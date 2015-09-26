@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20150926',
     '20150919',
     '20150810',
     '20150808',
@@ -526,6 +527,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20150926': [
+        'Terminal graphics characters are now rendered in a new way, improving quality in many cases.  Many of them are also rendered without system fonts, which allows MacTerm to carefully scale certain characters and connect them to neighboring cells where appropriate.',
+        'Terminal graphics characters now cover the entire "Box Drawing" set of Unicode 8.0.  This adds new capabilities such as curved-corner lines, dotted lines, half-lines and other line variations.',
+        'Terminal graphics characters now cover the entire "Block Elements" set of Unicode 8.0.',
+        'Terminal graphics characters now include a variety of other glyphs, such as brackets used in mathematical expressions.',
+        'Terminal graphics characters now directly support "powerline" (a popular extension), providing renderings for several of its internal Unicode sequences without requiring patched fonts.  This includes full-height triangles, chevrons, a "version control branch" character, a padlock, and others.',
+    ],
     '20150919': [
         'Terminal graphics characters now cover more of the Greek alphabet, especially for mathematics.',
     ],

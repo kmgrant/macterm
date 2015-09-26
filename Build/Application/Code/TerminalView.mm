@@ -87,6 +87,7 @@
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalBackground.h"
+#import "TerminalGlyphDrawing.objc++.h"
 #import "TerminalWindow.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"
@@ -377,6 +378,7 @@ TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the curre
 	struct
 	{
 		TerminalTextAttributes		attributes;		// current text attribute flags, affecting color of terminal text, etc.
+		NSMutableDictionary*		attributeDict;	// most recent equivalent attributed-string attributes (e.g. fonts, colors)
 		
 		struct
 		{
@@ -468,8 +470,8 @@ NSCursor*			customCursorCrosshairs				();
 NSCursor*			customCursorIBeam					(Boolean = false);
 NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
-NSDictionary*		dictionaryWithTerminalTextAttributes(My_TerminalViewPtr, TerminalTextAttributes, Float32 = 1.0);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
+void				drawSingleColorImage				(CGContextRef, CGColorRef, CGRect, id);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
 														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
@@ -477,7 +479,8 @@ void				drawTerminalScreenRunOp				(TerminalScreenRef, UInt16, CFStringRef, Term
 														 TerminalTextAttributes, void*);
 void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, CFIndex,
 														 CFStringRef, TerminalTextAttributes);
-void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
+void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char,
+														 CGFloat, TerminalTextAttributes);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
 Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, TerminalView_RowIndex, Terminal_LineStackStorage*);
@@ -550,6 +553,8 @@ SInt16				setPortScreenPort					(My_TerminalViewPtr);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
+void				setTerminalTextAttributesDictionary	(My_TerminalViewPtr, NSMutableDictionary*, TerminalTextAttributes,
+														 Float32 = 1.0);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHandle,
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
@@ -4460,6 +4465,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	assert(addDataSource(this, inScreenDataSource));
 	
 	// miscellaneous settings
+	this->text.attributes = 0;
+	this->text.attributeDict = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary initial size */];
 	this->text.font.normalFont = nil; // set later
 	this->text.font.boldFont = nil; // set later
 	this->text.selection.range.first.first = 0;
@@ -4749,6 +4756,7 @@ My_TerminalView::
 	[this->contentNSView release];
 	[this->paddingNSView release];
 	[this->backgroundNSView release];
+	[this->text.attributeDict release];
 	if (nil != this->text.font.normalFont)
 	{
 		[this->text.font.normalFont release], this->text.font.normalFont = nil;
@@ -5679,180 +5687,6 @@ delayMinimumTicks	(UInt16		inTickCount)
 
 
 /*!
-Returns a dictionary suitable for use in attributed strings
-that contains the specified terminal text attributes.
-
-(4.0)
-*/
-NSDictionary*
-dictionaryWithTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
-										 TerminalTextAttributes		inAttributes,
-										 Float32					UNUSED_ARGUMENT(inAlpha))
-{
-	NSMutableDictionary*	result = [NSMutableDictionary dictionaryWithCapacity:4/* arbitrary initial size */];
-	
-	
-	// set font attributes
-	{
-		NSFontManager*	fontManager = [NSFontManager sharedFontManager];
-		NSFont*			originalFont = inTerminalViewPtr->text.font.normalFont;
-		NSFont*			sourceFont = originalFont;
-		
-		
-		if ((STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes)) &&
-			(nil != inTerminalViewPtr->text.font.boldFont))
-		{
-			sourceFont = inTerminalViewPtr->text.font.boldFont;
-		}
-		
-		if (STYLE_ITALIC(inAttributes))
-		{
-			sourceFont = [fontManager convertFont:sourceFont toHaveTrait:NSItalicFontMask];
-			if ((nil == sourceFont) ||
-				(NSItalicFontMask != ([fontManager traitsOfFont:sourceFont] & NSItalicFontMask)))
-			{
-				// if no dedicated italic font is available, apply a transform to make
-				// the current font appear slanted (note: this is what WebKit does)
-				NSAffineTransform*			fontTransform = [NSAffineTransform transform];
-				NSAffineTransform*			italicTransform = [NSAffineTransform transform];
-				NSAffineTransformStruct		slantTransformData;
-				
-				
-				std::memset(&slantTransformData, 0, sizeof(slantTransformData));
-				slantTransformData.m11 = 1.0;
-				slantTransformData.m12 = 0.0;
-				slantTransformData.m21 = -tanf(-14.0/* rotation in degrees */ * acosf(0) / 90.0);
-				slantTransformData.m22 = 1.0;
-				slantTransformData.tX  = 0.0;
-				slantTransformData.tY  = 0.0;
-				[italicTransform setTransformStruct:slantTransformData];
-				
-				[fontTransform scaleBy:[originalFont pointSize]];
-				[fontTransform appendTransform:italicTransform];
-				
-				sourceFont = [NSFont fontWithDescriptor:[originalFont fontDescriptor] textTransform:fontTransform];
-			}
-		}
-		
-		// in case the font is somehow not resolved at all after
-		// attempts to transform it, bail and use the original
-		if (nil == sourceFont)
-		{
-			sourceFont = originalFont;
-		}
-		
-		if (nil != sourceFont)
-		{
-			[result setObject:sourceFont forKey:NSFontAttributeName];
-		}
-		
-		if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
-		{
-			[result setObject:@(1) forKey:NSUnderlineStyleAttributeName];
-		}
-	}
-	
-	// set color attributes
-	{
-		NSColor*	foregroundNSColor = (inTerminalViewPtr->screen.currentRenderDragColors)
-										? [NSColor blackColor] // default for drags is black
-										: nil;
-		
-		
-		if (nil == foregroundNSColor)
-		{
-			CGDeviceColor	backgroundDeviceColor;
-			CGDeviceColor	foregroundDeviceColor;
-			
-			
-			// find the correct colors in the color table
-			getScreenColorsForAttributes(inTerminalViewPtr, inAttributes,
-											&foregroundDeviceColor, &backgroundDeviceColor,
-											&inTerminalViewPtr->screen.currentRenderNoBackground);
-			foregroundNSColor = [NSColor colorWithCalibratedRed:foregroundDeviceColor.red
-																green:foregroundDeviceColor.green
-																blue:foregroundDeviceColor.blue
-																alpha:1.0];
-			NSColor*	backgroundNSColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
-																			green:backgroundDeviceColor.green
-																			blue:backgroundDeviceColor.blue
-																			alpha:1.0];
-			
-			
-			if (STYLE_SEARCH_RESULT(inAttributes))
-			{
-				// use selection colors
-				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
-				NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
-				
-				
-				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
-																	background:&searchResultBackgroundColor])
-				{
-					foregroundNSColor = [[foregroundNSColor copy] autorelease];
-				}
-				else
-				{
-					foregroundNSColor = searchResultTextColor;
-				}
-			}
-			else if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
-			{
-				if (gPreferenceProxies.invertSelections)
-				{
-					// invert the text (foreground from background)
-					foregroundNSColor = backgroundNSColor;
-				}
-				else
-				{
-					// alter the color (usually to make it look darker)
-					NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
-					NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
-					
-					
-					if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
-																	background:&selectionBackgroundColor])
-					{
-						// bail; force the default color even if it won’t look as good
-						selectionTextColor = [NSColor blackColor];
-					}
-					foregroundNSColor = [selectionTextColor
-											colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-				}
-			}
-			else
-			{
-				// use default value (set above)
-			}
-			
-			//
-			// modify the base text color based on other state
-			//
-			
-			// adjust for inactive views (dimmer text)
-			if (false == inTerminalViewPtr->isActive)
-			{
-				// make the text color lighter, unless it is selected
-				if (false == STYLE_SELECTED(inAttributes))
-				{
-					foregroundNSColor = [foregroundNSColor blendedColorWithFraction:0.5/* arbitrary */
-																					ofColor:[NSColor whiteColor]];
-				}
-			}
-		}
-		
-		// UNIMPLEMENTED: highlighted-text (possibly inverted) colors
-		// UNIMPLEMENTED: dimmed-screen colors
-		// UNIMPLEMENTED: “concealed” style colors
-		
-		[result setObject:foregroundNSColor forKey:NSForegroundColorAttributeName];
-	}
-	
-	return result;
-}// dictionaryWithTerminalTextAttributes
-
-
-/*!
 This method handles dragging of a text selection.
 If the text is dropped (i.e. not cancelled), then
 "true" is returned in "outDragWasDropped".
@@ -6076,6 +5910,48 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
+Instead of drawing an image as-is, draws the image as
+if it were entirely in one color (except for effects
+from anti-aliasing).  For example, this can be used to
+draw an image using a text color as if it were a member
+of a font.
+
+The layer image object must be something that is valid
+for a CALayer (currently: CGImageRef or NSImage*).
+
+Note, this is generic and it should move elsewhere.
+
+WARNING:	The state of the context is not preserved.
+
+(4.1)
+*/
+void
+drawSingleColorImage	(CGContextRef	inDrawingContext,
+						 CGColorRef		inColor,
+						 CGRect			inFrame,
+						 id				inLayerImage)
+{
+	CALayer*	maskLayer = [CALayer layer];
+	CALayer*	renderingLayer = [CALayer layer];
+	
+	
+	assert(nil != maskLayer);
+	assert(nil != renderingLayer);
+	maskLayer.contents = inLayerImage;
+	maskLayer.frame = CGRectMake(0, 0, inFrame.size.width, inFrame.size.height);
+	renderingLayer.backgroundColor = inColor;
+	renderingLayer.frame = inFrame;
+	renderingLayer.mask = maskLayer;
+	
+	// place the drawing in the right part of the window
+	CGContextTranslateCTM(inDrawingContext, renderingLayer.frame.origin.x,
+							renderingLayer.frame.origin.y);
+	
+	[renderingLayer renderInContext:inDrawingContext];
+}// drawSingleColorImage
+
+
+/*!
 This is only intended to be used by drawVTGraphicsGlyph(),
 to handle glyphs that happen to be Greek letters or other
 Mac Roman characters that the Symbol font can render.
@@ -6181,6 +6057,13 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 				STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
 				STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
 		
+		// TEMPORARY...these kinds of offsets make no sense whatsoever
+		// and yet Core Graphics drawings seem to be utterly misaligned
+		// with QuickDraw backgrounds without them (NOTE: adjusting
+		// width is not reasonable because it refers to the whole range,
+		// which might encompass several characters)
+		//sectionBounds.origin.x += 1;
+		sectionBounds.size.height -= 3;
 		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
@@ -6283,7 +6166,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		// font attributes are set directly on the (attributed) string
 		// of the text storage, not in the graphics context
-		[textStorage addAttributes:dictionaryWithTerminalTextAttributes(inTerminalViewPtr, inAttributes, 1.0/* alpha */)
+		setTerminalTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
+											inAttributes, 1.0/* alpha */);
+		[textStorage addAttributes:inTerminalViewPtr->text.attributeDict
 									range:NSMakeRange(0, [textStorage length])];
 		
 		// remove the extra pixels inserted by default so that drawing
@@ -6428,9 +6313,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 				CGFloat const	kHOffsetPerGlyph = INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter);
 				SInt16			i = 0;
 				Point			oldPen;
-				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x, inBoundaries.origin.y,
-															kHOffsetPerGlyph,
-															INTEGER_DOUBLED(inTerminalViewPtr->text.font.heightPerCharacter));
+				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
+															kHOffsetPerGlyph + 4,
+															inBoundaries.size.height/*INTEGER_DOUBLED(inTerminalViewPtr->text.font.heightPerCharacter)*/ + 4);
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6441,7 +6326,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 						// draw a graphics character
 						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds,
 											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
-											oldMacRomanBufferForQuickDraw[i]);
+											oldMacRomanBufferForQuickDraw[i], oldPen.v - glyphBounds.origin.y, inAttributes);
 					}
 					else
 					{
@@ -6449,8 +6334,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 					}
 					
-					glyphBounds.origin.x += glyphBounds.size.width;
-					MoveTo(oldPen.h + STATIC_CAST(glyphBounds.size.width, SInt16), oldPen.v);
+					glyphBounds.origin.x += kHOffsetPerGlyph;
+					MoveTo(oldPen.h + STATIC_CAST(kHOffsetPerGlyph, SInt16), oldPen.v);
 				}
 			}
 			else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
@@ -6463,9 +6348,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 				SInt16			i = 0;
 				char			previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
 				Point			oldPen;
-				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x, inBoundaries.origin.y,
-															kHOffsetPerGlyph,
-															inTerminalViewPtr->text.font.heightPerCharacter);
+				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
+															kHOffsetPerGlyph + 4,
+															inBoundaries.size.height/*inTerminalViewPtr->text.font.heightPerCharacter*/ + 4);
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6554,15 +6439,15 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 						// draw a graphics character
 						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds,
 											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
-											oldMacRomanBufferForQuickDraw[i]);
+											oldMacRomanBufferForQuickDraw[i], oldPen.v - glyphBounds.origin.y, inAttributes);
 					}
 					else
 					{
 						// draw a normal character
 						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 					}
-					glyphBounds.origin.x += glyphBounds.size.width;
-					MoveTo(oldPen.h + STATIC_CAST(glyphBounds.size.width, SInt16), oldPen.v);
+					glyphBounds.origin.x += kHOffsetPerGlyph;
+					MoveTo(oldPen.h + STATIC_CAST(kHOffsetPerGlyph, SInt16), oldPen.v);
 					
 					previousChar = thisChar;
 				}
@@ -6612,22 +6497,74 @@ VT font.
 (3.0)
 */
 void
-drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
-						 CGContextRef			inDrawingContext,
-						 CGRect const&			inBoundaries,
-						 UniChar				inUnicode,
-						 char					inMacRomanForQuickDraw) // DEPRECATED
+drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
+						 CGContextRef				inDrawingContext,
+						 CGRect const&				inBoundaries,
+						 UniChar					inUnicode,
+						 char						inMacRomanForQuickDraw, // DEPRECATED
+						 CGFloat					inBaselineHint,
+						 TerminalTextAttributes		inAttributes)
 {
-	Rect		cellRect;
-	Point		cellCenter; // used for line drawing glyphs
-	SInt16		cellTop = 0;
-	SInt16		cellLeft = 0;
-	SInt16		cellRight = 0;
-	SInt16		cellBottom = 0;
-	SInt16		lineWidth = 1; // changed later...
-	SInt16		lineHeight = 1; // changed later...
-	SInt16		preservedFontID = 0;
+	CGFloat const					kMaxWidthInPixelsForSmallSizeGlyphs = 10; // arbitrary; when to switch to small-size renderings
+	TerminalGlyphDrawing_Options	drawingOptions = 0;
+	// float parameters are used for improved renderings with Core Graphics
+	CGContextSaveRestore			_(inDrawingContext);
+	TerminalGlyphDrawing_Cache*		sourceLayerCache = nil; // may be set below
+	CGRect							floatBounds = inBoundaries;
+	CGFloat							floatCellTop = inBoundaries.origin.y;
+	CGFloat							floatCellLeft = inBoundaries.origin.x;
+	CGFloat							floatCellRight = (inBoundaries.origin.x + inBoundaries.size.width);
+	CGFloat							floatCellBottom = (inBoundaries.origin.y + inBoundaries.size.height);
+	CGColorRef						foregroundColor = nullptr;
+	NSColor*						foregroundNSColor = nil;
+	// legacy metrics for QuickDraw code (will be removed eventually)
+	SInt16							preservedFontID = 0;
+	Rect							cellRect; // set later...
+	Point							cellCenter; // used for line drawing glyphs
+	SInt16							cellTop = STATIC_CAST(floatCellTop, SInt16);
+	SInt16							cellLeft = STATIC_CAST(floatCellLeft, SInt16);
+	SInt16							cellRight = STATIC_CAST(floatCellRight, SInt16);
+	SInt16							cellBottom = STATIC_CAST(floatCellBottom, SInt16);
+	SInt16							lineWidth = 1; // changed later...
+	SInt16							lineHeight = 1; // changed later...
 	
+	
+	// TEMPORARY; since original bounds are based in QuickDraw
+	// coordinates, must adjust to produce equivalent results
+	// in Core Graphics (for example, when the background is
+	// filled for text selection, it must appear to be in
+	// exactly the same pixels that Core Graphics would use to
+	// draw vector graphics); definitely a hack...
+	floatBounds.origin.x += 1.0;
+	//floatBounds.origin.y += 1.0;
+	floatBounds.size.width -= 3.0;
+	//floatBounds.size.height -= 1.0;
+	
+	if (STYLE_BOLD(inAttributes))
+	{
+		drawingOptions |= kTerminalGlyphDrawing_OptionBold;
+	}
+	
+	if (floatBounds.size.width < kMaxWidthInPixelsForSmallSizeGlyphs)
+	{
+		drawingOptions |= kTerminalGlyphDrawing_OptionSmallSize;
+	}
+	
+	// TEMPORARY; set now to ensure correct values (later, when
+	// removing Carbon support entirely, this can probably be
+	// done earlier and persist for all other calls implicitly)
+	setTerminalTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
+										inAttributes, 1.0/* alpha */);
+	foregroundNSColor = STATIC_CAST([inTerminalViewPtr->text.attributeDict objectForKey:NSForegroundColorAttributeName],
+									NSColor*);
+	{
+		NSColor*	asRGB = [foregroundNSColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		
+		
+		assert(nil != asRGB);
+		foregroundColor = CGColorCreateGenericRGB(asRGB.redComponent, asRGB.greenComponent, asRGB.blueComponent,
+													asRGB.alphaComponent);
+	}
 	
 	// preserve font
 	{
@@ -6657,19 +6594,28 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		lineWidth = penState.pnSize.h;
 		lineHeight = penState.pnSize.v;
 	}
-	{
-		Point	penLocation;
-		
-		
-		GetPen(&penLocation);
-		cellTop = inBoundaries.origin.y;
-		cellLeft = inBoundaries.origin.x;
-		cellRight = cellLeft + inBoundaries.size.width; // implicitly double-width if appropriate
-		cellBottom = inBoundaries.origin.y + inBoundaries.size.height;
-		SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
-	}
+	SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
 	SetPt(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
 			cellTop + INTEGER_HALVED(cellBottom - cellTop));
+	
+#if 0
+	{
+		// debug: show the clipping rectangle
+		CGContextSaveRestore	_(inDrawingContext);
+		
+		
+		[[NSColor redColor] setAsForegroundInCGContext:inDrawingContext];
+		CGContextStrokeRect(inDrawingContext, floatBounds);
+	}
+#endif
+#if 1 // disable to debug out-of-bounds errors
+	// clip drawing to the boundaries (this is restored upon return);
+	// note that this cannot offset by as much as one full pixel
+	// because this would start to create gaps between graphics glyphs
+	CGContextClipToRect(inDrawingContext, CGRectMake(floatBounds.origin.x + 0.5, floatBounds.origin.y + 0.5,
+														floatBounds.size.width - 1, floatBounds.size.height - 1));
+	//CGContextClipToRect(inDrawingContext, floatBounds);
+#endif
 	
 	// The set of characters supported here should also be used in the
 	// translateCharacter() internal method of the Terminal module.
@@ -6677,6 +6623,264 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 	// whether or not they were originally tagged as being graphical.
 	switch (inUnicode)
 	{
+	case 0x2501: // middle line, bold version
+	case 0x2503: // vertical line, bold version
+	case 0x250F: // hook mid-right to mid-bottom, bold version
+	case 0x2513: // hook mid-left to mid-bottom, bold version
+	case 0x2517: // hook mid-top to mid-right, bold version
+	case 0x251B: // hook mid-top to mid-left, bold version
+	case 0x2523: // cross minus the left piece, bold version
+	case 0x252B: // cross minus the right piece, bold version
+	case 0x2533: // cross minus the top piece, bold version
+	case 0x253B: // cross minus the bottom piece, bold version
+	case 0x254B: // cross, bold version
+	case 0x2578: // cross, left segment only, bold version
+	case 0x2579: // cross, top segment only, bold version
+	case 0x257A: // cross, right segment only, bold version
+	case 0x257B: // cross, bottom segment only, bold version
+		{
+			// glyph can be generated by Terminal Glyphs module
+			// but it is also the bold version (note: most likely
+			// the option was already set by attributes but this
+			// is for completeness)
+			drawingOptions |= kTerminalGlyphDrawing_OptionBold;
+		}
+		//break; // INTENTIONAL FALL-THROUGH
+	// INTENTIONAL FALL-THROUGH
+	case 0x221A: // square root left edge
+	case 0x23B7: // square root bottom, centered
+	case 0x23B8: // left vertical box line
+	case 0x23B9: // right vertical box line
+	case 0x23BA: // top line
+	case 0x23BB: // line between top and middle regions
+	case 0x23BC: // line between middle and bottom regions
+	case 0x23BD: // bottom line
+	case 0x23D0: // vertical line extension
+	case 0x2500: // middle line
+	case 0x2502: // vertical line
+	case 0x250C: // hook mid-right to mid-bottom
+	case 0x250D: // hook mid-right to mid-bottom, bold right
+	case 0x250E: // hook mid-right to mid-bottom, bold bottom
+	case 0x2510: // hook mid-left to mid-bottom
+	case 0x2511: // hook mid-left to mid-bottom, bold left
+	case 0x2512: // hook mid-left to mid-bottom, bold bottom
+	case 0x2514: // hook mid-top to mid-right
+	case 0x2515: // hook mid-top to mid-right, bold right
+	case 0x2516: // hook mid-top to mid-right, bold top
+	case 0x2518: // hook mid-top to mid-left
+	case 0x2519: // hook mid-top to mid-left, bold left
+	case 0x251A: // hook mid-top to mid-left, bold top
+	case 0x251C: // cross minus the left piece
+	case 0x251D: // cross minus the left piece, bold right
+	case 0x251E: // cross minus the left piece, bold top
+	case 0x251F: // cross minus the left piece, bold bottom
+	case 0x2520: // cross minus the left piece, bold vertical
+	case 0x2521: // cross minus the left piece, bold hook mid-top to mid-right
+	case 0x2522: // cross minus the left piece, bold hook mid-bottom to mid-right
+	//case 0x2523: // cross minus the left piece, bold version
+	case 0x2524: // cross minus the right piece
+	case 0x2525: // cross minus the right piece, bold left
+	case 0x2526: // cross minus the right piece, bold top
+	case 0x2527: // cross minus the right piece, bold bottom
+	case 0x2528: // cross minus the right piece, bold vertical
+	case 0x2529: // cross minus the right piece, bold hook mid-top to mid-left
+	case 0x252A: // cross minus the right piece, bold hook mid-bottom to mid-left
+	//case 0x252B: // cross minus the right piece, bold version
+	case 0x252C: // cross minus the top piece
+	case 0x252D: // cross minus the top piece, bold left
+	case 0x252E: // cross minus the top piece, bold right
+	case 0x252F: // cross minus the top piece, bold horizontal
+	case 0x2530: // cross minus the top piece, bold bottom
+	case 0x2531: // cross minus the top piece, bold hook mid-bottom to mid-left
+	case 0x2532: // cross minus the top piece, bold hook mid-bottom to mid-right
+	//case 0x2533: // cross minus the top piece, bold version
+	case 0x2534: // cross minus the bottom piece
+	case 0x2535: // cross minus the bottom piece, bold left
+	case 0x2536: // cross minus the bottom piece, bold right
+	case 0x2537: // cross minus the bottom piece, bold horizontal
+	case 0x2538: // cross minus the bottom piece, bold top
+	case 0x2539: // cross minus the bottom piece, bold hook mid-top to mid-left
+	case 0x253A: // cross minus the bottom piece, bold hook mid-top to mid-right
+	//case 0x253B: // cross minus the bottom piece, bold version
+	case 0x253C: // cross
+	case 0x253D: // cross, bold left
+	case 0x253E: // cross, bold right
+	case 0x253F: // cross, bold horizontal
+	case 0x2540: // cross, bold top
+	case 0x2541: // cross, bold bottom
+	case 0x2542: // cross, bold vertical
+	case 0x2543: // cross, bold hook mid-top to mid-left
+	case 0x2544: // cross, bold hook mid-top to mid-right
+	case 0x2545: // cross, bold hook mid-bottom to mid-left
+	case 0x2546: // cross, bold hook mid-bottom to mid-right
+	case 0x2547: // cross, bold T-up
+	case 0x2548: // cross, bold T-down
+	case 0x2549: // cross, bold T-left
+	case 0x254A: // cross, bold T-right
+	//case 0x254B: // cross, bold version
+	case 0x2550: // middle line, double-line version
+	case 0x2551: // vertical line, double-line version
+	case 0x2552: // hook mid-right to mid-bottom, double-horizontal-only version
+	case 0x2553: // hook mid-right to mid-bottom, double-vertical-only version
+	case 0x2554: // hook mid-right to mid-bottom, double-line version
+	case 0x2555: // hook mid-left to mid-bottom, double-horizontal-only version
+	case 0x2556: // hook mid-left to mid-bottom, double-vertical-only version
+	case 0x2557: // hook mid-left to mid-bottom, double-line version
+	case 0x2558: // hook mid-top to mid-right, double-horizontal-only version
+	case 0x2559: // hook mid-top to mid-right, double-vertical-only version
+	case 0x255A: // hook mid-top to mid-right, double-line version
+	case 0x255B: // hook mid-top to mid-left, double-horizontal-only version
+	case 0x255C: // hook mid-top to mid-left, double-vertical-only version
+	case 0x255D: // hook mid-top to mid-left, double-line version
+	case 0x255E: // cross minus the left piece, double-horizontal-only version
+	case 0x255F: // cross minus the left piece, double-vertical-only version
+	case 0x2560: // cross minus the left piece, double-line version
+	case 0x2561: // cross minus the right piece, double-horizontal-only version
+	case 0x2562: // cross minus the right piece, double-vertical-only version
+	case 0x2563: // cross minus the right piece, double-line version
+	case 0x2564: // cross minus the top piece, double-horizontal-only version
+	case 0x2565: // cross minus the top piece, double-vertical-only version
+	case 0x2566: // cross minus the top piece, double-line version
+	case 0x2567: // cross minus the bottom piece, double-horizontal-only version
+	case 0x2568: // cross minus the bottom piece, double-vertical-only version
+	case 0x2569: // cross minus the bottom piece, double-line version
+	case 0x256A: // cross, double-horizontal-only
+	case 0x256B: // cross, double-vertical-only
+	case 0x256C: // cross, double-line version
+	case 0x2574: // cross, left segment only
+	case 0x2575: // cross, top segment only
+	case 0x2576: // cross, right segment only
+	case 0x2577: // cross, bottom segment only
+	case 0x257C: // horizontal line, bold right half
+	case 0x257D: // vertical line, bold bottom half
+	case 0x257E: // horizontal line, bold left half
+	case 0x257F: // vertical line, bold top half
+	case 0x2580: // upper-half block
+	case 0x2581: // 1/8 bottom block
+	case 0x2582: // 2/8 (1/4) bottom block
+	case 0x2583: // 3/8 bottom block
+	case 0x2584: // lower-half block
+	case 0x2585: // 5/8 bottom block
+	case 0x2586: // 6/8 (3/4) bottom block
+	case 0x2587: // 7/8 bottom block
+	case 0x2588: // solid block
+	case 0x2589: // 7/8 left block
+	case 0x258A: // 6/8 (3/4) left block
+	case 0x258B: // 5/8 left block
+	case 0x258C: // left-half block
+	case 0x258D: // 3/8 left block
+	case 0x258E: // 2/8 (1/4) left block
+	case 0x258F: // 1/8 left block
+	case 0x2590: // right-half block
+	case 0x2594: // 1/8 top block
+	case 0x2595: // 1/8 right block
+	case 0x2596: // quadrant lower-left
+	case 0x2597: // quadrant lower-right
+	case 0x2598: // quadrant upper-left
+	case 0x2599: // block minus upper-right quadrant
+	case 0x259A: // quadrants upper-left and lower-right
+	case 0x259B: // block minus lower-right quadrant
+	case 0x259C: // block minus lower-left quadrant
+	case 0x259D: // quadrant upper-right
+	case 0x259E: // quadrants upper-right and lower-left
+	case 0x259F: // block minus upper-left quadrant
+		{
+			// glyph can be generated by Terminal Glyphs module
+			sourceLayerCache = [TerminalGlyphDrawing_Cache cacheWithUnicodePoint:inUnicode];
+			
+			// most glyphs are negatively affected by anti-aliasing
+			// because adjacent characters are not cleanly joined;
+			// note the exceptions in the case below
+			drawingOptions |= kTerminalGlyphDrawing_OptionAntialiasingDisabled;
+		}
+		break;
+	
+	case 0x2505: // horizontal triple-dashed line, bold version
+	case 0x2507: // vertical triple-dashed line, bold version
+	case 0x2509: // horizontal quadruple-dashed line, bold version
+	case 0x250B: // vertical quadruple-dashed line, bold version
+	case 0x254D: // horizontal double-dashed line, bold version
+	case 0x254F: // vertical double-dashed line, bold version
+	case 0x2714: // check mark, bold
+	case 0x2718: // X mark
+		{
+			// antialiased and bold
+			drawingOptions |= kTerminalGlyphDrawing_OptionBold;
+		}
+		//break; // INTENTIONAL FALL-THROUGH
+	// INTENTIONAL FALL-THROUGH
+	case '=': // equal to
+	case 0x2022: // bullet (technically bigger than middle dot and circular)
+	case 0x2026: // ellipsis (three dots)
+	case 0x2260: // not equal to
+	case 0x2261: // equivalent to (three horizontal lines)
+	case 0x22EF: // middle ellipsis (three dots, centered)
+	case 0x2320: // integral sign (elongated S), top
+	case 0x2321: // integral sign (elongated S), bottom
+	case 0x2325: // option key
+	case 0x2387: // alternate key
+	case 0x239B: // left parenthesis, upper
+	case 0x239C: // left parenthesis extension
+	case 0x239D: // left parenthesis, lower
+	case 0x239E: // right parenthesis, upper
+	case 0x239F: // right parenthesis extension
+	case 0x23A0: // right parenthesis, lower
+	case 0x23A1: // left square bracket, upper
+	case 0x23A2: // left square bracket extension
+	case 0x23A3: // left square bracket, lower
+	case 0x23A4: // right square bracket, upper
+	case 0x23A5: // right square bracket extension
+	case 0x23A6: // right square bracket, lower
+	case 0x23A7: // left curly brace, upper
+	case 0x23A8: // left curly brace, middle
+	case 0x23A9: // left curly brace, lower
+	case 0x23AA: // curly brace extension
+	case 0x23AB: // right curly brace, upper
+	case 0x23AC: // right curly brace, middle
+	case 0x23AD: // right curly brace, lower
+	case 0x23AE: // integral extension
+	case 0x23B2: // large sigma (summation), top half
+	case 0x23B3: // large sigma (summation), bottom half
+	case 0x2504: // horizontal triple-dashed line
+	case 0x2506: // vertical triple-dashed line
+	case 0x2508: // horizontal quadruple-dashed line
+	case 0x250A: // vertical quadruple-dashed line
+	case 0x254C: // horizontal double-dashed line
+	case 0x254E: // vertical double-dashed line
+	case 0x256D: // curved mid-right to mid-bottom
+	case 0x256E: // curved mid-left to mid-bottom
+	case 0x256F: // curved mid-top to mid-left
+	case 0x2570: // curved mid-top to mid-right
+	case 0x2571: // diagonal line from top-right to bottom-left
+	case 0x2572: // diagonal line from top-left to bottom-right
+	case 0x2573: // diagonal lines from each corner crossing in the center
+	case 0x26A1: // online/offline lightning bolt
+	case 0x2713: // check mark
+	case 0x27A6: // curve-to-right arrow (used for "detached from head" in powerline)
+		{
+			// glyphs in this case are the same as the case above
+			// except that anti-aliasing is ALLOWED
+			sourceLayerCache = [TerminalGlyphDrawing_Cache cacheWithUnicodePoint:inUnicode];
+		}
+		break;
+	
+	case 0xE0A0: // "powerline" version control branch
+	case 0xE0A1: // "powerline" line (LN) marker
+	case 0xE0A2: // "powerline" closed padlock
+	case 0xE0B0: // "powerline" rightward triangle
+	case 0xE0B1: // "powerline" rightward arrowhead
+	case 0xE0B2: // "powerline" leftward triangle
+	case 0xE0B3: // "powerline" leftward arrowhead
+		{
+			// handling of these is currently the same as above but
+			// they are separated so that it will be easy to disable
+			// them conditionally later (technically they implement
+			// Unicode extensions and some application may not want
+			// this interpretation)
+			sourceLayerCache = [TerminalGlyphDrawing_Cache cacheWithUnicodePoint:inUnicode];
+		}
+		break;
+	
 	case 0x2591: // light gray pattern
 		{
 			PenState	penState;
@@ -6806,452 +7010,48 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 				cellBottom - lineHeight/* break from adjacent characters */);
 		break;
 	
-	case 0x2518: // hook mid-top to mid-left
-	case 0x251B: // bold version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellTop);
-		break;
-	
-	case 0x255B: // hook mid-top to mid-left, double-horizontal-only version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellCenter.v + lineHeight);
-		LineTo(cellLeft, cellCenter.v + lineHeight);
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h, cellCenter.v - lineHeight);
-		break;
-	
-	case 0x255C: // hook mid-top to mid-left, double-vertical-only version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v);
-		LineTo(cellCenter.h + lineWidth, cellTop);
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x255D: // hook mid-top to mid-left, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellTop);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellTop);
-		break;
-	
-	case 0x2510: // hook mid-left to mid-bottom
-	case 0x2513: // bold version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		break;
-	
-	case 0x2555: // hook mid-left to mid-bottom, double-horizontal-only version
-		MoveTo(cellCenter.h, cellBottom - lineHeight);
-		LineTo(cellCenter.h, cellCenter.v - lineHeight);
-		LineTo(cellLeft, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x2556: // hook mid-left to mid-bottom, double-vertical-only version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2557: // hook mid-left to mid-bottom, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x250C: // hook mid-right to mid-bottom
-	case 0x250F: // bold version
-		MoveTo(cellRight - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		break;
-	
-	case 0x2552: // hook mid-right to mid-bottom, double-horizontal-only version
-		MoveTo(cellCenter.h, cellBottom - lineHeight);
-		LineTo(cellCenter.h, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x2553: // hook mid-right to mid-bottom, double-vertical-only version
-		MoveTo(cellRight - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellCenter.v);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2554: // hook mid-right to mid-bottom, double-line version
-		MoveTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2514: // hook mid-top to mid-right
-	case 0x2517: // bold version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x2558: // hook mid-top to mid-right, double-horizontal-only version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		MoveTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h, cellCenter.v - lineHeight);
-		break;
-	
-	case 0x2559: // hook mid-top to mid-right, double-vertical-only version
-		MoveTo(cellRight - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellTop);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v);
-		break;
-	
-	case 0x255A: // hook mid-top to mid-right, double-line version
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x253C: // cross
-	case 0x254B: // bold version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x256C: // cross, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellTop);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x256A: // cross, double-horizontal-only
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x256B: // cross, double-vertical-only
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x23BA: // top line
-		MoveTo(cellLeft, cellTop);
-		LineTo(cellRight - lineWidth, cellTop);
-		break;
-	
-	case 0x23BB: // line between top and middle regions
-		MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight - lineWidth, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		break;
-	
-	case 0x2500: // middle line
-	case 0x2501: // bold version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x2550: // middle line, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x23BC: // line between middle and bottom regions
-		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		LineTo(cellRight - lineWidth, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 0x2261: // equivalent to (three horizontal lines)
-		MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight - lineWidth, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		LineTo(cellRight - lineWidth, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 0x23BD: // bottom line
-		MoveTo(cellLeft, cellBottom - lineHeight);
-		LineTo(cellRight - lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x251C: // cross minus the left piece
-	case 0x2523: // bold version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x255E: // cross minus the left piece, double-horizontal-only version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x255F: // cross minus the left piece, double-vertical-only version
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x2560: // cross minus the left piece, double-line version
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2524: // cross minus the right piece
-	case 0x252B: // bold version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		break;
-	
-	case 0x2561: // cross minus the right piece, double-horizontal-only version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v - lineHeight);
-		LineTo(cellLeft, cellCenter.v - lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v + lineHeight);
-		LineTo(cellLeft, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x2562: // cross minus the right piece, double-vertical-only version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v);
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2563: // cross minus the right piece, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellTop);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2534: // cross minus the bottom piece
-	case 0x253B: // bold version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellCenter.v);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x2567: // cross minus the bottom piece, double-horizontal-only version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h, cellTop);
-		break;
-	
-	case 0x2568: // cross minus the bottom piece, double-vertical-only version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v);
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x2569: // cross minus the bottom piece, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellTop);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		break;
-	
-	case 0x252C: // cross minus the top piece
-	case 0x2533: // bold version
-		MoveTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		break;
-	
-	case 0x2564: // cross minus the top piece, double-horizontal-only version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		MoveTo(cellCenter.h, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		break;
-	
-	case 0x2565: // cross minus the top piece, double-vertical-only version
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight - lineWidth, cellCenter.v);
-		MoveTo(cellCenter.h + lineWidth, cellCenter.v);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h - lineWidth, cellCenter.v);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2566: // cross minus the top piece, double-line version
-		MoveTo(cellLeft, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
-		MoveTo(cellLeft, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2502: // vertical line
-	case 0x2503: // bold version
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		break;
-	
-	case 0x2551: // vertical line, double-line version
-		MoveTo(cellCenter.h - lineWidth, cellTop);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		MoveTo(cellCenter.h + lineWidth, cellTop);
-		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
-		break;
-	
-	case 0x2571: // diagonal line from top-right to bottom-left
-		MoveTo(cellRight, cellTop);
-		LineTo(cellLeft, cellBottom);
-		break;
-	
-	case 0x2572: // diagonal line from top-left to bottom-right
-		MoveTo(cellLeft, cellTop);
-		LineTo(cellRight, cellBottom);
-		break;
-	
-	case 0x2573: // diagonal lines from each corner crossing in the center
-		MoveTo(cellLeft, cellTop);
-		LineTo(cellRight, cellBottom);
-		MoveTo(cellRight, cellTop);
-		LineTo(cellLeft, cellBottom);
-		break;
-	
+#if 0
+	// although this glyph is not rendered here for consistency with other
+	// similar glyphs (instead, the Terminal Glyph Drawing module is used),
+	// it is potentially useful to enable this when debugging because it
+	// shows the given rectangle in the simplest possible way
 	case 0x2588: // solid block
-		PaintRect(&cellRect);
+		{
+			[foregroundNSColor setAsBackgroundInCGContext:inDrawingContext];
+			CGContextFillRect(inDrawingContext, floatBounds);
+		}
 		break;
-	
-	case 0x2584: // lower-half block
-		cellRect.top = cellCenter.v;
-		PaintRect(&cellRect);
-		break;
-	
-	case 0x258C: // left-half block
-		cellRect.right = cellCenter.h;
-		PaintRect(&cellRect);
-		break;
-	
-	case 0x2590: // right-half block
-		cellRect.left = cellCenter.h;
-		PaintRect(&cellRect);
-		break;
-	
-	case 0x2580: // top-half block
-		cellRect.bottom = cellCenter.v;
-		PaintRect(&cellRect);
-		break;
-	
-	case 0x2027: // centered dot
-	case 0x00B7: // centered dot (alternate?)
-		MoveTo(cellCenter.h, cellCenter.v);
-		Line(0, 0);
-		break;
-	
-	case 0x2022: // bullet (technically bigger than middle dot and circular)
-		InsetRect(&cellRect, INTEGER_QUARTERED(cellRight - cellLeft)/* arbitrary */, INTEGER_QUARTERED(cellBottom - cellTop));
-		PaintOval(&cellRect);
-		break;
-	
-	case 0x2219: // bullet operator (smaller than bullet)
-		MoveTo(cellCenter.h, cellCenter.v);
-		Line(0, 0);
-		break;
+#endif
 	
 	case 0x25A0: // black square
 		InsetRect(&cellRect, INTEGER_QUARTERED(cellRight - cellLeft)/* arbitrary */, INTEGER_QUARTERED(cellBottom - cellTop));
 		PaintRect(&cellRect);
 		break;
 	
-	case 0x2320: // integral sign (elongated S), top
-		MoveTo(cellCenter.h + lineWidth + lineWidth, cellTop + lineHeight + lineHeight);
-		LineTo(cellCenter.h + lineWidth + lineWidth, cellTop);
-		LineTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		break;
-	
-	case 0x2321: // integral sign (elongated S), bottom
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom - lineHeight);
-		LineTo(cellCenter.h - lineWidth - lineWidth, cellBottom - lineHeight);
-		LineTo(cellCenter.h - lineWidth - lineWidth, cellBottom - lineHeight - lineHeight - lineHeight);
+	case 0x2699: // gear
+		{
+			// use the contextual menu icon (same shape) but transform it
+			// so that the image is drawn only in the current text color
+			NSString*	imageName = BRIDGE_CAST(AppResources_ReturnContextMenuFilenameNoExtension(),
+												NSString*);
+			NSImage*	gearImage = [NSImage imageNamed:imageName];
+			
+			
+			if (nil == gearImage)
+			{
+				Console_Warning(Console_WriteValueCFString, "unable to find image, name", BRIDGE_CAST(imageName, CFStringRef));
+			}
+			else
+			{
+				// create a square inset rectangle
+				CGRect		imageFrame = CGRectMake(floatBounds.origin.x,
+													floatBounds.origin.y + (floatBounds.size.height - floatBounds.size.width) / 2.0,
+													floatBounds.size.width, floatBounds.size.width/* make square */);
+				
+				
+				drawSingleColorImage(inDrawingContext, foregroundColor, imageFrame, gearImage);
+			}
+		}
 		break;
 	
 	case 0x0192: // small 'f' with hook
@@ -7263,277 +7063,270 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		MoveTo(cellLeft + lineWidth, cellCenter.v - lineHeight);
 		LineTo(cellCenter.h + lineWidth * 2/* arbitrary */, cellCenter.v - lineHeight);
 	#else
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0xA6);
 	#endif
 		break;
 	
-	case 0x221A: // square root left edge
-		MoveTo(cellLeft + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellLeft + lineWidth * 2/* arbitrary */, cellCenter.v - lineHeight);
-		LineTo(cellRight - lineWidth, cellBottom - lineHeight);
-		LineTo(cellRight - lineWidth, cellTop + lineHeight);
-		break;
-	
 	case 0x0391: // capital alpha
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x41);
 		break;
 	
 	case 0x0392: // capital beta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x42);
 		break;
 	
 	case 0x0393: // capital gamma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x47);
 		break;
 	
 	case 0x0394: // capital delta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x44);
 		break;
 	
 	case 0x0395: // capital epsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x45);
 		break;
 	
 	case 0x0396: // capital zeta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x5A);
 		break;
 	
 	case 0x0397: // capital eta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x48);
 		break;
 	
 	case 0x0398: // capital theta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x51);
 		break;
 	
 	case 0x0399: // capital iota
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x49);
 		break;
 	
 	case 0x039A: // capital kappa
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x4B);
 		break;
 	
 	case 0x039B: // capital lambda
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x4C);
 		break;
 	
 	case 0x039C: // capital mu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x4D);
 		break;
 	
 	case 0x039D: // capital nu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x4E);
 		break;
 	
 	case 0x039E: // capital xi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x58);
 		break;
 	
 	case 0x039F: // capital omicron
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x4F);
 		break;
 	
 	case 0x03A0: // capital pi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x50);
 		break;
 	
 	case 0x03A1: // capital rho
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x52);
 		break;
 	
 	case 0x03A3: // capital sigma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x53);
 		break;
 	
 	case 0x03A4: // capital tau
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x54);
 		break;
 	
 	case 0x03A5: // capital upsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x55);
 		break;
 	
 	case 0x03A6: // capital phi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x46);
 		break;
 	
 	case 0x03A7: // capital chi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x43);
 		break;
 	
 	case 0x03A8: // capital psi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x59);
 		break;
 	
 	case 0x03A9: // capital omega
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x57);
 		break;
 	
 	case 0x03B1: // alpha
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x61);
 		break;
 	
 	case 0x03B2: // beta
 	case 0x00DF: // small sharp "S" (TEMPORARY; render as a beta due to similarity)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x62);
 		break;
 	
 	case 0x03B3: // gamma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x67);
 		break;
 	
 	case 0x03B4: // delta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x64);
 		break;
 	
 	case 0x03B5: // epsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x65);
 		break;
 	
 	case 0x03B6: // zeta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x7A);
 		break;
 	
 	case 0x03B7: // eta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x68);
 		break;
 	
 	case 0x03B8: // theta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 						 	 0x71);
 		break;
 	
 	case 0x03B9: // iota
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x69);
 		break;
 	
 	case 0x03BA: // kappa
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x6B);
 		break;
 	
 	case 0x03BB: // lambda
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x6C);
 		break;
 	
 	case 0x00B5: // mu
 	case 0x03BC: // mu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x6D);
 		break;
 	
 	case 0x03BD: // nu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x6E);
 		break;
 	
 	case 0x03BE: // xi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x78);
 		break;
 	
 	case 0x03BF: // omicron
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x6F);
 		break;
 	
 	case 0x03C0: // pi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x70);
 		break;
 	
 	case 0x03C1: // rho
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x72);
 		break;
 	
 	case 0x03C2: // final sigma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x56);
 		break;
 	
 	case 0x03C3: // sigma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x73);
 		break;
 	
 	case 0x03C4: // tau
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x74);
 		break;
 	
 	case 0x03C5: // upsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x75);
 		break;
 	
 	case 0x03C6: // phi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x66);
 		break;
 	
 	case 0x03C7: // chi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x63);
 		break;
 	
 	case 0x03C8: // psi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x79);
 		break;
 	
 	case 0x03C9: // omega
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x77);
 		break;
 	
 	case 0x03D1: // theta (symbol)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x4A);
 		break;
 	
 	case 0x03D5: // phi (symbol)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x6A);
 		break;
 	
 	case 0x03D6: // pi (symbol)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, inBoundaries, inUnicode,
+		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0x76);
 		break;
 	
@@ -7551,8 +7344,21 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr		inTerminalViewPtr,
 		break;
 	}
 	
+	// if a glyph implementation above uses a layer, render it
+	if (nil != sourceLayerCache)
+	{
+		TerminalGlyphDrawing_Layer*		renderingLayer = [sourceLayerCache layerWithOptions:drawingOptions
+																							color:foregroundColor];
+		
+		
+		assert(nil != renderingLayer);
+		[renderingLayer renderInContext:inDrawingContext frame:floatBounds baselineHint:inBaselineHint];
+	}
+	
 	// restore font
 	TextFont(preservedFontID);
+	
+	CGColorRelease(foregroundColor), foregroundColor = nullptr;
 }// drawVTGraphicsGlyph
 
 
@@ -7599,7 +7405,8 @@ eraseSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		if (inTerminalViewPtr->isCocoa)
 		{
-			CGContextFillRect(inDrawingContext, outRowSectionBounds);
+			CGContextFillRect(inDrawingContext, CGRectMake(outRowSectionBounds.origin.x - 0.5, outRowSectionBounds.origin.y - 0.5,
+															outRowSectionBounds.size.width + 1, outRowSectionBounds.size.height + 1));
 		}
 		else
 		{
@@ -9269,6 +9076,13 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 		}
 		else
 		{
+		#if 1
+			// Core Graphics and QuickDraw tend to clash and introduce
+			// antialiasing artifacts in edge cases; rather than try to
+			// debug all of the places this could happen, a full screen
+			// refresh is forced while tracking text selections
+			updateDisplay(inTerminalViewPtr);
+		#else
 			UInt16 const	kFirstChar = (inTerminalViewPtr->text.selection.isRectangular)
 											? orderedRange.first.first
 											: 0;
@@ -9284,6 +9098,7 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 				invalidateRowSection(inTerminalViewPtr, rowIndex,
 										kFirstChar, kPastLastChar - kFirstChar/* count */);
 			}
+		#endif
 		}
 	}
 }// highlightVirtualRange
@@ -9320,6 +9135,7 @@ invalidateRowSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	// mark the specified area; it is already in “screen coordinates”,
 	// which match the view coordinates used by updateDisplayInRegion()
 	getRowSectionBounds(inTerminalViewPtr, inLineNumber, inStartingColumnNumber, inCharacterCount, &textBounds);
+	
 	RectRgn(gInvalidationScratchRegion(), &textBounds);
 	updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
 }// invalidateRowSection
@@ -11091,14 +10907,14 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					{
 						CGContextSaveRestore	_(drawingContext);
 						TerminalTextAttributes	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-						CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
-																				viewPtr->screen.cursor.bounds.top,
+						CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left - 1,
+																				viewPtr->screen.cursor.bounds.top - 1,
 																				viewPtr->screen.cursor.bounds.right -
 																					viewPtr->screen.cursor.bounds.left
-																					- 2/* TEMPORARY Quartz/QD conversion */,
+																					+ 1/* TEMPORARY Quartz/QD conversion */,
 																				viewPtr->screen.cursor.bounds.bottom -
 																					viewPtr->screen.cursor.bounds.top
-																					- 2/* TEMPORARY Quartz/QD conversion */);
+																					+ 1/* TEMPORARY Quartz/QD conversion */);
 						
 						
 						// flip colors and paint at the current blink alpha value
@@ -11126,7 +10942,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							fullRectangleBounds.size.width = viewPtr->text.font.widthPerCharacter;
 							fullRectangleBounds.size.height = newHeight;
 							RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
-							--dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
+							++dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
 							
 							// draw the dot in the middle of the cell that the cursor occupies
 							if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
@@ -12969,6 +12785,190 @@ setScreenCustomColor	(My_TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
+Updates a dictionary suitable for use in attributed strings
+that contains the specified terminal text attributes.
+
+Currently this can set the following attribute keys:
+- NSFontAttributeName
+- NSForegroundColorAttributeName
+- NSUnderlineStyleAttributeName
+
+(4.0)
+*/
+void
+setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
+										 NSMutableDictionary*		inoutDictionary,
+										 TerminalTextAttributes		inAttributes,
+										 Float32					UNUSED_ARGUMENT(inAlpha))
+{
+	//
+	// IMPORTANT: since the output might be a persistent dictionary,
+	// set values for ALL keys whether or not they “need” values
+	//
+	
+	// set font attributes
+	{
+		NSFontManager*	fontManager = [NSFontManager sharedFontManager];
+		NSFont*			originalFont = inTerminalViewPtr->text.font.normalFont;
+		NSFont*			sourceFont = originalFont;
+		
+		
+		if ((STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes)) &&
+			(nil != inTerminalViewPtr->text.font.boldFont))
+		{
+			sourceFont = inTerminalViewPtr->text.font.boldFont;
+		}
+		
+		if (STYLE_ITALIC(inAttributes))
+		{
+			sourceFont = [fontManager convertFont:sourceFont toHaveTrait:NSItalicFontMask];
+			if ((nil == sourceFont) ||
+				(NSItalicFontMask != ([fontManager traitsOfFont:sourceFont] & NSItalicFontMask)))
+			{
+				// if no dedicated italic font is available, apply a transform to make
+				// the current font appear slanted (note: this is what WebKit does)
+				NSAffineTransform*			fontTransform = [NSAffineTransform transform];
+				NSAffineTransform*			italicTransform = [NSAffineTransform transform];
+				NSAffineTransformStruct		slantTransformData;
+				
+				
+				std::memset(&slantTransformData, 0, sizeof(slantTransformData));
+				slantTransformData.m11 = 1.0;
+				slantTransformData.m12 = 0.0;
+				slantTransformData.m21 = -tanf(-14.0/* rotation in degrees */ * acosf(0) / 90.0);
+				slantTransformData.m22 = 1.0;
+				slantTransformData.tX  = 0.0;
+				slantTransformData.tY  = 0.0;
+				[italicTransform setTransformStruct:slantTransformData];
+				
+				[fontTransform scaleBy:[originalFont pointSize]];
+				[fontTransform appendTransform:italicTransform];
+				
+				sourceFont = [NSFont fontWithDescriptor:[originalFont fontDescriptor] textTransform:fontTransform];
+			}
+		}
+		
+		// in case the font is somehow not resolved at all after
+		// attempts to transform it, bail and use the original
+		if (nil == sourceFont)
+		{
+			sourceFont = originalFont;
+		}
+		
+		if (nil != sourceFont)
+		{
+			[inoutDictionary setObject:sourceFont forKey:NSFontAttributeName];
+		}
+		
+		if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
+		{
+			[inoutDictionary setObject:@(1) forKey:NSUnderlineStyleAttributeName];
+		}
+		else
+		{
+			[inoutDictionary setObject:@(0) forKey:NSUnderlineStyleAttributeName];
+		}
+	}
+	
+	// set color attributes
+	{
+		NSColor*	foregroundNSColor = (inTerminalViewPtr->screen.currentRenderDragColors)
+										? [NSColor blackColor] // default for drags is black
+										: nil;
+		
+		
+		if (nil == foregroundNSColor)
+		{
+			CGDeviceColor	backgroundDeviceColor;
+			CGDeviceColor	foregroundDeviceColor;
+			
+			
+			// find the correct colors in the color table
+			getScreenColorsForAttributes(inTerminalViewPtr, inAttributes,
+											&foregroundDeviceColor, &backgroundDeviceColor,
+											&inTerminalViewPtr->screen.currentRenderNoBackground);
+			foregroundNSColor = [NSColor colorWithCalibratedRed:foregroundDeviceColor.red
+																green:foregroundDeviceColor.green
+																blue:foregroundDeviceColor.blue
+																alpha:1.0];
+			NSColor*	backgroundNSColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
+																			green:backgroundDeviceColor.green
+																			blue:backgroundDeviceColor.blue
+																			alpha:1.0];
+			
+			
+			if (STYLE_SEARCH_RESULT(inAttributes))
+			{
+				// use selection colors
+				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
+				NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
+				
+				
+				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
+																	background:&searchResultBackgroundColor])
+				{
+					foregroundNSColor = [[foregroundNSColor copy] autorelease];
+				}
+				else
+				{
+					foregroundNSColor = searchResultTextColor;
+				}
+			}
+			else if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+			{
+				if (gPreferenceProxies.invertSelections)
+				{
+					// invert the text (foreground from background)
+					foregroundNSColor = backgroundNSColor;
+				}
+				else
+				{
+					// alter the color (usually to make it look darker)
+					NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
+					NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
+					
+					
+					if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
+																	background:&selectionBackgroundColor])
+					{
+						// bail; force the default color even if it won’t look as good
+						selectionTextColor = [NSColor blackColor];
+					}
+					foregroundNSColor = [selectionTextColor
+											colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+				}
+			}
+			else
+			{
+				// use default value (set above)
+			}
+			
+			//
+			// modify the base text color based on other state
+			//
+			
+			// adjust for inactive views (dimmer text)
+			if (false == inTerminalViewPtr->isActive)
+			{
+				// make the text color lighter, unless it is selected
+				if (false == STYLE_SELECTED(inAttributes))
+				{
+					foregroundNSColor = [foregroundNSColor blendedColorWithFraction:0.5/* arbitrary */
+																					ofColor:[NSColor whiteColor]];
+				}
+			}
+		}
+		
+		// UNIMPLEMENTED: highlighted-text (possibly inverted) colors
+		// UNIMPLEMENTED: dimmed-screen colors
+		// UNIMPLEMENTED: “concealed” style colors
+		
+		[inoutDictionary setObject:foregroundNSColor forKey:NSForegroundColorAttributeName];
+	}
+}// setTerminalTextAttributesDictionary
+
+
+/*!
 Uses the current cursor shape preference and font metrics
 of the given screen to determine the view-relative boundaries
 of the terminal cursor if it were located at the specified
@@ -13056,6 +13056,14 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	if (nullptr != inoutBoundsRegionOrNull)
 	{
+		// TEMPORARY; not clear why correctional factors are needed now
+		// but it seems that QuickDraw update regions interact badly
+		// with Core Graphics drawings and trigger anti-aliasing effects
+		// unless they are forced to overlap all filled-rectangle edges
+		maximumCursorBounds.top -= 1;
+		maximumCursorBounds.left -= 1;
+		maximumCursorBounds.right += 2;
+		maximumCursorBounds.bottom += 3;
 		RectRgn(inoutBoundsRegionOrNull, &maximumCursorBounds);
 	}
 }// setUpCursorBounds
@@ -13706,7 +13714,7 @@ setting colors.
 
 In general, only style and dimming affect color.
 
-NOTE:	In Cocoa views, dictionaryWithTerminalTextAttributes()
+NOTE:	In Cocoa views, setTerminalTextAttributesDictionary()
 		determines the foreground color.
 
 IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
@@ -14071,7 +14079,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 
 /*!
 LEGACY.  Used for Carbon views only.  See also the routine
-dictionaryWithTerminalTextAttributes(), which returns keys and
+setTerminalTextAttributesDictionary(), which returns keys and
 values suitable for use in attributed strings.
 
 Sets the screen variable for the current text attributes to be
@@ -14853,7 +14861,7 @@ drawRect:(NSRect)	aRect
 				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCharacter;
 				fullRectangleBounds.size.height = newHeight;
 				RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
-				--dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
+				++dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
 				
 				// draw the dot in the middle of the cell that the cursor occupies
 				if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)

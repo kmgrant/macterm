@@ -17449,7 +17449,7 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 			break;
 		
 		case 'a':
-			result = 0x2593; // checkerboard
+			result = 0x2592; // checkerboard
 			break;
 		
 		case 'b':
@@ -17653,7 +17653,7 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 	else
 	{
 		// the original character was not explicitly identified as graphical,
-		// but it may still be best to *tag* it as such, so that a more
+		// but it may still be best to *tag* it as such so that a more
 		// advanced rendering can be done (default font renderings for
 		// graphics are not always as nice)
 		switch (inCharacter)
@@ -17661,87 +17661,226 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		// this list should generally match the set of Unicode characters that
 		// are handled by the drawVTGraphicsGlyph() internal method in the
 		// Terminal View module
-		case 0x2591: // light gray pattern
-		case 0x2592: // medium gray pattern
-		case 0x2593: // heavy gray pattern or checkerboard
-		case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
-		case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+		case '=': // equal to
+		case 0x00B5: // mu (alt)
+		case 0x00B7: // centered dot (alternate?)
+		case 0x00DF: // small sharp "S"
+		case 0x0192: // small 'f' with hook
+		case 0x2022: // bullet
+		case 0x2026: // ellipsis (three dots)
+		case 0x2027: // centered dot
 		case 0x2190: // carriage return (international symbol is an arrow pointing right to left)
 		case 0x2193: // line feed (international symbol is an arrow pointing top to bottom)
 		case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
-		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
-		case 0x2518: // hook mid-top to mid-left
-		case 0x251B: // hook mid-top to mid-left, bold version
-		case 0x255B: // hook mid-top to mid-left, double-horizontal-only version
-		case 0x255C: // hook mid-top to mid-left, double-vertical-only version
-		case 0x255D: // hook mid-top to mid-left, double-line version
-		case 0x2510: // hook mid-left to mid-bottom
-		case 0x2513: // hook mid-left to mid-bottom, bold version
-		case 0x2555: // hook mid-left to mid-bottom, double-horizontal-only version
-		case 0x2556: // hook mid-left to mid-bottom, double-vertical-only version
-		case 0x2557: // hook mid-left to mid-bottom, double-line version
+		case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+		case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+		case 0x2219: // bullet operator
+		case 0x221A: // square root left edge
+		case 0x2260: // not equal to
+		case 0x2261: // equivalent to
+		case 0x22EF: // middle ellipsis (three dots, centered)
+		case 0x2325: // option key
+		case 0x2387: // alternate key
+		case 0x23B2: // large sigma (summation), top half
+		case 0x23B3: // large sigma (summation), bottom half
+		case 0x23BA: // top line
+		case 0x23BB: // line between top and middle regions
+		case 0x23BC: // line between middle and bottom regions
+		case 0x23BD: // bottom line
+		case 0x2500: // middle line
+		case 0x2501: // middle line, bold version
+		case 0x2502: // vertical line
+		case 0x2503: // vertical line, bold version
+		case 0x2504: // horizontal triple-dashed line
+		case 0x2505: // horizontal triple-dashed line, bold version
+		case 0x2506: // vertical triple-dashed line
+		case 0x2507: // vertical triple-dashed line, bold version
+		case 0x2508: // horizontal quadruple-dashed line
+		case 0x2509: // horizontal quadruple-dashed line, bold version
+		case 0x250A: // vertical quadruple-dashed line
+		case 0x250B: // vertical quadruple-dashed line, bold version
 		case 0x250C: // hook mid-right to mid-bottom
+		case 0x250D: // hook mid-right to mid-bottom, bold right
+		case 0x250E: // hook mid-right to mid-bottom, bold bottom
 		case 0x250F: // hook mid-right to mid-bottom, bold version
+		case 0x2510: // hook mid-left to mid-bottom
+		case 0x2511: // hook mid-left to mid-bottom, bold left
+		case 0x2512: // hook mid-left to mid-bottom, bold bottom
+		case 0x2513: // hook mid-left to mid-bottom, bold version
+		case 0x2514: // hook mid-top to mid-right
+		case 0x2515: // hook mid-top to mid-right, bold right
+		case 0x2516: // hook mid-top to mid-right, bold top
+		case 0x2517: // hook mid-top to mid-right, bold version
+		case 0x2518: // hook mid-top to mid-left
+		case 0x2519: // hook mid-top to mid-left, bold left
+		case 0x251A: // hook mid-top to mid-left, bold top
+		case 0x251B: // hook mid-top to mid-left, bold version
+		case 0x251C: // cross minus the left piece
+		case 0x251D: // cross minus the left piece, bold right
+		case 0x251E: // cross minus the left piece, bold top
+		case 0x251F: // cross minus the left piece, bold bottom
+		case 0x2520: // cross minus the left piece, bold vertical
+		case 0x2521: // cross minus the left piece, bold hook mid-top to mid-right
+		case 0x2522: // cross minus the left piece, bold hook mid-bottom to mid-right
+		case 0x2523: // cross minus the left piece, bold version
+		case 0x2524: // cross minus the right piece
+		case 0x2525: // cross minus the right piece, bold left
+		case 0x2526: // cross minus the right piece, bold top
+		case 0x2527: // cross minus the right piece, bold bottom
+		case 0x2528: // cross minus the right piece, bold vertical
+		case 0x2529: // cross minus the right piece, bold hook mid-top to mid-left
+		case 0x252A: // cross minus the right piece, bold hook mid-bottom to mid-left
+		case 0x252B: // cross minus the right piece, bold version
+		case 0x252C: // cross minus the top piece
+		case 0x252D: // cross minus the top piece, bold left
+		case 0x252E: // cross minus the top piece, bold right
+		case 0x252F: // cross minus the top piece, bold horizontal
+		case 0x2530: // cross minus the top piece, bold bottom
+		case 0x2531: // cross minus the top piece, bold hook mid-bottom to mid-left
+		case 0x2532: // cross minus the top piece, bold hook mid-bottom to mid-right
+		case 0x2533: // cross minus the top piece, bold version
+		case 0x2534: // cross minus the bottom piece
+		case 0x2535: // cross minus the bottom piece, bold left
+		case 0x2536: // cross minus the bottom piece, bold right
+		case 0x2537: // cross minus the bottom piece, bold horizontal
+		case 0x2538: // cross minus the bottom piece, bold top
+		case 0x2539: // cross minus the bottom piece, bold hook mid-top to mid-left
+		case 0x253A: // cross minus the bottom piece, bold hook mid-top to mid-right
+		case 0x253B: // cross minus the bottom piece, bold version
+		case 0x253C: // cross
+		case 0x253D: // cross, bold left
+		case 0x253E: // cross, bold right
+		case 0x253F: // cross, bold horizontal
+		case 0x2540: // cross, bold top
+		case 0x2541: // cross, bold bottom
+		case 0x2542: // cross, bold vertical
+		case 0x2543: // cross, bold hook mid-top to mid-left
+		case 0x2544: // cross, bold hook mid-top to mid-right
+		case 0x2545: // cross, bold hook mid-bottom to mid-left
+		case 0x2546: // cross, bold hook mid-bottom to mid-right
+		case 0x2547: // cross, bold T-up
+		case 0x2548: // cross, bold T-down
+		case 0x2549: // cross, bold T-left
+		case 0x254A: // cross, bold T-right
+		case 0x254B: // cross, bold version
+		case 0x254C: // horizontal double-dashed line
+		case 0x254D: // horizontal double-dashed line, bold version
+		case 0x254E: // vertical double-dashed line
+		case 0x254F: // vertical double-dashed line, bold version
+		case 0x2550: // middle line, double-line version
+		case 0x2551: // vertical line, double-line version
 		case 0x2552: // hook mid-right to mid-bottom, double-horizontal-only version
 		case 0x2553: // hook mid-right to mid-bottom, double-vertical-only version
 		case 0x2554: // hook mid-right to mid-bottom, double-line version
-		case 0x2514: // hook mid-top to mid-right
-		case 0x2517: // hook mid-top to mid-right, bold version
+		case 0x2555: // hook mid-left to mid-bottom, double-horizontal-only version
+		case 0x2556: // hook mid-left to mid-bottom, double-vertical-only version
+		case 0x2557: // hook mid-left to mid-bottom, double-line version
 		case 0x2558: // hook mid-top to mid-right, double-horizontal-only version
 		case 0x2559: // hook mid-top to mid-right, double-vertical-only version
 		case 0x255A: // hook mid-top to mid-right, double-line version
-		case 0x253C: // cross
-		case 0x254B: // cross, bold version
-		case 0x256A: // cross, double-horizontal-only version
-		case 0x256B: // cross, double-vertical-only version
-		case 0x256C: // cross, double-line version
-		case 0x23BA: // top line
-		case 0x23BB: // line between top and middle regions
-		case 0x2500: // middle line
-		case 0x2501: // middle line, bold version
-		case 0x2550: // middle line, double-line version
-		case 0x23BC: // line between middle and bottom regions
-		case 0x2261: // equivalent to
-		case 0x23BD: // bottom line
-		case 0x251C: // cross minus the left piece
-		case 0x2523: // cross minus the left piece, bold version
+		case 0x255B: // hook mid-top to mid-left, double-horizontal-only version
+		case 0x255C: // hook mid-top to mid-left, double-vertical-only version
+		case 0x255D: // hook mid-top to mid-left, double-line version
 		case 0x255E: // cross minus the left piece, double-horizontal-only version
 		case 0x255F: // cross minus the left piece, double-vertical-only version
 		case 0x2560: // cross minus the left piece, double-line version
-		case 0x2524: // cross minus the right piece
-		case 0x252B: // cross minus the right piece, bold version
 		case 0x2561: // cross minus the right piece, double-horizontal-only version
 		case 0x2562: // cross minus the right piece, double-vertical-only version
 		case 0x2563: // cross minus the right piece, double-line version
-		case 0x2534: // cross minus the bottom piece
-		case 0x253B: // cross minus the bottom piece, bold version
-		case 0x2567: // cross minus the bottom piece, double-horizontal-only version
-		case 0x2568: // cross minus the bottom piece, double-vertical-only version
-		case 0x2569: // cross minus the bottom piece, double-line version
-		case 0x252C: // cross minus the top piece
-		case 0x2533: // cross minus the top piece, bold version
 		case 0x2564: // cross minus the top piece, double-horizontal-only version
 		case 0x2565: // cross minus the top piece, double-vertical-only version
 		case 0x2566: // cross minus the top piece, double-line version
-		case 0x2502: // vertical line
-		case 0x2503: // vertical line, bold version
-		case 0x2551: // vertical line, double-line version
+		case 0x2567: // cross minus the bottom piece, double-horizontal-only version
+		case 0x2568: // cross minus the bottom piece, double-vertical-only version
+		case 0x2569: // cross minus the bottom piece, double-line version
+		case 0x256A: // cross, double-horizontal-only version
+		case 0x256B: // cross, double-vertical-only version
+		case 0x256C: // cross, double-line version
+		case 0x2320: // integral sign (elongated S), top
+		case 0x2321: // integral sign (elongated S), bottom
+		case 0x239B: // left parenthesis, upper
+		case 0x239C: // left parenthesis extension
+		case 0x239D: // left parenthesis, lower
+		case 0x239E: // right parenthesis, upper
+		case 0x239F: // right parenthesis extension
+		case 0x23A0: // right parenthesis, lower
+		case 0x23A1: // left square bracket, upper
+		case 0x23A2: // left square bracket extension
+		case 0x23A3: // left square bracket, lower
+		case 0x23A4: // right square bracket, upper
+		case 0x23A5: // right square bracket extension
+		case 0x23A6: // right square bracket, lower
+		case 0x23A7: // left curly brace, upper
+		case 0x23A8: // left curly brace, middle
+		case 0x23A9: // left curly brace, lower
+		case 0x23AA: // curly brace extension
+		case 0x23AB: // right curly brace, upper
+		case 0x23AC: // right curly brace, middle
+		case 0x23AD: // right curly brace, lower
+		case 0x23AE: // integral extension
+		case 0x23B7: // square root bottom, centered
+		case 0x23B8: // left vertical box line
+		case 0x23B9: // right vertical box line
+		case 0x23D0: // vertical line extension
+		case 0x256D: // curved mid-right to mid-bottom
+		case 0x256E: // curved mid-left to mid-bottom
+		case 0x256F: // curved mid-top to mid-left
+		case 0x2570: // curved mid-top to mid-right
 		case 0x2571: // diagonal line from top-right to bottom-left
 		case 0x2572: // diagonal line from top-left to bottom-right
 		case 0x2573: // diagonal lines from each corner crossing in the center
-		case 0x2588: // solid block
+		case 0x2574: // cross, left segment only
+		case 0x2575: // cross, top segment only
+		case 0x2576: // cross, right segment only
+		case 0x2577: // cross, bottom segment only
+		case 0x2578: // cross, left segment only, bold version
+		case 0x2579: // cross, top segment only, bold version
+		case 0x257A: // cross, right segment only, bold version
+		case 0x257B: // cross, bottom segment only, bold version
+		case 0x257C: // horizontal line, bold right half
+		case 0x257D: // vertical line, bold bottom half
+		case 0x257E: // horizontal line, bold left half
+		case 0x257F: // vertical line, bold top half
+		case 0x2580: // upper-half block
+		case 0x2581: // 1/8 bottom block
+		case 0x2582: // 2/8 (1/4) bottom block
+		case 0x2583: // 3/8 bottom block
 		case 0x2584: // lower-half block
+		case 0x2585: // 5/8 bottom block
+		case 0x2586: // 6/8 (3/4) bottom block
+		case 0x2587: // 7/8 bottom block
+		case 0x2588: // solid block
+		case 0x2589: // 7/8 left block
+		case 0x258A: // 6/8 (3/4) left block
+		case 0x258B: // 5/8 left block
 		case 0x258C: // left-half block
+		case 0x258D: // 3/8 left block
+		case 0x258E: // 2/8 (1/4) left block
+		case 0x258F: // 1/8 left block
 		case 0x2590: // right-half block
-		case 0x2580: // top-half block
-		case 0x2027: // centered dot
-		case 0x00B7: // centered dot (alternate?)
-		case 0x2022: // bullet
-		case 0x2219: // bullet operator
+		case 0x2591: // light gray pattern
+		case 0x2592: // medium gray pattern
+		case 0x2593: // heavy gray pattern or checkerboard
+		case 0x2594: // 1/8 top block
+		case 0x2595: // 1/8 right block
+		case 0x2596: // quadrant lower-left
+		case 0x2597: // quadrant lower-right
+		case 0x2598: // quadrant upper-left
+		case 0x2599: // block minus upper-right quadrant
+		case 0x259A: // quadrants upper-left and lower-right
+		case 0x259B: // block minus lower-right quadrant
+		case 0x259C: // block minus lower-left quadrant
+		case 0x259D: // quadrant upper-right
+		case 0x259E: // quadrants upper-right and lower-left
+		case 0x259F: // block minus upper-left quadrant
 		case 0x25A0: // black square
-		case 0x2320: // integral sign (elongated S), top
-		case 0x2321: // integral sign (elongated S), bottom
-		case 0x0192: // small 'f' with hook
+		case 0x2699: // gear
+		case 0x26A1: // online/offline lightning bolt
+		case 0x2713: // check mark
+		case 0x2714: // check mark, bold
+		case 0x2718: // X mark
+		case 0x27A6: // curve-to-right arrow (used for detached-from-head in "powerline")
+		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
 		case 0x0391: // capital alpha
 		case 0x0392: // capital beta
 		case 0x0393: // capital gamma
@@ -17794,7 +17933,13 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x03D1: // theta (symbol)
 		case 0x03D5: // phi (symbol)
 		case 0x03D6: // pi (symbol)
-		case 0x221A: // square root left edge
+		case 0xE0A0: // "powerline" version control branch
+		case 0xE0A1: // "powerline" line (LN) marker
+		case 0xE0A2: // "powerline" closed padlock
+		case 0xE0B0: // "powerline" rightward triangle
+		case 0xE0B1: // "powerline" rightward arrowhead
+		case 0xE0B2: // "powerline" leftward triangle
+		case 0xE0B3: // "powerline" leftward arrowhead
 			STYLE_ADD(outNewAttributes, kTerminalTextAttributeVTGraphics);
 			break;
 		

@@ -19,6 +19,8 @@
 		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; };
+		0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */; };
+		0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A442C4F1B810760008B046B /* QuartzCore.framework */; };
 		0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46C56C15D864B700843BBC /* PreferenceValue.mm */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
@@ -266,6 +268,9 @@
 		0A4123170ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelMacros.nib; sourceTree = "<group>"; };
 		0A4123190ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelSessions.nib; sourceTree = "<group>"; };
 		0A41231B0ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminals.nib; sourceTree = "<group>"; };
+		0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalGlyphDrawing.mm; path = Application/Code/TerminalGlyphDrawing.mm; sourceTree = "<group>"; };
+		0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TerminalGlyphDrawing.objc++.h"; path = "Application/Code/TerminalGlyphDrawing.objc++.h"; sourceTree = "<group>"; };
+		0A442C4F1B810760008B046B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppleEventUtilities.h; path = Application/Code/AppleEventUtilities.h; sourceTree = "<group>"; };
 		0A4603BD0554376100ACDF3A /* BasicTypesAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BasicTypesAE.h; path = Application/Code/BasicTypesAE.h; sourceTree = "<group>"; };
 		0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventUtilities.template.h; path = Shared/Code/CarbonEventUtilities.template.h; sourceTree = "<group>"; };
@@ -622,6 +627,7 @@
 				0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */,
 				0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */,
 				0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */,
+				0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */,
 				0AC6BD970A8C0BB100AFF37A /* QuickTime.framework in Frameworks */,
 				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
 				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
@@ -794,6 +800,7 @@
 				0A64C5EA1059E423005B8A48 /* StreamCapture.mm */,
 				0A46FE25055432A400ACDF3A /* Terminal.mm */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
+				0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */,
 				0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */,
 				0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */,
 				0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */,
@@ -856,6 +863,7 @@
 				0A64C5EC1059E432005B8A48 /* StreamCapture.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
 				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
+				0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */,
 				0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */,
 				0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */,
 				0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */,
@@ -1039,6 +1047,7 @@
 				0A46079705543DE400ACDF3A /* CoreFoundation.framework */,
 				0A46059505543D7C00ACDF3A /* CoreServices.framework */,
 				0A2A06020DF4B8F900DF8C98 /* Growl.framework */,
+				0A442C4F1B810760008B046B /* QuartzCore.framework */,
 				0A46059605543D7C00ACDF3A /* QuickTime.framework */,
 				0A46059705543D7C00ACDF3A /* System.framework */,
 			);
@@ -1464,6 +1473,7 @@
 				0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */,
 				0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */,
 				0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */,
+				0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */,
 				0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */,
 				0A36176B0DD286240081A445 /* Keypads.mm in Sources */,
 				0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */,
