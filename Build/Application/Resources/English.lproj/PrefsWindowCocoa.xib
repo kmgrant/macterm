@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="15A284" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefsWindow_Controller">
@@ -33,16 +33,17 @@
         <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="304" y="418" width="600" height="348"/>
+            <rect key="contentRect" x="304" y="418" width="500" height="350"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
             <value key="minSize" type="size" width="500" height="350"/>
             <view key="contentView" id="4" userLabel="Window Content View">
-                <rect key="frame" x="0.0" y="0.0" width="600" height="348"/>
+                <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43">
                         <rect key="frame" x="5" y="3" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -55,6 +56,7 @@
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="122">
                         <rect key="frame" x="225" y="3" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="123">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -65,15 +67,16 @@
                         </connections>
                     </button>
                     <scrollView focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="22" horizontalPageScroll="10" verticalLineScroll="22" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="24">
-                        <rect key="frame" x="0.0" y="32" width="220" height="316"/>
+                        <rect key="frame" x="0.0" y="32" width="220" height="318"/>
                         <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
                         <clipView key="contentView" drawsBackground="NO" id="A2q-66-WeZ">
-                            <rect key="frame" x="0.0" y="0.0" width="220" height="316"/>
+                            <rect key="frame" x="0.0" y="0.0" width="220" height="318"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView focusRingType="none" appearanceType="vibrantLight" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowHeight="20" id="27">
-                                    <rect key="frame" x="0.0" y="0.0" width="220" height="22"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="220" height="318"/>
                                     <autoresizingMask key="autoresizingMask"/>
+                                    <animations/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
@@ -108,23 +111,28 @@
                                     </connections>
                                 </tableView>
                             </subviews>
+                            <animations/>
                             <nil key="backgroundColor"/>
                         </clipView>
+                        <animations/>
                         <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="26">
                             <rect key="frame" x="1" y="297.0625" width="184.5" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
+                            <animations/>
                         </scroller>
                         <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="25">
                             <rect key="frame" x="224" y="17" width="15" height="102"/>
                             <autoresizingMask key="autoresizingMask"/>
+                            <animations/>
                         </scroller>
                         <connections>
                             <binding destination="-2" name="hidden" keyPath="self.sourceListHidden" id="56"/>
                         </connections>
                     </scrollView>
                     <box horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="37">
-                        <rect key="frame" x="218" y="32" width="5" height="316"/>
+                        <rect key="frame" x="218" y="32" width="5" height="318"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
+                        <animations/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
@@ -135,6 +143,7 @@
                     <segmentedControl verticalHuggingPriority="750" id="57">
                         <rect key="frame" x="59" y="4" width="101" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <segmentedCell key="cell" borderStyle="border" alignment="left" style="capsule" trackingMode="momentary" id="58">
                             <font key="font" metaFont="system"/>
                             <segments>
@@ -193,21 +202,24 @@
                         </connections>
                     </segmentedControl>
                     <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="76">
-                        <rect key="frame" x="0.0" y="29" width="600" height="5"/>
+                        <rect key="frame" x="0.0" y="29" width="500" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
                     </box>
                     <tabView drawsBackground="NO" type="noTabsNoBorder" id="149">
-                        <rect key="frame" x="221" y="32" width="379" height="316"/>
+                        <rect key="frame" x="221" y="32" width="279" height="318"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <animations/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems/>
                     </tabView>
                     <searchField wantsLayer="YES" verticalHuggingPriority="750" id="vkn-sq-ZCZ">
-                        <rect key="frame" x="380" y="5" width="200" height="22"/>
+                        <rect key="frame" x="280" y="5" width="200" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search for Preferences" usesSingleLineMode="YES" bezelStyle="round" sendsWholeSearchString="YES" id="twk-95-Uqr">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -219,6 +231,7 @@
                         </connections>
                     </searchField>
                 </subviews>
+                <animations/>
             </view>
             <contentBorderThickness minY="32"/>
             <connections>
