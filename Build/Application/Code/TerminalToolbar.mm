@@ -2552,6 +2552,17 @@ screen:(NSScreen*)				aScreen
 		[self setLevel:NSNormalWindowLevel];
 		[self setMovableByWindowBackground:YES];
 		[self setReleasedWhenClosed:NO];
+		[[self standardWindowButton:NSWindowCloseButton] setHidden:YES];
+		[[self standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
+		[[self standardWindowButton:NSWindowZoomButton] setHidden:YES];
+		[[self standardWindowButton:NSWindowDocumentIconButton] setHidden:YES];
+		[[self standardWindowButton:NSWindowToolbarButton] setHidden:YES];
+		
+		// the toolbar is meant to apply to the active window so it
+		// should be visible wherever the user is (even in a
+		// Full Screen context)
+		[self setCollectionBehavior:(NSWindowCollectionBehaviorMoveToActiveSpace |
+										NSWindowCollectionBehaviorParticipatesInCycle)];
 		
 		// size constraints; the window should have no content height
 		// because it is only intended to display the window’s toolbar
@@ -2642,9 +2653,6 @@ toScreen:(NSScreen*)			aScreen
 	NSRect		result = [super constrainFrameRect:frameRect toScreen:aScreen];
 	
 	
-	// initially assume the superclass is the best result
-	frameRect = result;
-	
 	// constraints must be disabled when the customization sheet is open
 	// so that the window can move (if necessary) to reveal the sheet
 	unless (self->isDisplayingSheet)
@@ -2654,19 +2662,24 @@ toScreen:(NSScreen*)			aScreen
 									: ((nil != [self screen])
 										? [self screen]
 										: [NSScreen mainScreen]);
-		NSRect		screenRect = [targetScreen visibleFrame];
+		NSRect		screenFullRect = [targetScreen frame];
+		NSRect		screenInteriorRect = [targetScreen visibleFrame];
 		
 		
-		if (result.origin.y < (screenRect.origin.y + (screenRect.size.height / 2.0)))
+		if (result.origin.y < (screenInteriorRect.origin.y + (screenInteriorRect.size.height / 2.0)))
 		{
-			result.origin.y = screenRect.origin.y;
+			result.origin.y = screenInteriorRect.origin.y;
 		}
 		else
 		{
-			result.origin.y = screenRect.origin.y + screenRect.size.height - frameRect.size.height;
+			result.origin.y = screenInteriorRect.origin.y + screenInteriorRect.size.height - result.size.height;
 		}
-		result.origin.x = screenRect.origin.x;
-		result.size.width = screenRect.size.width;
+		
+		// do not obey the system’s behavior for side-Dock placement
+		// because this just creates awkward gaps that are almost
+		// certainly not covered by anything
+		result.origin.x = screenFullRect.origin.x;
+		result.size.width = screenFullRect.size.width;
 	}
 	
 	if (result.size.height < 1/* arbitrary */)
@@ -2843,7 +2856,7 @@ applicationDidChangeScreenParameters:(NSNotification*)		aNotification
 
 /*!
 Shows the toolbar if it is hidden when the window gains
-the user focus.  Also adjusts opacity.
+the user focus.
 
 This balances the fact that any attempt to hide the
 toolbar will hide the window.
@@ -2858,12 +2871,11 @@ windowDidBecomeKey:(NSNotification*)	aNotification
 	{
 		[[self toolbar] setVisible:YES];
 	}
-	[self setAlphaValue:1.0/* arbitrary */];
 }// windowDidBecomeKey:
 
 
 /*!
-Adjusts opacity when the toolbar is not active.
+Forces the toolbar to remain visible.
 
 (4.0)
 */
@@ -2874,22 +2886,6 @@ windowDidResignKey:(NSNotification*)	aNotification
 	if (NO == [[self toolbar] isVisible])
 	{
 		[[self toolbar] setVisible:YES];
-	}
-	
-	// use the same fade value for the toolbar that terminal windows use
-	unless (self->isDisplayingSheet)
-	{
-		Float32		fadeAlpha = 1.0;
-		
-		
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagFadeAlpha,
-				sizeof(fadeAlpha), &fadeAlpha))
-		{
-			fadeAlpha = 1.0; // assume a value, if preference can’t be found
-		}
-		
-		[self setAlphaValue:fadeAlpha];
 	}
 }// windowDidResignKey:
 
