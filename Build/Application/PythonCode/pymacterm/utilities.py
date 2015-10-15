@@ -62,7 +62,8 @@ def mac_os_name():
     standard way, because (for instance) platform.mac_version()
     fails with the Panther version of Python.
 
-    >>> mac_os_name() in ['Yosemite', 'Mavericks', 'Mountain Lion', 'Lion',
+    >>> mac_os_name() in ['El Capitán', 'Yosemite',
+    ...                   'Mavericks', 'Mountain Lion', 'Lion',
     ...                   'Snow Leopard', 'Leopard', 'Tiger', 'Panther']
     True
 
@@ -87,6 +88,8 @@ def mac_os_name():
         result = "Mavericks"
     elif darwin_version.startswith('14.'):
         result = "Yosemite"
+    elif darwin_version.startswith('15.'):
+        result = "El Capitán"
     return result
 
 def slash_free_path(path):

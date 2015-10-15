@@ -71,7 +71,7 @@ if __name__ == "__main__":
     DEFAULT_QUILLS_FW_VER = "B"
     DEFAULT_QUILLS_PYLIB_VER = "2.6"
     DEFAULT_WRAPPER = "MacTerm_python%s_wrap" % DEFAULT_QUILLS_PYLIB_VER
-    if MAC_OS_NAME == "Mavericks" or MAC_OS_NAME == "Yosemite":
+    if MAC_OS_NAME == "Mavericks" or MAC_OS_NAME == "Yosemite" or MAC_OS_NAME == "El Capitán":
         PY_INTERPRETER = path_join(MACOS_DIR, DEFAULT_WRAPPER)
         QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER
         QUILLS_PYLIB_VER = DEFAULT_QUILLS_PYLIB_VER
