@@ -472,6 +472,7 @@ NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
 OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 void				drawSingleColorImage				(CGContextRef, CGColorRef, CGRect, id);
+void				drawSingleColorPattern				(CGContextRef, CGColorRef, CGRect, id);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
 														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
@@ -5921,8 +5922,6 @@ for a CALayer (currently: CGImageRef or NSImage*).
 
 Note, this is generic and it should move elsewhere.
 
-WARNING:	The state of the context is not preserved.
-
 (4.1)
 */
 void
@@ -5948,7 +5947,91 @@ drawSingleColorImage	(CGContextRef	inDrawingContext,
 							renderingLayer.frame.origin.y);
 	
 	[renderingLayer renderInContext:inDrawingContext];
+	
+	// revert the above adjustment to the transformation
+	// matrix to avoid permanently changing graphics state
+	CGContextTranslateCTM(inDrawingContext, -renderingLayer.frame.origin.x,
+							-renderingLayer.frame.origin.y);
 }// drawSingleColorImage
+
+
+/*!
+Invokes drawSingleColorImage() one or more times, to
+ensure that all renderings of the image will appear to
+align with other calls for the same image.  (All the
+warnings and side effects of that method apply.)
+
+NOTE:	Patterns are generally created with images for
+		performance reasons.  Attempts to use other
+		approaches (like direct Core Graphics APIs)
+		have had relatively slow rendering times.
+
+(4.1)
+*/
+void
+drawSingleColorPattern	(CGContextRef	inDrawingContext,
+						 CGColorRef		inColor,
+						 CGRect			inFrame,
+						 id				inLayerImage)
+{
+	CGFloat const	kOriginalX = inFrame.origin.x;
+	CGFloat const	kOriginalY = inFrame.origin.y;
+	CGFloat const	kWidth = CGRectGetWidth(inFrame);
+	CGFloat const	kHeight = CGRectGetHeight(inFrame);
+	SInt32 const	kOffsetToAlignX = -(STATIC_CAST(kOriginalX, SInt32) % STATIC_CAST(kWidth, SInt32));
+	SInt32 const	kOffsetToAlignY = -(STATIC_CAST(kOriginalY, SInt32) % STATIC_CAST(kHeight, SInt32));
+	
+	
+	// disable antialiasing to make pattern edges join together better
+	// (the image itself will still blur in order to scale)
+	CGContextSetAllowsAntialiasing(inDrawingContext, false);
+	
+	if ((0 == kOffsetToAlignX) && (0 == kOffsetToAlignY))
+	{
+		// proposed location happens to be aligned; nothing special
+		// is required so take the faster path
+		drawSingleColorImage(inDrawingContext, inColor, inFrame, inLayerImage);
+	}
+	else
+	{
+		CGFloat const	kX1 = (kOriginalX + kOffsetToAlignX);
+		CGFloat const	kY1 = (kOriginalY + kOffsetToAlignY);
+		CGFloat const	kX2 = (kX1 + kWidth);
+		CGFloat const	kY2 = (kY1 + kHeight);
+		CGRect const	kAlignedX1Y1Rect = CGRectMake(kX1, kY1, kWidth, kHeight);
+		CGRect const	kAlignedX1Y2Rect = CGRectMake(kX1, kY2, kWidth, kHeight);
+		CGRect const	kAlignedX2Y1Rect = CGRectMake(kX2, kY1, kWidth, kHeight);
+		CGRect const	kAlignedX2Y2Rect = CGRectMake(kX2, kY2, kWidth, kHeight);
+		
+		
+		// when alignment is required there will always be a base image
+		// rendered at the closest aligned location
+		drawSingleColorImage(inDrawingContext, inColor, kAlignedX1Y1Rect, inLayerImage);
+		
+		// draw up to 3 more images (which will be clipped out) to show
+		// up to 4 sections of a fully-aligned pattern
+		if (0 == kOffsetToAlignX)
+		{
+			// only Y direction requires an extra image to fill
+			drawSingleColorImage(inDrawingContext, inColor, kAlignedX1Y2Rect, inLayerImage);
+		}
+		else if (0 == kOffsetToAlignY)
+		{
+			// only X direction requires an extra image to fill
+			drawSingleColorImage(inDrawingContext, inColor, kAlignedX2Y1Rect, inLayerImage);
+		}
+		else
+		{
+			// alignment is shifted in both directions; multiple
+			// images are required to complete the pattern
+			drawSingleColorImage(inDrawingContext, inColor, kAlignedX1Y2Rect, inLayerImage);
+			drawSingleColorImage(inDrawingContext, inColor, kAlignedX2Y1Rect, inLayerImage);
+			drawSingleColorImage(inDrawingContext, inColor, kAlignedX2Y2Rect, inLayerImage);
+		}
+	}
+	
+	CGContextSetAllowsAntialiasing(inDrawingContext, true);
+}// drawSingleColorPattern
 
 
 /*!
@@ -6883,40 +6966,55 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	case 0x2591: // light gray pattern
 		{
-			PenState	penState;
-			Pattern		checkerPat = { { 0x22, 0x22, 0x00, 0x00, 0x88, 0x88, 0x00, 0x00 } }; // “light” gray pattern
+			NSString*	imageName = BRIDGE_CAST(AppResources_ReturnGlyphPatternLightGrayFilenameNoExtension(),
+												NSString*);
+			NSImage*	patternImage = [NSImage imageNamed:imageName];
 			
 			
-			GetPenState(&penState);
-			PenPat(&checkerPat);
-			PaintRect(&cellRect);
-			SetPenState(&penState);
+			if (nil == patternImage)
+			{
+				Console_Warning(Console_WriteValueCFString, "unable to find image, name", BRIDGE_CAST(imageName, CFStringRef));
+			}
+			else
+			{
+				drawSingleColorPattern(inDrawingContext, foregroundColor, floatBounds, patternImage);
+			}
 		}
 		break;
 	
 	case 0x2592: // medium gray pattern
 		{
-			PenState	penState;
-			Pattern		checkerPat = { { 0xAA, 0xAA, 0x00, 0x00, 0x55, 0x55, 0x00, 0x00 } }; // “medium” gray pattern
+			NSString*	imageName = BRIDGE_CAST(AppResources_ReturnGlyphPatternMediumGrayFilenameNoExtension(),
+												NSString*);
+			NSImage*	patternImage = [NSImage imageNamed:imageName];
 			
 			
-			GetPenState(&penState);
-			PenPat(&checkerPat);
-			PaintRect(&cellRect);
-			SetPenState(&penState);
+			if (nil == patternImage)
+			{
+				Console_Warning(Console_WriteValueCFString, "unable to find image, name", BRIDGE_CAST(imageName, CFStringRef));
+			}
+			else
+			{
+				drawSingleColorPattern(inDrawingContext, foregroundColor, floatBounds, patternImage);
+			}
 		}
 		break;
 	
-	case 0x2593: // heavy gray pattern or checkerboard
+	case 0x2593: // heavy gray pattern
 		{
-			PenState	penState;
-			Pattern		checkerPat = { { 0x33, 0x33, 0xCC, 0xCC, 0x33, 0x33, 0xCC, 0xCC } }; // “fat” checkboard pattern
+			NSString*	imageName = BRIDGE_CAST(AppResources_ReturnGlyphPatternDarkGrayFilenameNoExtension(),
+												NSString*);
+			NSImage*	patternImage = [NSImage imageNamed:imageName];
 			
 			
-			GetPenState(&penState);
-			PenPat(&checkerPat);
-			PaintRect(&cellRect);
-			SetPenState(&penState);
+			if (nil == patternImage)
+			{
+				Console_Warning(Console_WriteValueCFString, "unable to find image, name", BRIDGE_CAST(imageName, CFStringRef));
+			}
+			else
+			{
+				drawSingleColorPattern(inDrawingContext, foregroundColor, floatBounds, patternImage);
+			}
 		}
 		break;
 	

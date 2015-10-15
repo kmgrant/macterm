@@ -175,6 +175,9 @@ DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \
 DefaultFormat4.plist \
+GlyphForPatternDarkGray.png \
+GlyphForPatternLightGray.png \
+GlyphForPatternMediumGray.png \
 GrowlRegistrationTicket.growlRegDict \
 IconForBellOff.icns \
 IconForBellOn.icns \

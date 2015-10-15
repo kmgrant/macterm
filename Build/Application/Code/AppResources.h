@@ -154,6 +154,27 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnGlyphPatternDarkGrayFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.png"
+	return CFSTR("GlyphForPatternDarkGray");
+}
+
+inline CFStringRef
+	AppResources_ReturnGlyphPatternLightGrayFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.png"
+	return CFSTR("GlyphForPatternLightGray");
+}
+
+inline CFStringRef
+	AppResources_ReturnGlyphPatternMediumGrayFilenameNoExtension		()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.png"
+	return CFSTR("GlyphForPatternMediumGray");
+}
+
+inline CFStringRef
 	AppResources_ReturnHideWindowIconFilenameNoExtension				()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"

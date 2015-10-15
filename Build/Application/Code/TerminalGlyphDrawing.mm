@@ -2589,15 +2589,6 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 			}
 			break;
 		
-		case 0x2593: // heavy gray pattern or checkerboard
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerHalfWidth, 0, metrics.layerHalfWidth, metrics.layerHeight));
-				} options:(kMy_GlyphDrawingOptionFill)];
-			}
-			break;
-		
 		case 0x2594: // 1/8 top block
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
@@ -2982,7 +2973,7 @@ baselineHint:(CGFloat)			aBaselineOffsetFromTop
 	[super renderInContext:aDrawingContext];
 	
 	// this flag is not part of the state so it must be restored manually
-	CGContextSetAllowsAntialiasing(aDrawingContext, YES);
+	CGContextSetAllowsAntialiasing(aDrawingContext, true);
 }// renderInContext:frame:baselineHint:
 
 
