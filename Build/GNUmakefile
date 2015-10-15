@@ -462,7 +462,6 @@ $(DEST_APP_MACOS_TOP)/MacTerm \
 $(DEST_APP_MACOS_TOP)/RunApplication.py
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_MACOS_TOP)
-	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
 	$(XCB) -project Application.xcodeproj -target PythonInvoker -configuration $(BUILD_CONF)
 	$(COPY) $(SRC_PYINVOKER_TOP_LEOPARD)/PythonInvoker* $(DEST_APP_MACOS_TOP)/MacTerm_python2.6_wrap
 
@@ -470,7 +469,6 @@ $(DEST_APP_MACOS_TOP)/RunApplication.py
 clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm
 	$(RM) $(DEST_APP_MACOS_TOP)/RunApplication.py
-	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.x
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTerm_python2.6_wrap
 	-$(RMDIR) $(DEST_APP_MACOS_TOP) 2>/dev/null
 	$(XCB) clean -project Application.xcodeproj -target PythonInvoker -configuration $(BUILD_CONF)
