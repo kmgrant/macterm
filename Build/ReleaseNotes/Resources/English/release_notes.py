@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20151014',
     '20150926',
     '20150919',
     '20150810',
@@ -527,6 +528,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20151014': [
+        'The "I-beam" mouse pointer shape now looks better, fixing rendering issues such as a clipped shadow.',
+        'The "move terminal cursor" mouse pointer shape now looks better, fixing rendering issues such as a clipped shadow.',
+    ],
     '20150926': [
         'Terminal graphics characters are now rendered in a new way, improving quality in many cases.  Many of them are also rendered without system fonts, which allows MacTerm to carefully scale certain characters and connect them to neighboring cells where appropriate.',
         'Terminal graphics characters now cover the entire "Box Drawing" set of Unicode 8.0.  This adds new capabilities such as curved-corner lines, dotted lines, half-lines and other line variations.',

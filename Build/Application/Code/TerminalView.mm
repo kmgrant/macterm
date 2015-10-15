@@ -5609,7 +5609,7 @@ customCursorIBeam	(Boolean	inSmall)
 		{
 			// IMPORTANT: specified hot-spot should be synchronized with the image data
 			gCustomIBeamCursorSmall = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeamSmall"]
-																		hotSpot:NSMakePoint(11, 11)];
+																		hotSpot:NSMakePoint(12, 11)];
 		}
 		result = gCustomIBeamCursorSmall;
 	}
@@ -5619,7 +5619,7 @@ customCursorIBeam	(Boolean	inSmall)
 		{
 			// IMPORTANT: specified hot-spot should be synchronized with the image data
 			gCustomIBeamCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeam"]
-																	hotSpot:NSMakePoint(15, 15)];
+																	hotSpot:NSMakePoint(16, 14)];
 		}
 		result = gCustomIBeamCursor;
 	}
@@ -5652,7 +5652,7 @@ customCursorMoveTerminalCursor	(Boolean	inSmall)
 		{
 			// IMPORTANT: specified hot-spot should be synchronized with the image data
 			gCustomMoveCursorSmall = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursorSmall"]
-																		hotSpot:NSMakePoint(11, 11)];
+																		hotSpot:NSMakePoint(12, 12)];
 		}
 		result = gCustomMoveCursorSmall;
 	}
@@ -5662,7 +5662,7 @@ customCursorMoveTerminalCursor	(Boolean	inSmall)
 		{
 			// IMPORTANT: specified hot-spot should be synchronized with the image data
 			gCustomMoveCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursor"]
-																	hotSpot:NSMakePoint(15, 15)];
+																	hotSpot:NSMakePoint(16, 16)];
 		}
 		result = gCustomMoveCursor;
 	}
