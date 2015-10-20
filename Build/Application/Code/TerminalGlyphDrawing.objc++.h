@@ -71,6 +71,8 @@ NOTE:	Normally this object is constructed only by a
 	NSUInteger						filledSublayerFlags_; // array index is bit number; sublayers that fill
 	NSUInteger						noStrokeSublayerFlags_; // sublayers that exclusively fill (no stroke)
 	NSUInteger						insetSublayerFlags_; // sublayers that use an inset frame instead of the default
+	NSUInteger						thickLineSublayerFlags_; // sublayers that do not scale beyond a thick line width
+	NSUInteger						thinLineSublayerFlags_; // sublayers that do not scale beyond a thin line width
 	NSMutableArray*					sublayerBlocks_;
 }
 

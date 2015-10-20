@@ -6893,10 +6893,20 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		//break; // INTENTIONAL FALL-THROUGH
 	// INTENTIONAL FALL-THROUGH
 	case '=': // equal to
+	case 0x00B7: // middle dot
 	case 0x2022: // bullet (technically bigger than middle dot and circular)
 	case 0x2026: // ellipsis (three dots)
+	case 0x2027: // centered dot (hyphenation point)
+	case 0x2190: // leftwards arrow
+	case 0x2191: // upwards arrow
+	case 0x2192: // rightwards arrow
+	case 0x2193: // downwards arrow
+	case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+	case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+	case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
 	case 0x2260: // not equal to
 	case 0x2261: // equivalent to (three horizontal lines)
+	case 0x2219: // bullet operator (smaller than bullet)
 	case 0x22EF: // middle ellipsis (three dots, centered)
 	case 0x2320: // integral sign (elongated S), top
 	case 0x2321: // integral sign (elongated S), bottom
@@ -6937,9 +6947,15 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	case 0x2571: // diagonal line from top-right to bottom-left
 	case 0x2572: // diagonal line from top-left to bottom-right
 	case 0x2573: // diagonal lines from each corner crossing in the center
+	case 0x25A0: // black square
+	case 0x25C6: // black diamond
+	case 0x25C7: // white diamond
+	case 0x25CA: // lozenge (narrower white diamond)
 	case 0x26A1: // online/offline lightning bolt
 	case 0x2713: // check mark
 	case 0x27A6: // curve-to-right arrow (used for "detached from head" in powerline)
+	case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+	case 0xFFFD: // replacement character
 		{
 			// glyphs in this case are the same as the case above
 			// except that anti-aliasing is ALLOWED
@@ -7018,96 +7034,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		}
 		break;
 	
-	case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
-		// draw horizontal line
-		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw top part of arrowhead
-		LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
-				cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		// draw bottom part of arrowhead
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
-				cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw end line
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
-		// draw vertical line
-		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw bottom part of arrowhead
-		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw lines across arrow
-		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellCenter.v);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellCenter.v);
-		break;
-	
-	case 0x2190: // carriage return (international symbol is an arrow pointing right to left)
-		// draw horizontal line
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		// draw bottom part of arrowhead
-		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 0x2193: // line feed (international symbol is an arrow pointing top to bottom)
-		// draw vertical line
-		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw bottom part of arrowhead
-		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
-		// draw vertical component
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop);
-		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw horizontal component
-		LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw top part of arrowhead
-		LineTo(cellCenter.h, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		// draw bottom part of arrowhead
-		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
-		// draw vertical line
-		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw bottom part of arrowhead
-		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw end line
-		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellBottom - lineHeight/* break from adjacent characters */);
-		break;
-	
 #if 0
 	// although this glyph is not rendered here for consistency with other
 	// similar glyphs (instead, the Terminal Glyph Drawing module is used),
@@ -7120,11 +7046,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		}
 		break;
 #endif
-	
-	case 0x25A0: // black square
-		InsetRect(&cellRect, INTEGER_QUARTERED(cellRight - cellLeft)/* arbitrary */, INTEGER_QUARTERED(cellBottom - cellTop));
-		PaintRect(&cellRect);
-		break;
 	
 	case 0x2699: // gear
 		{

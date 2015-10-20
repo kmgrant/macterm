@@ -39,6 +39,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 // library includes
+#import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
 #import <Console.h>
 
@@ -62,6 +63,8 @@ enum
 	kMy_GlyphDrawingOptionFill		= (1 << 0),		// fill the path with the target color
 	kMy_GlyphDrawingOptionInset		= (1 << 1),		// inset target rectangle to avoid touching neighbor cells
 	kMy_GlyphDrawingOptionNoStroke	= (1 << 2),		// do NOT stroke the path with the target color
+	kMy_GlyphDrawingOptionThickLine	= (1 << 3),		// do NOT auto-scale line width beyond a very thick width
+	kMy_GlyphDrawingOptionThinLine	= (1 << 4),		// do NOT auto-scale line width beyond a very thin width
 };
 
 CGAffineTransform* const	kMy_NoTransform = nullptr;
@@ -93,6 +96,8 @@ The private class interface.
 	- (void)
 	addLayerUsingBlock:(My_ShapeDefinitionBlock)_
 	options:(My_GlyphDrawingOptions)_;
+	- (void)
+	addLayerUsingText:(NSString*)_;
 	- (CGSize)
 	insetAmount;
 	- (void)
@@ -202,6 +207,8 @@ void	extendWithSegmentDown			(CGMutablePathRef, TerminalGlyphDrawing_Metrics*);
 void	extendWithSegmentLeft			(CGMutablePathRef, TerminalGlyphDrawing_Metrics*);
 void	extendWithSegmentRight			(CGMutablePathRef, TerminalGlyphDrawing_Metrics*);
 void	extendWithSegmentUp				(CGMutablePathRef, TerminalGlyphDrawing_Metrics*);
+BOOL	extendWithText					(CGMutablePathRef, TerminalGlyphDrawing_Metrics*,
+										 CFAttributedStringRef);
 
 } // anonymous namespace
 
@@ -373,6 +380,8 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 		self->filledSublayerFlags_ = 0;
 		self->noStrokeSublayerFlags_ = 0;
 		self->insetSublayerFlags_ = 0;
+		self->thickLineSublayerFlags_ = 0;
+		self->thinLineSublayerFlags_ = 0;
 		self->sublayerBlocks_ = [[NSMutableArray alloc] init];
 		
 		self.geometryFlipped = YES;
@@ -413,7 +422,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 						extendPath(aPath, slashLeft, kPosition2 + metrics.lineWidth * 2.0,
 											slashRight, kPosition1 - metrics.lineWidth * 2.0);
 					}
-				} options:(kMy_GlyphDrawingOptionInset)/* inset metrics to avoid touching neighbor cells */];
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -443,15 +452,15 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 			}
 			break;
 		
-		case 0x00B7: // centered dot (alternate?)
-		case 0x2027: // centered dot
+		case 0x00B7: // middle dot
+		case 0x2027: // centered dot (hyphenation point)
 		case 0x2219: // bullet operator (smaller than bullet)
 			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* UNUSED_ARGUMENT(metrics))
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGPathAddEllipseInRect(aPath, kMy_NoTransform, CGRectInset(weakSelf.bounds, CGRectGetWidth(weakSelf.bounds) / 4.0,
-																				CGRectGetHeight(weakSelf.bounds) / 4.0));
-				}];
+					CGPathAddEllipseInRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerHalfWidth, metrics.layerHalfHeight,
+																				metrics.lineWidth, metrics.lineWidth));
+				} options:(kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -462,6 +471,117 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 					CGPathAddEllipseInRect(aPath, kMy_NoTransform, CGRectInset(weakSelf.bounds, CGRectGetWidth(weakSelf.bounds) / 2.0,
 																				CGRectGetHeight(weakSelf.bounds) / 2.0));
 				}];
+			}
+			break;
+		
+		case 0x2190: // leftwards arrow
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0);
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0 * 3.0);
+					extendWithCenterHorizontal(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x2191: // upwards arrow
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kLeft = metrics.layerWidth / 4.0;
+					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					
+					
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										kLeft, metrics.layerHeight / 4.0);
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										kRight, metrics.layerHeight / 4.0);
+					extendWithCenterVertical(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x2192: // rightwards arrow
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0);
+					extendWithCenterHorizontal(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x2193: // downwards arrow
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kLeft = metrics.layerWidth / 4.0;
+					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					
+					
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kLeft, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kRight, metrics.layerHeight / 4.0 * 3.0);
+					extendWithCenterVertical(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.layerHeight / 4.0);
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.layerHeight / 4.0 * 3.0);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kLeft = metrics.layerWidth / 4.0;
+					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					
+					
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kLeft, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kRight, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, kLeft, metrics.layerHeight / 4.0,
+										kRight, metrics.layerHeight / 4.0);
+					extendPath(aPath, kLeft, metrics.layerHalfHeight,
+										kRight, metrics.layerHalfHeight);
+					extendWithCenterVertical(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.squareLineRightEdge + metrics.lineWidth, metrics.layerHeight / 4.0,
+										metrics.squareLineRightEdge + metrics.lineWidth, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0);
+					extendWithCenterHorizontal(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -497,7 +617,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 					extendPath(aPath, kLeft, kPosition1, kRight, kPosition1);
 					extendPath(aPath, kLeft, kPosition2, kRight, kPosition2);
 					extendPath(aPath, kLeft, kPosition3, kRight, kPosition3);
-				} options:(kMy_GlyphDrawingOptionInset)/* inset metrics to avoid touching neighbor cells */];
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -552,7 +672,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 										metrics.layerWidth / 3.0, kYPosition1);
 					extendPath(aPath, metrics.layerWidth / 3.0, kYPosition1,
 										metrics.squareLineLeftEdge, kYPosition1);
-				} options:(kMy_GlyphDrawingOptionInset)/* inset metrics to avoid touching neighbor cells */];
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -571,7 +691,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 										metrics.layerWidth / 3.0, kYPosition2);
 					extendPath(aPath, metrics.layerWidth / 3.0, kYPosition2,
 										metrics.squareLineLeftEdge, kYPosition2);
-				} options:(kMy_GlyphDrawingOptionInset)/* inset metrics to avoid touching neighbor cells */];
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -2713,6 +2833,61 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 			}
 			break;
 		
+		case 0x25A0: // black square
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 4.0, metrics.layerHeight / 4.0,
+																		metrics.layerHalfWidth, metrics.layerHalfHeight));
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionNoStroke)];
+			}
+			break;
+		
+		case 0x25C6: // black diamond
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					// draw a filled diamond (should be similar to 0x25C7)
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge, metrics.layerHalfHeight);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x25C7: // white diamond
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					// draw a hollow diamond (should be similar to 0x25C6)
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge, metrics.layerHalfHeight);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0x25CA: // lozenge (narrower white diamond)
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					// draw a hollow diamond (should be similar to 0x25C6)
+					extendPath(aPath, metrics.layerHalfWidth / 2.0, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										metrics.layerHalfWidth / 2.0 * 3.0, metrics.layerHalfHeight);
+					extendPath(aPath, metrics.layerHalfWidth / 2.0 * 3.0, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										metrics.layerHalfWidth / 2.0, metrics.layerHalfHeight);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
 		case 0x26A1: // online/offline lightning bolt
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
@@ -2771,7 +2946,26 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
 					extendPath(aPath, kXPosition2, metrics.layerHeight / 3.0 * 2.0,
 										kXPosition2, metrics.layerHeight / 6.0);
-				}];
+				} options:(kMy_GlyphDrawingOptionThickLine)];
+			}
+			break;
+		
+		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kLeft = metrics.layerWidth / 4.0;
+					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					
+					
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kLeft, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kRight, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, kLeft, metrics.squareLineBottomEdge + metrics.lineWidth,
+										kRight, metrics.squareLineBottomEdge + metrics.lineWidth);
+					extendWithCenterVertical(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -2791,7 +2985,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
 										kXPosition2, metrics.squareLineTopEdge,
 										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
-				}];
+				} options:(kMy_GlyphDrawingOptionThickLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
@@ -2804,7 +2998,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 					extendPath(aPath, kXPosition1, metrics.layerHeight / 3.0 * 2.0,
 										kXPosition2, metrics.layerHeight / 3.0,
 										kXPosition2, metrics.layerHeight / 6.0);
-				}];
+				} options:(kMy_GlyphDrawingOptionThickLine)];
 			}
 			break;
 		
@@ -2845,7 +3039,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
 												metrics.layerWidth / 5.0 * 4.0, metrics.layerHeight / 5.0,
 												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
-				} options:(kMy_GlyphDrawingOptionInset)/* inset metrics to avoid touching neighbor cells */];
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThickLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 6.0,
@@ -2863,7 +3057,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 										metrics.squareLineRightEdge - metrics.lineWidth, metrics.layerHalfHeight,
 										metrics.squareLineLeftEdge, metrics.squareLineBottomEdge,
 										metrics.squareLineLeftEdge, metrics.squareLineTopEdge);
-				} options:(kMy_GlyphDrawingOptionFill)];
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -2887,7 +3081,7 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
 										metrics.squareLineRightEdge, metrics.squareLineBottomEdge,
 										metrics.squareLineRightEdge, metrics.squareLineTopEdge);
-				} options:(kMy_GlyphDrawingOptionFill)];
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -2899,6 +3093,24 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
 										metrics.squareLineRightEdge, metrics.squareLineBottomEdge);
 				}];
+			}
+			break;
+		
+		case 0xFFFD: // replacement character
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					// draw a hollow diamond
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge, metrics.layerHalfHeight);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
+				} options:(kMy_GlyphDrawingOptionThinLine)];
+				
+				// draw a question mark inside the diamond
+				[self addLayerUsingText:@"?"];
 			}
 			break;
 		
@@ -3310,6 +3522,94 @@ extendWithSegmentUp	(CGMutablePathRef				inoutPath,
 }// extendWithSegmentUp
 
 
+/*!
+Generates the glyphs of the specified text and adds them to
+the path, translated to the given location.  Returns true
+only if the text is handled successfully.
+
+NOTE:	This is not really meant to draw long strings, it
+		would be restricted to whatever fits in a cell.
+		Use it for cases where a font contains the exact
+		rendering that you require.
+
+(4.1)
+*/
+BOOL
+extendWithText		(CGMutablePathRef				inoutPath,
+					 TerminalGlyphDrawing_Metrics*	inMetrics,
+					 CFAttributedStringRef			inText)
+{
+	CFRetainRelease		coreTextLine(STATIC_CAST(CTLineCreateWithAttributedString(inText), CFTypeRef),
+										true/* is retained */);
+	BOOL				horizontallyCentered = YES; // currently not a parameter
+	BOOL				result = NO;
+	
+	
+	if (coreTextLine.exists())
+	{
+		CTLineRef		asLine = REINTERPRET_CAST(coreTextLine.returnCFTypeRef(), CTLineRef);
+		NSArray*		lineRuns = BRIDGE_CAST(CTLineGetGlyphRuns(asLine), NSArray*);
+		
+		
+		// only one run is expected but an iteration seems necessary regardless
+		[lineRuns enumerateObjectsUsingBlock:^(id object, NSUInteger UNUSED_ARGUMENT(index), BOOL* UNUSED_ARGUMENT(stop))
+		{
+			CTRunRef			asRun = BRIDGE_CAST(object, CTRunRef);
+			CTFontRef			currentFont = REINTERPRET_CAST(CFDictionaryGetValue
+																(CTRunGetAttributes(asRun), kCTFontAttributeName),
+																CTFontRef);
+			NSUInteger const		kNumGlyphs = CTRunGetGlyphCount(asRun);
+			
+			
+			// although this is iterating over glyphs, the expectation is
+			// that there is one glyph (centered about the origin-X)
+			for (NSUInteger i = 0; i < kNumGlyphs; ++i)
+			{
+				CFRange		oneGlyphRange = CFRangeMake(i, 1);
+				CGGlyph		glyphFontIndex = kCGFontIndexInvalid;
+				CGPoint		glyphPosition;
+				CGSize		glyphAdvance;
+				CGPathRef	glyphPath = nullptr;
+				
+				
+				CTRunGetGlyphs(asRun, oneGlyphRange, &glyphFontIndex);
+				CTRunGetPositions(asRun, oneGlyphRange, &glyphPosition);
+				CTRunGetAdvances(asRun, oneGlyphRange, &glyphAdvance);
+				
+				// generate a subpath for this glyph
+				glyphPath = CTFontCreatePathForGlyph(currentFont, glyphFontIndex, kMy_NoTransform);
+				{
+					CGSize const		kCellSize = inMetrics.targetLayer.frame.size;
+					CGRect const		kCellFrame = CGRectMake(0, 0, kCellSize.width, kCellSize.height);
+					CGRect const		kFontRelativeFrame = CTFontGetBoundingRectsForGlyphs(currentFont, kCTFontHorizontalOrientation,
+																							&glyphFontIndex, nullptr/* sub-rectangles */,
+																							1/* number of items */);
+					CGFloat const		kOffsetX = (((horizontallyCentered)
+													? (-glyphAdvance.width / 2.0)
+													: 0) * CGRectGetWidth(kCellFrame) / CGRectGetWidth(kFontRelativeFrame));
+					CGAffineTransform	offsetFlipMatrix = CGAffineTransformConcat
+															(CGAffineTransformMakeScale
+																(kCellSize.width / CGRectGetWidth(kFontRelativeFrame),
+																	-kCellSize.height / CGRectGetHeight(kFontRelativeFrame)),
+																CGAffineTransformMakeTranslation
+																(kCellFrame.origin.x + kCellSize.width / 2.0 + kOffsetX, kCellSize.height));
+					
+					
+					// finally, extend the path to include a drawing of this glyph
+					CGPathAddPath(inoutPath, &offsetFlipMatrix, glyphPath);
+					//CGPathAddRect(inoutPath, &offsetFlipMatrix, kFontRelativeFrame); // debug
+					//CGPathAddRect(inoutPath, kMy_NoTransform, kCellFrame); // debug
+				}
+				CGPathRelease(glyphPath), glyphPath = nullptr;
+			}
+		}];
+		result = YES;
+	}
+	
+	return result;
+}// extendWithText
+
+
 } // anonymous namespace
 
 
@@ -3404,8 +3704,12 @@ options:(My_GlyphDrawingOptions)				aFlagSet
 	
 	assert(sublayerBlocks_.count < 32); // array size cannot exceed number of bits available
 	
+	//
 	// since layers can be destroyed and rebuilt for new targets,
-	// it is necessary to remember whether or not they fill paths
+	// it is necessary to remember all of their flag values; each
+	// layer’s settings are allowed to differ from siblings
+	//
+	
 	if (aFlagSet & kMy_GlyphDrawingOptionFill)
 	{
 		filledSublayerFlags_ |= kFlagMask;
@@ -3415,8 +3719,6 @@ options:(My_GlyphDrawingOptions)				aFlagSet
 		filledSublayerFlags_ &= ~kFlagMask;
 	}
 	
-	// since layers can be destroyed and rebuilt for new targets,
-	// it is necessary to remember whether or not they disable strokes
 	if (aFlagSet & kMy_GlyphDrawingOptionNoStroke)
 	{
 		noStrokeSublayerFlags_ |= kFlagMask;
@@ -3426,8 +3728,6 @@ options:(My_GlyphDrawingOptions)				aFlagSet
 		noStrokeSublayerFlags_ &= ~kFlagMask;
 	}
 	
-	// since layers can be destroyed and rebuilt for new targets,
-	// it is necessary to remember whether or not they are inset
 	if (aFlagSet & kMy_GlyphDrawingOptionInset)
 	{
 		insetSublayerFlags_ |= kFlagMask;
@@ -3437,12 +3737,65 @@ options:(My_GlyphDrawingOptions)				aFlagSet
 		insetSublayerFlags_ &= ~kFlagMask;
 	}
 	
+	if (aFlagSet & kMy_GlyphDrawingOptionThickLine)
+	{
+		thickLineSublayerFlags_ |= kFlagMask;
+	}
+	else
+	{
+		thickLineSublayerFlags_ &= ~kFlagMask;
+	}
+	
+	if (aFlagSet & kMy_GlyphDrawingOptionThinLine)
+	{
+		thinLineSublayerFlags_ |= kFlagMask;
+	}
+	else
+	{
+		thinLineSublayerFlags_ &= ~kFlagMask;
+	}
+	
 	// TEMPORARY: using the 10.6 SDK (older buggy compiler) a block
 	// that originated on the stack would be added to an NSArray as
 	// a type of object that crashes when released; to avoid this
 	// for now, a useless heap copy of the block is made
 	[sublayerBlocks_ addObject:[[aBlock copy] autorelease]];
 }// addLayerUsingBlock:options:
+
+
+/*!
+A convenience method for adding a path with the most common
+options for drawing a single glyph as text: namely, the path
+of the glyph is filled, it uses inset metrics to not touch
+neighbor cells, and it has a thin line limit.
+
+(4.1)
+*/
+- (void)
+addLayerUsingText:(NSString*)	aGlyph
+{
+	[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+	{
+		NSMutableAttributedString*		attributedString = [[[NSMutableAttributedString alloc]
+															initWithString:aGlyph] autorelease];
+		BOOL							renderOK = false;
+		
+		
+		metrics.targetLayer.frame = CGRectInset(metrics.targetLayer.frame, metrics.lineWidth, metrics.lineWidth);
+		renderOK = extendWithText(aPath, metrics, BRIDGE_CAST(attributedString, CFAttributedStringRef));
+		if (NO == renderOK)
+		{
+			static BOOL		haveWarned = NO;
+			
+			
+			if (NO == haveWarned)
+			{
+				Console_Warning(Console_WriteLine, "unexpectedly failed to extend a path using text");
+				haveWarned = YES;
+			}
+		}
+	} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+}// addLayerUsingText:
 
 
 /*!
@@ -3535,10 +3888,15 @@ rebuildLayers
 		
 		// note: these layer properties are only defaults; any
 		// shape definition block can override any setting
+		CGFloat const	kMaxLineWidth = ((0 != (thickLineSublayerFlags_ & kFlagMask))
+											? 4.0 // arbitrary
+											: ((0 != (thinLineSublayerFlags_ & kFlagMask))
+												? 2.0 // arbitrary
+												: (self.frame.size.width / 5.0))); // arbitrary
 		layer.lineWidth = ((self.frame.size.width * self.frame.size.height) / 240); // arbitrary; make lines thicker when text is larger
-		if (layer.lineWidth > (self.frame.size.width / 5.0))
+		if (layer.lineWidth > kMaxLineWidth)
 		{
-			layer.lineWidth = (self.frame.size.width / 5.0);
+			layer.lineWidth = kMaxLineWidth;
 		}
 		if (NO == self.isAntialiasingDisabled)
 		{

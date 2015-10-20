@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20151019',
     '20151014',
     '20150926',
     '20150919',
@@ -528,6 +529,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20151019': [
+        'Terminal graphics characters now include updated renderings for various arrows, diamonds and bullets.',
+        'Terminal graphics characters have been tweaked to look better at large font sizes (preventing over-scaling of line widths in some cases).',
+        'Terminal graphics characters now render a "replacement character" (�) for missing glyphs.',
+    ],
     '20151014': [
         'The "I-beam" mouse pointer shape now looks better, fixing rendering issues such as a clipped shadow.',
         'The "move terminal cursor" mouse pointer shape now looks better, fixing rendering issues such as a clipped shadow.',

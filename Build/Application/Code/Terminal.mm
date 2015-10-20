@@ -17668,9 +17668,11 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x0192: // small 'f' with hook
 		case 0x2022: // bullet
 		case 0x2026: // ellipsis (three dots)
-		case 0x2027: // centered dot
-		case 0x2190: // carriage return (international symbol is an arrow pointing right to left)
-		case 0x2193: // line feed (international symbol is an arrow pointing top to bottom)
+		case 0x2027: // centered dot (hyphenation point)
+		case 0x2190: // leftwards arrow
+		case 0x2191: // upwards arrow
+		case 0x2192: // rightwards arrow
+		case 0x2193: // downwards arrow
 		case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
 		case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
 		case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
@@ -17874,6 +17876,9 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x259E: // quadrants upper-right and lower-left
 		case 0x259F: // block minus upper-left quadrant
 		case 0x25A0: // black square
+		case 0x25C6: // black diamond
+		case 0x25C7: // white diamond
+		case 0x25CA: // lozenge (narrower white diamond)
 		case 0x2699: // gear
 		case 0x26A1: // online/offline lightning bolt
 		case 0x2713: // check mark
@@ -17940,6 +17945,7 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0xE0B1: // "powerline" rightward arrowhead
 		case 0xE0B2: // "powerline" leftward triangle
 		case 0xE0B3: // "powerline" leftward arrowhead
+		case 0xFFFD: // replacement character
 			STYLE_ADD(outNewAttributes, kTerminalTextAttributeVTGraphics);
 			break;
 		
