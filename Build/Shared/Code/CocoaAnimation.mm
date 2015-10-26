@@ -171,7 +171,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
-		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 										autorelease];
 		
 		
@@ -235,7 +235,7 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 	AutoPool	_;
-	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
 	NSRect		newFrame = NSZeroRect;
@@ -278,7 +278,7 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 	AutoPool		_;
-	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 									autorelease];
 	NSRect			oldFrame = [imageWindow frame];
 	NSRect			newFrame = NSZeroRect;
@@ -339,7 +339,7 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 	
 	if ([inTargetWindow isVisible])
 	{
-		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 									autorelease];
 		NSRect		oldFrame = [imageWindow frame];
 		NSRect		newFrame = [imageWindow frame];
@@ -407,7 +407,7 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
 		[inTargetWindow orderFront:nil];
 		
-		imageWindow = [createImageWindowFrom(inTargetWindow, [[inTargetWindow contentView] frame])
+		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 												autorelease];
 		
 		// start from a location that is slightly offset from the target window
