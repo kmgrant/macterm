@@ -252,7 +252,8 @@ The private class interface.
 	- (void)
 	rebuildSourceList;
 	- (void)
-	updateUserInterfaceForSourceListTransition:(id)_;
+	setSourceListHidden:(BOOL)_
+	newWindowFrame:(NSRect)_;
 
 // accessors
 	- (Quills::Prefs::Class)
@@ -2936,8 +2937,8 @@ init
 		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->windowMinSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->extraWindowContentSize = NSZeroSize; // set later
-		self->isSourceListHidden = NO; // set later
 		self->activePanel = nil;
+		self->_searchText = [@"" copy];
 		
 		// install a callback that finds out about changes to available preferences collections
 		{
@@ -3005,10 +3006,10 @@ setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
 	{
 		NSUInteger					oldIndex = [self->currentPreferenceCollectionIndexes firstIndex];
 		NSUInteger					newIndex = [indexes firstIndex];
-		PrefsWindow_Collection*		oldCollection = (NSNotFound != oldIndex)
+		PrefsWindow_Collection*		oldCollection = ((NSNotFound != oldIndex) && (oldIndex < currentPreferenceCollections.count))
 													? [currentPreferenceCollections objectAtIndex:oldIndex]
 													: nil;
-		PrefsWindow_Collection*		newCollection = (NSNotFound != newIndex)
+		PrefsWindow_Collection*		newCollection = ((NSNotFound != newIndex) && (newIndex < currentPreferenceCollections.count))
 													? [currentPreferenceCollections objectAtIndex:newIndex]
 													: nil;
 		Preferences_ContextRef		oldDataSet = (nil != oldCollection)
@@ -3047,35 +3048,6 @@ automaticallyNotifiesObserversOfCurrentPreferenceCollections
 {
 	return NO;
 }// automaticallyNotifiesObserversOfCurrentPreferenceCollections
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isSourceListHidden
-{
-	return isSourceListHidden;
-}// isSourceListHidden
-- (BOOL)
-isSourceListShowing
-{
-	return (NO == isSourceListHidden);
-}// isSourceListShowing
-- (void)
-setSourceListHidden:(BOOL)	aFlag
-{
-	// “cheat” by notifying of a change to the opposite property as well
-	// (Cocoa bindings will automatically send the notification for the
-	// non-inverted property derived from this method’s name)
-	[self willChangeValueForKey:@"sourceListShowing"];
-	
-	isSourceListHidden = aFlag;
-	
-	[self didChangeValueForKey:@"sourceListShowing"];
-}// setSourceListHidden:
 
 
 #pragma mark Actions
@@ -3790,19 +3762,16 @@ windowDidLoad
 	assert(nil != windowFirstResponder);
 	assert(nil != windowLastResponder);
 	assert(nil != containerTabView);
+	assert(nil != sourceListBackdrop);
 	assert(nil != sourceListContainer);
 	assert(nil != sourceListTableView);
 	assert(nil != sourceListSegmentedControl);
-	assert(nil != horizontalDividerView);
+	assert(nil != sourceListHelpButton);
+	assert(nil != mainViewHelpButton);
+	assert(nil != verticalSeparator);
 	
 	NSRect const	kOriginalContainerFrame = [self->containerTabView frame];
 	
-	
-	// programmatically remove the toolbar button
-	if ([[self window] respondsToSelector:@selector(setShowsToolbarButton:)])
-	{
-		[[self window] setShowsToolbarButton:NO];
-	}
 	
 	// create all panels
 	{
@@ -3854,6 +3823,17 @@ windowDidLoad
 		[windowToolbar setSizeMode:NSToolbarSizeModeRegular];
 		[windowToolbar setDelegate:self];
 		[[self window] setToolbar:windowToolbar];
+	}
+	
+	// disable the zoom button (Full Screen is graphically glitchy)
+	{
+		// you would think this should be NSWindowFullScreenButton but since Apple
+		// redefined the Zoom button for Full Screen on later OS versions, it is
+		// necessary to disable Zoom instead
+		NSButton*		zoomButton = [self.window standardWindowButton:NSWindowZoomButton];
+		
+		
+		zoomButton.enabled = NO;
 	}
 	
 	// “indent” the toolbar items slightly so they are further away
@@ -3937,12 +3917,6 @@ windowDidLoad
 	// to be necessary for correct behavior on Panther at least
 	[self whenObject:self->sourceListTableView postsNote:NSTableViewSelectionDidChangeNotification
 						performSelector:@selector(tableViewSelectionDidChange:)];
-	
-	// on Mac OS X versions prior to 10.5 there is no concept of
-	// “bottom chrome” so a horizontal line is included to produce
-	// a similar sort of divider; on later Mac OS X versions however
-	// this should be hidden so that the softer gray can show through
-	[self->horizontalDividerView setHidden:YES];
 	
 	// show the first panel while simultaneously resizing the
 	// window to an appropriate frame and showing any auxiliary
@@ -4403,7 +4377,9 @@ withAnimation:(BOOL)												isAnimated
 {
 	if (aPanel != self->activePanel)
 	{
-		BOOL	wasShowingSourceList = [self isSourceListShowing];
+		NSRect	newWindowFrame = NSZeroRect; // set later
+		BOOL	wasShowingSourceList = ((NO == self->sourceListContainer.isHidden) &&
+										(self->sourceListContainer.frame.size.width > 0));
 		BOOL	willShowSourceList = (kPanel_EditTypeInspector == [aPanel panelEditType]); // initially...
 		
 		
@@ -4436,25 +4412,11 @@ withAnimation:(BOOL)												isAnimated
 			[newPanel.delegate panelViewManager:newPanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 		}
 		
-		// if necessary display the source list of available preference collections
-		if (willShowSourceList != wasShowingSourceList)
-		{
-			// change the source list visibility
-			[self updateUserInterfaceForSourceListTransition:((willShowSourceList) ? @(YES) : @(NO))];
-			[self setSourceListHidden:(NO == willShowSourceList)];
-		}
-		else
-		{
-			// source list is still needed, but it will have new content (note
-			// that this step is implied if the visibility changes above)
-			[self rebuildSourceList];
-		}
-		
 		// set the window to the size for the new panel (if none, use the
 		// size that was originally used for the panel in its NIB)
+		if (NO == EventLoop_IsWindowFullScreen(self.window))
 		{
 			NSRect		originalFrame = [[self window] frame];
-			NSRect		newWindowFrame = NSZeroRect; // set later
 			NSRect		newContentRect = [[self window] contentRectForFrameRect:originalFrame]; // initially...
 			NSSize		minSize = [[self window] minSize];
 			NSArray*	sizeArray = [self->windowSizesByID objectForKey:[aPanel panelIdentifier]];
@@ -4503,9 +4465,28 @@ withAnimation:(BOOL)												isAnimated
 					newWindowFrame.origin.y += (NSHeight(originalFrame) - NSHeight(newWindowFrame));
 				}
 			}
+		}
+		
+		// if necessary display the source list of available preference collections
+		if (willShowSourceList != wasShowingSourceList)
+		{
+			if (willShowSourceList)
+			{
+				[self rebuildSourceList];
+			}
 			
-			// resize the window
+			// resize the window and change the source list visibility
+			// at the same time for fluid animation
+			[self setSourceListHidden:(NO == willShowSourceList) newWindowFrame:newWindowFrame];
+		}
+		else
+		{
+			// resize the window normally
 			[[self window] setFrame:newWindowFrame display:YES animate:isAnimated];
+			
+			// source list is still needed, but it will have new content (note
+			// that this step is implied if the visibility changes above)
+			[self rebuildSourceList];
 		}
 	}
 }// displayPanel:withAnimation:
@@ -4676,69 +4657,80 @@ rebuildSourceList
 
 
 /*!
-Performs user interface modifications appropriate for changing the
-visibility of the source list that shows preference collections.
-
-This is a separate method that accepts an object parameter so that
-it can be easily called from the main thread using the NSObject
-method "performSelectorOnMainThread:withObject:waitUntilDone:".
-See "setSourceListHidden:".
-
-NOTE:	Some interface changes (such as hiding or showing buttons)
-		are achieved with Cocoa bindings to the appropriate states,
-		so there are fewer adjustments here than you might expect.
+Changes the visibility of the source list and the size of
+the window, animating any other views to match.
 
 (4.1)
 */
 - (void)
-updateUserInterfaceForSourceListTransition:(id)		anNSNumberBoolForNewVisibleState
+setSourceListHidden:(BOOL)		aHiddenFlag
+newWindowFrame:(NSRect)			aNewWindowFrame
 {
-#if 0
-	UInt16 const	kIndentationLevels = 5; // arbitrary
-#endif
-	NSRect			newContainerFrame = [self->containerTabView frame];
-	NSRect			windowContentFrame = [[self window] contentRectForFrameRect:[[self window] frame]];
+	NSRect		newWindowContentFrame = [self.window contentRectForFrameRect:aNewWindowFrame];
+	NSRect		listFrame;
+	NSRect		panelFrame;
 	
 	
-	if ([anNSNumberBoolForNewVisibleState boolValue])
-	{
-	#if 0
-		// “indent” the toolbar so that the items do not appear above the source list
-		for (UInt16 i = 0; i < kIndentationLevels; ++i)
+	// the darker backdrop behind the list makes the
+	// slide animation less jarring
+	self->sourceListBackdrop.hidden = aHiddenFlag;
+	
+	// calculate the new size and location of the panel
+	panelFrame = NSMakeRect((aHiddenFlag) ? 0 : NSWidth(sourceListContainer.frame), containerTabView.frame.origin.y,
+							NSWidth(newWindowContentFrame) - ((aHiddenFlag) ? 0 : self->extraWindowContentSize.width),
+							NSHeight(newWindowContentFrame) - self->extraWindowContentSize.height);
+	
+	// calculate the new size and location of the list,
+	// potentially moving it to an invisible location (after
+	// the animation ends, the list is hidden anyway)
+	listFrame = sourceListContainer.frame;
+	listFrame.origin.x = ((aHiddenFlag) ? -self->extraWindowContentSize.width : 0); // “slide” effect
+	listFrame.size.height = NSHeight(panelFrame);
+	
+	// animate changes to other views (NOTE: can replace this with a
+	// more advanced block-based approach when using a later SDK)
+	dispatch_async(dispatch_get_main_queue(),
+	^{
+		// all of the changes in this block will animate simultaneously
+		[NSAnimationContext beginGrouping];
+		[[NSAnimationContext currentContext] setDuration:0.22];
 		{
-			[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
-		}
-	#endif
-		
-		// move the panel next to the source list
-		newContainerFrame.origin.x = NSWidth([self->sourceListContainer frame]);
-		newContainerFrame.size.width = (NSWidth(windowContentFrame) - NSWidth([self->sourceListContainer frame]));
-		[self->containerTabView setFrame:newContainerFrame];
-		
-		// refresh the content (should not be needed, but this is a good place to do it;
-		// note that notifications trigger rebuilds whenever preferences actually change)
-		[self rebuildSourceList];
-	}
-	else
-	{
-	#if 0
-		// remove the “indent” from the toolbar (IMPORTANT: repeat as many times as spaces were originally added, below)
-		if ([[[[self window] toolbar] items] count] > kIndentationLevels)
-		{
-			for (UInt16 i = 0; i < kIndentationLevels; ++i)
+			[self.window.animator setFrame:aNewWindowFrame display:YES];
+			[[self->containerTabView animator] setFrame:panelFrame];
+			if (NO == aHiddenFlag)
 			{
-				[[[self window] toolbar] removeItemAtIndex:0];
+				sourceListContainer.hidden = aHiddenFlag;
+				sourceListSegmentedControl.hidden = aHiddenFlag;
+				sourceListHelpButton.hidden = (NO == aHiddenFlag);
+				verticalSeparator.hidden = aHiddenFlag;
+				mainViewHelpButton.hidden = aHiddenFlag;
+			}
+			[sourceListContainer.animator setFrame:listFrame];
+			[sourceListContainer.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
+			[sourceListSegmentedControl.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
+			[verticalSeparator.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
+			[mainViewHelpButton.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
+			[sourceListHelpButton.animator setAlphaValue:((aHiddenFlag) ? 1.0 : 0.0)]; // this alternate help button appears when there is no list
+			if (aHiddenFlag)
+			{
+				sourceListContainer.hidden = aHiddenFlag;
+				sourceListSegmentedControl.hidden = aHiddenFlag;
+				sourceListHelpButton.hidden = (NO == aHiddenFlag);
+				verticalSeparator.hidden = aHiddenFlag;
+				mainViewHelpButton.hidden = aHiddenFlag;
 			}
 		}
-	#endif
-		
-		// move the panel to the edge of the window; adjust the width to keep the
-		// layout bindings from over-padding the opposite side however
-		newContainerFrame.origin.x = 0;
-		newContainerFrame.size.width = NSWidth(windowContentFrame);
-		[self->containerTabView setFrame:newContainerFrame];
-	}
-}// updateUserInterfaceForSourceListTransition:
+		[NSAnimationContext endGrouping];
+	});
+	// after the animation above completes, refresh the final view
+	// (it is unclear why this step is needed; the symptom is that
+	// when the source list is hidden, the tab view of the next panel
+	// is sometimes not completely redrawn on its left side)
+	dispatch_after(dispatch_time(0, 0.32 * NSEC_PER_SEC), dispatch_get_main_queue(),
+	^{
+		[containerTabView setNeedsDisplay:YES];
+	});
+}// setSourceListHidden:newWindowFrame:
 
 
 @end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)

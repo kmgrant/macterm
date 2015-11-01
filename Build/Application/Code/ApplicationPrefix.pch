@@ -6,6 +6,7 @@
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
+#include <QuartzCore/QuartzCore.h>
 #include <QuickTime/QuickTime.h>
 
 #include <UniversalDefines.h>

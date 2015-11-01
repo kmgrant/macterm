@@ -99,16 +99,20 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefsWindow_Controller : NSWindowController< NSToolbarDelegate,
+@interface PrefsWindow_Controller : NSWindowController< NSSplitViewDelegate,
+														NSToolbarDelegate,
 														Panel_Parent > //{
 {
 	IBOutlet NSView*		windowFirstResponder;
 	IBOutlet NSView*		windowLastResponder;
 	IBOutlet NSTabView*		containerTabView;
+	IBOutlet NSView*		sourceListBackdrop;
 	IBOutlet NSView*		sourceListContainer;
 	IBOutlet NSTableView*	sourceListTableView;
 	IBOutlet NSView*		sourceListSegmentedControl;
-	IBOutlet NSView*		horizontalDividerView;
+	IBOutlet NSButton*		sourceListHelpButton;
+	IBOutlet NSButton*		mainViewHelpButton;
+	IBOutlet NSView*		verticalSeparator;
 @private
 	NSIndexSet*							currentPreferenceCollectionIndexes;
 	NSMutableArray*						currentPreferenceCollections;
@@ -118,7 +122,6 @@ changes to an interface declared in a ".mm" file.
 	NSMutableDictionary*				windowMinSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
 	NSString*							_searchText;
 	NSSize								extraWindowContentSize; // stores extra content width and height (not belonging to a panel)
-	BOOL								isSourceListHidden;
 	ListenerModel_StandardListener*		preferenceChangeListener;
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
 }
@@ -128,20 +131,12 @@ changes to an interface declared in a ".mm" file.
 	sharedPrefsWindowController;
 
 // accessors
-	- (NSIndexSet*)
-	currentPreferenceCollectionIndexes;
-	- (void)
-	setCurrentPreferenceCollectionIndexes:(NSIndexSet*)_; // binding
+	@property (strong) NSIndexSet*
+	currentPreferenceCollectionIndexes; // binding
 	- (NSArray*)
 	currentPreferenceCollections; // binding
-	- (BOOL)
-	isSourceListHidden; // binding
-	- (BOOL)
-	isSourceListShowing; // binding
 	@property (copy) NSString*
 	searchText; // binding
-	- (void)
-	setSourceListHidden:(BOOL)_;
 
 // actions
 	- (IBAction)
