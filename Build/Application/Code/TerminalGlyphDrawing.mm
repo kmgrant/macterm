@@ -90,7 +90,13 @@ The private class interface.
 	- (BOOL)
 	isSmallSize;
 
-// new methods: other
+// new methods: complete glyph definitions
+	- (void)
+	addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)_;
+	- (void)
+	addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)_;
+
+// new methods: partial glyph definitions
 	- (void)
 	addLayerUsingBlock:(My_ShapeDefinitionBlock)_;
 	- (void)
@@ -98,6 +104,8 @@ The private class interface.
 	options:(My_GlyphDrawingOptions)_;
 	- (void)
 	addLayerUsingText:(NSString*)_;
+
+// new methods: other
 	- (CGSize)
 	insetAmount;
 	- (void)
@@ -348,18 +356,6 @@ color:(CGColorRef)									aColor
 
 
 /*!
-Initializer for normal-size glyphs.
-
-(4.1)
-*/
-- (instancetype)
-initWithUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
-{
-	return [self initWithUnicodePoint:aUnicodePoint options:0];
-}// initWithUnicodePoint:
-
-
-/*!
 Designated initializer.
 
 (4.1)
@@ -371,9 +367,6 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 	self = [super init];
 	if (nil != self)
 	{
-		/*__weak*/ TerminalGlyphDrawing_Layer*	weakSelf = self;
-		
-		
 		self->unicodePoint_ = aUnicodePoint;
 		self->baselineHint_ = 0; // set later
 		self->options_ = anOptionFlagSet;
@@ -385,6 +378,584 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 		self->sublayerBlocks_ = [[NSMutableArray alloc] init];
 		
 		self.geometryFlipped = YES;
+		
+		// note: the Terminal View and Terminal Screen modules must also be
+		// aware of any supported Unicode values
+		if ((aUnicodePoint >= 0x2500) && (aUnicodePoint < 0x2600))
+		{
+			[self addLayersForRangeHex2500To2600UnicodePoint:aUnicodePoint];
+		}
+		else
+		{
+			// this catch-all function should implement any remaining
+			// supported glyph renderings that do not fit in one of
+			// the ranges above
+			[self addLayersForOutsideRangeUnicodePoint:aUnicodePoint];
+		}
+		
+		[self rebuildLayers];
+	}
+	return self;
+}// initWithUnicodePoint:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[sublayerBlocks_ release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Draws the layer in the frame rectangle, with the specified
+baseline offset (from the top) as a hint to renderers that
+create text-like output.  If you do not know the baseline
+then you should set this to "aFrame.size.height".
+
+Use this instead of calling "renderInContext:" directly.
+Also note that currently this class is not set up to
+recognize direct changes to the frame; rather, the frame
+is updated as a side effect of using this method.
+
+(4.1)
+*/
+- (void)
+renderInContext:(CGContextRef)	aDrawingContext
+frame:(CGRect)					aFrame
+baselineHint:(CGFloat)			aBaselineOffsetFromTop
+{
+	CGContextSaveRestore	_(aDrawingContext);
+	
+	
+	self.baselineHint = aBaselineOffsetFromTop;
+	if (false == CGRectEqualToRect(self.frame, aFrame))
+	{
+		// layer shapes have the ability to adapt to their container so
+		// they are reconstructed whenever the target region changes
+		self.frame = aFrame;
+		[self rebuildLayers];
+	}
+	
+	// place the drawing in the right part of the window
+	CGContextTranslateCTM(aDrawingContext, self.frame.origin.x, self.frame.origin.y);
+	
+	// if necessary disable anti-aliasing for the drawing; note that
+	// this does not call CGContextSetShouldAntialias() because that
+	// method will only affect some anti-aliasing (in particular,
+	// edge effects on the update rectangle may still be displayed,
+	// which can prevent lines from connecting properly)
+	CGContextSetAllowsAntialiasing(aDrawingContext, (NO == self.isAntialiasingDisabled));
+	
+	[super renderInContext:aDrawingContext];
+	
+	// this flag is not part of the state so it must be restored manually
+	CGContextSetAllowsAntialiasing(aDrawingContext, true);
+}// renderInContext:frame:baselineHint:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accesses the color that is used to draw the glyph.
+This color may be used to stroke or to fill, depending
+on what the glyph definition requires.
+
+(4.1)
+*/
+- (CGColorRef)
+color
+{
+	CGColorRef		result = nullptr;
+	
+	
+	for (CALayer* layer in self.sublayers)
+	{
+		if ([layer isKindOfClass:CAShapeLayer.class])
+		{
+			CAShapeLayer*	asShapeLayer = STATIC_CAST(layer, decltype(asShapeLayer));
+			
+			
+			result = asShapeLayer.fillColor;
+			if (nil == result)
+			{
+				result = asShapeLayer.strokeColor;
+			}
+			break;
+		}
+	}
+	return result;
+}
+- (void)
+setColor:(CGColorRef)		aColor
+{
+	NSUInteger	i = 0;
+	for (CALayer* layer in self.sublayers)
+	{
+		assert([layer isKindOfClass:CAShapeLayer.class]);
+		NSUInteger const	kFlagMask = (1 << i);
+		CAShapeLayer*		asShapeLayer = STATIC_CAST(layer, decltype(asShapeLayer));
+		
+		
+		// sublayers can use the color for stroke or fill
+		asShapeLayer.fillColor = (0 != (filledSublayerFlags_ & kFlagMask))
+									? aColor
+									: nil;
+		asShapeLayer.strokeColor = (0 != (noStrokeSublayerFlags_ & kFlagMask))
+									? nil
+									: aColor;
+		++i;
+	}
+}// setColor:
+
+
+@end //} TerminalGlyphDrawing_Layer
+
+
+#pragma mark Internal Methods
+namespace {
+
+
+/*!
+An overloaded function that extends the specified path
+by moving to the first point location and adding lines
+through all the given points.
+
+This is just a short-cut for CGPathAddLines().
+
+(4.1)
+*/
+void
+extendPath	(CGMutablePathRef	inoutPath,
+			 CGFloat			inX1,
+			 CGFloat			inY1,
+			 CGFloat			inX2,
+			 CGFloat			inY2)
+{
+	CGPoint		points[] =
+				{
+					{ inX1, inY1 },
+					{ inX2, inY2 }
+				};
+	
+	
+	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
+}// extendPath (5 arguments)
+
+
+/*!
+An overloaded function that extends the specified path
+by moving to the first point location and adding lines
+through all the given points.
+
+This is just a short-cut for CGPathAddLines().
+
+(4.1)
+*/
+void
+extendPath	(CGMutablePathRef	inoutPath,
+			 CGFloat			inX1,
+			 CGFloat			inY1,
+			 CGFloat			inX2,
+			 CGFloat			inY2,
+			 CGFloat			inX3,
+			 CGFloat			inY3)
+{
+	CGPoint		points[] =
+				{
+					{ inX1, inY1 },
+					{ inX2, inY2 },
+					{ inX3, inY3 }
+				};
+	
+	
+	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
+}// extendPath (7 arguments)
+
+
+/*!
+An overloaded function that extends the specified path
+by moving to the first point location and adding lines
+through all the given points.
+
+This is just a short-cut for CGPathAddLines().
+
+(4.1)
+*/
+void
+extendPath	(CGMutablePathRef	inoutPath,
+			 CGFloat			inX1,
+			 CGFloat			inY1,
+			 CGFloat			inX2,
+			 CGFloat			inY2,
+			 CGFloat			inX3,
+			 CGFloat			inY3,
+			 CGFloat			inX4,
+			 CGFloat			inY4)
+{
+	CGPoint		points[] =
+				{
+					{ inX1, inY1 },
+					{ inX2, inY2 },
+					{ inX3, inY3 },
+					{ inX4, inY4 }
+				};
+	
+	
+	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
+}// extendPath (9 arguments)
+
+
+/*!
+Adds a line from the left edge to the right edge
+that is centered in the frame.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithCenterHorizontal	(CGMutablePathRef				inoutPath,
+							 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight,
+							inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight);
+}// extendWithCenterHorizontal
+
+
+/*!
+Adds a line from the top edge to the bottom edge
+that is centered in the frame.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithCenterVertical	(CGMutablePathRef				inoutPath,
+							 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge,
+							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
+}// extendWithCenterVertical
+
+
+/*!
+Adds a line from the left edge to the center, and
+from the center to the bottom edge.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithMidLeftBottomHook		(CGMutablePathRef				inoutPath,
+								 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
+}// extendWithMidLeftBottomHook
+
+
+/*!
+Adds a line from the left edge to the center, and
+from the center to the top edge.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithMidLeftTopHook	(CGMutablePathRef				inoutPath,
+							 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge);
+}// extendWithMidLeftTopHook
+
+
+/*!
+Adds a line from the right edge to the center, and
+from the center to the bottom edge.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithMidRightBottomHook	(CGMutablePathRef				inoutPath,
+								 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
+}// extendWithMidRightBottomHook
+
+
+/*!
+Adds a line from the right edge to the center, and
+from the center to the top edge.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithMidRightTopHook	(CGMutablePathRef				inoutPath,
+							 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge);
+}// extendWithMidRightTopHook
+
+
+/*!
+Adds a line from the bottom edge to the center.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithSegmentDown	(CGMutablePathRef				inoutPath,
+						 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
+}// extendWithSegmentDown
+
+
+/*!
+Adds a line from the left edge to the center.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithSegmentLeft	(CGMutablePathRef				inoutPath,
+						 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight);
+}// extendWithSegmentLeft
+
+
+/*!
+Adds a line from the right edge to the center.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithSegmentRight	(CGMutablePathRef				inoutPath,
+						 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight);
+}// extendWithSegmentRight
+
+
+/*!
+Adds a line from the top edge to the center.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(4.1)
+*/
+void
+extendWithSegmentUp	(CGMutablePathRef				inoutPath,
+					 TerminalGlyphDrawing_Metrics*	inMetrics)
+{
+	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
+							inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge);
+}// extendWithSegmentUp
+
+
+/*!
+Generates the glyphs of the specified text and adds them to
+the path, translated to the given location.  Returns true
+only if the text is handled successfully.
+
+NOTE:	This is not really meant to draw long strings, it
+		would be restricted to whatever fits in a cell.
+		Use it for cases where a font contains the exact
+		rendering that you require.
+
+(4.1)
+*/
+BOOL
+extendWithText		(CGMutablePathRef				inoutPath,
+					 TerminalGlyphDrawing_Metrics*	inMetrics,
+					 CFAttributedStringRef			inText)
+{
+	CFRetainRelease		coreTextLine(STATIC_CAST(CTLineCreateWithAttributedString(inText), CFTypeRef),
+										true/* is retained */);
+	BOOL				horizontallyCentered = YES; // currently not a parameter
+	BOOL				result = NO;
+	
+	
+	if (coreTextLine.exists())
+	{
+		CTLineRef		asLine = REINTERPRET_CAST(coreTextLine.returnCFTypeRef(), CTLineRef);
+		NSArray*		lineRuns = BRIDGE_CAST(CTLineGetGlyphRuns(asLine), NSArray*);
+		
+		
+		// only one run is expected but an iteration seems necessary regardless
+		[lineRuns enumerateObjectsUsingBlock:^(id object, NSUInteger UNUSED_ARGUMENT(index), BOOL* UNUSED_ARGUMENT(stop))
+		{
+			CTRunRef			asRun = BRIDGE_CAST(object, CTRunRef);
+			CTFontRef			currentFont = REINTERPRET_CAST(CFDictionaryGetValue
+																(CTRunGetAttributes(asRun), kCTFontAttributeName),
+																CTFontRef);
+			NSUInteger const		kNumGlyphs = CTRunGetGlyphCount(asRun);
+			
+			
+			// although this is iterating over glyphs, the expectation is
+			// that there is one glyph (centered about the origin-X)
+			for (NSUInteger i = 0; i < kNumGlyphs; ++i)
+			{
+				CFRange		oneGlyphRange = CFRangeMake(i, 1);
+				CGGlyph		glyphFontIndex = kCGFontIndexInvalid;
+				CGPoint		glyphPosition;
+				CGSize		glyphAdvance;
+				CGPathRef	glyphPath = nullptr;
+				
+				
+				CTRunGetGlyphs(asRun, oneGlyphRange, &glyphFontIndex);
+				CTRunGetPositions(asRun, oneGlyphRange, &glyphPosition);
+				CTRunGetAdvances(asRun, oneGlyphRange, &glyphAdvance);
+				
+				// generate a subpath for this glyph
+				glyphPath = CTFontCreatePathForGlyph(currentFont, glyphFontIndex, kMy_NoTransform);
+				{
+					CGSize const		kCellSize = inMetrics.targetLayer.frame.size;
+					CGRect const		kCellFrame = CGRectMake(0, 0, kCellSize.width, kCellSize.height);
+					CGRect const		kFontRelativeFrame = CTFontGetBoundingRectsForGlyphs(currentFont, kCTFontHorizontalOrientation,
+																							&glyphFontIndex, nullptr/* sub-rectangles */,
+																							1/* number of items */);
+					CGFloat const		kOffsetX = (((horizontallyCentered)
+													? (-glyphAdvance.width / 2.0)
+													: 0) * CGRectGetWidth(kCellFrame) / CGRectGetWidth(kFontRelativeFrame));
+					CGAffineTransform	offsetFlipMatrix = CGAffineTransformConcat
+															(CGAffineTransformMakeScale
+																(kCellSize.width / CGRectGetWidth(kFontRelativeFrame),
+																	-kCellSize.height / CGRectGetHeight(kFontRelativeFrame)),
+																CGAffineTransformMakeTranslation
+																(kCellFrame.origin.x + kCellSize.width / 2.0 + kOffsetX, kCellSize.height));
+					
+					
+					// finally, extend the path to include a drawing of this glyph
+					CGPathAddPath(inoutPath, &offsetFlipMatrix, glyphPath);
+					//CGPathAddRect(inoutPath, &offsetFlipMatrix, kFontRelativeFrame); // debug
+					//CGPathAddRect(inoutPath, kMy_NoTransform, kCellFrame); // debug
+				}
+				CGPathRelease(glyphPath), glyphPath = nullptr;
+			}
+		}];
+		result = YES;
+	}
+	
+	return result;
+}// extendWithText
+
+
+} // anonymous namespace
+
+
+#pragma mark -
+@implementation TerminalGlyphDrawing_Layer (TerminalGlyphDrawing_LayerInternal) //{
+
+
+#pragma mark Accessors
+
+
+/*!
+Returns true only if the options given at construction time
+included "kTerminalGlyphDrawing_OptionAntialiasingDisabled".
+
+(4.1)
+*/
+- (BOOL)
+isAntialiasingDisabled
+{
+	return (0 != (options_ & kTerminalGlyphDrawing_OptionAntialiasingDisabled));
+}// isAntialiasingDisabled
+
+
+/*!
+Returns true only if the options given at construction time
+included "kTerminalGlyphDrawing_OptionBold".
+
+(4.1)
+*/
+- (BOOL)
+isBold
+{
+	return (0 != (options_ & kTerminalGlyphDrawing_OptionBold));
+}// isBold
+
+
+/*!
+Returns true only if the options given at construction time
+included "kTerminalGlyphDrawing_OptionSmallSize".
+
+(4.1)
+*/
+- (BOOL)
+isSmallSize
+{
+	return (0 != (options_ & kTerminalGlyphDrawing_OptionSmallSize));
+}// isSmallSize
+
+
+#pragma mark New Methods: Complete Glyph Definitions
+
+
+/*!
+Adds drawing layers for Unicode points that are not handled by range
+methods such as "addLayersForRangeHex2500To2600UnicodePoint:".
+
+This is called by the initializer.
+
+(4.1)
+*/
+- (void)
+addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
+{
+	if ((aUnicodePoint >= 0x2500) && (aUnicodePoint < 0x2600))
+	{
+		// value is not in the supported range for this function
+		assert(false && "should call addLayersForRangeHex2500To2600UnicodePoint: for this value");
+	}
+	else
+	{
+		// value is in the expected range
+		/*__weak*/ TerminalGlyphDrawing_Layer*	weakSelf = self;
+		
 		
 		switch (aUnicodePoint)
 		{
@@ -989,6 +1560,262 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 			}
 			break;
 		
+		case 0x26A1: // online/offline lightning bolt
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.layerWidth / 3.0 * 2.0, metrics.layerHeight / 3.0,
+										metrics.layerWidth / 4.0, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHalfHeight,
+										metrics.layerWidth / 3.0, metrics.layerHeight / 3.0 * 2.0);
+				}];
+			}
+			break;
+		
+		case 0x2713: // check mark
+		case 0x2714: // check mark, bold
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					metrics.targetLayer.lineCap = kCALineCapRound;
+					extendPath(aPath, metrics.layerWidth / 5.0, metrics.layerHalfHeight,
+										metrics.layerWidth / 3.0, metrics.layerHeight / 6.0 * 4.0,
+										metrics.layerWidth / 6.0 * 5.0, metrics.layerHeight / 6.0);
+				}];
+			}
+			break;
+		
+		case 0x2718: // X mark
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.layerWidth / 4.0, metrics.layerHeight / 4.0,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0 + metrics.lineHalfWidth);
+					extendPath(aPath, metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0,
+										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0 * 3.0);
+				}];
+			}
+			break;
+		
+		case 0x27A6: // curve-to-right arrow (used for detached-from-head in "powerline")
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					// do not draw the curve-arrow; instead, draw something a
+					// bit more similar to the “version control branch” icon
+					// (except show the detachment)
+					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
+					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
+					
+					
+					// left line
+					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0,
+										kXPosition1, metrics.layerHeight / 6.0 * 5.0);
+					
+					// arrow head
+					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
+										kXPosition2, metrics.squareLineTopEdge,
+										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
+					extendPath(aPath, kXPosition2, metrics.layerHeight / 3.0 * 2.0,
+										kXPosition2, metrics.layerHeight / 6.0);
+				} options:(kMy_GlyphDrawingOptionThickLine)];
+			}
+			break;
+		
+		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kLeft = metrics.layerWidth / 4.0;
+					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					
+					
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kLeft, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										kRight, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, kLeft, metrics.squareLineBottomEdge + metrics.lineWidth,
+										kRight, metrics.squareLineBottomEdge + metrics.lineWidth);
+					extendWithCenterVertical(aPath, metrics);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0xE0A0: // "powerline" version control branch
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
+					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
+					
+					
+					// left line
+					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0,
+										kXPosition1, metrics.layerHeight / 6.0 * 5.0);
+					
+					// arrow head
+					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
+										kXPosition2, metrics.squareLineTopEdge,
+										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
+				} options:(kMy_GlyphDrawingOptionThickLine)];
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
+					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
+					
+					
+					// this element of the path is separate so that the
+					// line overlap/intersection is smoother
+					metrics.targetLayer.lineCap = kCALineCapRound;
+					extendPath(aPath, kXPosition1, metrics.layerHeight / 3.0 * 2.0,
+										kXPosition2, metrics.layerHeight / 3.0,
+										kXPosition2, metrics.layerHeight / 6.0);
+				} options:(kMy_GlyphDrawingOptionThickLine)];
+			}
+			break;
+		
+		case 0xE0A1: // "powerline" line (LN) marker
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kLLeft = (metrics.squareLineLeftEdge + 1);
+					CGFloat const	kLRight = (metrics.layerWidth / 5.0 * 3.0);
+					CGFloat const	kLTop = (metrics.squareLineTopEdge + 1);
+					CGFloat const	kLBottom = ((metrics.layerHeight / 5.0 * 2.0) - 1);
+					CGFloat const	kNLeft = (metrics.layerWidth / 3.0);
+					CGFloat const	kNRight = (metrics.squareLineRightEdge - 1);
+					CGFloat const	kNTop = ((metrics.layerHeight / 5.0 * 3.0));
+					CGFloat const	kNBottom = (metrics.squareLineBottomEdge - 2);
+					
+					
+					//metrics.targetLayer.lineCap = kCALineCapRound;
+					extendPath(aPath, kLLeft, kLTop, kLLeft, kLBottom,
+										kLRight, kLBottom);
+					extendPath(aPath, kNLeft, kNBottom, kNLeft, kNTop,
+										kNRight, kNBottom, kNRight, kNTop);
+				}];
+			}
+			break;
+		
+		case 0xE0A2: // "powerline" closed padlock
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGPathMoveToPoint(aPath, kMy_NoTransform,
+												metrics.layerWidth / 5.0, metrics.layerHalfHeight);
+					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
+												metrics.layerWidth / 5.0, metrics.layerHeight / 5.0,
+												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
+					CGPathMoveToPoint(aPath, kMy_NoTransform,
+												metrics.layerWidth / 5.0 * 4.0, metrics.layerHalfHeight);
+					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
+												metrics.layerWidth / 5.0 * 4.0, metrics.layerHeight / 5.0,
+												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
+				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThickLine)];
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 6.0,
+											metrics.layerHalfHeight, metrics.layerWidth / 6.0 * 4.0, metrics.layerHeight / 3.0));
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionInset)];
+			}
+			break;
+		
+		case 0xE0B0: // "powerline" rightward triangle
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					//metrics.targetLayer.lineCap = kCALineCapRound;
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge - metrics.lineWidth, metrics.layerHalfHeight,
+										metrics.squareLineLeftEdge, metrics.squareLineBottomEdge,
+										metrics.squareLineLeftEdge, metrics.squareLineTopEdge);
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0xE0B1: // "powerline" rightward arrowhead
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge - metrics.lineWidth, metrics.layerHalfHeight,
+										metrics.squareLineLeftEdge, metrics.squareLineBottomEdge);
+				}];
+			}
+			break;
+		
+		case 0xE0B2: // "powerline" leftward triangle
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					metrics.targetLayer.lineCap = kCALineCapRound;
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.squareLineTopEdge,
+										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
+										metrics.squareLineRightEdge, metrics.squareLineBottomEdge,
+										metrics.squareLineRightEdge, metrics.squareLineTopEdge);
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
+			}
+			break;
+		
+		case 0xE0B3: // "powerline" leftward arrowhead
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.squareLineTopEdge,
+										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
+										metrics.squareLineRightEdge, metrics.squareLineBottomEdge);
+				}];
+			}
+			break;
+		
+		case 0xFFFD: // replacement character
+			{
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					// draw a hollow diamond
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineTopEdge,
+										metrics.squareLineRightEdge, metrics.layerHalfHeight);
+					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
+										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
+										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
+				} options:(kMy_GlyphDrawingOptionThinLine)];
+				
+				// draw a question mark inside the diamond
+				[self addLayerUsingText:@"?"];
+			}
+			break;
+		
+		default:
+			// ???
+			Console_Warning(Console_WriteValueUnicodePoint, "TerminalGlyphDrawing_Layer not implemented for specified code point", aUnicodePoint);
+			break;
+		}
+	}
+}// addLayersForOutsideRangeUnicodePoint:
+
+
+/*!
+Adds drawing layers for Unicode points in the range 0x2500 (inclusive)
+to 0x2600 (exclusive).
+
+This is called by the initializer.
+
+(4.1)
+*/
+- (void)
+addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
+{
+	if ((aUnicodePoint < 0x2500) || (aUnicodePoint >= 0x2600))
+	{
+		// value is not in the supported range for this function
+		assert(false && "incorrect glyph layer initialization method called");
+	}
+	else
+	{
+		// value is in the expected range
+		switch (aUnicodePoint)
+		{
 		case 0x2500: // middle line
 		case 0x2501: // middle line, bold version
 			{
@@ -2888,778 +3715,16 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 			}
 			break;
 		
-		case 0x26A1: // online/offline lightning bolt
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					extendPath(aPath, metrics.layerWidth / 3.0 * 2.0, metrics.layerHeight / 3.0,
-										metrics.layerWidth / 4.0, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHalfHeight,
-										metrics.layerWidth / 3.0, metrics.layerHeight / 3.0 * 2.0);
-				}];
-			}
-			break;
-		
-		case 0x2713: // check mark
-		case 0x2714: // check mark, bold
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, metrics.layerWidth / 5.0, metrics.layerHalfHeight,
-										metrics.layerWidth / 3.0, metrics.layerHeight / 6.0 * 4.0,
-										metrics.layerWidth / 6.0 * 5.0, metrics.layerHeight / 6.0);
-				}];
-			}
-			break;
-		
-		case 0x2718: // X mark
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					extendPath(aPath, metrics.layerWidth / 4.0, metrics.layerHeight / 4.0,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0 + metrics.lineHalfWidth);
-					extendPath(aPath, metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0,
-										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0 * 3.0);
-				}];
-			}
-			break;
-		
-		case 0x27A6: // curve-to-right arrow (used for detached-from-head in "powerline")
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					// do not draw the curve-arrow; instead, draw something a
-					// bit more similar to the “version control branch” icon
-					// (except show the detachment)
-					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
-					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
-					
-					
-					// left line
-					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0,
-										kXPosition1, metrics.layerHeight / 6.0 * 5.0);
-					
-					// arrow head
-					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
-										kXPosition2, metrics.squareLineTopEdge,
-										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
-					extendPath(aPath, kXPosition2, metrics.layerHeight / 3.0 * 2.0,
-										kXPosition2, metrics.layerHeight / 6.0);
-				} options:(kMy_GlyphDrawingOptionThickLine)];
-			}
-			break;
-		
-		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGFloat const	kLeft = metrics.layerWidth / 4.0;
-					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
-					
-					
-					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kLeft, metrics.layerHeight / 4.0 * 3.0);
-					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kRight, metrics.layerHeight / 4.0 * 3.0);
-					extendPath(aPath, kLeft, metrics.squareLineBottomEdge + metrics.lineWidth,
-										kRight, metrics.squareLineBottomEdge + metrics.lineWidth);
-					extendWithCenterVertical(aPath, metrics);
-				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
-			}
-			break;
-		
-		case 0xE0A0: // "powerline" version control branch
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
-					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
-					
-					
-					// left line
-					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0,
-										kXPosition1, metrics.layerHeight / 6.0 * 5.0);
-					
-					// arrow head
-					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
-										kXPosition2, metrics.squareLineTopEdge,
-										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
-				} options:(kMy_GlyphDrawingOptionThickLine)];
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
-					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
-					
-					
-					// this element of the path is separate so that the
-					// line overlap/intersection is smoother
-					metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, kXPosition1, metrics.layerHeight / 3.0 * 2.0,
-										kXPosition2, metrics.layerHeight / 3.0,
-										kXPosition2, metrics.layerHeight / 6.0);
-				} options:(kMy_GlyphDrawingOptionThickLine)];
-			}
-			break;
-		
-		case 0xE0A1: // "powerline" line (LN) marker
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGFloat const	kLLeft = (metrics.squareLineLeftEdge + 1);
-					CGFloat const	kLRight = (metrics.layerWidth / 5.0 * 3.0);
-					CGFloat const	kLTop = (metrics.squareLineTopEdge + 1);
-					CGFloat const	kLBottom = ((metrics.layerHeight / 5.0 * 2.0) - 1);
-					CGFloat const	kNLeft = (metrics.layerWidth / 3.0);
-					CGFloat const	kNRight = (metrics.squareLineRightEdge - 1);
-					CGFloat const	kNTop = ((metrics.layerHeight / 5.0 * 3.0));
-					CGFloat const	kNBottom = (metrics.squareLineBottomEdge - 2);
-					
-					
-					//metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, kLLeft, kLTop, kLLeft, kLBottom,
-										kLRight, kLBottom);
-					extendPath(aPath, kNLeft, kNBottom, kNLeft, kNTop,
-										kNRight, kNBottom, kNRight, kNTop);
-				}];
-			}
-			break;
-		
-		case 0xE0A2: // "powerline" closed padlock
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGPathMoveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0, metrics.layerHalfHeight);
-					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0, metrics.layerHeight / 5.0,
-												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
-					CGPathMoveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0 * 4.0, metrics.layerHalfHeight);
-					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0 * 4.0, metrics.layerHeight / 5.0,
-												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
-				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThickLine)];
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 6.0,
-											metrics.layerHalfHeight, metrics.layerWidth / 6.0 * 4.0, metrics.layerHeight / 3.0));
-				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionInset)];
-			}
-			break;
-		
-		case 0xE0B0: // "powerline" rightward triangle
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					//metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, metrics.squareLineLeftEdge, metrics.squareLineTopEdge,
-										metrics.squareLineRightEdge - metrics.lineWidth, metrics.layerHalfHeight,
-										metrics.squareLineLeftEdge, metrics.squareLineBottomEdge,
-										metrics.squareLineLeftEdge, metrics.squareLineTopEdge);
-				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
-			}
-			break;
-		
-		case 0xE0B1: // "powerline" rightward arrowhead
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					extendPath(aPath, metrics.squareLineLeftEdge, metrics.squareLineTopEdge,
-										metrics.squareLineRightEdge - metrics.lineWidth, metrics.layerHalfHeight,
-										metrics.squareLineLeftEdge, metrics.squareLineBottomEdge);
-				}];
-			}
-			break;
-		
-		case 0xE0B2: // "powerline" leftward triangle
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, metrics.squareLineRightEdge, metrics.squareLineTopEdge,
-										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
-										metrics.squareLineRightEdge, metrics.squareLineBottomEdge,
-										metrics.squareLineRightEdge, metrics.squareLineTopEdge);
-				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
-			}
-			break;
-		
-		case 0xE0B3: // "powerline" leftward arrowhead
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					extendPath(aPath, metrics.squareLineRightEdge, metrics.squareLineTopEdge,
-										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
-										metrics.squareLineRightEdge, metrics.squareLineBottomEdge);
-				}];
-			}
-			break;
-		
-		case 0xFFFD: // replacement character
-			{
-				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
-				{
-					// draw a hollow diamond
-					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
-										metrics.layerHalfWidth, metrics.squareLineTopEdge,
-										metrics.squareLineRightEdge, metrics.layerHalfHeight);
-					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
-										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
-				} options:(kMy_GlyphDrawingOptionThinLine)];
-				
-				// draw a question mark inside the diamond
-				[self addLayerUsingText:@"?"];
-			}
-			break;
-		
 		default:
 			// ???
-			Console_Warning(Console_WriteValueUnicodePoint, "TerminalGlyphDrawing_Layer not implemented for specified code point", aUnicodePoint);
-			break;
-		}
-		
-		[self rebuildLayers];
-	}
-	return self;
-}// initWithUnicodePoint:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[sublayerBlocks_ release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark New Methods
-
-
-/*!
-Draws the layer in the frame rectangle, with the specified
-baseline offset (from the top) as a hint to renderers that
-create text-like output.  If you do not know the baseline
-then you should set this to "aFrame.size.height".
-
-Use this instead of calling "renderInContext:" directly.
-Also note that currently this class is not set up to
-recognize direct changes to the frame; rather, the frame
-is updated as a side effect of using this method.
-
-(4.1)
-*/
-- (void)
-renderInContext:(CGContextRef)	aDrawingContext
-frame:(CGRect)					aFrame
-baselineHint:(CGFloat)			aBaselineOffsetFromTop
-{
-	CGContextSaveRestore	_(aDrawingContext);
-	
-	
-	self.baselineHint = aBaselineOffsetFromTop;
-	if (false == CGRectEqualToRect(self.frame, aFrame))
-	{
-		// layer shapes have the ability to adapt to their container so
-		// they are reconstructed whenever the target region changes
-		self.frame = aFrame;
-		[self rebuildLayers];
-	}
-	
-	// place the drawing in the right part of the window
-	CGContextTranslateCTM(aDrawingContext, self.frame.origin.x, self.frame.origin.y);
-	
-	// if necessary disable anti-aliasing for the drawing; note that
-	// this does not call CGContextSetShouldAntialias() because that
-	// method will only affect some anti-aliasing (in particular,
-	// edge effects on the update rectangle may still be displayed,
-	// which can prevent lines from connecting properly)
-	CGContextSetAllowsAntialiasing(aDrawingContext, (NO == self.isAntialiasingDisabled));
-	
-	[super renderInContext:aDrawingContext];
-	
-	// this flag is not part of the state so it must be restored manually
-	CGContextSetAllowsAntialiasing(aDrawingContext, true);
-}// renderInContext:frame:baselineHint:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accesses the color that is used to draw the glyph.
-This color may be used to stroke or to fill, depending
-on what the glyph definition requires.
-
-(4.1)
-*/
-- (CGColorRef)
-color
-{
-	CGColorRef		result = nullptr;
-	
-	
-	for (CALayer* layer in self.sublayers)
-	{
-		if ([layer isKindOfClass:CAShapeLayer.class])
-		{
-			CAShapeLayer*	asShapeLayer = STATIC_CAST(layer, decltype(asShapeLayer));
-			
-			
-			result = asShapeLayer.fillColor;
-			if (nil == result)
-			{
-				result = asShapeLayer.strokeColor;
-			}
+			Console_Warning(Console_WriteValueUnicodePoint, "TerminalGlyphDrawing_Layer not implemented for range [0x2500, 0x2600) and specified code point", aUnicodePoint);
 			break;
 		}
 	}
-	return result;
-}
-- (void)
-setColor:(CGColorRef)		aColor
-{
-	NSUInteger	i = 0;
-	for (CALayer* layer in self.sublayers)
-	{
-		assert([layer isKindOfClass:CAShapeLayer.class]);
-		NSUInteger const	kFlagMask = (1 << i);
-		CAShapeLayer*		asShapeLayer = STATIC_CAST(layer, decltype(asShapeLayer));
-		
-		
-		// sublayers can use the color for stroke or fill
-		asShapeLayer.fillColor = (0 != (filledSublayerFlags_ & kFlagMask))
-									? aColor
-									: nil;
-		asShapeLayer.strokeColor = (0 != (noStrokeSublayerFlags_ & kFlagMask))
-									? nil
-									: aColor;
-		++i;
-	}
-}// setColor:
+}// addLayersForRangeHex2500To2600UnicodePoint:
 
 
-@end //} TerminalGlyphDrawing_Layer
-
-
-#pragma mark Internal Methods
-namespace {
-
-
-/*!
-An overloaded function that extends the specified path
-by moving to the first point location and adding lines
-through all the given points.
-
-This is just a short-cut for CGPathAddLines().
-
-(4.1)
-*/
-void
-extendPath	(CGMutablePathRef	inoutPath,
-			 CGFloat			inX1,
-			 CGFloat			inY1,
-			 CGFloat			inX2,
-			 CGFloat			inY2)
-{
-	CGPoint		points[] =
-				{
-					{ inX1, inY1 },
-					{ inX2, inY2 }
-				};
-	
-	
-	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
-}// extendPath (5 arguments)
-
-
-/*!
-An overloaded function that extends the specified path
-by moving to the first point location and adding lines
-through all the given points.
-
-This is just a short-cut for CGPathAddLines().
-
-(4.1)
-*/
-void
-extendPath	(CGMutablePathRef	inoutPath,
-			 CGFloat			inX1,
-			 CGFloat			inY1,
-			 CGFloat			inX2,
-			 CGFloat			inY2,
-			 CGFloat			inX3,
-			 CGFloat			inY3)
-{
-	CGPoint		points[] =
-				{
-					{ inX1, inY1 },
-					{ inX2, inY2 },
-					{ inX3, inY3 }
-				};
-	
-	
-	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
-}// extendPath (7 arguments)
-
-
-/*!
-An overloaded function that extends the specified path
-by moving to the first point location and adding lines
-through all the given points.
-
-This is just a short-cut for CGPathAddLines().
-
-(4.1)
-*/
-void
-extendPath	(CGMutablePathRef	inoutPath,
-			 CGFloat			inX1,
-			 CGFloat			inY1,
-			 CGFloat			inX2,
-			 CGFloat			inY2,
-			 CGFloat			inX3,
-			 CGFloat			inY3,
-			 CGFloat			inX4,
-			 CGFloat			inY4)
-{
-	CGPoint		points[] =
-				{
-					{ inX1, inY1 },
-					{ inX2, inY2 },
-					{ inX3, inY3 },
-					{ inX4, inY4 }
-				};
-	
-	
-	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
-}// extendPath (9 arguments)
-
-
-/*!
-Adds a line from the left edge to the right edge
-that is centered in the frame.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithCenterHorizontal	(CGMutablePathRef				inoutPath,
-							 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight,
-							inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight);
-}// extendWithCenterHorizontal
-
-
-/*!
-Adds a line from the top edge to the bottom edge
-that is centered in the frame.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithCenterVertical	(CGMutablePathRef				inoutPath,
-							 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge,
-							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
-}// extendWithCenterVertical
-
-
-/*!
-Adds a line from the left edge to the center, and
-from the center to the bottom edge.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithMidLeftBottomHook		(CGMutablePathRef				inoutPath,
-								 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
-}// extendWithMidLeftBottomHook
-
-
-/*!
-Adds a line from the left edge to the center, and
-from the center to the top edge.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithMidLeftTopHook	(CGMutablePathRef				inoutPath,
-							 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge);
-}// extendWithMidLeftTopHook
-
-
-/*!
-Adds a line from the right edge to the center, and
-from the center to the bottom edge.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithMidRightBottomHook	(CGMutablePathRef				inoutPath,
-								 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
-}// extendWithMidRightBottomHook
-
-
-/*!
-Adds a line from the right edge to the center, and
-from the center to the top edge.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithMidRightTopHook	(CGMutablePathRef				inoutPath,
-							 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge);
-}// extendWithMidRightTopHook
-
-
-/*!
-Adds a line from the bottom edge to the center.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithSegmentDown	(CGMutablePathRef				inoutPath,
-						 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.squareLineBottomEdge);
-}// extendWithSegmentDown
-
-
-/*!
-Adds a line from the left edge to the center.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithSegmentLeft	(CGMutablePathRef				inoutPath,
-						 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.squareLineLeftEdge, inMetrics.layerHalfHeight);
-}// extendWithSegmentLeft
-
-
-/*!
-Adds a line from the right edge to the center.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithSegmentRight	(CGMutablePathRef				inoutPath,
-						 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.squareLineRightEdge, inMetrics.layerHalfHeight);
-}// extendWithSegmentRight
-
-
-/*!
-Adds a line from the top edge to the center.
-
-The exact coordinates depend on the specified
-metrics object.
-
-(4.1)
-*/
-void
-extendWithSegmentUp	(CGMutablePathRef				inoutPath,
-					 TerminalGlyphDrawing_Metrics*	inMetrics)
-{
-	extendPath(inoutPath, inMetrics.layerHalfWidth, inMetrics.layerHalfHeight,
-							inMetrics.layerHalfWidth, inMetrics.squareLineTopEdge);
-}// extendWithSegmentUp
-
-
-/*!
-Generates the glyphs of the specified text and adds them to
-the path, translated to the given location.  Returns true
-only if the text is handled successfully.
-
-NOTE:	This is not really meant to draw long strings, it
-		would be restricted to whatever fits in a cell.
-		Use it for cases where a font contains the exact
-		rendering that you require.
-
-(4.1)
-*/
-BOOL
-extendWithText		(CGMutablePathRef				inoutPath,
-					 TerminalGlyphDrawing_Metrics*	inMetrics,
-					 CFAttributedStringRef			inText)
-{
-	CFRetainRelease		coreTextLine(STATIC_CAST(CTLineCreateWithAttributedString(inText), CFTypeRef),
-										true/* is retained */);
-	BOOL				horizontallyCentered = YES; // currently not a parameter
-	BOOL				result = NO;
-	
-	
-	if (coreTextLine.exists())
-	{
-		CTLineRef		asLine = REINTERPRET_CAST(coreTextLine.returnCFTypeRef(), CTLineRef);
-		NSArray*		lineRuns = BRIDGE_CAST(CTLineGetGlyphRuns(asLine), NSArray*);
-		
-		
-		// only one run is expected but an iteration seems necessary regardless
-		[lineRuns enumerateObjectsUsingBlock:^(id object, NSUInteger UNUSED_ARGUMENT(index), BOOL* UNUSED_ARGUMENT(stop))
-		{
-			CTRunRef			asRun = BRIDGE_CAST(object, CTRunRef);
-			CTFontRef			currentFont = REINTERPRET_CAST(CFDictionaryGetValue
-																(CTRunGetAttributes(asRun), kCTFontAttributeName),
-																CTFontRef);
-			NSUInteger const		kNumGlyphs = CTRunGetGlyphCount(asRun);
-			
-			
-			// although this is iterating over glyphs, the expectation is
-			// that there is one glyph (centered about the origin-X)
-			for (NSUInteger i = 0; i < kNumGlyphs; ++i)
-			{
-				CFRange		oneGlyphRange = CFRangeMake(i, 1);
-				CGGlyph		glyphFontIndex = kCGFontIndexInvalid;
-				CGPoint		glyphPosition;
-				CGSize		glyphAdvance;
-				CGPathRef	glyphPath = nullptr;
-				
-				
-				CTRunGetGlyphs(asRun, oneGlyphRange, &glyphFontIndex);
-				CTRunGetPositions(asRun, oneGlyphRange, &glyphPosition);
-				CTRunGetAdvances(asRun, oneGlyphRange, &glyphAdvance);
-				
-				// generate a subpath for this glyph
-				glyphPath = CTFontCreatePathForGlyph(currentFont, glyphFontIndex, kMy_NoTransform);
-				{
-					CGSize const		kCellSize = inMetrics.targetLayer.frame.size;
-					CGRect const		kCellFrame = CGRectMake(0, 0, kCellSize.width, kCellSize.height);
-					CGRect const		kFontRelativeFrame = CTFontGetBoundingRectsForGlyphs(currentFont, kCTFontHorizontalOrientation,
-																							&glyphFontIndex, nullptr/* sub-rectangles */,
-																							1/* number of items */);
-					CGFloat const		kOffsetX = (((horizontallyCentered)
-													? (-glyphAdvance.width / 2.0)
-													: 0) * CGRectGetWidth(kCellFrame) / CGRectGetWidth(kFontRelativeFrame));
-					CGAffineTransform	offsetFlipMatrix = CGAffineTransformConcat
-															(CGAffineTransformMakeScale
-																(kCellSize.width / CGRectGetWidth(kFontRelativeFrame),
-																	-kCellSize.height / CGRectGetHeight(kFontRelativeFrame)),
-																CGAffineTransformMakeTranslation
-																(kCellFrame.origin.x + kCellSize.width / 2.0 + kOffsetX, kCellSize.height));
-					
-					
-					// finally, extend the path to include a drawing of this glyph
-					CGPathAddPath(inoutPath, &offsetFlipMatrix, glyphPath);
-					//CGPathAddRect(inoutPath, &offsetFlipMatrix, kFontRelativeFrame); // debug
-					//CGPathAddRect(inoutPath, kMy_NoTransform, kCellFrame); // debug
-				}
-				CGPathRelease(glyphPath), glyphPath = nullptr;
-			}
-		}];
-		result = YES;
-	}
-	
-	return result;
-}// extendWithText
-
-
-} // anonymous namespace
-
-
-#pragma mark -
-@implementation TerminalGlyphDrawing_Layer (TerminalGlyphDrawing_LayerInternal) //{
-
-
-#pragma mark Accessors
-
-
-/*!
-Returns true only if the options given at construction time
-included "kTerminalGlyphDrawing_OptionAntialiasingDisabled".
-
-(4.1)
-*/
-- (BOOL)
-isAntialiasingDisabled
-{
-	return (0 != (options_ & kTerminalGlyphDrawing_OptionAntialiasingDisabled));
-}// isAntialiasingDisabled
-
-
-/*!
-Returns true only if the options given at construction time
-included "kTerminalGlyphDrawing_OptionBold".
-
-(4.1)
-*/
-- (BOOL)
-isBold
-{
-	return (0 != (options_ & kTerminalGlyphDrawing_OptionBold));
-}// isBold
-
-
-/*!
-Returns true only if the options given at construction time
-included "kTerminalGlyphDrawing_OptionSmallSize".
-
-(4.1)
-*/
-- (BOOL)
-isSmallSize
-{
-	return (0 != (options_ & kTerminalGlyphDrawing_OptionSmallSize));
-}// isSmallSize
-
-
-#pragma mark New Methods: Other
+#pragma mark New Methods: Partial Glyph Definitions
 
 
 /*!
@@ -3796,6 +3861,9 @@ addLayerUsingText:(NSString*)	aGlyph
 		}
 	} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 }// addLayerUsingText:
+
+
+#pragma mark New Methods: Other
 
 
 /*!

@@ -78,8 +78,6 @@ NOTE:	Normally this object is constructed only by a
 
 // initializers
 	- (instancetype)
-	initWithUnicodePoint:(UnicodeScalarValue)_;
-	- (instancetype)
 	initWithUnicodePoint:(UnicodeScalarValue)_
 	options:(TerminalGlyphDrawing_Options)_ NS_DESIGNATED_INITIALIZER;
 
