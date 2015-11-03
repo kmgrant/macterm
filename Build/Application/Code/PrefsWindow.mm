@@ -4416,9 +4416,9 @@ withAnimation:(BOOL)												isAnimated
 		// size that was originally used for the panel in its NIB)
 		if (NO == EventLoop_IsWindowFullScreen(self.window))
 		{
-			NSRect		originalFrame = [[self window] frame];
-			NSRect		newContentRect = [[self window] contentRectForFrameRect:originalFrame]; // initially...
-			NSSize		minSize = [[self window] minSize];
+			NSRect		originalFrame = self.window.frame;
+			NSRect		newContentRect = [self.window contentRectForFrameRect:originalFrame]; // initially...
+			NSSize		minSize = [self.window minSize];
 			NSArray*	sizeArray = [self->windowSizesByID objectForKey:[aPanel panelIdentifier]];
 			NSArray*	minSizeArray = [self->windowMinSizesByID objectForKey:[aPanel panelIdentifier]];
 			
@@ -4434,37 +4434,52 @@ withAnimation:(BOOL)												isAnimated
 				
 				
 				minSize = NSMakeSize(newMinWidth, newMinHeight);
-				[[self window] setContentMinSize:minSize];
+				[self.window setContentMinSize:minSize];
 			}
 			
-			// start with the restored size
+			// start with the restored size but respect the minimum size
 			assert(2 == [sizeArray count]);
 			newContentRect.size.width = MAX([[sizeArray objectAtIndex:0] floatValue], minSize.width);
 			newContentRect.size.height = MAX([[sizeArray objectAtIndex:1] floatValue], minSize.height);
 			
-			// try to keep the window on screen; also constrain it to
-			// its minimum size
+			// since the coordinate system anchors the window at the
+			// bottom-left corner and the intent is to keep the top-left
+			// corner constant, calculate an appropriate new origin when
+			// changing the size (don’t just change the size by itself);
+			// this calculation must be performed prior to seeking the
+			// intersection with the screen rectangle so that a proposed
+			// offscreen location is seen by the intersection check
+			newWindowFrame = [[self window] frameRectForContentRect:newContentRect];
+			newWindowFrame.origin.y += (NSHeight(originalFrame) - NSHeight(newWindowFrame));
+			
+			// try to keep the window on screen
 			{
-				NSRect	unconstrainedFrame = [[self window] frameRectForContentRect:newContentRect];
+				NSRect		onScreenFrame = NSIntersectionRect(newWindowFrame, self.window.screen.visibleFrame);
 				
 				
-				newWindowFrame = unconstrainedFrame;
-				
-				newWindowFrame = NSIntersectionRect(newWindowFrame, [[[self window] screen] frame]);
-				newWindowFrame.size.width = MAX(NSWidth(newWindowFrame), [[self window] minSize].width);
-				newWindowFrame.size.height = MAX(NSHeight(newWindowFrame), [[self window] minSize].height);
-				
-				// since the coordinate system anchors the window at the
-				// bottom-left corner and the intent is to keep the top-left
-				// corner constant, calculate an appropriate new origin when
-				// changing the size (don’t just change the size by itself);
-				// do not do this if the window was constrained because the
-				// origin and/or size will have changed for other reasons
-				if (unconstrainedFrame.origin.y == newWindowFrame.origin.y)
+				// see if the window is going to remain entirely on the screen...
+				if (NO == NSEqualRects(onScreenFrame, newWindowFrame))
 				{
-					newWindowFrame.origin.y += (NSHeight(originalFrame) - NSHeight(newWindowFrame));
+					// window will become partially offscreen; try to move it onscreen
+					if ((newWindowFrame.origin.x + NSWidth(newWindowFrame)) >
+						(self.window.screen.visibleFrame.origin.x + NSWidth(self.window.screen.visibleFrame)))
+					{
+						// adjust to the left
+						newWindowFrame.origin.x = (onScreenFrame.origin.x + NSWidth(onScreenFrame) - NSWidth(newWindowFrame));
+					}
+					else
+					{
+						// adjust to the right
+						newWindowFrame.origin.x = onScreenFrame.origin.x;
+					}
+					newWindowFrame.origin.y = onScreenFrame.origin.y;
 				}
 			}
+		}
+		else
+		{
+			// full-screen; size is not changing
+			newWindowFrame = self.window.frame;
 		}
 		
 		// if necessary display the source list of available preference collections
@@ -4482,7 +4497,7 @@ withAnimation:(BOOL)												isAnimated
 		else
 		{
 			// resize the window normally
-			[[self window] setFrame:newWindowFrame display:YES animate:isAnimated];
+			[self.window setFrame:newWindowFrame display:YES animate:isAnimated];
 			
 			// source list is still needed, but it will have new content (note
 			// that this step is implied if the visibility changes above)

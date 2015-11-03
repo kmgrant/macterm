@@ -37,7 +37,7 @@
         <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="304" y="418" width="500" height="350"/>
+            <rect key="contentRect" x="250" y="740" width="500" height="350"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
             <value key="minSize" type="size" width="500" height="350"/>
             <view key="contentView" id="4" userLabel="Window Content View">
