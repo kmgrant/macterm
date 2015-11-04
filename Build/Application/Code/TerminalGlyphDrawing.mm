@@ -1564,11 +1564,37 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
+					// draw triangle pointing to upper right
+					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : (metrics.lineWidth / 4.0));
+					
+					
 					extendPath(aPath, metrics.layerWidth / 3.0 * 2.0, metrics.layerHeight / 3.0,
-										metrics.layerWidth / 4.0, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHalfHeight,
+										metrics.layerWidth / 4.0, metrics.layerHalfHeight + kTriangleOffset,
+										metrics.layerWidth / 3.0, metrics.layerHalfHeight + kTriangleOffset,
+										metrics.layerWidth / 3.0 * 2.0, metrics.layerHeight / 3.0);
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : (metrics.lineWidth / 4.0));
+					
+					
+					// draw triangle pointing to lower left
+					extendPath(aPath, metrics.layerWidth / 3.0, metrics.layerHeight / 3.0 * 2.0,
+										metrics.layerWidth / 3.0 * 2.0, metrics.layerHalfHeight - kTriangleOffset,
+										metrics.layerWidth / 4.0 * 3.0, metrics.layerHalfHeight - kTriangleOffset,
 										metrics.layerWidth / 3.0, metrics.layerHeight / 3.0 * 2.0);
-				}];
+				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
+				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+				{
+					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : (metrics.lineWidth / 4.0));
+					
+					
+					// fill in the middle
+					extendPath(aPath, metrics.layerWidth / 3.0 + metrics.lineHalfWidth, metrics.layerHalfHeight + kTriangleOffset,
+										metrics.layerWidth / 3.0 * 2.0 - metrics.lineHalfWidth, metrics.layerHalfHeight + kTriangleOffset);
+					extendPath(aPath, metrics.layerWidth / 3.0 + metrics.lineHalfWidth, metrics.layerHalfHeight - kTriangleOffset,
+										metrics.layerWidth / 3.0 * 2.0 - metrics.lineHalfWidth, metrics.layerHalfHeight - kTriangleOffset);
+				} options:(kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
 		
@@ -1740,7 +1766,7 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 					extendPath(aPath, metrics.squareLineLeftEdge, metrics.squareLineTopEdge,
 										metrics.squareLineRightEdge - metrics.lineWidth, metrics.layerHalfHeight,
 										metrics.squareLineLeftEdge, metrics.squareLineBottomEdge);
-				}];
+				} options:(kMy_GlyphDrawingOptionThickLine)];
 			}
 			break;
 		
@@ -1764,7 +1790,7 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 					extendPath(aPath, metrics.squareLineRightEdge, metrics.squareLineTopEdge,
 										metrics.squareLineLeftEdge + metrics.lineWidth, metrics.layerHalfHeight,
 										metrics.squareLineRightEdge, metrics.squareLineBottomEdge);
-				}];
+				} options:(kMy_GlyphDrawingOptionThickLine)];
 			}
 			break;
 		
