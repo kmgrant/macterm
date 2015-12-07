@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
+        <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_KeyboardViewManager">
             <connections>
                 <outlet property="logicalFirstResponder" destination="2125" id="2252"/>
                 <outlet property="logicalLastResponder" destination="2295" id="2301"/>
-                <outlet property="managedView" destination="1835" id="1906"/>
+                <outlet property="view" destination="1835" id="kIh-HE-KNd"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <arrayController clearsFilterPredicateOnInsertion="NO" id="2157" userLabel="New-Line Names">
             <declaredKeys>
                 <string>boundName</string>
@@ -41,13 +42,14 @@
         <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
             <rect key="frame" x="0.0" y="0.0" width="520" height="289"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <view key="contentView">
+            <view key="contentView" id="cxw-zG-B3Y">
                 <rect key="frame" x="0.0" y="0.0" width="520" height="289"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="1913">
                         <rect key="frame" x="72" y="252" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Process Control:" id="1914">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -57,6 +59,7 @@
                     <textField verticalHuggingPriority="750" id="2137">
                         <rect key="frame" x="72" y="219" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Flow Control:" id="2138">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -66,6 +69,7 @@
                     <textField verticalHuggingPriority="750" id="2127">
                         <rect key="frame" x="276" y="252" width="227" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Interrupt Process" id="2128">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -75,6 +79,7 @@
                     <textField verticalHuggingPriority="750" id="2010">
                         <rect key="frame" x="223" y="146" width="280" height="28"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="First click a button above, then choose a replacement key from the palette." id="2011">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -84,6 +89,7 @@
                     <textField verticalHuggingPriority="750" id="2094">
                         <rect key="frame" x="72" y="50" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Delete:" id="2102">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -93,6 +99,7 @@
                     <textField verticalHuggingPriority="750" id="2108">
                         <rect key="frame" x="72" y="83" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Emacs Meta:" id="2116">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -102,6 +109,7 @@
                     <textField verticalHuggingPriority="750" id="2140">
                         <rect key="frame" x="72" y="112" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Emacs Cursor:" id="2141">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -111,6 +119,7 @@
                     <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" id="2109">
                         <rect key="frame" x="223" y="79" width="142" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         <size key="cellSize" width="48" height="25"/>
                         <size key="intercellSpacing" width="-1" height="2"/>
@@ -148,6 +157,7 @@
                     <textField verticalHuggingPriority="750" id="2089">
                         <rect key="frame" x="72" y="20" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="New Line:" id="2093">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -157,9 +167,10 @@
                     <popUpButton verticalHuggingPriority="750" id="2090">
                         <rect key="frame" x="219" y="14" width="149" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="2091">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
+                            <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="2092"/>
                         </popUpButtonCell>
                         <connections>
@@ -172,20 +183,22 @@
                     <button id="2125">
                         <rect key="frame" x="223" y="248" width="48" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2126">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
                         <connections>
                             <action selector="performChooseInterruptProcessKey:" target="-2" id="2306"/>
-                            <binding destination="-2" name="title" keyPath="self.keyInterruptProcess.stringValue" id="2226"/>
                             <binding destination="-2" name="value" keyPath="self.isEditingKeyInterruptProcess" id="2312"/>
+                            <binding destination="-2" name="title" keyPath="self.keyInterruptProcess.stringValue" id="2226"/>
                             <outlet property="nextKeyView" destination="2130" id="2246"/>
                         </connections>
                     </button>
                     <textField verticalHuggingPriority="750" id="2129">
                         <rect key="frame" x="276" y="219" width="227" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Suspend (Scroll Lock / XOFF)" id="2132">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -195,20 +208,22 @@
                     <button id="2130">
                         <rect key="frame" x="223" y="215" width="48" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2131">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
                         <connections>
                             <action selector="performChooseSuspendKey:" target="-2" id="2309"/>
-                            <binding destination="-2" name="title" keyPath="self.keySuspend.stringValue" id="2227"/>
                             <binding destination="-2" name="value" keyPath="self.isEditingKeySuspend" id="2314"/>
+                            <binding destination="-2" name="title" keyPath="self.keySuspend.stringValue" id="2227"/>
                             <outlet property="nextKeyView" destination="2134" id="2247"/>
                         </connections>
                     </button>
                     <textField verticalHuggingPriority="750" id="2133">
                         <rect key="frame" x="276" y="186" width="227" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Resume (XON)" id="2136">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -218,20 +233,22 @@
                     <button id="2134">
                         <rect key="frame" x="223" y="182" width="48" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2135">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
                         <connections>
                             <action selector="performChooseResumeKey:" target="-2" id="2308"/>
-                            <binding destination="-2" name="title" keyPath="self.keyResume.stringValue" id="2228"/>
                             <binding destination="-2" name="value" keyPath="self.isEditingKeyResume" id="2316"/>
+                            <binding destination="-2" name="title" keyPath="self.keyResume.stringValue" id="2228"/>
                             <outlet property="nextKeyView" destination="2142" id="2248"/>
                         </connections>
                     </button>
-                    <box autoresizesSubviews="NO" verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="2139">
+                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="2139">
                         <rect key="frame" x="20" y="135" width="480" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
@@ -239,6 +256,7 @@
                     <button id="2142">
                         <rect key="frame" x="221" y="111" width="281" height="18"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" title="Map to arrow keys" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="2143">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -251,6 +269,7 @@
                     <button id="2242">
                         <rect key="frame" x="221" y="49" width="281" height="18"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" title="Map to backspace" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="2243">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -263,6 +282,7 @@
                     <textField verticalHuggingPriority="750" id="2254">
                         <rect key="frame" x="17" y="270" width="128" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2257">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -272,6 +292,7 @@
                     <button id="2255">
                         <rect key="frame" x="16" y="252" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2256">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -285,6 +306,7 @@
                     <button id="2262">
                         <rect key="frame" x="16" y="219" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2263">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -298,6 +320,7 @@
                     <button id="2268">
                         <rect key="frame" x="16" y="186" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2269">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -311,6 +334,7 @@
                     <button id="2277">
                         <rect key="frame" x="16" y="112" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2278">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -324,6 +348,7 @@
                     <button id="2283">
                         <rect key="frame" x="16" y="83" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2284">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -337,6 +362,7 @@
                     <button id="2289">
                         <rect key="frame" x="16" y="50" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2290">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -350,6 +376,7 @@
                     <button id="2295">
                         <rect key="frame" x="16" y="20" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2296">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -360,7 +387,9 @@
                         </connections>
                     </button>
                 </subviews>
+                <animations/>
             </view>
+            <animations/>
             <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
             <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
         </box>

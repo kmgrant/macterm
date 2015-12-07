@@ -203,9 +203,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface Panel_ViewManager : NSObject //{
+@interface Panel_ViewManager : NSViewController //{
 {
-	IBOutlet NSView*	managedView;
 	IBOutlet NSView*	logicalFirstResponder;
 	IBOutlet NSView*	logicalLastResponder;
 @private
@@ -231,7 +230,7 @@ changes to an interface declared in a ".mm" file.
 	logicalFirstResponder;
 	- (NSView*)
 	logicalLastResponder;
-	- (NSView*)
+	@property (readonly) NSView*
 	managedView;
 	@property (assign) SEL
 	panelDisplayAction;

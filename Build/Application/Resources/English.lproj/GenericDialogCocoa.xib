@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14D136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
+        <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="GenericDialog_ViewManager">
@@ -12,8 +13,8 @@
                 <outlet property="helpButton" destination="185" id="cbU-9G-L2y"/>
                 <outlet property="logicalFirstResponder" destination="Uuv-K9-HWg" id="dVO-NC-2s8"/>
                 <outlet property="logicalLastResponder" destination="185" id="5ok-yP-YIW"/>
-                <outlet property="managedView" destination="184" id="t6q-v7-SLJ"/>
                 <outlet property="otherButton" destination="xOj-D2-a6L" id="fPY-D3-gdG"/>
+                <outlet property="view" destination="184" id="PPs-H3-2Gg"/>
                 <outlet property="viewContainer" destination="pxA-1L-Taq" id="OAV-dI-TpE"/>
             </connections>
         </customObject>
@@ -22,13 +23,14 @@
         <box borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View">
             <rect key="frame" x="0.0" y="0.0" width="468" height="63"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <view key="contentView">
+            <view key="contentView" id="m3r-NZ-anf">
                 <rect key="frame" x="0.0" y="0.0" width="468" height="63"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="185">
                         <rect key="frame" x="18" y="16" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="198">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -40,6 +42,7 @@
                     <button verticalHuggingPriority="750" id="x4d-gD-k7q">
                         <rect key="frame" x="368" y="13" width="86" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mQS-QU-sLF">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -55,6 +58,7 @@ DQ
                     <button verticalHuggingPriority="750" id="Uuv-K9-HWg">
                         <rect key="frame" x="282" y="13" width="86" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="3po-Rh-tjU">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -69,6 +73,7 @@ Gw
                     <button verticalHuggingPriority="750" id="xOj-D2-a6L">
                         <rect key="frame" x="47" y="13" width="46" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <animations/>
                         <buttonCell key="cell" type="push" title="-" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="B7u-Gd-Ibv">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -86,11 +91,14 @@ Gw
                     <tabView drawsBackground="NO" type="noTabsNoBorder" id="pxA-1L-Taq">
                         <rect key="frame" x="0.0" y="61" width="468" height="2"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <animations/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems/>
                     </tabView>
                 </subviews>
+                <animations/>
             </view>
+            <animations/>
             <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
             <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
             <point key="canvasLocation" x="243" y="126.5"/>

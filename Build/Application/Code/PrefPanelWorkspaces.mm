@@ -2660,7 +2660,7 @@ Accessor.
 - (PrefPanelWorkspaces_WindowsViewManager*)
 windowsViewManager
 {
-	Panel_ViewManager*		parentViewManager = self.panelParent;
+	id< Panel_Parent >		parentViewManager = self.panelParent;
 	assert(nil != parentViewManager);
 	assert([parentViewManager isKindOfClass:PrefPanelWorkspaces_WindowsViewManager.class]);
 	PrefPanelWorkspaces_WindowsViewManager*		result = STATIC_CAST(parentViewManager, PrefPanelWorkspaces_WindowsViewManager*);

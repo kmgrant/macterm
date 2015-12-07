@@ -1126,7 +1126,7 @@ initWithNibNamed:(NSString*)		aNibName
 delegate:(id< Panel_Delegate >)		aDelegate
 context:(void*)						aContext
 {
-	self = [super init];
+	self = [super initWithNibName:aNibName bundle:nil];
 	if (nil != self)
 	{
 		_delegate = aDelegate;
@@ -1141,23 +1141,9 @@ context:(void*)						aContext
 		// to ensure that their bindings actually succeed)
 		[self.delegate panelViewManager:self initializeWithContext:aContext];
 		
-		// it is necessary to capture and release all top-level objects here
-		// so that "self" can actually be deallocated; otherwise, the implicit
-		// retain-count of 1 on each top-level object prevents deallocation
-		{
-			NSArray*	objects = nil;
-			NSNib*		loader = [[NSNib alloc] initWithNibNamed:aNibName bundle:nil];
-			BOOL		loadOK = [loader instantiateNibWithOwner:self topLevelObjects:&objects];
-			
-			
-			[loader release];
-			if (NO == loadOK)
-			{
-				[self release];
-				return nil;
-			}
-			[objects makeObjectsPerformSelector:@selector(release)];
-		}
+		// NSViewController implicitly loads the NIB when the "view"
+		// property is accessed; force that here
+		[self view];
 	}
 	return self;
 }// initWithDelegate:
@@ -1188,7 +1174,7 @@ Instructs the view to save all changes and prepare to be torn down
 performCloseAndAccept:(id)	sender
 {
 #pragma unused(sender)
-	[self.delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:YES];
+	[self.delegate panelViewManager:self didFinishUsingContainerView:self.view userAccepted:YES];
 }// performCloseAndAccept:
 
 
@@ -1202,7 +1188,7 @@ down (e.g. in a modal sheet, when the user clicks Cancel).
 performCloseAndDiscard:(id)		sender
 {
 #pragma unused(sender)
-	[self.delegate panelViewManager:self didFinishUsingContainerView:self->managedView userAccepted:NO];
+	[self.delegate panelViewManager:self didFinishUsingContainerView:self.view userAccepted:NO];
 }// performCloseAndDiscard:
 
 
@@ -1297,12 +1283,16 @@ logicalLastResponder
 /*!
 Returns the view that contains the entire panel.
 
+NOTE:	This is now redundant with the "view" property of
+		the parent NSViewController.  This method may be
+		removed in the future.
+
 (4.1)
 */
 - (NSView*)
 managedView
 {
-	return self->managedView;
+	return self.view;
 }// managedView
 
 
@@ -1402,28 +1392,34 @@ panelResizeAxes
 }// panelResizeAxes
 
 
-#pragma mark NSNibAwaking
+#pragma mark NSViewController
 
 
 /*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
+
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
 
 (4.1)
 */
 - (void)
-awakeFromNib
+loadView
 {
-	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
-	assert(nil != managedView);
+	[super loadView];
+	
 	assert(nil != logicalFirstResponder);
 	assert(nil != logicalLastResponder);
 	
 	self->_isPanelUserInterfaceLoaded = YES;
 	
-	[self.delegate panelViewManager:self didLoadContainerView:self->managedView];
-}// awakeFromNib
+	[self.delegate panelViewManager:self didLoadContainerView:self.view];
+}// loadView
 
 
 @end // Panel_ViewManager
