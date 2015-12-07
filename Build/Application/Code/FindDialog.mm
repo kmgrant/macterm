@@ -72,10 +72,10 @@
 /*!
 Manages the Find user interface.
 */
-@interface FindDialog_Handler : NSObject< FindDialog_ViewManagerChannel, PopoverManager_Delegate > //{
+@interface FindDialog_Handler : NSObject< FindDialog_VCDelegate, PopoverManager_Delegate > //{
 {
 	FindDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
-	FindDialog_ViewManager*			viewMgr;			// loads the Find interface
+	FindDialog_VC*					viewMgr;			// loads the Find interface
 	Popover_Window*					containerWindow;	// holds the Find dialog view
 	NSView*							managedView;		// the view that implements the majority of the interface
 	TerminalWindowRef				terminalWindow;		// the terminal window for which this dialog applies
@@ -121,19 +121,19 @@ Manages the Find user interface.
 	- (TerminalWindowRef)
 	terminalWindow;
 
-// FindDialog_ViewManagerChannel
+// FindDialog_VCDelegate
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	didLoadManagedView:(NSView*)_;
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	didSearchInManagedView:(NSView*)_
 	withQuery:(NSString*)_;
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	didFinishUsingManagedView:(NSView*)_
 	acceptingSearch:(BOOL)_
 	finalOptions:(FindDialog_Options)_;
@@ -587,7 +587,7 @@ display
 	{
 		// no focus is done the first time because this is
 		// eventually done in "findDialog:didLoadManagedView:"
-		self->viewMgr = [[FindDialog_ViewManager alloc]
+		self->viewMgr = [[FindDialog_VC alloc]
 							initForTerminalWindow:[self terminalWindow] responder:self
 													initialOptions:self->cachedOptions];
 	}
@@ -727,12 +727,12 @@ terminalWindow
 }// terminalWindow
 
 
-#pragma mark FindDialog_ViewManagerChannel
+#pragma mark FindDialog_VCDelegate
 
 
 /*!
-Called when a FindDialog_ViewManager has finished loading
-and initializing its view; responds by displaying the view
+Called when a FindDialog_VC has finished loading and
+initializing its view; responds by displaying the view
 in a window and giving it keyboard focus.
 
 Since this may be invoked multiple times, the window is
@@ -741,8 +741,8 @@ only created during the first invocation.
 (4.0)
 */
 - (void)
-findDialog:(FindDialog_ViewManager*)	aViewMgr
-didLoadManagedView:(NSView*)			aManagedView
+findDialog:(FindDialog_VC*)		aViewMgr
+didLoadManagedView:(NSView*)	aManagedView
 {
 	self->managedView = aManagedView;
 	if (nil == self->containerWindow)
@@ -771,7 +771,7 @@ Called when highlighting should be removed.
 (4.1)
 */
 - (void)
-findDialog:(FindDialog_ViewManager*)							aViewMgr
+findDialog:(FindDialog_VC*)										aViewMgr
 clearSearchHighlightingInContext:(FindDialog_SearchContext)		aContext
 {
 #pragma unused(aViewMgr)
@@ -788,9 +788,9 @@ equivalent to "[aViewMgr searchText]".
 (4.0)
 */
 - (void)
-findDialog:(FindDialog_ViewManager*)	aViewMgr
-didSearchInManagedView:(NSView*)		aManagedView
-withQuery:(NSString*)					searchText
+findDialog:(FindDialog_VC*)			aViewMgr
+didSearchInManagedView:(NSView*)	aManagedView
+withQuery:(NSString*)				searchText
 {
 #pragma unused(aManagedView)
 	BOOL		didSearch = NO;
@@ -816,7 +816,7 @@ opened.
 (4.0)
 */
 - (void)
-findDialog:(FindDialog_ViewManager*)	aViewMgr
+findDialog:(FindDialog_VC*)				aViewMgr
 didFinishUsingManagedView:(NSView*)		aManagedView
 acceptingSearch:(BOOL)					acceptedSearch
 finalOptions:(FindDialog_Options)		options
@@ -991,7 +991,7 @@ awakeFromNib
 
 
 #pragma mark -
-@implementation FindDialog_ViewManager
+@implementation FindDialog_VC
 
 
 @synthesize searchProgressHidden = _searchProgressHidden;
@@ -1006,11 +1006,11 @@ Designated initializer.
 (4.0)
 */
 - (instancetype)
-initForTerminalWindow:(TerminalWindowRef)			aTerminalWindow
-responder:(id< FindDialog_ViewManagerChannel >)		aResponder
-initialOptions:(FindDialog_Options)					options
+initForTerminalWindow:(TerminalWindowRef)	aTerminalWindow
+responder:(id< FindDialog_VCDelegate >)		aResponder
+initialOptions:(FindDialog_Options)			options
 {
-	self = [super init];
+	self = [super initWithNibName:@"FindDialogCocoa" bundle:nil];
 	if (nil != self)
 	{
 		responder = aResponder;
@@ -1022,23 +1022,9 @@ initialOptions:(FindDialog_Options)					options
 		_searchText = [@"" retain];
 		_statusText = [@"" retain];
 		
-		// it is necessary to capture and release all top-level objects here
-		// so that "self" can actually be deallocated; otherwise, the implicit
-		// retain-count of 1 on each top-level object prevents deallocation
-		{
-			NSArray*	objects = nil;
-			NSNib*		loader = [[NSNib alloc] initWithNibNamed:@"FindDialogCocoa" bundle:nil];
-			BOOL		loadOK = [loader instantiateNibWithOwner:self topLevelObjects:&objects];
-			
-			
-			[loader release];
-			if (NO == loadOK)
-			{
-				[self release];
-				return nil;
-			}
-			[objects makeObjectsPerformSelector:@selector(release)];
-		}
+		// NSViewController implicitly loads the NIB when the "view"
+		// property is accessed; force that here
+		[self view];
 	}
 	return self;
 }// initForTerminalWindow:responder:initialOptions:
@@ -1108,7 +1094,7 @@ performCloseAndRevert:(id)	sender
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
 	}
-	[self->responder findDialog:self didFinishUsingManagedView:self->managedView
+	[self->responder findDialog:self didFinishUsingManagedView:self.view
 										acceptingSearch:NO finalOptions:options];
 }// performCloseAndRevert:
 
@@ -1138,8 +1124,8 @@ performCloseAndSearch:(id)	sender
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
 	}
-	[self->responder findDialog:self didSearchInManagedView:self->managedView withQuery:queryText];
-	[self->responder findDialog:self didFinishUsingManagedView:self->managedView
+	[self->responder findDialog:self didSearchInManagedView:self.view withQuery:queryText];
+	[self->responder findDialog:self didFinishUsingManagedView:self.view
 										acceptingSearch:YES finalOptions:options];
 }// performCloseAndSearch:
 
@@ -1161,7 +1147,7 @@ performSearch:(id)	sender
 	
 	self.statusText = @"";
 	self.searchProgressHidden = NO;
-	[self->responder findDialog:self didSearchInManagedView:self->managedView withQuery:queryText];
+	[self->responder findDialog:self didSearchInManagedView:self.view withQuery:queryText];
 }// performSearch:
 
 
@@ -1302,27 +1288,6 @@ setMultiTerminalSearch:(BOOL)	isMultiTerminal
 }// setMultiTerminalSearch:
 
 
-#pragma mark NSNibAwaking
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
-
-(4.0)
-*/
-- (void)
-awakeFromNib
-{
-	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
-	assert(nil != managedView);
-	assert(nil != searchField);
-	
-	[self->responder findDialog:self didLoadManagedView:self->managedView];
-}// awakeFromNib
-
-
 #pragma mark NSTextFieldDelegate
 
 
@@ -1363,6 +1328,33 @@ doCommandBySelector:(SEL)	aSelector
 }// control:textView:doCommandBySelector:
 
 
-@end // FindDialog_ViewManager
+#pragma mark NSViewController
+
+
+/*!
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
+
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
+
+(4.1)
+*/
+- (void)
+loadView
+{
+	[super loadView];
+	
+	assert(nil != searchField);
+	
+	[self->responder findDialog:self didLoadManagedView:self.view];
+}// loadView
+
+
+@end // FindDialog_VC
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

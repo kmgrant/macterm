@@ -75,33 +75,33 @@ typedef struct FindDialog_OpaqueStruct*		FindDialog_Ref;
 
 #ifdef __OBJC__
 
-@class FindDialog_ViewManager;
+@class FindDialog_VC;
 
 /*!
-Classes that are delegates of FindDialog_ViewManager
+Classes that are delegates of FindDialog_VC
 must conform to this protocol.
 */
-@protocol FindDialog_ViewManagerChannel //{
+@protocol FindDialog_VCDelegate //{
 
 	// use this opportunity to create and display a window to wrap the Find view
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	didLoadManagedView:(NSView*)_;
 
 	// remove search highlighting
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
 
 	// perform the search yourself, then call the view manager’s "updateUserInterfaceWithMatches:didSearch:"
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	didSearchInManagedView:(NSView*)_
 	withQuery:(NSString*)_;
 
 	// perform a search yourself, but no need to update the user interface since it should be destroyed
 	- (void)
-	findDialog:(FindDialog_ViewManager*)_
+	findDialog:(FindDialog_VC*)_
 	didFinishUsingManagedView:(NSView*)_
 	acceptingSearch:(BOOL)_
 	finalOptions:(FindDialog_Options)_;
@@ -116,25 +116,24 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface FindDialog_ViewManager : NSObject< NSTextFieldDelegate > //{
+@interface FindDialog_VC : NSViewController< NSTextFieldDelegate > //{
 {
-	IBOutlet NSView*			managedView;
 	IBOutlet NSSearchField*		searchField;
 @private
-	id< FindDialog_ViewManagerChannel >		responder;
-	TerminalWindowRef						terminalWindow;
-	NSString*								_searchText;
-	NSString*								_statusText;
-	BOOL									_caseInsensitiveSearch;
-	BOOL									_multiTerminalSearch;
-	BOOL									_searchProgressHidden;
-	BOOL									_successfulSearch;
+	id< FindDialog_VCDelegate >		responder;
+	TerminalWindowRef				terminalWindow;
+	NSString*						_searchText;
+	NSString*						_statusText;
+	BOOL							_caseInsensitiveSearch;
+	BOOL							_multiTerminalSearch;
+	BOOL							_searchProgressHidden;
+	BOOL							_successfulSearch;
 }
 
 // initializers
 	- (instancetype)
 	initForTerminalWindow:(TerminalWindowRef)_
-	responder:(id< FindDialog_ViewManagerChannel >)_
+	responder:(id< FindDialog_VCDelegate >)_
 	initialOptions:(FindDialog_Options)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
@@ -178,7 +177,7 @@ Allows field actions to affect the search panel state.
 */
 @interface FindDialog_SearchField : NSSearchField //{
 {
-	IBOutlet FindDialog_ViewManager*	viewManager;
+	IBOutlet FindDialog_VC*		viewManager;
 }
 @end //}
 
