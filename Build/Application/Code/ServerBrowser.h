@@ -62,7 +62,7 @@ typedef struct ServerBrowser_OpaqueStruct*		ServerBrowser_Ref;
 
 #ifdef __OBJC__
 
-@class ServerBrowser_ViewManager;
+@class ServerBrowser_VC;
 
 
 /*!
@@ -81,52 +81,52 @@ nearly as convenient.
 
 	// the user has selected a different connection protocol type
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didSetProtocol:(Session_Protocol)_;
 
 	// the user has entered a different server host name
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didSetHostName:(NSString*)_;
 
 	// the user has entered a different server port number
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didSetPortNumber:(NSUInteger)_;
 
 	// the user has entered a different server log-in ID
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didSetUserID:(NSString*)_;
 
 @optional
 
 	// the browser has been removed
 	- (void)
-	serverBrowserDidClose:(ServerBrowser_ViewManager*)_;
+	serverBrowserDidClose:(ServerBrowser_VC*)_;
 
 @end //}
 
 
 /*!
-Classes that are delegates of ServerBrowser_ViewManager
+Classes that are delegates of ServerBrowser_VC
 must conform to this protocol.
 */
-@protocol ServerBrowser_ViewManagerChannel //{
+@protocol ServerBrowser_VCDelegate //{
 
 	// use this opportunity to create and display a window to wrap the view
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didLoadManagedView:(NSView*)_;
 
 	// when the view is going away, perform any final updates
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didFinishUsingManagedView:(NSView*)_;
 
 	// user interface has hidden or displayed something that requires the view size to change
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	setManagedView:(NSView*)_
 	toScreenFrame:(NSRect)_;
 
@@ -149,15 +149,14 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface ServerBrowser_ViewManager : NSObject< NSNetServiceBrowserDelegate > //{
+@interface ServerBrowser_VC : NSViewController< NSNetServiceBrowserDelegate > //{
 {
 	IBOutlet NSView*		discoveredHostsContainer;
 	IBOutlet NSTableView*	discoveredHostsTableView;
-	IBOutlet NSView*		managedView;
 	IBOutlet NSView*		logicalFirstResponder;
 	IBOutlet NSResponder*	nextResponderWhenHidingDiscoveredHosts;
 @private
-	id< ServerBrowser_ViewManagerChannel >	_responder;
+	id< ServerBrowser_VCDelegate >			_responder;
 	id< ServerBrowser_DataChangeObserver >	_dataObserver;
 	EventTargetRef							_eventTarget;
 	NSNetServiceBrowser*					_browser;
@@ -180,10 +179,10 @@ changes to an interface declared in a ".mm" file.
 
 // initializers
 	- (instancetype)
-	initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
+	initWithResponder:(id< ServerBrowser_VCDelegate >)_
 	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
-	initWithResponder:(id< ServerBrowser_ViewManagerChannel >)_
+	initWithResponder:(id< ServerBrowser_VCDelegate >)_
 	eventTarget:(EventTargetRef)_;
 
 // new methods
@@ -247,6 +246,10 @@ changes to an interface declared in a ".mm" file.
 	- (BOOL)
 	validateUserID:(id*)_
 	error:(NSError**)_;
+
+// NSViewController
+	- (void)
+	loadView;
 
 @end //}
 

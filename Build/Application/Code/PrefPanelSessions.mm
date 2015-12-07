@@ -5777,8 +5777,8 @@ change in server protocol.
 (4.1)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-didSetProtocol:(Session_Protocol)			aProtocol
+serverBrowser:(ServerBrowser_VC*)	aBrowser
+didSetProtocol:(Session_Protocol)	aProtocol
 {
 #pragma unused(aBrowser)
 	// save value in preferences (although only the command line
@@ -5798,8 +5798,8 @@ change in server host name.
 (4.1)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-didSetHostName:(NSString*)					aHostName
+serverBrowser:(ServerBrowser_VC*)	aBrowser
+didSetHostName:(NSString*)			aHostName
 {
 #pragma unused(aBrowser)
 	// save value in preferences (although only the command line
@@ -5819,8 +5819,8 @@ change in server port number.
 (4.1)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-didSetPortNumber:(NSUInteger)				aPortNumber
+serverBrowser:(ServerBrowser_VC*)	aBrowser
+didSetPortNumber:(NSUInteger)		aPortNumber
 {
 #pragma unused(aBrowser)
 	// save value in preferences (although only the command line
@@ -5840,8 +5840,8 @@ change in user ID.
 (4.1)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-didSetUserID:(NSString*)					aUserID
+serverBrowser:(ServerBrowser_VC*)	aBrowser
+didSetUserID:(NSString*)			aUserID
 {
 #pragma unused(aBrowser)
 	// save value in preferences (although only the command line
@@ -5860,7 +5860,7 @@ Ensures that server-related settings are saved.
 (4.1)
 */
 - (void)
-serverBrowserDidClose:(ServerBrowser_ViewManager*)	aBrowser
+serverBrowserDidClose:(ServerBrowser_VC*)	aBrowser
 {
 #pragma unused(aBrowser)
 	[self willChangeValueForKey:@"isEditingRemoteShell"];

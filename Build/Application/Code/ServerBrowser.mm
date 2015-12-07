@@ -73,10 +73,10 @@ extern "C"
 Manages the Server Browser user interface.
 */
 @interface ServerBrowser_Handler : NSObject< NSWindowDelegate, PopoverManager_Delegate,
-												ServerBrowser_ViewManagerChannel > //{
+												ServerBrowser_VCDelegate > //{
 {
 	ServerBrowser_Ref			_selfRef;					// identical to address of structure, but typed as ref
-	ServerBrowser_ViewManager*	_viewMgr;					// loads the server browser interface
+	ServerBrowser_VC*			_viewMgr;					// loads the server browser interface
 	Popover_Window*				_containerWindow;			// holds the main view
 	NSView*						_managedView;				// the view that implements the majority of the interface
 	NSWindow*					_parentWindow;				// the Cocoa window that the point is relative to
@@ -132,15 +132,15 @@ Manages the Server Browser user interface.
 	- (NSSize)
 	idealSize;
 
-// ServerBrowser_ViewManagerChannel
+// ServerBrowser_VCDelegate
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didLoadManagedView:(NSView*)_;
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	didFinishUsingManagedView:(NSView*)_;
 	- (void)
-	serverBrowser:(ServerBrowser_ViewManager*)_
+	serverBrowser:(ServerBrowser_VC*)_
 	setManagedView:(NSView*)_
 	toScreenFrame:(NSRect)_;
 
@@ -221,7 +221,7 @@ void		notifyOfClosedPopover		(EventTargetRef);
 /*!
 The private class interface.
 */
-@interface ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal) //{
+@interface ServerBrowser_VC (ServerBrowser_VCInternal) //{
 
 	- (void)
 	didDoubleClickDiscoveredHostWithSelection:(NSArray*)_;
@@ -539,11 +539,11 @@ display
 		if (nil != _eventTarget)
 		{
 			// legacy (will be removed)
-			_viewMgr = [[ServerBrowser_ViewManager alloc] initWithResponder:self eventTarget:_eventTarget];
+			_viewMgr = [[ServerBrowser_VC alloc] initWithResponder:self eventTarget:_eventTarget];
 		}
 		else
 		{
-			_viewMgr = [[ServerBrowser_ViewManager alloc] initWithResponder:self dataObserver:_dataObserver];
+			_viewMgr = [[ServerBrowser_VC alloc] initWithResponder:self dataObserver:_dataObserver];
 		}
 	}
 	else
@@ -689,13 +689,13 @@ idealSize
 }// idealSize
 
 
-#pragma mark ServerBrowser_ViewManagerChannel
+#pragma mark ServerBrowser_VCDelegate
 
 
 /*!
-Called when a ServerBrowser_ViewManager has finished
-loading and initializing its view; responds by displaying
-the view in a window and giving it keyboard focus.
+Called when a ServerBrowser_VC has finished loading and
+initializing its view; responds by displaying the view
+in a window and giving it keyboard focus.
 
 Since this may be invoked multiple times, the window is
 only created during the first invocation.
@@ -703,8 +703,8 @@ only created during the first invocation.
 (4.0)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-didLoadManagedView:(NSView*)				aManagedView
+serverBrowser:(ServerBrowser_VC*)	aBrowser
+didLoadManagedView:(NSView*)		aManagedView
 {
 	_managedView = aManagedView;
 	[_managedView retain];
@@ -750,8 +750,8 @@ that opened the popover in the first place).
 (4.0)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-didFinishUsingManagedView:(NSView*)			aManagedView
+serverBrowser:(ServerBrowser_VC*)		aBrowser
+didFinishUsingManagedView:(NSView*)		aManagedView
 {
 #pragma unused(aBrowser, aManagedView)
 	if (nil != _eventTarget)
@@ -774,9 +774,9 @@ normally the window can just be manipulated directly.
 (4.0)
 */
 - (void)
-serverBrowser:(ServerBrowser_ViewManager*)	aBrowser
-setManagedView:(NSView*)					aManagedView
-toScreenFrame:(NSRect)						aRect
+serverBrowser:(ServerBrowser_VC*)	aBrowser
+setManagedView:(NSView*)			aManagedView
+toScreenFrame:(NSRect)				aRect
 {
 #pragma unused(aBrowser, aManagedView)
 	NSRect	windowFrame = [_containerWindow frameRectForViewRect:aRect];
@@ -983,7 +983,7 @@ dealloc
 
 
 #pragma mark -
-@implementation ServerBrowser_ViewManager
+@implementation ServerBrowser_VC
 
 
 @synthesize errorMessage = _errorMessage;
@@ -998,15 +998,14 @@ Designated initializer.
 (4.0)
 */
 - (instancetype)
-initWithResponder:(id< ServerBrowser_ViewManagerChannel >)	aResponder
-dataObserver:(id< ServerBrowser_DataChangeObserver >)		aDataObserver
+initWithResponder:(id< ServerBrowser_VCDelegate >)		aResponder
+dataObserver:(id< ServerBrowser_DataChangeObserver >)	aDataObserver
 {
-	self = [super init];
+	self = [super initWithNibName:@"ServerBrowserCocoa" bundle:nil];
 	if (nil != self)
 	{
 		discoveredHostsContainer = nil;
 		discoveredHostsTableView = nil;
-		managedView = nil;
 		nextResponderWhenHidingDiscoveredHosts = nil;
 		
 		_responder = aResponder;
@@ -1051,23 +1050,9 @@ dataObserver:(id< ServerBrowser_DataChangeObserver >)		aDataObserver
 		_hidesProgress = YES;
 		_hidesUserIDError = YES;
 		
-		// it is necessary to capture and release all top-level objects here
-		// so that "self" can actually be deallocated; otherwise, the implicit
-		// retain-count of 1 on each top-level object prevents deallocation
-		{
-			NSArray*	objects = nil;
-			NSNib*		loader = [[NSNib alloc] initWithNibNamed:@"ServerBrowserCocoa" bundle:nil];
-			BOOL		loadOK = [loader instantiateNibWithOwner:self topLevelObjects:&objects];
-			
-			
-			[loader release];
-			if (NO == loadOK)
-			{
-				[self release];
-				return nil;
-			}
-			[objects makeObjectsPerformSelector:@selector(release)];
-		}
+		// NSViewController implicitly loads the NIB when the "view"
+		// property is accessed; force that here
+		[self view];
 	}
 	return self;
 }// initWithResponder:dataObserver:
@@ -1079,8 +1064,8 @@ Legacy initializer; for Carbon only, will be removed soon.
 (4.0)
 */
 - (instancetype)
-initWithResponder:(id< ServerBrowser_ViewManagerChannel >)	aResponder
-eventTarget:(EventTargetRef)								aTarget
+initWithResponder:(id< ServerBrowser_VCDelegate >)	aResponder
+eventTarget:(EventTargetRef)						aTarget
 {
 	self = [self initWithResponder:aResponder dataObserver:nil];
 	if (nil != self)
@@ -1550,9 +1535,9 @@ hidesDiscoveredHosts
 - (void)
 setHidesDiscoveredHosts:(BOOL)		flag
 {
-	NSRect const	kOldFrame = [self->managedView frame];
-	NSRect			newFrame = [self->managedView frame];
-	NSRect			convertedFrame = [self->managedView frame];
+	NSRect const	kOldFrame = self.view.frame;
+	NSRect			newFrame = self.view.frame;
+	NSRect			convertedFrame = self.view.frame;
 	
 	
 	_hidesDiscoveredHosts = flag;
@@ -1570,7 +1555,7 @@ setHidesDiscoveredHosts:(BOOL)		flag
 		
 		// fix the current keyboard focus, if necessary
 		{
-			NSWindow*		popoverWindow = [self->managedView window];
+			NSWindow*		popoverWindow = self.view.window;
 			NSResponder*	firstResponder = [popoverWindow firstResponder];
 			
 			
@@ -1586,7 +1571,7 @@ setHidesDiscoveredHosts:(BOOL)		flag
 				{
 					// current keyboard focus is in the region that is being hidden;
 					// force the keyboard focus to change to something that is visible
-					[[self->managedView window] makeFirstResponder:self->nextResponderWhenHidingDiscoveredHosts];
+					[self.view.window makeFirstResponder:self->nextResponderWhenHidingDiscoveredHosts];
 				}
 			}
 		}
@@ -1601,19 +1586,19 @@ setHidesDiscoveredHosts:(BOOL)		flag
 		convertedFrame.origin.y -= deltaHeight;
 		[self rediscoverServices];
 	}
-	convertedFrame.origin = [[self->managedView window] convertBaseToScreen:convertedFrame.origin];
+	convertedFrame.origin = [self.view.window convertBaseToScreen:convertedFrame.origin];
 	
 	if (flag)
 	{
-		[_responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
-		[self->managedView setFrame:newFrame];
+		[_responder serverBrowser:self setManagedView:self.view toScreenFrame:convertedFrame];
+		[self.view setFrame:newFrame];
 		[self->discoveredHostsContainer setHidden:flag];
 	}
 	else
 	{
 		[self->discoveredHostsContainer setHidden:flag];
-		[_responder serverBrowser:self setManagedView:self->managedView toScreenFrame:convertedFrame];
-		[self->managedView setFrame:newFrame];
+		[_responder serverBrowser:self setManagedView:self.view toScreenFrame:convertedFrame];
+		[self.view setFrame:newFrame];
 	}
 }// setHidesDiscoveredHosts:
 
@@ -1833,44 +1818,50 @@ netServiceBrowserWillSearch:(NSNetServiceBrowser*)	aNetServiceBrowser
 }// netServiceBrowserWillSearch:
 
 
-#pragma mark NSNibAwaking
+#pragma mark NSViewController
 
 
 /*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
 
-(4.0)
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
+
+(4.1)
 */
 - (void)
-awakeFromNib
+loadView
 {
-	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
+	[super loadView];
+	
 	assert(nil != discoveredHostsContainer);
 	assert(nil != discoveredHostsTableView);
-	assert(nil != managedView);
 	assert(nil != nextResponderWhenHidingDiscoveredHosts);
 	
 	self.hidesDiscoveredHosts = YES;
-	[_responder serverBrowser:self didLoadManagedView:self->managedView];
+	[_responder serverBrowser:self didLoadManagedView:self.view];
 	
 	// find out when the window will close, so that the button that opened the window can return to normal
-	[self whenObject:[self->managedView window] postsNote:NSWindowWillCloseNotification
+	[self whenObject:self.view.window postsNote:NSWindowWillCloseNotification
 						performSelector:@selector(serverBrowserWindowWillClose:)];
 	
 	// since double-click bindings require 10.4 or later, do this manually now
 	[discoveredHostsTableView setIgnoresMultiClick:NO];
 	[discoveredHostsTableView setTarget:self];
 	[discoveredHostsTableView setDoubleAction:@selector(didDoubleClickDiscoveredHostWithSelection:)];
-}// awakeFromNib
+}// loadView
 
 
-@end // ServerBrowser_ViewManager
+@end // ServerBrowser_VC
 
 
 #pragma mark -
-@implementation ServerBrowser_ViewManager (ServerBrowser_ViewManagerInternal)
+@implementation ServerBrowser_VC (ServerBrowser_VCInternal)
 
 
 /*!
@@ -2093,7 +2084,7 @@ serverBrowserWindowWillClose:(NSNotification*)	notification
 	}
 	
 	// notify the handler
-	[_responder serverBrowser:self didFinishUsingManagedView:self->managedView];
+	[_responder serverBrowser:self didFinishUsingManagedView:self.view];
 }// serverBrowserWindowWillClose:
 
 
