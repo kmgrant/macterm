@@ -63,29 +63,29 @@ typedef struct WindowTitleDialog_OpaqueStruct*		WindowTitleDialog_Ref;
 
 #ifdef __OBJC__
 
-@class WindowTitleDialog_ViewManager;
+@class WindowTitleDialog_VC;
 
 /*!
-Classes that are delegates of WindowTitleDialog_ViewManager
+Classes that are delegates of WindowTitleDialog_VC
 must conform to this protocol.
 */
-@protocol WindowTitleDialog_ViewManagerChannel //{
+@protocol WindowTitleDialog_VCDelegate //{
 
 	// use this opportunity to create and display a window to wrap the Rename view
 	- (void)
-	titleDialog:(WindowTitleDialog_ViewManager*)_
+	titleDialog:(WindowTitleDialog_VC*)_
 	didLoadManagedView:(NSView*)_;
 
 	// perform the window rename yourself, but no need to update the user interface since it should be destroyed
 	- (void)
-	titleDialog:(WindowTitleDialog_ViewManager*)_
+	titleDialog:(WindowTitleDialog_VC*)_
 	didFinishUsingManagedView:(NSView*)_
 	acceptingRename:(BOOL)_
 	finalTitle:(NSString*)_;
 
 	// return an NSString* to use for the initial title text field value
 	- (NSString*)
-	titleDialog:(WindowTitleDialog_ViewManager*)_
+	titleDialog:(WindowTitleDialog_VC*)_
 	returnInitialTitleTextForManagedView:(NSView*)_;
 
 @end //}
@@ -98,28 +98,27 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface WindowTitleDialog_ViewManager : NSObject //{
+@interface WindowTitleDialog_VC : NSViewController //{
 {
-	IBOutlet NSView*		managedView;
 	IBOutlet NSTextField*	titleField;
 @private
-	id< WindowTitleDialog_ViewManagerChannel >	_responder;
-	NSWindow*									_parentCocoaWindow;
-	HIWindowRef									_parentCarbonWindow;
-	NSString*									_titleText;
+	id< WindowTitleDialog_VCDelegate >	_responder;
+	NSWindow*							_parentCocoaWindow;
+	HIWindowRef							_parentCarbonWindow;
+	NSString*							_titleText;
 }
 
 // initializers
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
-	responder:(id< WindowTitleDialog_ViewManagerChannel >)_ NS_DESIGNATED_INITIALIZER;
+	responder:(id< WindowTitleDialog_VCDelegate >)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initForCarbonWindow:(HIWindowRef)_
-	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+	responder:(id< WindowTitleDialog_VCDelegate >)_;
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
-	responder:(id< WindowTitleDialog_ViewManagerChannel >)_;
+	responder:(id< WindowTitleDialog_VCDelegate >)_;
 
 // new methods
 	- (NSView*)

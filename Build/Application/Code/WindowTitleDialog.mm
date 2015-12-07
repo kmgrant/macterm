@@ -64,10 +64,10 @@
 /*!
 Manages the rename-window user interface.
 */
-@interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_ViewManagerChannel > //{
+@interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_VCDelegate > //{
 {
 	WindowTitleDialog_Ref					_selfRef;				// identical to address of structure, but typed as ref
-	WindowTitleDialog_ViewManager*			_viewMgr;				// loads the Rename interface
+	WindowTitleDialog_VC*					_viewMgr;				// loads the Rename interface
 	Popover_Window*							_containerWindow;		// holds the Rename dialog view
 	NSView*									_managedView;			// the view that implements the majority of the interface
 	SessionRef								_session;				// the session, if any, to which this applies
@@ -119,17 +119,17 @@ Manages the rename-window user interface.
 	- (NSSize)
 	idealSize;
 
-// WindowTitleDialog_ViewManagerChannel
+// WindowTitleDialog_VCDelegate
 	- (void)
-	titleDialog:(WindowTitleDialog_ViewManager*)_
+	titleDialog:(WindowTitleDialog_VC*)_
 	didLoadManagedView:(NSView*)_;
 	- (void)
-	titleDialog:(WindowTitleDialog_ViewManager*)_
+	titleDialog:(WindowTitleDialog_VC*)_
 	didFinishUsingManagedView:(NSView*)_
 	acceptingRename:(BOOL)_
 	finalTitle:(NSString*)_;
 	- (NSString*)
-	titleDialog:(WindowTitleDialog_ViewManager*)_
+	titleDialog:(WindowTitleDialog_VC*)_
 	returnInitialTitleTextForManagedView:(NSView*)_;
 
 @end //}
@@ -395,12 +395,12 @@ display
 		// eventually done in "titleDialog:didLoadManagedView:"
 		if (nullptr != _targetCarbonWindow)
 		{
-			_viewMgr = [[WindowTitleDialog_ViewManager alloc]
+			_viewMgr = [[WindowTitleDialog_VC alloc]
 						initForCarbonWindow:_targetCarbonWindow responder:self];
 		}
 		else
 		{
-			_viewMgr = [[WindowTitleDialog_ViewManager alloc]
+			_viewMgr = [[WindowTitleDialog_VC alloc]
 						initForCocoaWindow:_targetCocoaWindow responder:self];
 		}
 	}
@@ -515,22 +515,22 @@ idealSize
 }// idealSize
 
 
-#pragma mark WindowTitleDialog_ViewManagerChannel
+#pragma mark WindowTitleDialog_VCDelegate
 
 
 /*!
-Called when a WindowTitleDialog_ViewManager has finished
-loading and initializing its view; responds by displaying
-the view in a window and giving it keyboard focus.
+Called when a WindowTitleDialog_VC has finished loading and
+initializing its view; responds by displaying the view in a
+window and giving it keyboard focus.
 
-Since this may be invoked multiple times, the window is
-only created during the first invocation.
+Since this may be invoked multiple times, the window is only
+created during the first invocation.
 
 (4.0)
 */
 - (void)
-titleDialog:(WindowTitleDialog_ViewManager*)	aViewMgr
-didLoadManagedView:(NSView*)					aManagedView
+titleDialog:(WindowTitleDialog_VC*)		aViewMgr
+didLoadManagedView:(NSView*)			aManagedView
 {
 	_managedView = aManagedView;
 	if (nil == _containerWindow)
@@ -585,10 +585,10 @@ target window.
 (4.0)
 */
 - (void)
-titleDialog:(WindowTitleDialog_ViewManager*)	aViewMgr
-didFinishUsingManagedView:(NSView*)				aManagedView
-acceptingRename:(BOOL)							acceptedRename
-finalTitle:(NSString*)							newTitle
+titleDialog:(WindowTitleDialog_VC*)		aViewMgr
+didFinishUsingManagedView:(NSView*)		aManagedView
+acceptingRename:(BOOL)					acceptedRename
+finalTitle:(NSString*)					newTitle
 {
 #pragma unused(aViewMgr, aManagedView)
 	// hide the popover
@@ -640,8 +640,8 @@ title text parameter.
 (4.0)
 */
 - (NSString*)
-titleDialog:(WindowTitleDialog_ViewManager*)		aViewMgr
-returnInitialTitleTextForManagedView:(NSView*)		aManagedView
+titleDialog:(WindowTitleDialog_VC*)				aViewMgr
+returnInitialTitleTextForManagedView:(NSView*)	aManagedView
 {
 #pragma unused(aViewMgr, aManagedView)
 	NSString*	result = nil;
@@ -687,7 +687,7 @@ returnInitialTitleTextForManagedView:(NSView*)		aManagedView
 
 
 #pragma mark -
-@implementation WindowTitleDialog_ViewManager
+@implementation WindowTitleDialog_VC
 
 
 @synthesize titleText = _titleText;
@@ -699,11 +699,11 @@ Designated initializer.
 (4.0)
 */
 - (instancetype)
-initForCocoaWindow:(NSWindow*)							aCocoaWindow
-orCarbonWindow:(HIWindowRef)							aCarbonWindow
-responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
+initForCocoaWindow:(NSWindow*)					aCocoaWindow
+orCarbonWindow:(HIWindowRef)					aCarbonWindow
+responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
 {
-	self = [super init];
+	self = [super initWithNibName:@"WindowTitleDialogCocoa" bundle:nil];
 	if (nil != self)
 	{
 		_responder = aResponder;
@@ -711,23 +711,9 @@ responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
 		_parentCocoaWindow = aCocoaWindow;
 		_titleText = [@"" retain];
 		
-		// it is necessary to capture and release all top-level objects here
-		// so that "self" can actually be deallocated; otherwise, the implicit
-		// retain-count of 1 on each top-level object prevents deallocation
-		{
-			NSArray*	objects = nil;
-			NSNib*		loader = [[NSNib alloc] initWithNibNamed:@"WindowTitleDialogCocoa" bundle:nil];
-			BOOL		loadOK = [loader instantiateNibWithOwner:self topLevelObjects:&objects];
-			
-			
-			[loader release];
-			if (NO == loadOK)
-			{
-				[self release];
-				return nil;
-			}
-			[objects makeObjectsPerformSelector:@selector(release)];
-		}
+		// NSViewController implicitly loads the NIB when the "view"
+		// property is accessed; force that here
+		[self view];
 	}
 	return self;
 }// initForCocoaWindow:orCarbonWindow:responder:
@@ -739,8 +725,8 @@ Initializer for Carbon-based windows.
 (4.0)
 */
 - (instancetype)
-initForCarbonWindow:(HIWindowRef)						aWindow
-responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
+initForCarbonWindow:(HIWindowRef)				aWindow
+responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
 {
 	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow responder:aResponder];
 	if (nil != self)
@@ -757,8 +743,8 @@ be the designated initializer.
 (4.0)
 */
 - (instancetype)
-initForCocoaWindow:(NSWindow*)							aWindow
-responder:(id< WindowTitleDialog_ViewManagerChannel >)	aResponder
+initForCocoaWindow:(NSWindow*)					aWindow
+responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
 {
 	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr responder:aResponder];
 	if (nil != self)
@@ -823,7 +809,7 @@ performCloseAndRename:(id)	sender
 									: [NSString stringWithString:_titleText];
 		
 		
-		[_responder titleDialog:self didFinishUsingManagedView:self->managedView
+		[_responder titleDialog:self didFinishUsingManagedView:self.view
 										acceptingRename:YES finalTitle:newTitleText];
 	}
 }// performCloseAndRename:
@@ -842,33 +828,39 @@ IMPORTANT:	It is appropriate at this time for the
 performCloseAndRevert:(id)	sender
 {
 #pragma unused(sender)
-	[_responder titleDialog:self didFinishUsingManagedView:self->managedView
+	[_responder titleDialog:self didFinishUsingManagedView:self.view
 									acceptingRename:NO finalTitle:nil];
 }// performCloseAndRevert:
 
 
-#pragma mark NSNibAwaking
+#pragma mark NSViewController
 
 
 /*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
 
-(4.0)
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
+
+(4.1)
 */
 - (void)
-awakeFromNib
+loadView
 {
-	// NOTE: superclass does not implement "awakeFromNib", otherwise it should be called here
-	assert(nil != managedView);
+	[super loadView];
+	
 	assert(nil != titleField);
 	
-	[_responder titleDialog:self didLoadManagedView:self->managedView];
-	self.titleText = [_responder titleDialog:self returnInitialTitleTextForManagedView:self->managedView];
-}// awakeFromNib
+	[_responder titleDialog:self didLoadManagedView:self.view];
+	self.titleText = [_responder titleDialog:self returnInitialTitleTextForManagedView:self.view];
+}// loadView
 
 
-@end // WindowTitleDialog_ViewManager
+@end // WindowTitleDialog_VC
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
