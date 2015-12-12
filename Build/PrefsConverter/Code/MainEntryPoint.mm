@@ -607,18 +607,20 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 			{
 				// prompt the user to restart; the actual forced-quit is not performed
 				// within the converter, but rather within the main Python script front-end
+				NSAlert*	errorBox = [[[NSAlert alloc] init] autorelease];
 				NSString*	button1 = NSLocalizedString(@"Quit Preferences Converter", @"button label");
 				NSString*	messageText = NSLocalizedString(@"Your preferences have been migrated to a new format.  Please run MacTerm again to use the migrated settings.",
 															@"displayed upon successful conversion");
 				NSString*	helpText = NSLocalizedString(@"This version of MacTerm will now be able to read your existing preferences.",
 															@"displayed upon successful conversion");
-				//int			clickedButton = NSAlertFirstButtonReturn;
 				
 				
 				// display a message to the user
-				UNUSED_RETURN(int)[[NSAlert alertWithMessageText:messageText defaultButton:button1 alternateButton:nil
-																	otherButton:nil informativeTextWithFormat:helpText, nil]
-									runModal];
+				errorBox.messageText = messageText;
+				errorBox.informativeText = helpText;
+				UNUSED_RETURN(NSButton*)[errorBox addButtonWithTitle:button1];
+				
+				UNUSED_RETURN(int)[errorBox runModal];
 			}
 		}
 	}

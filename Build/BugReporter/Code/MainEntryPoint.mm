@@ -214,10 +214,16 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 				// generate OS version information
 				// (again, this must be in URL-encoded format!)
 			#if BUG_REPORT_INCLUDES_OS_VERSION
-				CFStringAppend(modifiedURLCFString, CFSTR("%20%20Mac%20OS%20X%20"));
-				CFStringAppend(modifiedURLCFString, (CFStringRef)[[[NSProcessInfo processInfo] operatingSystemVersionString]
-																	stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]);
-				CFStringAppend(modifiedURLCFString, CFSTR("%0D"));
+				{
+					NSCharacterSet*		allowedChars = [NSCharacterSet URLQueryAllowedCharacterSet];
+					NSString*			versionString = [[[NSProcessInfo processInfo] operatingSystemVersionString]
+															stringByAddingPercentEncodingWithAllowedCharacters:allowedChars];
+					
+					
+					CFStringAppend(modifiedURLCFString, CFSTR("%20%20Mac%20OS%20X%20"));
+					CFStringAppend(modifiedURLCFString, BRIDGE_CAST(versionString, CFStringRef));
+					CFStringAppend(modifiedURLCFString, CFSTR("%0D"));
+				}
 			#endif
 				
 				// generate application version information
