@@ -48,7 +48,7 @@
 #include <CFRetainRelease.h>
 
 // application includes
-#include "TerminalTextAttributes.typedef.h"
+#include "TextAttributes.h"
 
 
 
@@ -63,7 +63,7 @@ enum
 #pragma mark Types
 
 typedef UniChar*								TerminalLine_TextIterator;
-typedef std::vector< TerminalTextAttributes >   TerminalLine_TextAttributesList;
+typedef std::vector< TextAttributes_Object >	TerminalLine_TextAttributesList;
 
 
 /*!
@@ -86,7 +86,7 @@ struct TerminalLine_AttributeInfo
 	inline TerminalLine_AttributeInfo (TerminalLine_AttributeInfo const&);
 
 private:
-	TerminalTextAttributes				globalAttributes;   //!< attributes that apply to every character (e.g. double-sized text)
+	TextAttributes_Object				globalAttributes;   //!< attributes that apply to every character (e.g. double-sized text)
 	TerminalLine_TextAttributesList		attributeVector;	//!< where character attributes exist
 };
 
@@ -148,13 +148,13 @@ struct TerminalLine_Object
 	inline TerminalLine_TextAttributesList const&
 	returnAttributeVector () const;
 	
-	inline TerminalTextAttributes
+	inline TextAttributes_Object
 	returnGlobalAttributes () const;
 	
 	inline TerminalLine_TextAttributesList&
 	returnMutableAttributeVector ();
 	
-	inline TerminalTextAttributes&
+	inline TextAttributes_Object&
 	returnMutableGlobalAttributes ();
 	
 	void
@@ -250,7 +250,7 @@ a single line of a terminal buffer.
 TerminalLine_AttributeInfo::
 TerminalLine_AttributeInfo ()
 :
-globalAttributes(kTerminalTextAttributesAllOff),
+globalAttributes(),
 attributeVector(kTerminalLine_MaximumCharacterCount)
 {
 }// TerminalLine_AttributeInfo constructor
@@ -342,7 +342,7 @@ such as a “double-size” mode.
 
 (4.1)
 */
-TerminalTextAttributes
+TextAttributes_Object
 TerminalLine_Object::
 returnGlobalAttributes ()
 const
@@ -406,7 +406,7 @@ character-by-character version, returnMutableAttributeVector().
 
 (4.1)
 */
-TerminalTextAttributes&
+TextAttributes_Object&
 TerminalLine_Object::
 returnMutableGlobalAttributes ()
 {

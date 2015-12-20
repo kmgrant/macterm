@@ -11,6 +11,7 @@
 		0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
 		0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
+		0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A23A8D11C21077B00156B1E /* TextAttributes.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */; };
@@ -234,6 +235,7 @@
 		0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusDead.icns; path = Application/Resources/IconForSessionStatusDead.icns; sourceTree = "<group>"; };
 		0A1FE93E1A39F196003C81BA /* XPCCallPythonClient.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "XPCCallPythonClient.objc++.h"; path = "Shared/Code/XPCCallPythonClient.objc++.h"; sourceTree = "<group>"; };
 		0A21A1CD131766EA0012240D /* DefaultFormat4.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultFormat4.plist; path = Application/Resources/DefaultFormat4.plist; sourceTree = "<group>"; };
+		0A23A8D11C21077B00156B1E /* TextAttributes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TextAttributes.mm; path = Application/Code/TextAttributes.mm; sourceTree = "<group>"; };
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelTabs.mm; path = Application/Code/GenericPanelTabs.mm; sourceTree = "<group>"; };
 		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
@@ -319,7 +321,7 @@
 		0A46043B0554376100ACDF3A /* Terminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Terminal.h; path = Application/Code/Terminal.h; sourceTree = "<group>"; };
 		0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalScreenRef.typedef.h; path = Application/Code/TerminalScreenRef.typedef.h; sourceTree = "<group>"; };
 		0A46043E0554376100ACDF3A /* TerminalSpeaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalSpeaker.h; path = Application/Code/TerminalSpeaker.h; sourceTree = "<group>"; };
-		0A46043F0554376100ACDF3A /* TerminalTextAttributes.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalTextAttributes.typedef.h; path = Application/Code/TerminalTextAttributes.typedef.h; sourceTree = "<group>"; };
+		0A46043F0554376100ACDF3A /* TextAttributes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextAttributes.h; path = Application/Code/TextAttributes.h; sourceTree = "<group>"; };
 		0A4604400554376100ACDF3A /* TerminalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalView.h; path = Application/Code/TerminalView.h; sourceTree = "<group>"; };
 		0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalViewRef.typedef.h; path = Application/Code/TerminalViewRef.typedef.h; sourceTree = "<group>"; };
 		0A4604420554376100ACDF3A /* TerminalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindow.h; path = Application/Code/TerminalWindow.h; sourceTree = "<group>"; };
@@ -806,6 +808,7 @@
 				0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */,
 				0A46FE28055432A400ACDF3A /* TerminalView.mm */,
 				0A46FE29055432A400ACDF3A /* TerminalWindow.mm */,
+				0A23A8D11C21077B00156B1E /* TextAttributes.mm */,
 				0A46FE2D055432A400ACDF3A /* TextTranslation.cp */,
 				0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
@@ -868,12 +871,12 @@
 				0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */,
 				0A46043D0554376100ACDF3A /* TerminalScreenRef.typedef.h */,
 				0A46043E0554376100ACDF3A /* TerminalSpeaker.h */,
-				0A46043F0554376100ACDF3A /* TerminalTextAttributes.typedef.h */,
 				0A47A0AC14B3EBE000E39136 /* TerminalToolbar.objc++.h */,
 				0A4604400554376100ACDF3A /* TerminalView.h */,
 				0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */,
 				0A4604420554376100ACDF3A /* TerminalWindow.h */,
 				0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */,
+				0A46043F0554376100ACDF3A /* TextAttributes.h */,
 				0A4604470554376100ACDF3A /* TextTranslation.h */,
 				0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */,
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,
@@ -1391,6 +1394,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */,
+				0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */,
 				0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */,
 				0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */,
 				0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */,

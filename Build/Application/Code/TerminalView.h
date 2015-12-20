@@ -72,6 +72,7 @@ class NSWindow;
 #include "Preferences.h"
 #include "TerminalRangeDescription.typedef.h"
 #include "TerminalScreenRef.typedef.h"
+#include "TextAttributes.h"
 
 
 
@@ -153,8 +154,6 @@ enum TerminalView_Event
 															//!  different; this is NOT called if the number of search
 															//!  results simply changes (context: TerminalViewRef)
 };
-
-#include "TerminalTextAttributes.typedef.h"
 
 typedef UInt16 TerminalView_TextFlags;
 enum

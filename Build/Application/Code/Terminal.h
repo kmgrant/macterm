@@ -59,7 +59,7 @@
 #include "Preferences.h"
 #include "SessionRef.typedef.h"
 #include "TerminalSpeaker.h"
-#include "TerminalTextAttributes.typedef.h"
+#include "TextAttributes.h"
 #include "VTKeys.h"
 
 
@@ -279,7 +279,7 @@ typedef void (*Terminal_ScreenRunProcPtr)	(TerminalScreenRef			inScreen,
 											 CFStringRef				inLineTextBufferAsCFStringOrNull,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumnNumber,
-											 TerminalTextAttributes		inAttributes,
+											 TextAttributes_Object		inAttributes,
 											 void*						inContextPtr);
 inline void
 Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
@@ -288,7 +288,7 @@ Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
 								 CFStringRef					inLineTextBufferAsCFStringOrNull,
 								 Terminal_LineRef				inRow,
 								 UInt16							inZeroBasedStartColumnNumber,
-								 TerminalTextAttributes			inAttributes,
+								 TextAttributes_Object			inAttributes,
 								 void*							inContextPtr)
 {
 	(*inUserRoutine)(inScreen, inLineTextBufferOrWhitespaceLength, inLineTextBufferAsCFStringOrNull,
@@ -400,16 +400,16 @@ Terminal_Result
 Terminal_Result
 	Terminal_ChangeLineAttributes			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
-											 TerminalTextAttributes		inAttributesToSet,
-											 TerminalTextAttributes		inAttributesToClear);
+											 TextAttributes_Object		inAttributesToSet,
+											 TextAttributes_Object		inAttributesToClear);
 
 Terminal_Result
 	Terminal_ChangeLineRangeAttributes		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumn,
 											 SInt16						inZeroBasedPastTheEndColumnOrNegativeForLastColumn,
-											 TerminalTextAttributes		inAttributesToSet,
-											 TerminalTextAttributes		inAttributesToClear);
+											 TextAttributes_Object		inAttributesToSet,
+											 TextAttributes_Object		inAttributesToClear);
 
 Terminal_Result
 	Terminal_ChangeRangeAttributes			(TerminalScreenRef			inScreen,
@@ -418,8 +418,8 @@ Terminal_Result
 											 UInt16						inZeroBasedStartColumn,
 											 UInt16						inZeroBasedPastTheEndColumn,
 											 Boolean					inConstrainToRectangle,
-											 TerminalTextAttributes		inAttributesToSet,
-											 TerminalTextAttributes		inAttributesToClear);
+											 TextAttributes_Object		inAttributesToSet,
+											 TextAttributes_Object		inAttributesToClear);
 
 Terminal_Result
 	Terminal_CopyLineRange					(TerminalScreenRef			inScreen,
@@ -456,7 +456,7 @@ void
 Terminal_Result
 	Terminal_GetLineGlobalAttributes		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
-											 TerminalTextAttributes*	outAttributesPtr);
+											 TextAttributes_Object*		outAttributesPtr);
 
 Terminal_Result
 	Terminal_GetLine						(TerminalScreenRef			inScreen,
@@ -498,7 +498,7 @@ Terminal_Result
 Boolean
 	Terminal_CursorIsVisible				(TerminalScreenRef			inScreen);
 
-TerminalTextAttributes
+TextAttributes_Object
 	Terminal_CursorReturnAttributes			(TerminalScreenRef			inScreen);
 
 Terminal_Result

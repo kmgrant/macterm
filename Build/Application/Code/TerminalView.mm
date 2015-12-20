@@ -377,7 +377,7 @@ TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the curre
 	
 	struct
 	{
-		TerminalTextAttributes		attributes;		// current text attribute flags, affecting color of terminal text, etc.
+		TextAttributes_Object		attributes;		// current text attribute flags, affecting color of terminal text, etc.
 		NSMutableDictionary*		attributeDict;	// most recent equivalent attributed-string attributes (e.g. fonts, colors)
 		
 		struct
@@ -477,11 +477,11 @@ Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, Terminal
 														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
 void				drawTerminalScreenRunOp				(TerminalScreenRef, UInt16, CFStringRef, Terminal_LineRef, UInt16,
-														 TerminalTextAttributes, void*);
+														 TextAttributes_Object, void*);
 void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, CFIndex,
-														 CFStringRef, TerminalTextAttributes);
+														 CFStringRef, TextAttributes_Object);
 void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char,
-														 CGFloat, TerminalTextAttributes);
+														 CGFloat, TextAttributes_Object);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
 Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, TerminalView_RowIndex, Terminal_LineStackStorage*);
@@ -494,7 +494,7 @@ void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
 SInt16				getRowCharacterWidth				(My_TerminalViewPtr, TerminalView_RowIndex);
 void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, Rect*);
 void				getScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
-void				getScreenColorsForAttributes		(My_TerminalViewPtr, TerminalTextAttributes, CGDeviceColor*, CGDeviceColor*, Boolean*);
+void				getScreenColorsForAttributes		(My_TerminalViewPtr, TextAttributes_Object, CGDeviceColor*, CGDeviceColor*, Boolean*);
 Boolean				getScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor*);
 void				getScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
 void				getScreenOrigin						(My_TerminalViewPtr, SInt16*, SInt16*);
@@ -513,7 +513,7 @@ void				handleMultiClick					(My_TerminalViewPtr, UInt16);
 void				handleNewViewContainerBounds		(HIViewRef, Float32, Float32, void*);
 void				handlePendingUpdates				();
 void				highlightCurrentSelection			(My_TerminalViewPtr, Boolean, Boolean);
-void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes,
+void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, TextAttributes_Object,
 														 Boolean, Boolean);
 void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, UInt16);
 Boolean				isMonospacedFont					(FMFontFamily);
@@ -554,7 +554,7 @@ SInt16				setPortScreenPort					(My_TerminalViewPtr);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
-void				setTerminalTextAttributesDictionary	(My_TerminalViewPtr, NSMutableDictionary*, TerminalTextAttributes,
+void				setTerminalTextAttributesDictionary	(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
 														 Float32 = 1.0);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHandle,
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
@@ -566,8 +566,8 @@ void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point
 void				updateDisplay						(My_TerminalViewPtr);
 void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle);
 void				updateDisplayTimer					(EventLoopTimerRef, void*);
-void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes);
-void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TerminalTextAttributes, Boolean, Float32 = 1.0);
+void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TextAttributes_Object);
+void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TextAttributes_Object, Boolean, Float32 = 1.0);
 void				visualBell							(TerminalViewRef);
 
 } // anonymous namespace
@@ -1333,7 +1333,7 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 		
 		for (auto cellRange : viewPtr->text.searchResults)
 		{
-			highlightVirtualRange(viewPtr, cellRange, kTerminalTextAttributeSearchResult,
+			highlightVirtualRange(viewPtr, cellRange, kTextAttributes_SearchHighlight,
 									false/* is highlighted */, true/* redraw */);
 		}
 		viewPtr->text.searchResults.clear();
@@ -1393,7 +1393,7 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 		assert(false == viewPtr->text.searchResults.empty());
 		viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.begin();
 		highlightVirtualRange(viewPtr, viewPtr->text.searchResults.back(),
-								kTerminalTextAttributeSearchResult,
+								kTextAttributes_SearchHighlight,
 								true/* is highlighted */, true/* redraw */);
 		
 		// TEMPORARY - efficiency may demand a unique type of event for this
@@ -5798,8 +5798,8 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 			
 			if (nullptr != lineIterator)
 			{
-				TerminalTextAttributes		lineGlobalAttributes = 0L;
-				Terminal_Result				terminalError = kTerminal_ResultOK;
+				TextAttributes_Object	lineGlobalAttributes = 0L;
+				Terminal_Result			terminalError = kTerminal_ResultOK;
 				
 				
 				// unfortunately rendering requires knowledge of the physical location of
@@ -5838,7 +5838,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 					{
 						lineGlobalAttributes = 0;
 					}
-					if (STYLE_IS_DOUBLE_WIDTH_ONLY(lineGlobalAttributes))
+					if (lineGlobalAttributes.hasDoubleWidth())
 					{
 						Rect	rowBounds;
 						
@@ -6111,7 +6111,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 							 CFStringRef				inLineTextBufferAsCFStringOrNull,
 							 Terminal_LineRef			UNUSED_ARGUMENT(inRow),
 							 UInt16						inZeroBasedStartColumnNumber,
-							 TerminalTextAttributes		inAttributes,
+							 TextAttributes_Object		inAttributes,
 							 void*						inTerminalViewPtr)
 {
 	My_TerminalViewPtr	viewPtr = REINTERPRET_CAST(inTerminalViewPtr, My_TerminalViewPtr);
@@ -6154,7 +6154,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// than necessary; keep track of any blink attributes, and
 		// elsewhere this flag can be used to disable the animation
 		// timer when it is not needed
-		if (STYLE_BLINKING(inAttributes))
+		if (inAttributes.hasBlink())
 		{
 			RectRgn(gInvalidationScratchRegion(), &intBounds);
 			UnionRgn(gInvalidationScratchRegion(), viewPtr->animation.rendering.region,
@@ -6231,7 +6231,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					 Rect const&				inOldQuickDrawBoundaries,
 					 CFIndex					inCharacterCount,
 					 CFStringRef				inTextBufferAsCFString,
-					 TerminalTextAttributes		inAttributes)
+					 TextAttributes_Object		inAttributes)
 {
 	if (inTerminalViewPtr->isCocoa)
 	{
@@ -6282,7 +6282,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			
 			[NSGraphicsContext setCurrentContext:givenContext];
 			[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
-			if (STYLE_BOLD(inAttributes) &&
+			if (inAttributes.hasBold() &&
 				(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
 			{
 				// COMPLETE AND UTTER HACK: occasionally a font will have no bold version
@@ -6373,9 +6373,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			// position pen at start of text, on font baseline
 			MoveTo(inOldQuickDrawBoundaries.left,
 					inOldQuickDrawBoundaries.top +
-						(STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
-														? inTerminalViewPtr->text.font.doubleMetrics.ascent
-														: inTerminalViewPtr->text.font.normalMetrics.ascent));
+						(inAttributes.hasAttributes(kTextAttributes_DoubleHeightBottom)
+													? inTerminalViewPtr->text.font.doubleMetrics.ascent
+													: inTerminalViewPtr->text.font.normalMetrics.ascent));
 			
 			// if bold or large text or graphics are being drawn, do it one character
 			// at a time; bold fonts typically increase the font spacing, and double-
@@ -6586,7 +6586,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 						 UniChar					inUnicode,
 						 char						inMacRomanForQuickDraw, // DEPRECATED
 						 CGFloat					inBaselineHint,
-						 TerminalTextAttributes		inAttributes)
+						 TextAttributes_Object		inAttributes)
 {
 	CGFloat const					kMaxWidthInPixelsForSmallSizeGlyphs = 10; // arbitrary; when to switch to small-size renderings
 	TerminalGlyphDrawing_Options	drawingOptions = 0;
@@ -6623,7 +6623,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	floatBounds.size.width -= 3.0;
 	//floatBounds.size.height -= 1.0;
 	
-	if (STYLE_BOLD(inAttributes))
+	if (inAttributes.hasBold())
 	{
 		drawingOptions |= kTerminalGlyphDrawing_OptionBold;
 	}
@@ -7787,19 +7787,19 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	rowIterator = findRowIterator(inTerminalViewPtr, topRow + inZeroBasedRowIndex, &rowIteratorData);
 	if (nullptr != rowIterator)
 	{
-		TerminalTextAttributes		globalAttributes = 0L;
+		TextAttributes_Object		globalAttributes = 0L;
 		Terminal_Result				terminalError = kTerminal_ResultOK;
 		
 		
 		terminalError = Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
 		if (kTerminal_ResultOK == terminalError)
 		{
-			if (STYLE_IS_DOUBLE_HEIGHT_TOP(globalAttributes))
+			if (globalAttributes.hasDoubleHeightTop())
 			{
 				// if this is the top half, the total boundaries extend downwards by one normal line height
 				outBoundsPtr->bottom = outBoundsPtr->top + INTEGER_DOUBLED(outBoundsPtr->bottom - outBoundsPtr->top);
 			}
-			else if (STYLE_IS_DOUBLE_HEIGHT_BOTTOM(globalAttributes))
+			else if (globalAttributes.hasDoubleHeightBottom())
 			{
 				// if this is the bottom half, the total boundaries extend upwards by one normal line height
 				outBoundsPtr->top = outBoundsPtr->bottom - INTEGER_DOUBLED(outBoundsPtr->bottom - outBoundsPtr->top);
@@ -7829,7 +7829,7 @@ SInt16
 getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 						 TerminalView_RowIndex	inLineNumber)
 {
-	TerminalTextAttributes		globalAttributes = 0L;
+	TextAttributes_Object		globalAttributes = 0L;
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
 	SInt16						result = inTerminalViewPtr->text.font.widthPerCharacter;
@@ -7839,7 +7839,7 @@ getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 	if (nullptr != rowIterator)
 	{
 		UNUSED_RETURN(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
-		if (STYLE_IS_DOUBLE_ANY(globalAttributes)) result = INTEGER_DOUBLED(result);
+		if (globalAttributes.hasDoubleAny()) result = INTEGER_DOUBLED(result);
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
 	}
 	return result;
@@ -7939,7 +7939,7 @@ background view.
 */
 void
 getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
-								 TerminalTextAttributes		inAttributes,
+								 TextAttributes_Object		inAttributes,
 								 CGDeviceColor*				outForeColorPtr,
 								 CGDeviceColor*				outBackColorPtr,
 								 Boolean*					outNoBackgroundPtr)
@@ -7951,13 +7951,13 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	// choose foreground color
 	isCustom = false; // initially...
-	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_FOREGROUND_INDEX(inAttributes))
+	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */inAttributes.hasAttributes(kTextAttributes_EnableForeground))
 	{
 		// one of the “core” 256 colors was chosen
-		UInt16		fg = kTerminalView_ColorIndexNormalANSIBlack + STYLE_FOREGROUND_INDEX(inAttributes);
+		UInt16		fg = kTerminalView_ColorIndexNormalANSIBlack + inAttributes.colorIndexForeground();
 		
 		
-		if (STYLE_BOLD(inAttributes) && (fg <= kTerminalView_ColorIndexNormalANSIWhite))
+		if (inAttributes.hasBold() && (fg <= kTerminalView_ColorIndexNormalANSIWhite))
 		{
 			// “magically” use the emphasized color for text that is actually bold
 			fg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
@@ -7979,22 +7979,31 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		// “real” bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
 		// the text will still be recognizeable as boldface
-		if (STYLE_BLINKING(inAttributes)) fg = kTerminalView_ColorIndexBlinkingText;
-		else if (STYLE_BOLD(inAttributes)) fg = kTerminalView_ColorIndexBoldText;
-		else fg = kTerminalView_ColorIndexNormalText;
+		if (inAttributes.hasBlink())
+		{
+			fg = kTerminalView_ColorIndexBlinkingText;
+		}
+		else if (inAttributes.hasBold())
+		{
+			fg = kTerminalView_ColorIndexBoldText;
+		}
+		else
+		{
+			fg = kTerminalView_ColorIndexNormalText;
+		}
 		
 		getScreenCustomColor(inTerminalViewPtr, fg, outForeColorPtr);
 	}
 	
 	// choose background color
 	isCustom = false; // initially...
-	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_BACKGROUND_INDEX(inAttributes))
+	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */inAttributes.hasAttributes(kTextAttributes_EnableBackground))
 	{
 		// one of the “core” 256 colors was chosen
-		UInt16		bg = kTerminalView_ColorIndexNormalANSIBlack + STYLE_BACKGROUND_INDEX(inAttributes);
+		UInt16		bg = kTerminalView_ColorIndexNormalANSIBlack + inAttributes.colorIndexBackground();
 		
 		
-		if (STYLE_BOLD(inAttributes) && (bg <= kTerminalView_ColorIndexNormalANSIWhite))
+		if (inAttributes.hasBold() && (bg <= kTerminalView_ColorIndexNormalANSIWhite))
 		{
 			// “magically” use the emphasized color for text that is actually bold
 			bg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
@@ -8016,8 +8025,14 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		// “real” bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
 		// the text will still be recognizeable as boldface
-		if (STYLE_BLINKING(inAttributes)) bg = kTerminalView_ColorIndexBlinkingBackground;
-		else if (STYLE_BOLD(inAttributes)) bg = kTerminalView_ColorIndexBoldBackground;
+		if (inAttributes.hasBlink())
+		{
+			bg = kTerminalView_ColorIndexBlinkingBackground;
+		}
+		else if (inAttributes.hasBold())
+		{
+			bg = kTerminalView_ColorIndexBoldBackground;
+		}
 		else
 		{
 			bg = kTerminalView_ColorIndexNormalBackground;
@@ -8027,7 +8042,7 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	}
 	
 	// to invert, swap the colors and make sure the background is drawn
-	if (STYLE_INVERSE_VIDEO(inAttributes))
+	if (inAttributes.hasAttributes(kTextAttributes_StyleInverse))
 	{
 		std::swap< CGDeviceColor >(*outForeColorPtr, *outBackColorPtr);
 		*outNoBackgroundPtr = false;
@@ -8041,7 +8056,10 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		*outNoBackgroundPtr = false;
 	}
 	
-	if (STYLE_CONCEALED(inAttributes)) *outForeColorPtr = *outBackColorPtr; // make “invisible” by using same colors for everything
+	if (inAttributes.hasConceal())
+	{
+		*outForeColorPtr = *outBackColorPtr; // make “invisible” by using same colors for everything
+	}
 }// getScreenColorsForAttributes
 
 
@@ -8988,7 +9006,7 @@ highlightCurrentSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 									inTerminalViewPtr->text.selection.range.second.second);
 	#endif
 		highlightVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range,
-								kTerminalTextAttributeSelected, inIsHighlighted, inRedraw);
+								kTextAttributes_Selected, inIsHighlighted, inRedraw);
 	}
 }// highlightCurrentSelection
 
@@ -9024,7 +9042,7 @@ LOCALIZE THIS:	The highlighting scheme should be
 void
 highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 						 TerminalView_CellRange const&	inRange,
-						 TerminalTextAttributes			inHighlightingStyle,
+						 TextAttributes_Object			inHighlightingStyle,
 						 Boolean						inIsHighlighted,
 						 Boolean						inRedraw)
 {
@@ -9050,9 +9068,9 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 												inTerminalViewPtr->text.selection.isRectangular,
 												(inIsHighlighted)
 												? inHighlightingStyle
-												: kTerminalTextAttributesAllOff/* attributes to set */,
+												: TextAttributes_Object()/* attributes to set */,
 												(inIsHighlighted)
-												? kTerminalTextAttributesAllOff
+												? TextAttributes_Object()
 												: inHighlightingStyle/* attributes to clear */);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}
@@ -10824,7 +10842,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
 						}
 					#endif
-						viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
+						viewPtr->text.attributes = kTextAttributes_Invalid; // forces attributes to reset themselves properly
 						
 						// if, after drawing all text, no text is actually blinking,
 						// then disable the animation timer (so unnecessary refreshes
@@ -10925,7 +10943,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 					{
 						CGContextSaveRestore	_(drawingContext);
-						TerminalTextAttributes	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+						TextAttributes_Object	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
 						CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left - 1,
 																				viewPtr->screen.cursor.bounds.top - 1,
 																				viewPtr->screen.cursor.bounds.right -
@@ -10937,8 +10955,14 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						
 						// flip colors and paint at the current blink alpha value
-						if (cursorAttributes & kTerminalTextAttributeInverseVideo) cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
-						else cursorAttributes |= kTerminalTextAttributeInverseVideo;
+						if (cursorAttributes.hasAttributes(kTextAttributes_StyleInverse))
+						{
+							cursorAttributes.removeAttributes(kTextAttributes_StyleInverse);
+						}
+						else
+						{
+							cursorAttributes.addAttributes(kTextAttributes_StyleInverse);
+						}
 						useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
 												true/* is cursor */,
 												cursorBlinks(viewPtr)
@@ -11447,7 +11471,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				{
 					// TEMPORARY - could adjust this to only invalidate the part that was
 					// actually added/removed
-					highlightVirtualRange(viewPtr, oldSelectionRange, kTerminalTextAttributeSelected,
+					highlightVirtualRange(viewPtr, oldSelectionRange, kTextAttributes_Selected,
 											false/* highlighted */, true/* draw */);
 					highlightCurrentSelection(viewPtr, true/* highlighted */, true/* draw */);
 					copySelectedTextIfUserPreference(viewPtr);
@@ -12649,7 +12673,7 @@ setPortScreenPort	(My_TerminalViewPtr		inTerminalViewPtr)
 			if (oldViewPtr != inTerminalViewPtr) // is last-used window different?
 			{
 				oldViewPtr = inTerminalViewPtr;
-				inTerminalViewPtr->text.attributes = kInvalidTerminalTextAttributes; // attributes will need setting
+				inTerminalViewPtr->text.attributes = kTextAttributes_Invalid; // attributes will need setting
 				result = 1;
 			}
 			SetPortWindowPort(window);
@@ -12817,7 +12841,7 @@ Currently this can set the following attribute keys:
 void
 setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 										 NSMutableDictionary*		inoutDictionary,
-										 TerminalTextAttributes		inAttributes,
+										 TextAttributes_Object		inAttributes,
 										 Float32					UNUSED_ARGUMENT(inAlpha))
 {
 	//
@@ -12832,13 +12856,13 @@ setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 		NSFont*			sourceFont = originalFont;
 		
 		
-		if ((STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes)) &&
+		if ((inAttributes.hasBold() || inAttributes.hasSearchHighlight()) &&
 			(nil != inTerminalViewPtr->text.font.boldFont))
 		{
 			sourceFont = inTerminalViewPtr->text.font.boldFont;
 		}
 		
-		if (STYLE_ITALIC(inAttributes))
+		if (inAttributes.hasItalic())
 		{
 			sourceFont = [fontManager convertFont:sourceFont toHaveTrait:NSItalicFontMask];
 			if ((nil == sourceFont) ||
@@ -12879,7 +12903,7 @@ setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 			[inoutDictionary setObject:sourceFont forKey:NSFontAttributeName];
 		}
 		
-		if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
+		if (inAttributes.hasUnderline() || inAttributes.hasSearchHighlight())
 		{
 			[inoutDictionary setObject:@(1) forKey:NSUnderlineStyleAttributeName];
 		}
@@ -12916,7 +12940,7 @@ setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 																			alpha:1.0];
 			
 			
-			if (STYLE_SEARCH_RESULT(inAttributes))
+			if (inAttributes.hasSearchHighlight())
 			{
 				// use selection colors
 				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
@@ -12933,7 +12957,7 @@ setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 					foregroundNSColor = searchResultTextColor;
 				}
 			}
-			else if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+			else if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 			{
 				if (gPreferenceProxies.invertSelections)
 				{
@@ -12970,7 +12994,7 @@ setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 			if (false == inTerminalViewPtr->isActive)
 			{
 				// make the text color lighter, unless it is selected
-				if (false == STYLE_SELECTED(inAttributes))
+				if (false == inAttributes.hasSelection())
 				{
 					foregroundNSColor = [foregroundNSColor blendedColorWithFraction:0.5/* arbitrary */
 																					ofColor:[NSColor whiteColor]];
@@ -13745,7 +13769,7 @@ IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
 void
 useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 						 CGContextRef				inDrawingContext,
-						 TerminalTextAttributes		inAttributes,
+						 TextAttributes_Object		inAttributes,
 						 Boolean					inIsCursor,
 						 Float32					inDesiredAlpha)
 {
@@ -13782,7 +13806,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				// “darken” the colors if text is selected, but only in the foreground;
 				// in the background, the view renders an outline of the selection, so
 				// selected text should NOT have any special appearance in that case
-				if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+				if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 				{
 					inTerminalViewPtr->screen.currentRenderNoBackground = false;
 					
@@ -13815,7 +13839,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// not selected is FURTHER dimmed so as to emphasize the selection and show
 			// that the selection is in fact a click-through region
 			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					((false == inTerminalViewPtr->text.selection.inhibited) && STYLE_SELECTED(inAttributes) && !gApplicationIsSuspended))
+					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && !gApplicationIsSuspended))
 			{
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				
@@ -13835,7 +13859,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			
 			// give search results a special appearance
-			if (STYLE_SEARCH_RESULT(inAttributes))
+			if (inAttributes.hasSearchHighlight())
 			{
 				// use selection colors
 				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
@@ -13852,7 +13876,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				if (false == inTerminalViewPtr->text.selection.inhibited)
 				{
 					// adjust the colors if text is selected
-					if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+					if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 					{
 						searchResultBackgroundColor = [searchResultBackgroundColor colorWithShading];
 					}
@@ -13868,7 +13892,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// finally, check the foreground and background colors; do not allow
 			// them to be identical unless “concealed” is the style (e.g. perhaps
 			// text is ANSI white and the background is white; that's invisible!)
-			unless (STYLE_CONCEALED(inAttributes))
+			unless (inAttributes.hasConceal())
 			{
 				// UNIMPLEMENTED
 			}
@@ -13925,7 +13949,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				// “darken” the colors if text is selected, but only in the foreground;
 				// in the background, the view renders an outline of the selection, so
 				// selected text should NOT have any special appearance in that case
-				if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+				if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 				{
 					inTerminalViewPtr->screen.currentRenderNoBackground = false;
 					
@@ -13966,7 +13990,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// not selected is FURTHER dimmed so as to emphasize the selection and show
 			// that the selection is in fact a click-through region
 			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					((false == inTerminalViewPtr->text.selection.inhibited) && STYLE_SELECTED(inAttributes) && !gApplicationIsSuspended))
+					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && !gApplicationIsSuspended))
 			{
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				
@@ -13983,7 +14007,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			
 			// give search results a special appearance
-			if (STYLE_SEARCH_RESULT(inAttributes))
+			if (inAttributes.hasSearchHighlight())
 			{
 				// TEMPORARY: Carbon legacy will go away but for now transition this to
 				// use the new Cocoa methods for finding the appropriate colors.
@@ -14007,7 +14031,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				if (false == inTerminalViewPtr->text.selection.inhibited)
 				{
 					// adjust the colors if text is selected
-					if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
+					if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 					{
 						searchResultBackgroundColor = [searchResultBackgroundColor colorWithShading];
 					}
@@ -14023,7 +14047,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// finally, check the foreground and background colors; do not allow
 			// them to be identical unless “concealed” is the style (e.g. perhaps
 			// text is ANSI white and the background is white; that's invisible!)
-			unless (STYLE_CONCEALED(inAttributes))
+			unless (inAttributes.hasConceal())
 			{
 				RGBColor	comparedColor;
 				
@@ -14130,10 +14154,10 @@ IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
 void
 useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 							 CGContextRef				inDrawingContext,
-							 TerminalTextAttributes		inAttributes)
+							 TextAttributes_Object		inAttributes)
 {
-	if ((inTerminalViewPtr->text.attributes == kInvalidTerminalTextAttributes) ||
-			(inTerminalViewPtr->text.attributes != inAttributes))
+	if ((inTerminalViewPtr->text.attributes == kTextAttributes_Invalid) ||
+		(inTerminalViewPtr->text.attributes != inAttributes))
 	{
 		Float32		fontSize = 0.0;
 		
@@ -14143,12 +14167,12 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		//       here, EVERY time text is rendered; it could eventually
 		//       be set somewhere else, e.g. whenever the attribute bits
 		//       or font size change, a rendering size could be updated
-		if (STYLE_IS_DOUBLE_HEIGHT_TOP(inAttributes))
+		if (inAttributes.hasDoubleHeightTop())
 		{
 			// top half - do not render
 			fontSize = kArbitraryDoubleWidthDoubleHeightPseudoFontSize;
 		}
-		else if (STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes))
+		else if (inAttributes.hasDoubleHeightBottom())
 		{
 			// bottom half - double size
 			fontSize = inTerminalViewPtr->text.font.doubleMetrics.size;
@@ -14193,8 +14217,14 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			// The font is not actually used, it is just a marker so
 			// that the renderer knows it is in graphics mode.  In most
 			// cases, the terminal’s regular font is used instead.
-			if (STYLE_USE_VT_GRAPHICS(inAttributes)) TextFont(kArbitraryVTGraphicsPseudoFontID);
-			else TextFontByName(inTerminalViewPtr->text.font.familyName);
+			if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
+			{
+				TextFont(kArbitraryVTGraphicsPseudoFontID);
+			}
+			else
+			{
+				TextFontByName(inTerminalViewPtr->text.font.familyName);
+			}
 			
 			// set text size...
 			TextSize(fontSize);
@@ -14210,7 +14240,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 					STATIC_CAST(inTerminalViewPtr->text.font.thicknessHorizontalLines, SInt16));
 			
 			// 3.0 - for a sufficiently large font, allow boldface
-			if (STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
+			if (inAttributes.hasBold() || inAttributes.hasSearchHighlight())
 			{
 				Style	fontFace = GetPortTextFace(currentPort);
 				
@@ -14226,7 +14256,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			
 			// 3.0 - for a sufficiently large font, allow italicizing
-			if (STYLE_ITALIC(inAttributes))
+			if (inAttributes.hasItalic())
 			{
 				Style	fontFace = GetPortTextFace(currentPort);
 				
@@ -14243,7 +14273,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			
 			// 3.0 - for a sufficiently large font, allow underlining
-			if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
+			if (inAttributes.hasUnderline() || inAttributes.hasSearchHighlight())
 			{
 				Style	fontFace = GetPortTextFace(currentPort);
 				
@@ -14752,7 +14782,7 @@ drawRect:(NSRect)	aRect
 												rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
 												rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
 		}
-		viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
+		viewPtr->text.attributes = kTextAttributes_Invalid; // forces attributes to reset themselves properly
 		
 		// if, after drawing all text, no text is actually blinking,
 		// then disable the animation timer (so unnecessary refreshes
@@ -14838,7 +14868,7 @@ drawRect:(NSRect)	aRect
 		if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 		{
 			CGContextSaveRestore		_(drawingContext);
-			TerminalTextAttributes		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+			TextAttributes_Object		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
 			CGRect						cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
 																		viewPtr->screen.cursor.bounds.top,
 																		viewPtr->screen.cursor.bounds.right -
@@ -14850,13 +14880,13 @@ drawRect:(NSRect)	aRect
 			
 			
 			// flip colors and paint at the current blink alpha value
-			if (cursorAttributes & kTerminalTextAttributeInverseVideo)
+			if (cursorAttributes.hasAttributes(kTextAttributes_StyleInverse))
 			{
-				cursorAttributes &= ~kTerminalTextAttributeInverseVideo;
+				cursorAttributes.removeAttributes(kTextAttributes_StyleInverse);
 			}
 			else
 			{
-				cursorAttributes |= kTerminalTextAttributeInverseVideo;
+				cursorAttributes.addAttributes(kTextAttributes_StyleInverse);
 			}
 			useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
 									true/* is cursor */,
