@@ -4466,7 +4466,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	assert(addDataSource(this, inScreenDataSource));
 	
 	// miscellaneous settings
-	this->text.attributes = 0;
+	this->text.attributes = TextAttributes_Object();
 	this->text.attributeDict = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary initial size */];
 	this->text.font.normalFont = nil; // set later
 	this->text.font.boldFont = nil; // set later
@@ -5798,7 +5798,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 			
 			if (nullptr != lineIterator)
 			{
-				TextAttributes_Object	lineGlobalAttributes = 0L;
+				TextAttributes_Object	lineGlobalAttributes;
 				Terminal_Result			terminalError = kTerminal_ResultOK;
 				
 				
@@ -5836,7 +5836,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 																		&lineGlobalAttributes);
 					if (kTerminal_ResultOK != terminalError)
 					{
-						lineGlobalAttributes = 0;
+						lineGlobalAttributes.clear();
 					}
 					if (lineGlobalAttributes.hasDoubleWidth())
 					{
@@ -7787,7 +7787,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	rowIterator = findRowIterator(inTerminalViewPtr, topRow + inZeroBasedRowIndex, &rowIteratorData);
 	if (nullptr != rowIterator)
 	{
-		TextAttributes_Object		globalAttributes = 0L;
+		TextAttributes_Object		globalAttributes;
 		Terminal_Result				terminalError = kTerminal_ResultOK;
 		
 		
@@ -7829,7 +7829,7 @@ SInt16
 getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 						 TerminalView_RowIndex	inLineNumber)
 {
-	TextAttributes_Object		globalAttributes = 0L;
+	TextAttributes_Object		globalAttributes;
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
 	SInt16						result = inTerminalViewPtr->text.font.widthPerCharacter;

@@ -1817,7 +1817,7 @@ CFStringRef					stringByStrippingEndWhitespace			(CFStringRef);
 //            Changes must be kept consistent everywhere.  See below, for usage.
 inline TextAttributes_Object	styleOfVTParameter					(UInt8	inPs)
 {
-	return (1 << (inPs - 1));
+	return TextAttributes_Object(1 << (inPs - 1));
 }
 void						tabStopClearAll							(My_ScreenBufferPtr);
 UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr, Boolean);
@@ -3808,8 +3808,8 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		TerminalLine_TextIterator							textIterator = nullptr;
 		TerminalLine_TextAttributesList const&				currentAttributeVector = currentLine.returnAttributeVector();
 		auto												attrIterator = currentAttributeVector.begin();
-		TextAttributes_Object								previousAttributes = 0;
-		TextAttributes_Object								currentAttributes = 0;
+		TextAttributes_Object								previousAttributes;
+		TextAttributes_Object								currentAttributes;
 		SInt16												runStartCharacterIndex = 0;
 		SInt16												characterIndex = 0;
 		size_t												styleRunLength = 0;
@@ -9980,7 +9980,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, kTextAttributes_DoubleHeightTop/* set */,
-										kTextAttributes_RangeDoubleAny/* clear */);
+										kTextAttributes_DoubleTextAll/* clear */);
 			
 			// VT100 manual specifies that a cursor in the right half of
 			// the normal screen width should be stuck at the half-way point
@@ -10002,7 +10002,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, kTextAttributes_DoubleHeightBottom/* set */,
-										kTextAttributes_RangeDoubleAny/* clear */);
+										kTextAttributes_DoubleTextAll/* clear */);
 			
 			// VT100 manual specifies that a cursor in the right half of
 			// the normal screen width should be stuck at the half-way point
@@ -10024,7 +10024,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, kTextAttributes_DoubleWidth/* set */,
-										kTextAttributes_RangeDoubleAny/* clear */);
+										kTextAttributes_DoubleTextAll/* clear */);
 			
 			// VT100 manual specifies that a cursor in the right half of
 			// the normal screen width should be stuck at the half-way point
@@ -10084,8 +10084,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
-			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, 0/* set */,
-										kTextAttributes_RangeDoubleAny/* clear */);
+			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, TextAttributes_Object()/* set */,
+										kTextAttributes_DoubleTextAll/* clear */);
 		}
 		break;
 	
@@ -14507,7 +14507,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		SInt16								preWriteCursorX = inDataPtr->current.cursorX;
 		My_ScreenRowIndex					preWriteCursorY = inDataPtr->current.cursorY;
-		TextAttributes_Object				temporaryAttributes = 0;
+		TextAttributes_Object				temporaryAttributes;
 		CFStringInlineBuffer				inlineBuffer;
 		
 		
@@ -14814,8 +14814,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 		{
 			UniChar*							startPtr = nullptr;
 			TerminalLine_TextIterator			startIterator = nullptr;
-			TextAttributes_Object				attrib = 0;
-			TextAttributes_Object				temporaryAttributes = 0;
+			TextAttributes_Object				attrib;
+			TextAttributes_Object				temporaryAttributes;
 			SInt16								preWriteCursorX = 0;
 			SInt16								extra = 0;
 			Boolean								wrapped = false;

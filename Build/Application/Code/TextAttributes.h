@@ -41,6 +41,19 @@
 
 
 
+#pragma mark Constants
+
+/*!
+Constant values used in attributes.  (These should be
+consistent with documented bits below.)
+*/
+enum
+{
+	kTextAttributes_ValueDoubleHeightBottom		= 0x03,
+	kTextAttributes_ValueDoubleHeightTop		= 0x02,
+	kTextAttributes_ValueDoubleWidth			= 0x01
+};
+
 #pragma mark Types
 
 /*!
@@ -65,11 +78,13 @@ IMPORTANT:	The bit ranges documented below should match the
 
 Upper 32-bit range ("_upper" field):
 <pre>
-[BACKGROUND]                    [FOREGROUND]                       [B][F] [UNU.] [UNUSED]     [UNUSED]
+[BACKGROUND]                    [FOREGROUND]                       [B][F] [UNU.] [UNUSED]     [UNUSED][INV.]
 31 30 29 28  27 26 25 24  23 22 21 20  19 18 17 16    15 14 13 12  11 10  9  8   7  6  5  4   3  2  1  0
 ─┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼─────┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼─
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  └──┴───┴──┴──┴──┴───┴──┴──┴──┴─── 9-0: UNDEFINED; set to 0
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  └─── 0: if set, all bits are INVALID
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  │  │  │   │  │  │
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  └──┴───┴──┴──┴──┴───┴──┴──┴────── 9-1: UNDEFINED; set to 0
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  └───────── 10: use custom foreground color index (bits 21-12)?
@@ -143,14 +158,47 @@ Space has been allocated for larger index values in the future.
 */
 struct TextAttributes_Object
 {
-	inline
+	//! Although not strictly necessary, this class makes it easier
+	//! to keep shifts and masks consistent across all uses (and
+	//! it will not conflict with TextAttributes_Object constructors
+	//! that accept integers).  It also provides a good place for
+	//! helper methods that can handle two 32-bit halves.
+	struct BitRange
+	{
+		explicit inline
+		BitRange	(UInt32, UInt8);
+		
+		inline void
+		addExclusivelyTo	(UInt32&, UInt32&, UInt32) const;
+		
+		inline void
+		addTo	(UInt32&, UInt32&, UInt32) const;
+		
+		inline void
+		clearFrom	(UInt32&, UInt32&) const;
+		
+		inline UInt32
+		returnValue		(UInt32, UInt32) const;
+		
+		inline void
+		removeFrom	(UInt32&, UInt32&, UInt32) const;
+		
+		UInt32	_mask;
+		UInt8	_shift;
+	};
+	
+	
+	explicit inline
 	TextAttributes_Object ();
 	
-	inline
+	explicit inline
 	TextAttributes_Object	(UInt32);
 	
 	inline
 	TextAttributes_Object	(UInt32, UInt32);
+	
+	inline
+	TextAttributes_Object	(BitRange, UInt32);
 	
 	inline bool
 	operator ==	(TextAttributes_Object const&) const;
@@ -181,12 +229,6 @@ struct TextAttributes_Object
 	
 	inline bool
 	hasAttributes	(TextAttributes_Object) const;
-	
-	inline bool
-	hasAttributesIdenticalInRange	(TextAttributes_Object, TextAttributes_Object) const;
-	
-	inline bool
-	hasAttributesInRange	(TextAttributes_Object) const;
 	
 	inline bool
 	hasBlink () const;
@@ -226,69 +268,63 @@ struct TextAttributes_Object
 	
 	inline void
 	removeStyleAndColorRelatedAttributes ();
+	
+	inline UInt32
+	returnValueInRange	(TextAttributes_Object::BitRange) const;
 
 private:
 	UInt32	_upper;
 	UInt32	_lower;
 };
 
+//! the mask and shift for the bits required to represent any double-text value
+TextAttributes_Object::BitRange const	kTextAttributes_MaskDoubleText(0x03, 10 + 0);
+
+//! the mask and shift for the bits required to represent any color index value
+TextAttributes_Object::BitRange const	kTextAttributes_MaskColorIndexBackground(0x03FF, 64 - 10);
+TextAttributes_Object::BitRange const	kTextAttributes_MaskColorIndexForeground(0x03FF, 64 - 2 * 10);
+
 //
 // IMPORTANT: The constant bit ranges chosen below should match
 // the bit-range documentation block above.
 //
 
-//! indicates the attribute bits are undefined
+//! indicates that ALL the attribute bits are undefined
 TextAttributes_Object const		kTextAttributes_Invalid
-								(0xFFFFFFFF,	0xFFFFFFFF);
+								(0x00000001,	0);
 
 //! is text marked as do-not-touch by selective erase sequences?
 TextAttributes_Object const		kTextAttributes_CannotErase
 								(0,				0x00008000);
 
-//! the background color index
-TextAttributes_Object const		kTextAttributes_ColorIndexBackground
-								(0,				0xFF000000);
-
-//! the foreground color index
-TextAttributes_Object const		kTextAttributes_ColorIndexForeground
-								(0,				0x00FF0000);
-
-//! if masking "kTextAttributes_RangeDoubleAny" yields EXACTLY this
-//! value, then the bottom half of double-width and double-height
+//! if the bits in the range "kTextAttributes_MaskDoubleText" are
+//! equal to this, the bottom half of double-width and double-height
 //! text is to be rendered
 TextAttributes_Object const		kTextAttributes_DoubleHeightBottom
-								(0,				0x00000C00);
+								(kTextAttributes_MaskDoubleText, kTextAttributes_ValueDoubleHeightBottom);
 
-//! if masking "kTextAttributes_RangeDoubleAny" yields EXACTLY this
-//! value, then the top half of double-width and double-height text
-//! is to be rendered
+//! if the bits in the range "kTextAttributes_MaskDoubleText" are
+//! equal to this, the top half of double-width and double-height
+//! text is to be rendered
 TextAttributes_Object const		kTextAttributes_DoubleHeightTop
-								(0,				0x00000800);
+								(kTextAttributes_MaskDoubleText, kTextAttributes_ValueDoubleHeightTop);
 
-//! if masking "kTextAttributes_RangeDoubleAny" yields EXACTLY this
-//! value, then double-width, single-height text is to be rendered
+//! if the bits in the range "kTextAttributes_MaskDoubleText" are
+//! equal to this, double-width, single-height text is to be rendered
 TextAttributes_Object const		kTextAttributes_DoubleWidth
-								(0,				0x00000400);
+								(kTextAttributes_MaskDoubleText, kTextAttributes_ValueDoubleWidth);
+
+//! for convenience, bits to cover all possible double-text settings
+TextAttributes_Object const		kTextAttributes_DoubleTextAll
+								(kTextAttributes_MaskDoubleText, 0x03);
 
 //! if set, the background color index applies
 TextAttributes_Object const		kTextAttributes_EnableBackground
-								(0x00000200,	0);
+								(0x00000400,	0);
 
 //! if set, the foreground color index applies
 TextAttributes_Object const		kTextAttributes_EnableForeground
-								(0x00000100,	0);
-
-//! a mask that should encompass all possible background color index values
-TextAttributes_Object const		kTextAttributes_RangeColorIndexBackground
-								(0xFFC00000,	0);
-
-//! a mask that should encompass all possible foreground color index values
-TextAttributes_Object const		kTextAttributes_RangeColorIndexForeground
-								(0x003FF000,	0);
-
-//! a mask that should encompass all possible double-size attributes
-TextAttributes_Object const		kTextAttributes_RangeDoubleAny
-								(0,				0x00000C00);
+								(0x00000800,	0);
 
 //! is text highlighted as being part of a search result?
 TextAttributes_Object const		kTextAttributes_SearchHighlight
@@ -331,6 +367,164 @@ TextAttributes_Object const		kTextAttributes_VTGraphics
 #pragma mark Public Methods
 
 /*!
+Describes a range of bits within a larger space that can be
+as wide as 64 bits.
+
+IMPORTANT:	Although you can store any mask/shift combination,
+			helper methods do not handle any bit combinations
+			that would straddle the boundaries between two
+			32-bit halves.  For maximum convenience, the shift
+			must keep the mask value within one 32-bit half.
+*/
+TextAttributes_Object::BitRange::BitRange	(UInt32		inMask,
+											 UInt8		inShift)
+: _mask(inMask)
+, _shift(inShift)
+{
+	assert(inShift < 63);
+}// TextAttributes_Object::BitRange constructor
+
+
+/*!
+A short-cut for calling clearFrom() and addTo(): existing
+bits in the mask range are all cleared before the new value
+is added with bitwise-OR.  Other bits are untouched.
+
+IMPORTANT:	This does not handle shift/mask combinations
+			that would straddle the boundaries between the
+			two halves.  The shift must not cause the mask
+			value to exceed one 32-bit half or it will be
+			clipped.
+
+(4.1)
+*/
+void
+TextAttributes_Object::BitRange::addExclusivelyTo	(UInt32&	inoutUpper,
+													 UInt32&	inoutLower,
+													 UInt32		inValue)
+const
+{
+	clearFrom(inoutUpper, inoutLower);
+	addTo(inoutUpper, inoutLower, inValue);
+}// addExclusivelyTo
+
+
+/*!
+Performs a bitwise-OR of the specified value with the given
+target upper/lower ranges, applying the mask and shift as
+appropriate.  If the shift is greater than or equal to 32,
+the value is applied to the upper argument; otherwise, it
+applies to the lower argument.
+
+IMPORTANT:	This does not handle shift/mask combinations
+			that would straddle the boundaries between the
+			two halves.  The shift must not cause the mask
+			value to exceed one 32-bit half or it will be
+			clipped.
+
+(4.1)
+*/
+void
+TextAttributes_Object::BitRange::addTo	(UInt32&	inoutUpper,
+										 UInt32&	inoutLower,
+										 UInt32		inValue)
+const
+{
+	if (_shift >= 32)
+	{
+		inoutUpper |= ((inValue & _mask) << (_shift - 32));
+	}
+	else
+	{
+		inoutLower |= ((inValue & _mask) << _shift);
+	}
+}// addTo
+
+
+/*!
+This is a short-cut for calling removeFrom() using a value
+of the mask; in other words, it clears the masked bits and
+leaves other bits untouched.
+
+(4.1)
+*/
+void
+TextAttributes_Object::BitRange::clearFrom	(UInt32&	inoutUpper,
+											 UInt32&	inoutLower)
+const
+{
+	removeFrom(inoutUpper, inoutLower, _mask);
+}// clearFrom
+
+
+/*!
+Returns the value of the masked region of the given bits,
+after shifting.  If the shift is greater than or equal to
+32, the value comes from the upper argument; otherwise, it
+comes from the lower argument.
+
+IMPORTANT:	This does not handle shift/mask combinations
+			that would straddle the boundaries between the
+			two halves.  The shift must not cause the mask
+			value to exceed one 32-bit half or it will be
+			clipped.
+
+(4.1)
+*/
+UInt32
+TextAttributes_Object::BitRange::returnValue	(UInt32		inUpper,
+												 UInt32		inLower)
+const
+{
+	UInt32		result = 0;
+	
+	
+	if (_shift >= 32)
+	{
+		result = ((inUpper >> (_shift - 32)) & _mask);
+	}
+	else
+	{
+		result = ((inLower >> _shift) & _mask);
+	}
+	
+	return result;
+}// returnValue
+
+
+/*!
+Performs a bitwise-AND of the negation of the specified value
+with the given target upper/lower ranges, applying the mask
+and shift as appropriate.  If the shift is greater than or
+equal to 32, the value is applied to the upper argument;
+otherwise, it applies to the lower argument.
+
+IMPORTANT:	This does not handle shift/mask combinations
+			that would straddle the boundaries between the
+			two halves.  The shift must not cause the mask
+			value to exceed one 32-bit half or it will be
+			clipped.
+
+(4.1)
+*/
+void
+TextAttributes_Object::BitRange::removeFrom		(UInt32&	inoutUpper,
+												 UInt32&	inoutLower,
+												 UInt32		inValue)
+const
+{
+	if (_shift >= 32)
+	{
+		inoutUpper &= ~((inValue & _mask) << (_shift - 32));
+	}
+	else
+	{
+		inoutLower &= ~((inValue & _mask) << _shift);
+	}
+}// removeFrom
+
+
+/*!
 Sets all bits to zero.
 
 (4.1)
@@ -364,7 +558,30 @@ TextAttributes_Object::TextAttributes_Object	(UInt32		inUpper,
 : _upper(inUpper)
 , _lower(inLower)
 {
-}// TextAttributes_Object 2-argument constructor
+}// TextAttributes_Object 2-argument constructor (UInt32, UInt32)
+
+
+/*!
+Initializes bits by shifting the given value into the specified range.
+
+WARNING:	This does NOT yet support shifts that cross the boundary
+			between the upper 32 bits and the lower 32 bits.  The
+			mask may span more than one bit and the shift may be
+			greater than 32 but a “wide” mask should not be shifted
+			such that part of the range would straddle the boundary
+			between the upper and lower 32-bit ranges.  If you have
+			bits that require this, use a more explicit constructor
+			that specifies exact upper and lower values.
+
+(4.1)
+*/
+TextAttributes_Object::TextAttributes_Object	(BitRange	inRange,
+												 UInt32		inValue)
+: _upper(0)
+, _lower(0)
+{
+	inRange.addTo(_upper, _lower, inValue);
+}// TextAttributes_Object 2-argument constructor (BitRange, UInt32)
 
 
 /*!
@@ -429,8 +646,7 @@ UInt16
 TextAttributes_Object::colorIndexBackground ()
 const
 {
-	// upper/lower, bit shift and mask need to be consistent with kTextAttributes_ColorIndexBackground
-	return ((_upper >> 22) & 0x03FF);
+	return this->returnValueInRange(kTextAttributes_MaskColorIndexBackground);
 }// colorIndexBackground
 
 
@@ -443,8 +659,10 @@ copying the relevant bits from another set of attributes.
 void
 TextAttributes_Object::colorIndexBackgroundCopyFrom		(TextAttributes_Object		inSourceAttributes)
 {
-	_upper &= ~(kTextAttributes_RangeColorIndexBackground._upper | kTextAttributes_EnableBackground._upper);
-	_upper |= (inSourceAttributes._upper & (kTextAttributes_RangeColorIndexBackground._upper | kTextAttributes_EnableBackground._upper));
+	_upper &= ~(kTextAttributes_EnableBackground._upper);
+	_upper |= (inSourceAttributes._upper & (kTextAttributes_EnableBackground._upper));
+	kTextAttributes_MaskColorIndexBackground.addExclusivelyTo(_upper, _lower,
+																inSourceAttributes.returnValueInRange(kTextAttributes_MaskColorIndexBackground));
 }// colorIndexBackgroundCopyFrom
 
 
@@ -456,9 +674,9 @@ Sets the background-index portion of the attributes.
 void
 TextAttributes_Object::colorIndexBackgroundSet	(UInt16		inIndex)
 {
-	// upper/lower, bit shift and mask need to be consistent with kTextAttributes_ColorIndexBackground
-	_upper &= ~(kTextAttributes_RangeColorIndexBackground._upper);
-	_upper |= (kTextAttributes_EnableBackground._upper | ((STATIC_CAST(inIndex, UInt32) & 0x03FF) << 22));
+	kTextAttributes_MaskColorIndexBackground.addExclusivelyTo(_upper, _lower, inIndex);
+	_upper |= (kTextAttributes_EnableBackground._upper);
+	assert(colorIndexBackground() == inIndex); // debug
 }// colorIndexBackgroundSet
 
 
@@ -471,8 +689,7 @@ UInt16
 TextAttributes_Object::colorIndexForeground ()
 const
 {
-	// upper/lower, bit shift and mask need to be consistent with kTextAttributes_ColorIndexForeground
-	return ((_upper >> 12) & 0x03FF);
+	return this->returnValueInRange(kTextAttributes_MaskColorIndexForeground);
 }// colorIndexForeground
 
 
@@ -484,9 +701,9 @@ Sets the foreground-index portion of the attributes.
 void
 TextAttributes_Object::colorIndexForegroundSet	(UInt16		inIndex)
 {
-	// upper/lower, bit shift and mask need to be consistent with kTextAttributes_ColorIndexForeground
-	_upper &= ~(kTextAttributes_RangeColorIndexForeground._upper);
-	_upper |= (kTextAttributes_EnableForeground._upper | ((STATIC_CAST(inIndex, UInt32) & 0x03FF) << 12));
+	kTextAttributes_MaskColorIndexForeground.addExclusivelyTo(_upper, _lower, inIndex);
+	_upper |= (kTextAttributes_EnableForeground._upper);
+	assert(colorIndexForeground() == inIndex); // debug
 }// colorIndexForegroundSet
 
 
@@ -494,7 +711,7 @@ TextAttributes_Object::colorIndexForegroundSet	(UInt16		inIndex)
 Returns true if this object’s attributes include all of
 the specified attribute bits.
 
-See also hasAttributesInRange().
+See also returnValueInRange().
 
 (4.1)
 */
@@ -505,39 +722,6 @@ const
 	return ((inAttributes._upper == (_upper & inAttributes._upper)) &&
 			(inAttributes._lower == (_lower & inAttributes._lower)));
 }// hasAttributes
-
-
-/*!
-Returns true if the attributes from this object that fall inside
-the given masked range are identical to the given attributes.
-
-(4.1)
-*/
-bool
-TextAttributes_Object::hasAttributesIdenticalInRange	(TextAttributes_Object		inMask,
-														 TextAttributes_Object		inAttributes)
-const
-{
-	UInt32 const	kUpperTest = (_upper & inMask._upper);
-	UInt32 const	kLowerTest = (_lower & inMask._lower);
-	
-	
-	return ((inAttributes._upper == kUpperTest) && (inAttributes._lower == kLowerTest));
-}// hasAttributesIdenticalInRange
-
-
-/*!
-Returns true if any bit of this object’s attributes is set
-from the given masked range.
-
-(4.1)
-*/
-bool
-TextAttributes_Object::hasAttributesInRange		(TextAttributes_Object		inMask)
-const
-{
-	return ((0 != (_upper & inMask._upper)) || (0 != (_lower & inMask._lower)));
-}// hasAttributesInRange
 
 
 /*!
@@ -589,7 +773,7 @@ bool
 TextAttributes_Object::hasDoubleAny ()
 const
 {
-	return this->hasAttributesInRange(kTextAttributes_RangeDoubleAny);
+	return (0 != this->returnValueInRange(kTextAttributes_MaskDoubleText));
 }// hasDoubleAny
 
 
@@ -603,7 +787,7 @@ bool
 TextAttributes_Object::hasDoubleHeightBottom ()
 const
 {
-	return this->hasAttributesIdenticalInRange(kTextAttributes_RangeDoubleAny, kTextAttributes_DoubleHeightBottom);
+	return (kTextAttributes_ValueDoubleHeightBottom == this->returnValueInRange(kTextAttributes_MaskDoubleText));
 }// hasDoubleHeightBottom
 
 
@@ -617,7 +801,7 @@ bool
 TextAttributes_Object::hasDoubleHeightTop ()
 const
 {
-	return this->hasAttributesIdenticalInRange(kTextAttributes_RangeDoubleAny, kTextAttributes_DoubleHeightTop);
+	return (kTextAttributes_ValueDoubleHeightTop == this->returnValueInRange(kTextAttributes_MaskDoubleText));
 }// hasDoubleHeightTop
 
 
@@ -630,7 +814,7 @@ bool
 TextAttributes_Object::hasDoubleWidth ()
 const
 {
-	return this->hasAttributesIdenticalInRange(kTextAttributes_RangeDoubleAny, kTextAttributes_DoubleWidth);
+	return (kTextAttributes_ValueDoubleWidth == this->returnValueInRange(kTextAttributes_MaskDoubleText));
 }// hasDoubleWidth
 
 
@@ -710,9 +894,9 @@ void
 TextAttributes_Object::removeStyleAndColorRelatedAttributes ()
 {
 	// specify ALL bits that control styles or colors
-	_upper &= ~(kTextAttributes_RangeColorIndexBackground._upper |
-				kTextAttributes_RangeColorIndexForeground._upper |
-				kTextAttributes_EnableBackground._upper |
+	kTextAttributes_MaskColorIndexBackground.clearFrom(_upper, _lower);
+	kTextAttributes_MaskColorIndexForeground.clearFrom(_upper, _lower);
+	_upper &= ~(kTextAttributes_EnableBackground._upper |
 				kTextAttributes_EnableForeground._upper);
 	_lower &= ~(kTextAttributes_StyleBlinking._lower |
 				kTextAttributes_StyleBold._lower |
@@ -721,6 +905,25 @@ TextAttributes_Object::removeStyleAndColorRelatedAttributes ()
 				kTextAttributes_StyleItalic._lower |
 				kTextAttributes_StyleUnderline._lower);
 }// removeStyleAndColorRelatedAttributes
+
+
+/*!
+Returns the shifted, masked value of the specified range of bits.
+The argument should be recognized range constant such as
+"kTextAttributes_MaskColorIndexBackground".
+
+NOTE:	Normally you should rely on more specific accessors such as
+		colorIndexForeground(), hasBold(), etc.  See also the generic
+		bit accessor hasAttributes().
+
+(4.1)
+*/
+UInt32
+TextAttributes_Object::returnValueInRange	(TextAttributes_Object::BitRange	inRange)
+const
+{
+	return inRange.returnValue(_upper, _lower);
+}// returnValueInRange
 
 
 #endif
