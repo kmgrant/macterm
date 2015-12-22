@@ -1036,6 +1036,9 @@ public:
 	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	SInt16								argLastIndex;			//!< zero-based last parameter position in the "values" array
 	ParameterList						argList;				//!< all values provided for the current escape sequence
+	ParameterList						parameterMarkList;		//!< this list has the same size as "argList"; in parallel with "argList", it sets only two values:
+																//!  -1 to indicate that a parameter is finished (the typical case) or 0 to indicate that it is just
+																//!  a colon-separated sub-parameter; in cases like SGR, this is used to track related values
 	VariantChain						preCallbackSet;			//!< state determinant/transition callbacks invoked ahead of normal callbacks, to allow tweaks;
 																//!  a pre-callback set’s echo and reset callbacks are never used and should be nullptr; in
 																//!  addition, “normal” emulator callbacks CANNOT be used as pre-callbacks because they will
@@ -1447,6 +1450,7 @@ public:
 		kStateCSIParamDigit7	= 'PNm7',
 		kStateCSIParamDigit8	= 'PNm8',
 		kStateCSIParamDigit9	= 'PNm9',
+		kStateCSIParamDigitSub	= 'PNm:',				//!< end of sub-parameter (colons can appear more than once)
 		kStateCSIParameterEnd	= kMy_ParserStateSeenESCLeftSqBracketSemicolon,		//!< end of parameter (semicolons can appear more than once)
 		kStateCSIPrivate		= kMy_ParserStateSeenESCLeftSqBracketQuestionMark,	//!< parameter list prefixed by '?' to indicate a private sequence
 		kStateCUB				= kMy_ParserStateSeenESCLeftSqBracketParamsD,	//!< cursor backward
@@ -5984,6 +5988,7 @@ multiByteDecoder(),
 stateRepetitions(0),
 argLastIndex(0),
 argList(kMy_MaximumANSIParameters),
+parameterMarkList(kMy_MaximumANSIParameters),
 preCallbackSet(),
 currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateDeterminant(inPrimaryEmulation),
@@ -6048,6 +6053,13 @@ clearEscapeSequenceParameters ()
 	{
 		this->argList[parameterIndex] = kMy_ParamUndefined;
 	}
+	
+	parameterIndex = this->parameterMarkList.size();
+	while (--parameterIndex >= 0)
+	{
+		this->parameterMarkList[parameterIndex] = -1;
+	}
+	
 	this->argLastIndex = 0;
 }// clearEscapeSequenceParameters
 
@@ -9333,6 +9345,10 @@ returnCSINextState		(My_ParserState			inPreviousState,
 		result = kStateCSIParamDigit9;
 		break;
 	
+	case ':':
+		result = kStateCSIParamDigitSub;
+		break;
+	
 	case ';':
 		result = kStateCSIParameterEnd;
 		break;
@@ -9650,6 +9666,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 		case kStateCSIParamDigit7:
 		case kStateCSIParamDigit8:
 		case kStateCSIParamDigit9:
+		case kStateCSIParamDigitSub:
 		case kStateCSIParameterEnd:
 		case kStateCSIPrivate:
 			inNowOutNext.second = My_VT100::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
@@ -9886,8 +9903,18 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
+	case kStateCSIParamDigitSub:
+		// end of sub-parameter
+		inDataPtr->emulator.parameterMarkList[inDataPtr->emulator.argLastIndex] = 0;
+		if (inDataPtr->emulator.argLastIndex < kMy_MaximumANSIParameters)
+		{
+			++(inDataPtr->emulator.argLastIndex);
+		}
+		break;
+	
 	case kStateCSIParameterEnd:
 		// end of control sequence parameter
+		inDataPtr->emulator.parameterMarkList[inDataPtr->emulator.argLastIndex] = -1;
 		if (inDataPtr->emulator.argLastIndex < kMy_MaximumANSIParameters)
 		{
 			++(inDataPtr->emulator.argLastIndex);
@@ -10213,20 +10240,45 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateSGR:
 		// ANSI colors and other character attributes
 		{
-			SInt16		i = 0;
+			SInt16		lastCheckedIndex = 0; // current numerical value (sub-parameter or main parameter)
+			UInt16		subParameterBackCount = 0; // number of sub-parameters to check prior to current value (if any)
 			
 			
-			while (i <= inDataPtr->emulator.argLastIndex)
+			while (lastCheckedIndex <= inDataPtr->emulator.argLastIndex)
 			{
-				SInt16		p = 0;
+				// the marker array identifies values that were given as sub-parameters
+				// (most terminal modes do not recognize these)
+				Boolean const	kIsSubParam = (0 == inDataPtr->emulator.parameterMarkList[lastCheckedIndex]);
+				SInt16 const	kAnchorIndex = (lastCheckedIndex - subParameterBackCount);
+				SInt16 const	kArgsLeft = (inDataPtr->emulator.argLastIndex - kAnchorIndex);
+				SInt16			skipParameterCount = 0; // force-discard future arguments (ignored if there are sub-parameters)
+				SInt16			p = 0;
 				
 				
-				if (inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] < 0)
+				// all unused parameters receive default values
+				if (inDataPtr->emulator.argList[lastCheckedIndex] < 0)
 				{
-					inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = 0;
+					inDataPtr->emulator.argList[lastCheckedIndex] = 0;
 				}
 				
-				p = inDataPtr->emulator.argList[i];
+				if (kIsSubParam)
+				{
+					// sub-parameters (colon-separated) are not processed immediately;
+					// they are processed when a terminating argument is found
+					++subParameterBackCount;
+					++lastCheckedIndex;
+					continue;
+				}
+				
+				// normal parameter processing; if any sub-parameters have
+				// been processed, the “anchor” will actually be at the
+				// beginning of all sub-parameters (in this way, if some
+				// parameter "1" expects to then see "2", "3", and "4",
+				// there is no real difference between processing "1:2:3:4"
+				// and "1;2;3;4"; if a distinction is necessary, note that
+				// "lastCheckedIndex" and "kAnchorIndex" are the same when
+				// there are no sub-parameters present)
+				p = inDataPtr->emulator.argList[kAnchorIndex];
 				
 				// Note that a real VT100 will only understand 0-7 here.
 				// Other values are basically recognized because they are
@@ -10277,7 +10329,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTerm256Color))
 						{
 							//Console_WriteLine("request to set one of 256 background or foreground colors");
-							if (2 != (inDataPtr->emulator.argLastIndex - i))
+							if (2 != kArgsLeft)
 							{
 								if (DebugInterface_LogsTerminalInputChar())
 								{
@@ -10287,8 +10339,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							else
 							{
 								Boolean const	kSetForeground = (38 == p);
-								SInt16 const	kParam2 = inDataPtr->emulator.argList[i + 1];
-								SInt16 const	kParam3 = inDataPtr->emulator.argList[i + 2];
+								SInt16 const	kParam2 = inDataPtr->emulator.argList[kAnchorIndex + 1];
+								SInt16 const	kParam3 = inDataPtr->emulator.argList[kAnchorIndex + 2];
 								SInt16 const	kColorParam = kParam3;
 								
 								
@@ -10312,8 +10364,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 										inDataPtr->current.latentAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.drawingAttributes);
 									}
 								}
-								++i; // skip next parameter (2)
-								++i; // skip next parameter (3)
+								skipParameterCount = 2; // skip next parameters (2, 3)
 							}
 						}
 					}
@@ -10344,7 +10395,15 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						Console_WriteValue("current terminal in SGR mode does not support parameter", p);
 					}
 				}
-				++i;
+				++lastCheckedIndex;
+				if (0 == subParameterBackCount)
+				{
+					// skip any requested future parameters when processing
+					// a series of arguments (if there are sub-parameters,
+					// ignore this because sub-parameters are already handled)
+					lastCheckedIndex += skipParameterCount;
+				}
+				subParameterBackCount = 0;
 			}
 		}
 		break;
@@ -11056,6 +11115,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIParamDigit7:
 	case My_VT100::kStateCSIParamDigit8:
 	case My_VT100::kStateCSIParamDigit9:
+	case My_VT100::kStateCSIParamDigitSub:
 	case My_VT100::kStateCSIParameterEnd:
 	case My_VT100::kStateCSIPrivate:
 		inNowOutNext.second = My_VT102::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
@@ -11840,6 +11900,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIParamDigit7:
 	case My_VT100::kStateCSIParamDigit8:
 	case My_VT100::kStateCSIParamDigit9:
+	case My_VT100::kStateCSIParamDigitSub:
 	case My_VT100::kStateCSIParameterEnd:
 	case My_VT100::kStateCSIPrivate:
 	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
@@ -12677,6 +12738,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIParamDigit7:
 	case My_VT100::kStateCSIParamDigit8:
 	case My_VT100::kStateCSIParamDigit9:
+	case My_VT100::kStateCSIParamDigitSub:
 	case My_VT100::kStateCSIParameterEnd:
 	case My_VT100::kStateCSIPrivate:
 	case My_VT220::kStateCSISecondaryDA:
