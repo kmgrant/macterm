@@ -78,6 +78,7 @@ enum Terminal_Result
 	kTerminal_ResultNotEnoughMemory = -4,		//!< there is not enough memory to allocate required data structures
 	kTerminal_ResultIteratorCannotAdvance = -5,	//!< attempt to advance iterator past the end of its list
 	kTerminal_ResultNoListeningSession = -6,	//!< cannot send result anywhere because no session is currently listening
+	kTerminal_ResultUnsupported = -7,			//!< request cannot be fulfilled for target object
 };
 
 /*!
@@ -596,6 +597,18 @@ Terminal_Result
 
 Boolean
 	Terminal_WindowIsToBeMinimized			(TerminalScreenRef			inScreen);
+
+//@}
+
+//!\name True Color Definitions
+//@{
+
+Terminal_Result
+	Terminal_TrueColorGetFromID				(TerminalScreenRef			inScreen,
+											 TextAttributes_TrueColorID	inID,
+											 Float32&					outRedComponentFraction,
+											 Float32&					outGreenComponentFraction,
+											 Float32&					outBlueComponentFraction);
 
 //@}
 

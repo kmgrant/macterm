@@ -595,11 +595,6 @@ TerminalView_Result
 //!\name State Management
 //@{
 
-// THIS ALSO SETS THE STATE OF ANSI GRAPHICS MODE
-void
-	TerminalView_SetANSIColorsEnabled			(TerminalViewRef			inView,
-												 Boolean					inUseANSIColorSequences);
-
 TerminalView_Result
 	TerminalView_SetCursorRenderingEnabled		(TerminalViewRef			inView,
 												 Boolean					inIsCursorVisible);

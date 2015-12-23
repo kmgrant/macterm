@@ -1044,6 +1044,35 @@ Applications may ignore tweaks unless you also set the Identity
 
 The tweaks currently allowed are:
 
+h5. 24-Bit Color (Millions)
+
+Recognizes terminal sequences specifying any combination of the
+ red, green and blue components of a color, instead of relying on
+ look-up tables.
+
+This feature works in tandem with other coloring methods.  While
+ it is the most flexible of any method, it is also the least
+ customizable by the user.  Developers of terminal-based
+ applications are encouraged to always give users a way to change
+ the colors that are selected.
+
+Terminals impose a limit on the absolute maximum number of 24-bit
+ color specifications (foreground or background).  Currently this
+ limit is set to 2048, which means that the 2049th unique color
+ definition in a particular terminal view will replace the oldest
+ definition in that view.  This trade-off ensures that the
+ terminal does not have to keep track of a very large number of
+ unique colors, and it saves memory.  The limit may change in the
+ future.
+
+Developers should note that MacTerm does not count the base set
+ of 256 colors toward this limit.  If the required color can be
+ represented using older XTerm or ANSI color table specifications,
+ applications should prefer those (they require fewer terminal
+ sequence bytes anyway).  Also note that users can customize the
+ base 16 colors to blend more naturally with their preferred
+ Format, whereas 24-bit colors may not be changed by the user.
+
 h5. VT100
 
 h6. Fix Line Wrapping Bug

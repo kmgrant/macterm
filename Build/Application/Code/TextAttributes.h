@@ -54,7 +54,43 @@ enum
 	kTextAttributes_ValueDoubleWidth			= 0x01
 };
 
+/*!
+The limit on true color is imposed to avoid requiring a
+large number of attribute bits.  See documentation on
+TextAttributes_TrueColorID.
+*/
+enum
+{
+	kTextAttributes_TrueColorBits			= 11,
+	kTextAttributes_TrueColorIDMaximum		= ((1 << kTextAttributes_TrueColorBits) - 1)
+};
+
 #pragma mark Types
+
+/*!
+As color specifications are received through terminal
+sequences, new color definitions are created and assigned
+ID numbers.  Renderers may determine the color using the
+Terminal_TrueColorGetFromID() API.
+
+There is a mask value applied in the attributes so the ID
+may not actually support the same maximum size as its
+integer type; see "kTextAttributes_TrueColorIDMaximum".
+
+This is intentionally more compact than the original 24-bit
+specification (therefore limiting the total number of color
+combinations in terminals).  The goal is to consume fewer
+bits to associate a true color with its text.
+
+NOTE:	Color IDs are reused after a time.  In theory this
+		could mean that text could change its rendering,
+		especially for old scrollback lines in large buffers
+		where lots of unique colors are seen.  This is
+		considered an acceptable trade-off to avoid a more
+		complex scheme for remembering the true color values
+		of every piece of text in the terminal.
+*/
+typedef UInt16 TextAttributes_TrueColorID;
 
 /*!
 Terminal Attribute Bits
@@ -78,24 +114,25 @@ IMPORTANT:	The bit ranges documented below should match the
 
 Upper 32-bit range ("_upper" field):
 <pre>
-[BACKGROUND]                    [FOREGROUND]                       [B][F] [UNU.] [UNUSED]     [UNUSED][INV.]
+[BACKGROUND]                       [FOREGROUND]                          [B][F]  [T][UNUSED]  [UNUSED][INV.]
 31 30 29 28  27 26 25 24  23 22 21 20  19 18 17 16    15 14 13 12  11 10  9  8   7  6  5  4   3  2  1  0
 ─┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼─────┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼───┼──┼──┼──┼─
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  └─── 0: if set, all bits are INVALID
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  │  │  │   │  │  │
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  └──┴───┴──┴──┴──┴───┴──┴──┴────── 9-1: UNDEFINED; set to 0
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │  └──┴──┴───┴──┴──┴────── 6-1: UNDEFINED; set to 0
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   │
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │   └──────────── 7: color index is TextAttributes_TrueColorID?
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  │
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │  └─── 8: use custom foreground color index (bits 20-10)?
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  │
+ │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  └────── 9: use custom background color index (bits 31-21)?
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  └───────── 10: use custom foreground color index (bits 21-12)?
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   └──────────── 11: use custom background color index (bits 31-22)?
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │
- │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │
- │  │  │  │   │  │  │  │   │  │  └──┴───┴──┴──┴──┴─────┴──┴──┴──┴─── 21-12: index selecting a unique foreground color from a palette [1]
- │  │  │  │   │  │  │  │   │  │
- │  │  │  │   │  │  │  │   │  │
- └──┴──┴──┴───┴──┴──┴──┴───┴──┴────────────────────── 31-22: index selecting a unique background color from a palette [1]
+ │  │  │  │   │  │  │  │   │  │  │  └───┴──┴──┴──┴─────┴──┴──┴──┴───┴──┴───────── 20-10: index for unique foreground color from a palette [1]
+ │  │  │  │   │  │  │  │   │  │  │                                                       or, if bit 7 is set, a TextAttributes_TrueColorID
+ │  │  │  │   │  │  │  │   │  │  │
+ └──┴──┴──┴───┴──┴──┴──┴───┴──┴──┴─────────────────── 31-21: index for unique background color from a palette [1]
+                                                             or, if bit 7 is set, a TextAttributes_TrueColorID
 </pre>
 
 Lower 32-bit range ("_lower" field):
@@ -149,6 +186,9 @@ The values 8-15 are also recognized for the “bold” color values.
 On terminals that support 256 colors, any number from 0 to 255 is
 valid, referring to the 256-color table maintained by the terminal.
 Space has been allocated for larger index values in the future.
+Note that if the “color index is TextAttributes_TrueColorID” bit is
+set, this field is actually an TextAttributes_TrueColorID that can
+be resolved to a set of high-precision color components.
 
 [2] The 2-bit double text mode values can be one of the following
 (but please use defined constants instead of these numbers):
@@ -211,6 +251,18 @@ struct TextAttributes_Object
 	
 	inline void
 	clear ();
+	
+	inline TextAttributes_TrueColorID
+	colorIDBackground () const;
+	
+	inline void
+	colorIDBackgroundSet	(TextAttributes_TrueColorID);
+	
+	inline TextAttributes_TrueColorID
+	colorIDForeground () const;
+	
+	inline void
+	colorIDForegroundSet	(TextAttributes_TrueColorID);
 	
 	inline UInt16
 	colorIndexBackground () const;
@@ -281,8 +333,9 @@ private:
 TextAttributes_Object::BitRange const	kTextAttributes_MaskDoubleText(0x03, 10 + 0);
 
 //! the mask and shift for the bits required to represent any color index value
-TextAttributes_Object::BitRange const	kTextAttributes_MaskColorIndexBackground(0x03FF, 64 - 10);
-TextAttributes_Object::BitRange const	kTextAttributes_MaskColorIndexForeground(0x03FF, 64 - 2 * 10);
+//! (this must be at least as large as TextAttributes_TrueColorID)
+TextAttributes_Object::BitRange const	kTextAttributes_MaskColorIndexBackground(kTextAttributes_TrueColorIDMaximum, 64 - kTextAttributes_TrueColorBits);
+TextAttributes_Object::BitRange const	kTextAttributes_MaskColorIndexForeground(kTextAttributes_TrueColorIDMaximum, 64 - 2 * kTextAttributes_TrueColorBits);
 
 //
 // IMPORTANT: The constant bit ranges chosen below should match
@@ -296,6 +349,10 @@ TextAttributes_Object const		kTextAttributes_Invalid
 //! is text marked as do-not-touch by selective erase sequences?
 TextAttributes_Object const		kTextAttributes_CannotErase
 								(0,				0x00008000);
+
+//! if set, foreground and background index are TextAttributes_TrueColorID values
+TextAttributes_Object const		kTextAttributes_ColorIndexIsTrueColorID
+								(0x00000080,	0);
 
 //! if the bits in the range "kTextAttributes_MaskDoubleText" are
 //! equal to this, the bottom half of double-width and double-height
@@ -320,11 +377,11 @@ TextAttributes_Object const		kTextAttributes_DoubleTextAll
 
 //! if set, the background color index applies
 TextAttributes_Object const		kTextAttributes_EnableBackground
-								(0x00000400,	0);
+								(0x00000100,	0);
 
 //! if set, the foreground color index applies
 TextAttributes_Object const		kTextAttributes_EnableForeground
-								(0x00000800,	0);
+								(0x00000200,	0);
 
 //! is text highlighted as being part of a search result?
 TextAttributes_Object const		kTextAttributes_SearchHighlight
@@ -638,6 +695,70 @@ TextAttributes_Object::clear ()
 
 
 /*!
+Returns the true-color ID for rendering the background (cell).
+
+IMPORTANT:	You must only call this for attributes that set
+			the "kTextAttributes_ColorIndexIsTrueColorID" bit.
+
+(4.1)
+*/
+TextAttributes_TrueColorID
+TextAttributes_Object::colorIDBackground ()
+const
+{
+	assert(this->hasAttributes(kTextAttributes_ColorIndexIsTrueColorID));
+	return STATIC_CAST(colorIndexBackground(), TextAttributes_TrueColorID);
+}// colorIDBackground
+
+
+/*!
+Changes the true-color ID for rendering the foreground (text),
+adding the "kTextAttributes_ColorIndexIsTrueColorID" bit.
+
+(4.1)
+*/
+void
+TextAttributes_Object::colorIDBackgroundSet		(TextAttributes_TrueColorID		inID)
+{
+	colorIndexBackgroundSet(STATIC_CAST(inID, UInt16));
+	this->addAttributes(kTextAttributes_ColorIndexIsTrueColorID);
+	assert(colorIDBackground() == inID);
+}// colorIDBackgroundSet
+
+
+/*!
+Returns the true-color ID for rendering the foreground (text).
+
+IMPORTANT:	You must only call this for attributes that set
+			the "kTextAttributes_ColorIndexIsTrueColorID" bit.
+
+(4.1)
+*/
+TextAttributes_TrueColorID
+TextAttributes_Object::colorIDForeground ()
+const
+{
+	assert(this->hasAttributes(kTextAttributes_ColorIndexIsTrueColorID));
+	return STATIC_CAST(colorIndexForeground(), TextAttributes_TrueColorID);
+}// colorIDForeground
+
+
+/*!
+Changes the true-color ID for rendering the foreground (text),
+adding the "kTextAttributes_ColorIndexIsTrueColorID" bit.
+
+(4.1)
+*/
+void
+TextAttributes_Object::colorIDForegroundSet		(TextAttributes_TrueColorID		inID)
+{
+	colorIndexForegroundSet(STATIC_CAST(inID, UInt16));
+	this->addAttributes(kTextAttributes_ColorIndexIsTrueColorID);
+	assert(colorIDForeground() == inID);
+}// colorIDForegroundSet
+
+
+/*!
 Returns the background-index portion of the attributes.
 
 (4.1)
@@ -659,21 +780,25 @@ copying the relevant bits from another set of attributes.
 void
 TextAttributes_Object::colorIndexBackgroundCopyFrom		(TextAttributes_Object		inSourceAttributes)
 {
-	_upper &= ~(kTextAttributes_EnableBackground._upper);
-	_upper |= (inSourceAttributes._upper & (kTextAttributes_EnableBackground._upper));
+	_upper &= ~(kTextAttributes_EnableBackground._upper | kTextAttributes_ColorIndexIsTrueColorID._upper);
+	_upper |= (inSourceAttributes._upper & (kTextAttributes_EnableBackground._upper | kTextAttributes_ColorIndexIsTrueColorID._upper));
 	kTextAttributes_MaskColorIndexBackground.addExclusivelyTo(_upper, _lower,
 																inSourceAttributes.returnValueInRange(kTextAttributes_MaskColorIndexBackground));
 }// colorIndexBackgroundCopyFrom
 
 
 /*!
-Sets the background-index portion of the attributes.
+Sets the background-index portion of the attributes, clearing
+the "kTextAttributes_ColorIndexIsTrueColorID" bit.
+
+If this should remain true-color, use colorIDBackgroundSet().
 
 (4.1)
 */
 void
 TextAttributes_Object::colorIndexBackgroundSet	(UInt16		inIndex)
 {
+	_upper &= ~(kTextAttributes_ColorIndexIsTrueColorID._upper);
 	kTextAttributes_MaskColorIndexBackground.addExclusivelyTo(_upper, _lower, inIndex);
 	_upper |= (kTextAttributes_EnableBackground._upper);
 	assert(colorIndexBackground() == inIndex); // debug
@@ -694,13 +819,17 @@ const
 
 
 /*!
-Sets the foreground-index portion of the attributes.
+Sets the foreground-index portion of the attributes, clearing
+the "kTextAttributes_ColorIndexIsTrueColorID" bit.
+
+If this should remain true-color, use colorIDForegroundSet().
 
 (4.1)
 */
 void
 TextAttributes_Object::colorIndexForegroundSet	(UInt16		inIndex)
 {
+	_upper &= ~(kTextAttributes_ColorIndexIsTrueColorID._upper);
 	kTextAttributes_MaskColorIndexForeground.addExclusivelyTo(_upper, _lower, inIndex);
 	_upper |= (kTextAttributes_EnableForeground._upper);
 	assert(colorIndexForeground() == inIndex); // debug
@@ -896,7 +1025,8 @@ TextAttributes_Object::removeStyleAndColorRelatedAttributes ()
 	// specify ALL bits that control styles or colors
 	kTextAttributes_MaskColorIndexBackground.clearFrom(_upper, _lower);
 	kTextAttributes_MaskColorIndexForeground.clearFrom(_upper, _lower);
-	_upper &= ~(kTextAttributes_EnableBackground._upper |
+	_upper &= ~(kTextAttributes_ColorIndexIsTrueColorID._upper |
+				kTextAttributes_EnableBackground._upper |
 				kTextAttributes_EnableForeground._upper);
 	_lower &= ~(kTextAttributes_StyleBlinking._lower |
 				kTextAttributes_StyleBold._lower |

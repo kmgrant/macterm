@@ -670,7 +670,11 @@ typedef std::basic_string< UInt8 >				My_ByteString;
 
 typedef std::map< UniChar, CFRetainRelease >	My_PrintableByUniChar;
 
+typedef std::vector< UInt8 >					My_RGBComponentList;
+
 typedef std::vector< char >						My_TabStopList;
+
+typedef std::map< UInt32, TextAttributes_TrueColorID >		My_TrueColorIDByComponentKey;
 
 /*!
 All the information associated with either the G0 or G1
@@ -945,9 +949,10 @@ public:
 	enum
 	{
 		kVariantFlagsNone				= 0,
-		kVariantFlagXTerm256Color		= (1 << 0),		//!< corresponds to kPreferences_TagXTerm256ColorsEnabled
-		kVariantFlagXTermAlterWindow	= (1 << 1),		//!< corresponds to kPreferences_TagXTermWindowAlterationEnabled
-		kVariantFlagXTermBCE			= (1 << 2),		//!< corresponds to kPreferences_TagXTermBackgroundColorEraseEnabled
+		kVariantFlag24BitColor			= (1 << 0),		//!< corresponds to kPreferences_TagTerminal24BitColorEnabled
+		kVariantFlagXTerm256Color		= (1 << 1),		//!< corresponds to kPreferences_TagXTerm256ColorsEnabled
+		kVariantFlagXTermAlterWindow	= (1 << 2),		//!< corresponds to kPreferences_TagXTermWindowAlterationEnabled
+		kVariantFlagXTermBCE			= (1 << 3),		//!< corresponds to kPreferences_TagXTermBackgroundColorEraseEnabled
 	};
 	
 	struct Callbacks
@@ -972,6 +977,8 @@ public:
 	typedef std::vector< SInt16 >		ParameterList;
 	
 	My_Emulator		(Emulation_FullType, CFStringRef, CFStringEncoding);
+	
+	~My_Emulator ();
 	
 	Boolean
 	changeTo	(Emulation_FullType);
@@ -1046,6 +1053,11 @@ public:
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
 	VariantFlags						supportedVariants;		//!< tags identifying minor features, e.g. 256-color support
+	My_TrueColorIDByComponentKey		trueColorIDsByRGB;		//!< maps RGB elements to their table index value (ID), if any
+	My_RGBComponentList*				trueColorTableReds;		//!< red components for all 24-bit colors; allocated only for supporting terminals
+	My_RGBComponentList*				trueColorTableGreens;	//!< green components for all 24-bit colors; allocated only for supporting terminals
+	My_RGBComponentList*				trueColorTableBlues;	//!< blue components for all 24-bit colors; allocated only for supporting terminals
+	UInt16								trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
 	Boolean								addedXTerm;				//!< since multiple variants reuse these callbacks, only insert them once
 
 protected:
@@ -1086,6 +1098,9 @@ public:
 	
 	void
 	printingReset ();
+	
+	Boolean
+	return24BitColor	(Preferences_ContextRef);
 	
 	CFStringRef
 	returnAnswerBackMessage		(Preferences_ContextRef);
@@ -1776,6 +1791,7 @@ My_ScreenBufferLinePtr		createLinePtr							();
 void						cursorRestore							(My_ScreenBufferPtr);
 void						cursorSave								(My_ScreenBufferPtr);
 void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
+Boolean						defineTrueColor							(My_ScreenBufferPtr, UInt8, UInt8, UInt8, TextAttributes_TrueColorID&);
 void						deleteLinePtr							(My_ScreenBufferLinePtr);
 void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
 void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
@@ -5219,6 +5235,73 @@ Terminal_StopMonitoring		(TerminalScreenRef			inRef,
 
 
 /*!
+Returns the red, green and blue intensity fractions for
+the given “true” color, which is defined whenever a
+24-bit color terminal sequence is received.
+
+The TextAttributes_Object type can be used to extract the
+TextAttributes_TrueColorID value for a section of text.
+
+\retval kTerminal_ResultOK
+if no error occurred
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference is invalid
+
+\retval kTerminal_ResultParameterError
+if the specified index is out of range
+
+\retval kTerminal_ResultUnsupported
+if the specified terminal was not configured for true-color values
+
+(4.1)
+*/
+Terminal_Result
+Terminal_TrueColorGetFromID		(TerminalScreenRef				inRef,
+								 TextAttributes_TrueColorID		inIndex,
+								 Float32&						outRedComponentFraction,
+								 Float32&						outGreenComponentFraction,
+								 Float32&						outBlueComponentFraction)
+{
+	Terminal_Result		result = kTerminal_ResultOK;
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	
+	
+	if (nullptr == dataPtr)
+	{
+		result = kTerminal_ResultInvalidID;
+	}
+	else
+	{
+		auto	redVectorPtr = dataPtr->emulator.trueColorTableReds;
+		auto	greenVectorPtr = dataPtr->emulator.trueColorTableGreens;
+		auto	blueVectorPtr = dataPtr->emulator.trueColorTableBlues;
+		
+		
+		if ((nullptr == redVectorPtr) || (nullptr == greenVectorPtr) || (nullptr == blueVectorPtr))
+		{
+			result = kTerminal_ResultUnsupported;
+		}
+		else if ((inIndex >= (*redVectorPtr).size()) ||
+					(inIndex >= (*greenVectorPtr).size()) ||
+					(inIndex >= (*blueVectorPtr).size()))
+		{
+			result = kTerminal_ResultParameterError;
+		}
+		else
+		{
+			// convert the RGB components (each from 0 to 255) into fractions of 1.0
+			outRedComponentFraction = STATIC_CAST((*redVectorPtr)[inIndex], Float32) / 255.0;
+			outGreenComponentFraction = STATIC_CAST((*greenVectorPtr)[inIndex], Float32) / 255.0;
+			outBlueComponentFraction = STATIC_CAST((*blueVectorPtr)[inIndex], Float32) / 255.0;
+		}
+	}
+	
+	return result;
+}// TrueColorGetFromID
+
+
+/*!
 Attempts to reposition the cursor by sending enough arrow key
 sequences in the specified directions.  (A delta of zero in
 either direction means the cursor does not move on that axis.)
@@ -5996,6 +6079,10 @@ currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnResetHandler(inPrimaryEmulation)),
 pushedCallbacks(),
 supportedVariants(kVariantFlagsNone),
+trueColorTableReds(nullptr),
+trueColorTableGreens(nullptr),
+trueColorTableBlues(nullptr),
+trueColorTableNextID(0),
 addedXTerm(false),
 eightBitReceiver(false),
 eightBitTransmitter(false),
@@ -6003,6 +6090,21 @@ lockSevenBitTransmit(false)
 {
 	initializeParserStateStack();
 }// My_Emulator default constructor
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+My_Emulator::~My_Emulator()
+{
+	// NOTE: constructor initializes these to nullptr and it is
+	// safe to do an unchecked "delete" of nullptr
+	delete trueColorTableReds;
+	delete trueColorTableGreens;
+	delete trueColorTableBlues;
+}// My_Emulator destructor
 
 
 /*!
@@ -6731,6 +6833,13 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	this->speech.mode = kTerminal_SpeechModeSpeakNever;
 	
 	// set up optional terminal emulator features
+	if (return24BitColor(inTerminalConfig))
+	{
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlag24BitColor;
+		this->emulator.trueColorTableReds = new My_RGBComponentList();
+		this->emulator.trueColorTableGreens = new My_RGBComponentList();
+		this->emulator.trueColorTableBlues = new My_RGBComponentList();
+	}
 	if (returnXTerm256(inTerminalConfig))
 	{
 		this->emulator.supportedVariants |= My_Emulator::kVariantFlagXTerm256Color;
@@ -6973,6 +7082,29 @@ printingReset ()
 		}
 	}
 }// printingReset
+
+
+/*!
+Reads "kPreferences_TagTerminal24BitColorEnabled" from a
+Preferences context, and returns either that value or the
+default of true if none was found.
+
+(4.0)
+*/
+Boolean
+My_ScreenBuffer::
+return24BitColor	(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminal24BitColorEnabled,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = true; // arbitrary
+	
+	return result;
+}// return24BitColor
 
 
 /*!
@@ -10250,9 +10382,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				// (most terminal modes do not recognize these)
 				Boolean const	kIsSubParam = (0 == inDataPtr->emulator.parameterMarkList[lastCheckedIndex]);
 				SInt16 const	kAnchorIndex = (lastCheckedIndex - subParameterBackCount);
-				SInt16 const	kArgsLeft = (inDataPtr->emulator.argLastIndex - kAnchorIndex);
+				SInt16 const	kArgsLeft = (inDataPtr->emulator.argLastIndex - kAnchorIndex + 1);
 				SInt16			skipParameterCount = 0; // force-discard future arguments (ignored if there are sub-parameters)
-				SInt16			p = 0;
+				SInt16			paramValue = 0;
 				
 				
 				// all unused parameters receive default values
@@ -10278,79 +10410,237 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				// and "1;2;3;4"; if a distinction is necessary, note that
 				// "lastCheckedIndex" and "kAnchorIndex" are the same when
 				// there are no sub-parameters present)
-				p = inDataPtr->emulator.argList[kAnchorIndex];
+				paramValue = inDataPtr->emulator.argList[kAnchorIndex];
 				
 				// Note that a real VT100 will only understand 0-7 here.
 				// Other values are basically recognized because they are
 				// compatible with VT100 and are very often used (ANSI
 				// colors in particular).
-				if (p == 0)
+				if (0 == paramValue)
 				{
 					inDataPtr->current.drawingAttributes.removeStyleAndColorRelatedAttributes();
 					inDataPtr->current.latentAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.drawingAttributes);
 				}
-				else if (p < 9)
+				else if (paramValue < 9)
 				{
-					inDataPtr->current.drawingAttributes.addAttributes(styleOfVTParameter(p)); // set attribute
+					inDataPtr->current.drawingAttributes.addAttributes(styleOfVTParameter(paramValue)); // set attribute
 				}
-				else if (p == 10)
+				else if (10 == paramValue)
 				{
 					// set normal font - unsupported
 				}
-				else if (p == 11)
+				else if (11 == paramValue)
 				{
 					// set alternate font - unsupported
 				}
-				else if (p == 12)
+				else if (12 == paramValue)
 				{
 					// set alternate font, shifting by 128 - unsupported
 				}
-				else if (p == 22)
+				else if (22 == paramValue)
 				{
 					inDataPtr->current.drawingAttributes.removeAttributes(styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
 				}
-				else if ((p > 22) && (p < 29))
+				else if ((paramValue > 22) && (paramValue < 29))
 				{
-					inDataPtr->current.drawingAttributes.removeAttributes(styleOfVTParameter(p - 20)); // clear attribute
+					inDataPtr->current.drawingAttributes.removeAttributes(styleOfVTParameter(paramValue - 20)); // clear attribute
 				}
 				else
 				{
-					if ((p >= 30) && (p < 38))
+					if ((paramValue >= 30) && (paramValue < 38))
 					{
-						inDataPtr->current.drawingAttributes.colorIndexForegroundSet(p - 30);
+						inDataPtr->current.drawingAttributes.colorIndexForegroundSet(paramValue - 30);
 					}
-					else if ((p >= 40) && (p < 48))
+					else if ((paramValue >= 40) && (paramValue < 48))
 					{
-						inDataPtr->current.drawingAttributes.colorIndexBackgroundSet(p - 40);
+						inDataPtr->current.drawingAttributes.colorIndexBackgroundSet(paramValue - 40);
 						inDataPtr->current.latentAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.drawingAttributes);
 					}
-					else if ((38 == p) || (48 == p))
+					else if ((38 == paramValue) || (48 == paramValue))
 					{
-						if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTerm256Color))
+						// this implements the “popular” form, which is to abuse SGR-mode parameters
+						// themselves to obtain the color specification; colon (:) is NOT recognized
+						// as a delimiter here (note that the user can disable certain terminal
+						// tweaks, including this one, to restore standard behavior for applications
+						// that require it)
+						Boolean const	kSetForeground = (38 == paramValue);
+						
+						
+						if (kArgsLeft < 2)
 						{
-							//Console_WriteLine("request to set one of 256 background or foreground colors");
-							if (2 != kArgsLeft)
+							if (DebugInterface_LogsTerminalInputChar())
+							{
+								Console_Warning(Console_WriteLine, "expected more parameters for 24-bit-color or 256-color request");
+							}
+						}
+						else if (1 == inDataPtr->emulator.argList[kAnchorIndex + 1])
+						{
+							// documented as a transparency request; no known applications
+							// currently send this option (has no parameters) and it is
+							// the default behavior when no background color is set anyway
+							if (DebugInterface_LogsTerminalInputChar())
+							{
+								Console_Warning(Console_WriteLine, "transparency option not currently supported");
+							}
+						}
+						else if (2 == inDataPtr->emulator.argList[kAnchorIndex + 1])
+						{
+							// 24-bit color (three 8-bit values for R, G, B components)
+							if (false == inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlag24BitColor))
 							{
 								if (DebugInterface_LogsTerminalInputChar())
 								{
-									Console_Warning(Console_WriteLine, "expected exactly 3 parameters for 256-color-mode request");
+									Console_Warning(Console_WriteLine, "ignoring 24-bit-color request due to terminal configuration");
+								}
+							}
+							else if (kArgsLeft < 5)
+							{
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "expected 5 parameters for 24-bit RGB color request");
 								}
 							}
 							else
 							{
-								Boolean const	kSetForeground = (38 == p);
-								SInt16 const	kParam2 = inDataPtr->emulator.argList[kAnchorIndex + 1];
-								SInt16 const	kParam3 = inDataPtr->emulator.argList[kAnchorIndex + 2];
-								SInt16 const	kColorParam = kParam3;
+								SInt16 const	kRedParam = inDataPtr->emulator.argList[kAnchorIndex + 2];
+								SInt16 const	kGreenParam = inDataPtr->emulator.argList[kAnchorIndex + 3];
+								SInt16 const	kBlueParam = inDataPtr->emulator.argList[kAnchorIndex + 4];
 								
 								
-								if (5 != kParam2)
+								if ((kRedParam > 255) || (kRedParam < 0) ||
+									(kGreenParam > 255) || (kGreenParam < 0) ||
+									(kBlueParam > 255) || (kBlueParam < 0))
 								{
 									if (DebugInterface_LogsTerminalInputChar())
 									{
-										Console_Warning(Console_WriteValue, "unrecognized parameter for type of color (expected 5)",
-														kParam2);
+										Console_Warning(Console_WriteValueFloat4,
+														"illegal range for R, G or B value of 24-bit color (expected 0-255)",
+														kRedParam, kGreenParam, kBlueParam, 0);
 									}
+								}
+								else
+								{
+									TextAttributes_TrueColorID		colorID = 0;
+									
+									
+									//Console_WriteValueFloat4("request to set RGB 24-bit color (R,G,B,fg/bg)",
+									//							kRedParam, kGreenParam, kBlueParam, kSetForeground); // debug
+									if (false == defineTrueColor(inDataPtr, STATIC_CAST(kRedParam, UInt8),
+																	STATIC_CAST(kGreenParam, UInt8),
+																	STATIC_CAST(kBlueParam, UInt8), colorID))
+									{
+										// NOTE: this should not happen because the supportsVariant() method
+										// is called earlier, and the color table should always be allocated
+										// in terminals that support 24-bit color
+										if (DebugInterface_LogsTerminalInputChar())
+										{
+											Console_Warning(Console_WriteLine, "terminal failed to store new 24-bit color!");
+										}
+									}
+									else
+									{
+										if (kSetForeground)
+										{
+											inDataPtr->current.drawingAttributes.colorIDForegroundSet(colorID);
+										}
+										else
+										{
+											inDataPtr->current.drawingAttributes.colorIDBackgroundSet(colorID);
+										}
+									}
+								}
+								skipParameterCount = 4; // skip parameters (2, 3, 4, 5)
+							}
+						}
+						else if (3 == inDataPtr->emulator.argList[kAnchorIndex + 1])
+						{
+							if (false == inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlag24BitColor))
+							{
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "ignoring 24-bit-color request due to terminal configuration");
+								}
+							}
+							else
+							{
+								// CMY color request; this is not supported but it is probably
+								// important to strip off any “parameters”
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "CMY color type is not supported");
+								}
+								
+								if (kArgsLeft < 5)
+								{
+									if (DebugInterface_LogsTerminalInputChar())
+									{
+										Console_Warning(Console_WriteLine, "expected 5 parameters for 24-bit CMY color request");
+									}
+								}
+								else
+								{
+									skipParameterCount = 4; // skip parameters (2, 3, 4, 5)
+								}
+							}
+						}
+						else if (4 == inDataPtr->emulator.argList[kAnchorIndex + 1])
+						{
+							if (false == inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlag24BitColor))
+							{
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "ignoring 24-bit-color request due to terminal configuration");
+								}
+							}
+							else
+							{
+								// CMYK color request; this is not supported but it is probably
+								// important to strip off any “parameters”
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "CMYK color type is not supported");
+								}
+								
+								if (kArgsLeft < 6)
+								{
+									if (DebugInterface_LogsTerminalInputChar())
+									{
+										Console_Warning(Console_WriteLine, "expected 6 parameters for 24-bit CMYK color request");
+									}
+								}
+								else
+								{
+									skipParameterCount = 5; // skip parameters (2, 3, 4, 5, 6)
+								}
+							}
+						}
+						else if (5 == inDataPtr->emulator.argList[kAnchorIndex + 1])
+						{
+							// index into XTerm 256-color table
+							if (kArgsLeft < 2)
+							{
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "expected 2 parameters for XTerm 256-color request");
+								}
+							}
+							else if (false == inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTerm256Color))
+							{
+								if (DebugInterface_LogsTerminalInputChar())
+								{
+									Console_Warning(Console_WriteLine, "ignoring XTerm 256-color request due to terminal configuration");
+								}
+							}
+							else
+							{
+								// index into XTerm 256-color palette
+								SInt16 const	kColorParam = inDataPtr->emulator.argList[kAnchorIndex + 2];
+								
+								
+								if ((kColorParam > 255) || (kColorParam < 0))
+								{
+									Console_Warning(Console_WriteValue, "illegal range for index of color (expected 0-255)",
+													kColorParam);
 								}
 								else
 								{
@@ -10367,32 +10657,42 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 								skipParameterCount = 2; // skip next parameters (2, 3)
 							}
 						}
+						else
+						{
+							if (DebugInterface_LogsTerminalInputChar())
+							{
+								Console_Warning(Console_WriteLine, "expected leading digit parameter ('1', '2', '3', '4' or '5')");
+							}
+						}
 					}
-					else if (39 == p)
+					else if (39 == paramValue)
 					{
 						// generally means “reset foreground”
 						inDataPtr->current.drawingAttributes.colorIndexForegroundSet(0);
 						inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_EnableForeground);
 					}
-					else if (49 == p)
+					else if (49 == paramValue)
 					{
 						// generally means “reset background”
 						inDataPtr->current.drawingAttributes.colorIndexBackgroundSet(0);
 						inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_EnableBackground);
 						inDataPtr->current.latentAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.drawingAttributes);
 					}
-					else if ((p >= 90) && (p < 98))
+					else if ((paramValue >= 90) && (paramValue < 98))
 					{
-						inDataPtr->current.drawingAttributes.colorIndexForegroundSet(8 + (p - 90));
+						inDataPtr->current.drawingAttributes.colorIndexForegroundSet(8 + (paramValue - 90));
 					}
-					else if ((p >= 100) && (p < 108))
+					else if ((paramValue >= 100) && (paramValue < 108))
 					{
-						inDataPtr->current.drawingAttributes.colorIndexBackgroundSet(8 + (p - 100));
+						inDataPtr->current.drawingAttributes.colorIndexBackgroundSet(8 + (paramValue - 100));
 						inDataPtr->current.latentAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.drawingAttributes);
 					}
 					else
 					{
-						Console_WriteValue("current terminal in SGR mode does not support parameter", p);
+						if (DebugInterface_LogsTerminalInputChar())
+						{
+							Console_WriteValue("current terminal in SGR mode does not support parameter", paramValue);
+						}
 					}
 				}
 				++lastCheckedIndex;
@@ -14465,6 +14765,109 @@ cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 	*outCursorXPtr = inDataPtr->current.cursorX;
 	*outCursorYPtr = inDataPtr->current.cursorY;
 }// cursorWrapIfNecessaryGetLocation
+
+
+/*!
+Provides the ID for the given RGB combination.  (See the
+public Terminal_TrueColorGetFromID() API.)  Returns true
+only if successful.
+
+As noted in "TextAttributes.h", there is a limit to the
+number of possible IDs and they will be reused (oldest
+first) when the limit is exceeded.
+
+The color components are used to find any existing ID
+for the same color however, preventing many individual
+requests for the same color from being assigned unique
+IDs.
+
+(4.1)
+*/
+Boolean
+defineTrueColor		(My_ScreenBufferPtr				inDataPtr,
+					 UInt8							inRed,
+					 UInt8							inGreen,
+					 UInt8							inBlue,
+					 TextAttributes_TrueColorID&	outColorID)
+{
+	Boolean		result = false;
+	UInt32		rgbKey = (inBlue | (inGreen << 8) | (inRed << 16));
+	auto&		rgbMap = inDataPtr->emulator.trueColorIDsByRGB;
+	auto		rgbIter = inDataPtr->emulator.trueColorIDsByRGB.find(rgbKey);
+	
+	
+	if (rgbIter != rgbMap.end())
+	{
+		// the specified R/G/B combination is currently in use
+		// and it has an ID; rather than wasting another ID,
+		// return the existing ID
+		outColorID = rgbIter->second;
+		result = true;
+	}
+	else if (nullptr != inDataPtr->emulator.trueColorTableReds)
+	{
+		outColorID = inDataPtr->emulator.trueColorTableNextID;
+		
+		if (inDataPtr->emulator.trueColorTableReds->size() <= kTextAttributes_TrueColorIDMaximum)
+		{
+			// table is not yet big enough; allocate more space
+			inDataPtr->emulator.trueColorTableReds->push_back(inRed);
+			inDataPtr->emulator.trueColorTableGreens->push_back(inGreen);
+			inDataPtr->emulator.trueColorTableBlues->push_back(inBlue);
+			if (inDataPtr->emulator.trueColorTableNextID == kTextAttributes_TrueColorIDMaximum)
+			{
+				// table has reached its maximum size; next one will overwrite
+				inDataPtr->emulator.trueColorTableNextID = 0;
+			}
+			else
+			{
+				// set next ID to match index of next new element
+				inDataPtr->emulator.trueColorTableNextID = inDataPtr->emulator.trueColorTableReds->size();
+			}
+		}
+		else
+		{
+			// table is at maximum size; reuse the already-allocated space
+			(*(inDataPtr->emulator.trueColorTableReds))[inDataPtr->emulator.trueColorTableNextID] = inRed;
+			(*(inDataPtr->emulator.trueColorTableGreens))[inDataPtr->emulator.trueColorTableNextID] = inGreen;
+			(*(inDataPtr->emulator.trueColorTableBlues))[inDataPtr->emulator.trueColorTableNextID] = inBlue;
+			if (kTextAttributes_TrueColorIDMaximum == inDataPtr->emulator.trueColorTableNextID)
+			{
+				inDataPtr->emulator.trueColorTableNextID = 0;
+			}
+			else
+			{
+				++(inDataPtr->emulator.trueColorTableNextID);
+			}
+			
+			// remove any previous RGB mapping to the ID that is being reused
+			// (otherwise, a future request for the previous key color would
+			// continue to return the same ID)
+			auto	iterPair = inDataPtr->emulator.trueColorIDsByRGB.begin();
+			auto	endPairs = inDataPtr->emulator.trueColorIDsByRGB.end();
+			for (; iterPair != endPairs; ++iterPair)
+			{
+				if (outColorID == iterPair->second)
+				{
+					break;
+				}
+			}
+			if (iterPair != endPairs)
+			{
+				inDataPtr->emulator.trueColorIDsByRGB.erase(iterPair);
+			}
+		}
+		
+		// create a mapping based on the RGB value back to this entry
+		// so that repeated requests for the same color do not exhaust
+		// the limited set of color ID entries
+		rgbMap[rgbKey] = outColorID;
+		
+		result = true;
+	}
+	
+	return result;
+}// defineTrueColor
 
 
 /*!

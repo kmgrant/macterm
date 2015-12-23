@@ -261,6 +261,8 @@ table(deftable).
 (defbottom). |\2(desc). A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|
 (deftop). |(key). @terminal-emulator-answerback@|(types). _string_|
 (defbottom). |\2(desc). The name sent to the session when asked about terminal type; defaults to the current emulator name.|
+(deftop). |(key). @terminal-emulator-enable-color-24bit@|(types). _true or false_|
+(defbottom). |\2(desc). Arbitrary RGB color terminal sequences are allowed, using 8 bits per element.|
 (deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@|
 (defbottom). |\2(desc). Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
 (deftop). |(key). @terminal-emulator-vt100-fix-line-wrapping-bug@|(types). _true or false_|

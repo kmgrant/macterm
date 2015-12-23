@@ -1544,6 +1544,11 @@ UIStrings_Copy	(UIStrings_PrefPanelTerminalsCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_PrefPanelTerminals24BitColorEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("24-Bit Color (Millions)"), CFSTR("PrefPanelTerminals"),
+													CFSTR("kUIStrings_PrefPanelTerminals24BitColorEnabled"));
+		break;
+	
 	case kUIStrings_PrefPanelTerminalsCategoryName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminals"), CFSTR("PrefPanelTerminals"),
 													CFSTR("kUIStrings_PrefPanelTerminalsCategoryName"));

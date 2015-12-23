@@ -442,6 +442,8 @@
 	<string>vertical bar</string>
 	<key>terminal-emulator-answerback</key>
 	<string>vt100</string>
+	<key>terminal-emulator-enable-color-24bit</key>
+	<true/>
 	<key>terminal-emulator-type</key>
 	<string>vt100</string>
 	<key>terminal-emulator-vt100-fix-line-wrapping-bug</key>

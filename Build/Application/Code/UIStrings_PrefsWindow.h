@@ -141,6 +141,7 @@ enum UIStrings_PrefPanelTerminalsCFString
 	kUIStrings_PrefPanelTerminalsEmulationTabName		= 'TrmE',
 	// For simplicity, code in Preferences user interfaces assumes that tags can be
 	// used instead of the “proper” enumeration names, for these “named preferences”.
+	kUIStrings_PrefPanelTerminals24BitColorEnabled		= kPreferences_TagTerminal24BitColorEnabled,
 	kUIStrings_PrefPanelTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
 	kUIStrings_PrefPanelTerminalsXTermBackColorErase	= kPreferences_TagXTermBackgroundColorEraseEnabled,
 	kUIStrings_PrefPanelTerminalsXTerm256ColorsEnabled	= kPreferences_TagXTerm256ColorsEnabled,

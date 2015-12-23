@@ -894,6 +894,7 @@ createContainerView		(Panel_Ref		inPanel,
 		{
 			DataBrowserItemID const		kTweakTags[] =
 										{
+											kPreferences_TagTerminal24BitColorEnabled,
 											kPreferences_TagVT100FixLineWrappingBug,
 											kPreferences_TagXTerm256ColorsEnabled,
 											kPreferences_TagXTermBackgroundColorEraseEnabled,
@@ -1284,6 +1285,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							Boolean		flagValue = true;
 							
 							
+							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminal24BitColorEnabled,
+																						sizeof(flagValue), &flagValue);
 							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTerm256ColorsEnabled,
 																						sizeof(flagValue), &flagValue);
 							UNUSED_RETURN(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagXTermBackgroundColorEraseEnabled,
@@ -3134,6 +3137,17 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 		
 		
 		self->featureArray = [asMutableArray retain];
+		
+		// 24-bit color support
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagTerminal24BitColorEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"24-Bit Color (Millions)",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
 		
 		// VT100 line-wrapping bug
 		valueObject = [[[PreferenceValue_Flag alloc]

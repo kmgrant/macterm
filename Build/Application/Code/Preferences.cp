@@ -1233,6 +1233,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagWindowTabPreferredEdge,
 									CFSTR("window-terminal-tab-edge"), typeCFStringRef/* "top", "bottom", "left" or "right" */,
 									sizeof(OptionBits), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagTerminal24BitColorEnabled,
+										CFSTR("terminal-emulator-enable-color-24bit"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
 										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermBackgroundColorEraseEnabled,
@@ -8085,6 +8087,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				switch (inDataPreferenceTag)
 				{
 				case kPreferences_TagDataReceiveDoNotStripHighBit:
+				case kPreferences_TagTerminal24BitColorEnabled:
 				case kPreferences_TagTerminalClearSavesLines:
 				case kPreferences_TagTerminalLineWrap:
 				case kPreferences_TagVT100FixLineWrappingBug:
@@ -10478,6 +10481,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagTerminal24BitColorEnabled:
 			case kPreferences_TagVT100FixLineWrappingBug:
 			case kPreferences_TagXTerm256ColorsEnabled:
 			case kPreferences_TagXTermBackgroundColorEraseEnabled:

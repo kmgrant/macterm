@@ -320,7 +320,6 @@ struct My_TerminalView
 	{
 		TerminalScreenRef			ref;					// where the data for this terminal view comes from
 		Boolean						sizeNotMatchedWithView;	// if true, screen dimensions of screen buffer do not change when the view is resized
-		Boolean						areANSIColorsEnabled;	// are ANSI-colored text and graphics allowed in this window?
 		Boolean						focusRingEnabled;		// is the matte and content area focus ring displayed?
 		Boolean						isReverseVideo;			// are foreground and background colors temporarily swapped?
 		
@@ -554,7 +553,7 @@ SInt16				setPortScreenPort					(My_TerminalViewPtr);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
-void				setTerminalTextAttributesDictionary	(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
+void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
 														 Float32 = 1.0);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHandle,
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
@@ -3402,27 +3401,6 @@ TerminalView_SelectVirtualRange		(TerminalViewRef				inView,
 
 
 /*!
-Specifies whether ANSI-colored text and graphics
-are allowed to be rendered in the specified screen.
-This setting cannot currently be changed on the
-fly unless it was enabled to begin with, because
-various color resources required to make it work
-are not always allocated.
-
-(2.6)
-*/
-void
-TerminalView_SetANSIColorsEnabled	(TerminalViewRef	inView,
-									 Boolean			inUseANSIColorSequences)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	viewPtr->screen.areANSIColorsEnabled = inUseANSIColorSequences;
-}// SetANSIColorsEnabled
-
-
-/*!
 Sets a new value for a specific color in a
 terminal window.  Returns "true" only if the
 color could be set.
@@ -6249,8 +6227,8 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		// font attributes are set directly on the (attributed) string
 		// of the text storage, not in the graphics context
-		setTerminalTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
-											inAttributes, 1.0/* alpha */);
+		setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
+									inAttributes, 1.0/* alpha */);
 		[textStorage addAttributes:inTerminalViewPtr->text.attributeDict
 									range:NSMakeRange(0, [textStorage length])];
 		
@@ -6636,8 +6614,8 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	// TEMPORARY; set now to ensure correct values (later, when
 	// removing Carbon support entirely, this can probably be
 	// done earlier and persist for all other calls implicitly)
-	setTerminalTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
-										inAttributes, 1.0/* alpha */);
+	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
+								inAttributes, 1.0/* alpha */);
 	foregroundNSColor = STATIC_CAST([inTerminalViewPtr->text.attributeDict objectForKey:NSForegroundColorAttributeName],
 									NSColor*);
 	{
@@ -7949,26 +7927,49 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	*outNoBackgroundPtr = false; // initially...
 	
+	//
 	// choose foreground color
+	//
+	
 	isCustom = false; // initially...
-	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */inAttributes.hasAttributes(kTextAttributes_EnableForeground))
+	if (inAttributes.hasAttributes(kTextAttributes_EnableForeground))
 	{
-		// one of the “core” 256 colors was chosen
-		UInt16		fg = kTerminalView_ColorIndexNormalANSIBlack + inAttributes.colorIndexForeground();
-		
-		
-		if (inAttributes.hasBold() && (fg <= kTerminalView_ColorIndexNormalANSIWhite))
+		if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsTrueColorID))
 		{
-			// “magically” use the emphasized color for text that is actually bold
-			fg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
+			// a “true color” was chosen
+			TextAttributes_TrueColorID	colorID = inAttributes.colorIDForeground();
+			Terminal_Result				getIDResult = Terminal_TrueColorGetFromID(inTerminalViewPtr->screen.ref, colorID,
+																					outForeColorPtr->red,
+																					outForeColorPtr->green,
+																					outForeColorPtr->blue);
+			
+			
+			if (kTerminal_ResultOK != getIDResult)
+			{
+				// UNIMPLEMENTED: handle error
+			}
+			isCustom = true;
 		}
-		isCustom = getScreenCoreColor(inTerminalViewPtr, fg, outForeColorPtr);
-		if (false == isCustom)
+		else
 		{
-			// depending on terminal state, this might indicate an error...
-			// TEMPORARY - need to add more checks here
+			// one of the “core” 256 colors was chosen
+			UInt16		fg = kTerminalView_ColorIndexNormalANSIBlack + inAttributes.colorIndexForeground();
+			
+			
+			if (inAttributes.hasBold() && (fg <= kTerminalView_ColorIndexNormalANSIWhite))
+			{
+				// “magically” use the emphasized color for text that is actually bold
+				fg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
+			}
+			isCustom = getScreenCoreColor(inTerminalViewPtr, fg, outForeColorPtr);
+			if (false == isCustom)
+			{
+				// depending on terminal state, this might indicate an error...
+				// TEMPORARY - need to add more checks here
+			}
 		}
 	}
+	
 	if (false == isCustom)
 	{
 		// ordinary color, based on style
@@ -7995,26 +7996,49 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		getScreenCustomColor(inTerminalViewPtr, fg, outForeColorPtr);
 	}
 	
+	//
 	// choose background color
+	//
+	
 	isCustom = false; // initially...
-	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */inAttributes.hasAttributes(kTextAttributes_EnableBackground))
+	if (inAttributes.hasAttributes(kTextAttributes_EnableBackground))
 	{
-		// one of the “core” 256 colors was chosen
-		UInt16		bg = kTerminalView_ColorIndexNormalANSIBlack + inAttributes.colorIndexBackground();
-		
-		
-		if (inAttributes.hasBold() && (bg <= kTerminalView_ColorIndexNormalANSIWhite))
+		if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsTrueColorID))
 		{
-			// “magically” use the emphasized color for text that is actually bold
-			bg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
+			// a “true color” was chosen
+			TextAttributes_TrueColorID	colorID = inAttributes.colorIDBackground();
+			Terminal_Result				getIDResult = Terminal_TrueColorGetFromID(inTerminalViewPtr->screen.ref, colorID,
+																					outBackColorPtr->red,
+																					outBackColorPtr->green,
+																					outBackColorPtr->blue);
+			
+			
+			if (kTerminal_ResultOK != getIDResult)
+			{
+				// UNIMPLEMENTED: handle error
+			}
+			isCustom = true;
 		}
-		isCustom = getScreenCoreColor(inTerminalViewPtr, bg, outBackColorPtr);
-		if (false == isCustom)
+		else
 		{
-			// depending on terminal state, this might indicate an error...
-			// TEMPORARY - need to add more checks here
+			// one of the “core” 256 colors was chosen
+			UInt16		bg = kTerminalView_ColorIndexNormalANSIBlack + inAttributes.colorIndexBackground();
+			
+			
+			if (inAttributes.hasBold() && (bg <= kTerminalView_ColorIndexNormalANSIWhite))
+			{
+				// “magically” use the emphasized color for text that is actually bold
+				bg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
+			}
+			isCustom = getScreenCoreColor(inTerminalViewPtr, bg, outBackColorPtr);
+			if (false == isCustom)
+			{
+				// depending on terminal state, this might indicate an error...
+				// TEMPORARY - need to add more checks here
+			}
 		}
 	}
+	
 	if (false == isCustom)
 	{
 		// ordinary color, based on style
@@ -12839,10 +12863,10 @@ Currently this can set the following attribute keys:
 (4.0)
 */
 void
-setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
-										 NSMutableDictionary*		inoutDictionary,
-										 TextAttributes_Object		inAttributes,
-										 Float32					UNUSED_ARGUMENT(inAlpha))
+setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
+								 NSMutableDictionary*		inoutDictionary,
+								 TextAttributes_Object		inAttributes,
+								 Float32					UNUSED_ARGUMENT(inAlpha))
 {
 	//
 	// IMPORTANT: since the output might be a persistent dictionary,
@@ -13008,7 +13032,7 @@ setTerminalTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		[inoutDictionary setObject:foregroundNSColor forKey:NSForegroundColorAttributeName];
 	}
-}// setTerminalTextAttributesDictionary
+}// setTextAttributesDictionary
 
 
 /*!
@@ -13757,7 +13781,7 @@ setting colors.
 
 In general, only style and dimming affect color.
 
-NOTE:	In Cocoa views, setTerminalTextAttributesDictionary()
+NOTE:	In Cocoa views, setTextAttributesDictionary()
 		determines the foreground color.
 
 IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
@@ -14122,8 +14146,8 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 
 /*!
 LEGACY.  Used for Carbon views only.  See also the routine
-setTerminalTextAttributesDictionary(), which returns keys and
-values suitable for use in attributed strings.
+setTextAttributesDictionary(), which returns keys and values
+suitable for use in attributed strings.
 
 Sets the screen variable for the current text attributes to be
 the specified attributes, and sets QuickDraw and Core Graphics

@@ -88,6 +88,7 @@ The XTerm is a superset of the VT100 series that is notable for
  well as mouse support.  MacTerm implements a number of useful
  XTerm features, *in addition to those already in the VT102*:
 
+* 24-bit color (8 bits per R, G, B element)
 * 256 colors (set "xterm-256color" TERM for apps to use it)
 * dynamic updates to colors
 * window and/or minimized-icon titles
