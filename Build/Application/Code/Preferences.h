@@ -566,6 +566,10 @@ Preferences_Result
 											 Boolean*							outIsDefaultOrNull = nullptr);
 
 Boolean
+	Preferences_ContextIsDefault			(Preferences_ContextRef				inContext,
+											 Quills::Prefs::Class				inClass);
+
+Boolean
 	Preferences_ContextIsValid				(Preferences_ContextRef				inContext);
 
 Preferences_Result

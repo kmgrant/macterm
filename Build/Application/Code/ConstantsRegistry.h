@@ -103,6 +103,7 @@ enum
 	kConstantsRegistry_NSErrorBadPortNumber		= 1,
 	kConstantsRegistry_NSErrorBadUserID			= 2,
 	kConstantsRegistry_NSErrorBadNumber			= 3, // generic
+	kConstantsRegistry_NSErrorBadArray			= 4, // generic
 };
 
 /*!

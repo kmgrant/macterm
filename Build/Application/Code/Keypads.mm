@@ -69,6 +69,8 @@ Preferences_Tag				gArrangeWindowScreenBinding = 0;
 FourCharCode				gArrangeWindowDataTypeForWindowBinding = typeQDPoint;
 FourCharCode				gArrangeWindowDataTypeForScreenBinding = typeHIRect;
 Point						gArrangeWindowStackingOrigin = { 0, 0 };
+id							gArrangeWindowDidEndTarget = nil;
+SEL							gArrangeWindowDidEndSelector = nil;
 EventTargetRef				gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
 id							gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
@@ -116,6 +118,10 @@ Binds the “Arrange Window” panel to a preferences tag, which
 determines both the source of its initial window position and
 the destination that is auto-updated as the window is moved.
 
+This variant accepts an Objective-C object and selector to
+invoke when the user has finished setting the arrangement
+value.  The selector returns no value and accepts no arguments.
+
 Set the screen binding information to nonzero values to also
 keep track of the boundaries of the display that contains most
 of the window.  This is usually important to save somewhere as
@@ -134,10 +140,12 @@ the origin and size are both defined.
 
 Set "inBinding" to 0 to have no binding effect.
 
-(4.0)
+(4.1)
 */
 void
-Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
+Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
+										 SEL						inDidEndSelector,
+										 Preferences_Tag			inWindowBindingOrZero,
 										 FourCharCode				inDataTypeForWindowBinding,
 										 Preferences_Tag			inScreenBindingOrZero,
 										 FourCharCode				inDataTypeForScreenBinding,
@@ -174,6 +182,9 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 	gArrangeWindowScreenBinding = inScreenBindingOrZero;
 	gArrangeWindowDataTypeForScreenBinding = inDataTypeForScreenBinding;
 	
+	gArrangeWindowDidEndTarget = inDidEndTarget;
+	gArrangeWindowDidEndSelector = inDidEndSelector;
+	
 	if (0 != gArrangeWindowBinding)
 	{
 		if (typeQDPoint == gArrangeWindowDataTypeForWindowBinding)
@@ -204,7 +215,25 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 			}
 		}
 	}
-}// SetArrangeWindowPanelBinding
+}// SetArrangeWindowPanelBinding (7 arguments)
+
+
+/*!
+The historical variant, which does not support Objective-C.
+
+(4.0)
+*/
+void
+Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
+										 FourCharCode				inDataTypeForWindowBinding,
+										 Preferences_Tag			inScreenBindingOrZero,
+										 FourCharCode				inDataTypeForScreenBinding,
+										 Preferences_ContextRef		inContextOrNull)
+{
+	Keypads_SetArrangeWindowPanelBinding(nil, nil, inWindowBindingOrZero, inDataTypeForWindowBinding,
+											inScreenBindingOrZero, inDataTypeForScreenBinding,
+											inContextOrNull);
+}// SetArrangeWindowPanelBinding (5 arguments)
 
 
 /*!
@@ -666,6 +695,11 @@ doneArranging:(id)	sender
 			{
 				assert(false && "incorrect screen rectangle binding type");
 			}
+		}
+		
+		if (nil != gArrangeWindowDidEndTarget)
+		{
+			[gArrangeWindowDidEndTarget performSelector:gArrangeWindowDidEndSelector withObject:nil];
 		}
 	}
 	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, false);

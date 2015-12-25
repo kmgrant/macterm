@@ -13,6 +13,15 @@
                 <outlet property="view" destination="1835" id="piI-11-18o"/>
             </connections>
         </customObject>
+        <arrayController id="7fk-9M-ORg" userLabel="Session Choices">
+            <connections>
+                <binding destination="-2" name="contentArray" keyPath="self.windowSession.valueDescriptorArray" id="NSV-Kx-6Kz">
+                    <dictionary key="options">
+                        <bool key="NSConditionallySetsEditable" value="NO"/>
+                    </dictionary>
+                </binding>
+            </connections>
+        </arrayController>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
@@ -89,8 +98,8 @@
                             <menu key="menu" title="OtherViews" id="2060"/>
                         </popUpButtonCell>
                         <connections>
-                            <binding destination="-2" name="selectedObject" keyPath="self.windowSession.currentValueDescriptor" previousBinding="MrR-3Q-dwh" id="3FH-0D-Qic"/>
-                            <binding destination="-2" name="content" keyPath="self.windowSession.stringValue" id="MrR-3Q-dwh"/>
+                            <binding destination="7fk-9M-ORg" name="content" keyPath="arrangedObjects" id="8CO-VI-o1J"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.windowSession.currentValueDescriptor" previousBinding="8CO-VI-o1J" id="628-3x-Rw4"/>
                             <outlet property="nextKeyView" destination="U3M-TN-P0h" id="Ru8-9D-TLw"/>
                         </connections>
                     </popUpButton>
@@ -104,6 +113,7 @@
                         </buttonCell>
                         <connections>
                             <action selector="performSetBoundary:" target="-2" id="hMX-6j-c6g"/>
+                            <binding destination="-2" name="enabled" keyPath="self.windowSession.hasValue" id="hKm-Aq-fVp"/>
                             <outlet property="nextKeyView" destination="2000" id="jpj-gc-QI9"/>
                         </connections>
                     </button>

@@ -66,6 +66,15 @@ enum PreferenceValue_CType
 	kPreferenceValue_CTypeFloat64 = 5	//!< preference requires Float64 variable (double)
 };
 
+/*!
+Specifies the different interpretations of a series of
+coordinates that define a rectangle.
+*/
+enum PreferenceValue_RectType
+{
+	kPreferenceValue_RectTypeHIRect = 1	//!< preference requires HIRect variable or equivalent
+};
+
 #pragma mark Types
 
 /*!
@@ -133,7 +142,7 @@ it easy to store and retrieve one tag value.
 @interface PreferenceValue_InheritedSingleTag : PreferenceValue_Inherited //{
 {
 @private
-	Preferences_Tag		preferencesTag;
+	Preferences_Tag		_preferencesTag;
 }
 
 // initializers
@@ -142,7 +151,7 @@ it easy to store and retrieve one tag value.
 	contextManager:(PrefsContextManager_Object*)_;
 
 // accessors
-	- (Preferences_Tag)
+	@property (assign) Preferences_Tag
 	preferencesTag;
 
 @end //}
@@ -286,6 +295,39 @@ milliseconds.
 
 /*!
 Manages bindings for any preference whose value is
+defined to be a floating-point rectangle.
+*/
+@interface PreferenceValue_Rect : PreferenceValue_InheritedSingleTag //{
+{
+	PreferenceValue_RectType	valueRectType;
+}
+
+// initializers
+	- (instancetype)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	preferenceRectType:(PreferenceValue_RectType)_;
+
+// new methods
+	- (NSArray*)
+	readValueSeeIfDefault:(BOOL*)_;
+
+// accessors: bindings
+	- (NSArray*)
+	numberArrayValue;
+	- (void)
+	setNumberArrayValue:(NSArray*)_; // binding
+
+// validators
+	- (BOOL)
+	validateNumberArrayValue:(id*)_
+	error:(NSError**)_;
+
+@end //}
+
+
+/*!
+Manages bindings for any preference whose value is
 defined to be a pointer to a CFStringRef.
 */
 @interface PreferenceValue_String : PreferenceValue_InheritedSingleTag //{
@@ -415,11 +457,11 @@ type such as PreferenceValue_IntegerDescriptor, to
 specify which values are stored and how they are
 displayed to the user.
 */
-@interface PreferenceValue_Array : PreferenceValue_Inherited //{
+@interface PreferenceValue_Array : PreferenceValue_InheritedSingleTag //{
 {
 @private
-	NSArray*					valueDescriptorArray;
-	PreferenceValue_Number*		preferenceAccessObject;
+	NSArray*					_valueDescriptorArray;
+	PreferenceValue_Number*		_preferenceAccessObject;
 }
 
 // initializers
@@ -446,10 +488,13 @@ string value that comes from the list of available
 collections in a certain preferences class.  This is
 typically bound to a pop-up menu.
 */
-@interface PreferenceValue_CollectionBinding : PreferenceValue_Inherited //{
+@interface PreferenceValue_CollectionBinding : PreferenceValue_InheritedSingleTag //{
 {
 @private
 	NSArray*							_valueDescriptorArray;
+	id									_targetForDidRebuildArray;
+	SEL									_selectorForDidRebuildArray;
+	BOOL								_includeDefaultFlag;
 	PreferenceValue_String*				_preferenceAccessObject;
 	ListenerModel_StandardListener*		_preferenceChangeListener;
 	Quills::Prefs::Class				_preferencesClass;
@@ -459,10 +504,22 @@ typically bound to a pop-up menu.
 	- (instancetype)
 	initWithPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
-	sourceClass:(Quills::Prefs::Class)_;
+	sourceClass:(Quills::Prefs::Class)_
+	includeDefault:(BOOL)_
+	didRebuildTarget:(id)_
+	didRebuildSelector:(SEL)_; // designated initializer
+	- (instancetype)
+	initWithPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	sourceClass:(Quills::Prefs::Class)_
+	includeDefault:(BOOL)_;
+
+// new methods
+	- (NSString*)
+	readValueSeeIfDefault:(BOOL*)_;
 
 // accessors
-	@property (strong) id
+	@property (strong) PreferenceValue_StringDescriptor*
 	currentValueDescriptor; // binding
 	@property (strong, readonly) NSArray*
 	valueDescriptorArray; // binding

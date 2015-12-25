@@ -5527,19 +5527,22 @@ didLoadContainerView:(NSView*)			aContainerView
 	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavorite
 														contextManager:self->prefsMgr
-														sourceClass:Quills::Prefs::FORMAT]
+														sourceClass:Quills::Prefs::FORMAT
+														includeDefault:YES]
 							autorelease]
 					forKey:@"formatFavorite"];
 	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTerminalFavorite
 														contextManager:self->prefsMgr
-														sourceClass:Quills::Prefs::TERMINAL]
+														sourceClass:Quills::Prefs::TERMINAL
+														includeDefault:YES]
 							autorelease]
 					forKey:@"terminalFavorite"];
 	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTranslationFavorite
 														contextManager:self->prefsMgr
-														sourceClass:Quills::Prefs::TRANSLATION]
+														sourceClass:Quills::Prefs::TRANSLATION
+														includeDefault:YES]
 							autorelease]
 					forKey:@"translationFavorite"];
 	

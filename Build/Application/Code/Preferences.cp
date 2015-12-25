@@ -2414,6 +2414,40 @@ Preferences_ContextGetName	(Preferences_ContextRef		inContext,
 
 
 /*!
+Returns true only if the specified context is one that could be
+returned by Preferences_GetDefaultContext().
+
+\retval kPreferences_ResultOK
+if the context name was found
+
+\retval kPreferences_ResultUnknownName
+if the context name was not found
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
+(4.1)
+*/
+Boolean
+Preferences_ContextIsDefault	(Preferences_ContextRef		inContext,
+								 Quills::Prefs::Class		inClass)
+{
+	Boolean						result = false;
+	Preferences_ContextRef		actualDefaultContext = nullptr;
+	Preferences_Result			preferencesResult = Preferences_GetDefaultContext
+													(&actualDefaultContext, inClass);
+	
+	
+	if (kPreferences_ResultOK == preferencesResult)
+	{
+		result = (inContext == actualDefaultContext);
+	}
+	
+	return result;
+}// ContextIsDefault
+
+
+/*!
 Returns true only if the specified context is still valid.  An
 invalid context was either never valid, or invalidated by having
 lost all its retain counts (causing deallocation).

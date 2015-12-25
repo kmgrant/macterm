@@ -312,10 +312,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 	
 	*outIdealSize = panelIdealSize;
 	[self->detailViewManager.delegate panelViewManager:aViewManager requestingIdealSize:&panelIdealSize];
-	// TEMPORARY: the padding that seems necessary here is greater
-	// than what ought to be required; somewhere, a calculation is
-	// out of order...
-	outIdealSize->width = NSWidth(masterFrame) + 64/* arbitrary padding */ + MAX(panelIdealSize.width, outIdealSize->width);
+	outIdealSize->width = NSWidth(masterFrame) + 64/* sum of end and middle paddings */ + MAX(panelIdealSize.width, outIdealSize->width);
 	outIdealSize->height = MAX(NSHeight(masterFrame), 32/* approximate header/line size */ + outIdealSize->height);
 }// panelViewManager:requestingIdealSize:
 

@@ -444,6 +444,17 @@ void
 												 FourCharCode				inDataTypeForScreenBinding = 0,
 												 Preferences_ContextRef		inContextOrNull = nullptr);
 
+#ifdef __OBJC__
+void
+	Keypads_SetArrangeWindowPanelBinding		(id							inDidEndTarget,
+												 SEL						inDidEndSelector,
+												 Preferences_Tag			inWindowBindingOrZero,
+												 FourCharCode				inDataTypeForWindowBinding,
+												 Preferences_Tag			inScreenBindingOrZero = 0,
+												 FourCharCode				inDataTypeForScreenBinding = 0,
+												 Preferences_ContextRef		inContextOrNull = nullptr);
+#endif
+
 Boolean
 	Keypads_IsVisible							(Keypads_WindowType			inKeypad);
 

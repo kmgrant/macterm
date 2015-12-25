@@ -265,7 +265,7 @@ contextManager:(PrefsContextManager_Object*)	aContextMgr
 	self = [super initWithContextManager:aContextMgr];
 	if (nil != self)
 	{
-		self->preferencesTag = aTag;
+		self->_preferencesTag = aTag;
 	}
 	return self;
 }// initWithPreferencesTag:contextManager:
@@ -282,8 +282,15 @@ Accessor.
 - (Preferences_Tag)
 preferencesTag
 {
-	return preferencesTag;
-}// preferencesTag
+	return _preferencesTag;
+}
+- (void)
+setPreferencesTag:(Preferences_Tag)		aTag
+{
+	[self willSetPreferenceValue];
+	_preferencesTag = aTag;
+	[self didSetPreferenceValue];
+}// setPreferencesTag:
 
 
 @end // PreferenceValue_InheritedSingleTag
@@ -391,12 +398,13 @@ Accessor.
 - (NSString*)
 describedStringValue
 {
-	return describedValue;
+	return [[describedValue copy] autorelease];
 }
 - (void)
 setDescribedStringValue:(NSString*)		aValue
 {
-	describedValue = aValue;
+	[describedValue autorelease];
+	describedValue = [aValue copy];
 }// setDescribedStringValue:
 
 
@@ -426,9 +434,9 @@ valueDescriptorArray:(NSArray*)					aDescriptorArray
 	self = [super initWithContextManager:aContextMgr];
 	if (nil != self)
 	{
-		self->valueDescriptorArray = [aDescriptorArray copy];
-		self->preferenceAccessObject = [[PreferenceValue_Number alloc]
-										initWithPreferencesTag:aTag contextManager:aContextMgr preferenceCType:aCType];
+		self->_valueDescriptorArray = [aDescriptorArray copy];
+		self->_preferenceAccessObject = [[PreferenceValue_Number alloc]
+											initWithPreferencesTag:aTag contextManager:aContextMgr preferenceCType:aCType];
 		
 		// monitor the preferences context manager so that observers
 		// of preferences in sub-objects can be told to expect changes
@@ -450,8 +458,8 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[valueDescriptorArray release];
-	[preferenceAccessObject release];
+	[_valueDescriptorArray release];
+	[_preferenceAccessObject release];
 	[super dealloc];
 }// dealloc
 
@@ -504,7 +512,7 @@ Accessor.
 - (NSArray*)
 valueDescriptorArray
 {
-	return [[valueDescriptorArray retain] autorelease];
+	return [[_valueDescriptorArray retain] autorelease];
 }// valueDescriptorArray
 
 
@@ -516,7 +524,7 @@ Accessor.
 - (id)
 currentValueDescriptor
 {
-	UInt32		currentValue = [[self->preferenceAccessObject numberStringValue] intValue];
+	UInt32		currentValue = [[self->_preferenceAccessObject numberStringValue] intValue];
 	id			result = nil;
 	
 	
@@ -549,7 +557,7 @@ setCurrentValueDescriptor:(id)	selectedObject
 		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)selectedObject;
 		
 		
-		[self->preferenceAccessObject setNumberStringValue:
+		[self->_preferenceAccessObject setNumberStringValue:
 										[[NSNumber numberWithInt:[asInfo describedIntegerValue]] stringValue]];
 	}
 	
@@ -562,6 +570,21 @@ setCurrentValueDescriptor:(id)	selectedObject
 
 
 /*!
+Embellishes base class implementation to also synchronize
+the preferences tag associated with the internal access
+object.
+
+(4.1)
+*/
+- (void)
+didSetPreferenceValue
+{
+	_preferenceAccessObject.preferencesTag = self.preferencesTag;
+	[super didSetPreferenceValue];
+}// didSetPreferenceValue
+
+
+/*!
 Accessor.
 
 (4.1)
@@ -570,7 +593,7 @@ Accessor.
 isInherited
 {
 	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = [self->preferenceAccessObject isInherited];
+	BOOL	result = [self->_preferenceAccessObject isInherited];
 	
 	
 	return result;
@@ -587,7 +610,7 @@ setNilPreferenceValue
 {
 	[self willSetPreferenceValue];
 	[self willChangeValueForKey:@"currentValueDescriptor"];
-	[self->preferenceAccessObject setNilPreferenceValue];
+	[self->_preferenceAccessObject setNilPreferenceValue];
 	[self didChangeValueForKey:@"currentValueDescriptor"];
 	[self didSetPreferenceValue];
 }// setNilPreferenceValue
@@ -601,6 +624,23 @@ setNilPreferenceValue
 
 
 /*!
+Initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+sourceClass:(Quills::Prefs::Class)				aPreferencesClass
+includeDefault:(BOOL)							aDefaultFlag
+{
+	return [self initWithPreferencesTag:aTag contextManager:aContextMgr sourceClass:aPreferencesClass
+										includeDefault:aDefaultFlag
+										didRebuildTarget:nil didRebuildSelector:nil];
+}// initWithPreferencesTag:contextManager:sourceClass:
+
+
+/*!
 Designated initializer.
 
 (4.1)
@@ -609,11 +649,17 @@ Designated initializer.
 initWithPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 sourceClass:(Quills::Prefs::Class)				aPreferencesClass
+includeDefault:(BOOL)							aDefaultFlag
+didRebuildTarget:(id)							aTarget
+didRebuildSelector:(SEL)						aSelector
 {
 	self = [super initWithContextManager:aContextMgr];
 	if (nil != self)
 	{
 		_valueDescriptorArray = [@[] retain];
+		_targetForDidRebuildArray = aTarget;
+		_selectorForDidRebuildArray = aSelector;
+		_includeDefaultFlag = aDefaultFlag;
 		_preferencesClass = aPreferencesClass;
 		_preferenceAccessObject = [[PreferenceValue_String alloc] initWithPreferencesTag:aTag contextManager:aContextMgr];
 		
@@ -642,7 +688,7 @@ sourceClass:(Quills::Prefs::Class)				aPreferencesClass
 		}
 	}
 	return self;
-}// initWithPreferencesTag:contextManager:preferenceCType:valueDescriptorArray:
+}// initWithPreferencesTag:contextManager:sourceClass:includeDefault:didRebuildTarget:didRebuildSelector:
 
 
 /*!
@@ -733,6 +779,19 @@ prefsContextWillChange:(NSNotification*)	aNotification
 }// prefsContextWillChange:
 
 
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (NSString*)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	return [self->_preferenceAccessObject readValueSeeIfDefault:outIsDefault];
+}// readValueSeeIfDefault:
+
+
 #pragma mark Accessors
 
 
@@ -753,17 +812,17 @@ Accessor.
 
 (4.1)
 */
-- (id)
+- (PreferenceValue_StringDescriptor*)
 currentValueDescriptor
 {
 	// NOTE: the “is default” nature of a value is reflected
 	// separately in the user interface (inheritance indicator)
 	// and NOT in the value; see "isInherited"
-	CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
-									true/* is retained */);
-	NSString*			asNSStringDefaultName = BRIDGE_CAST(defaultName.returnCFStringRef(), NSString*);
-	NSString*			currentValue = [_preferenceAccessObject stringValue];
-	id					result = nil;
+	CFRetainRelease						defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
+													true/* is retained */);
+	NSString*							asNSStringDefaultName = BRIDGE_CAST(defaultName.returnCFStringRef(), NSString*);
+	NSString*							currentValue = [_preferenceAccessObject stringValue];
+	PreferenceValue_StringDescriptor*	result = nil;
 	
 	
 	for (id object in [self valueDescriptorArray])
@@ -784,7 +843,7 @@ currentValueDescriptor
 	return result;
 }
 - (void)
-setCurrentValueDescriptor:(id)	selectedObject
+setCurrentValueDescriptor:(PreferenceValue_StringDescriptor*)	selectedObject
 {
 	[self willSetPreferenceValue];
 	[self willChangeValueForKey:@"currentValueDescriptor"];
@@ -795,10 +854,7 @@ setCurrentValueDescriptor:(id)	selectedObject
 	}
 	else
 	{
-		PreferenceValue_StringDescriptor*	asInfo = (PreferenceValue_StringDescriptor*)selectedObject;
-		
-		
-		[self->_preferenceAccessObject setStringValue:[asInfo describedStringValue]];
+		[self->_preferenceAccessObject setStringValue:[selectedObject describedStringValue]];
 	}
 	
 	[self didChangeValueForKey:@"currentValueDescriptor"];
@@ -807,6 +863,21 @@ setCurrentValueDescriptor:(id)	selectedObject
 
 
 #pragma mark PreferenceValue_Inherited
+
+
+/*!
+Embellishes base class implementation to also synchronize
+the preferences tag associated with the internal access
+object.
+
+(4.1)
+*/
+- (void)
+didSetPreferenceValue
+{
+	_preferenceAccessObject.preferencesTag = self.preferencesTag;
+	[super didSetPreferenceValue];
+}// didSetPreferenceValue
 
 
 /*!
@@ -865,7 +936,7 @@ This should be called whenever preferences are changed
 rebuildDescriptorArray
 {
 	CFArrayRef				newNameArray = nullptr;
-	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newNameArray, true/* include Default */);
+	Preferences_Result		arrayResult = Preferences_CreateContextNameArray(_preferencesClass, newNameArray, _includeDefaultFlag);
 	
 	
 	if (kPreferences_ResultOK != arrayResult)
@@ -943,7 +1014,7 @@ Accessor.
 colorValue
 {
 	BOOL		isDefault = NO;
-	NSColor*	result = [[self prefsMgr] readColorForPreferenceTag:[self preferencesTag] isDefault:&isDefault];
+	NSColor*	result = [[self prefsMgr] readColorForPreferenceTag:self.preferencesTag isDefault:&isDefault];
 	
 	
 	return result;
@@ -953,12 +1024,13 @@ setColorValue:(NSColor*)	aColor
 {
 	[self willSetPreferenceValue];
 	
-	BOOL	saveOK = [[self prefsMgr] writeColor:aColor forPreferenceTag:[self preferencesTag]];
+	BOOL	saveOK = [[self prefsMgr] writeColor:aColor forPreferenceTag:self.preferencesTag];
 	
 	
 	if (NO == saveOK)
 	{
-		Console_Warning(Console_WriteLine, "failed to save a color preference");
+		Console_Warning(Console_WriteValueFourChars, "failed to save a color preference",
+						self.preferencesTag);
 	}
 	
 	[self didSetPreferenceValue];
@@ -980,7 +1052,7 @@ isInherited
 	BOOL	result = NO;
 	
 	
-	UNUSED_RETURN(NSColor*)[[self prefsMgr] readColorForPreferenceTag:[self preferencesTag] isDefault:&result];
+	UNUSED_RETURN(NSColor*)[[self prefsMgr] readColorForPreferenceTag:self.preferencesTag isDefault:&result];
 	
 	return result;
 }// isInherited
@@ -1044,7 +1116,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		FSRef				fileObjectValue;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 																		sizeof(fileObjectValue), &fileObjectValue,
 																		true/* search defaults */, &isDefault);
 		
@@ -1105,12 +1177,13 @@ setStringValue:(NSString*)	aString
 		// when given nothing and the context is non-Default, delete the setting;
 		// this will revert to either the Default value (in non-Default contexts)
 		// or the “factory default” value (in Default contexts)
-		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:self.preferencesTag];
 		
 		
 		if (NO == deleteOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to remove file-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to remove file-value preference",
+							self.preferencesTag);
 		}
 	}
 	else
@@ -1129,7 +1202,7 @@ setStringValue:(NSString*)	aString
 			
 			if ((noErr == error) && (self->isDirectory == STATIC_CAST(pathIsDirectory, BOOL)))
 			{
-				Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+				Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																				sizeof(fileObjectValue), &fileObjectValue);
 				
 				
@@ -1142,7 +1215,8 @@ setStringValue:(NSString*)	aString
 		
 		if (NO == saveOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to save file-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to save file-value preference",
+							self.preferencesTag);
 		}
 	}
 	
@@ -1177,7 +1251,8 @@ setURLValue:(NSURL*)	aURL
 	}
 	else
 	{
-		Console_Warning(Console_WriteLine, "failed to save file-value preference because a non-file URL was given");
+		Console_Warning(Console_WriteValueFourChars, "failed to save file-value preference because a non-file URL was given",
+						self.preferencesTag);
 	}
 }// setURLValue:
 
@@ -1274,7 +1349,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		Boolean				flagValue = false;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 																		sizeof(flagValue), &flagValue,
 																		true/* search defaults */, &isDefault);
 		
@@ -1325,12 +1400,13 @@ setNumberValue:(NSNumber*)		aFlag
 		// when given nothing and the context is non-Default, delete the setting;
 		// this will revert to either the Default value (in non-Default contexts)
 		// or the “factory default” value (in Default contexts)
-		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:self.preferencesTag];
 		
 		
 		if (NO == deleteOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to remove flag-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to remove flag-value preference",
+							self.preferencesTag);
 		}
 	}
 	else
@@ -1344,7 +1420,7 @@ setNumberValue:(NSNumber*)		aFlag
 			Boolean				asBoolean = (self->inverted)
 											? (NO == [aFlag boolValue])
 											: (YES == [aFlag boolValue]);
-			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																			sizeof(asBoolean), &asBoolean);
 			
 			
@@ -1356,7 +1432,8 @@ setNumberValue:(NSNumber*)		aFlag
 		
 		if (NO == saveOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to save flag-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to save flag-value preference",
+							self.preferencesTag);
 		}
 	}
 	
@@ -1454,7 +1531,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				SInt16		intValue = 0;
 				
 				
-				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 															sizeof(intValue), &intValue, true/* search defaults */,
 															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
@@ -1469,7 +1546,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				UInt16		intValue = 0;
 				
 				
-				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 															sizeof(intValue), &intValue, true/* search defaults */,
 															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
@@ -1484,7 +1561,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				SInt32		intValue = 0L;
 				
 				
-				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 															sizeof(intValue), &intValue, true/* search defaults */,
 															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
@@ -1499,7 +1576,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				UInt32		intValue = 0L;
 				
 				
-				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 															sizeof(intValue), &intValue, true/* search defaults */,
 															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
@@ -1514,7 +1591,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				Float32		floatValue = 0.0;
 				
 				
-				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 															sizeof(floatValue), &floatValue, true/* search defaults */,
 															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
@@ -1537,7 +1614,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 				Float64		floatValue = 0.0;
 				
 				
-				prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 															sizeof(floatValue), &floatValue, true/* search defaults */,
 															&isDefault);
 				if (kPreferences_ResultOK == prefsResult)
@@ -1651,12 +1728,13 @@ setNumberStringValue:(NSString*)	aNumberString
 		// when given nothing and the context is non-Default, delete the setting;
 		// this will revert to either the Default value (in non-Default contexts)
 		// or the “factory default” value (in Default contexts)
-		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:self.preferencesTag];
 		
 		
 		if (NO == deleteOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to remove numerical-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to remove numerical-value preference",
+							self.preferencesTag);
 		}
 	}
 	else
@@ -1679,7 +1757,7 @@ setNumberStringValue:(NSString*)	aNumberString
 					SInt16		intValue = [aNumberString intValue];
 					
 					
-					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																sizeof(intValue), &intValue);
 				}
 				break;
@@ -1689,7 +1767,7 @@ setNumberStringValue:(NSString*)	aNumberString
 					UInt16		intValue = [aNumberString intValue];
 					
 					
-					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																sizeof(intValue), &intValue);
 				}
 				break;
@@ -1699,7 +1777,7 @@ setNumberStringValue:(NSString*)	aNumberString
 					SInt32		intValue = [aNumberString intValue];
 					
 					
-					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																sizeof(intValue), &intValue);
 				}
 				break;
@@ -1709,7 +1787,7 @@ setNumberStringValue:(NSString*)	aNumberString
 					UInt32		intValue = [aNumberString intValue];
 					
 					
-					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																sizeof(intValue), &intValue);
 				}
 				break;
@@ -1724,7 +1802,7 @@ setNumberStringValue:(NSString*)	aNumberString
 						// ignore "self->scaleWithRounding" (not enforced for input strings)
 						floatValue *= gScaleFactorsByExponentOffset[self->scaleExponent - kMinExponent];
 					}
-					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																sizeof(floatValue), &floatValue);
 				}
 				break;
@@ -1739,7 +1817,7 @@ setNumberStringValue:(NSString*)	aNumberString
 						// ignore "self->scaleWithRounding" (not enforced for input strings)
 						floatValue *= gScaleFactorsByExponentOffset[self->scaleExponent - kMinExponent];
 					}
-					prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																sizeof(floatValue), &floatValue);
 				}
 				break;
@@ -1757,7 +1835,8 @@ setNumberStringValue:(NSString*)	aNumberString
 		
 		if (NO == saveOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to save numerical-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to save numerical-value preference",
+							self.preferencesTag);
 		}
 	}
 	
@@ -1906,6 +1985,278 @@ setNilPreferenceValue
 
 
 #pragma mark -
+@implementation PreferenceValue_Rect
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)	aContextMgr
+preferenceRectType:(PreferenceValue_RectType)	aRectType
+{
+#pragma unused(aRectType)
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->valueRectType = aRectType;
+	}
+	return self;
+}// initWithPreferencesTag:contextManager:preferenceRectType:
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns the preference’s current value, and indicates whether or
+not that value was inherited from a parent context.
+
+(4.1)
+*/
+- (NSArray*)
+readValueSeeIfDefault:(BOOL*)	outIsDefault
+{
+	NSArray*				result = nil;
+	Boolean					isDefault = false;
+	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
+	
+	
+	if (Preferences_ContextIsValid(sourceContext))
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		
+		
+		switch (self->valueRectType)
+		{
+		case kPreferenceValue_RectTypeHIRect:
+			{
+				HIRect		rectValue;
+				
+				
+				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
+															sizeof(rectValue), &rectValue, true/* search defaults */,
+															&isDefault);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = [[@[[NSNumber numberWithFloat:rectValue.origin.x],
+									[NSNumber numberWithFloat:rectValue.origin.y],
+									[NSNumber numberWithFloat:rectValue.size.width],
+									[NSNumber numberWithFloat:rectValue.size.height]] retain] autorelease];
+				}
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	
+	if (nullptr != outIsDefault)
+	{
+		*outIsDefault = (true == isDefault);
+	}
+	
+	return result;
+}// readValueSeeIfDefault:
+
+
+#pragma mark Accessors: Bindings
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+numberArrayValue
+{
+	BOOL		isDefault = NO;
+	NSArray*	result = [self readValueSeeIfDefault:&isDefault];
+	
+	
+	return result;
+}
+- (void)
+setNumberArrayValue:(NSArray*)		aNumberArray
+{
+	[self willSetPreferenceValue];
+	
+	if (nil == aNumberArray)
+	{
+		// when given nothing and the context is non-Default, delete the setting;
+		// this will revert to either the Default value (in non-Default contexts)
+		// or the “factory default” value (in Default contexts)
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:self.preferencesTag];
+		
+		
+		if (NO == deleteOK)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to remove rectangle-value preference",
+							self.preferencesTag);
+		}
+	}
+	else
+	{
+		BOOL					saveOK = NO;
+		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
+		
+		
+		if (Preferences_ContextIsValid(targetContext))
+		{
+			Preferences_Result	prefsResult = kPreferences_ResultOK;
+			
+			
+			// NOTE: The validation method will scrub the string beforehand so
+			// requests for numerical values should not fail here.
+			switch (self->valueRectType)
+			{
+			case kPreferenceValue_RectTypeHIRect:
+				{
+					HIRect		rectValue;
+					
+					
+					assert(4 == aNumberArray.count);
+					rectValue.origin.x = [[aNumberArray objectAtIndex:0] floatValue];
+					rectValue.origin.y = [[aNumberArray objectAtIndex:1] floatValue];
+					rectValue.size.width = [[aNumberArray objectAtIndex:2] floatValue];
+					rectValue.size.height = [[aNumberArray objectAtIndex:3] floatValue];
+					
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
+																sizeof(rectValue), &rectValue);
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				saveOK = YES;
+			}
+		}
+		
+		if (NO == saveOK)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to save rectangle-value preference",
+							self.preferencesTag);
+		}
+	}
+	
+	[self didSetPreferenceValue];
+}// setNumberArrayValue:
+
+
+#pragma mark Validators
+
+
+/*!
+Validates an array of numbers, returning an appropriate
+error (and a NO result) if the number array is incorrect.
+
+(4.0)
+*/
+- (BOOL)
+validateNumberArrayValue:(id*/* NSArray** */)	ioValue
+error:(NSError**)								outError
+{
+	BOOL	result = NO;
+	
+	
+	if (nil == *ioValue)
+	{
+		result = YES;
+	}
+	else
+	{
+		NSArray**	asArrayPtr = STATIC_CAST(ioValue, NSArray**);
+		BOOL		arrayOK = NO;
+		
+		
+		// TEMPORARY; minimal validation is done right now but
+		// it could for instance try to avoid values that are
+		// ridiculously out of range (yet, this itself may need
+		// to be parameterized or handled by subclasses)
+		arrayOK = (4 == [*asArrayPtr count]);
+		
+		if (arrayOK)
+		{
+			result = YES;
+		}
+		else
+		{
+			if (nil != outError) result = NO;
+			else result = YES; // cannot return NO when the error instance is undefined
+		}
+		
+		if (NO == result)
+		{
+			NSString*	errorMessage = nil;
+			
+			
+			switch (self->valueRectType)
+			{
+			case kPreferenceValue_RectTypeHIRect:
+			default:
+				errorMessage = NSLocalizedStringFromTable(@"This value must be exactly four floating-point numbers.",
+															@"PrefsWindow"/* table */,
+															@"message displayed for bad rectangle values");
+				break;
+			}
+			
+			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
+							code:kConstantsRegistry_NSErrorBadArray
+							userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
+		}
+	}
+	return result;
+}// validateNumberArrayValue:error:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES
+	BOOL	result = NO;
+	
+	
+	UNUSED_RETURN(NSArray*)[self readValueSeeIfDefault:&result];
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self setNumberArrayValue:nil];
+}// setNilPreferenceValue
+
+
+@end // PreferenceValue_Rect
+
+
+#pragma mark -
 @implementation PreferenceValue_String
 
 
@@ -1946,7 +2297,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		CFStringRef			stringValue = nullptr;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 																		sizeof(stringValue), &stringValue,
 																		true/* search defaults */, &isDefault);
 		
@@ -1994,12 +2345,13 @@ setStringValue:(NSString*)	aString
 		// when given nothing and the context is non-Default, delete the setting;
 		// this will revert to either the Default value (in non-Default contexts)
 		// or the “factory default” value (in Default contexts)
-		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:self.preferencesTag];
 		
 		
 		if (NO == deleteOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to remove string-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to remove string-value preference",
+							self.preferencesTag);
 		}
 	}
 	else
@@ -2011,7 +2363,7 @@ setStringValue:(NSString*)	aString
 		if (Preferences_ContextIsValid(targetContext))
 		{
 			CFStringRef			asCFString = BRIDGE_CAST(aString, CFStringRef);
-			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																			sizeof(asCFString), &asCFString);
 			
 			
@@ -2023,7 +2375,8 @@ setStringValue:(NSString*)	aString
 		
 		if (NO == saveOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to save string-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to save string-value preference",
+							self.preferencesTag);
 		}
 	}
 	
@@ -2116,7 +2469,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	if (Preferences_ContextIsValid(sourceContext))
 	{
 		CFArrayRef			arrayValue = nullptr;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
 																		sizeof(arrayValue), &arrayValue,
 																		true/* search defaults */, &isDefault);
 		
@@ -2163,12 +2516,13 @@ setStringValue:(NSString*)	aString
 		// when given nothing and the context is non-Default, delete the setting;
 		// this will revert to either the Default value (in non-Default contexts)
 		// or the “factory default” value (in Default contexts)
-		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
+		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:self.preferencesTag];
 		
 		
 		if (NO == deleteOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to remove array-from-string-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to remove array-from-string-value preference",
+							self.preferencesTag);
 		}
 	}
 	else
@@ -2181,7 +2535,7 @@ setStringValue:(NSString*)	aString
 		{
 			NSArray*			arrayValue = [aString componentsSeparatedByCharactersInSet:self.characterSetForSplitting];
 			CFArrayRef			asCFArray = BRIDGE_CAST(arrayValue, CFArrayRef);
-			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
 																			sizeof(asCFArray), &asCFArray);
 			
 			
@@ -2193,7 +2547,8 @@ setStringValue:(NSString*)	aString
 		
 		if (NO == saveOK)
 		{
-			Console_Warning(Console_WriteLine, "failed to save array-from-string-value preference");
+			Console_Warning(Console_WriteValueFourChars, "failed to save array-from-string-value preference",
+							self.preferencesTag);
 		}
 	}
 	

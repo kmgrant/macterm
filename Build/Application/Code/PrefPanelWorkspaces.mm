@@ -208,6 +208,18 @@ typedef My_WorkspacesPanelData*		My_WorkspacesPanelDataPtr;
 
 
 /*!
+The private class interface.
+*/
+@interface PrefPanelWorkspaces_WindowSessionValue (PrefPanelWorkspaces_WindowSessionValueInternal) //{
+
+// new methods
+	- (void)
+	rebuildSessionList;
+
+@end //}
+
+
+/*!
 Private properties.
 */
 @interface PrefPanelWorkspaces_WindowsViewManager () //{
@@ -247,6 +259,12 @@ Private properties.
 The private class interface.
 */
 @interface PrefPanelWorkspaces_WindowEditorViewManager (PrefPanelWorkspaces_WindowEditorViewManagerInternal) //{
+
+// new methods
+	- (void)
+	configureForIndex:(Preferences_Index)_;
+	- (void)
+	didFinishSettingWindowBoundary;
 
 // accessors
 	@property (readonly) NSArray*
@@ -2137,7 +2155,11 @@ primaryDisplayBindingKeys
 
 
 #pragma mark -
-@implementation PrefPanelWorkspaces_WindowInfo //{
+@implementation PrefPanelWorkspaces_SessionDescriptor //{
+
+
+@synthesize commandType = _commandType;
+@synthesize sessionFavoriteName = _sessionFavoriteName;
 
 
 #pragma mark Initializers
@@ -2168,9 +2190,107 @@ Accessor.
 (4.1)
 */
 - (NSString*)
+description
+{
+	NSString*	result = nil;
+	
+	
+	if (nil == self.commandType)
+	{
+		// use Session Favorite name
+		result = [[self.sessionFavoriteName retain] autorelease];
+	}
+	else
+	{
+		// use command type to form a description
+		UInt32 const	commandType = STATIC_CAST([self.commandType unsignedIntegerValue], UInt32);
+		
+		
+		switch (commandType)
+		{
+		case 0:
+			result = NSLocalizedStringFromTable(@"None (No Window)",
+												@"PrefPanelWorkspaces"/* table */,
+												@"description for “no window”");
+			break;
+		
+		case kCommandNewSessionDefaultFavorite:
+			result = NSLocalizedStringFromTable(@"Default",
+												@"PrefPanelWorkspaces"/* table */,
+												@"description of special workspace session type: Default");
+			break;
+		
+		case kCommandNewSessionLoginShell:
+			result = NSLocalizedStringFromTable(@"Log-In Shell",
+												@"PrefPanelWorkspaces"/* table */,
+												@"description of special workspace session type: Log-In Shell");
+			break;
+		
+		case kCommandNewSessionShell:
+			result = NSLocalizedStringFromTable(@"Shell",
+												@"PrefPanelWorkspaces"/* table */,
+												@"description of special workspace session type: Shell");
+			break;
+		
+		case kCommandNewSessionDialog:
+			result = NSLocalizedStringFromTable(@"Custom New Session",
+												@"PrefPanelWorkspaces"/* table */,
+												@"description of special workspace session type: Custom New Session");
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	
+	return result;
+}// description
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowInfo //{
+
+
+@synthesize preferencesIndex = _preferencesIndex;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithIndex:(Preferences_Index)	anIndex
+{
+	self = [super init];
+	if (nil != self)
+	{
+		assert(anIndex >= 1);
+		self->_preferencesIndex = anIndex;
+	}
+	return self;
+}// initWithIndex:
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
 windowIndexLabel
 {
-	return [[NSNumber numberWithUnsignedInteger:self.currentIndex] stringValue];
+	return [[NSNumber numberWithUnsignedInteger:self.preferencesIndex] stringValue];
 }// windowIndexLabel
 
 
@@ -2183,8 +2303,9 @@ Accessor.
 windowName
 {
 	NSString*				result = @"";
-	assert(0 != self.currentIndex);
-	Preferences_Tag const	windowTitleIndexedTag = [self actualTagForBase:kPreferences_TagIndexedWindowTitle];
+	assert(0 != self.preferencesIndex);
+	Preferences_Tag const	windowTitleIndexedTag = Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowTitle, self.preferencesIndex);
 	CFStringRef				nameCFString = nullptr;
 	Preferences_Result		prefsResult = Preferences_ContextGetData
 											(self.currentContext, windowTitleIndexedTag,
@@ -2212,8 +2333,9 @@ windowName
 - (void)
 setWindowName:(NSString*)	aWindowName
 {
-	assert(0 != self.currentIndex);
-	Preferences_Tag const	windowTitleIndexedTag = [self actualTagForBase:kPreferences_TagIndexedWindowTitle];
+	assert(0 != self.preferencesIndex);
+	Preferences_Tag const	windowTitleIndexedTag = Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowTitle, self.preferencesIndex);
 	CFStringRef				asCFStringRef = BRIDGE_CAST(aWindowName, CFStringRef);
 	Preferences_Result		prefsResult = Preferences_ContextSetData
 											(self.currentContext, windowTitleIndexedTag,
@@ -2349,28 +2471,18 @@ initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewM
 						@[
 							// create as many managers as there are supported indexes
 							// (see the Preferences module)
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] init] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:1] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:2] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:3] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:4] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:5] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:6] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:7] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:8] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:9] autorelease],
+							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:10] autorelease],
 						];
-	Preferences_Index	prefsIndexValue = 1;
 	
-	
-	// configure each context manager to modify a different index
-	// of the current workspace data (the context itself is set
-	// later, through callbacks)
-	for (PrefPanelWorkspaces_WindowInfo* eachInfo in listData)
-	{
-		[eachInfo setCurrentIndex:prefsIndexValue];
-		++prefsIndexValue;
-	}
 	
 	aViewManager.listItemHeaders = listData;
 }// initializeNumberedListViewManager:
@@ -2431,7 +2543,7 @@ toDataSet:(GenericPanelNumberedList_DataSet*)						newStructPtr
 
 
 #pragma mark -
-@implementation PrefPanelWorkspaces_WindowBoundariesValue
+@implementation PrefPanelWorkspaces_WindowBoundariesValue //{
 
 
 /*!
@@ -2441,20 +2553,22 @@ Designated initializer.
 */
 - (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+index:(Preferences_Index)								anIndex
 {
+	assert(anIndex > 0);
 	self = [super initWithContextManager:aContextMgr];
 	if (nil != self)
 	{
-		// WARNING: this is not actually of “flag” type and any attempt
-		// to read or set the value will fail; this object is only used
-		// for simplicity because the binding currently only requires
-		// the inherited/enabled settings
-		self->frameObject = [[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagIndexedWindowFrameBounds
-														contextManager:aContextMgr];
-		self->screenBoundsObject = [[PreferenceValue_Flag alloc]
-									initWithPreferencesTag:kPreferences_TagIndexedWindowScreenBounds
-															contextManager:aContextMgr];
+		self->frameObject = [[PreferenceValue_Rect alloc]
+								initWithPreferencesTag:Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowFrameBounds, anIndex)
+														contextManager:aContextMgr
+														preferenceRectType:kPreferenceValue_RectTypeHIRect];
+		self->screenBoundsObject = [[PreferenceValue_Rect alloc]
+									initWithPreferencesTag:Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedWindowScreenBounds, anIndex)
+															contextManager:aContextMgr
+															preferenceRectType:kPreferenceValue_RectTypeHIRect];
 		
 		// monitor the preferences context manager so that observers
 		// of preferences in sub-objects can be told to expect changes
@@ -2476,8 +2590,41 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
+	[frameObject release];
+	[screenBoundsObject release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Preferences_Index)
+preferencesIndex
+{
+	return _preferencesIndex;
+}
+- (void)
+setPreferencesIndex:(Preferences_Index)		anIndex
+{
+	if (_preferencesIndex != anIndex)
+	{
+		// technically the context may not have changed (only the index)
+		// but the response is exactly the same, as settings may be updated
+		[self prefsContextWillChange:nil];
+		_preferencesIndex = anIndex;
+		self->frameObject.preferencesTag = Preferences_ReturnTagVariantForIndex
+											(kPreferences_TagIndexedWindowFrameBounds, anIndex);
+		self->screenBoundsObject.preferencesTag = Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowScreenBounds, anIndex);
+		[self prefsContextDidChange:nil];
+	}
+}// setPreferencesIndex:
 
 
 #pragma mark New Methods
@@ -2553,6 +2700,400 @@ setNilPreferenceValue
 
 
 #pragma mark -
+@implementation PrefPanelWorkspaces_WindowSessionValue //{
+
+
+@synthesize preferencesIndex = _preferencesIndex;
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+index:(Preferences_Index)								anIndex
+{
+	assert(anIndex > 0);
+	self = [super initWithContextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->commandTypeObject = [[PreferenceValue_Number alloc]
+									initWithPreferencesTag:Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedWindowCommandType, anIndex)
+															contextManager:aContextMgr
+															preferenceCType:kPreferenceValue_CTypeUInt32];
+		self->sessionObject = [[PreferenceValue_CollectionBinding alloc]
+								initWithPreferencesTag:Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowSessionFavorite, anIndex)
+														contextManager:aContextMgr
+														sourceClass:Quills::Prefs::SESSION
+														includeDefault:YES
+														didRebuildTarget:self
+														didRebuildSelector:@selector(rebuildSessionList)];
+		self->_descriptorArray = [[NSMutableArray alloc] init];
+		[self rebuildSessionList];
+		
+		// monitor the preferences context manager so that observers
+		// of preferences in sub-objects can be told to expect changes
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
+							performSelector:@selector(prefsContextWillChange:)];
+		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
+							performSelector:@selector(prefsContextDidChange:)];
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+	[_descriptorArray release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+This is read-only and it changes whenever the value of
+the property "currentValueDescriptor" changes.
+
+(4.1)
+*/
+- (BOOL)
+hasValue
+{
+	id			sessionDescriptor = self.currentValueDescriptor.description;
+	NSNumber*	commandType = self.currentValueDescriptor.commandType;
+	
+	
+	// the None setting is a special command type of zero (0)
+	// so any other value is considered a valid window setting;
+	// IMPORTANT: this logic should be consistent with other
+	// interpretations of the two preference settings in this
+	// class and in user interface bindings
+	return (((nil == commandType) && (nil != sessionDescriptor)) ||
+			(0 != [commandType unsignedIntegerValue]));
+}// hasValue
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+valueDescriptorArray
+{
+	return [[_descriptorArray retain] autorelease];
+}// valueDescriptorArray
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (PrefPanelWorkspaces_SessionDescriptor*)
+currentValueDescriptor
+{
+	BOOL		isSessionFavoriteUndefined = NO;
+	BOOL		isCommandTypeUndefined = NO;
+	NSString*	sessionFavoriteName = [self->sessionObject readValueSeeIfDefault:&isSessionFavoriteUndefined];
+	NSNumber*	commandType = [self->commandTypeObject readValueSeeIfDefault:&isCommandTypeUndefined];
+	PrefPanelWorkspaces_SessionDescriptor*	result = nil;
+	
+	
+	// normally a value will always be returned above and
+	// the only way to detect an undefined value is with
+	// the “is Default” flag; although, since the source
+	// context might BE the Default, the flags might be
+	// true and then it is necessary to check the values
+	if (Preferences_ContextIsDefault(self->sessionObject.prefsMgr.currentContext, Quills::Prefs::WORKSPACE))
+	{
+		isSessionFavoriteUndefined = (nil == sessionFavoriteName);
+		isCommandTypeUndefined = (nil == commandType);
+	}
+	
+	// IMPORTANT: the historical (Carbon) implementation
+	// originally checked the session favorite setting
+	// before the command type, and ignored the latter
+	// if the former was defined; in case the user has
+	// old preferences saved, the Cocoa version uses the
+	// same fallback logic
+ 	if ((NO == isSessionFavoriteUndefined) &&
+		(NO == [sessionFavoriteName isEqualToString:@""]))
+	{
+		// selection is one of the Session Favorite names
+		for (PrefPanelWorkspaces_SessionDescriptor* asDesc in self.valueDescriptorArray)
+		{
+			if ([asDesc.sessionFavoriteName isEqualToString:sessionFavoriteName])
+			{
+				result = asDesc;
+				break;
+			}
+		}
+	}
+	else if (NO == isCommandTypeUndefined)
+	{
+		// selection is one of the special session types
+		for (PrefPanelWorkspaces_SessionDescriptor* asDesc in self.valueDescriptorArray)
+		{
+			if ([asDesc.commandType isEqual:commandType])
+			{
+				result = asDesc;
+				break;
+			}
+		}
+	}
+	else
+	{
+		// in case no preference was ever saved, return None
+		//Console_Warning(Console_WriteLine, "unable to find any valid window session setting (built-in command type or associated Session Favorite)");
+		result = [self.valueDescriptorArray objectAtIndex:0];
+	}
+	
+	return result;
+}
+- (void)
+setCurrentValueDescriptor:(PrefPanelWorkspaces_SessionDescriptor*)	selectedObject
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+	[self willChangeValueForKey:@"hasValue"];
+	
+	if (nil == selectedObject)
+	{
+		[self setNilPreferenceValue];
+	}
+	else
+	{
+		if (nil == selectedObject.commandType)
+		{
+			// selection is one of the Session Favorite names
+			[self->commandTypeObject setNilPreferenceValue];
+			self->sessionObject.currentValueDescriptor = [[[PreferenceValue_StringDescriptor alloc]
+															initWithStringValue:selectedObject.sessionFavoriteName
+																				description:selectedObject.sessionFavoriteName]
+															autorelease];
+		}
+		else
+		{
+			// selection is one of the special session types
+			self->commandTypeObject.numberValue = selectedObject.commandType;
+			[self->sessionObject setNilPreferenceValue];
+		}
+	}
+	
+	[self didChangeValueForKey:@"hasValue"];
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// setCurrentValueDescriptor:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (Preferences_Index)
+preferencesIndex
+{
+	return _preferencesIndex;
+}
+- (void)
+setPreferencesIndex:(Preferences_Index)		anIndex
+{
+	if (_preferencesIndex != anIndex)
+	{
+		// technically the context may not have changed (only the index)
+		// but the response is exactly the same, as settings may be updated
+		[self prefsContextWillChange:nil];
+		_preferencesIndex = anIndex;
+		self->commandTypeObject.preferencesTag = Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowCommandType, anIndex);
+		self->sessionObject.preferencesTag = Preferences_ReturnTagVariantForIndex
+												(kPreferences_TagIndexedWindowSessionFavorite, anIndex);
+		[self prefsContextDidChange:nil];
+	}
+}// setPreferencesIndex:
+
+
+#pragma mark New Methods
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextWillChange:"
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didChangeValueForKey:@"hasValue"];
+	[self didSetPreferenceValue];
+}// prefsContextDidChange:
+
+
+/*!
+Responds to a change in preferences context by notifying
+observers that key values have changed (so that updates
+to the user interface occur).
+
+(4.1)
+*/
+- (void)
+prefsContextWillChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	// note: should be opposite order of "prefsContextDidChange:"
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"hasValue"];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+}// prefsContextWillChange:
+
+
+#pragma mark PreferenceValue_Inherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isInherited
+{
+	// if the current value comes from a default then the “inherited” state is YES;
+	// since a fallback occurs between preference values, this must be a bit more
+	// complicated than usual
+	BOOL		isSessionFavoriteUndefined = NO;
+	BOOL		isCommandTypeUndefined = NO;
+	BOOL		result = NO;
+	NSString*	sessionName = [self->sessionObject readValueSeeIfDefault:&isSessionFavoriteUndefined];
+	
+	
+	UNUSED_RETURN(NSNumber*)[self->commandTypeObject readValueSeeIfDefault:&isCommandTypeUndefined];
+	
+	if ((isSessionFavoriteUndefined) && (isCommandTypeUndefined))
+	{
+		result = YES;
+	}
+	else if ((NO == isSessionFavoriteUndefined) &&
+				(NO == [sessionName isEqualToString:@""]))
+	{
+		result = [self->sessionObject isInherited];
+	}
+	else if (NO == isCommandTypeUndefined)
+	{
+		result = [self->commandTypeObject isInherited];
+	}
+	
+	return result;
+}// isInherited
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (void)
+setNilPreferenceValue
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentValueDescriptor"];
+	[self willChangeValueForKey:@"hasValue"];
+	[self->commandTypeObject setNilPreferenceValue];
+	[self->sessionObject setNilPreferenceValue];
+	[self didChangeValueForKey:@"hasValue"];
+	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didSetPreferenceValue];
+}// setNilPreferenceValue
+
+
+@end //} PrefPanelWorkspaces_WindowSessionValue
+
+
+#pragma mark -
+@implementation PrefPanelWorkspaces_WindowSessionValue (PrefPanelWorkspaces_WindowSessionValueInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Invoked when the "sessionObject" rebuilds its list of sessions.
+This responds by updating the corresponding array of descriptors
+(which includes those sessions and some other items such as
+standard session types).
+
+(4.1)
+*/
+- (void)
+rebuildSessionList
+{
+	[_descriptorArray removeAllObjects];
+	
+	PrefPanelWorkspaces_SessionDescriptor*		newDesc = nil;
+	
+	
+	// add an item that means “no session in this window slot”
+	// (should be the first item)
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc.commandType = [NSNumber numberWithInteger:0];
+	newDesc.sessionFavoriteName = nil;
+	[_descriptorArray addObject:newDesc];
+	
+	// add items for each user Session Favorite (including Default)
+	for (PreferenceValue_StringDescriptor* sessionDesc in [self->sessionObject valueDescriptorArray])
+	{
+		newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+		newDesc.commandType = nil;
+		newDesc.sessionFavoriteName = [sessionDesc describedStringValue];
+		[_descriptorArray addObject:newDesc];
+	}
+	
+	// add an item that means “open the Log-In Shell session in the window”
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionLoginShell];
+	newDesc.sessionFavoriteName = nil;
+	[_descriptorArray addObject:newDesc];
+	
+	// add an item that means “open the (non-log-in) Shell session in the window”
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionShell];
+	newDesc.sessionFavoriteName = nil;
+	[_descriptorArray addObject:newDesc];
+	
+	// add an item that means “open the Custom New Session sheet when the window opens“
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionDialog];
+	newDesc.sessionFavoriteName = nil;
+	[_descriptorArray addObject:newDesc];
+}// rebuildSessionList
+
+
+@end //} PrefPanelWorkspaces_WindowSessionValue (PrefPanelWorkspaces_WindowSessionValueInternal)
+
+
+#pragma mark -
 @implementation PrefPanelWorkspaces_WindowEditorViewManager //{
 
 
@@ -2610,10 +3151,11 @@ performSetBoundary:(id)		sender
 	}
 	else
 	{
-		Preferences_Index const		currentIndex = [self.windowsViewManager.selectedWindowInfo currentIndex];
+		Preferences_Index const		currentIndex = self.windowsViewManager.selectedWindowInfo.preferencesIndex;
 		
 		
-		Keypads_SetArrangeWindowPanelBinding(Preferences_ReturnTagVariantForIndex
+		Keypads_SetArrangeWindowPanelBinding(self, @selector(didFinishSettingWindowBoundary),
+												Preferences_ReturnTagVariantForIndex
 												(kPreferences_TagIndexedWindowFrameBounds, currentIndex),
 												typeHIRect,
 												Preferences_ReturnTagVariantForIndex
@@ -2623,6 +3165,30 @@ performSetBoundary:(id)		sender
 		Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
 	}
 }// performSetBoundary:
+
+
+/*!
+Responds when the user selects the “None (No Window)” item
+in the window session pop-up menu.  This sets the
+corresponding preferences appropriately.
+
+(4.1)
+*/
+- (IBAction)
+performSetSessionToNone:(id)	sender
+{
+#pragma unused(sender)
+	PrefPanelWorkspaces_SessionDescriptor*		noneDesc = nil;
+	
+	
+	// the value "0" is assumed throughout (and in the
+	// Preferences module when processing the value)
+	// as a way to indicate an unused window slot
+	noneDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	noneDesc.commandType = [NSNumber numberWithInteger:0];
+	noneDesc.sessionFavoriteName = nil;
+	self.windowSession.currentValueDescriptor = noneDesc;
+}// performSetSessionToNone:
 
 
 #pragma mark Accessors
@@ -2685,6 +3251,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 initializeWithContext:(void*)			aContext
 {
 #pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
 }// panelViewManager:initializeWithContext:
 
@@ -2715,6 +3282,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	assert(nil != byKey);
+	assert(nil != prefsMgr);
 	
 	// remember frame from XIB (it might be changed later)
 	self->idealSize = [aContainerView frame].size;
@@ -2726,15 +3294,9 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	// NOTE: These are initialized in an invalid state (no context manager)
-	// because they will always be changed via callback to a specific
-	// combination of context and index.
-	[self->byKey setObject:[[[PrefPanelWorkspaces_WindowBoundariesValue alloc]
-								initWithContextManager:nullptr] autorelease]
-					forKey:@"windowBoundaries"];
-	//[self->byKey setObject:[[[PrefPanelWorkspaces_WindowSessionValue alloc]
-	//							initWithContextManager:nullptr] autorelease]
-	//				forKey:@"windowSession"];
+	// NOTE: These can be changed via callback to a different combination
+	// of context and index.
+	[self configureForIndex:1];
 	
 	// note that all values have changed (causes the display to be refreshed)
 	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
@@ -2815,7 +3377,7 @@ toDataSet:(void*)						newDataSet
 	//GenericPanelNumberedList_DataSet*	oldStructPtr = REINTERPRET_CAST(oldDataSet, GenericPanelNumberedList_DataSet*);
 	GenericPanelNumberedList_DataSet*	newStructPtr = REINTERPRET_CAST(newDataSet, GenericPanelNumberedList_DataSet*);
 	Preferences_ContextRef				asPrefsContext = REINTERPRET_CAST(newStructPtr->parentPanelDataSetOrNull, Preferences_ContextRef);
-	Preferences_Index					asIndex = STATIC_CAST(newStructPtr->selectedListItem, Preferences_Index);
+	Preferences_Index					asIndex = STATIC_CAST(1 + newStructPtr->selectedListItem, Preferences_Index); // index is one-based
 	
 	
 	if (self.isPanelUserInterfaceLoaded)
@@ -2829,11 +3391,13 @@ toDataSet:(void*)						newDataSet
 		// now apply the specified settings
 		if (nullptr != asPrefsContext)
 		{
+			// user has selected an entirely different preferences collection
 			self.windowBoundaries.prefsMgr.currentContext = asPrefsContext;
 			self.windowSession.prefsMgr.currentContext = asPrefsContext;
 		}
-		self.windowBoundaries.prefsMgr.currentIndex = asIndex;
-		self.windowSession.prefsMgr.currentIndex = asIndex;
+		// user may or may not have selected a different window
+		// (the response is currently the same either way)
+		[self configureForIndex:asIndex];
 		
 		// note that all values have changed (causes the display to be refreshed)
 		for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
@@ -2955,6 +3519,68 @@ preferencesClass
 
 #pragma mark -
 @implementation PrefPanelWorkspaces_WindowEditorViewManager (PrefPanelWorkspaces_WindowEditorViewManagerInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Creates and/or configures index-dependent internal objects used
+for value bindings.
+
+NOTE:	This does NOT trigger any will/did callbacks because it
+		is typically called in places where these are already
+		being called.  Callbacks are necessary to ensure that
+		user interface elements are updated, for instance.
+
+(4.1)
+*/
+- (void)
+configureForIndex:(Preferences_Index)	anIndex
+{
+	if (nil == self.windowBoundaries)
+	{
+		[self->byKey setObject:[[[PrefPanelWorkspaces_WindowBoundariesValue alloc]
+									initWithContextManager:self->prefsMgr index:anIndex] autorelease]
+						forKey:@"windowBoundaries"];
+	}
+	else
+	{
+		self.windowBoundaries.preferencesIndex = anIndex;
+	}
+	
+	if (nil == self.windowSession)
+	{
+		[self->byKey setObject:[[[PrefPanelWorkspaces_WindowSessionValue alloc]
+									initWithContextManager:self->prefsMgr index:anIndex] autorelease]
+						forKey:@"windowSession"];
+	}
+	else
+	{
+		self.windowSession.preferencesIndex = anIndex;
+	}
+}// configureForIndex:
+
+
+/*!
+This is invoked when the user indicates that he or she is
+finished setting the target window boundary.
+
+(4.1)
+*/
+- (void)
+didFinishSettingWindowBoundary
+{
+	// trigger updates to inheritance checkbox, etc.
+	[self.windowBoundaries willSetPreferenceValue];
+	[self.windowSession willSetPreferenceValue];
+	[self.windowSession didSetPreferenceValue];
+	[self.windowBoundaries didSetPreferenceValue];
+	//self.windowSession.currentValueDescriptor = self.windowSession.currentValueDescriptor;
+}// didFinishSettingWindowBoundary
+
+
+#pragma mark Accessors
 
 
 /*!

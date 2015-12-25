@@ -92,6 +92,29 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+An object for user interface bindings; it indicates
+whether the string value is a Session Favorite name
+or a special type of session such as a log-in shell.
+*/
+@interface PrefPanelWorkspaces_SessionDescriptor : NSObject //{
+{
+@private
+	NSNumber*	_commandType;
+	NSString*	_sessionFavoriteName;
+}
+
+// accessors
+	@property (strong) NSNumber*
+	commandType; // nil for Session Favorite, or see corresponding preference setting
+	@property (strong, readonly) NSString*
+	description; // read-only; Session Favorite name or other description
+	@property (strong) NSString*
+	sessionFavoriteName; // the name of a Session Favorite; takes precedence if "commandType" is also set
+
+@end //}
+
+
+/*!
 An object for user interface bindings; prior to use,
 set a (Workspace-class) Preferences Context and a
 particular window index.  The window name can be
@@ -99,8 +122,18 @@ changed, causing the corresponding preferences (the
 window title) to be updated.
 */
 @interface PrefPanelWorkspaces_WindowInfo : PrefsContextManager_Object< GenericPanelNumberedList_ListItemHeader > //{
+{
+@private
+	Preferences_Index	_preferencesIndex;
+}
+
+// initializers
+	- (instancetype)
+	initWithIndex:(Preferences_Index)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
+	@property (readonly) Preferences_Index
+	preferencesIndex;
 	@property (readonly) NSString*
 	windowIndexLabel;
 	@property (strong) NSString*
@@ -138,16 +171,20 @@ Manages bindings for the window boundaries preference.
 @interface PrefPanelWorkspaces_WindowBoundariesValue : PreferenceValue_Inherited //{
 {
 @private
-	PreferenceValue_Flag*	frameObject;
-	PreferenceValue_Flag*	screenBoundsObject;
+	PreferenceValue_Rect*	frameObject;
+	PreferenceValue_Rect*	screenBoundsObject;
+	Preferences_Index		_preferencesIndex;
 }
 
 // initializers
 	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
+	initWithContextManager:(PrefsContextManager_Object*)_
+	index:(Preferences_Index)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
 	// (value is set externally by panel; only bindings are for inherited/enabled)
+	@property (assign) Preferences_Index
+	preferencesIndex;
 
 @end //}
 
@@ -158,21 +195,28 @@ Manages bindings for the window session preference.
 @interface PrefPanelWorkspaces_WindowSessionValue : PreferenceValue_Inherited //{
 {
 @private
-	PreferenceValue_Number*				commandTypeObject;
-	PreferenceValue_CollectionBinding*	sessionObject;
+	PreferenceValue_Number*					commandTypeObject;
+	PreferenceValue_CollectionBinding*		sessionObject;
+	NSMutableArray*							_descriptorArray;
+	Preferences_Index						_preferencesIndex;
 }
 
 // initializers
 	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
+	initWithContextManager:(PrefsContextManager_Object*)_
+	index:(Preferences_Index)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
+	- (BOOL)
+	hasValue; // binding (read-only; depends on "currentValueDescriptor")
 	- (NSArray*)
-	sessionInfoArray; // binding
-	- (id)
-	currentSessionInfo;
+	valueDescriptorArray; // binding (objects of type PrefPanelWorkspaces_SessionDescriptor)
+	- (PrefPanelWorkspaces_SessionDescriptor*)
+	currentValueDescriptor;
 	- (void)
-	setCurrentSessionInfo:(id)_; // binding
+	setCurrentValueDescriptor:(PrefPanelWorkspaces_SessionDescriptor*)_; // binding
+	@property (assign) Preferences_Index
+	preferencesIndex;
 
 @end //}
 
@@ -189,13 +233,16 @@ changes to an interface declared in a ".mm" file.
 																			PrefsWindow_PanelInterface > //{
 {
 @private
-	NSSize					idealSize;
-	NSMutableDictionary*	byKey;
+	PrefsContextManager_Object*		prefsMgr;
+	NSSize							idealSize;
+	NSMutableDictionary*			byKey;
 }
 
 // actions
 	- (IBAction)
 	performSetBoundary:(id)_;
+	- (IBAction)
+	performSetSessionToNone:(id)_;
 
 // accessors
 	- (PrefPanelWorkspaces_WindowBoundariesValue*)
