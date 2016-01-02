@@ -254,6 +254,20 @@ prefsMgr
 
 
 /*!
+This initializer exists only to catch incorrect calls by
+subclasses.
+
+(4.1)
+*/
+- (instancetype)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	NSAssert(false, @"initWithContextManager: initializer is not valid for subclasses of PreferenceValue_InheritedSingleTag");
+	return nil;
+}// initWithContextManager:
+
+
+/*!
 Designated initializer.
 
 (4.1)
@@ -431,7 +445,7 @@ contextManager:(PrefsContextManager_Object*)	aContextMgr
 preferenceCType:(PreferenceValue_CType)			aCType
 valueDescriptorArray:(NSArray*)					aDescriptorArray
 {
-	self = [super initWithContextManager:aContextMgr];
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
 	if (nil != self)
 	{
 		self->_valueDescriptorArray = [aDescriptorArray copy];
@@ -653,7 +667,7 @@ includeDefault:(BOOL)							aDefaultFlag
 didRebuildTarget:(id)							aTarget
 didRebuildSelector:(SEL)						aSelector
 {
-	self = [super initWithContextManager:aContextMgr];
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
 	if (nil != self)
 	{
 		_valueDescriptorArray = [@[] retain];

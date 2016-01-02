@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160102',
     '20151222',
     '20151019',
     '20151014',
@@ -530,6 +531,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160102': [
+        'Fixed a recent regression in panel displays for certain preferences, such as the line-ending setting.',
+    ],
     '20151222': [
         'Terminals now support "true" color (24-bit, millions) by default.  Both standard and common non-standard variants are emulated.  For example, a shell command like \'printf "\\033[1;38:2::245:;48:2:40:177:249m hello \\033[0m\\n"\' would print the word \'hello\' in bold green text on a bluish background, and so would \'printf "\\033[1;38;2;0;245;0;48;2;40;177;249m hello \\033[0m\\n"\'.',
         'Terminals do not allow an unending set of "true" colors to be defined.  Currently, after 2048 new colors have been requested in a particular terminal view, the oldest will start being reassigned.  The original 256 indexed colors do not count toward this limit however, as long as they are requested using the simpler indexing color sequences.',
