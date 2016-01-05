@@ -52,7 +52,7 @@
 		0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0007FAC07A00248DDF /* FlagManager.cp */; };
 		0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE36055432A400ACDF3A /* Undoables.cp */; };
 		0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */; };
-		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */; };
+		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */; };
 		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */; };
 		0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A984182083452E6002E1BCE /* TerminalBackground.cp */; };
 		0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD5055432A400ACDF3A /* EventLoop.mm */; };
@@ -376,7 +376,7 @@
 		0A46FE01055432A400ACDF3A /* Panel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Panel.mm; path = Application/Code/Panel.mm; sourceTree = "<group>"; };
 		0A46FE03055432A400ACDF3A /* Preferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Preferences.cp; path = Application/Code/Preferences.cp; sourceTree = "<group>"; };
 		0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelGeneral.mm; path = Application/Code/PrefPanelGeneral.mm; sourceTree = "<group>"; };
-		0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelMacros.cp; path = Application/Code/PrefPanelMacros.cp; sourceTree = "<group>"; };
+		0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelMacros.mm; path = Application/Code/PrefPanelMacros.mm; sourceTree = "<group>"; };
 		0A46FE08055432A400ACDF3A /* PrefsWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsWindow.mm; path = Application/Code/PrefsWindow.mm; sourceTree = "<group>"; };
 		0A46FE0F055432A400ACDF3A /* RecordAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecordAE.cp; path = Application/Code/RecordAE.cp; sourceTree = "<group>"; };
 		0A46FE12055432A400ACDF3A /* AppResources.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppResources.cp; path = Application/Code/AppResources.cp; sourceTree = "<group>"; };
@@ -508,6 +508,7 @@
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTerminals.mm; path = Application/Code/PrefPanelTerminals.mm; sourceTree = "<group>"; };
 		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
+		0AC1A97D1C388B8100CEBDF3 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
 		0AC69F151877A697004E6019 /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Application/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
@@ -1009,6 +1010,7 @@
 				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
 				0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */,
+				0AC1A97C1C388B8100CEBDF3 /* PrefPanelMacrosCocoa.xib */,
 				0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */,
 				0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */,
 				0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */,
@@ -1125,7 +1127,7 @@
 				0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */,
 				0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */,
 				0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */,
-				0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */,
+				0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */,
 				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */,
 				0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */,
 				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */,
@@ -1406,7 +1408,7 @@
 				0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */,
 				0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */,
 				0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */,
-				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.cp in Sources */,
+				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */,
 				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */,
 				0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */,
 				0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */,
@@ -1778,6 +1780,14 @@
 				0AB2273F12D2D41300D663BB /* English */,
 			);
 			name = KeypadVT220KeysCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0AC1A97C1C388B8100CEBDF3 /* PrefPanelMacrosCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AC1A97D1C388B8100CEBDF3 /* English */,
+			);
+			name = PrefPanelMacrosCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AC5687412CFC73800BAA7F0 /* Credits.html */ = {

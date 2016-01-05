@@ -452,6 +452,14 @@ fixed array of possible values (with descriptions).
 This is very commonly bound to a pop-up menu or a
 matrix element.
 
+If the current state forms a set of multiple values,
+the "currentMultiValueDescriptors" binding can be
+used instead of "currentValueDescriptor".  For an
+integer-based set of descriptors, the assumption is
+that all integer values can be treated as bits and
+combined using bitwise-OR or removed by using a
+bitwise-AND with a negation.
+
 The descriptor array should contain objects of a
 type such as PreferenceValue_IntegerDescriptor, to
 specify which values are stored and how they are
@@ -461,6 +469,7 @@ displayed to the user.
 {
 @private
 	NSArray*					_valueDescriptorArray;
+	id							_placeholderDescriptor;
 	PreferenceValue_Number*		_preferenceAccessObject;
 }
 
@@ -474,10 +483,16 @@ displayed to the user.
 // accessors
 	- (NSArray*)
 	valueDescriptorArray; // binding
+	- (NSArray*)
+	currentMultiValueDescriptors;
+	- (void)
+	setCurrentMultiValueDescriptors:(NSArray*)_; // binding
 	- (id)
 	currentValueDescriptor;
 	- (void)
 	setCurrentValueDescriptor:(id)_; // binding
+	@property (strong) id
+	placeholderDescriptor; // value of "currentValueDescriptor" when nothing matches
 
 @end //}
 

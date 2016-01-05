@@ -428,6 +428,10 @@ a selector of this form:
 (Ordinarily this might be defined as a protocol but the
 header is currently included by regular C++ code.)
 
+Optionally, the responder may also implement the method
+"controlKeypadHidden" to detect when the keypad is hidden by
+the user.
+
 If an object is provided, the keypad window is automatically
 displayed.  Currently, only the control keys palette type
 (kKeypads_WindowTypeControlKeys) is recognized.
@@ -976,8 +980,26 @@ Designated initializer.
 init
 {
 	self = [super initWithWindowNibName:@"KeypadControlKeysCocoa"];
+	if (nil != self)
+	{
+		[self whenObject:self.window postsNote:NSWindowWillCloseNotification
+							performSelector:@selector(windowWillClose:)];
+	}
 	return self;
 }// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+	[super dealloc];
+}// dealloc
 
 
 /*!
@@ -1426,6 +1448,28 @@ typeControlUnderscore:(id)	sender
 	[self sendCharacter:0x1F];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlUnderscore, gControlKeysEventTarget);
 }// typeControlUnderscore:
+
+
+#pragma mark NSWindowDelegate
+
+
+/*!
+If a responder has been set for the keypad then that
+responder is notified that the keypad is being hidden.
+
+(4.1)
+*/
+- (void)
+windowWillClose:(NSNotification*)	aNotification
+{
+	if (nil != gControlKeysResponder)
+	{
+		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadHidden)])
+		{
+			[gControlKeysResponder performSelector:@selector(controlKeypadHidden)];
+		}
+	}
+}// windowWillClose:
 
 
 #pragma mark NSWindowController

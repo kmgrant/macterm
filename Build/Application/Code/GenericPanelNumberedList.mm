@@ -280,6 +280,7 @@ didLoadContainerView:(NSView*)			aContainerView
 #pragma unused(aViewManager, aContainerView)
 	assert(nil != masterView);
 	assert(nil != detailView);
+	assert(nil != detailViewManager);
 	
 	NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[self->detailViewManager panelIdentifier]];
 	
@@ -288,8 +289,6 @@ didLoadContainerView:(NSView*)			aContainerView
 	[tabItem setInitialFirstResponder:[self->detailViewManager logicalFirstResponder]];
 	[self->detailView addTabViewItem:tabItem];
 	[tabItem release];
-	
-	//[self->detailView selectTabViewItemWithIdentifier:[self->detailViewManager panelIdentifier]];
 	
 	[self->masterDriver containerViewDidLoadForNumberedListViewManager:self];
 }// panelViewManager:didLoadContainerView:
@@ -305,15 +304,20 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
+	NSRect		containerFrame = [[self managedView] frame];
 	NSRect		masterFrame = [self->masterView frame];
 	NSRect		defaultDetailFrame = [self->detailView frame];
 	NSSize		panelIdealSize = defaultDetailFrame.size;
 	
 	
-	*outIdealSize = panelIdealSize;
 	[self->detailViewManager.delegate panelViewManager:aViewManager requestingIdealSize:&panelIdealSize];
-	outIdealSize->width = NSWidth(masterFrame) + 64/* sum of end and middle paddings */ + MAX(panelIdealSize.width, outIdealSize->width);
-	outIdealSize->height = MAX(NSHeight(masterFrame), 32/* approximate header/line size */ + outIdealSize->height);
+	panelIdealSize.width = MAX(panelIdealSize.width, NSWidth(defaultDetailFrame));
+	panelIdealSize.height = MAX(panelIdealSize.height, NSHeight(defaultDetailFrame));
+	
+	// set total size, including space required by numbered-list interface
+	*outIdealSize = panelIdealSize;
+	outIdealSize->width += (NSWidth(containerFrame) - NSWidth(defaultDetailFrame));
+	outIdealSize->height += (NSHeight(containerFrame) - NSHeight(defaultDetailFrame));
 }// panelViewManager:requestingIdealSize:
 
 

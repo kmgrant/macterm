@@ -262,6 +262,7 @@ subclasses.
 - (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
+#pragma unused(aContextMgr)
 	NSAssert(false, @"initWithContextManager: initializer is not valid for subclasses of PreferenceValue_InheritedSingleTag");
 	return nil;
 }// initWithContextManager:
@@ -429,6 +430,9 @@ setDescribedStringValue:(NSString*)		aValue
 @implementation PreferenceValue_Array
 
 
+@synthesize placeholderDescriptor = _placeholderDescriptor;
+
+
 /*!
 Designated initializer.
 
@@ -493,6 +497,7 @@ prefsContextDidChange:(NSNotification*)		aNotification
 {
 #pragma unused(aNotification)
 	// note: should be opposite order of "prefsContextWillChange:"
+	[self didChangeValueForKey:@"currentMultiValueDescriptors"];
 	[self didChangeValueForKey:@"currentValueDescriptor"];
 	[self didSetPreferenceValue];
 }// prefsContextDidChange:
@@ -512,6 +517,7 @@ prefsContextWillChange:(NSNotification*)	aNotification
 	// note: should be opposite order of "prefsContextDidChange:"
 	[self willSetPreferenceValue];
 	[self willChangeValueForKey:@"currentValueDescriptor"];
+	[self willChangeValueForKey:@"currentMultiValueDescriptors"];
 }// prefsContextWillChange:
 
 
@@ -554,6 +560,15 @@ currentValueDescriptor
 		}
 	}
 	
+	if (nil == result)
+	{
+		// preferences setting did not match anything in the
+		// predefined list of described values
+		//Console_Warning(Console_WriteValueFourChars, "search failed for preference tag", self.preferencesTag); // debug
+		//Console_Warning(Console_WriteValue, "not found in array: value", currentValue); // debug
+		result = self.placeholderDescriptor;
+	}
+	
 	return result;
 }
 - (void)
@@ -578,6 +593,66 @@ setCurrentValueDescriptor:(id)	selectedObject
 	[self didChangeValueForKey:@"currentValueDescriptor"];
 	[self didSetPreferenceValue];
 }// setCurrentValueDescriptor:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSArray*)
+currentMultiValueDescriptors
+{
+	UInt32				currentValue = [[self->_preferenceAccessObject numberStringValue] intValue];
+	NSMutableArray*		result = [[NSMutableArray alloc] initWithCapacity:0];
+	
+	
+	for (id object in [self valueDescriptorArray])
+	{
+		PreferenceValue_IntegerDescriptor*	asDesc = STATIC_CAST(object, PreferenceValue_IntegerDescriptor*);
+		
+		
+		// the assumption is that multi-value integers will be bits
+		// that can be compared as bit sets
+		if (currentValue & [asDesc describedIntegerValue])
+		{
+			[result addObject:asDesc];
+		}
+	}
+	
+	return result;
+}
+- (void)
+setCurrentMultiValueDescriptors:(NSArray*)	selectedObjects
+{
+	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentMultiValueDescriptors"];
+	
+	if (nil == selectedObjects)
+	{
+		[self setNilPreferenceValue];
+	}
+	else
+	{
+		UInt32		newValue = 0L;
+		
+		
+		for (id object in selectedObjects)
+		{
+			PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)object;
+			
+			
+			// the assumption is that multi-value integers will be bits
+			// that can be combined as bit sets
+			newValue |= [asInfo describedIntegerValue];
+		}
+		
+		[self->_preferenceAccessObject setNumberStringValue:[[NSNumber numberWithInt:newValue] stringValue]];
+	}
+	
+	[self didChangeValueForKey:@"currentMultiValueDescriptors"];
+	[self didSetPreferenceValue];
+}// setCurrentMultiValueDescriptors:
 
 
 #pragma mark PreferenceValue_Inherited
@@ -623,9 +698,11 @@ Accessor.
 setNilPreferenceValue
 {
 	[self willSetPreferenceValue];
+	[self willChangeValueForKey:@"currentMultiValueDescriptors"];
 	[self willChangeValueForKey:@"currentValueDescriptor"];
 	[self->_preferenceAccessObject setNilPreferenceValue];
 	[self didChangeValueForKey:@"currentValueDescriptor"];
+	[self didChangeValueForKey:@"currentMultiValueDescriptors"];
 	[self didSetPreferenceValue];
 }// setNilPreferenceValue
 

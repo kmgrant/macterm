@@ -972,13 +972,13 @@ Preferences_Init ()
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroAction, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-action"), typeCFStringRef,
-											sizeof(MacroManager_Action), Quills::Prefs::MACRO_SET);
+											sizeof(UInt32), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroContents, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-contents-string"), typeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKey, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-key"), typeCFStringRef,
-											sizeof(MacroManager_KeyID), Quills::Prefs::MACRO_SET);
+											sizeof(UInt32), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKeyModifiers, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-modifiers"), typeCFArrayRef,
 											sizeof(UInt32), Quills::Prefs::MACRO_SET);
@@ -7182,8 +7182,7 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							MacroManager_Action*	storedValuePtr = REINTERPRET_CAST
-																		(outDataPtr, MacroManager_Action*);
+							UInt32*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt32*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("verbatim"), kCFCompareCaseInsensitive))
@@ -7257,10 +7256,9 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							MacroManager_KeyID*		storedValuePtr = REINTERPRET_CAST
-																		(outDataPtr, MacroManager_KeyID*);
-							UInt16					keyCode = 0;
-							Boolean					isVirtualKey = false;
+							UInt32*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt32*);
+							UInt16		keyCode = 0;
+							Boolean		isVirtualKey = false;
 							
 							
 							if (virtualKeyParseName(valueCFString, keyCode, isVirtualKey))
@@ -9702,7 +9700,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 			{
 			case kPreferences_TagIndexedMacroAction:
 				{
-					MacroManager_Action const	data = *(REINTERPRET_CAST(inDataPtr, MacroManager_Action const*));
+					UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
 					
 					
 					switch (data)
@@ -9760,9 +9758,9 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagIndexedMacroKey:
 				{
-					MacroManager_KeyID const	data = *(REINTERPRET_CAST(inDataPtr, MacroManager_KeyID const*));
-					UInt16 const				kKeyCode = MacroManager_KeyIDKeyCode(data);
-					Boolean const				kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(data);
+					UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
+					UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(data);
+					Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(data);
 					
 					
 					if (kIsVirtualKey)

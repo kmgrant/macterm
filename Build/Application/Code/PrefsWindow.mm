@@ -3781,6 +3781,7 @@ windowDidLoad
 		for (Class viewMgrClass in
 				@[
 					[PrefPanelGeneral_ViewManager class],
+					[PrefPanelMacros_ViewManager class],
 					[PrefPanelWorkspaces_ViewManager class],
 					[PrefPanelSessions_ViewManager class],
 					[PrefPanelTerminals_ViewManager class],
@@ -3836,9 +3837,11 @@ windowDidLoad
 		zoomButton.enabled = NO;
 	}
 	
+	self.window.excludedFromWindowsMenu = YES;
+	
 	// “indent” the toolbar items slightly so they are further away
 	// from the window’s controls (such as the close button)
-	for (UInt16 i = 0; i < 2/* arbitrary */; ++i)
+	for (UInt16 i = 0; i < 1/* arbitrary */; ++i)
 	{
 		[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
 	}
@@ -4383,7 +4386,7 @@ withAnimation:(BOOL)												isAnimated
 		BOOL	willShowSourceList = (kPanel_EditTypeInspector == [aPanel panelEditType]); // initially...
 		
 		
-		if (nil != self->activePanel)
+		if ((nil != self->activePanel) && (NO == EventLoop_IsWindowFullScreen(self.window)))
 		{
 			// remember the window size that the user wanted for the previous panel
 			NSRect		contentRect = [[self window] contentRectForFrameRect:[[self window] frame]];
