@@ -2431,6 +2431,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					result = ToggleDrawer(gDrawerWindow);
 					break;
 				
+			#if 0
+				// old Carbon approach (to be removed)
 				case kCommandDisplayPrefPanelFormats:
 				case kCommandDisplayPrefPanelGeneral:
 				case kCommandDisplayPrefPanelKiosk:
@@ -2444,6 +2446,63 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					choosePanel(gIndicesByCommandID()[received.commandID]);
 					result = noErr;
 					break;
+			#else
+				case kCommandDisplayPrefPanelFormats:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorFormats, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelGeneral:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorGeneral, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelKiosk:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorKiosk, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelMacros:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorMacros, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelSessions:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorSessions, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelTerminals:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorTerminals, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelTranslations:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorTranslations, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+				
+				case kCommandDisplayPrefPanelWorkspaces:
+					[[PrefsWindow_Controller sharedPrefsWindowController]
+						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorWorkspaces, NSString*)
+														withAnimation:NO];
+					result = noErr;
+					break;
+			#endif
 				
 				default:
 					// ???
@@ -2854,7 +2913,7 @@ copyWithZone:(NSZone*)	aZone
 
 /*!
 Returns a hash code for this object (a value that should
-ideally change whenever a property significant to "isEqualTo:"
+ideally change whenever a property significant to "isEqual:"
 is changed).
 
 (4.1)
@@ -3788,7 +3847,6 @@ windowDidLoad
 					[PrefPanelFormats_ViewManager class],
 					[PrefPanelTranslations_ViewManager class],
 					[PrefPanelFullScreen_ViewManager class]
-					// other panels TBD
 				])
 		{
 			newViewMgr = [[viewMgrClass alloc] init];
@@ -3921,18 +3979,39 @@ windowDidLoad
 	[self whenObject:self->sourceListTableView postsNote:NSTableViewSelectionDidChangeNotification
 						performSelector:@selector(tableViewSelectionDidChange:)];
 	
-	// show the first panel while simultaneously resizing the
-	// window to an appropriate frame and showing any auxiliary
-	// interface that the panel requests (such as a source list)
-	[self displayPanel:[self->panelsByID objectForKey:[self->panelIDArray objectAtIndex:0]] withAnimation:NO];
-	
-	// find out when the window closes
+	// find out when the window closes or becomes key
+	[self whenObject:self.window postsNote:NSWindowDidBecomeKeyNotification
+					performSelector:@selector(windowDidBecomeKey:)];
 	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
 					performSelector:@selector(windowWillClose:)];
 }// windowDidLoad
 
 
 #pragma mark NSWindowDelegate
+
+
+/*!
+Responds to becoming the key window by selecting a panel
+if none has been selected.
+
+(4.1)
+*/
+- (void)
+windowDidBecomeKey:(NSNotification*)	aNotification
+{
+	// if no panel has been selected, choose one (this is the normal
+	// case but since it is possible for actions such as “Add to
+	// Preferences” to request direct access to panels, it may be
+	// that the first open request has chosen a specific panel)
+	if (nil == self->activePanel)
+	{
+		// show the first panel while simultaneously resizing the
+		// window to an appropriate frame and showing any auxiliary
+		// interface that the panel requests (such as a source list)
+		[self displayPanel:[self->panelsByID objectForKey:[self->panelIDArray objectAtIndex:0]] withAnimation:NO];
+		[self setSourceListHidden:YES newWindowFrame:self.window.frame];
+	}
+}// windowDidBecomeKey:
 
 
 /*!
@@ -4381,8 +4460,8 @@ withAnimation:(BOOL)												isAnimated
 	if (aPanel != self->activePanel)
 	{
 		NSRect	newWindowFrame = NSZeroRect; // set later
-		BOOL	wasShowingSourceList = ((NO == self->sourceListContainer.isHidden) &&
-										(self->sourceListContainer.frame.size.width > 0));
+		BOOL	wasShowingSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);/*((NO == self->sourceListContainer.isHidden) &&
+										(self->sourceListContainer.frame.size.width > 0));*/
 		BOOL	willShowSourceList = (kPanel_EditTypeInspector == [aPanel panelEditType]); // initially...
 		
 		
@@ -4528,20 +4607,24 @@ way, you can pinpoint a specific part of the window.
 displayPanelOrTabWithIdentifier:(NSString*)		anIdentifier
 withAnimation:(BOOL)							isAnimated
 {
-	Panel_ViewManager< Panel_Parent, PrefsWindow_PanelInterface >*	mainPanel = nil;
-	Panel_ViewManager< Panel_Parent, PrefsWindow_PanelInterface >*	candidateMainPanel = nil;
-	Panel_ViewManager*												childPanel = nil;
-	Panel_ViewManager*												candidateChildPanel = nil;
+	Panel_ViewManager< PrefsWindow_PanelInterface >*	mainPanel = nil;
+	Panel_ViewManager< PrefsWindow_PanelInterface >*	candidateMainPanel = nil;
+	Panel_ViewManager*									childPanel = nil;
+	Panel_ViewManager*									candidateChildPanel = nil;
 	
+	
+	// force the user interface to load (otherwise the panels
+	// may not exist and may not be selectable)
+	[self.window makeKeyAndOrderFront:nil];
 	
 	// given the way panels are currently indexed, it is
 	// necessary to search main categories and then
 	// search panel children (there is no direct map)
 	for (NSString* panelIdentifier in self->panelIDArray)
 	{
-		if ([panelIdentifier isEqualToString:anIdentifier])
+		if ([[panelIdentifier lowercaseString] isEqualToString:[anIdentifier lowercaseString]])
 		{
-			mainPanel = [self->panelsByID objectForKey:anIdentifier];
+			mainPanel = [self->panelsByID objectForKey:panelIdentifier];
 			break;
 		}
 	}
@@ -4552,16 +4635,19 @@ withAnimation:(BOOL)							isAnimated
 		// category; search for a child panel that matches
 		for (candidateMainPanel in [self->panelsByID objectEnumerator])
 		{
-			for (candidateChildPanel in [candidateMainPanel panelParentEnumerateChildViewManagers])
+			if ([candidateMainPanel conformsToProtocol:@protocol(Panel_Parent)])
 			{
-				NSString*	childIdentifier = [candidateChildPanel panelIdentifier];
-				
-				
-				if ([childIdentifier isEqualToString:anIdentifier])
+				for (candidateChildPanel in [STATIC_CAST(candidateMainPanel, id< Panel_Parent >) panelParentEnumerateChildViewManagers])
 				{
-					mainPanel = candidateMainPanel;
-					childPanel = candidateChildPanel;
-					break;
+					NSString*	childIdentifier = [candidateChildPanel panelIdentifier];
+					
+					
+					if ([[childIdentifier lowercaseString] isEqualTo:[anIdentifier lowercaseString]])
+					{
+						mainPanel = candidateMainPanel;
+						childPanel = candidateChildPanel;
+						break;
+					}
 				}
 			}
 		}
@@ -4575,6 +4661,11 @@ withAnimation:(BOOL)							isAnimated
 	if (nil != childPanel)
 	{
 		[childPanel performDisplaySelfThroughParent:nil];
+	}
+	
+	if ((nil == mainPanel) && (nil == childPanel))
+	{
+		Console_Warning(Console_WriteValueCFString, "unable to display panel with identifier", BRIDGE_CAST(anIdentifier, CFStringRef));
 	}
 }// displayPanelOrTabWithIdentifier:withAnimation:
 

@@ -68,8 +68,6 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	setTestTerminalToActiveSessionData:(id)_;
 	- (IBAction)
-	showTestPreferencesWindow:(id)_;
-	- (IBAction)
 	showTestTerminalToolbar:(id)_;
 	- (IBAction)
 	showTestTerminalWindow:(id)_;
@@ -105,9 +103,6 @@ extern Boolean		gDebugInterface_LogsTerminalState;
 
 void
 	DebugInterface_Display					();
-
-void
-	DebugInterface_DisplayTestPrefsWindow	();
 
 void
 	DebugInterface_DisplayTestTerminal		();

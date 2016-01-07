@@ -238,17 +238,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		}
 	}
 	
-	// if requested, automatically show the experimental new preferences window
-	{
-		char const*		varValue = getenv("MACTERM_AUTO_SHOW_COCOA_PREFS");
-		
-		
-		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
-		{
-			DebugInterface_DisplayTestPrefsWindow();
-		}
-	}
-	
 	// when debugging, make sure the application activates after it starts up
 	if (Local_StandardInputIsATerminal())
 	{
@@ -276,7 +265,7 @@ Initialize_ApplicationShutDownIsolatedComponents ()
 	CommandLine_Done();
 	Clipboard_Done();
 	InfoWindow_Done();
-	PrefsWindow_Done(); // also saves other preferences
+	UNUSED_RETURN(Preferences_Result)Preferences_Save();
 	Preferences_Done();
 	EventLoop_Done();
 }// ApplicationShutDownIsolatedComponents

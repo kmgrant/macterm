@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="15A284" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="DebugInterface_PanelController">
@@ -11,20 +11,20 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Debugging Options" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
-            <rect key="contentRect" x="191" y="400" width="466" height="319"/>
+            <rect key="contentRect" x="191" y="400" width="466" height="288"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
             <value key="minSize" type="size" width="466" height="319"/>
             <value key="maxSize" type="size" width="466" height="319"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="466" height="319"/>
+                <rect key="frame" x="0.0" y="0.0" width="466" height="288"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button wantsLayer="YES" id="47">
-                        <rect key="frame" x="184" y="281" width="264" height="18"/>
+                        <rect key="frame" x="184" y="250" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -33,7 +33,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="check" title="Log Terminal State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="48">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -43,7 +42,7 @@
                         </connections>
                     </button>
                     <button wantsLayer="YES" id="52">
-                        <rect key="frame" x="184" y="261" width="264" height="18"/>
+                        <rect key="frame" x="184" y="230" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -52,7 +51,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="check" title="Log Terminal Input Characters" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="53">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -62,7 +60,7 @@
                         </connections>
                     </button>
                     <button wantsLayer="YES" id="112">
-                        <rect key="frame" x="184" y="241" width="264" height="18"/>
+                        <rect key="frame" x="184" y="210" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -71,7 +69,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="check" title="Log Pseudoterminal Device Settings" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="113">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -81,7 +78,7 @@
                         </connections>
                     </button>
                     <textField wantsLayer="YES" verticalHuggingPriority="750" id="56">
-                        <rect key="frame" x="17" y="282" width="146" height="17"/>
+                        <rect key="frame" x="17" y="251" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -90,7 +87,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Global:" id="57">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -98,7 +94,7 @@
                         </textFieldCell>
                     </textField>
                     <textField wantsLayer="YES" verticalHuggingPriority="750" id="58">
-                        <rect key="frame" x="17" y="193" width="146" height="17"/>
+                        <rect key="frame" x="17" y="162" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -107,7 +103,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Active Terminal:" id="59">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -115,7 +110,7 @@
                         </textFieldCell>
                     </textField>
                     <button wantsLayer="YES" verticalHuggingPriority="750" id="60">
-                        <rect key="frame" x="180" y="183" width="182" height="32"/>
+                        <rect key="frame" x="180" y="152" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -124,7 +119,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="push" title="Log Detailed Snapshot" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="61">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -134,7 +128,7 @@
                         </connections>
                     </button>
                     <textField wantsLayer="YES" verticalHuggingPriority="750" id="72">
-                        <rect key="frame" x="17" y="153" width="146" height="17"/>
+                        <rect key="frame" x="17" y="122" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -143,7 +137,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Incomplete Work:" id="75">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -151,7 +144,7 @@
                         </textFieldCell>
                     </textField>
                     <button wantsLayer="YES" verticalHuggingPriority="750" id="73">
-                        <rect key="frame" x="180" y="143" width="182" height="32"/>
+                        <rect key="frame" x="180" y="112" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -160,32 +153,12 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="push" title="Show Cocoa Terminal" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="74">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
                             <action selector="showTestTerminalWindow:" target="-2" id="77"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="125">
-                        <rect key="frame" x="180" y="79" width="182" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <animations/>
-                        <buttonCell key="cell" type="push" title="Show Preferences" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="126">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="showTestPreferencesWindow:" target="-2" id="128"/>
                         </connections>
                     </button>
                     <button wantsLayer="YES" verticalHuggingPriority="750" id="129">
@@ -198,7 +171,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="push" title="Launch XPC Service" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="130">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -208,7 +180,7 @@
                         </connections>
                     </button>
                     <button wantsLayer="YES" verticalHuggingPriority="750" id="117">
-                        <rect key="frame" x="180" y="111" width="182" height="32"/>
+                        <rect key="frame" x="180" y="79" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -217,7 +189,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="push" title="Show Cocoa Toolbar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="118">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -236,7 +207,6 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <animations/>
                         <buttonCell key="cell" type="push" title="Cocoa Term Session" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="135">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -246,9 +216,8 @@
                         </connections>
                     </button>
                 </subviews>
-                <animations/>
             </view>
-            <point key="canvasLocation" x="244" y="372.5"/>
+            <point key="canvasLocation" x="244" y="357"/>
         </window>
     </objects>
 </document>

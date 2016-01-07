@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160107',
     '20160102',
     '20151222',
     '20151019',
@@ -531,6 +532,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160107': [
+        'Preferences window has been reimplemented in Cocoa, which makes it look much better on Retina displays.',
+        'Preferences window now has a search field for quickly locating relevant panels.',
+        'Preferences panels that are collection-based now all support inheritance from Default.  (Previously, this was only avaiable for Format settings.)  Note that it is important to observe when the "Use Default" box is checked for a setting because this means that the value is entirely defined by the corresponding Default setting and will update if the Default changes.  To override a "Use Default" setting, simply change the value to something different.  To restore a "Use Default" setting, click the corresponding box.',
+        'Preferences window Sessions pane Data Flow tab now provides a graphical interface for the "Automatically write to directory:" option that previously existed as a low-level setting for capturing files.',
+    ],
     '20160102': [
         'Fixed a recent regression in panel displays for certain preferences, such as the line-ending setting.',
     ],

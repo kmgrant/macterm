@@ -987,7 +987,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kHICommandPreferences:
-			PrefsWindow_Display();
+			[[[PrefsWindow_Controller sharedPrefsWindowController] window] makeKeyAndOrderFront:nil];
 			break;
 		
 		//case kCommandWiderScreen:
