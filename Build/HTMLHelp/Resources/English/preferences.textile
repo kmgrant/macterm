@@ -35,6 +35,9 @@ When you select the Macros, Workspaces, Sessions, Terminals,
  appears.  This means you may create *groups of preferences*.  The
  list is unique for every category.
 
+The order of collections can be changed by dragging items in the
+ list.
+
 h3. "Default" Item
 
 Every list starts with a Default item.  If you do not want to
@@ -79,25 +82,7 @@ The new collection will try to use any name that was given in
 h3. "-" Button
 
 First select an item in the list and then use this button to
- remove the item.  (NOTE: So far in the beta there is a known
- bug where items may not disappear the first time you attempt to
- delete them.  It is possible you may have to click "-" several
- times before an item is actually removed from the list.  This
- bug will obviously be fixed before MacTerm is completed.)
-
-h3. Up-Arrow Button
-
-First select an item in the list and then use this button to move
- the item higher in the list.  You can use this repeatedly to
- move the item further.  Note that "Default" is always the first
- item and nothing can be moved above it.
-
-h3. Down-Arrow Button
-
-First select an item in the list and then use this button to move
- the item lower in the list.  You can use this repeatedly to
- move the item further.  Note that "Default" is always the first
- item and it cannot be moved down.
+ remove the item.
 
 h3. Gear Menu Button
 
@@ -133,29 +118,29 @@ Exported settings are a good way to share among users of MacTerm.
 
 h2(#inheritance). About Inherited Preferences
 
-If a panel has one or more columns of check boxes on the side, it
- means that you can delete any "local" values for that setting
- and force the collection to always inherit the default value.
- When the Default is changed, inheriting collections will always
- use the latest Default value.
+In collection-based preference panels, a "Use Default" column of
+ checkboxes is available to control which settings are inherited
+ from the corresponding Default.
 
-For example, you may decide that you want every terminal window
- to use the same font and size but allow different Format options
- to have different colors.  To have the font kept in sync
- automatically, simply set the font and size in the Default Format
- and ensure that the appropriate check boxes are set in all other
- Format collections to use that Default.
+This is a great way to avoid unnecessary duplicates; for example,
+ you might want to set a Font only once and have most of your
+ other Format settings use the same value.
 
-When there is more than one check box side-by-side, each box
- corresponds to a different setting in the same row.  For example,
- if you see two color boxes side-by-side, each will have its own
- check box to control inheritance of one color.
+Note that *when a Default setting is changed, any collections*
+ *that are set to inherit that setting will implicitly change* so
+ be sure to set "local" versions of any settings that should
+ remain unique.
 
-The "Use Default" check boxes are disabled once they are checked.
- Enter a different value to make the "Use Default" option
- available again; for example, if the check box controls a color,
- click the color box to select a new color and the check box will
- be enabled.
+To make a unique local value, simply edit the corresponding
+ setting.  The initial edit must set a value that is different
+ from the Default.  After the first change, you can change the
+ value back if you want it to copy without inheriting.
+
+To remove a local variation and restore inheritance from Default,
+ click the corresponding checkbox in the "Use Default" column for
+ the setting.  (Sometimes, if multiple settings are arranged
+ side-by-side horizontally, there will be multiple checkboxes on
+ that line to select which one to make Default.)
 
 h2(#search). About Preferences Search
 
@@ -573,11 +558,47 @@ bq. You can create more than one set of preferences in
  edit that collection's settings in the main Preferences
  window.
 
+bq. Preferences in this category allow inheritance;
+ see "About Inherited Preferences" for details.
+
 Workspaces manage multiple terminal windows on one or more
  displays.  In addition, the Default is used at startup time to
  automatically spawn zero or more windows for you.
 
-h3. Window List
+h3. Options
+
+h4(#usetabs). Use tabs to arrange windows
+
+Once enabled, all new windows (but not existing ones) will be
+ given tab adornments and will stick together automatically.
+
+New windows are added to the tab group of the active window.
+ A tab can be moved to a new group by clicking the up-arrow
+ button on its tab, or using Window >> Move to New Workspace.
+
+**Tip:** If you're using more than one display, or Spaces, it
+ is handy to have a tab group for each space.
+
+It is important to notice that MacTerm tabs are normal
+ windows so they are independent and can be modified in the
+ usual ways.  The _only_ exception is that all the windows in
+ the group will move together.
+
+If a sheet is open on one tab, you can still reach other tabs
+ by clicking on them with the mouse.
+
+You can also drag and drop between tabs: simply move the mouse
+ over a tab to activate its window.
+
+h4. Automatically enter Full Screen
+
+If you want the session window to automatically take over a
+ screen as soon as it starts, set this option.  The effect is
+ the same as if you had used "Enter Full Screen" yourself.  If
+ more than one window is in the Workspace then each will try
+ to attempt Full Screen individually.
+
+h3. Windows
 
 This displays the number of windows that can be in the workspace
  (currently fixed at 10), and their names.
@@ -613,31 +634,6 @@ If "Use tabs to arrange windows" is set for the Workspace, then
 
 See also the "Window Stacking Origin", which applies to any new
  window that is not created as part of a Workspace.
-
-h3. Settings
-
-h4(#usetabs). Use tabs to arrange windows
-
-Once enabled, all new windows (but not existing ones) will be
- given tab adornments and will stick together automatically.
-
-New windows are added to the tab group of the active window.
- A tab can be moved to a new group by clicking the up-arrow
- button on its tab, or using Window >> Move to New Workspace.
-
-**Tip:** If you're using more than one display, or Spaces, it
- is handy to have a tab group for each space.
-
-It is important to notice that MacTerm tabs are normal
- windows so they are independent and can be modified in the
- usual ways.  The _only_ exception is that all the windows in
- the group will move together.
-
-If a sheet is open on one tab, you can still reach other tabs
- by clicking on them with the mouse.
-
-You can also drag and drop between tabs: simply move the mouse
- over a tab to activate its window.
 
 h2(#sessions). Sessions
 
@@ -1330,6 +1326,9 @@ bq. You can create more than one set of preferences in
  choose a name from the list in the drawer, and then
  edit that collection's settings in the main Preferences
  window.
+
+bq. Preferences in this category allow inheritance;
+ see "About Inherited Preferences" for details.
 
 A translation table essentially allows the terminal to display
  text the way it is supposed to, according to what an application
