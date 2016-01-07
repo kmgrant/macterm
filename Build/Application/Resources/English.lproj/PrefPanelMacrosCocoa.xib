@@ -221,7 +221,6 @@
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
-                            <binding destination="-2" name="enabled" keyPath="self.macroKey.isOrdinaryCharacter" id="h7a-wS-3c8"/>
                             <binding destination="-2" name="value" keyPath="self.macroKey.currentOrdinaryCharacter" id="ivo-Vn-wFe"/>
                             <outlet property="nextKeyView" destination="Sem-ZU-nnH" id="OWA-2P-Y4p"/>
                         </connections>
@@ -234,7 +233,7 @@
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
                         <connections>
-                            <binding destination="-2" name="enabled" keyPath="self.macroAction.inheritEnabled" id="UE2-k6-8hx"/>
+                            <binding destination="-2" name="enabled" keyPath="self.macroContents.inheritEnabled" id="y3M-Fs-KzD"/>
                             <binding destination="-2" name="value" keyPath="self.macroContents.inherited" id="4sk-te-WX1"/>
                         </connections>
                     </button>
