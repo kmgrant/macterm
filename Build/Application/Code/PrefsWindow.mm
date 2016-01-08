@@ -1557,7 +1557,6 @@ init ()
 		installPanel(PrefPanelWorkspaces_New());
 		installPanel(PrefPanelSessions_New());
 		installPanel(PrefPanelTerminals_New());
-		installPanel(PrefPanelFormats_New());
 		installPanel(PrefPanelTranslations_New());
 		installPanel(PrefPanelFullScreen_New());
 		
@@ -3999,6 +3998,7 @@ if none has been selected.
 - (void)
 windowDidBecomeKey:(NSNotification*)	aNotification
 {
+#pragma unused(aNotification)
 	// if no panel has been selected, choose one (this is the normal
 	// case but since it is possible for actions such as “Add to
 	// Preferences” to request direct access to panels, it may be

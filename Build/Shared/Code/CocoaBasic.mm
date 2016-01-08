@@ -46,23 +46,11 @@
 
 // application includes
 #import "AppResources.h"
-#import "ColorBox.h"
 #import "FileUtilities.h"
 
 
 
 #pragma mark Types
-
-/*!
-Responds to user actions in the system-wide Color Panel.
-*/
-@interface CocoaBasic_NoticeColorPanelChange : NSResponder //{
-
-// NSColorPanelResponderMethod
-	- (void)
-	changeColor:(id)_;
-
-@end //}
 
 typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
 
@@ -78,8 +66,6 @@ NSString*	returnPathForFSRef	(FSRef const&);
 namespace {
 
 HIWindowRefToNSWindowMap&			gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowMap x; return x; }
-HIViewWrap							gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
-CocoaBasic_NoticeColorPanelChange*	gColorWatcher = nil;		//!< sees color changes
 NSSpeechSynthesizer*				gDefaultSynth = nil;
 
 } // anonymous namespace
@@ -183,70 +169,6 @@ CocoaBasic_ApplyStandardStyleToPopover	(Popover_Window*	inoutPopover,
 		[inoutPopover setArrowHeight:0.0];
 	}
 }// ApplyStandardStyleToPopover
-
-
-/*!
-Shows the global color panel floating window, if it is
-not already visible.
-
-(1.0)
-*/
-void
-CocoaBasic_ColorPanelDisplay ()
-{
-	AutoPool	_;
-	
-	
-	[NSApp orderFrontColorPanel:NSApp];
-}// ColorPanelDisplay
-
-
-/*!
-Specifies the view, which must be a color box, that is
-the current target of the global color panel.  Also
-initializes the global color panel color to whatever
-ColorBox_GetColor() returns.
-
-(1.0)
-*/
-void
-CocoaBasic_ColorPanelSetTargetView	(HIViewRef	inColorBoxView)
-{
-	AutoPool		_;
-	NSColorPanel*	colorPanel = [NSColorPanel sharedColorPanel];
-	NSColor*		globalColor = nil;
-	RGBColor		viewColor;
-	CGDeviceColor	viewColorFloat;
-	
-	
-	// create a responder if none exists, to watch for color changes
-	if (nil == gColorWatcher)
-	{
-		gColorWatcher = [[CocoaBasic_NoticeColorPanelChange alloc] init];
-		[gColorWatcher setNextResponder:[NSApp nextResponder]];
-		[NSApp setNextResponder:gColorWatcher];
-	}
-	
-	// remove highlighting from any previous focus
-	if (gCurrentColorPanelFocus.exists()) SetControl32BitValue(gCurrentColorPanelFocus, kControlCheckBoxUncheckedValue);
-	
-	// set the global to the new target view
-	gCurrentColorPanelFocus.setCFTypeRef(inColorBoxView);
-	
-	// highlight the new focus
-	SetControl32BitValue(gCurrentColorPanelFocus, kControlCheckBoxCheckedValue);
-	
-	// initialize the color in the panel
-	ColorBox_GetColor(inColorBoxView, &viewColor);
-	viewColorFloat.red = viewColor.red;
-	viewColorFloat.red /= RGBCOLOR_INTENSITY_MAX;
-	viewColorFloat.green = viewColor.green;
-	viewColorFloat.green /= RGBCOLOR_INTENSITY_MAX;
-	viewColorFloat.blue = viewColor.blue;
-	viewColorFloat.blue /= RGBCOLOR_INTENSITY_MAX;
-	globalColor = [NSColor colorWithDeviceRed:viewColorFloat.red green:viewColorFloat.green blue:viewColorFloat.blue alpha:1.0];
-	[colorPanel setColor:globalColor];
-}// ColorPanelSetTargetView
 
 
 /*!
@@ -910,90 +832,5 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 }// returnPathForFSRef
 
 } // anonymous namespace
-
-
-#pragma mark -
-@implementation CocoaBasic_NoticeColorPanelChange
-
-
-/*!
-Notified when the user selects a new color in the system-wide
-Colors panel.
-
-(4.0)
-*/
-- (void)
-changeColor:(id)	sender
-{
-#pragma unused(sender)
-	NSColorPanel*	colorPanel = [NSColorPanel sharedColorPanel];
-	NSColor*		newColor = [[colorPanel color] colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-	CGDeviceColor	newColorFloat;
-	float			ignoredAlpha = 0;
-	RGBColor		newColorRGB;
-	
-	
-	[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue alpha:&ignoredAlpha];
-	newColorFloat.red *= RGBCOLOR_INTENSITY_MAX;
-	newColorFloat.green *= RGBCOLOR_INTENSITY_MAX;
-	newColorFloat.blue *= RGBCOLOR_INTENSITY_MAX;
-	newColorRGB.red = STATIC_CAST(newColorFloat.red, unsigned short);
-	newColorRGB.green = STATIC_CAST(newColorFloat.green, unsigned short);
-	newColorRGB.blue = STATIC_CAST(newColorFloat.blue, unsigned short);
-	
-	ColorBox_SetColor(gCurrentColorPanelFocus, &newColorRGB, true/* is user action */);
-	
-	// TEMPORARY UGLY HACK: since the Cocoa color panel contains sliders with their
-	// own event loops, it is possible for update routines to be invoked continuously
-	// in such a way that the window is ERASED without an update; all attempts to
-	// render the window in other ways have failed, but slightly RESIZING the window
-	// performs a full redraw and is still fairly subtle (the user might notice a
-	// slight shift on the right edge of the window, but this is still far better
-	// than having the entire window turn white); it is not clear why this is
-	// happening, other than the usual theory that Carbon and Cocoa just weren’t
-	// meant to play nicely together and crap like this will never be truly fixed
-	// until the user interface can migrate to Cocoa completely...
-	if (nullptr != gCurrentColorPanelFocus)
-	{
-		HIWindowRef		window = HIViewGetWindow(gCurrentColorPanelFocus);
-		WindowClass		windowClass = kDocumentWindowClass;
-		Rect			bounds;
-		OSStatus		error = noErr;
-		
-		
-		// for sheets, the PARENT window can sometimes be erased too...sigh
-		error = GetWindowClass(window, &windowClass);
-		if (noErr != error)
-		{
-			Console_Warning(Console_WriteValue, "failed to find color panel’s window class", error);
-			windowClass = kDocumentWindowClass;
-		}
-		if (kSheetWindowClass == windowClass)
-		{
-			HIWindowRef		parentWindow;
-			
-			
-			error = GetSheetWindowParent(window, &parentWindow);
-			if (noErr == error)
-			{
-				UNUSED_RETURN(OSStatus)HIViewRender(HIViewGetRoot(parentWindow));
-			}
-		}
-		
-		// view rendering does not seem to work for the main window, so
-		// use a resize hack to force a complete update
-		error = GetWindowBounds(window, kWindowContentRgn, &bounds);
-		if (noErr == error)
-		{
-			++bounds.right;
-			UNUSED_RETURN(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
-			--bounds.right;
-			UNUSED_RETURN(OSStatus)SetWindowBounds(window, kWindowContentRgn, &bounds);
-		}
-	}
-}/// changeColor:
-
-
-@end // CocoaBasic_NoticeColorPanelChange
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

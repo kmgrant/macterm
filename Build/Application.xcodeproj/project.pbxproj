@@ -46,7 +46,6 @@
 		0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFB055432A400ACDF3A /* MenuBar.cp */; };
 		0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3C055432A400ACDF3A /* WindowTitleDialog.mm */; };
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.mm */; };
-		0AC6BAE80A8C0BA000AFF37A /* ColorBox.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC0055432A400ACDF3A /* ColorBox.cp */; };
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */; };
 		0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0007FAC07A00248DDF /* FlagManager.cp */; };
@@ -277,7 +276,6 @@
 		0A4603BD0554376100ACDF3A /* BasicTypesAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BasicTypesAE.h; path = Application/Code/BasicTypesAE.h; sourceTree = "<group>"; };
 		0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventUtilities.template.h; path = Shared/Code/CarbonEventUtilities.template.h; sourceTree = "<group>"; };
 		0A4603C00554376100ACDF3A /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Clipboard.h; path = Application/Code/Clipboard.h; sourceTree = "<group>"; };
-		0A4603C40554376100ACDF3A /* ColorBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ColorBox.h; path = Application/Code/ColorBox.h; sourceTree = "<group>"; };
 		0A4603C50554376100ACDF3A /* ColorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ColorUtilities.h; path = Shared/Code/ColorUtilities.h; sourceTree = "<group>"; };
 		0A4603C60554376100ACDF3A /* CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandLine.h; path = Application/Code/CommandLine.h; sourceTree = "<group>"; };
 		0A4603C70554376100ACDF3A /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = Application/Code/Commands.h; sourceTree = "<group>"; };
@@ -347,7 +345,6 @@
 		0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppleEventUtilities.cp; path = Application/Code/AppleEventUtilities.cp; sourceTree = "<group>"; };
 		0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BasicTypesAE.cp; path = Application/Code/BasicTypesAE.cp; sourceTree = "<group>"; };
 		0A46FDBC055432A400ACDF3A /* Clipboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Clipboard.mm; path = Application/Code/Clipboard.mm; sourceTree = "<group>"; };
-		0A46FDC0055432A400ACDF3A /* ColorBox.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorBox.cp; path = Application/Code/ColorBox.cp; sourceTree = "<group>"; };
 		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Commands.mm; path = Application/Code/Commands.mm; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
@@ -764,7 +761,6 @@
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
 				0A46FE12055432A400ACDF3A /* AppResources.cp */,
 				0A46FDBC055432A400ACDF3A /* Clipboard.mm */,
-				0A46FDC0055432A400ACDF3A /* ColorBox.cp */,
 				0A35F5130DEDD9E300F16B03 /* CommandLine.mm */,
 				0A46FDC3055432A400ACDF3A /* Commands.mm */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
@@ -826,7 +822,6 @@
 				0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */,
 				0A4604230554376100ACDF3A /* AppResources.h */,
 				0A4603C00554376100ACDF3A /* Clipboard.h */,
-				0A4603C40554376100ACDF3A /* ColorBox.h */,
 				0A4603C60554376100ACDF3A /* CommandLine.h */,
 				0A4603C70554376100ACDF3A /* Commands.h */,
 				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
@@ -1402,7 +1397,6 @@
 				0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */,
 				0AC6BAE50A8C0BA000AFF37A /* WindowTitleDialog.mm in Sources */,
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */,
-				0AC6BAE80A8C0BA000AFF37A /* ColorBox.cp in Sources */,
 				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */,
 				0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */,

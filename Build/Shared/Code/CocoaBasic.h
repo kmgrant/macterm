@@ -112,12 +112,6 @@ void
 void
 	CocoaBasic_AboutPanelDisplay					();
 
-void
-	CocoaBasic_ColorPanelDisplay					();
-
-void
-	CocoaBasic_ColorPanelSetTargetView				(HIViewRef);
-
 Boolean
 	CocoaBasic_FileOpenPanelDisplay					(CFStringRef = nullptr,
 													 CFStringRef = nullptr,

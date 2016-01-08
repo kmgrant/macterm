@@ -203,17 +203,8 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-Panel_Ref
-	PrefPanelFormats_New					();
-
-Panel_Ref
-	PrefPanelFormats_NewANSIColorsPane		();
-
 Preferences_TagSetRef
 	PrefPanelFormats_NewANSIColorsTagSet	();
-
-Panel_Ref
-	PrefPanelFormats_NewNormalPane			();
 
 Preferences_TagSetRef
 	PrefPanelFormats_NewNormalTagSet		();
