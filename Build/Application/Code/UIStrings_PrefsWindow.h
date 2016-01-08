@@ -152,10 +152,6 @@ UIStrings_Result
 							 CFStringRef&								outString);
 
 UIStrings_Result
-	UIStrings_Copy			(UIStrings_PrefPanelTranslationsCFString	inWhichString,
-							 CFStringRef&								outString);
-
-UIStrings_Result
 	UIStrings_Copy			(UIStrings_PrefPanelWorkspacesCFString		inWhichString,
 							 CFStringRef&								outString);
 
