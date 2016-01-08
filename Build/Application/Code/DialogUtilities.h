@@ -43,50 +43,15 @@
 #ifndef __DIALOGUTILITIES__
 #define __DIALOGUTILITIES__
 
-// standard-C++ includes
-#include <functional>
-#include <vector>
-
 // Mac includes
 #include <Carbon/Carbon.h>
 
 // library includes
 #include <HIViewWrap.fwd.h>
-#include <WindowInfo.h>
 
 
 
 #pragma mark Public Methods
-
-#define	BooleanToCheckBoxValue(a)			((a) ? (kControlCheckBoxCheckedValue) : (kControlCheckBoxUncheckedValue))
-
-#define	BooleansToCheckBoxValue(a,b)		(((a) && (b)) \
-												? (kControlCheckBoxCheckedValue) \
-												: (((a) || (b)) \
-													? (kControlCheckBoxMixedValue) \
-													: (kControlCheckBoxUncheckedValue)))
-
-#define	BooleanToRadioButtonValue(a)		((a) ? (kControlRadioButtonCheckedValue) : (kControlRadioButtonUncheckedValue))
-
-OSStatus
-	DialogUtilities_CreateControlsBasedOnWindowNIB	(CFStringRef			inNIBFileBasename,
-											 CFStringRef					inPanelNameInNIB,
-											 WindowRef						inDestinationWindow,
-											 ControlRef						inDestinationParent,
-											 std::vector< ControlRef >&		inoutControlArray,
-											 Rect&							outIdealBounds);
-
-void
-	DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > const&	inControlArray);
-
-void
-	DialogUtilities_DisposeDuplicateControl	(ControlRef				inDuplicatedControl);
-
-// DISPOSE WITH DialogUtilities_DisposeDuplicateControl()
-OSStatus
-	DialogUtilities_DuplicateControl		(ControlRef				inTemplateControl,
-											 WindowRef				inDestinationWindow,
-											 ControlRef&			outNewControl);
 
 void
 	GetControlText							(ControlRef				inControl,
@@ -109,15 +74,6 @@ void
 
 OSStatus
 	DialogUtilities_SetKeyboardFocus		(HIViewRef				inView);
-
-OSStatus
-	DialogUtilities_SetPopUpItemByCommand	(HIViewRef				inPopUpMenuView,
-											 UInt32					inMenuCommandID);
-
-OSStatus
-	DialogUtilities_SetPopUpItemByText		(HIViewRef				inPopUpMenuView,
-											 CFStringRef			inText,
-											 MenuItemIndex			inFallbackSelection = 1);
 
 HIViewWrap&
 	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);

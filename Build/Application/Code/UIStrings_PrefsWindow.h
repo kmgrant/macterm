@@ -70,76 +70,6 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowListHeaderNumber				= 'Numb'
 };
 
-/*!
-Macros Preferences Panel String Table ("PrefPanelMacros.strings")
-
-Identifies localizable strings used in the Macros preferences panel.
-*/
-enum UIStrings_PrefPanelMacrosCFString
-{
-	kUIStrings_PrefPanelMacrosCategoryName		= 'McrT',
-	kUIStrings_PrefPanelMacrosListHeaderName	= 'McNm'
-};
-
-/*!
-Sessions Preferences Panel String Table ("PrefPanelSessions.strings")
-
-Identifies localizable strings used in the Sessions preferences panel.
-*/
-enum UIStrings_PrefPanelSessionsCFString
-{
-	kUIStrings_PrefPanelSessionsCategoryName		= 'SsnT',
-	kUIStrings_PrefPanelSessionsDataFlowTabName		= 'SsnD',
-	kUIStrings_PrefPanelSessionsGraphicsTabName		= 'SsnV',
-	kUIStrings_PrefPanelSessionsKeyboardTabName		= 'SsnC',
-	kUIStrings_PrefPanelSessionsResourceTabName		= 'SsnH'
-};
-
-/*!
-Terminals Preferences Panel String Table ("PrefPanelTerminals.strings")
-
-Identifies localizable strings used in the Terminals preferences panel.
-*/
-enum UIStrings_PrefPanelTerminalsCFString
-{
-	kUIStrings_PrefPanelTerminalsCategoryName			= 'TrmT',
-	kUIStrings_PrefPanelTerminalsEmulationTabName		= 'TrmE',
-	// For simplicity, code in Preferences user interfaces assumes that tags can be
-	// used instead of the “proper” enumeration names, for these “named preferences”.
-	kUIStrings_PrefPanelTerminals24BitColorEnabled		= kPreferences_TagTerminal24BitColorEnabled,
-	kUIStrings_PrefPanelTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
-	kUIStrings_PrefPanelTerminalsXTermBackColorErase	= kPreferences_TagXTermBackgroundColorEraseEnabled,
-	kUIStrings_PrefPanelTerminalsXTerm256ColorsEnabled	= kPreferences_TagXTerm256ColorsEnabled,
-	kUIStrings_PrefPanelTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,
-	kUIStrings_PrefPanelTerminalsXTermGraphicsEnabled	= kPreferences_TagXTermGraphicsEnabled,
-	kUIStrings_PrefPanelTerminalsXTermWindowAltEnabled	= kPreferences_TagXTermWindowAlterationEnabled,
-	kUIStrings_PrefPanelTerminalsListHeaderTweakName	= 'TrmH',
-	kUIStrings_PrefPanelTerminalsOptionsTabName			= 'TrmO',
-	kUIStrings_PrefPanelTerminalsScreenTabName			= 'TrmS'
-};
-
-/*!
-Translations Preferences Panel String Table ("PrefPanelTranslations.strings")
-
-Identifies localizable strings used in the Translations preferences panel.
-*/
-enum UIStrings_PrefPanelTranslationsCFString
-{
-	kUIStrings_PrefPanelTranslationsCategoryName			= 'TrnT',
-	kUIStrings_PrefPanelTranslationsListHeaderBaseTable		= 'TrnB'
-};
-
-/*!
-Workspaces Preferences Panel String Table ("PrefPanelWorkspaces.strings")
-
-Identifies localizable strings used in the Workspaces preferences panel.
-*/
-enum UIStrings_PrefPanelWorkspacesCFString
-{
-	kUIStrings_PrefPanelWorkspacesCategoryName				= 'WspT',
-	kUIStrings_PrefPanelWorkspacesWindowsListHeaderName		= 'WnNm'
-};
-
 
 
 #pragma mark Public Methods
@@ -149,10 +79,6 @@ enum UIStrings_PrefPanelWorkspacesCFString
 
 UIStrings_Result
 	UIStrings_Copy			(UIStrings_PreferencesWindowCFString		inWhichString,
-							 CFStringRef&								outString);
-
-UIStrings_Result
-	UIStrings_Copy			(UIStrings_PrefPanelWorkspacesCFString		inWhichString,
 							 CFStringRef&								outString);
 
 //@}

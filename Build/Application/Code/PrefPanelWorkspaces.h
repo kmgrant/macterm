@@ -257,9 +257,6 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-Panel_Ref
-	PrefPanelWorkspaces_New				();
-
 Preferences_TagSetRef
 	PrefPanelWorkspaces_NewTagSet		();
 

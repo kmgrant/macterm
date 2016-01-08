@@ -1552,7 +1552,7 @@ init ()
 		}
 		
 		// create category panels - call these routines in the order you want their category buttons to appear
-		installPanel(PrefPanelWorkspaces_New());
+		// (obsolete, will be removed soon)
 		
 		// footer callbacks
 		{
