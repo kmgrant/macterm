@@ -1366,14 +1366,13 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			CommandLine_Display();
 			break;
 		
-		//kCommandShowHidePrefCollectionsDrawer:
 		//kCommandDisplayPrefPanelFormats:
 		//kCommandDisplayPrefPanelGeneral:
 		//kCommandDisplayPrefPanelKiosk:
 		//kCommandDisplayPrefPanelMacros:
 		//kCommandDisplayPrefPanelSessions:
 		//kCommandDisplayPrefPanelTerminals:
-		//	see PrefsWindow.cp
+		//	see PrefsWindow.mm
 		//	break;
 		
 		case kCommandShowControlKeys:

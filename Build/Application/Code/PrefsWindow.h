@@ -167,18 +167,9 @@ changes to an interface declared in a ".mm" file.
 #pragma mark Public Methods
 
 void
-	PrefsWindow_Done				();
-
-void
 	PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 									 Preferences_TagSetRef		inTagSetOrNull = nullptr,
 									 UInt32						inPrefPanelShowCommandIDOrZero = 0);
-
-void
-	PrefsWindow_Display				();
-
-void
-	PrefsWindow_Remove				();
 
 #endif
 
