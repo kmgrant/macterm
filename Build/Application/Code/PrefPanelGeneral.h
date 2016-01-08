@@ -262,9 +262,6 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-Panel_Ref
-	PrefPanelGeneral_New					();
-
 Preferences_TagSetRef
 	PrefPanelGeneral_NewNotificationsTagSet	();
 

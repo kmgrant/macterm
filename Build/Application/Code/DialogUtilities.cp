@@ -913,30 +913,6 @@ GetControlNumericalText		(ControlRef		inControl,
 
 
 /*!
-To get a static text or editable text control’s
-text contents as a four-character code, use this
-method.
-
-(3.0)
-*/
-void
-GetControlOSTypeText	(ControlRef		inControl,
-						 OSType*		outTypePtr)
-{
-	if (outTypePtr != nullptr)
-	{
-		Str15	typeString;
-		
-		
-		typeString[0] = '\0';
-		GetControlText(inControl, typeString);
-		typeString[0] = 4;
-		BlockMoveData(&typeString[1], outTypePtr, sizeof(OSType));
-	}
-}// GetControlOSTypeText
-
-
-/*!
 To get a copy of the text in a text field control,
 use this method.
 

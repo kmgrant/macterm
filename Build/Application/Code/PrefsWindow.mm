@@ -1552,7 +1552,6 @@ init ()
 		}
 		
 		// create category panels - call these routines in the order you want their category buttons to appear
-		installPanel(PrefPanelGeneral_New());
 		installPanel(PrefPanelMacros_New());
 		installPanel(PrefPanelWorkspaces_New());
 		installPanel(PrefPanelSessions_New());

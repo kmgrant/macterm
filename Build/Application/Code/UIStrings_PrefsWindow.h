@@ -71,31 +71,6 @@ enum UIStrings_PreferencesWindowCFString
 };
 
 /*!
-Formats Preferences Panel String Table ("PrefPanelFormats.strings")
-
-Identifies localizable strings used in the Formats preferences panel.
-*/
-enum UIStrings_PrefPanelFormatsCFString
-{
-	kUIStrings_PrefPanelFormatsCategoryName			= 'ForT',
-	kUIStrings_PrefPanelFormatsNormalTabName		= 'ForN',
-	kUIStrings_PrefPanelFormatsANSIColorsTabName	= 'ForA'
-};
-
-/*!
-General Preferences Panel String Table ("PrefPanelGeneral.strings")
-
-Identifies localizable strings used in the General preferences panel.
-*/
-enum UIStrings_PrefPanelGeneralCFString
-{
-	kUIStrings_PrefPanelGeneralCategoryName			= 'GenT',
-	kUIStrings_PrefPanelGeneralNotificationTabName	= 'GenN',
-	kUIStrings_PrefPanelGeneralOptionsTabName		= 'GenO',
-	kUIStrings_PrefPanelGeneralSpecialTabName		= 'GenS'
-};
-
-/*!
 Macros Preferences Panel String Table ("PrefPanelMacros.strings")
 
 Identifies localizable strings used in the Macros preferences panel.
@@ -174,14 +149,6 @@ enum UIStrings_PrefPanelWorkspacesCFString
 
 UIStrings_Result
 	UIStrings_Copy			(UIStrings_PreferencesWindowCFString		inWhichString,
-							 CFStringRef&								outString);
-
-UIStrings_Result
-	UIStrings_Copy			(UIStrings_PrefPanelFormatsCFString			inWhichString,
-							 CFStringRef&								outString);
-
-UIStrings_Result
-	UIStrings_Copy			(UIStrings_PrefPanelGeneralCFString			inWhichString,
 							 CFStringRef&								outString);
 
 UIStrings_Result

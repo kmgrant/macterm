@@ -94,10 +94,6 @@ void
 											 size_t*				outStringLengthPtrOrNull = nullptr);
 
 void
-	GetControlOSTypeText					(ControlRef				inControl,
-											 OSType*				outTypePtr);
-
-void
 	GetControlText							(ControlRef				inControl,
 											 Str255					outText);
 
