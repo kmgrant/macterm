@@ -83,16 +83,6 @@ enum UIStrings_PrefPanelFormatsCFString
 };
 
 /*!
-Full Screen Preferences Panel String Table ("PrefPanelFullScreen.strings")
-
-Identifies localizable strings used in the Full Screen preferences panel.
-*/
-enum UIStrings_PrefPanelFullScreenCFString
-{
-	kUIStrings_PrefPanelFullScreenCategoryName		= 'KioT'
-};
-
-/*!
 General Preferences Panel String Table ("PrefPanelGeneral.strings")
 
 Identifies localizable strings used in the General preferences panel.
@@ -188,10 +178,6 @@ UIStrings_Result
 
 UIStrings_Result
 	UIStrings_Copy			(UIStrings_PrefPanelFormatsCFString			inWhichString,
-							 CFStringRef&								outString);
-
-UIStrings_Result
-	UIStrings_Copy			(UIStrings_PrefPanelFullScreenCFString		inWhichString,
 							 CFStringRef&								outString);
 
 UIStrings_Result

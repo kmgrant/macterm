@@ -1558,7 +1558,6 @@ init ()
 		installPanel(PrefPanelSessions_New());
 		installPanel(PrefPanelTerminals_New());
 		installPanel(PrefPanelTranslations_New());
-		installPanel(PrefPanelFullScreen_New());
 		
 		// footer callbacks
 		{

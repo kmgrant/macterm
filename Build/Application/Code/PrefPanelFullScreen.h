@@ -97,10 +97,6 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-// CARBON LEGACY
-Panel_Ref
-	PrefPanelFullScreen_New			();
-
 Preferences_TagSetRef
 	PrefPanelFullScreen_NewTagSet	();
 
