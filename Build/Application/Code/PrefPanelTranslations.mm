@@ -61,7 +61,6 @@
 #import "Preferences.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"
-#import "UIStrings_PrefsWindow.h"
 
 
 

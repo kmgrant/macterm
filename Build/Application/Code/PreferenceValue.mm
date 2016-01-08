@@ -50,7 +50,7 @@
 
 // application includes
 #import "ConstantsRegistry.h"
-#import "UIStrings_PrefsWindow.h"
+#import "UIStrings.h"
 
 
 

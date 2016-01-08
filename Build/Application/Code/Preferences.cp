@@ -94,7 +94,6 @@
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
-#include "UIStrings_PrefsWindow.h"
 #include "VectorInterpreter.h"
 
 

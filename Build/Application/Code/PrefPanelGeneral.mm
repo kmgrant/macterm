@@ -74,7 +74,6 @@
 #import "TerminalView.h"
 #import "TerminalWindow.h"
 #import "UIStrings.h"
-#import "UIStrings_PrefsWindow.h"
 
 
 

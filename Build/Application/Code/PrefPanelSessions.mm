@@ -72,7 +72,6 @@ extern "C"
 #import "ServerBrowser.h"
 #import "Session.h"
 #import "UIStrings.h"
-#import "UIStrings_PrefsWindow.h"
 #import "VectorInterpreter.h"
 
 

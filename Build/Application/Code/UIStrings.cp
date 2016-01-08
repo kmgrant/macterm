@@ -56,9 +56,6 @@
 // resource includes
 #include "CFRetainRelease.h"
 
-// application includes
-#include "UIStrings_PrefsWindow.h"
-
 
 
 #pragma mark Public Methods

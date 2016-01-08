@@ -68,7 +68,6 @@
 #import "PreferenceValue.objc++.h"
 #import "Terminal.h"
 #import "UIStrings.h"
-#import "UIStrings_PrefsWindow.h"
 
 
 #pragma mark Internal Method Prototypes

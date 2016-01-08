@@ -270,8 +270,7 @@ Tags for use with Quills::Prefs::TERMINAL.
 
 Some are terminal-specific tweaks; anything starting with
 "kPreferences_TagVT…" or "kPreferences_TagXTerm…".
-These should also have localized names in
-"UIStrings_PrefsWindow.h".
+These should also have localized names in "UIStrings.h".
 */
 enum
 {

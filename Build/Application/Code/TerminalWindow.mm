@@ -107,7 +107,6 @@ extern "C"
 #import "TerminalToolbar.objc++.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
-#import "UIStrings_PrefsWindow.h"
 
 
 

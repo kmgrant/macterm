@@ -305,7 +305,22 @@ enum UIStrings_HelpSystemCFString
 	kUIStrings_HelpSystemTopicHelpWithTerminalSettings	= 'Term'
 };
 
-// see "UIStrings_PrefsWindow.h" for declaration of "UIStrings_PreferencesWindowCFString"
+/*!
+Preferences Window String Table ("PreferencesWindow.strings")
+
+Identifies localizable strings used in preferences panels.
+*/
+enum UIStrings_PreferencesWindowCFString
+{
+	kUIStrings_PreferencesWindowAddToFavoritesButton			= 'AFBt',
+	kUIStrings_PreferencesWindowCollectionsDrawerDescription	= 'CDDs',
+	kUIStrings_PreferencesWindowCollectionsDrawerShowHideName	= 'SHCD',
+	kUIStrings_PreferencesWindowDefaultFavoriteName				= 'DefF',
+	kUIStrings_PreferencesWindowFavoritesRemoveWarning			= 'DelW',
+	kUIStrings_PreferencesWindowFavoritesRemoveWarningHelpText	= 'DelH',
+	kUIStrings_PreferencesWindowIconName						= 'Icon',
+	kUIStrings_PreferencesWindowListHeaderNumber				= 'Numb'
+};
 
 /*!
 Progress Windows String Table ("ProgressWindows.strings")
@@ -450,7 +465,9 @@ UIStrings_Result
 	UIStrings_Copy						(UIStrings_HelpSystemCFString					inWhichString,
 										 CFStringRef&									outString);
 
-// see "UIStrings_PrefsWindow.h" for a declaration that accepts "UIStrings_PreferencesWindowCFString"
+UIStrings_Result
+	UIStrings_Copy						(UIStrings_PreferencesWindowCFString			inWhichString,
+										 CFStringRef&									outString);
 
 UIStrings_Result
 	UIStrings_Copy						(UIStrings_ProgressWindowCFString				inWhichString,

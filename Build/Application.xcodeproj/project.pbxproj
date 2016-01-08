@@ -442,7 +442,6 @@
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
 		0A839C3415805125000F001E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
 		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
-		0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UIStrings_PrefsWindow.h; path = Application/Code/UIStrings_PrefsWindow.h; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
@@ -876,7 +875,6 @@
 				0A4604470554376100ACDF3A /* TextTranslation.h */,
 				0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */,
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,
-				0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */,
 				0A4604510554376100ACDF3A /* Undoables.h */,
 				0A4604540554376100ACDF3A /* URL.h */,
 				0AC69F171877A733004E6019 /* UTF8Decoder.h */,

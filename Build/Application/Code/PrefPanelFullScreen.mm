@@ -57,7 +57,6 @@
 #import "Panel.h"
 #import "Preferences.h"
 #import "UIStrings.h"
-#import "UIStrings_PrefsWindow.h"
 
 
 #pragma mark Internal Method Prototypes
