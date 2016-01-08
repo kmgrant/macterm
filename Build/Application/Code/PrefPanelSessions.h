@@ -332,29 +332,14 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-Panel_Ref
-	PrefPanelSessions_New						();
-
-Panel_Ref
-	PrefPanelSessions_NewDataFlowPane			();
-
 Preferences_TagSetRef
 	PrefPanelSessions_NewDataFlowPaneTagSet		();
-
-Panel_Ref
-	PrefPanelSessions_NewGraphicsPane			();
 
 Preferences_TagSetRef
 	PrefPanelSessions_NewGraphicsPaneTagSet		();
 
-Panel_Ref
-	PrefPanelSessions_NewKeyboardPane			();
-
 Preferences_TagSetRef
 	PrefPanelSessions_NewKeyboardPaneTagSet		();
-
-Panel_Ref
-	PrefPanelSessions_NewResourcePane			();
 
 Preferences_TagSetRef
 	PrefPanelSessions_NewResourcePaneTagSet		();

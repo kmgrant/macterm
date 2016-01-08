@@ -955,73 +955,6 @@ GetControlTextAsCFString	(ControlRef		inControl,
 
 
 /*!
-This is a standard ControlKeyFilterUPP that will
-prevent any non-digit characters from being typed
-into a text field.
-
-If there is a text selection in the specified
-field, or if a special key (such as an arrow key
-or the delete key) is pressed, this method will
-not block it.
-
-(3.0)
-*/
-ControlKeyFilterResult
-NumericalLimiter		(ControlRef			UNUSED_ARGUMENT(inControl),
-						 SInt16*			inKeyCode,
-						 SInt16*			inCharCode,
-						 EventModifiers*	inModifiers)
-{
-	ControlKeyFilterResult  result = kControlKeyFilterPassKey;
-	
-	
-	if (!(*inModifiers & cmdKey))
-	{
-		// make sure that any arrow or delete key press is allowed
-		if ((*inKeyCode != 0x3B/* left arrow */) &&
-			(*inKeyCode != 0x7B/* left arrow */) &&
-			(*inKeyCode != 0x3E/* up arrow */) &&
-			(*inKeyCode != 0x7E/* up arrow */) &&
-			(*inKeyCode != 0x3C/* right arrow */) &&
-			(*inKeyCode != 0x7C/* right arrow */) &&
-			(*inKeyCode != 0x3D/* down arrow */) &&
-			(*inKeyCode != 0x7D/* down arrow */) &&
-			(*inKeyCode != 0x33/* delete */) &&
-			(*inKeyCode != 0x75/* del */))
-		{
-			// if a character key was pressed, block it when there are four or more characters in the field already
-			unless (CPP_STD::isdigit(*inCharCode)) result = kControlKeyFilterBlockKey;
-		}
-	}
-	else
-	{
-		// command key is down - scan for a Paste operation
-		if ((*inCharCode == 'V') || (*inCharCode == 'v'))
-		{
-			// pasting isn’t allowed because there is no easy way to filter out non-digits
-			result = kControlKeyFilterBlockKey;
-		}
-	}
-	return result;
-}// NumericalLimiter
-
-
-/*!
-Returns a key filter UPP for NumericalLimiter().
-
-(3.1)
-*/
-ControlKeyFilterUPP
-NumericalLimiterKeyFilterUPP ()
-{
-	static ControlKeyFilterUPP		result = NewControlKeyFilterUPP(NumericalLimiter);
-	
-	
-	return result;
-}// NumericalLimiterKeyFilterUPP
-
-
-/*!
 Removes the interior of a region so that
 it ends up describing only its outline.
 
@@ -1247,34 +1180,6 @@ DialogUtilities_SetPopUpItemByText	(HIViewRef		inPopUpMenuView,
 	}
 	return result;
 }// SetPopUpItemByText
-
-
-/*!
-Determines the first segment matching the given command ID,
-and makes that the currently-selected segment.
-
-(4.0)
-*/
-OSStatus
-DialogUtilities_SetSegmentByCommand		(HIViewRef		inSegmentedView,
-										 UInt32			inCommandID)
-{
-	UInt32 const	kNumberOfSegments = HISegmentedViewGetSegmentCount(inSegmentedView);
-	UInt32			segmentCommandID = 0;
-	OSStatus		result = errUnknownControl;
-	
-	
-	for (UInt32 i = 1; i <= kNumberOfSegments; ++i)
-	{
-		segmentCommandID = HISegmentedViewGetSegmentCommand(inSegmentedView, i);
-		if (inCommandID == segmentCommandID)
-		{
-			result = HISegmentedViewSetSegmentValue(inSegmentedView, i, kControlRadioButtonCheckedValue);
-		}
-	}
-	
-	return result;
-}// SetSegmentByCommand
 
 
 /*!

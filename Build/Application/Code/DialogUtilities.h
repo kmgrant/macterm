@@ -101,20 +101,6 @@ void
 	GetControlTextAsCFString				(ControlRef				inControl,
 											 CFStringRef&			outCFString);
 
-class DialogUtilities_HIViewIDEqualTo; // STL Unary Function - returns: bool, argument: HIViewRef
-
-//! since the Carbon implementation of IsControlHilited() isn’t smart enough to consider the inactive case, this API exists...
-#define IsControlActiveAndHilited(inControlHandle)			((GetControlHilite(inControlHandle) > 0) && (GetControlHilite(inControlHandle) < 255))
-
-ControlKeyFilterResult
-	NumericalLimiter						(ControlRef				inControl,
-											 SInt16*				inKeyCode,
-											 SInt16*				inCharCode,
-											 EventModifiers*		inModifiers);
-
-ControlKeyFilterUPP
-	NumericalLimiterKeyFilterUPP			();
-
 void
 	OutlineRegion							(RgnHandle				inoutRegion);
 
@@ -146,60 +132,11 @@ OSStatus
 											 CFStringRef			inText,
 											 MenuItemIndex			inFallbackSelection = 1);
 
-OSStatus
-	DialogUtilities_SetSegmentByCommand		(HIViewRef				inSegmentedView,
-											 UInt32					inCommandID);
-
 HIViewWrap&
 	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);
 
 void
 	TextFontByName							(ConstStringPtr			inFontName);
-
-
-
-#pragma mark Functor Implementations
-
-/*!
-This is a functor that returns true if the specified
-HIViewRef’s ID is equal to the one given at construction
-time.
-
-Model of STL Predicate.
-
-(3.1)
-*/
-class DialogUtilities_HIViewIDEqualTo:
-public std::unary_function< HIViewRef/* argument */, bool/* return */ >
-{
-public:
-	DialogUtilities_HIViewIDEqualTo		(HIViewID const&	inID)
-	: _viewID(inID)
-	{
-	}
-	
-	bool
-	operator ()	(HIViewRef	inView)
-	{
-		bool		result = false;
-		HIViewID	comparedID;
-		OSStatus	error = GetControlID(inView, &comparedID);
-		
-		
-		if (noErr == error)
-		{
-			result = ((comparedID.signature == _viewID.signature) &&
-						(comparedID.id == _viewID.id));
-		}
-		
-		return result;
-	}
-
-protected:
-
-private:
-	HIViewID	_viewID;
-};
 
 #endif
 
