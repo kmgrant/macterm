@@ -1239,56 +1239,6 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 
 
 /*!
-Locates the specified string used by the Macros panel of the
-Preferences window and returns a reference to a Core Foundation
-string.  Since a copy is made, you must call CFRelease() on the
-returned string when you are finished with it.
-
-\retval kUIStrings_ResultOK
-if the string is copied successfully
-
-\retval kUIStrings_ResultNoSuchString
-if the given tag is invalid
-
-\retval kUIStrings_ResultCannotGetString
-if an OS error occurred
-
-(4.0)
-*/
-UIStrings_Result
-UIStrings_Copy	(UIStrings_PrefPanelMacrosCFString		inWhichString,
-				 CFStringRef&							outString)
-{
-	UIStrings_Result	result = kUIStrings_ResultOK;
-	
-	
-	// IMPORTANT: The external utility program "genstrings" is not smart enough to
-	//            figure out the proper string table name if you do not inline it.
-	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
-	//            automatically generate localizable ".strings" files.
-	switch (inWhichString)
-	{
-	case kUIStrings_PrefPanelMacrosCategoryName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros"), CFSTR("PrefPanelMacros"),
-													CFSTR("kUIStrings_PrefPanelMacrosCategoryName"));
-		break;
-	
-	case kUIStrings_PrefPanelMacrosListHeaderName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Macro Name"), CFSTR("PrefPanelMacros"),
-													CFSTR("kUIStrings_PrefPanelMacrosListHeaderName"));
-		break;
-	
-	default:
-		// ???
-		result = kUIStrings_ResultNoSuchString;
-		break;
-	}
-	return result;
-}// Copy (Macros preferences panel strings)
-
-
-/*!
 Locates the specified string used by the Sessions panel of the
 Preferences window and returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease() on the

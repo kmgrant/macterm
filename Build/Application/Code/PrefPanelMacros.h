@@ -195,9 +195,6 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-Panel_Ref
-	PrefPanelMacros_New					();
-
 Preferences_TagSetRef
 	PrefPanelMacros_NewTagSet			();
 
