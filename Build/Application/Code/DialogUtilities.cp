@@ -883,36 +883,6 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 
 
 /*!
-Converts the text in a text field or static text view
-into a number.
-
-The optional length argument is useful to distinguish
-a true zero value from a 0 that occurred for other
-reasons (mainly, from a blank text field).
-
-(3.0)
-*/
-void
-GetControlNumericalText		(ControlRef		inControl,
-							 SInt32*		outNumberPtr,
-							 size_t*		outStringLengthPtrOrNull)
-{
-	if (outNumberPtr != nullptr)
-	{
-		Str255		pString;
-		
-		
-		GetControlText(inControl, pString);
-		StringToNum(pString, outNumberPtr);
-		if (nullptr != outStringLengthPtrOrNull)
-		{
-			*outStringLengthPtrOrNull = PLstrlen(pString);
-		}
-	}
-}// GetControlNumericalText
-
-
-/*!
 To get a copy of the text in a text field control,
 use this method.
 
@@ -974,49 +944,6 @@ OutlineRegion	(RgnHandle		inoutRegion)
 		Memory_DisposeRegion(&tempRgn);
 	}
 }// OutlineRegion
-
-
-/*!
-To fill in a text field or static text control
-with a number, use this convenient method.
-The specified signed number is first converted
-to a string, and then the resultant string is
-passed to SetControlText().
-
-Use DrawOneControl() to update the control to
-reflect the change.
-
-(3.0)
-*/
-void
-SetControlNumericalText		(ControlRef		inControl,
-							 SInt32			inNumber)
-{
-	Str255		string;
-	
-	
-	NumToString(inNumber, string);
-	SetControlText(inControl, string);
-}// SetControlNumericalText
-
-
-/*!
-Equivalent to setting the title property of a control
-using a string that contains only an integer.
-
-(4.1)
-*/
-void
-SetControlNumericalTitle	(ControlRef		inControl,
-							 SInt32			inNumber)
-{
-	CFRetainRelease		stringObject(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, CFSTR("%d"),
-																STATIC_CAST(inNumber, int)),
-										true/* is retained */);
-	
-	
-	SetControlTitleWithCFString(inControl, stringObject.returnCFStringRef());
-}// SetControlNumericalTitle
 
 
 /*!

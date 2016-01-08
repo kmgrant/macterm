@@ -1553,7 +1553,6 @@ init ()
 		
 		// create category panels - call these routines in the order you want their category buttons to appear
 		installPanel(PrefPanelWorkspaces_New());
-		installPanel(PrefPanelTerminals_New());
 		installPanel(PrefPanelTranslations_New());
 		
 		// footer callbacks

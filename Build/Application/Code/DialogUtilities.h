@@ -89,11 +89,6 @@ OSStatus
 											 ControlRef&			outNewControl);
 
 void
-	GetControlNumericalText					(ControlRef				inControl,
-											 SInt32*				outNumberPtr,
-											 size_t*				outStringLengthPtrOrNull = nullptr);
-
-void
 	GetControlText							(ControlRef				inControl,
 											 Str255					outText);
 
@@ -103,14 +98,6 @@ void
 
 void
 	OutlineRegion							(RgnHandle				inoutRegion);
-
-void
-	SetControlNumericalText					(ControlRef				inControl,
-											 SInt32					inNumber);
-
-void
-	SetControlNumericalTitle				(ControlRef				inControl,
-											 SInt32					inNumber);
 
 void
 	SetControlText							(ControlRef				inControl,

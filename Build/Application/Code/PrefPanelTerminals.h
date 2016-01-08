@@ -215,23 +215,11 @@ changes to an interface declared in a ".mm" file.
 
 #pragma mark Public Methods
 
-Panel_Ref
-	PrefPanelTerminals_New						();
-
-Panel_Ref
-	PrefPanelTerminals_NewEmulationPane			();
-
 Preferences_TagSetRef
 	PrefPanelTerminals_NewEmulationPaneTagSet	();
 
-Panel_Ref
-	PrefPanelTerminals_NewOptionsPane			();
-
 Preferences_TagSetRef
 	PrefPanelTerminals_NewOptionsPaneTagSet		();
-
-Panel_Ref
-	PrefPanelTerminals_NewScreenPane			();
 
 Preferences_TagSetRef
 	PrefPanelTerminals_NewScreenPaneTagSet		();
