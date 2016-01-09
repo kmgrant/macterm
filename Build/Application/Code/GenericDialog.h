@@ -51,7 +51,6 @@ class NSWindow;
 #endif
 
 // application includes
-#include "HelpSystem.h"
 #include "Panel.h"
 
 
@@ -155,24 +154,8 @@ GenericDialog_Ref
 	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
 												 Panel_ViewManager*					inHostedPanel,
 												 void*								inDataSetPtr,
-												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
+												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
 #endif
-
-GenericDialog_Ref
-	GenericDialog_New							(NSWindow*							inParentWindowOrNullForModalDialog,
-												 Panel_Ref							inHostedPanel,
-												 void*								inDataSetPtr,
-												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
-
-// DEPRECATED; USE GenericDialog_New() WITH AN NSWindow*
-GenericDialog_Ref
-	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
-												 Panel_Ref							inHostedPanel,
-												 void*								inDataSetPtr,
-												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
 
 void
 	GenericDialog_Dispose						(GenericDialog_Ref*					inoutDialogPtr);

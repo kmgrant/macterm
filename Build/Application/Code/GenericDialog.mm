@@ -48,27 +48,18 @@
 #import <utility>
 
 // Mac includes
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventHandlerWrap.template.h>
-#import <CarbonEventUtilities.template.h>
-#import <CFRetainRelease.h>
-#import <CFUtilities.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#import <CommonEventHandlers.h>
 #import <Console.h>
-#import <HIViewWrap.h>
-#import <HIViewWrapManip.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
-#import <NIBLoader.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
 #import <SoundSystem.h>
@@ -76,31 +67,11 @@
 // application includes
 #import "AppResources.h"
 #import "Commands.h"
-#import "DialogUtilities.h"
-#import "EventLoop.h"
-#import "HelpSystem.h"
 #import "Session.h"
 #import "Terminology.h"
 #import "UIStrings.h"
 
 
-
-#pragma mark Constants
-namespace {
-
-/*!
-IMPORTANT
-
-The following values MUST agree with the control IDs in the
-"Dialog" NIB from the package "GenericDialog.nib".
-*/
-HIViewID const	idMyUserPanePanelMargins	= { 'Panl', 0/* ID */ };
-HIViewID const	idMyButtonHelp				= { 'Help', 0/* ID */ };
-HIViewID const	idMyButtonOK				= { 'Okay', 0/* ID */ };
-HIViewID const	idMyButtonCancel			= { 'Canc', 0/* ID */ };
-HIViewID const	idMyButtonOther				= { 'Othr', 0/* ID */ };
-
-} // anonymous namespace
 
 #pragma mark Types
 namespace {
@@ -109,13 +80,10 @@ typedef std::map< UInt32, GenericDialog_DialogEffect >		My_DialogEffectsByComman
 
 struct My_GenericDialog
 {
-	My_GenericDialog	(NSWindow*, HIWindowRef, Panel_ViewManager*, Panel_Ref, void*,
-						 GenericDialog_CloseNotifyProcPtr, HelpSystem_KeyPhrase);
+	My_GenericDialog	(NSWindow*, HIWindowRef, Panel_ViewManager*, void*,
+						 GenericDialog_CloseNotifyProcPtr);
 	
 	~My_GenericDialog	();
-	
-	void
-	autoArrangeButtons ();
 	
 	void
 	loadViewManager ();
@@ -127,21 +95,11 @@ struct My_GenericDialog
 	Boolean									isModal;						//!< if false, the dialog is a sheet
 	GenericDialog_ViewManager*				containerViewManager;			//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
 	Panel_ViewManager*						hostedViewManager;				//!< new-style; the Cocoa view manager for the primary user interface
-	Panel_Ref								hostedPanel;					//!< old-style; the panel implementing the primary user interface
 	HISize									panelIdealSize;					//!< the dimensions most appropriate for displaying the UI
 	PopoverManager_Ref						popoverManager;					//!< object to help display popover window
 	Popover_Window*							popoverWindow;					//!< new-style, popover variant; contains a Cocoa view in a popover frame
-	NIBWindow								dialogWindow;					//!< old-style; acts as the Mac OS window for the dialog
-	HIViewWrap								userPaneForMargins;				//!< used to determine location of, and space around, the hosted panel
-	HIViewWrap								buttonHelp;						//!< displays context-sensitive help on this dialog
-	HIViewWrap								buttonOK;						//!< accepts the user’s changes
-	HIViewWrap								buttonCancel;					//!< aborts
-	HIViewWrap								buttonOther;					//!< optional
-	CarbonEventHandlerWrap					buttonHICommandsHandler;		//!< invoked when a dialog button is clicked
 	GenericDialog_CloseNotifyProcPtr		closeNotifyProc;				//!< routine to call when the dialog is dismissed
 	My_DialogEffectsByCommandID				closeEffects;					//!< custom sheet-closing effects for certain commands
-	CommonEventHandlers_WindowResizer		windowResizeHandler;			//!< invoked when a window has been resized
-	HelpSystem_WindowKeyPhraseSetter		contextualHelpSetup;			//!< ensures proper contextual help for this window
 	void*									userDataPtr;					//!< optional; external data
 };
 typedef My_GenericDialog*			My_GenericDialogPtr;
@@ -175,15 +133,6 @@ My_GenericDialogPtrLocker&		gGenericDialogPtrLocks ()		{ static My_GenericDialog
 
 } // anonymous namespace
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-Boolean		handleItemHit		(My_GenericDialogPtr, HIViewID const&);
-void		handleNewSize		(HIWindowRef, Float32, Float32, void*);
-OSStatus	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
-
-} // anonymous namespace
-
 
 
 #pragma mark Public Methods
@@ -205,8 +154,7 @@ GenericDialog_Ref
 GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 					 Panel_ViewManager*					inHostedViewManager,
 					 void*								inDataSetPtr,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-					 HelpSystem_KeyPhrase				inHelpButtonAction)
+					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
 	GenericDialog_Ref	result = nullptr;
 	
@@ -217,97 +165,8 @@ GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	{
 		result = REINTERPRET_CAST(new My_GenericDialog
 									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
-										inParentWindowOrNullForModalDialog,
-										inHostedViewManager, nullptr/* old-style panel */,
-										inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction),
-									GenericDialog_Ref);
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// New
-
-
-/*!
-This method is used to create a dialog box.  It creates
-the dialog box invisibly, and sets up dialog views.
-
-The format of "inDataSetPtr" is entirely defined by the
-type of panel that the dialog is hosting.  The data is
-passed to the panel with Panel_SendMessageNewDataSet().
-
-If "inParentWindowOrNullForModalDialog" is nullptr, the
-window is automatically made application-modal; otherwise,
-it is a sheet.
-
-(4.1)
-*/
-GenericDialog_Ref
-GenericDialog_New	(NSWindow*							inParentWindowOrNullForModalDialog,
-					 Panel_Ref							inHostedPanel,
-					 void*								inDataSetPtr,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-					 HelpSystem_KeyPhrase				inHelpButtonAction)
-{
-	GenericDialog_Ref	result = nullptr;
-	
-	
-	assert(nullptr != inHostedPanel);
-	
-	try
-	{
-		result = REINTERPRET_CAST(new My_GenericDialog
-									(inParentWindowOrNullForModalDialog, nullptr/* Carbon parent */,
-										nil/* view manager */, inHostedPanel,
-										inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction),
-									GenericDialog_Ref);
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// New
-
-
-/*!
-This method is used to create a dialog box.  It creates
-the dialog box invisibly, and sets up dialog views.
-
-The format of "inDataSetPtr" is entirely defined by the
-type of panel that the dialog is hosting.  The data is
-passed to the panel with Panel_SendMessageNewDataSet().
-
-If "inParentWindowOrNullForModalDialog" is nullptr, the
-window is automatically made application-modal; otherwise,
-it is a sheet.
-
-DEPRECATED.  Use the version of this method that accepts
-an NSWindow*.
-
-(3.1)
-*/
-GenericDialog_Ref
-GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
-					 Panel_Ref							inHostedPanel,
-					 void*								inDataSetPtr,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-					 HelpSystem_KeyPhrase				inHelpButtonAction)
-{
-	GenericDialog_Ref	result = nullptr;
-	
-	
-	assert(nullptr != inHostedPanel);
-	
-	try
-	{
-		result = REINTERPRET_CAST(new My_GenericDialog
-									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
-										inParentWindowOrNullForModalDialog,
-										nil/* view manager */, inHostedPanel, inDataSetPtr,
-										inCloseNotifyProcPtr, inHelpButtonAction),
+										inParentWindowOrNullForModalDialog, inHostedViewManager,
+										inDataSetPtr, inCloseNotifyProcPtr),
 									GenericDialog_Ref);
 	}
 	catch (std::bad_alloc)
@@ -450,39 +309,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 		}
 		else
 		{
-			//
-			// legacy (Carbon); will be removed soon
-			//
-			
-			HIViewRef	panelContainer = nullptr;
-			OSStatus	error = noErr;
-			
-			
-			// show the panel
-			Panel_GetContainerView(ptr->hostedPanel, panelContainer);
-			Panel_SendMessageNewVisibility(ptr->hostedPanel, true/* visible */);
-			error = HIViewSetVisible(panelContainer, true/* visible */);
-			assert_noerr(error);
-			
-			// display the dialog
-			if (ptr->isModal)
-			{
-				// handle events
-				ShowWindow(ptr->dialogWindow);
-				EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
-				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
-				Panel_SendMessageFocusFirst(ptr->hostedPanel);
-				error = RunAppModalLoopForWindow(ptr->dialogWindow);
-				assert_noerr(error);
-			}
-			else
-			{
-				ShowSheetWindow(ptr->dialogWindow, REINTERPRET_CAST([ptr->parentWindow windowRef], HIWindowRef));
-				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
-				Panel_SendMessageFocusFirst(ptr->hostedPanel);
-				CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
-				// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
-			}
+			assert(false && "generic dialog expected a hosted view manager");
 		}
 	}
 }// Display
@@ -541,13 +368,8 @@ GenericDialog_SetCommandButtonTitle		(GenericDialog_Ref		inDialog,
 	}
 	else
 	{
-		// legacy (Carbon)
-		if (kHICommandOK == inCommandID)
-		{
-			UNUSED_RETURN(OSStatus)SetControlTitleWithCFString(ptr->buttonOK, inButtonTitle);
-		}
+		assert(false && "generic dialog expected a hosted view manager");
 	}
-	ptr->autoArrangeButtons();
 }// SetCommandButtonTitle
 
 
@@ -626,10 +448,8 @@ My_GenericDialog::
 My_GenericDialog	(NSWindow*							inParentNSWindowOrNull,
 					 HIWindowRef						inParentCarbonWindowOrNull,
 					 Panel_ViewManager*					inHostedViewManagerOrNull,
-					 Panel_Ref							inHostedPanelOrNull,
 					 void*								inDataSetPtr,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-					 HelpSystem_KeyPhrase				inHelpButtonAction)
+					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
@@ -638,208 +458,17 @@ parentCarbonWindow				(inParentCarbonWindowOrNull),
 isModal							(nil == inParentNSWindowOrNull),
 containerViewManager			(nil), // set later if necessary
 hostedViewManager				([inHostedViewManagerOrNull retain]),
-hostedPanel						(inHostedPanelOrNull),
 panelIdealSize					(CGSizeMake(0, 0)), // set later
 popoverManager					(nullptr), // created as needed
 popoverWindow					(nil), // set later if necessary
-dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
-											CFSTR("GenericDialog"),
-											(this->isModal)
-											? CFSTR("Dialog")
-											: CFSTR("Sheet"))
-											<< NIBLoader_AssertWindowExists),
-userPaneForMargins				((nil != inHostedViewManagerOrNull)
-									? nullptr
-									: (dialogWindow.returnHIViewWithID(idMyUserPanePanelMargins)
-										<< HIViewWrap_AssertExists)),
-buttonHelp						((nil != inHostedViewManagerOrNull)
-									? nullptr
-									: (dialogWindow.returnHIViewWithID(idMyButtonHelp)
-										<< HIViewWrap_AssertExists
-										<< DialogUtilities_SetUpHelpButton)),
-buttonOK						((nil != inHostedViewManagerOrNull)
-									? nullptr
-									: (dialogWindow.returnHIViewWithID(idMyButtonOK)
-										<< HIViewWrap_AssertExists)),
-buttonCancel					((nil != inHostedViewManagerOrNull)
-									? nullptr
-									: (dialogWindow.returnHIViewWithID(idMyButtonCancel)
-										<< HIViewWrap_AssertExists)),
-buttonOther						((nil != inHostedViewManagerOrNull)
-									? nullptr
-									: (dialogWindow.returnHIViewWithID(idMyButtonOther)
-										<< HIViewWrap_AssertExists)),
-buttonHICommandsHandler			(), // set later if necessary
 closeNotifyProc					(inCloseNotifyProcPtr),
 closeEffects					(),
-windowResizeHandler				(),
-contextualHelpSetup				(this->dialogWindow, inHelpButtonAction),
 userDataPtr						(nullptr)
 {
-	OSStatus	error = noErr;
-	HISize		panelMarginsTopLeft;
-	HISize		panelMarginsBottomRight;
-	HISize		windowInitialSize;
-	HIViewRef	panelContainer = nullptr;
-	
-	
-	if (nullptr != hostedPanel)
-	{
-		//
-		// legacy (Carbon) setup; will be removed soon
-		//
-		
-		assert(nil == this->hostedViewManager);
-		
-		// initialize button command handler
-		buttonHICommandsHandler.install(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
-										this->selfRef/* user data */);
-		
-		// allow the panel to create its controls by providing a pointer to the containing window
-		Panel_SendMessageCreateViews(this->hostedPanel, this->dialogWindow);
-		Panel_GetContainerView(this->hostedPanel, panelContainer);
-		
-		// figure out where the panel should be, and how much space is around it
-		{
-			HIViewWrap	contentView(kHIViewWindowContentID, this->dialogWindow);
-			HIRect		contentBounds;
-			HIRect		panelFrame;
-			
-			
-			assert(contentView.exists());
-			error = HIViewGetBounds(contentView, &contentBounds);
-			assert_noerr(error);
-			error = HIViewGetFrame(this->userPaneForMargins, &panelFrame);
-			assert_noerr(error);
-			panelMarginsTopLeft = CGSizeMake(panelFrame.origin.x, panelFrame.origin.y);
-			panelMarginsBottomRight = CGSizeMake(contentBounds.size.width - panelFrame.size.width - panelMarginsTopLeft.width,
-													contentBounds.size.height - panelFrame.size.height - panelMarginsTopLeft.height);
-			
-			// set the *initial* size of the panel to match the NIB...but (below)
-			// once a delta-size handler is set up and the proper window size is
-			// calculated, this will be automatically adjusted to the ideal size
-			error = HIViewSetFrame(panelContainer, &panelFrame);
-			assert_noerr(error);
-		}
-		
-		// make the grow box transparent by default, which looks better most of the time;
-		// however, give the panel the option to change this appearance
-		{
-			HIViewWrap		growBox(kHIViewWindowGrowBoxID, this->dialogWindow);
-			
-			
-			if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(this->hostedPanel))
-			{
-				UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
-			}
-			else
-			{
-				UNUSED_RETURN(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
-			}
-		}
-		
-		// set up window resizing
-		{
-			SInt32		resizeRequirements = Panel_SendMessageGetUsefulResizeAxes(this->hostedPanel);
-			UInt16		maxWidthOffset = 200; // arbitrary
-			UInt16		maxHeightOffset = 100; // arbitrary
-			
-			
-			// adjust offsets
-			if (kPanel_ResponseResizeHorizontal == resizeRequirements)
-			{
-				maxHeightOffset = 0;
-			}
-			if (kPanel_ResponseResizeVertical == resizeRequirements)
-			{
-				maxWidthOffset = 0;
-			}
-			
-			// hide the grow box completely if it is not useful to resize the panel
-			if (kPanel_ResponseResizeNotNeeded == resizeRequirements)
-			{
-				UNUSED_RETURN(OSStatus)ChangeWindowAttributes(this->dialogWindow, 0/* attributes to set */,
-																kWindowResizableAttribute/* attributes to clear */);
-			}
-			
-			// install a callback that responds as a window is resized
-			{
-				Rect		currentBounds;
-				
-				
-				error = GetWindowBounds(this->dialogWindow, kWindowContentRgn, &currentBounds);
-				assert_noerr(error);
-				this->windowResizeHandler.install(this->dialogWindow, handleNewSize, this->selfRef/* user data */,
-													currentBounds.right - currentBounds.left/* minimum width */,
-													currentBounds.bottom - currentBounds.top/* minimum height */,
-													currentBounds.right - currentBounds.left + 200/* arbitrary maximum width */,
-													currentBounds.bottom - currentBounds.top/* maximum height */);
-				assert(this->windowResizeHandler.isInstalled());
-			}
-			
-			// adjust for ideal size
-			if (kPanel_ResponseSizeProvided != Panel_SendMessageGetIdealSize(this->hostedPanel, this->panelIdealSize))
-			{
-				// some problem setting the size; choose one arbitrarily
-				Console_Warning(Console_WriteLine, "unable to determine ideal size of dialog panel");
-				panelIdealSize = CGSizeMake(400.0, 250.0); // arbitrary
-			}
-			windowInitialSize = CGSizeMake(panelMarginsTopLeft.width + this->panelIdealSize.width + panelMarginsBottomRight.width,
-											panelMarginsTopLeft.height + this->panelIdealSize.height + panelMarginsBottomRight.height);
-			this->windowResizeHandler.setWindowIdealSize(windowInitialSize.width, windowInitialSize.height);
-			this->windowResizeHandler.setWindowMinimumSize(windowInitialSize.width, windowInitialSize.height);
-			this->windowResizeHandler.setWindowMaximumSize(windowInitialSize.width + maxWidthOffset,
-															windowInitialSize.height + maxHeightOffset);
-		}
-		
-		// resize the window; due to event handlers, a resize of the window
-		// changes the panel size too
-		SizeWindow(this->dialogWindow, STATIC_CAST(windowInitialSize.width, SInt16),
-					STATIC_CAST(windowInitialSize.height, SInt16), true/* update */);
-		
-		// auto-size and auto-arrange the initial buttons
-		this->autoArrangeButtons();
-		
-		// positioning is not done in the NIB because an arbitrarily-sized panel is
-		// added programmatically, and affects the size (and centering) of the window
-		if (this->isModal)
-		{
-			HIWindowRef const	kAnchorWindow = GetUserFocusWindow();
-			
-			
-			UNUSED_RETURN(OSStatus)RepositionWindow(this->dialogWindow, kAnchorWindow,
-													(nullptr == kAnchorWindow)
-													? kWindowCenterOnMainScreen
-													: kWindowCenterOnParentWindowScreen);
-		}
-		
-		// now notify the panel of its data
-		{
-			Panel_DataSetTransition		dataSetTransition;
-			
-			
-			bzero(&dataSetTransition, sizeof(dataSetTransition));
-			dataSetTransition.newDataSet = inDataSetPtr;
-			Panel_SendMessageNewDataSet(inHostedPanelOrNull, dataSetTransition);
-		}
-		
-		// ensure other handlers were installed
-		assert(buttonHICommandsHandler.isInstalled());
-	}
-	else
-	{
-		//
-		// new method; use Cocoa object and view
-		//
-		
-		assert(nullptr == this->hostedPanel);
-		
-		// now notify the panel of its data
-		[inHostedViewManagerOrNull.delegate panelViewManager:inHostedViewManagerOrNull
-																didChangeFromDataSet:nullptr
-																toDataSet:inDataSetPtr];
-	}
+	// now notify the panel of its data
+	[inHostedViewManagerOrNull.delegate panelViewManager:inHostedViewManagerOrNull
+															didChangeFromDataSet:nullptr
+															toDataSet:inDataSetPtr];
 }// My_GenericDialog constructor
 
 
@@ -863,39 +492,7 @@ My_GenericDialog::
 	}
 	
 	[hostedViewManager release];
-	
-	if (this->dialogWindow.exists())
-	{
-		DisposeWindow(this->dialogWindow.operator WindowRef());
-	}
 }// My_GenericDialog destructor
-
-
-/*!
-Resizes and repositions all of the command buttons in
-the dialog, so that they fit their current titles and
-are evenly spaced along the bottom of the window.
-
-(4.0)
-*/
-void
-My_GenericDialog::
-autoArrangeButtons ()
-{
-	if (nil != this->hostedViewManager)
-	{
-		// new method: use Cocoa
-		// UNIMPLEMENTED
-	}
-	else
-	{
-		// legacy (Carbon)
-		HIViewRef	buttonArray[] = { this->buttonOK, this->buttonCancel, this->buttonOther };
-		
-		
-		Localization_ArrangeButtonArray(buttonArray, sizeof(buttonArray) / sizeof(HIViewRef));
-	}
-}// autoArrangeButtons
 
 
 /*!
@@ -920,209 +517,6 @@ loadViewManager ()
 														viewManager:this->hostedViewManager];
 	}
 }// loadViewManager
-
-
-/*!
-Responds to view selections in the dialog box.
-If a button is pressed, the window is closed and
-the close notifier routine is called.
-
-This routine has the option of changing the item
-index; this will only affect the modal dialog
-(i.e. it has no effect for the sheet).
-
-Returns "true" only if the specified item hit is
-to be IGNORED.
-
-(3.1)
-*/
-Boolean
-handleItemHit	(My_GenericDialogPtr	inPtr,
-				 HIViewID const&		inID)
-{
-	Boolean		result = false;
-	
-	
-	assert(0 == inID.id);
-	if (idMyButtonOK.signature == inID.signature)
-	{
-		// user accepted - close the dialog with an appropriate transition for acceptance
-		Panel_SendMessageNewVisibility(inPtr->hostedPanel, false/* visible */);
-		if (inPtr->isModal)
-		{
-			UNUSED_RETURN(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
-			HideWindow(inPtr->dialogWindow);
-		}
-		else
-		{
-			Boolean		animateClose = (inPtr->closeEffects.end() == inPtr->closeEffects.find(kHICommandOK)) ||
-										(kGenericDialog_DialogEffectCloseNormally == inPtr->closeEffects[kHICommandOK]);
-			
-			
-			if (false == animateClose)
-			{
-				if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
-				else animateClose = true;
-			}
-			if (animateClose) HideSheetWindow(inPtr->dialogWindow);
-		}
-		
-		// notify of close
-		if (nullptr != inPtr->closeNotifyProc)
-		{
-			GenericDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK was pressed */);
-		}
-	}
-	else if (idMyButtonCancel.signature == inID.signature)
-	{
-		// user cancelled - close the dialog with an appropriate transition for cancelling
-		Panel_SendMessageNewVisibility(inPtr->hostedPanel, false/* visible */);
-		if (inPtr->isModal)
-		{
-			UNUSED_RETURN(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
-			HideWindow(inPtr->dialogWindow);
-		}
-		else
-		{
-			Boolean		animateClose = (inPtr->closeEffects.end() == inPtr->closeEffects.find(kHICommandCancel)) ||
-										(kGenericDialog_DialogEffectCloseNormally == inPtr->closeEffects[kHICommandCancel]);
-			
-			
-			if (false == animateClose)
-			{
-				if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
-				else animateClose = true;
-			}
-			if (animateClose) HideSheetWindow(inPtr->dialogWindow);
-		}
-		
-		// notify of close
-		if (nullptr != inPtr->closeNotifyProc)
-		{
-			GenericDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK was pressed */);
-		}
-	}
-	else if (idMyButtonHelp.signature == inID.signature)
-	{
-		HelpSystem_DisplayHelpInCurrentContext();
-	}
-	else
-	{
-		// ???
-	}
-	
-	return result;
-}// handleItemHit
-
-
-/*!
-Moves or resizes the dialog views.
-
-(3.1)
-*/
-void
-handleNewSize	(HIWindowRef	UNUSED_ARGUMENT(inWindow),
-				 Float32		inDeltaX,
-				 Float32		inDeltaY,
-				 void*			inGenericDialogRef)
-{
-	GenericDialog_Ref			ref = REINTERPRET_CAST(inGenericDialogRef, GenericDialog_Ref);
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), ref);
-	
-	
-	if (Localization_IsLeftToRight())
-	{
-		ptr->buttonOK << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
-		ptr->buttonCancel << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
-		ptr->buttonOther << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
-		ptr->buttonHelp << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-	}
-	else
-	{
-		ptr->buttonOK << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		ptr->buttonCancel << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		ptr->buttonOther << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		ptr->buttonHelp << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
-	}
-	Panel_Resizer(inDeltaX, inDeltaY, true/* is delta */)(ptr->hostedPanel);
-}// handleNewSize
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons in the new session dialog.
-
-(3.1)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inGenericDialogRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	GenericDialog_Ref	ref = REINTERPRET_CAST(inGenericDialogRef, GenericDialog_Ref);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			switch (received.commandID)
-			{
-			case kHICommandOK:
-				{
-					My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), ref);
-					
-					
-					if (handleItemHit(ptr, idMyButtonOK)) result = eventNotHandledErr;
-				}
-				// do this outside the auto-locker block so that
-				// all locks are free when disposal is attempted
-				GenericDialog_Dispose(&ref);
-				break;
-			
-			case kHICommandCancel:
-				{
-					My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), ref);
-					
-					
-					if (handleItemHit(ptr, idMyButtonCancel)) result = eventNotHandledErr;
-				}
-				// do this outside the auto-locker block so that
-				// all locks are free when disposal is attempted
-				GenericDialog_Dispose(&ref);
-				break;
-			
-			case kCommandContextSensitiveHelp:
-				{
-					My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), ref);
-					
-					
-					if (handleItemHit(ptr, idMyButtonHelp)) result = eventNotHandledErr;
-				}
-				break;
-			
-			default:
-				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldn’t be able to select menu commands while the window is open
-				result = eventNotHandledErr;
-				break;
-			}
-		}
-	}
-	
-	return result;
-}// receiveHICommand
 
 } // anonymous namespace
 

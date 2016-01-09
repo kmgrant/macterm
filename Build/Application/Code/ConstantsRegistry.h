@@ -67,25 +67,11 @@ API; kept in one place so they are known to be unique.
 enum
 {
 	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
-	kConstantsRegistry_ControlPropertyTypeAddressDialog				= 'ADlg',	//!< data: AddressDialog_Ref
 	kConstantsRegistry_ControlPropertyTypeBackgroundColor			= 'BkCl',	//!< data: CGDeviceColor
-	kConstantsRegistry_ControlPropertyTypeColorBoxData				= 'ClBx',	//!< data: MyColorBoxDataPtr (internal to ColorBox.cp)
-	kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag		= 'DPrf',	//!< data: Preferences_Tag
-	kConstantsRegistry_ControlPropertyTypeOwningPanel				= 'Panl',	//!< data: Panel_Ref
 	kConstantsRegistry_ControlPropertyTypeShowDragHighlight			= 'Drag',	//!< data: Boolean (if true, draw highlight; if false; erase)
 	kConstantsRegistry_ControlPropertyTypeTerminalBackgroundData	= 'TrmB',	//!< data: MyTerminalBackgroundPtr (internal to TerminalView.cp)
 	kConstantsRegistry_ControlPropertyTypeTerminalViewRef			= 'TrmV',	//!< data: TerminalViewRef
 	kConstantsRegistry_ControlPropertyTypeTerminalWindowRef			= 'TrmW',	//!< data: TerminalWindowRef
-};
-
-/*!
-This list contains all tags used with the SetMenuItemProperty()
-API; kept in one place so they are known to be unique.
-*/
-enum
-{
-	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
-	kConstantsRegistry_MenuItemPropertyTypeSessionRef				= 'Sess',	//!< data: SessionRef
 };
 
 /*!

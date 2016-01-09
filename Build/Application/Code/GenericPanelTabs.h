@@ -63,8 +63,6 @@ class NSView;
 
 #pragma mark Types
 
-typedef std::vector< Panel_Ref >		GenericPanelTabs_List;
-
 typedef std::map< NSView*, Panel_ViewManager* >		GenericPanelTabs_ViewManagerByView;
 
 #ifdef __OBJC__
@@ -100,15 +98,6 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 #endif // __OBJC__
-
-
-
-#pragma mark Public Methods
-
-Panel_Ref
-	GenericPanelTabs_New	(CFStringRef					inName,
-							 Panel_Kind						inKind,
-							 GenericPanelTabs_List const&	inTabs);
 
 #endif
 
