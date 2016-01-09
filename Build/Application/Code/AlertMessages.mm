@@ -47,7 +47,6 @@
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <HIViewWrap.h>
-#import <IconManager.h>
 #import <ListenerModel.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>

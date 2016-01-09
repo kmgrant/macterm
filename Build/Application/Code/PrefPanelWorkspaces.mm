@@ -50,7 +50,6 @@
 // library includes
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <IconManager.h>
 #import <Localization.h>
 #import <ListenerModel.h>
 #import <MemoryBlocks.h>

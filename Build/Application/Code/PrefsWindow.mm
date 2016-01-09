@@ -57,7 +57,6 @@
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <FileSelectionDialogs.h>
-#import <IconManager.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
 #import <SoundSystem.h>

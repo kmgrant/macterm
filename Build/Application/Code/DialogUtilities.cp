@@ -31,6 +31,7 @@
 
 ###############################################################*/
 
+#include "DialogUtilities.h"
 #include <UniversalDefines.h>
 
 // standard-C includes
@@ -46,25 +47,11 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <AlertMessages.h>
-#include <CarbonEventUtilities.template.h>
-#include <ColorUtilities.h>
 #include <Console.h>
-#include <FileSelectionDialogs.h>
 #include <HIViewWrap.h>
-#include <IconManager.h>
-#include <Localization.h>
-#include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
-#include <NIBLoader.h>
-#include <SoundSystem.h>
-#include <WindowInfo.h>
 
 // application includes
-#include "AppResources.h"
-#include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "MenuBar.h"
 #include "UIStrings.h"
 
 

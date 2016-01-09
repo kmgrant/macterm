@@ -49,7 +49,6 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <IconManager.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
 
