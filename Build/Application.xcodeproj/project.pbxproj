@@ -209,7 +209,6 @@
 		0A03DBC7063F6BA400C38B78 /* MacroManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MacroManager.mm; path = Application/Code/MacroManager.mm; sourceTree = "<group>"; };
 		0A03DBC9063F6BCC00C38B78 /* MacroManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacroManager.h; path = Application/Code/MacroManager.h; sourceTree = "<group>"; };
 		0A05299C15BBA1B200D62259 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
-		0A060B2A078BA0D500A8BB55 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ColorBox.nib; sourceTree = "<group>"; };
 		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/file/__init__.py; sourceTree = "<group>"; };
 		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
 		0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TranslucentMenuArrow.h; path = Application/Code/TranslucentMenuArrow.h; sourceTree = "<group>"; };
@@ -265,10 +264,6 @@
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTranslations.mm; path = Application/Code/PrefPanelTranslations.mm; sourceTree = "<group>"; };
 		0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTranslations.h; path = Application/Code/PrefPanelTranslations.h; sourceTree = "<group>"; };
 		0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTranslations.icns; path = Application/Resources/IconForPrefPanelTranslations.icns; sourceTree = "<group>"; };
-		0A4123150ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelFormats.nib; sourceTree = "<group>"; };
-		0A4123170ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelMacros.nib; sourceTree = "<group>"; };
-		0A4123190ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelSessions.nib; sourceTree = "<group>"; };
-		0A41231B0ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminals.nib; sourceTree = "<group>"; };
 		0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalGlyphDrawing.mm; path = Application/Code/TerminalGlyphDrawing.mm; sourceTree = "<group>"; };
 		0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TerminalGlyphDrawing.objc++.h"; path = "Application/Code/TerminalGlyphDrawing.objc++.h"; sourceTree = "<group>"; };
 		0A442C4F1B810760008B046B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -400,7 +395,6 @@
 		0A495E9014734EA9005A1D3A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
 		0A4AC969155ED67E00FA6184 /* VectorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindow.h; path = Application/Code/VectorWindow.h; sourceTree = "<group>"; };
 		0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorWindow.mm; path = Application/Code/VectorWindow.mm; sourceTree = "<group>"; };
-		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelWorkspaces.mm; path = Application/Code/PrefPanelWorkspaces.mm; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
 		0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelWorkspaces.icns; path = Application/Resources/IconForPrefPanelWorkspaces.icns; sourceTree = "<group>"; };
@@ -441,7 +435,6 @@
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
 		0A839C3415805125000F001E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
-		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
@@ -465,7 +458,6 @@
 		0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockPtrLocker.template.h; path = Shared/Code/MemoryBlockPtrLocker.template.h; sourceTree = "<group>"; };
 		0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceLocker.template.h; path = Shared/Code/MemoryBlockReferenceLocker.template.h; sourceTree = "<group>"; };
 		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
-		0A9CC37A06DC470D00DCD12E /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanels.nib; sourceTree = "<group>"; };
 		0A9D796B12A2342B0006CECA /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/term/__init__.py; sourceTree = "<group>"; };
 		0A9D796C12A2342B0006CECA /* text.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = text.py; path = Application/PythonCode/pymacterm/term/text.py; sourceTree = "<group>"; };
 		0AA179F71468E4A500779DA9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/FindDialogCocoa.xib; sourceTree = "<group>"; };
@@ -526,7 +518,6 @@
 		0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOff.icns; path = Application/Resources/IconForScrollLockOff.icns; sourceTree = "<group>"; };
 		0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOn.icns; path = Application/Resources/IconForScrollLockOn.icns; sourceTree = "<group>"; };
 		0AC8F364188F6BC100686F55 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
-		0ACA57C50AEADC5C00B5F482 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/GenericDialog.nib; sourceTree = "<group>"; };
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericDialog.mm; path = Application/Code/GenericDialog.mm; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
 		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
@@ -1022,15 +1013,6 @@
 				0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */,
 				0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
-				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
-				0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */,
-				0A9CC37906DC470D00DCD12E /* PrefPanels.nib */,
-				0A4123140ACE525B0067D333 /* PrefPanelFormats.nib */,
-				0A4123160ACE525B0067D333 /* PrefPanelMacros.nib */,
-				0A4123180ACE525B0067D333 /* PrefPanelSessions.nib */,
-				0A41231A0ACE525B0067D333 /* PrefPanelTerminals.nib */,
-				0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */,
-				0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */,
 				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
 			);
 			name = NIBs;
@@ -1510,14 +1492,6 @@
 			name = PrefPanelFormatGeneralCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A060B29078BA0D500A8BB55 /* ColorBox.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A060B2A078BA0D500A8BB55 /* English */,
-			);
-			name = ColorBox.nib;
-			sourceTree = "<group>";
-		};
 		0A0D315616E2F5440063914A /* PrefPanelTerminalScreenCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1558,52 +1532,12 @@
 			name = PrefPanelTerminalOptionsCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A4123140ACE525B0067D333 /* PrefPanelFormats.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4123150ACE525B0067D333 /* English */,
-			);
-			name = PrefPanelFormats.nib;
-			sourceTree = "<group>";
-		};
-		0A4123160ACE525B0067D333 /* PrefPanelMacros.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4123170ACE525B0067D333 /* English */,
-			);
-			name = PrefPanelMacros.nib;
-			sourceTree = "<group>";
-		};
-		0A4123180ACE525B0067D333 /* PrefPanelSessions.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4123190ACE525B0067D333 /* English */,
-			);
-			name = PrefPanelSessions.nib;
-			sourceTree = "<group>";
-		};
-		0A41231A0ACE525B0067D333 /* PrefPanelTerminals.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A41231B0ACE525B0067D333 /* English */,
-			);
-			name = PrefPanelTerminals.nib;
-			sourceTree = "<group>";
-		};
 		0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				0A495E9014734EA9005A1D3A /* English */,
 			);
 			name = WindowTitleDialogCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4C9D210FE9B1A0005EAE9D /* English */,
-			);
-			name = PrefPanelWorkspaces.nib;
 			sourceTree = "<group>";
 		};
 		0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */ = {
@@ -1676,22 +1610,6 @@
 				0A839C3415805125000F001E /* English */,
 			);
 			name = PrefPanelTranslationsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A8450A60554CB8E00CFF440 /* English */,
-			);
-			name = PrefsWindow.nib;
-			sourceTree = "<group>";
-		};
-		0A9CC37906DC470D00DCD12E /* PrefPanels.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A9CC37A06DC470D00DCD12E /* English */,
-			);
-			name = PrefPanels.nib;
 			sourceTree = "<group>";
 		};
 		0AA179F61468E4A500779DA9 /* FindDialogCocoa.xib */ = {
@@ -1804,14 +1722,6 @@
 				0AC8F364188F6BC100686F55 /* English */,
 			);
 			name = PrefPanelSessionResourceCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0ACA57C50AEADC5C00B5F482 /* English */,
-			);
-			name = GenericDialog.nib;
 			sourceTree = "<group>";
 		};
 		0ACC40631A432446009D0D53 /* PrefPanelWorkspaceOptionsCocoa.xib */ = {

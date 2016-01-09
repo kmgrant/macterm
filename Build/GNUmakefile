@@ -227,15 +227,6 @@ English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 MacTerm.help \
 English.lproj/AlertMessages.nib \
-English.lproj/ColorBox.nib \
-English.lproj/GenericDialog.nib \
-English.lproj/PrefPanelFormats.nib \
-English.lproj/PrefPanelMacros.nib \
-English.lproj/PrefPanels.nib \
-English.lproj/PrefPanelSessions.nib \
-English.lproj/PrefPanelTerminals.nib \
-English.lproj/PrefPanelWorkspaces.nib \
-English.lproj/PrefsWindow.nib \
 English.lproj/TerminalWindow.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
