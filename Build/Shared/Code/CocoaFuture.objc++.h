@@ -191,6 +191,7 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 @end //}
 
+#endif
 
 id// NSUserNotification*
 	CocoaFuture_AllocInitUserNotification				();
@@ -225,59 +226,5 @@ void
 
 id// NSXPCInterface*
 	CocoaFuture_XPCInterfaceWithProtocol				(Protocol*			inProtocol);
-
-#else
-
-// this functionality is available if compiling against a later OS version
-// but the routines are implemented anyway to ease porting efforts (this
-// also serves as documentation for those using the alternates above, as
-// it shows what the emulated versions are trying to achieve)
-
-id// NSUserNotification*
-	CocoaFuture_AllocInitUserNotification		()	{ return [[NSUserNotification alloc] init]; }
-
-id// NSXPCConnection*
-	CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*		inName)
-	{
-		return [[NSXPCConnection alloc] initWithServiceName:inName];
-	}
-
-id// NSUserNotificationCenter*
-	CocoaFuture_DefaultUserNotificationCenter	()	{ return [NSUserNotificationCenter defaultUserNotificationCenter]; }
-
-void
-	CocoaFuture_XPCConnectionResume				(NSXPCConnection*		inConnection)
-	{
-		[inConnection resume];
-	}
-
-void
-	CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*	inConnection,
-														 NSXPCInterface*	inInterface)
-	{
-		inConnection.remoteObjectInterface = inInterface;
-	}
-
-void
-	CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*	inConnection,
-														 void				(^inBlock)())
-	{
-		inConnection.interruptionHandler = inBlock;
-	}
-
-void
-	CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*	inConnection,
-														 void				(^inBlock)())
-	{
-		inConnection.invalidationHandler = inBlock;
-	}
-
-id// NSXPCInterface*
-	CocoaFuture_XPCInterfaceWithProtocol		(Protocol*			inProtocol)
-	{
-		return [NSXPCInterface interfaceWithProtocol:inProtocol];
-	}
-
-#endif // MAC_OS_X_VERSION_10_8
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

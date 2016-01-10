@@ -104,6 +104,7 @@ id
 CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect		inFrame)
 {
 	id		result = nil;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSVisualEffectView");
 	
 	
@@ -135,6 +136,9 @@ CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect		inFrame)
 			Console_Warning(Console_WriteLine, "NSVisualEffectView found but it does not implement 'alloc' and/or 'initWithFrame:'");
 		}
 	}
+#else
+	result = [[NSUserNotification alloc] init];
+#endif
 	
 	return result;
 }// AllocInitVisualEffectViewWithFrame
@@ -153,6 +157,7 @@ id
 CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*		inName)
 {
 	id		result = nil;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCConnection");
 	
 	
@@ -182,6 +187,9 @@ CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*		inName)
 			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'alloc' and/or 'initWithServiceName'");
 		}
 	}
+#else
+	result = [[NSXPCConnection alloc] initWithServiceName:inName];
+#endif
 	
 	return result;
 }// AllocInitXPCConnectionWithServiceName
@@ -203,6 +211,7 @@ id
 CocoaFuture_DefaultUserNotificationCenter ()
 {
 	id		result = nil;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSUserNotificationCenter");
 	
 	
@@ -224,13 +233,16 @@ CocoaFuture_DefaultUserNotificationCenter ()
 			Console_Warning(Console_WriteLine, "NSUserNotificationCenter found but it does not implement 'defaultUserNotificationCenter'");
 		}
 	}
+#else
+	result = [NSUserNotificationCenter defaultUserNotificationCenter];
+#endif
 	
 	return result;
 }// DefaultUserNotificationCenter
 
 
 /*!
-On Mac OS X 10.8 and later, "[aConnection remoteObjectProxyWithErrorHandler]";
+On Mac OS X 10.8 and later, "[aConnection remoteObjectProxyWithErrorHandler:]";
 on earlier Mac OS X versions, no effect (returning "nil").
 
 This work-around is necessary because older code bases will not be able to
@@ -243,6 +255,7 @@ CocoaFuture_XPCConnectionRemoteObjectProxy	(NSXPCConnection*		inConnection,
 											 void (^inHandler)(NSError*))
 {
 	id		result = nil;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCConnection");
 	
 	
@@ -265,6 +278,9 @@ CocoaFuture_XPCConnectionRemoteObjectProxy	(NSXPCConnection*		inConnection,
 			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'remoteObjectProxyWithErrorHandler:'");
 		}
 	}
+#else
+	result = [aConnection remoteObjectProxyWithErrorHandler:inHandler];
+#endif
 	
 	return result;
 }// XPCConnectionRemoteObjectProxy
@@ -282,6 +298,7 @@ directly refer to the class (it doesn’t exist).
 void
 CocoaFuture_XPCConnectionResume		(NSXPCConnection*		inConnection)
 {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCConnection");
 	
 	
@@ -304,6 +321,9 @@ CocoaFuture_XPCConnectionResume		(NSXPCConnection*		inConnection)
 			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'resume'");
 		}
 	}
+#else
+	[inConnection resume];
+#endif
 }// XPCConnectionResume
 
 
@@ -320,6 +340,7 @@ void
 CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*		inConnection,
 													 void					(^inBlock)())
 {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCConnection");
 	
 	
@@ -342,6 +363,9 @@ CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*		inConnection
 			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'setInterruptionHandler:'");
 		}
 	}
+#else
+	inConnection.interruptionHandler = inBlock;
+#endif
 }// XPCConnectionSetInterruptionHandler
 
 
@@ -358,6 +382,7 @@ void
 CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*		inConnection,
 													 void					(^inBlock)())
 {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCConnection");
 	
 	
@@ -380,6 +405,9 @@ CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*		inConnection
 			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'setInvalidationHandler:'");
 		}
 	}
+#else
+	inConnection.invalidationHandler = inBlock;
+#endif
 }// XPCConnectionSetInvalidationHandler
 
 
@@ -396,6 +424,7 @@ void
 CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*		inConnection,
 													 NSXPCInterface*		inInterface)
 {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCConnection");
 	
 	
@@ -418,6 +447,9 @@ CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*		inConnectio
 			Console_Warning(Console_WriteLine, "NSXPCConnection found but it does not implement 'setRemoteObjectInterface:'");
 		}
 	}
+#else
+	inConnection.remoteObjectInterface = inInterface;
+#endif
 }// XPCConnectionSetRemoteObjectInterface
 
 
@@ -434,6 +466,7 @@ id
 CocoaFuture_XPCInterfaceWithProtocol	(Protocol*		inProtocol)
 {
 	id		result = nil;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 	id		targetClass = objc_getClass("NSXPCInterface");
 	
 	
@@ -462,6 +495,9 @@ CocoaFuture_XPCInterfaceWithProtocol	(Protocol*		inProtocol)
 			Console_Warning(Console_WriteLine, "NSXPCInterface found but it does not implement 'interfaceWithProtocol:'");
 		}
 	}
+#else
+	result = [NSXPCInterface interfaceWithProtocol:inProtocol];
+#endif
 	
 	return result;
 }// XPCInterfaceWithProtocol
