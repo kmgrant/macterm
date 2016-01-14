@@ -38,6 +38,9 @@
 #include <sstream>
 #include <string>
 
+// Unix includes
+#include <execinfo.h>
+
 // Mac includes
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
@@ -264,6 +267,32 @@ Console_WriteScriptError	(CFStringRef		inTitle,
 		Console_WriteValueCFString(cStringTitle, inDescription);
 	}
 }// WriteScriptError
+
+
+/*!
+Prints a debugging call stack trace to the standard error
+stream, up to the maximum number of symbols.  If the count
+is zero, an arbitrary depth is chosen.
+
+(4.1)
+*/
+void
+Console_WriteStackTrace		(UInt16		inDepth)
+{
+	int const		kArrayLength = ((inDepth == 0)
+									? 20/* arbitrary */
+									: inDepth);
+	void**			symbolArray = new void*[kArrayLength];
+	int				actualSize = backtrace(symbolArray, kArrayLength);
+	
+	
+	// print the trace
+	Console_WriteHorizontalRule();
+	backtrace_symbols_fd(symbolArray, actualSize, STDERR_FILENO);
+	Console_WriteHorizontalRule();
+	
+	delete [] symbolArray, symbolArray = nullptr;
+}// WriteStackTrace
 
 
 /*!

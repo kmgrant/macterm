@@ -202,6 +202,9 @@ void
 									 CFStringRef		inDescription);
 
 void
+	Console_WriteStackTrace			(UInt16				inDepth = 0);
+
+void
 	Console_WriteUnitTestReport		(char const*		inModuleName,
 									 UInt16				inFailureCount,
 									 UInt16				inTotalTests);
