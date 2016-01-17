@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160117',
     '20160107',
     '20160102',
     '20151222',
@@ -532,6 +533,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160117': [
+        'Fixed text selection tracking to not continue while a "Multi-Line Paste" message is open.',
+    ],
     '20160107': [
         'Preferences window has been reimplemented in Cocoa, which makes it look much better on Retina displays.',
         'Preferences window now has a search field for quickly locating relevant panels.',

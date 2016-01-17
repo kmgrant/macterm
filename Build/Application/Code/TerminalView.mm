@@ -11753,6 +11753,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										LocalToGlobal(&event.where);
 										event.modifiers = currentModifiers;
 										UNUSED_RETURN(OSStatus)dragTextSelection(viewPtr, dragRgn, &event, &dragged);
+										trackingResult = kMouseTrackingMouseUp; // terminate loop
 										cannotBeDoubleClick = true;
 									}
 									else if (0 == (currentModifiers & shiftKey))
