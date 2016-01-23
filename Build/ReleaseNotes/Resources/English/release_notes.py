@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160123',
     '20160117',
     '20160107',
     '20160102',
@@ -533,6 +534,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160123': [
+        'Fixed potential crash in the Custom New Session sheet.',
+    ],
     '20160117': [
         'Fixed text selection tracking to not continue while a "Multi-Line Paste" message is open.',
     ],

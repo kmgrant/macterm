@@ -171,6 +171,9 @@ void
 void*
 	GenericDialog_ReturnImplementation			(GenericDialog_Ref					inDialog);
 
+Panel_ViewManager*
+	GenericDialog_ReturnViewManager				(GenericDialog_Ref					inDialog);
+
 void
 	GenericDialog_SetCommandButtonTitle			(GenericDialog_Ref					inDialog,
 												 UInt32								inCommandID,

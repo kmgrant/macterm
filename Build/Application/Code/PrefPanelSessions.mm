@@ -690,27 +690,6 @@ init
 	self = [super initWithNibNamed:@"PrefPanelSessionResourceCocoa" delegate:self context:nullptr];
 	if (nil != self)
 	{
-		_serverBrowser = nil;
-		_sessionFavoriteIndexes = [[NSIndexSet alloc] init];
-		_sessionFavorites = [@[] retain];
-		
-		// install a callback that finds out about changes to available preferences collections
-		{
-			Preferences_Result		error = kPreferences_ResultOK;
-			
-			
-			self->preferenceChangeListener = [[ListenerModel_StandardListener alloc]
-												initWithTarget:self
-																eventFiredSelector:@selector(model:preferenceChange:context:)];
-			
-			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
-												false/* call immediately to get initial value */);
-			assert(kPreferences_ResultOK == error);
-			error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
-												true/* call immediately to get initial value */);
-			assert(kPreferences_ResultOK == error);
-		}
-		
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
 	return self;
@@ -1135,6 +1114,10 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 initializeWithContext:(void*)			aContext
 {
 #pragma unused(aViewManager, aContext)
+	_serverBrowser = nil;
+	_sessionFavoriteIndexes = [[NSIndexSet alloc] init];
+	_sessionFavorites = [@[] retain];
+	
 	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary; number of settings */];
 }// panelViewManager:initializeWithContext:
@@ -1237,6 +1220,23 @@ didLoadContainerView:(NSView*)			aContainerView
 	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
 	{
 		[self didChangeValueForKey:keyName];
+	}
+	
+	// install a callback that finds out about changes to available preferences collections
+	{
+		Preferences_Result		error = kPreferences_ResultOK;
+		
+		
+		self->preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+											initWithTarget:self
+															eventFiredSelector:@selector(model:preferenceChange:context:)];
+		
+		error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
+											false/* call immediately to get initial value */);
+		assert(kPreferences_ResultOK == error);
+		error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
+											true/* call immediately to get initial value */);
+		assert(kPreferences_ResultOK == error);
 	}
 }// panelViewManager:didLoadContainerView:
 

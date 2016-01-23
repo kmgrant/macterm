@@ -335,6 +335,25 @@ GenericDialog_ReturnImplementation	(GenericDialog_Ref	inDialog)
 
 
 /*!
+Returns the view manager assigned when the dialog was
+constructed.
+
+(4.1)
+*/
+Panel_ViewManager*
+GenericDialog_ReturnViewManager		(GenericDialog_Ref	inDialog)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	Panel_ViewManager*			result = nullptr;
+	
+	
+	if (nullptr != ptr) result = ptr->hostedViewManager;
+	
+	return result;
+}// ReturnViewManager
+
+
+/*!
 Specifies a new name for the button corresponding to the
 given command.  The specified button is automatically
 resized to fit the title, and other action buttons are

@@ -2768,7 +2768,16 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 								 Boolean				inOKButtonPressed)
 {
 	SessionFactory_NewSessionDataObject*	dataObject = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), SessionFactory_NewSessionDataObject*);
+	PrefPanelSessions_ResourceViewManager*	viewMgr = STATIC_CAST(GenericDialog_ReturnViewManager(inDialogThatClosed),
+																	PrefPanelSessions_ResourceViewManager*);
 	
+	
+	assert([viewMgr isKindOfClass:[PrefPanelSessions_ResourceViewManager class]]);
+	
+	// remove observers added by SessionFactory_DisplayUserCustomizationUI()
+	// (the parameters should be consistent)
+	[viewMgr removeObserver:dataObject forKeyPath:@"formatFavorite.currentValueDescriptor"];
+	[viewMgr removeObserver:dataObject forKeyPath:@"terminalFavorite.currentValueDescriptor"];
 	
 	if (inOKButtonPressed)
 	{
@@ -2831,7 +2840,7 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 		}
 	}
 	
-	[dataObject release];
+	[dataObject release], GenericDialog_SetImplementation(inDialogThatClosed, nullptr);
 }// handleNewSessionDialogClose
 
 
