@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160124',
     '20160123',
     '20160117',
     '20160107',
@@ -534,6 +535,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160124': [
+        'Application bundle size has been reduced by over 1.2 MB after compressing the files that describe the graphical user interface.',
+    ],
     '20160123': [
         'Fixed potential crash in the Custom New Session sheet.',
     ],

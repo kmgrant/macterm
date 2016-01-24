@@ -89,7 +89,10 @@ CHMOD=/bin/chmod
 CODE_SIGN=/usr/bin/codesign
 COPY=/bin/cp
 IBTOOL=$(DEVELOPER_DIR)/usr/bin/ibtool
-IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format human-readable-text --flatten NO
+# the ibtool options below might be useful for debugging
+#IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format human-readable-text --flatten NO
+# the ibtool options below are meant to minimize space in released bundles
+IBTOOL_COMPILE_XIB_OPTIONS=--errors --warnings --notices --output-format binary1 --flatten YES
 MKDIR_P=/usr/bin/install -d
 MOVE=/bin/mv
 RMDIR=/bin/rmdir
