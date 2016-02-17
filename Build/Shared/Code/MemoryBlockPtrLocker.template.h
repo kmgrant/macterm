@@ -70,6 +70,10 @@ public:
 	releaseLock	(structure_reference_type	inReference,
 				 structure_type**			inoutPtrPtr) override;
 	
+	//! enables stack traces when objects are locked
+	void
+	setLockLogEnabled	(Boolean	inLocksAreLogged);
+	
 	//! test routine
 	static Boolean
 	unitTest ();
@@ -78,6 +82,7 @@ protected:
 
 private:
 	DisposeProcPtr		_disposer;
+	bool				_logLocks;		//!< for debugging;
 	bool				_requireLocks;	//!< in the destruct phase ONLY, this is cleared to
 										//!  prevent callbacks from looping back; it is
 										//!  implicit in that phase that the structure is
@@ -126,6 +131,7 @@ MemoryBlockPtrLocker< structure_reference_type, structure_type >::
 MemoryBlockPtrLocker	(DisposeProcPtr		inDisposer)
 :
 _disposer(inDisposer),
+_logLocks(false),
 _requireLocks(true)
 {
 }// MemoryBlockPtrLocker 1-argument constructor
@@ -149,6 +155,13 @@ acquireLock	(structure_reference_type	inReference)
 		
 		
 		newLockCount = this->incrementLockCount(inReference);
+		if (_logLocks)
+		{
+			// log that a lock was acquired, and show where the lock came from
+			Console_WriteValueAddress("acquired lock, target object", inReference);
+			Console_WriteValue("new lock count", newLockCount);
+			Console_WriteStackTrace();
+		}
 		assert(newLockCount > oldLockCount);
 	}
 	return result;
@@ -169,8 +182,15 @@ releaseLock	(structure_reference_type	inReference,
 	#endif
 		
 		
-		assert(oldLockCount > 0);
 		newLockCount = this->decrementLockCount(inReference);
+		if (_logLocks)
+		{
+			// log that a lock was released, and show where the release came from
+			Console_WriteValueAddress("released lock, target object", inReference);
+			Console_WriteValue("new lock count", newLockCount);
+			Console_WriteStackTrace();
+		}
+		assert(oldLockCount > 0);
 		assert(newLockCount < oldLockCount);
 		if ((0 == newLockCount) && (nullptr != _disposer))
 		{
@@ -180,6 +200,15 @@ releaseLock	(structure_reference_type	inReference,
 		if (inoutPtrPtr != nullptr) *inoutPtrPtr = nullptr;
 	}
 }// releaseLock
+
+
+template < typename structure_reference_type, typename structure_type >
+void
+MemoryBlockPtrLocker< structure_reference_type, structure_type >::
+setLockLogEnabled	(Boolean	inLocksAreLogged)
+{
+	_logLocks = inLocksAreLogged;
+}// setLockLogEnabled
 
 
 /*!
