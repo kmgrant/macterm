@@ -36,11 +36,9 @@
 #ifdef __OBJC__
 @class NSResponder;
 @class NSWindow;
-@class Popover_Window;
 #else
 class NSResponder;
 class NSWindow;
-class Popover_Window;
 #endif
 
 
@@ -49,14 +47,6 @@ class Popover_Window;
 
 //!\name General
 //@{
-
-void
-	CocoaBasic_ApplyBlueStyleToPopover				(Popover_Window*,
-													 Boolean);
-
-void
-	CocoaBasic_ApplyStandardStyleToPopover			(Popover_Window*,
-													 Boolean);
 
 Boolean
 	CocoaBasic_CreateFileAndDirectoriesWithData		(CFURLRef,

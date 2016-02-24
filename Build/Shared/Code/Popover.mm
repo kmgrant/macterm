@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Popover Window 1.2 (based on MAAttachedWindow)
+	Popover Window 1.4 (based on MAAttachedWindow)
 	MAAttachedWindow © 2007 by Magic Aubergine
 	Popover Window © 2011-2016 by Kevin Grant
 	
@@ -32,6 +32,8 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
+#import <CocoaFuture.objc++.h>
+#import <Console.h>
 
 
 
@@ -85,6 +87,8 @@ The private class interface.
 // new methods
 	- (void)
 	appendArrowToPath:(NSBezierPath*)_;
+	- (void)
+	applyStyle:(Popover_WindowStyle)_;
 	- (NSPoint)
 	convertToScreenFromWindowPoint:(NSPoint)_;
 	- (NSPoint)
@@ -112,6 +116,16 @@ The private class interface.
 
 @end //}
 
+@interface Popover_Window () //{
+
+// accessors
+	@property (copy) NSColor*
+	borderOuterDisplayColor;
+	@property (copy) NSColor*
+	borderPrimaryDisplayColor;
+
+@end //}
+
 
 #pragma mark Internal Methods
 
@@ -120,13 +134,111 @@ The private class interface.
 
 
 /*!
+The height determines how “slender” the frame arrow’s triangle is.
+*/
+@synthesize arrowHeight = _arrowHeight;
+
+/*!
+The outer border color is used to render the boundary of
+the popover window.  See also "setBorderPrimaryColor:".
+
+The border thickness is determined by "setBorderWidth:".
+If the outer and primary colors are the same then the
+border appears to be that thickness; otherwise the width
+is divided roughly evenly between the two colors.
+*/
+@synthesize borderOuterColor = _borderOuterColor;
+
+/*!
+The outer border display color is what is currently used
+for rendering, which may either be the value of the
+property "borderOuterColor" or a temporary setting such
+as a gray border for inactive windows.
+*/
+@synthesize borderOuterDisplayColor = _borderOuterDisplayColor;
+
+/*!
+The primary border color is used to render a frame inside
+the outer border (see "setBorderOuterColor:").
+
+The border thickness is determined by "setBorderWidth:".
+If the outer and primary colors are the same then the
+border appears to be that thickness; otherwise the width
+is divided roughly evenly between the two colors.
+*/
+@synthesize borderPrimaryColor = _borderPrimaryColor;
+
+/*!
+The primary border display color is what is currently used
+for rendering, which may either be the value of the
+property "borderPrimaryColor" or a temporary setting such
+as a gray border for inactive windows.
+*/
+@synthesize borderPrimaryDisplayColor = _borderPrimaryDisplayColor;
+
+/*!
+Specifies whether or not the frame has an arrow displayed.
+Even if there is no arrow, space is allocated for the arrow
+so that it can appear or disappear without the user seeing
+the window resize.
+*/
+@synthesize hasArrow = _hasArrow;
+
+/*!
+When the window position puts the arrow near a corner of
+the frame, this specifies how close to the corner the
+arrow is.  If a rounded corner appears then the arrow is
+off to the side; otherwise the arrow is right in the
+corner.
+*/
+@synthesize hasRoundCornerBesideArrow = _hasRoundCornerBesideArrow;
+
+/*!
+The popover background color is used to construct an image
+that the NSWindow superclass uses for rendering.
+
+Use this property instead of the NSWindow "backgroundColor"
+property because the normal background color is overridden
+to contain the entire rendering of the popover window frame
+(as a pattern image).
+*/
+@synthesize popoverBackgroundColor = _popoverBackgroundColor;
+
+
+#pragma mark Initializers
+
+
+/*!
+Convenience initializer; assumes a value for vibrancy.
+
+(1.4)
+*/
+- (instancetype)
+initWithView:(NSView*)			aView
+style:(Popover_WindowStyle)		aStyle
+attachedToPoint:(NSPoint)		aPoint
+inWindow:(NSWindow*)			aWindow
+{
+	return [self initWithView:aView style:aStyle attachedToPoint:aPoint
+								inWindow:aWindow vibrancy:YES];
+}
+
+
+/*!
 Designated initializer.
 
 A popover embeds a single view (which can of course contain any number
-of other views).  Although you can later set the window frame in any
-way you wish, at construction time you only provide a point that
-determines where the tip of the window frame’s arrow is (the distance
-indicates how far the arrow is from that point).
+of other views).
+
+The style pre-configures various properties of the frame to produce
+standard styles.  Although you can change properties later, it is
+highly recommended that you use the defaults.
+
+At construction time you only provide a point that determines where the
+tip of the window frame’s arrow is (the distance indicates how far the
+arrow is from that point).  This anchor point is used even if the
+style of the window does not actually render an arrow; thus, for styles
+such as sheets, you simply specify the center-top point by default.
 
 If a parent window is provided then "point" is in the coordinates of
 that window; otherwise the "point" is in screen coordinates.
@@ -136,12 +248,18 @@ values for margin, etc. and the location is also chosen automatically.
 You may change any property of the popover later however, and ideally
 before the window is shown to the user.
 
-(1.1)
+If the vibrancy flag is set, an NSVisualEffectView is inserted into
+the view hierarchy so that the entire window appears to be translucent
+while blurring the background.
+
+(1.4)
 */
 - (instancetype)
-initWithView:(NSView*)		aView
-attachedToPoint:(NSPoint)	aPoint
-inWindow:(NSWindow*)		aWindow
+initWithView:(NSView*)			aView
+style:(Popover_WindowStyle)		aStyle
+attachedToPoint:(NSPoint)		aPoint
+inWindow:(NSWindow*)			aWindow
+vibrancy:(BOOL)					aVisualEffectFlag
 {
 	if (nil == aView)
 	{
@@ -205,28 +323,120 @@ inWindow:(NSWindow*)		aWindow
 			[self useOptimizedDrawing:YES];
 			
 			// set up some sensible defaults for display
-			self->popoverBackgroundColor = [[NSColor colorWithCalibratedWhite:0.1 alpha:0.75] copy];
-			self->borderOuterColor = [[NSColor grayColor] copy];
-			self->borderPrimaryColor = [[NSColor whiteColor] copy];
+			self->_popoverBackgroundColor = [[NSColor colorWithCalibratedWhite:0.1 alpha:0.75] copy];
+			self->_borderOuterColor = [[NSColor grayColor] copy];
+			self->_borderOuterDisplayColor = [self->_borderOuterColor copy];
+			self->_borderPrimaryColor = [[NSColor whiteColor] copy];
+			self->_borderPrimaryDisplayColor = [self->_borderPrimaryColor copy];
 			self->borderWidth = 2.0;
 			self->viewMargin = kDefaultMargin;
 			self->arrowBaseWidth = kDefaultArrowBaseWidth;
-			self->arrowHeight = kDefaultArrowHeight;
-			self->hasArrow = YES;
+			self->_arrowHeight = kDefaultArrowHeight;
+			self->_hasArrow = YES;
 			self->cornerRadius = kDefaultCornerRadius;
-			self->hasRoundCornerBesideArrow = kDefaultCornerIsRounded;
+			self->_hasRoundCornerBesideArrow = kDefaultCornerIsRounded;
 			self->resizeInProgress = NO;
 			
 			// add view as subview
 			[[self contentView] addSubview:self->embeddedView];
 			
-			// update the view
-			[self fixViewFrame];
-			[self updateBackground];
+			// if supported by the runtime OS, add a vibrancy effect to
+			// make the entire window more translucent than transparent
+			// (NOTE: this does not currently mix well with the arrow
+			// rendering in all cases, because the arrow background
+			// does not include the vibrancy effect; this might be
+			// fixable later by reimplementing the window to use a more
+			// elaborate scheme for arrows, such as view clipping)
+			if (aVisualEffectFlag)
+			{
+				@try
+				{
+					NSView*		parentView = [[self->embeddedView subviews] objectAtIndex:0];
+					id			visualEffectObject = CocoaFuture_AllocInitVisualEffectViewWithFrame
+														(NSRectToCGRect(parentView.frame));
+					
+					
+					if (nil != visualEffectObject)
+					{
+						NSView*		visualEffectView = STATIC_CAST(visualEffectObject, NSView*);
+						NSArray*	subviews = [[[parentView subviews] copy] autorelease];
+						
+						
+						if (nil == subviews)
+						{
+							// this should never happen...
+							subviews = @[];
+						}
+						
+						visualEffectView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
+																NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin);
+						
+						// keep the views from disappearing when they are removed temporarily
+						[subviews enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop)
+						{
+						#pragma unused(index, stop)
+							NSView*		asView = STATIC_CAST(object, NSView*);
+							
+							
+							[[object retain] autorelease];
+							[asView removeFromSuperview];
+						}];
+						
+						[visualEffectView setSubviews:subviews];
+						[parentView addSubview:visualEffectView];
+					}
+					else
+					{
+						// OS is too old to support this effect (no problem)
+					}
+				}
+				@catch (NSException*	inException)
+				{
+					// since this is just a visual adornment, do not allow
+					// exceptions to cause problems; just log and continue
+					Console_Warning(Console_WriteValueCFString, "visual effect adornment failed, exception",
+									BRIDGE_CAST([inException name], CFStringRef));
+				}
+			}
+			
+			// ensure that the display is updated after certain changes
+			[self addObserver:self forKeyPath:@"arrowHeight"
+								options:0
+								context:nullptr];
+			[self addObserver:self forKeyPath:@"borderOuterColor"
+								options:0
+								context:nullptr];
+			[self addObserver:self forKeyPath:@"borderPrimaryColor"
+								options:0
+								context:nullptr];
+			[self addObserver:self forKeyPath:@"hasArrow"
+								options:0
+								context:nullptr];
+			[self addObserver:self forKeyPath:@"hasRoundCornerBesideArrow"
+								options:0
+								context:nullptr];
+			[self addObserver:self forKeyPath:@"popoverBackgroundColor"
+								options:0
+								context:nullptr];
+			
+			// ensure that frame-dependent property changes will cause the
+			// frame to be synchronized with the new values (note that the
+			// "setBorderWidth:" method already requires the border to fit
+			// within the margin so that value is not monitored here)
+			[self addObserver:self forKeyPath:@"viewMargin"
+								options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld)
+								context:nullptr];
 			
 			// subscribe to notifications
+			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
+								performSelector:@selector(windowDidBecomeKey:)];
+			[self whenObject:self postsNote:NSWindowDidResignKeyNotification
+								performSelector:@selector(windowDidResignKey:)];
 			[self whenObject:self postsNote:NSWindowDidResizeNotification
 								performSelector:@selector(windowDidResize:)];
+			
+			// use the style parameter to modify default values
+			[self applyStyle:aStyle];
 		}
 	}
 	return self;
@@ -242,15 +452,55 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[borderOuterColor release];
-	[borderPrimaryColor release];
-	[popoverBackgroundColor release];
+	
+	[_borderOuterColor release];
+	[_borderOuterDisplayColor release];
+	[_borderPrimaryColor release];
+	[_borderPrimaryDisplayColor release];
+	[_popoverBackgroundColor release];
+	
+	// remove observers registered by initializer (arguments
+	// should be consistent)
+	[self removeObserver:self forKeyPath:@"arrowHeight" context:nullptr];
+	[self removeObserver:self forKeyPath:@"borderOuterColor" context:nullptr];
+	[self removeObserver:self forKeyPath:@"borderPrimaryColor" context:nullptr];
+	[self removeObserver:self forKeyPath:@"hasArrow" context:nullptr];
+	[self removeObserver:self forKeyPath:@"hasRoundCornerBesideArrow" context:nullptr];
+	[self removeObserver:self forKeyPath:@"popoverBackgroundColor" context:nullptr];
+	[self removeObserver:self forKeyPath:@"viewMargin" context:nullptr];
 	
 	[super dealloc];
 }
 
 
-#pragma mark General
+#pragma mark Utilities
+
+
+/*!
+Sets the "hasArrow", "hasRoundCornerBesideArrow",
+"arrowBaseWidth" and "arrowHeight" properties
+simultaneously to a standard configuration.
+
+(1.4)
+*/
+- (void)
+setStandardArrowProperties:(BOOL)	aHasArrowFlag
+{
+	if (aHasArrowFlag)
+	{
+		self.hasArrow = YES;
+		self.hasRoundCornerBesideArrow = YES;
+		self.arrowBaseWidth = 30.0;
+		self.arrowHeight = 15.0;
+	}
+	else
+	{
+		self.hasArrow = NO;
+		self.hasRoundCornerBesideArrow = YES;
+		self.arrowBaseWidth = 0.0;
+		self.arrowHeight = 0.0;
+	}
+}
 
 
 /*!
@@ -262,7 +512,7 @@ embedded view has the given local frame.
 - (NSRect)
 frameRectForViewRect:(NSRect)	aRect
 {
-	return [self.class frameRectForViewRect:aRect viewMargin:[self viewMargin] arrowHeight:[self arrowHeight]
+	return [self.class frameRectForViewRect:aRect viewMargin:self.viewMargin arrowHeight:self.arrowHeight
 											side:self->windowPropertyFlags];
 }
 
@@ -276,9 +526,12 @@ window has the given global frame.
 - (NSRect)
 viewRectForFrameRect:(NSRect)	aRect
 {
-	return [self.class viewRectForFrameRect:aRect viewMargin:[self viewMargin] arrowHeight:[self arrowHeight]
+	return [self.class viewRectForFrameRect:aRect viewMargin:self.viewMargin arrowHeight:self.arrowHeight
 											side:self->windowPropertyFlags];
 }
+
+
+#pragma mark Window Location
 
 
 /*!
@@ -303,7 +556,7 @@ onSide:(Popover_Properties)		aSide
 	{
 		NSRect		windowFrame = [self frameRectForViewRect:[self->embeddedView frame]]; // ignore origin, use only size
 		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:windowFrame.size
-																		arrowInset:[self arrowInset]
+																		arrowInset:self.arrowInset
 																		at:((nil != self->popoverParentWindow)
 																			? [self.class convertToScreenFromWindow:self->popoverParentWindow
 																													point:aPoint]
@@ -313,11 +566,11 @@ onSide:(Popover_Properties)		aSide
 		
 		windowFrame.origin.x = idealOrigin.x;
 		windowFrame.origin.y = idealOrigin.y;
-		NSDisableScreenUpdates();
+		//NSDisableScreenUpdates();
 		[self setFrame:windowFrame display:NO];
 		[self fixViewFrame];
 		[self updateBackground];
-		NSEnableScreenUpdates();
+		//NSEnableScreenUpdates();
 	}
 }
 
@@ -342,9 +595,9 @@ setPointWithAutomaticPositioning:(NSPoint)	aPoint
 preferredSide:(Popover_Properties)			aSide
 {
 	Popover_Properties	chosenSide = [self.class bestSideForViewOfSize:self->viewFrame.size
-																		andMargin:[self viewMargin]
-																		arrowHeight:[self arrowHeight]
-																		arrowInset:[self arrowInset]
+																		andMargin:self.viewMargin
+																		arrowHeight:self.arrowHeight
+																		arrowInset:self.arrowInset
 																		at:aPoint
 																		onParentWindow:self->popoverParentWindow
 																		preferredSide:aSide];
@@ -377,7 +630,7 @@ setArrowBaseWidth:(float)	aValue
 						(self->viewMargin * 2.0)) - self->cornerRadius;
 	
 	
-	if (self->hasRoundCornerBesideArrow)
+	if (self.hasRoundCornerBesideArrow)
 	{
 		maxWidth -= self->cornerRadius;
 	}
@@ -392,92 +645,6 @@ setArrowBaseWidth:(float)	aValue
 	}
 	
 	[self redisplay];
-}
-
-
-/*!
-Accessor.
-
-The height determines how “slender” the frame arrow’s triangle is.
-
-(1.0)
-*/
-- (float)
-arrowHeight
-{
-	return arrowHeight;
-}
-- (void)
-setArrowHeight:(float)	aValue
-{
-	if (arrowHeight != aValue)
-	{
-		arrowHeight = aValue;
-		
-		[self redisplay];
-	}
-}
-
-
-/*!
-Accessor.
-
-The outer border color is used to render the boundary of
-the popover window.  See also "setBorderPrimaryColor:".
-
-The border thickness is determined by "setBorderWidth:".
-If the outer and primary colors are the same then the
-border appears to be that thickness; otherwise the width
-is divided roughly evenly between the two colors.
-
-(1.1)
-*/
-- (NSColor*)
-borderOuterColor
-{
-	return [[borderOuterColor retain] autorelease];
-}
-- (void)
-setBorderOuterColor:(NSColor*)	aValue
-{
-	if (borderOuterColor != aValue)
-	{
-		[borderOuterColor release];
-		borderOuterColor = [aValue copy];
-		
-		[self updateBackground];
-	}
-}
-
-
-/*!
-Accessor.
-
-The primary border color is used to render a frame inside
-the outer border (see "setBorderOuterColor:").
-
-The border thickness is determined by "setBorderWidth:".
-If the outer and primary colors are the same then the
-border appears to be that thickness; otherwise the width
-is divided roughly evenly between the two colors.
-
-(1.1)
-*/
-- (NSColor*)
-borderPrimaryColor
-{
-	return [[borderPrimaryColor retain] autorelease];
-}
-- (void)
-setBorderPrimaryColor:(NSColor*)	aValue
-{
-	if (borderPrimaryColor != aValue)
-	{
-		[borderPrimaryColor release];
-		borderPrimaryColor = [aValue copy];
-		
-		[self updateBackground];
-	}
 }
 
 
@@ -549,93 +716,7 @@ setCornerRadius:(float)		aValue
 	cornerRadius = MAX(cornerRadius, 0.0);
 	
 	// synchronize arrow size
-	[self setArrowBaseWidth:self->arrowBaseWidth];
-}
-
-
-/*!
-Accessor.
-
-Specifies whether or not the frame has an arrow displayed.
-Even if there is no arrow, space is allocated for the arrow
-so that it can appear or disappear without the user seeing
-the window resize.
-
-(1.0)
-*/
-- (BOOL)
-hasArrow
-{
-	return hasArrow;
-}
-- (void)
-setHasArrow:(BOOL)	aValue
-{
-	if (hasArrow != aValue)
-	{
-		hasArrow = aValue;
-		
-		[self updateBackground];
-	}
-}
-
-
-/*!
-Accessor.
-
-When the window position puts the arrow near a corner of
-the frame, this specifies how close to the corner the
-arrow is.  If a rounded corner appears then the arrow is
-off to the side; otherwise the arrow is right in the
-corner.
-
-(1.0)
-*/
-- (BOOL)
-hasRoundCornerBesideArrow
-{
-	return hasRoundCornerBesideArrow;
-}
-- (void)
-setHasRoundCornerBesideArrow:(BOOL)		aValue
-{
-	if (hasRoundCornerBesideArrow != aValue)
-	{
-		hasRoundCornerBesideArrow = aValue;
-		
-		[self redisplay];
-	}
-}
-
-
-/*!
-Accessor.
-
-The popover background color is used to construct an image
-that the NSWindow superclass uses for rendering.
-
-Use this property instead of the NSWindow "backgroundColor"
-property because the normal background color is overridden
-to contain the entire rendering of the popover window frame
-(as a pattern image).
-
-(1.0)
-*/
-- (NSColor*)
-popoverBackgroundColor
-{
-	return [[self->popoverBackgroundColor retain] autorelease];
-}
-- (void)
-setPopoverBackgroundColor:(NSColor*)	aValue
-{
-	if (self->popoverBackgroundColor != aValue)
-	{
-		[self->popoverBackgroundColor release];
-		self->popoverBackgroundColor = [aValue copy];
-		
-		[self updateBackground];
-	}
+	self.arrowBaseWidth = self.arrowBaseWidth;
 }
 
 
@@ -657,9 +738,79 @@ setViewMargin:(float)	aValue
 	if (viewMargin != aValue)
 	{
 		viewMargin = MAX(aValue, 0.0);
-		
-		// synchronize corner radius (and arrow base width)
-		[self setCornerRadius:self->cornerRadius];
+	}
+}
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to key values by updating dependent
+states such as frame rectangles or the display.
+
+(1.3)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+#pragma unused(anObject, aContext)
+	//if (NO == self.disableObservers)
+	{
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			NSRect		newFrame = self.frame;
+			// IMPORTANT: these will only be defined if the call to add
+			// the observer includes the appropriate options
+			id			oldValue = [aChangeDictionary objectForKey:NSKeyValueChangeOldKey];
+			id			newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
+			
+			
+			if ([aKeyPath isEqualToString:@"arrowHeight"])
+			{
+				// fix layout and update background
+				[self redisplay];
+			}
+			else if ([aKeyPath isEqualToString:@"borderOuterColor"])
+			{
+				[self updateBackground];
+			}
+			else if ([aKeyPath isEqualToString:@"borderPrimaryColor"])
+			{
+				[self updateBackground];
+			}
+			else if ([aKeyPath isEqualToString:@"hasArrow"])
+			{
+				[self updateBackground];
+			}
+			else if ([aKeyPath isEqualToString:@"hasRoundCornerBesideArrow"])
+			{
+				// fix layout and update background
+				[self redisplay];
+			}
+			else if ([aKeyPath isEqualToString:@"popoverBackgroundColor"])
+			{
+				[self updateBackground];
+			}
+			else if ([aKeyPath isEqualToString:@"viewMargin"])
+			{
+				float const		kOldFloat = [oldValue floatValue];
+				float const		kNewFloat = [newValue floatValue];
+				
+				
+				// synchronize corner radius (and arrow base width)
+				self.cornerRadius = self->cornerRadius;
+				
+				// adjust frame to make space for the difference in margin
+				newFrame.size.width += (kNewFloat - kOldFloat);
+				newFrame.size.height += (kNewFloat - kOldFloat);
+				[self setFrame:newFrame display:NO];
+				[self fixViewFrame];
+			}
+		}
 	}
 }
 
@@ -753,11 +904,41 @@ cause an equivalent (semi-transparent) image to be the background.
 - (void)
 setBackgroundColor:(NSColor*)	aValue
 {
-	[self setPopoverBackgroundColor:aValue];
+	self.popoverBackgroundColor = aValue;
 }
 
 
 #pragma mark NSWindowNotifications
+
+
+/*!
+Responds to window activation by restoring the frame colors.
+
+(1.4)
+*/
+- (void)
+windowDidBecomeKey:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	self.borderOuterDisplayColor = self.borderOuterColor;
+	self.borderPrimaryDisplayColor = self.borderPrimaryColor;
+	[self updateBackground];
+}
+
+
+/*!
+Responds to window deactivation by graying the frame colors.
+
+(1.4)
+*/
+- (void)
+windowDidResignKey:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	self.borderOuterDisplayColor = [NSColor colorWithCalibratedRed:0.95 green:0.95 blue:0.95 alpha:1.0];
+	self.borderPrimaryDisplayColor = [NSColor colorWithCalibratedRed:0.65 green:0.65 blue:0.65 alpha:1.0];
+	[self updateBackground];
+}
 
 
 /*!
@@ -790,12 +971,12 @@ orientation and thickness to the given path.
 - (void)
 appendArrowToPath:(NSBezierPath*)	aPath
 {
-	if (hasArrow)
+	if (self.hasArrow)
 	{
 		float const		kScaleFactor = 1.0;
 		float const		kScaledArrowWidth = self->arrowBaseWidth * kScaleFactor;
 		float const		kHalfScaledArrowWidth = kScaledArrowWidth / 2.0;
-		float const		kScaledArrowHeight = self->arrowHeight * kScaleFactor;
+		float const		kScaledArrowHeight = self.arrowHeight * kScaleFactor;
 		NSPoint			tipPt = [aPath currentPoint];
 		NSPoint			endPt = [aPath currentPoint];
 		
@@ -840,6 +1021,87 @@ appendArrowToPath:(NSBezierPath*)	aPath
 
 
 /*!
+Presets a wide variety of window properties to produce a
+standard appearance.  This only affects appearance and
+not behavior but the code that runs a popover window
+should ensure that the window behavior is consistent.
+
+(1.4)
+*/
+- (void)
+applyStyle:(Popover_WindowStyle)	aStyle
+{
+	switch (aStyle)
+	{
+	case kPopover_WindowStyleNormal:
+		// an actual popover window with an arrow, that is
+		// typically transient (any click outside dismisses it);
+		// caller can later decide to remove the arrow
+		self.backgroundColor = [NSColor colorWithCalibratedRed:0.9 green:0.9 blue:0.9 alpha:0.95];
+		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.25 green:0.25 blue:0.25 alpha:0.7];
+		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:1.0 green:1.0 blue:1.0 alpha:0.8];
+		self.viewMargin = 3.0;
+		self.borderWidth = 2.2;
+		self.cornerRadius = 4.0;
+		[self setStandardArrowProperties:YES];
+		break;
+	
+	case kPopover_WindowStyleAlertAppModal:
+		// not really a popover but an application-modal dialog box
+		// for displaying an alert message
+		[self applyStyle:kPopover_WindowStyleDialogAppModal];
+		self.borderOuterColor = [NSColor colorWithCalibratedRed:1.0 green:0.9 blue:0.9 alpha:1.0];
+		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.75 green:0.7 blue:0.7 alpha:1.0];
+		break;
+	
+	case kPopover_WindowStyleAlertSheet:
+		// not really a popover but a window-modal dialog for
+		// displaying an alert message
+		[self applyStyle:kPopover_WindowStyleAlertAppModal];
+		self.viewMargin = 6.0;
+		self.borderWidth = 6.0;
+		self.cornerRadius = 3.0;
+		break;
+	
+	case kPopover_WindowStyleDialogAppModal:
+		// not really a popover but an application-modal dialog box
+		[self applyStyle:kPopover_WindowStyleNormal];
+		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.85 green:0.85 blue:0.85 alpha:1.0];
+		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.55 green:0.55 blue:0.55 alpha:1.0];
+		self.viewMargin = 9.0;
+		self.borderWidth = 9.0;
+		self.cornerRadius = 9.0;
+		[self setStandardArrowProperties:NO];
+		break;
+	
+	case kPopover_WindowStyleDialogSheet:
+		// not really a popover but a window-modal dialog
+		[self applyStyle:kPopover_WindowStyleDialogAppModal];
+		self.viewMargin = 6.0;
+		self.borderWidth = 6.0;
+		self.cornerRadius = 3.0;
+		break;
+	
+	case kPopover_WindowStyleHelp:
+		// a floating window that typically contains only help text
+		self.backgroundColor = [NSColor colorWithCalibratedRed:0 green:0.25 blue:0.5 alpha:0.93];
+		self.borderOuterColor = [NSColor whiteColor];
+		self.borderPrimaryColor = [NSColor blackColor];
+		self.viewMargin = 5.0;
+		self.borderWidth = 5.0;
+		self.cornerRadius = 5.0;
+		[self setStandardArrowProperties:YES];
+		break;
+	
+	default:
+		// ???
+		assert(false && "unsupported style type");
+		break;
+	}
+}
+
+
+/*!
 Returns the offset from the nearest corner that the arrow’s
 tip should have, if applicable.
 
@@ -848,7 +1110,7 @@ tip should have, if applicable.
 - (float)
 arrowInset
 {
-	float const		kRadius = (self->hasRoundCornerBesideArrow)
+	float const		kRadius = (self.hasRoundCornerBesideArrow)
 								? self->cornerRadius
 								: 0;
 	
@@ -909,7 +1171,7 @@ as an NSColor so that it can be rendered naturally by NSWindow.
 backgroundColorPatternImage
 {
 	NSColor*	result = nil;
-	NSImage*	patternImage = [[NSImage alloc] initWithSize:[self frame].size];
+	NSImage*	patternImage = [[NSImage alloc] initWithSize:self.frame.size];
 	
 	
 	[patternImage lockFocus];
@@ -917,7 +1179,7 @@ backgroundColorPatternImage
 	{
 		BOOL const		kDebug = NO;
 		NSBezierPath*	sourcePath = [self backgroundPath];
-		NSRect			localRect = [self frame];
+		NSRect			localRect = self.frame;
 		
 		
 		localRect.origin.x = 0;
@@ -932,16 +1194,16 @@ backgroundColorPatternImage
 			[sourcePath addClip];
 		}
 		
-		[self->popoverBackgroundColor set];
+		[self.popoverBackgroundColor set];
 		[sourcePath fill];
-		if ([self borderWidth] > 0)
+		if (self.borderWidth > 0)
 		{
 			// double width since drawing is clipped inside the path
-			[sourcePath setLineWidth:([self borderWidth] * 2.0)];
-			[self->borderPrimaryColor set];
+			[sourcePath setLineWidth:(self.borderWidth * 2.0)];
+			[self.borderPrimaryDisplayColor set];
 			[sourcePath stroke];
-			[sourcePath setLineWidth:[self borderWidth] - 1.0]; // arbitrary shift
-			[self->borderOuterColor set];
+			[sourcePath setLineWidth:self.borderWidth - 1.0]; // arbitrary shift
+			[self.borderOuterDisplayColor set];
 			[sourcePath stroke];
 		}
 		
@@ -1003,7 +1265,7 @@ backgroundPath
 		
 		// offset by any rounded corner that’s in effect
 		if ((isRoundedCorner) &&
-			((hasRoundCornerBesideArrow) ||
+			((self.hasRoundCornerBesideArrow) ||
 				((kPopover_PositionBottomRight != self->windowPropertyFlags) &&
 					(kPopover_PositionRightBottom != self->windowPropertyFlags))))
 		{
@@ -1012,7 +1274,7 @@ backgroundPath
 		
 		endOfLine = NSMakePoint(kMaxX, kMaxY);
 		if ((isRoundedCorner) &&
-			((hasRoundCornerBesideArrow) ||
+			((self.hasRoundCornerBesideArrow) ||
 				((kPopover_PositionBottomLeft != self->windowPropertyFlags) &&
 					(kPopover_PositionLeftBottom != self->windowPropertyFlags))))
 		{
@@ -1058,7 +1320,7 @@ backgroundPath
 	endOfLine = NSMakePoint(kMaxX, kMinY);
 	shouldDrawNextCorner = NO;
 	if ((isRoundedCorner) &&
-		((hasRoundCornerBesideArrow) ||
+		((self.hasRoundCornerBesideArrow) ||
 			((kPopover_PositionTopLeft != self->windowPropertyFlags) &&
 				(kPopover_PositionLeftTop != self->windowPropertyFlags))))
 	{
@@ -1101,7 +1363,7 @@ backgroundPath
 	endOfLine = NSMakePoint(kMinX, kMinY);
 	shouldDrawNextCorner = NO;
 	if ((isRoundedCorner) &&
-		((hasRoundCornerBesideArrow) ||
+		((self.hasRoundCornerBesideArrow) ||
 			((kPopover_PositionTopRight != self->windowPropertyFlags) &&
 				(kPopover_PositionRightTop != self->windowPropertyFlags))))
 	{
@@ -1144,7 +1406,7 @@ backgroundPath
 	endOfLine = NSMakePoint(kMinX, kMaxY);
 	shouldDrawNextCorner = NO;
 	if ((isRoundedCorner) &&
-		((hasRoundCornerBesideArrow) ||
+		((self.hasRoundCornerBesideArrow) ||
 			((kPopover_PositionRightBottom != self->windowPropertyFlags) &&
 				(kPopover_PositionBottomRight != self->windowPropertyFlags))))
 	{
@@ -1432,7 +1694,7 @@ not be called from an initializer).
 - (NSPoint)
 idealFrameOriginForPoint:(NSPoint)		aPoint
 {
-	return [self.class idealFrameOriginForSize:[self frame].size arrowInset:[self arrowInset]
+	return [self.class idealFrameOriginForSize:self.frame.size arrowInset:self.arrowInset
 												at:((self->popoverParentWindow)
 													? [self.class convertToScreenFromWindow:self->popoverParentWindow
 																							point:aPoint]
@@ -1533,10 +1795,10 @@ redisplay
 	if (NO == self->resizeInProgress)
 	{
 		self->resizeInProgress = YES;
-		NSDisableScreenUpdates();
+		//NSDisableScreenUpdates();
 		[self fixViewFrame];
 		[self updateBackground];
-		NSEnableScreenUpdates();
+		//NSEnableScreenUpdates();
 		self->resizeInProgress = NO;
 	}
 }
@@ -1550,7 +1812,7 @@ Forces the window to render itself again.
 - (void)
 updateBackground
 {
-	NSDisableScreenUpdates();
+	//NSDisableScreenUpdates();
 	// call superclass to avoid overridden version from this class
 	[super setBackgroundColor:[self backgroundColorPatternImage]];
 	if ([self isVisible])
@@ -1558,7 +1820,7 @@ updateBackground
 		[self display];
 		[self invalidateShadow];
 	}
-	NSEnableScreenUpdates();
+	//NSEnableScreenUpdates();
 }
 
 

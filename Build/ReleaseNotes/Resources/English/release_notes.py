@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160223',
     '20160124',
     '20160123',
     '20160117',
@@ -535,6 +536,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160223': [
+        'Popover windows such as the Server Browser now use the vibrancy effect instead of pure transparency.',
+        'Sheets now have a different border style than other windows.',
+    ],
     '20160124': [
         'Application bundle size has been reduced by over 1.2 MB after compressing the files that describe the graphical user interface.',
     ],

@@ -8,7 +8,7 @@
 */
 /*###############################################################
 
-	Popover Window 1.1 (based on MAAttachedWindow)
+	Popover Window 1.4 (based on MAAttachedWindow)
 	MAAttachedWindow © 2007 by Magic Aubergine
 	Popover Window © 2011-2016 by Kevin Grant
 	
@@ -27,6 +27,9 @@
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
+
+// library includes
+#import <CocoaFuture.objc++.h>
 
 
 #pragma mark Constants
@@ -96,6 +99,23 @@ enum
 	kPopover_PositionTopLeft		= kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameAboveArrow
 };
 
+/*!
+At initialization time, use one of these styles to
+preset a wide variety of window properties (useful
+for producing standard appearances).  They only
+affect appearance and not behavior but you should
+ensure that the window behavior is consistent.
+*/
+enum Popover_WindowStyle
+{
+	kPopover_WindowStyleNormal			= 0,
+	kPopover_WindowStyleHelp			= 1,
+	kPopover_WindowStyleDialogAppModal	= 2,
+	kPopover_WindowStyleDialogSheet		= 3,
+	kPopover_WindowStyleAlertAppModal	= 4,
+	kPopover_WindowStyleAlertSheet		= 5
+};
+
 
 #pragma mark Types
 
@@ -117,18 +137,20 @@ frame appearance.
 @private
 	__weak NSWindow*		popoverParentWindow;
 	__weak NSView*			embeddedView;
-	NSColor*				borderOuterColor;
-	NSColor*				borderPrimaryColor;
-	NSColor*				popoverBackgroundColor;
+	NSColor*				_borderOuterColor;
+	NSColor*				_borderPrimaryColor;
+	NSColor*				_borderOuterDisplayColor;
+	NSColor*				_borderPrimaryDisplayColor;
+	NSColor*				_popoverBackgroundColor;
 	NSRect					viewFrame;
 	float					arrowBaseWidth;
-	float					arrowHeight;
+	float					_arrowHeight;
 	float					borderWidth;
 	float					cornerRadius;
 	float					viewMargin;
 	BOOL					resizeInProgress;
-	BOOL					hasArrow;
-	BOOL					hasRoundCornerBesideArrow;
+	BOOL					_hasArrow;
+	BOOL					_hasRoundCornerBesideArrow;
 	BOOL					isAutoPositioning;
 	Popover_Properties		windowPropertyFlags;
 }
@@ -136,8 +158,23 @@ frame appearance.
 // initializers
 	- (instancetype)
 	initWithView:(NSView*)_
+	style:(Popover_WindowStyle)_
 	attachedToPoint:(NSPoint)_
 	inWindow:(NSWindow*)_;
+	- (instancetype)
+	initWithView:(NSView*)_
+	style:(Popover_WindowStyle)_
+	attachedToPoint:(NSPoint)_
+	inWindow:(NSWindow*)_
+	vibrancy:(BOOL)_ NS_DESIGNATED_INITIALIZER;
+
+// utilities
+	- (void)
+	setStandardArrowProperties:(BOOL)_;
+	- (NSRect)
+	viewRectForFrameRect:(NSRect)_;
+	- (NSRect)
+	frameRectForViewRect:(NSRect)_;
 
 // window location
 	- (void)
@@ -147,55 +184,29 @@ frame appearance.
 	setPointWithAutomaticPositioning:(NSPoint)_
 	preferredSide:(Popover_Properties)_;
 
-// utilities
-	- (NSRect)
-	viewRectForFrameRect:(NSRect)_;
-	- (NSRect)
-	frameRectForViewRect:(NSRect)_;
-
 // accessors: colors
-	- (NSColor*)
+	@property (copy) NSColor*
 	borderOuterColor;
-	- (void)
-	setBorderOuterColor:(NSColor*)_;
-	- (NSColor*)
+	@property (copy) NSColor*
 	borderPrimaryColor;
-	- (void)
-	setBorderPrimaryColor:(NSColor*)_;
-	- (NSColor*)
+	@property (copy) NSColor*
 	popoverBackgroundColor;
-	- (void)
-	setPopoverBackgroundColor:(NSColor*)_;
 
 // accessors: general
-	- (float)
+	@property (assign) float
 	arrowBaseWidth;
-	- (void)
-	setArrowBaseWidth:(float)_;
-	- (float)
+	@property (assign) float
 	arrowHeight;
-	- (void)
-	setArrowHeight:(float)_;
-	- (float)
+	@property (assign) float
 	borderWidth;
-	- (void)
-	setBorderWidth:(float)_;
-	- (float)
+	@property (assign) float
 	cornerRadius;
-	- (void)
-	setCornerRadius:(float)_;
-	- (BOOL)
+	@property (assign) BOOL
 	hasRoundCornerBesideArrow;
-	- (void)
-	setHasRoundCornerBesideArrow:(BOOL)_;
-	- (BOOL)
+	@property (assign) BOOL
 	hasArrow;
-	- (void)
-	setHasArrow:(BOOL)_;
-	- (float)
+	@property (assign) float
 	viewMargin;
-	- (void)
-	setViewMargin:(float)_;
 
 // NSWindow
 	- (void)

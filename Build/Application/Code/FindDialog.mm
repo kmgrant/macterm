@@ -751,11 +751,11 @@ didLoadManagedView:(NSView*)	aManagedView
 		
 		
 		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+								 										style:kPopover_WindowStyleNormal
 																		attachedToPoint:NSZeroPoint/* see delegate */
 																		inWindow:parentWindow];
 		[self->containerWindow setReleasedWhenClosed:NO];
-		
-		CocoaBasic_ApplyStandardStyleToPopover(self->containerWindow, false/* has arrow */);
+		[self->containerWindow setStandardArrowProperties:NO];
 		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeNone,
 												kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside

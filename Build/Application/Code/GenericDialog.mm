@@ -285,12 +285,9 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 			if (nil == ptr->popoverWindow)
 			{
 				ptr->popoverWindow = [[Popover_Window alloc] initWithView:ptr->containerViewManager.managedView
+									  										style:kPopover_WindowStyleDialogSheet
 																			attachedToPoint:NSMakePoint(0, 0)/* TEMPORARY */
 																			inWindow:ptr->parentWindow];
-				// TEMPORARY; this should not necessarily have “standard popover style”
-				// because it does not have an arrow like a popover; perhaps a new look
-				// should be created, one that has an NSVisualEffectView behind it?
-				CocoaBasic_ApplyStandardStyleToPopover(ptr->popoverWindow, false/* has arrow */);
 			}
 			
 			if (nil == ptr->popoverManager)
@@ -763,55 +760,6 @@ didLoadContainerView:(NSView*)			aContainerView
 		// resize the container (and the window, through constraints)
 		self->initialPanelSize = NSMakeSize(initialWidth, initialHeight);
 		[aContainerView setFrameSize:self->initialPanelSize];
-	}
-	
-	// if supported by the runtime OS, add a vibrancy effect to
-	// make the entire window more translucent than transparent
-	@try
-	{
-		NSView*		parentView = [self->viewContainer superview];
-		id			visualEffectObject = CocoaFuture_AllocInitVisualEffectViewWithFrame(NSRectToCGRect(parentView.frame));
-		
-		
-		if (nil != visualEffectObject)
-		{
-			NSView*		visualEffectView = STATIC_CAST(visualEffectObject, NSView*);
-			NSArray*	subviews = [[parentView subviews] copy];
-			
-			
-			if (nil == subviews)
-			{
-				// this should never happen...
-				subviews = @[];
-			}
-			
-			visualEffectView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
-													NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin);
-			
-			// keep the views from disappearing when they are removed temporarily
-			[subviews enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop)
-			{
-			#pragma unused(index, stop)
-				NSView*		asView = STATIC_CAST(object, NSView*);
-				
-				
-				[[object retain] autorelease];
-				[asView removeFromSuperview];
-			}];
-			
-			[visualEffectView setSubviews:subviews];
-			[parentView setSubviews:@[visualEffectView]];
-		}
-		else
-		{
-			// OS is too old to support this effect (no problem)
-		}
-	}
-	@catch (NSException*	inException)
-	{
-		// since this is just a visual adornment, do not allow
-		// exceptions to cause problems; just log and continue
-		Console_Warning(Console_WriteValueCFString, "visual effect adornment failed, exception", BRIDGE_CAST([inException name], CFStringRef));
 	}
 	
 	// there is only one “tab” (and the frame and background are

@@ -717,11 +717,11 @@ didLoadManagedView:(NSView*)		aManagedView
 	if (nil == _containerWindow)
 	{
 		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																style:kPopover_WindowStyleNormal
 																attachedToPoint:NSZeroPoint/* see delegate */
 																inWindow:[self parentCocoaWindow]];
 		[_containerWindow setDelegate:self];
 		[_containerWindow setReleasedWhenClosed:NO];
-		CocoaBasic_ApplyStandardStyleToPopover(_containerWindow, true/* has arrow */);
 		if (nullptr != self.parentCarbonWindow)
 		{
 			// legacy (will be removed)

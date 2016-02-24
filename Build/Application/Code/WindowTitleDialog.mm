@@ -554,10 +554,11 @@ didLoadManagedView:(NSView*)			aManagedView
 		}
 		
 		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																style:kPopover_WindowStyleDialogSheet
 																attachedToPoint:NSZeroPoint/* see delegate */
 																inWindow:asNSWindow];
 		[_containerWindow setReleasedWhenClosed:NO];
-		CocoaBasic_ApplyStandardStyleToPopover(_containerWindow, true/* has arrow */);
+		[_containerWindow setStandardArrowProperties:YES];
 		if (nullptr != _targetCarbonWindow)
 		{
 			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
