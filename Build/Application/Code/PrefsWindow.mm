@@ -1604,7 +1604,8 @@ windowDidLoad
 		[[self window] setToolbar:windowToolbar];
 	}
 	
-	// disable the zoom button (Full Screen is graphically glitchy)
+	// disable the zoom button (Full Screen is graphically glitchy);
+	// see also code in "didEndSheet:"
 	{
 		// you would think this should be NSWindowFullScreenButton but since Apple
 		// redefined the Zoom button for Full Screen on later OS versions, it is
@@ -1614,6 +1615,10 @@ windowDidLoad
 		
 		zoomButton.enabled = NO;
 	}
+	
+	// ensure that the changes above are re-applied after sheets close
+	[self whenObject:self.window postsNote:NSWindowDidEndSheetNotification
+						performSelector:@selector(didEndSheet:)];
 	
 	self.window.excludedFromWindowsMenu = YES;
 	
@@ -1788,6 +1793,27 @@ panelParentEnumerateChildViewManagers
 	// TEMPORARY; this is not an ordered list (it should be)
 	return [self->panelsByID objectEnumerator];
 }// panelParentEnumerateChildViewManagers
+
+
+#pragma mark Notifications
+
+
+/*!
+Handles a bug in Mac OS X where a sheet will restore
+access to all window buttons (overriding changes made
+by "windowDidLoad").
+
+(4.1)
+*/
+- (void)
+didEndSheet:(NSNotification*)	aNotification
+{
+	// re-apply the window button changes made in "windowDidLoad"
+	NSButton*		zoomButton = [self.window standardWindowButton:NSWindowZoomButton];
+	
+	
+	zoomButton.enabled = NO;
+}// didEndSheet:
 
 
 @end // PrefsWindow_Controller
