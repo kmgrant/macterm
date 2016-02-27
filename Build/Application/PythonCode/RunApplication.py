@@ -203,43 +203,6 @@ if __name__ == "__main__":
     print("MacTerm: Base initialization complete.  This is version %s." %
           Base.version())
 
-    # if the current version is very old, warn the user
-    try:
-        PARTS = str(Base.version()).split(".")
-        if len(PARTS) > 4:
-            BUILD_NUMBER = PARTS[4] # 8 digits and YYYYMMDD, e.g. 20110610
-            LATEST_YYYYMMDD = NOW_DT.strftime("%Y%m%d") # 8 digits and YYYYMMDD
-            if (len(LATEST_YYYYMMDD) == 8) and (len(BUILD_NUMBER) == 8):
-                YEAR_NOW = int(LATEST_YYYYMMDD[0:4])
-                YEAR_BUILD = int(BUILD_NUMBER[0:4])
-                OUT_OF_DATE = False
-                # arbitrary; releases more than this many months old
-                # are considered out-of-date
-                MONTHS_FOR_OLD = 2
-                if 1 == (YEAR_NOW - YEAR_BUILD):
-                    # when the years are different but it's just the
-                    # previous year, the releases might still be close
-                    # (e.g. December versus January); so check months,
-                    # subtracting 12 from the older one so that it is
-                    # always considered less
-                    MONTH_NOW = int(LATEST_YYYYMMDD[4:6])
-                    MONTH_BUILD = int(BUILD_NUMBER[4:6]) - 12
-                    MONTH_DIFF = int(MONTH_NOW) - int(MONTH_BUILD)
-                    OUT_OF_DATE = (MONTH_DIFF > MONTHS_FOR_OLD)
-                elif (YEAR_NOW - YEAR_BUILD) > 1:
-                    # over a year, definitely old
-                    OUT_OF_DATE = True
-                else:
-                    # builds are same year, do a diff of months
-                    MONTH_NOW = int(LATEST_YYYYMMDD[4:6])
-                    MONTH_BUILD = int(BUILD_NUMBER[4:6])
-                    MONTH_DIFF = int(MONTH_NOW) - int(MONTH_BUILD)
-                    OUT_OF_DATE = (MONTH_DIFF > MONTHS_FOR_OLD)
-                if OUT_OF_DATE:
-                    Base._version_warning()
-    except Exception as _:
-        print("exception in version check", _)
-
     # optionally invoke some unit tests
     DO_TESTING = ("MACTERM_RUN_TESTS" in os.environ)
     if DO_TESTING:

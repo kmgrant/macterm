@@ -53,14 +53,6 @@
 
 
 
-#pragma mark Internal Methods
-namespace {
-
-void	updateNoticeCloseNotifyProc		(InterfaceLibAlertRef, SInt16, void*);
-
-} // anonymous namespace
-
-
 #pragma mark Variables
 namespace {
 
@@ -194,121 +186,6 @@ Base::_initial_workspace_name ()
 }// _initial_workspace_name
 
 
-/*!
-When Python code determines that the current version of the
-program is out of date, this function should be called to
-trigger an appropriate warning to the user.
-
-This is for application internal use, and is only exposed to
-Python because the majority of the checking code is in Python.
-
-(4.0)
-*/
-void
-Base::_version_warning ()
-{
-	Boolean		noUpdateWarning = false;
-	
-	
-	unless (kPreferences_ResultOK ==
-			Preferences_GetData(kPreferences_TagNoUpdateWarning,
-								sizeof(noUpdateWarning), &noUpdateWarning))
-	{
-		noUpdateWarning = false; // assume a value, if preference can’t be found
-	}
-	
-	unless (noUpdateWarning)
-	{
-		AlertMessages_BoxRef	alertBox = Alert_NewModeless(updateNoticeCloseNotifyProc, nullptr/* context */);
-		UIStrings_Result		stringResult = kUIStrings_ResultOK;
-		CFStringRef				titleTextCFString = nullptr;
-		CFStringRef				dialogTextCFString = nullptr;
-		CFStringRef				helpTextCFString = nullptr;
-		CFStringRef				primaryButtonCFString = nullptr;
-		CFStringRef				updateButtonCFString = nullptr;
-		
-		
-		Alert_SetParamsFor(alertBox, kAlert_StyleOK);
-		Alert_SetType(alertBox, kAlertCautionAlert);
-		stringResult = UIStrings_Copy(kUIStrings_AlertWindowUpdateCheckTitle, titleTextCFString);
-		assert(stringResult.ok());
-		if (stringResult.ok())
-		{
-			Alert_SetTitleCFString(alertBox, titleTextCFString);
-			CFRelease(titleTextCFString), titleTextCFString = nullptr;
-		}
-		stringResult = UIStrings_Copy(kUIStrings_AlertWindowUpdateCheckPrimaryText, dialogTextCFString);
-		assert(stringResult.ok());
-		if (stringResult.ok())
-		{
-			stringResult = UIStrings_Copy(kUIStrings_AlertWindowUpdateCheckHelpText, helpTextCFString);
-			assert(stringResult.ok());
-			if (stringResult.ok())
-			{
-				Alert_SetTextCFStrings(alertBox, dialogTextCFString, helpTextCFString);
-				CFRelease(helpTextCFString), helpTextCFString = nullptr;
-			}
-			CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
-		}
-		stringResult = UIStrings_Copy(kUIStrings_ButtonIgnore, primaryButtonCFString);
-		assert(stringResult.ok());
-		if (stringResult.ok())
-		{
-			Alert_SetButtonText(alertBox, kAlertStdAlertOKButton, primaryButtonCFString);
-			CFRelease(primaryButtonCFString), primaryButtonCFString = nullptr;
-		}
-		stringResult = UIStrings_Copy(kUIStrings_ButtonCheckForUpdatesWithEllipsis, updateButtonCFString);
-		assert(stringResult.ok());
-		if (stringResult.ok())
-		{
-			Alert_SetButtonText(alertBox, kAlertStdAlertOtherButton, updateButtonCFString);
-			CFRelease(updateButtonCFString), updateButtonCFString = nullptr;
-		}
-		Alert_SetHelpButton(alertBox, true);
-		Alert_Display(alertBox); // box is disposed by the callback
-	}
-}// _version_warning
-
-
 } // namespace Quills
-
-
-#pragma mark Internal Methods
-namespace {
-
-void
-updateNoticeCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
-								 SInt16					inItemHit,
-								 void*					UNUSED_ARGUMENT(inContext))
-{
-	switch (inItemHit)
-	{
-	case kAlertStdAlertOtherButton:
-		// Check for Updates
-		Commands_ExecuteByID(kCommandCheckForUpdates);
-		break;
-	
-	case kAlertStdAlertHelpButton:
-		HelpSystem_DisplayHelpWithoutContext();
-		break;
-	
-	case kAlertStdAlertOKButton:
-		// Ignore
-		{
-			Boolean const	kFlag = true;
-			
-			
-			// if the user chooses to ignore this warning, automatically avoid future warnings
-			UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagNoUpdateWarning, sizeof(kFlag), &kFlag);
-		}
-		break;
-	
-	default:
-		break;
-	}
-	Alert_Dispose(&inAlertThatClosed);
-}// updateNoticeCloseNotifyProc
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

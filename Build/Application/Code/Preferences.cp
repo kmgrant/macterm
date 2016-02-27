@@ -1055,8 +1055,6 @@ Preferences_Init ()
 										CFSTR("no-animations"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoPasteWarning,
 										CFSTR("data-send-paste-no-warning"), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::createFlag(kPreferences_TagNoUpdateWarning,
-										CFSTR("no-update-warning"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNotification,
 									CFSTR("when-alert-in-background"), typeCFStringRef/* "alert", "animate", "badge", "ignore" */,
 									sizeof(SInt16), Quills::Prefs::GENERAL);
@@ -6735,7 +6733,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsWindowFrame:
 				case kPreferences_TagKioskNoSystemFullScreenMode:
 				case kPreferences_TagNoAnimations:
-				case kPreferences_TagNoUpdateWarning:
 					if (false == inContextPtr->exists(keyName))
 					{
 						result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -9336,7 +9333,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskShowsWindowFrame:
 			case kPreferences_TagNoAnimations:
-			case kPreferences_TagNoUpdateWarning:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
