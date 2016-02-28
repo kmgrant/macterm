@@ -52,9 +52,9 @@ reference locks exist - and, you provide users with a way to
 acquire and release locks on your references, deferring most of
 the implementation details to this template code.
 */
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged = false >
 class MemoryBlockReferenceLocker:
-public MemoryBlockLocker< structure_reference_type, structure_type >
+public MemoryBlockLocker< structure_reference_type, structure_type, debugged >
 {
 public:
 	//! increments the lock count by one; always returns nullptr because pointer return value has no meaning
@@ -78,9 +78,9 @@ private:
 
 #pragma mark Public Methods
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type*
-MemoryBlockReferenceLocker< structure_reference_type, structure_type >::
+MemoryBlockReferenceLocker< structure_reference_type, structure_type, debugged >::
 acquireLock	(structure_reference_type	inReference)
 {
 	UInt16				newLockCount = 0;
@@ -90,14 +90,19 @@ acquireLock	(structure_reference_type	inReference)
 	
 	
 	newLockCount = this->incrementLockCount(inReference);
+	if (debugged)
+	{
+		// log that a lock was acquired, and show where the lock came from
+		this->logLockState("acquired lock", inReference, newLockCount);
+	}
 	assert(newLockCount > oldLockCount);
 	return nullptr; // the return value has no meaning
 }// acquireLock
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 void
-MemoryBlockReferenceLocker< structure_reference_type, structure_type >::
+MemoryBlockReferenceLocker< structure_reference_type, structure_type, debugged >::
 releaseLock	(structure_reference_type	inReference)
 {
 	structure_type*		dummyPtr = nullptr;
@@ -108,9 +113,9 @@ releaseLock	(structure_reference_type	inReference)
 }// releaseLock
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 void
-MemoryBlockReferenceLocker< structure_reference_type, structure_type >::
+MemoryBlockReferenceLocker< structure_reference_type, structure_type, debugged >::
 releaseLock	(structure_reference_type	inReference,
 			 structure_type**			UNUSED_ARGUMENT(inNull))
 {
@@ -120,8 +125,20 @@ releaseLock	(structure_reference_type	inReference,
 #endif
 	
 	
+	if (debugged)
+	{
+		if (oldLockCount <= 0)
+		{
+			this->logLockState("assertion failure for reference", inReference, oldLockCount);
+		}
+	}
 	assert(oldLockCount > 0);
 	newLockCount = this->decrementLockCount(inReference);
+	if (debugged)
+	{
+		// log that a lock was released, and show where the release came from
+		this->logLockState("released lock", inReference, newLockCount);
+	}
 	assert(newLockCount < oldLockCount);
 }// releaseLock
 

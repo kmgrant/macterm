@@ -51,9 +51,9 @@ to use relocatable blocks, or vice-versa, without code changes.
 (Even so, it is handy because you’d avoid typecasting opaque
 reference types to pointers and vice-versa.)
 */
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged = false >
 class MemoryBlockPtrLocker:
-public MemoryBlockLocker< structure_reference_type, structure_type >
+public MemoryBlockLocker< structure_reference_type, structure_type, debugged >
 {
 public:
 	typedef void (*DisposeProcPtr)(structure_type*);
@@ -82,7 +82,6 @@ protected:
 
 private:
 	DisposeProcPtr		_disposer;
-	bool				_logLocks;		//!< for debugging;
 	bool				_requireLocks;	//!< in the destruct phase ONLY, this is cleared to
 										//!  prevent callbacks from looping back; it is
 										//!  implicit in that phase that the structure is
@@ -122,24 +121,29 @@ MemoryBlockPtrLocker_RunTests ()
 		++failedTests;
 	}
 	
+	++totalTests;
+	if (false == MemoryBlockPtrLocker<MemoryBlockPtrLocker_TestClassRef, MemoryBlockPtrLocker_TestClass, true/* debug */>::unitTest())
+	{
+		++failedTests;
+	}
+	
 	Console_WriteUnitTestReport("Memory Block Ptr Locker", failedTests, totalTests);
 }// RunTests
 
 
-template < typename structure_reference_type, typename structure_type >
-MemoryBlockPtrLocker< structure_reference_type, structure_type >::
+template < typename structure_reference_type, typename structure_type, bool debugged >
+MemoryBlockPtrLocker< structure_reference_type, structure_type, debugged >::
 MemoryBlockPtrLocker	(DisposeProcPtr		inDisposer)
 :
 _disposer(inDisposer),
-_logLocks(false),
 _requireLocks(true)
 {
 }// MemoryBlockPtrLocker 1-argument constructor
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type*
-MemoryBlockPtrLocker< structure_reference_type, structure_type >::
+MemoryBlockPtrLocker< structure_reference_type, structure_type, debugged >::
 acquireLock	(structure_reference_type	inReference)
 {
 	structure_type*		result = nullptr;
@@ -155,12 +159,10 @@ acquireLock	(structure_reference_type	inReference)
 		
 		
 		newLockCount = this->incrementLockCount(inReference);
-		if (_logLocks)
+		if (debugged)
 		{
 			// log that a lock was acquired, and show where the lock came from
-			Console_WriteValueAddress("acquired lock, target object", inReference);
-			Console_WriteValue("new lock count", newLockCount);
-			Console_WriteStackTrace();
+			this->logLockState("acquired lock", inReference, newLockCount);
 		}
 		assert(newLockCount > oldLockCount);
 	}
@@ -168,9 +170,9 @@ acquireLock	(structure_reference_type	inReference)
 }// acquireLock
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 void
-MemoryBlockPtrLocker< structure_reference_type, structure_type >::
+MemoryBlockPtrLocker< structure_reference_type, structure_type, debugged >::
 releaseLock	(structure_reference_type	inReference,
 			 structure_type**			inoutPtrPtr)
 {
@@ -183,12 +185,10 @@ releaseLock	(structure_reference_type	inReference,
 		
 		
 		newLockCount = this->decrementLockCount(inReference);
-		if (_logLocks)
+		if (debugged)
 		{
 			// log that a lock was released, and show where the release came from
-			Console_WriteValueAddress("released lock, target object", inReference);
-			Console_WriteValue("new lock count", newLockCount);
-			Console_WriteStackTrace();
+			this->logLockState("released lock", inReference, newLockCount);
 		}
 		assert(oldLockCount > 0);
 		assert(newLockCount < oldLockCount);
@@ -202,15 +202,6 @@ releaseLock	(structure_reference_type	inReference,
 }// releaseLock
 
 
-template < typename structure_reference_type, typename structure_type >
-void
-MemoryBlockPtrLocker< structure_reference_type, structure_type >::
-setLockLogEnabled	(Boolean	inLocksAreLogged)
-{
-	_logLocks = inLocksAreLogged;
-}// setLockLogEnabled
-
-
 /*!
 Tests an instance of this template class.  Returns true only
 if successful.  Information on failures is printed to the
@@ -218,13 +209,13 @@ console.
 
 (4.0)
 */
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 Boolean
-MemoryBlockPtrLocker< structure_reference_type, structure_type >::
+MemoryBlockPtrLocker< structure_reference_type, structure_type, debugged >::
 unitTest ()
 {
-	typedef LockAcquireRelease< structure_reference_type, structure_type >		TestAutoLockerClass;
-	typedef MemoryBlockPtrLocker< structure_reference_type, structure_type >	TestLockerClass;
+	typedef LockAcquireRelease< structure_reference_type, structure_type, debugged >	TestAutoLockerClass;
+	typedef MemoryBlockPtrLocker< structure_reference_type, structure_type, debugged >	TestLockerClass;
 	Boolean		result = true;
 	
 	
@@ -278,7 +269,12 @@ unitTest ()
 			TestAutoLockerClass		ptr2(locker, ref2);
 			
 			
-			result &= Console_Assert("ptr2 is not nullified", nullptr != &*ptr2);
+			{
+				structure_type*		tmpPtr = &*ptr2;
+				
+				
+				result &= Console_Assert("ptr2 is not nullified", nullptr != tmpPtr);
+			}
 			result &= Console_Assert("lock count decreases for ref1", false == locker.isLocked(ref1));
 			result &= Console_Assert("lock count is down to zero for ref1", 0 == locker.returnLockCount(ref1));
 			result &= Console_Assert("lock count is up to one for ref2", 1 == locker.returnLockCount(ref2));

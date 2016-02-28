@@ -59,6 +59,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <Console.h>
 #include <MemoryBlockReferenceTracker.template.h> // for _AddrToLongHasher
 
 
@@ -75,7 +76,7 @@ of the same type as you wish.  To add a reference, simply try to
 lock it for the first time with acquireLock().  To remove a
 reference, unlock all locks on it.
 */
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged = false >
 class MemoryBlockLocker
 {
 public:
@@ -95,6 +96,13 @@ public:
 	//! determines if there are any locks on the specified reference’s memory block
 	inline bool
 	isLocked				(structure_reference_type			inReference) const;
+	
+	//! writes a stack trace and notes the current lock count; this helps with
+	//! debugging, to show exactly where locks are added/removed
+	void
+	logLockState			(char const*						inDescription,
+							 structure_reference_type			inReference,
+							 UInt16								inProposedLockCount) const;
 	
 	//! nullifies a pointer to a mutable memory block; once all locks are cleared, the block can be relocated or purged, etc.
 	virtual void
@@ -128,10 +136,10 @@ A useful wrapper that you could declare in a block so that
 a lock is automatically acquired upon entry and released
 upon block exit.
 */
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged = false >
 class LockAcquireRelease
 {
-	typedef MemoryBlockLocker< structure_reference_type, structure_type >	LockerType;
+	typedef MemoryBlockLocker< structure_reference_type, structure_type, debugged >		LockerType;
 
 public:
 	//! acquires a lock
@@ -177,25 +185,25 @@ private:
 
 #pragma mark Public Methods
 
-template < typename structure_reference_type, typename structure_type >
-MemoryBlockLocker< structure_reference_type, structure_type >::
+template < typename structure_reference_type, typename structure_type, bool debugged >
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
 ~MemoryBlockLocker ()
 {
 }// ~MemoryBlockLocker
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 void
-MemoryBlockLocker< structure_reference_type, structure_type >::
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
 clear ()
 {
 	_mapObject.clear();
 }// clear
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 UInt16
-MemoryBlockLocker< structure_reference_type, structure_type >::
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
 decrementLockCount	(structure_reference_type	inReference)
 {
 	UInt16		result = 0;
@@ -216,9 +224,9 @@ decrementLockCount	(structure_reference_type	inReference)
 }// decrementLockCount
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 UInt16
-MemoryBlockLocker< structure_reference_type, structure_type >::
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
 incrementLockCount	(structure_reference_type	inReference)
 {
 	UInt16		result = 0;
@@ -241,9 +249,9 @@ incrementLockCount	(structure_reference_type	inReference)
 }// incrementLockCount
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 bool
-MemoryBlockLocker< structure_reference_type, structure_type >::
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
 isLocked	(structure_reference_type	inReference)
 const
 {
@@ -253,9 +261,24 @@ const
 }// isLocked
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
+void
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
+logLockState	(char const*				inDescription,
+				 structure_reference_type	inReference,
+				 UInt16						inLockCount)
+const
+{
+	// log that a lock was acquired, and show where the lock came from
+	Console_WriteValueAddress(inDescription, inReference);
+	Console_WriteValue("new lock count", inLockCount);
+	Console_WriteStackTrace();
+}// logLockState
+
+
+template < typename structure_reference_type, typename structure_type, bool debugged >
 UInt16
-MemoryBlockLocker< structure_reference_type, structure_type >::
+MemoryBlockLocker< structure_reference_type, structure_type, debugged >::
 returnLockCount		(structure_reference_type	inReference)
 const
 {
@@ -271,10 +294,10 @@ const
 }// returnLockCount
 
 
-template < typename structure_reference_type, typename structure_type >
-LockAcquireRelease< structure_reference_type, structure_type >::
-LockAcquireRelease	(LockAcquireRelease< structure_reference_type, structure_type >::LockerType&	inLocker,
-					 structure_reference_type														inReference)
+template < typename structure_reference_type, typename structure_type, bool debugged >
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
+LockAcquireRelease	(LockAcquireRelease< structure_reference_type, structure_type, debugged >::LockerType&	inLocker,
+							 structure_reference_type														inReference)
 :
 _locker(inLocker),
 _ref(inReference),
@@ -283,43 +306,43 @@ _ptr(inLocker.acquireLock(inReference))
 }// LockAcquireRelease
 
 
-template < typename structure_reference_type, typename structure_type >
-LockAcquireRelease< structure_reference_type, structure_type >::
+template < typename structure_reference_type, typename structure_type, bool debugged >
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 ~LockAcquireRelease ()
 {
 	_locker.releaseLock(_ref, &_ptr);
 }// ~LockAcquireRelease
 
 
-template < typename structure_reference_type, typename structure_type >
-typename LockAcquireRelease< structure_reference_type, structure_type >::LockerType&
-LockAcquireRelease< structure_reference_type, structure_type >::
+template < typename structure_reference_type, typename structure_type, bool debugged >
+typename LockAcquireRelease< structure_reference_type, structure_type, debugged >::LockerType&
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 locker ()
 {
 	return _locker;
 }// locker
 
 
-template < typename structure_reference_type, typename structure_type >
-LockAcquireRelease< structure_reference_type, structure_type >::
+template < typename structure_reference_type, typename structure_type, bool debugged >
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 operator structure_type* ()
 {
 	return &(this->operator *());
 }// operator structure_type*
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type&
-LockAcquireRelease< structure_reference_type, structure_type >::
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 operator * ()
 {
 	return *_ptr;
 }// operator *
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type const&
-LockAcquireRelease< structure_reference_type, structure_type >::
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 operator * ()
 const
 {
@@ -327,18 +350,18 @@ const
 }// operator * const
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type*
-LockAcquireRelease< structure_reference_type, structure_type >::
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 operator -> ()
 {
 	return &(this->operator *());
 }// operator ->
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type const*
-LockAcquireRelease< structure_reference_type, structure_type >::
+LockAcquireRelease< structure_reference_type, structure_type, debugged >::
 operator -> ()
 const
 {

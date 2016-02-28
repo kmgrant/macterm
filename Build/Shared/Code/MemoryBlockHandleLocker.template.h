@@ -50,9 +50,9 @@ If you use this class, you should not lock or unlock the handle on
 your own, because that will corrupt the state maintained for the
 handle.
 */
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged = false >
 class MemoryBlockHandleLocker:
-public MemoryBlockLocker< structure_reference_type, structure_type >
+public MemoryBlockLocker< structure_reference_type, structure_type, debugged >
 {
 public:
 	//! returns the value of the handle’s master pointer, guaranteed to be stable while the handle is locked
@@ -73,9 +73,9 @@ private:
 
 #pragma mark Public Methods
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 structure_type*
-MemoryBlockHandleLocker< structure_reference_type, structure_type >::
+MemoryBlockHandleLocker< structure_reference_type, structure_type, debugged >::
 acquireLock	(structure_reference_type	inReference)
 {
 	structure_type*		result = nullptr;
@@ -88,14 +88,19 @@ acquireLock	(structure_reference_type	inReference)
 	HLock(REINTERPRET_CAST(inReference, Handle));
 	result = *(REINTERPRET_CAST(inReference, structure_type**));
 	newLockCount = this->incrementLockCount(inReference);
+	if (debugged)
+	{
+		// log that a lock was acquired, and show where the lock came from
+		this->logLockState("acquired lock", inReference, newLockCount);
+	}
 	assert(newLockCount > oldLockCount);
 	return result;
 }// acquireLock
 
 
-template < typename structure_reference_type, typename structure_type >
+template < typename structure_reference_type, typename structure_type, bool debugged >
 void
-MemoryBlockHandleLocker< structure_reference_type, structure_type >::
+MemoryBlockHandleLocker< structure_reference_type, structure_type, debugged >::
 releaseLock	(structure_reference_type	inReference,
 			 structure_type**			inoutPtrPtr)
 {
@@ -108,6 +113,11 @@ releaseLock	(structure_reference_type	inReference,
 	
 	assert(oldLockCount > 0);
 	newLockCount = this->decrementLockCount(inReference);
+	if (debugged)
+	{
+		// log that a lock was released, and show where the release came from
+		this->logLockState("released lock", inReference, newLockCount);
+	}
 	assert(newLockCount < oldLockCount);
 	if (newLockCount == 0) HUnlock(REINTERPRET_CAST(inReference, Handle));
 	if (inoutPtrPtr != nullptr) *inoutPtrPtr = nullptr;
