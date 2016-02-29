@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160228',
     '20160223',
     '20160124',
     '20160123',
@@ -536,6 +537,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160228': [
+        'The floating Command Line window now has an option to send input to all open sessions.',
+    ],
     '20160223': [
         'Popover windows such as the Server Browser now use the vibrancy effect instead of pure transparency.',
         'Sheets now have a different border style than other windows.',

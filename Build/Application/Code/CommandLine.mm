@@ -49,6 +49,13 @@
 
 
 
+#pragma mark Internal Method Prototypes
+namespace {
+
+void	sendInputSessionOp		(SessionRef, void*, SInt32, void*);
+
+} // anonymous namespace
+
 #pragma mark Variables
 namespace {
 
@@ -137,6 +144,27 @@ CommandLine_Display ()
 
 
 #pragma mark Internal Methods
+namespace {
+
+/*!
+This method, of standard "SessionFactory_SessionOpProcPtr"
+form, is used for the “multi-terminal input” mode to send
+the same input to all sessions.
+
+(4.1)
+*/
+void
+sendInputSessionOp	(SessionRef		inSession,
+					 void*			inInputCFStringRef,
+					 SInt32			UNUSED_ARGUMENT(inData2),
+					 void*			UNUSED_ARGUMENT(inoutResultPtr))
+{
+	Session_UserInputCFString(inSession, BRIDGE_CAST(inInputCFStringRef, CFStringRef));
+	Session_SendNewline(inSession, kSession_EchoCurrentSessionValue);
+}// sendInputSessionOp
+
+} // anonymous namespace
+
 
 #pragma mark -
 @implementation CommandLine_HistoryDataSource
@@ -276,6 +304,13 @@ textDidBeginEditing:(NSNotification*)	notification
 
 
 /*!
+Specifies whether or not the input from the Command Line
+is sent to all terminal windows.
+*/
+@synthesize multiTerminalInput = _multiTerminalInput;
+
+
+/*!
 Returns the singleton.
 
 (3.1)
@@ -358,9 +393,19 @@ sendText:(id)	sender
 		NSMutableArray*		historyArray = [STATIC_CAST([commandLineField dataSource], CommandLine_HistoryDataSource*) historyArray];
 		
 		
-		Session_UserInputCFString(session, BRIDGE_CAST(commandLineText, CFStringRef));
-		Session_SendNewline(session, kSession_EchoCurrentSessionValue);
 		[historyArray insertObject:[NSString stringWithString:commandLineText] atIndex:0];
+		if (self.multiTerminalInput)
+		{
+			SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
+											sendInputSessionOp,
+											STATIC_CAST(commandLineText, void*)/* data 1: menu info */,
+											0L/* data 2: undefined */, nullptr/* result: unused */);
+		}
+		else
+		{
+			Session_UserInputCFString(session, BRIDGE_CAST(commandLineText, CFStringRef));
+			Session_SendNewline(session, kSession_EchoCurrentSessionValue);
+		}
 	}
 }// sendText:
 

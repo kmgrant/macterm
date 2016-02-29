@@ -95,6 +95,7 @@ changes to an interface declared in a ".mm" file.
 {
 	NSMutableString*							commandLineText; // binding
 	IBOutlet CommandLine_TerminalLikeComboBox*	commandLineField;
+	BOOL										_multiTerminalInput;
 }
 
 // class methods
@@ -108,6 +109,8 @@ changes to an interface declared in a ".mm" file.
 	sendText:(id)_;
 
 // accessors
+	@property (assign) BOOL
+	multiTerminalInput;
 	- (NSColor*)
 	textColor;
 
