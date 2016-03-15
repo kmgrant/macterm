@@ -117,6 +117,10 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 #endif
 	
 #if RUN_MODULE_TESTS
+	Memory_RunTests();
+#endif
+	
+#if RUN_MODULE_TESTS
 	MemoryBlockPtrLocker_RunTests();
 #endif
 	

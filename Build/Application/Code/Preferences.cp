@@ -11210,7 +11210,7 @@ Tests the CFPreferences-in-sub-domain context with
 the Session class.
 
 Returns "true" if ALL assertions pass; "false" is
-returned if any fail, however messagess should be
+returned if any fail, however messages should be
 printed for ALL assertion failures regardless.
 
 (3.1)
@@ -11231,7 +11231,7 @@ Tests the CFPreferences-in-sub-domain context with
 the Format class.
 
 Returns "true" if ALL assertions pass; "false" is
-returned if any fail, however messagess should be
+returned if any fail, however messages should be
 printed for ALL assertion failures regardless.
 
 (3.1)

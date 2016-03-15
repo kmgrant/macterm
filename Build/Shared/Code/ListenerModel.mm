@@ -1027,7 +1027,7 @@ Tests construction and call of standard listeners
 that receive a context.
 
 Returns "true" if ALL assertions pass; "false" is
-returned if any fail, however messagess should be
+returned if any fail, however messages should be
 printed for ALL assertion failures regardless.
 
 (1.4)
