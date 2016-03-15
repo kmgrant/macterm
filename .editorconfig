@@ -1,0 +1,19 @@
+# follows EditorConfig specification; see http://editorconfig.org/
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+
+[**/*.py]
+indent_style = space
+indent_size = 4
+
+[**/{*.cp,*.h,*.mm}]
+indent_style = tab
+indent_size = 4
+insert_final_newline = true
+
+[**/Makefile*]
+indent_style = tab
