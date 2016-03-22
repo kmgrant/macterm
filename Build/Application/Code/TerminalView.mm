@@ -15046,4 +15046,137 @@ resetCursorRects
 
 @end // TerminalView_ContentView (TerminalView_ContentViewInternal)
 
+
+#pragma mark -
+@implementation TerminalView_Controller //{
+
+
+/*!
+The background view sits behind everything else in the terminal
+and renders the matte color.  (In the future, this might also
+render patterns or other visual effects.)
+*/
+@synthesize terminalBackgroundView = _terminalBackgroundView;
+
+/*!
+The content view sits in front of everything else in the terminal
+and renders text and graphics.
+*/
+@synthesize terminalContentView = _terminalContentView;
+
+/*!
+The padding view sits between the content view and the background
+and renders the background color.  (In the future, this might also
+render pictures or other visual effects.)
+*/
+@synthesize terminalPaddingView = _terminalPaddingView;
+
+
+/*!
+Designated initializer.
+
+(2016.03)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithNibName:@"TerminalViewCocoa" bundle:nil];
+	if (nil != self)
+	{
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2016.03)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark NSViewController
+
+
+/*!
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
+
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
+
+(2016.03)
+*/
+- (void)
+loadView
+{
+	[super loadView];
+	assert(nil != self.terminalContentView);
+	assert(nil != self.terminalPaddingView);
+	assert(nil != self.terminalBackgroundView);
+	
+	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL), true/* is retained */);
+	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
+	
+	
+	@try
+	{
+		// could customize the new contexts above to initialize settings;
+		// currently, this is not done
+		{
+			TerminalScreenRef		buffer = nullptr;
+			Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
+																		translationConfig.returnRef(), &buffer);
+			
+			
+			if (kTerminal_ResultOK != bufferResult)
+			{
+				Console_WriteValue("error creating test terminal screen buffer", bufferResult);
+			}
+			else
+			{
+				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(self.terminalContentView, self.terminalPaddingView,
+																			self.terminalBackgroundView, buffer, nullptr/* format */);
+				
+				
+				if (nullptr == viewRef)
+				{
+					Console_WriteLine("error creating test terminal view!");
+				}
+				else
+				{
+					// write some text in various styles to the screen (happens to be a
+					// copy of what the sample view does); this will help with testing
+					// the new Cocoa-based renderer as it is implemented
+					Terminal_EmulatorProcessCString(buffer,
+													"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+					Terminal_EmulatorProcessCString(buffer,
+													"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+					// the range selected here should be as long as the length of the word “sel” above
+					TerminalView_SelectVirtualRange(viewRef, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+					// the range selected here should be as long as the length of the word “find” above
+					TerminalView_FindVirtualRange(viewRef, std::make_pair(std::make_pair(4, 0), std::make_pair(8, 1)/* exclusive end */));
+				}
+			}
+		}
+	}
+	@finally
+	{
+		terminalConfig.clear();
+		translationConfig.clear();
+	}
+}// loadView
+
+
+@end //} TerminalView_Controller
+
 // BELOW IS REQUIRED NEWLINE TO END FILE

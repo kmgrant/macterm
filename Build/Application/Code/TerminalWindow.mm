@@ -439,7 +439,8 @@ TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull, inNoStagger),
+		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
+														inNoStagger),
 									TerminalWindowRef);
 	}
 	catch (std::bad_alloc)
@@ -448,6 +449,48 @@ TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
 	}
 	return result;
 }// New
+
+
+/*!
+Creates a new terminal window that is configured in the given
+ways.  If any problems occur, nullptr is returned; otherwise,
+a reference to the new terminal window is returned.
+
+Any of the contexts can be "nullptr" if you want to rely on
+defaults.  These contexts only determine initial settings;
+future changes to the contexts will not affect the window.
+
+The "inNoStagger" argument should normally be set to false; it
+is used for the special case of a new window that duplicates
+an existing window (so that it can be animated into its final
+position).
+
+IMPORTANT:	In general, you should NOT create terminal windows
+			this way; use the Session Factory module.
+
+(2016.03)
+*/
+TerminalWindowRef
+TerminalWindow_NewCocoaViewTest		(Preferences_ContextRef		inTerminalInfoOrNull,
+									 Preferences_ContextRef		inFontInfoOrNull,
+									 Preferences_ContextRef		inTranslationOrNull,
+									 Boolean					inNoStagger)
+{
+	TerminalWindowRef	result = nullptr;
+	
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
+														inNoStagger),
+									TerminalWindowRef);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	return result;
+}// NewCocoaViewTest
 
 
 /*!
@@ -2883,6 +2926,10 @@ installedActions()
 			Terminal_EmulatorProcessCString(newScreen, "\033[?7h"); // turn on autowrap
 		}
 	}
+	
+	// override this default; technically terminal windows
+	// are immediately closeable for the first 15 seconds
+	setWarningOnWindowClose(this, false);
 }// My_TerminalWindow 2-argument constructor
 
 
@@ -8234,105 +8281,35 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 
 
 #pragma mark -
-@implementation TerminalWindow_Controller
+@implementation TerminalWindow_Controller //{
 
 
-static TerminalWindow_Controller*	gTerminalWindow_Controller = nil;
+@synthesize terminalWindowRef = _terminalWindowRef;
 
 
-@synthesize testTerminalContentView = testTerminalContentView;
-
-
-/*!
-Returns the singleton.
-
-(4.0)
-*/
-+ (id)
-sharedTerminalWindowController
-{
-	if (nil == gTerminalWindow_Controller)
-	{
-		gTerminalWindow_Controller = [[self.class allocWithZone:NULL] init];
-	}
-	return gTerminalWindow_Controller;
-}// sharedTerminalWindowController
+#pragma mark Initializers
 
 
 /*!
-Designated initializer.
+A temporary initializer for creating a terminal window frame
+that wraps an experimental, Cocoa-based terminal view.
 
-(4.0)
+Eventually, this will be the basis for the default interface.
+
+(2016.03)
 */
 - (instancetype)
-init
+initWithTerminalVC:(TerminalView_Controller*)	aViewController
 {
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
 	if (nil != self)
 	{
-		self->toolbarDelegate = nil;
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[self->toolbarDelegate release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
-
-(4.0)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-	assert(nil != testTerminalContentView);
-	assert(nil != testTerminalPaddingView);
-	assert(nil != testTerminalBackgroundView);
-	
-	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL), true/* is retained */);
-	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
-	
-	
-	gCocoaTerminalNSWindows()[[self window]] = nullptr; // TEMPORARY; no object yet but the keys of the map serve as a list of Cocoa windows
-	
-	// determine if a Full Screen icon should appear on the window frame
-	{
-		Boolean		useCustomFullScreenMode = false;
+		self->_terminalWindowRef = nil;
 		
+		// TEMPORARY; view controller is ignored for now, using
+		// only the view itself
+		[REINTERPRET_CAST(self.window.contentView, NSView*) addSubview:aViewController.view];
 		
-		if (kPreferences_ResultOK !=
-			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode))
-		{
-			useCustomFullScreenMode = false; // assume a default if preference can’t be found
-		}
-		
-		if (false == useCustomFullScreenMode)
-		{
-			setCocoaWindowFullScreenIcon([self window], true);
-		}
-	}
-	
-	@try
-	{
 		// create toolbar; has to be done programmatically, because
 		// IB only supports them in 10.5; which makes sense, you know,
 		// since toolbars have only been in the OS since 10.0, and
@@ -8342,66 +8319,36 @@ windowDidLoad
 			NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
 			
 			
-			self->toolbarDelegate = [[TerminalToolbar_Delegate alloc] initForToolbar:windowToolbar
+			self->_toolbarDelegate = [[TerminalToolbar_Delegate alloc] initForToolbar:windowToolbar
 																						experimentalItems:YES];
 			[windowToolbar setAllowsUserCustomization:YES];
 			[windowToolbar setAutosavesConfiguration:YES];
-			[windowToolbar setDelegate:self->toolbarDelegate];
-			[[self window] setToolbar:windowToolbar];
+			[windowToolbar setDelegate:self->_toolbarDelegate];
+			[self.window setToolbar:windowToolbar];
 		}
 		
-		// could customize the new contexts above to initialize settings;
-		// currently, this is not done
-		{
-			TerminalScreenRef		buffer = nullptr;
-			Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
-																		translationConfig.returnRef(), &buffer);
-			
-			
-			if (kTerminal_ResultOK != bufferResult)
-			{
-				Console_WriteValue("error creating test terminal screen buffer", bufferResult);
-			}
-			else
-			{
-				TerminalViewRef		view = TerminalView_NewNSViewBased(testTerminalContentView, testTerminalPaddingView,
-																		testTerminalBackgroundView, buffer, nullptr/* format */);
-				
-				
-				if (nullptr == view)
-				{
-					Console_WriteLine("error creating test terminal view!");
-				}
-				else
-				{
-					// "canDrawConcurrently" is YES for terminal background views
-					// so enable concurrent view drawing at the window level
-					[[self window] setAllowsConcurrentViewDrawing:YES];
-					
-					// write some text in various styles to the screen (happens to be a
-					// copy of what the sample view does); this will help with testing
-					// the new Cocoa-based renderer as it is implemented
-					Terminal_EmulatorProcessCString(buffer,
-													"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
-					Terminal_EmulatorProcessCString(buffer,
-													"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
-					// the range selected here should be as long as the length of the word “sel” above
-					TerminalView_SelectVirtualRange(view, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
-					// the range selected here should be as long as the length of the word “find” above
-					TerminalView_FindVirtualRange(view, std::make_pair(std::make_pair(4, 0), std::make_pair(8, 1)/* exclusive end */));
-				}
-			}
-		}
+		// "canDrawConcurrently" is YES for terminal background views
+		// so enable concurrent view drawing at the window level
+		[self.window setAllowsConcurrentViewDrawing:YES];
 	}
-	@finally
-	{
-		terminalConfig.clear();
-		translationConfig.clear();
-	}
-}// windowDidLoad
+	return self;
+}// initWithTerminalVC:
 
 
-@end // TerminalWindow_Controller
+/*!
+Destructor.
+
+(2016.03)
+*/
+- (void)
+dealloc
+{
+	[self->_toolbarDelegate release];
+	[super dealloc];
+}// dealloc
+
+
+@end //} TerminalWindow_Controller
 
 
 #pragma mark -

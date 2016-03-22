@@ -49,9 +49,11 @@
 #ifdef __OBJC__
 @class NSWindow;
 @class TerminalToolbar_Delegate;
+@class TerminalView_Controller;
 #else
 class NSWindow;
 class TerminalToolbar_Delegate;
+class TerminalView_Controller;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -61,6 +63,9 @@ class TerminalToolbar_Delegate;
 // application includes
 #include "Preferences.h"
 #include "TerminalScreenRef.typedef.h"
+#ifdef __OBJC__
+#include "TerminalToolbar.objc++.h"
+#endif
 #include "TerminalViewRef.typedef.h"
 
 
@@ -146,9 +151,11 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
-Implements the temporary Cocoa window that wraps the
-Cocoa version of the Terminal View that is under
-development.  See "TerminalWindowCocoa.xib".
+Implements a window controller for a window that holds
+at least one terminal view as a parent.  See
+"TerminalWindowCocoa.xib".
+
+A TerminalWindowRef should own this controller.
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -156,20 +163,18 @@ changes to an interface declared in a ".mm" file.
 */
 @interface TerminalWindow_Controller : NSWindowController //{
 {
-	IBOutlet TerminalView_ContentView*		testTerminalContentView;
-	IBOutlet TerminalView_BackgroundView*	testTerminalPaddingView; // should embed the content view
-	IBOutlet TerminalView_BackgroundView*	testTerminalBackgroundView; // should embed the padding view
 @private
-	TerminalToolbar_Delegate*	toolbarDelegate;
+	TerminalWindowRef			_terminalWindowRef;
+	TerminalToolbar_Delegate*	_toolbarDelegate;
 }
 
-// class methods
-	+ (id)
-	sharedTerminalWindowController; // TEMPORARY
+// initializers
+	- (instancetype)
+	initWithTerminalVC:(TerminalView_Controller*)_;
 
 // accessors
-	@property (strong) TerminalView_ContentView*
-	testTerminalContentView;
+	@property (assign) TerminalWindowRef
+	terminalWindowRef;
 
 @end //}
 
@@ -194,6 +199,13 @@ changes to an interface declared in a ".mm" file.
 // DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
 TerminalWindowRef
 	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
+													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
+													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
+													 Boolean					inNoStagger = false);
+
+// TEMPORARY; TRANSITIONAL
+TerminalWindowRef
+	TerminalWindow_NewCocoaViewTest					(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
 													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
 													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
 													 Boolean					inNoStagger = false);

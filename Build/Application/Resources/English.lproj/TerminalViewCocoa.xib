@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment version="1060" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9532"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="TerminalView_Controller">
+            <connections>
+                <outlet property="_terminalBackgroundView" destination="cDo-Db-uy1" id="BSs-2D-uY0"/>
+                <outlet property="_terminalContentView" destination="loa-tG-21c" id="WjB-sO-0OK"/>
+                <outlet property="_terminalPaddingView" destination="pHh-8Y-KeE" id="td7-gh-l3Z"/>
+                <outlet property="view" destination="W7A-kM-a7G" id="4ma-wd-xts"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <view id="W7A-kM-a7G" userLabel="Terminal View">
+            <rect key="frame" x="0.0" y="0.0" width="716" height="495"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="WeZ-2K-AtA">
+                    <rect key="frame" x="-1" y="-2" width="733" height="498"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <clipView key="contentView" id="Ka3-Tg-djC">
+                        <rect key="frame" x="1" y="1" width="731" height="496"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView id="cDo-Db-uy1" userLabel="Background View" customClass="TerminalView_BackgroundView">
+                                <rect key="frame" x="0.0" y="0.0" width="716" height="496"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <customView id="pHh-8Y-KeE" userLabel="Padding View" customClass="TerminalView_BackgroundView">
+                                        <rect key="frame" x="5" y="5" width="706" height="486"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <subviews>
+                                            <customView id="loa-tG-21c" userLabel="Content View" customClass="TerminalView_ContentView">
+                                                <rect key="frame" x="7" y="7" width="692" height="472"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            </customView>
+                                        </subviews>
+                                    </customView>
+                                </subviews>
+                            </customView>
+                        </subviews>
+                    </clipView>
+                    <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="Ck9-fv-ECn">
+                        <rect key="frame" x="-100" y="-100" width="716" height="15"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                    <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="0.99798387289047241" horizontal="NO" id="e43-mT-axq">
+                        <rect key="frame" x="716" y="1" width="16" height="496"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                </scrollView>
+            </subviews>
+            <point key="canvasLocation" x="361" y="832.5"/>
+        </view>
+    </objects>
+</document>

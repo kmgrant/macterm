@@ -53,6 +53,18 @@
 
 
 #pragma mark Variables
+namespace {
+
+TerminalView_Controller*&		gDebugInterface_TestTerminalVC()	{ static TerminalView_Controller* _ = [[TerminalView_Controller alloc] init]; return _; };
+TerminalWindow_Controller*&		gDebugInterface_TestTerminalWindowController()
+								{
+									static TerminalWindow_Controller*	_ = [[TerminalWindow_Controller alloc]
+																				initWithTerminalVC:gDebugInterface_TestTerminalVC()];
+									return _;
+								}
+
+} // anonymous namespace
+
 Boolean		gDebugInterface_LogsDeviceState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
@@ -86,7 +98,7 @@ Shows the experimental new terminal window (Cocoa based).
 void
 DebugInterface_DisplayTestTerminal ()
 {
-	[[[TerminalWindow_Controller sharedTerminalWindowController] window] makeKeyAndOrderFront:nil];
+	[gDebugInterface_TestTerminalWindowController().window makeKeyAndOrderFront:nil];
 }// DisplayTestTerminal
 
 
@@ -270,8 +282,8 @@ setTestTerminalToActiveSessionData:(id)		sender
 	SessionRef					activeSession = SessionFactory_ReturnUserRecentSession();
 	TerminalWindowRef			activeTerminalWindow = Session_ReturnActiveTerminalWindow(activeSession);
 	TerminalScreenRef			activeScreen = TerminalWindow_ReturnScreenWithFocus(activeTerminalWindow);
-	TerminalWindow_Controller*	terminalWC = [TerminalWindow_Controller sharedTerminalWindowController];
-	TerminalViewRef				testView = [terminalWC.testTerminalContentView terminalViewRef];
+	TerminalView_Controller*	terminalVC = gDebugInterface_TestTerminalVC();
+	TerminalViewRef				testView = [terminalVC.terminalContentView terminalViewRef];
 	TerminalView_Result			viewResult = kTerminalView_ResultOK;
 	
 	

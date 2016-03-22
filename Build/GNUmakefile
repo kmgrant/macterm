@@ -272,6 +272,7 @@ English.lproj/PrefsWindowCocoa \
 English.lproj/PrintPreviewCocoa \
 English.lproj/ResizeInfoCocoa \
 English.lproj/ServerBrowserCocoa \
+English.lproj/TerminalViewCocoa \
 English.lproj/TerminalWindowCocoa \
 English.lproj/VectorWindowCocoa \
 English.lproj/WindowTitleDialogCocoa

@@ -484,6 +484,7 @@
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/__init__.py; sourceTree = "<group>"; };
 		0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaFuture.mm; path = Shared/Code/CocoaFuture.mm; sourceTree = "<group>"; };
 		0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaFuture.objc++.h"; path = "Shared/Code/CocoaFuture.objc++.h"; sourceTree = "<group>"; };
+		0ABBB09E1C9FA27B0024662E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalViewCocoa.xib; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
@@ -1004,6 +1005,7 @@
 				0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */,
 				0AF91B1C18445F15004A7588 /* ResizeInfoCocoa.xib */,
 				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
+				0ABBB09D1C9FA27B0024662E /* TerminalViewCocoa.xib */,
 				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
 				0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */,
 				0A495E8F14734EA9005A1D3A /* WindowTitleDialogCocoa.xib */,
@@ -1684,6 +1686,14 @@
 				0AB2273F12D2D41300D663BB /* English */,
 			);
 			name = KeypadVT220KeysCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0ABBB09D1C9FA27B0024662E /* TerminalViewCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ABBB09E1C9FA27B0024662E /* English */,
+			);
+			name = TerminalViewCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AC1A97C1C388B8100CEBDF3 /* PrefPanelMacrosCocoa.xib */ = {

@@ -228,6 +228,37 @@ changes to an interface declared in a ".mm" file.
 
 @end //}
 
+
+/*!
+Implements a view controller for the Cocoa version of
+the terminal view.  See "TerminalWindowCocoa.xib".
+
+A TerminalViewRef owns this controller, created as a
+side effect of TerminalView_NewNSViewBased().
+
+Window elements are handled by TerminalWindow_Controller.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface TerminalView_Controller : NSViewController //{
+{
+	IBOutlet TerminalView_ContentView*		_terminalContentView;
+	IBOutlet TerminalView_BackgroundView*	_terminalPaddingView; // should embed the content view
+	IBOutlet TerminalView_BackgroundView*	_terminalBackgroundView; // should embed the padding view
+}
+
+// accessors
+	@property (strong) TerminalView_BackgroundView*
+	terminalBackgroundView;
+	@property (strong) TerminalView_BackgroundView*
+	terminalPaddingView;
+	@property (strong) TerminalView_ContentView*
+	terminalContentView;
+
+@end //}
+
 #else
 
 class TerminalView_BackgroundView;
