@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160405',
     '20160228',
     '20160223',
     '20160124',
@@ -537,6 +538,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160405': [
+        'Fixed flickering and other graphical bugs that could appear in certain sheets.',
+        'Sheets have been shifted slightly to fit toolbars better.',
+    ],
     '20160228': [
         'The floating Command Line window now has an option to send input to all open sessions.',
     ],

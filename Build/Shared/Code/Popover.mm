@@ -383,6 +383,7 @@ vibrancy:(BOOL)					aVisualEffectFlag
 						}];
 						
 						[visualEffectView setSubviews:subviews];
+						[parentView setWantsLayer:YES];
 						[parentView addSubview:visualEffectView];
 					}
 					else

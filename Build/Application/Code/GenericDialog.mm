@@ -1043,6 +1043,7 @@ parentWindow:(NSWindow*)			parentWindow
 	result.y = ((parentFrame.origin.y - contentFrame.origin.y) + NSHeight(contentFrame));
 	
 	result.y -= 20; // arbitrary; make it easier to drag the parent window
+	result.y -= 35; // arbitrary additional offset; move below any toolbar and/or Full Screen view
 	
 	return result;
 }// idealAnchorPointForFrame:parentWindow:
