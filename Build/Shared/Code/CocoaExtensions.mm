@@ -396,6 +396,43 @@ postNote:(NSString*)	aNotificationName
 
 
 /*!
+Calls "postNote:queued:coalescing:" with a default coalescing
+value of "NSNotificationNoCoalescing".
+
+(2016.04)
+*/
+- (void)
+postNote:(NSString*)		aNotificationName
+queued:(NSPostingStyle)		aPostingStyle
+{
+	[self postNote:aNotificationName queued:aPostingStyle coalescing:NSNotificationNoCoalescing];
+}// postNote:queued:
+
+
+/*!
+Calls "enqueueNotification:postingStyle:coalesceMask:forModes:"
+on the default NSNotificationQueue, using an NSNotification
+object on the object "self".
+
+(2016.04)
+*/
+- (void)
+postNote:(NSString*)					aNotificationName
+queued:(NSPostingStyle)					aPostingStyle
+coalescing:(NSNotificationCoalescing)	aCoalescingMask
+{
+	NSNotification*		notificationObject = [NSNotification
+												notificationWithName:aNotificationName
+																		object:self];
+	
+	
+	[[NSNotificationQueue defaultQueue]
+		enqueueNotification:notificationObject postingStyle:aPostingStyle
+							coalesceMask:aCoalescingMask forModes:nil];
+}// postNote:queued:coalescing:
+
+
+/*!
 Calls "addObserver:selector:name:object:" on the default
 NSNotificationCenter, setting the observer to "self" and
 the other parameters as indicated.  (Therefore, you must

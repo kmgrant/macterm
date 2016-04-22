@@ -83,6 +83,13 @@
 	- (void)
 	postNote:(NSString*)_;
 	- (void)
+	postNote:(NSString*)_
+	queued:(NSPostingStyle)_;
+	- (void)
+	postNote:(NSString*)_
+	queued:(NSPostingStyle)_
+	coalescing:(NSNotificationCoalescing)_;
+	- (void)
 	whenObject:(id)_
 	postsNote:(NSString*)_
 	performSelector:(SEL)_;
@@ -126,5 +133,76 @@
 // a macro for a highly-common comparison operation in observers
 #define KEY_PATH_IS_SEL(aKeyPath,aSelector) \
 	[(keyPath) isEqualToString:NSStringFromSelector(aSelector)]
+
+
+/*!
+Uses compile-time type deduction to invoke a selector on an
+object that returns a single non-object parameter value and
+takes no arguments.  The result is returned via parameter.
+(When result is an object, use "performSelector:withObject:".)
+
+Returns true only if the selector was found and invoked.
+
+This is just a convenient way to use NSInvocation and set up
+everything properly for a single-primitive-return-value case.
+
+(2016.03)
+*/
+template < typename arg_type >
+BOOL
+CocoaExtensions_PerformSelectorOnTargetReturningValue	(SEL		inSelector,
+														 id			inTarget,
+														 arg_type*	outValuePtr)
+{
+	BOOL	result = [inTarget respondsToSelector:inSelector];
+	
+	
+	if (result)
+	{
+		// (see NSInvocation extensions above for this method)
+		NSInvocation*	methodInvoker = [NSInvocation invocationWithSelector:inSelector target:inTarget];
+		
+		
+		// note: first “real” argument of target method is at #2
+		[methodInvoker setReturnValue:outValuePtr];
+		[methodInvoker invoke];
+	}
+	return result;
+}// PerformSelectorOnTargetReturningValue
+
+
+/*!
+Uses compile-time type deduction to invoke a selector on an
+object that requires a single non-object parameter value.
+(If you have an object, use "performSelector:withObject:".)
+
+Returns true only if the selector was found and invoked.
+
+This is just a convenient way to use NSInvocation and set up
+everything properly for a single-primitive-argument case.
+
+(2016.03)
+*/
+template < typename arg_type >
+BOOL
+CocoaExtensions_PerformSelectorOnTargetWithValue	(SEL		inSelector,
+													 id			inTarget,
+													 arg_type	inSingleArgument)
+{
+	BOOL	result = [inTarget respondsToSelector:inSelector];
+	
+	
+	if (result)
+	{
+		// (see NSInvocation extensions above for this method)
+		NSInvocation*	methodInvoker = [NSInvocation invocationWithSelector:inSelector target:inTarget];
+		
+		
+		// note: first “real” argument of target method is at #2
+		[methodInvoker setArgument:&inSingleArgument atIndex:2];
+		[methodInvoker invoke];
+	}
+	return result;
+}// PerformSelectorOnTargetWithValue
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
