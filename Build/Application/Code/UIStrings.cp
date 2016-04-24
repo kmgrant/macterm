@@ -111,6 +111,16 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowClosePrimaryText"));
 		break;
 	
+	case kUIStrings_AlertWindowCopyToDefaultPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Overwrite the Default of this class using settings from “%1$@”?\n\nConsider backing up your Default settings first."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowCopyToDefaultPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowCopyToDefaultHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Backups can be created by duplicating a collection or exporting it to a file.\n\nNote that settings in Default determine inherited values in other collections, and they have special uses that are outlined in MacTerm Help."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowCopyToDefaultHelpText"));
+		break;
+	
 	case kUIStrings_AlertWindowCommandFailedHelpText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Please report this unexpected problem to the MacTerm maintainers.  Click Quit to exit immediately, or Continue to ignore this error (not recommended)."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCommandFailedHelpText"));
@@ -129,6 +139,16 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	case kUIStrings_AlertWindowCFNoWritePermissionPrimaryText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("The command could not be completed because the requested disk location is not allowed to change (error %1$d)."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCFNoWritePermissionPrimaryText; %1$d will be an error code"));
+		break;
+	
+	case kUIStrings_AlertWindowDeleteCollectionPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The selected collection and all of its settings will be deleted.  Continue?"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowDeleteCollectionPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowDeleteCollectionHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("This cannot be undone.  Any other settings that refer to this collection will use Default instead."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowDeleteCollectionHelpText"));
 		break;
 	
 	case kUIStrings_AlertWindowExcessiveErrorsPrimaryText:
@@ -429,6 +449,16 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	case kUIStrings_ButtonSave:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Save"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonSave"));
+		break;
+	
+	case kUIStrings_ButtonDelete:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Delete"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonDelete"));
+		break;
+	
+	case kUIStrings_ButtonOverwrite:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Overwrite"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonOverwrite"));
 		break;
 	
 	case kUIStrings_ButtonStartSession:

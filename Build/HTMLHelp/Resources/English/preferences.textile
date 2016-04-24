@@ -82,12 +82,32 @@ The new collection will try to use any name that was given in
 h3. "-" Button
 
 First select an item in the list and then use this button to
- remove the item.
+ remove the item.  (A confirmation message is presented.)
 
 h3. Gear Menu Button
 
 This is a contextual menu that provides additional commands for
  acting on whatever item in the list is selected:
+
+h4. Copy Collection Settings to Default...
+
+Overwrites the Default settings in the current category to use
+ the settings of the collection that you select.  (A confirmation
+ message is presented.)
+
+Note that Default settings have multiple uses; see the help
+ content in the sections above for details.  For instance, if
+ other collections inherit several settings from Default, they
+ may all appear to change once you overwrite the Default.
+
+Backing up your Default settings beforehand is recommended.  You
+ can do this in a couple of ways: you can use "Duplicate Collection"
+ (see below) to make a copy under a new name, or you can use the
+ "Export to File..." command.
+
+One typical application of this command is to copy another color
+ scheme in place of your Default.  Although, this can be used in
+ any preference category that has collections.
 
 h4. Duplicate Collection
 

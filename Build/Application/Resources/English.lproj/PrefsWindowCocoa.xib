@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9059" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9059"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10116"/>
         <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
@@ -47,7 +47,6 @@
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43">
                         <rect key="frame" x="5" y="4" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -59,7 +58,6 @@
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="122">
                         <rect key="frame" x="225" y="4" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="123">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -71,7 +69,6 @@
                     <box wantsLayer="YES" horizontalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="37">
                         <rect key="frame" x="218" y="35" width="5" height="315"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
-                        <animations/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
@@ -79,7 +76,6 @@
                     <segmentedControl verticalHuggingPriority="750" id="57">
                         <rect key="frame" x="59" y="5" width="101" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <animations/>
                         <segmentedCell key="cell" borderStyle="border" alignment="left" style="capsule" trackingMode="momentary" id="58">
                             <font key="font" metaFont="system"/>
                             <segments>
@@ -109,10 +105,16 @@
                                     <nil key="label"/>
                                     <menu key="menu" id="63">
                                         <items>
-                                            <menuItem title="Duplicate Collection" id="64">
+                                            <menuItem title="Copy Collection Settings to Default…" id="64">
                                                 <modifierMask key="keyEquivalentModifierMask"/>
                                                 <connections>
-                                                    <action selector="performDuplicatePreferenceCollection:" target="-2" id="67"/>
+                                                    <action selector="performCopyPreferenceCollectionToDefault:" target="-2" id="skx-0q-Xer"/>
+                                                </connections>
+                                            </menuItem>
+                                            <menuItem title="Duplicate Collection" id="YIo-8d-34j">
+                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                <connections>
+                                                    <action selector="performDuplicatePreferenceCollection:" target="-2" id="wYQ-sj-fiB"/>
                                                 </connections>
                                             </menuItem>
                                             <menuItem title="Rename Collection" id="65">
@@ -139,14 +141,12 @@
                     <tabView drawsBackground="NO" type="noTabsNoBorder" id="149">
                         <rect key="frame" x="220" y="36" width="280" height="314"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <animations/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems/>
                     </tabView>
                     <searchField wantsLayer="YES" verticalHuggingPriority="750" id="vkn-sq-ZCZ">
                         <rect key="frame" x="280" y="6" width="200" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <animations/>
                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search for Preferences" usesSingleLineMode="YES" bezelStyle="round" sendsWholeSearchString="YES" id="twk-95-Uqr">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -174,7 +174,6 @@
                                             <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowHeight="20" id="27">
                                                 <rect key="frame" x="0.0" y="0.0" width="220" height="22"/>
                                                 <autoresizingMask key="autoresizingMask"/>
-                                                <animations/>
                                                 <size key="intercellSpacing" width="3" height="2"/>
                                                 <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
@@ -209,30 +208,23 @@
                                                 </connections>
                                             </tableView>
                                         </subviews>
-                                        <animations/>
                                         <nil key="backgroundColor"/>
                                     </clipView>
-                                    <animations/>
                                     <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="26">
-                                        <rect key="frame" x="1" y="297.0625" width="184.5" height="15"/>
+                                        <rect key="frame" x="1" y="297.0625" width="185" height="15"/>
                                         <autoresizingMask key="autoresizingMask"/>
-                                        <animations/>
                                     </scroller>
                                     <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="25">
                                         <rect key="frame" x="224" y="17" width="15" height="102"/>
                                         <autoresizingMask key="autoresizingMask"/>
-                                        <animations/>
                                     </scroller>
                                 </scrollView>
                             </subviews>
-                            <animations/>
                         </view>
-                        <animations/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" red="0.76680871212121215" green="0.76680871212121215" blue="0.76680871212121215" alpha="1" colorSpace="calibratedRGB"/>
                     </box>
                 </subviews>
-                <animations/>
             </view>
             <contentBorderThickness minY="36"/>
             <connections>

@@ -144,6 +144,8 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	performContextSensitiveHelp:(id)_;
 	- (IBAction)
+	performCopyPreferenceCollectionToDefault:(id)_;
+	- (IBAction)
 	performDuplicatePreferenceCollection:(id)_;
 	- (IBAction)
 	performExportPreferenceCollectionToFile:(id)_;

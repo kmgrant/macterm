@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160424',
     '20160405',
     '20160228',
     '20160223',
@@ -538,6 +539,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160424': [
+        'Preferences window now provides a "Copy Collection Settings to Default…" item (in the "gear" contextual menu).',
+        'Preferences window collection deletion button ("-") now displays a confirmation warning.',
+    ],
     '20160405': [
         'Fixed flickering and other graphical bugs that could appear in certain sheets.',
         'Sheets have been shifted slightly to fit toolbars better.',

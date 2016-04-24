@@ -141,8 +141,10 @@ in the source list.
 #pragma mark Internal Method Prototypes
 namespace {
 
-CFDictionaryRef			createSearchDictionary			();
-OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+void				copyToDefaultsWarningCloseNotifyProc	(AlertMessages_BoxRef, SInt16, void*);
+CFDictionaryRef		createSearchDictionary					();
+void				deleteCollectionWarningCloseNotifyProc	(AlertMessages_BoxRef, SInt16, void*);
+OSStatus			receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -276,6 +278,100 @@ PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 
 #pragma mark Internal Methods
 namespace {
+
+/*!
+The responder to a closed “copy to Default?” alert.
+This routine overwrites all Default settings in the
+current category if the item hit is the OK button,
+otherwise it does not modify preferences in any way.
+The given alert is destroyed.
+
+(2016.04)
+*/
+void
+copyToDefaultsWarningCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
+										 SInt16					inItemHit,
+										 void*					inSourceContextRef)
+{
+	Preferences_ContextRef		baseContext = REINTERPRET_CAST(inSourceContextRef, Preferences_ContextRef);
+	
+	
+	// if user consented to the copy, overwrite Default settings;
+	// otherwise, do nothing
+	if (kAlertStdAlertOKButton == inItemHit)
+	{
+		Preferences_ContextRef		defaultContext = nullptr;
+		Quills::Prefs::Class		targetClass = [[PrefsWindow_Controller sharedPrefsWindowController] currentPreferencesClass];
+		Preferences_Result			prefsResult = Preferences_GetDefaultContext(&defaultContext, targetClass);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValue, "failed to find the default context, error", prefsResult);
+		}
+		else
+		{
+			Preferences_TagSetRef	tagsInContext = Preferences_NewTagSet(baseContext);
+			
+			
+			prefsResult = Preferences_ContextCopy(baseContext, defaultContext, tagsInContext);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Sound_StandardAlert();
+				Console_Warning(Console_WriteValue, "failed to copy, error", prefsResult);
+			}
+			Preferences_ReleaseTagSet(&tagsInContext);
+		}
+	}
+	
+	// dispose of the alert
+	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
+}// copyToDefaultsWarningCloseNotifyProc
+
+
+/*!
+The responder to a closed “delete settings?” alert.
+This routine deletes the specified collection if the
+item hit is the OK button, otherwise it does not
+modify preferences in any way.  The given alert is
+destroyed.
+
+(2016.04)
+*/
+void
+deleteCollectionWarningCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
+										 SInt16					inItemHit,
+										 void*					inSourceContextRef)
+{
+	Preferences_ContextRef		deadContext = REINTERPRET_CAST(inSourceContextRef, Preferences_ContextRef);
+	
+	
+	// if user consented to the deletion, proceed;
+	// otherwise, do nothing
+	if (kAlertStdAlertOKButton == inItemHit)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// NOTE: notifications are sent when a context is deleted from Favorites
+		// so the source list should automatically resynchronize
+		prefsResult = Preferences_ContextDeleteFromFavorites(deadContext), deadContext = nullptr;
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValue, "failed to delete currently-selected context; error", prefsResult);
+		}
+		
+		// reset the selection, as it will be invalidated when the target item is removed
+		[[PrefsWindow_Controller sharedPrefsWindowController]
+			setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:0]];
+	}
+	
+	// dispose of the alert
+	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
+}// deleteCollectionWarningCloseNotifyProc
+
 
 /*!
 Creates and returns a Core Foundation dictionary that can be used
@@ -879,6 +975,73 @@ performContextSensitiveHelp:(id)	sender
 
 
 /*!
+Copies ALL of the settings from the selected collection
+into the Default collection of the same class, after
+first confirming this with the user.
+
+(2016.04)
+*/
+- (IBAction)
+performCopyPreferenceCollectionToDefault:(id)	sender
+{
+#pragma unused(sender)
+	UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+	PrefsWindow_Collection*		baseCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
+	Preferences_ContextRef		baseContext = [baseCollection preferencesContext];
+	CFStringRef					contextName = nullptr;
+	
+	
+	if (false == Preferences_ContextIsValid(baseContext))
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to copy context data; current selection is invalid");
+	}
+	else if ((0 == selectedIndex) || Preferences_ContextIsDefault(baseContext, [self currentPreferencesClass]))
+	{
+		// the Default collection is not a valid source when the
+		// whole point of the command is to update the Default!
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "attempt to copy the Default context into itself");
+	}
+	else if (kPreferences_ResultOK != Preferences_ContextGetName(baseContext, contextName))
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "failed to find the name of the source context when copying data");
+	}
+	else
+	{
+		AlertMessages_BoxRef	box = nullptr;
+		UIStrings_Result		stringResult = kUIStrings_ResultOK;
+		CFRetainRelease			dialogTextTemplateCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowCopyToDefaultPrimaryText),
+															true/* is retained */);
+		CFRetainRelease			dialogTextCFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+																			dialogTextTemplateCFString.returnCFStringRef(),
+																			contextName),
+													true/* is retained */);
+		CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowCopyToDefaultHelpText),
+													true/* is retained */);
+		CFRetainRelease			overwriteButtonCFString(UIStrings_ReturnCopy(kUIStrings_ButtonOverwrite),
+														true/* is retained */);
+		
+		
+		assert(dialogTextCFString.exists());
+		assert(helpTextCFString.exists());
+		assert(overwriteButtonCFString.exists());
+		
+		box = Alert_NewWindowModal(self.window, false/* is window close alert */,
+									copyToDefaultsWarningCloseNotifyProc,
+									REINTERPRET_CAST(baseContext, void*)/* user data */);
+		Alert_SetHelpButton(box, false);
+		Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+		Alert_SetTextCFStrings(box, dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
+		Alert_SetButtonText(box, kAlert_ItemButton1, overwriteButtonCFString.returnCFStringRef());
+		Alert_SetType(box, kAlertCautionAlert);
+		Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
+	}
+}// performCopyPreferenceCollectionToDefault:
+
+
+/*!
 Adds a new preferences collection by making a copy of the
 one selected in the source list.  Also immediately enters
 editing mode on the new collection so that the user may
@@ -988,10 +1151,12 @@ the source list (and saved user preferences).
 performRemovePreferenceCollection:(id)	sender
 {
 #pragma unused(sender)
-	UInt16		selectedIndex = [self->sourceListTableView selectedRow];
+	UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+	PrefsWindow_Collection*		baseCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
+	Preferences_ContextRef		baseContext = [baseCollection preferencesContext];
 	
 	
-	if (0 == selectedIndex)
+	if ((0 == selectedIndex) || Preferences_ContextIsDefault(baseContext, [self currentPreferencesClass]))
 	{
 		// the Default collection; this should never be possible to remove
 		// (and should be prevented by other guards before this point, but
@@ -1012,20 +1177,29 @@ performRemovePreferenceCollection:(id)	sender
 		}
 		else
 		{
-			Preferences_Result		prefsResult = kPreferences_ResultOK;
+			AlertMessages_BoxRef	box = nullptr;
+			UIStrings_Result		stringResult = kUIStrings_ResultOK;
+			CFRetainRelease			dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowDeleteCollectionPrimaryText),
+													true/* is retained */);
+			CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowDeleteCollectionHelpText),
+														true/* is retained */);
+			CFRetainRelease			deleteButtonCFString(UIStrings_ReturnCopy(kUIStrings_ButtonDelete),
+															true/* is retained */);
 			
 			
-			// NOTE: notifications are sent when a context is deleted from Favorites
-			// so the source list should automatically resynchronize
-			prefsResult = Preferences_ContextDeleteFromFavorites(deadContext), deadCollection = nil, deadContext = nullptr;
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Sound_StandardAlert();
-				Console_Warning(Console_WriteValue, "failed to delete currently-selected context; error", prefsResult);
-			}
+			assert(dialogTextCFString.exists());
+			assert(helpTextCFString.exists());
+			assert(deleteButtonCFString.exists());
 			
-			// reset the selection, as it will be invalidated when the target item is removed
-			[self setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:0]];
+			box = Alert_NewWindowModal(self.window, false/* is window close alert */,
+										deleteCollectionWarningCloseNotifyProc,
+										REINTERPRET_CAST(deadContext, void*)/* user data */);
+			Alert_SetHelpButton(box, false);
+			Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+			Alert_SetTextCFStrings(box, dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
+			Alert_SetButtonText(box, kAlert_ItemButton1, deleteButtonCFString.returnCFStringRef());
+			Alert_SetType(box, kAlertCautionAlert);
+			Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
 		}
 	}
 }// performRemovePreferenceCollection:
@@ -1808,6 +1982,7 @@ by "windowDidLoad").
 - (void)
 didEndSheet:(NSNotification*)	aNotification
 {
+#pragma unused(aNotification)
 	// re-apply the window button changes made in "windowDidLoad"
 	NSButton*		zoomButton = [self.window standardWindowButton:NSWindowZoomButton];
 	
