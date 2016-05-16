@@ -124,7 +124,7 @@ Core Animation was available).
 
 // new methods
 	- (void)
-	animationStep:(id)_;
+	nextAnimationStep;
 
 @end //}
 
@@ -191,18 +191,8 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
-		{
-			NSArray*	frameCoordinates = @[
-												[NSNumber numberWithFloat:newFrame.origin.x],
-												[NSNumber numberWithFloat:newFrame.origin.y],
-												[NSNumber numberWithFloat:newFrame.size.width],
-												[NSNumber numberWithFloat:newFrame.size.height],
-											];
-			
-			
-			[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
-											afterDelay:(kAnimationDelay + 0.25)];
-		}
+		CocoaExtensions_RunLater((kAnimationDelay + 0.25),
+									^{ [inTargetWindow setFrame:newFrame display:YES]; });
 		
 		// animate!
 		[imageWindow orderFront:nil];
@@ -299,18 +289,7 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 							effect:kMy_AnimationEffectFadeIn] autorelease];
 	
 	// the original window moves after a short delay
-	{
-		NSArray*	frameCoordinates = @[
-											[NSNumber numberWithFloat:newFrame.origin.x],
-											[NSNumber numberWithFloat:newFrame.origin.y],
-											[NSNumber numberWithFloat:newFrame.size.width],
-											[NSNumber numberWithFloat:newFrame.size.height],
-										];
-		
-		
-		[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
-										afterDelay:0.4];
-	}
+	CocoaExtensions_RunLater(0.4, ^{ [inTargetWindow setFrame:newFrame display:YES]; });
 }// TransitionWindowForMove
 
 
@@ -418,18 +397,8 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
-		{
-			NSArray*	frameCoordinates = @[
-												[NSNumber numberWithFloat:newFrame.origin.x],
-												[NSNumber numberWithFloat:newFrame.origin.y],
-												[NSNumber numberWithFloat:newFrame.size.width],
-												[NSNumber numberWithFloat:newFrame.size.height],
-											];
-			
-			
-			[inTargetWindow performSelector:@selector(setFrameWithArray:) withObject:frameCoordinates
-											afterDelay:(kAnimationDelay + 0.25)];
-		}
+		CocoaExtensions_RunLater((kAnimationDelay + 0.25),
+									^{ [inTargetWindow setFrame:newFrame display:YES]; });
 		
 		// animate!
 		[imageWindow orderFront:nil];
@@ -625,7 +594,10 @@ createImageWindowFrom	(NSWindow*		inWindow,
 
 
 #pragma mark -
-@implementation CocoaAnimation_WindowFrameAnimator
+@implementation CocoaAnimation_WindowFrameAnimator //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -810,7 +782,7 @@ simplified:(BOOL)									isSimplified
 		}
 		
 		// begin animation
-		[self animationStep:nil];
+		[self nextAnimationStep];
 	}
 	return self;
 }// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:simplified:
@@ -868,6 +840,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark New Methods
+
+
 /*!
 Nudges the window to a new frame according to the current
 step in the animation and updates the step number.  If the
@@ -877,9 +852,8 @@ this again after a short delay.
 (1.8)
 */
 - (void)
-animationStep:(id)	unused
+nextAnimationStep
 {
-#pragma unused(unused)
 	NSRect	newFrame = self->originalFrame;
 	
 	
@@ -934,7 +908,8 @@ animationStep:(id)	unused
 	self->currentFrame += (kCurveLength / self->frameCount);
 	if (self->currentFrame < kCurveLength)
 	{
-		[self performSelector:@selector(animationStep:) withObject:nil afterDelay:self->frameDelays[self->currentFrame]];
+		CocoaExtensions_RunLater(self->frameDelays[self->currentFrame],
+									^{ [self nextAnimationStep]; });
 	}
 	else
 	{
@@ -951,9 +926,9 @@ animationStep:(id)	unused
 		// hide the fake window
 		[self->borderlessWindow orderOut:nil];
 	}
-}// animationStep:
+}// nextAnimationStep
 
 
-@end // CocoaAnimation_WindowFrameAnimator
+@end // CocoaAnimation_WindowFrameAnimator //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

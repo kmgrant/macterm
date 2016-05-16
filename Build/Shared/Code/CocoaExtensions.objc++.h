@@ -44,7 +44,7 @@
 	selectionColorsForForeground:(NSColor**)_
 	background:(NSColor**)_;
 
-// helpers for constructing color variations
+// new methods: constructing color variations
 	- (NSColor*)
 	colorCloserToBlack;
 	- (NSColor*)
@@ -52,7 +52,7 @@
 	- (NSColor*)
 	colorWithShading;
 
-// setting the colors of a graphics context
+// new methods: setting color in graphics context
 	- (void)
 	setAsBackgroundInCGContext:(CGContextRef)_;
 	- (void)
@@ -69,10 +69,40 @@
 
 @interface NSInvocation (CocoaExtensions_NSInvocation) //{
 
-// class methods: helpers for constructing from selectors on target objects
+// class methods
 	+ (NSInvocation*)
 	invocationWithSelector:(SEL)_
 	target:(id)_;
+
+@end //}
+
+
+/*!
+Since observers have the ridiculous property of
+being extremely dependent on exactly how they
+are installed in order to be removed correctly,
+this object is used to capture state precisely.
+
+When one of the helper methods below is used to
+register an observer, an object of this type is
+allocated and returned to capture the parameters
+that were used.
+
+Then, "removeObserverSpecifiedWith:" can be used
+to precisely remove the observer later.
+*/
+@interface CocoaExtensions_ObserverSpec : NSObject //{
+{
+@private
+	void*		_context;
+	NSString*	_keyPath;
+}
+
+// accessors
+	@property (assign) void*
+	context;
+	@property (strong) NSString*
+	keyPath;
 
 @end //}
 
@@ -99,12 +129,30 @@
 	- (void)
 	ignoreWhenObjectsPostNotes;
 
+// new methods: simpler observers with easier cleanup
+	- (CocoaExtensions_ObserverSpec*)
+	observePropertyFromKeyPath:(NSString*)_
+	ofObject:(id)_
+	options:(NSKeyValueObservingOptions)_
+	context:(void*)_;
+	- (CocoaExtensions_ObserverSpec*)
+	observePropertyFromSelector:(SEL)_;
+	- (CocoaExtensions_ObserverSpec*)
+	observePropertyFromSelector:(SEL)_
+	ofObject:(id)_
+	options:(NSKeyValueObservingOptions)_
+	context:(void*)_;
+	- (void)
+	removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)_;
+	- (void)
+	removeObserversSpecifiedInArray:(NSArray*)_;
+
 @end //}
 
 
 @interface NSValue (CocoaExtensions_NSValue) //{
 
-// class methods: helpers for constructing from Core Graphics data
+// class methods: Core Graphics data
 	+ (NSValue*)
 	valueWithCGPoint:(CGPoint)_;
 	+ (NSValue*)
@@ -121,18 +169,33 @@
 	- (NSPoint)
 	localToGlobalRelativeToTopForPoint:(NSPoint)_;
 
-// new methods: helpers for setting frames with a delay
-	- (void)
-	setFrameWithArray:(id)_;
-
 @end //}
 
 
 #pragma mark New Methods
 
+//!\name Key-Value Coding
+//@{
+
 // a macro for a highly-common comparison operation in observers
 #define KEY_PATH_IS_SEL(aKeyPath,aSelector) \
-	[(keyPath) isEqualToString:NSStringFromSelector(aSelector)]
+	[(aKeyPath) isEqualToString:NSStringFromSelector(aSelector)]
+
+//@}
+
+//!\name Delayed Invocations
+//@{
+
+void
+	CocoaExtensions_RunLater							(Float64						inDelayAsFractionOfSeconds,
+														 void							(^inBlock)());
+
+void
+	CocoaExtensions_RunLaterInQueue						(dispatch_queue_t const&		inQueue,
+														 Float64						inDelayAsFractionOfSeconds,
+														 void							(^inBlock)());
+
+//@}
 
 
 /*!

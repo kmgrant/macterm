@@ -90,6 +90,8 @@
 	- (void)
 	moveToIdealPosition;
 	- (void)
+	moveToIdealPositionAfterDelay:(float)_;
+	- (void)
 	popOver;
 	- (void)
 	popUnder;
@@ -289,7 +291,7 @@ PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref		inRef,
 	PopoverManager_Handler*		ptr = [PopoverManager_Handler popoverHandlerFromRef:inRef];
 	
 	
-	[ptr performSelector:@selector(moveToIdealPosition) withObject:nil afterDelay:inDelay];
+	[ptr moveToIdealPositionAfterDelay:inDelay];
 }// UseIdealLocationAfterDelay
 
 
@@ -409,7 +411,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	if ([handler isVisible])
 	{
-		[handler performSelector:@selector(moveToIdealPosition) withObject:nil afterDelay:0.5/* arbitrary */];
+		[handler moveToIdealPositionAfterDelay:0.3/* arbitrary */];
 	}
 	result = eventNotHandledErr; // not completely handled
 	
@@ -670,6 +672,20 @@ moveToIdealPosition
 
 
 /*!
+Arranges to call "moveToIdealPosition" after the
+specified delay, and sets a flag to guard against
+further requests until this one is fulfilled.
+    
+(2016.05)
+*/      
+- (void)
+moveToIdealPositionAfterDelay:(float)	aDelayInSeconds
+{
+	CocoaExtensions_RunLater(aDelayInSeconds, ^{ [self moveToIdealPosition]; });
+}// moveToIdealPositionAfterDelay:
+
+
+/*!
 Returns the Cocoa window that represents the renamed
 window, even if that is a Carbon window.
 
@@ -789,7 +805,7 @@ afterDelay:(float)					aDelay
 			// remove window animations
 			[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 		}
-		[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
+		CocoaExtensions_RunLater(aDelay, ^{ [self->containerWindow close]; });
 		break;
 	
 	default:
@@ -811,7 +827,7 @@ afterDelay:(float)					aDelay
 				// create fade-out effect; admittedly a bit of a hack...
 				[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
 			}
-			[self->containerWindow performSelector:@selector(close) withObject:nil afterDelay:aDelay];
+			CocoaExtensions_RunLater(aDelay, ^{ [self->containerWindow close]; });
 		}
 		break;
 	}

@@ -821,7 +821,7 @@ deltaSizeFontOfButton:(NSButton*)	aButton
 				// as long as the button has an animation frame associated with it,
 				// arrange to call this method again (delaying each animation frame)
 				toPair->second = 1 + kOriginalIndex;
-				[self performSelector:@selector(deltaSizeFontOfButton:) withObject:aButton afterDelay:kDelay];
+				CocoaExtensions_RunLater(kDelay, ^{ [self deltaSizeFontOfButton:aButton]; });
 			}
 		}
 	}
@@ -1462,6 +1462,7 @@ responder is notified that the keypad is being hidden.
 - (void)
 windowWillClose:(NSNotification*)	aNotification
 {
+#pragma unused(aNotification)
 	if (nil != gControlKeysResponder)
 	{
 		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadHidden)])
@@ -2035,7 +2036,7 @@ performSetFunctionKeyLayoutRxvt:(id)	sender
 	}
 	
 	// update labels; this is done always for the convenience of the initialization code
-	[self performSelector:@selector(setLabelsRxvt:) withObject:nil afterDelay:resizeTime];
+	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsRxvt:nil]; });
 }// performSetFunctionKeyLayoutRxvt:
 
 
@@ -2081,7 +2082,7 @@ performSetFunctionKeyLayoutVT220:(id)	sender
 	}
 	
 	// update labels; this is done always for the convenience of the initialization code
-	[self performSelector:@selector(setLabelsVT220:) withObject:nil afterDelay:resizeTime];
+	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsVT220:nil]; });
 }// performSetFunctionKeyLayoutVT220:
 
 
@@ -2127,7 +2128,7 @@ performSetFunctionKeyLayoutXTermX11:(id)	sender
 	}
 	
 	// update labels; this is done always for the convenience of the initialization code
-	[self performSelector:@selector(setLabelsXTermX11:) withObject:nil afterDelay:resizeTime];
+	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsXTermX11:nil]; });
 }// performSetFunctionKeyLayoutXTermX11:
 
 
@@ -2173,7 +2174,7 @@ performSetFunctionKeyLayoutXTermXFree86:(id)	sender
 	}
 	
 	// update labels; this is done always for the convenience of the initialization code
-	[self performSelector:@selector(setLabelsXTermXFree86:) withObject:nil afterDelay:resizeTime];
+	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsXTermXFree86:nil]; });
 }// performSetFunctionKeyLayoutXTermXFree86:
 
 

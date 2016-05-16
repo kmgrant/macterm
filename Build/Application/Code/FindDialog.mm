@@ -863,7 +863,7 @@ finalOptions:(FindDialog_Options)		options
 		{
 			// show the user where the text is; delay this slightly to avoid
 			// animation interference caused by the closing of the popover
-			[self performSelector:@selector(zoomToSearchResults) withObject:nil afterDelay:0.1/* seconds */];
+			CocoaExtensions_RunLater(0.1/* seconds */, ^{ [self zoomToSearchResults]; });
 		}
 	}
 	else

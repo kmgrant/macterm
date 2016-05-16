@@ -308,6 +308,8 @@ vibrancy:(BOOL)					aVisualEffectFlag
 											backing:NSBackingStoreBuffered defer:NO];
 		if (nil != self)
 		{
+			self->registeredObservers = [[NSMutableArray alloc] init];
+			
 			self->popoverParentWindow = aWindow;
 			self->embeddedView = aView;
 			self->windowPropertyFlags = side;
@@ -401,32 +403,22 @@ vibrancy:(BOOL)					aVisualEffectFlag
 			}
 			
 			// ensure that the display is updated after certain changes
-			[self addObserver:self forKeyPath:@"arrowHeight"
-								options:0
-								context:nullptr];
-			[self addObserver:self forKeyPath:@"borderOuterColor"
-								options:0
-								context:nullptr];
-			[self addObserver:self forKeyPath:@"borderPrimaryColor"
-								options:0
-								context:nullptr];
-			[self addObserver:self forKeyPath:@"hasArrow"
-								options:0
-								context:nullptr];
-			[self addObserver:self forKeyPath:@"hasRoundCornerBesideArrow"
-								options:0
-								context:nullptr];
-			[self addObserver:self forKeyPath:@"popoverBackgroundColor"
-								options:0
-								context:nullptr];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(arrowHeight)]];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(borderOuterColor)]];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(borderPrimaryColor)]];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(hasArrow)]];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(hasRoundCornerBesideArrow)]];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(popoverBackgroundColor)]];
 			
 			// ensure that frame-dependent property changes will cause the
 			// frame to be synchronized with the new values (note that the
 			// "setBorderWidth:" method already requires the border to fit
 			// within the margin so that value is not monitored here)
-			[self addObserver:self forKeyPath:@"viewMargin"
-								options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld)
-								context:nullptr];
+			[registeredObservers addObject:[self observePropertyFromSelector:@selector(viewMargin)
+											ofObject:self
+											options:(NSKeyValueObservingOptionNew |
+														NSKeyValueObservingOptionOld)
+											context:nullptr]];
 			
 			// subscribe to notifications
 			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
@@ -460,15 +452,9 @@ dealloc
 	[_borderPrimaryDisplayColor release];
 	[_popoverBackgroundColor release];
 	
-	// remove observers registered by initializer (arguments
-	// should be consistent)
-	[self removeObserver:self forKeyPath:@"arrowHeight" context:nullptr];
-	[self removeObserver:self forKeyPath:@"borderOuterColor" context:nullptr];
-	[self removeObserver:self forKeyPath:@"borderPrimaryColor" context:nullptr];
-	[self removeObserver:self forKeyPath:@"hasArrow" context:nullptr];
-	[self removeObserver:self forKeyPath:@"hasRoundCornerBesideArrow" context:nullptr];
-	[self removeObserver:self forKeyPath:@"popoverBackgroundColor" context:nullptr];
-	[self removeObserver:self forKeyPath:@"viewMargin" context:nullptr];
+	// remove observers registered by initializer
+	[self removeObserversSpecifiedInArray:registeredObservers];
+	[registeredObservers release];
 	
 	[super dealloc];
 }

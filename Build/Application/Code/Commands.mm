@@ -64,6 +64,7 @@ extern "C"
 #import <CFUtilities.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Localization.h>
@@ -3718,7 +3719,7 @@ in the initializer has elapsed.
 - (void)
 execute
 {
-	[self performSelector:@selector(executeWithoutDelay) withObject:nil afterDelay:self->executionDelay];
+	CocoaExtensions_RunLater(self->executionDelay, ^{ [self executeWithoutDelay]; });
 }// execute
 
 

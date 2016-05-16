@@ -135,6 +135,7 @@ frame appearance.
 @interface Popover_Window : NSWindow //{
 {
 @private
+	NSMutableArray*			registeredObservers;
 	NSWindow*				popoverParentWindow;
 	NSView*					embeddedView;
 	NSColor*				_borderOuterColor;

@@ -32,94 +32,48 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 
 
 
 #pragma mark Public Methods
 
+
+/*!
+Calls CocoaExtensions_RunLaterInQueue() using the main queue.
+
+(2016.05)
+*/
+void
+CocoaExtensions_RunLater	(Float64	inDelayAsFractionOfSeconds,
+							 void		(^inBlock)())
+{
+	CocoaExtensions_RunLaterInQueue(dispatch_get_main_queue(), inDelayAsFractionOfSeconds, inBlock);
+}// RunLater
+
+
+/*!
+Replaces "performSelector:withObject:afterDelay:" by calling
+dispatch_after() with a block.
+
+(2016.05)
+*/
+void
+CocoaExtensions_RunLaterInQueue		(dispatch_queue_t const&	inQueue,
+									 Float64					inDelayAsFractionOfSeconds,
+									 void						(^inBlock)())
+{
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, inDelayAsFractionOfSeconds * NSEC_PER_SEC),
+					inQueue, inBlock);
+}// RunLaterInQueue
+
+
 #pragma mark -
 @implementation NSColor (CocoaExtensions_NSColor)
 
 
-/*!
-Returns a color that is similar to the current color but
-with an arbitrarily-darker shade.
-
-(1.10)
-*/
-- (NSColor*)
-colorCloserToBlack
-{
-	NSColor*	result = [self blendedColorWithFraction:0.5/* arbitrary */ ofColor:[NSColor blackColor]];
-	
-	
-	if (nil == result)
-	{
-		result = [[self retain] autorelease];
-	}
-	return result;
-}// colorCloserToBlack
-
-
-/*!
-Returns a color that is similar to the current color but
-with an arbitrarily-lighter shade.
-
-(1.10)
-*/
-- (NSColor*)
-colorCloserToWhite
-{
-	NSColor*	result = [self blendedColorWithFraction:0.5/* arbitrary */ ofColor:[NSColor whiteColor]];
-	
-	
-	if (nil == result)
-	{
-		result = [[self retain] autorelease];
-	}
-	return result;
-}// colorCloserToWhite
-
-
-/*!
-Returns a color that is a noticeably different shade; if the
-color is very dark, this will be like "colorCloserToWhite";
-otherwise it will be like "colorCloserToBlack".
-
-(1.10)
-*/
-- (NSColor*)
-colorWithShading
-{
-	NSColor*	asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-	NSColor*	result = asRGB;
-	
-	
-	if (nil != asRGB)
-	{
-		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
-		
-		
-		if ([asRGB brightnessComponent] < kTolerance)
-		{
-			// dark; make whiter
-			result = [self colorCloserToWhite];
-		}
-		else
-		{
-			// light; make blacker
-			result = [self colorCloserToBlack];
-		}
-	}
-	
-	if (nil == result)
-	{
-		result = [[self retain] autorelease];
-	}
-	
-	return result;
-}// colorWithShading
+#pragma mark Class Methods
 
 
 /*!
@@ -257,6 +211,92 @@ background:(NSColor**)						inoutBackgroundColor
 }// selectionColorsForForeground:background:
 
 
+#pragma mark New Methods: Constructing Color Variations
+
+
+/*!
+Returns a color that is similar to the current color but
+with an arbitrarily-darker shade.
+
+(1.10)
+*/
+- (NSColor*)
+colorCloserToBlack
+{
+	NSColor*	result = [self blendedColorWithFraction:0.5/* arbitrary */ ofColor:[NSColor blackColor]];
+	
+	
+	if (nil == result)
+	{
+		result = [[self retain] autorelease];
+	}
+	return result;
+}// colorCloserToBlack
+
+
+/*!
+Returns a color that is similar to the current color but
+with an arbitrarily-lighter shade.
+
+(1.10)
+*/
+- (NSColor*)
+colorCloserToWhite
+{
+	NSColor*	result = [self blendedColorWithFraction:0.5/* arbitrary */ ofColor:[NSColor whiteColor]];
+	
+	
+	if (nil == result)
+	{
+		result = [[self retain] autorelease];
+	}
+	return result;
+}// colorCloserToWhite
+
+
+/*!
+Returns a color that is a noticeably different shade; if the
+color is very dark, this will be like "colorCloserToWhite";
+otherwise it will be like "colorCloserToBlack".
+
+(1.10)
+*/
+- (NSColor*)
+colorWithShading
+{
+	NSColor*	asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	NSColor*	result = asRGB;
+	
+	
+	if (nil != asRGB)
+	{
+		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
+		
+		
+		if ([asRGB brightnessComponent] < kTolerance)
+		{
+			// dark; make whiter
+			result = [self colorCloserToWhite];
+		}
+		else
+		{
+			// light; make blacker
+			result = [self colorCloserToBlack];
+		}
+	}
+	
+	if (nil == result)
+	{
+		result = [[self retain] autorelease];
+	}
+	
+	return result;
+}// colorWithShading
+
+
+#pragma mark New Methods: Setting Color in Graphics Context
+
+
 /*!
 Sets this NSColor value as the background RGB color
 of the specified Core Graphics context.
@@ -343,7 +383,21 @@ setAsForegroundInQDCurrentPort
 
 
 #pragma mark -
+@implementation CocoaExtensions_ObserverSpec //@{
+
+
+@synthesize context = _context;
+@synthesize keyPath = _keyPath;
+
+
+@end //}
+
+
+#pragma mark -
 @implementation NSInvocation (CocoaExtensions_NSInvocation)
+
+
+#pragma mark Class Methods
 
 
 /*!
@@ -377,6 +431,9 @@ target:(id)						aTarget
 
 #pragma mark -
 @implementation NSObject (CocoaExtensions_NSObject)
+
+
+#pragma mark New Methods: Simpler Notifications
 
 
 /*!
@@ -483,11 +540,136 @@ ignoreWhenObjectsPostNotes
 }// ignoreWhenObjectsPostNotes
 
 
+#pragma mark New Methods: Simpler Observers with Easier Cleanup
+
+
+/*!
+Calls "addObserver:forKeyPath:options:context:" but
+returns an object capturing the key state of this
+call so that you can correctly remove the observer
+later (see "removeObserverSpecifiedWith:").
+
+(2016.04)
+*/
+- (CocoaExtensions_ObserverSpec*)
+observePropertyFromKeyPath:(NSString*)	aKeyPath
+ofObject:(id)							anObject
+options:(NSKeyValueObservingOptions)	anOptionSet
+context:(void*)							aContext
+{
+	CocoaExtensions_ObserverSpec*	result = [[CocoaExtensions_ObserverSpec alloc] init];
+	
+	
+	// capture all information necessary to correctly
+	// remove this observer at a later time
+	result.keyPath = aKeyPath;
+	result.context = aContext;
+	
+	// install the observer
+	[anObject addObserver:self forKeyPath:aKeyPath options:anOptionSet context:aContext];
+	
+	return result;
+}// observePropertyFromKeyPath:fromSelector:options:context:
+
+
+/*!
+Simplified version that assumes the target and observer are
+both the current object, with no special options or context.
+Calls "observePropertyOfObject:fromSelector:options:context:".
+
+(2016.04)
+*/
+- (CocoaExtensions_ObserverSpec*)
+observePropertyFromSelector:(SEL)		aSelectorForKeyPath
+{
+	CocoaExtensions_ObserverSpec*	result = nil;
+	
+	
+	result = [self observePropertyFromSelector:aSelectorForKeyPath
+												ofObject:self
+												options:0
+												context:nullptr];
+	return result;
+}// observePropertyFromSelector:
+
+
+/*!
+Calls "observePropertyFromKeyPath:fromSelector:options:context:"
+with the constraint that the target key path MUST be expressed
+as a real selector (the property method).
+
+It is highly recommended that key paths be expressed in terms of
+valid selectors wherever possible, to gain compile-time
+protection against typos that do not correspond to any known
+method name.  While this is still not foolproof, it is likely to
+catch a lot of common mistakes.
+
+(2016.04)
+*/
+- (CocoaExtensions_ObserverSpec*)
+observePropertyFromSelector:(SEL)		aSelectorForKeyPath
+ofObject:(id)							anObject
+options:(NSKeyValueObservingOptions)	anOptionSet
+context:(void*)							aContext
+{
+	CocoaExtensions_ObserverSpec*	result = nil;
+	
+	
+	result = [self observePropertyFromKeyPath:NSStringFromSelector(aSelectorForKeyPath)
+												ofObject:anObject
+												options:anOptionSet
+												context:aContext];
+	return result;
+}// observePropertyFromSelector:ofObject:options:context:
+
+
+/*!
+Calls "removeObserver:forKeyPath:context:" using the
+properties of the given object.
+
+(2016.04)
+*/
+- (void)
+removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)		aSpec
+{
+	[self removeObserver:self forKeyPath:aSpec.keyPath context:aSpec.context];
+}// removeObserverSpecifiedWith:
+
+
+/*!
+For an array of "CocoaExtensions_ObserverSpec*" values,
+calls "removeObserverSpecifiedWith:" on each.
+
+It is highly recommended that classes allocate a single
+array field to hold observer data as observers are
+registered so that their "dealloc" teardown code can
+simply call this helper function to safely remove all
+of the observers.
+
+(2016.04)
+*/
+- (void)
+removeObserversSpecifiedInArray:(NSArray*)	aSpecArray
+{
+	for (id object in aSpecArray)
+	{
+		assert([object isKindOfClass:CocoaExtensions_ObserverSpec.class]);
+		CocoaExtensions_ObserverSpec*	asSpec = STATIC_CAST(object, CocoaExtensions_ObserverSpec*);
+		
+		
+		[self removeObserverSpecifiedWith:asSpec];
+	}
+}// removeObserversSpecifiedInArray:
+
+
 @end // NSObject (CocoaExtensions_NSObject)
 
 
 #pragma mark -
 @implementation NSValue (CocoaExtensions_NSValue)
+
+
+#pragma mark Class Methods: Core Graphics Data
 
 
 /*!
@@ -539,6 +721,9 @@ valueWithCGSize:(CGSize)	aSize
 @implementation NSWindow (CocoaExtensions_NSWindow)
 
 
+#pragma mark New Methods: Coordinate Translation
+
+
 /*!
 Translates coordinates from the local coordinate system of
 the window into the screen coordinate system, while “flipping”
@@ -568,55 +753,6 @@ localToGlobalRelativeToTopForPoint:(NSPoint)	aLocalPoint
 	
 	return result;
 }// localToGlobalRelativeToTopForPoint
-
-
-/*!
-Given an NSArray with 4 floating-point numbers in the order
-X, Y, width and height, calls "setFrame:display:" on the
-window (with a display of YES).
-
-The array would be constructed using code such as:
-@[
-	[NSNumber numberWithFloat:[window frame].origin.x],
-	[NSNumber numberWithFloat:[window frame].origin.y],
-	[NSNumber numberWithFloat:[window frame].size.width],
-	[NSNumber numberWithFloat:[window frame].size.height]
-];
-
-This is useful for calls that require an object, such as
-"performSelector:withObject:afterDelay:".
-
-(1.9)
-*/
-- (void)
-setFrameWithArray:(id)		anArray
-{
-	NSRect		newFrame = [self frame];
-	size_t		i = 0;
-	
-	
-	for (NSNumber* numberObject in anArray)
-	{
-		if (0 == i)
-		{
-			newFrame.origin.x = [numberObject floatValue];
-		}
-		else if (1 == i)
-		{
-			newFrame.origin.y = [numberObject floatValue];
-		}
-		else if (2 == i)
-		{
-			newFrame.size.width = [numberObject floatValue];
-		}
-		else if (3 == i)
-		{
-			newFrame.size.height = [numberObject floatValue];
-		}
-		++i;
-	}
-	[self setFrame:newFrame display:YES];
-}// setFrameWithArray:
 
 
 @end // NSWindow (CocoaExtensions_NSWindow)
