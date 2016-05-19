@@ -573,27 +573,24 @@ See also CocoaBasic_SetDockTileToDefaultAppIcon().
 void
 CocoaBasic_SetDockTileToCautionOverlay ()
 {
-	static BOOL		gHaveDisplayed = NO;
-	
-	
-	// TEMPORARY; on certain versions of Mac OS X, it seems that this can
-	// crash in the middle of Cocoa the *second* time it is called; for
-	// now just avoid the problem, as this is low-priority code
-	if (NO == gHaveDisplayed)
+	@autoreleasepool
 	{
-		AutoPool		_;
 		NSImage*		appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
 		NSImage*		overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
+		NSSize			imageSize = [appIconImage size];
 		
 		
-		// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
+		imageSize.width /= 2.0;
+		imageSize.height /= 2.0;
 		[appIconImage lockFocus];
-		[overlayImage drawAtPoint:NSMakePoint(56, 16) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+		// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
+		[overlayImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
+											imageSize.width/* width */, imageSize.height/* height */)
+									fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 		[appIconImage unlockFocus];
+		
 		[NSApp setApplicationIconImage:appIconImage];
 		[appIconImage release];
-		
-		gHaveDisplayed = YES;
 	}
 }// SetDockTileToCautionOverlay
 

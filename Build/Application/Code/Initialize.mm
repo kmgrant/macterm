@@ -351,21 +351,21 @@ initApplicationCore ()
 	}
 	
 	// set up notification info
+	Preferences_Init();
 	{
-		UInt16		notificationPreferences = kAlert_NotifyDisplayDiamondMark;
+		UInt16					notificationPreferences = kAlert_NotifyDisplayDiamondMark;
+		Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagNotification,
+																	sizeof(notificationPreferences),
+																	&notificationPreferences);
 		
 		
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
-									&notificationPreferences))
+		unless (kPreferences_ResultOK == prefsResult)
 		{
 			notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
 		}
 		
 		// the Interface Library Alert module is responsible for handling Notification Manager stuff...
 		Alert_SetNotificationPreferences(notificationPreferences);
-		// TEMPORARY: This needs a new localized string.  LOCALIZE THIS.
-		//Alert_SetNotificationMessage(...);
 	}
 	
 #if RUN_MODULE_TESTS

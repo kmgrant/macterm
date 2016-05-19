@@ -262,9 +262,6 @@ void
 	Alert_SetIsBackgrounded				(Boolean					inIsApplicationSuspended);
 
 void
-	Alert_SetNotificationMessage		(ConstStringPtr				inMessage);
-
-void
 	Alert_SetNotificationPreferences	(UInt16						inNotificationPreferences);
 
 void

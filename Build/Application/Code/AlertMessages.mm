@@ -67,6 +67,12 @@
 namespace {
 
 /*!
+Choose a value that will not match something returned
+by "requestUserAttention:".
+*/
+NSInteger const		kInvalidUserAttentionRequestID = -1234;
+
+/*!
 IMPORTANT
 
 The following values MUST agree with the control IDs in the
@@ -149,11 +155,11 @@ namespace {
 
 Boolean				gIsAnimationAllowed = false;
 Boolean				gNotificationIsBackgrounded = false;
+Boolean				gNotificationIsIconBadged = false;
 Boolean				gUseSpeech = false;
 Boolean				gIsInited = false;
 UInt16				gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
-Str255				gNotificationMessage;
-NMRecPtr			gNotificationPtr = nullptr;
+NSInteger			gNotificationRequestID = kInvalidUserAttentionRequestID;
 EventHandlerUPP		gAlertButtonHICommandUPP = nullptr;
 My_AlertPtrLocker&	gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
 My_RefTracker&		gAlertBoxValidRefs ()	{ static My_RefTracker x; return x; }
@@ -163,7 +169,7 @@ My_RefTracker&		gAlertBoxValidRefs ()	{ static My_RefTracker x; return x; }
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus		backgroundNotification			();
+Boolean			backgroundNotification			();
 void			badgeApplicationDockTile		();
 void			handleItemHitCarbon				(My_AlertMessagePtr, DialogItemIndex);
 void			newButtonString					(CFRetainRelease&, UIStrings_ButtonCFString);
@@ -553,7 +559,7 @@ Alert_SetNotificationPreferences().
 void
 Alert_BackgroundNotification ()
 {
-	UNUSED_RETURN(OSStatus)backgroundNotification();
+	UNUSED_RETURN(Boolean)backgroundNotification();
 }// BackgroundNotification
 
 
@@ -892,26 +898,21 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 
 
 /*!
-Call this routine when a resume event occurs
-to see if any notifications need servicing
-(usually displays one or more alert windows
-that were deferred because the program was
-backgrounded).
+Call this routine when a resume event occurs to clear
+any background notifications that may have been posted.
 
 (1.0)
 */
 void
 Alert_ServiceNotification ()
 {
-	if (nullptr != gNotificationPtr)
+	if ((kInvalidUserAttentionRequestID != gNotificationRequestID) ||
+		(gNotificationIsIconBadged))
 	{
-		RestoreApplicationDockTileImage(); // remove any caution icon badge
-		UNUSED_RETURN(OSStatus)NMRemove(gNotificationPtr);
-		if (nullptr != gNotificationPtr->nmIcon)
-		{
-			ReleaseResource(gNotificationPtr->nmIcon), gNotificationPtr->nmIcon = nullptr;
-		}
-		Memory_DisposePtr(REINTERPRET_CAST(&gNotificationPtr, Ptr*));
+		CocoaBasic_SetDockTileToDefaultAppIcon(); // remove any caution icon badge
+		[NSApp cancelUserAttentionRequest:gNotificationRequestID];
+		gNotificationRequestID = kInvalidUserAttentionRequestID;
+		gNotificationIsIconBadged = false;
 	}
 }// ServiceNotification
 
@@ -1052,21 +1053,6 @@ Alert_SetIsBackgrounded		(Boolean	inIsApplicationSuspended)
 {
 	gNotificationIsBackgrounded = inIsApplicationSuspended;
 }// SetIsBackgrounded
-
-
-/*!
-If you have used Alert_SetNotificationPreferences()
-to specify that a message be displayed in the event
-of a background alert, you can use this method to
-specify what that message should say.
-
-(1.0)
-*/
-void
-Alert_SetNotificationMessage	(ConstStringPtr		inMessage)
-{
-	PLstrcpy(gNotificationMessage, inMessage);
-}// SetNotificationMessage
 
 
 /*!
@@ -1454,52 +1440,42 @@ My_AlertMessage::
 
 
 /*!
-Posts a general notification to the queue, with
-no particular message.  So this grabs the user’s
-attention for something other than an alert
-message.  The exact form of notification depends
-on the notification preferences specified via
-Alert_SetNotificationPreferences().
+If the application is in the background and no previous
+notification is pending, this method will request the
+user’s attention.  The exact form of notification depends
+on calls to Alert_SetNotificationPreferences().
 
-(1.1)
+Returns true only if a new user notification was posted.
+
+(2016.05)
 */
-OSStatus
+Boolean
 backgroundNotification ()
 {
-	OSStatus	result = noErr;
+	Boolean		result = false;
 	
 	
-	if ((gNotificationIsBackgrounded) && (nullptr == gNotificationPtr))
+	if ((gNotificationIsBackgrounded) && (kInvalidUserAttentionRequestID == gNotificationRequestID))
 	{
-		gNotificationPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(NMRec)), NMRecPtr);
-		if (nullptr == gNotificationPtr) result = memFullErr;
-		else
+		// badge the application’s Dock tile with a caution icon, if that preference is set
+		if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark)
 		{
-			gNotificationPtr->qLink = nullptr;
-			gNotificationPtr->qType = nmType;
-			gNotificationPtr->nmMark = 0; // index of menu item to mark
-			gNotificationPtr->nmIcon = nullptr;
-			gNotificationPtr->nmSound = nullptr;
-			if (gNotificationPreferences < kAlert_NotifyAlsoDisplayAlert)
-			{
-				gNotificationPtr->nmStr = nullptr;
-			}
-			else
-			{
-				gNotificationPtr->nmStr = gNotificationMessage;
-			}
-			gNotificationPtr->nmResp = nullptr;
-			gNotificationPtr->nmRefCon = 0L;
-			
-			// badge the application’s Dock tile with a caution icon, if that preference is set
-			if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark)
-			{
-				badgeApplicationDockTile();
-			}
-			
-			result = NMInstall(gNotificationPtr); // TEMP - should use AEInteractWithUser here, instead...
+			badgeApplicationDockTile();
 		}
+		
+		// optionally add more noticeable effects
+		if (gNotificationPreferences >= kAlert_NotifyAlsoDisplayAlert)
+		{
+			gNotificationRequestID = [NSApp requestUserAttention:NSCriticalRequest];
+		}
+		else if (gNotificationPreferences >= kAlert_NotifyDisplayIconAndDiamondMark)
+		{
+			gNotificationRequestID = [NSApp requestUserAttention:NSInformationalRequest];
+		}
+		
+		result = true;
 	}
+	
 	return result;
 }// backgroundNotification
 
@@ -1517,6 +1493,7 @@ void
 badgeApplicationDockTile ()
 {
 	CocoaBasic_SetDockTileToCautionOverlay();
+	gNotificationIsIconBadged = true;
 }// badgeApplicationDockTile
 
 

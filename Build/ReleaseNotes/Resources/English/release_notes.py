@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160519',
     '20160424',
     '20160405',
     '20160228',
@@ -539,6 +540,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160519': [
+        'Fixed background notifications to respect preferences.',
+        'Fixed background notifications to render the Dock icon correctly, and to show it every time there is a notification.',
+        'Preferences window General pane Notifications tab now describes Dock effects more accurately.',
+    ],
     '20160424': [
         'Preferences window now provides a "Copy Collection Settings to Default…" item (in the "gear" contextual menu).',
         'Preferences window collection deletion button ("-") now displays a confirmation warning.',
@@ -1257,7 +1263,7 @@ notes_by_version = {
     ],
     '20110114': [
         'Fixed various problems that could occur when sessions fail (due to unreachable servers, etc.).',
-        'Preferences window General pane Notification tab can now open the Growl preferences pane, if it is installed.',
+        'Preferences window General pane Notifications tab can now open the Growl preferences pane, if it is installed.',
     ],
     '20110112': [
         'Fixed a possible crash when certain windows were opened, especially at startup time.',
@@ -1645,7 +1651,7 @@ notes_by_version = {
     ],
     '20090609': [
         'New low-level preference for setting a column at which to render a thin margin line.',
-        'Preferences window General pane Notification tab "Margin bell" checkbox has been removed.',
+        'Preferences window General pane Notifications tab "Margin bell" checkbox has been removed.',
     ],
     '20090608': [
         'Full Screen will now fill up to 2 displays, with the most-recently-selected window on each display.',
@@ -2261,7 +2267,7 @@ notes_by_version = {
         'Help has received several minor corrections and other edits.',
     ],
     '20080216': [
-        'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',
+        'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notifications tab.',
         'The Print Screen command is no longer instantaneous, it displays a dialog (allowing export to PDF, among other print options).',
     ],
     '20080212': [
@@ -2598,7 +2604,7 @@ notes_by_version = {
         'Session Info window columns can be moved or resized, ordering is implicitly saved.',
         'Terminal emulation core rewritten from scratch!',
         'Terminal maximum width increased to 256 columns.',
-        'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',
+        'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notifications tab.',
         'Terminal inactivity notification is now available, allowing you to watch for sessions that become idle.',
         'Terminal window toolbars now use the standard Mac OS X implementation.',
         'Terminal window toolbar LED icon artwork has been significantly improved.',
