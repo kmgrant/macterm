@@ -57,6 +57,23 @@
 #pragma mark Constants
 namespace {
 
+typedef NSUInteger My_BrailleBits;
+enum
+{
+	// Braille dot positions, as follows: “L” means a dot on
+	// the left side (versus “R” for right), and dots are
+	// named A, B, C or D from top to bottom
+	kMy_BrailleBitLA				= (1 << 0),		// left side, top
+	kMy_BrailleBitLB				= (1 << 1),		// left side, mid-top
+	kMy_BrailleBitLC				= (1 << 2),		// left side, mid-bottom
+	kMy_BrailleBitLD				= (1 << 3),		// left side, bottom
+	kMy_BrailleBitRA				= (1 << 4),		// right side, top
+	kMy_BrailleBitRB				= (1 << 5),		// right side, mid-top
+	kMy_BrailleBitRC				= (1 << 6),		// right side, mid-bottom
+	kMy_BrailleBitRD				= (1 << 7),		// right side, bottom
+	kMy_BrailleBitSmallLayout		= (1 << 8)		// expect very little space, arrange dots appropriately
+};
+
 typedef NSUInteger My_GlyphDrawingOptions;
 enum
 {
@@ -95,6 +112,8 @@ The private class interface.
 	addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)_;
 	- (void)
 	addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)_;
+	- (void)
+	addLayersForRangeHex2800To2900UnicodePoint:(UnicodeScalarValue)_;
 
 // new methods: partial glyph definitions
 	- (void)
@@ -385,6 +404,11 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 		{
 			[self addLayersForRangeHex2500To2600UnicodePoint:aUnicodePoint];
 		}
+		else if ((aUnicodePoint >= 0x2800) && (aUnicodePoint < 0x2900))
+		{
+			// Braille set
+			[self addLayersForRangeHex2800To2900UnicodePoint:aUnicodePoint];
+		}
 		else
 		{
 			// this catch-all function should implement any remaining
@@ -613,6 +637,166 @@ extendPath	(CGMutablePathRef	inoutPath,
 	
 	CGPathAddLines(inoutPath, kMy_NoTransform, points, sizeof(points) / sizeof(*points));
 }// extendPath (9 arguments)
+
+
+/*!
+Adds a series of dot shapes to the path.  The
+bit flags correspond to My_BrailleBits.  This
+can be used to produce all 256 combinations of
+Braille patterns of 8 dots.
+
+The exact coordinates depend on the specified
+metrics object.
+
+(2016.05)
+*/
+void
+extendWithBraille	(CGMutablePathRef				inoutPath,
+					 TerminalGlyphDrawing_Metrics*	inMetrics,
+					 My_BrailleBits					inWhichDots)
+{
+	Boolean const		kIsSmall = (0 != (inWhichDots & kMy_BrailleBitSmallLayout));
+	Boolean const		kIsSquare = kIsSmall;
+	Boolean const		kIsThin = kIsSmall;
+	CGFloat const		kLeftX = ((kIsSmall)
+									? inMetrics.squareLineLeftEdge
+									: DECR_PIXEL(inMetrics.squareLineLeftEdge - inMetrics.lineHalfWidth));
+	CGFloat const		kRightX = ((kIsSmall)
+									? inMetrics.squareLineRightEdge
+									: INCR_PIXEL(inMetrics.squareLineRightEdge - inMetrics.lineHalfWidth));
+	CGFloat const		kSpacingY = (inMetrics.squareLineBottomEdge - inMetrics.squareLineTopEdge) / 3.0;
+	CGFloat const		kLineAY = ((kIsSmall)
+									? (inMetrics.squareLineTopEdge - inMetrics.lineHalfWidth)
+									: inMetrics.squareLineTopEdge);
+	CGFloat const		kLineBY = (inMetrics.squareLineTopEdge + kSpacingY);
+	CGFloat const		kLineCY = (inMetrics.squareLineBottomEdge - kSpacingY);
+	CGFloat const		kLineDY = ((kIsSmall)
+									? (inMetrics.squareLineBottomEdge + inMetrics.lineHalfWidth)
+									: inMetrics.squareLineBottomEdge);
+	CGFloat const		kDotWidth = ((kIsThin) ? inMetrics.lineHalfWidth : inMetrics.lineWidth);
+	CGFloat const		kDotHeight = ((kIsThin) ? inMetrics.lineHalfWidth : inMetrics.lineWidth);
+	
+	
+	if (inWhichDots & kMy_BrailleBitLA)
+	{
+		CGRect const	kRect = CGRectMake(kLeftX, kLineAY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitLB)
+	{
+		CGRect const	kRect = CGRectMake(kLeftX, kLineBY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitLC)
+	{
+		CGRect const	kRect = CGRectMake(kLeftX, kLineCY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitLD)
+	{
+		CGRect const	kRect = CGRectMake(kLeftX, kLineDY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitRA)
+	{
+		CGRect const	kRect = CGRectMake(kRightX, kLineAY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitRB)
+	{
+		CGRect const	kRect = CGRectMake(kRightX, kLineBY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitRC)
+	{
+		CGRect const	kRect = CGRectMake(kRightX, kLineCY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+	
+	if (inWhichDots & kMy_BrailleBitRD)
+	{
+		CGRect const	kRect = CGRectMake(kRightX, kLineDY, kDotWidth, kDotHeight);
+		
+		
+		if (kIsSquare)
+		{
+			CGPathAddRect(inoutPath, kMy_NoTransform, kRect);
+		}
+		else
+		{
+			CGPathAddEllipseInRect(inoutPath, kMy_NoTransform, kRect);
+		}
+	}
+}// extendWithBraille
 
 
 /*!
@@ -950,6 +1134,11 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 	{
 		// value is not in the supported range for this function
 		assert(false && "should call addLayersForRangeHex2500To2600UnicodePoint: for this value");
+	}
+	else if ((aUnicodePoint >= 0x2800) && (aUnicodePoint < 0x2900))
+	{
+		// value is not in the supported range for this function
+		assert(false && "should call addLayersForRangeHex2800To2900UnicodePoint: for this value");
 	}
 	else
 	{
@@ -3748,6 +3937,2371 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 		}
 	}
 }// addLayersForRangeHex2500To2600UnicodePoint:
+
+
+/*!
+Adds drawing layers for Unicode points in the range 0x2800 (inclusive)
+to 0x2900 (exclusive).
+
+All of these points form the Braille set.
+
+This is called by the initializer.
+
+(2016.05)
+*/
+- (void)
+addLayersForRangeHex2800To2900UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
+{
+	if ((aUnicodePoint < 0x2800) || (aUnicodePoint >= 0x2900))
+	{
+		// value is not in the supported range for this function
+		assert(false && "incorrect glyph layer initialization method called");
+	}
+	else
+	{
+		// value is in the expected range
+		My_BrailleBits const	kLA = kMy_BrailleBitLA;
+		My_BrailleBits const	kLB = kMy_BrailleBitLB;
+		My_BrailleBits const	kLC = kMy_BrailleBitLC;
+		My_BrailleBits const	kLD = kMy_BrailleBitLD;
+		My_BrailleBits const	kRA = kMy_BrailleBitRA;
+		My_BrailleBits const	kRB = kMy_BrailleBitRB;
+		My_BrailleBits const	kRC = kMy_BrailleBitRC;
+		My_BrailleBits const	kRD = kMy_BrailleBitRD;
+		My_BrailleBits		bitFlags = 0;
+		
+		
+		// NOTE: obviously the zeroes in the bit flags below are
+		// not necessary to calculate the value but they have the
+		// benefit of making the Braille dot structure obvious
+		switch (aUnicodePoint)
+		{
+		case 0x2800:
+			{
+				// (this one is blank so nothing to draw)
+			}
+			break;
+		
+		case 0x2801:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2802:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2803:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2804:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2805:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2806:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2807:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2808:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2809:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x280A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x280B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x280C:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x280D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x280E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x280F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2810:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2811:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2812:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2813:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2814:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2815:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2816:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2817:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2818:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2819:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x281A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x281B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x281C:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x281D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x281E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x281F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2820:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2821:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2822:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2823:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2824:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2825:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2826:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2827:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2828:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2829:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x282A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x282B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x282C:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x282D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x282E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x282F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2830:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2831:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2832:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2833:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2834:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2835:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2836:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2837:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2838:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2839:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x283A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x283B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x283C:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x283D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x283E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x283F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							0 | 0);
+			}
+			break;
+		
+		case 0x2840:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2841:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2842:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2843:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2844:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2845:
+			{
+				bitFlags = (kLA| 0 |
+							0 | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2846:
+			{
+				bitFlags = (0| 0 |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2847:
+			{
+				bitFlags = (kLA| 0 |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2848:
+			{
+				bitFlags = (0| kRA |
+							0 | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2849:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x284A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x284B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x284C:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x284D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x284E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x284F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2850:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2851:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2852:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2853:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2854:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2855:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2856:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2857:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2858:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2859:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x285A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x285B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x285C:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x285D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x285E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x285F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2860:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2861:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2862:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2863:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2864:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2865:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2866:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2867:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2868:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2869:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x286A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x286B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x286C:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x286D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x286E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x286F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2870:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2871:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2872:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2873:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2874:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2875:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2876:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2877:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2878:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2879:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x287A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x287B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x287C:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x287D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x287E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x287F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | 0);
+			}
+			break;
+		
+		case 0x2880:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2881:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2882:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2883:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2884:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2885:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2886:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2887:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2888:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2889:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x288A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x288B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x288C:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x288D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x288E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x288F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2890:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2891:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2892:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2893:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2894:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2895:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2896:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2897:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2898:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x2899:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x289A:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x289B:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x289C:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x289D:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x289E:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x289F:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A0:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A1:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A2:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A3:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A4:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A5:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A6:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A7:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A8:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28A9:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28AA:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28AB:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28AC:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28AD:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28AE:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28AF:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B0:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B1:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B2:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B3:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B4:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B5:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B6:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B7:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B8:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28B9:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28BA:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28BB:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28BC:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28BD:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28BE:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28BF:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							0 | kRD);
+			}
+			break;
+		
+		case 0x28C0:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C1:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C2:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C3:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C4:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C5:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C6:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C7:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C8:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28C9:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28CA:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28CB:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28CC:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28CD:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28CE:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28CF:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D0:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D1:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D2:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D3:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D4:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D5:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D6:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D7:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D8:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28D9:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28DA:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28DB:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28DC:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28DD:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28DE:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28DF:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | 0 |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E0:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E1:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E2:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E3:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E4:
+			{
+				bitFlags = (0 | 0 |
+							0 | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E5:
+			{
+				bitFlags = (kLA | 0 |
+							0 | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E6:
+			{
+				bitFlags = (0 | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E7:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E8:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28E9:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28EA:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28EB:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28EC:
+			{
+				bitFlags = (0 | kRA |
+							0 | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28ED:
+			{
+				bitFlags = (kLA | kRA |
+							0 | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28EE:
+			{
+				bitFlags = (0 | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28EF:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | 0 |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F0:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F1:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F2:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F3:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F4:
+			{
+				bitFlags = (0 | 0 |
+							0 | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F5:
+			{
+				bitFlags = (kLA | 0 |
+							0 | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F6:
+			{
+				bitFlags = (0 | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F7:
+			{
+				bitFlags = (kLA | 0 |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F8:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28F9:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28FA:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28FB:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							0 | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28FC:
+			{
+				bitFlags = (0 | kRA |
+							0 | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28FD:
+			{
+				bitFlags = (kLA | kRA |
+							0 | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28FE:
+			{
+				bitFlags = (0 | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		case 0x28FF:
+			{
+				bitFlags = (kLA | kRA |
+							kLB | kRB |
+							kLC | kRC |
+							kLD | kRD);
+			}
+			break;
+		
+		default:
+			// not yet handled
+			Console_Warning(Console_WriteValueUnicodePoint, "TerminalGlyphDrawing_Layer not implemented for specified Braille code point", aUnicodePoint);
+			break;
+		}
+		
+		if (0 != bitFlags)
+		{
+			My_GlyphDrawingOptions		drawingOptions = (kMy_GlyphDrawingOptionInset |
+															kMy_GlyphDrawingOptionThinLine |
+															kMy_GlyphDrawingOptionThickLine);
+			
+			
+			if ([self isSmallSize])
+			{
+				bitFlags |= kMy_BrailleBitSmallLayout;
+			}
+			
+			[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
+			{
+				extendWithBraille(aPath, metrics, bitFlags);
+			} options:drawingOptions];
+		}
+	}
+}// addLayersForRangeHex2800To2900UnicodePoint:
 
 
 #pragma mark New Methods: Partial Glyph Definitions

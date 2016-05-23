@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160523',
     '20160519',
     '20160424',
     '20160405',
@@ -540,6 +541,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160523': [
+        'Terminal graphics characters now cover the entire "Braille" set of Unicode 8.0.  Some terminal programs also use these dot patterns to simulate LED text displays.',
+    ],
     '20160519': [
         'Fixed background notifications to respect preferences.',
         'Fixed background notifications to render the Dock icon correctly, and to show it every time there is a notification.',

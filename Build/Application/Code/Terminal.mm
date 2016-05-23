@@ -18134,6 +18134,11 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 			break;
 		}
 	}
+	else if ((inCharacter >= 0x2800) && (inCharacter <= 0x28FF))
+	{
+		// all characters in the Braille range
+		outNewAttributes.addAttributes(kTextAttributes_VTGraphics);
+	}
 	else
 	{
 		// the original character was not explicitly identified as graphical,
