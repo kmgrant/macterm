@@ -33,7 +33,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CFRetainRelease.h>
 
 
@@ -54,12 +53,13 @@ void
 CocoaUserDefaults_CopyDomain	(CFStringRef	inFromName,
 								 CFStringRef	inToName)
 {
-	AutoPool			_;
+@autoreleasepool {
 	NSUserDefaults*		defaultsTarget = [NSUserDefaults standardUserDefaults];
 	NSDictionary*		dataDictionary = [defaultsTarget persistentDomainForName:(NSString*)inFromName];
 	
 	
 	[defaultsTarget setPersistentDomain:dataDictionary forName:(NSString*)inToName];
+}// @autoreleasepool
 }// CopyDomain
 
 
@@ -72,9 +72,7 @@ deleting its ~/Library/Preferences/<name>.plist file).
 void
 CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[[NSUserDefaults standardUserDefaults] removePersistentDomainForName:(NSString*)inName];
 	
 	// it seems that later versions of Mac OS X no longer like the idea
@@ -117,6 +115,7 @@ CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 			}
 		}
 	}
+}// @autoreleasepool
 }// DeleteDomain
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

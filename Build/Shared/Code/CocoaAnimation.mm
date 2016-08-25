@@ -32,7 +32,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
@@ -158,9 +157,7 @@ void
 CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 												 NSWindow*		inRelativeToWindow)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	// show the window offscreen so its image is defined
 	[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
 	[inTargetWindow orderFront:nil];
@@ -203,6 +200,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 								delayDistribution:kMy_AnimationTimeDistributionLinear
 								effect:kMy_AnimationEffectFadeIn] autorelease];
 	}
+}// @autoreleasepool
 }// TransitionWindowForDuplicate
 
 
@@ -224,7 +222,7 @@ void
 CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
-	AutoPool	_;
+@autoreleasepool {
 	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
@@ -248,6 +246,7 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 	// hide the original window immediately; the animation on the
 	// image window can take however long it needs to complete
 	[inTargetWindow orderOut:nil];
+}// @autoreleasepool
 }// TransitionWindowForHide
 
 
@@ -267,7 +266,7 @@ void
 CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
-	AutoPool		_;
+@autoreleasepool {
 	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 									autorelease];
 	NSRect			oldFrame = [imageWindow frame];
@@ -290,6 +289,7 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 	
 	// the original window moves after a short delay
 	CocoaExtensions_RunLater(0.4, ^{ [inTargetWindow setFrame:newFrame display:YES]; });
+}// @autoreleasepool
 }// TransitionWindowForMove
 
 
@@ -313,9 +313,7 @@ void
 CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 											 Boolean		inIsConfirming)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	if ([inTargetWindow isVisible])
 	{
 		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
@@ -355,6 +353,7 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 		// image window can take however long it needs to complete
 		[inTargetWindow orderOut:nil];
 	}
+}// @autoreleasepool
 }// TransitionWindowForRemove
 
 
@@ -368,7 +367,7 @@ void
 CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 												 NSWindow*		UNUSED_ARGUMENT(inRelativeToWindow))
 {
-	AutoPool	_;
+@autoreleasepool {
 	NSRect		actualFrame = [inTargetWindow frame];
 	BOOL		useAnimation = ((NSWidth(actualFrame) * NSHeight(actualFrame)) < 250000/* arbitrary */); // avoid if window is large
 	
@@ -415,6 +414,7 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		[inTargetWindow setFrame:actualFrame display:NO];
 		[inTargetWindow orderFront:nil];
 	}
+}// @autoreleasepool
 }// TransitionWindowForSheetOpen
 
 
@@ -435,7 +435,7 @@ void
 CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 												 CGRect			inStartLocation)
 {
-	AutoPool	_;
+@autoreleasepool {
 	NSWindow*	imageWindow = [createImageWindowFrom
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
 															inStartLocation.size.width, inStartLocation.size.height))
@@ -461,6 +461,7 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 							fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
 							delayDistribution:kMy_AnimationTimeDistributionEaseOut
 							effect:kMy_AnimationEffectFadeOut] autorelease];
+}// @autoreleasepool
 }// TransitionWindowSectionForOpen
 
 
@@ -481,7 +482,7 @@ void
 CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow,
 														 CGRect			inStartLocation)
 {
-	AutoPool	_;
+@autoreleasepool {
 	NSWindow*	imageWindow = [createImageWindowFrom
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
 															inStartLocation.size.width, inStartLocation.size.height))
@@ -514,6 +515,7 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
 							delayDistribution:kMy_AnimationTimeDistributionLinear
 							effect:kMy_AnimationEffectFadeIn] autorelease];
+}// @autoreleasepool
 }// TransitionWindowSectionForSearchResult
 
 

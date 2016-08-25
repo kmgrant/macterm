@@ -46,7 +46,6 @@ extern "C"
 }
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <BoundName.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>

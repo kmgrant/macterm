@@ -34,12 +34,10 @@
 #import <cctype>
 
 // Mac includes
-#import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
-#import <CoreServices/CoreServices.h>
+#import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CFRetainRelease.h>
 #import <Console.h>
 #import <MemoryBlocks.h>
@@ -410,7 +408,7 @@ Localization_AutoSizeNSButton	(NSButton*		inButton,
 								 UInt16			inMinimumWidth,
 								 Boolean		inResize)
 {
-	AutoPool	_;
+@autoreleasepool {
 	UInt16		result = inMinimumWidth;
 	
 	
@@ -439,6 +437,7 @@ Localization_AutoSizeNSButton	(NSButton*		inButton,
 		}
 	}
 	return result;
+}// @autoreleasepool
 }// AutoSizeNSButton
 
 

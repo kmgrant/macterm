@@ -47,7 +47,6 @@
 
 // library includes
 #import <AlertMessages.h>
-#import <AutoPool.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
@@ -182,7 +181,7 @@ EventLoop_Init ()
 	// some modules can only initialize after Cocoa is ready (and
 	// not all modules are using Cocoa, yet)
 	{
-		AutoPool	_;
+	@autoreleasepool {
 		NSBundle*	mainBundle = nil;
 		NSString*	mainFileName = nil;
 		BOOL		loadOK = NO;
@@ -196,6 +195,7 @@ EventLoop_Init ()
 		assert(nil != mainFileName);
 		loadOK = [NSBundle loadNibNamed:mainFileName owner:NSApp];
 		assert(loadOK);
+	}// @autoreleasepool
 	}
 	
 	// support Growl notifications if possible
@@ -643,10 +643,9 @@ application delegate’s "terminate:" method.
 void
 EventLoop_Run ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[NSApp run];
+}// @autoreleasepool
 }// Run
 
 

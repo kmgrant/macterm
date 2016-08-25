@@ -37,7 +37,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
 
@@ -136,10 +135,9 @@ Shows the command line floating window, and focuses it.
 void
 CommandLine_Display ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[[CommandLine_PanelController sharedCommandLinePanelController] showWindow:NSApp];
+}// @autoreleasepool
 }// Display
 
 

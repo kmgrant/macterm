@@ -39,7 +39,6 @@
 #import <map>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
@@ -246,7 +245,7 @@ considered visible.
 Boolean
 Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 {
-	AutoPool	_;
+@autoreleasepool {
 	Boolean		result = false;
 	
 	
@@ -280,6 +279,7 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 		break;
 	}
 	return result;
+}// @autoreleasepool
 }// IsVisible
 
 
@@ -493,7 +493,7 @@ void
 Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 					 Boolean				inIsVisible)
 {
-	AutoPool		_;
+@autoreleasepool {
 	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
 	
 	
@@ -566,6 +566,7 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	{
 		UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 	}
+}// @autoreleasepool
 }// SetVisible
 
 

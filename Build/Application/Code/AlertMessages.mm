@@ -39,7 +39,6 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CocoaBasic.h>
@@ -351,7 +350,6 @@ AlertMessages_BoxRef
 Alert_NewModeless	(AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 void*								inCloseNotifyProcUserData)
 {
-	AutoPool				_;
 	AlertMessages_BoxRef	result = nullptr;
 	
 	
@@ -417,7 +415,6 @@ Alert_NewWindowModal	(NSWindow*							inParentWindow,
 						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 						 void*								inCloseNotifyProcUserData)
 {
-	AutoPool				_;
 	AlertMessages_BoxRef	result = nullptr;
 	
 	
@@ -943,7 +940,6 @@ Alert_SetButtonText		(AlertMessages_BoxRef	inAlert,
 						 UInt16					inWhichButton,
 						 CFStringRef			inNewText)
 {
-	AutoPool				_;
 	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
@@ -1250,7 +1246,6 @@ Alert_SetTextCFStrings	(AlertMessages_BoxRef	inAlert,
 						 CFStringRef			inDialogText,
 						 CFStringRef			inHelpText)
 {
-	AutoPool				_;
 	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
@@ -1283,7 +1278,6 @@ void
 Alert_SetTitleCFString	(AlertMessages_BoxRef	inAlert,
 						 CFStringRef			inNewTitle)
 {
-	AutoPool				_;
 	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
@@ -1420,9 +1414,6 @@ Destructor.  See Alert_Dispose().
 My_AlertMessage::
 ~My_AlertMessage ()
 {
-	AutoPool		_;
-	
-	
 	// clean up
 	if (nil != this->targetWindowController)
 	{
@@ -1575,9 +1566,6 @@ alert message.
 void
 prepareForDisplay	(My_AlertMessagePtr		inPtr)
 {
-	AutoPool	_;
-	
-	
 	if (nil != inPtr->targetWindowController)
 	{
 		[inPtr->targetWindowController setHidesHelpButton:((inPtr->params.helpButton) ? NO : YES)];

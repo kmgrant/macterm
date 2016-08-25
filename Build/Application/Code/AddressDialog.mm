@@ -37,7 +37,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <BoundName.objc++.h>
 #import <Console.h>
 #import <CocoaFuture.objc++.h>
@@ -73,12 +72,13 @@ Shows or hides the IP Addresses panel.
 void
 AddressDialog_Display ()
 {
-	AutoPool		_;
+@autoreleasepool {
 	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
 	
 	
 	[[AddressDialog_PanelController sharedAddressPanelController] showWindow:NSApp];
 	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
+}// @autoreleasepool
 }// Display
 
 

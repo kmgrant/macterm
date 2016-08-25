@@ -33,7 +33,6 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Growl/Growl.h>
@@ -101,9 +100,7 @@ Initializes the Growl delegate.
 void
 GrowlSupport_Init ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	// If supported by the current OS, forward notifications to the system’s
 	// Notification Center.  This requires a bit of trickery because the
 	// current code base is compiled to support older OS versions (and yet
@@ -138,6 +135,7 @@ GrowlSupport_Init ()
 	{
 		[GrowlApplicationBridge setGrowlDelegate:[GrowlSupport_Delegate sharedGrowlDelegate]];
 	}
+}// @autoreleasepool
 }// Init
 
 
@@ -153,13 +151,14 @@ the system).
 Boolean
 GrowlSupport_IsAvailable ()
 {
-	AutoPool	_;
+@autoreleasepool {
 	Boolean		result = false;
 	
 	
 	result = (((YES == gGrowlFrameworkIsLinked) && (YES == [[GrowlSupport_Delegate sharedGrowlDelegate] isReady])) ||
 				(NSAppKitVersionNumber > NSAppKitVersionNumber10_7));
 	return result;
+}// @autoreleasepool
 }// IsAvailable
 
 
@@ -197,9 +196,7 @@ GrowlSupport_Notify		(GrowlSupport_NoteDisplay	inDisplay,
 						 CFStringRef				inSubTitle,
 						 CFStringRef				inSoundName)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	if (nullptr == inTitle)
 	{
 		inTitle = inNotificationName;
@@ -291,6 +288,7 @@ GrowlSupport_Notify		(GrowlSupport_NoteDisplay	inDisplay,
 		[scriptObject release];
 	#endif
 	}
+}// @autoreleasepool
 }// Notify
 
 
@@ -303,11 +301,12 @@ its expected location.
 Boolean
 GrowlSupport_PreferencesPaneCanDisplay ()
 {
-	AutoPool	_;
+@autoreleasepool {
 	Boolean		result = ([[NSFileManager defaultManager] isReadableFileAtPath:gGrowlPrefsPaneGlobalPath]) ? true : false;
 	
 	
 	return result;
+}// @autoreleasepool
 }// PreferencesPaneCanDisplay
 
 
@@ -320,13 +319,12 @@ pane, if it is available.
 void
 GrowlSupport_PreferencesPaneDisplay ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	if (GrowlSupport_PreferencesPaneCanDisplay())
 	{
 		UNUSED_RETURN(BOOL)[[NSWorkspace sharedWorkspace] openFile:gGrowlPrefsPaneGlobalPath];
 	}
+}// @autoreleasepool
 }// PreferencesPaneDisplay
 
 

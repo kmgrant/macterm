@@ -37,7 +37,6 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <HIViewWrap.h>
@@ -82,7 +81,7 @@ Shows the standard About panel, or brings it to the front.
 void
 CocoaBasic_AboutPanelDisplay ()
 {
-	AutoPool		_;
+@autoreleasepool {
 	// clear out the version field because it tends to be redundant
 	NSDictionary*	aboutBoxOptions = @{
 											@"Version": @"",
@@ -90,6 +89,7 @@ CocoaBasic_AboutPanelDisplay ()
 	
 	
 	[NSApp orderFrontStandardAboutPanelWithOptions:aboutBoxOptions];
+}// @autoreleasepool
 }// AboutPanelDisplay
 
 
@@ -167,7 +167,7 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 									 CFStringRef	inWindowTitle,
 									 CFArrayRef		inAllowedFileTypes)
 {
-	AutoPool		_;
+@autoreleasepool {
 	NSOpenPanel*	thePanel = [NSOpenPanel openPanel];
 	int				buttonHit = NSCancelButton;
 	Boolean			result = false;
@@ -215,6 +215,7 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 	}
 	
 	return result;
+}// @autoreleasepool
 }// FileOpenPanelDisplay
 
 
@@ -229,7 +230,7 @@ CGDeviceColor
 CocoaBasic_GetGray	(CGDeviceColor const&	inColor,
 					 Float32				inFraction)
 {
-	AutoPool		_;
+@autoreleasepool {
 	CGDeviceColor	result = inColor;
 	NSColor*		c1 = [NSColor colorWithCalibratedRed:inColor.red green:inColor.green blue:inColor.blue alpha:1.0];
 	NSColor*		c2 = [NSColor whiteColor];
@@ -243,6 +244,7 @@ CocoaBasic_GetGray	(CGDeviceColor const&	inColor,
 		result.blue = [blended blueComponent];
 	}
 	return result;
+}// @autoreleasepool
 }// GetGray
 
 
@@ -259,7 +261,7 @@ CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
 					 CGDeviceColor const&	inColor2,
 					 Float32				inFraction)
 {
-	AutoPool		_;
+@autoreleasepool {
 	CGDeviceColor	result = inColor1;
 	NSColor*		c1 = [NSColor colorWithCalibratedRed:inColor1.red green:inColor1.green blue:inColor1.blue alpha:1.0];
 	NSColor*		c2 = [NSColor colorWithCalibratedRed:inColor2.red green:inColor2.green blue:inColor2.blue alpha:1.0];
@@ -273,6 +275,7 @@ CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
 		result.blue = [blended blueComponent];
 	}
 	return result;
+}// @autoreleasepool
 }// GetGray
 
 
@@ -311,13 +314,12 @@ in code that is not yet Cocoa-based).
 void
 CocoaBasic_InvalidateRestorableState	(NSResponder*	inResponder)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	if ([inResponder respondsToSelector:@selector(invalidateRestorableState)])
 	{
 		[inResponder invalidateRestorableState];
 	}
+}// @autoreleasepool
 }// InvalidateRestorableState
 
 
@@ -338,7 +340,7 @@ See also CocoaBasic_MakeKeyWindowCarbonUserFocusWindow().
 void
 CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
 {
-	AutoPool		_;
+@autoreleasepool {
 	HIWindowRef		carbonWindow = GetUserFocusWindow();
 	
 	
@@ -354,6 +356,7 @@ CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
 		
 		[window makeKeyAndOrderFront:nil];
 	}
+}// @autoreleasepool
 }// MakeFrontWindowCarbonUserFocusWindow
 
 
@@ -373,7 +376,7 @@ See also CocoaBasic_MakeFrontWindowCarbonUserFocusWindow().
 void
 CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
 {
-	AutoPool		_;
+@autoreleasepool {
 	HIWindowRef		carbonWindow = GetUserFocusWindow();
 	
 	
@@ -389,6 +392,7 @@ CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
 		
 		[window makeKeyWindow];
 	}
+}// @autoreleasepool
 }// MakeKeyWindowCarbonUserFocusWindow
 
 
@@ -404,11 +408,10 @@ See also CocoaBasic_ReturnUserSoundNames().
 void
 CocoaBasic_PlaySoundByName	(CFStringRef	inName)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[(NSSound*)[NSSound soundNamed:(NSString*)inName] stop];
 	[(NSSound*)[NSSound soundNamed:(NSString*)inName] play];
+}// @autoreleasepool
 }// PlaySoundByName
 
 
@@ -420,10 +423,9 @@ Plays the sound in the specified file (asynchronously).
 void
 CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[[[[NSSound alloc] initWithContentsOfURL:(NSURL*)inFile byReference:NO] autorelease] play];
+}// @autoreleasepool
 }// PlaySoundFile
 
 
@@ -438,7 +440,7 @@ Returns true only if successfully registered.
 Boolean
 CocoaBasic_RegisterCocoaCarbonWindow	(NSWindow*		inCocoaWindow)
 {
-	AutoPool	_;
+@autoreleasepool {
 	Boolean		result = false;
 	
 	
@@ -448,6 +450,7 @@ CocoaBasic_RegisterCocoaCarbonWindow	(NSWindow*		inCocoaWindow)
 		result = true;
 	}
 	return result;
+}// @autoreleasepool
 }// RegisterCocoaCarbonWindow
 
 
@@ -465,7 +468,7 @@ when a new window is created.
 NSWindow*
 CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
 {
-	AutoPool	_;
+@autoreleasepool {
 	NSWindow*	result = nil;
 	
 	
@@ -495,6 +498,7 @@ CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
 		}
 	}
 	return result;
+}// @autoreleasepool
 }// ReturnNewOrExistingCocoaCarbonWindow
 
 
@@ -509,13 +513,14 @@ The returned string is not retained, so do not release it.
 CFStringRef
 CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding	inEncoding)
 {
-	AutoPool			_;
+@autoreleasepool {
 	NSStringEncoding	translatedEncoding = CFStringConvertEncodingToNSStringEncoding(inEncoding);
 	CFStringRef			result = nullptr;
 	
 	
 	result = BRIDGE_CAST([NSString localizedNameOfStringEncoding:translatedEncoding], CFStringRef);
 	return result;
+}// @autoreleasepool
 }// ReturnStringEncodingLocalizedName
 
 
@@ -603,10 +608,9 @@ Returns the Dock icon back to a plain application icon.
 void
 CocoaBasic_SetDockTileToDefaultAppIcon ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[NSApp setApplicationIconImage:nil];
+}// @autoreleasepool
 }// SetDockTileToDefaultAppIcon
 
 
@@ -622,7 +626,7 @@ CocoaBasic_SetFileTypeCreator	(CFStringRef	inPath,
 								 OSType			inNewType,
 								 OSType			inNewCreator)
 {
-	AutoPool		_;
+@autoreleasepool {
 	Boolean			result = false;
 	NSDictionary*	attributeDict = @{
 										NSFileHFSTypeCode: [NSNumber numberWithUnsignedLong:inNewType],
@@ -636,6 +640,7 @@ CocoaBasic_SetFileTypeCreator	(CFStringRef	inPath,
 	}
 	
 	return result;
+}// @autoreleasepool
 }// SetFileTypeCreator
 
 
@@ -647,10 +652,9 @@ Returns true if a computer voice is currently speaking.
 Boolean
 CocoaBasic_SpeakingInProgress ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	return ([gDefaultSynth isSpeaking]) ? true : false;
+}// @autoreleasepool
 }// SpeakingInProgress
 
 
@@ -662,7 +666,7 @@ Passes the given string to the default speech synthesizer.
 Boolean
 CocoaBasic_StartSpeakingString	(CFStringRef	inCFString)
 {
-	AutoPool	_;
+@autoreleasepool {
 	BOOL		speakOK;
 	
 	
@@ -673,6 +677,7 @@ CocoaBasic_StartSpeakingString	(CFStringRef	inCFString)
 	speakOK = ([gDefaultSynth startSpeakingString:(NSString*)inCFString]) ? true : false;
 	
 	return (speakOK) ? true : false;
+}// @autoreleasepool
 }// StartSpeakingString
 
 
@@ -685,10 +690,9 @@ necessarily gracefully.
 void
 CocoaBasic_StopSpeaking ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[gDefaultSynth stopSpeaking];
+}// @autoreleasepool
 }// StopSpeaking
 
 

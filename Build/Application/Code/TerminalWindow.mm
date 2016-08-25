@@ -62,7 +62,6 @@ extern "C"
 
 // library includes
 #import <AlertMessages.h>
-#import <AutoPool.objc++.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
@@ -1766,12 +1765,13 @@ void
 TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
 								 CFStringRef		inName)
 {
-	AutoPool						_;
+@autoreleasepool {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
 	[ptr->window setMiniwindowTitle:(NSString*)inName];
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeIconTitle, ptr->selfRef/* context */);
+}// @autoreleasepool
 }// SetIconTitle
 
 
@@ -1800,7 +1800,7 @@ void
 TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 							 Boolean			inIsHidden)
 {
-	AutoPool						_;
+@autoreleasepool {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
@@ -1829,6 +1829,7 @@ TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 			changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeObscuredState, ptr->selfRef/* context */);
 		}
 	}
+}// @autoreleasepool
 }// SetObscured
 
 
@@ -2546,7 +2547,7 @@ allScreens(),
 allViews(),
 installedActions()
 {
-	AutoPool				_;
+@autoreleasepool {
 	TerminalScreenRef		newScreen = nullptr;
 	TerminalViewRef			newView = nullptr;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
@@ -2930,6 +2931,7 @@ installedActions()
 	// override this default; technically terminal windows
 	// are immediately closeable for the first 15 seconds
 	setWarningOnWindowClose(this, false);
+}// @autoreleasepool
 }// My_TerminalWindow 2-argument constructor
 
 
@@ -2941,9 +2943,7 @@ Destructor.  See TerminalWindow_Dispose().
 My_TerminalWindow::
 ~My_TerminalWindow ()
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	sheetContextEnd(this);
 	
 	if (nullptr != this->searchDialog)
@@ -3089,6 +3089,7 @@ My_TerminalWindow::
 	{
 		Terminal_ReleaseScreen(&screenRef);
 	}
+}// @autoreleasepool
 }// My_TerminalWindow destructor
 
 
@@ -3798,7 +3799,7 @@ Returns nullptr if the window was not created successfully.
 NSWindow*
 createWindow ()
 {
-	AutoPool		_;
+@autoreleasepool {
 	NSWindow*		result = nil;
 	HIWindowRef		window = nullptr;
 	Boolean			useCustomFullScreenMode = false;
@@ -3828,6 +3829,7 @@ createWindow ()
 		}
 	}
 	return result;
+}// @autoreleasepool
 }// createWindow
 
 
@@ -5277,7 +5279,7 @@ receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inTerminalWindowRef)
 {
-	AutoPool			_;
+@autoreleasepool {
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
 	UInt32 const		kEventClass = GetEventClass(inEvent);
 	UInt32 const		kEventKind = GetEventKind(inEvent);
@@ -5327,6 +5329,7 @@ receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		}
 	}
 	return result;
+}// @autoreleasepool
 }// receiveTabDragDrop
 
 
@@ -6117,7 +6120,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inTerminalWindowRef)
 {
-	AutoPool			_;
+@autoreleasepool {
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
 	UInt32 const		kEventClass = GetEventClass(inEvent);
 	UInt32 const		kEventKind = GetEventKind(inEvent);
@@ -6272,6 +6275,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	
 	return result;
+}// @autoreleasepool
 }// receiveWindowResize
 
 
@@ -6283,12 +6287,13 @@ Implementation of TerminalWindow_ReturnWindow().
 HIWindowRef
 returnCarbonWindow		(My_TerminalWindowPtr	inPtr)
 {
-	AutoPool		_;
+@autoreleasepool {
 	HIWindowRef		result = nullptr;
 	
 	
 	result = (HIWindowRef)[inPtr->window windowRef];
 	return result;
+}// @autoreleasepool
 }// returnCarbonWindow
 
 
@@ -6697,7 +6702,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 void*					inEventContextPtr,
 						 void*					inTerminalWindowRef)
 {
-	AutoPool			_;
+@autoreleasepool {
 	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
 	
 	
@@ -6887,6 +6892,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// ???
 		break;
 	}
+}// @autoreleasepool
 }// sessionStateChanged
 
 
@@ -7657,9 +7663,7 @@ void
 setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
 						 CFStringRef			inNewTitle)
 {
-	AutoPool	_;
-	
-	
+@autoreleasepool {
 	[inPtr->window setTitle:(NSString*)inNewTitle];
 	if (inPtr->tab.exists())
 	{
@@ -7685,6 +7689,7 @@ setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
 		error = HMSetControlHelpContent(titleWrap, &helpTag);
 		assert_noerr(error);
 	}
+}// @autoreleasepool
 }// setWindowAndTabTitle
 
 
@@ -8088,7 +8093,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kTerminal_ChangeWindowIconTitle:
 		// set window’s alternate (Dock icon) title to match
 		{
-			AutoPool			_;
+		@autoreleasepool {
 			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
 			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
 			
@@ -8111,13 +8116,14 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					CFRelease(titleCFString), titleCFString = nullptr;
 				}
 			}
+		}// @autoreleasepool
 		}
 		break;
 	
 	case kTerminal_ChangeWindowMinimization:
 		// minimize or restore window based on requested minimization
 		{
-			AutoPool			_;
+		@autoreleasepool {
 			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
 			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
 			
@@ -8136,6 +8142,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					[ptr->window deminiaturize:nil];
 				}
 			}
+		}// @autoreleasepool
 		}
 		break;
 	

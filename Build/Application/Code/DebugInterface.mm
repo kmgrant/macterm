@@ -36,7 +36,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
@@ -81,12 +80,13 @@ Shows the Debugging panel.
 void
 DebugInterface_Display ()
 {
-	AutoPool		_;
+@autoreleasepool {
 	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
 	
 	
 	[[DebugInterface_PanelController sharedDebugInterfacePanelController] showWindow:NSApp];
 	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
+}// @autoreleasepool
 }// Display
 
 

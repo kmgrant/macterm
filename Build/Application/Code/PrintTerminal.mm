@@ -38,7 +38,6 @@
 #import <cstring>
 
 // library includes
-#import <AutoPool.objc++.h>
 #import <CocoaBasic.h>
 #import <CFRetainRelease.h>
 #import <MemoryBlockPtrLocker.template.h>
@@ -116,7 +115,7 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 								 CFStringRef		inJobName,
 								 Boolean			inDefaultToLandscape)
 {
-	AutoPool				_;
+@autoreleasepool {
 	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
 											true/* is retained */);
@@ -143,6 +142,7 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 	}
 	
 	return result;
+}// @autoreleasepool
 }// NewJobFromFile
 
 
@@ -158,7 +158,7 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 										 CFStringRef		inJobName,
 										 Boolean			inDefaultToLandscape)
 {
-	AutoPool				_;
+@autoreleasepool {
 	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
 											true/* is retained */);
@@ -171,6 +171,7 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 																		andLandscape:((inDefaultToLandscape) ? YES : NO)],
 								PrintTerminal_JobRef);
 	return result;
+}// @autoreleasepool
 }// NewJobFromSelectedText
 
 
@@ -186,7 +187,7 @@ PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef	inView,
 										 TerminalScreenRef	inViewBuffer,
 										 CFStringRef		inJobName)
 {
-	AutoPool				_;
+@autoreleasepool {
 	TerminalView_CellRange	startEnd;
 	TerminalView_CellRange	oldStartEnd;
 	Boolean					isRectangular = false;
@@ -240,6 +241,7 @@ PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef	inView,
 	}
 	
 	return result;
+}// @autoreleasepool
 }// NewJobFromVisibleScreen
 
 
@@ -253,12 +255,13 @@ object is no longer in use, it is destroyed.
 void
 PrintTerminal_ReleaseJob	(PrintTerminal_JobRef*		inoutRefPtr)
 {
-	AutoPool				_;
+@autoreleasepool {
 	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:*inoutRefPtr];
 	
 	
 	[ptr release];
 	*inoutRefPtr = nullptr;
+}// @autoreleasepool
 }// ReleaseJob
 
 
@@ -302,7 +305,7 @@ PrintTerminal_Result
 PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 								 HIWindowRef			inParentWindowOrNull)
 {
-	AutoPool				_;
+@autoreleasepool {
 	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:inRef];
 	PrintTerminal_Result	result = kPrintTerminal_ResultOK;
 	
@@ -317,6 +320,7 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 		[ptr beginPreviewSheetModalForWindow:window];
 	}
 	return result;
+}// @autoreleasepool
 }// JobSendToPrinter
 
 
