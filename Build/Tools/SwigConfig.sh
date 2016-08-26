@@ -19,7 +19,7 @@
 # IMPORTANT: MacTerm's build system assumes /opt/swig
 # regardless of what you may customize here.  See the
 # Xcode configuration files for a SWIG_PREFIX variable.
-swigversion=3.0.5
+swigversion=3.0.10
 prefix_with_ver=/opt/swig-${swigversion}
 prefix_no_ver=/opt/swig
 
