@@ -43,6 +43,8 @@
 #include <ApplicationServices/ApplicationServices.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
+#else
+class NSString;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -52,6 +54,21 @@
 
 
 #pragma mark Constants
+
+/*!
+A panel should send this notification to the default center
+when its "panelViewManager:requestingIdealSize:" method will
+return a different value than before.  Panel containers
+typically respond to this by adjusting a parent window size.
+
+The notification should not be sent by most panels, as it is
+not sent for the initial ideal-size value.
+
+No userInfo is defined for this notification.  Panels typically
+already know the original ideal size, and they can find the new
+size by calling "panelViewManager:requestingIdealSize:" again.
+*/
+extern NSString*	kPanel_IdealSizeDidChangeNotification;
 
 /*!
 An “edit type” describes how a panel behaves: is it
@@ -198,6 +215,7 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*	logicalLastResponder;
 @private
 	BOOL					_isPanelUserInterfaceLoaded;
+	BOOL					_panelHasContextualHelp;
 	id< Panel_Delegate >	_delegate;
 	SEL						_panelDisplayAction;
 	id						_panelDisplayTarget;
@@ -225,6 +243,8 @@ changes to an interface declared in a ".mm" file.
 	panelDisplayAction;
 	@property (assign) id
 	panelDisplayTarget;
+	@property (assign) BOOL
+	panelHasContextualHelp;
 	@property (readonly) Panel_EditType
 	panelEditType;
 	@property (assign) id< Panel_Parent >

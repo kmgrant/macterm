@@ -47,6 +47,11 @@
 #import <Console.h>
 
 
+#pragma mark Constants
+
+NSString*	kPanel_IdealSizeDidChangeNotification =
+				@"kPanel_IdealSizeDidChangeNotification";
+
 #pragma mark Public Methods
 
 #pragma mark -
@@ -57,6 +62,7 @@
 @synthesize isPanelUserInterfaceLoaded = _isPanelUserInterfaceLoaded;
 @synthesize panelDisplayAction = _panelDisplayAction;
 @synthesize panelDisplayTarget = _panelDisplayTarget;
+@synthesize panelHasContextualHelp = _panelHasContextualHelp;
 @synthesize panelParent = _panelParent;
 
 
@@ -78,6 +84,11 @@ context:(void*)						aContext
 		_panelDisplayAction = nil;
 		_panelDisplayTarget = nil;
 		_panelParent = nil;
+		
+		// by default, assume that a panel has no help if the method to
+		// respond to help is not implemented (the property can still
+		// be changed however)
+		self.panelHasContextualHelp = [self.delegate respondsToSelector:@selector(panelViewManager:didPerformContextSensitiveHelp:)];
 		
 		// since NIBs can construct lots of objects and bindings it is
 		// actually pretty important to have an early hook for subclasses
@@ -105,7 +116,7 @@ dealloc
 }// dealloc
 
 
-#pragma mark New Methods
+#pragma mark Actions
 
 
 /*!
@@ -139,6 +150,11 @@ performCloseAndDiscard:(id)		sender
 /*!
 Instructs the view to display context-sensitive help (e.g. when
 the user clicks the help button).
+
+Panel implementations should set the "panelHasContextualHelp"
+property if this method is implemented, as panel parents may
+decide to hide and/or disable a help button based on that
+property.
 
 (4.1)
 */

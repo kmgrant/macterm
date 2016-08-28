@@ -854,6 +854,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			gExitWatchTimer();
 			
 			// avoid special processing of data, allow the terminal to see it all (raw mode)
+			if (0)
 			{
 				// arrange for user’s TTY to be fixed at exit time
 				gTerminalToRestore = STDIN_FILENO;
@@ -2572,35 +2573,12 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			// excessive)
 			if ((canNotifyGrowl) || (canDisplayAlert))
 			{
-				Boolean const	kDisplayGrowl = GrowlSupport_IsAvailable();
-				Boolean const	kDisplayNormal = (false == kDisplayGrowl);
-				
-				
-				if ((kDisplayGrowl) && (canNotifyGrowl))
-				{
-					// page Growl
-					GrowlSupport_Notify(displayType, growlNotificationName, growlNotificationTitle,
-										dialogTextCFString/* description */);
-				}
-				
-				if ((kDisplayNormal) && (canDisplayAlert))
-				{
-					InterfaceLibAlertRef	box = Alert_NewModeless(Alert_StandardCloseNotifyProc, nullptr/* context */);
-					
-					
-					Alert_SetParamsFor(box, kAlert_StyleOK);
-					Alert_SetType(box, kAlertNoteAlert);
-					
-					if (nullptr != dialogTextCFString)
-					{
-						Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
-					}
-					
-					// show the message; it is disposed asynchronously
-					Alert_Display(box);
-				}
+				// page the Mac OS X user notification center (and Growl,
+				// if it is installed)
+				GrowlSupport_Notify(displayType, growlNotificationName, growlNotificationTitle,
+									dialogTextCFString/* description */);
 			}
-				
+			
 			if (nullptr != growlNotificationTitle)
 			{
 				CFRelease(growlNotificationTitle), growlNotificationTitle = nullptr;

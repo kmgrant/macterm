@@ -79,26 +79,15 @@ enum
 	// standard heights in pixels for buttons of various kinds
 	BUTTON_HT						= 20,
 	BUTTON_HT_SMALL					= 17,
-	CHECKBOX_HT						= 21,
-	RADIOBUTTON_HT					= CHECKBOX_HT,
-	TAB_HT_BIG						= 22,
 	
 	// amount of space required between a button’s title and its sides
-	MINIMUM_BUTTON_TITLE_CUSHION	= 20,
+	MINIMUM_BUTTON_TITLE_CUSHION	= 24,
 	
 	// standard distances in pixels between buttons and their surroundings
 	HSP_BUTTONS						= 12,
 	HSP_BUTTON_AND_DIALOG			= 24,
 	VSP_BUTTON_AND_DIALOG			= 20,
 	VSP_BUTTON_SMALL_AND_DIALOG		= 14,
-	
-	// standard distances in pixels between a tab’s edges and its surroundings
-	HSP_TAB_AND_DIALOG				= 20,
-	VSP_TAB_AND_DIALOG				= 17,
-	
-	// standard distances in pixels between a tab’s inner pane and its edges
-	HSP_TABPANE_AND_TAB				= 20,
-	VSP_TABPANE_AND_TAB				= 10,
 };
 
 #pragma mark Types
@@ -151,46 +140,21 @@ void
 void
 	Localization_RestorePortFontState			(GrafPortFontState const*	inState);
 
-void
-	Localization_UseThemeFont					(ThemeFontID				inThemeFontToUse,
-												 StringPtr					outFontName,
-												 SInt16*					outFontSizePtr,
-												 Style*						outFontStylePtr);
-
 //@}
 
 //!\name Utilities for View Manipulation
 //@{
 
 void
-	Localization_AdjustHelpButtonControl		(ControlRef					inControl);
-
-void
 	Localization_AdjustHelpNSButton				(NSButton*					inHelpButton);
-
-void
-	Localization_ArrangeButtonArray				(ControlRef const*			inButtons,
-												 UInt16						inButtonCount);
 
 void
 	Localization_ArrangeNSButtonArray			(CFArrayRef					inNSButtonArray);
 
 UInt16
-	Localization_AutoSizeButtonControl			(ControlRef					inControl,
-												 UInt16						inMinimumWidth = 86);
-
-UInt16
 	Localization_AutoSizeNSButton				(NSButton*					inButton,
-												 UInt16						inMinimumWidth = 86,
+												 UInt16						inMinimumWidth = 92/* includes spacing */,
 												 Boolean					inResize = true);
-
-void
-	Localization_HorizontallyPlaceControls		(ControlRef					inControl1,
-												 ControlRef					inControl2);
-
-OSStatus
-	Localization_SetControlThemeFontInfo		(ControlRef					inControl,
-												 ThemeFontID				inThemeFontToUse);
 
 //@}
 

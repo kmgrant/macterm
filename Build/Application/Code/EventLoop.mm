@@ -57,6 +57,7 @@
 #import <HIViewWrap.h>
 #import <ListenerModel.h>
 #import <Localization.h>
+#import <MacHelpUtilities.h>
 #import <MemoryBlockHandleLocker.template.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
@@ -187,7 +188,7 @@ EventLoop_Init ()
 		BOOL		loadOK = NO;
 		
 		
-		[NSApplication sharedApplication];
+		[EventLoop_AppObject sharedApplication];
 		assert(nil != NSApp);
 		mainBundle = [NSBundle mainBundle];
 		assert(nil != mainBundle);
@@ -1034,7 +1035,18 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								}
 								
 								// make the text bold!
-								Localization_SetControlThemeFontInfo(possibleTextView, kThemeAlertHeaderFont);
+								{
+									ControlFontStyleRec		styleRec;
+									
+									
+									if (noErr == GetControlData(possibleTextView, kControlEntireControl, kControlFontStyleTag,
+																sizeof(styleRec), &styleRec, nullptr/* actual size */))
+									{
+										styleRec.style = bold;
+										styleRec.flags |= kControlUseFaceMask;
+										UNUSED_RETURN(OSStatus)SetControlFontStyle(possibleTextView, &styleRec);
+									}
+								}
 								
 								if ((noErr == GetControlID(possibleTextView, &viewID)) &&
 									(kShowLabelID.signature == viewID.signature) &&
@@ -1144,5 +1156,118 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 }// updateModifiers
 
 } // anonymous namespace
+
+
+#pragma mark -
+@implementation EventLoop_AppObject //{
+
+
+#pragma mark NSApplication
+
+
+/*!
+Customizes the appearance of errors so that they use the
+same kind of sheets as other messages.
+
+(2016.05)
+*/
+- (void)
+presentError:(NSError*)			anError
+modalForWindow:(NSWindow*)		aParentWindow
+delegate:(id)					aDelegate
+didPresentSelector:(SEL)		aDidPresentSelector
+contextInfo:(void*)				aContext
+{
+	NSArray*	buttonArray = [anError localizedRecoveryOptions];
+	BOOL		callSuper = YES;
+	
+	
+	// debug
+	//NSLog(@"presenting error [domain: %@, code: %ld, info: %@]: %@", [anError domain], (long)[anError code], [anError userInfo], anError);
+	
+	if ([anError.domain isEqualToString:NSCocoaErrorDomain] &&
+		(NSUserCancelledError == anError.code))
+	{
+		// no reason to display a message in this case
+		callSuper = NO;
+	}
+	else if (buttonArray.count > 3)
+	{
+		// ???
+		// do not know how to handle this; defer to superclass
+		callSuper = YES;
+	}
+	else
+	{
+		AlertMessages_BoxWrap	box(Alert_NewWindowModal(nullptr/*aParentWindow*/), true/* is retained */);
+		NSString*				dialogText = anError.localizedDescription;
+		NSString*				helpText = anError.localizedRecoverySuggestion;
+		NSString*				helpSearch = anError.helpAnchor;
+		id						recoveryAttempter = anError.recoveryAttempter;
+		
+		
+		Alert_SetParamsFor(box.returnRef(), kAlert_StyleOK);
+		
+		if (nil == dialogText)
+		{
+			dialogText = @"";
+		}
+		if (nil == helpText)
+		{
+			helpText = @"";
+		}
+		Alert_SetTextCFStrings(box.returnRef(), BRIDGE_CAST(dialogText, CFStringRef), BRIDGE_CAST(helpText, CFStringRef));
+		
+		if ([buttonArray count] > 0)
+		{
+			Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, BRIDGE_CAST([buttonArray objectAtIndex:0], CFStringRef));
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1,
+			^{
+				[recoveryAttempter attemptRecoveryFromError:anError optionIndex:0 delegate:aDelegate
+															didRecoverSelector:aDidPresentSelector contextInfo:aContext];
+			});
+		}
+		if ([buttonArray count] > 1)
+		{
+			Alert_SetButtonText(box.returnRef(), kAlert_ItemButton2, BRIDGE_CAST([buttonArray objectAtIndex:1], CFStringRef));
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton2,
+			^{
+				[recoveryAttempter attemptRecoveryFromError:anError optionIndex:1 delegate:aDelegate
+															didRecoverSelector:aDidPresentSelector contextInfo:aContext];
+			});
+		}
+		if ([buttonArray count] > 2)
+		{
+			Alert_SetButtonText(box.returnRef(), kAlert_ItemButton3, BRIDGE_CAST([buttonArray objectAtIndex:2], CFStringRef));
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton3,
+			^{
+				[recoveryAttempter attemptRecoveryFromError:anError optionIndex:2 delegate:aDelegate
+															didRecoverSelector:aDidPresentSelector contextInfo:aContext];
+			});
+		}
+		if (nil != helpSearch)
+		{
+			Alert_SetHelpButton(box.returnRef(), true);
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemHelpButton,
+			^{
+				MacHelpUtilities_LaunchHelpSystemWithSearch(BRIDGE_CAST(helpSearch, CFStringRef));
+			});
+		}
+		
+		Alert_Display(box.returnRef()); // retains alert until it is dismissed
+		
+		// alert is handled above; should not display default alert
+		callSuper = NO;
+	}
+	
+	if (callSuper)
+	{
+		[super presentError:anError modalForWindow:aParentWindow delegate:aDelegate
+							didPresentSelector:aDidPresentSelector contextInfo:aContext];
+	}
+}// presentError:modalForWindow:delegate:didPresentSelector:contextInfo:
+
+
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

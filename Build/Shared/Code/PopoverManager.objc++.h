@@ -112,7 +112,7 @@ PopoverManager_Ref
 												 id< PopoverManager_Delegate >	inDelegate,
 												 PopoverManager_AnimationType	inAnimation,
 												 PopoverManager_BehaviorType	inBehavior,
-												 NSWindow*						inParentWindow);
+												 NSView*						inParentView);
 
 PopoverManager_Ref
 	PopoverManager_New							(Popover_Window*				inPopover,

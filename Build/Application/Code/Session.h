@@ -91,11 +91,6 @@ enum
 	kSession_AllChanges					= '****',	//!< wildcard to indicate all events (context:
 													//!  varies)
 	
-	kSession_ChangeCloseWarningAnswered	= '!Btn',	//!< a “save changes before closing” warning message
-													//!  was open, and the user finally responded by
-													//!  clicking a button (context:
-													//!  SessionCloseWarningButtonInfoPtr)
-	
 	kSession_ChangeResourceLocation		= 'SURL',	//!< the URL of a monitored Session has been updated
 													//!  (context: SessionRef)
 	
@@ -346,17 +341,6 @@ enum
 #include "SessionRef.typedef.h"
 
 /*!
-Information passed to a handler when the user has
-chosen an option from the Close sheet.
-*/
-struct SessionCloseWarningButtonInfo
-{
-	SessionRef		session;			//!< which session’s close alert was answered by the user
-	SInt16			buttonHit;			//!< "kAlertStdAlert...Button" constant for the button selected by the user
-};
-typedef SessionCloseWarningButtonInfo*	SessionCloseWarningButtonInfoPtr;
-
-/*!
 Various key mappings for typical session events.  To modify,
 use Session_ReturnEventKeys() to copy the current values, and
 Session_SetEventKeys() to write an updated structure.
@@ -411,7 +395,8 @@ void
 
 void
 	Session_DisplayTerminationWarning		(SessionRef							inRef,
-											 Session_TerminationDialogOptions	inOptions = kSession_TerminationDialogDefaultOptions);
+											 Session_TerminationDialogOptions	inOptions = kSession_TerminationDialogDefaultOptions,
+											 void								(^inCancelAction)() = ^{});
 
 void
 	Session_DisplayWindowRenameUI			(SessionRef							inRef);

@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160827',
     '20160523',
     '20160519',
     '20160424',
@@ -541,6 +542,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160827': [
+        'Fixed minor bugs in the behavior of sheets and panels.',
+        'Alerts have been reimplemented in Cocoa, which makes them look much better on Retina displays.',
+        'Alerts now have a different border style than other windows.',
+        'Animations are now slightly faster.',
+    ],
     '20160523': [
         'Terminal graphics characters now cover the entire "Braille" set of Unicode 8.0.  Some terminal programs also use these dot patterns to simulate LED text displays.',
     ],

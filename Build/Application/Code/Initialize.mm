@@ -295,7 +295,6 @@ Initialize_ApplicationShutDownRemainingComponents ()
 	TerminalBackground_Done();
 	Commands_Done();
 	SessionFactory_Done();
-	Alert_Done();
 	Undoables_Done();
 }// ApplicationShutDownRemainingComponents
 
@@ -393,9 +392,6 @@ tests are done in initApplicationCore()...
 void
 initMacOSToolbox ()
 {
-	// initialization of the Alert module must be done here, otherwise startup error alerts can’t be displayed
-	Alert_Init();
-	
 	// initialize the Undoables module
 	{
 		CFStringRef		undoNameCFString = nullptr;

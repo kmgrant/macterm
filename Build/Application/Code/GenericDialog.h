@@ -40,15 +40,16 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
-@class NSWindow;
+@class NSView;
 #else
-class NSWindow;
+class NSView;
 #endif
 
 // library includes
 #ifdef __OBJC__
 #	import <PopoverManager.objc++.h>
 #endif
+#include <RetainRelease.template.h>
 
 // application includes
 #include "Panel.h"
@@ -62,6 +63,15 @@ enum GenericDialog_DialogEffect
 	kGenericDialog_DialogEffectCloseNormally		= 0,	//!< sheet closes with animation
 	kGenericDialog_DialogEffectCloseImmediately		= 1,	//!< sheet closes without animation (e.g. a Close button, or Cancel in rare cases)
 	kGenericDialog_DialogEffectNone					= 2		//!< no effect on the sheet (e.g. command button)
+};
+
+enum GenericDialog_ItemID
+{
+	kGenericDialog_ItemIDNone = 0,			//!< no item
+	kGenericDialog_ItemIDButton1 = 1,		//!< primary button (typically “OK”)
+	kGenericDialog_ItemIDButton2 = 2,		//!< second button (typically “Cancel”)
+	kGenericDialog_ItemIDButton3 = 3,		//!< third button (e.g. “Don’t Save”)
+	kGenericDialog_ItemIDHelpButton = 4		//!< help button
 };
 
 #pragma mark Types
@@ -87,12 +97,18 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSButton*		cancelButton;
 	IBOutlet NSButton*		otherButton;
 	IBOutlet NSButton*		helpButton;
-	NSString*				_primaryActionButtonName;
-	NSString*				_thirdButtonName;
+	void					(^_cleanupBlock)();
+	void					(^_helpButtonBlock)();
+	void					(^_primaryButtonBlock)();
+	void					(^_secondButtonBlock)();
 	void					(^_thirdButtonBlock)();
+	NSString*				_primaryButtonName;
+	NSString*				_secondButtonName;
+	NSString*				_thirdButtonName;
 	NSString*				identifier;
 	NSString*				localizedName;
 	NSImage*				localizedIcon;
+	NSSize					idealManagedViewSize;
 	NSSize					initialPanelSize;
 	Panel_ViewManager*		mainViewManager;
 	GenericDialog_Ref		dialogRef;
@@ -107,12 +123,22 @@ changes to an interface declared in a ".mm" file.
 	viewManager:(Panel_ViewManager*)_;
 
 // accessors: user interface settings
+	@property (copy) void
+	(^cleanupBlock)();
+	@property (copy) void
+	(^helpButtonBlock)();
+	@property (copy) void
+	(^primaryButtonBlock)();
 	@property (strong) NSString*
-	primaryActionButtonName;
-	@property (strong) void
+	primaryButtonName; // binding
+	@property (copy) void
+	(^secondButtonBlock)();
+	@property (strong) NSString*
+	secondButtonName; // binding
+	@property (copy) void
 	(^thirdButtonBlock)();
 	@property (strong) NSString*
-	thirdButtonName;
+	thirdButtonName; // binding
 
 // actions
 	- (IBAction)
@@ -122,28 +148,6 @@ changes to an interface declared in a ".mm" file.
 
 #endif // __OBJC__
 
-#pragma mark Callbacks
-
-/*!
-Generic Dialog Close Notification Method
-
-Invoked when a button is clicked that closes the
-dialog.  Use this to perform any post-processing.
-See also GenericDialog_StandardCloseNotifyProc().
-
-You should NOT call GenericDialog_Dispose() in this
-routine!
-*/
-typedef void	 (*GenericDialog_CloseNotifyProcPtr)	(GenericDialog_Ref		inDialogThatClosed,
-														 Boolean				inOKButtonPressed);
-inline void
-GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRoutine,
-										 GenericDialog_Ref					inDialogThatClosed,
-										 Boolean							inOKButtonPressed)
-{
-	(*inUserRoutine)(inDialogThatClosed, inOKButtonPressed);
-}
-
 
 
 #pragma mark Public Methods
@@ -151,47 +155,94 @@ GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRou
 #ifdef __OBJC__
 // NOTE: SPECIFIED VIEW MANAGER IS RETAINED BY THIS CALL
 GenericDialog_Ref
-	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
+	GenericDialog_New							(NSView*							inModalToViewOrNullForAppModalDialog,
 												 Panel_ViewManager*					inHostedPanel,
 												 void*								inDataSetPtr,
-												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
+												 Boolean							inIsAlert = false);
+
+// NOTE: SPECIFIED VIEW MANAGER IS RETAINED BY THIS CALL
+GenericDialog_Ref
+	GenericDialog_NewParentCarbon				(HIWindowRef						inParentWindowOrNullForModalDialog,
+												 Panel_ViewManager*					inHostedPanel,
+												 void*								inDataSetPtr,
+												 Boolean							inIsAlert = false);
 #endif
 
 void
-	GenericDialog_Dispose						(GenericDialog_Ref*					inoutDialogPtr);
+	GenericDialog_Retain						(GenericDialog_Ref					inDialog);
 
 void
-	GenericDialog_AddButton						(GenericDialog_Ref					inDialog,
-												 CFStringRef						inButtonTitle,
-												 void								(^inResponseBlock)());
+	GenericDialog_Release						(GenericDialog_Ref*					inoutDialogPtr);
 
 void
-	GenericDialog_Display						(GenericDialog_Ref					inDialog);
+	GenericDialog_Display						(GenericDialog_Ref					inDialog,
+												 Boolean							inAnimated,
+												 void								(^inImplementationReleaseBlock)());
+
+void
+	GenericDialog_Remove						(GenericDialog_Ref					inDialog);
 
 void*
 	GenericDialog_ReturnImplementation			(GenericDialog_Ref					inDialog);
 
+GenericDialog_DialogEffect
+	GenericDialog_ReturnItemDialogEffect		(GenericDialog_Ref					inDialog,
+												 GenericDialog_ItemID				inItemID);
+
 Panel_ViewManager*
 	GenericDialog_ReturnViewManager				(GenericDialog_Ref					inDialog);
-
-void
-	GenericDialog_SetCommandButtonTitle			(GenericDialog_Ref					inDialog,
-												 UInt32								inCommandID,
-												 CFStringRef						inButtonTitle);
-
-void
-	GenericDialog_SetCommandDialogEffect		(GenericDialog_Ref					inDialog,
-												 UInt32								inCommandID,
-												 GenericDialog_DialogEffect			inEffect);
 
 void
 	GenericDialog_SetImplementation				(GenericDialog_Ref					inDialog,
 												 void*								inDataPtr);
 
 void
-	GenericDialog_StandardCloseNotifyProc		(GenericDialog_Ref					inDialogThatClosed,
-												 Boolean							inOKButtonPressed);
+	GenericDialog_SetItemDialogEffect			(GenericDialog_Ref					inDialog,
+												 GenericDialog_ItemID				inItemID,
+												 GenericDialog_DialogEffect			inEffect);
+
+void
+	GenericDialog_SetItemResponseBlock			(GenericDialog_Ref					inDialog,
+												 GenericDialog_ItemID				inItemID,
+												 void								(^inResponseBlock)());
+
+void
+	GenericDialog_SetItemTitle					(GenericDialog_Ref					inDialog,
+												 GenericDialog_ItemID				inItemID,
+												 CFStringRef						inButtonTitle);
 
 #endif
+
+
+
+#pragma mark Types Dependent on Method Names
+
+// DO NOT USE DIRECTLY.
+struct _GenericDialog_RefMgr
+{
+	typedef GenericDialog_Ref	reference_type;
+	
+	static void
+	retain	(reference_type		inRef)
+	{
+		GenericDialog_Retain(inRef);
+	}
+	
+	static void
+	release	(reference_type		inRef)
+	{
+		GenericDialog_Release(&inRef);
+	}
+};
+
+/*!
+Allows RAII-based automatic retain and release of a dialog so
+you don’t have to call GenericDialog_Release() yourself.  Simply
+declare a variable of this type (in a data structure, say),
+initialize it as appropriate, and your reference is safe.  Note
+that there is a constructor that allows you to store pre-retained
+(e.g. newly allocated) references too.
+*/
+typedef RetainRelease< _GenericDialog_RefMgr >		GenericDialog_Wrap;
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

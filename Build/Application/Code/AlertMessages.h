@@ -9,7 +9,7 @@
 */
 /*###############################################################
 
-	Interface Library 2.6
+	Interface Library
 	© 1998-2016 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -48,7 +48,80 @@ class NSWindow;
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#ifdef __OBJC__
+#	import <CocoaFuture.objc++.h>
+#endif
+#include <RetainRelease.template.h>
 
+// application includes
+#ifdef __OBJC__
+@class AlertMessages_ContentView;
+@class AlertMessages_WindowDraggingIcon;
+#endif
+#include "GenericDialog.h"
+#include "Panel.h"
+
+
+
+#pragma mark Constants
+
+/*!
+Pass one of these to Alert_SetNotificationPreferences()
+to decide how the application should respond to alerts
+that appear in the background.
+*/
+enum
+{
+	kAlert_NotifyDoNothing = 0,
+	kAlert_NotifyDisplayDiamondMark = 1,
+	kAlert_NotifyDisplayIconAndDiamondMark = 2,
+	kAlert_NotifyAlsoDisplayAlert = 3
+};
+
+/*!
+Styles allow multiple properties of an alert to be
+set to standard values in a single call.
+*/
+enum
+{
+	kAlert_StyleOK,					//!< preset the primary button to be named “OK”
+	kAlert_StyleCancel,				//!< preset the primary button to be named “Cancel”
+	kAlert_StyleOKCancel,			//!< preset the primary button to be named “OK” and
+									//!  the second button to be named “Cancel”
+	kAlert_StyleDontSaveCancelSave	//!< standard three-button layout and button names
+};
+
+/*!
+Item identifiers are used in APIs that make settings
+that apply to only certain items (such as the title,
+or the code that is invoked by a button press).
+
+This is a number instead of a named enumeration so
+that it can be used in certain APIs that expect
+numbers.
+*/
+enum
+{
+	kAlert_ItemButtonNone = 0,	//!< no item at all (useful for variables)
+	kAlert_ItemButton1 = 1,		//!< primary button (e.g. “OK”)
+	kAlert_ItemButton2 = 2,		//!< secondary button (e.g. “Cancel”)
+	kAlert_ItemButton3 = 3,		//!< third button (e.g. “Don’t Save”)
+	kAlert_ItemHelpButton = 4	//!< round “?” button
+};
+
+/*!
+The icon ID is a way to request a standard icon (or
+lack of icon) in the window.  New alerts start with
+"kAlert_IconIDDefault".
+*/
+enum Alert_IconID
+{
+	kAlert_IconIDNone = 0,		//!< no icon
+	kAlert_IconIDDefault = 1,	//!< caution icon (inverted triangle with “!”)
+	kAlert_IconIDStop = 2,		//!< currently the same as the default case but may change
+	kAlert_IconIDNote = 3		//!< for simple messages (currently uses application icon)
+};
 
 #pragma mark Types
 
@@ -64,30 +137,23 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface AlertMessages_WindowController : NSWindowController //{
+@interface AlertMessages_VC : Panel_ViewManager < Panel_Delegate > //{
 {
 @public
-	IBOutlet NSButton*		helpButtonUI;
-	IBOutlet NSButton*		tertiaryButtonUI;
-	IBOutlet NSButton*		secondaryButtonUI;
-	IBOutlet NSButton*		primaryButtonUI;
-	IBOutlet NSTextField*	titleTextUI;
-	IBOutlet NSTextView*	dialogTextUI;
-	IBOutlet NSTextView*	helpTextUI;
-	IBOutlet NSImageView*	mainIconUI;
+	IBOutlet NSTextField*						titleTextUI;
+	IBOutlet NSTextView*						dialogTextUI;
+	IBOutlet NSTextView*						helpTextUI;
+	IBOutlet AlertMessages_WindowDraggingIcon*	mainIconUI;
 
 @private
-	void*		dataPtr;
-	NSString*	titleText;
-	NSString*	dialogText;
-	NSString*	helpText;
-	NSString*	primaryButtonText;
-	NSString*	secondaryButtonText;
-	NSString*	tertiaryButtonText;
-	NSString*	iconImageName;
-	BOOL		hidesHelpButton;
-	BOOL		hidesSecondaryButton;
-	BOOL		hidesTertiaryButton;
+	NSMutableArray*		registeredObservers;
+	NSSize				idealFrameSize;
+	NSSize				idealIconSize;
+	NSString*			_titleText;
+	NSString*			_dialogText;
+	NSString*			_helpText;
+	NSString*			iconImageName;
+	Alert_IconID		iconID;
 }
 
 // new methods
@@ -97,160 +163,32 @@ changes to an interface declared in a ".mm" file.
 	setUpFonts;
 
 // accessors
-	- (void*)
-	dataPtr;
-	- (void)
-	setDataPtr:(void*)_;
-	- (NSString*)
-	dialogText;
-	- (void)
-	setDialogText:(NSString*)_; // binding
-	- (NSString*)
-	helpText;
-	- (void)
-	setHelpText:(NSString*)_; // binding
-	- (BOOL)
-	hidesHelpButton;
-	- (void)
-	setHidesHelpButton:(BOOL)_; // binding
-	- (BOOL)
-	hidesSecondaryButton;
-	- (void)
-	setHidesSecondaryButton:(BOOL)_; // binding
-	- (BOOL)
-	hidesTertiaryButton;
-	- (void)
-	setHidesTertiaryButton:(BOOL)_; // binding
+	@property (strong) NSString*
+	dialogText; // binding
+	@property (strong) NSString*
+	helpText; // binding
 	- (NSString*)
 	iconImageName;
 	- (void)
 	setIconImageName:(NSString*)_;
-	- (NSString*)
-	primaryButtonText;
-	- (void)
-	setPrimaryButtonText:(NSString*)_; // binding
-	- (NSString*)
-	secondaryButtonText;
-	- (void)
-	setSecondaryButtonText:(NSString*)_; // binding
-	- (NSString*)
-	tertiaryButtonText;
-	- (void)
-	setTertiaryButtonText:(NSString*)_; // binding
-	- (NSString*)
-	titleText;
-	- (void)
-	setTitleText:(NSString*)_; // binding
+	@property (strong) NSString*
+	titleText; // binding
 
-// actions
-	- (IBAction)
-	performPrimaryAction:(id)_;
-	- (IBAction)
-	performSecondaryAction:(id)_;
-	- (IBAction)
-	performTertiaryAction:(id)_;
-	- (IBAction)
-	performHelpAction:(id)_;
+// initializers
+	- (instancetype)
+	init;
+	- (instancetype)
+	initWithNibNamed:(NSString*)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
-
-
-/*!
-Implements the modal alert.  This class must be in sync
-with references in "AlertMessagesModalCocoa.xib".
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface AlertMessages_ModalWindowController : AlertMessages_WindowController @end
-
-
-/*!
-Implements the modeless alert.  This class must be in sync
-with references in "AlertMessagesModelessCocoa.xib".
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface AlertMessages_NotificationWindowController : AlertMessages_WindowController @end
 
 #endif // __OBJC__
 
 typedef struct AlertMessages_OpaqueBox*		AlertMessages_BoxRef;
-typedef AlertMessages_BoxRef		InterfaceLibAlertRef; // DEPRECATED NAME
-
-enum
-{
-	// pass one of these to Alert_SetNotificationPreferences()
-	kAlert_NotifyDoNothing = 0,
-	kAlert_NotifyDisplayDiamondMark = 1,
-	kAlert_NotifyDisplayIconAndDiamondMark = 2,
-	kAlert_NotifyAlsoDisplayAlert = 3
-};
-
-enum
-{
-	kAlert_StyleOK,
-	kAlert_StyleCancel,
-	kAlert_StyleOKCancel,
-	kAlert_StyleOKCancel_CancelIsDefault,
-	kAlert_StyleYesNo,
-	kAlert_StyleYesNo_NoIsDefault,
-	kAlert_StyleYesNoCancel,
-	kAlert_StyleYesNoCancel_NoIsDefault,
-	kAlert_StyleYesNoCancel_CancelIsDefault,
-	kAlert_StyleDontSaveCancelSave
-};
-
-// dialog item indices
-enum
-{
-	kAlert_ItemButtonNone = 0,
-	kAlert_ItemButton1 = kAlertStdAlertOKButton,
-	kAlert_ItemButton2 = kAlertStdAlertCancelButton,
-	kAlert_ItemButton3 = kAlertStdAlertOtherButton,
-	kAlert_ItemHelpButton = kAlertStdAlertHelpButton
-};
-
-#pragma mark Callbacks
-
-/*!
-Alert Close Notification Method
-
-When a window-modal alert is closed (Mac OS X only),
-this method is invoked.  Use this to know exactly
-when it is safe to call Alert_Dispose().
-*/
-typedef void (*AlertMessages_CloseNotifyProcPtr)	(AlertMessages_BoxRef	inAlertThatClosed,
-													 SInt16					inItemHit,
-													 void*					inUserData);
-inline void
-AlertMessages_InvokeCloseNotifyProc		(AlertMessages_CloseNotifyProcPtr	inUserRoutine,
-										 AlertMessages_BoxRef				inAlertThatClosed,
-										 SInt16								inItemHit,
-										 void*								inUserData)
-{
-	(*inUserRoutine)(inAlertThatClosed, inItemHit, inUserData);
-}
 
 
 
 #pragma mark Public Methods
-
-//!\name Module Setup and Teardown
-//@{
-
-// CALL THIS ROUTINE ONCE, BEFORE ANY OTHER ALERT ROUTINE
-void
-	Alert_Init							();
-
-// CALL THIS ROUTINE AFTER YOU ARE PERMANENTLY DONE WITH ALERTS
-void
-	Alert_Done							();
-
-//@}
 
 //!\name Global Settings
 //@{
@@ -285,33 +223,26 @@ void
 //@{
 
 AlertMessages_BoxRef
-	Alert_New							();
+	Alert_NewApplicationModal			();
 
 AlertMessages_BoxRef
-	Alert_NewModeless					(AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-										 void*								inCloseNotifyProcUserData);
+	Alert_NewWindowModal				(NSWindow*							inParentWindow);
 
 AlertMessages_BoxRef
-	Alert_NewWindowModal				(NSWindow*							inParentWindow,
-										 Boolean							inIsParentWindowCloseWarning,
-										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-										 void*								inCloseNotifyProcUserData);
-
-InterfaceLibAlertRef
-	Alert_NewWindowModal				(HIWindowRef						inParentWindow,
-										 Boolean							inIsParentWindowCloseWarning,
-										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-										 void*								inCloseNotifyProcUserData);
+	Alert_NewWindowModalParentCarbon	(HIWindowRef						inParentWindow);
 
 void
-	Alert_Dispose						(AlertMessages_BoxRef*				inoutAlert);
+	Alert_Retain						(AlertMessages_BoxRef				inAlert);
+
+void
+	Alert_Release						(AlertMessages_BoxRef*				inoutAlert);
 
 //@}
 
-//!\name Displaying Alerts
+//!\name Displaying and Removing Alerts
 //@{
 
-OSStatus
+void
 	Alert_Display						(AlertMessages_BoxRef		inAlert,
 										 Boolean					inAnimated = true);
 
@@ -320,31 +251,26 @@ void
 										 CFStringRef				inHelpText,
 										 Boolean					inIsHelpButton);
 
+// DEPRECATED, CARBON LEGACY.
 Boolean
 	Alert_ReportOSStatus				(OSStatus					inErrorCode,
 										 Boolean					inAssertion = false);
 
-//@}
-
-//!\name Alert Window Events
-//@{
-
-// ONLY WORKS WITH ALERTS THAT ARE CURRENTLY DISPLAYED
-void
-	Alert_Abort							(AlertMessages_BoxRef				inAlert);
-
-UInt16
-	Alert_ItemHit						(AlertMessages_BoxRef				inAlert);
-
-void
-	Alert_StandardCloseNotifyProc		(AlertMessages_BoxRef				inAlertThatClosed,
-										 SInt16								inItemHit,
-										 void*								inUserData);
+GenericDialog_Ref
+	Alert_ReturnGenericDialog			(AlertMessages_BoxRef		inAlert);
 
 //@}
 
 //!\name Helper Routines to Specify Alert Window Adornments
 //@{
+
+void
+	Alert_DisableCloseAnimation			(AlertMessages_BoxRef		inAlert);
+
+void
+	Alert_SetButtonResponseBlock		(AlertMessages_BoxRef		inAlert,
+										 UInt16						inWhichButton,
+										 void						(^inResponseBlock)());
 
 void
 	Alert_SetButtonText					(AlertMessages_BoxRef		inAlert,
@@ -354,6 +280,10 @@ void
 void
 	Alert_SetHelpButton					(AlertMessages_BoxRef		inAlert,
 										 Boolean					inIsHelpButton);
+
+void
+	Alert_SetIcon						(AlertMessages_BoxRef		inAlert,
+										 Alert_IconID				inIcon);
 
 void
 	Alert_SetParamsFor					(AlertMessages_BoxRef		inAlert,
@@ -368,12 +298,40 @@ void
 	Alert_SetTitleCFString				(AlertMessages_BoxRef		inAlert,
 										 CFStringRef				inNewText);
 
-void
-	Alert_SetType						(AlertMessages_BoxRef		inAlert,
-										 AlertType					inNewType);
-
 //@}
 
 #endif
+
+
+
+#pragma mark Types Dependent on Method Names
+
+// DO NOT USE DIRECTLY.
+struct _AlertMessages_BoxRefMgr
+{
+	typedef AlertMessages_BoxRef	reference_type;
+	
+	static void
+	retain	(reference_type		inRef)
+	{
+		Alert_Retain(inRef);
+	}
+	
+	static void
+	release	(reference_type		inRef)
+	{
+		Alert_Release(&inRef);
+	}
+};
+
+/*!
+Allows RAII-based automatic retain and release of a dialog so
+you don’t have to call Alert_Release() yourself.  Simply
+declare a variable of this type (in a data structure, say),
+initialize it as appropriate, and your reference is safe.  Note
+that there is a constructor that allows you to store pre-retained
+(e.g. newly allocated) references too.
+*/
+typedef RetainRelease< _AlertMessages_BoxRefMgr >		AlertMessages_BoxWrap;
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

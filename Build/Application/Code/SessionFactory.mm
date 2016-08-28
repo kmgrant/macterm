@@ -1454,31 +1454,41 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 		// a sheet asking the user what to do with the new window
 		if (displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 		{
-			GenericDialog_Ref	dialog = nullptr;
+			GenericDialog_Wrap	dialog;
 			CFRetainRelease		addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
 													true/* is retained */);
+			CFRetainRelease		cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+												true/* is retained */);
 			CFRetainRelease		startSessionString(UIStrings_ReturnCopy(kUIStrings_ButtonStartSession),
 													true/* is retained */);
 			
 			
 			// display the sheet
 			dataObject.disableObservers = YES; // temporarily disable to prevent visible shift in window appearance
-			dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
-										embeddedPanel, temporaryContext, handleNewSessionDialogClose);
+			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+																		embeddedPanel, temporaryContext),
+										true/* is retained */);
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-			GenericDialog_SetCommandDialogEffect(dialog, kHICommandCancel, kGenericDialog_DialogEffectCloseImmediately);
-			GenericDialog_SetCommandButtonTitle(dialog, kHICommandOK, startSessionString.returnCFStringRef());
-			GenericDialog_AddButton(dialog, addToPrefsString.returnCFStringRef(),
-									^{
-										Preferences_TagSetRef	tagSet = PrefPanelSessions_NewResourcePaneTagSet();
-										
-										
-										PrefsWindow_AddCollection(temporaryContext, tagSet,
-																	kCommandDisplayPrefPanelSessions);
-										Preferences_ReleaseTagSet(&tagSet);
-									});
-			GenericDialog_SetImplementation(dialog, dataObject);
-			GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, startSessionString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+												^{ handleNewSessionDialogClose(dialog.returnRef(), true/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+												^{ handleNewSessionDialogClose(dialog.returnRef(), false/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
+												^{
+													Preferences_TagSetRef	tagSet = PrefPanelSessions_NewResourcePaneTagSet();
+													
+													
+													PrefsWindow_AddCollection(temporaryContext, tagSet,
+																				kCommandDisplayPrefPanelSessions);
+													Preferences_ReleaseTagSet(&tagSet);
+												});
+			GenericDialog_SetItemDialogEffect(dialog.returnRef(), kGenericDialog_ItemIDButton2, kGenericDialog_DialogEffectCloseImmediately);
+			GenericDialog_SetImplementation(dialog.returnRef(), dataObject);
+			[dataObject retain], GenericDialog_Display(dialog.returnRef(), false/* animated */,
+														^{ [dataObject release]; }); // retains dialog until it is dismissed
 			dataObject.disableObservers = NO;
 			result = true;
 		}

@@ -50,6 +50,7 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
+@class NSCarbonWindow; // WARNING: not for general use, see actual usage below
 
 // library includes
 #import <AlertMessages.h>
@@ -59,6 +60,7 @@
 #import <Console.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
@@ -76,12 +78,11 @@
 #pragma mark Types
 namespace {
 
-typedef std::map< UInt32, GenericDialog_DialogEffect >		My_DialogEffectsByCommandID;
+typedef std::map< GenericDialog_ItemID, GenericDialog_DialogEffect >	My_DialogEffectsByItemID;
 
 struct My_GenericDialog
 {
-	My_GenericDialog	(NSWindow*, HIWindowRef, Panel_ViewManager*, void*,
-						 GenericDialog_CloseNotifyProcPtr);
+	My_GenericDialog	(NSView*, HIWindowRef, Panel_ViewManager*, void*, Boolean = false);
 	
 	~My_GenericDialog	();
 	
@@ -89,26 +90,51 @@ struct My_GenericDialog
 	loadViewManager ();
 	
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
-	GenericDialog_Ref						selfRef;						//!< identical to address of structure, but typed as ref
-	NSWindow*								parentWindow;					//!< the terminal window for which this dialog applies
-	HIWindowRef								parentCarbonWindow;				//!< legacy; if parent is a Carbon window, specify it here
-	Boolean									isModal;						//!< if false, the dialog is a sheet
-	GenericDialog_ViewManager*				containerViewManager;			//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
-	Panel_ViewManager*						hostedViewManager;				//!< new-style; the Cocoa view manager for the primary user interface
-	HISize									panelIdealSize;					//!< the dimensions most appropriate for displaying the UI
-	PopoverManager_Ref						popoverManager;					//!< object to help display popover window
-	Popover_Window*							popoverWindow;					//!< new-style, popover variant; contains a Cocoa view in a popover frame
-	GenericDialog_CloseNotifyProcPtr		closeNotifyProc;				//!< routine to call when the dialog is dismissed
-	My_DialogEffectsByCommandID				closeEffects;					//!< custom sheet-closing effects for certain commands
-	void*									userDataPtr;					//!< optional; external data
+	GenericDialog_Ref				selfRef;				//!< identical to address of structure, but typed as ref
+	NSView*							modalToView;			//!< if not nil, a view whose hierarchy is unusable while the dialog is open
+	HIWindowRef						parentCarbonWindow;		//!< legacy; if parent is a Carbon window, specify it here
+	Boolean							isAlert;				//!< this may affect the window appearance or behavior
+	GenericDialog_ViewManager*		containerViewManager;	//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
+	Panel_ViewManager*				hostedViewManager;		//!< new-style; the Cocoa view manager for the primary user interface
+	PopoverManager_Ref				popoverManager;			//!< object to help display popover window
+	Popover_Window*					popoverWindow;			//!< new-style, popover variant; contains a Cocoa view in a popover frame
+	My_DialogEffectsByItemID		closeEffects;			//!< custom sheet-closing effects for certain items
+	void*							userDataPtr;			//!< optional; external data
+	Memory_WeakRefEraser			weakRefEraser;			//!< at destruction time, clears weak references that involve this object
 };
 typedef My_GenericDialog*			My_GenericDialogPtr;
 typedef My_GenericDialog const*		My_GenericDialogConstPtr;
 
-typedef MemoryBlockPtrLocker< GenericDialog_Ref, My_GenericDialog >		My_GenericDialogPtrLocker;
-typedef LockAcquireRelease< GenericDialog_Ref, My_GenericDialog >		My_GenericDialogAutoLocker;
+typedef MemoryBlockPtrLocker< GenericDialog_Ref, My_GenericDialog >			My_GenericDialogPtrLocker;
+typedef LockAcquireRelease< GenericDialog_Ref, My_GenericDialog >			My_GenericDialogAutoLocker;
+typedef MemoryBlockReferenceLocker< GenericDialog_Ref, My_GenericDialog >	My_GenericDialogReferenceLocker;
 
 } // anonymous namespace
+
+
+/*!
+This view ensures that the arrow cursor is used.
+*/
+@interface GenericDialog_ContentView : NSBox //{
+
+// NSView
+	- (void)
+	resetCursorRects;
+
+@end //}
+
+
+/*!
+This view can be used to debug the boundaries of
+the panel.
+*/
+@interface GenericDialog_PanelView : NSTabView //{
+
+// NSView
+	- (void)
+	drawRect:(NSRect)_;
+
+@end //}
 
 
 /*!
@@ -117,6 +143,9 @@ The private class interface.
 @interface GenericDialog_ViewManager (GenericDialog_ViewManagerInternal) //{
 
 // new methods
+	- (void)
+	performActionFrom:(id)_
+	forButton:(GenericDialog_ItemID)_;
 	- (void)
 	setStringProperty:(NSString**)_
 	withName:(NSString*)_
@@ -129,7 +158,8 @@ The private class interface.
 #pragma mark Variables
 namespace {
 
-My_GenericDialogPtrLocker&		gGenericDialogPtrLocks ()		{ static My_GenericDialogPtrLocker x; return x; }
+My_GenericDialogPtrLocker&			gGenericDialogPtrLocks ()	{ static My_GenericDialogPtrLocker x; return x; }
+My_GenericDialogReferenceLocker&	gGenericDialogRefLocks ()	{ static My_GenericDialogReferenceLocker x; return x; }
 
 } // anonymous namespace
 
@@ -138,23 +168,31 @@ My_GenericDialogPtrLocker&		gGenericDialogPtrLocks ()		{ static My_GenericDialog
 #pragma mark Public Methods
 
 /*!
-This method is used to create a Cocoa-based popover view.
+This method is used to create a Cocoa-based popover view
+that runs a dialog.  If "iModalToViewOrNullForAppModalDialog"
+is nullptr, the window is automatically application-modal;
+otherwise, it is a sheet.
 
-The format of "inDataSetPtr" is entirely defined by the
-type of panel that the dialog is hosting.  The data is
-passed to the panel with Panel_SendMessageNewDataSet().
+The specified view manager is retained by this call (since
+the dialog might require access to the panel for an unknown
+period of time, under user control).  Therefore, you can
+release your copy of the reference after this call returns.
 
-If "inParentWindowOrNullForModalDialog" is nullptr, the
-window is automatically made application-modal; otherwise,
-it is a sheet.
+The format of "inDataSetPtr" is entirely defined by the type
+of panel that the dialog is hosting.  The data is passed to
+the panel with Panel_SendMessageNewDataSet().
+
+You must use GenericDialog_Release() when finished.  (It is
+recommended that you make use of the GenericDialog_Wrap
+class for this however.)
 
 (4.1)
 */
 GenericDialog_Ref
-GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
-					 Panel_ViewManager*					inHostedViewManager,
-					 void*								inDataSetPtr,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+GenericDialog_New	(NSView*				inModalToViewOrNullForAppModalDialog,
+					 Panel_ViewManager*		inHostedViewManager,
+					 void*					inDataSetPtr,
+					 Boolean				inIsAlert)
 {
 	GenericDialog_Ref	result = nullptr;
 	
@@ -164,10 +202,10 @@ GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	try
 	{
 		result = REINTERPRET_CAST(new My_GenericDialog
-									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog),
-										inParentWindowOrNullForModalDialog, inHostedViewManager,
-										inDataSetPtr, inCloseNotifyProcPtr),
+									(inModalToViewOrNullForAppModalDialog, nullptr/* parent Carbon window */,
+										inHostedViewManager, inDataSetPtr, inIsAlert),
 									GenericDialog_Ref);
+		GenericDialog_Retain(result);
 	}
 	catch (std::bad_alloc)
 	{
@@ -178,138 +216,249 @@ GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 
 
 /*!
-Call this method to destroy a dialog box and its associated
-data structures.  On return, your copy of the dialog reference
-is set to nullptr.
+Legacy version; creates the window over a parent
+that is a Carbon window.
 
-(3.1)
+(4.1)
 */
-void
-GenericDialog_Dispose	(GenericDialog_Ref*		inoutRefPtr)
+GenericDialog_Ref
+GenericDialog_NewParentCarbon	(HIWindowRef			inParentWindowOrNullForModalDialog,
+								 Panel_ViewManager*		inHostedViewManager,
+								 void*					inDataSetPtr,
+								 Boolean				inIsAlert)
 {
-	if (gGenericDialogPtrLocks().isLocked(*inoutRefPtr))
+	GenericDialog_Ref	result = nullptr;
+	
+	
+	assert(nil != inHostedViewManager);
+	
+	try
 	{
-		Console_Warning(Console_WriteValue, "attempt to dispose of locked generic dialog; outstanding locks",
-						gGenericDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		result = REINTERPRET_CAST(new My_GenericDialog
+									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog).contentView,
+										inParentWindowOrNullForModalDialog, inHostedViewManager, inDataSetPtr, inIsAlert),
+									GenericDialog_Ref);
+		GenericDialog_Retain(result);
 	}
-	else
+	catch (std::bad_alloc)
 	{
-		delete *(REINTERPRET_CAST(inoutRefPtr, My_GenericDialogPtr*)), *inoutRefPtr = nullptr;
+		result = nullptr;
 	}
-}// Dispose
+	return result;
+}// NewParentCarbon
 
 
 /*!
-Specifies that there should be a third button with a custom
-action attached.  The given block is run on the main thread
-when the button is clicked.
+Adds a lock on the specified reference, preventing it from
+being deleted.  See GenericDialog_Release().
 
-The button is automatically sized to be large enough for the
-given title string, and automatically placed to the left of
-other command buttons.
+NOTE:	Usually, you should let GenericDialog_Wrap objects
+		handle retain/release for you.
 
-Currently, this will not work for more than one extra button.
+(2.6)
+*/
+void
+GenericDialog_Retain	(GenericDialog_Ref	inRef)
+{
+	gGenericDialogRefLocks().acquireLock(inRef);
+}// Retain
+
+
+/*!
+Releases one lock on the specified dialog and deletes the dialog
+*if* no other locks remain.  Your copy of the reference is set
+to nullptr either way.
+
+NOTE:	Usually, you should let GenericDialog_Wrap objects
+		handle retain/release for you.
+
+(2.6)
+*/
+void
+GenericDialog_Release	(GenericDialog_Ref*		inoutRefPtr)
+{
+	gGenericDialogRefLocks().releaseLock(*inoutRefPtr);
+	unless (gGenericDialogRefLocks().isLocked(*inoutRefPtr))
+	{
+		if (gGenericDialogPtrLocks().isLocked(*inoutRefPtr))
+		{
+			Console_Warning(Console_WriteValue, "attempt to dispose of locked generic dialog; outstanding locks",
+							gGenericDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		}
+		else
+		{
+			delete *(REINTERPRET_CAST(inoutRefPtr, My_GenericDialogPtr*)), *inoutRefPtr = nullptr;
+		}
+	}
+	*inoutRefPtr = nullptr;
+}// Release
+
+
+/*!
+Displays the dialog.  If the dialog is modal, this call will block
+until the dialog is finished.  Otherwise, a sheet will appear over
+the parent window and this call will return immediately.
+
+The release block is executed when the dialog is removed by the
+user.  While technically this block can do anything, it is better
+to use GenericDialog_SetItemResponseBlock() for reactions to each
+button, and use the release block for general cleanup procedures.
+
+IMPORTANT:	When a GenericDialog_Ref is “owned” by another object,
+			the correct way to call GenericDialog_Display() is to
+			“retain” that parent object first, then display the
+			dialog with a release-block that will (eventually)
+			release the object.  This allows the lifetime of the
+			owner to be extended until at least as long as the
+			user is still using the dialog.
+
+(2016.05)
+*/
+void
+GenericDialog_Display	(GenericDialog_Ref		inDialog,
+						 Boolean				inAnimated,
+						 void					(^inImplementationReleaseBlock)())
+{
+	Popover_Window*		newPopoverWindow = nil;
+	Boolean				shouldRunModal = false;
+	Boolean				userPrefersNoAnimation = false;
+	Boolean				noAnimation = false;
+	
+	
+	// determine if animation should occur
+	unless (kPreferences_ResultOK ==
+			Preferences_GetData(kPreferences_TagNoAnimations,
+								sizeof(userPrefersNoAnimation), &userPrefersNoAnimation))
+	{
+		userPrefersNoAnimation = false; // assume a value, if preference can’t be found
+	}
+	noAnimation = ((false == inAnimated) || (userPrefersNoAnimation));
+	
+	// operations that require access to the object should occur
+	// inside a local lock-block that is released prior to
+	// processing dialog events (the application-modal case);
+	// otherwise, a button click might try to destroy the dialog
+	// and fail to do so
+	{
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+		
+		
+		if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
+		else
+		{
+			if (nil != ptr->hostedViewManager)
+			{
+				shouldRunModal = ((nil == ptr->modalToView) && (nullptr == ptr->parentCarbonWindow));
+				
+				ptr->loadViewManager();
+				assert(nil != ptr->containerViewManager);
+				
+				if (nil == ptr->popoverWindow)
+				{
+					newPopoverWindow = [[Popover_Window alloc] initWithView:ptr->containerViewManager.managedView
+																			style:((ptr->isAlert)
+																					? ((shouldRunModal)
+																						? kPopover_WindowStyleAlertAppModal
+																						: kPopover_WindowStyleAlertSheet)
+																					: ((shouldRunModal)
+																						? kPopover_WindowStyleDialogAppModal
+																						: kPopover_WindowStyleDialogSheet))
+																			attachedToPoint:NSMakePoint(0, 0)/* TEMPORARY */
+																			inWindow:[ptr->modalToView window]];
+					ptr->popoverWindow = newPopoverWindow;
+					
+					// make application-modal windows movable
+					if (shouldRunModal)
+					{
+						[ptr->popoverWindow setMovableByWindowBackground:YES];
+					}
+				}
+				
+				if (nil == ptr->popoverManager)
+				{
+					if (nullptr != ptr->parentCarbonWindow)
+					{
+						// legacy; parent window uses Carbon
+						ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
+																	[ptr->containerViewManager logicalFirstResponder],
+																	ptr->containerViewManager/* delegate */,
+																	(noAnimation)
+																	? kPopoverManager_AnimationTypeNone
+																	: kPopoverManager_AnimationTypeStandard,
+																	kPopoverManager_BehaviorTypeDialog,
+																	ptr->parentCarbonWindow);
+					}
+					else
+					{
+						// contemporary case; parent window uses Cocoa
+						ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
+																	[ptr->containerViewManager logicalFirstResponder],
+																	ptr->containerViewManager/* delegate */,
+																	(noAnimation)
+																	? kPopoverManager_AnimationTypeNone
+																	: kPopoverManager_AnimationTypeStandard,
+																	kPopoverManager_BehaviorTypeDialog,
+																	ptr->modalToView);
+					}
+				}
+				
+				ptr->containerViewManager.cleanupBlock = inImplementationReleaseBlock;
+				
+				[ptr->containerViewManager.delegate panelViewManager:ptr->containerViewManager willChangePanelVisibility:kPanel_VisibilityDisplayed];
+				PopoverManager_DisplayPopover(ptr->popoverManager);
+				[ptr->containerViewManager.delegate panelViewManager:ptr->containerViewManager didChangePanelVisibility:kPanel_VisibilityDisplayed];
+			}
+			else
+			{
+				assert(false && "generic dialog expected a hosted view manager");
+			}
+		}
+	}
+	
+	if (shouldRunModal)
+	{
+		// IMPORTANT: the PopoverManager_DisplayPopover() routine must
+		// display the window immediately when there is no parent window;
+		// if it tries to animate, the following modal loop may begin
+		// before an animation is able to complete (there are ways
+		// around this but it’s much better for the user to just show
+		// the window immediately anyway)
+		UNUSED_RETURN(long)[NSApp runModalForWindow:newPopoverWindow];
+	}
+}// Display
+
+
+/*!
+Sends a fake cancellation message to cause the dialog to be
+removed from the screen.
+
+WARNING:	If there are no remaining retains of the dialog,
+			this action could cause the underlying structure
+			to be destroyed.  Therefore, if you plan to do
+			anything else with the object afterward, you
+			must call GenericDialog_Retain() beforehand.
 
 (4.1)
 */
 void
-GenericDialog_AddButton		(GenericDialog_Ref		inDialog,
-							 CFStringRef			inButtonTitle,
-							 void					(^inResponseBlock)())
+GenericDialog_Remove	(GenericDialog_Ref		inDialog)
 {
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	GenericDialog_ViewManager*		viewManager = nil;
 	
 	
-	if (nil != ptr->hostedViewManager)
+	// find the view manager and then release the lock
+	// (otherwise the object cannot be destroyed)
 	{
-		// new way (Cocoa)
-		ptr->loadViewManager();
-		assert(nil != ptr->containerViewManager);
-		ptr->containerViewManager.thirdButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
-		ptr->containerViewManager.thirdButtonBlock = inResponseBlock;
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+		
+		
+		viewManager = ptr->containerViewManager;
 	}
-	else
-	{
-		// not supported in legacy Carbon mode
-		Console_Warning(Console_WriteLine, "GenericDialog_AddButton() not supported on Carbon-based dialogs anymore");
-	}
-}// AddButton
-
-
-/*!
-Displays the dialog.  If the dialog is modal, this call will
-block until the dialog is finished.  Otherwise, a sheet will
-appear over the parent window and this call will return
-immediately.
-
-A view with the specified ID must exist in the window, to be
-the initial keyboard focus.
-
-IMPORTANT:	Invoking this routine means it is no longer your
-			responsibility to call GenericDialog_Dispose():
-			this is done at an appropriate time after the
-			user closes the dialog and after your notification
-			routine has been called.
-
-(3.1)
-*/
-void
-GenericDialog_Display	(GenericDialog_Ref		inDialog)
-{
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
 	
-	
-	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
-	else
-	{
-		if (nil != ptr->hostedViewManager)
-		{
-			//
-			// new method: use Cocoa
-			//
-			
-			Boolean		noAnimations = false;
-			
-			
-			// determine if animation should occur
-			unless (kPreferences_ResultOK ==
-					Preferences_GetData(kPreferences_TagNoAnimations,
-										sizeof(noAnimations), &noAnimations))
-			{
-				noAnimations = false; // assume a value, if preference can’t be found
-			}
-			
-			ptr->loadViewManager();
-			assert(nil != ptr->containerViewManager);
-			
-			if (nil == ptr->popoverWindow)
-			{
-				ptr->popoverWindow = [[Popover_Window alloc] initWithView:ptr->containerViewManager.managedView
-									  										style:kPopover_WindowStyleDialogSheet
-																			attachedToPoint:NSMakePoint(0, 0)/* TEMPORARY */
-																			inWindow:ptr->parentWindow];
-			}
-			
-			if (nil == ptr->popoverManager)
-			{
-				ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
-															[ptr->containerViewManager logicalFirstResponder],
-															ptr->containerViewManager/* delegate */,
-															(noAnimations)
-															? kPopoverManager_AnimationTypeNone
-															: kPopoverManager_AnimationTypeStandard,
-															kPopoverManager_BehaviorTypeDialog,
-															ptr->parentCarbonWindow);
-			}
-			
-			PopoverManager_DisplayPopover(ptr->popoverManager);
-		}
-		else
-		{
-			assert(false && "generic dialog expected a hosted view manager");
-		}
-	}
-}// Display
+	// send a simulated button click to hide and destroy
+	// the dialog
+	[viewManager performActionFrom:nil forButton:kGenericDialog_ItemIDButton2];
+}// Remove
 
 
 /*!
@@ -332,6 +481,32 @@ GenericDialog_ReturnImplementation	(GenericDialog_Ref	inDialog)
 
 
 /*!
+Returns the effect that an action has on the dialog, as
+set by GenericDialog_SetItemDialogEffect() (or, if never
+set, the default for the button ID).
+
+(2016.05)
+*/
+GenericDialog_DialogEffect
+GenericDialog_ReturnItemDialogEffect	(GenericDialog_Ref		inDialog,
+										 GenericDialog_ItemID	inItemID)
+{
+	GenericDialog_DialogEffect		result = kGenericDialog_DialogEffectCloseNormally;
+	My_GenericDialogAutoLocker		ptr(gGenericDialogPtrLocks(), inDialog);
+	auto							toEffect = ptr->closeEffects.find(inItemID);
+	
+	
+	// see if the effect has been overridden
+	if (toEffect != ptr->closeEffects.end())
+	{
+		result = toEffect->second;
+	}
+	
+	return result;
+}// ReturnItemDialogEffect
+
+
+/*!
 Returns the view manager assigned when the dialog was
 constructed.
 
@@ -351,81 +526,14 @@ GenericDialog_ReturnViewManager		(GenericDialog_Ref	inDialog)
 
 
 /*!
-Specifies a new name for the button corresponding to the
-given command.  The specified button is automatically
-resized to fit the title, and other action buttons are
-moved (and possibly resized) to make room.
-
-Use kHICommandOK to refer to the default button.  No other
-command IDs are currently supported!
-
-IMPORTANT:	This API currently only works for the
-			standard buttons, not custom command IDs.
-
-(4.0)
-*/
-void
-GenericDialog_SetCommandButtonTitle		(GenericDialog_Ref		inDialog,
-										 UInt32					inCommandID,
-										 CFStringRef			inButtonTitle)
-{
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	
-	
-	if (nil != ptr->hostedViewManager)
-	{
-		// new method: use Cocoa
-		if (kHICommandOK == inCommandID)
-		{
-			ptr->loadViewManager();
-			assert(nil != ptr->containerViewManager);
-			ptr->containerViewManager.primaryActionButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
-		}
-	}
-	else
-	{
-		assert(false && "generic dialog expected a hosted view manager");
-	}
-}// SetCommandButtonTitle
-
-
-/*!
-Specifies the effect that a command has on the dialog.
-
-Use kHICommandOK and kHICommandCancel to refer to the
-two standard buttons.
-
-Note that by default, the OK and Cancel buttons have the
-effect of "kGenericDialog_DialogEffectCloseNormally", and
-any extra buttons have no effect at all (that is,
-"kGenericDialog_DialogEffectNone").
-
-IMPORTANT:	This API currently only works for the
-			standard buttons, not custom command IDs.
-
-(3.1)
-*/
-void
-GenericDialog_SetCommandDialogEffect	(GenericDialog_Ref				inDialog,
-										 UInt32							inCommandID,
-										 GenericDialog_DialogEffect		inEffect)
-{
-	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
-	
-	
-	ptr->closeEffects[inCommandID] = inEffect;
-}// SetCommandDialogEffect
-
-
-/*!
 Associates arbitrary user data with your dialog.
 Retrieve with GenericDialog_ReturnImplementation().
 
 (3.1)
 */
 void
-GenericDialog_SetImplementation		(GenericDialog_Ref	inDialog,
-									 void*				inContext)
+GenericDialog_SetImplementation		(GenericDialog_Ref		inDialog,
+									 void*					inContext)
 {
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
 	
@@ -435,16 +543,124 @@ GenericDialog_SetImplementation		(GenericDialog_Ref	inDialog,
 
 
 /*!
-The default handler for closing a dialog.
+Specifies the effect that an action has on the dialog.
+
+Note that by default, the OK and Cancel buttons have the
+effect of "kGenericDialog_DialogEffectCloseNormally", and
+any extra buttons have no effect at all (that is,
+"kGenericDialog_DialogEffectNone").
 
 (3.1)
 */
 void
-GenericDialog_StandardCloseNotifyProc	(GenericDialog_Ref	UNUSED_ARGUMENT(inDialogThatClosed),
-										 Boolean			UNUSED_ARGUMENT(inOKButtonPressed))
+GenericDialog_SetItemDialogEffect	(GenericDialog_Ref				inDialog,
+									 GenericDialog_ItemID			inItemID,
+									 GenericDialog_DialogEffect		inEffect)
 {
-	// do nothing
-}// StandardCloseNotifyProc
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	ptr->closeEffects[inItemID] = inEffect;
+}// SetItemDialogEffect
+
+
+/*!
+Specifies the response for an action button.
+
+IMPORTANT:	This API currently only works for the
+			standard buttons, not custom command IDs.
+
+(4.1)
+*/
+void
+GenericDialog_SetItemResponseBlock	(GenericDialog_Ref		inDialog,
+									 GenericDialog_ItemID	inItemID,
+									 void					(^inResponseBlock)())
+{
+	My_GenericDialogAutoLocker		ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	if (nil != ptr->hostedViewManager)
+	{
+		ptr->loadViewManager();
+		assert(nil != ptr->containerViewManager);
+		if (kGenericDialog_ItemIDButton2 == inItemID)
+		{
+			ptr->containerViewManager.secondButtonBlock = inResponseBlock;
+		}
+		else if (kGenericDialog_ItemIDButton3 == inItemID)
+		{
+			ptr->containerViewManager.thirdButtonBlock = inResponseBlock;
+		}
+		else if (kGenericDialog_ItemIDHelpButton == inItemID)
+		{
+			ptr->containerViewManager.helpButtonBlock = inResponseBlock;
+		}
+		else
+		{
+			ptr->containerViewManager.primaryButtonBlock = inResponseBlock;
+		}
+	}
+	else
+	{
+		assert(false && "generic dialog expected a hosted view manager");
+	}
+}// SetItemResponseBlock
+
+
+/*!
+Specifies a new name for the button corresponding to the
+given ID.  The specified button is automatically resized
+to fit the title, and other action buttons are moved (and
+possibly resized) to make room.
+
+The title can be set to nullptr for buttons 2 and 3 in
+order to hide them.  This is achieved through bindings.
+
+(4.0)
+*/
+void
+GenericDialog_SetItemTitle	(GenericDialog_Ref		inDialog,
+							 GenericDialog_ItemID	inItemID,
+							 CFStringRef			inButtonTitle)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	if (nil != ptr->hostedViewManager)
+	{
+		if (kGenericDialog_ItemIDButton1 == inItemID)
+		{
+			ptr->loadViewManager();
+			assert(nil != ptr->containerViewManager);
+			ptr->containerViewManager.primaryButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
+		}
+		else if (kGenericDialog_ItemIDButton2 == inItemID)
+		{
+			ptr->loadViewManager();
+			assert(nil != ptr->containerViewManager);
+			// there is a binding that sets the hidden state based
+			// on "nil" name values
+			ptr->containerViewManager.secondButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
+		}
+		else if (kGenericDialog_ItemIDButton3 == inItemID)
+		{
+			ptr->loadViewManager();
+			assert(nil != ptr->containerViewManager);
+			// there is a binding that sets the hidden state based
+			// on "nil" name values
+			ptr->containerViewManager.thirdButtonName = BRIDGE_CAST(inButtonTitle, NSString*);
+		}
+		else
+		{
+			assert(false && "unsupported item ID");
+		}
+	}
+	else
+	{
+		assert(false && "generic dialog expected a hosted view manager");
+	}
+}// SetItemTitle
 
 
 #pragma mark Internal Methods
@@ -461,25 +677,24 @@ forces good object design.
 (3.1)
 */
 My_GenericDialog::
-My_GenericDialog	(NSWindow*							inParentNSWindowOrNull,
-					 HIWindowRef						inParentCarbonWindowOrNull,
-					 Panel_ViewManager*					inHostedViewManagerOrNull,
-					 void*								inDataSetPtr,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+My_GenericDialog	(NSView*				inModalToNSViewOrNull,
+					 HIWindowRef			inParentCarbonWindowOrNull,
+					 Panel_ViewManager*		inHostedViewManagerOrNull,
+					 void*					inDataSetPtr,
+					 Boolean				inIsAlert)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
-parentWindow					(inParentNSWindowOrNull),
+modalToView						(inModalToNSViewOrNull),
 parentCarbonWindow				(inParentCarbonWindowOrNull),
-isModal							(nil == inParentNSWindowOrNull),
+isAlert							(inIsAlert),
 containerViewManager			(nil), // set later if necessary
 hostedViewManager				([inHostedViewManagerOrNull retain]),
-panelIdealSize					(CGSizeMake(0, 0)), // set later
 popoverManager					(nullptr), // created as needed
 popoverWindow					(nil), // set later if necessary
-closeNotifyProc					(inCloseNotifyProcPtr),
 closeEffects					(),
-userDataPtr						(nullptr)
+userDataPtr						(nullptr),
+weakRefEraser					(this)
 {
 	// now notify the panel of its data
 	[inHostedViewManagerOrNull.delegate panelViewManager:inHostedViewManagerOrNull
@@ -489,7 +704,7 @@ userDataPtr						(nullptr)
 
 
 /*!
-Destructor.  See GenericDialog_Dispose().
+Destructor.  See GenericDialog_Release().
 
 (3.1)
 */
@@ -498,22 +713,19 @@ My_GenericDialog::
 {
 	if (nullptr != popoverManager)
 	{
+		[containerViewManager.delegate panelViewManager:containerViewManager willChangePanelVisibility:kPanel_VisibilityHidden];
 		PopoverManager_RemovePopover(popoverManager, false/* is confirming */);
 		PopoverManager_Dispose(&popoverManager);
 	}
 	
-	if (nil != popoverWindow)
-	{
-		[popoverWindow release];
-	}
-	
+	[popoverWindow release];
 	[hostedViewManager release];
+	[containerViewManager release];
 }// My_GenericDialog destructor
 
 
 /*!
-Constructs the internal view manager object if necessary,
-and transfers ownership of this object to that manager.
+Constructs the internal view manager object if necessary.
 
 Cocoa only.
 
@@ -526,11 +738,11 @@ loadViewManager ()
 	if (nil == this->containerViewManager)
 	{
 		this->containerViewManager = [[GenericDialog_ViewManager alloc]
-										initWithRef:this->selfRef/* transfer ownership here */
-														identifier:[this->hostedViewManager panelIdentifier]
-														localizedName:[this->hostedViewManager panelName]
-														localizedIcon:[this->hostedViewManager panelIcon]
-														viewManager:this->hostedViewManager];
+										initWithRef:this->selfRef
+													identifier:[this->hostedViewManager panelIdentifier]
+													localizedName:[this->hostedViewManager panelName]
+													localizedIcon:[this->hostedViewManager panelIcon]
+													viewManager:this->hostedViewManager];
 	}
 }// loadViewManager
 
@@ -538,9 +750,71 @@ loadViewManager ()
 
 
 #pragma mark -
+@implementation GenericDialog_ContentView //{
+
+
+#pragma mark NSView
+
+
+/*!
+Sets the cursor to an arrow when the mouse is over the
+dialog window’s content view.
+
+(2016.05)
+*/
+- (void)
+resetCursorRects
+{
+	[self addCursorRect:self.bounds cursor:[NSCursor arrowCursor]];
+}// resetCursorRects
+
+
+@end //}
+
+
+#pragma mark -
+@implementation GenericDialog_PanelView //{
+
+
+#pragma mark NSView
+
+
+/*!
+Starts by asking the superclass to draw.  And then, if
+enabled, performs custom drawing on top for debugging.
+
+(2016.05)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+	[super drawRect:aRect];
+	
+#if 0
+	// for debugging; display a red rectangle to show
+	// the area occupied by the view
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	
+	
+	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+	CGContextSetLineWidth(drawingContext, 2.0);
+	[NSBezierPath strokeRect:NSInsetRect(self.bounds, 1.0, 1.0)];
+#endif
+}// drawRect:
+
+
+@end //}
+
+
+#pragma mark -
 @implementation GenericDialog_ViewManager
 
 
+@synthesize cleanupBlock = _cleanupBlock;
+@synthesize helpButtonBlock = _helpButtonBlock;
+@synthesize primaryButtonBlock = _primaryButtonBlock;
+@synthesize secondButtonBlock = _secondButtonBlock;
 @synthesize thirdButtonBlock = _thirdButtonBlock;
 
 
@@ -568,12 +842,10 @@ viewManager:(Panel_ViewManager*)	aViewManager
 											}];
 	if (nil != self)
 	{
+		GenericDialog_Retain(aDialogRef);
 		self->dialogRef = aDialogRef;
 		
 		aViewManager.panelParent = self;
-		
-		// set an initial button value for bindings to use
-		self.primaryActionButtonName = [BRIDGE_CAST(UIStrings_ReturnCopy(kUIStrings_ButtonOK), NSString*) autorelease];
 		
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
@@ -591,11 +863,20 @@ dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
 	
-	GenericDialog_Dispose(&dialogRef);
+	[_primaryButtonName release];
+	[_secondButtonName release];
+	[_thirdButtonName release];
+	
 	mainViewManager.panelParent = nil;
 	[identifier release];
 	[localizedName release];
 	[localizedIcon release];
+	
+	if (nullptr != dialogRef)
+	{
+		GenericDialog_Release(&dialogRef);
+	}
+	
 	[super dealloc];
 }// dealloc
 
@@ -609,21 +890,47 @@ Accessor.
 (4.1)
 */
 - (NSString*)
-primaryActionButtonName
+primaryButtonName
 {
-	return [[self->_primaryActionButtonName copy] autorelease];
+	return [[self->_primaryButtonName copy] autorelease];
 }
 - (void)
-setPrimaryActionButtonName:(NSString*)		aString
+setPrimaryButtonName:(NSString*)	aString
 {
-	[self setStringProperty:&_primaryActionButtonName withName:@"primaryActionButtonName" toValue:aString];
+	[self setStringProperty:&_primaryButtonName withName:@"primaryButtonName" toValue:aString];
 	
 	// NOTE: UI updates are OK here because there are no
 	// bindings that can be set ahead of construction
 	// (initialization occurs at view-load time); otherwise
 	// it would be necessary to keep track of pending updates
 	[self updateButtonLayout];
-}// setPrimaryActionButtonName:
+}// setPrimaryButtonName:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (NSString*)
+secondButtonName
+{
+	return [[self->_secondButtonName copy] autorelease];
+}
+- (void)
+setSecondButtonName:(NSString*)	aString
+{
+	[self setStringProperty:&_secondButtonName withName:@"secondButtonName" toValue:aString];
+	
+	// if there is no name, remove the button from the key loop
+	[self->cancelButton setRefusesFirstResponder:(nil == aString)];
+	
+	// NOTE: UI updates are OK here because there are no
+	// bindings that can be set ahead of construction
+	// (initialization occurs at view-load time); otherwise
+	// it would be necessary to keep track of pending updates
+	[self updateButtonLayout];
+}// setSecondButtonName:
 
 
 /*!
@@ -641,6 +948,21 @@ setThirdButtonName:(NSString*)		aString
 {
 	[self setStringProperty:&_thirdButtonName withName:@"thirdButtonName" toValue:aString];
 	
+	// if there is no name, remove the button from the key loop
+	[self->otherButton setRefusesFirstResponder:(nil == aString)];
+	
+	// for the third button, infer a suitable command key
+	if ((nil != aString) && (aString.length > 0))
+	{
+		NSString*	keyCharString = [aString substringWithRange:[aString rangeOfComposedCharacterSequenceAtIndex:0]];
+		
+		
+		// TEMPORARY; despite this setting, button keys do not seem
+		// to work; need to investigate why...
+		self->otherButton.keyEquivalent = keyCharString;
+		self->otherButton.keyEquivalentModifierMask = NSCommandKeyMask;
+	}
+	
 	// NOTE: UI updates are OK here because there are no
 	// bindings that can be set ahead of construction
 	// (initialization occurs at view-load time); otherwise
@@ -653,6 +975,32 @@ setThirdButtonName:(NSString*)		aString
 
 
 /*!
+Invoked when the user clicks the first button in the dialog.
+See the "primaryButtonName" property.
+
+(4.1)
+*/
+- (IBAction)
+performPrimaryButtonAction:(id)		sender
+{
+	[self performActionFrom:sender forButton:kGenericDialog_ItemIDButton1];
+}// performPrimaryButtonAction
+
+
+/*!
+Invoked when the user clicks the “second button” in the dialog.
+See the "secondButtonName" property.
+
+(4.1)
+*/
+- (IBAction)
+performSecondButtonAction:(id)	sender
+{
+	[self performActionFrom:sender forButton:kGenericDialog_ItemIDButton2];
+}// performSecondButtonAction
+
+
+/*!
 Invoked when the user clicks the “third button” in the dialog.
 See the "thirdButtonName" property.
 
@@ -661,11 +1009,7 @@ See the "thirdButtonName" property.
 - (IBAction)
 performThirdButtonAction:(id)	sender
 {
-#pragma unused(sender)
-	if (nil != self.thirdButtonBlock)
-	{
-		self.thirdButtonBlock();
-	}
+	[self performActionFrom:sender forButton:kGenericDialog_ItemIDButton3];
 }// performThirdButtonAction
 
 
@@ -738,24 +1082,26 @@ didLoadContainerView:(NSView*)			aContainerView
 	
 	[self whenObject:self->viewContainer postsNote:NSViewFrameDidChangeNotification
 						performSelector:@selector(parentViewFrameDidChange:)];
+	[self whenObject:self->mainViewManager.delegate postsNote:kPanel_IdealSizeDidChangeNotification
+						performSelector:@selector(childViewIdealSizeDidChange:)];
 	
 	// determine ideal size of embedded panel, and calculate the
 	// ideal size of the entire window accordingly
 	{
 		NSRect		containerFrame = [aContainerView frame];
-		NSSize		panelIdealSize;
 		Float32		initialWidth = NSWidth(containerFrame);
 		Float32		initialHeight = NSHeight(containerFrame);
 		
 		
-		[self->mainViewManager.delegate panelViewManager:self->mainViewManager requestingIdealSize:&panelIdealSize];
-		[self->mainViewManager.managedView setFrameSize:panelIdealSize];
+		// see also "childViewIdealSizeDidChange:"
+		[self->mainViewManager.delegate panelViewManager:self->mainViewManager requestingIdealSize:&idealManagedViewSize];
+		[self->mainViewManager.managedView setFrameSize:idealManagedViewSize];
 		
-		if (panelIdealSize.width > initialWidth)
+		if (idealManagedViewSize.width > initialWidth)
 		{
-			initialWidth = panelIdealSize.width;
+			initialWidth = idealManagedViewSize.width;
 		}
-		initialHeight += panelIdealSize.height;
+		initialHeight += idealManagedViewSize.height;
 		
 		// resize the container (and the window, through constraints)
 		self->initialPanelSize = NSMakeSize(initialWidth, initialHeight);
@@ -782,8 +1128,10 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// link the key view chains of the panel and the dialog
-	[self->mainViewManager logicalLastResponder].nextKeyView = [super logicalFirstResponder];
-	[super logicalLastResponder].nextKeyView = [self->mainViewManager logicalFirstResponder];
+	assert(nil != [self->mainViewManager logicalFirstResponder]);
+	assert(nil != [self->mainViewManager logicalLastResponder]);
+	[self->mainViewManager logicalLastResponder].nextKeyView = self->actionButton;
+	self->helpButton.nextKeyView = [self->mainViewManager logicalFirstResponder];
 	
 	[self updateButtonLayout];
 }// panelViewManager:didLoadContainerView:
@@ -816,6 +1164,9 @@ didPerformContextSensitiveHelp:(id)		sender
 #pragma unused(aViewManager)
 	// forward to child view
 	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didPerformContextSensitiveHelp:sender];
+	
+	// perform help block
+	[self performActionFrom:sender forButton:kGenericDialog_ItemIDHelpButton];
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -887,28 +1238,6 @@ userAccepted:(BOOL)						isAccepted
 #pragma unused(aViewManager)
 	// forward to child view
 	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
-	
-	// forward to original caller
-	{
-		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
-		UInt32						commandID = (isAccepted) ? kHICommandOK : kHICommandCancel;
-		Boolean						animateClose = (ptr->closeEffects.end() == ptr->closeEffects.find(commandID)) ||
-													(kGenericDialog_DialogEffectCloseNormally == ptr->closeEffects[commandID]);
-		
-		
-		GenericDialog_InvokeCloseNotifyProc(ptr->closeNotifyProc, ptr->selfRef, isAccepted/* OK was pressed */);
-		
-		if (false == animateClose)
-		{
-			PopoverManager_SetAnimationType(ptr->popoverManager, kPopoverManager_AnimationTypeNone);
-		}
-		PopoverManager_RemovePopover(ptr->popoverManager, isAccepted);
-	}
-	
-	// by contract, the Generic Dialog takes control of the
-	// object if the dialog is displayed; destroy it (this
-	// must happen outside the lock-block above)
-	GenericDialog_Dispose(&self->dialogRef);
 }// panelViewManager:didFinishUsingContainerView:userAccepted:
 
 
@@ -951,7 +1280,8 @@ panelParentEnumerateChildViewManagers
 /*!
 Overrides the base to return the logical first responder
 of the embedded panel (so that keyboard entry starts in
-that panel).
+that panel), or one of the action buttons if the panel
+has no key-input items.
 
 Note that the last responder is not overridden, and the
 loop is set in "panelViewManager:didLoadContainerView:".
@@ -961,7 +1291,28 @@ loop is set in "panelViewManager:didLoadContainerView:".
 - (NSView*)
 logicalFirstResponder
 {
-	return [self->mainViewManager logicalFirstResponder];
+	NSView*		result = [self->mainViewManager logicalFirstResponder];
+	
+	
+	if (NO == result.canBecomeKeyView)
+	{
+		// abnormal panel that has no key-input items; instead,
+		// set initial focus to an available action button
+		if (self->cancelButton.canBecomeKeyView)
+		{
+			result = self->cancelButton;
+		}
+		else if (self->otherButton.canBecomeKeyView)
+		{
+			result = self->otherButton;
+		}
+		else
+		{
+			result = self->actionButton;
+		}
+	}
+	
+	return result;
 }// logicalFirstResponder
 
 
@@ -1035,15 +1386,56 @@ relative to its parent window; also called during window resizing.
 idealAnchorPointForFrame:(NSRect)	parentFrame
 parentWindow:(NSWindow*)			parentWindow
 {
-	NSRect		contentFrame = [parentWindow contentRectForFrameRect:parentFrame];
 	NSPoint		result = NSMakePoint(0, 0);
 	
 	
-	result.x = (NSWidth(parentFrame) / 2.0);
-	result.y = ((parentFrame.origin.y - contentFrame.origin.y) + NSHeight(contentFrame));
-	
-	result.y -= 20; // arbitrary; make it easier to drag the parent window
-	result.y -= 35; // arbitrary additional offset; move below any toolbar and/or Full Screen view
+	if (nil != parentWindow)
+	{
+		NSRect		contentFrame = [parentWindow contentRectForFrameRect:parentFrame];
+		
+		
+		result.x = (NSWidth(parentFrame) / 2.0);
+		result.y = ((parentFrame.origin.y - contentFrame.origin.y) + NSHeight(contentFrame));
+		
+		// a real window will account for title/toolbar when
+		// queried for the content-for-frame rectangle above;
+		// only legacy Carbon windows require manual offsets
+		if ([[parentWindow class] isSubclassOfClass:[NSCarbonWindow class]])
+		{
+			result.y -= 20; // arbitrary; move below typical title bar to make it easier to drag the parent window
+			
+			// determine if the window has a toolbar showing
+			if (nullptr != self->dialogRef)
+			{
+				My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+				
+				
+				// the Carbon window reference should match the given parent window
+				if ((nullptr != ptr->parentCarbonWindow) && IsWindowToolbarVisible(ptr->parentCarbonWindow))
+				{
+					result.y -= 30; // arbitrary additional offest; move below any toolbar and/or Full Screen view
+				}
+			}
+		}
+		else
+		{
+			// minor adjustment for aesthetics
+			result.y += 2;
+		}
+	}
+	else
+	{
+		// application-wide window with no parent; just center it
+		NSScreen*		mainScreen = [NSScreen mainScreen];
+		NSRect			screenFrame = mainScreen.frame;
+		
+		
+		// a somewhat-arbitrary placement, typically for alerts
+		// (TEMPORARY; this does not consider the actual size of
+		// the popover frame, it puts all at the same position)
+		result = NSMakePoint(screenFrame.origin.x + screenFrame.size.width / 2.0,
+								screenFrame.origin.y + screenFrame.size.height / 5.0 * 4.0);
+	}
 	
 	return result;
 }// idealAnchorPointForFrame:parentWindow:
@@ -1129,6 +1521,37 @@ changeFont:(id)		sender
 
 
 /*!
+Invoked when the child view changes its ideal size (that is,
+"panelViewManager:requestingIdealSize:" returns a new value).
+
+IMPORTANT:	This only adapts the initial size, as it is only
+			expected to change prior to display.  It cannot
+			adapt later.
+
+(4.1)
+*/
+- (void)
+childViewIdealSizeDidChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	// this should be in sync with any initialization code
+	NSSize		oldSize = self->idealManagedViewSize;
+	
+	
+	// determine the new preferred size
+	[self->mainViewManager.delegate panelViewManager:self->mainViewManager requestingIdealSize:&idealManagedViewSize];
+	
+	// tweak the initial panel size so that anything else based
+	// on this (such as the window layout) is set up correctly
+	self->initialPanelSize.width += (self->idealManagedViewSize.width - oldSize.width);
+	self->initialPanelSize.height += (self->idealManagedViewSize.height - oldSize.height);
+	
+	// notify listeners of this change
+	[self postNote:kPanel_IdealSizeDidChangeNotification];
+}// childViewIdealSizeDidChange:
+
+
+/*!
 Invoked when the parent view frame is changed.  The layout
 of action buttons in the dialog depends on the width of the
 main view.
@@ -1150,6 +1573,125 @@ parentViewFrameDidChange:(NSNotification*)		aNotification
 
 
 #pragma mark New Methods
+
+
+/*!
+Invoked when the user clicks a button in the dialog.  See
+the action properties, such as "primaryButtonAction".
+
+(4.1)
+*/
+- (void)
+performActionFrom:(id)				sender
+forButton:(GenericDialog_ItemID)	aButton
+{
+#pragma unused(sender)
+	BOOL	userAccepted = (kGenericDialog_ItemIDButton1 == aButton);
+	BOOL	keepDialog = ((kGenericDialog_ItemIDHelpButton == aButton) ||
+							(kGenericDialog_ItemIDButton3 == aButton));
+	
+	
+	// locally lock/unlock the object in case the subsequent block
+	// decides to destroy the dialog
+	{
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		BOOL						hasCustomEffect = (ptr->closeEffects.end() != ptr->closeEffects.find(aButton));
+		
+		
+		// determine if the dialog should be automatically destroyed
+		if (hasCustomEffect)
+		{
+			// respect any custom behaviors
+			keepDialog = (kGenericDialog_DialogEffectNone == ptr->closeEffects[aButton]);
+			if (kGenericDialog_DialogEffectCloseImmediately == ptr->closeEffects[aButton])
+			{
+				PopoverManager_SetAnimationType(ptr->popoverManager, kPopoverManager_AnimationTypeNone);
+			}
+		}
+	}
+	
+	if (NO == keepDialog)
+	{
+		// inform the panel that it has finished
+		[self panelViewManager:self->mainViewManager
+								didFinishUsingContainerView:self->mainViewManager.managedView
+								userAccepted:userAccepted];
+	}
+	
+	// perform any action associated with the button; note that
+	// action blocks ought not to destroy the dialog (technically
+	// they can but it is better for dialogs to use the routine
+	// GenericDialog_SetItemDialogEffect() consistently)
+	switch (aButton)
+	{
+	case kGenericDialog_ItemIDButton1:
+		if (nil != self.primaryButtonBlock)
+		{
+			self.primaryButtonBlock();
+		}
+		break;
+	
+	case kGenericDialog_ItemIDButton2:
+		if (nil != self.secondButtonBlock)
+		{
+			self.secondButtonBlock();
+		}
+		break;
+	
+	case kGenericDialog_ItemIDButton3:
+		if (nil != self.thirdButtonBlock)
+		{
+			self.thirdButtonBlock();
+		}
+		break;
+	
+	case kGenericDialog_ItemIDHelpButton:
+		if (nil != self.helpButtonBlock)
+		{
+			self.helpButtonBlock();
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	// if required, remove the dialog from view
+	if (NO == keepDialog)
+	{
+		// hide the dialog and (if application-modal) end the modal session
+		{
+			My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+			
+			
+			if (nil != ptr->popoverManager)
+			{
+				PopoverManager_RemovePopover(ptr->popoverManager, userAccepted);
+			}
+			
+			// if a modal session is in progress, end it
+			if ((nil == ptr->modalToView) && (nullptr == ptr->parentCarbonWindow))
+			{
+				// TEMPORARY; might want to use NSModalSession objects
+				// so that this cannot end just any open dialog
+				[NSApp stopModal];
+			}
+		}
+		
+		// allow the caller to perform any custom actions prior to the
+		// release of the dialog
+		if (nil != self.cleanupBlock)
+		{
+			self.cleanupBlock();
+		}
+		
+		// release the dialog (this must happen outside any lock-block);
+		// note that this could destroy the object if there are no other
+		// retain calls in effect
+		GenericDialog_Release(&self->dialogRef);
+	}
+}// performActionFrom:forButton:
 
 
 /*!

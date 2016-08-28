@@ -220,7 +220,7 @@ public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 *
 				 NSScreen*	inScreen2)
 	const
 	{
-		bool	result = false;
+		bool	result = (inScreen1 < inScreen2);
 		
 		
 		if ([NSScreen mainScreen] == inScreen1)
@@ -246,7 +246,7 @@ BOOL				addWindowMenuItemForSession						(SessionRef, My_MenuItemInsertionInfoCo
 void				addWindowMenuItemSessionOp						(SessionRef, void*, SInt32, void*);
 NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
 void				changeNotifyForCommandExecution					(UInt32);
-BOOL				handleQuit										(BOOL);
+BOOL				handleQuitReview								();
 int					indexOfItemWithAction							(NSMenu*, SEL);
 Boolean				isAnyListenerForCommandExecution				(UInt32);
 BOOL				isCarbonWindow									(id);
@@ -256,8 +256,6 @@ void				moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef, void*, SInt32
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 BOOL				quellAutoNew									();
-void				receiveTerminationWarningAnswer					(ListenerModel_Ref, ListenerModel_Event,
-																	 void*, void*);
 HIViewRef			returnActiveCarbonWindowFocusedField			();
 int					returnFirstWindowItemAnchor						(NSMenu*);
 NSMenu*				returnMenu										(UInt32);
@@ -293,7 +291,6 @@ ListenerModel_ListenerRef	gSessionWindowStateChangeEventListener = nullptr;
 UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
 Boolean						gCurrentQuitCancelled = false;
 UInt16						gCurrentQuitInitialSessionCount = 0;
-ListenerModel_ListenerRef	gCurrentQuitWarningAnswerListener = nullptr;
 ListenerModel_Ref&			gCommandExecutionListenerModel	(Boolean	inDispose = false)
 {
 	static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
@@ -2007,7 +2004,6 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 	NSWindow*				currentWindow = nil;
 	NSWindow*				nextWindow = nil;
 	NSWindow*				firstValidWindow = nil;
-	NSWindow*				frontWindow = [NSApp mainWindow];
 	TerminalWindowRef		terminalWindow = nullptr;
 	BOOL					setNext = NO;
 	BOOL					doneSearch = NO;
@@ -2068,8 +2064,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 				// keyboard rotation); also, floating windows are
 				// explicitly ignored because they all have menu
 				// key equivalents that would give them focus
-				if ([*toWindow isOnActiveSpace] && [*toWindow canBecomeMainWindow] &&
-					(isWindowVisible(*toWindow) || (nullptr != [*toWindow terminalWindowRef])))
+				if ([*toWindow isOnActiveSpace] && [*toWindow canBecomeKeyWindow] && isWindowVisible(*toWindow))
 				{
 					currentWindow = *toWindow;
 				}
@@ -2078,7 +2073,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 			if (nil != currentWindow)
 			{
 				// only rotate between windows on the active Space
-				if (frontWindow == currentWindow)
+				if ([NSApp keyWindow] == currentWindow)
 				{
 					setNext = YES;
 				}
@@ -2116,16 +2111,6 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 	}
 	else
 	{
-		unless (isWindowVisible(nextWindow))
-		{
-			// display the window and ensure it is not marked as hidden (in case it was)
-			terminalWindow = [nextWindow terminalWindowRef];
-			if (TerminalWindow_IsValid(terminalWindow))
-			{
-				TerminalWindow_SetObscured(terminalWindow, false);
-			}
-		}
-		
 		// just in case Mac OS X does special gymnastics for Carbon
 		// windows, use only Carbon APIs to activate Carbon windows
 		// (TEMPORARY)
@@ -2140,7 +2125,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 		
 		if (inHidePreviousWindow)
 		{
-			terminalWindow = [frontWindow terminalWindowRef];
+			terminalWindow = [[NSApp mainWindow] terminalWindowRef];
 			if (TerminalWindow_IsValid(terminalWindow))
 			{
 				TerminalWindow_SetObscured(terminalWindow, true);
@@ -2313,32 +2298,76 @@ changeNotifyForCommandExecution		(UInt32		inCommand)
 
 
 /*!
-Handles a quit by reviewing any open sessions (if "inAsk" is
-YES).  Returns YES only if the application should quit.
+Handles a quit by reviewing any open sessions.  Returns
+YES only if the application should quit.
 
 (4.0)
 */
 BOOL
-handleQuit	(BOOL	inAsk)
+handleQuitReview ()
 {
-	BOOL		result = NO;
-	SInt16		itemHit = kAlertStdAlertOKButton; // if only 1 session is open, the user “Reviews” it
-	SInt32		sessionCount = SessionFactory_ReturnCount() -
-								SessionFactory_ReturnStateCount(kSession_StateActiveUnstable); // ignore recently-opened windows
+	__block BOOL	result = NO;
+	SInt32			sessionCount = SessionFactory_ReturnCount() -
+									SessionFactory_ReturnStateCount(kSession_StateActiveUnstable); // ignore recently-opened windows
+	auto			reviewHandler =
+					^{
+						// “Review…”; so, display alerts for each open session, individually, and
+						// quit after all alerts are closed unless the user cancels one of them.
+						// A fairly simple way to handle this is to activate each window in turn,
+						// and then display a modal alert asking about the frontmost window.  This
+						// is not quite as elegant as using sheets, but since it is synchronous it
+						// is WAY easier to write code for!  To help the user better understand
+						// which window is being referred to, each window is moved to the center
+						// of the main screen using a slide animation prior to popping open an
+						// alert.  In addition, all background windows become translucent.
+						Boolean		cancelQuit = false;
+						
+						
+						result = YES;
+						
+						// prevent tabs from shifting during this process
+						UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
+						
+						// iterate over each session in a MODAL fashion, highlighting a window
+						// and either displaying an alert or discarding the window if it has only
+						// been open a short time
+						SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
+														moveWindowAndDisplayTerminationAlertSessionOp,
+														0L/* data 1 */, 0L/* data 2 */, &cancelQuit/* result */,
+														true/* is a final iteration: use a copy of the list? */);
+						
+						// prevent tabs from shifting during this process
+						UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
+						
+						if (cancelQuit)
+						{
+							result = NO;
+						}
+					};
 	
 	
-	// if there are any unsaved sessions, confirm quitting (nice if the user accidentally hit command-Q);
-	// note that currently, because the Console is considered a session, the following statement tests
-	// for MORE than 1 open session before warning the user (there has to be an elegant way to do this...)
-	if ((inAsk) && (sessionCount > 1))
+	// if the number of “stable” sessions (not recently opened) is just 1,
+	// bypass the Quit step and just do the Close question directly;
+	// otherwise, start with the Quit prompt and see if the user wants to
+	// iteratively perform the Close check on all the stable sessions
+	if (sessionCount <= 1)
 	{
-		InterfaceLibAlertRef	box = nullptr;
+		// display Close prompt only
+		reviewHandler();
+	}
+	else
+	{
+		// display a Quit prompt with options that include “Discard All”
+		// to quit immediately; “Cancel”; or “Review…” to iteratively
+		// display application-modal Close confirmation windows for each
+		// stable session window (windows that have opened recently are
+		// automatically skipped so as not to waste the user’s time)
+		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
 		
 		
-		box = Alert_New();
-		Alert_SetHelpButton(box, false);
-		Alert_SetParamsFor(box, kAlert_StyleDontSaveCancelSave);
-		Alert_SetType(box, kAlertCautionAlert);
+		Alert_SetHelpButton(box.returnRef(), false);
+		Alert_SetParamsFor(box.returnRef(), kAlert_StyleDontSaveCancelSave);
+		Alert_DisableCloseAnimation(box.returnRef());
 		// set message
 		{
 			UIStrings_Result	stringResult = kUIStrings_ResultOK;
@@ -2354,7 +2383,7 @@ handleQuit	(BOOL	inAsk)
 				stringResult = UIStrings_Copy(kUIStrings_AlertWindowQuitHelpText, helpTextCFString);
 				if (stringResult.ok())
 				{
-					Alert_SetTextCFStrings(box, primaryTextCFString, helpTextCFString);
+					Alert_SetTextCFStrings(box.returnRef(), primaryTextCFString, helpTextCFString);
 					CFRelease(helpTextCFString);
 				}
 				CFRelease(primaryTextCFString);
@@ -2369,7 +2398,7 @@ handleQuit	(BOOL	inAsk)
 			stringResult = UIStrings_Copy(kUIStrings_AlertWindowQuitName, titleCFString);
 			if (stringResult.ok())
 			{
-				Alert_SetTitleCFString(box, titleCFString);
+				Alert_SetTitleCFString(box.returnRef(), titleCFString);
 				CFRelease(titleCFString);
 			}
 		}
@@ -2382,9 +2411,10 @@ handleQuit	(BOOL	inAsk)
 			stringResult = UIStrings_Copy(kUIStrings_ButtonReviewWithEllipsis, buttonCFString);
 			if (stringResult.ok())
 			{
-				Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonCFString);
+				Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, buttonCFString);
 				CFRelease(buttonCFString);
 			}
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1, reviewHandler);
 		}
 		{
 			UIStrings_Result	stringResult = kUIStrings_ResultOK;
@@ -2394,63 +2424,20 @@ handleQuit	(BOOL	inAsk)
 			stringResult = UIStrings_Copy(kUIStrings_ButtonDiscardAll, buttonCFString);
 			if (stringResult.ok())
 			{
-				Alert_SetButtonText(box, kAlertStdAlertOtherButton, buttonCFString);
+				Alert_SetButtonText(box.returnRef(), kAlert_ItemButton3, buttonCFString);
 				CFRelease(buttonCFString);
 			}
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton3,
+											^{
+												// “Discard All”; no alerts are displayed but the application still quits
+												result = YES;
+											});
 		}
-		Alert_Display(box);
-		itemHit = Alert_ItemHit(box);
-		Alert_Dispose(&box);
-	}
-	
-	if (itemHit == kAlertStdAlertOKButton)
-	{
-		// “Review…”; so, display alerts for each open session, individually, and
-		// quit after all alerts are closed unless the user cancels one of them.
-		// A fairly simple way to handle this is to activate each window in turn,
-		// and then display a modal alert asking about the frontmost window.  This
-		// is not quite as elegant as using sheets, but since it is synchronous it
-		// is WAY easier to write code for!  To help the user better understand
-		// which window is being referred to, each window is moved to the center
-		// of the main screen using a slide animation prior to popping open an
-		// alert.  In addition, all background windows become translucent.
-		Boolean		cancelQuit = false;
-		
-		
-		result = YES;
-		
-		// prevent tabs from shifting during this process
-		UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
-		
-		// iterate over each session in a MODAL fashion, highlighting a window
-		// and either displaying an alert or discarding the window if it has only
-		// been open a short time
-		SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
-										moveWindowAndDisplayTerminationAlertSessionOp,
-										0L/* data 1 */, 0L/* data 2 */, &cancelQuit/* result */,
-										true/* is a final iteration: use a copy of the list? */);
-		
-		// prevent tabs from shifting during this process
-		UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
-		
-		if (cancelQuit)
-		{
-			result = NO;
-		}
-	}
-	else if (itemHit == kAlertStdAlertOtherButton)
-	{
-		// “Discard All”; so, no alerts are displayed, but the application still quits
-		result = YES;
-	}
-	else
-	{
-		// “Cancel” or Help
-		result = NO;
+		Alert_Display(box.returnRef()); // retains alert until it is dismissed
 	}
 	
 	return result;
-}// handleQuit
+}// handleQuitReview
 
 
 /*!
@@ -2624,15 +2611,24 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 			// all windows became translucent; make sure the alert one is opaque
 			UNUSED_RETURN(OSStatus)SetWindowAlpha(window, 1.0);
 			
-			Session_StartMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
-			Session_DisplayTerminationWarning(inSession, dialogOptions);
-			// there is a chance that displaying the alert will destroy
-			// the session, in which case the stop-monitoring call is
-			// invalid (but only in that case)
-			if (Session_IsValid(inSession))
+			// enforce a tiny delay between messages, otherwise it may be hard
+			// for the user to realize that a new message has appeared for a
+			// different window
 			{
-				Session_StopMonitoring(inSession, kSession_ChangeCloseWarningAnswered, gCurrentQuitWarningAnswerListener);
+				UInt32		finalTick = 0L;
+				
+				
+				Delay(8, &finalTick);
 			}
+			
+			Session_DisplayTerminationWarning(inSession, dialogOptions,
+												^{
+													// action to take if Quit is cancelled; this flag will
+													// cause the last-animated window to return to its
+													// previous position, and prevent any remaining windows
+													// from displaying Close-confirmation messages
+													gCurrentQuitCancelled = YES;
+												});
 			
 			*outFlagPtr = gCurrentQuitCancelled;
 		}
@@ -2714,30 +2710,6 @@ quellAutoNew ()
 	
 	return result;
 }// quellAutoNew
-
-
-/*!
-Invoked when a session’s termination warning is
-closed; 
-
-(4.0)
-*/
-void
-receiveTerminationWarningAnswer		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-									 ListenerModel_Event	inEventThatOccurred,
-									 void*					inEventContextPtr,
-									 void*					UNUSED_ARGUMENT(inListenerContextPtr))
-{
-	assert(inEventThatOccurred == kSession_ChangeCloseWarningAnswered);
-	
-	{
-		SessionCloseWarningButtonInfoPtr	infoPtr = REINTERPRET_CAST(inEventContextPtr,
-																		SessionCloseWarningButtonInfoPtr);
-		
-		
-		gCurrentQuitCancelled = (infoPtr->buttonHit == kAlertStdAlertCancelButton);
-	}
-}// receiveTerminationWarningAnswer
 
 
 /*!
@@ -3827,7 +3799,9 @@ sender:(id)							anObject
 	// available will need to define its own validation method,
 	// and any command that has no other requirements (aside from a
 	// terminal) does not need a validator at all.
-	BOOL	result = (nullptr != SessionFactory_ReturnUserFocusSession());
+	SessionRef	userFocusSession = SessionFactory_ReturnUserFocusSession();
+	NSWindow*	sessionWindow = Session_ReturnActiveNSWindow(userFocusSession);
+	BOOL		result = ((nullptr != userFocusSession) && (sessionWindow == [NSApp keyWindow]));
 	
 	
 	// by default, assume actions cannot be used in Full Screen mode
@@ -4083,17 +4057,12 @@ applicationShouldTerminate:(NSApplication*)		sender
 	
 	gCurrentQuitInitialSessionCount = SessionFactory_ReturnCount();
 	
-	// this callback changes the "gCurrentQuitCancelled" flag accordingly as session windows are visited
-	gCurrentQuitWarningAnswerListener = ListenerModel_NewStandardListener(receiveTerminationWarningAnswer);
-	
 	// kill all open sessions (asking the user as appropriate), and if the
 	// user never cancels, *flags* the main event loop to terminate cleanly
-	if (NO == handleQuit(YES/* ask for user permission */))
+	if (NO == handleQuitReview())
 	{
 		result = NSTerminateCancel;
 	}
-	
-	ListenerModel_ReleaseListener(&gCurrentQuitWarningAnswerListener);
 	
 	return result;
 }// applicationShouldTerminate:
@@ -7119,6 +7088,10 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 			// appears can be updated to indicate the state change
 			STATIC_CAST(anItem, NSToolbarItem*).toolTip = self.fullScreenCommandName;
 		}
+		else if ([anItem isKindOfClass:NSApplication.class])
+		{
+			// ignore
+		}
 		else
 		{
 			Console_Warning(Console_WriteValueCFString, "unable to update Full Screen title of user interface object with unknown class",
@@ -8170,16 +8143,17 @@ error:(NSString**)					outError // NOTE: really is NSString**, not NSError** (un
 	
 	if (nil != errorString)
 	{
-		AlertMessages_BoxRef	box = Alert_New();
+		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
 		
 		
 		*outError = errorString;
-		Alert_SetParamsFor(box, kAlert_StyleOK);
-		Alert_SetType(box, kAlertNoteAlert);
-		Alert_SetTextCFStrings(box, BRIDGE_CAST(*outError, CFStringRef), (pathString.length > 100/* arbitrary */)
-																			? BRIDGE_CAST([pathString substringToIndex:99], CFStringRef)
-																			: BRIDGE_CAST(pathString, CFStringRef)/* help text */);
-		Alert_Display(box);
+		Alert_SetParamsFor(box.returnRef(), kAlert_StyleOK);
+		Alert_SetIcon(box.returnRef(), kAlert_IconIDNote);
+		Alert_SetTextCFStrings(box.returnRef(), BRIDGE_CAST(*outError, CFStringRef),
+								(pathString.length > 100/* arbitrary */)
+								? BRIDGE_CAST([pathString substringToIndex:99], CFStringRef)
+								: BRIDGE_CAST(pathString, CFStringRef)/* help text */);
+		Alert_Display(box.returnRef()); // retains alert until it is dismissed
 	}
 }// openPathInShell:userData:error:
 
@@ -8265,16 +8239,17 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 	
 	if (nil != errorString)
 	{
-		AlertMessages_BoxRef	box = Alert_New();
+		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
 		
 		
 		*outError = errorString;
-		Alert_SetParamsFor(box, kAlert_StyleOK);
-		Alert_SetType(box, kAlertNoteAlert);
-		Alert_SetTextCFStrings(box, BRIDGE_CAST(*outError, CFStringRef), (theURLString.length > 100/* arbitrary */)
-																			? BRIDGE_CAST([theURLString substringToIndex:99], CFStringRef)
-																			: BRIDGE_CAST(theURLString, CFStringRef)/* help text */);
-		Alert_Display(box);
+		Alert_SetParamsFor(box.returnRef(), kAlert_StyleOK);
+		Alert_SetIcon(box.returnRef(), kAlert_IconIDNote);
+		Alert_SetTextCFStrings(box.returnRef(), BRIDGE_CAST(*outError, CFStringRef),
+								(theURLString.length > 100/* arbitrary */)
+								? BRIDGE_CAST([theURLString substringToIndex:99], CFStringRef)
+								: BRIDGE_CAST(theURLString, CFStringRef)/* help text */);
+		Alert_Display(box.returnRef()); // retains alert until it is dismissed
 	}
 }// openURL:userData:error:
 

@@ -6,7 +6,7 @@
 */
 /*###############################################################
 
-	Interface Library 2.6
+	Interface Library
 	© 1998-2016 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -39,18 +39,16 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <HIViewWrap.h>
 #import <ListenerModel.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
+#import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
-#import <NIBLoader.h>
 #import <Registrar.template.h>
 
 // application includes
@@ -58,6 +56,8 @@
 #import "Commands.h"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
+#import "GenericDialog.h"
+#import "HelpSystem.h"
 #import "UIStrings.h"
 
 
@@ -71,24 +71,6 @@ by "requestUserAttention:".
 */
 NSInteger const		kInvalidUserAttentionRequestID = -1234;
 
-/*!
-IMPORTANT
-
-The following values MUST agree with the control IDs in the
-"Dialog" and "Sheet" NIBs from the package "AlertMessages.nib".
-*/
-HIViewID const	idMyButtonDefault		= { 'Dflt', 0/* ID */ };
-HIViewID const	idMyButtonCancel		= { 'Canc', 0/* ID */ };
-HIViewID const	idMyButtonOther			= { 'Othr', 0/* ID */ };
-HIViewID const	idMyButtonHelp			= { 'Help', 0/* ID */ };
-HIViewID const	idMyTextTitle			= { 'Titl', 0/* ID */ };
-HIViewID const	idMyTextMain			= { 'Main', 0/* ID */ };
-HIViewID const	idMyTextHelp			= { 'Smal', 0/* ID */ };
-HIViewID const	idMyStopIcon			= { 'Stop', 0/* ID */ };
-HIViewID const	idMyNoteIcon			= { 'Note', 0/* ID */ };
-HIViewID const	idMyCautionIcon			= { 'Caut', 0/* ID */ };
-HIViewID const	idMyApplicationIcon		= { 'AppI', 0/* ID */ };
-
 } // anonymous namespace
 
 #pragma mark Types
@@ -101,106 +83,109 @@ struct My_AlertMessage
 {
 public:
 	My_AlertMessage ();
-	~My_AlertMessage ();
 	
-	My_RefRegistrar									refValidator;			//!< ensures this reference is recognized as a valid one
-	AlertMessages_BoxRef							selfRef;
-	
-	AlertMessages_ModalWindowController*			asModal;				//!< set to "nil" unless this is an application-modal alert
-	AlertMessages_ModalWindowController*			asSheet;				//!< set to "nil" unless this is a window-modal alert
-	AlertMessages_NotificationWindowController*		asNotification;			//!< set to "nil" unless this is a modeless alert
-	AlertMessages_WindowController*					targetWindowController;	//!< message target; set to match one of the above
-	
-	// TEMPORARY; most of what follows has traditionally been needed
-	// to drive Carbon-based interfaces, and it will all go away
-	// once the transition to Cocoa is complete
-	AlertStdCFStringAlertParamRec   params;
-	AlertType						alertType;
-	CFRetainRelease					dialogTextCFString;
-	CFRetainRelease					helpTextCFString;
-	CFRetainRelease					titleCFString;
-	ControlRef						buttonDefault;		//!< rightmost button
-	ControlRef						buttonCancel;		//!< no-action alert dismissal button
-	ControlRef						buttonOther;		//!< 3rd button of arbitrary size
-	ControlRef						buttonHelp;			//!< context-sensitive help display button
-	ControlRef						textTitle;			//!< optional large text displaying alert title
-	ControlRef						textMain;			//!< required text displaying main message
-	ControlRef						textHelp;			//!< optional small text displaying auxiliary info
-	ControlRef						mainIcon;			//!< alert icon displayed
-	ControlRef						stopIcon;			//!< alert icon from NIB
-	ControlRef						noteIcon;			//!< alert icon from NIB
-	ControlRef						cautionIcon;		//!< alert icon from NIB
-	ControlRef						applicationIcon;	//!< application icon overlay
-	UInt16							itemHit;
-	Boolean							isCompletelyModeless;
-	Boolean							isSheet;
-	Boolean							isSheetForWindowCloseWarning;
-	WindowRef						dialogWindow;
-	WindowRef						parentWindow;
-	NSWindow*						parentNSWindow;
-	EventHandlerRef					buttonHICommandsHandler;
-	AlertMessages_CloseNotifyProcPtr	sheetCloseNotifier;
-	void*							sheetCloseNotifierUserData;
+	My_RefRegistrar			refValidator;		//!< ensures this reference is recognized as a valid one
+	AlertMessages_BoxRef	selfRef;
+	AlertMessages_VC*		viewController;		//!< panel for icon and text content of alert message; owned by "genericDialog"
+	GenericDialog_Wrap		genericDialog;		//!< wraps alert panel in a window, with buttons, and displays it
+	Alert_IconID			iconID;
+	WindowRef				parentWindow;
+	NSWindow*				parentNSWindow;
 };
 typedef My_AlertMessage*	My_AlertMessagePtr;
 
-typedef MemoryBlockPtrLocker< AlertMessages_BoxRef, My_AlertMessage >	My_AlertPtrLocker;
-typedef LockAcquireRelease< AlertMessages_BoxRef, My_AlertMessage >		My_AlertAutoLocker;
+typedef MemoryBlockPtrLocker< AlertMessages_BoxRef, My_AlertMessage >		My_AlertPtrLocker;
+typedef LockAcquireRelease< AlertMessages_BoxRef, My_AlertMessage >			My_AlertAutoLocker;
+typedef MemoryBlockReferenceLocker< AlertMessages_BoxRef, My_AlertMessage >	My_AlertReferenceLocker;
 
 } // anonymous namespace
+
+
+/*!
+A subclass of NSImageView that allows the user to drag
+the window when it is clicked.  Used to
+*/
+@interface AlertMessages_WindowDraggingIcon : NSImageView //{
+{
+	BOOL	_mouseDownCanMoveWindow;
+}
+
+// accessors
+	@property (assign) BOOL
+	mouseDownCanMoveWindow;
+
+@end //}
+
+
+/*!
+A debugging class that is essentially its superclass but
+the drawing routine has the option to add information.
+*/
+@interface AlertMessages_TextView : NSTextView //{
+
+// NSView
+	- (void)
+	drawRect:(NSRect)_;
+
+@end //}
+
+
+/*!
+A debugging class that is essentially its superclass but
+the drawing routine has the option to add information.
+*/
+@interface AlertMessages_TitleTextField : NSTextField //{
+
+// NSView
+	- (void)
+	drawRect:(NSRect)_;
+
+@end //}
 
 #pragma mark Variables
 namespace {
 
-Boolean				gIsAnimationAllowed = false;
-Boolean				gNotificationIsBackgrounded = false;
-Boolean				gNotificationIsIconBadged = false;
-Boolean				gUseSpeech = false;
-Boolean				gIsInited = false;
-UInt16				gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
-NSInteger			gNotificationRequestID = kInvalidUserAttentionRequestID;
-EventHandlerUPP		gAlertButtonHICommandUPP = nullptr;
-My_AlertPtrLocker&	gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
-My_RefTracker&		gAlertBoxValidRefs ()	{ static My_RefTracker x; return x; }
+Boolean						gIsAnimationAllowed = false;
+Boolean						gNotificationIsBackgrounded = false;
+Boolean						gNotificationIsIconBadged = false;
+Boolean						gUseSpeech = false;
+UInt16						gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
+NSInteger					gNotificationRequestID = kInvalidUserAttentionRequestID;
+My_AlertPtrLocker&			gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
+My_AlertReferenceLocker&	gAlertRefLocks ()	{ static My_AlertReferenceLocker x; return x; }
+My_RefTracker&				gAlertBoxValidRefs ()	{ static My_RefTracker x; return x; }
 
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-Boolean			backgroundNotification			();
-void			badgeApplicationDockTile		();
-void			handleItemHitCarbon				(My_AlertMessagePtr, DialogItemIndex);
-void			newButtonString					(CFRetainRelease&, UIStrings_ButtonCFString);
-void			prepareForDisplay				(My_AlertMessagePtr);
-OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-void			setCarbonAlertVisibility		(My_AlertMessagePtr, Boolean, Boolean);
-OSStatus		standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStringRef);
+Boolean					backgroundNotification				();
+void					badgeApplicationDockTile			();
+void					newButtonString						(CFRetainRelease&, UIStrings_ButtonCFString);
+GenericDialog_ItemID	returnGenericItemIDForAlertItem		(UInt16);
 
 } // anonymous namespace
+
 
 /*!
 The private class interface.
 */
-@interface AlertMessages_WindowController (AlertMessages_WindowControllerInternal) //{
+@interface AlertMessages_VC (AlertMessages_VCInternal) //{
 
-	- (void)
-	abortAlert;
-	- (void)
-	deltaSizeWindow:(float)_;
-	- (void)
-	didFinishAlertWithButton:(unsigned int)_
-	fromEvent:(BOOL)_;
+// new methods
 	- (NSImage*)
 	imageForIconImageName:(NSString*)_;
 	- (void)
-	setDisplayedDialogText:(NSString*)_;
-	- (void)
-	setDisplayedHelpText:(NSString*)_;
+	recalculateIdealHeight;
 	- (void)
 	setStringProperty:(NSString**)_
 	withName:(NSString*)_
 	toValue:(NSString*)_;
+
+// accessors
+	@property (assign) Alert_IconID
+	iconID;
 
 @end //}
 
@@ -209,70 +194,12 @@ The private class interface.
 #pragma mark Public Methods
 
 /*!
-This routine should be called once, before any
-other Alert routine.  The corresponding method
-Alert_Done() should be invoked once at the end
-of the program (most likely), after the Alert
-module is not needed anymore.
-
-The Alert module needs the reference number of
-your application’s resource file.  You usually
-call Alert_Init() at startup time.
-
-(1.0)
-*/
-void
-Alert_Init ()
-{
-	gAlertButtonHICommandUPP = NewEventHandlerUPP(receiveHICommand);
-	
-	// register application icon, because the "AlertMessages.nib" file
-	// relies on this type/creator combination for the icon badge
-	{
-		IconRef		result = nullptr;
-		FSRef		iconFile;
-		
-		
-		if (AppResources_GetArbitraryResourceFileFSRef
-			(AppResources_ReturnBundleIconFilenameNoExtension(),
-				CFSTR("icns")/* type */, iconFile))
-		{
-			if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-													kConstantsRegistry_IconServicesIconApplication,
-													&iconFile, &result))
-			{
-				// failed!
-				Console_Warning(Console_WriteLine, "failed to register application icon for use in alert messages");
-			}
-		}
-	}
-	
-	gIsInited = true;
-}// Init
-
-
-/*!
-This routine should be called once, after the
-Alert module is no longer needed.
-
-(1.0)
-*/
-void
-Alert_Done ()
-{
-	Alert_ServiceNotification();
-	gAlertPtrLocks().clear();
-	DisposeEventHandlerUPP(gAlertButtonHICommandUPP), gAlertButtonHICommandUPP = nullptr;
-	gIsInited = false;
-}// Done
-
-
-/*!
 Creates an application-modal alert without displaying
 it (this gives you the opportunity to specify its
 characteristics using other methods from this module).
 When you are finished with the alert, use the method
-Alert_Dispose() to destroy it.
+Alert_Release().  (It is recommended that you make use
+of the AlertMessages_BoxWrap class for this however.)
 
 Generally, you call this routine to create an alert,
 then call other methods to set up the attributes of
@@ -286,134 +213,30 @@ other buttons.
 
 IMPORTANT:	If unsuccessful, nullptr is returned.
 
-(1.0)
+(2016.03)
 */
 AlertMessages_BoxRef
-Alert_New ()
+Alert_NewApplicationModal ()
 {
-	AlertMessages_BoxRef	result = nullptr;
+	AlertMessages_BoxRef	result = Alert_NewWindowModal(nullptr/* parent window */);
 	
 	
-	try
-	{
-		My_AlertMessagePtr		alertPtr = new My_AlertMessage();
-		
-		
-		if (nullptr != alertPtr)
-		{
-			alertPtr->targetWindowController = alertPtr->asModal =
-				[[AlertMessages_ModalWindowController alloc] init];
-			if (nil == alertPtr->targetWindowController)
-			{
-				delete alertPtr;
-			}
-			else
-			{
-				[alertPtr->targetWindowController setDataPtr:alertPtr];
-				
-				result = REINTERPRET_CAST(alertPtr, AlertMessages_BoxRef);
-			}
-		}
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
 	return result;
-}// New
+}// NewApplicationModal
 
 
 /*!
-Constructs a notification window.
+Constructs a translucent sheet alert if the parent window
+is not nil; otherwise, constructs a movable and modal
+window (see also Alert_NewApplicationModal(), which is a
+short-cut for this 2nd case).
 
-A modeless alert is no different than a sheet in terms of
-handling, except that it is not associated with any window.  And
-since it is not modal, the user can literally ignore the alert
-forever.  (The Finder displays these kinds of alerts if problems
-arise during file copies, for example.)
+IMPORTANT:	If unsuccessful, nullptr is returned.
 
-When you subsequently display the alert, you will actually have
-to defer handling of the alert until the notifier you specify is
-invoked.  For alerts with a single button for which you don’t
-care about the result, just use "Alert_StandardCloseNotifyProc"
-as your notifier; for all other kinds of alerts, pass your own
-custom routine so you can tell which button was hit.
-
-Currently, the initial location of a modeless alert is chosen
-automatically.  It is also auto-saved as a user preference, so
-that new alerts will generally appear where the user wants them
-to be.
-
-(2.3)
+(2016.03)
 */
 AlertMessages_BoxRef
-Alert_NewModeless	(AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-					 void*								inCloseNotifyProcUserData)
-{
-	AlertMessages_BoxRef	result = nullptr;
-	
-	
-	try
-	{
-		My_AlertMessagePtr		alertPtr = new My_AlertMessage();
-		
-		
-		if (nullptr != alertPtr)
-		{
-			alertPtr->targetWindowController = alertPtr->asNotification =
-				[[AlertMessages_NotificationWindowController alloc] init];
-			if (nil == alertPtr->targetWindowController)
-			{
-				delete alertPtr;
-			}
-			else
-			{
-				[alertPtr->targetWindowController setDataPtr:alertPtr];
-				
-				alertPtr->isCompletelyModeless = true;
-				alertPtr->sheetCloseNotifier = inCloseNotifyProcPtr;
-				alertPtr->sheetCloseNotifierUserData = inCloseNotifyProcUserData;
-				
-				result = REINTERPRET_CAST(alertPtr, AlertMessages_BoxRef);
-			}
-		}
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// NewModeless
-
-
-/*!
-Constructs a translucent sheet alert, as opposed to a
-movable modal dialog box.
-
-The "inIsParentWindowCloseWarning" option specifies
-how the sheet is closed; the Aqua Human Interface
-Guidelines suggest removing a sheet immediately
-without animation (along with its parent window) if
-the default action button for the sheet causes the
-parent window to close.
-
-Since sheets are essentially modeless, when you
-subsequently display the alert you will actually
-have to defer handling of the alert until the
-notifier you specify is invoked.  For alerts with
-a single button for which you don’t care about the
-result, just use "Alert_StandardCloseNotifyProc"
-as your notifier; for all other kinds of alerts,
-pass your own custom routine so you can tell which
-button was hit.
-
-(2.5)
-*/
-AlertMessages_BoxRef
-Alert_NewWindowModal	(NSWindow*							inParentWindow,
-						 Boolean							inIsParentWindowCloseWarning,
-						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-						 void*								inCloseNotifyProcUserData)
+Alert_NewWindowModal	(NSWindow*		inParentWindow)
 {
 	AlertMessages_BoxRef	result = nullptr;
 	
@@ -426,24 +249,26 @@ Alert_NewWindowModal	(NSWindow*							inParentWindow,
 		if (nullptr != alertPtr)
 		{
 			alertPtr->parentNSWindow = inParentWindow;
-			alertPtr->targetWindowController = alertPtr->asSheet =
-				[[AlertMessages_ModalWindowController alloc] init];
-			if (nil == alertPtr->targetWindowController)
-			{
-				delete alertPtr;
-			}
-			else
-			{
-				[alertPtr->targetWindowController setDataPtr:alertPtr];
-				
-				alertPtr->isSheet = true;
-				alertPtr->isSheetForWindowCloseWarning = inIsParentWindowCloseWarning;
-				
-				alertPtr->sheetCloseNotifier = inCloseNotifyProcPtr;
-				alertPtr->sheetCloseNotifierUserData = inCloseNotifyProcUserData;
-				
-				result = REINTERPRET_CAST(alertPtr, AlertMessages_BoxRef);
-			}
+			// the window is not required to be defined because a
+			// lack of window is used by Alert_NewApplicationModal()
+			//assert(nil != alertPtr->parentNSWindow);
+			
+			alertPtr->viewController = [[AlertMessages_VC alloc] init];
+			assert(nil != alertPtr->viewController);
+			alertPtr->genericDialog = GenericDialog_Wrap(GenericDialog_New(inParentWindow.contentView,
+																			alertPtr->viewController/* transfer ownership */,
+																			nullptr/* data set */, true/* is alert style */),
+															true/* is retained */);
+			assert(alertPtr->genericDialog.exists());
+			[alertPtr->viewController release]; // ownership transfers to "genericDialog"
+			
+			// set a default help button action
+			Alert_SetButtonResponseBlock(alertPtr->selfRef, kAlert_ItemHelpButton, ^{ HelpSystem_DisplayHelpWithoutContext(); });
+			
+			result = alertPtr->selfRef;
+			assert(nullptr != result);
+			
+			Alert_Retain(result);
 		}
 	}
 	catch (std::bad_alloc)
@@ -451,20 +276,17 @@ Alert_NewWindowModal	(NSWindow*							inParentWindow,
 		result = nullptr;
 	}
 	return result;
-}// NewWindowModal (NSWindow*, ...)
+}// NewWindowModal
 
 
 /*!
 DEPRECATED.  For displaying alerts over Carbon windows only.
-See also the method of the same name that accepts an "NSWindow*".
+See also Alert_NewWindowModal(), which accepts "NSWindow*".
 
-(2.5)
+(2016.03)
 */
 AlertMessages_BoxRef
-Alert_NewWindowModal	(HIWindowRef						inParentWindow,
-						 Boolean							inIsParentWindowCloseWarning,
-						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-						 void*								inCloseNotifyProcUserData)
+Alert_NewWindowModalParentCarbon	(HIWindowRef	inParentWindow)
 {
 	AlertMessages_BoxRef	result = nullptr;
 	
@@ -476,13 +298,24 @@ Alert_NewWindowModal	(HIWindowRef						inParentWindow,
 		
 		if (nullptr != alertPtr)
 		{
-			alertPtr->isSheet = true;
-			alertPtr->isSheetForWindowCloseWarning = inIsParentWindowCloseWarning;
 			alertPtr->parentWindow = inParentWindow;
-			alertPtr->sheetCloseNotifier = inCloseNotifyProcPtr;
-			alertPtr->sheetCloseNotifierUserData = inCloseNotifyProcUserData;
 			
-			result = REINTERPRET_CAST(alertPtr, AlertMessages_BoxRef);
+			alertPtr->viewController = [[AlertMessages_VC alloc] init];
+			assert(nil != alertPtr->viewController);
+			alertPtr->genericDialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(inParentWindow,
+																						alertPtr->viewController/* transfer ownership */,
+																						nullptr/* data set */, true/* is alert style */),
+															true/* is retained */);
+			assert(alertPtr->genericDialog.exists());
+			[alertPtr->viewController release]; // ownership transfers to "genericDialog"
+			
+			// set a default help button action
+			Alert_SetButtonResponseBlock(alertPtr->selfRef, kAlert_ItemHelpButton, ^{ HelpSystem_DisplayHelpWithoutContext(); });
+			
+			result = alertPtr->selfRef;
+			assert(nullptr != result);
+			
+			Alert_Retain(result);
 		}
 	}
 	catch (std::bad_alloc)
@@ -490,57 +323,60 @@ Alert_NewWindowModal	(HIWindowRef						inParentWindow,
 		result = nullptr;
 	}
 	return result;
-}// NewWindowModal (HIWindowRef, ...)
+}// NewWindowModalParentCarbon
 
 
 /*!
-When you are finished with an alert that you
-created with Alert_New(), call this routine
-to destroy it.  The reference is automatically
-set to nullptr.
+Adds a lock on the specified reference, preventing it from
+being deleted.  See Alert_Release().
 
-(1.0)
+NOTE:	Usually, you should let AlertMessages_BoxWrap objects
+		handle retain/release for you.
+
+(2016.03)
 */
 void
-Alert_Dispose	(AlertMessages_BoxRef*		inoutAlert)
+Alert_Retain	(AlertMessages_BoxRef	inAlert)
 {
-	if (nullptr != inoutAlert)
-	{
-		if (gAlertBoxValidRefs().end() == gAlertBoxValidRefs().find(*inoutAlert))
-		{
-			Console_Warning(Console_WriteValueAddress, "attempt to Alert_Dispose() with invalid reference", *inoutAlert);
-		}
-		else
-		{
-			delete *(REINTERPRET_CAST(inoutAlert, My_AlertMessagePtr*)), *inoutAlert = nullptr;
-		}
-	}
-}// Dispose
+	gAlertRefLocks().acquireLock(inAlert);
+}// Retain
 
 
 /*!
-Hits an item in an open alert window as if the user
-hit the item.  Generally used in open sheets to force
-behavior (for example, forcing a sheet to Cancel and
-slide closed).
+Releases one lock on the specified alert and deletes the alert
+*if* no other locks remain.  Your copy of the reference is set
+to nullptr either way.
 
-(1.0)
+NOTE:	Usually, you should let AlertMessages_BoxWrap objects
+		handle retain/release for you.
+
+(2016.03)
 */
 void
-Alert_Abort		(AlertMessages_BoxRef	inAlert)
+Alert_Release	(AlertMessages_BoxRef*		inoutAlertPtr)
 {
-	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
-	
-	
-	if (nil != alertPtr->targetWindowController)
+	if (gAlertBoxValidRefs().end() == gAlertBoxValidRefs().find(*inoutAlertPtr))
 	{
-		[alertPtr->targetWindowController abortAlert];
+		Console_Warning(Console_WriteValueAddress, "attempt to Alert_Release() with invalid reference", *inoutAlertPtr);
 	}
 	else
 	{
-		handleItemHitCarbon(alertPtr, kAlert_ItemButtonNone);
+		gAlertRefLocks().releaseLock(*inoutAlertPtr);
+		unless (gAlertRefLocks().isLocked(*inoutAlertPtr))
+		{
+			if (gAlertPtrLocks().isLocked(*inoutAlertPtr))
+			{
+				Console_Warning(Console_WriteValue, "attempt to dispose of locked alert; outstanding locks",
+								gAlertPtrLocks().returnLockCount(*inoutAlertPtr));
+			}
+			else
+			{
+				delete *(REINTERPRET_CAST(inoutAlertPtr, My_AlertMessagePtr*)), *inoutAlertPtr = nullptr;
+			}
+		}
 	}
-}// Abort
+	*inoutAlertPtr = nullptr;
+}// Release
 
 
 /*!
@@ -561,164 +397,115 @@ Alert_BackgroundNotification ()
 
 
 /*!
-Use this method to display an alert described by an
-Interface Library Alert object.  This will have one of
-two effects:
-- For application-modal alerts, the call will block
-  until the alert is dismissed (either by user action
-  or timeout).  If the alert has more than one button,
-  the item hit can be found as a standard alert button
-  number (kAlert_ItemButton1, etc.) by invoking the
-  Alert_ItemHit() method.
-- For window-modal alerts (Mac OS X only), the sheet
-  will be displayed and then this routine will return
-  immediately.  When the alert is finally dismissed,
-  the notification routine specified by
-  Alert_NewWindowModal() will be invoked, at which
-  time you find out which button (if any) was chosen.
-  Only at that point is it safe to dispose of the
-  alert with Alert_Dispose().
+Disables the window-closing animation that occurs when the
+primary button is selected.
 
-The "inAnimated" flag is currently only respected for
-application-modal alerts, and only means something on
-Mac OS X 10.7 and beyond (where the window can “pop”
-open).  If you suppress animation, the window is
-displayed immediately without the standard animation.
-This is not recommended except in special situations.
-Note that if Alert_SetIsAnimationAllowed() has been
-set to false, it takes precedence over the flag here.
+NOTE:	This is a very special case and it is really only meant
+		for alerts that guard against closing the parent window.
 
-If the program is in the background (as specified by
-a call to Alert_SetIsBackgrounded()), a notification
-is posted.  The alert is displayed immediately, but
-the notification lets the user know that it’s there.
-Your application must call Alert_ServiceNotification()
-whenever a “resume” event is detected in your event
-loop, in order to service notifications posted by the
-Alert module.
-
-Another Alert module alert box can be visible while
-this method is invoked, and all displayed alerts will
-still be displayed properly.  This is better than the
-Mac OS default implementation - a bug in the
-StandardAlert() implementation prevents simultaneous
-display of alerts, because it causes all displayed
-alerts to show the same alert text.
-
-You must have called Alert_Init() properly to display
-any kind of alert.  If this module has not been
-initialized, "notInitErr" is returned.
-
-(1.0)
+(4.1)
 */
-OSStatus
-Alert_Display	(AlertMessages_BoxRef	inAlert,
-				 Boolean				inAnimated)
+void
+Alert_DisableCloseAnimation		(AlertMessages_BoxRef	inAlert)
 {
-	OSStatus	result = noErr;
-	Boolean		animationFinalFlag = (inAnimated && gIsAnimationAllowed);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
-	// only attempt to display an alert if the module was properly initialized
-	if (gIsInited)
-	{
-		My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
-		
-		
-		result = backgroundNotification();
-		[[NSCursor arrowCursor] set];
-		if (nil != alertPtr->targetWindowController)
-		{
-			// Cocoa implementation
-			prepareForDisplay(alertPtr);
-			if (alertPtr->isSheet)
-			{
-				if (nil != alertPtr->asSheet)
-				{
-					[NSApp beginSheet:[alertPtr->targetWindowController window]
-										modalForWindow:alertPtr->parentNSWindow
-										modalDelegate:alertPtr->asSheet
-										didEndSelector:@selector(sheetDidEnd:returnCode:contextInfo:)
-										contextInfo:inAlert];
-				}
-			}
-			else if (alertPtr->isCompletelyModeless)
-			{
-				if (nil != alertPtr->asNotification)
-				{
-					[[alertPtr->targetWindowController window] orderBack:NSApp];
-				}
-			}
-			else
-			{
-				NSWindow*	window = [alertPtr->targetWindowController window];
-				
-				
-				if (animationFinalFlag)
-				{
-					if ([window respondsToSelector:@selector(setAnimationBehavior:)])
-					{
-						[window setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
-					}
-				}
-				else
-				{
-					if ([window respondsToSelector:@selector(setAnimationBehavior:)])
-					{
-						[window setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
-					}
-				}
-				[NSApp beginSheet:window modalForWindow:nil modalDelegate:nil didEndSelector:nil contextInfo:nil];
-				UNUSED_RETURN(int)[NSApp runModalForWindow:window];
-				[NSApp endSheet:window];
-				Alert_ServiceNotification(); // just in case it wasn’t removed properly
-				[window orderOut:NSApp];
-			}
-			
-			// speak text if necessary - UNIMPLEMENTED
-		}
-		else
-		{
-			// legacy Carbon implementation; now only needed for certain sheets
-		#if 1
-			result = standardAlert(alertPtr, alertPtr->alertType, alertPtr->dialogTextCFString.returnCFStringRef(),
-									alertPtr->helpTextCFString.returnCFStringRef());
-		#else
-			//(OSStatus)CreateStandardAlert(alertPtr->alertType, alertPtr->dialogTextCFString.returnCFStringRef(),
-			//								alertPtr->helpTextCFString.returnCFStringRef(),
-			//								&alertPtr->params, &alertPtr->itemHit, &someDialog);
-		#endif
-		}
-	}
-	else
-	{
-		result = notInitErr;
-	}
-	
-	return result;
-}// Display
+	GenericDialog_SetItemDialogEffect(alertPtr->genericDialog.returnRef(), kGenericDialog_ItemIDButton1,
+										kGenericDialog_DialogEffectCloseImmediately);
+}// DisableCloseAnimation
 
 
 /*!
-Determines the number of the button that was selected
-by the user.  A value of 1, 2, or 3 indicates the
-respective button positions for the default button,
-cancel button, and “other” button.  The value 4
-indicates the help button.  If the alert times out
-(that is, it “closed itself”), 0 is returned.
+Use this method to display an alert message.  For alerts with
+multiple buttons, Alert_SetButtonResponseBlock() should be used
+to determine button actions.
 
-(1.0)
+Application-modal alerts will block until the alert is dismissed
+(either by user action or timeout) and this call will not return
+until the alert is closed.
+
+Conversely, window-modal alerts display asynchronously and this
+call will return immediately.  The response blocks for buttons
+can therefore be called at any time.
+
+The "isAnimated" flag prevents all animations.  You can prevent
+animations globally (regardless of the "isAnimated" value) by
+calling Alert_SetIsAnimationAllowed().  You can prevent the
+alert-close animation for primary-button clicks by calling the
+Alert_DisableCloseAnimation() method (useful for alerts that
+warn against closing the parent window).  In general, animation
+controls should only be used to prevent alert animations from
+interfering with other animations.
+
+If the application is in the background (as specified by a call
+to Alert_SetIsBackgrounded()), the user’s preferred background
+notification scheme is applied — such as an animating Dock icon.
+Alert_ServiceNotification() must be called when the application
+“resumes” so that the notification will be cleared properly.
+
+(2016.05)
 */
-UInt16
-Alert_ItemHit	(AlertMessages_BoxRef	inAlert)
+void
+Alert_Display	(AlertMessages_BoxRef	inAlert,
+				 Boolean				inAnimated)
 {
 	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
-	UInt16					result = kAlert_ItemButton3;
+	GenericDialog_Ref		genericDialog = alertPtr->genericDialog.returnRef();
+	Boolean					animationFinalFlag = (inAnimated && gIsAnimationAllowed);
 	
 	
-	if (nullptr != alertPtr) result = alertPtr->itemHit;
-	return result;
-}// ItemHit
+	UNUSED_RETURN(Boolean)backgroundNotification();
+	
+	[[NSCursor arrowCursor] set];
+	
+	if (nullptr != genericDialog)
+	{
+		// the first two buttons will close the alert by default but
+		// they will also animate by default; set this based on the
+		// animation flag above
+		if (false == animationFinalFlag)
+		{
+			// animation is disabled; any buttons that are set to
+			// perform an animated close should now close immediately
+			if (kGenericDialog_DialogEffectCloseNormally ==
+				GenericDialog_ReturnItemDialogEffect(genericDialog, kGenericDialog_ItemIDButton1))
+			{
+				GenericDialog_SetItemDialogEffect(genericDialog, kGenericDialog_ItemIDButton1,
+													kGenericDialog_DialogEffectCloseImmediately);
+			}
+			if (kGenericDialog_DialogEffectCloseNormally ==
+				GenericDialog_ReturnItemDialogEffect(genericDialog, kGenericDialog_ItemIDButton2))
+			{
+				GenericDialog_SetItemDialogEffect(genericDialog, kGenericDialog_ItemIDButton2,
+													kGenericDialog_DialogEffectCloseImmediately);
+			}
+		}
+		// regardless of the animation setting, the third button’s
+		// dialog effect MUST be set explicitly (to close the dialog)
+		// because the third button does not close by default
+		GenericDialog_SetItemDialogEffect(genericDialog, kGenericDialog_ItemIDButton3,
+											(animationFinalFlag)
+											? kGenericDialog_DialogEffectCloseNormally
+											: kGenericDialog_DialogEffectCloseImmediately);
+		
+		// display the dialog; since Alert_Release() overwrites its
+		// target variable, a local copy of the value is created
+		{
+			__block AlertMessages_BoxRef	dummyBox = inAlert;
+			
+			
+			Alert_Retain(dummyBox), GenericDialog_Display(genericDialog, animationFinalFlag,
+															^{ Alert_Release(&dummyBox); }); // retains dialog until it is dismissed
+		}
+		
+		// speak text if necessary - UNIMPLEMENTED
+	}
+	else
+	{
+		Console_Warning(Console_WriteLine, "cannot display, alert is not initialized");
+	}
+}// Display
 
 
 /*!
@@ -732,15 +519,13 @@ Alert_Message	(CFStringRef	inDialogText,
 				 CFStringRef	inHelpText,
 				 Boolean		inIsHelpButton)
 {
-	AlertMessages_BoxRef	box = nullptr;
+	AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
 	
 	
-	box = Alert_New(); // no help button, single OK button
-	Alert_SetHelpButton(box, inIsHelpButton);
-	Alert_SetTextCFStrings(box, inDialogText, inHelpText);
-	Alert_SetType(box, kAlertNoteAlert);
-	Alert_Display(box);
-	Alert_Dispose(&box);
+	Alert_SetHelpButton(box.returnRef(), inIsHelpButton);
+	Alert_SetTextCFStrings(box.returnRef(), inDialogText, inHelpText);
+	Alert_SetIcon(box.returnRef(), kAlert_IconIDNote);
+	Alert_Display(box.returnRef()); // retains alert until it is dismissed
 }// Message
 
 
@@ -771,11 +556,11 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 	if (result)
 	{
 		UIStrings_Result		stringResult = kUIStrings_ResultOK;
-		AlertMessages_BoxRef	box = nullptr;
+		AlertMessages_BoxWrap	box;
 		CFStringRef				primaryTextCFString = nullptr;
 		CFStringRef				primaryTextTemplateCFString = nullptr;
 		CFStringRef				helpTextCFString = nullptr;
-		Boolean					doExit = false;
+		__block Boolean			doExit = false;
 		
 		
 		// generate dialog text; some “common” errors may have custom messages
@@ -835,11 +620,11 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 			helpTextCFString = CFSTR("");
 		}
 		
-		box = Alert_New();
-		Alert_SetHelpButton(box, false);
+		box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), true/* is retained */);
+		Alert_SetHelpButton(box.returnRef(), false);
 		if (inAssertion)
 		{
-			Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+			Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
 			{
 				CFRetainRelease		buttonString;
 				
@@ -847,19 +632,20 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 				newButtonString(buttonString, kUIStrings_ButtonQuit);
 				if (buttonString.exists())
 				{
-					Alert_SetButtonText(box, kAlert_ItemButton1, buttonString.returnCFStringRef());
+					Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, buttonString.returnCFStringRef());
 				}
+				Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1, ^{ doExit = true; });
 				newButtonString(buttonString, kUIStrings_ButtonContinue);
 				if (buttonString.exists())
 				{
-					Alert_SetButtonText(box, kAlert_ItemButton2, buttonString.returnCFStringRef());
+					Alert_SetButtonText(box.returnRef(), kAlert_ItemButton2, buttonString.returnCFStringRef());
 				}
 			}
-			Alert_SetType(box, kAlertStopAlert);
+			Alert_SetIcon(box.returnRef(), kAlert_IconIDStop);
 		}
 		else
 		{
-			Alert_SetParamsFor(box, kAlert_StyleOK);
+			Alert_SetParamsFor(box.returnRef(), kAlert_StyleOK);
 			{
 				CFRetainRelease		buttonString;
 				
@@ -867,23 +653,13 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 				newButtonString(buttonString, kUIStrings_ButtonContinue);
 				if (buttonString.exists())
 				{
-					Alert_SetButtonText(box, kAlert_ItemButton1, buttonString.returnCFStringRef());
+					Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, buttonString.returnCFStringRef());
 				}
 			}
-			Alert_SetType(box, kAlertCautionAlert);
 		}
-		Alert_SetTextCFStrings(box, primaryTextCFString, helpTextCFString);
+		Alert_SetTextCFStrings(box.returnRef(), primaryTextCFString, helpTextCFString);
 		
-		Alert_Display(box);
-		if (inAssertion)
-		{
-			doExit = (Alert_ItemHit(box) == kAlert_ItemButton1);
-		}
-		else
-		{
-			doExit = false;
-		}
-		Alert_Dispose(&box);
+		Alert_Display(box.returnRef()); // retains alert until it is dismissed
 		
 		if (doExit)
 		{
@@ -892,6 +668,39 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 	}
 	return result;
 }// ReportOSStatus
+
+
+/*!
+Returns the Generic Dialog object that is used to display
+the alert.
+
+Note that it is preferable to use methods from this module
+to affect alert windows.  The Generic Dialog accessor is
+mostly useful for cases of direct window management, such
+as the case of holding a reference to any open dialog (alert
+or otherwise).
+
+IMPORTANT:	It is possible for an AlertMessages_BoxRef to
+			be released while its Generic Dialog is still
+			on screen.  In other words, the Generic Dialog
+			may “out-live” the alert object, existing only
+			to run the user interface itself.  This is a
+			common case, since user input is asynchronous.
+			The Generic Dialog is owned by the running
+			interface, and is released when the dialog is
+			removed.
+
+(2016.03)
+*/
+GenericDialog_Ref
+Alert_ReturnGenericDialog		(AlertMessages_BoxRef	inAlert)
+{
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
+	GenericDialog_Ref		result = alertPtr->genericDialog.returnRef();
+	
+	
+	return result;
+}// ReturnGenericDialog
 
 
 /*!
@@ -915,6 +724,43 @@ Alert_ServiceNotification ()
 
 
 /*!
+Specifies the response for an action button.
+
+(4.1)
+*/
+void
+Alert_SetButtonResponseBlock	(AlertMessages_BoxRef	inAlert,
+								 UInt16					inWhichButton,
+								 void					(^inResponseBlock)())
+{
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
+	
+	
+	if (nullptr != alertPtr)
+	{
+		if (NO == alertPtr->genericDialog.exists())
+		{
+			Console_Warning(Console_WriteLine, "unable to set button response block for alert that is not using Generic Dialog");
+		}
+		else
+		{
+			GenericDialog_ItemID	itemID = returnGenericItemIDForAlertItem(inWhichButton);
+			
+			
+			if (kGenericDialog_ItemIDNone == itemID)
+			{
+				Console_Warning(Console_WriteValue, "invalid button number for response block", inWhichButton);
+			}
+			else
+			{
+				GenericDialog_SetItemResponseBlock(alertPtr->genericDialog.returnRef(), itemID, inResponseBlock);
+			}
+		}
+	}
+}// SetButtonResponseBlock
+
+
+/*!
 Sets the label of a specific button in subsequently-
 displayed alerts.  This information could be overridden
 by alert styles, so you should always use
@@ -925,6 +771,11 @@ one of the standard alert constants below:
 	kAlert_ItemButton1
 	kAlert_ItemButton2
 	kAlert_ItemButton3
+
+When text is set for "kAlert_ItemButton3", the label is
+used to automatically infer a command key; the NSButton
+method "keyEquivalent" is used to set a key character and
+"keyEquivalentModifierMask" is set to "NSCommandKeyMask".
 
 You may also pass nullptr to clear the button entirely, in
 which case it is not displayed in the alert box.
@@ -945,52 +796,24 @@ Alert_SetButtonText		(AlertMessages_BoxRef	inAlert,
 	
 	if (nullptr != alertPtr)
 	{
-		CFStringRef*	stringPtr = nullptr;
-		
-		
-		// if given an actual string, make sure the reference remains valid indefinitely
-		unless ((nullptr == inNewText) || (inNewText == REINTERPRET_CAST(-1/* kAlertDefaultOtherText, etc. */, CFStringRef)))
+		if (NO == alertPtr->genericDialog.exists())
 		{
-			CFRetain(inNewText);
+			Console_Warning(Console_WriteLine, "unable to set button text for alert that is not using Generic Dialog");
 		}
-		
-		// figure out where to store the button string
-		switch (inWhichButton)
+		else
 		{
-		case kAlert_ItemButton2:
-			if (nil != alertPtr->targetWindowController)
+			GenericDialog_ItemID	itemID = returnGenericItemIDForAlertItem(inWhichButton);
+			
+			
+			if (kGenericDialog_ItemIDNone == itemID)
 			{
-				[alertPtr->targetWindowController setSecondaryButtonText:(NSString*)inNewText];
+				Console_Warning(Console_WriteValue, "invalid button number when setting text", inWhichButton);
 			}
-			stringPtr = &alertPtr->params.cancelText;
-			break;
-		
-		case kAlert_ItemButton3:
-			if (nil != alertPtr->targetWindowController)
+			else
 			{
-				[alertPtr->targetWindowController setTertiaryButtonText:(NSString*)inNewText];
+				GenericDialog_SetItemTitle(alertPtr->genericDialog.returnRef(), itemID, inNewText);
 			}
-			stringPtr = &alertPtr->params.otherText;
-			break;
-		
-		case kAlert_ItemButton1:
-		default:
-			if (nil != alertPtr->targetWindowController)
-			{
-				[alertPtr->targetWindowController setPrimaryButtonText:(NSString*)inNewText];
-				// this button is always visible
-			}
-			stringPtr = &alertPtr->params.defaultText;
-			break;
 		}
-		assert(nullptr != stringPtr);
-		
-		// free any previously-stored reference, and store the new one
-		unless ((nullptr == *stringPtr) || (*stringPtr == REINTERPRET_CAST(-1/* kAlertDefaultOtherText, etc. */, CFStringRef)))
-		{
-			CFRelease(*stringPtr);
-		}
-		*stringPtr = inNewText;
 	}
 }// SetButtonText
 
@@ -998,9 +821,7 @@ Alert_SetButtonText		(AlertMessages_BoxRef	inAlert,
 /*!
 Specifies whether a help button appears in an alert.
 Help buttons should not appear unless help is
-available!  If the Contexts library or Apple Guide
-itself cannot be found, this method will not accept
-a parameter value of true.
+available!
 
 (1.0)
 */
@@ -1013,9 +834,34 @@ Alert_SetHelpButton		(AlertMessages_BoxRef	inAlert,
 	
 	if (nullptr != alertPtr)
 	{
-		alertPtr->params.helpButton = inIsHelpButton;
+		alertPtr->viewController.panelHasContextualHelp = inIsHelpButton;
 	}
 }// SetHelpButton
+
+
+/*!
+Sets the icon for an alert.  If the icon is set to
+"kAlert_IconIDNone" then nothing is displayed.
+
+(2016.03)
+*/
+void
+Alert_SetIcon	(AlertMessages_BoxRef	inAlert,
+				 Alert_IconID			inIcon)
+{
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
+	
+	
+	if (nullptr != alertPtr)
+	{
+		alertPtr->iconID = inIcon;
+		
+		// attempt to update the view controller; this will
+		// generally fail because the UI probably isn’t
+		// loaded yet
+		alertPtr->viewController.iconID = inIcon;
+	}
+}// SetIcon
 
 
 /*!
@@ -1025,7 +871,7 @@ has no effect.
 
 This should correspond to a user preference setting.
 
-(2.6)
+(2016.03)
 */
 void
 Alert_SetIsAnimationAllowed		(Boolean	inIsAnimationAllowed)
@@ -1106,8 +952,6 @@ Alert_SetParamsFor	(AlertMessages_BoxRef	inAlert,
 			}
 			Alert_SetButtonText(inAlert, kAlert_ItemButton2, nullptr);
 			Alert_SetButtonText(inAlert, kAlert_ItemButton3, nullptr);
-			alertPtr->params.defaultButton = kAlert_ItemButton1;
-			alertPtr->params.cancelButton = 0;
 			break;
 		
 		case kAlert_StyleCancel:
@@ -1118,12 +962,9 @@ Alert_SetParamsFor	(AlertMessages_BoxRef	inAlert,
 			}
 			Alert_SetButtonText(inAlert, kAlert_ItemButton2, nullptr);
 			Alert_SetButtonText(inAlert, kAlert_ItemButton3, nullptr);
-			alertPtr->params.defaultButton = kAlert_ItemButton1;
-			alertPtr->params.cancelButton = 0;
 			break;
 		
 		case kAlert_StyleOKCancel:
-		case kAlert_StyleOKCancel_CancelIsDefault:
 			newButtonString(tempCFString, kUIStrings_ButtonOK);
 			if (tempCFString.exists())
 			{
@@ -1135,76 +976,6 @@ Alert_SetParamsFor	(AlertMessages_BoxRef	inAlert,
 				Alert_SetButtonText(inAlert, kAlert_ItemButton2, tempCFString.returnCFStringRef());
 			}
 			Alert_SetButtonText(inAlert, kAlert_ItemButton3, nullptr);
-			if (inAlertStyle == kAlert_StyleOKCancel_CancelIsDefault)
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton2;
-				alertPtr->params.cancelButton = kAlert_ItemButton1;
-			}
-			else
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton1;
-				alertPtr->params.cancelButton = kAlert_ItemButton2;
-			}
-			break;
-		
-		case kAlert_StyleYesNo:
-		case kAlert_StyleYesNo_NoIsDefault:
-			newButtonString(tempCFString, kUIStrings_ButtonYes);
-			if (tempCFString.exists())
-			{
-				Alert_SetButtonText(inAlert, kAlert_ItemButton1, tempCFString.returnCFStringRef());
-			}
-			newButtonString(tempCFString, kUIStrings_ButtonNo);
-			if (tempCFString.exists())
-			{
-				Alert_SetButtonText(inAlert, kAlert_ItemButton2, tempCFString.returnCFStringRef());
-			}
-			Alert_SetButtonText(inAlert, kAlert_ItemButton3, nullptr);
-			if (inAlertStyle == kAlert_StyleYesNo_NoIsDefault)
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton2;
-				alertPtr->params.cancelButton = kAlert_ItemButton1;
-			}
-			else
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton1;
-				alertPtr->params.cancelButton = kAlert_ItemButton2;
-			}
-			break;
-		
-		case kAlert_StyleYesNoCancel:
-		case kAlert_StyleYesNoCancel_NoIsDefault:
-		case kAlert_StyleYesNoCancel_CancelIsDefault:
-			newButtonString(tempCFString, kUIStrings_ButtonYes);
-			if (tempCFString.exists())
-			{
-				Alert_SetButtonText(inAlert, kAlert_ItemButton1, tempCFString.returnCFStringRef());
-			}
-			newButtonString(tempCFString, kUIStrings_ButtonNo);
-			if (tempCFString.exists())
-			{
-				Alert_SetButtonText(inAlert, kAlert_ItemButton2, tempCFString.returnCFStringRef());
-			}
-			newButtonString(tempCFString, kUIStrings_ButtonCancel);
-			if (tempCFString.exists())
-			{
-				Alert_SetButtonText(inAlert, kAlert_ItemButton3, tempCFString.returnCFStringRef());
-			}
-			alertPtr->params.defaultButton = kAlert_ItemButton1;
-			alertPtr->params.cancelButton = kAlert_ItemButton3;
-			if (inAlertStyle == kAlert_StyleYesNoCancel_NoIsDefault)
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton2;
-			}
-			else if (inAlertStyle == kAlert_StyleYesNoCancel_CancelIsDefault)
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton3;
-			}
-			else
-			{
-				alertPtr->params.defaultButton = kAlert_ItemButton1;
-			}
-			alertPtr->params.cancelButton = kAlert_ItemButton3;
 			break;
 		
 		case kAlert_StyleDontSaveCancelSave:
@@ -1223,8 +994,6 @@ Alert_SetParamsFor	(AlertMessages_BoxRef	inAlert,
 			{
 				Alert_SetButtonText(inAlert, kAlert_ItemButton3, tempCFString.returnCFStringRef());
 			}
-			alertPtr->params.defaultButton = kAlert_ItemButton1;
-			alertPtr->params.cancelButton = kAlert_ItemButton2;
 			break;
 		
 		default:
@@ -1251,14 +1020,8 @@ Alert_SetTextCFStrings	(AlertMessages_BoxRef	inAlert,
 	
 	if (nullptr != alertPtr)
 	{
-		if (nil != alertPtr->targetWindowController)
-		{
-			[alertPtr->targetWindowController setDialogText:(NSString*)inDialogText];
-			[alertPtr->targetWindowController setHelpText:(NSString*)inHelpText];
-		}
-		
-		alertPtr->dialogTextCFString.setCFTypeRef(inDialogText);
-		alertPtr->helpTextCFString.setCFTypeRef(inHelpText);
+		alertPtr->viewController.dialogText = BRIDGE_CAST(inDialogText, NSString*);
+		alertPtr->viewController.helpText = BRIDGE_CAST(inHelpText, NSString*);
 	}
 }// SetTextCFStrings
 
@@ -1283,34 +1046,9 @@ Alert_SetTitleCFString	(AlertMessages_BoxRef	inAlert,
 	
 	if (nullptr != alertPtr)
 	{
-		if (nil != alertPtr->targetWindowController)
-		{
-			[alertPtr->targetWindowController setTitleText:(NSString*)inNewTitle];
-		}
-		
-		alertPtr->titleCFString.setCFTypeRef(inNewTitle);
+		alertPtr->viewController.titleText = BRIDGE_CAST(inNewTitle, NSString*);
 	}
 }// SetTitle
-
-
-/*!
-Use this method to set the icon for an alert.
-A “plain” alert type has no icon.
-
-(1.0)
-*/
-void
-Alert_SetType	(AlertMessages_BoxRef	inAlert,
-				 AlertType				inNewType)
-{
-	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
-	
-	
-	if (nullptr != alertPtr)
-	{
-		alertPtr->alertType = inNewType;
-	}
-}// SetType
 
 
 /*!
@@ -1327,107 +1065,27 @@ Alert_SetUseSpeech		(Boolean	inUseSpeech)
 }// SetUseSpeech
 
 
-/*!
-The standard responder to a closed window-modal (sheet)
-or modeless (notification window) alert, this routine simply
-destroys the specified alert, ignoring any buttons clicked.
-
-If for some reason a nullptr alert is given, this callback
-has no effect.
-
-This notifier is only appropriate if you display an alert with
-a single button choice.  If you need to know which button was
-chosen, call Alert_NewWindowModal() or Alert_NewModeless()
-with your own notifier instead of this one, remembering to
-call Alert_Dispose() within your custom notifier (or, just
-call this routine).
-
-(1.0)
-*/
-void
-Alert_StandardCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
-								 SInt16					UNUSED_ARGUMENT(inItemHit),
-								 void*					UNUSED_ARGUMENT(inUserData))
-{
-	if (nullptr != inAlertThatClosed)
-	{
-		Alert_Dispose(&inAlertThatClosed);
-	}
-}// StandardCloseNotifyProc
-
-
 #pragma mark Internal Methods
 namespace {
 
 /*!
-Constructor.  See Alert_New().
+Constructor.  See the Alert_New...() methods.
 
 (1.1)
 */
 My_AlertMessage::
-My_AlertMessage()
+My_AlertMessage ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 refValidator(REINTERPRET_CAST(this, AlertMessages_BoxRef), gAlertBoxValidRefs()),
 selfRef(REINTERPRET_CAST(this, AlertMessages_BoxRef)),
-asModal(nil),
-asNotification(nil),
-targetWindowController(nil),
-params(),
-alertType(kAlertNoteAlert),
-dialogTextCFString(),
-helpTextCFString(),
-titleCFString(),
-buttonDefault(nullptr),
-buttonCancel(nullptr),
-buttonOther(nullptr),
-buttonHelp(nullptr),
-textTitle(nullptr),
-textMain(nullptr),
-textHelp(nullptr),
-mainIcon(nullptr),
-stopIcon(nullptr),
-noteIcon(nullptr),
-cautionIcon(nullptr),
-applicationIcon(nullptr),
-itemHit(kAlert_ItemButton3),
-isCompletelyModeless(false),
-isSheet(false),
-isSheetForWindowCloseWarning(false),
-dialogWindow(nullptr),
+viewController(nil),
+genericDialog(),
+iconID(kAlert_IconIDDefault),
 parentWindow(nullptr),
-parentNSWindow(nil),
-buttonHICommandsHandler(nullptr),
-sheetCloseNotifier(nullptr),
-sheetCloseNotifierUserData(nullptr)
+parentNSWindow(nil)
 {
-	assert_noerr(GetStandardAlertDefaultParams(&this->params, kStdCFStringAlertVersionOne));
-	this->params.movable = true;
 }// My_AlertMessage default constructor
-
-
-/*!
-Destructor.  See Alert_Dispose().
-
-(1.1)
-*/
-My_AlertMessage::
-~My_AlertMessage ()
-{
-	// clean up
-	if (nil != this->targetWindowController)
-	{
-		[this->targetWindowController release], this->targetWindowController = nil;
-	}
-	if (nullptr != this->buttonHICommandsHandler)
-	{
-		RemoveEventHandler(this->buttonHICommandsHandler), this->buttonHICommandsHandler = nullptr;
-	}
-	if (nullptr != this->dialogWindow)
-	{
-		DisposeWindow(this->dialogWindow), this->dialogWindow = nullptr;
-	}
-}// My_AlertMessage destructor
 
 
 /*!
@@ -1489,54 +1147,6 @@ badgeApplicationDockTile ()
 
 
 /*!
-Responds to clicks in Carbon-based alert boxes.
-
-DEPRECATED.  Use Cocoa.
-
-(1.0)
-*/
-void
-handleItemHitCarbon		(My_AlertMessagePtr		inPtr,
-						 DialogItemIndex		inItemIndex)
-{
-	switch (inItemIndex)
-	{
-	case kAlert_ItemButton1:
-		inPtr->itemHit = kAlert_ItemButton1;
-		{
-			Boolean		animate = true;
-			
-			
-			if (inPtr->isSheetForWindowCloseWarning) animate = false;
-			setCarbonAlertVisibility(inPtr, false/* visible */, animate/* animate */);
-		}
-		break;
-	
-	case kAlert_ItemButton2:
-		inPtr->itemHit = kAlert_ItemButton2;
-		setCarbonAlertVisibility(inPtr, false/* visible */, true/* animate */);
-		break;
-	
-	case kAlert_ItemButton3:
-		inPtr->itemHit = kAlert_ItemButton3;
-		setCarbonAlertVisibility(inPtr, false/* visible */, true/* animate */);
-		break;
-	
-	case kAlert_ItemHelpButton:
-		inPtr->itemHit = kAlert_ItemHelpButton;
-		setCarbonAlertVisibility(inPtr, false/* visible */, false/* animate */);
-		break;
-	
-	case kAlert_ItemButtonNone:
-	default:
-		inPtr->itemHit = kAlert_ItemButtonNone;
-		setCarbonAlertVisibility(inPtr, false/* visible */, false/* animate */);
-		break;
-	}
-}// handleItemHitCarbon
-
-
-/*!
 Use this method to obtain a string containing
 a standard button title (ex. Yes, No, Save,
 etc.).  Call CFRelease() on the new string when
@@ -1558,801 +1168,183 @@ newButtonString		(CFRetainRelease&			outStringStorage,
 
 
 /*!
-Performs last-minute steps to prepare for displaying an
-alert message.
+Translates from Alert module button numbers to those used
+by the Generic Dialog module, if possible.
 
-(2.5)
+(4.1)
 */
-void
-prepareForDisplay	(My_AlertMessagePtr		inPtr)
+GenericDialog_ItemID
+returnGenericItemIDForAlertItem		(UInt16		inWhichButton)
 {
-	if (nil != inPtr->targetWindowController)
-	{
-		[inPtr->targetWindowController setHidesHelpButton:((inPtr->params.helpButton) ? NO : YES)];
-		[inPtr->targetWindowController window]; // perform a dummy call to ensure the NIB is loaded before views are adjusted
-		
-		// perform any last-minute synchronizations between data stored here
-		// and the state of the actual user interface elements; this is needed
-		// because the old implementation unfortunately depended upon an OS
-		// data structure for a lot of its settings; since it is not possible
-		// to intercept every possible way that data could be initialized,
-		// the best that can be done is to inspect the final values just
-		// before the window appears and to adjust accordingly (all of this
-		// will go away once the implementation becomes 100% Cocoa, but this
-		// is a transitional problem)
-		if (kAlertCautionAlert == inPtr->alertType)
-		{
-			[inPtr->targetWindowController setIconImageName:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
-		}
-		else
-		{
-			[inPtr->targetWindowController setIconImageName:nil];
-		}
-		[inPtr->targetWindowController adjustViews];
-	}
-}// prepareForDisplay
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons in the special key sequences dialog.
-
-(3.0)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inMy_AlertMessagePtr)
-{
-	OSStatus				result = eventNotHandledErr;
-	My_AlertMessagePtr		ptr = REINTERPRET_CAST(inMy_AlertMessagePtr, My_AlertMessagePtr);
-	UInt32 const			kEventClass = GetEventClass(inEvent);
-	UInt32 const			kEventKind = GetEventKind(inEvent);
+	GenericDialog_ItemID	result = kGenericDialog_ItemIDNone;
 	
 	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
+	switch (inWhichButton)
 	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (result == noErr)
-		{
-			switch (received.commandID)
-			{
-			case kHICommandOK:
-				// default button
-				handleItemHitCarbon(ptr, kAlert_ItemButton1);
-				break;
-			
-			case kHICommandCancel:
-				// Cancel button
-				handleItemHitCarbon(ptr, kAlert_ItemButton2);
-				break;
-			
-			case kCommandAlertOtherButton:
-				// 3rd button
-				handleItemHitCarbon(ptr, kAlert_ItemButton3);
-				break;
-			
-			case kCommandContextSensitiveHelp:
-				// help button
-				handleItemHitCarbon(ptr, kAlert_ItemHelpButton);
-				break;
-			
-			default:
-				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldn’t be able to select menu commands while the window is open
-				result = eventNotHandledErr;
-				break;
-			}
-		}
+	case kAlert_ItemButton1:
+		result = kGenericDialog_ItemIDButton1;
+		break;
+	
+	case kAlert_ItemButton2:
+		result = kGenericDialog_ItemIDButton2;
+		break;
+	
+	case kAlert_ItemButton3:
+		result = kGenericDialog_ItemIDButton3;
+		break;
+	
+	case kAlert_ItemHelpButton:
+		result = kGenericDialog_ItemIDHelpButton;
+		break;
+	
+	default:
+		// ???
+		break;
 	}
 	
 	return result;
-}// receiveHICommand
-
-
-/*!
-Shows or hides an alert window, optionally with animation
-appropriate to the type of alert.
-
-DEPRECATED.  Only needed for Carbon windows, and only for
-sheets (as all other styles have moved to Cocoa).
-
-(1.0)
-*/
-void
-setCarbonAlertVisibility	(My_AlertMessagePtr		inPtr,
-							 Boolean				inIsVisible,
-							 Boolean				inAnimate)
-{
-	assert(nil == inPtr->targetWindowController);
-	assert(inPtr->isSheet);
-	
-	if (inIsVisible)
-	{
-		ShowSheetWindow(inPtr->dialogWindow, inPtr->parentWindow);
-		CocoaBasic_MakeKeyWindowCarbonUserFocusWindow();
-	}
-	else
-	{
-		unless (inAnimate)
-		{
-			// hide the parent to hide the sheet immediately
-			HideWindow(inPtr->parentWindow);
-		}
-		HideSheetWindow(inPtr->dialogWindow);
-		
-		AlertMessages_InvokeCloseNotifyProc(inPtr->sheetCloseNotifier, inPtr->selfRef, inPtr->itemHit,
-											inPtr->sheetCloseNotifierUserData), inPtr = nullptr;
-		// WARNING: after this point the alert has been destroyed!
-	}
-}// setCarbonAlertVisibility
-
-
-/*!
-Displays a dialog box on the screen that reflects
-the parameters of an Interface Library Alert.  Any
-errors that occur, preventing the dialog from
-displaying, will be returned.  The item number hit
-is stored using the given alert reference, and can
-be obtained by calling Alert_ItemHit().
-
-On Mac OS X, if the alert is in fact window-modal,
-this routine will return immediately WITHOUT having
-completed handling the alert.  Instead, the alert’s
-notifier is invoked whenever the user closes the
-alert.
-
-This method is invoked by Alert_Display().
-
-Legacy, used for the Carbon implementation only.
-
-(1.0)
-*/
-OSStatus
-standardAlert	(My_AlertMessagePtr		inAlert,
-				 AlertType				inAlertType,
-				 CFStringRef			inDialogText,
-				 CFStringRef			inHelpText)
-{
-	My_AlertMessagePtr		ptr = inAlert;
-	OSStatus				result = noErr;
-	
-	
-	assert((ptr->isSheet) && (nil == ptr->targetWindowController));
-	
-	if (nullptr != ptr)
-	{
-		enum
-		{
-			kTopEdgeIcon = 18		// pixels; system standard offset from the top of the alert box is 10 pixels
-		};
-		//Boolean				isButton1 = true;
-		Boolean				isButton2 = true;
-		Boolean				isButton3 = true;
-		
-		
-		// load the NIB containing this dialog (automatically finds the right localization)
-		ptr->dialogWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-										CFSTR("AlertMessages"), ptr->isSheet
-																? CFSTR("Sheet")
-																: (ptr->isCompletelyModeless)
-																	? CFSTR("Modeless")
-																	: CFSTR("Dialog"))
-							<< NIBLoader_AssertWindowExists;
-		
-		// find references to all controls that are needed for any operation
-		// (button clicks, responding to window resizing, etc.)
-		{
-			OSStatus	error = noErr;
-			
-			
-			error = GetControlByID(ptr->dialogWindow, &idMyButtonDefault, &ptr->buttonDefault);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyButtonCancel, &ptr->buttonCancel);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyButtonOther, &ptr->buttonOther);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyButtonHelp, &ptr->buttonHelp);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyTextTitle, &ptr->textTitle);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyTextMain, &ptr->textMain);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyTextHelp, &ptr->textHelp);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyStopIcon, &ptr->stopIcon);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyNoteIcon, &ptr->noteIcon);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyCautionIcon, &ptr->cautionIcon);
-			assert_noerr(error);
-			error = GetControlByID(ptr->dialogWindow, &idMyApplicationIcon, &ptr->applicationIcon);
-			assert_noerr(error);
-		}
-		
-		// set up fonts (since NIBs are too crappy to support this in older Mac OS X versions);
-		// note that completely-modeless alerts are generally smaller, so fonts are shrunk for them
-		Localization_SetControlThemeFontInfo(ptr->textTitle, (ptr->isCompletelyModeless)
-																? kThemeAlertHeaderFont
-																: USHRT_MAX/* special font - see Localization_UseThemeFont() */);
-		Localization_SetControlThemeFontInfo(ptr->textMain, (ptr->isCompletelyModeless)
-																? kThemeSmallEmphasizedSystemFont
-																: kThemeAlertHeaderFont);
-		Localization_SetControlThemeFontInfo(ptr->textHelp, kThemeSmallSystemFont);
-		
-		// set the window title to be the application name, on Mac OS X
-	#if 0
-		{
-			CFStringRef		string;
-			
-			
-			Localization_GetCurrentApplicationNameAsCFString(&string);
-			SetWindowTitleWithCFString(ptr->dialogWindow, string);
-		}
-	#endif
-		
-		// if the alert should have a title, give it one
-		if (ptr->titleCFString.exists())
-		{
-			SetControlTextWithCFString(ptr->textTitle, ptr->titleCFString.returnCFStringRef());
-		}
-		
-		//
-		// set up dialog items to reflect alert parameters
-		//
-		
-		if (nullptr != ptr->params.defaultText)
-		{
-			// if the alert is configured to use the default title (“OK”), copy the appropriate string resource
-			if (ptr->params.defaultText == REINTERPRET_CAST(kAlertDefaultOKText, CFStringRef))
-			{
-				CFRetainRelease		myString;
-				
-				
-				newButtonString(myString, kUIStrings_ButtonOK);
-				SetControlTitleWithCFString(ptr->buttonDefault, myString.returnCFStringRef());
-			}
-			else SetControlTitleWithCFString(ptr->buttonDefault, ptr->params.defaultText);
-		}
-		else
-		{
-			CFRetainRelease		myString;
-			
-			
-			newButtonString(myString, kUIStrings_ButtonOK);
-			SetControlTitleWithCFString(ptr->buttonDefault, myString.returnCFStringRef());
-		}
-		
-		if (nullptr != ptr->params.cancelText)
-		{
-			// if the alert is configured to use the default title (“Cancel”), copy the appropriate string resource
-			if (ptr->params.cancelText == REINTERPRET_CAST(kAlertDefaultCancelText, CFStringRef))
-			{
-				CFRetainRelease		myString;
-				
-				
-				newButtonString(myString, kUIStrings_ButtonCancel);
-				SetControlTitleWithCFString(ptr->buttonCancel, myString.returnCFStringRef());
-			}
-			else SetControlTitleWithCFString(ptr->buttonCancel, ptr->params.cancelText);
-		}
-		else
-		{
-			ptr->params.cancelText = nullptr;
-			SetControlVisibility(ptr->buttonCancel, false/* visible */, false/* draw */);
-			isButton2 = false;
-		}
-		
-		if (nullptr != ptr->params.otherText)
-		{
-			// if the alert is configured to use the default title (“Don’t Save”), copy the appropriate string resource
-			if (ptr->params.otherText == REINTERPRET_CAST(kAlertDefaultOtherText, CFStringRef))
-			{
-				CFRetainRelease		myString;
-				
-				
-				newButtonString(myString, kUIStrings_ButtonDontSave);
-				SetControlTitleWithCFString(ptr->buttonOther, myString.returnCFStringRef());
-			}
-			else SetControlTitleWithCFString(ptr->buttonOther, ptr->params.otherText);
-		}
-		else
-		{
-			ptr->params.otherText = nullptr;
-			SetControlVisibility(ptr->buttonOther, false/* visible */, false/* draw */);
-			isButton3 = false;
-		}
-		
-		if (!ptr->params.helpButton) SetControlVisibility(ptr->buttonHelp, false/* visibility */, false/* draw */);
-		SetControlTextWithCFString(ptr->textMain, inDialogText);
-		if (nullptr != inHelpText) SetControlTextWithCFString(ptr->textHelp, inHelpText);
-		else SetControlVisibility(ptr->textHelp, false/* visibility */, false/* draw */);
-		
-		// set the alert icon properly for the alert type
-		{
-			switch (inAlertType)
-			{
-			case kAlertStopAlert:
-				ptr->mainIcon = ptr->stopIcon;
-				break;
-			
-			case kAlertNoteAlert:
-				ptr->mainIcon = ptr->noteIcon;
-				break;
-			
-			case kAlertCautionAlert:
-				ptr->mainIcon = ptr->cautionIcon;
-				break;
-			
-			case kAlertPlainAlert:
-			default:
-				{
-					Rect	bounds;
-					
-					
-					ptr->mainIcon = nullptr;
-					
-					// for plain alerts, resize the application "badge" as it is now the ENTIRE icon (that
-					// is, the normal icon is hidden but it should appear to be a large application icon)
-					GetControlBounds(ptr->mainIcon, &bounds);
-					SetControlBounds(ptr->applicationIcon, &bounds);
-					SetControlVisibility(ptr->mainIcon, false/* visible */, false/* draw */);
-				}
-				break;
-			}
-			
-			// hide all icons not applicable to the alert
-			{
-				ControlRef		allIcons[] = { ptr->stopIcon, ptr->noteIcon, ptr->cautionIcon };
-				
-				
-				for (size_t i = 0; i < sizeof(allIcons) / sizeof(ControlRef); ++i)
-				{
-					if (ptr->mainIcon != allIcons[i])
-					{
-						SetControlVisibility(allIcons[i], false/* visible */, false/* draw */);
-					}
-				}
-			}
-		}
-		
-		// make the dialog big enough to fit the text, then display it
-		{
-			enum
-			{
-				kSpacingBetweenTextItems = 10		// width in pixels vertically separating dialog text and help text
-			};
-			SInt16		textExpanseV = 0;
-			SInt16		totalExpanseV = 0; // initialized to vertical position of top edge of dialog text item
-			HIRect		floatBounds;
-			Rect		controlRect;
-			
-			
-			// use the actual top edge as defined in the NIB
-			HIViewGetFrame(ptr->textTitle, &floatBounds);
-			totalExpanseV = STATIC_CAST(floatBounds.origin.y, SInt16);
-			
-			// size and arrange title text, if present
-			if (ptr->titleCFString.exists())
-			{
-				GetControlBounds(ptr->textTitle, &controlRect);
-				//(OSStatus)SetControlData(ptr->textTitle, kControlEntireControl, kControlStaticTextCFStringTag,
-				//							STATIC_CAST(PLstrlen(ptr->title) * sizeof(UInt8), Size), ptr->title + 1);
-				textExpanseV = 20; // should be fixed to properly calculate dimensions, but alas, I’ve been lazy
-				//SizeControl(ptr->textTitle, INTERFACELIB_ALERT_DIALOG_WD - HSP_BUTTON_AND_DIALOG - controlRect.left, textExpanseV);
-				
-				// the text width is automatically set in the NIB
-				SizeControl(ptr->textTitle, STATIC_CAST(controlRect.right - controlRect.left, SInt16), textExpanseV);
-				MoveControl(ptr->textTitle, controlRect.left, totalExpanseV);
-				totalExpanseV += (textExpanseV + kSpacingBetweenTextItems);
-			}
-			else
-			{
-				SetControlVisibility(ptr->textTitle, false/* visible */, false/* draw */);
-			}
-			
-			// size and arrange message text (always present)
-			GetControlBounds(ptr->textMain, &controlRect);
-			{
-				Point		dimensions;
-				SInt16		offset = 0;
-				OSStatus	error = noErr;
-				
-				
-				SetPt(&dimensions, controlRect.right - controlRect.left, controlRect.bottom - controlRect.top);
-				error = GetThemeTextDimensions(inDialogText, kThemeAlertHeaderFont, kThemeStateActive,
-												true/* wrap to width */, &dimensions, &offset);
-				assert_noerr(error);
-				
-				// set the text size appropriately
-				textExpanseV = dimensions.v;
-				SizeControl(ptr->textMain, controlRect.right - controlRect.left, textExpanseV);
-			}
-			MoveControl(ptr->textMain, controlRect.left, totalExpanseV);
-			totalExpanseV += textExpanseV;
-			
-			// size and arrange help text, if present
-			if (nullptr != inHelpText)
-			{
-				totalExpanseV += kSpacingBetweenTextItems;
-				GetControlBounds(ptr->textHelp, &controlRect);
-				{
-					Point		dimensions;
-					SInt16		offset = 0;
-					OSStatus	error = noErr;
-					
-					
-					SetPt(&dimensions, controlRect.right - controlRect.left, controlRect.bottom - controlRect.top);
-					error = GetThemeTextDimensions(inHelpText, kThemeSmallSystemFont, kThemeStateActive,
-													true/* wrap to width */, &dimensions, &offset);
-					assert_noerr(error);
-					
-					// set the text size appropriately
-					textExpanseV = dimensions.v;
-					SizeControl(ptr->textHelp, controlRect.right - controlRect.left, textExpanseV);
-				}
-				MoveControl(ptr->textHelp, controlRect.left, totalExpanseV);
-				totalExpanseV += textExpanseV;
-			}
-			
-			// make the alert window just big enough for any text and buttons being displayed
-			{
-				Rect	windowBounds;
-				
-				
-				GetWindowBounds(ptr->dialogWindow, kWindowContentRgn, &windowBounds);
-				windowBounds.bottom = windowBounds.top +
-										STATIC_CAST(totalExpanseV +
-													INTEGER_DOUBLED(VSP_BUTTON_AND_DIALOG) + BUTTON_HT,
-											SInt16);
-				UNUSED_RETURN(OSStatus)SetWindowBounds(ptr->dialogWindow, kWindowContentRgn, &windowBounds);
-			}
-			
-			// arrange icons and main text areas
-			{
-				// swap the icon and text if necessary
-				Localization_HorizontallyPlaceControls(ptr->mainIcon, ptr->textMain);
-				
-				// for right-to-left localization only, the alert icon and text will switch places
-				if (false == Localization_IsLeftToRight())
-				{
-					Rect	mainIconRect;
-					
-					
-					GetControlBounds(ptr->mainIcon, &mainIconRect);
-					GetControlBounds(ptr->applicationIcon, &controlRect);
-					controlRect.right = mainIconRect.left + (controlRect.right - controlRect.left);
-					controlRect.left = mainIconRect.left;
-					SetControlBounds(ptr->applicationIcon, &controlRect);
-				}
-				
-				// shift the title text and help text to the same horizontal position as the dialog text moved to
-				if (nullptr != inHelpText)
-				{
-					Rect	dialogTextRect;
-					Rect	helpTextRect;
-					
-					
-					GetControlBounds(ptr->textMain, &dialogTextRect);
-					GetControlBounds(ptr->textHelp, &helpTextRect);
-					MoveControl(ptr->textHelp, dialogTextRect.left, helpTextRect.top);
-					GetControlBounds(ptr->textTitle, &helpTextRect);
-					MoveControl(ptr->textTitle, dialogTextRect.left, helpTextRect.top);
-				}
-			}
-			
-			// move the dialog buttons vertically to their proper place in the new dialog
-			{
-				ControlRef		buttonControls[2] = { ptr->buttonOther, nullptr };
-				
-				
-				// use this “sneaky” approach to correctly set up the vertical component of the third button
-				Localization_ArrangeButtonArray(buttonControls, 1);
-				
-				// auto-arrange the buttons in the OK and Cancel positions
-				buttonControls[0] = ptr->buttonDefault;
-				buttonControls[1] = ptr->buttonCancel;
-				Localization_ArrangeButtonArray(buttonControls, 2);
-				
-				if (isButton3)
-				{
-					// move and size that third button
-					SInt16		x = 0;
-					UInt16		buttonWidth = 0;
-					ControlRef	buttonControl = nullptr;
-					
-					
-					// first resize the button to fit its title
-					buttonWidth = Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
-					
-					// now determine where the left edge of the button should be (locale-sensitive)
-					buttonControl = (isButton2) ? ptr->buttonCancel : ptr->buttonDefault;
-					GetControlBounds(buttonControl, &controlRect);
-					if (Localization_IsLeftToRight()) x = STATIC_CAST(controlRect.left - HSP_BUTTONS - buttonWidth, SInt16);
-					else x = STATIC_CAST(controlRect.right + HSP_BUTTONS, SInt16);
-					
-					// now move the third button appropriately
-					buttonControl = ptr->buttonOther;
-					GetControlBounds(buttonControl, &controlRect);
-					MoveControl(buttonControl, x, controlRect.top);
-				}
-			}
-			
-			// determine if the Help button should be disabled...
-			HIViewWrap		helpButtonObject(ptr->buttonHelp);
-			DialogUtilities_SetUpHelpButton(helpButtonObject);
-			
-			// move the help button, if it’s supposed to be there
-			if (ptr->params.helpButton) Localization_AdjustHelpButtonControl(ptr->buttonHelp);
-		}
-		
-		// install a callback that responds to buttons in the window
-		{
-			EventTypeSpec const		whenButtonClicked[] =
-									{
-										{ kEventClassCommand, kEventCommandProcess }
-									};
-			OSStatus				error = noErr;
-			
-			
-			error = InstallWindowEventHandler(ptr->dialogWindow, gAlertButtonHICommandUPP,
-												GetEventTypeCount(whenButtonClicked), whenButtonClicked,
-												ptr/* user data */,
-												&ptr->buttonHICommandsHandler/* event handler reference */);
-			assert_noerr(error);
-		}
-		
-		// absorb keyboard events to avoid accidental button activations,
-		// e.g. if user presses Return just as a message appears, this
-		// should not kill the message
-		FlushEvents(keyDown, 0/* stop mask */);
-		
-		// get the rectangle where the alert box is supposed to be, and animate it into position (with Mac OS 8.5 and beyond)
-		setCarbonAlertVisibility(ptr, true/* visible */, true/* animate */);
-		
-		// advance focus (the default button can already be easily hit with
-		// the keyboard, so focusing the next button makes it equally easy
-		// for the user to choose that option with a key)
-		{
-			if (isButton2)
-			{
-				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonCancel);
-			}
-			else if (isButton3)
-			{
-				UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonOther);
-			}
-		}
-		
-		unless ((ptr->isSheet) || (ptr->isCompletelyModeless))
-		{
-			ShowWindow(ptr->dialogWindow);
-			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
-			RunAppModalLoopForWindow(ptr->dialogWindow);
-			
-			Alert_ServiceNotification(); // just in case it wasn’t removed properly
-			setCarbonAlertVisibility(ptr, false/* visible */, true/* animate */);
-		}
-	}
-	else result = memPCErr;
-	
-	return result;
-}// standardAlert
+}// returnGenericItemIDForAlertItem
 
 } // anonymous namespace
 
 
 #pragma mark -
-@implementation AlertMessages_ModalWindowController
+@implementation AlertMessages_TextView //{
+
+
+#pragma mark NSView
+
+
+/*!
+Starts by asking the superclass to draw.  And then, if
+enabled, performs custom drawing on top for debugging.
+
+(2016.04)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+	[super drawRect:aRect];
+	
+#if 0
+	// for debugging; display a red rectangle to show
+	// the area occupied by the view
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	
+	
+	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+	CGContextSetLineWidth(drawingContext, 2.0);
+	[NSBezierPath strokeRect:NSInsetRect(self.bounds, 1.0, 1.0)];
+#endif
+}// drawRect:
+
+
+@end //}
+
+
+#pragma mark -
+@implementation AlertMessages_TitleTextField //{
+
+
+#pragma mark NSView
+
+
+/*!
+Starts by asking the superclass to draw.  And then, if
+enabled, performs custom drawing on top for debugging.
+
+(2016.04)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+	[super drawRect:aRect];
+	
+#if 0
+	// for debugging; display a red rectangle to show
+	// the area occupied by the view
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	
+	
+	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+	CGContextSetLineWidth(drawingContext, 2.0);
+	[NSBezierPath strokeRect:NSInsetRect(self.bounds, 1.0, 1.0)];
+#endif
+}// drawRect:
+
+
+@end //}
+
+
+#pragma mark -
+@implementation AlertMessages_VC //{
+
+
+/*!
+The primary message of the window, displayed in normal-sized print.
+*/
+@synthesize dialogText = _dialogText;
+
+/*!
+A secondary message (typically help or other information), displayed
+in the smallest print by the window.
+*/
+@synthesize helpText = _helpText;
+
+/*!
+A succinct description of the type of message, displayed in the
+largest print by the window.
+*/
+@synthesize titleText = _titleText;
+
+
+/*!
+Common initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	return [self initWithNibNamed:@"AlertMessagesCocoa"];
+}// init
 
 
 /*!
 Designated initializer.
 
-(4.0)
+(4.1)
 */
 - (instancetype)
-init
+initWithNibNamed:(NSString*)	aNibName
 {
-	self = [super initWithWindowNibName:@"AlertMessagesModalCocoa"];
+	self = [super initWithNibNamed:aNibName delegate:self context:nullptr];
 	if (nil != self)
 	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
 	}
 	return self;
-}// init
+}// initWithNibNamed:
 
 
 /*!
 Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Responds to the close of a window-modal alert.
 
 (4.1)
 */
 - (void)
-sheetDidEnd:(NSWindow*)		aSheet
-returnCode:(int)			aReturnCode
-contextInfo:(void*)			aBoxRef
-{
-#pragma unused(aSheet, aReturnCode, aBoxRef)
-	//AlertMessages_BoxRef	asBox = REINTERPRET_CAST(aBoxRef, AlertMessages_BoxRef);
-	
-	
-	// nothing is needed because the buttons are already bound to actions
-}// sheetDidEnd:returnCode:contextInfo:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
-
-(4.0)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-}// windowDidLoad
-
-
-@end // AlertMessages_ModalWindowController
-
-
-#pragma mark -
-@implementation AlertMessages_NotificationWindowController
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-init
-{
-	self = [super initWithWindowNibName:@"AlertMessagesModelessCocoa"];
-	if (nil != self)
-	{
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
 dealloc
 {
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark AlertMessages_WindowController
-
-
-/*!
-This implementation sets a smaller font size than is normally
-used for alerts.
-
-(4.0)
-*/
-- (void)
-setUpFonts
-{
-	[super setUpFonts];
-	//[titleTextUI setFont:[NSFont userFontOfSize:18.0/* arbitrary */]];
-	[dialogTextUI setFont:[NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]];
-	[helpTextUI setFont:[NSFont systemFontOfSize:[NSFont labelFontSize]]];
-}// setUpFonts
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
-
-(4.0)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-}// windowDidLoad
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"Notifications";
-}// windowFrameAutosaveName
-
-
-@end // AlertMessages_NotificationWindowController
-
-
-#pragma mark -
-@implementation AlertMessages_WindowController
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initWithWindowNibName:(NSString*)	aName
-{
-	self = [super initWithWindowNibName:aName];
-	if (nil != self)
-	{
-		self->dataPtr = nullptr;
-		
-		self->titleText = [[NSString alloc] initWithString:@""];
-		self->dialogText = [[NSString alloc] initWithString:@""];
-		self->helpText = [[NSString alloc] initWithString:@""];
-		self->primaryButtonText = [[NSString alloc] initWithString:@""];
-		self->secondaryButtonText = [[NSString alloc] initWithString:@""];
-		self->tertiaryButtonText = [[NSString alloc] initWithString:@""];
-		self->iconImageName = nil;
-		
-		self->hidesHelpButton = NO;
-		self->hidesSecondaryButton = YES;
-		self->hidesTertiaryButton = YES;
-	}
-	return self;
-}// initWithWindowNibName:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[titleText release];
-	[dialogText release];
-	[helpText release];
-	[primaryButtonText release];
-	[secondaryButtonText release];
-	[tertiaryButtonText release];
+	[self ignoreWhenObjectsPostNotes];
+	[self removeObserversSpecifiedInArray:registeredObservers];
+	[registeredObservers release];
+	
+	[_titleText release];
+	[_dialogText release];
+	[_helpText release];
+	
 	[super dealloc];
 }// dealloc
 
@@ -2368,84 +1360,77 @@ moved up to occupy the same space; and if there is not enough
 room to fit the remaining text, the text and the window are
 expanded.
 
-(4.0)
+NOTE:	This operation is currently not really designed to be
+		performed more than once.  Multiple adjustments after
+		the alert is displayed may not work as intended.
+
+(4.1)
 */
 - (void)
 adjustViews
 {
-	// make the 3rd button as big as it needs to be
-#if 0
-	[tertiaryButtonUI sizeToFit];
-#else
-	UNUSED_RETURN(UInt16)Localization_AutoSizeNSButton(tertiaryButtonUI);
-#endif
+	NSRect		aboveFrame;
+	NSRect		nextFrame;
+	CGFloat		spacingAfterTitle = 0;
+	CGFloat		spacingAfterMessage = 0;
 	
-	// hide the title text if there is none, and reclaim the space
-	if (0 == [titleText length])
+	
+	if (0 == titleTextUI.stringValue.length)
 	{
-		// include both the height of the title frame and the space between
-		// the dialog text and title text frames
-		float		dialogTextY = [dialogTextUI frame].origin.y;
-		float		dialogTextHeight = [dialogTextUI frame].size.height;
-		float		titleTextY = [titleTextUI frame].origin.y;
-		float		titleTextHeight = [titleTextUI frame].size.height;
-		float		titleTextExpanseY = titleTextHeight + (titleTextY - (dialogTextY + dialogTextHeight));
-		NSRect		newFrame = NSZeroRect;
-		NSView*		containerView = nil;
-		
-		
-		[titleTextUI setHidden:YES];
-		
-		containerView = dialogTextUI;
-		newFrame = [containerView frame];
-		newFrame.origin.y += titleTextExpanseY;
-		[containerView setFrame:newFrame];
-		
-		containerView = helpTextUI;
-		newFrame = [containerView frame];
-		newFrame.origin.y += titleTextExpanseY;
-		[containerView setFrame:newFrame];
-		
-		[self deltaSizeWindow:-titleTextExpanseY];
+		// collapse the frame into its top-edge location
+		titleTextUI.frame = NSMakeRect(titleTextUI.frame.origin.x, titleTextUI.frame.origin.y + titleTextUI.frame.size.height,
+										titleTextUI.frame.size.width, 0);
+		titleTextUI.hidden = YES;
 	}
 	else
 	{
+		titleTextUI.hidden = NO;
 		[titleTextUI sizeToFit];
+		titleTextUI.frame = NSMakeRect(titleTextUI.frame.origin.x,  titleTextUI.frame.origin.y,
+										titleTextUI.frame.size.width, titleTextUI.frame.size.height);
+		spacingAfterTitle = 10/* arbitrary */;
 	}
+	aboveFrame = titleTextUI.frame;
 	
-	// hide the help text if there is none, and reclaim the space
-	if (0 == [helpText length])
+	if (0 == dialogTextUI.string.length)
 	{
-		// include both the height of the text frame and the space between
-		// the dialog text and help text frames
-		float		dialogTextY = [dialogTextUI frame].origin.y;
-		float		helpTextY = [helpTextUI frame].origin.y;
-		float		helpTextHeight = [helpTextUI frame].size.height;
-		float		helpTextExpanseY = helpTextHeight + (dialogTextY - (helpTextY + helpTextHeight));
-		
-		
-		[helpTextUI setHidden:YES];
-		[self deltaSizeWindow:-helpTextExpanseY];
-	}
-	
-	// focus a non-default button if possible
-	if (NO == [secondaryButtonUI isHidden])
-	{
-		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:secondaryButtonUI];
-	}
-	else if (NO == [tertiaryButtonUI isHidden])
-	{
-		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:tertiaryButtonUI];
-	}
-	else if (NO == [helpButtonUI isHidden])
-	{
-		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:helpButtonUI];
+		// collapse the frame into its top-edge location
+		dialogTextUI.frame = NSMakeRect(dialogTextUI.frame.origin.x, dialogTextUI.frame.origin.y + dialogTextUI.frame.size.height,
+										dialogTextUI.frame.size.width, 0);
+		dialogTextUI.hidden = YES;
 	}
 	else
 	{
-		UNUSED_RETURN(BOOL)[[self window] makeFirstResponder:primaryButtonUI];
+		dialogTextUI.hidden = NO;
+		[dialogTextUI sizeToFit];
+		[dialogTextUI scrollRangeToVisible:NSMakeRange([dialogTextUI.string length] - 1, 1)];
+		spacingAfterMessage = 10/* arbitrary */;
 	}
-	// INCOMPLETE
+	nextFrame = dialogTextUI.frame;
+	nextFrame.origin.y = (aboveFrame.origin.y - spacingAfterTitle - nextFrame.size.height);
+	[dialogTextUI setFrameOrigin:nextFrame.origin];
+	aboveFrame = nextFrame;
+	
+	if (0 == helpTextUI.string.length)
+	{
+		// collapse the frame into its top-edge location
+		helpTextUI.frame = NSMakeRect(helpTextUI.frame.origin.x, helpTextUI.frame.origin.y + helpTextUI.frame.size.height,
+										helpTextUI.frame.size.width, 0);
+		helpTextUI.hidden = YES;
+	}
+	else
+	{
+		helpTextUI.hidden = NO;
+		[helpTextUI sizeToFit];
+		[helpTextUI scrollRangeToVisible:NSMakeRange([helpTextUI.string length] - 1, 1)];
+	}
+	[helpTextUI sizeToFit];
+	[helpTextUI scrollRangeToVisible:NSMakeRange([helpTextUI.string length] - 1, 1)];
+	nextFrame = helpTextUI.frame;
+	nextFrame.origin.y = (aboveFrame.origin.y - spacingAfterMessage - nextFrame.size.height);
+	[helpTextUI setFrameOrigin:nextFrame.origin];
+	
+	[self recalculateIdealHeight];
 }// adjustViews
 
 
@@ -2456,7 +1441,7 @@ appropriate typefaces and sizes.  The default implementation
 follows standard alert requirements, but a subclass may wish to
 use smaller fonts, e.g. for modeless notification windows.
 
-(4.0)
+(4.1)
 */
 - (void)
 setUpFonts
@@ -2471,128 +1456,13 @@ setUpFonts
 
 
 /*!
-Pointer to auxiliary data (historical).  Its actual type is a
-pointer to the internal structure, My_AlertMessage.
-
-(4.0)
-*/
-- (void*)
-dataPtr
-{
-	return dataPtr;
-}
-- (void)
-setDataPtr:(void*)		inDataPtr
-{
-	dataPtr = inDataPtr;
-}// setDataPtr:
-
-
-/*!
-Accessor for the text displayed in normal print by the window.
-
-(4.0)
-*/
-- (NSString*)
-dialogText
-{
-	return [[dialogText copy] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfDialogText
-{
-	return NO;
-}
-- (void)
-setDialogText:(NSString*)	aString
-{
-	[self setStringProperty:&dialogText withName:@"dialogText" toValue:aString];
-	[self setDisplayedDialogText:self->dialogText];
-}// setDialogText:
-
-
-/*!
-Accessor for the text displayed in small print by the window.
-
-(4.0)
-*/
-- (NSString*)
-helpText
-{
-	return [[helpText copy] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfHelpText
-{
-	return NO;
-}
-- (void)
-setHelpText:(NSString*)		aString
-{
-	[self setStringProperty:&helpText withName:@"helpText" toValue:aString];
-	[self setDisplayedHelpText:self->helpText];
-}// setHelpText:
-
-
-/*!
-Whether or not the alert window has a help button showing.
-
-(4.0)
-*/
-- (BOOL)
-hidesHelpButton
-{
-	return hidesHelpButton;
-}
-- (void)
-setHidesHelpButton:(BOOL)	flag
-{
-	hidesHelpButton = flag;
-}// setHidesHelpButton:
-
-
-/*!
-Whether or not the alert window has a secondary button showing.
-
-(4.0)
-*/
-- (BOOL)
-hidesSecondaryButton
-{
-	return hidesSecondaryButton;
-}
-- (void)
-setHidesSecondaryButton:(BOOL)	flag
-{
-	hidesSecondaryButton = flag;
-}// setHidesSecondaryButton:
-
-
-/*!
-Whether or not the alert window has a tertiary button showing.
-
-(4.0)
-*/
-- (BOOL)
-hidesTertiaryButton
-{
-	return hidesTertiaryButton;
-}
-- (void)
-setHidesTertiaryButton:(BOOL)	flag
-{
-	hidesTertiaryButton = flag;
-}// setHidesTertiaryButton:
-
-
-/*!
 Accessor for the name of the image to use as the icon.
 This is only the base image, which is automatically given
 an application icon badge before rendering.  If set to an
 empty string, then the icon is a large application icon
 that has no badge.
 
-(4.0)
+(4.1)
 */
 - (NSString*)
 iconImageName
@@ -2612,169 +1482,127 @@ setIconImageName:(NSString*)	aString
 }// setIconImageName:
 
 
-/*!
-Accessor for the title of the first (and likely default) button.
-
-(4.0)
-*/
-- (NSString*)
-primaryButtonText
-{
-	return [[primaryButtonText copy] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfPrimaryButtonText
-{
-	return NO;
-}
-- (void)
-setPrimaryButtonText:(NSString*)	aString
-{
-	[self setStringProperty:&primaryButtonText withName:@"primaryButtonText" toValue:aString];
-}// setPrimaryButtonText:
+#pragma mark NSKeyValueObserving
 
 
 /*!
-Accessor for the title of the second (and likely Cancel) button.
+Intercepts changes to key values by updating dependent
+states such as frame rectangles or the display.
 
-(4.0)
-*/
-- (NSString*)
-secondaryButtonText
-{
-	return [[secondaryButtonText copy] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfSecondaryButtonText
-{
-	return NO;
-}
-- (void)
-setSecondaryButtonText:(NSString*)	aString
-{
-	[self setStringProperty:&secondaryButtonText withName:@"secondaryButtonText" toValue:aString];
-	[self setHidesSecondaryButton:(0 == [aString length])];
-}// setSecondaryButtonText:
-
-
-/*!
-Accessor for the title of the third button.
-
-(4.0)
-*/
-- (NSString*)
-tertiaryButtonText
-{
-	return [[tertiaryButtonText copy] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfTertiaryButtonText
-{
-	return NO;
-}
-- (void)
-setTertiaryButtonText:(NSString*)	aString
-{
-	[self setStringProperty:&tertiaryButtonText withName:@"tertiaryButtonText" toValue:aString];
-	[self setHidesTertiaryButton:(0 == [aString length])];
-}// setTertiaryButtonText:
-
-
-/*!
-Accessor for the text displayed in large print by the window.
-
-(4.0)
-*/
-- (NSString*)
-titleText
-{
-	return [[titleText copy] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfTitleText
-{
-	return NO;
-}
-- (void)
-setTitleText:(NSString*)	aString
-{
-	[self setStringProperty:&titleText withName:@"titleText" toValue:aString];
-}// setTitleText:
-
-
-#pragma mark Actions
-
-
-/*!
-Responds to a click in the help button.
-
-(4.0)
-*/
-- (IBAction)
-performHelpAction:(id)		sender
-{
-#pragma unused(sender)
-	[self didFinishAlertWithButton:kAlert_ItemHelpButton fromEvent:YES];
-}// performHelpAction:
-
-
-/*!
-Responds to a click in the first (and likely default) button.
-
-(4.0)
-*/
-- (IBAction)
-performPrimaryAction:(id)	sender
-{
-#pragma unused(sender)
-	[self didFinishAlertWithButton:kAlert_ItemButton1 fromEvent:YES];
-}// performPrimaryAction:
-
-
-/*!
-Responds to a click in the second (typically Cancel) button.
-
-(4.0)
-*/
-- (IBAction)
-performSecondaryAction:(id)		sender
-{
-#pragma unused(sender)
-	[self didFinishAlertWithButton:kAlert_ItemButton2 fromEvent:YES];
-}// performSecondaryAction:
-
-
-/*!
-Responds to a click in the third button.
-
-(4.0)
-*/
-- (IBAction)
-performTertiaryAction:(id)		sender
-{
-#pragma unused(sender)
-	[self didFinishAlertWithButton:kAlert_ItemButton3 fromEvent:YES];
-}// performTertiaryAction:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init".)
-
-(4.0)
+(4.1)
 */
 - (void)
-windowDidLoad
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
 {
-	[super windowDidLoad];
-	assert(nil != helpButtonUI);
-	assert(nil != tertiaryButtonUI);
-	assert(nil != secondaryButtonUI);
-	assert(nil != primaryButtonUI);
+#pragma unused(anObject, aContext)
+	//if (NO == self.disableObservers)
+	{
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			// the "titleTextUI" view can support direct bindings
+			// but NSTextField does not, hence these observers
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(dialogText)))
+			{
+				dialogTextUI.string = self.dialogText;
+			}
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(helpText)))
+			{
+				helpTextUI.string = self.helpText;
+			}
+		}
+	}
+}
+
+
+#pragma mark NSWindowNotifications
+
+
+/*!
+Responds to window activation by restoring the icon.
+
+(4.1)
+*/
+- (void)
+windowDidBecomeKey:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	mainIconUI.enabled = YES;
+}
+
+
+/*!
+Responds to window deactivation by graying the icon.
+
+(4.1)
+*/
+- (void)
+windowDidResignKey:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	mainIconUI.enabled = NO;
+}
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->registeredObservers = [[NSMutableArray alloc] init];
+	self->_titleText = [[NSString alloc] initWithString:@""];
+	self->_dialogText = [[NSString alloc] initWithString:@""];
+	self->_helpText = [[NSString alloc] initWithString:@""];
+	self->iconID = kAlert_IconIDDefault; // can change later
+	self->iconImageName = @"IconForCaution"; // can change later
+	
+	// set a default value (can be changed later)
+	self.panelHasContextualHelp = NO;
+	
+	// ensure that the display is updated after certain changes
+	[registeredObservers addObject:[self observePropertyFromSelector:@selector(dialogText)]];
+	[registeredObservers addObject:[self observePropertyFromSelector:@selector(helpText)]];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeNormal;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	assert(nil != self.view);
 	assert(nil != titleTextUI);
 	assert(nil != dialogTextUI);
 	assert(nil != helpTextUI);
@@ -2785,104 +1613,260 @@ windowDidLoad
 	[dialogTextUI setAlignment:NSNaturalTextAlignment];
 	[dialogTextUI setDrawsBackground:NO];
 	[dialogTextUI setEditable:NO];
-	[self setDisplayedDialogText:self->dialogText];
 	[helpTextUI setAlignment:NSNaturalTextAlignment];
 	[helpTextUI setDrawsBackground:NO];
 	[helpTextUI setEditable:NO];
-	[self setDisplayedHelpText:self->helpText];
 	[mainIconUI setImage:[self imageForIconImageName:[self iconImageName]]];
-}// windowDidLoad
+	mainIconUI.mouseDownCanMoveWindow = YES;
+	
+	// remember the original NIB view size as ideal
+	// (this can be changed by "recalculateIdealHeight")
+	self->idealFrameSize = self.view.frame.size;
+	
+	// TEMPORARY; it is not yet clear why but the size is
+	// being cramped by 20 pixels in alert panels (even
+	// though other uses of Generic Dialog are not); this
+	// can cause text to wrap outside of its calculated
+	// space so it is important that the width be corrected
+	self->idealFrameSize.width += 20; // TEMPORARY; why is this needed?
+	
+	// remember the original icon size as a minimum height
+	self->idealIconSize = mainIconUI.frame.size;
+}// panelViewManager:didLoadContainerView:
 
 
-@end // AlertMessages_WindowController
+/*!
+Specifies a sensible width and height for this panel.
+
+This varies as the alert’s properties are changed (such
+as text; see "recalculateIdealHeight") but size changes
+are not guaranteed to be used by containing windows
+unless they are made prior to displaying the panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = self->idealFrameSize;
+}// panelViewManager:requestingIdealSize:
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+NOTE:	This does nothing because the alert panel is only
+		displayed in a wrapping Generic Dialog (which has
+		full support for binding actions to buttons).
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	;
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager)
+	if (kPanel_VisibilityDisplayed == aVisibility)
+	{
+		[self adjustViews];
+	}
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager)
+	if (kPanel_VisibilityDisplayed == aVisibility)
+	{
+		// assume the window is now displayed and subscribe to notifications
+		[self whenObject:aViewManager.managedView.window postsNote:NSWindowDidBecomeKeyNotification
+							performSelector:@selector(windowDidBecomeKey:)];
+		[self whenObject:aViewManager.managedView.window postsNote:NSWindowDidResignKeyNotification
+							performSelector:@selector(windowDidResignKey:)];
+	}
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+Not applicable to this panel because it is only intended to
+display a single alert message.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet, newDataSet)
+	// do nothing
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes.
+
+NOTE:	This does nothing because the alert panel is only
+		displayed in a wrapping Generic Dialog (which has
+		full support for binding actions to buttons).
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView, isAccepted)
+	// do nothing (assume Generic Dialog wrapper)
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	NSImage*	result = [NSImage imageNamed:self.iconImageName];
+	
+	
+	assert(nil != result);
+	return result;
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+Currently the identifier is the same for all alerts.  If
+necessary, the interface may change in the future to allow
+callers to set different identifiers for each alert.
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.panels.AlertMessage";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Alert", @"AlertMessage", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintVertical;
+}// panelResizeAxes
+
+
+@end //} AlertMessages_VC
 
 
 #pragma mark -
-@implementation AlertMessages_WindowController (AlertMessages_WindowControllerInternal)
+@implementation AlertMessages_VC (AlertMessages_VCInternal) //{
+
+
+#pragma mark Accessors
 
 
 /*!
-Aborts a currently-displayed alert without choosing any
-particular button.  If a callback was given it is called
-with "kAlert_ItemButtonNone" as the hit item.
+Accessor.
 
 (4.1)
 */
-- (void)
-abortAlert
+- (Alert_IconID)
+iconID
 {
-	[self didFinishAlertWithButton:kAlert_ItemButtonNone fromEvent:NO];
-}// abortAlert
-
-
-/*!
-Changes the height of the window by the specified amount.
-Note that the buttons will also move, because they are
-configured in the NIB to be attached to the bottom edge.
-
-(4.0)
-*/
+	return iconID;
+}
 - (void)
-deltaSizeWindow:(float)		deltaV
+setIconID:(Alert_IconID)	anIconID
 {
-	NSRect		frame = NSZeroRect;
-	
-	
-	frame = [[self window] frame];
-	frame.size.height += deltaV;
-	[[self window] setFrame:frame display:YES];
-}// deltaSizeWindow:
-
-
-/*!
-Responds to a click in a button.  Modeless and window-modal
-alerts will be destroyed at this time; application-modal
-alerts are assumed to do all their cleanup synchronously.
-
-(4.1)
-*/
-- (void)
-didFinishAlertWithButton:(unsigned int)		aButton
-fromEvent:(BOOL)							anEventSource
-{
-	My_AlertMessage*	alertPtr = (My_AlertMessage*)[self dataPtr];
-	
-	
-	alertPtr->itemHit = aButton;
-	
-	// now close the alert in an appropriate way
-	if (alertPtr->isSheet)
+	if (iconID != anIconID)
 	{
-		if ((alertPtr->isSheetForWindowCloseWarning) && (kAlert_ItemButton1 == aButton))
+		iconID = anIconID;
+		
+		// change the displayed icon image
+		switch (anIconID)
 		{
-			// suppress sheet-close animation
-			// UNIMPLEMENTED; Cocoa does not really allow this
-		}
-		[NSApp endSheet:[alertPtr->targetWindowController window]];
-		[alertPtr->targetWindowController close];
-		AlertMessages_InvokeCloseNotifyProc(alertPtr->sheetCloseNotifier, alertPtr->selfRef, alertPtr->itemHit,
-											alertPtr->sheetCloseNotifierUserData), alertPtr = nullptr;
-		// WARNING: after this point the alert has been destroyed!
-	}
-	else if (alertPtr->isCompletelyModeless)
-	{
-		[alertPtr->targetWindowController close];
-		AlertMessages_InvokeCloseNotifyProc(alertPtr->sheetCloseNotifier, alertPtr->selfRef, alertPtr->itemHit,
-											alertPtr->sheetCloseNotifierUserData), alertPtr = nullptr;
-		// WARNING: after this point the alert has been destroyed!
-	}
-	else
-	{
-		if (anEventSource)
-		{
-			[NSApp stopModal];
-		}
-		else
-		{
-			[NSApp abortModal];
+		case kAlert_IconIDNone:
+			self.iconImageName = @"";
+			break;
+		
+		case kAlert_IconIDNote:
+			self.iconImageName = NSImageNameApplicationIcon;
+			break;
+		
+		case kAlert_IconIDStop: // for now, make this the same
+		case kAlert_IconIDDefault:
+		default:
+			self.iconImageName = @"IconForCaution";
+			break;
 		}
 	}
-}// didFinishAlertWithButton:
+}
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -2910,6 +1894,11 @@ imageForIconImageName:(NSString*)	anImageName
 			Console_Warning(Console_WriteValueCFString, "failed to find icon for image name", (CFStringRef)anImageName);
 			result = appIconImage;
 		}
+		else if ([anImageName isEqualToString:NSImageNameApplicationIcon])
+		{
+			// entire image is application icon
+			result = appIconImage;
+		}
 		else
 		{
 			// valid image; now superimpose a small application icon
@@ -2932,78 +1921,47 @@ imageForIconImageName:(NSString*)	anImageName
 
 
 /*!
-Updates the dialog text in the user interface and also
-resizes and rearranges views (and if necessary, the window)
-to leave just enough room for the new string.
+Adds up the current heights and spacings of key views to
+decide the ideal height of the view and notifies the
+embedded panel of the change.
 
-(4.0)
+(4.1)
 */
 - (void)
-setDisplayedDialogText:(NSString*)	aString
+recalculateIdealHeight
 {
-	if (nil != dialogTextUI)
+	self->idealFrameSize.height = 0; // initially...
+	
+	if (NO == titleTextUI.isHidden)
 	{
-		NSView*		containerView = nil;
-		NSRect		oldFrame = [dialogTextUI frame];
-		NSRect		newFrame = oldFrame;
-		float		deltaV = 0;
-		
-		
-		[dialogTextUI setString:aString];
-		[dialogTextUI sizeToFit];
-		[dialogTextUI scrollRangeToVisible:NSMakeRange([aString length] - 1, 1)];
-		newFrame = [dialogTextUI frame];
-		deltaV = (newFrame.size.height - oldFrame.size.height);
-		
-		containerView = dialogTextUI;
-		newFrame = [containerView frame];
-		newFrame.origin.y -= deltaV;
-		newFrame.size.height += deltaV;
-		[containerView setFrame:newFrame];
-		
-		containerView = helpTextUI;
-		newFrame = [containerView frame];
-		newFrame.origin.y -= deltaV;
-		[containerView setFrameOrigin:newFrame.origin];
-		
-		[self deltaSizeWindow:deltaV];
+		self->idealFrameSize.height += self->titleTextUI.frame.size.height;
 	}
-}// setDisplayedDialogText:
-
-
-/*!
-Updates the help text in the user interface and also
-resizes and rearranges views (and if necessary, the window)
-to leave just enough room for the new string.
-
-(4.0)
-*/
-- (void)
-setDisplayedHelpText:(NSString*)	aString
-{
-	if (nil != helpTextUI)
+	if (NO == dialogTextUI.isHidden)
 	{
-		NSView*		containerView = nil;
-		NSRect		oldFrame = [helpTextUI frame];
-		NSRect		newFrame = oldFrame;
-		float		deltaV = 0;
-		
-		
-		[helpTextUI setString:aString];
-		[helpTextUI sizeToFit];
-		[helpTextUI scrollRangeToVisible:NSMakeRange([aString length] - 1, 1)];
-		newFrame = [helpTextUI frame];
-		deltaV = (newFrame.size.height - oldFrame.size.height);
-		
-		containerView = helpTextUI;
-		newFrame = [containerView frame];
-		newFrame.origin.y -= deltaV;
-		newFrame.size.height += deltaV;
-		[containerView setFrame:newFrame];
-		
-		[self deltaSizeWindow:deltaV];
+		if (NO == titleTextUI.isHidden)
+		{
+			self->idealFrameSize.height += 10/* padding between */;
+		}
+		self->idealFrameSize.height += self->dialogTextUI.frame.size.height;
 	}
-}// setDisplayedHelpText:
+	if (NO == helpTextUI.isHidden)
+	{
+		if (NO == dialogTextUI.isHidden)
+		{
+			self->idealFrameSize.height += 10/* padding between */;
+		}
+		self->idealFrameSize.height += self->helpTextUI.frame.size.height;
+	}
+	
+	// do not truncate the icon, no matter how little text there is
+	self->idealFrameSize.height = MAX(self->idealFrameSize.height, self->idealIconSize.height);
+	
+	// ensure panel is large enough to fit its top and bottom margins
+	self->idealFrameSize.height += 40; // 20 padding at top, 20 padding at bottom
+	
+	// notify observers (e.g. to resize any parent window)
+	[self postNote:kPanel_IdealSizeDidChangeNotification];
+}// recalculateIdealHeight
 
 
 /*!
@@ -3035,6 +1993,22 @@ toValue:(NSString*)					aString
 }// setStringProperty:withName:toValue:
 
 
-@end // AlertMessages_WindowController (AlertMessages_WindowControllerInternal)
+@end //} AlertMessages_VC (AlertMessages_VCInternal)
+
+
+#pragma mark -
+@implementation AlertMessages_WindowDraggingIcon //{
+
+
+/*!
+This subclass exists to better support movable alert
+windows.  If this property is set to YES then the
+user can drag the window even if the initial click
+is on the alert icon.
+*/
+@synthesize mouseDownCanMoveWindow = _mouseDownCanMoveWindow;
+
+
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

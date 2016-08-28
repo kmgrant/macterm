@@ -734,7 +734,7 @@ didLoadManagedView:(NSView*)		aManagedView
 			_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
 												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
 												kPopoverManager_BehaviorTypeStandard,
-												self.parentCocoaWindow);
+												self.parentCocoaWindow.contentView);
 		}
 		PopoverManager_DisplayPopover(_popoverMgr);
 	}

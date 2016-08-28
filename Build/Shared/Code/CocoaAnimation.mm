@@ -556,6 +556,7 @@ createImageWindowFrom	(NSWindow*		inWindow,
 													backing:NSBackingStoreBuffered defer:NO];
 	
 	// capture the image of the original window
+	@autoreleasepool
 	{
 		NSView*				contentView = STATIC_CAST(result.contentView, NSView*);
 		NSBitmapImageRep*	imageRep = nil;
@@ -564,9 +565,10 @@ createImageWindowFrom	(NSWindow*		inWindow,
 		
 		// capture the contents of the original window
 		[originalContentView lockFocus];
-		imageRep = [[[NSBitmapImageRep alloc] initWithFocusedViewRect:inContentViewSection] autorelease];
+		imageRep = [[NSBitmapImageRep alloc] initWithFocusedViewRect:inContentViewSection];
 		[originalContentView unlockFocus];
 		[windowImage addRepresentation:imageRep];
+		[imageRep release], imageRep = nil;
 		
 		// with Core Animation and Mac OS X 10.6 and beyond, the NSImage
 		// can be directly set as the contents of a layer-backed view
@@ -579,13 +581,14 @@ createImageWindowFrom	(NSWindow*		inWindow,
 		{
 			// prior to Core Animation, an image view is required
 			NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(inContentViewSection), NSHeight(inContentViewSection));
-			NSImageView*	imageView = [[[NSImageView alloc] initWithFrame:zeroOriginBounds] autorelease];
+			NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
 			
 			
 			Console_Warning(Console_WriteLine, "expected to find a valid Core Animation layer; falling back to image view");
 			[imageView setImageScaling:NSScaleToFit];
 			[imageView setImage:windowImage];
 			[result setContentView:imageView];
+			[imageView release], imageView = nil;
 		}
 	}
 	

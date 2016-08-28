@@ -63,6 +63,8 @@ The private class interface.
 	arrowInset:(float)_
 	at:(NSPoint)_
 	side:(Popover_Properties)_;
+	+ (BOOL)
+	isGraphiteTheme;
 	+ (Popover_Properties)
 	windowPlacement:(Popover_Properties)_;
 
@@ -319,6 +321,7 @@ vibrancy:(BOOL)					aVisualEffectFlag
 			[super setBackgroundColor:[NSColor clearColor]];
 			[self setMovableByWindowBackground:NO];
 			[self setExcludedFromWindowsMenu:YES];
+			[self setPreventsApplicationTerminationWhenModal:NO];
 			[self setAlphaValue:1.0];
 			[self setOpaque:NO];
 			[self setHasShadow:YES];
@@ -415,10 +418,10 @@ vibrancy:(BOOL)					aVisualEffectFlag
 			// "setBorderWidth:" method already requires the border to fit
 			// within the margin so that value is not monitored here)
 			[registeredObservers addObject:[self observePropertyFromSelector:@selector(viewMargin)
-											ofObject:self
-											options:(NSKeyValueObservingOptionNew |
-														NSKeyValueObservingOptionOld)
-											context:nullptr]];
+																				ofObject:self
+																				options:(NSKeyValueObservingOptionNew |
+																							NSKeyValueObservingOptionOld)
+																				context:nullptr]];
 			
 			// subscribe to notifications
 			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
@@ -756,33 +759,33 @@ context:(void*)						aContext
 			id			newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
 			
 			
-			if ([aKeyPath isEqualToString:@"arrowHeight"])
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(arrowHeight)))
 			{
 				// fix layout and update background
 				[self redisplay];
 			}
-			else if ([aKeyPath isEqualToString:@"borderOuterColor"])
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(borderOuterColor)))
 			{
 				[self updateBackground];
 			}
-			else if ([aKeyPath isEqualToString:@"borderPrimaryColor"])
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(borderPrimaryColor)))
 			{
 				[self updateBackground];
 			}
-			else if ([aKeyPath isEqualToString:@"hasArrow"])
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(hasArrow)))
 			{
 				[self updateBackground];
 			}
-			else if ([aKeyPath isEqualToString:@"hasRoundCornerBesideArrow"])
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(hasRoundCornerBesideArrow)))
 			{
 				// fix layout and update background
 				[self redisplay];
 			}
-			else if ([aKeyPath isEqualToString:@"popoverBackgroundColor"])
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(popoverBackgroundColor)))
 			{
 				[self updateBackground];
 			}
-			else if ([aKeyPath isEqualToString:@"viewMargin"])
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(viewMargin)))
 			{
 				float const		kOldFloat = [oldValue floatValue];
 				float const		kNewFloat = [newValue floatValue];
@@ -1037,8 +1040,16 @@ applyStyle:(Popover_WindowStyle)	aStyle
 		// not really a popover but an application-modal dialog box
 		// for displaying an alert message
 		[self applyStyle:kPopover_WindowStyleDialogAppModal];
-		self.borderOuterColor = [NSColor colorWithCalibratedRed:1.0 green:0.9 blue:0.9 alpha:1.0];
-		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.75 green:0.7 blue:0.7 alpha:1.0];
+		if ([self.class isGraphiteTheme])
+		{
+			self.borderOuterColor = [NSColor colorWithCalibratedRed:0.9 green:0.9 blue:0.9 alpha:1.0];
+			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.7 green:0.7 blue:0.7 alpha:1.0];
+		}
+		else
+		{
+			self.borderOuterColor = [NSColor colorWithCalibratedRed:1.0 green:0.9 blue:0.9 alpha:1.0];
+			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.75 green:0.7 blue:0.7 alpha:1.0];
+		}
 		break;
 	
 	case kPopover_WindowStyleAlertSheet:
@@ -1071,7 +1082,14 @@ applyStyle:(Popover_WindowStyle)	aStyle
 	
 	case kPopover_WindowStyleHelp:
 		// a floating window that typically contains only help text
-		self.backgroundColor = [NSColor colorWithCalibratedRed:0 green:0.25 blue:0.5 alpha:0.93];
+		if ([self.class isGraphiteTheme])
+		{
+			self.backgroundColor = [NSColor colorWithCalibratedRed:0.5 green:0.5 blue:0.5 alpha:0.93];
+		}
+		else
+		{
+			self.backgroundColor = [NSColor colorWithCalibratedRed:0 green:0.25 blue:0.5 alpha:0.93];
+		}
 		self.borderOuterColor = [NSColor whiteColor];
 		self.borderPrimaryColor = [NSColor blackColor];
 		self.viewMargin = 5.0;
@@ -1206,7 +1224,7 @@ backgroundColorPatternImage
 	
 	result = [NSColor colorWithPatternImage:patternImage];
 	
-	[patternImage autorelease];
+	[patternImage release];
 	
 	return result;
 }
@@ -1772,6 +1790,20 @@ side:(Popover_Properties)			aSide
 
 
 /*!
+Returns YES only if the current system appearance is
+using the graphite theme (grayscale).  This is used
+to determine if frames should use color.
+
+(2016.06)
+*/
++ (BOOL)
+isGraphiteTheme
+{
+	return (NSGraphiteControlTint == [NSColor currentControlTint]);
+}
+
+
+/*!
 Forces the window to redo its layout and render itself again.
 
 (1.0)
@@ -1801,7 +1833,11 @@ updateBackground
 {
 	//NSDisableScreenUpdates();
 	// call superclass to avoid overridden version from this class
-	[super setBackgroundColor:[self backgroundColorPatternImage]];
+	@autoreleasepool
+	{
+		[super setBackgroundColor:[self backgroundColorPatternImage]];
+	}
+	
 	if ([self isVisible])
 	{
 		[self display];
@@ -1895,7 +1931,7 @@ windowPlacement:(Popover_Properties)	aFlagSet
 
 
 /*!
-Returns the window placement portion of the specified properties.
+Returns the window placement portion of this popover’s properties.
 
 (1.1)
 */

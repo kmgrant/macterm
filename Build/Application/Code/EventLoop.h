@@ -79,6 +79,24 @@ enum
 																	//!  process, or about to become inactive (context: nullptr)
 };
 
+#pragma mark Types
+
+#ifdef __OBJC__
+
+@interface EventLoop_AppObject : NSApplication //{
+
+// NSApplication
+	- (void)
+	presentError:(NSError*)_
+	modalForWindow:(NSWindow*)_
+	delegate:(id)_
+	didPresentSelector:(SEL)_
+	contextInfo:(void*)_;
+
+@end //}
+
+#endif
+
 
 
 #pragma mark Public Methods

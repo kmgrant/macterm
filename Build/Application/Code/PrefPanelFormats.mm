@@ -51,6 +51,7 @@
 
 // library includes
 #import <AlertMessages.h>
+#import <CFRetainRelease.h>
 #import <CocoaExtensions.objc++.h>
 #import <ColorUtilities.h>
 #import <Console.h>
@@ -77,9 +78,8 @@
 #pragma mark Internal Method Prototypes
 namespace {
 
-Preferences_Result		copyColor								(Preferences_Tag, Preferences_ContextRef, Preferences_ContextRef,
-																 Boolean = false, Boolean* = nullptr);
-void					resetANSIWarningCloseNotifyProcCocoa	(AlertMessages_BoxRef, SInt16, void*);
+Preferences_Result		copyColor	(Preferences_Tag, Preferences_ContextRef, Preferences_ContextRef,
+									 Boolean = false, Boolean* = nullptr);
 
 } // anonymous namespace
 
@@ -268,43 +268,6 @@ copyColor	(Preferences_Tag			inSourceTag,
 	}
 	return result;
 }// copyColor
-
-
-/*!
-The responder to a closed “reset ANSI colors?” alert.
-This routine resets the 16 displayed ANSI colors if
-the item hit is the OK button, otherwise it does not
-modify the displayed colors in any way.  The given
-alert is destroyed.
-
-(4.1)
-*/
-void
-resetANSIWarningCloseNotifyProcCocoa	(AlertMessages_BoxRef	inAlertThatClosed,
-										 SInt16					inItemHit,
-										 void*					inStandardColorsViewManagerPtr)
-{
-	PrefPanelFormats_StandardColorsViewManager*		viewMgr = REINTERPRET_CAST
-																(inStandardColorsViewManagerPtr,
-																	PrefPanelFormats_StandardColorsViewManager*);
-	
-	
-	// if user consented to color reset, then change all colors to defaults
-	if (kAlertStdAlertOKButton == inItemHit)
-	{
-		BOOL	resetOK = [viewMgr resetToFactoryDefaultColors];
-		
-		
-		if (NO == resetOK)
-		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteLine, "failed to reset all the standard colors to default values!");
-		}
-	}
-	
-	// dispose of the alert
-	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-}// resetANSIWarningCloseNotifyProcCocoa
 
 } // anonymous namespace
 
@@ -1556,24 +1519,34 @@ performResetStandardColors:(id)		sender
 {
 #pragma unused(sender)
 	// check with the user first!
-	AlertMessages_BoxRef	box = nullptr;
+	AlertMessages_BoxWrap	box(Alert_NewWindowModal([[self managedView] window]), true/* is retained */);
 	UIStrings_Result		stringResult = kUIStrings_ResultOK;
-	CFStringRef				dialogTextCFString = nullptr;
-	CFStringRef				helpTextCFString = nullptr;
+	CFRetainRelease			dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowANSIColorsResetPrimaryText),
+												true/* is retained */);
+	CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowGenericCannotUndoHelpText),
+												true/* is retained */);
 	
 	
-	stringResult = UIStrings_Copy(kUIStrings_AlertWindowANSIColorsResetPrimaryText, dialogTextCFString);
-	assert(stringResult.ok());
-	stringResult = UIStrings_Copy(kUIStrings_AlertWindowGenericCannotUndoHelpText, helpTextCFString);
-	assert(stringResult.ok());
+	assert(dialogTextCFString.exists());
+	assert(helpTextCFString.exists());
 	
-	box = Alert_NewWindowModal([[self managedView] window], false/* is window close alert */,
-								resetANSIWarningCloseNotifyProcCocoa, self/* user data */);
-	Alert_SetHelpButton(box, false);
-	Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-	Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
-	Alert_SetType(box, kAlertCautionAlert);
-	Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
+	Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1,
+	^{
+		// user consented to color reset; change all colors to defaults
+		BOOL	resetOK = [self resetToFactoryDefaultColors];
+		
+		
+		if (NO == resetOK)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to reset all the standard colors to default values!");
+		}
+	});
+	Alert_SetHelpButton(box.returnRef(), false);
+	Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
+	Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(),
+							helpTextCFString.returnCFStringRef());
+	Alert_Display(box.returnRef()); // retains alert until it is dismissed
 }// performResetStandardColors:
 
 

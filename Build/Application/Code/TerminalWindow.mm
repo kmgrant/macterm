@@ -4522,27 +4522,43 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							GenericDialog_Ref				dialog = nullptr;
+							GenericDialog_Wrap				dialog;
 							PrefPanelFormats_ViewManager*	embeddedPanel = [[PrefPanelFormats_ViewManager alloc] init];
 							CFRetainRelease					addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
 																				true/* is retained */);
-						
+							CFRetainRelease					cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+																			true/* is retained */);
+							CFRetainRelease					okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+																		true/* is retained */);
+							
 							
 							// display the sheet
-							dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
-														embeddedPanel, temporaryContext, sheetClosed);
+							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+																						embeddedPanel, temporaryContext),
+														true/* is retained */);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-							GenericDialog_AddButton(dialog, addToPrefsString.returnCFStringRef(),
-													^{
-														Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
-														
-														
-														PrefsWindow_AddCollection(temporaryContext, tagSet,
-																					kCommandDisplayPrefPanelFormats);
-														Preferences_ReleaseTagSet(&tagSet);
-													});
-							GenericDialog_SetImplementation(dialog, terminalWindow);
-							GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+																^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+																^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
+																^{
+																	Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
+																	
+																	
+																	PrefsWindow_AddCollection(temporaryContext, tagSet,
+																								kCommandDisplayPrefPanelFormats);
+																	Preferences_ReleaseTagSet(&tagSet);
+																});
+							GenericDialog_SetImplementation(dialog.returnRef(), terminalWindow);
+							// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
+							// to be implemented and called here; for now, assume that the
+							// terminal window will remain valid as long as the dialog exists
+							// (that ought to be the case)
+							GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
 						}
 						
 						result = noErr;
@@ -4660,16 +4676,31 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							GenericDialog_Ref						dialog = nullptr;
+							GenericDialog_Wrap						dialog;
 							PrefPanelTerminals_ScreenViewManager*	embeddedPanel = [[PrefPanelTerminals_ScreenViewManager alloc] init];
+							CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+																					true/* is retained */);
+							CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+																				true/* is retained */);
 							
 							
 							// display the sheet
-							dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
-														embeddedPanel, temporaryContext, sheetClosed);
+							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+																						embeddedPanel, temporaryContext),
+														true/* is retained */);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-							GenericDialog_SetImplementation(dialog, terminalWindow);
-							GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+																^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+																^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+							GenericDialog_SetImplementation(dialog.returnRef(), terminalWindow);
+							// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
+							// to be implemented and called here; for now, assume that the
+							// terminal window will remain valid as long as the dialog exists
+							// (that ought to be the case)
+							GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
 						}
 						
 						result = noErr;
@@ -4835,27 +4866,43 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							GenericDialog_Ref					dialog = nullptr;
+							GenericDialog_Wrap					dialog;
 							PrefPanelTranslations_ViewManager*	embeddedPanel = [[PrefPanelTranslations_ViewManager alloc] init];
 							CFRetainRelease						addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
 																					true/* is retained */);
+							CFRetainRelease						cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+																				true/* is retained */);
+							CFRetainRelease						okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+																			true/* is retained */);
 							
 							
 							// display the sheet
-							dialog = GenericDialog_New(TerminalWindow_ReturnWindow(terminalWindow),
-														embeddedPanel, temporaryContext, sheetClosed);
+							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+																						embeddedPanel, temporaryContext),
+														true/* is retained */);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-							GenericDialog_AddButton(dialog, addToPrefsString.returnCFStringRef(),
-													^{
-														Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
-														
-														
-														PrefsWindow_AddCollection(temporaryContext, tagSet,
-																					kCommandDisplayPrefPanelTranslations);
-														Preferences_ReleaseTagSet(&tagSet);
-													});
-							GenericDialog_SetImplementation(dialog, terminalWindow);
-							GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+																^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+																^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
+							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
+																^{
+																	Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
+																	
+																	
+																	PrefsWindow_AddCollection(temporaryContext, tagSet,
+																								kCommandDisplayPrefPanelTranslations);
+																	Preferences_ReleaseTagSet(&tagSet);
+																});
+							GenericDialog_SetImplementation(dialog.returnRef(), terminalWindow);
+							// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
+							// to be implemented and called here; for now, assume that the
+							// terminal window will remain valid as long as the dialog exists
+							// (that ought to be the case)
+							GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
 						}
 						
 						result = noErr;
@@ -7963,34 +8010,24 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (nullptr != terminalWindow)
 			{
 				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				AlertMessages_BoxRef			warningBox = Alert_NewWindowModal(TerminalWindow_ReturnWindow(terminalWindow),
-																					false/* is close warning */, Alert_StandardCloseNotifyProc,
-																					nullptr/* context */);
-				UIStrings_Result				stringResult = kUIStrings_ResultOK;
-				CFStringRef						dialogTextCFString = nullptr;
-				CFStringRef						helpTextCFString = nullptr;
+				AlertMessages_BoxWrap			box(Alert_NewWindowModal(TerminalWindow_ReturnNSWindow(terminalWindow)),
+													true/* is retained */);
+				CFRetainRelease					dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowExcessiveErrorsPrimaryText),
+																	true/* is retained */);
+				CFRetainRelease					helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowExcessiveErrorsHelpText),
+																	true/* is retained */);
 				
 				
-				Alert_SetParamsFor(warningBox, kAlert_StyleOK);
-				Alert_SetType(warningBox, kAlertNoteAlert);
+				Alert_SetParamsFor(box.returnRef(), kAlert_StyleOK);
+				Alert_SetIcon(box.returnRef(), kAlert_IconIDNote);
 				
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowExcessiveErrorsPrimaryText, dialogTextCFString);
-				assert(stringResult.ok());
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowExcessiveErrorsHelpText, helpTextCFString);
-				assert(stringResult.ok());
-				Alert_SetTextCFStrings(warningBox, dialogTextCFString, helpTextCFString);
+				assert(dialogTextCFString.exists());
+				assert(helpTextCFString.exists());
+				Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(),
+										helpTextCFString.returnCFStringRef());
 				
-				// show the message; it is disposed asynchronously
-				Alert_Display(warningBox);
-				
-				if (nullptr != dialogTextCFString)
-				{
-					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
-				}
-				if (nullptr != helpTextCFString)
-				{
-					CFRelease(helpTextCFString), helpTextCFString = nullptr;
-				}
+				// show the message
+				Alert_Display(box.returnRef()); // retains alert until it is dismissed
 			}
 		}
 		break;

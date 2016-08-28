@@ -569,7 +569,7 @@ didLoadManagedView:(NSView*)			aManagedView
 		{
 			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
 												self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
-												_targetCocoaWindow);
+												_targetCocoaWindow.contentView);
 		}
 		PopoverManager_DisplayPopover(_popoverMgr);
 	}

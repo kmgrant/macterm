@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment version="1060" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10117"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="AlertMessages_VC">
+            <connections>
+                <outlet property="dialogTextUI" destination="veC-t9-gpm" id="I1G-7D-u4j"/>
+                <outlet property="helpTextUI" destination="i9s-bA-TTg" id="qa7-OI-ATi"/>
+                <outlet property="logicalFirstResponder" destination="Rn1-It-qwq" id="6K4-Sa-I25"/>
+                <outlet property="logicalLastResponder" destination="M44-en-2bl" id="7pS-zt-Uhs"/>
+                <outlet property="mainIconUI" destination="M44-en-2bl" id="z9A-0o-L6K"/>
+                <outlet property="titleTextUI" destination="Rn1-It-qwq" id="SUT-bp-0FS"/>
+                <outlet property="view" destination="X1f-Jj-WHQ" id="EdX-l1-9Im"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <view id="X1f-Jj-WHQ">
+            <rect key="frame" x="0.0" y="0.0" width="450" height="120"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+            <subviews>
+                <imageView id="M44-en-2bl" userLabel="Icon" customClass="AlertMessages_WindowDraggingIcon">
+                    <rect key="frame" x="24" y="42" width="64" height="64"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="dNy-xR-sxb"/>
+                </imageView>
+                <textField verticalHuggingPriority="750" id="Rn1-It-qwq" userLabel="Title Text" customClass="AlertMessages_TitleTextField">
+                    <rect key="frame" x="111" y="77" width="321" height="23"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="&lt;title text&gt;" id="cBl-XC-Z58">
+                        <font key="font" metaFont="systemBold" size="18"/>
+                        <color key="textColor" red="0.20000000300000001" green="0.20000000300000001" blue="0.20000000300000001" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                    <connections>
+                        <binding destination="-2" name="value" keyPath="self.titleText" id="YVV-hL-Qlb">
+                            <dictionary key="options">
+                                <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
+                                <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
+                            </dictionary>
+                        </binding>
+                    </connections>
+                </textField>
+                <customView id="veC-t9-gpm" userLabel="Dialog Text" customClass="AlertMessages_TextView">
+                    <rect key="frame" x="108" y="46" width="322" height="20"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                </customView>
+                <customView id="i9s-bA-TTg" userLabel="Help Text" customClass="AlertMessages_TextView">
+                    <rect key="frame" x="108" y="20" width="322" height="18"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                </customView>
+            </subviews>
+            <point key="canvasLocation" x="230" y="292"/>
+        </view>
+    </objects>
+</document>

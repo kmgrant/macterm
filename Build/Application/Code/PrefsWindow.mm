@@ -141,9 +141,9 @@ in the source list.
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				copyToDefaultsWarningCloseNotifyProc	(AlertMessages_BoxRef, SInt16, void*);
+void				copyContextToDefaults					(Preferences_ContextRef);
 CFDictionaryRef		createSearchDictionary					();
-void				deleteCollectionWarningCloseNotifyProc	(AlertMessages_BoxRef, SInt16, void*);
+void				deleteContext							(Preferences_ContextRef);
 OSStatus			receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -280,97 +280,65 @@ PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 namespace {
 
 /*!
-The responder to a closed “copy to Default?” alert.
 This routine overwrites all Default settings in the
-current category if the item hit is the OK button,
-otherwise it does not modify preferences in any way.
-The given alert is destroyed.
+current category.
 
 (2016.04)
 */
 void
-copyToDefaultsWarningCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
-										 SInt16					inItemHit,
-										 void*					inSourceContextRef)
+copyContextToDefaults	(Preferences_ContextRef		inSourceContext)
 {
-	Preferences_ContextRef		baseContext = REINTERPRET_CAST(inSourceContextRef, Preferences_ContextRef);
+	Preferences_ContextRef		defaultContext = nullptr;
+	Quills::Prefs::Class		targetClass = [[PrefsWindow_Controller sharedPrefsWindowController] currentPreferencesClass];
+	Preferences_Result			prefsResult = Preferences_GetDefaultContext(&defaultContext, targetClass);
 	
 	
-	// if user consented to the copy, overwrite Default settings;
-	// otherwise, do nothing
-	if (kAlertStdAlertOKButton == inItemHit)
+	if (kPreferences_ResultOK != prefsResult)
 	{
-		Preferences_ContextRef		defaultContext = nullptr;
-		Quills::Prefs::Class		targetClass = [[PrefsWindow_Controller sharedPrefsWindowController] currentPreferencesClass];
-		Preferences_Result			prefsResult = Preferences_GetDefaultContext(&defaultContext, targetClass);
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteValue, "failed to find the default context, error", prefsResult);
+	}
+	else
+	{
+		Preferences_TagSetRef	tagsInContext = Preferences_NewTagSet(inSourceContext);
 		
 		
+		prefsResult = Preferences_ContextCopy(inSourceContext, defaultContext, tagsInContext);
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			Sound_StandardAlert();
-			Console_Warning(Console_WriteValue, "failed to find the default context, error", prefsResult);
+			Console_Warning(Console_WriteValue, "failed to copy, error", prefsResult);
 		}
-		else
-		{
-			Preferences_TagSetRef	tagsInContext = Preferences_NewTagSet(baseContext);
-			
-			
-			prefsResult = Preferences_ContextCopy(baseContext, defaultContext, tagsInContext);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Sound_StandardAlert();
-				Console_Warning(Console_WriteValue, "failed to copy, error", prefsResult);
-			}
-			Preferences_ReleaseTagSet(&tagsInContext);
-		}
+		Preferences_ReleaseTagSet(&tagsInContext);
 	}
-	
-	// dispose of the alert
-	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-}// copyToDefaultsWarningCloseNotifyProc
+}// copyContextToDefaults
 
 
 /*!
-The responder to a closed “delete settings?” alert.
-This routine deletes the specified collection if the
-item hit is the OK button, otherwise it does not
-modify preferences in any way.  The given alert is
-destroyed.
+This routine deletes the specified collection and updates
+the current selection in the Preferences window.
 
 (2016.04)
 */
 void
-deleteCollectionWarningCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
-										 SInt16					inItemHit,
-										 void*					inSourceContextRef)
+deleteContext	(Preferences_ContextRef		inDeadContext)
 {
-	Preferences_ContextRef		deadContext = REINTERPRET_CAST(inSourceContextRef, Preferences_ContextRef);
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
-	// if user consented to the deletion, proceed;
-	// otherwise, do nothing
-	if (kAlertStdAlertOKButton == inItemHit)
+	// NOTE: notifications are sent when a context is deleted from Favorites
+	// so the source list should automatically resynchronize
+	prefsResult = Preferences_ContextDeleteFromFavorites(inDeadContext), inDeadContext = nullptr;
+	if (kPreferences_ResultOK != prefsResult)
 	{
-		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		
-		
-		// NOTE: notifications are sent when a context is deleted from Favorites
-		// so the source list should automatically resynchronize
-		prefsResult = Preferences_ContextDeleteFromFavorites(deadContext), deadContext = nullptr;
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteValue, "failed to delete currently-selected context; error", prefsResult);
-		}
-		
-		// reset the selection, as it will be invalidated when the target item is removed
-		[[PrefsWindow_Controller sharedPrefsWindowController]
-			setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:0]];
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteValue, "failed to delete currently-selected context; error", prefsResult);
 	}
 	
-	// dispose of the alert
-	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-}// deleteCollectionWarningCloseNotifyProc
+	// reset the selection, as it will be invalidated when the target item is removed
+	[[PrefsWindow_Controller sharedPrefsWindowController]
+		setCurrentPreferenceCollectionIndexes:[NSIndexSet indexSetWithIndex:0]];
+}// deleteContext
 
 
 /*!
@@ -1010,8 +978,7 @@ performCopyPreferenceCollectionToDefault:(id)	sender
 	}
 	else
 	{
-		AlertMessages_BoxRef	box = nullptr;
-		UIStrings_Result		stringResult = kUIStrings_ResultOK;
+		AlertMessages_BoxWrap	box(Alert_NewWindowModal(self.window), true/* is retained */);
 		CFRetainRelease			dialogTextTemplateCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowCopyToDefaultPrimaryText),
 															true/* is retained */);
 		CFRetainRelease			dialogTextCFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
@@ -1028,15 +995,17 @@ performCopyPreferenceCollectionToDefault:(id)	sender
 		assert(helpTextCFString.exists());
 		assert(overwriteButtonCFString.exists());
 		
-		box = Alert_NewWindowModal(self.window, false/* is window close alert */,
-									copyToDefaultsWarningCloseNotifyProc,
-									REINTERPRET_CAST(baseContext, void*)/* user data */);
-		Alert_SetHelpButton(box, false);
-		Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-		Alert_SetTextCFStrings(box, dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
-		Alert_SetButtonText(box, kAlert_ItemButton1, overwriteButtonCFString.returnCFStringRef());
-		Alert_SetType(box, kAlertCautionAlert);
-		Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
+		Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1,
+		^{
+			// user consented to the overwrite of defaults
+			copyContextToDefaults(baseContext);
+		});
+		Alert_SetHelpButton(box.returnRef(), true);
+		Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
+		Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
+		Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, overwriteButtonCFString.returnCFStringRef());
+		Alert_SetIcon(box.returnRef(), kAlert_IconIDDefault);
+		Alert_Display(box.returnRef()); // notifier disposes the alert when the sheet eventually closes
 	}
 }// performCopyPreferenceCollectionToDefault:
 
@@ -1177,7 +1146,7 @@ performRemovePreferenceCollection:(id)	sender
 		}
 		else
 		{
-			AlertMessages_BoxRef	box = nullptr;
+			AlertMessages_BoxWrap	box(Alert_NewWindowModal(self.window), true/* is retained */);
 			UIStrings_Result		stringResult = kUIStrings_ResultOK;
 			CFRetainRelease			dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowDeleteCollectionPrimaryText),
 													true/* is retained */);
@@ -1191,15 +1160,17 @@ performRemovePreferenceCollection:(id)	sender
 			assert(helpTextCFString.exists());
 			assert(deleteButtonCFString.exists());
 			
-			box = Alert_NewWindowModal(self.window, false/* is window close alert */,
-										deleteCollectionWarningCloseNotifyProc,
-										REINTERPRET_CAST(deadContext, void*)/* user data */);
-			Alert_SetHelpButton(box, false);
-			Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-			Alert_SetTextCFStrings(box, dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
-			Alert_SetButtonText(box, kAlert_ItemButton1, deleteButtonCFString.returnCFStringRef());
-			Alert_SetType(box, kAlertCautionAlert);
-			Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1,
+			^{
+				// user consented to the overwrite of defaults
+				deleteContext(deadContext);
+			});
+			Alert_SetHelpButton(box.returnRef(), false);
+			Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
+			Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
+			Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, deleteButtonCFString.returnCFStringRef());
+			Alert_SetIcon(box.returnRef(), kAlert_IconIDDefault);
+			Alert_Display(box.returnRef()); // notifier disposes the alert when the sheet eventually closes
 		}
 	}
 }// performRemovePreferenceCollection:
@@ -2757,7 +2728,7 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 	// (it is unclear why this step is needed; the symptom is that
 	// when the source list is hidden, the tab view of the next panel
 	// is sometimes not completely redrawn on its left side)
-	dispatch_after(dispatch_time(0, 0.32 * NSEC_PER_SEC), dispatch_get_main_queue(),
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.32 * NSEC_PER_SEC), dispatch_get_main_queue(),
 	^{
 		[containerTabView setNeedsDisplay:YES];
 	});

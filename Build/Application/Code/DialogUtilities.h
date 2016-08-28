@@ -75,9 +75,6 @@ void
 OSStatus
 	DialogUtilities_SetKeyboardFocus		(HIViewRef				inView);
 
-HIViewWrap&
-	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);
-
 void
 	TextFontByName							(ConstStringPtr			inFontName);
 

@@ -208,44 +208,6 @@ DialogUtilities_SetKeyboardFocus	(HIViewRef		inView)
 
 
 /*!
-Call this routine on the Help button control of every window.
-This routine checks to see if all necessary components for
-contextual help are available (disabling the button if help
-is not available), and changes the icon of the button to be a
-high-quality icon if possible.  An appropriate accessibility
-description is given to the button.
-
-(3.1)
-*/
-HIViewWrap&
-DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
-{
-	// set accessibility title
-	CFStringRef		accessibilityDescCFString = nullptr;
-	
-	
-	if (UIStrings_Copy(kUIStrings_ButtonHelpAccessibilityDesc, accessibilityDescCFString).ok())
-	{
-		HIViewRef const		kViewRef = inoutView;
-		HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(kViewRef, HIObjectRef);
-		OSStatus			error = noErr;
-		
-		
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(kViewObjectRef, 0/* sub-component identifier */,
-					kAXDescriptionAttribute, accessibilityDescCFString);
-		if (noErr != error)
-		{
-			Console_Warning(Console_WriteValue, "failed to set accessibility description for help button, error", error);
-		}
-		CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-	}
-	
-	return inoutView;
-}// SetUpHelpButton
-
-
-/*!
 To change the font of the current graphics port
 to be the font with the specified name, use this
 method.

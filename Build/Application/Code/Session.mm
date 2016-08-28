@@ -245,7 +245,7 @@ typedef std::map< HIViewRef, EventHandlerRef >	My_TextInputHandlerByView;
 typedef std::set< VectorWindow_Ref >			My_VectorWindowSet;
 
 /*!
-The data structure that is known as a "Session_Ref" to
+The data structure that is known as a "SessionRef" to
 any code outside this module.  See Session_New().
 */
 struct My_Session
@@ -293,7 +293,9 @@ struct My_Session
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
 	EventLoopTimerUPP			respawnSessionTimerUPP;		// procedure that is called when a session should be respawned
 	EventLoopTimerRef			respawnSessionTimer;		// short timer
-	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
+	MemoryBlocks_WeakPairWrap
+	< SessionRef,
+		GenericDialog_Ref >		currentDialog;				// weak reference while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
 	Session_EventKeys			eventKeys;					// information on keyboard short-cuts for major events
@@ -319,8 +321,8 @@ struct My_Session
 	EventLoopTimerRef			pendingPasteTimer;			// paste timer, reset only when a Paste or an equivalent (like a drag) occurs
 	Preferences_ContextWrap		recentSheetContext;			// defined temporarily while a Preferences-dependent sheet (such as key sequences) is up
 	My_SessionSheetType			sheetType;					// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
-	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
 	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
+	Memory_WeakRefEraser		weakRefEraser;				// at destruction time, clears weak references that involve this object
 	SessionRef					selfRef;					// convenient reference to this structure
 	
 	struct
@@ -341,37 +343,7 @@ typedef My_SessionPtr*	My_SessionHandle;
 
 typedef MemoryBlockPtrLocker< SessionRef, My_Session >	My_SessionPtrLocker;
 typedef LockAcquireRelease< SessionRef, My_Session >	My_SessionAutoLocker;
-typedef MemoryBlockReferenceTracker<SessionRef>			My_SessionRefTracker;
-
-struct My_PasteAlertInfo
-{
-	// sent to pasteWarningCloseNotifyProc()
-	SessionRef			sessionForPaste;
-	CFRetainRelease		sourcePasteboard;
-	CFRetainRelease		pendingLines;
-};
-typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
-
-struct My_TerminateAlertInfo
-{
-	My_TerminateAlertInfo	(SessionRef		inSession,
-							 Boolean		inKeepWindow,
-							 Boolean		inRestart)
-	: sessionBeingTerminated(inSession), keepWindow(inKeepWindow), restartSession(inRestart) {}
-	
-	// sent to terminationWarningCloseNotifyProc()
-	SessionRef		sessionBeingTerminated;
-	Boolean			keepWindow;
-	Boolean			restartSession;
-};
-typedef My_TerminateAlertInfo*	My_TerminateAlertInfoPtr;
-
-struct My_WatchAlertInfo
-{
-	// sent to watchCloseNotifyProc()
-	SessionRef		sessionBeingWatched;
-};
-typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
+typedef MemoryBlockReferenceTracker< SessionRef >		My_SessionRefTracker;
 
 } // anonymous namespace
 
@@ -404,7 +376,6 @@ void						localEchoString						(My_SessionPtr, CFStringRef);
 void						navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						pasteLineFromTimer					(EventLoopTimerRef, void*);
-void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 size_t						processMoreData						(My_SessionPtr);
@@ -427,13 +398,12 @@ void						terminalHoverLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalInsertLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+void						terminationWarningClose				(SessionRef&, Boolean, Boolean);
 Boolean						vectorGraphicsCreateTarget			(My_SessionPtr);
 void						vectorGraphicsDetachTarget			(My_SessionPtr);
 void						vectorGraphicsWindowChanged			(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						watchClearForSession				(My_SessionPtr);
-void						watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
 void						watchNotifyForSession				(My_SessionPtr, Session_Watch);
 void						watchNotifyFromTimer				(EventLoopTimerRef, void*);
 void						watchTimerResetForSession			(My_SessionPtr, Session_Watch);
@@ -991,15 +961,30 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 	}
 	else
 	{
-		GenericDialog_Ref						dialog = nullptr;
+		GenericDialog_Wrap						dialog;
 		PrefPanelSessions_KeyboardViewManager*	embeddedPanel = [[PrefPanelSessions_KeyboardViewManager alloc] init];
+		CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+																true/* is retained */);
+		CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+															true/* is retained */);
 		
 		
-		dialog = GenericDialog_New(Session_ReturnActiveWindow(inRef),
-									embeddedPanel, temporaryContext, sheetClosed);
+		dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(Session_ReturnActiveWindow(inRef), embeddedPanel,
+																	temporaryContext),
+									true/* is retained */);
 		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-		GenericDialog_SetImplementation(dialog, inRef);
-		GenericDialog_Display(dialog); // automatically disposed when the user clicks a button
+		GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+		GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+											^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+		GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+		GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+											^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+		GenericDialog_SetImplementation(dialog.returnRef(), inRef);
+		// TEMPORARY; maybe Session_Retain/Release concept needs to be
+		// implemented and called here; for now, assume that the session
+		// will remain valid as long as the dialog exists (that ought to
+		// be the case)
+		GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
 	}
 }// DisplaySpecialKeySequencesDialog
 
@@ -1007,6 +992,8 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 /*!
 Displays a warning alert for terminating the given terminal
 window’s session, handling the user’s response automatically.
+You may however be notified of a cancellation by using the
+parameter "inCancelAction".
 
 Note that if the window was only recently opened, the action
 (such as closing the window, restart or force-quit) will take
@@ -1039,59 +1026,49 @@ message type and action, there are additional options:
   function returns immediately but the action could be taken
   at any future time, handled asynchronously.
 
-Although the warning dialog is handled completely (e.g. session
-is automatically terminated if the user says so), you may still
-wish to find out when the user has responded to the warning -
-to handle a Close All or Quit command, for example.  To receive
-notification when a button is clicked in the warning alert or
-sheet, listen for the "kSession_ChangeCloseWarningAnswered"
-event, with the Session_StartMonitoring() routine.  (This event
-is NOT sent for Restart alerts; it is only sent if the window
-closes.)
-
 (3.0)
 */
 void
 Session_DisplayTerminationWarning	(SessionRef							inRef,
-									 Session_TerminationDialogOptions	inOptions)
+									 Session_TerminationDialogOptions	inOptions,
+									 void								(^inCancelAction)())
 {
-	Boolean const				kForceModal = (0 != (inOptions & kSession_TerminationDialogOptionModal));
-	Boolean const				kKeepWindow = (0 != (inOptions & kSession_TerminationDialogOptionKeepWindow));
-	Boolean const				kRestart = (0 != (inOptions & kSession_TerminationDialogOptionRestart));
-	Boolean const				kNoAlertAnimation = (0 != (inOptions & kSession_TerminationDialogOptionNoAlertAnimation));
-	Boolean const				kIsRestartCommand = ((kRestart) && (kKeepWindow));
-	Boolean const				kIsKillCommand = ((false == kRestart) && (kKeepWindow));
-	Boolean const				kIsCloseCommand = ((false == kIsRestartCommand) && (false == kIsKillCommand));
-	Boolean const				kWillRemoveTerminalWindow = kIsCloseCommand;
-	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = new My_TerminateAlertInfo(inRef, (false == kWillRemoveTerminalWindow), kRestart);
+	Boolean const		kForceModal = (0 != (inOptions & kSession_TerminationDialogOptionModal));
+	Boolean const		kKeepWindow = (0 != (inOptions & kSession_TerminationDialogOptionKeepWindow));
+	Boolean const		kRestart = (0 != (inOptions & kSession_TerminationDialogOptionRestart));
+	Boolean const		kNoAlertAnimation = (0 != (inOptions & kSession_TerminationDialogOptionNoAlertAnimation));
+	Boolean const		kIsRestartCommand = ((kRestart) && (kKeepWindow));
+	Boolean const		kIsKillCommand = ((false == kRestart) && (kKeepWindow));
+	Boolean const		kIsCloseCommand = ((false == kIsRestartCommand) && (false == kIsKillCommand));
+	Boolean const		kWillRemoveTerminalWindow = kIsCloseCommand;
 	
 	
 	assert((kIsRestartCommand) || (kIsKillCommand) || (kIsCloseCommand));
 	
 	if (Session_StateIsActiveUnstable(inRef) || Session_StateIsDead(inRef))
 	{
-		// the process JUST started or is already dead, so kill the window without confirmation
-		terminationWarningCloseNotifyProc(nullptr/* alert box */, kAlertStdAlertOKButton,
-											terminateAlertInfoPtr/* user data */);
+		// the process JUST started or is already dead so kill the window without confirmation
+		terminationWarningClose(inRef, kKeepWindow, kRestart);
 	}
 	else
 	{
-		AlertMessages_BoxRef	alertBox = nullptr;
+		AlertMessages_BoxWrap	box;
 		TerminalWindowRef		terminalWindow = nullptr;
 		HIWindowRef				window = Session_ReturnActiveWindow(inRef);
 		Rect					originalStructureBounds;
 		Rect					centeredStructureBounds;
 		OSStatus				error = noErr;
+		__block Boolean			wasCancelled = false;
 		
 		
 		if (kForceModal)
 		{
-			alertBox = Alert_New();
+			box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), true/* is retained */);
 		}
 		else
 		{
-			alertBox = Alert_NewWindowModal(window/* parent */, kWillRemoveTerminalWindow/* is window close alert */,
-											terminationWarningCloseNotifyProc, terminateAlertInfoPtr/* user data */);
+			box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(window/* parent */),
+										true/* is retained */);
 		}
 		
 		// TEMPORARY - this should really take into account whether the quit event is interactive
@@ -1141,24 +1118,28 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 		// it can be killed if necessary
 		{
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+			GenericDialog_Ref		existingSheet = ptr->currentDialog.returnTargetRef();
 			
 			
 			terminalWindow = ptr->terminalWindow;
 			
-			// if a warning alert is already showing (presumably because
-			// a sheet is open and now a modal dialog is being displayed),
-			// first Cancel the open sheet before displaying another one
-			if (nullptr != ptr->currentTerminationAlert)
+			if (nullptr != existingSheet)
 			{
-				Alert_Abort(ptr->currentTerminationAlert);
+				GenericDialog_SetItemDialogEffect(existingSheet, kGenericDialog_ItemIDButton2, kGenericDialog_DialogEffectCloseImmediately);
+				GenericDialog_Remove(existingSheet);
 			}
 			
-			ptr->currentTerminationAlert = alertBox;
+			// keep track of this sheet (weak reference) so that it can be
+			// removed when a global termination warning appears
+			ptr->currentDialog.assign(Alert_ReturnGenericDialog(box.returnRef()));
 		}
 		
 		// basic alert box setup
-		Alert_SetParamsFor(alertBox, kAlert_StyleOKCancel);
-		Alert_SetType(alertBox, kAlertCautionAlert);
+		Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
+		if (kWillRemoveTerminalWindow)
+		{
+			Alert_DisableCloseAnimation(box.returnRef());
+		}
 		
 		// set message
 		{
@@ -1183,7 +1164,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 													: kUIStrings_AlertWindowCloseHelpText, helpTextCFString);
 				if (stringResult.ok())
 				{
-					Alert_SetTextCFStrings(alertBox, primaryTextCFString, helpTextCFString);
+					Alert_SetTextCFStrings(box.returnRef(), primaryTextCFString, helpTextCFString);
 					CFRelease(helpTextCFString);
 				}
 				CFRelease(primaryTextCFString);
@@ -1202,7 +1183,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 												: kUIStrings_AlertWindowCloseName, titleCFString);
 			if (stringResult == kUIStrings_ResultOK)
 			{
-				Alert_SetTitleCFString(alertBox, titleCFString);
+				Alert_SetTitleCFString(box.returnRef(), titleCFString);
 				CFRelease(titleCFString);
 			}
 		}
@@ -1219,9 +1200,42 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 												: kUIStrings_ButtonClose, buttonTitleCFString);
 			if (stringResult == kUIStrings_ResultOK)
 			{
-				Alert_SetButtonText(alertBox, kAlertStdAlertOKButton, buttonTitleCFString);
+				Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, buttonTitleCFString);
 				CFRelease(buttonTitleCFString);
 			}
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1,
+											^{
+												// a variable is used because it is nullified in the event
+												// that the session is destroyed by the user’s actions
+												SessionRef		session = inRef;
+												
+												
+												terminationWarningClose(session, kKeepWindow, kRestart);
+												if (nullptr == session)
+												{
+													// user destroyed the session and its window
+												}
+											});
+			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton2,
+											^{
+												// clear the alert status attribute for the session
+												{
+													My_SessionAutoLocker	localPtr(gSessionPtrLocks(), inRef);
+													
+													
+													changeStateAttributes(localPtr, 0/* attributes to set */,
+																			kSession_StateAttributeOpenDialog/* attributes to clear */);
+												}
+												
+												// perform any action from the caller (e.g. this is
+												// used at quitting time to interrupt the remaining
+												// sequence of window-closings)
+												inCancelAction();
+												
+												// in the modal case, this action must also be seen
+												// locally in order to reverse animation effects
+												wasCancelled = true;
+											});
 		}
 		
 		// apply the alert status attribute to the session; this may,
@@ -1243,8 +1257,11 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 		TerminalWindow_Select(terminalWindow);
 		if (kForceModal)
 		{
-			Alert_Display(alertBox, (false == kNoAlertAnimation));
-			if ((kWillRemoveTerminalWindow) && (Alert_ItemHit(alertBox) == kAlertStdAlertCancelButton))
+			Alert_Display(box.returnRef(), (false == kNoAlertAnimation)); // retains alert until it is dismissed
+			
+			// NOTE: "wasCancelled" can be set by the action block that
+			// is associated with an alert button, earlier
+			if ((kWillRemoveTerminalWindow) && (wasCancelled))
 			{
 				// in the event that the user cancelled and the window
 				// was transitioned to the screen center, “un-transition”
@@ -1268,11 +1285,10 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 																		&floatBounds, true/* asynchronous */, &transitionOptions);
 				}
 			}
-			terminationWarningCloseNotifyProc(alertBox, Alert_ItemHit(alertBox), terminateAlertInfoPtr/* user data */);
 		}
 		else
 		{
-			Alert_Display(alertBox); // notifier disposes the alert when the sheet eventually closes
+			Alert_Display(box.returnRef()); // retains alert until it is dismissed
 		}
 	}
 }// DisplaySessionTerminationWarning
@@ -3310,7 +3326,6 @@ Session_StartMonitoring		(SessionRef					inRef,
 	if (inForWhatChange == kSession_AllChanges)
 	{
 		// recursively invoke for ALL session change types listed in "Session.h"
-		Session_StartMonitoring(inRef, kSession_ChangeCloseWarningAnswered, inListener);
 		Session_StartMonitoring(inRef, kSession_ChangeResourceLocation, inListener);
 		Session_StartMonitoring(inRef, kSession_ChangeSelected, inListener);
 		Session_StartMonitoring(inRef, kSession_ChangeState, inListener);
@@ -3509,7 +3524,6 @@ Session_StopMonitoring	(SessionRef					inRef,
 	if (inForWhatChange == kSession_AllChanges)
 	{
 		// recursively invoke for ALL session change types listed in "Session.h"
-		Session_StopMonitoring(inRef, kSession_ChangeCloseWarningAnswered, inListener);
 		Session_StopMonitoring(inRef, kSession_ChangeResourceLocation, inListener);
 		Session_StopMonitoring(inRef, kSession_ChangeSelected, inListener);
 		Session_StopMonitoring(inRef, kSession_ChangeState, inListener);
@@ -5160,24 +5174,21 @@ Session_UserInputPaste	(SessionRef			inRef,
 											? Clipboard_ReturnPrimaryPasteboard()
 											: inSourceOrNull;
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	My_PasteAlertInfoPtr	pasteAlertInfoPtr = new My_PasteAlertInfo;
 	CFStringRef				pastedCFString = nullptr;
 	CFStringRef				pastedDataUTI = nullptr;
 	Session_Result			result = kSession_ResultOK;
 	
 	
-	pasteAlertInfoPtr->sessionForPaste = inRef;
 	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI, kPasteboard))
 	{
-		Boolean		isOneLine = false;
-		Boolean		noWarning = false;
+		CFRetainRelease		pendingLines(StringUtilities_CFNewStringsWithLines(pastedCFString),
+										true/* is retained */);
+		Boolean				isOneLine = false;
+		Boolean				noWarning = false;
 		
 		
 		// examine the Clipboard; if the data contains new-lines, warn the user
-		pasteAlertInfoPtr->sourcePasteboard = kPasteboard;
-		pasteAlertInfoPtr->pendingLines.setCFTypeRef(StringUtilities_CFNewStringsWithLines(pastedCFString),
-														true/* is retained */);
-		isOneLine = (CFArrayGetCount(pasteAlertInfoPtr->pendingLines.returnCFArrayRef()) < 2);
+		isOneLine = (CFArrayGetCount(pendingLines.returnCFArrayRef()) < 2);
 		
 		// determine if the user should be warned
 		unless (kPreferences_ResultOK ==
@@ -5189,84 +5200,131 @@ Session_UserInputPaste	(SessionRef			inRef,
 		
 		// now, paste (perhaps displaying a warning first)
 		{
-			AlertMessages_BoxRef	box = nullptr;
+			AlertMessages_BoxWrap	box;
+			auto					joinResponder =
+									^{
+										// first join the text into one line (replace new-line sequences
+										// with single spaces), then Paste
+										CFRetainRelease		pastedLines(pendingLines.returnCFArrayRef());
+										CFRetainRelease		joinedCFString(CFStringCreateByCombiningStrings(kCFAllocatorDefault,
+																											pastedLines.returnCFArrayRef(),
+																											CFSTR("")/* separator */),
+																			true/* is retained */);
+										
+										
+										Session_UserInputCFString(inRef, joinedCFString.returnCFStringRef());
+									};
+			auto					normalPasteResponder =
+									^{
+										My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), inRef);
+										CFRetainRelease			pastedLines(pendingLines.returnCFArrayRef());
+										
+										
+										// regular Paste; periodically (but fairly rapidly) insert
+										// each line into the session, using a timer for delays
+										if (nullptr == sessionPtr->pendingPasteTimer)
+										{
+											// first time; create the timer
+											OSStatus			error = noErr;
+											Preferences_Result	prefsResult = kPreferences_ResultOK;
+											EventTime			delayValue = 0;
+											
+											
+											// determine how long the delay between lines should be
+											prefsResult = Preferences_GetData(kPreferences_TagPasteNewLineDelay, sizeof(delayValue),
+																				&delayValue);
+											if (kPreferences_ResultOK != prefsResult)
+											{
+												// set an arbitrary default value
+												delayValue = 50 * kEventDurationMillisecond;
+											}
+											
+											// due to timer limitations the delay cannot be exactly zero
+											if (delayValue < 0.001)
+											{
+												delayValue = 0.001; // arbitrary
+											}
+											
+											sessionPtr->pendingPasteTimerUPP = NewEventLoopTimerUPP(pasteLineFromTimer);
+											error = InstallEventLoopTimer(GetCurrentEventLoop(),
+																			kEventDurationNoWait + 0.01/* start time; must be nonzero for Mac OS X 10.3 */,
+																			delayValue/* time between fires */,
+																			sessionPtr->pendingPasteTimerUPP, sessionPtr->selfRef/* user data */,
+																			&sessionPtr->pendingPasteTimer);
+											assert_noerr(error);
+										}
+										
+										// NOTE: this assignment will replace any previous set of lines
+										// that might still exist; although very unlikely, this could
+										// happen if the user decided to invoke Paste again while a
+										// large and time-consuming Paste was already in progress
+										sessionPtr->pendingPasteLines.setCFTypeRef(pastedLines.returnCFArrayRef());
+										sessionPtr->pendingPasteCurrentLine = 0;
+									};
 			
 			
 			if (isOneLine)
 			{
 				// the Clipboard contains only one line of text; Paste immediately without warning
-				pasteWarningCloseNotifyProc(box, kAlertStdAlertOKButton, pasteAlertInfoPtr/* user data */);
+				joinResponder();
 			}
 			else if (noWarning)
 			{
 				// the Clipboard contains more than one line, and the user does not want to be warned;
 				// proceed with the Paste, but do it without joining (“other button” option)
-				pasteWarningCloseNotifyProc(box, kAlertStdAlertOtherButton, pasteAlertInfoPtr/* user data */);
+				normalPasteResponder();
 			}
 			else
 			{
 				// configure and display the confirmation alert
-				box = Alert_NewWindowModal(returnActiveWindow(ptr)/* parent */, false/* is window close alert */,
-											pasteWarningCloseNotifyProc, pasteAlertInfoPtr/* user data */);
+				box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(Session_ReturnActiveWindow(inRef)),
+											true/* is retained */);
 				
 				// set basics
-				Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-				Alert_SetType(box, kAlertCautionAlert);
+				Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
 				
 				// set message
 				{
-					UIStrings_Result	stringResult = kUIStrings_ResultOK;
-					CFStringRef			primaryTextCFString = nullptr;
+					CFRetainRelease		primaryTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowPasteLinesWarningPrimaryText),
+															true/* is retained */);
+					CFRetainRelease		helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowPasteLinesWarningHelpText),
+															true/* is retained */);
 					
 					
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowPasteLinesWarningPrimaryText, primaryTextCFString);
-					if (stringResult.ok())
+					if (primaryTextCFString.exists() && helpTextCFString.exists())
 					{
-						CFStringRef		helpTextCFString = nullptr;
-						
-						
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowPasteLinesWarningHelpText, helpTextCFString);
-						if (stringResult.ok())
-						{
-							Alert_SetTextCFStrings(box, primaryTextCFString, helpTextCFString);
-							CFRelease(helpTextCFString);
-						}
-						CFRelease(primaryTextCFString);
+						Alert_SetTextCFStrings(box.returnRef(), primaryTextCFString.returnCFStringRef(),
+												helpTextCFString.returnCFStringRef());
 					}
 				}
 				
 				// set title
 				{
-					UIStrings_Result	stringResult = kUIStrings_ResultOK;
-					CFStringRef			titleCFString = nullptr;
+					CFRetainRelease		titleCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowPasteLinesWarningName),
+														true/* is retained */);
 					
 					
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowPasteLinesWarningName, titleCFString);
-					if (stringResult == kUIStrings_ResultOK)
+					if (titleCFString.exists())
 					{
-						Alert_SetTitleCFString(box, titleCFString);
-						CFRelease(titleCFString);
+						Alert_SetTitleCFString(box.returnRef(), titleCFString.returnCFStringRef());
 					}
 				}
 				
 				// set buttons
 				{
-					UIStrings_Result	stringResult = kUIStrings_ResultOK;
-					CFStringRef			buttonTitleCFString = nullptr;
+					CFRetainRelease		joinString(UIStrings_ReturnCopy(kUIStrings_ButtonMakeOneLine),
+													true/* is retained */);
+					CFRetainRelease		pasteNormallyString(UIStrings_ReturnCopy(kUIStrings_ButtonPasteNormally),
+															true/* is retained */);
 					
 					
-					stringResult = UIStrings_Copy(kUIStrings_ButtonMakeOneLine, buttonTitleCFString);
-					if (stringResult == kUIStrings_ResultOK)
-					{
-						Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonTitleCFString);
-						CFRelease(buttonTitleCFString);
-					}
-					stringResult = UIStrings_Copy(kUIStrings_ButtonPasteNormally, buttonTitleCFString);
-					if (stringResult == kUIStrings_ResultOK)
-					{
-						Alert_SetButtonText(box, kAlertStdAlertOtherButton, buttonTitleCFString);
-						CFRelease(buttonTitleCFString);
-					}
+					Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, joinString.returnCFStringRef());
+					Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1, joinResponder);
+					Alert_SetButtonText(box.returnRef(), kAlert_ItemButton3, pasteNormallyString.returnCFStringRef());
+					Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton3,
+													^{
+														normalPasteResponder();
+													});
 				}
 				
 				// ensure that the relevant window is visible and frontmost
@@ -5274,9 +5332,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 				TerminalWindow_SetVisible(ptr->terminalWindow, true);
 				TerminalWindow_Select(ptr->terminalWindow);
 				
-				// returns immediately; notifier disposes the alert when the sheet
-				// eventually closes
-				Alert_Display(box);
+				Alert_Display(box.returnRef()); // retains alert until it is dismissed
 			}
 		}
 		CFRelease(pastedCFString), pastedCFString = nullptr;
@@ -5424,7 +5480,7 @@ longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
 longLifeTimer(nullptr), // set later
 respawnSessionTimerUPP(NewEventLoopTimerUPP(respawnSession)),
 respawnSessionTimer(nullptr), // set later
-currentTerminationAlert(nullptr),
+currentDialog(REINTERPRET_CAST(this, SessionRef)),
 terminalWindow(nullptr), // set at window validation time
 mainProcess(nullptr),
 // controlKey is initialized below
@@ -5450,8 +5506,8 @@ pendingPasteTimerUPP(nullptr),
 pendingPasteTimer(nullptr),
 recentSheetContext(nullptr),
 sheetType(kMy_SessionSheetTypeNone),
-watchBox(nullptr),
 renameDialog(nullptr),
+weakRefEraser(this),
 selfRef(REINTERPRET_CAST(this, SessionRef))
 // echo initialized below
 // preferencesCache initialized below
@@ -7381,101 +7437,6 @@ pasteLineFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 
 
 /*!
-The responder to a closed “really paste?” alert.  This routine
-performs the Paste to the specified session using the verbatim
-Clipboard text if the item hit is the OK button.  If the user
-hit the Other button, the Clipboard text is slightly modified
-to form a single line, before Paste.  Otherwise, the Paste does
-not occur.
-
-NOTE:	This callback may be invoked by the Alert Messages
-		module, but it is also called separately (with nullptr
-		for "inAlertThatClosed") to trigger desired pasting
-		behaviors.
-
-The given alert is destroyed if it exists.
-
-(3.1)
-*/
-void
-pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
-								 SInt16					inItemHit,
-								 void*					inMy_PasteAlertInfoPtr)
-{
-	My_PasteAlertInfoPtr	dataPtr = REINTERPRET_CAST(inMy_PasteAlertInfoPtr, My_PasteAlertInfoPtr);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionForPaste);
-		
-		
-		if (inItemHit == kAlertStdAlertOKButton)
-		{
-			// first join the text into one line (replace new-line sequences
-			// with single spaces), then Paste
-			CFRetainRelease		joinedCFString(CFStringCreateByCombiningStrings(kCFAllocatorDefault,
-																				dataPtr->pendingLines.returnCFArrayRef(),
-																				CFSTR("")/* separator */),
-												true/* is retained */);
-			
-			
-			Session_UserInputCFString(sessionPtr->selfRef, joinedCFString.returnCFStringRef());
-		}
-		else if (inItemHit == kAlertStdAlertOtherButton)
-		{
-			// regular Paste; periodically (but fairly rapidly) insert
-			// each line into the session, using a timer for delays
-			if (nullptr == sessionPtr->pendingPasteTimer)
-			{
-				// first time; create the timer
-				OSStatus			error = noErr;
-				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				EventTime			delayValue = 0;
-				
-				
-				// determine how long the delay between lines should be
-				prefsResult = Preferences_GetData(kPreferences_TagPasteNewLineDelay, sizeof(delayValue),
-													&delayValue);
-				if (kPreferences_ResultOK != prefsResult)
-				{
-					// set an arbitrary default value
-					delayValue = 50 * kEventDurationMillisecond;
-				}
-				
-				// due to timer limitations the delay cannot be exactly zero
-				if (delayValue < 0.001)
-				{
-					delayValue = 0.001; // arbitrary
-				}
-				
-				sessionPtr->pendingPasteTimerUPP = NewEventLoopTimerUPP(pasteLineFromTimer);
-				error = InstallEventLoopTimer(GetCurrentEventLoop(),
-												kEventDurationNoWait + 0.01/* start time; must be nonzero for Mac OS X 10.3 */,
-												delayValue/* time between fires */,
-												sessionPtr->pendingPasteTimerUPP, sessionPtr->selfRef/* user data */,
-												&sessionPtr->pendingPasteTimer);
-				assert_noerr(error);
-			}
-			
-			// NOTE: this assignment will replace any previous set of lines
-			// that might still exist; although very unlikely, this could
-			// happen if the user decided to invoke Paste again while a
-			// large and time-consuming Paste was already in progress
-			sessionPtr->pendingPasteLines.setCFTypeRef(dataPtr->pendingLines.returnCFArrayRef());
-			sessionPtr->pendingPasteCurrentLine = 0;
-		}
-		
-		// clean up
-		delete dataPtr, dataPtr = nullptr;
-	}
-	
-	// dispose of the alert
-	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-}// pasteWarningCloseNotifyProc
-
-
-/*!
 Invoked whenever a monitored preference value is changed
 (see Session_New() to see which preferences are monitored).
 This routine responds by ensuring that internal variables
@@ -8230,7 +8191,7 @@ returnActiveNSWindow	(My_SessionPtr		inPtr)
 	NSWindow*	result = nullptr; // should be "nil" (TEMPORARY; fix when file is converted to Objective-C)
 	
 	
-	if (Session_IsValid(inPtr->selfRef))
+	if ((nullptr != inPtr) && Session_IsValid(inPtr->selfRef))
 	{
 		if (nullptr != inPtr->terminalWindow)
 		{
@@ -8254,7 +8215,7 @@ returnActiveWindow	(My_SessionPtr		inPtr)
 	HIWindowRef		result = nullptr;
 	
 	
-	if (Session_IsValid(inPtr->selfRef))
+	if ((nullptr != inPtr) && Session_IsValid(inPtr->selfRef))
 	{
 		if (nullptr != inPtr->terminalWindow)
 		{
@@ -8675,116 +8636,84 @@ structure is always defined.
 (3.0)
 */
 void
-terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
-									 SInt16					inItemHit,
-									 void*					inTerminateAlertInfoPtr)
+terminationWarningClose		(SessionRef&	inoutSessionRef,
+							 Boolean		inKeepWindow,
+							 Boolean		inRestartSession)
 {
-	My_TerminateAlertInfoPtr	dataPtr = REINTERPRET_CAST(inTerminateAlertInfoPtr, My_TerminateAlertInfoPtr);
-	
-	
-	if (Session_IsValid(dataPtr->sessionBeingTerminated))
+	if (Session_IsValid(inoutSessionRef))
 	{
 		Boolean		destroySession = false;
 		
 		
-		if (nullptr != dataPtr)
+		if (nullptr != inoutSessionRef)
 		{
-			My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
+			My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), inoutSessionRef);
 			
 			
-			// clear the alert status attribute to the session
+			// clear the alert status attribute for the session
 			changeStateAttributes(sessionPtr, 0/* attributes to set */,
 									kSession_StateAttributeOpenDialog/* attributes to clear */);
 			
 			// some actions are only appropriate when the window is closing...
-			if (false == dataPtr->keepWindow)
+			if (false == inKeepWindow)
 			{
-				// notify listeners
+				// implicitly update the toolbar visibility preference based
+				// on the toolbar visibility of this closing window
 				{
-					SessionCloseWarningButtonInfo	info;
+					Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
 					
 					
-					bzero(&info, sizeof(info));
-					info.session = dataPtr->sessionBeingTerminated;
-					info.buttonHit = inItemHit;
-					changeNotifyForSession(sessionPtr, kSession_ChangeCloseWarningAnswered, &info/* context */);
+					UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
+																			sizeof(toolbarHidden), &toolbarHidden);
 				}
 				
-				// determine if the user accepted the alert
-				if (kAlertStdAlertOKButton == inItemHit)
-				{
-					// implicitly update the toolbar visibility preference based
-					// on the toolbar visibility of this closing window
-					{
-						Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
-						
-						
-						UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
-																				sizeof(toolbarHidden), &toolbarHidden);
-					}
-					
-					// flag to destroy the session; this cannot occur within this block,
-					// because the session pointer is still locked (also, it will not
-					// happen for restarting sessions)
-					destroySession = true;
-				}
+				// flag to destroy the session; this cannot occur within this block,
+				// because the session pointer is still locked (also, it will not
+				// happen for restarting sessions)
+				destroySession = true;
 			}
 			
-			// clean up
-			sessionPtr->currentTerminationAlert = nullptr; // now it is legal to display a different warning sheet
+			// now it is legal to display a different warning sheet
+			sessionPtr->currentDialog.assign(nullptr);
 		}
 		
 		if (destroySession)
 		{
 			// this call will terminate the running process and
 			// immediately close the associated window
-			Session_Dispose(&dataPtr->sessionBeingTerminated);
+			Session_Dispose(&inoutSessionRef);
 		}
-		else if (dataPtr->keepWindow)
+		else if (inKeepWindow)
 		{
-			if (kAlertStdAlertOKButton == inItemHit)
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inoutSessionRef);
+			
+			
+			// kill the original process; normally this could potentially dispose of
+			// the entire session and its window, so a flag is set to veto that
+			ptr->restartInProgress = true;
+			Session_SetState(inoutSessionRef, kSession_StateDead);
+			ptr->restartInProgress = false;
+			
+			// if requested, restart the command afterwards
+			if (inRestartSession)
 			{
-				My_SessionAutoLocker	ptr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
+				// TEMPORARY; this is technically terminal-type-specific and just happens to
+				// work to clear the screen and home the cursor in any supported emulator;
+				// this should probably be more explicit
+				Session_TerminalWriteCString(inoutSessionRef, "\033[H\033[J");
 				
-				
-				// kill the original process; normally this could potentially dispose of
-				// the entire session and its window, so a flag is set to veto that
-				ptr->restartInProgress = true;
-				Session_SetState(dataPtr->sessionBeingTerminated, kSession_StateDead);
-				ptr->restartInProgress = false;
-				
-				// if requested, restart the command afterwards
-				if (dataPtr->restartSession)
-				{
-					// TEMPORARY; this is technically terminal-type-specific and just happens to
-					// work to clear the screen and home the cursor in any supported emulator;
-					// this should probably be more explicit
-					Session_TerminalWriteCString(dataPtr->sessionBeingTerminated, "\033[H\033[J");
-					
-					// install a one-shot timer to rerun the command line after a short delay
-					// (certain processes, such as shells, do not respawn correctly if the
-					// respawn is attempted immediately after the previous process exits)
-					UNUSED_RETURN(OSStatus)InstallEventLoopTimer
-											(GetCurrentEventLoop(),
-												200 * kEventDurationMillisecond/* delay before start; heuristic */,
-												kEventDurationForever/* time between fires - this timer does not repeat */,
-												ptr->respawnSessionTimerUPP, dataPtr->sessionBeingTerminated, &ptr->respawnSessionTimer);
-				}
+				// install a one-shot timer to rerun the command line after a short delay
+				// (certain processes, such as shells, do not respawn correctly if the
+				// respawn is attempted immediately after the previous process exits)
+				UNUSED_RETURN(OSStatus)InstallEventLoopTimer
+										(GetCurrentEventLoop(),
+											200 * kEventDurationMillisecond/* delay before start; heuristic */,
+											kEventDurationForever/* time between fires - this timer does not repeat */,
+											ptr->respawnSessionTimerUPP, inoutSessionRef, &ptr->respawnSessionTimer);
 			}
 		}
 	}
-	
-	// clean up
-	if (nullptr != dataPtr)
-	{
-		// see Session_DisplayTerminationWarning() for the fact that
-		// this structure is allocated with operator "new"
-		delete dataPtr, dataPtr = nullptr;
-	}
-	
-	// dispose of the alert
-	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-}// terminationWarningCloseNotifyProc
+}// terminationWarningClose
 
 
 /*!
@@ -8936,44 +8865,7 @@ watchClearForSession	(My_SessionPtr		inPtr)
 	// note the change (e.g. can cause icon displays to be updated)
 	changeStateAttributes(inPtr, 0/* attributes to set */,
 							kSession_StateAttributeNotification/* attributes to clear */);
-	
-	// hide the global alert, if present
-	if (nullptr != inPtr->watchBox)
-	{
-		Alert_Dispose(&inPtr->watchBox);
-	}
 }// watchClearForSession
-
-
-/*!
-The responder to a closed watch-notification alert.  The watch
-trigger for the session (if any) is cleared if it has not been
-cleared already.  The given alert is destroyed.
-
-(3.1)
-*/
-void
-watchCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
-						 SInt16					inItemHit,
-						 void*					inMy_WatchAlertInfoPtr)
-{
-	My_WatchAlertInfoPtr	dataPtr = REINTERPRET_CAST(inMy_WatchAlertInfoPtr, My_WatchAlertInfoPtr);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), dataPtr->sessionBeingWatched);
-		
-		
-		watchClearForSession(ptr);
-		
-		// clean up
-		delete dataPtr, dataPtr = nullptr;
-	}
-	
-	// dispose of the alert
-	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
-}// watchCloseNotifyProc
 
 
 /*!
@@ -9022,8 +8914,6 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 				CFStringRef			growlNotificationTitle = nullptr;
 				CFStringRef			dialogTextCFString = nullptr;
 				UIStrings_Result	stringResult = kUIStrings_ResultOK;
-				Boolean				displayGrowl = GrowlSupport_IsAvailable();
-				Boolean				displayNormal = (false == displayGrowl);
 				
 				
 				// set message based on watch type
@@ -9050,38 +8940,13 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
 				}
 				
-				if (displayGrowl)
-				{
-					// page Growl and then clear immediately, instead of waiting
-					// for the user to respond
-					GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways,
-										growlNotificationName, growlNotificationTitle,
-										dialogTextCFString/* description */);
-					watchClearForSession(inPtr);
-				}
-				
-				// TEMPORARY; not really set up to handle more than one alert at a time
-				// per session, so prevent multiple alerts for the same session
-				if ((displayNormal) && (nullptr == inPtr->watchBox))
-				{
-					My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
-					
-					
-					// basic setup
-					watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
-					assert(nullptr == inPtr->watchBox);
-					inPtr->watchBox = Alert_NewModeless(watchCloseNotifyProc, watchAlertInfoPtr/* context */);
-					Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
-					Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
-					
-					if (stringResult.ok())
-					{
-						Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
-					}
-					
-					// show the message; it is disposed asynchronously
-					Alert_Display(inPtr->watchBox);
-				}
+				// page the Mac OS X user notification center (and Growl, if
+				// it is installed) and then clear immediately, instead of
+				// waiting for the user to respond
+				GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways,
+									growlNotificationName, growlNotificationTitle,
+									dialogTextCFString/* description */);
+				watchClearForSession(inPtr);
 				
 				if (nullptr != growlNotificationTitle)
 				{

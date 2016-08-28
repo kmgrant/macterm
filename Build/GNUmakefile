@@ -229,14 +229,12 @@ PreferencesSearch.plist \
 English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 MacTerm.help \
-English.lproj/AlertMessages.nib \
 English.lproj/TerminalWindow.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 XIB_PREFIXES := \
 English.lproj/AddressDialogCocoa \
-English.lproj/AlertMessagesModalCocoa \
-English.lproj/AlertMessagesModelessCocoa \
+English.lproj/AlertMessagesCocoa \
 English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
