@@ -56,22 +56,8 @@ RGBColor
 
 //@}
 
-//!\name Appearance 1.0 Helpers For Theme Brush System Calls
-//@{
-
-// DEPRECATED
-SInt16
-	ColorUtilities_ReturnCurrentDepth			(CGrafPtr				inPort);
-
-//@}
-
 //!\name Extremely Handy QuickDraw Port Color Manipulators
 //@{
-
-// DEPRECATED
-void
-	GetDarkerColors								(RGBColor*				outDarkerForegroundColorOrNull,
-												 RGBColor*				outDarkerBackgroundColorOrNull);
 
 // DEPRECATED
 void
@@ -80,24 +66,11 @@ void
 
 // DEPRECATED
 void
-	GetSelectionColors							(RGBColor*				outSelectionForegroundColorOrNull,
-												 RGBColor*				outSelectionBackgroundColorOrNull);
-
-// DEPRECATED
-void
 	UseInactiveColors							();
 
 // DEPRECATED
 void
-	UseInvertedColors							();
-
-// DEPRECATED
-void
 	UseLighterColors							();
-
-// DEPRECATED
-void
-	UseSelectionColors							();
 
 //@}
 

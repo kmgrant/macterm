@@ -45,6 +45,7 @@
 
 // application includes
 #import "Commands.h"
+#import "NetEvents.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "TranslucentMenuArrow.h"
@@ -65,9 +66,9 @@ namespace {
 Preferences_ContextRef		gArrangeWindowBindingContext = nullptr;
 Preferences_Tag				gArrangeWindowBinding = 0;
 Preferences_Tag				gArrangeWindowScreenBinding = 0;
-FourCharCode				gArrangeWindowDataTypeForWindowBinding = typeQDPoint;
+FourCharCode				gArrangeWindowDataTypeForWindowBinding = typeNetEvents_CGPoint;
 FourCharCode				gArrangeWindowDataTypeForScreenBinding = typeHIRect;
-Point						gArrangeWindowStackingOrigin = { 0, 0 };
+CGPoint						gArrangeWindowStackingOrigin = CGPointZero;
 id							gArrangeWindowDidEndTarget = nil;
 SEL							gArrangeWindowDidEndSelector = nil;
 EventTargetRef				gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
@@ -128,7 +129,7 @@ well, because it allows you to intelligently restore the window
 if the user has resized the screen after the window was saved.
 
 The window frame binding data type is currently allowed to be
-one of the following: "typeQDPoint" (Point), "typeHIRect"
+one of these: "typeNetEvents_CGPoint" (CGPoint), "typeHIRect"
 (HIRect).  The "inWindowBindingOrZero" tag must be documented as
 expecting the corresponding type!  If a type is rectangular, the
 width and height are set to 0, but the origin is still set
@@ -156,7 +157,7 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 	UInt16 const			kDefaultY = 128; // arbitrary
 	
 	
-	assert((typeQDPoint == inDataTypeForWindowBinding) || (typeHIRect == inDataTypeForWindowBinding));
+	assert((typeNetEvents_CGPoint == inDataTypeForWindowBinding) || (typeHIRect == inDataTypeForWindowBinding));
 	assert((0 == inDataTypeForScreenBinding) || (typeHIRect == inDataTypeForScreenBinding));
 	
 	if (nullptr == newContext)
@@ -186,14 +187,14 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 	
 	if (0 != gArrangeWindowBinding)
 	{
-		if (typeQDPoint == gArrangeWindowDataTypeForWindowBinding)
+		if (typeNetEvents_CGPoint == gArrangeWindowDataTypeForWindowBinding)
 		{
 			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
 														sizeof(gArrangeWindowStackingOrigin), &gArrangeWindowStackingOrigin,
 														false/* search defaults */);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				SetPt(&gArrangeWindowStackingOrigin, kDefaultX, kDefaultY); // assume a default, if preference can’t be found
+				gArrangeWindowStackingOrigin = CGPointMake(kDefaultX, kDefaultY); // assume a default, if preference can’t be found
 			}
 		}
 		else if (typeHIRect == gArrangeWindowDataTypeForWindowBinding)
@@ -205,12 +206,12 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 														sizeof(prefValue), &prefValue, false/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				gArrangeWindowStackingOrigin.h = prefValue.origin.x;
-				gArrangeWindowStackingOrigin.v = prefValue.origin.y;
+				gArrangeWindowStackingOrigin.x = prefValue.origin.x;
+				gArrangeWindowStackingOrigin.y = prefValue.origin.y;
 			}
 			else
 			{
-				SetPt(&gArrangeWindowStackingOrigin, kDefaultX, kDefaultY); // assume a default, if preference can’t be found
+				gArrangeWindowStackingOrigin = CGPointMake(kDefaultX, kDefaultY); // assume a default, if preference can’t be found
 			}
 		}
 	}
@@ -502,8 +503,8 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	case kKeypads_WindowTypeArrangeWindow:
 		if (inIsVisible)
 		{
-			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] setOriginToX:gArrangeWindowStackingOrigin.h
-																						andY:gArrangeWindowStackingOrigin.v];
+			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] setOriginToX:gArrangeWindowStackingOrigin.x
+																						andY:gArrangeWindowStackingOrigin.y];
 			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] showWindow:NSApp];
 		}
 		else
@@ -648,12 +649,11 @@ doneArranging:(id)	sender
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
-		if (typeQDPoint == gArrangeWindowDataTypeForWindowBinding)
+		if (typeNetEvents_CGPoint == gArrangeWindowDataTypeForWindowBinding)
 		{
-			Point		prefValue;
+			CGPoint		prefValue = CGPointMake(x, y);
 			
 			
-			SetPt(&prefValue, x, y);
 			prefsResult = Preferences_ContextSetData(gArrangeWindowBindingContext, gArrangeWindowBinding, sizeof(prefValue), &prefValue);
 		}
 		else if (typeHIRect == gArrangeWindowDataTypeForWindowBinding)

@@ -73,55 +73,6 @@ ColorUtilities_CGDeviceColorMake	(RGBColor const&	inColor)
 
 
 /*!
-Returns “darker” versions of the current foreground
-and background colors of the current graphics port -
-except if the background color is very close to black,
-then a brighter version of the color is returned.
-You can pass nullptr in place of either parameter if
-you are not interested in one of the colors.
-
-You might use this to show that a range of colored
-text is highlighted.
-
-DEPRECATED.  See "colorCloserToBlack:" (NSColor
-extension in Cocoa Extensions module).
-
-(1.3)
-*/
-void
-GetDarkerColors		(RGBColor*		outDarkerForegroundColorOrNull,
-					 RGBColor*		outDarkerBackgroundColorOrNull)
-{
-	RGBColor	black;
-	
-	
-	if (outDarkerForegroundColorOrNull != nullptr)
-	{
-		// set up foreground color
-		black.red = black.green = black.blue = 0;
-		GetForeColor(outDarkerForegroundColorOrNull);
-		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
-		black = *outDarkerForegroundColorOrNull;
-		GetForeColor(outDarkerForegroundColorOrNull);
-		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
-		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerForegroundColorOrNull);
-	}
-	
-	if (outDarkerBackgroundColorOrNull != nullptr)
-	{
-		// set up background color
-		black.red = black.green = black.blue = 0;
-		GetBackColor(outDarkerBackgroundColorOrNull);
-		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
-		black = *outDarkerBackgroundColorOrNull;
-		GetBackColor(outDarkerBackgroundColorOrNull);
-		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
-		UNUSED_RETURN(Boolean)GetGray(GetMainDevice(), &black, outDarkerBackgroundColorOrNull);
-	}
-}// GetDarkerColors
-
-
-/*!
 Returns “lighter” versions of the current foreground
 and background colors of the current graphics port.
 You can pass nullptr in place of either parameter if
@@ -169,60 +120,6 @@ GetLighterColors	(RGBColor*		outLighterForegroundColorOrNull,
 
 
 /*!
-Returns “selected” versions of the current foreground
-and background colors of the current graphics port.
-You can pass nullptr in place of either parameter if
-you are not interested in one of the colors.
-
-Since traditional selection schemes assume that white
-is the background color, this routine examines the
-current background color and will only use the system-
-wide highlight color if the background is approximately
-white.  Otherwise, the actual colors are used to find
-an appropriate selection color.
-
-DEPRECATED.  See "selectionColorsForForeground:background:"
-(NSColor extension in Cocoa Extensions module).
-
-(3.0)
-*/
-void
-GetSelectionColors	(RGBColor*		outLighterForegroundColorOrNull,
-					 RGBColor*		outLighterBackgroundColorOrNull)
-{
-	RGBColor		foreground;
-	RGBColor		background;
-	SInt16 const	kTolerance = 2048; // color intensities can vary by this much and still be considered black or white
-	
-	
-	GetForeColor(&foreground);
-	GetBackColor(&background);
-	if ((foreground.red < kTolerance) && (foreground.green < kTolerance) && (foreground.blue < kTolerance) &&
-			(background.red > (RGBCOLOR_INTENSITY_MAX - kTolerance)) &&
-			(background.green > (RGBCOLOR_INTENSITY_MAX - kTolerance)) &&
-			(background.blue > (RGBCOLOR_INTENSITY_MAX - kTolerance)))
-	{
-		// approximately monochromatic; this is what the highlight color
-		// is “traditionally” intended for, so it should look okay; use it
-		if (outLighterForegroundColorOrNull != nullptr) *outLighterForegroundColorOrNull = foreground;
-		if (outLighterForegroundColorOrNull != nullptr) LMGetHiliteRGB(outLighterBackgroundColorOrNull);
-	}
-	else if ((background.red < kTolerance) && (background.green < kTolerance) && (background.blue < kTolerance))
-	{
-		// very dark background; therefore, darkening the background will
-		// not make it clear where the selection is; brighten it instead
-		GetLighterColors(outLighterForegroundColorOrNull, outLighterBackgroundColorOrNull);
-	}
-	else
-	{
-		// typical case for a terminal window; some combination of colors,
-		// just find darker colors to show highlighted text in this case
-		GetDarkerColors(outLighterForegroundColorOrNull, outLighterBackgroundColorOrNull);
-	}
-}// GetSelectionColors
-
-
-/*!
 Creates a QuickDraw color by converting the red, green and blue
 intensity values from the given device color.  The resulting
 color will obviously be limited by the number of color values
@@ -255,26 +152,6 @@ ColorUtilities_QuickDrawColorMake	(CGDeviceColor const&	inDeviceColor)
 	
 	return result;
 }// QuickDrawColorMake
-
-
-/*!
-Determines the color depth of the specified port.
-
-DEPRECATED.  (Don’t rely on QuickDraw types.)
-
-(1.0)
-*/
-SInt16
-ColorUtilities_ReturnCurrentDepth	(CGrafPtr	inPort)
-{
-	SInt16		result = 1;
-	
-	
-	//result = (**GetPortPixMap(inPort)).pixelSize;
-	result = GetPixDepth(GetPortPixMap(inPort));
-	
-	return result;
-}// ReturnCurrentDepth
 
 
 /*!
@@ -339,33 +216,6 @@ UseInactiveColors ()
 
 
 /*!
-Reverses the current foreground and background
-colors of the current graphics port.
-
-This routine might be used inside a drawing
-procedure for a custom control, to represent
-a selected state.
-
-DEPRECATED.  Don’t use QuickDraw.  Manually swap
-foreground and background colors.
-
-(1.3)
-*/
-void
-UseInvertedColors ()
-{
-	RGBColor	foreground;
-	RGBColor	background;
-	
-	
-	GetForeColor(&foreground);
-	GetBackColor(&background);
-	RGBForeColor(&background);
-	RGBBackColor(&foreground);
-}// UseInvertedColors
-
-
-/*!
 Uses GetLighterColors() to determine the “lighter”
 versions of the current foreground and background
 colors of the current graphics port, and makes the
@@ -391,30 +241,5 @@ UseLighterColors ()
 	RGBForeColor(&foreground);
 	RGBBackColor(&background);
 }// UseLighterColors
-
-
-/*!
-Uses GetSelectionColors() to determine the “selected”
-versions of the current foreground and background
-colors of the current graphics port, and makes the
-selected versions the current foreground and background
-colors.
-
-DEPRECATED.  See "selectionColorsForForeground:background:"
-(NSColor extension in Cocoa Extensions module).
-
-(1.3)
-*/
-void
-UseSelectionColors ()
-{
-	RGBColor	foreground;
-	RGBColor	background;
-	
-	
-	GetSelectionColors(&foreground, &background);
-	RGBForeColor(&foreground);
-	RGBBackColor(&background);
-}// UseSelectionColors
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

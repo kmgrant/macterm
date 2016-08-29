@@ -3122,9 +3122,9 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 	if ((nullptr != inPtr) && (nullptr != outPositionPtr))
 	{
 		// calculate the stagger offset
-		Point		stackingOrigin;
-		Point		stagger;
-		Rect		screenRect;
+		CGPoint		stackingOrigin;
+		CGPoint		stagger;
+		CGRect		screenRect;
 		
 		
 		// determine the user’s preferred stacking origin
@@ -3133,35 +3133,45 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 				Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
 									&stackingOrigin))
 		{
-			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
+			stackingOrigin = CGPointMake(40, 40); // assume a default, if preference can’t be found
 		}
 		
 		if (inStaggerListIndex > 0)
 		{
 			// when previous stagger stacks hit the bottom of the
 			// screen, arbitrarily shift new stacks over slightly
-			stackingOrigin.h += (inStaggerListIndex * 60); // arbitrary
+			stackingOrigin.x += (inStaggerListIndex * 60); // arbitrary
 		}
 		
 		// the stagger amount on Mac OS X is set by the Aqua Human Interface Guidelines
-		SetPt(&stagger, 20, 20);
+		stagger = CGPointMake(20, 20);
 		
-		RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
-		if (PtInRect(stackingOrigin, &screenRect))
+		// convert to floating-point rectangle
+		{
+			Rect	integerRect;
+			
+			
+			RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &integerRect);
+			screenRect = CGRectMake(integerRect.left, integerRect.top,
+									integerRect.right - integerRect.left,
+									integerRect.bottom - integerRect.top);
+		}
+		
+		if (CGRectContainsPoint(screenRect, stackingOrigin))
 		{
 			// window is on the display where the user set an origin preference
-			outPositionPtr->x = stackingOrigin.h + stagger.h * (1 + inLocalWindowIndex);
-			outPositionPtr->y = stackingOrigin.v + stagger.v * (1 + inLocalWindowIndex);
+			outPositionPtr->x = stackingOrigin.x + stagger.x * (1 + inLocalWindowIndex);
+			outPositionPtr->y = stackingOrigin.y + stagger.y * (1 + inLocalWindowIndex);
 		}
 		else
 		{
 			// window is on a different display; use the origin magnitude to
 			// determine a reasonable offset on the window’s actual display
 			// (TEMPORARY; ideally the preference itself is per-display)
-			stackingOrigin.h += screenRect.left;
-			stackingOrigin.v += screenRect.top;
-			outPositionPtr->x = stackingOrigin.h + stagger.h * (1 + inLocalWindowIndex);
-			outPositionPtr->y = stackingOrigin.v + stagger.v * (1 + inLocalWindowIndex);
+			stackingOrigin.x += screenRect.origin.x;
+			stackingOrigin.y += screenRect.origin.y;
+			outPositionPtr->x = stackingOrigin.x + stagger.x * (1 + inLocalWindowIndex);
+			outPositionPtr->y = stackingOrigin.y + stagger.y * (1 + inLocalWindowIndex);
 		}
 	}
 }// calculateIndexedWindowPosition

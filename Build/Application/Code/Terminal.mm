@@ -15871,7 +15871,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					
 					case 7:
 						// refresh (update) window
-						RegionUtilities_RedrawWindowOnNextUpdate(window); // TEMPORARY; this changes too much (inefficient)
+						//RegionUtilities_RedrawWindowOnNextUpdate(window); // TEMPORARY; this changes too much (inefficient)
 						break;
 					
 					case 8:

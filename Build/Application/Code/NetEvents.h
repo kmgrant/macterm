@@ -53,7 +53,8 @@ enum
 	typeNetEvents_TerminalViewRef		= 'TTVR',	//!< "TerminalViewRef"
 	typeNetEvents_CFBooleanRef			= 'CFTF',	//!< "CFBooleanRef"; could use typeCFBooleanRef but that is not available in the Mac OS 10.1 SDK
 	typeNetEvents_CFDataRef				= 'CFDa',	//!< "CFDataRef"
-	typeNetEvents_CFNumberRef			= 'CFNm'	//!< "CFNumberRef"; could use typeCFNumberRef but that is not available in the Mac OS 10.1 SDK
+	typeNetEvents_CFNumberRef			= 'CFNm',	//!< "CFNumberRef"; could use typeCFNumberRef but that is not available in the Mac OS 10.1 SDK
+	typeNetEvents_CGPoint				= 'CGPt',	//!< "CGPoint"; could use typeCGPoint but that is not available in the Mac OS SDK
 };
 
 /*!

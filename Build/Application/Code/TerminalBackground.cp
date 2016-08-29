@@ -56,6 +56,7 @@
 #include "DialogUtilities.h"
 #include "NetEvents.h"
 #include "Preferences.h"
+#include "RegionUtilities.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
 
@@ -536,9 +537,9 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				// paint background color and draw background picture, if any
 				Rect		bounds;
 				Rect		clipBounds;
-				HIRect		floatBounds;
+				CGRect		floatBounds;
 				HIRect		floatClipBounds;
-				RgnHandle	optionalTargetRegion = nullptr;
+				HIShapeRef	optionalTargetShape = nullptr;
 				
 				
 				SetPort(drawingPort);
@@ -547,21 +548,22 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				// ensure view-local coordinates
 				HIViewGetBounds(view, &floatBounds);
 				GetControlBounds(view, &bounds);
-				OffsetRect(&bounds, -bounds.left, -bounds.top);
+				RegionUtilities_OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				// maybe a focus region has been provided
-				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
-																	optionalTargetRegion))
+				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamShape, typeHIShapeRef,
+																	optionalTargetShape))
 				{
-					GetRegionBounds(optionalTargetRegion, &clipBounds);
-					floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
-													clipBounds.bottom - clipBounds.top);
+					UNUSED_RETURN(CGRect*)HIShapeGetBounds(optionalTargetShape, &floatClipBounds);
 				}
 				else
 				{
-					clipBounds = bounds;
 					floatClipBounds = floatBounds;
 				}
+				RegionUtilities_SetRect(&clipBounds, STATIC_CAST(floatClipBounds.origin.x, SInt16),
+										STATIC_CAST(floatClipBounds.origin.y, SInt16),
+										STATIC_CAST(floatClipBounds.origin.x + floatClipBounds.size.width, SInt16),
+										STATIC_CAST(floatClipBounds.origin.y + floatClipBounds.size.height, SInt16));
 				
 				{
 					RGBColor	tmpColor;
@@ -1116,7 +1118,7 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 				case kControlClickableMetaPart:
 				case kTerminalBackground_ContentPartText:
 					GetControlBounds(dataPtr->view, &partBounds);
-					SetRect(&partBounds, 0, 0, partBounds.right - partBounds.left, partBounds.bottom - partBounds.top);
+					RegionUtilities_SetRect(&partBounds, 0, 0, partBounds.right - partBounds.left, partBounds.bottom - partBounds.top);
 					break;
 				
 				case kTerminalBackground_ContentPartVoid:

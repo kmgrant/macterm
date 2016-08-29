@@ -136,7 +136,7 @@ RegionUtilities_CenterRectIn	(Rect*			inoutInner,
 {
 	// the algorithm offsets the first rectangle based on the difference between
 	// the center points of the 2nd and 1st rectangles, which conceptually is this:
-	//		OffsetRect(inoutInner, (inOuter->left + INTEGER_HALVED(inOuter->right - inOuter->left)) -
+	//		RegionUtilities_OffsetRect(inoutInner, (inOuter->left + INTEGER_HALVED(inOuter->right - inOuter->left)) -
 	//									(inoutInner->left + INTEGER_HALVED(inoutInner->right - inoutInner->left)),
 	//								(inOuter->top + INTEGER_HALVED(inOuter->bottom - inOuter->top)) -
 	//									(inoutInner->top + INTEGER_HALVED(inoutInner->bottom - inoutInner->top)));
@@ -144,9 +144,35 @@ RegionUtilities_CenterRectIn	(Rect*			inoutInner,
 	// to the following, simpler form; since at first glance the simpler form
 	// is less obviously correct, the long expansion is included above for your
 	// peace of mind :)
-	OffsetRect(inoutInner, INTEGER_HALVED(inOuter->right + inOuter->left - inoutInner->right - inoutInner->left),
-				INTEGER_HALVED(inOuter->bottom + inOuter->top - inoutInner->bottom - inoutInner->top));
+	RegionUtilities_OffsetRect(inoutInner, INTEGER_HALVED(inOuter->right + inOuter->left - inoutInner->right - inoutInner->left),
+								INTEGER_HALVED(inOuter->bottom + inOuter->top - inoutInner->bottom - inoutInner->top));
 }// CenterRectIn
+
+
+/*!
+A replacement for code depending on the old QuickDraw
+method EqualRect().
+
+DEPRECATED.  Transitional only.  Allows for SDK migration.
+
+(2016.08)
+*/
+Boolean
+RegionUtilities_EqualRects	(Rect const*			inRect1Ptr,
+							 Rect const*			inRect2Ptr)
+{
+	Boolean		result = false;
+	
+	
+	if ((inRect1Ptr->left == inRect2Ptr->left) &&
+		(inRect1Ptr->top == inRect2Ptr->top) &&
+		(inRect1Ptr->right == inRect2Ptr->right) &&
+		(inRect1Ptr->bottom == inRect2Ptr->bottom))
+	{
+		result = true;
+	}
+	return result;
+}// EqualRects
 
 
 /*!
@@ -387,7 +413,7 @@ RegionUtilities_LocalToGlobal	(RgnHandle		inoutRegion)
 	Point	where;
 	
 	
-	SetPt(&where, 0, 0);
+	RegionUtilities_SetPoint(&where, 0, 0);
 	LocalToGlobal(&where);
 	OffsetRgn(inoutRegion, where.h, where.v);
 }// RegionUtilities_LocalToGlobal
@@ -406,7 +432,7 @@ Boolean
 RegionUtilities_NearPoints	(Point	inPoint1,
 							 Point	inPoint2)
 {
-	Boolean		result = EqualPt(inPoint1, inPoint2);
+	Boolean		result = ((inPoint1.h == inPoint2.h) && (inPoint1.v == inPoint2.v));
 	
 	
 	unless (result)
@@ -422,76 +448,62 @@ RegionUtilities_NearPoints	(Point	inPoint1,
 
 
 /*!
-Invalidates the entire area of a control, plus an
-extra area around the edges in case a control
-draws outside its boundaries (for example, focus
-rings or shadows).  This routine calls
-InvalWindowRect().
+A replacement for code depending on the old QuickDraw
+method OffsetRect().
 
-(3.0)
+DEPRECATED.  Transitional only.  Allows for SDK migration.
+
+(2016.08)
 */
 void
-RegionUtilities_RedrawControlOnNextUpdate	(ControlRef		inControl)
+RegionUtilities_OffsetRect	(Rect*		inoutRectPtr,
+							 SInt16		inDeltaX,
+							 SInt16		inDeltaY)
 {
-	Rect	bounds;
-	
-	
-	UNUSED_RETURN(Rect*)GetControlBounds(inControl, &bounds);
-	InsetRect(&bounds, -3, -3);
-	UNUSED_RETURN(OSStatus)InvalWindowRect(GetControlOwner(inControl), &bounds);
-}// RedrawControlOnNextUpdate
+	inoutRectPtr->left += inDeltaX;
+	inoutRectPtr->right += inDeltaX;
+	inoutRectPtr->top += inDeltaY;
+	inoutRectPtr->bottom += inDeltaY;
+}// OffsetRect
 
 
 /*!
-Invalidates the entire area of a window’s graphics
-port (content region).  This routine calls
-InvalWindowRect().
+A replacement for code depending on the old QuickDraw
+method SetPt().
 
-(3.0)
+DEPRECATED.  Transitional only.  Allows for SDK migration.
+
+(2016.08)
 */
 void
-RegionUtilities_RedrawWindowOnNextUpdate	(WindowRef		inWindow)
+RegionUtilities_SetPoint		(Point*		inoutPointPtr,
+							 SInt16		inX,
+							 SInt16		inY)
 {
-	Rect	windowPortRect;
-	
-	
-	UNUSED_RETURN(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
-	UNUSED_RETURN(OSStatus)InvalWindowRect(inWindow, &windowPortRect);
-}// RedrawWindowOnNextUpdate
+	inoutPointPtr->h = inX;
+	inoutPointPtr->v = inY;
+}// SetPoint
 
 
 /*!
-Validates the entire area of a control.  This
-routine calls ValidWindowRect().
+A replacement for code depending on the old QuickDraw
+method SetRect().
 
-(3.0)
+DEPRECATED.  Transitional only.  Allows for SDK migration.
+
+(2016.08)
 */
 void
-RegionUtilities_SetControlUpToDate	(ControlRef		inControl)
+RegionUtilities_SetRect	(Rect*		inoutRectPtr,
+						 SInt16		inLeft,
+						 SInt16		inTop,
+						 SInt16		inRight,
+						 SInt16		inBottom)
 {
-	Rect	bounds;
-	
-	
-	UNUSED_RETURN(Rect*)GetControlBounds(inControl, &bounds);
-	UNUSED_RETURN(OSStatus)ValidWindowRect(GetControlOwner(inControl), &bounds);
-}// SetControlUpToDate
-
-
-/*!
-Validates the entire area of a window’s graphics
-port (content region).  This routine calls
-ValidWindowRect().
-
-(3.0)
-*/
-void
-RegionUtilities_SetWindowUpToDate	(WindowRef	inWindow)
-{
-	Rect	windowPortRect;
-	
-	
-	UNUSED_RETURN(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
-	UNUSED_RETURN(OSStatus)ValidWindowRect(inWindow, &windowPortRect);
-}// SetWindowUpToDate
+	inoutRectPtr->left = inLeft;
+	inoutRectPtr->top = inTop;
+	inoutRectPtr->right = inRight;
+	inoutRectPtr->bottom = inBottom;
+}// SetRect
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

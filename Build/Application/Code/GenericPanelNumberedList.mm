@@ -305,7 +305,7 @@ requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
 	NSRect		containerFrame = [[self managedView] frame];
-	NSRect		masterFrame = [self->masterView frame];
+	//NSRect		masterFrame = [self->masterView frame];
 	NSRect		defaultDetailFrame = [self->detailView frame];
 	NSSize		panelIdealSize = defaultDetailFrame.size;
 	

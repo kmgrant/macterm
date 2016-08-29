@@ -57,6 +57,7 @@
 // application includes
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
+#include "RegionUtilities.h"
 #include "UIStrings.h"
 
 
@@ -637,14 +638,14 @@ receiveWindowResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCal
 					
 					if (kEventKind == kEventWindowGetMinimumSize)
 					{
-						SetPt(&dimensions, STATIC_CAST(ptr->minimumWidth, SInt16), STATIC_CAST(ptr->minimumHeight, SInt16));
+						RegionUtilities_SetPoint(&dimensions, STATIC_CAST(ptr->minimumWidth, SInt16), STATIC_CAST(ptr->minimumHeight, SInt16));
 					}
 					if (kEventKind == kEventWindowGetIdealSize)
 					{
 						// if the ideal size is specified, use that exclusively
 						if ((0 != ptr->idealWidth) && (0 != ptr->idealHeight))
 						{
-							SetPt(&dimensions, STATIC_CAST(ptr->idealWidth, SInt16), STATIC_CAST(ptr->idealHeight, SInt16));
+							RegionUtilities_SetPoint(&dimensions, STATIC_CAST(ptr->idealWidth, SInt16), STATIC_CAST(ptr->idealHeight, SInt16));
 						}
 						else
 						{
@@ -664,9 +665,9 @@ receiveWindowResizeOrSizeQuery	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCal
 								error = GetAvailableWindowPositioningBounds(windowDevice, &positioningBounds);
 								if (noErr == error)
 								{
-									SetPt(&dimensions,
-											STATIC_CAST(FLOAT64_MINIMUM(ptr->maximumWidth, positioningBounds.right - positioningBounds.left), SInt16),
-											STATIC_CAST(FLOAT64_MINIMUM(ptr->maximumHeight, positioningBounds.bottom - positioningBounds.top), SInt16));
+									RegionUtilities_SetPoint(&dimensions,
+																STATIC_CAST(FLOAT64_MINIMUM(ptr->maximumWidth, positioningBounds.right - positioningBounds.left), SInt16),
+																STATIC_CAST(FLOAT64_MINIMUM(ptr->maximumHeight, positioningBounds.bottom - positioningBounds.top), SInt16));
 									result = noErr;
 								}
 							}

@@ -1158,12 +1158,12 @@ prevents the popover from disappearing.
 - (void)
 windowDidEndSheet:(NSNotification*)		aNotification
 {
-	NSWindow*	sheetParentWindow = (NSWindow*)[aNotification object];
+#pragma unused(aNotification)
+	//NSWindow*	sheetParentWindow = (NSWindow*)[aNotification object];
 	
 	
 	self->isHeldOpenBySheet = NO;
 	[self release];
-	NSLog(@"end sheet");
 }// windowDidEndSheet:
 
 
@@ -1175,7 +1175,7 @@ a sheet on top or activate a floating panel.
 (2.7)
 */
 - (void)
-windowDidResignKey:(NSNotification*)	aNotification
+windowDidResignKey:(NSNotification*)		aNotification
 {
 	NSWindow*	formerKeyWindow = (NSWindow*)[aNotification object];
 	
@@ -1227,10 +1227,10 @@ prevents the popover from disappearing.
 - (void)
 windowWillBeginSheet:(NSNotification*)		aNotification
 {
-	NSWindow*	sheetParentWindow = (NSWindow*)[aNotification object];
+#pragma unused(aNotification)
+	//NSWindow*	sheetParentWindow = (NSWindow*)[aNotification object];
 	
 	
-	NSLog(@"begin sheet");
 	[self retain];
 	self->isHeldOpenBySheet = YES;
 }// windowWillBeginSheet:

@@ -51,10 +51,13 @@ void
 	RegionUtilities_CenterHIRectIn				(HIRect&			inoutInner,
 												 HIRect const&		inOuter);
 
-#define CenterRectIn(i,o)	RegionUtilities_CenterRectIn(i,o)
 void
 	RegionUtilities_CenterRectIn				(Rect*				inoutInner,
 												 Rect const*		inOuter);
+
+Boolean
+	RegionUtilities_EqualRects					(Rect const*			inRect1Ptr,
+												 Rect const*			inRect2Ptr);
 
 void
 	RegionUtilities_GetPositioningBounds		(WindowRef			inWindow,
@@ -84,16 +87,21 @@ Boolean
 												 Point				inPoint2);
 
 void
-	RegionUtilities_RedrawControlOnNextUpdate	(ControlRef			inControl);
+	RegionUtilities_OffsetRect					(Rect*				inoutRectPtr,
+												 SInt16				inDeltaX,
+												 SInt16				inDeltaY);
 
 void
-	RegionUtilities_RedrawWindowOnNextUpdate	(WindowRef			inWindow);
+	RegionUtilities_SetPoint						(Point*				inoutPointPtr,
+												 SInt16				inX,
+												 SInt16				inY);
 
 void
-	RegionUtilities_SetControlUpToDate			(ControlRef			inControl);
-
-void
-	RegionUtilities_SetWindowUpToDate			(WindowRef			inWindow);
+	RegionUtilities_SetRect						(Rect*				inoutRectPtr,
+												 SInt16				inLeft,
+												 SInt16				inTop,
+												 SInt16				inRight,
+												 SInt16				inBottom);
 
 #endif
 

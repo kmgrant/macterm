@@ -45,6 +45,7 @@
 #import <vector>
 
 // Mac includes
+#import <ApplicationServices/ApplicationServices.h>
 #import <CoreServices/CoreServices.h>
 
 // library includes
@@ -71,6 +72,7 @@
 #import "PrefPanelSessions.h"
 #import "PrefsWindow.h"
 #import "QuillsBase.h"
+#import "RegionUtilities.h"
 #import "SessionDescription.h"
 #import "Terminal.h"
 #import "TerminalView.h"
@@ -931,7 +933,8 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 			CFRetain(fontCFString);
 			if (CFStringGetPascalString(fontCFString, fontName, sizeof(fontName), kCFStringEncodingMacRoman))
 			{
-				if (kInvalidFontFamily != FMGetFontFamilyFromName(fontName))
+				if (nullptr != CTFontCreateWithQuickdrawInstance(fontName, 0/* font identifier */,
+																	normal/* font style */, 0.0/* font size */))
 				{
 					TerminalWindow_SetFontAndSize(terminalWindow, fontCFString, 0/* font size, or 0 to ignore */);
 				}
@@ -1842,7 +1845,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 		error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
 		if (noErr == error)
 		{
-			OffsetRect(&structureBounds, 32/* arbitrary */, 32/* arbitrary */);
+			RegionUtilities_OffsetRect(&structureBounds, 32/* arbitrary */, 32/* arbitrary */);
 			SetWindowBounds(window, kWindowStructureRgn, &structureBounds);
 		}
 	}

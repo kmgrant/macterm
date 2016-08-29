@@ -221,11 +221,11 @@ public:
 	setFrame	(HIRect const&		inNewFrame)
 	{
 		// the tag is forced to render at a point, so the rectangle is squished
-		SetRect(&_rec.absHotRect, STATIC_CAST(inNewFrame.origin.x, short), STATIC_CAST(inNewFrame.origin.y, short),
-				0, 0);
-		SetRect(&_rec.absHotRect, _rec.absHotRect.left, _rec.absHotRect.top,
-				_rec.absHotRect.left + STATIC_CAST(inNewFrame.size.width, short),
-				_rec.absHotRect.top + STATIC_CAST(inNewFrame.size.height, short));
+		RegionUtilities_SetRect(&_rec.absHotRect, STATIC_CAST(inNewFrame.origin.x, short), STATIC_CAST(inNewFrame.origin.y, short),
+								0, 0);
+		RegionUtilities_SetRect(&_rec.absHotRect, _rec.absHotRect.left, _rec.absHotRect.top,
+								_rec.absHotRect.left + STATIC_CAST(inNewFrame.size.width, short),
+								_rec.absHotRect.top + STATIC_CAST(inNewFrame.size.height, short));
 	}
 
 private:
@@ -1094,7 +1094,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				// do not allow the window to go off of the screen, however
 				RegionUtilities_GetPositioningBounds(window, &availablePositioningBounds);
 				centeredStructureBounds = originalStructureBounds;
-				CenterRectIn(&centeredStructureBounds, &availablePositioningBounds);
+				RegionUtilities_CenterRectIn(&centeredStructureBounds, &availablePositioningBounds);
 				centeredStructureBounds.top += kOffsetFromCenterV;
 				centeredStructureBounds.bottom += kOffsetFromCenterV;
 				if (centeredStructureBounds.top < kAbsoluteMinimumV)
@@ -1271,7 +1271,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				
 				
 				UNUSED_RETURN(OSStatus)GetWindowBounds(window, kWindowStructureRgn, &currentStructureBounds);
-				if (EqualRect(&currentStructureBounds, &centeredStructureBounds))
+				if (RegionUtilities_EqualRects(&currentStructureBounds, &centeredStructureBounds))
 				{
 					HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
 																			originalStructureBounds.right - originalStructureBounds.left,
@@ -1611,7 +1611,6 @@ Session_FlushNetwork	(SessionRef		inRef)
 	while (remainingBytesCount > 0) remainingBytesCount = processMoreData(ptr);
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									true); // output now
-	RegionUtilities_RedrawWindowOnNextUpdate(returnActiveWindow(ptr));
 }// FlushNetwork
 
 
@@ -8050,7 +8049,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		}
 		
 		// hide the cursor until the mouse moves
-		ObscureCursor();
+		[NSCursor setHiddenUntilMouseMoves:YES];
 		
 		// note that a key equivalent for a menu item might be invoked
 		// when the corresponding item is disabled; Cocoa seems to forward

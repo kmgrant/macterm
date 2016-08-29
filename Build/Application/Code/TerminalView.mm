@@ -3937,16 +3937,15 @@ TerminalView_ZoomOpenFromSelection		(TerminalViewRef	inView)
 	if (nullptr != viewPtr)
 	{
 		// the selection region is currently defined in the window’s local (content view) coordinates
-		RgnHandle	selectionRegion = TerminalView_ReturnSelectedTextAsNewRegion(inView);
+		HIShapeRef	selectionShape = getSelectedTextAsNewHIShape(viewPtr, 0);
 		
 		
-		if (nullptr != selectionRegion)
+		if (nullptr != selectionShape)
 		{
 			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
 			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
 			HIRect				selectionViewBounds = CGRectZero;
 			CGRect				selectionCGRect = CGRectZero;
-			Rect				selectionRect;
 			
 			
 			// since the region is currently defined in content-local coordinates,
@@ -3956,11 +3955,8 @@ TerminalView_ZoomOpenFromSelection		(TerminalViewRef	inView)
 			
 			// translate the selection area into Cocoa coordinates that are
 			// relative to the content view of the window
-			GetRegionBounds(selectionRegion, &selectionRect);
-			selectionCGRect.origin.x = selectionRect.left;
-			selectionCGRect.origin.y = selectionViewBounds.size.height - selectionRect.bottom;
-			selectionCGRect.size.width = selectionRect.right - selectionRect.left;
-			selectionCGRect.size.height = selectionRect.bottom - selectionRect.top;
+			UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
+			selectionCGRect.origin.y = selectionViewBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
 			
 			// animate!
 			TerminalView_FlashSelection(inView);
@@ -3972,7 +3968,7 @@ TerminalView_ZoomOpenFromSelection		(TerminalViewRef	inView)
 				CocoaAnimation_TransitionWindowSectionForOpen(cocoaWindow, selectionCGRect);
 			}
 			
-			Memory_DisposeRegion(&selectionRegion);
+			CFRelease(selectionShape), selectionShape = nullptr;
 		}
 	}
 }// ZoomOpenFromSelection
@@ -4000,7 +3996,6 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 		
 		
 		cursorRect = viewPtr->screen.cursor.bounds;
-		InsetRect(&cursorRect, -30, -30); // arbitrary
 		
 		screenToLocalRect(viewPtr, &cursorRect);
 		
@@ -4015,6 +4010,7 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 		cursorCGRect.origin.y = cursorViewBounds.size.height - cursorRect.bottom;
 		cursorCGRect.size.width = cursorRect.right - cursorRect.left;
 		cursorCGRect.size.height = cursorRect.bottom - cursorRect.top;
+		cursorCGRect = CGRectInset(cursorCGRect, -30, -30); // arbitrary
 		
 		// animate!
 		if (nullptr != terminalWindow)
@@ -4046,18 +4042,17 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 	if ((nullptr != viewPtr) && (false == viewPtr->text.searchResults.empty()))
 	{
 		// the selection region is currently defined in the window’s local (content view) coordinates
-		RgnHandle	selectionRegion = getVirtualRangeAsNewRegion(viewPtr, viewPtr->text.toCurrentSearchResult->first,
+		HIShapeRef	selectionShape = getVirtualRangeAsNewHIShape(viewPtr, viewPtr->text.toCurrentSearchResult->first,
 																	viewPtr->text.toCurrentSearchResult->second,
-																	false/* is rectangular */);
+																	0/* insets */, false/* is rectangular */);
 		
 		
-		if (nullptr != selectionRegion)
+		if (nullptr != selectionShape)
 		{
 			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
 			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
 			HIRect				selectionViewBounds = CGRectZero;
 			CGRect				selectionCGRect = CGRectZero;
-			Rect				selectionRect;
 			
 			
 			// since the region is currently defined in content-local coordinates,
@@ -4067,11 +4062,8 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 			
 			// translate the selection area into Cocoa coordinates that are
 			// relative to the content view of the window
-			GetRegionBounds(selectionRegion, &selectionRect);
-			selectionCGRect.origin.x = selectionRect.left;
-			selectionCGRect.origin.y = selectionViewBounds.size.height - selectionRect.bottom;
-			selectionCGRect.size.width = selectionRect.right - selectionRect.left;
-			selectionCGRect.size.height = selectionRect.bottom - selectionRect.top;
+			UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
+			selectionCGRect.origin.y = selectionViewBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
 			
 			// animate!
 			if (nullptr != terminalWindow)
@@ -4082,7 +4074,7 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 				CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, selectionCGRect);
 			}
 			
-			Memory_DisposeRegion(&selectionRegion);
+			CFRelease(selectionShape), selectionShape = nullptr;
 		}
 	}
 }// ZoomToSearchResults
@@ -4118,8 +4110,8 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 			
 			// find global rectangle of the screen area
 			UNUSED_RETURN(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
-			SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
-					STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
+			RegionUtilities_SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
+									STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
 			screenToLocalRect(viewPtr, &screenContentBounds);
 			QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
 			
@@ -5852,7 +5844,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 									
 									
 									GetPixBounds(pixels, &pixelMapBounds);
-									OffsetRect(&sourceRect, -pixelMapBounds.left, -pixelMapBounds.top);
+									RegionUtilities_OffsetRect(&sourceRect, -pixelMapBounds.left, -pixelMapBounds.top);
 									error = DecompressImage(GetPixBaseAddr(pixels), image, pixels,
 															&sourceRect/* source rectangle */,
 															&destRect/* destination rectangle */,
@@ -6114,9 +6106,9 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		
 		
 		// TEMPORARY - for QuickDraw use only
-		SetRect(&intBounds, STATIC_CAST(sectionBounds.origin.x, short), STATIC_CAST(sectionBounds.origin.y, short),
-				STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
-				STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
+		RegionUtilities_SetRect(&intBounds, STATIC_CAST(sectionBounds.origin.x, short), STATIC_CAST(sectionBounds.origin.y, short),
+								STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
+								STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
 		
 		// TEMPORARY...these kinds of offsets make no sense whatsoever
 		// and yet Core Graphics drawings seem to be utterly misaligned
@@ -6656,9 +6648,9 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		lineWidth = penState.pnSize.h;
 		lineHeight = penState.pnSize.v;
 	}
-	SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
-	SetPt(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
-			cellTop + INTEGER_HALVED(cellBottom - cellTop));
+	RegionUtilities_SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
+	RegionUtilities_SetPoint(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
+								cellTop + INTEGER_HALVED(cellBottom - cellTop));
 	
 #if 0
 	{
@@ -8614,7 +8606,7 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 		// find clipping region
 		error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &floatBounds);
 		assert_noerr(error);
-		SetRect(&screenBounds, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16), STATIC_CAST(floatBounds.size.height, SInt16));
+		RegionUtilities_SetRect(&screenBounds, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16), STATIC_CAST(floatBounds.size.height, SInt16));
 		
 		selectionStart = inSelectionStart;
 		selectionPastEnd = inSelectionPastEnd;
@@ -8645,11 +8637,11 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 			sortAnchors(selectionStart, selectionPastEnd, true/* is a rectangular selection */);
 			
 			// set up rectangle bounding area to be highlighted
-			SetRect(&selectionBounds,
-					selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-					selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
-					selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
-					selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
+			RegionUtilities_SetRect(&selectionBounds,
+									selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
+									selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
+									selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
+									selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
 			
 			// the final selection region is the portion of the full rectangle
 			// that fits within the current screen boundaries
@@ -8673,20 +8665,20 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 				sortAnchors(selectionStart, selectionPastEnd, false/* is a rectangular selection */);
 				
 				// bounds of first (possibly partial) line to be highlighted
-				SetRect(&partialSelectionBounds,
-						selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-						selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
-						inTerminalViewPtr->screen.cache.viewWidthInPixels,
-						(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter);
+				RegionUtilities_SetRect(&partialSelectionBounds,
+										selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
+										selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
+										inTerminalViewPtr->screen.cache.viewWidthInPixels,
+										(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter);
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(result, &clippedRect);
 				
 				// bounds of last (possibly partial) line to be highlighted
-				SetRect(&partialSelectionBounds,
-						0,
-						(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter,
-						selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
-						selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
+				RegionUtilities_SetRect(&partialSelectionBounds,
+										0,
+										(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter,
+										selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
+										selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(clippedRegion, &clippedRect);
 				UnionRgn(clippedRegion, result, result);
@@ -8694,11 +8686,11 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 				if ((selectionPastEnd.second - selectionStart.second) > 2)
 				{
 					// highlight extends across more than two lines - fill in the space in between
-					SetRect(&partialSelectionBounds,
-							0,
-							(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter,
-							inTerminalViewPtr->screen.cache.viewWidthInPixels,
-							(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter);
+					RegionUtilities_SetRect(&partialSelectionBounds,
+											0,
+											(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter,
+											inTerminalViewPtr->screen.cache.viewWidthInPixels,
+											(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter);
 					SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 					RectRgn(clippedRegion, &clippedRect);
 					UnionRgn(clippedRegion, result, result);
@@ -10780,7 +10772,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					Rect		clipBounds;
 					HIRect		floatBounds;
-					RgnHandle	optionalTargetRegion = nullptr;
+					CGRect		floatClipBounds;
+					HIShapeRef	optionalTargetShape = nullptr;
 					
 					
 					SetPort(drawingPort);
@@ -10790,10 +10783,15 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					HIViewGetBounds(view, &floatBounds);
 					
 					// maybe a focus region has been provided
-					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
-																		optionalTargetRegion))
+					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamShape, typeHIShapeRef,
+																		optionalTargetShape))
 					{
-						GetRegionBounds(optionalTargetRegion, &clipBounds);
+						UNUSED_RETURN(CGRect*)HIShapeGetBounds(optionalTargetShape, &floatClipBounds);
+						RegionUtilities_SetRect(&clipBounds,
+												STATIC_CAST(floatClipBounds.origin.x, SInt16),
+												STATIC_CAST(floatClipBounds.origin.y, SInt16),
+												STATIC_CAST((floatClipBounds.origin.x + floatClipBounds.size.width), SInt16),
+												STATIC_CAST((floatClipBounds.origin.y + floatClipBounds.size.height), SInt16));
 					}
 					else
 					{
@@ -11587,7 +11585,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				case kControlContentMetaPart:
 				case kTerminalView_ContentPartText:
 					GetControlBounds(viewPtr->contentHIView, &partBounds);
-					OffsetRect(&partBounds, -partBounds.left, -partBounds.top); // make view-relative coordinates
+					RegionUtilities_OffsetRect(&partBounds, -partBounds.left, -partBounds.top); // make view-relative coordinates
 					break;
 				
 				case kControlOpaqueMetaPart:
@@ -13106,7 +13104,7 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	getRowBounds(inTerminalViewPtr, inY, &rowBounds);
 	
-	SetPt(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY), rowBounds.bottom - rowBounds.top);
+	RegionUtilities_SetPoint(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY), rowBounds.bottom - rowBounds.top);
 	
 	outBoundsPtr->left = inX * characterSizeInPixels.h;
 	outBoundsPtr->top = rowBounds.top;

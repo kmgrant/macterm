@@ -1226,7 +1226,7 @@ Preferences_Init ()
 										CFSTR("window-vt220keys-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagWindowStackingOrigin,
 									CFSTR("window-terminal-position-pixels"), typeCFArrayRef/* 2 CFNumberRefs, pixels from top-left */,
-									sizeof(Point), Quills::Prefs::GENERAL);
+									sizeof(CGPoint), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagWindowTabPreferredEdge,
 									CFSTR("window-terminal-tab-edge"), typeCFStringRef/* "top", "bottom", "left" or "right" */,
 									sizeof(OptionBits), Quills::Prefs::GENERAL);
@@ -7023,23 +7023,31 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						else
 						{
 							CFNumberRef		singleCoord = nullptr;
-							Point*			outPointPtr = REINTERPRET_CAST(outDataPtr, Point*);
+							CGPoint*			outPointPtr = REINTERPRET_CAST(outDataPtr, CGPoint*);
 							
 							
 							singleCoord = CFUtilities_NumberCast(CFArrayGetValueAtIndex(valueCFArray, 0));
-							unless (CFNumberGetValue(singleCoord, kCFNumberSInt16Type, &outPointPtr->h))
+							unless (CFNumberGetValue(singleCoord, kCFNumberCGFloatType, &outPointPtr->x))
 							{
 								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							singleCoord = CFUtilities_NumberCast(CFArrayGetValueAtIndex(valueCFArray, 1));
-							unless (CFNumberGetValue(singleCoord, kCFNumberSInt16Type, &outPointPtr->v))
+							unless (CFNumberGetValue(singleCoord, kCFNumberCGFloatType, &outPointPtr->y))
 							{
 								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							
-							// set reasonable values if there is an error
-							if (outPointPtr->h <= 0) outPointPtr->h = 40;
-							if (outPointPtr->v <= 0) outPointPtr->v = 40;
+							// set reasonable X value if there is an error
+							if (outPointPtr->x <= 0)
+							{
+								outPointPtr->x = 40;
+							}
+							
+							// set reasonable Y value if there is an error
+							if (outPointPtr->y <= 0)
+							{
+								outPointPtr->y = 40;
+							}
 							
 							CFRelease(valueCFArray), valueCFArray = nullptr;
 						}
@@ -9588,15 +9596,15 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagWindowStackingOrigin:
 				{
-					Point const		data = *(REINTERPRET_CAST(inDataPtr, Point const*));
-					CFNumberRef		leftCoord = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type,
-																&data.h);
+					CGPoint const	data = *(REINTERPRET_CAST(inDataPtr, CGPoint const*));
+					CFNumberRef		leftCoord = CFNumberCreate(kCFAllocatorDefault, kCFNumberCGFloatType,
+																&data.x);
 					
 					
 					if (nullptr != leftCoord)
 					{
-						CFNumberRef		topCoord = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type,
-																	&data.v);
+						CFNumberRef		topCoord = CFNumberCreate(kCFAllocatorDefault, kCFNumberCGFloatType,
+																	&data.y);
 						
 						
 						if (nullptr != topCoord)
