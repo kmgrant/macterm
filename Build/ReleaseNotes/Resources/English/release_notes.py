@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160901',
     '20160827',
     '20160523',
     '20160519',
@@ -542,6 +543,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160901': [
+        'Preferences window Formats pane (and similar sheet) now also has a sample area in the Standard Colors tab.',
+    ],
     '20160827': [
         'Fixed minor bugs in the behavior of sheets and panels.',
         'Alerts have been reimplemented in Cocoa, which makes them look much better on Retina displays.',

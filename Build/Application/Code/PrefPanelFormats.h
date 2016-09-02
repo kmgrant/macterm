@@ -151,10 +151,15 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelFormats_StandardColorsViewManager : Panel_ViewManager< Panel_Delegate,
 																			PrefsWindow_PanelInterface > //{
 {
+	IBOutlet TerminalView_ContentView*		terminalSampleContentView;
+	IBOutlet TerminalView_BackgroundView*	terminalSamplePaddingView;
+	IBOutlet TerminalView_BackgroundView*	terminalSampleBackgroundView;
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSRect							idealFrame;
 	NSMutableDictionary*			byKey;
+	TerminalScreenRef				sampleScreenBuffer;
+	TerminalViewRef					sampleScreenView;
 }
 
 // accessors

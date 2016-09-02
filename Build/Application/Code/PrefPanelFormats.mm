@@ -108,6 +108,8 @@ The private class interface.
 */
 @interface PrefPanelFormats_StandardColorsViewManager (PrefPanelFormats_StandardColorsViewManagerInternal) //{
 
+	- (NSArray*)
+	colorBindingKeys;
 	- (void)
 	copyColorWithPreferenceTag:(Preferences_Tag)_
 	fromContext:(Preferences_ContextRef)_
@@ -115,6 +117,14 @@ The private class interface.
 	failureFlag:(BOOL*)_;
 	- (NSArray*)
 	primaryDisplayBindingKeys;
+	- (NSArray*)
+	sampleDisplayBindingKeyPaths;
+	- (void)
+	setSampleAreaFromDefaultPreferences;
+	- (void)
+	setSampleAreaFromPreferences:(Preferences_ContextRef)_
+	restrictedTag1:(Preferences_Tag)_
+	restrictedTag2:(Preferences_Tag)_;
 	- (BOOL)
 	resetToFactoryDefaultColors;
 
@@ -847,9 +857,8 @@ didLoadContainerView:(NSView*)			aContainerView
 				// to change
 				UNUSED_RETURN(TerminalView_Result)TerminalView_SetUserInteractionEnabled(self->sampleScreenView, false);
 				
-				// write some text in various styles to the screen (happens to be a
-				// copy of what the sample view does); this will help with testing
-				// the new Cocoa-based renderer as it is implemented
+				// write some text in all major styles to the screen so that the
+				// user can see examples of the selected font, size and colors
 				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
 												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
 				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
@@ -1569,6 +1578,33 @@ changeColor:(id)	sender
 }// changeColor:
 
 
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to bound values by updating the sample
+terminal view.
+
+(2016.09)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+#pragma unused(aKeyPath, anObject, aContext)
+	if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+	{
+		// TEMPORARY; refresh the terminal view for any change, without restrictions
+		// (should fix to send only relevant preference tags, based on the key path)
+		[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
+		[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]
+											restrictedTag1:'----' restrictedTag2:'----'];
+	}
+}// observeValueForKeyPath:ofObject:change:context:
+
+
 #pragma mark Panel_Delegate
 
 
@@ -1616,10 +1652,69 @@ didLoadContainerView:(NSView*)			aContainerView
 #pragma unused(aViewManager, aContainerView)
 	assert(nil != byKey);
 	assert(nil != prefsMgr);
+	assert(nil != terminalSampleBackgroundView);
+	assert(nil != terminalSamplePaddingView);
+	assert(nil != terminalSampleContentView);
 	
 	
 	// remember frame from XIB (it might be changed later)
 	self->idealFrame = [aContainerView frame];
+	
+	{
+		Preferences_ContextWrap		terminalConfig(Preferences_NewContext
+													(Quills::Prefs::TERMINAL), true/* is retained */);
+		Preferences_ContextWrap		translationConfig(Preferences_NewContext
+														(Quills::Prefs::TRANSLATION), true/* is retained */);
+		Terminal_Result				bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
+																		translationConfig.returnRef(),
+																		&self->sampleScreenBuffer);
+		
+		
+		if (kTerminal_ResultOK != bufferResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to create sample terminal screen buffer, error", bufferResult);
+		}
+		else
+		{
+			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
+																	self->terminalSamplePaddingView,
+																	self->terminalSampleBackgroundView,
+																	self->sampleScreenBuffer, nullptr/* format */);
+			if (nullptr == self->sampleScreenView)
+			{
+				Console_WriteLine("failed to create sample terminal view");
+			}
+			else
+			{
+				// force the view into normal display mode, because zooming will
+				// mess up the font size
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(self->sampleScreenView, kTerminalView_DisplayModeNormal);
+				
+				// ignore changes to certain preferences for this sample view, since
+				// it is not meant to be an ordinary terminal view
+				UNUSED_RETURN(TerminalView_Result)TerminalView_IgnoreChangesToPreference(self->sampleScreenView, kPreferences_TagTerminalResizeAffectsFontSize);
+				
+				// ignore user interaction, because text selections are not meant
+				// to change
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetUserInteractionEnabled(self->sampleScreenView, false);
+				
+				// write some text in all base colors to the screen so that the
+				// user can see examples of the selected colors (normal and bold)
+				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
+												"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
+												"\033[40m b \033[41m r \033[42m g \033[43m y \033[44m b \033[45m m \033[46m c \033[47m w \033[0m \033[30m b \033[31m r \033[32m g \033[33m y \033[34m b \033[35m m \033[36m c \033[37m w \033[0m");
+				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
+												"\r\n\033[1m\033[40m b \033[41m r \033[42m g \033[43m y \033[44m b \033[45m m \033[46m c \033[47m w \033[0m \033[1m\033[30m b \033[31m r \033[32m g \033[33m y \033[34m b \033[35m m \033[36m c \033[37m w \033[0m");
+			}
+		}
+	}
+	
+	// observe all properties that can affect the sample display area
+	for (NSString* keyPath in [self sampleDisplayBindingKeyPaths])
+	{
+		[self addObserver:self forKeyPath:keyPath options:0 context:nullptr];
+	}
 	
 	// note that all current values will change
 	for (NSString* keyName in [self primaryDisplayBindingKeys])
@@ -1897,6 +1992,27 @@ preferencesClass
 
 
 /*!
+Returns the names of key-value coding keys that have color values.
+
+(2016.09)
+*/
+- (NSArray*)
+colorBindingKeys
+{
+	return @[
+				@"blackNormalColor", @"blackBoldColor",
+				@"redNormalColor", @"redBoldColor",
+				@"greenNormalColor", @"greenBoldColor",
+				@"yellowNormalColor", @"yellowBoldColor",
+				@"blueNormalColor", @"blueBoldColor",
+				@"magentaNormalColor", @"magentaBoldColor",
+				@"cyanNormalColor", @"cyanBoldColor",
+				@"whiteNormalColor", @"whiteBoldColor",
+			];
+}// colorBindingKeys
+
+
+/*!
 Copies a color from the specified source context to the
 current context.
 
@@ -1952,24 +2068,109 @@ Returns the names of key-value coding keys that represent the
 primary bindings of this panel (those that directly correspond
 to saved preferences).
 
-(4.1)
+(2016.09)
 */
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return @[
-				@"blackNormalColor", @"blackBoldColor",
-				@"blackNormalColorInherited", @"blackBoldColorInherited",
-				@"blackNormalColorInheritEnabled", @"blackBoldColorInheritEnabled",
-				@"redNormalColor", @"redBoldColor",
-				@"greenNormalColor", @"greenBoldColor",
-				@"yellowNormalColor", @"yellowBoldColor",
-				@"blueNormalColor", @"blueBoldColor",
-				@"magentaNormalColor", @"magentaBoldColor",
-				@"cyanNormalColor", @"cyanBoldColor",
-				@"whiteNormalColor", @"whiteBoldColor",
-			];
+	NSMutableArray*		result = [NSMutableArray arrayWithArray:[self colorBindingKeys]];
+	
+	
+	return result;
 }// primaryDisplayBindingKeys
+
+
+/*!
+Returns the key paths of all settings that, if changed, would
+require the sample terminal to be refreshed.
+
+(2016.09)
+*/
+- (NSArray*)
+sampleDisplayBindingKeyPaths
+{
+	NSMutableArray*		result = [NSMutableArray arrayWithCapacity:20/* arbitrary */];
+	
+	
+	for (NSString* keyName in [self primaryDisplayBindingKeys])
+	{
+		[result addObject:[NSString stringWithFormat:@"%@.inherited", keyName]];
+		[result addObject:[NSString stringWithFormat:@"%@.inheritEnabled", keyName]];
+	}
+	
+	for (NSString* keyName in [self colorBindingKeys])
+	{
+		[result addObject:[NSString stringWithFormat:@"%@.colorValue", keyName]];
+	}
+	
+	return result;
+}// sampleDisplayBindingKeyPaths
+
+
+/*!
+Updates the sample terminal display using Default settings.
+This is occasionally necessary as a reset step prior to
+adding new settings, because a context does not have to
+define every value (the display should fall back on the
+defaults, instead of whatever setting happened to be in
+effect beforehand).
+
+(2016.09)
+*/
+- (void)
+setSampleAreaFromDefaultPreferences
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Preferences_ContextRef	defaultContext = nullptr;
+	
+	
+	prefsResult = Preferences_GetDefaultContext(&defaultContext, [self preferencesClass]);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		[self setSampleAreaFromPreferences:defaultContext restrictedTag1:'----' restrictedTag2:'----'];
+	}
+}// setSampleAreaFromDefaultPreferences
+
+
+/*!
+Updates the sample terminal display using the settings in the
+specified context.  All relevant settings are copied, unless
+one or more valid restriction tags are given; when restricted,
+only the settings indicated by the tags are used (and all other
+parts of the display are unchanged).
+
+(2016.09)
+*/
+- (void)
+setSampleAreaFromPreferences:(Preferences_ContextRef)	inSettingsToCopy
+restrictedTag1:(Preferences_Tag)						inTagRestriction1
+restrictedTag2:(Preferences_Tag)						inTagRestriction2
+{
+	Preferences_TagSetRef				tagSet = nullptr;
+	std::vector< Preferences_Tag >		tags;
+	
+	
+	if ('----' != inTagRestriction1) tags.push_back(inTagRestriction1);
+	if ('----' != inTagRestriction2) tags.push_back(inTagRestriction2);
+	if (false == tags.empty())
+	{
+		tagSet = Preferences_NewTagSet(tags);
+		if (nullptr == tagSet)
+		{
+			Console_Warning(Console_WriteLine, "unable to create tag set, cannot update sample area");
+		}
+		else
+		{
+			Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(self->sampleScreenView),
+									tagSet);
+			Preferences_ReleaseTagSet(&tagSet);
+		}
+	}
+	else
+	{
+		Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(self->sampleScreenView));
+	}
+}// setSampleAreaFromPreferences:restrictedTag1:restrictedTag2:
 
 
 /*!
