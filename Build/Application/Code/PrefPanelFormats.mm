@@ -97,6 +97,8 @@ The private class interface.
 	- (void)
 	setSampleAreaFromDefaultPreferences;
 	- (void)
+	setSampleAreaFromPreferences:(Preferences_ContextRef)_;
+	- (void)
 	setSampleAreaFromPreferences:(Preferences_ContextRef)_
 	restrictedTag1:(Preferences_Tag)_
 	restrictedTag2:(Preferences_Tag)_;
@@ -121,6 +123,8 @@ The private class interface.
 	sampleDisplayBindingKeyPaths;
 	- (void)
 	setSampleAreaFromDefaultPreferences;
+	- (void)
+	setSampleAreaFromPreferences:(Preferences_ContextRef)_;
 	- (void)
 	setSampleAreaFromPreferences:(Preferences_ContextRef)_
 	restrictedTag1:(Preferences_Tag)_
@@ -997,6 +1001,11 @@ panelViewManager:(Panel_ViewManager*)			aViewManager
 didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager, aVisibility)
+	if (kPanel_VisibilityDisplayed == aVisibility)
+	{
+		[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
+		[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]];
+	}
 }// panelViewManager:didChangePanelVisibility:
 
 	
@@ -1234,9 +1243,23 @@ setSampleAreaFromDefaultPreferences
 	prefsResult = Preferences_GetDefaultContext(&defaultContext, [self preferencesClass]);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		[self setSampleAreaFromPreferences:defaultContext restrictedTag1:'----' restrictedTag2:'----'];
+		[self setSampleAreaFromPreferences:defaultContext];
 	}
 }// setSampleAreaFromDefaultPreferences
+
+
+/*!
+Calls "setSampleAreaFromPreferences:restrictedTag1:restrictedTag2:"
+without any tag constraints.  Use this to reread all possible
+preferences, when you do not know which preferences have changed.
+
+(2016.09)
+*/
+- (void)
+setSampleAreaFromPreferences:(Preferences_ContextRef)	inSettingsToCopy
+{
+	[self setSampleAreaFromPreferences:inSettingsToCopy restrictedTag1:'----' restrictedTag2:'----'];
+}// setSampleAreaFromPreferences:
 
 
 /*!
@@ -1847,6 +1870,11 @@ panelViewManager:(Panel_ViewManager*)			aViewManager
 didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager, aVisibility)
+	if (kPanel_VisibilityDisplayed == aVisibility)
+	{
+		[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
+		[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]];
+	}
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -2130,6 +2158,20 @@ setSampleAreaFromDefaultPreferences
 		[self setSampleAreaFromPreferences:defaultContext restrictedTag1:'----' restrictedTag2:'----'];
 	}
 }// setSampleAreaFromDefaultPreferences
+
+
+/*!
+Calls "setSampleAreaFromPreferences:restrictedTag1:restrictedTag2:"
+without any tag constraints.  Use this to reread all possible
+preferences, when you do not know which preferences have changed.
+
+(2016.09)
+*/
+- (void)
+setSampleAreaFromPreferences:(Preferences_ContextRef)	inSettingsToCopy
+{
+	[self setSampleAreaFromPreferences:inSettingsToCopy restrictedTag1:'----' restrictedTag2:'----'];
+}// setSampleAreaFromPreferences:
 
 
 /*!

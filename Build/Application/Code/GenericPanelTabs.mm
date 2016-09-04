@@ -180,12 +180,21 @@ tabView:(NSTabView*)					aTabView
 didSelectTabViewItem:(NSTabViewItem*)	anItem
 {
 #pragma unused(aTabView)
-	auto	toPair = self->viewManagerByView->find([anItem view]);
+	auto				toPair = self->viewManagerByView->find([anItem view]);
+	Panel_ViewManager*	newPanel = ((self->viewManagerByView->end() != toPair)
+									? toPair->second
+									: nil);
 	
 	
-	if (self->viewManagerByView->end() != toPair)
+	if (nil != self->activePanel)
 	{
-		self->activePanel = toPair->second;
+		[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityHidden];
+	}
+	
+	if (nil != newPanel)
+	{
+		self->activePanel = newPanel;
+		[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 	}
 	else
 	{
@@ -193,6 +202,36 @@ didSelectTabViewItem:(NSTabViewItem*)	anItem
 		self->activePanel = nil;
 	}
 }// tabView:didSelectTabViewItem:
+
+
+/*!
+Notifies the proposed panel that it is about to become
+visible, and notifies any current panel that it is
+about to become invisible.
+
+(2016.09)
+*/
+- (void)
+tabView:(NSTabView*)					aTabView
+willSelectTabViewItem:(NSTabViewItem*)	anItem
+{
+#pragma unused(aTabView)
+	auto				toPair = self->viewManagerByView->find([anItem view]);
+	Panel_ViewManager*	newPanel = ((self->viewManagerByView->end() != toPair)
+									? toPair->second
+									: nil);
+	
+	
+	if (nil != self->activePanel)
+	{
+		[self->activePanel.delegate panelViewManager:self->activePanel willChangePanelVisibility:kPanel_VisibilityHidden];
+	}
+	
+	if (nil != newPanel)
+	{
+		[newPanel.delegate panelViewManager:newPanel willChangePanelVisibility:kPanel_VisibilityDisplayed];
+	}
+}// tabView:willSelectTabViewItem:
 
 
 #pragma mark Panel_Delegate
