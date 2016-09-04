@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160904',
     '20160901',
     '20160827',
     '20160523',
@@ -543,6 +544,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160904': [
+        'Fixed high CPU utilization after opening the Custom Format sheet.',
+        'Preferences window Formats pane (and similar sheet) now has a more accurate preview display, including character width and custom cursor color.',
+    ],
     '20160901': [
         'Preferences window Formats pane (and similar sheet) now also has a sample area in the Standard Colors tab.',
     ],

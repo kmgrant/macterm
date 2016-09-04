@@ -392,6 +392,7 @@ TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the curre
 			} normalMetrics,	// metrics for text meant to fit in a single cell (normal)
 			  doubleMetrics;	// metrics for text meant to fit in 4 cells, not 1 cell (double-width/height)
 			Float32			scaleWidthPerCharacter;	// a multiplier (normally 1.0) to force characters from the font to fit in a different width
+			SInt16			baseWidthPerCharacter;	// value of "widthPerCharacter" without any scaling applied
 			SInt16			widthPerCharacter;	// number of pixels wide each character is (multiply by 2 on double-width lines);
 												// generally, you should call getRowCharacterWidth() instead of referencing this!
 			SInt16			heightPerCharacter;	// number of pixels high each character is (multiply by 2 if double-height text)
@@ -6116,7 +6117,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// width is not reasonable because it refers to the whole range,
 		// which might encompass several characters)
 		//sectionBounds.origin.x += 1;
-		sectionBounds.size.height -= 3;
+		//sectionBounds.size.height -= 3;
 		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
@@ -6205,15 +6206,6 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 {
 	if (inTerminalViewPtr->isCocoa)
 	{
-		// TEMPORARY: allocate (instead of caching) these instances here
-		// to experiment with what is required to draw text correctly;
-		// eventually the text and layout will be handled more efficiently
-		NSTextStorage*		textStorage = [[NSTextStorage alloc]
-											initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)];
-		NSLayoutManager*	layoutMgr = [[NSLayoutManager alloc] init];
-		NSTextContainer*	container = [[NSTextContainer alloc] init];
-		
-		
 		// store new text attributes, for anything that refers to them
 		inTerminalViewPtr->text.attributes = inAttributes;
 		
@@ -6221,54 +6213,55 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		// of the text storage, not in the graphics context
 		setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
 									inAttributes, 1.0/* alpha */);
-		[textStorage addAttributes:inTerminalViewPtr->text.attributeDict
-									range:NSMakeRange(0, [textStorage length])];
 		
-		// remove the extra pixels inserted by default so that drawing
-		// begins precisely at the specified boundary origin
-		[container setLineFragmentPadding:0.0];
-		
-		// arbitrarily leave room for one extra character in case the
-		// boundary is miscalculated for any reason; the renderer HIDES
-		// (through wrapping, presumably) any character that overruns
-		// the end of the boundary so it is better to show every character
-		// with a little crowding than to show nothing at all!
-		[container setContainerSize:NSMakeSize(inBoundaries.size.width + inTerminalViewPtr->text.font.widthPerCharacter,
-												inBoundaries.size.height)];
-		
-		[layoutMgr addTextContainer:container];
-		[layoutMgr setTypesetterBehavior:NSTypesetterLatestBehavior];
-		
-		[textStorage addLayoutManager:layoutMgr];
-		
-		// draw the text
+		// draw the text with the correct attributes: font, etc.
 		{
-			NSRange				glyphRange = [layoutMgr glyphRangeForTextContainer:container];
-			NSPoint				drawingLocation = NSMakePoint(inBoundaries.origin.x, inBoundaries.origin.y);
-			NSGraphicsContext*	givenContext = [NSGraphicsContext graphicsContextWithGraphicsPort:inDrawingContext
-																									flipped:YES];
-			NSGraphicsContext*	oldContext = [NSGraphicsContext currentContext];
+			NSAttributedString*		attributedString = [[[NSAttributedString alloc]
+														initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)
+																		attributes:inTerminalViewPtr->text.attributeDict]
+																		autorelease];
+			CFRetainRelease			lineObject(CTLineCreateWithAttributedString
+												(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
+												true/* is retained */);
+			CTLineRef				asLineRef = REINTERPRET_CAST(lineObject.returnCFTypeRef(), CTLineRef);
+			NSPoint					drawingLocation = NSZeroPoint;
+			CGFloat					ascentMeasurement = 0;
+			CGFloat					descentMeasurement = 0;
+			CGFloat					leadingMeasurement = 0;
+			CGFloat					lineWidth = 0;
 			
 			
-			[NSGraphicsContext setCurrentContext:givenContext];
-			[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
-			if (inAttributes.hasBold() &&
-				(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
+			// measure the text’s layout so that it can be centered in the
+			// background region that was chosen, regardless of how much
+			// vertical space the text would otherwise require
+			lineWidth = CTLineGetTypographicBounds(asLineRef, &ascentMeasurement, &descentMeasurement, &leadingMeasurement);
+			drawingLocation = NSMakePoint(inBoundaries.origin.x,
+											NSHeight([inTerminalViewPtr->contentNSView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0));
+			
 			{
-				// COMPLETE AND UTTER HACK: occasionally a font will have no bold version
-				// in the same family and Cocoa does not seem as capable as QuickDraw in
-				// terms of inventing a bold rendering for such fonts; as a work-around
-				// text is drawn TWICE (the second at a slight offset from the original)
-				drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCharacter / 30)); // arbitrary
+				CGContextSaveRestore	_(inDrawingContext);
 				
-				[layoutMgr drawGlyphsForGlyphRange:glyphRange atPoint:drawingLocation];
+				
+				CGContextTranslateCTM(inDrawingContext, 0, NSHeight([inTerminalViewPtr->contentNSView frame]));
+				CGContextScaleCTM(inDrawingContext, 1.0, -1.0);
+				
+				CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
+				CTLineDraw(asLineRef, inDrawingContext);
+				
+				if (inAttributes.hasBold() &&
+					(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
+				{
+					// COMPLETE AND UTTER HACK: occasionally a font will have no bold version
+					// in the same family and Cocoa does not seem as capable as QuickDraw in
+					// terms of inventing a bold rendering for such fonts; as a work-around
+					// text is drawn TWICE (the second at a slight offset from the original)
+					drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCharacter / 30)); // arbitrary
+					
+					CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
+					CTLineDraw(asLineRef, inDrawingContext);
+				}
 			}
-			[NSGraphicsContext setCurrentContext:oldContext];
 		}
-		
-		[container release], container = nil;
-		[layoutMgr release], layoutMgr = nil;
-		[textStorage release], textStorage = nil;
 	}
 	else
 	{
@@ -12948,6 +12941,17 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 			[inoutDictionary setObject:sourceFont forKey:NSFontAttributeName];
 		}
 		
+		if (1.0 != inTerminalViewPtr->text.font.scaleWidthPerCharacter)
+		{
+			[inoutDictionary setObject:[NSNumber numberWithFloat:((inTerminalViewPtr->text.font.baseWidthPerCharacter * inTerminalViewPtr->text.font.scaleWidthPerCharacter) -
+																	inTerminalViewPtr->text.font.baseWidthPerCharacter)]
+										forKey:NSKernAttributeName];
+		}
+		else
+		{
+			[inoutDictionary removeObjectForKey:NSKernAttributeName];
+		}
+		
 		if (inAttributes.hasUnderline() || inAttributes.hasSearchHighlight())
 		{
 			[inoutDictionary setObject:@(1) forKey:NSUnderlineStyleAttributeName];
@@ -13192,13 +13196,12 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		// Set the width per character.
 		if (inTerminalViewPtr->text.font.isMonospaced)
 		{
-			inTerminalViewPtr->text.font.widthPerCharacter = STATIC_CAST([sourceFont maximumAdvancement].width, SInt16);
+			inTerminalViewPtr->text.font.baseWidthPerCharacter = STATIC_CAST([sourceFont maximumAdvancement].width, SInt16);
 		}
 		else
 		{
-			inTerminalViewPtr->text.font.widthPerCharacter = STATIC_CAST([sourceFont advancementForGlyph:
-																					[sourceFont glyphWithName:@"A"]].width,
-																			SInt16);
+			inTerminalViewPtr->text.font.baseWidthPerCharacter = STATIC_CAST([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width,
+																				SInt16);
 		}
 	}
 	else
@@ -13227,17 +13230,17 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		// amount proportional to the font size.
 		if (inTerminalViewPtr->text.font.isMonospaced)
 		{
-			inTerminalViewPtr->text.font.widthPerCharacter = CharWidth('A');
+			inTerminalViewPtr->text.font.baseWidthPerCharacter = CharWidth('A');
 		}
 		else
 		{
-			inTerminalViewPtr->text.font.widthPerCharacter = fontInfo.widMax;
+			inTerminalViewPtr->text.font.baseWidthPerCharacter = fontInfo.widMax;
 		}
 	}
 	
 	// scale the font width according to user preferences
 	{
-		Float32		reduction = inTerminalViewPtr->text.font.widthPerCharacter;
+		Float32		reduction = inTerminalViewPtr->text.font.baseWidthPerCharacter;
 		
 		
 		reduction *= inTerminalViewPtr->text.font.scaleWidthPerCharacter;
@@ -13941,6 +13944,20 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			{
 				// UNIMPLEMENTED
 			}
+			
+			// set the cursor color if necessary
+			if (inIsCursor)
+			{
+				CGDeviceColor	floatRGB;
+				
+				
+				if (inTerminalViewPtr->screen.cursor.isCustomColor)
+				{
+					// read the user’s preferred cursor color
+					getScreenCustomColor(inTerminalViewPtr, kTerminalView_ColorIndexCursorBackground, &floatRGB);
+					CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
+				}
+			}
 		}
 	}
 	else
@@ -14516,7 +14533,6 @@ drawRect:(NSRect)	aRect
 		// no associated view yet; draw a dummy background
 		CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
 		CGContextFillRect(drawingContext, clipBounds);
-		
 	}
 }// drawRect:
 
