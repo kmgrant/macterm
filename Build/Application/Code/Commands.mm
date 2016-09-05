@@ -5066,7 +5066,7 @@ canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 performActionForMacro:(id)		sender
 {
 	NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-	int				oneBasedMacroNumber = [asMenuItem tag];
+	UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
 	
 	
 	MacroManager_UserInputMacro(oneBasedMacroNumber - 1/* zero-based macro number */);
@@ -5076,7 +5076,7 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 	Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
 	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
-	int						macroIndex = [asMenuItem tag];
+	UInt16					macroIndex = STATIC_CAST([asMenuItem tag], UInt16);
 	BOOL					result = ((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
 										(nullptr != currentMacros));
 	

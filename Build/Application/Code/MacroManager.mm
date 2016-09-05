@@ -153,7 +153,7 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 		ContextSensitiveMenu_NewItemGroup(groupTitleCFString);
 		
 		// see which macros are applicable
-		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+		for (Preferences_Index i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
 		{
 			// retrieve action
 			prefsResult = Preferences_ContextGetData
@@ -291,7 +291,7 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 		if (nullptr != gCurrentMacroSet())
 		{
 			// remove monitors from the context that is about to be non-current
-			for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			for (Preferences_Index i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
 			{
 				UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
 																					Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i));
@@ -317,7 +317,7 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 			Preferences_RetainContext(gCurrentMacroSet());
 			
 			// monitor Preferences for changes to macro settings that are important in the Macro Manager module
-			for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			for (Preferences_Index i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
 			{
 				prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
 																	Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
@@ -360,6 +360,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 								 UInt16						inOneBasedMacroIndex,
 								 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
 {
+	Preferences_Index const	kMacroPrefIndex = STATIC_CAST(inOneBasedMacroIndex, Preferences_Index);
 	Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
 											? gCurrentMacroSet()
 											: inMacroSetOrNullForActiveSet;
@@ -371,7 +372,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	
 	// retrieve name
 	prefsResult = Preferences_ContextGetData
-					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, inOneBasedMacroIndex),
+					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, kMacroPrefIndex),
 						sizeof(nameCFString), &nameCFString, false/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
@@ -389,7 +390,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	
 	// retrieve key code
 	prefsResult = Preferences_ContextGetData
-					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, inOneBasedMacroIndex),
+					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, kMacroPrefIndex),
 						sizeof(macroKeyID), &macroKeyID, false/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
@@ -414,7 +415,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	// retrieve key modifiers
 	prefsResult = Preferences_ContextGetData
 					(prefsContext,
-						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, inOneBasedMacroIndex),
+						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, kMacroPrefIndex),
 						sizeof(modifiers), &modifiers, false/* search defaults too */);
 	if (kPreferences_ResultOK == prefsResult)
 	{
@@ -480,13 +481,15 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 		// actually change, i.e. in the monitor callback, and rely
 		// only on a cached array at this point
 		prefsResult = Preferences_ContextGetData
-						(context, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, inZeroBasedMacroIndex + 1),
+						(context, Preferences_ReturnTagVariantForIndex
+									(kPreferences_TagIndexedMacroAction, STATIC_CAST(inZeroBasedMacroIndex + 1, Preferences_Index)),
 							sizeof(actionPerformed), &actionPerformed, true/* search defaults too */);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			// retrieve action text
 			prefsResult = Preferences_ContextGetData
-							(context, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inZeroBasedMacroIndex + 1),
+							(context, Preferences_ReturnTagVariantForIndex
+										(kPreferences_TagIndexedMacroContents, STATIC_CAST(inZeroBasedMacroIndex + 1, Preferences_Index)),
 								sizeof(actionCFString), &actionCFString, true/* search defaults too */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
@@ -1176,7 +1179,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 				
 				default:
 					// ???
-					Console_Warning(Console_WriteValueCharacter, "unrecognized backslash escape", nextChar);
+					Console_Warning(Console_WriteValueCharacter, "unrecognized backslash escape", STATIC_CAST(nextChar, UInt8));
 					substitutionError = true;
 					break;
 				}

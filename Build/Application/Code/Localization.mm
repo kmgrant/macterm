@@ -217,7 +217,7 @@ Localization_AutoSizeNSButton	(NSButton*		inButton,
 																	}].width;
 		
 		
-		result = (stringWidth + INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION));
+		result = STATIC_CAST(stringWidth + INTEGER_TIMES_2(MINIMUM_BUTTON_TITLE_CUSHION), UInt16);
 		if (result < inMinimumWidth)
 		{
 			result = inMinimumWidth;

@@ -159,20 +159,21 @@ drawRect:(NSRect)	aRect
 	contentBounds = CGRectInset(contentBounds, 2.0, 2.0); // arbitrary distance
 	
 	// draw a translucent, filled circle
-	CGContextSetRGBFillColor(drawingContext, 0, 0, 0, ((self->hoverState) && (isEnabled)) ? 0.3 : 0.1/* alpha */);
+	CGContextSetRGBFillColor(drawingContext, 0, 0, 0, ((self->hoverState) && (isEnabled)) ? 0.3f : 0.1f/* alpha */);
 	CGContextBeginPath(drawingContext);
 	if (contentBounds.size.width == contentBounds.size.height)
 	{
 		// perfect square; make a circle
-		CGContextAddArc(drawingContext, contentBounds.origin.x + contentBounds.size.width / 2.0,
-						contentBounds.origin.y + contentBounds.size.height / 2.0,
-						(contentBounds.size.width / 2.0)/* radius */, 0/* start angle */, (2 * M_PI)/* end angle */, YES/* clockwise */);
+		CGContextAddArc(drawingContext, contentBounds.origin.x + CGFLOAT_DIV_2(contentBounds.size.width),
+						contentBounds.origin.y + CGFLOAT_DIV_2(contentBounds.size.height),
+						CGFLOAT_DIV_2(contentBounds.size.width)/* radius */,
+						0/* start angle */, STATIC_CAST(2 * M_PI, Float32)/* end angle */, YES/* clockwise */);
 	}
 	else
 	{
 		// not square; use a rounded rectangle
-		RegionUtilities_AddRoundedRectangleToPath(drawingContext, contentBounds, contentBounds.size.height / 3.0/* curve width */,
-													contentBounds.size.height / 3.0/* curve height */);
+		RegionUtilities_AddRoundedRectangleToPath(drawingContext, contentBounds, contentBounds.size.height / 3.0f/* curve width */,
+													contentBounds.size.height / 3.0f/* curve height */);
 	}
 	CGContextClosePath(drawingContext);
 	CGContextFillPath(drawingContext);
@@ -180,8 +181,8 @@ drawRect:(NSRect)	aRect
 	// draw an arrow in Yosemite style
 	{
 		// NOTE: cannot use CGRectGetMidX(), etc. because they are not constant expressions
-		CGFloat const	kMidX = (contentBounds.origin.x + contentBounds.size.width / 2.0);
-		CGFloat const	kMidY = (contentBounds.origin.y + contentBounds.size.height / 2.0);
+		CGFloat const	kMidX = (contentBounds.origin.x + CGFLOAT_DIV_2(contentBounds.size.width));
+		CGFloat const	kMidY = (contentBounds.origin.y + CGFLOAT_DIV_2(contentBounds.size.height));
 		CGPoint			points[] =
 						{
 							{ kMidX - 3.0f/* arbitrary */, kMidY + 1.5f/* arbitrary */ },
@@ -191,7 +192,7 @@ drawRect:(NSRect)	aRect
 						};
 		
 		
-		CGContextSetRGBStrokeColor(drawingContext, 0, 0, 0, ((self->hoverState) && (isEnabled)) ? 0.5 : 0.3/* alpha */);
+		CGContextSetRGBStrokeColor(drawingContext, 0, 0, 0, ((self->hoverState) && (isEnabled)) ? 0.5f : 0.3f/* alpha */);
 		CGContextSetLineWidth(drawingContext, 1.5);
 		CGContextSetLineCap(drawingContext, kCGLineCapRound);
 		CGContextSetLineJoin(drawingContext, kCGLineJoinRound);

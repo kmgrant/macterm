@@ -1282,7 +1282,7 @@ public:
 			
 			if (this->cursorAttributes.hasDoubleAny())
 			{
-				result = INTEGER_HALVED(result);
+				result = STATIC_CAST(INTEGER_DIV_2(result), UInt16);
 			}
 			return result;
 		}
@@ -1306,7 +1306,7 @@ public:
 	{
 		TextAttributes_Object		drawingAttributes;	//!< previous bits of corresponding bits in "current" structure
 		SInt16						cursorX;			//!< previous value of corresponding value in "current" structure
-		SInt16						cursorY;			//!< previous value of corresponding value in "current" structure
+		My_ScreenRowIndex			cursorY;			//!< previous value of corresponding value in "current" structure
 	} previous;
 	
 	TerminalScreenRef		selfRef;					//!< opaque reference that would resolve to a pointer to this structure
@@ -1835,7 +1835,7 @@ Terminal_Result				setVisibleRowCount						(My_ScreenBufferPtr, UInt16);
 CFStringRef					stringByStrippingEndWhitespace			(CFStringRef);
 // IMPORTANT: Attribute bit manipulation is fully described in "TextAttributes.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
-inline TextAttributes_Object	styleOfVTParameter					(UInt8	inPs)
+inline TextAttributes_Object	styleOfVTParameter					(UInt16	inPs)
 {
 	return TextAttributes_Object(1 << (inPs - 1));
 }
@@ -2474,7 +2474,7 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 	{
 		CFIndex const	kTextVectorSize = CFStringGetLength(iteratorPtr->currentLine().textCFString.returnCFMutableStringRef());
 		UInt16			endColumn = (inZeroBasedEndColumnOrNegativeForLastColumn < 0)
-										? kTextVectorSize - 1
+										? STATIC_CAST(kTextVectorSize - 1, UInt16)
 										: inZeroBasedEndColumnOrNegativeForLastColumn;
 		
 		
@@ -2585,7 +2585,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 		else
 		{
 			// there are multiple lines of text
-			UInt16 const	kEOLLength = CPP_STD::strlen(inEndOfLineSequence);
+			UInt16 const	kEOLLength = STATIC_CAST(CPP_STD::strlen(inEndOfLineSequence), UInt16);
 			Boolean			isEnd = false;
 			UInt16			lineCount = 0;
 			SInt16			currentX = 0;
@@ -2629,7 +2629,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 					// rectangular mode; all lines are uniform, and the left and right boundaries
 					// exactly match those of the anchor points, not flushing to the screen edges
 					currentX = inZeroBasedStartColumnOnFirstRow;
-					lineLength = INTEGER_ABSOLUTE(inZeroBasedEndColumnOnLastRow - inZeroBasedStartColumnOnFirstRow) + 1;
+					lineLength = STATIC_CAST(INTEGER_ABSOLUTE(inZeroBasedEndColumnOnLastRow - inZeroBasedStartColumnOnFirstRow) + 1, SInt16);
 				}
 				destLinePastTheEndPtr = destPtr + lineLength;
 				
@@ -2823,7 +2823,7 @@ Terminal_CursorGetLocation	(TerminalScreenRef		inRef,
 	else
 	{
 		if (outZeroBasedColumnPtr != nullptr) *outZeroBasedColumnPtr = dataPtr->current.cursorX;
-		if (outZeroBasedRowPtr != nullptr) *outZeroBasedRowPtr = dataPtr->current.cursorY;
+		if (outZeroBasedRowPtr != nullptr) *outZeroBasedRowPtr = STATIC_CAST(dataPtr->current.cursorY, UInt16);
 	}
 	
 	return result;
@@ -2935,7 +2935,7 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 	
 	if (dataPtr != nullptr)
 	{
-		SInt16 const	kPreviousScrollbackCount = dataPtr->scrollbackBufferCachedSize;
+		SInt16 const	kPreviousScrollbackCount = STATIC_CAST(dataPtr->scrollbackBufferCachedSize, SInt16);
 		
 		
 		dataPtr->scrollbackBuffer.clear();
@@ -3874,7 +3874,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					
 					
 					rangeAttributes.addAttributes(currentLine.returnGlobalAttributes());
-					Terminal_InvokeScreenRunProc(inDoWhat, inRef, styleRunLength/* length */,
+					Terminal_InvokeScreenRunProc(inDoWhat, inRef, STATIC_CAST(styleRunLength, UInt16)/* length */,
 													BRIDGE_CAST(styleRunSubstring, CFStringRef),
 													inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
@@ -3904,7 +3904,8 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					attributesForRemainder.addAttributes(kTextAttributes_Selected);
 				}
 				
-				Terminal_InvokeScreenRunProc(inDoWhat, inRef, styleRunLength/* length */, nullptr/* starting point */,
+				Terminal_InvokeScreenRunProc(inDoWhat, inRef, STATIC_CAST(styleRunLength, UInt16)/* length */,
+												nullptr/* text buffer, for non-blank space */,
 												inStartRow, runStartCharacterIndex/* zero-based start column */,
 												attributesForRemainder, inContextPtr);
 			}
@@ -4442,7 +4443,7 @@ Terminal_ReturnConfiguration	(TerminalScreenRef		inRef)
 	}
 	
 	{
-		UInt16		dimension = dataPtr->screenBuffer.size();
+		UInt16		dimension = STATIC_CAST(dataPtr->screenBuffer.size(), UInt16);
 		
 		
 		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalScreenRows,
@@ -4500,7 +4501,7 @@ Terminal_ReturnRowCount		(TerminalScreenRef		inRef)
 	
 	if (nullptr != dataPtr)
 	{
-		result = dataPtr->screenBuffer.size();
+		result = STATIC_CAST(dataPtr->screenBuffer.size(), UInt16);
 	}
 	return result;
 }// ReturnRowCount
@@ -5291,9 +5292,9 @@ Terminal_TrueColorGetFromID		(TerminalScreenRef				inRef,
 		else
 		{
 			// convert the RGB components (each from 0 to 255) into fractions of 1.0
-			outRedComponentFraction = STATIC_CAST((*redVectorPtr)[inIndex], Float32) / 255.0;
-			outGreenComponentFraction = STATIC_CAST((*greenVectorPtr)[inIndex], Float32) / 255.0;
-			outBlueComponentFraction = STATIC_CAST((*blueVectorPtr)[inIndex], Float32) / 255.0;
+			outRedComponentFraction = STATIC_CAST((*redVectorPtr)[inIndex], Float32) / 255.0f;
+			outGreenComponentFraction = STATIC_CAST((*greenVectorPtr)[inIndex], Float32) / 255.0f;
+			outBlueComponentFraction = STATIC_CAST((*blueVectorPtr)[inIndex], Float32) / 255.0f;
 		}
 	}
 	
@@ -6148,7 +6149,7 @@ void
 My_Emulator::
 clearEscapeSequenceParameters ()
 {
-	SInt16		parameterIndex = this->argList.size();
+	SInt16		parameterIndex = STATIC_CAST(this->argList.size(), SInt16);
 	
 	
 	while (--parameterIndex >= 0)
@@ -6156,7 +6157,7 @@ clearEscapeSequenceParameters ()
 		this->argList[parameterIndex] = kMy_ParamUndefined;
 	}
 	
-	parameterIndex = this->parameterMarkList.size();
+	parameterIndex = STATIC_CAST(this->parameterMarkList.size(), SInt16);
 	while (--parameterIndex >= 0)
 	{
 		this->parameterMarkList[parameterIndex] = -1;
@@ -8964,7 +8965,7 @@ cursorUp	(My_ScreenBufferPtr		inDataPtr)
 	}
 	else
 	{
-		SInt16				newValue = inDataPtr->current.cursorY - inDataPtr->emulator.argList[0];
+		SInt16				newValue = STATIC_CAST(inDataPtr->current.cursorY - inDataPtr->emulator.argList[0], SInt16);
 		My_ScreenRowIndex	rowIndex = 0;
 		
 		
@@ -9631,7 +9632,7 @@ setTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 		if (newValue > inDataPtr->visibleBoundary.rows.lastRow)
 		{
 			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
-			newValue = inDataPtr->visibleBoundary.rows.lastRow;
+			newValue = STATIC_CAST(inDataPtr->visibleBoundary.rows.lastRow, UInt16);
 		}
 		inDataPtr->customScrollingRegion.lastRow = newValue;
 	}
@@ -11100,7 +11101,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			SInt16		newX = 0;
 			
 			
-			newX = inDataPtr->emulator.recentCodePoint() - 32/* - 31 - 1 to convert from one-based to zero-based */;
+			newX = STATIC_CAST(inDataPtr->emulator.recentCodePoint(), SInt16) - 32/* - 31 - 1 to convert from one-based to zero-based */;
 			++result;
 			
 			// constrain the value and then change it safely
@@ -13516,10 +13517,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						
 						bzero(&colorInfo, sizeof(colorInfo));
 						colorInfo.screen = inDataPtr->selfRef;
-						colorInfo.index = i;
-						colorInfo.redComponent = r;
-						colorInfo.greenComponent = g;
-						colorInfo.blueComponent = b;
+						colorInfo.index = STATIC_CAST(i, UInt8);
+						colorInfo.redComponent = STATIC_CAST(r, UInt8);
+						colorInfo.greenComponent = STATIC_CAST(g, UInt8);
+						colorInfo.blueComponent = STATIC_CAST(b, UInt8);
 						
 						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeXTermColor, &colorInfo/* context */);
 						
@@ -14822,7 +14823,7 @@ defineTrueColor		(My_ScreenBufferPtr				inDataPtr,
 			else
 			{
 				// set next ID to match index of next new element
-				inDataPtr->emulator.trueColorTableNextID = inDataPtr->emulator.trueColorTableReds->size();
+				inDataPtr->emulator.trueColorTableNextID = STATIC_CAST(inDataPtr->emulator.trueColorTableReds->size(), UInt16);
 			}
 		}
 		else
@@ -16249,7 +16250,9 @@ void
 eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 						 My_ScreenBufferLine&	inRow)
 {
-	SInt16										midColumn = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
+	SInt16										midColumn = STATIC_CAST(INTEGER_DIV_2
+																		(inDataPtr->text.visibleScreen.numberOfColumnsPermitted),
+																			SInt16);
 	TerminalLine_TextIterator					textIterator = nullptr;
 	TerminalLine_TextAttributesList::iterator	attrIterator;
 	
@@ -16456,7 +16459,7 @@ locateCursorLine	(My_ScreenBufferPtr						inDataPtr,
 	
 	//assert(inDataPtr->current.cursorY >= 0);
 	assert(inDataPtr->current.cursorY <= kMaximumLines);
-	if (inDataPtr->current.cursorY < INTEGER_HALVED(kMaximumLines))
+	if (inDataPtr->current.cursorY < INTEGER_DIV_2(kMaximumLines))
 	{
 		// near the top; search from the beginning
 		// (NOTE: linear search is still horrible, but this makes it less horrible)
@@ -16684,7 +16687,9 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 inline void
 moveCursorLeftToHalf	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		halfway = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
+	SInt16		halfway = STATIC_CAST(INTEGER_DIV_2
+										(inDataPtr->text.visibleScreen.numberOfColumnsPermitted),
+											SInt16);
 	
 	
 	if (inDataPtr->current.cursorX >= halfway)
@@ -16938,11 +16943,11 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 		// don’t allow the cursor to fall off the screen (in origin
 		// mode, it cannot fall outside the scrolling region)
 		{
-			SInt16		newCursorY = inNewY;
+			SInt16		newCursorY = STATIC_CAST(inNewY, SInt16);
 			
 			
-			newCursorY = std::max< SInt16 >(newCursorY, inDataPtr->originRegionPtr->firstRow);
-			newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->originRegionPtr->lastRow);
+			newCursorY = std::max< SInt16 >(newCursorY, STATIC_CAST(inDataPtr->originRegionPtr->firstRow, SInt16));
+			newCursorY = std::min< SInt16 >(newCursorY, STATIC_CAST(inDataPtr->originRegionPtr->lastRow, SInt16));
 			inDataPtr->current.cursorY = newCursorY;
 		}
 		
@@ -17057,7 +17062,7 @@ screenCopyLinesToScrollback		(My_ScreenBufferPtr		inDataPtr)
 	if ((inDataPtr->text.scrollback.enabled) &&
 		(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 	{
-		SInt16 const			kLineCount = inDataPtr->screenBuffer.size();
+		SInt16 const			kLineCount = STATIC_CAST(inDataPtr->screenBuffer.size(), SInt16);
 		My_ScreenBufferLinePtr	templateLine = createLinePtr();
 		
 		
@@ -17332,7 +17337,7 @@ screenScroll	(My_ScreenBufferPtr		inDataPtr,
 					
 					bzero(&scrollInfo, sizeof(scrollInfo));
 					scrollInfo.screen = inDataPtr->selfRef;
-					scrollInfo.rowDelta = -STATIC_CAST(inLineCount, SInt32);
+					scrollInfo.rowDelta = -inLineCount;
 					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
 				}
 			}
@@ -17537,10 +17542,10 @@ setVisibleRowCount	(My_ScreenBufferPtr		inPtr,
 		result = kTerminal_ResultParameterError;
 	}
 	else if (nullptr == inPtr) result = kTerminal_ResultInvalidID;
-	else if (inPtr->screenBuffer.size() != inNewNumberOfLinesHigh)
+	else if (STATIC_CAST(inPtr->screenBuffer.size(), UInt16) != inNewNumberOfLinesHigh)
 	{
 		// then the requested number of lines is different than the current number; resize!
-		SInt16 const	kOriginalNumberOfLines = inPtr->screenBuffer.size();
+		SInt16 const	kOriginalNumberOfLines = STATIC_CAST(inPtr->screenBuffer.size(), SInt16);
 		SInt16 const	kLineDelta = (inNewNumberOfLinesHigh - kOriginalNumberOfLines);
 		
 		
@@ -17821,7 +17826,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 				// into a giant buffer
 				//getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
 				//getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, firstRow);
-				firstColumn = toRange->location;
+				firstColumn = STATIC_CAST(toRange->location, UInt16);
 				if (false == kIsScreen)
 				{
 					// translate scrollback into negative coordinates (zero-based)
@@ -17831,7 +17836,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 				textRegion.screen = contextPtr->screenBufferPtr->selfRef;
 				textRegion.firstRow = firstRow;
 				textRegion.firstColumn = firstColumn;
-				textRegion.columnCount = toRange->length;
+				textRegion.columnCount = STATIC_CAST(toRange->length, UInt16);
 				textRegion.rowCount = 1;
 				contextPtr->matchesVectorPtr->push_back(textRegion);
 			}
@@ -18518,7 +18523,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 			if (inNumberOfSpacesPerTabOrZeroForNoSubstitution == 0)
 			{
 				// straight character copy
-				src_char_seq_size_t		copiedLength = INTEGER_MINIMUM(sourceLength, inDestinationBufferLength);
+				src_char_seq_size_t		copiedLength = STATIC_CAST(INTEGER_MINIMUM(sourceLength, inDestinationBufferLength), src_char_seq_size_t);
 				
 				
 				__gnu_cxx::copy_n(inSourceBuffer, copiedLength, outDestinationBuffer);
@@ -18542,7 +18547,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 					// direct copy for non-whitespace
 					while ((*srcIter != ' ') && (srcIter != pastSourceEndIterator) && (destIter != kPastDestinationEndIterator))
 					{
-						*destIter++ = *srcIter++;
+						*destIter++ = STATIC_CAST(*srcIter++, UInt8);
 					}
 					
 					// for whitespace, replace with tabs when appropriate
@@ -18553,7 +18558,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 						
 						while ((*srcIter == ' ') && (srcIter != pastSourceEndIterator) && (destIter != kPastDestinationEndIterator))
 						{
-							*destIter++ = *srcIter++;
+							*destIter++ = STATIC_CAST(*srcIter++, UInt8);
 							++numberOfConsecutiveSpaces;
 							if (numberOfConsecutiveSpaces == inNumberOfSpacesPerTabOrZeroForNoSubstitution)
 							{
@@ -18570,7 +18575,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 		}
 	}
 	
-	*outDestinationCopiedLengthPtr = std::distance(outDestinationBuffer, result);
+	*outDestinationCopiedLengthPtr = STATIC_CAST(std::distance(outDestinationBuffer, result), dest_char_seq_size_t);
 	return result;
 }// whitespaceSensitiveCopy
 

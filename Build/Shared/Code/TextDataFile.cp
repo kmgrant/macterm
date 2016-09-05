@@ -661,7 +661,9 @@ TextDataFile_StringStripEndBrackets		(char*		inoutStringPtr,
 										 char**		outClippedStringPtr)
 {
 	Boolean		result = false;
-	SInt16		stringLength = ((nullptr == inoutStringPtr) ? 0 : CPP_STD::strlen(inoutStringPtr));
+	SInt16		stringLength = ((nullptr == inoutStringPtr)
+								? 0
+								: STATIC_CAST(CPP_STD::strlen(inoutStringPtr), SInt16));
 	
 	
 	if (stringLength >= 2)
@@ -813,10 +815,10 @@ TextDataFile_StringToRectangle	(char const*	inStringPtr,
 		if (4 == scanResult)
 		{
 			// four numbers successfully read
-			outValuePtr->left = l;
-			outValuePtr->top = t;
-			outValuePtr->right = r;
-			outValuePtr->bottom = b;
+			outValuePtr->left = STATIC_CAST(l, SInt16);
+			outValuePtr->top = STATIC_CAST(t, SInt16);
+			outValuePtr->right = STATIC_CAST(r, SInt16);
+			outValuePtr->bottom = STATIC_CAST(b, SInt16);
 			result = true;
 		}
 		else
@@ -862,9 +864,9 @@ TextDataFile_StringToRGBColor	(char const*		inStringPtr,
 			RGBColor	asRGBColor;
 			
 			
-			asRGBColor.red = r;
-			asRGBColor.green = g;
-			asRGBColor.blue = b;
+			asRGBColor.red = STATIC_CAST(r, SInt16);
+			asRGBColor.green = STATIC_CAST(g, SInt16);
+			asRGBColor.blue = STATIC_CAST(b, SInt16);
 			*outValuePtr = ColorUtilities_CGDeviceColorMake(asRGBColor);
 			result = true;
 		}
@@ -903,7 +905,7 @@ getNameValue	(char*		inoutLine,
 				 char**		outValuePtrOrNull)
 {
 	char const* const	startPtr = inoutLine;
-	SInt16 const		originalLength = CPP_STD::strlen(inoutLine);
+	SInt16 const		originalLength = STATIC_CAST(CPP_STD::strlen(inoutLine), SInt16);
 	char*				result = inoutLine;
 	char*				ptr = nullptr;
 	

@@ -1394,7 +1394,7 @@ parentWindow:(NSWindow*)			parentWindow
 		NSRect		contentFrame = [parentWindow contentRectForFrameRect:parentFrame];
 		
 		
-		result.x = (NSWidth(parentFrame) / 2.0);
+		result.x = CGFLOAT_DIV_2(NSWidth(parentFrame));
 		result.y = ((parentFrame.origin.y - contentFrame.origin.y) + NSHeight(contentFrame));
 		
 		// a real window will account for title/toolbar when
@@ -1433,8 +1433,8 @@ parentWindow:(NSWindow*)			parentWindow
 		// a somewhat-arbitrary placement, typically for alerts
 		// (TEMPORARY; this does not consider the actual size of
 		// the popover frame, it puts all at the same position)
-		result = NSMakePoint(screenFrame.origin.x + screenFrame.size.width / 2.0,
-								screenFrame.origin.y + screenFrame.size.height / 5.0 * 4.0);
+		result = NSMakePoint(screenFrame.origin.x + CGFLOAT_DIV_2(screenFrame.size.width),
+								screenFrame.origin.y + screenFrame.size.height / 5.0f * 4.0f);
 	}
 	
 	return result;

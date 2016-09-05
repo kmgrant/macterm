@@ -200,16 +200,16 @@ Float32 const	kAlphaByPhase[kMy_BlinkingColorCount] =
 					// changing alpha values, used for cursor rendering;
 					// arbitrary (progression is roughly quadratic to
 					// make one end of the animation loop more gradual)
-					0.11, 0.11, 0.11, 0.11, 0.39,
-					0.4725, 0.56, 0.6525, 0.75, 0.8525
+					0.11f, 0.11f, 0.11f, 0.11f, 0.39f,
+					0.4725f, 0.56f, 0.6525f, 0.75f, 0.8525f
 				};
 Float32 const	kBlendingByPhase[kMy_BlinkingColorCount] =
 				{
 					// percentage of foreground blended with background;
 					// arbitrary (progression is roughly quadratic to
 					// make one end of the animation loop more gradual)
-					0.11, 0.1725, 0.24, 0.3125, 0.39,
-					0.4725, 0.56, 0.6525, 0.75, 0.8525
+					0.11f, 0.1725f, 0.24f, 0.3125f, 0.39f,
+					0.4725f, 0.56f, 0.6525f, 0.75f, 0.8525f
 				};
 
 } // anonymous namespace
@@ -433,9 +433,9 @@ the roughly 256 equivalent RGB triplets or gray scales.
 class My_XTerm256Table
 {
 public:
-	typedef std::vector< SInt16 >			RGBLevels;
+	typedef std::vector< UInt8 >			RGBLevels;
 	typedef std::map< UInt8, RGBLevels >	RGBLevelsByIndex;
-	typedef std::map< UInt8, SInt16 >		GrayLevelByIndex;
+	typedef std::map< UInt8, UInt8 >		GrayLevelByIndex;
 	
 	My_XTerm256Table ();
 	
@@ -1960,7 +1960,7 @@ TerminalView_MoveCursorWithArrowKeys	(TerminalViewRef	inView,
 		if (kTerminal_ResultOK == terminalResult)
 		{
 			SInt16 const	kDeltaX = newColumnRow.first - STATIC_CAST(cursorX, SInt16);
-			SInt16 const	kDeltaY = newColumnRow.second - STATIC_CAST(cursorY, SInt16);
+			SInt16 const	kDeltaY = STATIC_CAST(newColumnRow.second, SInt16) - STATIC_CAST(cursorY, SInt16);
 			
 			
 			terminalResult = Terminal_UserInputOffsetCursor(viewPtr->screen.ref, kDeltaX, kDeltaY);
@@ -2826,16 +2826,16 @@ TerminalView_ScrollPageTowardBottomEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_DIV_4(kVisibleRowCount));
 	}
 	return result;
 }// ScrollPageTowardBottomEdge
@@ -2865,18 +2865,19 @@ TerminalView_ScrollPageTowardLeftEdge		(TerminalViewRef	inView)
 	else
 	{
 		UInt16 const	kVisibleColumnCount = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+		UInt16 const	kVisibleColumnCountBy4 = STATIC_CAST(INTEGER_DIV_4(kVisibleColumnCount), UInt16);
 		
 		
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCountBy4);
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCountBy4);
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCountBy4);
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCount - 3 * kVisibleColumnCountBy4);
 	}
 	return result;
 }// ScrollPageTowardLeftEdge
@@ -2906,18 +2907,19 @@ TerminalView_ScrollPageTowardRightEdge		(TerminalViewRef	inView)
 	else
 	{
 		UInt16 const	kVisibleColumnCount = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+		UInt16 const	kVisibleColumnCountBy4 = STATIC_CAST(INTEGER_DIV_4(kVisibleColumnCount), UInt16);
 		
 		
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCountBy4);
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCountBy4);
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCountBy4);
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCount - 3 * INTEGER_QUARTERED(kVisibleColumnCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCount - 3 * kVisibleColumnCountBy4);
 	}
 	return result;
 }// ScrollPageTowardRightEdge
@@ -2949,16 +2951,16 @@ TerminalView_ScrollPageTowardTopEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
 		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_QUARTERED(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_DIV_4(kVisibleRowCount));
 	}
 	return result;
 }// ScrollPageTowardTopEdge
@@ -4191,17 +4193,17 @@ colorLevels()
 	// following is completely arbitrary, and terminal sequences
 	// (eventually) may trigger setColor() to change any of these
 	// at the request of a program running in the terminal
-	SInt16 const	kCubeBase = 16; // first index
-	for (SInt16 red = 0; red < 6; ++red)
+	UInt8 const		kCubeBase = 16; // first index
+	for (UInt8 red = 0; red < 6; ++red)
 	{
-		for (SInt16 green = 0; green < 6; ++green)
+		for (UInt8 green = 0; green < 6; ++green)
 		{
-			for (SInt16 blue = 0; blue < 6; ++blue)
+			for (UInt8 blue = 0; blue < 6; ++blue)
 			{
-				UInt8 const		kIndex = kCubeBase + (36 * red) + (6 * green) + blue;
-				SInt16 const	kRedLevel = (red) ? (55 + 40 * red) : 0;
-				SInt16 const	kGreenLevel = (green) ? (55 + 40 * green) : 0;
-				SInt16 const	kBlueLevel = (blue) ? (55 + 40 * blue) : 0;
+				UInt8 const		kIndex = STATIC_CAST(kCubeBase + (36 * red) + (6 * green) + blue, UInt8);
+				UInt8 const	kRedLevel = (red) ? (55 + 40 * red) : 0;
+				UInt8 const	kGreenLevel = (green) ? (55 + 40 * green) : 0;
+				UInt8 const	kBlueLevel = (blue) ? (55 + 40 * blue) : 0;
 				RGBLevels		levels;
 				
 				
@@ -4216,11 +4218,11 @@ colorLevels()
 	}
 	
 	// some colors are simply levels of gray
-	SInt16 const	kGrayBase = 232; // first index
-	for (SInt16 gray = 0; gray < 24; ++gray)
+	UInt8 const		kGrayBase = 232; // first index
+	for (UInt8 gray = 0; gray < 24; ++gray)
 	{
-		UInt8 const		kIndex = kGrayBase + gray;
-		SInt16 const	kGrayLevel = 8 + 10 * gray;
+		UInt8 const		kIndex = (kGrayBase + gray);
+		UInt8 const		kGrayLevel = 8 + 10 * gray;
 		
 		
 		this->grayLevels[kIndex] = kGrayLevel;
@@ -4985,13 +4987,13 @@ calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	TextFontByName(inTerminalViewPtr->text.font.familyName);
 	TextSize(outPointSize);
 	while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCharacter) <
-			INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter))
+			INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCharacter))
 	{
 		TextSize(++outPointSize);
 	}
 	GetFontInfo(&info);
 	while (STATIC_CAST(info.ascent + info.descent + info.leading, unsigned int) >=
-			INTEGER_DOUBLED(inTerminalViewPtr->text.font.heightPerCharacter))
+			INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCharacter))
 	{
 		TextSize(--outPointSize);
 		GetFontInfo(&info);
@@ -5831,7 +5833,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 								
 								
 								// halve the source width, as the boundaries refer to the rendering width
-								sourceRect.right -= INTEGER_HALVED(sourceRect.right - sourceRect.left);
+								sourceRect.right -= INTEGER_DIV_2(sourceRect.right - sourceRect.left);
 								
 								error = MakeImageDescriptionForPixMap(pixels, &image);
 								if (error == noErr)
@@ -6228,7 +6230,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			CGFloat					ascentMeasurement = 0;
 			CGFloat					descentMeasurement = 0;
 			CGFloat					leadingMeasurement = 0;
-			CGFloat					lineWidth = 0;
+			Float64					lineWidth = 0;
 			
 			
 			// measure the text’s layout so that it can be centered in the
@@ -6236,7 +6238,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			// vertical space the text would otherwise require
 			lineWidth = CTLineGetTypographicBounds(asLineRef, &ascentMeasurement, &descentMeasurement, &leadingMeasurement);
 			drawingLocation = NSMakePoint(inBoundaries.origin.x,
-											NSHeight([inTerminalViewPtr->contentNSView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0));
+											NSHeight([inTerminalViewPtr->contentNSView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0f));
 			
 			{
 				CGContextSaveRestore	_(inDrawingContext);
@@ -6350,18 +6352,18 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
 			{
 				// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
-				Move(inCharacterCount * INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), 0);
+				Move(STATIC_CAST(inCharacterCount * INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCharacter), SInt16), 0);
 			}
 			else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
 			{
 				// bottom half of double-sized text; force the text to use
 				// twice the normal font metrics
-				CGFloat const	kHOffsetPerGlyph = INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter);
+				CGFloat const	kHOffsetPerGlyph = INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCharacter);
 				SInt16			i = 0;
 				Point			oldPen;
 				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
 															kHOffsetPerGlyph + 4,
-															inBoundaries.size.height/*INTEGER_DOUBLED(inTerminalViewPtr->text.font.heightPerCharacter)*/ + 4);
+															inBoundaries.size.height/*INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCharacter)*/ + 4);
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6504,7 +6506,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 				// fastest if rendered all at once using a single QuickDraw call, and since there are no
 				// forced font metrics with normal text, this can be a lot simpler (this is also almost
 				// certainly the common case, so it’s good if this is as efficient as possible)
-				DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
+				DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, STATIC_CAST(inCharacterCount, short)); // draw text using current font, size, color, etc.
 			}
 		}
 		
@@ -6642,8 +6644,8 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		lineHeight = penState.pnSize.v;
 	}
 	RegionUtilities_SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
-	RegionUtilities_SetPoint(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
-								cellTop + INTEGER_HALVED(cellBottom - cellTop));
+	RegionUtilities_SetPoint(&cellCenter, cellLeft + STATIC_CAST(INTEGER_DIV_2(cellRight - cellLeft), SInt16),
+								cellTop + STATIC_CAST(INTEGER_DIV_2(cellBottom - cellTop), SInt16));
 	
 #if 0
 	{
@@ -6659,7 +6661,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	// clip drawing to the boundaries (this is restored upon return);
 	// note that this cannot offset by as much as one full pixel
 	// because this would start to create gaps between graphics glyphs
-	CGContextClipToRect(inDrawingContext, CGRectMake(floatBounds.origin.x + 0.5, floatBounds.origin.y + 0.5,
+	CGContextClipToRect(inDrawingContext, CGRectMake(floatBounds.origin.x + 0.5f, floatBounds.origin.y + 0.5f,
 														floatBounds.size.width - 1, floatBounds.size.height - 1));
 	//CGContextClipToRect(inDrawingContext, floatBounds);
 #endif
@@ -7035,7 +7037,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 			{
 				// create a square inset rectangle
 				CGRect		imageFrame = CGRectMake(floatBounds.origin.x,
-													floatBounds.origin.y + (floatBounds.size.height - floatBounds.size.width) / 2.0,
+													floatBounds.origin.y + CGFLOAT_DIV_2(floatBounds.size.height - floatBounds.size.width),
 													floatBounds.size.width, floatBounds.size.width/* make square */);
 				
 				
@@ -7409,7 +7411,7 @@ eraseSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		if (inTerminalViewPtr->isCocoa)
 		{
-			CGContextFillRect(inDrawingContext, CGRectMake(outRowSectionBounds.origin.x - 0.5, outRowSectionBounds.origin.y - 0.5,
+			CGContextFillRect(inDrawingContext, CGRectMake(outRowSectionBounds.origin.x - 0.5f, outRowSectionBounds.origin.y - 0.5f,
 															outRowSectionBounds.size.width + 1, outRowSectionBounds.size.height + 1));
 		}
 		else
@@ -7529,7 +7531,7 @@ findRowIteratorRelativeTo	(My_TerminalViewPtr				inTerminalViewPtr,
 	else
 	{
 		// main screen lines are already zero-based and need no conversion
-		result = Terminal_NewMainScreenLineIterator(inTerminalViewPtr->screen.ref, kActualIndex,
+		result = Terminal_NewMainScreenLineIterator(inTerminalViewPtr->screen.ref, STATIC_CAST(kActualIndex, UInt16),
 													inoutStackStorageOrNull);
 	}
 	return result;
@@ -7695,7 +7697,7 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 	columnCalculation += inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
 	rowCalculation += inTerminalViewPtr->screen.topVisibleEdgeInRows;
 	
-	outCell.first = columnCalculation;
+	outCell.first = STATIC_CAST(columnCalculation, SInt16);
 	outCell.second = rowCalculation;
 	
 	return result;
@@ -7739,7 +7741,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 {
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
-	SInt16						sectionTopEdge = inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter;
+	SInt16						sectionTopEdge = STATIC_CAST(inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter, SInt16);
 	TerminalView_RowIndex		topRow = 0;
 	
 	
@@ -7782,12 +7784,12 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (globalAttributes.hasDoubleHeightTop())
 			{
 				// if this is the top half, the total boundaries extend downwards by one normal line height
-				outBoundsPtr->bottom = outBoundsPtr->top + INTEGER_DOUBLED(outBoundsPtr->bottom - outBoundsPtr->top);
+				outBoundsPtr->bottom = outBoundsPtr->top + STATIC_CAST(INTEGER_TIMES_2(outBoundsPtr->bottom - outBoundsPtr->top), SInt16);
 			}
 			else if (globalAttributes.hasDoubleHeightBottom())
 			{
 				// if this is the bottom half, the total boundaries extend upwards by one normal line height
-				outBoundsPtr->top = outBoundsPtr->bottom - INTEGER_DOUBLED(outBoundsPtr->bottom - outBoundsPtr->top);
+				outBoundsPtr->top = outBoundsPtr->bottom - STATIC_CAST(INTEGER_TIMES_2(outBoundsPtr->bottom - outBoundsPtr->top), SInt16);
 			}
 		}
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
@@ -7824,7 +7826,10 @@ getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 	if (nullptr != rowIterator)
 	{
 		UNUSED_RETURN(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
-		if (globalAttributes.hasDoubleAny()) result = INTEGER_DOUBLED(result);
+		if (globalAttributes.hasDoubleAny())
+		{
+			result = STATIC_CAST(INTEGER_TIMES_2(result), SInt16);
+		}
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
 	}
 	return result;
@@ -8112,6 +8117,8 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 					 UInt16					inColorEntryNumber,
 					 CGDeviceColor*			outColorPtr)
 {
+	auto					kColorLevelsKey = STATIC_CAST(inColorEntryNumber, My_XTerm256Table::RGBLevelsByIndex::key_type);
+	auto					kGrayLevelsKey = STATIC_CAST(inColorEntryNumber, My_XTerm256Table::GrayLevelByIndex::key_type);
 	My_CGColorByIndex&		colors = inTerminalViewPtr->coreColors; // only non-const for convenience of "[]"
 	My_XTerm256Table&		sourceGrid = *(inTerminalViewPtr->extendedColorsPtr); // only non-const for convenience of "[]"
 	Boolean					result = false;
@@ -8124,26 +8131,26 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 		result = true;
 	}
 	else if (sourceGrid.colorLevels.end() !=
-				sourceGrid.colorLevels.find(inColorEntryNumber))
+				sourceGrid.colorLevels.find(kColorLevelsKey))
 	{
 		// one of the many other standard colors
-		//Console_WriteValueFloat4("color", sourceGrid.colorLevels[inColorEntryNumber][0],
-		//							sourceGrid.colorLevels[inColorEntryNumber][1],
-		//							sourceGrid.colorLevels[inColorEntryNumber][2],
+		//Console_WriteValueFloat4("color", sourceGrid.colorLevels[kColorLevelsKey][0],
+		//							sourceGrid.colorLevels[kColorLevelsKey][1],
+		//							sourceGrid.colorLevels[kColorLevelsKey][2],
 		//							0);
-		My_XTerm256Table::makeCGDeviceColor(sourceGrid.colorLevels[inColorEntryNumber][0],
-											sourceGrid.colorLevels[inColorEntryNumber][1],
-											sourceGrid.colorLevels[inColorEntryNumber][2], *outColorPtr);
+		My_XTerm256Table::makeCGDeviceColor(sourceGrid.colorLevels[kColorLevelsKey][0],
+											sourceGrid.colorLevels[kColorLevelsKey][1],
+											sourceGrid.colorLevels[kColorLevelsKey][2], *outColorPtr);
 		result = true;
 	}
 	else if (sourceGrid.grayLevels.end() !=
-				sourceGrid.grayLevels.find(inColorEntryNumber))
+				sourceGrid.grayLevels.find(kGrayLevelsKey))
 	{
 		// one of the standard grays
-		//Console_WriteValue("gray", sourceGrid.grayLevels[inColorEntryNumber]);
-		My_XTerm256Table::makeCGDeviceColor(sourceGrid.grayLevels[inColorEntryNumber],
-											sourceGrid.grayLevels[inColorEntryNumber],
-											sourceGrid.grayLevels[inColorEntryNumber], *outColorPtr);
+		//Console_WriteValue("gray", sourceGrid.grayLevels[kGrayLevelsKey]);
+		My_XTerm256Table::makeCGDeviceColor(sourceGrid.grayLevels[kGrayLevelsKey],
+											sourceGrid.grayLevels[kGrayLevelsKey],
+											sourceGrid.grayLevels[kGrayLevelsKey], *outColorPtr);
 		result = true;
 	}
 	return result;
@@ -8377,7 +8384,7 @@ getSelectedTextSize		(My_TerminalViewPtr		inTerminalViewPtr)
 		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
 		// for rectangular selections, the size also includes space for one new-line per row
 		UInt16 const				kRowWidth = (inTerminalViewPtr->text.selection.isRectangular)
-												? INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first + 1/* size of new-line */)
+												? STATIC_CAST(INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first + 1/* size of new-line */), UInt16)
 												: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 		
 		
@@ -8455,7 +8462,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 		// the final selection region is the portion of the full rectangle
 		// that fits within the current screen boundaries
 		clippedRect = CGRectIntegral(CGRectIntersection(selectionBounds, screenBounds));
-		if (inInsets)
+		if (0.0 != inInsets)
 		{
 			clippedRect = CGRectInset(clippedRect, inInsets, inInsets);
 		}
@@ -8483,7 +8490,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 												selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
 												inTerminalViewPtr->screen.cache.viewWidthInPixels -
 													selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter -
-													2.0 * inInsets,
+													2.0f * inInsets,
 												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
 			rectShape = HIShapeCreateWithRect(&clippedRect);
@@ -8499,7 +8506,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
 			partialSelectionBounds = CGRectMake(inInsets,
 												(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter - inInsets,
-												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter - 2.0 * inInsets,
+												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter - 2.0f * inInsets,
 												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
 			rectShape = HIShapeCreateWithRect(&clippedRect);
@@ -8515,9 +8522,9 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 			// highlight extends across more than two lines - fill in the space in between
 			partialSelectionBounds = CGRectMake(inInsets,
 												(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
-												inTerminalViewPtr->screen.cache.viewWidthInPixels - 2.0 * inInsets,
+												inTerminalViewPtr->screen.cache.viewWidthInPixels - 2.0f * inInsets,
 												(selectionPastEnd.second - selectionStart.second - 2/* skip first and last lines */) *
-													inTerminalViewPtr->text.font.heightPerCharacter - 2.0 * inInsets);
+													inTerminalViewPtr->text.font.heightPerCharacter - 2.0f * inInsets);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
 			rectShape = HIShapeCreateWithRect(&clippedRect);
 			if (nullptr != rectShape)
@@ -8632,9 +8639,9 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 			// set up rectangle bounding area to be highlighted
 			RegionUtilities_SetRect(&selectionBounds,
 									selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-									selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
+									STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
 									selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
-									selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
+									STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
 			
 			// the final selection region is the portion of the full rectangle
 			// that fits within the current screen boundaries
@@ -8660,18 +8667,18 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 				// bounds of first (possibly partial) line to be highlighted
 				RegionUtilities_SetRect(&partialSelectionBounds,
 										selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-										selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
+										STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
 										inTerminalViewPtr->screen.cache.viewWidthInPixels,
-										(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter);
+										STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(result, &clippedRect);
 				
 				// bounds of last (possibly partial) line to be highlighted
 				RegionUtilities_SetRect(&partialSelectionBounds,
 										0,
-										(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter,
+										STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
 										selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
-										selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
+										STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(clippedRegion, &clippedRect);
 				UnionRgn(clippedRegion, result, result);
@@ -8681,9 +8688,9 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 					// highlight extends across more than two lines - fill in the space in between
 					RegionUtilities_SetRect(&partialSelectionBounds,
 											0,
-											(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter,
+											STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
 											inTerminalViewPtr->screen.cache.viewWidthInPixels,
-											(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter);
+											STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
 					SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 					RectRgn(clippedRegion, &clippedRect);
 					UnionRgn(clippedRegion, result, result);
@@ -8794,7 +8801,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 													(kCFAllocatorDefault, textStart, textPastEnd - textStart, kCFAllocatorNull/* deallocator */),
 													true/* is retained */);
 				std::string				asUTF8;
-				std::pair<long, long>	wordInfo; // offset (zero-based), and count
+				std::pair< long, long >	wordInfo; // offset (zero-based), and count
 				
 				
 				StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
@@ -8804,8 +8811,8 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 					if ((wordInfo.first >= 0) && (wordInfo.first < kColumnCount) &&
 						(wordInfo.second >= 0) && ((wordInfo.first + wordInfo.second) <= kColumnCount))
 					{
-						selectionStart.first = wordInfo.first;
-						selectionPastEnd.first = wordInfo.first + wordInfo.second;
+						selectionStart.first = STATIC_CAST(wordInfo.first, UInt16);
+						selectionPastEnd.first = STATIC_CAST(wordInfo.first + wordInfo.second, UInt16);
 					}
 				}
 				catch (std::exception const& e)
@@ -8941,7 +8948,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			TerminalView_GetTheoreticalScreenDimensions(view, STATIC_CAST(kMaximumViewWidth, UInt16),
 														STATIC_CAST(kMaximumViewHeight, UInt16),
 														&columns, &rows);
-			Terminal_SetVisibleScreenDimensions(viewPtr->screen.ref, columns, rows);
+			Terminal_SetVisibleScreenDimensions(viewPtr->screen.ref, columns, STATIC_CAST(rows, UInt16));
 			recalculateCachedDimensions(viewPtr);
 		}
 	}
@@ -9088,7 +9095,7 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 		Terminal_LineStackStorage	lineIteratorData;
 		Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, orderedRange.first.second,
 																				0/* origin row */, &lineIteratorData);
-		UInt16 const				kNumberOfRows = orderedRange.second.second - orderedRange.first.second;
+		UInt16 const				kNumberOfRows = STATIC_CAST(orderedRange.second.second - orderedRange.first.second, UInt16);
 		
 		
 		if (nullptr != lineIterator)
@@ -9535,8 +9542,8 @@ offsetLeftVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
 	SInt16			newDiscreteValue = kOldDiscreteValue + inDeltaInColumns;
 	
 	
-	newDiscreteValue = INTEGER_MAXIMUM(kMinimum, newDiscreteValue);
-	newDiscreteValue = INTEGER_MINIMUM(kMaximum, newDiscreteValue);
+	newDiscreteValue = STATIC_CAST(INTEGER_MAXIMUM(kMinimum, newDiscreteValue), SInt16);
+	newDiscreteValue = STATIC_CAST(INTEGER_MINIMUM(kMaximum, newDiscreteValue), SInt16);
 	inTerminalViewPtr->screen.leftVisibleEdgeInColumns = newDiscreteValue;
 	
 	inTerminalViewPtr->text.selection.range.first.first += (newDiscreteValue - kOldDiscreteValue);
@@ -11004,14 +11011,14 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 												true/* is cursor */,
 												cursorBlinks(viewPtr)
 												? viewPtr->animation.cursor.blinkAlpha
-												: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+												: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
 						CGContextFillRect(drawingContext, cursorFloatBounds);
 						
 						// if the terminal is currently in password mode, annotate the cursor
 						if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
 						{
 							CGFloat const	newHeight = viewPtr->text.font.heightPerCharacter; // TEMPORARY; does not handle double-height lines (probably does not need to)
-							CGFloat			dotDimensions = ceil(STATIC_CAST(viewPtr->text.font.heightPerCharacter, CGFloat) * 0.33/* arbitrary */);
+							CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCharacter * 0.33/* arbitrary */), CGFloat);
 							CGRect			fullRectangleBounds = cursorFloatBounds;
 							CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
 							
@@ -11035,7 +11042,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 														true/* is cursor */,
 														cursorBlinks(viewPtr)
 														? viewPtr->animation.cursor.blinkAlpha
-														: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+														: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
 							}
 							CGContextFillEllipseInRect(drawingContext, dotBounds);
 						}
@@ -11764,7 +11771,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										event.where = localMouse;
 										SetPortWindowPort(GetControlOwner(view));
 										LocalToGlobal(&event.where);
-										event.modifiers = currentModifiers;
+										event.modifiers = STATIC_CAST(currentModifiers, EventModifiers);
 										UNUSED_RETURN(OSStatus)dragTextSelection(viewPtr, dragRgn, &event, &dragged);
 										trackingResult = kMouseTrackingMouseUp; // terminate loop
 										cannotBeDoubleClick = true;
@@ -11787,7 +11794,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 								
 								// drag until the user releases the mouse, highlighting as the mouse moves
 								viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
-								trackTextSelection(viewPtr, localMouse, currentModifiers, &localMouse, &currentModifiers);
+								trackTextSelection(viewPtr, localMouse, STATIC_CAST(currentModifiers, EventModifiers), &localMouse, &currentModifiers);
 								
 								// since trackTextSelection() loops on mouse-up, assume the mouse is now up
 								trackingResult = kMouseTrackingMouseUp;
@@ -12916,7 +12923,7 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 				std::memset(&slantTransformData, 0, sizeof(slantTransformData));
 				slantTransformData.m11 = 1.0;
 				slantTransformData.m12 = 0.0;
-				slantTransformData.m21 = -tanf(-14.0/* rotation in degrees */ * acosf(0) / 90.0);
+				slantTransformData.m21 = -tanf(-14.0f/* rotation in degrees */ * acosf(0) / 90.0f);
 				slantTransformData.m22 = 1.0;
 				slantTransformData.tX  = 0.0;
 				slantTransformData.tY  = 0.0;
@@ -13252,10 +13259,10 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 						inTerminalViewPtr->text.font.doubleMetrics.ascent);
 	
 	// the thickness of lines in certain glyphs is also scaled with the font size
-	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max(1.0, inTerminalViewPtr->text.font.widthPerCharacter / 5.0); // arbitrary
-	inTerminalViewPtr->text.font.thicknessHorizontalBold = 2.0 * inTerminalViewPtr->text.font.thicknessHorizontalLines; // arbitrary
-	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max(1.0, inTerminalViewPtr->text.font.heightPerCharacter / 7.0); // arbitrary
-	inTerminalViewPtr->text.font.thicknessVerticalBold = 2.0 * inTerminalViewPtr->text.font.thicknessVerticalLines; // arbitrary
+	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max(1.0f, inTerminalViewPtr->text.font.widthPerCharacter / 5.0f); // arbitrary
+	inTerminalViewPtr->text.font.thicknessHorizontalBold = 2.0f * inTerminalViewPtr->text.font.thicknessHorizontalLines; // arbitrary
+	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max(1.0f, inTerminalViewPtr->text.font.heightPerCharacter / 7.0f); // arbitrary
+	inTerminalViewPtr->text.font.thicknessVerticalBold = 2.0f * inTerminalViewPtr->text.font.thicknessVerticalLines; // arbitrary
 }// setUpScreenFontMetrics
 	
 
@@ -14289,7 +14296,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			
 			// set text size...
-			TextSize(fontSize);
+			TextSize(STATIC_CAST(fontSize, SInt16));
 			
 			// set font style...
 			TextFace(normal);
@@ -14953,14 +14960,14 @@ drawRect:(NSRect)	aRect
 									true/* is cursor */,
 									cursorBlinks(viewPtr)
 									? viewPtr->animation.cursor.blinkAlpha
-									: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+									: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
 			CGContextFillRect(drawingContext, cursorFloatBounds);
 			
 			// if the terminal is currently in password mode, annotate the cursor
 			if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
 			{
 				CGFloat const	newHeight = viewPtr->text.font.heightPerCharacter; // TEMPORARY; does not handle double-height lines (probably does not need to)
-				CGFloat			dotDimensions = ceil(STATIC_CAST(viewPtr->text.font.heightPerCharacter, CGFloat) * 0.33/* arbitrary */);
+				CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCharacter * 0.33/* arbitrary */), CGFloat);
 				CGRect			fullRectangleBounds = cursorFloatBounds;
 				CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
 				
@@ -14984,7 +14991,7 @@ drawRect:(NSRect)	aRect
 											true/* is cursor */,
 											cursorBlinks(viewPtr)
 											? viewPtr->animation.cursor.blinkAlpha
-											: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+											: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
 				}
 				CGContextFillEllipseInRect(drawingContext, dotBounds);
 			}

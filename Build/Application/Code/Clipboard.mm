@@ -542,7 +542,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 		
 		
 		assert(nullptr != allItems);
-		for (ItemCount i = 1; i <= totalItems; ++i)
+		for (UInt16 i = 1; i <= STATIC_CAST(totalItems, UInt16); ++i)
 		{
 			PasteboardItemID	itemID = 0;
 			CFStringRef			thisCFString = nullptr; // contract is to always release this at the end, if defined

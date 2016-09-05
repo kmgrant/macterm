@@ -158,7 +158,7 @@ PrefPanelWorkspaces_NewTagSet ()
 	
 	// IMPORTANT: this list should be in sync with everything in this file
 	// that reads preferences from the context of a data set
-	for (UInt16 i = 1; i <= kPreferences_MaximumWorkspaceSize; ++i)
+	for (Preferences_Index i = 1; i <= kPreferences_MaximumWorkspaceSize; ++i)
 	{
 		tagList.push_back(Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowSessionFavorite, i));
 		tagList.push_back(Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedWindowCommandType, i));

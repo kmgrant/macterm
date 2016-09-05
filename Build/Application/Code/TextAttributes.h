@@ -767,7 +767,7 @@ UInt16
 TextAttributes_Object::colorIndexBackground ()
 const
 {
-	return this->returnValueInRange(kTextAttributes_MaskColorIndexBackground);
+	return STATIC_CAST(this->returnValueInRange(kTextAttributes_MaskColorIndexBackground), UInt16);
 }// colorIndexBackground
 
 
@@ -814,7 +814,7 @@ UInt16
 TextAttributes_Object::colorIndexForeground ()
 const
 {
-	return this->returnValueInRange(kTextAttributes_MaskColorIndexForeground);
+	return STATIC_CAST(this->returnValueInRange(kTextAttributes_MaskColorIndexForeground), UInt16);
 }// colorIndexForeground
 
 

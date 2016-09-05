@@ -164,7 +164,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	
 	// animate the change
 	{
-		float const		kAnimationDelay = 0.05;
+		float const		kAnimationDelay = 0.05f;
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
@@ -374,8 +374,8 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 	
 	if (useAnimation)
 	{
-		float const		kAnimationDelay = 0.002;
-		float const		kXInset = (0.10 * NSWidth(actualFrame)); // arbitrary
+		float const		kAnimationDelay = 0.002f;
+		float const		kXInset = (0.10f * NSWidth(actualFrame)); // arbitrary
 		NSRect			oldFrame = actualFrame;
 		NSRect			newFrame = actualFrame;
 		NSWindow*		imageWindow = nil;
@@ -450,8 +450,8 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 	// make the section appear to zoom open
 	newFrame.size.width *= 4; // arbitrary
 	newFrame.size.height *= 4; // arbitrary
-	newFrame.origin.x = oldFrame.origin.x - ((newFrame.size.width - oldFrame.size.width) / 2.0);
-	newFrame.origin.y = oldFrame.origin.y - ((newFrame.size.height - oldFrame.size.height) / 2.0);
+	newFrame.origin.x = oldFrame.origin.x - CGFLOAT_DIV_2(newFrame.size.width - oldFrame.size.width);
+	newFrame.origin.y = oldFrame.origin.y - CGFLOAT_DIV_2(newFrame.size.height - oldFrame.size.height);
 	
 	// animate!
 	[imageWindow orderFront:nil];
@@ -500,12 +500,12 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	// appears to be floating the entire time
 	newFrame.size.width += 8; // arbitrary
 	newFrame.size.height += 8 * (newFrame.size.height / newFrame.size.width); // arbitrary
-	newFrame.origin.x = oldFrame.origin.x - ((newFrame.size.width - oldFrame.size.width) / 2.0);
-	newFrame.origin.y = oldFrame.origin.y - ((newFrame.size.height - oldFrame.size.height) / 2.0);
+	newFrame.origin.x = oldFrame.origin.x - CGFLOAT_DIV_2(newFrame.size.width - oldFrame.size.width);
+	newFrame.origin.y = oldFrame.origin.y - CGFLOAT_DIV_2(newFrame.size.height - oldFrame.size.height);
 	oldFrame.size.width += 128; // arbitrary
 	oldFrame.size.height += 128 * (newFrame.size.height / newFrame.size.width); // arbitrary
-	oldFrame.origin.x = newFrame.origin.x - ((oldFrame.size.width - newFrame.size.width) / 2.0);
-	oldFrame.origin.y = newFrame.origin.y - ((oldFrame.size.height - newFrame.size.height) / 2.0);
+	oldFrame.origin.x = newFrame.origin.x - CGFLOAT_DIV_2(oldFrame.size.width - newFrame.size.width);
+	oldFrame.origin.y = newFrame.origin.y - CGFLOAT_DIV_2(oldFrame.size.height - newFrame.size.height);
 	
 	// animate!
 	[imageWindow orderFront:nil];
@@ -690,16 +690,16 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.2;
-				self->frameAlphas[i++] = 0.3;
-				self->frameAlphas[i++] = 0.4;
-				self->frameAlphas[i++] = 0.5;
-				self->frameAlphas[i++] = 0.6;
-				self->frameAlphas[i++] = 0.7;
-				self->frameAlphas[i++] = 0.8;
-				self->frameAlphas[i++] = 0.9;
-				self->frameAlphas[i++] = 0.95;
-				self->frameAlphas[i++] = 1.0;
+				self->frameAlphas[i++] = 0.2f;
+				self->frameAlphas[i++] = 0.3f;
+				self->frameAlphas[i++] = 0.4f;
+				self->frameAlphas[i++] = 0.5f;
+				self->frameAlphas[i++] = 0.6f;
+				self->frameAlphas[i++] = 0.7f;
+				self->frameAlphas[i++] = 0.8f;
+				self->frameAlphas[i++] = 0.9f;
+				self->frameAlphas[i++] = 0.95f;
+				self->frameAlphas[i++] = 1.0f;
 				assert(kCurveLength == i);
 			}
 			break;
@@ -709,16 +709,16 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.85;
-				self->frameAlphas[i++] = 0.7;
-				self->frameAlphas[i++] = 0.55;
-				self->frameAlphas[i++] = 0.45;
-				self->frameAlphas[i++] = 0.35;
-				self->frameAlphas[i++] = 0.25;
-				self->frameAlphas[i++] = 0.2;
-				self->frameAlphas[i++] = 0.15;
-				self->frameAlphas[i++] = 0.1;
-				self->frameAlphas[i++] = 0.05;
+				self->frameAlphas[i++] = 0.85f;
+				self->frameAlphas[i++] = 0.7f;
+				self->frameAlphas[i++] = 0.55f;
+				self->frameAlphas[i++] = 0.45f;
+				self->frameAlphas[i++] = 0.35f;
+				self->frameAlphas[i++] = 0.25f;
+				self->frameAlphas[i++] = 0.2f;
+				self->frameAlphas[i++] = 0.15f;
+				self->frameAlphas[i++] = 0.1f;
+				self->frameAlphas[i++] = 0.05f;
 				assert(kCurveLength == i);
 			}
 			break;
@@ -735,7 +735,7 @@ simplified:(BOOL)									isSimplified
 		// be increased to smooth out the animation over time, and right
 		// now the frame count is fairly inflexible)
 		{
-			float const		kPerUnitLinearDelay = baseDuration / kCurveLength;
+			float const		kPerUnitLinearDelay = STATIC_CAST(baseDuration, float) / kCurveLength;
 			
 			
 			if (kMy_AnimationTimeDistributionEaseOut == aDistribution)

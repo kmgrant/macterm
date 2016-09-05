@@ -1595,7 +1595,7 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 			// initialize state
 			unless (isPrinting)
 			{
-				CGContextSetShadow(drawingContext, CGSizeMake(2.2, -2.2)/* offset; arbitrary */, 6.0/* blur; arbitrary */);
+				CGContextSetShadow(drawingContext, CGSizeMake(2.2f, -2.2f)/* offset; arbitrary */, 6.0f/* blur; arbitrary */);
 			}
 			
 			// render each piece of the drawing; for a drawing that always uses the

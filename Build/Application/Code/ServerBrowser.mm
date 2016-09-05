@@ -782,7 +782,7 @@ toScreenFrame:(NSRect)				aRect
 	
 	
 	[_containerWindow setFrame:windowFrame display:YES animate:YES];
-	PopoverManager_UseIdealLocationAfterDelay(_popoverMgr, 0.1/* arbitrary delay */);
+	PopoverManager_UseIdealLocationAfterDelay(_popoverMgr, 0.1f/* arbitrary delay */);
 }// serverBrowser:setManagedView:toScreenFrame:
 
 
@@ -926,8 +926,14 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 			break;
 		}
 	}
-	if (nil != resolvedHost) [self setBestResolvedAddress:resolvedHost];
-	if (0 != resolvedPort) [self setBestResolvedPort:resolvedPort];
+	if (nil != resolvedHost)
+	{
+		[self setBestResolvedAddress:resolvedHost];
+	}
+	if (0 != resolvedPort)
+	{
+		[self setBestResolvedPort:STATIC_CAST(resolvedPort, UInt16)];
+	}
 }// netServiceDidResolveAddress:
 
 

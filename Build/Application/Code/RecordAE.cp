@@ -224,7 +224,7 @@ handleRecordingBegunEvent	(AppleEvent const*	inAppleEventPtr,
 	
 	if (result == noErr)
 	{
-		result = startRecording();
+		result = STATIC_CAST(startRecording(), OSErr);
 	}
 	
 	Console_WriteValue("result", result);
@@ -253,7 +253,7 @@ handleRecordingTerminatedEvent	(AppleEvent const*	inAppleEventPtr,
 	
 	if (result == noErr)
 	{
-		result = stopRecording();
+		result = STATIC_CAST(stopRecording(), OSErr);
 	}
 	
 	Console_WriteValue("result", result);

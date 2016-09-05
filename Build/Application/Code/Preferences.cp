@@ -3633,7 +3633,7 @@ Preferences_InsertContextNamesInMenu	(Quills::Prefs::Class	inClass,
 	if (result == kPreferences_ResultOK)
 	{
 		// now re-populate the menu using resource information
-		MenuItemIndex const		kMenuItemCount = CFArrayGetCount(nameCFStringCFArray);
+		MenuItemIndex const		kMenuItemCount = STATIC_CAST(CFArrayGetCount(nameCFStringCFArray), MenuItemIndex);
 		MenuItemIndex			i = 0;
 		CFStringRef				nameCFString = nullptr;
 		OSStatus				error = noErr;
@@ -4229,9 +4229,9 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 	{
 		Float32 const	kFloat1 = 0;
 		Float32 const	kFloat2 = 1;
-		Float32 const	kFloat3 = -36.4;
-		Float32 const	kFloat4 = 5312.79195;
-		Float32 const	kTolerance = 0.1; // for fuzzy equality
+		Float32 const	kFloat3 = -36.4f;
+		Float32 const	kFloat4 = 5312.79195f;
+		Float32 const	kTolerance = 0.1f; // for fuzzy equality
 		Float32			returnedFloat = 0.0;
 		
 		
@@ -8780,7 +8780,7 @@ readApplicationArrayPreference	(CFStringRef	inKey,
 		if (nullptr == keyString)
 		{
 			// allocate double the size because the string length assumes 16-bit characters
-			size_t const	kBufferSize = INTEGER_DOUBLED(CFStringGetLength(inKey));
+			size_t const	kBufferSize = INTEGER_TIMES_2(CFStringGetLength(inKey));
 			char*			bufferPtr = new char[kBufferSize];
 			
 			
@@ -8808,7 +8808,7 @@ readApplicationArrayPreference	(CFStringRef	inKey,
 			if (nullptr == descriptionString)
 			{
 				// allocate double the size because the string length assumes 16-bit characters
-				size_t const	kBufferSize = INTEGER_DOUBLED(CFStringGetLength(descriptionCFString));
+				size_t const	kBufferSize = INTEGER_TIMES_2(CFStringGetLength(descriptionCFString));
 				char*			bufferPtr = new char[kBufferSize];
 				
 				
@@ -9891,7 +9891,7 @@ setApplicationPreference	(CFStringRef		inKey,
 		if (nullptr == keyString)
 		{
 			// allocate double the size because the string length assumes 16-bit characters
-			size_t const	kBufferSize = INTEGER_DOUBLED(CFStringGetLength(inKey));
+			size_t const	kBufferSize = INTEGER_TIMES_2(CFStringGetLength(inKey));
 			char*			bufferPtr = new char[kBufferSize];
 			
 			
@@ -9922,7 +9922,7 @@ setApplicationPreference	(CFStringRef		inKey,
 			if (nullptr == descriptionString)
 			{
 				// allocate double the size because the string length assumes 16-bit characters
-				size_t const	kBufferSize = INTEGER_DOUBLED(CFStringGetLength(descriptionCFString));
+				size_t const	kBufferSize = INTEGER_TIMES_2(CFStringGetLength(descriptionCFString));
 				char*			bufferPtr = new char[kBufferSize];
 				
 				

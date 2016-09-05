@@ -70,11 +70,11 @@ namespace {
 
 Float32				gScaleFactorsByExponentOffset[] =
 					{
-						0.001,		// -3
-						0.01,		// -2
-						0.1,		// -1
-						1,			// 0
-						10,			// 1
+						0.001f,	// -3
+						0.01f,	// -2
+						0.1f,	// -1
+						1,		// 0
+						10,		// 1
 						100,		// 2
 						1000		// 3
 					};
@@ -1845,7 +1845,7 @@ setNumberStringValue:(NSString*)	aNumberString
 			{
 			case kPreferenceValue_CTypeSInt16:
 				{
-					SInt16		intValue = [aNumberString intValue];
+					SInt16		intValue = STATIC_CAST([aNumberString intValue], SInt16);
 					
 					
 					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
@@ -1855,7 +1855,7 @@ setNumberStringValue:(NSString*)	aNumberString
 			
 			case kPreferenceValue_CTypeUInt16:
 				{
-					UInt16		intValue = [aNumberString intValue];
+					UInt16		intValue = STATIC_CAST([aNumberString intValue], UInt16);
 					
 					
 					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,

@@ -45,6 +45,9 @@
 #	include <limits.h>
 #endif
 
+// Mac includes
+#include <ApplicationServices/ApplicationServices.h>
+
 
 
 /*###############################################################
@@ -135,26 +138,28 @@ inline long				INTEGER_MAXIMUM		(long a, long b)	{ return ((a > b) ? a : b); }	/
 inline long				INTEGER_MINIMUM		(long a, long b)	{ return ((a < b) ? a : b); }	//!< return smallest of two signed integers
 inline size_t			INTEGER_MEGABYTES	(unsigned int a)	{ return (a << 20); }			//!< return byte count for integer value measured in MB
 inline size_t			INTEGER_KILOBYTES	(unsigned int a)	{ return (a << 10); }			//!< return byte count for integer value measured in K
-inline unsigned long	INTEGER_OCTUPLED	(unsigned long a)	{ return (a << 3); }			//!< multiply integer by 8 (lossy for huge integers)
-inline unsigned long	INTEGER_QUADRUPLED	(unsigned long a)	{ return (a << 2); }			//!< multiply integer by 4 (lossy for huge integers)
-inline unsigned long	INTEGER_TRIPLED		(unsigned long a)	{ return ((a << 1) + a); }		//!< multiply integer by 3 (lossy for huge integers)
-inline unsigned long	INTEGER_DOUBLED		(unsigned long a)	{ return (a << 1); }			//!< multiply integer by 2 (lossy for huge integers)
-inline unsigned long	INTEGER_HALVED		(unsigned long a)	{ return (a >> 1); }			//!< divide integer by 2
-inline unsigned long	INTEGER_QUARTERED	(unsigned long a)	{ return (a >> 2); }			//!< divide integer by 4
-inline unsigned long	INTEGER_EIGHTHED	(unsigned long a)	{ return (a >> 3); }			//!< divide integer by 8
+inline unsigned long	INTEGER_TIMES_8		(unsigned long a)	{ return (a << 3); }			//!< multiply integer by 8 (lossy for huge integers)
+inline unsigned long	INTEGER_TIMES_4		(unsigned long a)	{ return (a << 2); }			//!< multiply integer by 4 (lossy for huge integers)
+inline unsigned long	INTEGER_TIMES_3		(unsigned long a)	{ return ((a << 1) + a); }		//!< multiply integer by 3 (lossy for huge integers)
+inline unsigned long	INTEGER_TIMES_2		(unsigned long a)	{ return (a << 1); }			//!< multiply integer by 2 (lossy for huge integers)
+inline unsigned long	INTEGER_DIV_2		(unsigned long a)	{ return (a >> 1); }			//!< divide integer by 2
+inline unsigned long	INTEGER_DIV_3		(unsigned long a)	{ return (a / 3); }				//!< divide integer by 3
+inline unsigned long	INTEGER_DIV_4		(unsigned long a)	{ return (a >> 2); }			//!< divide integer by 4
+inline unsigned long	INTEGER_DIV_8		(unsigned long a)	{ return (a >> 3); }			//!< divide integer by 8
 #else
 #	define INTEGER_ABSOLUTE(a)		(((a) >= 0) ? (a) : (-(a)))
 #	define INTEGER_MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
 #	define INTEGER_MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 #	define INTEGER_MEGABYTES(a)		((size_t)((a) << 20))
 #	define INTEGER_KILOBYTES(a)		((size_t)((a) << 10))
-#	define INTEGER_OCTUPLED(a)		((a) << 3)
-#	define INTEGER_QUADRUPLED(a)	((a) << 2)
-#	define INTEGER_TRIPLED(a)		(((a) << 1) + (a))
-#	define INTEGER_DOUBLED(a)		((a) << 1)
-#	define INTEGER_HALVED(a)		((a) >> 1)
-#	define INTEGER_QUARTERED(a)		((a) >> 2)
-#	define INTEGER_EIGHTHED(a)		((a) >> 3)
+#	define INTEGER_TIMES_8(a)		((a) << 3)
+#	define INTEGER_TIMES_4(a)	((a) << 2)
+#	define INTEGER_TIMES_3(a)		(((a) << 1) + (a))
+#	define INTEGER_TIMES_2(a)		((a) << 1)
+#	define INTEGER_DIV_2(a)		((a) >> 1)
+#	define INTEGER_DIV_3(a)		((a) / 3)
+#	define INTEGER_DIV_4(a)		((a) >> 2)
+#	define INTEGER_DIV_8(a)		((a) >> 3)
 #endif
 
 //! useful floating point routines, for efficiency; optimized for the PowerPC platform
@@ -162,24 +167,47 @@ inline unsigned long	INTEGER_EIGHTHED	(unsigned long a)	{ return (a >> 3); }			/
 inline double FLOAT64_ABSOLUTE		(double a)				{ return ((a >= 0) ? a : -a); }		//!< take absolute value of a floating-point number
 inline double FLOAT64_MAXIMUM		(double a, double b)	{ return ((a > b) ? a : b); }		//!< return largest of two signed floating-point numbers
 inline double FLOAT64_MINIMUM		(double a, double b)	{ return ((a < b) ? a : b); }		//!< return smallest of two signed floating-point numbers
-inline double FLOAT64_OCTUPLED		(double a)				{ return (a * 8.0); }				//!< multiply floating-point number by 8
-inline double FLOAT64_QUADRUPLED	(double a)				{ return (a * 4.0); }				//!< multiply floating-point number by 4
-inline double FLOAT64_TRIPLED		(double a)				{ return ((a * 2.0) + a); }			//!< multiply floating-point number by 3
-inline double FLOAT64_DOUBLED		(double a)				{ return (a * 2.0); }				//!< multiply floating-point number by 2
-inline double FLOAT64_HALVED		(double a)				{ return (a / 2.0); }				//!< divide floating-point number by 2
-inline double FLOAT64_QUARTERED		(double a)				{ return (a / 4.0); }				//!< divide floating-point number by 4
-inline double FLOAT64_EIGHTHED		(double a)				{ return (a / 8.0); }				//!< divide floating-point number by 8
+inline double FLOAT64_TIMES_8		(double a)				{ return (a * 8.0); }				//!< multiply floating-point number by 8
+inline double FLOAT64_TIMES_4	(double a)				{ return (a * 4.0); }				//!< multiply floating-point number by 4
+inline double FLOAT64_TIMES_3		(double a)				{ return ((a * 2.0) + a); }			//!< multiply floating-point number by 3
+inline double FLOAT64_TIMES_2		(double a)				{ return (a * 2.0); }				//!< multiply floating-point number by 2
+inline double FLOAT64_DIV_2		(double a)				{ return (a / 2.0); }				//!< divide floating-point number by 2
+inline double FLOAT64_DIV_3		(double a)				{ return (a / 3.0); }				//!< divide floating-point number by 3
+inline double FLOAT64_DIV_4		(double a)				{ return (a / 4.0); }				//!< divide floating-point number by 4
+inline double FLOAT64_DIV_8		(double a)				{ return (a / 8.0); }				//!< divide floating-point number by 8
 #else
 #	define FLOAT64_ABSOLUTE(a)		(((a) >= 0) ? (a) : (-(a)))
 #	define FLOAT64_MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
 #	define FLOAT64_MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
-#	define FLOAT64_OCTUPLED(a)		((a) * 8.0)
-#	define FLOAT64_QUADRUPLED(a)	((a) * 4.0)
-#	define FLOAT64_TRIPLED(a)		(((a) * 2.0) + (a))
-#	define FLOAT64_DOUBLED(a)		((a) * 2.0)
-#	define FLOAT64_HALVED(a)		((a) / 2.0)
-#	define FLOAT64_QUARTERED(a)		((a) / 4.0)
-#	define FLOAT64_EIGHTHED(a)		((a) / 8.0)
+#	define FLOAT64_TIMES_8(a)		((a) * 8.0)
+#	define FLOAT64_TIMES_4(a)	((a) * 4.0)
+#	define FLOAT64_TIMES_3(a)		(((a) * 2.0) + (a))
+#	define FLOAT64_TIMES_2(a)		((a) * 2.0)
+#	define FLOAT64_DIV_2(a)		((a) / 2.0)
+#	define FLOAT64_DIV_3(a)		((a) / 3.0)
+#	define FLOAT64_DIV_4(a)		((a) / 4.0)
+#	define FLOAT64_DIV_8(a)		((a) / 8.0)
+#endif
+
+//! warning-free operations on CGFloat type that account for float/double variants
+#if CGFLOAT_IS_DOUBLE
+#	define CGFLOAT_TIMES_8(a)		FLOAT64_TIMES_8((a))
+#	define CGFLOAT_TIMES_4(a)		FLOAT64_TIMES_4((a))
+#	define CGFLOAT_TIMES_3(a)		FLOAT64_TIMES_3((a))
+#	define CGFLOAT_TIMES_2(a)		FLOAT64_TIMES_2((a))
+#	define CGFLOAT_DIV_2(a)			FLOAT64_DIV_2((a))
+#	define CGFLOAT_DIV_3(a)			FLOAT64_DIV_3((a))
+#	define CGFLOAT_DIV_4(a)			FLOAT64_DIV_4((a))
+#	define CGFLOAT_DIV_8(a)			FLOAT64_DIV_8((a))
+#else
+#	define CGFLOAT_TIMES_8(a)		STATIC_CAST(FLOAT64_TIMES_8((a)), float)
+#	define CGFLOAT_TIMES_4(a)		STATIC_CAST(FLOAT64_TIMES_4((a)), float)
+#	define CGFLOAT_TIMES_3(a)		STATIC_CAST(FLOAT64_TIMES_3((a)), float)
+#	define CGFLOAT_TIMES_2(a)		STATIC_CAST(FLOAT64_TIMES_2((a)), float)
+#	define CGFLOAT_DIV_2(a)			STATIC_CAST(FLOAT64_DIV_2((a)), float)
+#	define CGFLOAT_DIV_3(a)			STATIC_CAST(FLOAT64_DIV_3((a)), float)
+#	define CGFLOAT_DIV_4(a)			STATIC_CAST(FLOAT64_DIV_4((a)), float)
+#	define CGFLOAT_DIV_8(a)			STATIC_CAST(FLOAT64_DIV_8((a)), float)
 #endif
 
 #endif

@@ -64,7 +64,7 @@ CocoaExtensions_RunLaterInQueue		(dispatch_queue_t const&	inQueue,
 									 Float64					inDelayAsFractionOfSeconds,
 									 void						(^inBlock)())
 {
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, inDelayAsFractionOfSeconds * NSEC_PER_SEC),
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, STATIC_CAST(inDelayAsFractionOfSeconds * NSEC_PER_SEC, int64_t)),
 					inQueue, inBlock);
 }// RunLaterInQueue
 
@@ -105,7 +105,7 @@ background:(NSColor**)							inoutBackgroundColor
 		if ((nil != foregroundRGB) && (nil != backgroundRGB))
 		{
 			//NSColor*	searchHighlightColor = [NSColor yellowColor];
-			NSColor*	searchHighlightColor = [NSColor colorWithCalibratedRed:0.92 green:1.0 blue:0.0 alpha:1.0];
+			NSColor*	searchHighlightColor = [NSColor colorWithCalibratedRed:0.92f green:1.0f blue:0.0f alpha:1.0f];
 			
 			
 			if (([foregroundRGB brightnessComponent] < kTolerance) &&
@@ -120,15 +120,15 @@ background:(NSColor**)							inoutBackgroundColor
 			{
 				// very dark background; therefore, darkening the background will
 				// not make it clear where the result is; brighten it instead
-				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.9/* arbitrary */ ofColor:[NSColor whiteColor]];
-				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.3/* arbitrary */ ofColor:[NSColor blackColor]];
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.9f/* arbitrary */ ofColor:[NSColor whiteColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.3f/* arbitrary */ ofColor:[NSColor blackColor]];
 			}
 			else
 			{
 				// typical case; some combination of colors, just find darker
 				// colors to show results in this case
-				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.8/* arbitrary */ ofColor:[NSColor blackColor]];
-				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.8/* arbitrary */ ofColor:searchHighlightColor];
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.8f/* arbitrary */ ofColor:[NSColor blackColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.8f/* arbitrary */ ofColor:searchHighlightColor];
 			}
 		}
 		else
@@ -189,15 +189,15 @@ background:(NSColor**)						inoutBackgroundColor
 			{
 				// very dark background; therefore, darkening the background will
 				// not make it clear where the selection is; brighten it instead
-				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.2/* arbitrary */ ofColor:[NSColor whiteColor]];
-				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.33/* arbitrary */ ofColor:[NSColor whiteColor]];
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.2f/* arbitrary */ ofColor:[NSColor whiteColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.33f/* arbitrary */ ofColor:[NSColor whiteColor]];
 			}
 			else
 			{
 				// typical case; some combination of colors, just find darker
 				// colors to show highlighted text in this case
-				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.2/* arbitrary */ ofColor:[NSColor blackColor]];
-				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.33/* arbitrary */ ofColor:[NSColor blackColor]];
+				*inoutForegroundColor = [foregroundRGB blendedColorWithFraction:0.2f/* arbitrary */ ofColor:[NSColor blackColor]];
+				*inoutBackgroundColor = [backgroundRGB blendedColorWithFraction:0.33f/* arbitrary */ ofColor:[NSColor blackColor]];
 			}
 		}
 		else

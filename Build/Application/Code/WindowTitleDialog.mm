@@ -466,7 +466,7 @@ parentWindow:(NSWindow*)			parentWindow
 {
 	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
 	NSRect		managedViewFrame = [_managedView frame];
-	NSPoint		result = NSMakePoint(parentFrame.size.width / 2.0, parentFrame.size.height - 12/* arbitrary */);
+	NSPoint		result = NSMakePoint(CGFLOAT_DIV_2(parentFrame.size.width), parentFrame.size.height - 12/* arbitrary */);
 	
 	
 	// if the window position would make the popover fall off the top of the

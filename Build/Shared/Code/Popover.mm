@@ -328,7 +328,7 @@ vibrancy:(BOOL)					aVisualEffectFlag
 			[self useOptimizedDrawing:YES];
 			
 			// set up some sensible defaults for display
-			self->_popoverBackgroundColor = [[NSColor colorWithCalibratedWhite:0.1 alpha:0.75] copy];
+			self->_popoverBackgroundColor = [[NSColor colorWithCalibratedWhite:0.1f alpha:0.75f] copy];
 			self->_borderOuterColor = [[NSColor grayColor] copy];
 			self->_borderOuterDisplayColor = [self->_borderOuterColor copy];
 			self->_borderPrimaryColor = [[NSColor whiteColor] copy];
@@ -617,7 +617,7 @@ arrowBaseWidth
 setArrowBaseWidth:(float)	aValue
 {
 	float	maxWidth = (MIN(self->viewFrame.size.width, self->viewFrame.size.height) +
-						(self->viewMargin * 2.0)) - self->cornerRadius;
+						(self->viewMargin * 2.0f)) - self->cornerRadius;
 	
 	
 	if (self.hasRoundCornerBesideArrow)
@@ -691,8 +691,8 @@ cornerRadius
 - (void)
 setCornerRadius:(float)		aValue
 {
-	float	maxRadius = ((MIN(self->viewFrame.size.width, self->viewFrame.size.height) + (self->viewMargin * 2.0)) -
-							self->arrowBaseWidth) / 2.0;
+	float	maxRadius = ((MIN(self->viewFrame.size.width, self->viewFrame.size.height) + (self->viewMargin * 2.0f)) -
+							self->arrowBaseWidth) / 2.0f;
 	
 	
 	if (aValue <= maxRadius)
@@ -925,8 +925,8 @@ Responds to window deactivation by graying the frame colors.
 windowDidResignKey:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	self.borderOuterDisplayColor = [NSColor colorWithCalibratedRed:0.95 green:0.95 blue:0.95 alpha:1.0];
-	self.borderPrimaryDisplayColor = [NSColor colorWithCalibratedRed:0.65 green:0.65 blue:0.65 alpha:1.0];
+	self.borderOuterDisplayColor = [NSColor colorWithCalibratedRed:0.95f green:0.95f blue:0.95f alpha:1.0f];
+	self.borderPrimaryDisplayColor = [NSColor colorWithCalibratedRed:0.65f green:0.65f blue:0.65f alpha:1.0f];
 	[self updateBackground];
 }
 
@@ -965,7 +965,7 @@ appendArrowToPath:(NSBezierPath*)	aPath
 	{
 		float const		kScaleFactor = 1.0;
 		float const		kScaledArrowWidth = self->arrowBaseWidth * kScaleFactor;
-		float const		kHalfScaledArrowWidth = kScaledArrowWidth / 2.0;
+		float const		kHalfScaledArrowWidth = kScaledArrowWidth / 2.0f;
 		float const		kScaledArrowHeight = self.arrowHeight * kScaleFactor;
 		NSPoint			tipPt = [aPath currentPoint];
 		NSPoint			endPt = [aPath currentPoint];
@@ -1027,12 +1027,12 @@ applyStyle:(Popover_WindowStyle)	aStyle
 		// an actual popover window with an arrow, that is
 		// typically transient (any click outside dismisses it);
 		// caller can later decide to remove the arrow
-		self.backgroundColor = [NSColor colorWithCalibratedRed:0.9 green:0.9 blue:0.9 alpha:0.95];
-		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.25 green:0.25 blue:0.25 alpha:0.7];
-		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:1.0 green:1.0 blue:1.0 alpha:0.8];
-		self.viewMargin = 3.0;
-		self.borderWidth = 2.2;
-		self.cornerRadius = 4.0;
+		self.backgroundColor = [NSColor colorWithCalibratedRed:0.9f green:0.9f blue:0.9f alpha:0.95f];
+		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.25f green:0.25f blue:0.25f alpha:0.7f];
+		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:0.8f];
+		self.viewMargin = 3.0f;
+		self.borderWidth = 2.2f;
+		self.cornerRadius = 4.0f;
 		[self setStandardArrowProperties:YES];
 		break;
 	
@@ -1042,13 +1042,13 @@ applyStyle:(Popover_WindowStyle)	aStyle
 		[self applyStyle:kPopover_WindowStyleDialogAppModal];
 		if ([self.class isGraphiteTheme])
 		{
-			self.borderOuterColor = [NSColor colorWithCalibratedRed:0.9 green:0.9 blue:0.9 alpha:1.0];
-			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.7 green:0.7 blue:0.7 alpha:1.0];
+			self.borderOuterColor = [NSColor colorWithCalibratedRed:0.9f green:0.9f blue:0.9f alpha:1.0f];
+			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.7f green:0.7f blue:0.7f alpha:1.0f];
 		}
 		else
 		{
-			self.borderOuterColor = [NSColor colorWithCalibratedRed:1.0 green:0.9 blue:0.9 alpha:1.0];
-			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.75 green:0.7 blue:0.7 alpha:1.0];
+			self.borderOuterColor = [NSColor colorWithCalibratedRed:1.0f green:0.9f blue:0.9f alpha:1.0f];
+			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.75f green:0.7f blue:0.7f alpha:1.0f];
 		}
 		break;
 	
@@ -1056,45 +1056,45 @@ applyStyle:(Popover_WindowStyle)	aStyle
 		// not really a popover but a window-modal dialog for
 		// displaying an alert message
 		[self applyStyle:kPopover_WindowStyleAlertAppModal];
-		self.viewMargin = 6.0;
-		self.borderWidth = 6.0;
-		self.cornerRadius = 3.0;
+		self.viewMargin = 6.0f;
+		self.borderWidth = 6.0f;
+		self.cornerRadius = 3.0f;
 		break;
 	
 	case kPopover_WindowStyleDialogAppModal:
 		// not really a popover but an application-modal dialog box
 		[self applyStyle:kPopover_WindowStyleNormal];
-		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.85 green:0.85 blue:0.85 alpha:1.0];
-		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.55 green:0.55 blue:0.55 alpha:1.0];
-		self.viewMargin = 9.0;
-		self.borderWidth = 9.0;
-		self.cornerRadius = 9.0;
+		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.85f green:0.85f blue:0.85f alpha:1.0f];
+		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.55f green:0.55f blue:0.55f alpha:1.0f];
+		self.viewMargin = 9.0f;
+		self.borderWidth = 9.0f;
+		self.cornerRadius = 9.0f;
 		[self setStandardArrowProperties:NO];
 		break;
 	
 	case kPopover_WindowStyleDialogSheet:
 		// not really a popover but a window-modal dialog
 		[self applyStyle:kPopover_WindowStyleDialogAppModal];
-		self.viewMargin = 6.0;
-		self.borderWidth = 6.0;
-		self.cornerRadius = 3.0;
+		self.viewMargin = 6.0f;
+		self.borderWidth = 6.0f;
+		self.cornerRadius = 3.0f;
 		break;
 	
 	case kPopover_WindowStyleHelp:
 		// a floating window that typically contains only help text
 		if ([self.class isGraphiteTheme])
 		{
-			self.backgroundColor = [NSColor colorWithCalibratedRed:0.5 green:0.5 blue:0.5 alpha:0.93];
+			self.backgroundColor = [NSColor colorWithCalibratedRed:0.5f green:0.5f blue:0.5f alpha:0.93f];
 		}
 		else
 		{
-			self.backgroundColor = [NSColor colorWithCalibratedRed:0 green:0.25 blue:0.5 alpha:0.93];
+			self.backgroundColor = [NSColor colorWithCalibratedRed:0.0f green:0.25f blue:0.5f alpha:0.93f];
 		}
 		self.borderOuterColor = [NSColor whiteColor];
 		self.borderPrimaryColor = [NSColor blackColor];
-		self.viewMargin = 5.0;
-		self.borderWidth = 5.0;
-		self.cornerRadius = 5.0;
+		self.viewMargin = 5.0f;
+		self.borderWidth = 5.0f;
+		self.cornerRadius = 5.0f;
 		[self setStandardArrowProperties:YES];
 		break;
 	
@@ -1135,7 +1135,7 @@ and width of the arrow’s triangular base.
 arrowInsetWithCornerRadius:(float)	aCornerRadius
 baseWidth:(float)					anArrowBaseWidth
 {
-	return (aCornerRadius + (anArrowBaseWidth / 2.0));
+	return (aCornerRadius + (anArrowBaseWidth / 2.0f));
 }
 
 
@@ -1204,10 +1204,10 @@ backgroundColorPatternImage
 		if (self.borderWidth > 0)
 		{
 			// double width since drawing is clipped inside the path
-			[sourcePath setLineWidth:(self.borderWidth * 2.0)];
+			[sourcePath setLineWidth:(self.borderWidth * 2.0f)];
 			[self.borderPrimaryDisplayColor set];
 			[sourcePath stroke];
-			[sourcePath setLineWidth:self.borderWidth - 1.0]; // arbitrary shift
+			[sourcePath setLineWidth:self.borderWidth - 1.0f]; // arbitrary shift
 			[self.borderOuterDisplayColor set];
 			[sourcePath stroke];
 		}
@@ -1241,7 +1241,7 @@ backgroundPath
 {
 	float const		kScaleFactor = 1.0;
 	float const		kScaledArrowWidth = self->arrowBaseWidth * kScaleFactor;
-	float const		kHalfScaledArrowWidth = kScaledArrowWidth / 2.0;
+	float const		kHalfScaledArrowWidth = kScaledArrowWidth / 2.0f;
 	float const		kScaledCornerRadius = (self->cornerRadius * kScaleFactor);
 	float const		kScaledMargin = (self->viewMargin * kScaleFactor);
 	NSRect const	kContentArea = NSInsetRect(self->viewFrame, -kScaledMargin, -kScaledMargin);

@@ -1913,7 +1913,7 @@ turn off the bell and the bell is currently on”.
 - (void)
 setStateFromScreen:(TerminalScreenRef)		aScreen
 {
-	if ((nullptr == aScreen) || (false == Terminal_LEDIsOn(aScreen, self->indexOfLED)))
+	if ((nullptr == aScreen) || (false == Terminal_LEDIsOn(aScreen, STATIC_CAST(self->indexOfLED, SInt16))))
 	{
 		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()]];
 	}

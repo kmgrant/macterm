@@ -359,7 +359,7 @@ TextTranslation_ReturnCharacterSetCount ()
 	// initialize the module if necessary
 	fillInCharacterSetList();
 	
-	return gTextEncodingInfoList().size();
+	return STATIC_CAST(gTextEncodingInfoList().size(), UInt16);
 }// ReturnCharacterSetCount
 
 

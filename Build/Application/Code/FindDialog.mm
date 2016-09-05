@@ -919,7 +919,7 @@ parentWindow:(NSWindow*)			parentWindow
 		NSRect		managedViewFrame = [self->managedView frame];
 		
 		
-		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0/* arbitrary */, 0.0);
+		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0f/* arbitrary */, 0.0f);
 	}
 	return result;
 }// idealAnchorPointForFrame:parentWindow:

@@ -242,10 +242,10 @@ typedef Terminal_ScrollDescription const*	Terminal_ScrollDescriptionConstPtr;
 struct Terminal_XTermColorDescription
 {
 	TerminalScreenRef	screen;				//!< the screen for which the color applies
-	UInt16				index;				//!< a number between 16 and 255 that indicates what changed
-	UInt16				redComponent;		//!< part of the color value
-	UInt16				greenComponent;		//!< part of the color value
-	UInt16				blueComponent;		//!< part of the color value
+	UInt8				index;				//!< a number between 16 and 255 that indicates what changed
+	UInt8				redComponent;		//!< part of the color value
+	UInt8				greenComponent;		//!< part of the color value
+	UInt8				blueComponent;		//!< part of the color value
 };
 typedef Terminal_XTermColorDescription const*	Terminal_XTermColorDescriptionConstPtr;
 

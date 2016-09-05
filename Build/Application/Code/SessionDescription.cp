@@ -1222,8 +1222,8 @@ overwriteFile	(SInt16						inFileReferenceNumber,
 			Rect	bounds;
 			
 			
-			bounds.left = *(inoutDataPtr->windowPositionHPtr);
-			bounds.top = *(inoutDataPtr->windowPositionVPtr);
+			bounds.left = STATIC_CAST(*(inoutDataPtr->windowPositionHPtr), SInt16);
+			bounds.top = STATIC_CAST(*(inoutDataPtr->windowPositionVPtr), SInt16);
 			bounds.right = bounds.left; // temporary
 			bounds.bottom = bounds.top; // temporary
 			success = TextDataFile_AddNameValueRectangle(writer, nullptr/* class */, "size", &bounds);
@@ -1524,7 +1524,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				
 				while (*charPtr)
 				{
-					*charPtr = CPP_STD::tolower(*charPtr);
+					*charPtr = STATIC_CAST(CPP_STD::tolower(*charPtr), char);
 					++charPtr;
 				}
 			}

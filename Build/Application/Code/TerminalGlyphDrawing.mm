@@ -50,8 +50,8 @@
 // there are more supported ways to do this such as using an
 // NSView and "centerScanRect:" but that is not practical
 // right now for legacy reasons)
-#define INCR_PIXEL(x) (round(x) + 0.5)
-#define DECR_PIXEL(x) (round(x) - 0.5)
+#define INCR_PIXEL(x) STATIC_CAST(roundf(x) + 0.5f, CGFloat)
+#define DECR_PIXEL(x) STATIC_CAST(roundf(x) - 0.5f, CGFloat)
 
 
 #pragma mark Constants
@@ -664,7 +664,7 @@ extendWithBraille	(CGMutablePathRef				inoutPath,
 	CGFloat const		kRightX = ((kIsSmall)
 									? inMetrics.squareLineRightEdge
 									: INCR_PIXEL(inMetrics.squareLineRightEdge - inMetrics.lineHalfWidth));
-	CGFloat const		kSpacingY = (inMetrics.squareLineBottomEdge - inMetrics.squareLineTopEdge) / 3.0;
+	CGFloat const		kSpacingY = CGFLOAT_DIV_3(inMetrics.squareLineBottomEdge - inMetrics.squareLineTopEdge);
 	CGFloat const		kLineAY = ((kIsSmall)
 									? (inMetrics.squareLineTopEdge - inMetrics.lineHalfWidth)
 									: inMetrics.squareLineTopEdge);
@@ -1042,14 +1042,14 @@ extendWithText		(CGMutablePathRef				inoutPath,
 																							&glyphFontIndex, nullptr/* sub-rectangles */,
 																							1/* number of items */);
 					CGFloat const		kOffsetX = (((horizontallyCentered)
-													? (-glyphAdvance.width / 2.0)
+													? CGFLOAT_DIV_2(-glyphAdvance.width)
 													: 0) * CGRectGetWidth(kCellFrame) / CGRectGetWidth(kFontRelativeFrame));
 					CGAffineTransform	offsetFlipMatrix = CGAffineTransformConcat
 															(CGAffineTransformMakeScale
 																(kCellSize.width / CGRectGetWidth(kFontRelativeFrame),
 																	-kCellSize.height / CGRectGetHeight(kFontRelativeFrame)),
 																CGAffineTransformMakeTranslation
-																(kCellFrame.origin.x + kCellSize.width / 2.0 + kOffsetX, kCellSize.height));
+																(kCellFrame.origin.x + CGFLOAT_DIV_2(kCellSize.width) + kOffsetX, kCellSize.height));
 					
 					
 					// finally, extend the path to include a drawing of this glyph
@@ -1179,8 +1179,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 							slashRight = kRight;
 						}
 						
-						extendPath(aPath, slashLeft, kPosition2 + metrics.lineWidth * 2.0,
-											slashRight, kPosition1 - metrics.lineWidth * 2.0);
+						extendPath(aPath, slashLeft, kPosition2 + CGFLOAT_TIMES_2(metrics.lineWidth),
+											slashRight, kPosition1 - CGFLOAT_TIMES_2(metrics.lineWidth));
 					}
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1191,8 +1191,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerWidth / 9.0);
-					CGFloat const	kSegmentLength = (kSpaceLength * 2.0);
+					CGFloat const	kSpaceLength = (metrics.layerWidth / 9.0f);
+					CGFloat const	kSegmentLength = CGFLOAT_TIMES_2(kSpaceLength);
 					CGFloat const	kYPosition = ((0x22EF == aUnicodePoint)
 													? metrics.layerHalfHeight
 													: DECR_PIXEL(metrics.baselineHint - metrics.lineHalfWidth));
@@ -1228,8 +1228,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* UNUSED_ARGUMENT(metrics))
 				{
-					CGPathAddEllipseInRect(aPath, kMy_NoTransform, CGRectInset(weakSelf.bounds, CGRectGetWidth(weakSelf.bounds) / 2.0,
-																				CGRectGetHeight(weakSelf.bounds) / 2.0));
+					CGPathAddEllipseInRect(aPath, kMy_NoTransform, CGRectInset(weakSelf.bounds, CGFLOAT_DIV_2(CGRectGetWidth(weakSelf.bounds)),
+																				CGFLOAT_DIV_2(CGRectGetHeight(weakSelf.bounds))));
 				}];
 			}
 			break;
@@ -1239,9 +1239,9 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0);
+										CGFLOAT_DIV_4(metrics.layerWidth), CGFLOAT_DIV_4(metrics.layerHeight));
 					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0 * 3.0);
+										CGFLOAT_DIV_4(metrics.layerWidth), CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendWithCenterHorizontal(aPath, metrics);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1251,14 +1251,14 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kLeft = metrics.layerWidth / 4.0;
-					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					CGFloat const	kLeft = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kRight = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineTopEdge,
-										kLeft, metrics.layerHeight / 4.0);
+										kLeft, CGFLOAT_DIV_4(metrics.layerHeight));
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineTopEdge,
-										kRight, metrics.layerHeight / 4.0);
+										kRight, CGFLOAT_DIV_4(metrics.layerHeight));
 					extendWithCenterVertical(aPath, metrics);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1269,9 +1269,10 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0);
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)), CGFLOAT_DIV_4(metrics.layerHeight));
 					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0);
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)),
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendWithCenterHorizontal(aPath, metrics);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1281,14 +1282,14 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kLeft = metrics.layerWidth / 4.0;
-					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					CGFloat const	kLeft = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kRight = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kLeft, metrics.layerHeight / 4.0 * 3.0);
+										kLeft, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kRight, metrics.layerHeight / 4.0 * 3.0);
+										kRight, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendWithCenterVertical(aPath, metrics);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1302,9 +1303,9 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 										metrics.squareLineRightEdge, metrics.layerHalfHeight,
 										metrics.squareLineLeftEdge, metrics.layerHalfHeight);
 					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
-										metrics.layerHalfWidth, metrics.layerHeight / 4.0);
+										metrics.layerHalfWidth, CGFLOAT_DIV_4(metrics.layerHeight));
 					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight,
-										metrics.layerHalfWidth, metrics.layerHeight / 4.0 * 3.0);
+										metrics.layerHalfWidth, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
@@ -1313,16 +1314,16 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kLeft = metrics.layerWidth / 4.0;
-					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					CGFloat const	kLeft = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kRight = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kLeft, metrics.layerHeight / 4.0 * 3.0);
+										kLeft, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kRight, metrics.layerHeight / 4.0 * 3.0);
-					extendPath(aPath, kLeft, metrics.layerHeight / 4.0,
-										kRight, metrics.layerHeight / 4.0);
+										kRight, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
+					extendPath(aPath, kLeft, CGFLOAT_DIV_4(metrics.layerHeight),
+										kRight, CGFLOAT_DIV_4(metrics.layerHeight));
 					extendPath(aPath, kLeft, metrics.layerHalfHeight,
 										kRight, metrics.layerHalfHeight);
 					extendWithCenterVertical(aPath, metrics);
@@ -1334,12 +1335,14 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					extendPath(aPath, metrics.squareLineRightEdge + metrics.lineWidth, metrics.layerHeight / 4.0,
-										metrics.squareLineRightEdge + metrics.lineWidth, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, metrics.squareLineRightEdge + metrics.lineWidth, CGFLOAT_DIV_4(metrics.layerHeight),
+										metrics.squareLineRightEdge + metrics.lineWidth,
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0);
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)), CGFLOAT_DIV_4(metrics.layerHeight));
 					extendPath(aPath, metrics.squareLineRightEdge, metrics.layerHalfHeight,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0);
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)),
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendWithCenterHorizontal(aPath, metrics);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1369,9 +1372,9 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 					// this should be similar to the "equal to" rendering ('=')
 					CGFloat const	kLeft = metrics.squareLineLeftEdge; // note inset option below
 					CGFloat const	kRight = metrics.squareLineRightEdge; // note inset option below
-					CGFloat const	kPosition1 = metrics.layerHalfHeight - metrics.lineWidth * 2.0; // arbitrary
+					CGFloat const	kPosition1 = metrics.layerHalfHeight - CGFLOAT_TIMES_2(metrics.lineWidth); // arbitrary
 					CGFloat const	kPosition2 = metrics.layerHalfHeight; // arbitrary
-					CGFloat const	kPosition3 = metrics.layerHalfHeight + metrics.lineWidth * 2.0; // arbitrary
+					CGFloat const	kPosition3 = metrics.layerHalfHeight + CGFLOAT_TIMES_2(metrics.lineWidth); // arbitrary
 					
 					
 					extendPath(aPath, kLeft, kPosition1, kRight, kPosition1);
@@ -1385,13 +1388,14 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kCurveRadius = (metrics.layerHeight / 4.0); // arbitrary (should match lower integral sign)
+					CGFloat const	kCurveRadius = CGFLOAT_DIV_4(metrics.layerHeight); // arbitrary (should match lower integral sign)
 					CGPoint const	kCurlStartPoint = CGPointMake(metrics.squareLineRightEdge, metrics.squareLineTopEdge + kCurveRadius);
 					CGPoint const	kCurlEndPoint = CGPointMake(metrics.layerHalfWidth, metrics.squareLineTopEdge + kCurveRadius);
 					CGPoint const	kStraightLineStartPoint = CGPointMake(metrics.layerHalfWidth, kCurlEndPoint.y + metrics.lineHalfWidth);
 					CGPathMoveToPoint(aPath, kMy_NoTransform, kCurlStartPoint.x, kCurlStartPoint.y);
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 4.0 * 3.0, metrics.squareLineTopEdge + metrics.lineHalfWidth,
+												CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)),
+												metrics.squareLineTopEdge + metrics.lineHalfWidth,
 												kCurlEndPoint.x, kCurlEndPoint.y);
 					extendPath(aPath, kStraightLineStartPoint.x, kStraightLineStartPoint.y,
 										metrics.layerHalfWidth, metrics.squareLineBottomEdge);
@@ -1403,13 +1407,15 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kCurveRadius = (metrics.layerHeight / 4.0); // arbitrary (should match upper integral sign)
-					CGPoint const	kCurlStartPoint = CGPointMake(metrics.layerWidth / 4.0, metrics.squareLineBottomEdge - kCurveRadius);
+					CGFloat const	kCurveRadius = CGFLOAT_DIV_4(metrics.layerHeight); // arbitrary (should match upper integral sign)
+					CGPoint const	kCurlStartPoint = CGPointMake(CGFLOAT_DIV_4(metrics.layerWidth),
+																	metrics.squareLineBottomEdge - kCurveRadius);
 					CGPoint const	kCurlEndPoint = CGPointMake(metrics.layerHalfWidth, metrics.squareLineBottomEdge - kCurveRadius);
 					CGPoint const	kStraightLineEndPoint = CGPointMake(metrics.layerHalfWidth, kCurlEndPoint.y - metrics.lineHalfWidth);
 					CGPathMoveToPoint(aPath, kMy_NoTransform, kCurlStartPoint.x, kCurlStartPoint.y);
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 4.0, metrics.squareLineBottomEdge - metrics.lineHalfWidth,
+												CGFLOAT_DIV_4(metrics.layerWidth),
+												metrics.squareLineBottomEdge - metrics.lineHalfWidth,
 												kCurlEndPoint.x, kCurlEndPoint.y);
 					extendPath(aPath, kStraightLineEndPoint.x, kStraightLineEndPoint.y,
 										metrics.layerHalfWidth, metrics.squareLineTopEdge);
@@ -1421,16 +1427,16 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kYPosition1 = (metrics.layerHeight / 4.0);
-					CGFloat const	kYPosition2 = (metrics.layerHeight / 4.0 * 3.0);
+					CGFloat const	kYPosition1 = CGFLOAT_DIV_4(metrics.layerHeight);
+					CGFloat const	kYPosition2 = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight));
 					
 					
 					extendPath(aPath, metrics.squareLineRightEdge, kYPosition1,
-										metrics.layerWidth / 3.0 * 2.0, kYPosition1);
+										CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)), kYPosition1);
 					extendPath(aPath, metrics.squareLineRightEdge, kYPosition2,
-										metrics.layerWidth / 3.0 * 2.0, kYPosition2,
-										metrics.layerWidth / 3.0, kYPosition1);
-					extendPath(aPath, metrics.layerWidth / 3.0, kYPosition1,
+										CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)), kYPosition2,
+										CGFLOAT_DIV_3(metrics.layerWidth), kYPosition1);
+					extendPath(aPath, CGFLOAT_DIV_3(metrics.layerWidth), kYPosition1,
 										metrics.squareLineLeftEdge, kYPosition1);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1440,16 +1446,16 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kYPosition1 = (metrics.layerHeight / 4.0);
-					CGFloat const	kYPosition2 = (metrics.layerHeight / 4.0 * 3.0);
+					CGFloat const	kYPosition1 = CGFLOAT_DIV_4(metrics.layerHeight);
+					CGFloat const	kYPosition2 = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight));
 					
 					
 					extendPath(aPath, metrics.squareLineRightEdge, kYPosition2,
-										metrics.layerWidth / 3.0 * 2.0, kYPosition2);
+										CGFLOAT_DIV_3(CGFLOAT_TIMES_2(metrics.layerWidth)), kYPosition2);
 					extendPath(aPath, metrics.squareLineRightEdge, kYPosition1,
-										metrics.layerWidth / 3.0 * 2.0, kYPosition1,
-										metrics.layerWidth / 3.0, kYPosition2);
-					extendPath(aPath, metrics.layerWidth / 3.0, kYPosition2,
+										CGFLOAT_DIV_3(CGFLOAT_TIMES_2(metrics.layerWidth)), kYPosition1,
+										CGFLOAT_DIV_3(metrics.layerWidth), kYPosition2);
+					extendPath(aPath, CGFLOAT_DIV_3(metrics.layerWidth), kYPosition2,
 										metrics.squareLineLeftEdge, kYPosition2);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
@@ -1566,8 +1572,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										metrics.layerHalfWidth, metrics.layerHeight / 4.0);
-					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.layerHeight / 4.0);
+										metrics.layerHalfWidth, CGFLOAT_DIV_4(metrics.layerHeight));
+					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, CGFLOAT_DIV_4(metrics.layerHeight));
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.squareLineTopEdge,
 												metrics.squareLineRightEdge, metrics.squareLineTopEdge);
 				}];
@@ -1593,8 +1599,9 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineTopEdge,
-										metrics.layerHalfWidth, metrics.layerHeight / 4.0 * 3.0);
-					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.layerHeight / 4.0 * 3.0);
+										metrics.layerHalfWidth, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
+					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth,
+												CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
 												metrics.squareLineRightEdge, metrics.squareLineBottomEdge);
 				}];
@@ -1606,8 +1613,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										metrics.layerHalfWidth, metrics.layerHeight / 4.0);
-					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.layerHeight / 4.0);
+										metrics.layerHalfWidth, CGFLOAT_DIV_4(metrics.layerHeight));
+					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, CGFLOAT_DIV_4(metrics.layerHeight));
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.squareLineTopEdge,
 												metrics.squareLineLeftEdge, metrics.squareLineTopEdge);
 				}];
@@ -1633,8 +1640,9 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineTopEdge,
-										metrics.layerHalfWidth, metrics.layerHeight / 4.0 * 3.0);
-					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.layerHeight / 4.0 * 3.0);
+										metrics.layerHalfWidth, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
+					CGPathMoveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth,
+												CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
 												metrics.squareLineLeftEdge, metrics.squareLineBottomEdge);
 				}];
@@ -1723,8 +1731,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHalfHeight / 2.0,
-										metrics.squareLineRightEdge, metrics.layerHalfHeight / 2.0);
+					extendPath(aPath, metrics.squareLineLeftEdge, CGFLOAT_DIV_2(metrics.layerHalfHeight),
+										metrics.squareLineRightEdge, CGFLOAT_DIV_2(metrics.layerHalfHeight));
 				}];
 			}
 			break;
@@ -1733,8 +1741,8 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHeight - metrics.layerHalfHeight / 2.0,
-										metrics.squareLineRightEdge, metrics.layerHeight - metrics.layerHalfHeight / 2.0);
+					extendPath(aPath, metrics.squareLineLeftEdge, metrics.layerHeight - CGFLOAT_DIV_2(metrics.layerHalfHeight),
+										metrics.squareLineRightEdge, metrics.layerHeight - CGFLOAT_DIV_2(metrics.layerHalfHeight));
 				}];
 			}
 			break;
@@ -1754,35 +1762,39 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					// draw triangle pointing to upper right
-					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : (metrics.lineWidth / 4.0));
+					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
 					
 					
-					extendPath(aPath, metrics.layerWidth / 3.0 * 2.0, metrics.layerHeight / 3.0,
-										metrics.layerWidth / 4.0, metrics.layerHalfHeight + kTriangleOffset,
-										metrics.layerWidth / 3.0, metrics.layerHalfHeight + kTriangleOffset,
-										metrics.layerWidth / 3.0 * 2.0, metrics.layerHeight / 3.0);
+					extendPath(aPath, CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)), CGFLOAT_DIV_3(metrics.layerHeight),
+										CGFLOAT_DIV_4(metrics.layerWidth), metrics.layerHalfHeight + kTriangleOffset,
+										CGFLOAT_DIV_3(metrics.layerWidth), metrics.layerHalfHeight + kTriangleOffset,
+										CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)), CGFLOAT_DIV_3(metrics.layerHeight));
 				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : (metrics.lineWidth / 4.0));
+					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
 					
 					
 					// draw triangle pointing to lower left
-					extendPath(aPath, metrics.layerWidth / 3.0, metrics.layerHeight / 3.0 * 2.0,
-										metrics.layerWidth / 3.0 * 2.0, metrics.layerHalfHeight - kTriangleOffset,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHalfHeight - kTriangleOffset,
-										metrics.layerWidth / 3.0, metrics.layerHeight / 3.0 * 2.0);
+					extendPath(aPath, CGFLOAT_DIV_3(metrics.layerWidth), CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerHeight)),
+										CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)), metrics.layerHalfHeight - kTriangleOffset,
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)), metrics.layerHalfHeight - kTriangleOffset,
+										CGFLOAT_DIV_3(metrics.layerWidth), CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerHeight)));
 				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : (metrics.lineWidth / 4.0));
+					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
 					
 					
 					// fill in the middle
-					extendPath(aPath, metrics.layerWidth / 3.0 + metrics.lineHalfWidth, metrics.layerHalfHeight + kTriangleOffset,
-										metrics.layerWidth / 3.0 * 2.0 - metrics.lineHalfWidth, metrics.layerHalfHeight + kTriangleOffset);
-					extendPath(aPath, metrics.layerWidth / 3.0 + metrics.lineHalfWidth, metrics.layerHalfHeight - kTriangleOffset,
-										metrics.layerWidth / 3.0 * 2.0 - metrics.lineHalfWidth, metrics.layerHalfHeight - kTriangleOffset);
+					extendPath(aPath, CGFLOAT_DIV_3(metrics.layerWidth) + metrics.lineHalfWidth,
+										metrics.layerHalfHeight + kTriangleOffset,
+										CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)) - metrics.lineHalfWidth,
+										metrics.layerHalfHeight + kTriangleOffset);
+					extendPath(aPath, CGFLOAT_DIV_3(metrics.layerWidth) + metrics.lineHalfWidth,
+										metrics.layerHalfHeight - kTriangleOffset,
+										CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)) - metrics.lineHalfWidth,
+										metrics.layerHalfHeight - kTriangleOffset);
 				} options:(kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
@@ -1793,9 +1805,11 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, metrics.layerWidth / 5.0, metrics.layerHalfHeight,
-										metrics.layerWidth / 3.0, metrics.layerHeight / 6.0 * 4.0,
-										metrics.layerWidth / 6.0 * 5.0, metrics.layerHeight / 6.0);
+					extendPath(aPath, metrics.layerWidth / 5.0f, metrics.layerHalfHeight,
+										CGFLOAT_DIV_3(metrics.layerWidth),
+										CGFLOAT_TIMES_4(metrics.layerHeight / 6.0f),
+										metrics.layerWidth / 6.0f * 5.0f,
+										metrics.layerHeight / 6.0f);
 				}];
 			}
 			break;
@@ -1804,10 +1818,11 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					extendPath(aPath, metrics.layerWidth / 4.0, metrics.layerHeight / 4.0,
-										metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0 * 3.0 + metrics.lineHalfWidth);
-					extendPath(aPath, metrics.layerWidth / 4.0 * 3.0, metrics.layerHeight / 4.0,
-										metrics.layerWidth / 4.0, metrics.layerHeight / 4.0 * 3.0);
+					extendPath(aPath, CGFLOAT_DIV_4(metrics.layerWidth), CGFLOAT_DIV_4(metrics.layerHeight),
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)),
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)) + metrics.lineHalfWidth);
+					extendPath(aPath, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth)), CGFLOAT_DIV_4(metrics.layerHeight),
+										CGFLOAT_DIV_4(metrics.layerWidth), CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 				}];
 			}
 			break;
@@ -1819,20 +1834,20 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 					// do not draw the curve-arrow; instead, draw something a
 					// bit more similar to the “version control branch” icon
 					// (except show the detachment)
-					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
-					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
+					CGFloat const	kXPosition1 = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kXPosition2 = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					// left line
-					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0,
-										kXPosition1, metrics.layerHeight / 6.0 * 5.0);
+					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0f,
+										kXPosition1, metrics.layerHeight / 6.0f * 5.0f);
 					
 					// arrow head
-					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
+					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + CGFLOAT_TIMES_2(metrics.lineWidth),
 										kXPosition2, metrics.squareLineTopEdge,
-										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
-					extendPath(aPath, kXPosition2, metrics.layerHeight / 3.0 * 2.0,
-										kXPosition2, metrics.layerHeight / 6.0);
+										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + CGFLOAT_TIMES_2(metrics.lineWidth));
+					extendPath(aPath, kXPosition2, CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerHeight)),
+										kXPosition2, metrics.layerHeight / 6.0f);
 				} options:(kMy_GlyphDrawingOptionThickLine)];
 			}
 			break;
@@ -1841,14 +1856,14 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kLeft = metrics.layerWidth / 4.0;
-					CGFloat const	kRight = metrics.layerWidth / 4.0 * 3.0;
+					CGFloat const	kLeft = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kRight = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kLeft, metrics.layerHeight / 4.0 * 3.0);
+										kLeft, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendPath(aPath, metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										kRight, metrics.layerHeight / 4.0 * 3.0);
+										kRight, CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight)));
 					extendPath(aPath, kLeft, metrics.squareLineBottomEdge + metrics.lineWidth,
 										kRight, metrics.squareLineBottomEdge + metrics.lineWidth);
 					extendWithCenterVertical(aPath, metrics);
@@ -1860,31 +1875,31 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
-					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
+					CGFloat const	kXPosition1 = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kXPosition2 = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					// left line
-					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0,
-										kXPosition1, metrics.layerHeight / 6.0 * 5.0);
+					extendPath(aPath, kXPosition1, metrics.layerHeight / 6.0f,
+										kXPosition1, metrics.layerHeight / 6.0f * 5.0f);
 					
 					// arrow head
-					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0,
+					extendPath(aPath, kXPosition2 - metrics.lineHalfWidth, metrics.squareLineTopEdge + CGFLOAT_TIMES_2(metrics.lineWidth),
 										kXPosition2, metrics.squareLineTopEdge,
-										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + metrics.lineWidth * 2.0);
+										kXPosition2 + metrics.lineHalfWidth, metrics.squareLineTopEdge + CGFLOAT_TIMES_2(metrics.lineWidth));
 				} options:(kMy_GlyphDrawingOptionThickLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kXPosition1 = (metrics.layerWidth / 4.0);
-					CGFloat const	kXPosition2 = (metrics.layerWidth / 4.0 * 3.0);
+					CGFloat const	kXPosition1 = CGFLOAT_DIV_4(metrics.layerWidth);
+					CGFloat const	kXPosition2 = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					// this element of the path is separate so that the
 					// line overlap/intersection is smoother
 					metrics.targetLayer.lineCap = kCALineCapRound;
-					extendPath(aPath, kXPosition1, metrics.layerHeight / 3.0 * 2.0,
-										kXPosition2, metrics.layerHeight / 3.0,
-										kXPosition2, metrics.layerHeight / 6.0);
+					extendPath(aPath, kXPosition1, CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerHeight)),
+										kXPosition2, CGFLOAT_DIV_3(metrics.layerHeight),
+										kXPosition2, metrics.layerHeight / 6.0f);
 				} options:(kMy_GlyphDrawingOptionThickLine)];
 			}
 			break;
@@ -1894,12 +1909,12 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					CGFloat const	kLLeft = (metrics.squareLineLeftEdge + 1);
-					CGFloat const	kLRight = (metrics.layerWidth / 5.0 * 3.0);
+					CGFloat const	kLRight = CGFLOAT_TIMES_3(metrics.layerWidth / 5.0);
 					CGFloat const	kLTop = (metrics.squareLineTopEdge + 1);
-					CGFloat const	kLBottom = ((metrics.layerHeight / 5.0 * 2.0) - 1);
-					CGFloat const	kNLeft = (metrics.layerWidth / 3.0);
+					CGFloat const	kLBottom = (CGFLOAT_TIMES_2(metrics.layerHeight / 5.0) - 1);
+					CGFloat const	kNLeft = CGFLOAT_DIV_3(metrics.layerWidth);
 					CGFloat const	kNRight = (metrics.squareLineRightEdge - 1);
-					CGFloat const	kNTop = ((metrics.layerHeight / 5.0 * 3.0));
+					CGFloat const	kNTop = CGFLOAT_TIMES_3(metrics.layerHeight / 5.0);
 					CGFloat const	kNBottom = (metrics.squareLineBottomEdge - 2);
 					
 					
@@ -1917,20 +1932,20 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					CGPathMoveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0, metrics.layerHalfHeight);
+												metrics.layerWidth / 5.0f, metrics.layerHalfHeight);
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0, metrics.layerHeight / 5.0,
-												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
+												metrics.layerWidth / 5.0f, metrics.layerHeight / 5.0f,
+												metrics.layerHalfWidth, metrics.layerHeight / 5.0f);
 					CGPathMoveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0 * 4.0, metrics.layerHalfHeight);
+												CGFLOAT_TIMES_4(metrics.layerWidth / 5.0f), metrics.layerHalfHeight);
 					CGPathAddQuadCurveToPoint(aPath, kMy_NoTransform,
-												metrics.layerWidth / 5.0 * 4.0, metrics.layerHeight / 5.0,
-												metrics.layerHalfWidth, metrics.layerHeight / 5.0);
+												CGFLOAT_TIMES_4(metrics.layerWidth / 5.0f), metrics.layerHeight / 5.0f,
+												metrics.layerHalfWidth, metrics.layerHeight / 5.0f);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThickLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 6.0,
-											metrics.layerHalfHeight, metrics.layerWidth / 6.0 * 4.0, metrics.layerHeight / 3.0));
+					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 6.0f,
+											metrics.layerHalfHeight, CGFLOAT_TIMES_4(metrics.layerWidth / 6.0f), CGFLOAT_DIV_3(metrics.layerHeight)));
 				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionInset)];
 			}
 			break;
@@ -2056,8 +2071,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerWidth / 9.0);
-					CGFloat const	kSegmentLength = (kSpaceLength * 2.0);
+					CGFloat const	kSpaceLength = (metrics.layerWidth / 9.0f);
+					CGFloat const	kSegmentLength = CGFLOAT_TIMES_2(kSpaceLength);
 					CGFloat			offset = kSpaceLength;
 					
 					
@@ -2079,8 +2094,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerHeight / 9.0);
-					CGFloat const	kSegmentLength = (kSpaceLength * 2.0);
+					CGFloat const	kSpaceLength = (metrics.layerHeight / 9.0f);
+					CGFloat const	kSegmentLength = CGFLOAT_TIMES_2(kSpaceLength);
 					CGFloat			offset = kSpaceLength;
 					
 					
@@ -2102,8 +2117,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerWidth / 16.0 * 1.5);
-					CGFloat const	kSegmentLength = (metrics.layerWidth / 16.0 * 2.5);
+					CGFloat const	kSpaceLength = (metrics.layerWidth / 16.0f * 1.5f);
+					CGFloat const	kSegmentLength = (metrics.layerWidth / 16.0f * 2.5f);
 					CGFloat			offset = kSpaceLength;
 					
 					
@@ -2128,8 +2143,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerHeight / 16.0 * 1.5);
-					CGFloat const	kSegmentLength = (metrics.layerHeight / 16.0 * 2.5);
+					CGFloat const	kSpaceLength = (metrics.layerHeight / 16.0f * 1.5f);
+					CGFloat const	kSegmentLength = (metrics.layerHeight / 16.0f * 2.5f);
 					CGFloat			offset = kSpaceLength;
 					
 					
@@ -2931,8 +2946,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerWidth / 6.0);
-					CGFloat const	kSegmentLength = (kSpaceLength * 2.0);
+					CGFloat const	kSpaceLength = (metrics.layerWidth / 6.0f);
+					CGFloat const	kSegmentLength = CGFLOAT_TIMES_2(kSpaceLength);
 					CGFloat			offset = kSpaceLength;
 					
 					
@@ -2951,8 +2966,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kSpaceLength = (metrics.layerHeight / 6.0);
-					CGFloat const	kSegmentLength = (kSpaceLength * 2.0);
+					CGFloat const	kSpaceLength = (metrics.layerHeight / 6.0f);
+					CGFloat const	kSegmentLength = CGFLOAT_TIMES_2(kSpaceLength);
 					CGFloat			offset = kSpaceLength;
 					
 					
@@ -3572,7 +3587,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 8.0);
+					CGFloat const	kBlockHeight = CGFLOAT_DIV_8(metrics.layerHeight);
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHeight - kBlockHeight, metrics.layerWidth, kBlockHeight));
@@ -3584,7 +3599,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 4.0);
+					CGFloat const	kBlockHeight = CGFLOAT_DIV_4(metrics.layerHeight);
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHeight - kBlockHeight, metrics.layerWidth, kBlockHeight));
@@ -3596,7 +3611,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 8.0 * 3.0);
+					CGFloat const	kBlockHeight = CGFLOAT_TIMES_3(CGFLOAT_DIV_8(metrics.layerHeight));
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHeight - kBlockHeight, metrics.layerWidth, kBlockHeight));
@@ -3608,7 +3623,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 8.0 * 4.0);
+					CGFloat const	kBlockHeight = CGFLOAT_TIMES_4(CGFLOAT_DIV_8(metrics.layerHeight));
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHalfHeight, metrics.layerWidth, kBlockHeight));
@@ -3620,7 +3635,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 8.0 * 5.0);
+					CGFloat const	kBlockHeight = CGFLOAT_DIV_8(metrics.layerHeight) * 5.0f;
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHeight - kBlockHeight, metrics.layerWidth, kBlockHeight));
@@ -3632,7 +3647,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 4.0 * 3.0);
+					CGFloat const	kBlockHeight = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerHeight));
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHeight - kBlockHeight, metrics.layerWidth, kBlockHeight));
@@ -3644,7 +3659,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 8.0 * 7.0);
+					CGFloat const	kBlockHeight = CGFLOAT_DIV_8(metrics.layerHeight) * 7.0f;
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, metrics.layerHeight - kBlockHeight, metrics.layerWidth, kBlockHeight));
@@ -3665,7 +3680,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 8.0 * 7.0);
+					CGFloat const	kBlockWidth = CGFLOAT_DIV_8(metrics.layerWidth) * 7.0f;
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, kBlockWidth, metrics.layerHeight));
@@ -3677,7 +3692,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 4.0 * 3.0);
+					CGFloat const	kBlockWidth = CGFLOAT_TIMES_3(CGFLOAT_DIV_4(metrics.layerWidth));
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, kBlockWidth, metrics.layerHeight));
@@ -3689,7 +3704,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 8.0 * 5.0);
+					CGFloat const	kBlockWidth = CGFLOAT_DIV_8(metrics.layerWidth) * 5.0f;
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, kBlockWidth, metrics.layerHeight));
@@ -3710,7 +3725,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 8.0 * 3.0);
+					CGFloat const	kBlockWidth = CGFLOAT_TIMES_3(CGFLOAT_DIV_8(metrics.layerWidth));
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, kBlockWidth, metrics.layerHeight));
@@ -3722,7 +3737,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 4.0);
+					CGFloat const	kBlockWidth = CGFLOAT_DIV_4(metrics.layerWidth);
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, kBlockWidth, metrics.layerHeight));
@@ -3734,7 +3749,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 8.0);
+					CGFloat const	kBlockWidth = CGFLOAT_DIV_8(metrics.layerWidth);
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, kBlockWidth, metrics.layerHeight));
@@ -3755,7 +3770,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockHeight = (metrics.layerHeight / 8.0);
+					CGFloat const	kBlockHeight = CGFLOAT_DIV_8(metrics.layerHeight);
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(0, 0, metrics.layerWidth, kBlockHeight));
@@ -3767,7 +3782,7 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kBlockWidth = (metrics.layerWidth / 8.0);
+					CGFloat const	kBlockWidth = CGFLOAT_DIV_8(metrics.layerWidth);
 					
 					
 					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth - kBlockWidth, 0, kBlockWidth, metrics.layerHeight));
@@ -3879,7 +3894,8 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 			{
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(metrics.layerWidth / 4.0, metrics.layerHeight / 4.0,
+					CGPathAddRect(aPath, kMy_NoTransform, CGRectMake(CGFLOAT_DIV_4(metrics.layerWidth),
+																		CGFLOAT_DIV_4(metrics.layerHeight),
 																		metrics.layerHalfWidth, metrics.layerHalfHeight));
 				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionNoStroke)];
 			}
@@ -3920,12 +3936,12 @@ addLayersForRangeHex2500To2600UnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					// draw a hollow diamond (should be similar to 0x25C6)
-					extendPath(aPath, metrics.layerHalfWidth / 2.0, metrics.layerHalfHeight,
+					extendPath(aPath, CGFLOAT_DIV_2(metrics.layerHalfWidth), metrics.layerHalfHeight,
 										metrics.layerHalfWidth, metrics.squareLineTopEdge,
-										metrics.layerHalfWidth / 2.0 * 3.0, metrics.layerHalfHeight);
-					extendPath(aPath, metrics.layerHalfWidth / 2.0 * 3.0, metrics.layerHalfHeight,
+										CGFLOAT_TIMES_3(CGFLOAT_DIV_2(metrics.layerHalfWidth)), metrics.layerHalfHeight);
+					extendPath(aPath, CGFLOAT_TIMES_3(CGFLOAT_DIV_2(metrics.layerHalfWidth)), metrics.layerHalfHeight,
 										metrics.layerHalfWidth, metrics.squareLineBottomEdge,
-										metrics.layerHalfWidth / 2.0, metrics.layerHalfHeight);
+										CGFLOAT_DIV_2(metrics.layerHalfWidth), metrics.layerHalfHeight);
 				} options:(kMy_GlyphDrawingOptionInset | kMy_GlyphDrawingOptionThinLine)];
 			}
 			break;
@@ -6463,7 +6479,7 @@ This method is also called to inset frames where appropriate.
 - (CGSize)
 insetAmount
 {
-	return CGSizeMake(CGRectGetWidth(self.frame) / 4.0, CGRectGetHeight(self.frame) / 5.0);
+	return CGSizeMake(CGFLOAT_DIV_4(CGRectGetWidth(self.frame)), CGRectGetHeight(self.frame) / 5.0f);
 }// insetAmount
 
 
@@ -6540,7 +6556,7 @@ rebuildLayers
 											? 4.0 // arbitrary
 											: ((0 != (thinLineSublayerFlags_ & kFlagMask))
 												? 2.0 // arbitrary
-												: (self.frame.size.width / 5.0))); // arbitrary
+												: (self.frame.size.width / 5.0f))); // arbitrary
 		layer.lineWidth = ((self.frame.size.width * self.frame.size.height) / 240); // arbitrary; make lines thicker when text is larger
 		if (layer.lineWidth > kMaxLineWidth)
 		{
@@ -6550,7 +6566,7 @@ rebuildLayers
 		{
 			// make anti-aliased lines slightly thicker so that they
 			// blend better with glyphs that are not anti-aliased
-			layer.lineWidth *= 1.4;
+			layer.lineWidth *= 1.4f;
 		}
 		if (layer.lineWidth < 1.0)
 		{
@@ -6559,7 +6575,7 @@ rebuildLayers
 		if (self.isBold)
 		{
 			// should match formula used in "standardBold" method
-			layer.lineWidth *= 1.5;
+			layer.lineWidth *= 1.5f;
 		}
 		layer.lineCap = kCALineCapSquare;
 		layer.lineJoin = kCALineJoinMiter;
@@ -6659,7 +6675,7 @@ set the layer line width appropriately.)
 - (void)
 standardBold
 {
-	self.targetLayer.lineWidth *= 1.5;
+	self.targetLayer.lineWidth *= 1.5f;
 }// standardBold
 
 
@@ -6674,8 +6690,8 @@ Returns half the height in pixels of the frame.
 - (CGFloat)
 layerHalfHeight
 {
-	//return DECR_PIXEL(CGRectGetHeight(self->targetLayer_.frame) / 2.0);
-	return (CGRectGetHeight(self->targetLayer_.frame) / 2.0);
+	//return DECR_PIXEL(CGFLOAT_DIV_2(CGRectGetHeight(self->targetLayer_.frame)));
+	return (CGFLOAT_DIV_2(CGRectGetHeight(self->targetLayer_.frame)));
 }// layerHalfHeight
 
 
@@ -6687,8 +6703,8 @@ Returns half the width in pixels of the frame.
 - (CGFloat)
 layerHalfWidth
 {
-	//return DECR_PIXEL(CGRectGetWidth(self->targetLayer_.frame) / 2.0);
-	return (CGRectGetWidth(self->targetLayer_.frame) / 2.0);
+	//return DECR_PIXEL(CGFLOAT_DIV_2(CGRectGetWidth(self->targetLayer_.frame)));
+	return (CGFLOAT_DIV_2(CGRectGetWidth(self->targetLayer_.frame)));
 }// layerHalfWidth
 
 
@@ -6728,7 +6744,7 @@ useful for aligning lines that overlap perpendicularly.
 - (CGFloat)
 lineHalfWidth
 {
-	return (self->targetLayer_.lineWidth / 2.0);
+	return CGFLOAT_DIV_2(self->targetLayer_.lineWidth);
 }// lineHalfWidth
 
 
@@ -6777,7 +6793,7 @@ doubleHorizontalSecondY
 	{
 		// without anti-aliasing, arbitrarily force a single-pixel space
 		// compared to the other line so that the split is legible
-		result = (self.doubleHorizontalFirstY + std::max(2.0 * self.lineWidth + 1, 1.0));
+		result = (self.doubleHorizontalFirstY + std::max< CGFloat >(CGFLOAT_TIMES_2(self.lineWidth) + 1, 1.0f));
 	}
 	else
 	{
@@ -6790,7 +6806,7 @@ doubleHorizontalSecondY
 			extraOffset += 0.2 * self.lineWidth;
 		}
 		
-		result = INCR_PIXEL(self.doubleHorizontalFirstY + 1.5 * self.lineWidth + extraOffset);
+		result = INCR_PIXEL(self.doubleHorizontalFirstY + 1.5f * self.lineWidth + extraOffset);
 	}
 	
 	return result;
@@ -6826,7 +6842,7 @@ doubleVerticalSecondX
 	{
 		// without anti-aliasing, arbitrarily force a single-pixel space
 		// compared to the other line so that the split is legible
-		result = (self.doubleVerticalFirstX + std::max(2.0 * self.lineWidth + 1, 1.0));
+		result = (self.doubleVerticalFirstX + std::max< CGFloat >(CGFLOAT_TIMES_2(self.lineWidth) + 1, 1.0f));
 	}
 	else
 	{
@@ -6839,7 +6855,7 @@ doubleVerticalSecondX
 			extraOffset += 0.2 * self.lineWidth;
 		}
 		
-		result = INCR_PIXEL(self.doubleVerticalFirstX + 1.5 * self.lineWidth + extraOffset);
+		result = INCR_PIXEL(self.doubleVerticalFirstX + 1.5f * self.lineWidth + extraOffset);
 	}
 	
 	return result;
@@ -6861,7 +6877,7 @@ squareLineBoldNormalJoin
 {
 	// this should be half as wide as the thickness chosen
 	// for lines in "standardBold"
-	return (self.lineWidth * 0.75);
+	return (self.lineWidth * 0.75f);
 }// squareLineBoldNormalJoin
 
 

@@ -503,8 +503,9 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	case kKeypads_WindowTypeArrangeWindow:
 		if (inIsVisible)
 		{
-			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] setOriginToX:gArrangeWindowStackingOrigin.x
-																						andY:gArrangeWindowStackingOrigin.y];
+			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController]
+				setOriginToX:STATIC_CAST(gArrangeWindowStackingOrigin.x, SInt16)
+								andY:STATIC_CAST(gArrangeWindowStackingOrigin.y, SInt16)];
 			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] showWindow:NSApp];
 		}
 		else
@@ -644,8 +645,8 @@ doneArranging:(id)	sender
 		NSScreen*			screen = [window screen];
 		NSRect				windowFrame = [window frame];
 		NSRect				screenFrame = [screen frame];
-		SInt16				x = STATIC_CAST(windowFrame.origin.x, SInt32);
-		SInt16				y = STATIC_CAST(screenFrame.size.height - windowFrame.size.height - windowFrame.origin.y, SInt32);
+		SInt16				x = STATIC_CAST(windowFrame.origin.x, SInt16);
+		SInt16				y = STATIC_CAST(screenFrame.size.height - windowFrame.size.height - windowFrame.origin.y, SInt16);
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		

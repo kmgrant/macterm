@@ -123,7 +123,7 @@ Prefs::define_macro		(unsigned int		index_in_set,
 		
 		
 		prefsResult = Preferences_ContextSetData(this->_context, Preferences_ReturnTagVariantForIndex
-																	(kPreferences_TagIndexedMacroName, index_in_set),
+																	(kPreferences_TagIndexedMacroName, STATIC_CAST(index_in_set, Preferences_Index)),
 													sizeof(nameCFString), &nameCFString);;
 		if (kPreferences_ResultOK != prefsResult)
 		{
@@ -140,7 +140,7 @@ Prefs::define_macro		(unsigned int		index_in_set,
 		
 		
 		prefsResult = Preferences_ContextSetData(this->_context, Preferences_ReturnTagVariantForIndex
-																	(kPreferences_TagIndexedMacroContents, index_in_set),
+																	(kPreferences_TagIndexedMacroContents, STATIC_CAST(index_in_set, Preferences_Index)),
 													sizeof(contentsCFString), &contentsCFString);;
 		if (kPreferences_ResultOK != prefsResult)
 		{

@@ -1077,8 +1077,8 @@ performSetCommandLineToRemoteShell:(id)		sender
 	else
 	{
 		NSWindow*	window = self.managedView.window;
-		NSPoint		fieldLocalPoint = NSMakePoint(NSWidth(self->commandLineTextField.bounds) / 2.0,
-													NSHeight(self->commandLineTextField.bounds) / 2.0);
+		NSPoint		fieldLocalPoint = NSMakePoint(CGFLOAT_DIV_2(NSWidth(self->commandLineTextField.bounds)),
+													CGFLOAT_DIV_2(NSHeight(self->commandLineTextField.bounds)));
 		CGPoint		browserPointOrigin = NSPointToCGPoint
 											([self->commandLineTextField convertPoint:fieldLocalPoint
 																						toView:nil/* make window coordinates */]);
@@ -1090,7 +1090,7 @@ performSetCommandLineToRemoteShell:(id)		sender
 		// a previously-constructed interface with old data)
 		ServerBrowser_Configure(_serverBrowser, STATIC_CAST([self.serverProtocol.numberValue unsignedIntegerValue], Session_Protocol),
 								BRIDGE_CAST(self.serverHost.stringValue, CFStringRef),
-								[self.serverPort.numberValue unsignedIntegerValue],
+								STATIC_CAST([self.serverPort.numberValue unsignedIntegerValue], UInt16),
 								BRIDGE_CAST(self.serverUserID.stringValue, CFStringRef));
 		
 		// display server browser (closed by the user)
@@ -1637,7 +1637,7 @@ updateCommandLineFromRemotePreferences
 	// reconstruct command line accordingly
 	if (false == copyRemoteCommandLineString(STATIC_CAST([self.serverProtocol.numberValue integerValue], Session_Protocol),
 												BRIDGE_CAST(self.serverHost.stringValue, CFStringRef),
-												[self.serverPort.numberValue integerValue],
+												STATIC_CAST([self.serverPort.numberValue integerValue], UInt16),
 												BRIDGE_CAST(self.serverUserID.stringValue, CFStringRef),
 												newCommandLine))
 	{

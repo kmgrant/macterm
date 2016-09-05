@@ -699,7 +699,7 @@ time; as far as sorting is concerned, this is sufficient.
 - (NSNumber*)
 dataCreationTime
 {
-	return [NSNumber numberWithInt:Session_TimeOfActivation(self->session)];
+	return [NSNumber numberWithUnsignedInteger:STATIC_CAST(Session_TimeOfActivation(self->session), NSUInteger)];
 }// dataCreationTime
 
 

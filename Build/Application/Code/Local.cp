@@ -987,7 +987,10 @@ from the gdb debugger).
 Boolean
 Local_StandardInputIsATerminal ()
 {
-	return isatty(STDIN_FILENO);
+	Boolean		result = STATIC_CAST(isatty(STDIN_FILENO), Boolean);
+	
+	
+	return result;
 }// StandardInputIsATerminal
 
 

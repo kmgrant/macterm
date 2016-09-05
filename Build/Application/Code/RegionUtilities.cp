@@ -77,9 +77,9 @@ RegionUtilities_AddRoundedRectangleToPath	(CGContextRef		inContext,
 		// define the entire path
 		{
 			float const		kScaledWidth = CGRectGetWidth(inFrame) / inCurveWidth;
-			float const		kScaledHalfWidth = kScaledWidth * 0.5;
+			float const		kScaledHalfWidth = kScaledWidth * 0.5f;
 			float const		kScaledHeight = CGRectGetHeight(inFrame) / inCurveHeight;
-			float const		kScaledHalfHeight = kScaledHeight * 0.5;
+			float const		kScaledHalfHeight = kScaledHeight * 0.5f;
 			float const		kRadius = 1.0;
 			
 			
@@ -136,16 +136,17 @@ RegionUtilities_CenterRectIn	(Rect*			inoutInner,
 {
 	// the algorithm offsets the first rectangle based on the difference between
 	// the center points of the 2nd and 1st rectangles, which conceptually is this:
-	//		RegionUtilities_OffsetRect(inoutInner, (inOuter->left + INTEGER_HALVED(inOuter->right - inOuter->left)) -
-	//									(inoutInner->left + INTEGER_HALVED(inoutInner->right - inoutInner->left)),
-	//								(inOuter->top + INTEGER_HALVED(inOuter->bottom - inOuter->top)) -
-	//									(inoutInner->top + INTEGER_HALVED(inoutInner->bottom - inoutInner->top)));
+	//		RegionUtilities_OffsetRect(inoutInner, (inOuter->left + INTEGER_DIV_2(inOuter->right - inOuter->left)) -
+	//									(inoutInner->left + INTEGER_DIV_2(inoutInner->right - inoutInner->left)),
+	//								(inOuter->top + INTEGER_DIV_2(inOuter->bottom - inOuter->top)) -
+	//									(inoutInner->top + INTEGER_DIV_2(inoutInner->bottom - inoutInner->top)));
 	// however, it’s possible to multiply out the above equation and reduce it
 	// to the following, simpler form; since at first glance the simpler form
 	// is less obviously correct, the long expansion is included above for your
 	// peace of mind :)
-	RegionUtilities_OffsetRect(inoutInner, INTEGER_HALVED(inOuter->right + inOuter->left - inoutInner->right - inoutInner->left),
-								INTEGER_HALVED(inOuter->bottom + inOuter->top - inoutInner->bottom - inoutInner->top));
+	RegionUtilities_OffsetRect(inoutInner,
+								STATIC_CAST(INTEGER_DIV_2(inOuter->right + inOuter->left - inoutInner->right - inoutInner->left), SInt16),
+								STATIC_CAST(INTEGER_DIV_2(inOuter->bottom + inOuter->top - inoutInner->bottom - inoutInner->top), SInt16));
 }// CenterRectIn
 
 

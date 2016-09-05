@@ -419,7 +419,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	{
 		// IMPORTANT: since this notification occurs constantly during
 		// a live move of the parent window, limit number of responses
-		[windowController moveToIdealPositionAfterDelay:0.3/* arbitrary */];
+		[windowController moveToIdealPositionAfterDelay:0.3f/* arbitrary */];
 	}
 	result = eventNotHandledErr; // not completely handled
 	
@@ -828,7 +828,7 @@ not be interrupted by closing animations.
 - (void)
 removeWindowAfterDelayWithAcceptance:(BOOL)		isAccepted
 {
-	[self removeWindowWithAcceptance:isAccepted afterDelay:0.03];
+	[self removeWindowWithAcceptance:isAccepted afterDelay:0.03f];
 }// removeWindowAfterDelayWithAcceptance:
 
 
@@ -867,7 +867,7 @@ See also "display".
 removeWindowWithAcceptance:(BOOL)	isAccepted
 afterDelay:(float)					aDelay
 {
-	float const		kDelayZeroEpsilon = 0.001; // arbitrary; less than this is treated as immediate
+	float const		kDelayZeroEpsilon = 0.001f; // arbitrary; less than this is treated as immediate
 	
 	
 	if (self->isHeldOpenBySheet)
@@ -1096,7 +1096,7 @@ parentWindowDidMove:(NSNotification*)		aNotification
 		{
 			// IMPORTANT: since this notification occurs constantly during
 			// a live move of the parent window, limit number of responses
-			[self moveToIdealPositionAfterDelay:0.3/* arbitrary */];
+			[self moveToIdealPositionAfterDelay:0.3f/* arbitrary */];
 		}
 	}
 }// parentWindowDidMove:
@@ -1143,7 +1143,7 @@ parentWindowDidResize:(NSNotification*)		aNotification
 		{
 			// IMPORTANT: since this notification occurs constantly during
 			// a live move of the parent window, limit number of responses
-			[self moveToIdealPositionAfterDelay:0.3/* arbitrary */];
+			[self moveToIdealPositionAfterDelay:0.3f/* arbitrary */];
 		}
 	}
 }// parentWindowDidResize:

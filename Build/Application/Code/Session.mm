@@ -137,7 +137,7 @@ struct My_KeyPress
 	ControlRef		control;			//!< which control is focused
 	SInt16			characterCode;		//!< code uniquifying the character corresponding to the key pressed
 	SInt16			characterCode2;		//!< if nonzero, the key press represents a sequence of two characters to send
-	SInt16			virtualKeyCode;		//!< code uniquifying the key pressed
+	UInt32			virtualKeyCode;		//!< code uniquifying the key pressed
 	Boolean			commandDown;		//!< the state of the Command modifier key
 	Boolean			controlDown;		//!< the state of the Control modifier key
 	Boolean			optionDown;			//!< the state of the Option modifier key
@@ -1534,7 +1534,7 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					Boolean		flag = false;
 					
 					
-					flag = ptr->eventKeys.newline;
+					flag = (kSession_NewlineModeMapCRNull == ptr->eventKeys.newline);
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapCR, flag);
 					if (kSessionDescription_ResultOK != saveError)
@@ -1602,13 +1602,16 @@ void
 Session_FlushNetwork	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16					remainingBytesCount = 0;
+	size_t					remainingBytesCount = 0;
 	
 	
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									false); // no output
 	remainingBytesCount = 1; // just needs to be positive to start with
-	while (remainingBytesCount > 0) remainingBytesCount = processMoreData(ptr);
+	while (remainingBytesCount > 0)
+	{
+		remainingBytesCount = processMoreData(ptr);
+	}
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									true); // output now
 }// FlushNetwork
@@ -2488,8 +2491,9 @@ Session_SendData	(SessionRef		inRef,
 	
 	if (nullptr != ptr->mainProcess)
 	{
-		result = Local_TerminalWriteBytes(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
-											inBufferPtr, inByteCount);
+		result = STATIC_CAST(Local_TerminalWriteBytes(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
+														inBufferPtr, inByteCount),
+								SInt16);
 	}
 	return result;
 }// SendData
@@ -6429,7 +6433,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	TerminalScreenRef		someScreen = ptr->targetTerminals.front(); // TEMPORARY
 	static SInt16			characterCode = '\0'; // ASCII
 	static SInt16			characterCode2 = '\0'; // ASCII
-	static SInt16			virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
+	static UInt32			virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
 	static Boolean			commandDown = false;
 	static Boolean			controlDown = false;
 	static Boolean			optionDown  = false;
@@ -6651,7 +6655,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				// control key (except carriage return, which is handled later,
 				// and any of the special control key sequences above)
-				Session_UserInputKey(session, characterCode);
+				Session_UserInputKey(session, STATIC_CAST(characterCode, UInt8));
 				result = true;
 			}
 		}

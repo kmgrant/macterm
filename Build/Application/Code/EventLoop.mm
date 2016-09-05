@@ -615,7 +615,7 @@ EventLoop_ReturnCurrentModifiers ()
 {
 	// under Carbon, a callback updates a global variable whenever
 	// the state of a modifier key changes; so, just return that value
-	return gCarbonEventModifiers;
+	return STATIC_CAST(gCarbonEventModifiers, EventModifiers);
 }// ReturnCurrentModifiers
 
 

@@ -184,6 +184,12 @@ The private class interface.
 	- (Preferences_ContextRef)
 	currentPreferencesContext;
 
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	preferenceChange:(ListenerModel_Event)_
+	context:(void*)_;
+
 // methods of the form required by NSSavePanel
 	- (void)
 	didEndExportPanel:(NSSavePanel*)_
@@ -953,7 +959,7 @@ first confirming this with the user.
 performCopyPreferenceCollectionToDefault:(id)	sender
 {
 #pragma unused(sender)
-	UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+	NSInteger					selectedIndex = [self->sourceListTableView selectedRow];
 	PrefsWindow_Collection*		baseCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
 	Preferences_ContextRef		baseContext = [baseCollection preferencesContext];
 	CFStringRef					contextName = nullptr;
@@ -1022,7 +1028,7 @@ change its name.
 performDuplicatePreferenceCollection:(id)	sender
 {
 #pragma unused(sender)
-	UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+	NSInteger					selectedIndex = [self->sourceListTableView selectedRow];
 	PrefsWindow_Collection*		baseCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
 	Preferences_ContextRef		baseContext = [baseCollection preferencesContext];
 	
@@ -1120,7 +1126,7 @@ the source list (and saved user preferences).
 performRemovePreferenceCollection:(id)	sender
 {
 #pragma unused(sender)
-	UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+	NSInteger					selectedIndex = [self->sourceListTableView selectedRow];
 	PrefsWindow_Collection*		baseCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
 	Preferences_ContextRef		baseContext = [baseCollection preferencesContext];
 	
@@ -1186,7 +1192,7 @@ collection in the source list.
 performRenamePreferenceCollection:(id)	sender
 {
 #pragma unused(sender)
-	UInt16		selectedIndex = [self->sourceListTableView selectedRow];
+	NSInteger	selectedIndex = [self->sourceListTableView selectedRow];
 	
 	
 	// do not allow the Default item to be edited (this is
@@ -2237,7 +2243,7 @@ currentPreferencesContext
 	
 	if (kPanel_EditTypeInspector == [self->activePanel panelEditType])
 	{
-		UInt16						selectedIndex = [self->sourceListTableView selectedRow];
+		NSInteger					selectedIndex = [self->sourceListTableView selectedRow];
 		PrefsWindow_Collection*		selectedCollection = [self->currentPreferenceCollections objectAtIndex:selectedIndex];
 		
 		
@@ -2728,7 +2734,7 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 	// (it is unclear why this step is needed; the symptom is that
 	// when the source list is hidden, the tab view of the next panel
 	// is sometimes not completely redrawn on its left side)
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.32 * NSEC_PER_SEC), dispatch_get_main_queue(),
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, STATIC_CAST(0.32 * NSEC_PER_SEC, int64_t)), dispatch_get_main_queue(),
 	^{
 		[containerTabView setNeedsDisplay:YES];
 	});

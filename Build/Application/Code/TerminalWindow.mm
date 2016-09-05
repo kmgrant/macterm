@@ -741,7 +741,7 @@ TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
 							 TerminalScreenRef*		outScreenArray,
 							 UInt16*				outActualCountOrNull)
 {
-	if (outScreenArray != nullptr)
+	if (nullptr != outScreenArray)
 	{
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		auto							maxIterator = ptr->allScreens.begin();
@@ -756,7 +756,10 @@ TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
 		{
 			*outScreenArray++ = *screenIterator;
 		}
-		if (outActualCountOrNull != nullptr) *outActualCountOrNull = ptr->allScreens.size();
+		if (nullptr != outActualCountOrNull)
+		{
+			*outActualCountOrNull = STATIC_CAST(ptr->allScreens.size(), UInt16);
+		}
 	}
 }// GetScreens
 
@@ -935,7 +938,7 @@ TerminalWindow_GetViews		(TerminalWindowRef	inRef,
 							 TerminalViewRef*	outViewArray,
 							 UInt16*			outActualCountOrNull)
 {
-	if (outViewArray != nullptr)
+	if (nullptr != outViewArray)
 	{
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		auto							maxIterator = ptr->allViews.begin();
@@ -950,7 +953,10 @@ TerminalWindow_GetViews		(TerminalWindowRef	inRef,
 		{
 			*outViewArray++ = *viewIterator;
 		}
-		if (outActualCountOrNull != nullptr) *outActualCountOrNull = ptr->allViews.size();
+		if (nullptr != outActualCountOrNull)
+		{
+			*outActualCountOrNull = STATIC_CAST(ptr->allViews.size(), UInt16);
+		}
 	}
 }// GetViews
 
@@ -992,7 +998,7 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 	{
 	case kTerminalWindow_ViewGroupEverything:
 	case kTerminalWindow_ViewGroupActive:
-		if (outViewArray != nullptr)
+		if (nullptr != outViewArray)
 		{
 			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 			auto							maxIterator = ptr->allViews.begin();
@@ -1007,7 +1013,10 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 			{
 				*outViewArray++ = *viewIterator;
 			}
-			if (outActualCountOrNull != nullptr) *outActualCountOrNull = ptr->allViews.size();
+			if (nullptr != outActualCountOrNull)
+			{
+				*outActualCountOrNull = STATIC_CAST(ptr->allViews.size(), UInt16);
+			}
 			result = kTerminalWindow_ResultOK;
 		}
 		break;
@@ -1400,7 +1409,7 @@ TerminalWindow_ReturnScreenCount	(TerminalWindowRef		inRef)
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		
 		
-		result = ptr->allScreens.size();
+		result = STATIC_CAST(ptr->allScreens.size(), UInt16);
 	}
 	else
 	{
@@ -1508,7 +1517,7 @@ TerminalWindow_ReturnViewCount		(TerminalWindowRef		inRef)
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		
 		
-		result = ptr->allViews.size();
+		result = STATIC_CAST(ptr->allViews.size(), UInt16);
 	}
 	else
 	{
@@ -1541,13 +1550,13 @@ TerminalWindow_ReturnViewCountInGroup	(TerminalWindowRef			inRef,
 		switch (inGroup)
 		{
 		case kTerminalWindow_ViewGroupEverything:
-			result = ptr->allViews.size();
+			result = STATIC_CAST(ptr->allViews.size(), UInt16);
 			assert(result == TerminalWindow_ReturnViewCount(inRef));
 			break;
 		
 		case kTerminalWindow_ViewGroupActive:
 			// currently, only one tab per window so the result is the same
-			result = ptr->allViews.size();
+			result = STATIC_CAST(ptr->allViews.size(), UInt16);
 			assert(result == TerminalWindow_ReturnViewCount(inRef));
 			break;
 		
@@ -2736,7 +2745,7 @@ installedActions()
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
 											Terminal_ReturnColumnCount(newScreen), Terminal_ReturnRowCount(newScreen),
 											&screenWidth, &screenHeight);
-		setStandardState(this, screenWidth, screenHeight, true/* resize window */);
+		setStandardState(this, screenWidth, STATIC_CAST(screenHeight, UInt16), true/* resize window */);
 	}
 	
 	// stagger the window (this is effective for newly-created windows
@@ -6400,7 +6409,7 @@ returnGrowBoxHeight		(My_TerminalWindowPtr	inPtr)
 		}
 		else
 		{
-			result = data;
+			result = STATIC_CAST(data, UInt16);
 		}
 	}
 	return result;
@@ -6481,7 +6490,7 @@ returnScrollBarWidth	(My_TerminalWindowPtr	inPtr)
 		
 		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
 		if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
-		result = data;
+		result = STATIC_CAST(data, UInt16);
 	}
 	return result;
 }// returnScrollBarWidth
@@ -7054,7 +7063,7 @@ setCursorInWindow	(HIWindowRef	inWindow,
 				(kConstantsRegistry_ControlKindTerminalView == controlKind.kind))
 			{
 				// set the cursor appropriately in whatever control is under the mouse
-				result = HandleControlSetCursor(viewUnderMouse, localMouse, inModifiers, &wasSet);
+				result = HandleControlSetCursor(viewUnderMouse, localMouse, STATIC_CAST(inModifiers, EventModifiers), &wasSet);
 				if (noErr != result)
 				{
 					// some problem; restore the arrow and claim all is well
@@ -7772,7 +7781,7 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 											inColumns, inRows, &screenWidth, &screenHeight);
-		setStandardState(inPtr, screenWidth, screenHeight, true/* resize window */, inAnimateWindowChanges);
+		setStandardState(inPtr, screenWidth, STATIC_CAST(screenHeight, UInt16), true/* resize window */, inAnimateWindowChanges);
 	}
 }// setWindowToIdealSizeForDimensions
 
@@ -7796,7 +7805,7 @@ setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 		
 		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
 									screenWidth, screenHeight);
-		setStandardState(inPtr, screenWidth, screenHeight, true/* resize window */);
+		setStandardState(inPtr, screenWidth, STATIC_CAST(screenHeight, UInt16), true/* resize window */);
 	}
 }// setWindowToIdealSizeForFont
 
@@ -8320,7 +8329,7 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 			barScale = kMy_ScrollBarThumbMinimumSize / (scrollBarBounds.size.height - 2 * kMy_ScrollBarArrowHeight);
 			if (viewScale < barScale)
 			{
-				proposedViewSize = barScale * viewDenominator;
+				proposedViewSize = STATIC_CAST(barScale * viewDenominator, UInt32);
 			}
 			
 			SetControlViewSize(scrollBarView, proposedViewSize);

@@ -295,7 +295,7 @@ Workspace_ReturnWindowCount		(Workspace_Ref	inWorkspace)
 	
 	if (nullptr != ptr)
 	{
-		result = ptr->contents.size();
+		result = STATIC_CAST(ptr->contents.size(), UInt16);
 	}
 	return result;
 }// ReturnWindowCount

@@ -359,7 +359,7 @@ setTranslationTableIndexes:(NSIndexSet*)	indexes
 		if ([indexes count] > 0)
 		{
 			// translate from zero-based to one-based
-			UInt16		index = (1 + [indexes firstIndex]);
+			UInt16		index = STATIC_CAST(1 + [indexes firstIndex], UInt16);
 			
 			
 			// update preferences

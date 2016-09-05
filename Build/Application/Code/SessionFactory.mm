@@ -914,7 +914,8 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 								(inSessionDescription, kSessionDescription_IntegerTypeTerminalVisibleLineCount, rows);
 			if (kSessionDescription_ResultOK == dataAccessError)
 			{
-				TerminalWindow_SetScreenDimensions(terminalWindow, columns, rows, false/* send to recording scripts */);
+				TerminalWindow_SetScreenDimensions(terminalWindow, STATIC_CAST(columns, UInt16), STATIC_CAST(rows, UInt16),
+													false/* send to recording scripts */);
 			}
 		}
 	}
@@ -951,7 +952,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 							(inSessionDescription, kSessionDescription_IntegerTypeTerminalFontSize, fontSize);
 		if (kSessionDescription_ResultOK == dataAccessError)
 		{
-			TerminalWindow_SetFontAndSize(terminalWindow, nullptr/* font */, fontSize);
+			TerminalWindow_SetFontAndSize(terminalWindow, nullptr/* font */, STATIC_CAST(fontSize, UInt16));
 		}
 	}
 	{
@@ -1223,7 +1224,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 	
 	// not every window in the workspace may be defined; launch
 	// every session that is found
-	for (UInt16 i = 1; i <= kPreferences_MaximumWorkspaceSize; ++i)
+	for (Preferences_Index i = 1; i <= kPreferences_MaximumWorkspaceSize; ++i)
 	{
 		CFStringRef			associatedSessionName = nullptr;
 		TerminalWindowRef	terminalWindow = nullptr;
@@ -1867,7 +1868,7 @@ even if they aren’t connected yet).
 UInt16
 SessionFactory_ReturnCount ()
 {
-	return gSessionListSortedByCreationTime().size();
+	return STATIC_CAST(gSessionListSortedByCreationTime().size(), UInt16);
 }// ReturnCount
 
 
@@ -2540,8 +2541,9 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 						 Preferences_ContextRef		inWorkspaceOrNull,
 						 UInt16						inWindowIndexInWorkspaceOrZero)
 {
-	WindowRef	window = TerminalWindow_ReturnWindow(inTerminalWindow);
-	Boolean		result = true;
+	Preferences_Index const		kWindowIndex = STATIC_CAST(inWindowIndexInWorkspaceOrZero, Preferences_Index);
+	WindowRef					window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	Boolean						result = true;
 	
 	
 	if (nullptr == window) result = false;
@@ -2555,14 +2557,14 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		
 		
 		// set the window location and size appropriately
-		if ((0 != inWindowIndexInWorkspaceOrZero) && (nullptr != inWorkspaceOrNull))
+		if ((0 != kWindowIndex) && (nullptr != inWorkspaceOrNull))
 		{
 			HIRect		frameBounds;
 			
 			
 			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex
 																		(kPreferences_TagIndexedWindowFrameBounds,
-																			inWindowIndexInWorkspaceOrZero),
+																			kWindowIndex),
 														sizeof(frameBounds), &frameBounds, false/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
@@ -2570,19 +2572,19 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 				// if the current display size disagrees, adjust the window location somehow
 				
 				// IMPORTANT: the boundaries are not guaranteed to specify the width or height
-				MoveWindowStructure(window, frameBounds.origin.x, frameBounds.origin.y);
+				MoveWindowStructure(window, STATIC_CAST(frameBounds.origin.x, SInt16), STATIC_CAST(frameBounds.origin.y, SInt16));
 			}
 		}
 		
 		// set the window title, if one is defined
-		if ((0 != inWindowIndexInWorkspaceOrZero) && (nullptr != inWorkspaceOrNull))
+		if ((0 != kWindowIndex) && (nullptr != inWorkspaceOrNull))
 		{
 			CFStringRef		titleCFString = nullptr;
 			
 			
 			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex
 																		(kPreferences_TagIndexedWindowTitle,
-																			inWindowIndexInWorkspaceOrZero),
+																			kWindowIndex),
 														sizeof(titleCFString), &titleCFString, false/* search defaults */);
 			if (kPreferences_ResultOK == prefsResult)
 			{
@@ -2661,7 +2663,7 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 			
 			// also, when given a target workspace, assume that tabs should appear on
 			// their own, even if they could otherwise fold into an existing stack
-			if ((useTabs) && (1 == inWindowIndexInWorkspaceOrZero))
+			if ((useTabs) && (1 == kWindowIndex))
 			{
 				// override the default behavior of using the active set of tabs
 				targetWorkspace = createWorkspace();

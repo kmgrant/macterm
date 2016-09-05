@@ -751,7 +751,7 @@ VectorInterpreter_Redraw	(VectorInterpreter_Ref	inRef,
 	for (ptr->toCurrentCommand = ptr->commandList.begin();
 			ptr->commandList.end() != ptr->toCurrentCommand; ++(ptr->toCurrentCommand))
 	{
-		VGdraw(destPtr, *(ptr->toCurrentCommand));
+		VGdraw(destPtr, STATIC_CAST(*(ptr->toCurrentCommand), char));
 	}
 }// Redraw
 
@@ -1195,9 +1195,9 @@ joinup		(short		hi,
 /* returns the number represented by the 3 pieces */
 {
 #if 1
-	return (((hi & 31) << 7) | ((lo & 31) << 2) | (e & 3));
+	return STATIC_CAST((((hi & 31) << 7) | ((lo & 31) << 2) | (e & 3)), short);
 #else
-	return (((hi /* & 31 */ ) << 7) | ((lo /* & 31 */ ) << 2) | (e /* & 3 */));
+	return STATIC_CAST((((hi /* & 31 */ ) << 7) | ((lo /* & 31 */ ) << 2) | (e /* & 3 */)), short);
 #endif
 }// joinup
 
@@ -1686,18 +1686,18 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 		case INTEGER1:
 			if (c & 0x40)
 			{
-				vp->intin = (vp->intin << 6) | (c & 0x3f);
+				vp->intin = STATIC_CAST((vp->intin << 6) | (c & 0x3f), short);
 				vp->state = INTEGER2;
 			}
 			else
 			{
-				vp->intin = (vp->intin << 4) | (c & 0x0f);
+				vp->intin = STATIC_CAST((vp->intin << 4) | (c & 0x0f), short);
 				if (!(c & 0x10)) vp->intin *= -1;
 				vp->state = vp->savstate;
 			}
 			break;
 		case INTEGER2:
-			vp->intin = (vp->intin << 4) | (c & 0x0f);
+			vp->intin = STATIC_CAST((vp->intin << 4) | (c & 0x0f), short);
 			if (!(c & 0x10)) vp->intin *= -1;
 			vp->state = vp->savstate;
 			break;
@@ -1908,7 +1908,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 			}
 			break;
 		case MARKER:				/* TEK4105 Set marker type.  17jul90dsw */
-			vp->TEKMarker = vp->intin;
+			vp->TEKMarker = STATIC_CAST(vp->intin, char);
 			if (vp->TEKMarker > 10) vp->TEKMarker = 10;
 			if (vp->TEKMarker <  0) vp->TEKMarker = 0;
 			vp->state = DONE;
@@ -1932,7 +1932,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 			goagain = true;
 			break;
 		case GTROT1:
-			vp->TEKRot = (vp->TEKRot) << (vp->intin);
+			vp->TEKRot = STATIC_CAST((vp->TEKRot) << (vp->intin), short);
 			vp->TEKRot = ((vp->TEKRot + 45) / 90) * 90;
 			vp->state = DONE;
 			goagain = true;
