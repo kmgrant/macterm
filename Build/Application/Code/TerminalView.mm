@@ -6117,7 +6117,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// width is not reasonable because it refers to the whole range,
 		// which might encompass several characters)
 		//sectionBounds.origin.x += 1;
-		//sectionBounds.size.height -= 3;
+		sectionBounds.size.height -= 3;
 		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
