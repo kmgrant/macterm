@@ -1572,8 +1572,8 @@ initializeWithContext:(void*)			aContext
 	self.panelHasContextualHelp = NO;
 	
 	// ensure that the display is updated after certain changes
-	[registeredObservers addObject:[self observePropertyFromSelector:@selector(dialogText)]];
-	[registeredObservers addObject:[self observePropertyFromSelector:@selector(helpText)]];
+	[registeredObservers addObject:[[self newObserverFromSelector:@selector(dialogText)] autorelease]];
+	[registeredObservers addObject:[[self newObserverFromSelector:@selector(helpText)] autorelease]];
 }// panelViewManager:initializeWithContext:
 
 

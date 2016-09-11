@@ -406,22 +406,22 @@ vibrancy:(BOOL)					aVisualEffectFlag
 			}
 			
 			// ensure that the display is updated after certain changes
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(arrowHeight)]];
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(borderOuterColor)]];
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(borderPrimaryColor)]];
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(hasArrow)]];
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(hasRoundCornerBesideArrow)]];
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(popoverBackgroundColor)]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(arrowHeight)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderOuterColor)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderPrimaryColor)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasArrow)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
 			
 			// ensure that frame-dependent property changes will cause the
 			// frame to be synchronized with the new values (note that the
 			// "setBorderWidth:" method already requires the border to fit
 			// within the margin so that value is not monitored here)
-			[registeredObservers addObject:[self observePropertyFromSelector:@selector(viewMargin)
-																				ofObject:self
-																				options:(NSKeyValueObservingOptionNew |
-																							NSKeyValueObservingOptionOld)
-																				context:nullptr]];
+			[registeredObservers addObject:[self newObserverFromSelector:@selector(viewMargin)
+																			ofObject:self
+																			options:(NSKeyValueObservingOptionNew |
+																						NSKeyValueObservingOptionOld)
+																			context:nullptr]];
 			
 			// subscribe to notifications
 			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification

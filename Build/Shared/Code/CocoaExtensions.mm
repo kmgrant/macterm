@@ -35,6 +35,11 @@
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 
+// compile-time options
+#ifndef COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
+#define COCOA_EXTENSIONS_SUPPORT_QUICKDRAW 1
+#endif
+
 
 
 #pragma mark Public Methods
@@ -314,6 +319,7 @@ setAsBackgroundInCGContext:(CGContextRef)	aDrawingContext
 }// setAsBackgroundInCGContext:
 
 
+#if COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
 /*!
 TEMPORARY.  FOR TRANSITIONAL CODE ONLY.  DEPRECATED.
 
@@ -336,6 +342,7 @@ setAsBackgroundInQDCurrentPort
 	asQuickDrawRGB = ColorUtilities_QuickDrawColorMake(asDeviceColor);
 	RGBBackColor(&asQuickDrawRGB);
 }// setAsBackgroundInQDCurrentPort
+#endif
 
 
 /*!
@@ -355,6 +362,7 @@ setAsForegroundInCGContext:(CGContextRef)	aDrawingContext
 }// setAsForegroundInCGContext:
 
 
+#if COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
 /*!
 TEMPORARY.  FOR TRANSITIONAL CODE ONLY.  DEPRECATED.
 
@@ -377,6 +385,7 @@ setAsForegroundInQDCurrentPort
 	asQuickDrawRGB = ColorUtilities_QuickDrawColorMake(asDeviceColor);
 	RGBForeColor(&asQuickDrawRGB);
 }// setAsForegroundInQDCurrentPort
+#endif
 
 
 @end // NSColor (CocoaExtensions_NSColor)
@@ -388,6 +397,7 @@ setAsForegroundInQDCurrentPort
 
 @synthesize context = _context;
 @synthesize keyPath = _keyPath;
+@synthesize observedObject = _observedObject;
 
 
 @end //}
@@ -552,7 +562,7 @@ later (see "removeObserverSpecifiedWith:").
 (2016.04)
 */
 - (CocoaExtensions_ObserverSpec*)
-observePropertyFromKeyPath:(NSString*)	aKeyPath
+newObserverFromKeyPath:(NSString*)		aKeyPath
 ofObject:(id)							anObject
 options:(NSKeyValueObservingOptions)	anOptionSet
 context:(void*)							aContext
@@ -562,6 +572,7 @@ context:(void*)							aContext
 	
 	// capture all information necessary to correctly
 	// remove this observer at a later time
+	result.observedObject = anObject;
 	result.keyPath = aKeyPath;
 	result.context = aContext;
 	
@@ -569,32 +580,32 @@ context:(void*)							aContext
 	[anObject addObserver:self forKeyPath:aKeyPath options:anOptionSet context:aContext];
 	
 	return result;
-}// observePropertyFromKeyPath:fromSelector:options:context:
+}// newObserverFromKeyPath:fromSelector:options:context:
 
 
 /*!
 Simplified version that assumes the target and observer are
 both the current object, with no special options or context.
-Calls "observePropertyOfObject:fromSelector:options:context:".
+Calls "newObserverOfObject:fromSelector:options:context:".
 
 (2016.04)
 */
 - (CocoaExtensions_ObserverSpec*)
-observePropertyFromSelector:(SEL)		aSelectorForKeyPath
+newObserverFromSelector:(SEL)		aSelectorForKeyPath
 {
 	CocoaExtensions_ObserverSpec*	result = nil;
 	
 	
-	result = [self observePropertyFromSelector:aSelectorForKeyPath
-												ofObject:self
-												options:0
-												context:nullptr];
+	result = [self newObserverFromSelector:aSelectorForKeyPath
+											ofObject:self
+											options:0
+											context:nullptr];
 	return result;
-}// observePropertyFromSelector:
+}// newObserverFromSelector:
 
 
 /*!
-Calls "observePropertyFromKeyPath:fromSelector:options:context:"
+Calls "newObserverFromKeyPath:fromSelector:options:context:"
 with the constraint that the target key path MUST be expressed
 as a real selector (the property method).
 
@@ -607,7 +618,7 @@ catch a lot of common mistakes.
 (2016.04)
 */
 - (CocoaExtensions_ObserverSpec*)
-observePropertyFromSelector:(SEL)		aSelectorForKeyPath
+newObserverFromSelector:(SEL)			aSelectorForKeyPath
 ofObject:(id)							anObject
 options:(NSKeyValueObservingOptions)	anOptionSet
 context:(void*)							aContext
@@ -615,24 +626,25 @@ context:(void*)							aContext
 	CocoaExtensions_ObserverSpec*	result = nil;
 	
 	
-	result = [self observePropertyFromKeyPath:NSStringFromSelector(aSelectorForKeyPath)
-												ofObject:anObject
-												options:anOptionSet
-												context:aContext];
+	result = [self newObserverFromKeyPath:NSStringFromSelector(aSelectorForKeyPath)
+											ofObject:anObject
+											options:anOptionSet
+											context:aContext];
 	return result;
-}// observePropertyFromSelector:ofObject:options:context:
+}// newObserverFromSelector:ofObject:options:context:
 
 
 /*!
-Calls "removeObserver:forKeyPath:context:" using the
-properties of the given object.
+Calls "removeObserver:forKeyPath:context:" on the observed
+object from the given specification, with the key path and
+context of the specification and this object as the observer.
 
 (2016.04)
 */
 - (void)
 removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)		aSpec
 {
-	[self removeObserver:self forKeyPath:aSpec.keyPath context:aSpec.context];
+	[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:aSpec.context];
 }// removeObserverSpecifiedWith:
 
 

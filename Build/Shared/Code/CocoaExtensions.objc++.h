@@ -58,11 +58,13 @@
 	- (void)
 	setAsForegroundInCGContext:(CGContextRef)_;
 
+#if COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
 // TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
 	- (void)
 	setAsBackgroundInQDCurrentPort;
 	- (void)
 	setAsForegroundInQDCurrentPort;
+#endif
 
 @end //}
 
@@ -94,6 +96,7 @@ to precisely remove the observer later.
 @interface CocoaExtensions_ObserverSpec : NSObject //{
 {
 @private
+	id			_observedObject;
 	void*		_context;
 	NSString*	_keyPath;
 }
@@ -103,6 +106,8 @@ to precisely remove the observer later.
 	context;
 	@property (strong) NSString*
 	keyPath;
+	@property (weak) id
+	observedObject;
 
 @end //}
 
@@ -131,14 +136,14 @@ to precisely remove the observer later.
 
 // new methods: simpler observers with easier cleanup
 	- (CocoaExtensions_ObserverSpec*)
-	observePropertyFromKeyPath:(NSString*)_
+	newObserverFromKeyPath:(NSString*)_
 	ofObject:(id)_
 	options:(NSKeyValueObservingOptions)_
 	context:(void*)_;
 	- (CocoaExtensions_ObserverSpec*)
-	observePropertyFromSelector:(SEL)_;
+	newObserverFromSelector:(SEL)_;
 	- (CocoaExtensions_ObserverSpec*)
-	observePropertyFromSelector:(SEL)_
+	newObserverFromSelector:(SEL)_
 	ofObject:(id)_
 	options:(NSKeyValueObservingOptions)_
 	context:(void*)_;
