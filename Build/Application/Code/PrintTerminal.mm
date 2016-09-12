@@ -34,13 +34,11 @@
 #import <UniversalDefines.h>
 
 // standard-C includes
-#import <cstdio>
 #import <cstring>
 
 // library includes
 #import <CocoaBasic.h>
 #import <CFRetainRelease.h>
-#import <MemoryBlockPtrLocker.template.h>
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
@@ -51,6 +49,8 @@
 #import <FlagManager.h>
 
 // application includes
+#import "AppResources.h"
+#import "ChildProcessWC.objc++.h"
 #import "Console.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
@@ -78,16 +78,12 @@ Helper class for printing from a terminal view.
 	+ (PrintTerminal_Job*)
 	jobFromRef:(PrintTerminal_JobRef)_;
 
-// new methods
-	- (void)
-	beginPreviewSheetModalForWindow:(NSWindow*)_;
-
 // initializers
 	- (instancetype)
 	initWithString:(NSString*)_
-	andFont:(NSFont*)_
-	andTitle:(NSString*)_
-	andLandscape:(BOOL)_;
+	font:(NSFont*)_
+	title:(NSString*)_
+	landscape:(BOOL)_;
 
 @end //}
 
@@ -135,9 +131,9 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 	else
 	{
 		result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:printFileString
-																			andFont:returnNSFontForTerminalView(inView)
-																			andTitle:BRIDGE_CAST(inJobName, NSString*)
-																			andLandscape:((inDefaultToLandscape) ? YES : NO)],
+																			font:returnNSFontForTerminalView(inView)
+																			title:BRIDGE_CAST(inJobName, NSString*)
+																			landscape:((inDefaultToLandscape) ? YES : NO)],
 									PrintTerminal_JobRef);
 	}
 	
@@ -166,9 +162,9 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 	
 	
 	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:BRIDGE_CAST(selectedText.returnCFStringRef(), NSString*)
-																		andFont:returnNSFontForTerminalView(inView)
-																		andTitle:BRIDGE_CAST(inJobName, NSString*)
-																		andLandscape:((inDefaultToLandscape) ? YES : NO)],
+																		font:returnNSFontForTerminalView(inView)
+																		title:BRIDGE_CAST(inJobName, NSString*)
+																		landscape:((inDefaultToLandscape) ? YES : NO)],
 								PrintTerminal_JobRef);
 	return result;
 }// @autoreleasepool
@@ -303,21 +299,77 @@ if "inRef" is not recognized
 */
 PrintTerminal_Result
 PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
-								 HIWindowRef			inParentWindowOrNull)
+								 HIWindowRef			UNUSED_ARGUMENT(inParentWindowOrNull))
 {
 @autoreleasepool {
 	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:inRef];
 	PrintTerminal_Result	result = kPrintTerminal_ResultOK;
 	
 	
-	if (nullptr == ptr) result = kPrintTerminal_ResultInvalidID;
+	if (nullptr == ptr)
+	{
+		result = kPrintTerminal_ResultInvalidID;
+	}
 	else
 	{
-		NSWindow*	window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNull);
+		//NSWindow*				window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNull);
+		NSPasteboard*			textToPrintPasteboard = [NSPasteboard pasteboardWithUniqueName];
+		NSString*				pasteboardName = [textToPrintPasteboard.name autorelease];
+		NSString*				titleString = ((nil != ptr->jobTitle)
+												? ptr->jobTitle
+												: @"");
+		NSMutableDictionary*		appEnvDict = [[[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary */]
+												autorelease];
+		CFErrorRef				errorRef = nullptr;
 		
 		
-		// run the sheet, which will also retain the job object
-		[ptr beginPreviewSheetModalForWindow:window];
+		// MUST correspond to environment variables expected
+		// by the Print Preview internal application (also,
+		// every value must be an NSString* type)
+		[appEnvDict setValue:titleString forKey:@"MACTERM_PRINT_PREVIEW_JOB_TITLE"];
+		[appEnvDict setValue:[ptr->textFont fontName] forKey:@"MACTERM_PRINT_PREVIEW_FONT_NAME"];
+		[appEnvDict setValue:[NSString stringWithFormat:@"%f", STATIC_CAST([ptr->textFont pointSize], float)]
+								forKey:@"MACTERM_PRINT_PREVIEW_FONT_SIZE"];
+		[appEnvDict setValue:pasteboardName forKey:@"MACTERM_PRINT_PREVIEW_PASTEBOARD_NAME"];
+		[appEnvDict setValue:((ptr->isLandscapeMode) ? @"1" : @"0") forKey:@"MACTERM_PRINT_PREVIEW_IS_LANDSCAPE"];
+		
+		// share the terminal text with the print-preview application
+		[textToPrintPasteboard clearContents];
+		if (NO == [textToPrintPasteboard writeObjects:@[ptr->printedText]])
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "unable to write terminal text to new pasteboard");
+		}
+		else
+		{
+			NSRunningApplication*	runHandle = AppResources_LaunchPrintPreview
+												(BRIDGE_CAST(appEnvDict, CFDictionaryRef), &errorRef);
+			
+			
+			if (nullptr != errorRef)
+			{
+				[NSApp presentError:BRIDGE_CAST(errorRef, NSError*)];
+			}
+			else
+			{
+				// success; sub-process will display print preview interface asynchronously;
+				// create a local proxy window so that it is possible to give the illusion
+				// of a window that is present in a single application’s window rotation
+				// (despite the autoreleased return value, the window is immediately “shown”
+				// offscreen and the controller is internally retained until the window closes)
+				ChildProcessWC_AtExitBlockType	atExit =
+												^{
+													// nothing needed
+													//NSLog(@"Print Preview at-exit called"); // debug
+												};
+				ChildProcessWC_Object*			proxyWindowController = nil;
+				
+				
+				proxyWindowController = [ChildProcessWC_Object
+											childProcessWCWithRunningApp:runHandle atExit:atExit];
+				[proxyWindowController.window orderBack:nil]; // NOTE: not needed, except to “use” the variable
+			}
+		}
 	}
 	return result;
 }// @autoreleasepool
@@ -354,7 +406,7 @@ returnNSFontForTerminalView		(TerminalViewRef	inView)
 
 
 #pragma mark -
-@implementation PrintTerminal_Job
+@implementation PrintTerminal_Job //{
 
 
 /*!
@@ -366,10 +418,10 @@ Designated initializer.
 (4.0)
 */
 - (instancetype)
-initWithString:(NSString*)		aString
-andFont:(NSFont*)				aFont
-andTitle:(NSString*)			aTitle
-andLandscape:(BOOL)				landscapeMode
+initWithString:(NSString*)	aString
+font:(NSFont*)				aFont
+title:(NSString*)			aTitle
+landscape:(BOOL)			landscapeMode
 {
 	self = [super init];
 	if (nil != self)
@@ -380,7 +432,7 @@ andLandscape:(BOOL)				landscapeMode
 		isLandscapeMode = landscapeMode;
 	}
 	return self;
-}// initWithString:andFont:andTitle:andLandscape:
+}// initWithString:font:title:landscape:
 
 
 /*!
@@ -399,27 +451,6 @@ dealloc
 
 
 /*!
-Creates (if necessary) and displays the print preview sheet,
-with the specified text.  The given text will be printed if
-the user chooses to proceed.
-
-(4.0)
-*/
-- (void)
-beginPreviewSheetModalForWindow:(NSWindow*)		aWindow
-{
-	// create a preview sheet; this is released after the sheet closes
-	PrintTerminal_PreviewPanelController*	preview = [[PrintTerminal_PreviewPanelController alloc]
-														initWithString:self->printedText andFont:self->textFont
-														andTitle:self->jobTitle andLandscape:self->isLandscapeMode];
-	
-	
-	// run the sheet
-	[preview beginPreviewSheetModalForWindow:aWindow];
-}// beginPreviewSheetModalForWindow:
-
-
-/*!
 Returns the internal object that is equivalent to the
 given external reference.
 
@@ -432,322 +463,6 @@ jobFromRef:(PrintTerminal_JobRef)	ref
 }// jobFromRef:
 
 
-@end // PrintTerminal_Job
-
-
-#pragma mark -
-@implementation PrintTerminal_PreviewPanelController
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initWithString:(NSString*)		aString
-andFont:(NSFont*)				aFont
-andTitle:(NSString*)			aTitle
-andLandscape:(BOOL)				landscapeMode
-{
-	self = [super initWithWindowNibName:@"PrintPreviewCocoa"];
-	if (nil != self)
-	{
-		previewTitle = [aTitle retain];
-		previewText = [aString retain];
-		previewFont = [aFont retain];
-		pageSetup = [NSPrintInfo sharedPrintInfo];
-		paperInfo = [[NSString string] retain];
-		[self setFontSize:[[NSNumber numberWithFloat:[previewFont pointSize]] stringValue]];
-		
-		// initialize the page setup to some values that are saner
-		// for printing terminal text
-		if (landscapeMode)
-		{
-			[pageSetup setOrientation:NSLandscapeOrientation];
-		}
-		else
-		{
-			[pageSetup setOrientation:NSPortraitOrientation];
-		}
-		[pageSetup setHorizontalPagination:NSFitPagination];
-		[pageSetup setHorizontallyCentered:NO];
-		[pageSetup setVerticallyCentered:NO];
-	}
-	[self setShouldCascadeWindows:NO];
-	return self;
-}// initWithString:andFont:andTitle:andLandscape:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[previewTitle release];
-	[previewText release];
-	[previewFont release];
-	[paperInfo release];
-	[fontSize release];
-	[super dealloc];
-} // dealloc
-
-
-/*!
-Creates (if necessary) and displays the print preview sheet.
-Text will be printed if the user chooses to proceed.
-
-IMPORTANT:	Despite its name, this is not yet implemented as a
-			sheet, because Cocoa-on-Carbon sheets are too flaky.
-			Once the application becomes all-Cocoa, this will
-			work as expected.
-
-(4.0)
-*/
-- (void)
-beginPreviewSheetModalForWindow:(NSWindow*)		aWindow
-{
-#pragma unused(aWindow)
-	NSWindow*	sheet = [self window];
-	
-	
-	// sheet is UNIMPLEMENTED - use a modal dialog
-	if (nil != self->previewTitle)
-	{
-		[sheet setTitle:self->previewTitle];
-	}
-	[NSApp beginSheet:sheet modalForWindow:nil
-							modalDelegate:nil didEndSelector:nil
-							contextInfo:nil];
-	UNUSED_RETURN(long)[NSApp runModalForWindow:[self window]];
-	[NSApp endSheet:sheet];
-	[sheet orderOut:self];
-}// beginPreviewSheetModalForWindow:
-
-
-/*!
-Closes the sheet without doing anything.
-
-(4.0)
-*/
-- (IBAction)
-cancel:(id)		sender
-{
-#pragma unused(sender)
-	[NSApp stopModal];
-}// cancel:
-
-
-/*!
-Displays relevant help information for the user.
-
-(4.0)
-*/
-- (IBAction)
-help:(id)	sender
-{
-#pragma unused(sender)
-	// TEMPORARY - add contextual help
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithoutContext();
-}// help:
-
-
-/*!
-Displays the Page Setup sheet for this print job.
-
-(4.0)
-*/
-- (IBAction)
-pageSetup:(id)	sender
-{
-#pragma unused(sender)
-	NSPrintInfo*	info = self->pageSetup;
-	NSPageLayout*	layout = [NSPageLayout pageLayout];
-	
-	
-	[layout beginSheetWithPrintInfo:info modalForWindow:[self window]
-											delegate:self
-											didEndSelector:@selector(pageLayoutDidEnd:returnCode:contextInfo:)
-											contextInfo:nil];
-}// pageSetup:
-
-
-/*!
-Asks the preview text view to print itself, and closes
-the sheet.
-
-(4.0)
-*/
-- (IBAction)
-print:(id)	sender
-{
-#pragma unused(sender)
-	NSPrintOperation*	op = [NSPrintOperation printOperationWithView:self->previewPane printInfo:self->pageSetup];
-	
-	
-	[op runOperationModalForWindow:[self window] delegate:self
-													didRunSelector:@selector(printOperationDidRun:success:contextInfo:)
-													contextInfo:nil];
-}// print:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-paperInfo
-{
-	return paperInfo;
-}
-- (void)
-setPaperInfo:(NSString*)	aString
-{
-	if (aString != paperInfo)
-	{
-		[paperInfo release];
-		paperInfo = [aString retain];
-	}
-}// setPaperInfo:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-fontSize
-{
-	return fontSize;
-}
-- (void)
-setFontSize:(NSString*)		aString
-{
-	if (aString != fontSize)
-	{
-		[fontSize release];
-		fontSize = [aString retain];
-		
-		if (nil != self->previewFont)
-		{
-			self->previewFont = [NSFont fontWithName:[self->previewFont fontName] size:[aString floatValue]];
-			[self->previewPane setFont:self->previewFont];
-		}
-	}
-}// setFontSize:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-maximumSensibleFontSize
-{
-	return [NSString stringWithFormat:@"%d", 48]; // arbitrary
-}// maximumSensibleFontSize
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSString*)
-minimumSensibleFontSize
-{
-	return [NSString stringWithFormat:@"%d", 8]; // arbitrary
-}// minimumSensibleFontSize
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init...".)
-
-(4.0)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-	
-	// update the text view with the requested string
-	[[[self->previewPane textStorage] mutableString] setString:self->previewText];
-	if (nil != self->previewFont)
-	{
-		[self->previewPane setFont:self->previewFont];
-	}
-	[self setPaperInfo:[self->pageSetup localizedPaperName]];
-}// windowDidLoad
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"PrintPreview";
-}// windowFrameAutosaveName
-
-
-#pragma mark Internal Methods
-
-
-/*!
-Responds to the closing of a page layout configuration sheet.
-
-(4.0)
-*/
-- (void)
-pageLayoutDidEnd:(NSPageLayout*)	pageLayout
-returnCode:(int)					returnCode
-contextInfo:(void*)					contextInfo
-{
-#pragma unused(pageLayout, returnCode, contextInfo)
-	[self setPaperInfo:[self->pageSetup localizedPaperName]];
-}// pageLayoutDidEnd:returnCode:contextInfo:
-
-
-/*!
-Responds to the closing of a printing configuration sheet
-(or other completion of printing) by finally closing the
-preview dialog.
-
-(4.0)
-*/
-- (void)
-printOperationDidRun:(NSPrintOperation*)	printOperation
-success:(BOOL)								success
-contextInfo:(void*)							contextInfo
-{
-#pragma unused(printOperation, contextInfo)
-	if (success)
-	{
-		[NSApp stopModal];
-	}
-}// printOperationDidRun:success:contextInfo:
-
-
-@end // PrintTerminal_PreviewPanelController
+@end //} PrintTerminal_Job
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

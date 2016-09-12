@@ -29,6 +29,7 @@
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
+		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
@@ -68,7 +69,7 @@
 		0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE29055432A400ACDF3A /* TerminalWindow.mm */; };
 		0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE01055432A400ACDF3A /* Panel.mm */; };
 		0AC6BB0A0A8C0BA000AFF37A /* SessionDescription.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE15055432A400ACDF3A /* SessionDescription.cp */; };
-		0AC6BB0B0A8C0BA000AFF37A /* AppResources.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE12055432A400ACDF3A /* AppResources.cp */; };
+		0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE12055432A400ACDF3A /* AppResources.mm */; };
 		0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDA055432A400ACDF3A /* Folder.cp */; };
 		0AC6BB0D0A8C0BA000AFF37A /* RecordAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0F055432A400ACDF3A /* RecordAE.cp */; };
 		0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE03055432A400ACDF3A /* Preferences.cp */; };
@@ -369,7 +370,7 @@
 		0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelMacros.mm; path = Application/Code/PrefPanelMacros.mm; sourceTree = "<group>"; };
 		0A46FE08055432A400ACDF3A /* PrefsWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsWindow.mm; path = Application/Code/PrefsWindow.mm; sourceTree = "<group>"; };
 		0A46FE0F055432A400ACDF3A /* RecordAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecordAE.cp; path = Application/Code/RecordAE.cp; sourceTree = "<group>"; };
-		0A46FE12055432A400ACDF3A /* AppResources.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppResources.cp; path = Application/Code/AppResources.cp; sourceTree = "<group>"; };
+		0A46FE12055432A400ACDF3A /* AppResources.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppResources.mm; path = Application/Code/AppResources.mm; sourceTree = "<group>"; };
 		0A46FE14055432A400ACDF3A /* Session.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Session.mm; path = Application/Code/Session.mm; sourceTree = "<group>"; };
 		0A46FE15055432A400ACDF3A /* SessionDescription.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SessionDescription.cp; path = Application/Code/SessionDescription.cp; sourceTree = "<group>"; };
 		0A46FE17055432A400ACDF3A /* SessionFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SessionFactory.mm; path = Application/Code/SessionFactory.mm; sourceTree = "<group>"; };
@@ -419,6 +420,9 @@
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = CustomPaths.xcconfig; path = Shared/CustomPaths.xcconfig; sourceTree = "<group>"; };
+		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
+		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
+		0A6C446A1D84C72B00E1B0E2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ChildProcessWindowCocoa.xib; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
 		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -743,7 +747,8 @@
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
-				0A46FE12055432A400ACDF3A /* AppResources.cp */,
+				0A46FE12055432A400ACDF3A /* AppResources.mm */,
+				0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */,
 				0A46FDBC055432A400ACDF3A /* Clipboard.mm */,
 				0A35F5130DEDD9E300F16B03 /* CommandLine.mm */,
 				0A46FDC3055432A400ACDF3A /* Commands.mm */,
@@ -804,6 +809,7 @@
 				0A4603F40554376100ACDF3A /* AlertMessages.h */,
 				0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */,
 				0A4604230554376100ACDF3A /* AppResources.h */,
+				0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */,
 				0A4603C00554376100ACDF3A /* Clipboard.h */,
 				0A4603C60554376100ACDF3A /* CommandLine.h */,
 				0A4603C70554376100ACDF3A /* Commands.h */,
@@ -965,6 +971,7 @@
 			children = (
 				0AB2273012D2D1DC00D663BB /* AddressDialogCocoa.xib */,
 				0A183A051C4301DC0067B17C /* AlertMessagesCocoa.xib */,
+				0A6C44691D84C72B00E1B0E2 /* ChildProcessWindowCocoa.xib */,
 				0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */,
 				0AB2273212D2D27000D663BB /* CommandLineCocoa.xib */,
 				0AB2272E12D2D03F00D663BB /* DebugInterfaceCocoa.xib */,
@@ -1391,7 +1398,7 @@
 				0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */,
 				0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */,
 				0AC6BB0A0A8C0BA000AFF37A /* SessionDescription.cp in Sources */,
-				0AC6BB0B0A8C0BA000AFF37A /* AppResources.cp in Sources */,
+				0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */,
 				0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */,
 				0AC6BB0D0A8C0BA000AFF37A /* RecordAE.cp in Sources */,
 				0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */,
@@ -1415,6 +1422,7 @@
 				0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */,
 				0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */,
 				0AC6BB3A0A8C0BA100AFF37A /* Initialize.mm in Sources */,
+				0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */,
 				0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */,
 				0AC6BB3C0A8C0BA100AFF37A /* TerminalView.mm in Sources */,
 				0AC6BB3D0A8C0BA100AFF37A /* URLAccessAE.cp in Sources */,
@@ -1576,6 +1584,14 @@
 				0A66B705154E04DC00B98072 /* English */,
 			);
 			name = VectorWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A6C44691D84C72B00E1B0E2 /* ChildProcessWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A6C446A1D84C72B00E1B0E2 /* English */,
+			);
+			name = ChildProcessWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A7236F410841FAB00BB36C2 /* PrintPreviewCocoa.xib */ = {

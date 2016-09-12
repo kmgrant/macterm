@@ -42,12 +42,11 @@
 // Mac includes
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
-
-
-
-#pragma mark Constants
-
-typedef OSStatus AppResources_Result;
+#ifdef __OBJC__
+@class NSRunningApplication;
+#else
+class NSRunningApplication;
+#endif
 
 
 
@@ -59,16 +58,20 @@ typedef OSStatus AppResources_Result;
 void
 	AppResources_Init													(CFBundleRef					inApplicationBundle);
 
+// DEPRECATED
 Boolean
 	AppResources_GetArbitraryResourceFileFSRef							(CFStringRef					inName,
 																		 CFStringRef					inTypeOrNull,
 																		 FSRef&							outFSRef);
 
-AppResources_Result
-	AppResources_LaunchCrashCatcher										();
+NSRunningApplication*
+	AppResources_LaunchPrintPreview										(CFDictionaryRef,
+																		 CFErrorRef*);
 
-AppResources_Result
-	AppResources_LaunchPreferencesConverter								();
+NSRunningApplication*
+	AppResources_LaunchResourceApplication								(CFStringRef,
+																		 CFDictionaryRef,
+																		 CFErrorRef*);
 
 CFBundleRef
 	AppResources_ReturnApplicationBundle								();

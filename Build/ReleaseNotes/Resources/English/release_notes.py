@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160911',
     '20160904',
     '20160901',
     '20160827',
@@ -544,6 +545,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160911': [
+        'Print Preview has been converted into an entirely separate sub-process, for added stability.  The preview stays open and can print even if MacTerm quits.',
+        'Print Preview has been sandboxed, having only the basic permission to print.',
+        'Print Preview is no longer a modal dialog; you can have multiple previews open at once, if desired.',
+    ],
     '20160904': [
         'Fixed high CPU utilization after opening the Custom Format sheet.',
         'Preferences window Formats pane (and similar sheet) now has a more accurate preview display, including character width and custom cursor color.',

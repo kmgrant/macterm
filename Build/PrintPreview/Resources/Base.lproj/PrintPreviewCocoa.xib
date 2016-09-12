@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10117" systemVersion="15G1004" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10117"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application">
+            <connections>
+                <outlet property="delegate" destination="795" id="796"/>
+            </connections>
+        </customObject>
+        <customObject id="795" userLabel="Application Delegate" customClass="PrintPreviewAppDelegate"/>
+        <menu title="Main Menu" systemMenu="main" id="29">
+            <items>
+                <menuItem title="Window" id="681">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Window" id="682">
+                        <items>
+                            <menuItem title="Minimize" keyEquivalent="m" id="nq2-hO-GgP">
+                                <connections>
+                                    <action selector="miniaturize:" target="-1" id="7Zb-SS-XPy"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Zoom" id="Sjg-fd-zdH">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="zoom:" target="-1" id="5y1-uG-NiE"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="6uK-bt-0X7"/>
+                            <menuItem title="Bring Next to Front" keyEquivalent="`" id="791">
+                                <connections>
+                                    <action selector="orderFrontNextWindow:" target="-1" id="dgA-5T-MRJ"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Bring Previous to Front" keyEquivalent="~" id="SRG-Qu-PcN">
+                                <connections>
+                                    <action selector="orderFrontPreviousWindow:" target="-1" id="HI9-kl-5Y3"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
+            </items>
+        </menu>
+    </objects>
+</document>

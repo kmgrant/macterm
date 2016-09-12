@@ -7005,18 +7005,17 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 		if (inSendRemainderToPrinter)
 		{
 			// print the captured text using the print dialog
-			CFStringRef			jobTitle = nullptr;
-			UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_TerminalPrintFromTerminalJobTitle,
-																jobTitle);
+			CFRetainRelease		jobTitle(UIStrings_ReturnCopy(kUIStrings_TerminalPrintFromTerminalJobTitle),
+											true/* is retained */);
 			
 			
-			if (nullptr != jobTitle)
+			if (jobTitle.exists())
 			{
 				TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(this->listeningSession);
 				PrintTerminal_JobRef	printJob = PrintTerminal_NewJobFromFile
 													(CFUtilities_URLCast(this->printingFileURL.returnCFTypeRef()),
 														TerminalWindow_ReturnViewWithFocus(terminalWindow),
-														jobTitle);
+														jobTitle.returnCFStringRef());
 				
 				
 				if (nullptr != printJob)
@@ -7025,7 +7024,6 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 														(printJob, TerminalWindow_ReturnWindow(terminalWindow));
 					PrintTerminal_ReleaseJob(&printJob);
 				}
-				CFRelease(jobTitle), jobTitle = nullptr;
 			}
 		}
 		

@@ -1167,6 +1167,26 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 /*!
 Customizes the appearance of errors so that they use the
+same kind of application-modal dialogs as other messages.
+Returns YES only if recovery was attempted.
+
+(2016.09)
+*/
+- (BOOL)
+presentError:(NSError*)		anError
+{
+	// this flag should agree with behavior in
+	// "presentError:modalForWindow:delegate:didPresentSelector:contextInfo:"
+	BOOL	result = ((nil != anError.recoveryAttempter) && ([anError localizedRecoveryOptions].count > 0));
+	
+	
+	[self presentError:anError modalForWindow:nil delegate:nil didPresentSelector:nil contextInfo:nil];
+	return result;
+}// presentError:
+
+
+/*!
+Customizes the appearance of errors so that they use the
 same kind of sheets as other messages.
 
 (2016.05)

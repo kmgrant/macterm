@@ -64,66 +64,6 @@ enum PrintTerminal_Result
 
 typedef struct PrintTerminal_OpaqueJob*		PrintTerminal_JobRef;
 
-#ifdef __OBJC__
-
-/*!
-Implements the Print Preview dialog.  See "PrintPreviewCocoa.xib".
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface PrintTerminal_PreviewPanelController : NSWindowController //{
-{
-@private
-	IBOutlet NSTextView*	previewPane;
-	NSString*				previewTitle;
-	NSString*				previewText;
-	NSFont*					previewFont;
-	NSPrintInfo*			pageSetup;
-	NSString*				paperInfo;
-	NSString*				fontSize;
-}
-
-// initializers
-	- (instancetype)
-	initWithString:(NSString*)_
-	andFont:(NSFont*)_
-	andTitle:(NSString*)_
-	andLandscape:(BOOL)_;
-
-// new methods
-	- (void)
-	beginPreviewSheetModalForWindow:(NSWindow*)_;
-
-// accessors
-	- (NSString*)
-	fontSize;
-	- (void)
-	setFontSize:(NSString*)_; // binding
-	- (NSString*)
-	maximumSensibleFontSize; // binding
-	- (NSString*)
-	minimumSensibleFontSize; // binding
-	- (NSString*)
-	paperInfo;
-	- (void)
-	setPaperInfo:(NSString*)_; // binding
-
-// actions
-	- (IBAction)
-	cancel:(id)_;
-	- (IBAction)
-	help:(id)_;
-	- (IBAction)
-	pageSetup:(id)_;
-	- (IBAction)
-	print:(id)_;
-
-@end //}
-
-#endif // __OBJC__
-
 
 
 #pragma mark Public Methods

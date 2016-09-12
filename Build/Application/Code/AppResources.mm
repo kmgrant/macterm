@@ -1,4 +1,4 @@
-/*!	\file AppResources.cp
+/*!	\file AppResources.mm
 	\brief Easy access to resources located in application
 	resource files.
 */
@@ -35,14 +35,16 @@
 #include <UniversalDefines.h>
 
 // Mac includes
+#include <AppKit/AppKit.h>
 #include <Carbon/Carbon.h>
-#include <QuickTime/QuickTime.h>
+//#include <QuickTime/QuickTime.h>
 
 // library includes
 #include <CFRetainRelease.h>
 #include <Console.h>
 
 // application includes
+#include "ConstantsRegistry.h"
 #include "Local.h"
 #include "UIStrings.h"
 
@@ -52,13 +54,6 @@
 namespace {
 
 CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
-
-} // anonymous namespace
-
-#pragma mark Internal Method Prototypes
-namespace {
-
-OSStatus	launchResourceApplication	(CFStringRef);
 
 } // anonymous namespace
 
@@ -93,6 +88,8 @@ of the main bundle.
 
 Returns "true" only if the file can be found.
 
+DEPRECATED.  URLs should be retrieved directly.
+
 (3.1)
 */
 Boolean
@@ -120,30 +117,101 @@ AppResources_GetArbitraryResourceFileFSRef	(CFStringRef	inName,
 
 
 /*!
-Launches a separate application informing the user
-that MacTerm has crashed.  This should be called
-from within a termination signal handler.
+Asynchronously launches a separate application that
+displays a preview of terminal text and allows the
+user to print.  A new instance is produced each time,
+allowing multiple previews to exist simultaneously
+in the background.
 
-(3.0)
+Environment variables set in the dictionary should
+match those used by the “Print Preview” internal
+application to customize the display (such as the
+font, font size, and unique name of a pasteboard
+containing all the text to print).
+
+See AppResources_LaunchResourceApplication() for
+more on the remaining parameters and return value.
+
+(2016.09)
 */
-AppResources_Result
-AppResources_LaunchCrashCatcher ()
+NSRunningApplication*
+AppResources_LaunchPrintPreview	(CFDictionaryRef		inEnvironment,
+								 CFErrorRef*			outErrorOrNull)
 {
-	return launchResourceApplication(CFSTR("BugReporter.app"));
-}// LaunchCrashCatcher
+	NSRunningApplication*	result = AppResources_LaunchResourceApplication
+										(CFSTR("PrintPreview.app"), inEnvironment, outErrorOrNull);
+	
+	
+	return result;
+}// LaunchPrintPreview
 
 
 /*!
-Launches a separate application that locates and
-converts old user preferences to the new format.
+Asynchronously launches a separate application that
+is located in the application bundle.  A new instance
+is produced each time.
 
-(3.1)
+The error parameter is a standard autoreleasing
+NSError object.  You can pass nullptr if you do not
+want the error information but you should probably
+display it to the user using the "presentError:"
+method of NSResponder.
+
+A handle to the running application is returned,
+in case you need to take further action (such as
+to force termination).
+
+(2016.09)
 */
-AppResources_Result
-AppResources_LaunchPreferencesConverter ()
+NSRunningApplication*
+AppResources_LaunchResourceApplication	(CFStringRef			inDotAppDirectoryName,
+										 CFDictionaryRef		inEnvironment,
+										 CFErrorRef*			outErrorOrNull)
 {
-	return launchResourceApplication(CFSTR("PrefsConverter.app"));
-}// LaunchPreferencesConverter
+	NSRunningApplication*	result = nil;
+	NSError*				error = nil;
+	CFRetainRelease			appURL(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(),
+															inDotAppDirectoryName, nullptr/* type string */,
+															nullptr/* subdirectory path */),
+									true/* is retained */);
+	
+	
+	if (false == appURL.exists())
+	{
+		error = [NSError errorWithDomain:BRIDGE_CAST(kConstantsRegistry_NSErrorDomainAppDefault, NSString*)
+											code:kConstantsRegistry_NSErrorResourceNotFound
+											userInfo:@{
+															NSFilePathErrorKey: BRIDGE_CAST(inDotAppDirectoryName, NSString*),
+															NSLocalizedDescriptionKey: NSLocalizedStringFromTable
+																						(@"Internal error: unable to find specified resource.",
+																							@"Alert"/* table */,
+																							@"message displayed for bad bundle resource locations"),
+														}];
+	}
+	else
+	{
+		NSDictionary*			launchConfigDict =
+								@{
+									NSWorkspaceLaunchConfigurationEnvironment: BRIDGE_CAST(inEnvironment, NSDictionary*),
+								};
+		
+		
+		result = [[NSWorkspace sharedWorkspace]
+					launchApplicationAtURL:BRIDGE_CAST(appURL.returnCFTypeRef(), NSURL*)
+											options:(NSWorkspaceLaunchWithoutAddingToRecents |
+														NSWorkspaceLaunchAsync |
+														NSWorkspaceLaunchNewInstance)
+											configuration:launchConfigDict
+											error:&error];
+	}
+	
+	if (outErrorOrNull != nullptr)
+	{
+		*outErrorOrNull = BRIDGE_CAST(error, CFErrorRef);
+	}
+	
+	return result;
+}// LaunchResourceApplication
 
 
 /*!
@@ -247,115 +315,5 @@ AppResources_ReturnCreatorCode ()
 	}
 	return gCreatorCode;
 }// ReturnCreatorCode
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-Attempts to open an application in this application’s
-bundle that has the specified name.
-
-(3.0)
-*/
-OSStatus
-launchResourceApplication	(CFStringRef	inName)
-{
-	OSStatus	result = noErr;
-	CFURLRef	resourceURL = nullptr;
-	
-	
-#if 1
-	// if placed in a .lproj directory...
-	resourceURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), inName,
-											nullptr/* type string */, nullptr/* subdirectory path */);
-#else
-	// if placed in the MacOS folder (execution is not reliable if placed here?)
-	resourceURL = CFBundleCopyAuxiliaryExecutableURL(AppResources_ReturnApplicationBundle(), inName);
-#endif
-	if (resourceURL != nullptr)
-	{
-	#if 1
-		// the resource URL provides a bundle folder path; now use the bundle to locate the main executable file
-		CFRetainRelease		executableBundle(CFBundleCreate(kCFAllocatorDefault, resourceURL),
-												true/* is retained */);
-		
-		
-		if (false == executableBundle.exists()) result = paramErr;
-		else
-		{
-			CFURLRef	executableURL = CFBundleCopyExecutableURL(executableBundle.returnCFBundleRef());
-			
-			
-			if (executableURL == nullptr) result = fnfErr;
-			else
-			{
-				// given the path to the executable, launch it and BLOCK so that
-				// the launched program must exit before continuing here
-				UInt8	unixPath[PATH_MAX];
-				
-				
-				if (CFURLGetFileSystemRepresentation(executableURL, true/* resolve against base */,
-														unixPath, sizeof(unixPath)))
-				{
-					Local_Result	spawnError = kLocal_ResultOK;
-					UInt8			escapedPath[PATH_MAX];
-					
-					
-					// IMPORTANT: The (eventual) system() call will run a SHELL, so
-					// the path must be escaped accordingly.  This is NOT perfect
-					// escaping, and should really IMPROVE, but single-quoting is
-					// certainly good enough to cover a very common case (spaces).
-					// A better solution is to individually recognize and escape,
-					// using a backslash (\), every character that the shell thinks
-					// is significant.  TEMPORARY.
-					escapedPath[0] = '\'';
-					escapedPath[1] = '\0';
-					std::strncpy(REINTERPRET_CAST(escapedPath, char*) + 1, REINTERPRET_CAST(unixPath, char const*),
-									sizeof(escapedPath) - 3/* quotes + terminator */);
-					std::strncat(REINTERPRET_CAST(escapedPath, char*), "\'", 1);
-					
-					spawnError = Local_SpawnProcessAndWaitForTermination(REINTERPRET_CAST(unixPath, char const*));
-					if (spawnError != kLocal_ResultOK)
-					{
-						// kind of an arbitrary OS error, but reasonably close
-						// in meaning to what the real problem is
-						result = errOSACantLaunch;
-					}
-				}
-				else
-				{
-					// kind of an arbitrary OS error, but reasonably close
-					// in meaning to what the real problem is
-					result = kURLInvalidURLError;
-				}
-				CFRelease(executableURL), executableURL = nullptr;
-			}
-		}
-	#else
-		// do not use Launch Services, because it cannot “block” and
-		// wait for the launched application to actually quit (there
-		// may be some other way to do this, such as setting up some
-		// kind of Carbon Event handler, but that seems too complex
-		// compared to just using the Unix system() routine)
-		LSLaunchURLSpec		config;
-		
-		
-		std::memset(&config, 0, sizeof(config));
-		config.appURL = resourceURL;
-		config.itemURLs = nullptr;
-		config.passThruParams = nullptr;
-		config.launchFlags = kLSLaunchDontAddToRecents;
-		config.asyncRefCon = nullptr;
-		result = LSOpenFromURLSpec(&config, nullptr/* launched URL */);
-	#endif
-		CFRelease(resourceURL), resourceURL = nullptr;
-	}
-	
-	Console_WriteValue("launch result", result);
-	return result;
-}// launchResourceApplication
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

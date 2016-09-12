@@ -117,6 +117,7 @@ SRC_APP_PROJ_TOP := $(MAKEFILE_DIR)/Application
 SRC_BUGREPORTER_PROJ_TOP := $(MAKEFILE_DIR)/BugReporter
 SRC_CALLPYCLIENT_PROJ_TOP := $(MAKEFILE_DIR)/CallPythonClient
 SRC_PREFSCONVERTER_PROJ_TOP := $(MAKEFILE_DIR)/PrefsConverter
+SRC_PRINTPREVIEW_PROJ_TOP := $(MAKEFILE_DIR)/PrintPreview
 
 SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
 SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
@@ -127,6 +128,8 @@ SRC_CALLPYCLIENT_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
 SRC_CALLPYCLIENT_TOP := $(SRC_CALLPYCLIENT_BUILD_TOP)/CallPythonClient.xpc
 SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
+SRC_PRINTPREVIEW_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
+SRC_PRINTPREVIEW_TOP := $(SRC_PRINTPREVIEW_BUILD_TOP)/PrintPreview.app
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
 SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/$(BUILD_CONF)
 SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Growl.framework
@@ -140,6 +143,7 @@ DEST_APP_XPCSERVICES_TOP := $(DEST_APP_TOP)/XPCServices
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_CALLPYCLIENT_TOP := $(DEST_APP_XPCSERVICES_TOP)/net.macterm.MacTerm.CallPythonClient.xpc
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
+DEST_PRINTPREVIEW_TOP := $(DEST_APP_RESOURCES_TOP)/PrintPreview.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
 DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.6/pymacterm
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/MacTermQuills.framework
@@ -235,6 +239,7 @@ English.lproj/TerminalWindow.nib
 XIB_PREFIXES := \
 English.lproj/AddressDialogCocoa \
 English.lproj/AlertMessagesCocoa \
+English.lproj/ChildProcessWindowCocoa \
 English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
@@ -267,7 +272,6 @@ English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefPanelWorkspaceOptionsCocoa \
 English.lproj/PrefPanelWorkspaceWindowsCocoa \
 English.lproj/PrefsWindowCocoa \
-English.lproj/PrintPreviewCocoa \
 English.lproj/ResizeInfoCocoa \
 English.lproj/ServerBrowserCocoa \
 English.lproj/TerminalViewCocoa \
@@ -556,6 +560,26 @@ clean-prefs-converter:
 	$(XCB) clean -project PrefsConverter.xcodeproj -configuration $(BUILD_CONF)
 	$(RM) -R $(DEST_PREFSCONVERTER_TOP)
 
+# Component: Print Preview
+
+.PHONY: install-print-preview
+install-print-preview:
+	$(call banner,$@)
+	@# keep in sync with the matching clean rule
+	$(XCB) -project PrintPreview.xcodeproj -configuration $(BUILD_CONF)
+	@# avoid rsyncing from /
+	@if [ "x$(SRC_PRINTPREVIEW_TOP)" = "x" ] ; then \
+		echo "SRC_PRINTPREVIEW_TOP variable unset" >&2 ; \
+		exit 1 ; \
+	fi
+	$(MKDIR_P) $(dir $(DEST_PRINTPREVIEW_TOP))
+	$(RSYNC) --archive $(SRC_PRINTPREVIEW_TOP)/ $(DEST_PRINTPREVIEW_TOP)
+
+.PHONY: clean-print-preview
+clean-print-preview:
+	$(XCB) clean -project PrintPreview.xcodeproj -configuration $(BUILD_CONF)
+	$(RM) -R $(DEST_PRINTPREVIEW_TOP)
+
 # Component: Miscellaneous Resources (NIBs, Images, etc.)
 
 .PHONY: install-resources
@@ -570,6 +594,7 @@ $(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_COPIED))
 	$(MAKE) install-bug-reporter
 	$(MAKE) install-callpy-client
 	$(MAKE) install-prefs-converter
+	$(MAKE) install-print-preview
 	@# make a special exception for Growl, which requires a filename with spaces
 	$(MOVE) $(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict \
 		'$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict'
@@ -584,6 +609,7 @@ clean-resources:
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_FILES))' | $(XARGS) $(RM)
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES_GENERATED))' | $(XARGS) $(RM) -R
+	$(MAKE) clean-print-preview
 	$(MAKE) clean-prefs-converter
 	$(MAKE) clean-callpy-client
 	$(MAKE) clean-bug-reporter
@@ -686,6 +712,7 @@ clean:
 	$(RM) $(DEST_APP_TOP)/Info.plist
 	$(RM) $(DEST_APP_TOP)/PkgInfo
 	$(RM) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
+	-$(RMDIR) $(SRC_PRINTPREVIEW_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_CALLPYCLIENT_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP) 2>/dev/null

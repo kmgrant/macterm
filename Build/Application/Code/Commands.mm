@@ -840,21 +840,19 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			{
 				Boolean				printScreen = ((kCommandPrintScreen == inCommandID) ||
 													(false == TerminalView_TextSelectionExists(activeView)));
-				CFStringRef			jobTitle = nullptr;
-				UIStrings_Result	stringResult = (printScreen)
-													? UIStrings_Copy(kUIStrings_TerminalPrintScreenJobTitle,
-																		jobTitle)
-													: UIStrings_Copy(kUIStrings_TerminalPrintSelectionJobTitle,
-																		jobTitle);
+				CFRetainRelease		jobTitle(((printScreen)
+												? UIStrings_ReturnCopy(kUIStrings_TerminalPrintScreenJobTitle)
+												: UIStrings_ReturnCopy(kUIStrings_TerminalPrintSelectionJobTitle)),
+												true/* is retained */);
 				
 				
-				if (nullptr != jobTitle)
+				if (jobTitle.exists())
 				{
 					PrintTerminal_JobRef	printJob = (printScreen)
 														? PrintTerminal_NewJobFromVisibleScreen
-															(activeView, activeScreen, jobTitle)
+															(activeView, activeScreen, jobTitle.returnCFStringRef())
 														: PrintTerminal_NewJobFromSelectedText
-															(activeView, jobTitle);
+															(activeView, jobTitle.returnCFStringRef());
 					
 					
 					if (nullptr != printJob)
@@ -863,7 +861,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 															(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
 						PrintTerminal_ReleaseJob(&printJob);
 					}
-					CFRelease(jobTitle), jobTitle = nullptr;
 				}
 			}
 			break;

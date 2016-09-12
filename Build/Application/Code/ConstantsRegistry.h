@@ -90,6 +90,7 @@ enum
 	kConstantsRegistry_NSErrorBadUserID			= 2,
 	kConstantsRegistry_NSErrorBadNumber			= 3, // generic
 	kConstantsRegistry_NSErrorBadArray			= 4, // generic
+	kConstantsRegistry_NSErrorResourceNotFound	= 5, // generic
 };
 
 /*!

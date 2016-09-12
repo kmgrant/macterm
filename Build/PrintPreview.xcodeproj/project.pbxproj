@@ -1,0 +1,346 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A33CC4E07FABA6500248DDF /* PrintPreviewPrefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC4D07FABA6500248DDF /* PrintPreviewPrefix.pch */; };
+		0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5507FABAF800248DDF /* UniversalDefines.h */; };
+		0A46C3A81D80CF650035E6A8 /* PrintPreviewCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */; };
+		0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A5C6C661597B1870094E3FD /* Cocoa.framework */; };
+		0A6C44541D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */; };
+		0A6C44581D83780600E1B0E2 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44551D83780600E1B0E2 /* CocoaExtensions.mm */; };
+		0A6C44591D83780600E1B0E2 /* CocoaExtensions.objc++.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A6C44561D83780600E1B0E2 /* CocoaExtensions.objc++.h */; };
+		0A6C445E1D83888300E1B0E2 /* PrintPreview.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */; };
+		0A6C44641D84A0A300E1B0E2 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C44631D84A0A300E1B0E2 /* IconForBundle.icns */; };
+		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		0AA7B35A09D8ABE70032215C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc.4_0;
+			fileType = sourcecode.cpp;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+		0AA7B35B09D8AC060032215C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc.4_0;
+			fileType = sourcecode.c;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXFileReference section */
+		0A33CC4D07FABA6500248DDF /* PrintPreviewPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintPreviewPrefix.pch; path = PrintPreview/Code/PrintPreviewPrefix.pch; sourceTree = "<group>"; };
+		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
+		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		0A6C44551D83780600E1B0E2 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
+		0A6C44561D83780600E1B0E2 /* CocoaExtensions.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaExtensions.objc++.h"; path = "Shared/Code/CocoaExtensions.objc++.h"; sourceTree = "<group>"; };
+		0A6C445B1D83827D00E1B0E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrintPreview/Resources/Base.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
+		0A6C445C1D83827D00E1B0E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrintPreview/Resources/Base.lproj/TerminalPrintDialogCocoa.xib; sourceTree = "<group>"; };
+		0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrintPreview.entitlements; path = PrintPreview/PrintPreview.entitlements; sourceTree = "<group>"; };
+		0A6C44631D84A0A300E1B0E2 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrintPreview/Resources/IconForBundle.icns; sourceTree = "<group>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = PrintPreview/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
+		8D0C4E970486CD37000505A6 /* PrintPreview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrintPreview.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D0C4E910486CD37000505A6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A33CC5407FABADE00248DDF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				0A6C44551D83780600E1B0E2 /* CocoaExtensions.mm */,
+				0A6C44561D83780600E1B0E2 /* CocoaExtensions.objc++.h */,
+				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		195DF8CFFE9D517E11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D0C4E970486CD37000505A6 /* PrintPreview.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		20286C29FDCF999611CA2CEA /* PrintPreview */ = {
+			isa = PBXGroup;
+			children = (
+				0A33CC5407FABADE00248DDF /* Shared */,
+				195DF8CFFE9D517E11CA2CBB /* Products */,
+				0A5C6C661597B1870094E3FD /* Cocoa.framework */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
+				0A33CC4D07FABA6500248DDF /* PrintPreviewPrefix.pch */,
+				0A6C44631D84A0A300E1B0E2 /* IconForBundle.icns */,
+				0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */,
+				0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */,
+				0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */,
+			);
+			name = PrintPreview;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		0AD4D6FB06E9A6FC004FF4CD /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A33CC4E07FABA6500248DDF /* PrintPreviewPrefix.pch in Headers */,
+				0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */,
+				0A6C44591D83780600E1B0E2 /* CocoaExtensions.objc++.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8D0C4E890486CD37000505A6 /* PrintPreview */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A578EDE09D88A71007D1289 /* Build configuration list for PBXNativeTarget "PrintPreview" */;
+			buildPhases = (
+				0AD4D6FB06E9A6FC004FF4CD /* Headers */,
+				8D0C4E8F0486CD37000505A6 /* Sources */,
+				8D0C4E8C0486CD37000505A6 /* Resources */,
+				8D0C4E910486CD37000505A6 /* Frameworks */,
+			);
+			buildRules = (
+				0AA7B35B09D8AC060032215C /* PBXBuildRule */,
+				0AA7B35A09D8ABE70032215C /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = PrintPreview;
+			productInstallPath = "$(HOME)/Applications";
+			productName = PrintPreview;
+			productReference = 8D0C4E970486CD37000505A6 /* PrintPreview.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		20286C28FDCF999611CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				TargetAttributes = {
+					8D0C4E890486CD37000505A6 = {
+						DevelopmentTeam = 8BA57X86ZM;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = 0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "PrintPreview" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+				Base,
+			);
+			mainGroup = 20286C29FDCF999611CA2CEA /* PrintPreview */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D0C4E890486CD37000505A6 /* PrintPreview */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D0C4E8C0486CD37000505A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A6C445E1D83888300E1B0E2 /* PrintPreview.entitlements in Resources */,
+				0A46C3A81D80CF650035E6A8 /* PrintPreviewCocoa.xib in Resources */,
+				0A6C44541D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib in Resources */,
+				0A6C44641D84A0A300E1B0E2 /* IconForBundle.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D0C4E8F0486CD37000505A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */,
+				0A6C44581D83780600E1B0E2 /* CocoaExtensions.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A6C445B1D83827D00E1B0E2 /* Base */,
+			);
+			name = PrintPreviewCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A6C445C1D83827D00E1B0E2 /* Base */,
+			);
+			name = TerminalPrintDialogCocoa.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0A578EDF09D88A71007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CODE_SIGN_ENTITLEMENTS = PrintPreview/PrintPreview.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = PrintPreview/Code/PrintPreviewPrefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				INFOPLIST_FILE = "PrintPreview/Resources/PrintPreview-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.PrintPreview;
+				PRODUCT_NAME = PrintPreview;
+				PROVISIONING_PROFILE = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = ForDebugging;
+		};
+		0A578EE009D88A71007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CODE_SIGN_ENTITLEMENTS = PrintPreview/PrintPreview.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = PrintPreview/Code/PrintPreviewPrefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				INFOPLIST_FILE = "PrintPreview/Resources/PrintPreview-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.PrintPreview;
+				PRODUCT_NAME = PrintPreview;
+				PROVISIONING_PROFILE = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = ForRelease;
+		};
+		0A578EE309D88A71007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = "COCOA_EXTENSIONS_SUPPORT_QUICKDRAW=0";
+				OBJROOT = _Generated;
+				SDKROOT = macosx;
+				SYMROOT = _Generated;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
+			};
+			name = ForDebugging;
+		};
+		0A578EE409D88A71007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = "COCOA_EXTENSIONS_SUPPORT_QUICKDRAW=0";
+				OBJROOT = _Generated;
+				SDKROOT = macosx;
+				SYMROOT = _Generated;
+			};
+			name = ForRelease;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A578EDE09D88A71007D1289 /* Build configuration list for PBXNativeTarget "PrintPreview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578EDF09D88A71007D1289 /* ForDebugging */,
+				0A578EE009D88A71007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+		0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "PrintPreview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578EE309D88A71007D1289 /* ForDebugging */,
+				0A578EE409D88A71007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 20286C28FDCF999611CA2CEA /* Project object */;
+}
