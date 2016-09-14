@@ -9,17 +9,17 @@
 	<key>CFBundleIconFile</key>
 	<string>IconForBundle.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>net.macterm.PrefsConverter</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
 	<string>KvnG</string>
-	<key>CFBundleVersion</key>
-	<string>4.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
 	<key>LSUIElement</key>
 	<string>1</string>
 	<key>NSMainNibFile</key>

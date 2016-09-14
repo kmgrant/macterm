@@ -9,15 +9,13 @@
 	<key>CFBundleIconFile</key>
 	<string>IconForBundle</string>
 	<key>CFBundleIdentifier</key>
-	<string>net.macterm.MacTerm.PrintPreview</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
 	<string>KGPP</string>
-	<key>CFBundleVersion</key>
-	<string>1.1</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSApplicationCategoryType</key>

@@ -419,7 +419,6 @@
 		0A68811112F537A1005F418A /* GrowlSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlSupport.mm; path = Shared/Code/GrowlSupport.mm; sourceTree = "<group>"; };
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
-		0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = CustomPaths.xcconfig; path = Shared/CustomPaths.xcconfig; sourceTree = "<group>"; };
 		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
 		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
 		0A6C446A1D84C72B00E1B0E2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ChildProcessWindowCocoa.xib; sourceTree = "<group>"; };
@@ -431,7 +430,6 @@
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
 		0A7A74ED15A90A0F00E14184 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
-		0A7B831F19D66761000A4240 /* All.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = All.xcconfig; path = Shared/All.xcconfig; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
@@ -880,8 +878,6 @@
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
 				0A46FE73055433CA00ACDF3A /* Products */,
-				0A7B831F19D66761000A4240 /* All.xcconfig */,
-				0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */,
 				0A69E5250DDBACB100DA7874 /* Debug.xcconfig */,
 				0A7B831E19D66751000A4240 /* Production.xcconfig */,
 			);
@@ -1242,6 +1238,23 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0500;
+				TargetAttributes = {
+					0A70B8A21079C1EB0013E76F = {
+						DevelopmentTeam = 8BA57X86ZM;
+					};
+					0A983A9B0D11087A0054B4D2 = {
+						DevelopmentTeam = 8BA57X86ZM;
+					};
+					0A9AF64D0AF5A50500E7DF18 = {
+						DevelopmentTeam = 8BA57X86ZM;
+					};
+					0AC6BAD10A8C0A8B00AFF37A = {
+						DevelopmentTeam = 8BA57X86ZM;
+					};
+					0AFB6A1E0E86FD26005C5A07 = {
+						DevelopmentTeam = 8BA57X86ZM;
+					};
+				};
 			};
 			buildConfigurationList = 0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1949,6 +1962,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
 					"$(LDFLAGS_EXTRA_FRAMEWORKS)",
@@ -2083,6 +2097,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
 					"$(LDFLAGS_EXTRA_FRAMEWORKS)",

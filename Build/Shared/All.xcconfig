@@ -1,4 +1,5 @@
 #include "CustomPaths.xcconfig"
+#include "Signature.xcconfig"
 
 // Growl is not necessarily linked
 LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl

@@ -39,6 +39,8 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
+		0A08ADB81D88EB4000E64198 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
+		0A08ADB91D88EB4000E64198 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0A33CC4D07FABA6500248DDF /* PrintPreviewPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintPreviewPrefix.pch; path = PrintPreview/Code/PrintPreviewPrefix.pch; sourceTree = "<group>"; };
 		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
 		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -94,6 +96,8 @@
 				0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */,
 				0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */,
 				0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */,
+				0A08ADB81D88EB4000E64198 /* Debug.xcconfig */,
+				0A08ADB91D88EB4000E64198 /* Production.xcconfig */,
 			);
 			name = PrintPreview;
 			sourceTree = "<group>";
@@ -145,6 +149,7 @@
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
 						DevelopmentTeam = 8BA57X86ZM;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.Sandbox = {
 								enabled = 1;
@@ -221,10 +226,10 @@
 /* Begin XCBuildConfiguration section */
 		0A578EDF09D88A71007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A08ADB81D88EB4000E64198 /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
 				CODE_SIGN_ENTITLEMENTS = PrintPreview/PrintPreview.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -250,9 +255,8 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrintPreview/Resources/PrintPreview-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.PrintPreview;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrintPreview;
 				PRODUCT_NAME = PrintPreview;
-				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = app;
 			};
@@ -260,10 +264,10 @@
 		};
 		0A578EE009D88A71007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A08ADB91D88EB4000E64198 /* Production.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
 				CODE_SIGN_ENTITLEMENTS = PrintPreview/PrintPreview.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -287,9 +291,8 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrintPreview/Resources/PrintPreview-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.PrintPreview;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrintPreview;
 				PRODUCT_NAME = PrintPreview;
-				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = app;
 			};

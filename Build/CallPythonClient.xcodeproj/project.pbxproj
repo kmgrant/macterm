@@ -27,6 +27,8 @@
 		0A3B585819F215F000F672A4 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
 		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		0AA19F4D1D88F14000FD70FF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
+		0AA19F4E1D88F14000FD70FF /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = CallPythonClient/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -84,6 +86,8 @@
 				0A1FE9401A39F25E003C81BA /* CallPythonClient.xib */,
 				0A1FE9371A36A2A8003C81BA /* Required Frameworks */,
 				195DF8CFFE9D517E11CA2CBB /* Products */,
+				0AA19F4D1D88F14000FD70FF /* Debug.xcconfig */,
+				0AA19F4E1D88F14000FD70FF /* Production.xcconfig */,
 			);
 			name = CanvasClient;
 			sourceTree = "<group>";
@@ -119,6 +123,7 @@
 					0A3B584619F208A900F672A4 = {
 						CreatedOnToolsVersion = 6.0.1;
 						DevelopmentTeam = 8BA57X86ZM;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.Sandbox = {
 								enabled = 1;
@@ -182,6 +187,7 @@
 /* Begin XCBuildConfiguration section */
 		0A3B585119F208A900F672A4 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F4D1D88F14000FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -198,8 +204,6 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = CallPythonClient/CallPythonClient.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -221,8 +225,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.CallPythonClient;
 				PRODUCT_NAME = CallPythonClient;
-				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -230,6 +234,7 @@
 		};
 		0A3B585219F208A900F672A4 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F4E1D88F14000FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -246,8 +251,6 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = CallPythonClient/CallPythonClient.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -263,8 +266,8 @@
 				INFOPLIST_FILE = "CallPythonClient/Resources/CallPythonClient-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.CallPythonClient;
 				PRODUCT_NAME = CallPythonClient;
-				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -272,6 +275,7 @@
 		};
 		0A578EE309D88A71007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F4D1D88F14000FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OBJROOT = _Generated;
@@ -286,6 +290,7 @@
 		};
 		0A578EE409D88A71007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F4E1D88F14000FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OBJROOT = _Generated;

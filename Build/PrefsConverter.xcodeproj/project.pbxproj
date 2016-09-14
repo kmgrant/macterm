@@ -47,6 +47,8 @@
 		0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
 		0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
 		0A42D788175C3110001F487B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = PrefsConverter/Resources/English.lproj/PrefsConverterCocoa.xib; sourceTree = "<group>"; };
+		0AA19F511D88F44C00FD70FF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
+		0AA19F521D88F44C00FD70FF /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrefsConverter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = PrefsConverter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
@@ -103,6 +105,8 @@
 				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
 				0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */,
+				0AA19F511D88F44C00FD70FF /* Debug.xcconfig */,
+				0AA19F521D88F44C00FD70FF /* Production.xcconfig */,
 			);
 			name = PrefsConverter;
 			sourceTree = "<group>";
@@ -148,6 +152,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0460;
+				TargetAttributes = {
+					8D0C4E890486CD37000505A6 = {
+						DevelopmentTeam = 8BA57X86ZM;
+						ProvisioningStyle = Manual;
+					};
+				};
 			};
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -208,9 +218,9 @@
 /* Begin XCBuildConfiguration section */
 		0A578F0709D88AAC007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F511D88F44C00FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -235,8 +245,9 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrefsConverter;
 				PRODUCT_NAME = PrefsConverter;
-				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = app;
 			};
@@ -244,9 +255,9 @@
 		};
 		0A578F0809D88AAC007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F521D88F44C00FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -269,8 +280,9 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrefsConverter;
 				PRODUCT_NAME = PrefsConverter;
-				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = app;
 			};
@@ -278,6 +290,7 @@
 		};
 		0A578F0B09D88AAC007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F511D88F44C00FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				OBJROOT = _Generated;
 				SDKROOT = macosx;
@@ -291,6 +304,7 @@
 		};
 		0A578F0C09D88AAC007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F521D88F44C00FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				OBJROOT = _Generated;
 				SDKROOT = macosx;

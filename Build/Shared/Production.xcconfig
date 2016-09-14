@@ -1,6 +1,5 @@
 // For released (non-debugging) builds.
 
-#include "CustomPaths.xcconfig"
 #include "All.xcconfig"
 
 // nothing needed currently

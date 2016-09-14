@@ -43,6 +43,8 @@
 		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
 		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0A5C6C7A1597B26E0094E3FD /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = BugReporter/Resources/English.lproj/BugReporterCocoa.xib; sourceTree = "<group>"; };
+		0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
+		0AA19F501D88F29900FD70FF /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = BugReporter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = BugReporter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 		8D0C4E970486CD37000505A6 /* BugReporter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BugReporter.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,6 +90,8 @@
 				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
 				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
 				0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */,
+				0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */,
+				0AA19F501D88F29900FD70FF /* Production.xcconfig */,
 			);
 			name = BugReporter;
 			sourceTree = "<group>";
@@ -136,6 +140,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0460;
+				TargetAttributes = {
+					8D0C4E890486CD37000505A6 = {
+						DevelopmentTeam = 8BA57X86ZM;
+						ProvisioningStyle = Manual;
+					};
+				};
 			};
 			buildConfigurationList = 0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "BugReporter" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -194,9 +204,9 @@
 /* Begin XCBuildConfiguration section */
 		0A578EDF09D88A71007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -221,8 +231,9 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "BugReporter/Resources/BugReporter-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.BugReporter;
 				PRODUCT_NAME = BugReporter;
-				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = app;
 			};
@@ -230,9 +241,9 @@
 		};
 		0A578EE009D88A71007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F501D88F29900FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -255,8 +266,9 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "BugReporter/Resources/BugReporter-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.BugReporter;
 				PRODUCT_NAME = BugReporter;
-				PROVISIONING_PROFILE = "";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				WRAPPER_EXTENSION = app;
 			};
@@ -264,6 +276,7 @@
 		};
 		0A578EE309D88A71007D1289 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				OBJROOT = _Generated;
 				SDKROOT = macosx;
@@ -277,6 +290,7 @@
 		};
 		0A578EE409D88A71007D1289 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0AA19F501D88F29900FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				OBJROOT = _Generated;
 				SDKROOT = macosx;

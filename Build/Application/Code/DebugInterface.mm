@@ -239,7 +239,7 @@ external Python callbacks.
 launchNewCallPythonClient:(id)	sender
 {
 #pragma unused(sender)
-	id					connectionObject = CocoaFuture_AllocInitXPCConnectionWithServiceName(@"net.macterm.MacTerm.CallPythonClient");
+	id					connectionObject = CocoaFuture_AllocInitXPCConnectionWithServiceName(@"net.macterm.helpers.CallPythonClient");
 	NSXPCInterface*		interfaceObject = CocoaFuture_XPCInterfaceWithProtocol(@protocol(XPCCallPythonClient_RemoteObjectInterface));
 	
 	

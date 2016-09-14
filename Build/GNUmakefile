@@ -62,6 +62,13 @@ help:
 #	GROWL_SDK_ROOT (if using Growl)
 include $(MAKEFILE_DIR)/Shared/CustomPaths.xcconfig
 
+# The following should be defined by this "include":
+#   CODE_SIGN_IDENTITY
+#   DEVELOPER_ID_APP
+#   DEVELOPMENT_TEAM
+# It may also define signing-related environment variables.
+include $(MAKEFILE_DIR)/Shared/Signature.xcconfig
+
 # temporary files (subdirectories created)
 #SYMROOT=<defined in Xcode config>
 #OBJROOT=<defined in Xcode config>
@@ -75,10 +82,6 @@ XCODE_ENV := \
 ifeq ($(strip $(shell /bin/test -d $(DEVELOPER_DIR) || echo "no")),no)
 DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
 endif
-
-# for code signing purposes, set this to an Apple-provided
-# "Developer ID Application" item in your Keychain
-DEVELOPER_ID_APP := Developer ID Application: Kevin Grant
 
 # choose a build configuration...
 BUILD_CONF := ForDebugging
@@ -141,7 +144,7 @@ DEST_APP_MACOS_TOP := $(DEST_APP_TOP)/MacOS
 DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
 DEST_APP_XPCSERVICES_TOP := $(DEST_APP_TOP)/XPCServices
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
-DEST_CALLPYCLIENT_TOP := $(DEST_APP_XPCSERVICES_TOP)/net.macterm.MacTerm.CallPythonClient.xpc
+DEST_CALLPYCLIENT_TOP := $(DEST_APP_XPCSERVICES_TOP)/net.macterm.helpers.CallPythonClient.xpc
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
 DEST_PRINTPREVIEW_TOP := $(DEST_APP_RESOURCES_TOP)/PrintPreview.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
