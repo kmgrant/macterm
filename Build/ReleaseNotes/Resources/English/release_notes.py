@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160915',
     '20160911',
     '20160904',
     '20160901',
@@ -545,6 +546,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160915': [
+        'Fixed click areas so that background windows are easier to select when sheets are open.',
+        'Fixed Rename command in vector graphics windows so that the panel does not reopen as soon as it is closed.',
+    ],
     '20160911': [
         'Print Preview has been converted into an entirely separate sub-process, for added stability.  The preview stays open and can print even if MacTerm quits.',
         'Print Preview has been sandboxed, having only the basic permission to print.',

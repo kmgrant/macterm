@@ -400,6 +400,18 @@ setAsForegroundInQDCurrentPort
 @synthesize observedObject = _observedObject;
 
 
+/*!
+Destructor.
+
+(2016.09)
+*/
+- (void)
+dealloc
+{
+	[_keyPath release];
+}// dealloc
+
+
 @end //}
 
 

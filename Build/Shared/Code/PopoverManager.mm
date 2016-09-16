@@ -67,7 +67,9 @@
 	NSView*							parentView;				// the view the popover is relative to, if Cocoa (and modal to, if dialog behavior)
 	HIWindowRef						parentCarbonWindow;		// the window the popover is relative to, if Carbon
 	CarbonEventHandlerWrap*			activationHandlerPtr;	// embellishes Carbon Event for activating window
+	CarbonEventHandlerWrap*			clickActivationHandlerPtr;	// embellishes Carbon Event for clicking special parts of window
 	CarbonEventHandlerWrap*			minimizeHandlerPtr;		// embellishes Carbon Event for minimizing window
+	CarbonEventHandlerWrap*			modalityHandlerPtr;		// embellishes Carbon Event for determining whether modal window blocks a click
 	CarbonEventHandlerWrap*			resizeHandlerPtr;		// embellishes Carbon Event for resizing window
 }
 
@@ -127,6 +129,8 @@ namespace {
 
 OSStatus	receiveWindowActivationChange	(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowCollapse			(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
+OSStatus	receiveWindowGetClickModality	(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -394,6 +398,84 @@ receiveWindowCollapse	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
+Handles "kEventWindowGetClickActivation" of "kEventClassWindow"
+for the parent window of a popover.
+
+Ensures that clicks in special window parts such as the toolbar
+will also select a window when it is blocked by a dialog.
+
+(2016.09)
+*/
+OSStatus
+receiveWindowGetClickActivation		(EventHandlerCallRef		inHandlerCallRef,
+									 EventRef				inEvent,
+									 void*					inWindowController)
+{
+	OSStatus				result = eventNotHandledErr;
+	PopoverManager_WC*		windowController = REINTERPRET_CAST(inWindowController, PopoverManager_WC*);
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowGetClickActivation);
+	
+	if ([windowController isVisible])
+	{
+		// the popover should remain on top
+		if (kPopoverManager_BehaviorTypeDialog == windowController->behaviorType)
+		{
+			[windowController popOver];
+		}
+	}
+	
+	// defer to default handler
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	return result;
+}// receiveWindowGetClickActivation
+
+
+/*!
+Handles "kEventWindowGetClickModality" of "kEventClassWindow"
+for the parent window of a popover.
+
+Ensures that the parent window can be activated by a click
+anywhere while a sheet is open.
+
+(2016.09)
+*/
+OSStatus
+receiveWindowGetClickModality	(EventHandlerCallRef		inHandlerCallRef,
+								 EventRef				inEvent,
+								 void*					inWindowController)
+{
+	OSStatus				result = eventNotHandledErr;
+	PopoverManager_WC*		windowController = REINTERPRET_CAST(inWindowController, PopoverManager_WC*);
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowGetClickModality);
+	
+	if ([windowController isVisible])
+	{
+		// the popover should remain on top
+		if (kPopoverManager_BehaviorTypeDialog == windowController->behaviorType)
+		{
+			[windowController popOver];
+		}
+	}
+	
+	// defer to default handler
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	return result;
+}// receiveWindowGetClickModality
+
+
+/*!
 Handles "kEventWindowBoundsChanged" of "kEventClassWindow"
 for the parent window of a popover.
 
@@ -504,10 +586,18 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 													CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
 																			kEventWindowActivated,
 																			kEventWindowDeactivated), self/* handler data */);
+			self->clickActivationHandlerPtr = new CarbonEventHandlerWrap
+													(GetWindowEventTarget(aCarbonWindow), receiveWindowGetClickActivation,
+														CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
+																				kEventWindowGetClickActivation), self/* handler data */);
 			self->minimizeHandlerPtr = new CarbonEventHandlerWrap
 											(GetWindowEventTarget(windowWatchedForMinimize), receiveWindowCollapse,
 												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
 																		kEventWindowCollapse), self/* handler data */);
+			self->modalityHandlerPtr = new CarbonEventHandlerWrap
+											(GetWindowEventTarget(aCarbonWindow), receiveWindowGetClickModality,
+												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
+																		kEventWindowGetClickModality), self/* handler data */);
 			self->resizeHandlerPtr = new CarbonEventHandlerWrap
 											(GetWindowEventTarget(aCarbonWindow), receiveWindowResize,
 												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow),
@@ -570,7 +660,9 @@ dealloc
 	[self.class cancelPreviousPerformRequestsWithTarget:self];
 	[self ignoreWhenObjectsPostNotes];
 	delete self->activationHandlerPtr, activationHandlerPtr = nullptr;
+	delete self->clickActivationHandlerPtr, clickActivationHandlerPtr = nullptr;
 	delete self->minimizeHandlerPtr, minimizeHandlerPtr = nullptr;
+	delete self->modalityHandlerPtr, modalityHandlerPtr = nullptr;
 	delete self->resizeHandlerPtr, resizeHandlerPtr = nullptr;
 	[containerWindow release];
 	[super dealloc];
@@ -1071,8 +1163,11 @@ parentWindowDidBecomeKey:(NSNotification*)		aNotification
 		//if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
 			// allow other normal windows to sit above background popovers
-			[self popOver];
-			// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
+			if ([self isVisible])
+			{
+				[self popOver];
+				// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
+			}
 		}
 	}
 }// parentWindowDidBecomeKey:
@@ -1119,7 +1214,10 @@ parentWindowDidResignKey:(NSNotification*)		aNotification
 		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
 			// when the parent window is active, the popover should remain on top
-			[self popUnder];
+			if ([self isVisible])
+			{
+				[self popUnder];
+			}
 		}
 	}
 }// parentWindowDidResignKey:
@@ -1150,8 +1248,8 @@ parentWindowDidResize:(NSNotification*)		aNotification
 
 
 /*!
-Responds when the popover displays a sheet.  This temporarily
-prevents the popover from disappearing.
+Responds when the dummy sheet is closed, allowing the
+popover to be released.  (See "windowWillBeginSheet:".)
 
 (2016.05)
 */
@@ -1190,17 +1288,20 @@ windowDidResignKey:(NSNotification*)		aNotification
 			// dialogs try to retain keyboard focus, expecting to be
 			// dismissed in an explicit way (e.g. via buttons)
 			removePopover = NO;
-			[self popUnder];
-		#if 0
-			if (nullptr == self->parentCarbonWindow)
+			if ([self isVisible])
 			{
-				if ([NSApp keyWindow] == [self parentCocoaWindow])
+				[self popUnder];
+			#if 0
+				if (nullptr == self->parentCarbonWindow)
 				{
-					// force clicks in the parent to be ignored
-					[self->containerWindow makeKeyWindow];
+					if ([NSApp keyWindow] == [self parentCocoaWindow])
+					{
+						// force clicks in the parent to be ignored
+						[self->containerWindow makeKeyWindow];
+					}
 				}
+			#endif
 			}
-		#endif
 		}
 		
 		if (removePopover)
