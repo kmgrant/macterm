@@ -24,6 +24,7 @@
 
 MAKEFILE_DIR := $(dir $(firstword $(MAKEFILE_LIST)))
 SHELL = /bin/bash
+SRC_SHARED_TOP := $(MAKEFILE_DIR)/Shared
 
 # IMPORTANT: The first rule in the file is chosen when "make" is
 # run by itself.  Xcode runs "make" for external targets.
@@ -60,7 +61,7 @@ help:
 #	SYMROOT
 #	OBJROOT
 #	GROWL_SDK_ROOT (if using Growl)
-include $(MAKEFILE_DIR)/Shared/CustomPaths.xcconfig
+include $(SRC_SHARED_TOP)/CustomPaths.xcconfig
 
 # The following should be defined by this "include":
 #   CODE_SIGN_IDENTITY
@@ -121,6 +122,7 @@ SRC_BUGREPORTER_PROJ_TOP := $(MAKEFILE_DIR)/BugReporter
 SRC_CALLPYCLIENT_PROJ_TOP := $(MAKEFILE_DIR)/CallPythonClient
 SRC_PREFSCONVERTER_PROJ_TOP := $(MAKEFILE_DIR)/PrefsConverter
 SRC_PRINTPREVIEW_PROJ_TOP := $(MAKEFILE_DIR)/PrintPreview
+#SRC_SHARED_TOP is set at the beginning
 
 SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
 SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
@@ -133,6 +135,8 @@ SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
 SRC_PRINTPREVIEW_BUILD_TOP := $(SYMROOT)/$(BUILD_CONF)
 SRC_PRINTPREVIEW_TOP := $(SRC_PRINTPREVIEW_BUILD_TOP)/PrintPreview.app
+SRC_SHARED_CODE_TOP := $(SRC_SHARED_TOP)/Code
+SRC_SHARED_RESOURCES_TOP := $(SRC_SHARED_TOP)/Resources
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
 SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/$(BUILD_CONF)
 SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Growl.framework
@@ -239,7 +243,7 @@ MacTerm.help \
 English.lproj/TerminalWindow.nib
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
-XIB_PREFIXES := \
+APP_XIB_PREFIXES := \
 English.lproj/AddressDialogCocoa \
 English.lproj/AlertMessagesCocoa \
 English.lproj/ChildProcessWindowCocoa \
@@ -279,10 +283,11 @@ English.lproj/ResizeInfoCocoa \
 English.lproj/ServerBrowserCocoa \
 English.lproj/TerminalViewCocoa \
 English.lproj/TerminalWindowCocoa \
-English.lproj/VectorWindowCocoa \
+English.lproj/VectorWindowCocoa
+SHARED_XIB_PREFIXES := \
 English.lproj/WindowTitleDialogCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
-$(foreach PREFIX,$(XIB_PREFIXES),$(PREFIX).nib)
+$(foreach PREFIX,$(APP_XIB_PREFIXES) $(SHARED_XIB_PREFIXES),$(PREFIX).nib)
 APP_RESOURCES_COPIED := \
 $(APP_RESOURCES_FILES) \
 $(APP_RESOURCES_BUNDLES) \
@@ -590,7 +595,8 @@ install-resources: \
 $(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_COPIED))
 	$(call banner,$@)
 	@# build any NIBs that are based on XIBs
-	$(foreach PREFIX,$(XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_APP_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))
+	$(foreach PREFIX,$(APP_XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_APP_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))
+	$(foreach PREFIX,$(SHARED_XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_SHARED_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
 	$(MAKE) install-app-dot-strings

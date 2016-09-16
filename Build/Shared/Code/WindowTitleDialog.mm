@@ -46,16 +46,8 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#import <Console.h>
-#import <FlagManager.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
-
-// application includes
-#import "Commands.h"
-#import "ConstantsRegistry.h"
-#import "Session.h"
-#import "VectorWindow.h"
 
 
 
@@ -66,16 +58,16 @@ Manages the rename-window user interface.
 */
 @interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_VCDelegate > //{
 {
-	WindowTitleDialog_Ref					_selfRef;				// identical to address of structure, but typed as ref
-	WindowTitleDialog_VC*					_viewMgr;				// loads the Rename interface
-	Popover_Window*							_containerWindow;		// holds the Rename dialog view
-	NSView*									_managedView;			// the view that implements the majority of the interface
-	SessionRef								_session;				// the session, if any, to which this applies
-	VectorWindow_Ref						_canvasWindow;			// the canvas window controller, if any, to which this applies
-	NSWindow*								_targetCocoaWindow;		// the window to be renamed, if Cocoa
-	HIWindowRef								_targetCarbonWindow;	// the window to be renamed, if Carbon
-	PopoverManager_Ref						_popoverMgr;			// manages common aspects of popover window behavior
-	WindowTitleDialog_CloseNotifyProcPtr	_closeNotifyProc;		// routine to call when the dialog is dismissed
+	WindowTitleDialog_Ref						_selfRef;				// identical to address of structure, but typed as ref
+	WindowTitleDialog_VC*						_viewMgr;				// loads the Rename interface
+	Popover_Window*								_containerWindow;		// holds the Rename dialog view
+	NSView*										_managedView;			// the view that implements the majority of the interface
+	NSWindow*									_targetCocoaWindow;		// the window to be renamed, if Cocoa
+	HIWindowRef									_targetCarbonWindow;		// the window to be renamed, if Carbon
+	BOOL										_animated;				// YES if there should be animation when opening/closing
+	PopoverManager_Ref							_popoverMgr;				// manages common aspects of popover window behavior
+	WindowTitleDialog_ReturnTitleCopyBlock		_initBlock;				// block to invoke when initializing dialog title
+	WindowTitleDialog_CloseNotifyBlock			_closeNotifyBlock;		// block to invoke when the dialog is dismissed
 }
 
 // class methods
@@ -86,18 +78,19 @@ Manages the rename-window user interface.
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
 	orCarbonWindow:(HIWindowRef)_
-	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_ NS_DESIGNATED_INITIALIZER;
+	animated:(BOOL)_
+	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
+	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
-	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_;
+	animated:(BOOL)_
+	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
+	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_;
 	- (instancetype)
 	initForCarbonWindow:(HIWindowRef)_
-	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
-	session:(SessionRef)_;
-	- (instancetype)
-	initForCocoaWindow:(NSWindow*)_
-	notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)_
-	vectorGraphicsCanvas:(VectorWindow_Ref)_;
+	animated:(BOOL)_
+	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
+	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_;
 
 // new methods
 	- (void)
@@ -139,57 +132,57 @@ Manages the rename-window user interface.
 #pragma mark Public Methods
 
 /*!
-This method is used to initialize a session-specific window
-title dialog box.  It creates the dialog box invisibly, and
-uses the specified session’s user-defined title as the
-initial field value.
+Returns a new window-modal version of the rename dialog
+that initializes its string field using the given
+initialization block.  The close-notify block is called
+when the dialog closes; if the user accepts, a new
+string is provided (otherwise, the string is nullptr).
 
-When the user changes the title, the session’s user-defined
-title is updated (which may affect the title of one or more
-windows, but this is up to the Session implementation).
-
-(3.1)
+(2016.09)
 */
 WindowTitleDialog_Ref
-WindowTitleDialog_NewForSession		(SessionRef								inSession,
-									 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+WindowTitleDialog_NewWindowModal		(NSWindow*								inCocoaParentWindow,
+									 Boolean									inIsAnimated,
+									 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
+									 WindowTitleDialog_CloseNotifyBlock		inFinalBlock)
 {
 	WindowTitleDialog_Ref	result = nullptr;
 	
 	
 	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCarbonWindow:Session_ReturnActiveWindow(inSession)
-															notificationProc:inCloseNotifyProcPtr
-															session:inSession];
+										initForCocoaWindow:inCocoaParentWindow animated:inIsAnimated
+															whenInitializing:inInitBlock
+															whenClosing:inFinalBlock];
 	return result;
-}// NewForSession
+}// NewWindowModal
 
 
 /*!
-This method is used to initialize a canvas-specific window
-title dialog box.  It creates the dialog box invisibly, and
-uses the specified vector canvas’ user-defined title as the
-initial field value.
+Returns a new window-modal version of the rename dialog
+that initializes its string field using the given
+initialization block.  The close-notify block is called
+when the dialog closes; if the user accepts, a new
+string is provided (otherwise, the string is nullptr).
 
-When the user changes the title, the canvas’ user-defined
-title is updated (which may affect the title of one or more
-windows, but this is up to the canvas implementation).
+DEPRECATED.  Use the NSWindow* version above.
 
-(3.1)
+(2016.09)
 */
 WindowTitleDialog_Ref
-WindowTitleDialog_NewForVectorCanvas	(VectorWindow_Ref						inCanvasWindow,
-										 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+WindowTitleDialog_NewWindowModalParentCarbon		(HIWindowRef								inCarbonParentWindow,
+												 Boolean									inIsAnimated,
+												 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
+												 WindowTitleDialog_CloseNotifyBlock		inFinalBlock)
 {
 	WindowTitleDialog_Ref	result = nullptr;
 	
 	
 	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCocoaWindow:VectorWindow_ReturnNSWindow(inCanvasWindow)
-															notificationProc:inCloseNotifyProcPtr
-															vectorGraphicsCanvas:inCanvasWindow];
+										initForCarbonWindow:inCarbonParentWindow animated:inIsAnimated
+															whenInitializing:inInitBlock
+															whenClosing:inFinalBlock];
 	return result;
-}// NewForVectorCanvas
+}// NewWindowModalParentCarbon
 
 
 /*!
@@ -218,7 +211,7 @@ callback is invoked.
 (3.0)
 */
 void
-WindowTitleDialog_Display	(WindowTitleDialog_Ref		inDialog)
+WindowTitleDialog_Display	(WindowTitleDialog_Ref	inDialog)
 {
 	WindowTitleDialog_Handler*	ptr = [WindowTitleDialog_Handler viewHandlerFromRef:inDialog];
 	
@@ -233,19 +226,6 @@ WindowTitleDialog_Display	(WindowTitleDialog_Ref		inDialog)
 		[ptr display];
 	}
 }// Display
-
-
-/*!
-The default handler for closing a window title dialog.
-
-(3.0)
-*/
-void
-WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialog_Ref	UNUSED_ARGUMENT(inDialogThatClosed),
-											 Boolean				UNUSED_ARGUMENT(inOKButtonPressed))
-{
-	// do nothing
-}// StandardCloseNotifyProc
 
 
 #pragma mark Internal Methods
@@ -279,8 +259,10 @@ there is no reason to support Carbon windows anymore.
 */
 - (instancetype)
 initForCocoaWindow:(NSWindow*)								aCocoaWindow
-orCarbonWindow:(HIWindowRef)								aCarbonWindow
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
+orCarbonWindow:(HIWindowRef)									aCarbonWindow
+animated:(BOOL)												anAnimationFlag
+whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
+whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
 {
 	self = [super init];
 	if (nil != self)
@@ -289,77 +271,59 @@ notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
 		_viewMgr = nil;
 		_containerWindow = nil;
 		_managedView = nil;
-		_session = nullptr;
-		_canvasWindow = nullptr;
 		_targetCocoaWindow = aCocoaWindow;
 		_targetCarbonWindow = aCarbonWindow;
 		_popoverMgr = nullptr;
-		_closeNotifyProc = aProc;
+		_animated = anAnimationFlag;
+		_initBlock = Block_copy(anInitBlock);
+		_closeNotifyBlock = Block_copy(aFinalBlock);
 	}
 	return self;
-}// initForCocoaWindow:orCarbonWindow:notificationProc:
+}// initForCocoaWindow:orCarbonWindow:animated:whenInitializing:whenClosing:
 
 
 /*!
-Initializer for Cocoa windows.  This will eventually be the
-designated initializer, when it is no longer necessary to
-support Carbon windows.
+Initializer for parent windows that use Carbon.
 
-(4.0)
-*/
-- (instancetype)
-initForCocoaWindow:(NSWindow*)								aWindow
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
-{
-	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr notificationProc:aProc];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initForCocoaWindow:notificationProc:
+DEPRECATED.  Use the NSWindow* version.
 
-
-/*!
-Initializer for windows that belong to Sessions.
-This is an important distinction because a Session
-may customize the raw title slightly, and the user
-interface should only allow the user-defined portion
-of the title to be editable.
-
-(4.0)
+(2016.09)
 */
 - (instancetype)
 initForCarbonWindow:(HIWindowRef)							aWindow
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
-session:(SessionRef)										aSession
+animated:(BOOL)												anAnimationFlag
+whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
+whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
 {
-	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow notificationProc:aProc];
+	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow animated:anAnimationFlag
+									whenInitializing:anInitBlock whenClosing:aFinalBlock];
 	if (nil != self)
 	{
-		_session = aSession;
 	}
 	return self;
-}// initForCarbonWindow:notificationProc:session:
+}// initForCarbonWindow:animated:whenInitializing:whenClosing:
 
 
 /*!
-Initializer for windows that belong to vector graphics
-windows.
+Initializer for parent windows that use Cocoa windows.  This will
+eventually be the designated initializer, when it is no longer
+necessary to support Carbon windows.
 
-(4.0)
+(2016.09)
 */
 - (instancetype)
 initForCocoaWindow:(NSWindow*)								aWindow
-notificationProc:(WindowTitleDialog_CloseNotifyProcPtr)		aProc
-vectorGraphicsCanvas:(VectorWindow_Ref)						aCanvasWindow
+animated:(BOOL)												anAnimationFlag
+whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
+whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
 {
-	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr notificationProc:aProc];
+	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr animated:anAnimationFlag
+									whenInitializing:anInitBlock whenClosing:aFinalBlock];
 	if (nil != self)
 	{
-		_canvasWindow = aCanvasWindow;
 	}
 	return self;
-}// initForCocoaWindow:notificationProc:vectorGraphicsCanvas:
+}// initForCocoaWindow:animated:whenInitializing:whenClosing:
 
 
 /*!
@@ -370,6 +334,8 @@ Destructor.
 - (void)
 dealloc
 {
+	Block_release(_initBlock);
+	Block_release(_closeNotifyBlock);
 	[_containerWindow release];
 	[_viewMgr release];
 	if (nullptr != _popoverMgr)
@@ -537,16 +503,8 @@ didLoadManagedView:(NSView*)			aManagedView
 	{
 		NSWindow*						asNSWindow = [self renamedCocoaWindow];
 		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
-		Boolean							noAnimations = false;
+		Boolean							noAnimations = (NO == self->_animated);
 		
-		
-		// determine if animation should occur
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagNoAnimations,
-									sizeof(noAnimations), &noAnimations))
-		{
-			noAnimations = false; // assume a value, if preference can’t be found
-		}
 		
 		if (noAnimations)
 		{
@@ -598,38 +556,12 @@ finalTitle:(NSString*)					newTitle
 	// prepare to rename the window
 	if (acceptedRename)
 	{
-		if (nullptr != _session)
-		{
-			// set session window’s user-defined title
-			Session_SetWindowUserDefinedTitle(_session, BRIDGE_CAST(newTitle, CFStringRef));
-		}
-		else if (nullptr != _canvasWindow)
-		{
-			// set vector graphics window’s user-defined title
-			VectorWindow_SetTitle(_canvasWindow, BRIDGE_CAST(newTitle, CFStringRef));
-		}
-		else
-		{
-			// set raw title
-			if (nullptr != _targetCocoaWindow)
-			{
-				[_targetCocoaWindow setTitle:newTitle];
-			}
-			if (nullptr != _targetCarbonWindow)
-			{
-				UNUSED_RETURN(OSStatus)SetWindowTitleWithCFString(_targetCarbonWindow, BRIDGE_CAST(newTitle, CFStringRef));
-			}
-		}
+		_closeNotifyBlock(BRIDGE_CAST(newTitle, CFStringRef));
 	}
 	else
 	{
-		// user cancelled; do nothing
-	}
-	
-	// notify of close
-	if (nullptr != _closeNotifyProc)
-	{
-		WindowTitleDialog_InvokeCloseNotifyProc(_closeNotifyProc, _selfRef, (acceptedRename) ? true : false);
+		// user cancelled
+		_closeNotifyBlock(nullptr/* no title; signals to block that user cancelled */);
 	}
 }// titleDialog:didFinishUsingManagedView:acceptingRename:finalTitle:
 
@@ -645,40 +577,8 @@ titleDialog:(WindowTitleDialog_VC*)				aViewMgr
 returnInitialTitleTextForManagedView:(NSView*)	aManagedView
 {
 #pragma unused(aViewMgr, aManagedView)
-	NSString*	result = nil;
+	NSString*	result = [BRIDGE_CAST(_initBlock(), NSString*) autorelease]; // block returns a copy of a string
 	
-	
-	if (nullptr != _session)
-	{
-		// find session window’s user-defined title
-		CFStringRef		titleString = nullptr;
-		Session_Result	sessionResult = kSession_ResultOK;
-		
-		
-		// note that the string is not copied here
-		sessionResult = Session_GetWindowUserDefinedTitle(_session, titleString);
-		if ((kSession_ResultOK == sessionResult) && (nullptr != titleString))
-		{
-			result = BRIDGE_CAST(titleString, NSString*);
-		}
-	}
-	else if (nullptr != _canvasWindow)
-	{
-		// find vector graphics window’s user-defined title
-		CFStringRef		titleString = nullptr;
-		
-		
-		VectorWindow_CopyTitle(_canvasWindow, titleString);
-		if (nullptr != titleString)
-		{
-			result = BRIDGE_CAST(titleString, NSString*);
-			[result autorelease];
-		}
-	}
-	else
-	{
-		// find raw window title
-	}
 	
 	return result;
 }// titleDialog:returnInitialTitleTextForManagedView:

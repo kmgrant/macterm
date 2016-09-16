@@ -45,6 +45,7 @@ class NSWindow;
 // library includes
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
+#import <WindowTitleDialog.h>
 
 // application includes
 #include "SessionRef.typedef.h"
@@ -52,7 +53,6 @@ class NSWindow;
 @class VectorCanvas_View;
 #endif
 #include "VectorInterpreterRef.typedef.h"
-#include "WindowTitleDialog.h"
 
 
 

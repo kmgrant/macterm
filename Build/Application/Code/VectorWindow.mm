@@ -50,13 +50,14 @@
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
+#import <WindowTitleDialog.h>
 
 // application includes
 #import "Console.h"
 #import "ConstantsRegistry.h"
 #import "EventLoop.h"
+#import "Preferences.h"
 #import "VectorInterpreter.h"
-#import "WindowTitleDialog.h"
 
 
 
@@ -447,7 +448,39 @@ performRename:(id)	sender
 #pragma unused(sender)
 	if (nullptr == self->renameDialog)
 	{
-		self->renameDialog = WindowTitleDialog_NewForVectorCanvas([self canvasWindow]);
+		NSWindow*	windowRef = self.window; // keep "self" from being retained in the blocks below
+		Boolean		noAnimations = false;
+		
+		
+		// determine if animation should occur
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoAnimations,
+									sizeof(noAnimations), &noAnimations))
+		{
+			noAnimations = false; // assume a value, if preference can’t be found
+		}
+		
+		// create the rename interface, specify how to initialize it
+		// and specify how to update the title when finished
+		self->renameDialog = WindowTitleDialog_NewWindowModal
+								(windowRef, (false == noAnimations),
+								^()
+								{
+									// initialize with existing title
+									return BRIDGE_CAST(windowRef.title, CFStringRef); // note: need to return a copy
+								},
+								^(CFStringRef	inNewTitle)
+								{
+									// if non-nullptr, set new title
+									if (nullptr == inNewTitle)
+									{
+										// user cancelled; ignore
+									}
+									else
+									{
+										windowRef.title = BRIDGE_CAST(inNewTitle, NSString*);
+									}
+								});
 	}
 	WindowTitleDialog_Display(self->renameDialog);
 }

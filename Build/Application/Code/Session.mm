@@ -75,6 +75,7 @@
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
 #import <StringUtilities.h>
+#import <WindowTitleDialog.h>
 
 // application includes
 #import "AppResources.h"
@@ -100,7 +101,6 @@
 #import "VectorInterpreter.h"
 #import "VectorWindow.h"
 #import "VTKeys.h"
-#import "WindowTitleDialog.h"
 
 
 
@@ -1309,7 +1309,47 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 	
 	if (nullptr == ptr->renameDialog)
 	{
-		ptr->renameDialog = WindowTitleDialog_NewForSession(inRef);
+		Boolean		noAnimations = false;
+		
+		
+		// determine if animation should occur
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNoAnimations,
+									sizeof(noAnimations), &noAnimations))
+		{
+			noAnimations = false; // assume a value, if preference can’t be found
+		}
+		
+		// create the rename interface, specify how to initialize it
+		// and specify how to update the title when finished
+		ptr->renameDialog = WindowTitleDialog_NewWindowModalParentCarbon
+							(Session_ReturnActiveWindow(inRef), (false == noAnimations),
+								^()
+								{
+									// initialize with existing title
+									CFStringRef		result = nullptr; // note: need to return a copy
+									
+									
+									if (kSession_ResultOK != Session_GetWindowUserDefinedTitle(inRef, result))
+									{
+										// failed; return copy of empty string
+										result = BRIDGE_CAST([@"" retain], CFStringRef);
+									}
+									
+									return result; // return-from-block
+								},
+								^(CFStringRef	inNewTitle)
+								{
+									// if non-nullptr, set new title
+									if (nullptr == inNewTitle)
+									{
+										// user cancelled; ignore
+									}
+									else
+									{
+										Session_SetWindowUserDefinedTitle(inRef, inNewTitle);
+									}
+								});
 	}
 	WindowTitleDialog_Display(ptr->renameDialog);
 }// DisplayWindowRenameUI

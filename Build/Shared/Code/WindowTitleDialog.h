@@ -7,25 +7,21 @@
 */
 /*###############################################################
 
-	MacTerm
-		© 1998-2016 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
-		(see About box for full list of U of I contributors).
+	Interface Library
+	© 1998-2016 by Kevin Grant
 	
-	This program is free software; you can redistribute it or
-	modify it under the terms of the GNU General Public License
+	This library is free software; you can redistribute it or
+	modify it under the terms of the GNU Lesser Public License
 	as published by the Free Software Foundation; either version
-	2 of the License, or (at your option) any later version.
+	2.1 of the License, or (at your option) any later version.
 	
 	This program is distributed in the hope that it will be
 	useful, but WITHOUT ANY WARRANTY; without even the implied
 	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-	PURPOSE.  See the GNU General Public License for more
-	details.
+	PURPOSE.  See the GNU Lesser Public License for details.
 	
-	You should have received a copy of the GNU General Public
-	License along with this program; if not, write to:
+	You should have received a copy of the GNU Lesser Public
+	License along with this library; if not, write to:
 	
 		Free Software Foundation, Inc.
 		59 Temple Place, Suite 330
@@ -60,6 +56,22 @@
 #pragma mark Types
 
 typedef struct WindowTitleDialog_OpaqueStruct*		WindowTitleDialog_Ref;
+
+/*!
+A block that is invoked to retrieve a window title
+when initializing the dialog for new use.  Typically
+this is implemented by reading some parent window’s
+current title string.
+*/
+typedef CFStringRef (^WindowTitleDialog_ReturnTitleCopyBlock)();
+
+/*!
+A block that is invoked when the dialog is closed.
+If the user accepted, a non-nullptr string will be
+given; typically this is used to update some parent
+window’s title.
+*/
+typedef void (^WindowTitleDialog_CloseNotifyBlock)(CFStringRef/* new title or nullptr when cancelled */);
 
 #ifdef __OBJC__
 
@@ -138,48 +150,28 @@ changes to an interface declared in a ".mm" file.
 
 #endif // __OBJC__
 
-#pragma mark Callbacks
-
-/*!
-Window Title Dialog Close Notification Method
-
-When a window title dialog is closed, this method
-is invoked.  Use this to know exactly when it is
-safe to call WindowTitleDialog_Dispose().
-*/
-typedef void	 (*WindowTitleDialog_CloseNotifyProcPtr)	(WindowTitleDialog_Ref	inDialogThatClosed,
-															 Boolean				inOKButtonPressed);
-inline void
-WindowTitleDialog_InvokeCloseNotifyProc		(WindowTitleDialog_CloseNotifyProcPtr	inUserRoutine,
-											 WindowTitleDialog_Ref					inDialogThatClosed,
-											 Boolean								inOKButtonPressed)
-{
-	(*inUserRoutine)(inDialogThatClosed, inOKButtonPressed);
-}
-
 
 
 #pragma mark Public Methods
 
-void
-	WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialog_Ref					inDialogThatClosed,
-												 Boolean								inOKButtonPressed);
-
 WindowTitleDialog_Ref
-	WindowTitleDialog_NewForSession				(SessionRef								inSession,
-												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
-																							WindowTitleDialog_StandardCloseNotifyProc);
+	WindowTitleDialog_NewWindowModal					(NSWindow*								inCocoaParentWindow,
+													 Boolean									inIsAnimated,
+													 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
+													 WindowTitleDialog_CloseNotifyBlock		inFinalBlock);
 
+// DEPRECATED
 WindowTitleDialog_Ref
-	WindowTitleDialog_NewForVectorCanvas		(VectorWindow_Ref						inCanvasWindow,
-												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
-																							WindowTitleDialog_StandardCloseNotifyProc);
+	WindowTitleDialog_NewWindowModalParentCarbon		(HIWindowRef								inCarbonParentWindow,
+													 Boolean									inIsAnimated,
+													 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
+													 WindowTitleDialog_CloseNotifyBlock		inFinalBlock);
 
 void
-	WindowTitleDialog_Dispose					(WindowTitleDialog_Ref*					inoutDialogPtr);
+	WindowTitleDialog_Dispose						(WindowTitleDialog_Ref*					inoutDialogPtr);
 
 void
-	WindowTitleDialog_Display					(WindowTitleDialog_Ref					inDialog);
+	WindowTitleDialog_Display						(WindowTitleDialog_Ref					inDialog);
 
 #endif
 
