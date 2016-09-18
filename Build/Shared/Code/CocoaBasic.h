@@ -41,6 +41,11 @@ class NSResponder;
 class NSWindow;
 #endif
 
+// compile-time options
+#ifndef COCOA_BASIC_SUPPORTS_CARBON
+#define COCOA_BASIC_SUPPORTS_CARBON 0
+#endif
+
 
 
 #pragma mark Public Methods
@@ -74,12 +79,6 @@ CFStringRef
 CFArrayRef
 	CocoaBasic_ReturnUserSoundNames					();
 
-void
-	CocoaBasic_SetDockTileToCautionOverlay			();
-
-void
-	CocoaBasic_SetDockTileToDefaultAppIcon			();
-
 Boolean
 	CocoaBasic_SetFileTypeCreator					(CFStringRef,
 													 OSType,
@@ -103,7 +102,8 @@ void
 	CocoaBasic_AboutPanelDisplay					();
 
 Boolean
-	CocoaBasic_FileOpenPanelDisplay					(CFStringRef = nullptr,
+	CocoaBasic_FileOpenPanelDisplay					(void (^inOpenURLHandler)(CFURLRef),
+													 CFStringRef = nullptr,
 													 CFStringRef = nullptr,
 													 CFArrayRef = nullptr);
 
@@ -119,17 +119,25 @@ void
 void
 	CocoaBasic_InvalidateRestorableState			(NSResponder*);
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 void
 	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow	();
+#endif
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 void
 	CocoaBasic_MakeKeyWindowCarbonUserFocusWindow	();
+#endif
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 Boolean
 	CocoaBasic_RegisterCocoaCarbonWindow			(NSWindow*);
+#endif
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 NSWindow*
 	CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow	(HIWindowRef);
+#endif
 
 //@}
 

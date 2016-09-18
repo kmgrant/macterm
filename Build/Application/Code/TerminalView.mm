@@ -631,7 +631,7 @@ struct My_PreferenceProxies	gPreferenceProxies;
 Boolean						gApplicationIsSuspended = false;
 Boolean						gTerminalViewInitialized = false;
 My_TerminalViewPtrLocker&	gTerminalViewPtrLocks ()				{ static My_TerminalViewPtrLocker x; return x; }
-RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
+RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = NewRgn(); assert(nullptr != x); return x; }
 My_XTerm256Table&			gColorGrid ()							{ static My_XTerm256Table x; return x; }
 
 } // anonymous namespace
@@ -4121,7 +4121,7 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 			// animate!
 			UNUSED_RETURN(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
 			
-			Memory_DisposeRegion(&selectionRegion);
+			DisposeRgn(selectionRegion), selectionRegion = nullptr;
 		}
 	}
 }// ZoomToSelection
@@ -4402,7 +4402,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
-	this->screen.refreshRegion = Memory_NewRegion();
+	this->screen.refreshRegion = NewRgn();
 	
 	this->encodingConfig.setRef(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
 	assert(this->encodingConfig.exists());
@@ -4461,7 +4461,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
-	this->screen.cursor.boundsAsRegion = Memory_NewRegion();
+	this->screen.cursor.boundsAsRegion = NewRgn();
 	this->screen.cursor.inhibited = false;
 	this->screen.cursor.isCustomColor = false;
 	this->screen.currentRenderContext = nullptr;
@@ -4620,7 +4620,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		}
 		this->animation.rendering.stage = 0;
 		this->animation.rendering.stageDelta = +1;
-		this->animation.rendering.region = Memory_NewRegion();
+		this->animation.rendering.region = NewRgn();
 		this->animation.cursor.blinkAlpha = 1.0;
 	}
 	
@@ -4767,9 +4767,9 @@ My_TerminalView::
 		DisposeEventLoopTimerUPP(this->screen.refreshTimerUPP), this->screen.refreshTimerUPP = nullptr;
 	}
 	
-	Memory_DisposeRegion(&this->animation.rendering.region);
-	Memory_DisposeRegion(&this->screen.cursor.boundsAsRegion);
-	Memory_DisposeRegion(&this->screen.refreshRegion);
+	DisposeRgn(this->animation.rendering.region), this->animation.rendering.region = nullptr;
+	DisposeRgn(this->screen.cursor.boundsAsRegion), this->screen.cursor.boundsAsRegion = nullptr;
+	DisposeRgn(this->screen.refreshRegion), this->screen.refreshRegion = nullptr;
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
 	// release strong references to data sources
@@ -8591,7 +8591,7 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 									 TerminalView_Cell const&	inSelectionPastEnd,
 									 Boolean					inIsRectangular)
 {
-	RgnHandle	result = Memory_NewRegion();
+	RgnHandle	result = NewRgn();
 	
 	
 	if (nullptr != result)
@@ -8651,7 +8651,7 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 		else
 		{
 			// then the area to be highlighted is irregularly shaped; this is more complex...
-			RgnHandle	clippedRegion = Memory_NewRegion();
+			RgnHandle	clippedRegion = NewRgn();
 			
 			
 			if (nullptr != clippedRegion)
@@ -8696,7 +8696,7 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 					UnionRgn(clippedRegion, result, result);
 				}
 				
-				Memory_DisposeRegion(&clippedRegion);
+				DisposeRgn(clippedRegion), clippedRegion = nullptr;
 			}
 		}
 	}
@@ -11781,7 +11781,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										// no drag, but unshifted click; cancel the selection
 										TerminalView_SelectNothing(viewPtr->selfRef);
 									}
-									Memory_DisposeRegion(&dragRgn);
+									DisposeRgn(dragRgn), dragRgn = nullptr;
 								}
 							}
 							

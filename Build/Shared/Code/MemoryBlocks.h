@@ -112,17 +112,6 @@ void
 
 //@}
 
-//!\name QuickDraw Memory Management Utilities
-//@{
-
-RgnHandle
-	Memory_NewRegion					();
-
-void
-	Memory_DisposeRegion				(RgnHandle*				inoutRegion);
-
-//@}
-
 #endif
 
 

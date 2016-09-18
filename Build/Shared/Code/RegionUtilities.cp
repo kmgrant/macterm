@@ -35,9 +35,6 @@
 #include <Console.h>
 #include <MemoryBlocks.h>
 
-// application includes
-#include "ConstantsRegistry.h"
-
 
 
 #pragma mark Public Methods

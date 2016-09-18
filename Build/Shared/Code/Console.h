@@ -46,6 +46,7 @@
 #include <string>
 
 // Mac includes
+#include <AvailabilityMacros.h>
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
@@ -164,6 +165,14 @@ inline bool __Console_AssertHelper (char const* t, char const* file, unsigned lo
 	__Console_CrashTraceably();
 	return false;
 }
+#if 0
+#define assert(e)  \
+    ((void) ((e) ? 0 : __Console_AssertHelper(#e, __FILE__, __LINE__)))
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
+// OSStatus is an old Carbon type that should not be used
+// in code that has migrated beyond the 10.6 SDK
 inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* file, unsigned long line)
 {
 	char const*		desc = GetMacOSStatusCommentString(e);
@@ -171,12 +180,9 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 	__Console_CrashTraceably();
 	return false;
 }
-#if 0
-#define assert(e)  \
-    ((void) ((e) ? 0 : __Console_AssertHelper(#e, __FILE__, __LINE__)))
-#endif
 #define assert_noerr(e)  \
     ((void) ((e == ::noErr) ? 0 : __Console_AssertNoErrHelper(e, #e, __FILE__, __LINE__)))
+#endif
 
 // usage: e.g. static_assert_named(x_is_3, x == 3); fails AT COMPILE TIME with a negative-array-size
 // error if the condition in the assertion did not hold (the "n" parameter names the array type);

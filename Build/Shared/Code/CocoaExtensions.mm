@@ -35,11 +35,6 @@
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 
-// compile-time options
-#ifndef COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
-#define COCOA_EXTENSIONS_SUPPORT_QUICKDRAW 1
-#endif
-
 
 
 #pragma mark Public Methods
@@ -409,6 +404,7 @@ Destructor.
 dealloc
 {
 	[_keyPath release];
+	[super dealloc];
 }// dealloc
 
 

@@ -30,6 +30,11 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
+// compile-time options
+#ifndef COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
+#define COCOA_EXTENSIONS_SUPPORT_QUICKDRAW 0
+#endif
+
 
 
 #pragma mark Types

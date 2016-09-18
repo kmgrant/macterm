@@ -585,7 +585,7 @@ createImageWindowFrom	(NSWindow*		inWindow,
 			
 			
 			Console_Warning(Console_WriteLine, "expected to find a valid Core Animation layer; falling back to image view");
-			[imageView setImageScaling:NSScaleToFit];
+			[imageView setImageScaling:NSImageScaleAxesIndependently];
 			[imageView setImage:windowImage];
 			[result setContentView:imageView];
 			[imageView release], imageView = nil;
@@ -603,6 +603,24 @@ createImageWindowFrom	(NSWindow*		inWindow,
 
 
 #pragma mark Initializers
+
+
+/*!
+This exists only because it is the designated initializer
+of the base class and should still be “valid”.  In reality,
+it is not an expected way to use the derived class.
+
+(2016.09)
+*/
+- (instancetype)
+init
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithTransition:kMy_AnimationTransitionSlide imageWindow:nil
+									finalWindow:nil fromFrame:NSZeroRect toFrame:NSZeroRect
+									totalDelay:0 delayDistribution:kMy_AnimationTimeDistributionLinear
+									effect:kMy_AnimationEffectNone simplified:NO];
+}// init
 
 
 /*!
@@ -880,7 +898,7 @@ nextAnimationStep
 		// is converted into an exact power of 2 so that optimizations
 		// are possible based on this (but not necessarily guaranteed)
 		powerOfTwo = (1 << STATIC_CAST(ceilf(log2f(newFrame.size.width)), unsigned int));
-		if (fabsf(newFrame.size.width - powerOfTwo) < 5/* pixels; arbitrary */)
+		if (fabsf(STATIC_CAST(newFrame.size.width - powerOfTwo, float)) < 5/* pixels; arbitrary */)
 		{
 			newFrame.size.width = powerOfTwo;
 		}
@@ -896,7 +914,7 @@ nextAnimationStep
 		// is converted into an exact power of 2 so that optimizations
 		// are possible based on this (but not necessarily guaranteed)
 		powerOfTwo = (1 << STATIC_CAST(ceilf(log2f(newFrame.size.height)), unsigned int));
-		if (fabsf(newFrame.size.height - powerOfTwo) < 5/* pixels; arbitrary */)
+		if (fabsf(STATIC_CAST(newFrame.size.height - powerOfTwo, float)) < 5/* pixels; arbitrary */)
 		{
 			newFrame.size.height = powerOfTwo;
 		}

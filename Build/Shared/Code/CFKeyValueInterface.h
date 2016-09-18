@@ -763,11 +763,10 @@ const
 	CFDictionaryRef const	kDictionary = _dataDictionary.returnCFDictionaryRef();
 	CFIndex const			kDictSize = CFDictionaryGetCount(kDictionary);
 	void const**			keyList = new void const*[kDictSize];
-	CFArrayRef				result = nullptr;
 	
 	
 	CFDictionaryGetKeysAndValues(_dataDictionary.returnCFDictionaryRef(), keyList, nullptr/* values */);
-	result = CFArrayCreate(kCFAllocatorDefault, keyList, kDictSize, &kCFTypeArrayCallBacks);
+	CFArrayRef		result = CFArrayCreate(kCFAllocatorDefault, keyList, kDictSize, &kCFTypeArrayCallBacks);
 	delete [] keyList, keyList = nullptr;
 	return result;
 }// returnKeyListCopy

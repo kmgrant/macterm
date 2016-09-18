@@ -58,6 +58,11 @@
 // library includes
 #import <Popover.objc++.h>
 
+// compile-time options
+#ifndef POPOVER_MANAGER_SUPPORTS_CARBON
+#define POPOVER_MANAGER_SUPPORTS_CARBON 0
+#endif
+
 
 
 #pragma mark Constants
@@ -114,6 +119,7 @@ PopoverManager_Ref
 												 PopoverManager_BehaviorType	inBehavior,
 												 NSView*						inParentView);
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 PopoverManager_Ref
 	PopoverManager_New							(Popover_Window*				inPopover,
 												 NSView*						inLogicalFirstResponder,
@@ -121,6 +127,7 @@ PopoverManager_Ref
 												 PopoverManager_AnimationType	inAnimation,
 												 PopoverManager_BehaviorType	inBehavior,
 												 HIWindowRef					inParentWindow);
+#endif 
 
 void
 	PopoverManager_Dispose						(PopoverManager_Ref*			inoutRefPtr);

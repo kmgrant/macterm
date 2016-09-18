@@ -109,7 +109,7 @@ it ends up describing only its outline.
 void
 OutlineRegion	(RgnHandle		inoutRegion)
 {
-	RgnHandle	tempRgn = Memory_NewRegion();
+	RgnHandle	tempRgn = NewRgn();
 	
 	
 	if (tempRgn != nullptr)
@@ -117,7 +117,7 @@ OutlineRegion	(RgnHandle		inoutRegion)
 		CopyRgn(inoutRegion, tempRgn);
 		InsetRgn(tempRgn, 1, 1);
 		DiffRgn(inoutRegion, tempRgn, inoutRegion);
-		Memory_DisposeRegion(&tempRgn);
+		DisposeRgn(tempRgn), tempRgn = nullptr;
 	}
 }// OutlineRegion
 

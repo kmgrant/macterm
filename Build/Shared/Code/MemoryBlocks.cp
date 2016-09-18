@@ -162,24 +162,6 @@ Memory_DisposePtrInterruptSafe	(void**		inoutPtrPtr)
 
 
 /*!
-Destroys a QuickDraw region allocated with Memory_NewRegion().
-On output, the region handle is automatically set to nullptr
-to prevent you from accidentally using it once it is destroyed.
-
-(1.0)
-*/
-void
-Memory_DisposeRegion	(RgnHandle*		inoutRegionPtr)
-{
-	if (nullptr != inoutRegionPtr)
-	{
-		DisposeRgn(*inoutRegionPtr);
-		*inoutRegionPtr = nullptr;
-	}
-}// DisposeRegion
-
-
-/*!
 Allocates a new Mac OS Memory Manager memory block and
 returns a handle to it.  If there is not enough contiguous
 free space in the heap zone to successfully perform the
@@ -214,12 +196,10 @@ allocation, nullptr is returned.
 Ptr
 Memory_NewPtr	(Size	inDesiredNumberOfBytes)
 {
-	Ptr		result = nullptr;
-	
-	
 	// NOTE: For performance, on Mac OS X calloc() should really be used instead.
 	//       When linking against Mach-O, this code should be changed.
-	result = NewPtrClear(inDesiredNumberOfBytes);
+	Ptr		result = NewPtrClear(inDesiredNumberOfBytes);
+	
 	
 	return result;
 }// NewPtr
@@ -234,30 +214,11 @@ This routine uses an interrupt-safe allocator.
 void*
 Memory_NewPtrInterruptSafe		(Size		inDesiredNumberOfBytes)
 {
-	void*		result = nullptr;
+	void*		result = ::malloc(STATIC_CAST(inDesiredNumberOfBytes, size_t));
 	
 	
-	result = ::malloc(STATIC_CAST(inDesiredNumberOfBytes, size_t));
 	return result;
 }// NewPtrInterruptSafe
-
-
-/*!
-Allocates a new QuickDraw region that can be used
-with any of the standard QuickDraw routines that
-manipulate regions.  Use Memory_DisposeRegion()
-to destroy this region when you’re done.
-
-(1.0)
-*/
-RgnHandle
-Memory_NewRegion ()
-{
-	RgnHandle		result = NewRgn();
-	
-	
-	return result;
-}// NewRegion
 
 
 /*!

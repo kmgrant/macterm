@@ -35,7 +35,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <AlertMessages.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
@@ -65,12 +64,14 @@
 	BOOL							isHeldOpenBySheet;		// used to prevent some popovers from disappearing while sheets are open
 	NSWindow*						dummySheet;				// for convenience in event-handling for dialogs, a dummy sheet
 	NSView*							parentView;				// the view the popover is relative to, if Cocoa (and modal to, if dialog behavior)
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 	HIWindowRef						parentCarbonWindow;		// the window the popover is relative to, if Carbon
 	CarbonEventHandlerWrap*			activationHandlerPtr;	// embellishes Carbon Event for activating window
 	CarbonEventHandlerWrap*			clickActivationHandlerPtr;	// embellishes Carbon Event for clicking special parts of window
 	CarbonEventHandlerWrap*			minimizeHandlerPtr;		// embellishes Carbon Event for minimizing window
 	CarbonEventHandlerWrap*			modalityHandlerPtr;		// embellishes Carbon Event for determining whether modal window blocks a click
 	CarbonEventHandlerWrap*			resizeHandlerPtr;		// embellishes Carbon Event for resizing window
+#endif
 }
 
 // class methods
@@ -127,11 +128,13 @@
 #pragma mark Internal Method Prototypes
 namespace {
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 OSStatus	receiveWindowActivationChange	(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowCollapse			(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowGetClickModality	(EventHandlerCallRef, EventRef, void*);
 OSStatus	receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
+#endif 
 
 } // anonymous namespace
 
@@ -153,18 +156,22 @@ PopoverManager_New	(Popover_Window*				inPopover,
 					 PopoverManager_BehaviorType	inBehavior,
 					 NSView*						inParentView)
 {
-	PopoverManager_Ref	result = nullptr;
+	PopoverManager_Ref	result = REINTERPRET_CAST([[PopoverManager_WC alloc]
+													initForParentCocoaView:inParentView
+																			orCarbonWindow:nullptr
+																			popover:inPopover
+																			firstResponder:inLogicalFirstResponder
+																			animationType:inAnimation
+																			behavior:inBehavior
+																			delegate:inDelegate],
+													PopoverManager_Ref);
 	
 	
-	result = (PopoverManager_Ref)[[PopoverManager_WC alloc]
-									initForParentCocoaView:inParentView orCarbonWindow:nullptr popover:inPopover
-															firstResponder:inLogicalFirstResponder
-															animationType:inAnimation behavior:inBehavior
-															delegate:inDelegate];
 	return result;
 }// New
 
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 /*!
 Constructs a new popover manager, where the parent window is
 Carbon-based.
@@ -179,16 +186,20 @@ PopoverManager_New	(Popover_Window*				inPopover,
 					 PopoverManager_BehaviorType	inBehavior,
 					 HIWindowRef					inParentWindow)
 {
-	PopoverManager_Ref	result = nullptr;
+	PopoverManager_Ref	result = REINTERPRET_CAST([[PopoverManager_WC alloc]
+													initForParentCocoaView:nil
+																			orCarbonWindow:inParentWindow
+																			popover:inPopover
+																			firstResponder:inLogicalFirstResponder
+																			animationType:inAnimation
+																			behavior:inBehavior
+																			delegate:inDelegate],
+													PopoverManager_Ref);
 	
 	
-	result = (PopoverManager_Ref)[[PopoverManager_WC alloc]
-									initForParentCocoaView:nil orCarbonWindow:inParentWindow popover:inPopover
-															firstResponder:inLogicalFirstResponder
-															animationType:inAnimation behavior:inBehavior
-															delegate:inDelegate];
 	return result;
 }// New
+#endif
 
 
 /*!
@@ -310,6 +321,7 @@ PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref		inRef,
 namespace {
 
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 /*!
 Handles "kEventWindowDeactivated" of "kEventClassWindow" for
 the parent window of a popover.
@@ -360,8 +372,10 @@ receiveWindowActivationChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 	
 	return result;
 }// receiveWindowActivationChange
+#endif
 
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 /*!
 Handles "kEventWindowCollapse" of "kEventClassWindow" for
 the parent window of a popover.
@@ -395,8 +409,10 @@ receiveWindowCollapse	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveWindowCollapse
+#endif
 
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 /*!
 Handles "kEventWindowGetClickActivation" of "kEventClassWindow"
 for the parent window of a popover.
@@ -434,8 +450,10 @@ receiveWindowGetClickActivation		(EventHandlerCallRef		inHandlerCallRef,
 	
 	return result;
 }// receiveWindowGetClickActivation
+#endif
 
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 /*!
 Handles "kEventWindowGetClickModality" of "kEventClassWindow"
 for the parent window of a popover.
@@ -473,8 +491,10 @@ receiveWindowGetClickModality	(EventHandlerCallRef		inHandlerCallRef,
 	
 	return result;
 }// receiveWindowGetClickModality
+#endif
 
 
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 /*!
 Handles "kEventWindowBoundsChanged" of "kEventClassWindow"
 for the parent window of a popover.
@@ -507,6 +527,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveWindowResize
+#endif
 
 
 } // anonymous namespace
@@ -546,12 +567,18 @@ animationType:(PopoverManager_AnimationType)	animationSpec
 behavior:(PopoverManager_BehaviorType)			behaviorSpec
 delegate:(id< PopoverManager_Delegate >)		anObject
 {
+#if ! POPOVER_MANAGER_SUPPORTS_CARBON
+#pragma unused(aCarbonWindow)
+#endif
 	self = [super initWithWindow:aPopover];
 	if (nil != self)
 	{
+	#if POPOVER_MANAGER_SUPPORTS_CARBON
 		HIWindowRef		windowWatchedForMinimize = nullptr;
+	#endif
 		
 		
+	#if POPOVER_MANAGER_SUPPORTS_CARBON
 		if (nullptr != aCarbonWindow)
 		{
 			// if the parent of the popover is a sheet, install the
@@ -561,6 +588,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 				windowWatchedForMinimize = aCarbonWindow;
 			}
 		}
+	#endif
 		
 		self->selfRef = (PopoverManager_Ref)self;
 		self->delegatePtr = new MemoryBlocks_WeakPairWrap< PopoverManager_WC*, id >(self);
@@ -574,8 +602,8 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		self->isHeldOpenBySheet = NO;
 		self->dummySheet = nil; // created as needed
 		self->parentView = aCocoaViewOrNil;
+	#if POPOVER_MANAGER_SUPPORTS_CARBON
 		self->parentCarbonWindow = aCarbonWindow;
-		
 		if (nullptr != aCarbonWindow)
 		{
 			// unfortunately Cocoa window notifications do not seem to work for
@@ -604,6 +632,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 																		kEventWindowBoundsChanged), self/* handler data */);
 		}
 		else
+	#endif
 		{
 			// there may be no parent window if it is being used to
 			// implement an application-modal dialog; otherwise,
@@ -659,11 +688,13 @@ dealloc
 	[self removeWindowWithAcceptance:NO];
 	[self.class cancelPreviousPerformRequestsWithTarget:self];
 	[self ignoreWhenObjectsPostNotes];
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 	delete self->activationHandlerPtr, activationHandlerPtr = nullptr;
 	delete self->clickActivationHandlerPtr, clickActivationHandlerPtr = nullptr;
 	delete self->minimizeHandlerPtr, minimizeHandlerPtr = nullptr;
 	delete self->modalityHandlerPtr, modalityHandlerPtr = nullptr;
 	delete self->resizeHandlerPtr, resizeHandlerPtr = nullptr;
+#endif
 	[containerWindow release];
 	[super dealloc];
 }// dealloc
@@ -710,13 +741,27 @@ display
 			// but the convenience of automatic window-modal event handling
 			// is still useful; an empty-frame window is created as a real
 			// sheet for event blocking, and then covered by the popover
-			if ((nil != self->parentView) || (nullptr != self->parentCarbonWindow))
+			if ((nil != self->parentView)
+			#if POPOVER_MANAGER_SUPPORTS_CARBON
+				|| (nullptr != self->parentCarbonWindow)
+			#endif
+				)
 			{
 				self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
 																			backing:NSBackingStoreBuffered defer:YES];
 				[self->dummySheet setPreventsApplicationTerminationWhenModal:NO];
+			#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000 /* MAC_OS_X_VERSION_10_10 */
+				// old method
 				[NSApp beginSheet:self->dummySheet modalForWindow:[self parentCocoaWindow] modalDelegate:nil
 									didEndSelector:nil contextInfo:self];
+			#else
+				// new method
+				[[self parentCocoaWindow] beginSheet:self->dummySheet
+														completionHandler:^(NSModalResponse aResponse)
+														{
+														#pragma unused(aResponse)
+														}];
+			#endif
 			}
 		}
 		else
@@ -862,10 +907,12 @@ parentCocoaWindow
 	NSWindow*	result = [self->parentView window];
 	
 	
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 	if ((nil == result) && (nullptr != self->parentCarbonWindow))
 	{
 		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self->parentCarbonWindow);
 	}
+#endif
 	
 	return result;
 }// parentCocoaWindow
@@ -880,6 +927,7 @@ and gives it the keyboard focus.
 - (void)
 popOver
 {
+#if POPOVER_MANAGER_SUPPORTS_CARBON
 	// TEMPORARY; in Carbon-Cocoa hybrid environments popovers do not necessarily
 	// handle the parent window correctly in all situations, so the simplest
 	// solution is just to force the parent window to deactivate (in the future
@@ -889,6 +937,7 @@ popOver
 	{
 		UNUSED_RETURN(OSStatus)ActivateWindow(self->parentCarbonWindow, false/* activate */);
 	}
+#endif
 	
 	[self->containerWindow setLevel:([[self parentCocoaWindow] level] + 1)];
 	[self->containerWindow makeFirstResponder:self->logicalFirstResponder];

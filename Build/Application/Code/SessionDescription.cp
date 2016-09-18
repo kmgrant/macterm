@@ -76,10 +76,12 @@
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceLocker.template.h>
 #include <MemoryBlocks.h>
+#include <SoundSystem.h>
 #include <TextDataFile.h>
 
 // application includes
 #include "DialogUtilities.h"
+#include "FileUtilities.h"
 #include "Preferences.h"
 #include "SessionFactory.h"
 #include "TerminalView.h"
@@ -696,7 +698,28 @@ SessionDescription_Load ()
 	
 	UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
 	UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
-	UNUSED_RETURN(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
+	UNUSED_RETURN(Boolean)CocoaBasic_FileOpenPanelDisplay
+	(^(CFURLRef		inURL) {
+		FSRef		fileRef;
+		OSStatus	error = noErr;
+		
+		
+		if (CFURLGetFSRef(inURL, &fileRef))
+		{
+			error = FileUtilities_OpenDocument(fileRef);
+		}
+		else
+		{
+			error = kURLInvalidURLError;
+		}
+		
+		if (noErr != error)
+		{
+			Sound_StandardAlert();
+			Console_WriteValueCFString("unable to open file", CFURLGetString(inURL));
+			Console_WriteValue("error", error);
+		}
+	}, promptCFString, titleCFString, fileTypes.returnCFArrayRef());
 }// Load
 
 

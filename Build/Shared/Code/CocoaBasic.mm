@@ -37,15 +37,11 @@
 #import <objc/objc-runtime.h>
 
 // library includes
+#import <CFRetainRelease.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <HIViewWrap.h>
 #import <Popover.objc++.h>
 #import <SoundSystem.h>
-
-// application includes
-#import "AppResources.h"
-#import "FileUtilities.h"
 
 
 
@@ -64,7 +60,9 @@ NSString*	returnPathForFSRef	(FSRef const&);
 #pragma mark Variables
 namespace {
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 HIWindowRefToNSWindowMap&			gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowMap x; return x; }
+#endif
 NSSpeechSynthesizer*				gDefaultSynth = nil;
 
 } // anonymous namespace
@@ -163,13 +161,14 @@ Returns true only if the user tried to open something.
 (1.0)
 */
 Boolean
-CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
+CocoaBasic_FileOpenPanelDisplay		(void		(^inOpenURLHandler)(CFURLRef),
+									 CFStringRef	inMessage,
 									 CFStringRef	inWindowTitle,
 									 CFArrayRef		inAllowedFileTypes)
 {
 @autoreleasepool {
 	NSOpenPanel*	thePanel = [NSOpenPanel openPanel];
-	int				buttonHit = NSCancelButton;
+	int				buttonHit = NSFileHandlingPanelCancelButton;
 	Boolean			result = false;
 	
 	
@@ -186,31 +185,14 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 	[thePanel setAllowsOtherFileTypes:YES];
 	[thePanel setAllowsMultipleSelection:YES];
 	[thePanel setResolvesAliases:YES];
-	buttonHit = [thePanel runModalForTypes:BRIDGE_CAST(inAllowedFileTypes, NSArray*)];
-	result = (NSOKButton == buttonHit);
+	thePanel.allowedFileTypes = BRIDGE_CAST(inAllowedFileTypes, NSArray*);
+	buttonHit = [thePanel runModal];
+	result = (NSFileHandlingPanelOKButton == buttonHit);
 	if (result)
 	{
 		for (NSURL* currentFileURL in [thePanel URLs])
 		{
-			FSRef		fileRef;
-			OSStatus	error = noErr;
-			
-			
-			if (CFURLGetFSRef(BRIDGE_CAST(currentFileURL, CFURLRef), &fileRef))
-			{
-				error = FileUtilities_OpenDocument(fileRef);
-			}
-			else
-			{
-				error = kURLInvalidURLError;
-			}
-			
-			if (noErr != error)
-			{
-				Sound_StandardAlert();
-				Console_WriteValueCFString("unable to open file", BRIDGE_CAST([currentFileURL absoluteString], CFStringRef));
-				Console_WriteValue("error", error);
-			}
+			inOpenURLHandler(BRIDGE_CAST(currentFileURL, CFURLRef));
 		}
 	}
 	
@@ -323,6 +305,7 @@ CocoaBasic_InvalidateRestorableState	(NSResponder*	inResponder)
 }// InvalidateRestorableState
 
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 /*!
 Forces the Cocoa runtime to consider the Carbon user focus
 window (as returned by GetUserFocusWindow()) to be the
@@ -358,8 +341,10 @@ CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
 	}
 }// @autoreleasepool
 }// MakeFrontWindowCarbonUserFocusWindow
+#endif
 
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 /*!
 Forces the Cocoa runtime to consider the Carbon user focus
 window (as returned by GetUserFocusWindow()) to be key.
@@ -394,6 +379,7 @@ CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
 	}
 }// @autoreleasepool
 }// MakeKeyWindowCarbonUserFocusWindow
+#endif
 
 
 /*!
@@ -429,6 +415,7 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 }// PlaySoundFile
 
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 /*!
 For an existing window suspected to be a Carbon window (e.g. as
 obtained from [NSApp keyWindow]), registers its Carbon window
@@ -452,8 +439,10 @@ CocoaBasic_RegisterCocoaCarbonWindow	(NSWindow*		inCocoaWindow)
 	return result;
 }// @autoreleasepool
 }// RegisterCocoaCarbonWindow
+#endif
 
 
+#if COCOA_BASIC_SUPPORTS_CARBON
 /*!
 Using the registry maintained by this module, returns the only
 known NSWindow* for the given Carbon window reference.  If none
@@ -500,6 +489,7 @@ CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
 	return result;
 }// @autoreleasepool
 }// ReturnNewOrExistingCocoaCarbonWindow
+#endif
 
 
 /*!
@@ -515,10 +505,10 @@ CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding	inEncoding)
 {
 @autoreleasepool {
 	NSStringEncoding	translatedEncoding = CFStringConvertEncodingToNSStringEncoding(inEncoding);
-	CFStringRef			result = nullptr;
+	CFStringRef			result = BRIDGE_CAST([NSString localizedNameOfStringEncoding:translatedEncoding],
+												CFStringRef);
 	
 	
-	result = BRIDGE_CAST([NSString localizedNameOfStringEncoding:translatedEncoding], CFStringRef);
 	return result;
 }// @autoreleasepool
 }// ReturnStringEncodingLocalizedName
@@ -540,7 +530,7 @@ CocoaBasic_ReturnUserSoundNames ()
 												findFolder(kLocalDomain, kSystemSoundsFolderType),
 												findFolder(kSystemDomain, kSystemSoundsFolderType),
 											];
-	NSArray* const			kSupportedFileTypes = [NSSound soundUnfilteredFileTypes];
+	NSArray* const			kSupportedFileTypes = [NSSound soundUnfilteredTypes];
 	NSFileManager* const	kFileManager = [NSFileManager defaultManager];
 	BOOL					isDirectory = NO;
 	NSMutableArray*			result = [NSMutableArray array];
@@ -552,7 +542,18 @@ CocoaBasic_ReturnUserSoundNames ()
 		{
 			if (isDirectory)
 			{
-				for (NSString* soundFile in [kFileManager directoryContentsAtPath:soundDirectory])
+				NSError*	error = nil;
+				NSArray*	soundFiles = [kFileManager contentsOfDirectoryAtPath:soundDirectory
+																					error:&error];
+				
+				
+				if ((nil == soundFiles) && (nil != error))
+				{
+					Console_Warning(Console_WriteValueCFString, "failed to iterate over sound directories, error",
+									BRIDGE_CAST([error localizedDescription], CFStringRef));
+				}
+				
+				for (NSString* soundFile in soundFiles)
 				{
 					if ([kSupportedFileTypes containsObject:[soundFile pathExtension]])
 					{
@@ -568,53 +569,6 @@ CocoaBasic_ReturnUserSoundNames ()
 
 
 /*!
-Adds a caution icon overlay to the main application icon
-in the Dock.
-
-See also CocoaBasic_SetDockTileToDefaultAppIcon().
-
-(1.4)
-*/
-void
-CocoaBasic_SetDockTileToCautionOverlay ()
-{
-	@autoreleasepool
-	{
-		NSImage*		appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
-		NSImage*		overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
-		NSSize			imageSize = [appIconImage size];
-		
-		
-		imageSize.width /= 2.0;
-		imageSize.height /= 2.0;
-		[appIconImage lockFocus];
-		// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
-		[overlayImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
-											imageSize.width/* width */, imageSize.height/* height */)
-									fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
-		[appIconImage unlockFocus];
-		
-		[NSApp setApplicationIconImage:appIconImage];
-		[appIconImage release];
-	}
-}// SetDockTileToCautionOverlay
-
-
-/*!
-Returns the Dock icon back to a plain application icon.
-
-(1.4)
-*/
-void
-CocoaBasic_SetDockTileToDefaultAppIcon ()
-{
-@autoreleasepool {
-	[NSApp setApplicationIconImage:nil];
-}// @autoreleasepool
-}// SetDockTileToDefaultAppIcon
-
-
-/*!
 Uses Cocoa NSFileManager APIs to set the HFS file type and
 creator codes for the file at the given path.  Returns true
 if both were set successfully.
@@ -627,16 +581,29 @@ CocoaBasic_SetFileTypeCreator	(CFStringRef	inPath,
 								 OSType			inNewCreator)
 {
 @autoreleasepool {
-	Boolean			result = false;
 	NSDictionary*	attributeDict = @{
 										NSFileHFSTypeCode: [NSNumber numberWithUnsignedLong:inNewType],
 										NSFileHFSCreatorCode: [NSNumber numberWithUnsignedLong:inNewCreator],
 									};
+	NSFileManager*	fileManager = [NSFileManager defaultManager];
+	NSError*		error = nil;
+	Boolean			result = false;
 	
 	
-	if ([[NSFileManager defaultManager] changeFileAttributes:attributeDict atPath:(NSString*)inPath])
+	// set attributes
+	result = [fileManager setAttributes:attributeDict ofItemAtPath:(NSString*)inPath
+										error:&error];
+	if (NO == result)
 	{
-		result = true;
+		if (nil != error)
+		{
+			Console_Warning(Console_WriteValueCFString, "failed to set file type/creator, error",
+							BRIDGE_CAST([error localizedDescription], CFStringRef));
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "failed to set file type/creator");
+		}
 	}
 	
 	return result;

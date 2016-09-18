@@ -92,7 +92,7 @@ void
 Console_Init ()
 {
 	// set up indentation
-	CPP_STD::strcpy(gIndentPrefix, "");
+	gIndentPrefix[0] = '\0';
 	gConsoleInitialized = true;
 }// Init
 
@@ -164,9 +164,16 @@ Console_BeginFunction ()
 	SInt16		i = 0;
 	
 	
-	if ((gIndentationLevel += DEBUGGING_SPACES_PER_INDENT) > DEBUGGING_PREFIX_MAX) gIndentationLevel = DEBUGGING_PREFIX_MAX;
-	CPP_STD::strcpy(gIndentPrefix, "");
-	for (i = 0; i < gIndentationLevel; i++) CPP_STD::strcat(gIndentPrefix, " ");
+	if ((gIndentationLevel += DEBUGGING_SPACES_PER_INDENT) > DEBUGGING_PREFIX_MAX)
+	{
+		gIndentationLevel = DEBUGGING_PREFIX_MAX;
+	}
+	
+	gIndentPrefix[0] = '\0';
+	for (i = 0; i < gIndentationLevel; i++)
+	{
+		CPP_STD::strncat(gIndentPrefix, " ", 1);
+	}
 }// BeginFunction
 
 
@@ -187,9 +194,16 @@ Console_EndFunction ()
 	SInt16		i = 0;
 	
 	
-	if ((gIndentationLevel -= DEBUGGING_SPACES_PER_INDENT) < 0) gIndentationLevel = 0;
-	CPP_STD::strcpy(gIndentPrefix, "");
-	for (i = 0; i < gIndentationLevel; i++) CPP_STD::strcat(gIndentPrefix, " ");
+	if ((gIndentationLevel -= DEBUGGING_SPACES_PER_INDENT) < 0)
+	{
+		gIndentationLevel = 0;
+	}
+	
+	gIndentPrefix[0] = '\0';
+	for (i = 0; i < gIndentationLevel; i++)
+	{
+		CPP_STD::strncat(gIndentPrefix, " ", 1);
+	}
 }// EndFunction
 
 
@@ -551,7 +565,14 @@ void
 Console_WriteValueFourChars		(char const*	inLabel,
 								 FourCharCode	inValue)
 {
-	CFRetainRelease		typeCFString(CreateTypeStringWithOSType(inValue), true/* is retained */);
+	CFRetainRelease		typeCFString(CFStringCreateWithFormat
+										(kCFAllocatorDefault, nullptr/* options */,
+											CFSTR("%c%c%c%c"),
+											STATIC_CAST(0x000000FFUL & (inValue >> 0), unsigned char),
+											STATIC_CAST(0x000000FFUL & (inValue >> 8), unsigned char),
+											STATIC_CAST(0x000000FFUL & (inValue >> 16), unsigned char),
+											STATIC_CAST(0x000000FFUL & (inValue >> 24), unsigned char)),
+											true/* is retained */);
 	
 	
 	Console_WriteValueCFString(inLabel, typeCFString.returnCFStringRef());

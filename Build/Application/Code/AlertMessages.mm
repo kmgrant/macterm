@@ -712,14 +712,18 @@ any background notifications that may have been posted.
 void
 Alert_ServiceNotification ()
 {
+@autoreleasepool {
 	if ((kInvalidUserAttentionRequestID != gNotificationRequestID) ||
 		(gNotificationIsIconBadged))
 	{
-		CocoaBasic_SetDockTileToDefaultAppIcon(); // remove any caution icon badge
+		// remove any caution icon badge
+		[NSApp setApplicationIconImage:nil];
+		
 		[NSApp cancelUserAttentionRequest:gNotificationRequestID];
 		gNotificationRequestID = kInvalidUserAttentionRequestID;
 		gNotificationIsIconBadged = false;
 	}
+}// @autoreleasepool
 }// ServiceNotification
 
 
@@ -1141,8 +1145,27 @@ appeared.
 void
 badgeApplicationDockTile ()
 {
-	CocoaBasic_SetDockTileToCautionOverlay();
+@autoreleasepool
+{
+	NSImage*	appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
+	NSImage*	overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
+	NSSize		imageSize = [appIconImage size];
+	
+	
+	imageSize.width /= 2.0;
+	imageSize.height /= 2.0;
+	[appIconImage lockFocus];
+	// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
+	[overlayImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
+										imageSize.width/* width */, imageSize.height/* height */)
+								fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+	[appIconImage unlockFocus];
+	
+	[NSApp setApplicationIconImage:appIconImage];
+	[appIconImage release];
+	
 	gNotificationIsIconBadged = true;
+}// @autoreleasepool
 }// badgeApplicationDockTile
 
 

@@ -1036,7 +1036,7 @@ Boolean
 unitTest000_Begin ()
 {
 	Boolean						result = true;
-	ListenerModel_ListenerWrap	callbackWrapper = nullptr;
+	ListenerModel_ListenerWrap	callbackWrapper;
 	ListenerModel_Result		modelError = kListenerModel_ResultOK;
 	
 	
