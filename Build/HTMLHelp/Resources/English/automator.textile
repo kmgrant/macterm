@@ -15,9 +15,9 @@ p(#abstract). MacTerm support for Automator is currently limited, however
 
 h2(#urls). Opening Sessions With URLs
 
-The default Internet actions in Automator (Mac OS X 10.4+) are
- often named or described in terms of web pages, but in fact they
- are general: opening sessions for URLs that MacTerm supports.
+The default Internet actions in Automator are often named or described
+ in terms of web pages, but in fact they are general: opening sessions
+ for URLs that MacTerm supports.
 
 A simple workflow in Automator would be to connect (from the
  Internet category) "Get Specified URLs" to "Display Webpages".

@@ -447,7 +447,7 @@ No matter which keys you choose, you have to be mindful of
 
 **Important:** If you use the Macros menu to select the set you
  are editing, it is easy to see how your key equivalent will be
- interpreted by Mac OS X.  Certain combinations are "special"
+ interpreted by macOS.  Certain combinations are "special"
  and will not be available to you.
 
 h4. Modifiers
@@ -691,7 +691,7 @@ bq. Note that even if you use a helper (such as the "Shell" button)
  command further.
 
 The "Shell" button writes a command to invoke your default shell.
- For most users this is set by the version of Mac OS X that you
+ For most users this is set by the version of macOS that you
  have but MacTerm will also respect any custom shell that was
  selected by the @chsh@ Unix utility.
 
@@ -1440,13 +1440,13 @@ h4. Method
 
 h5. Use fast (non-system) mode
 
-Suppresses the normal Full Screen mechanism of Mac OS X and uses
+Suppresses the normal Full Screen mechanism of macOS and uses
  a custom MacTerm scheme instead.
 
-The OS X mode has advantages and disadvantages; it is generally
+The macOS mode has advantages and disadvantages; it is generally
  better than the custom scheme for small single screens such as
  laptops, and generally worse on desktops with multiple displays.
- The OS X method is more integrated with the system, allowing
+ The macOS method is more integrated with the system, allowing
  gestures and the ability to create more Full Screen windows than
  you have displays.  On the other hand, it adds slow animations
  and most of the Access Control preferences are not available

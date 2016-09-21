@@ -63,22 +63,22 @@ if __name__ == "__main__":
     # MacTermQuills.framework code is the largest piece.  It is available as a
     # Universal binary.
     #
-    # Now that the project requires Mac OS X 10.9 or later, Python 2.6 is known
-    # to be available on all supported Mac OS X versions so it is assumed by
-    # default.  (If a future Mac OS X version stops supporting Python 2.6, it
+    # Now that the project requires macOS 10.9 or later, Python 2.6 is known
+    # to be available on all supported macOS versions so it is assumed by
+    # default.  (If a future macOS version stops supporting Python 2.6, it
     # will once again be necessary to have separate SWIG-generated wrappers for
     # each incompatible Python version.)
     DEFAULT_QUILLS_FW_VER = "B"
     DEFAULT_QUILLS_PYLIB_VER = "2.6"
     DEFAULT_WRAPPER = "MacTerm_python%s_wrap" % DEFAULT_QUILLS_PYLIB_VER
-    if MAC_OS_NAME in ("Mavericks", "Yosemite", "El Capitán", "Sierra"):
+    if MAC_OS_NAME in ("Yosemite", "El Capitán", "Sierra"):
         PY_INTERPRETER = path_join(MACOS_DIR, DEFAULT_WRAPPER)
         QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER
         QUILLS_PYLIB_VER = DEFAULT_QUILLS_PYLIB_VER
-    elif MAC_OS_NAME in ("Mountain Lion", "Lion", "Snow Leopard",
+    elif MAC_OS_NAME in ("Mavericks", "Mountain Lion", "Lion", "Snow Leopard",
                          "Leopard", "Tiger", "Panther"):
-        warn("This MacTerm version requires at least Mac OS X 10.9 ",
-             "(Mavericks).  Visit 'http://www.macterm.net/' to download",
+        warn("This MacTerm version requires at least macOS 10.10 ",
+             "(Yosemite).  Visit 'http://www.macterm.net/' to download",
              "version 4.0.0 for use on older systems.")
         sys.exit(1)
     else:

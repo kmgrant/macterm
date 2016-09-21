@@ -148,12 +148,7 @@ MacTerm provides a number of powerful keypad windows.  Clicking
  it represents.  However, keypad buttons __always__ send the right
  character code or character sequence, even in cases where the
  keyboard might not work (because of a terminal mode or a
- conflicting Mac OS X keyboard mapping, etc.).
-
-**Tip:** On later versions of Mac OS X, MacTerm will allow you
- to navigate keypad keys using the keyboard.  By default, you use
- Control-F1 to turn on Full Keyboard Access and Control-F6 to give
- keyboard focus to one of the floating keypad windows.
+ conflicting macOS keyboard mapping, etc.).
 
 h3(#controlkeys). Control Keys
 

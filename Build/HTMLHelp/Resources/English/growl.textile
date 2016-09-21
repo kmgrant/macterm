@@ -15,11 +15,11 @@ p(#abstract). MacTerm provides several different types of notifications that
 h2(#customizing). Customizing Notifications
 
 To view or customize MacTerm notifications, first install Growl
- on your computer (Mac OS X 10.4 or later), then open your
- "System Preferences" panel, "Growl" panel.  From there, click the
- "Applications" tab, and double-click "MacTerm" in the list.
- (If MacTerm does not appear yet, you may have to run MacTerm
- first.)  Finally, click the "Notifications" tab.
+ on your computer, then open your "System Preferences" panel,
+ "Growl" panel.  From there, click the "Applications" tab, and
+ double-click "MacTerm" in the list.  (If MacTerm does not appear
+ yet, you may have to run MacTerm first.)  Finally, click the
+ "Notifications" tab.
 
 h2(#notificationtypes). Types of Notifications
 

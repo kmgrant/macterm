@@ -27,7 +27,7 @@ However, there are cases where you may have to set this yourself:
 * if you connect to a remote server that has its own method for setting the terminal type (e.g. different operating system)
 * if there are defects in the active emulator and you want to try a different one (e.g. downgrading from "vt102" to "vt100")
 
-In Mac OS X and other Unix-like operating systems, you typically
+In macOS and other Unix-like operating systems, you typically
  are running a shell where the "TERM" variable can be changed.
 
 In most shells, you use this form:

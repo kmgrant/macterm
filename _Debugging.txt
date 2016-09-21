@@ -53,8 +53,8 @@ THE CALL STACK
   In MallocDebug or another program that traces the call stack,
   follow start() -> Py_Main() -> PyRun_SimpleFileExFlags() and
   trace as shown below down to the event loop.  (Note that this
-  example came from Python 2.3 on Mac OS X 10.4; a future
-  version of Python may change the call stack a bit.)
+  example came from Python 2.3; a future version of Python may
+  change the call stack a bit.)
   
   Example:
   ...

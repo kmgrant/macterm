@@ -39,7 +39,7 @@ First, you must create a Translation collection (via Preferences)
 * Select "Latin-US (DOS)" from the "Characters:" list.
 
 The list is based on what translation units are installed on your
- computer.  While the DOS set is always available on Mac OS X when
+ computer.  While the DOS set is always available on macOS when
  sold in the U.S., it may not exist in international versions.
 
 If you acquired a translation unit in some other way, it may have

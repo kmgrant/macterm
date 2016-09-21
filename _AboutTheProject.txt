@@ -2,13 +2,13 @@
                          MacTerm Project               2005-04-08
 
 ABOUT THE MACTERM PROJECT
-  Welcome to this source release of MacTerm for Mac OS X!
+  Welcome to this source release of MacTerm for modern macOS!
   
   Formerly known as MacTelnet (and before that, NCSA Telnet),
-  this is now primarily a Mac OS X terminal program.
+  this is now primarily a moderm macOS terminal program.
   
   MacTerm's goal is to be an excellent terminal emulation
-  program for Mac OS X, while also being very easy to use.  It
+  program for macOS, while also being very easy to use.  It
   streamlines terminal work on both local and remote machines
   by giving the user just the right set of powerful features, a
   smart set of preferences and convenient window management.

@@ -2,7 +2,7 @@
                       How to Build MacTerm             2009-09-03
 
 PREREQUISITES
-  Build with the latest OS X and the most recent Xcode.
+  Build with the latest macOS and the most recent Xcode.
   
   Currently, MacTerm requires the 10.6 SDK, which is not included
   with Xcode anymore.  Download the SDK separately from Apple's
