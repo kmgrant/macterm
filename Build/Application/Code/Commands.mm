@@ -4183,7 +4183,7 @@ performPrintScreen:(id)		sender
 canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (PrintTerminal_IsPrintingSupported() && (nullptr != TerminalWindow_ReturnFromMainWindow()));
+	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
 	
 	
 	return ((result) ? @(YES) : @(NO));
@@ -4212,7 +4212,7 @@ performPrintSelection:(id)	sender
 canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (PrintTerminal_IsPrintingSupported() && textSelectionExists());
+	BOOL	result = textSelectionExists();
 	
 	
 	return ((result) ? @(YES) : @(NO));

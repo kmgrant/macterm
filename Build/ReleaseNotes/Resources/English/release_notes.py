@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160920',
     '20160915',
     '20160911',
     '20160904',
@@ -546,6 +547,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160920': [
+        'Fixed possible crash in Print Preview on macOS Sierra.',
+    ],
     '20160915': [
         'Fixed click areas so that background windows are easier to select when sheets are open.',
         'Fixed Rename command in vector graphics windows so that the panel does not reopen as soon as it is closed.',

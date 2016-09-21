@@ -95,9 +95,6 @@ void
 //!\name Printing
 //@{
 
-Boolean
-	PrintTerminal_IsPrintingSupported		();
-
 PrintTerminal_Result
 	PrintTerminal_JobSendToPrinter			(PrintTerminal_JobRef		inJob,
 											 HIWindowRef				inParentWindowOrNull);

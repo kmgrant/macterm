@@ -7049,7 +7049,7 @@ void
 My_ScreenBuffer::
 printingReset ()
 {
-	if (PrintTerminal_IsPrintingSupported() && (0 == this->printingModes))
+	if (0 == this->printingModes)
 	{
 		SInt16		openedFile = 0;
 		
@@ -11731,14 +11731,7 @@ deviceStatusReportPrinterPort	(My_ScreenBufferPtr		inDataPtr)
 	if (nullptr != session)
 	{
 		// possible responses are "?13" (no printer), "?10" (ready), "?11" (not ready)
-		if (PrintTerminal_IsPrintingSupported())
-		{
-			inDataPtr->emulator.sendEscape(session, "\033[?10n", 6);
-		}
-		else
-		{
-			inDataPtr->emulator.sendEscape(session, "\033[?13n", 6);
-		}
+		inDataPtr->emulator.sendEscape(session, "\033[?10n", 6);
 	}
 }// My_VT220::deviceStatusReportPrinterPort
 

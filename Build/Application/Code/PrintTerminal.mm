@@ -262,27 +262,6 @@ PrintTerminal_ReleaseJob	(PrintTerminal_JobRef*		inoutRefPtr)
 
 
 /*!
-Returns true only if printing is supported.  This should be
-used to hide print-related commands in user interfaces, if
-printing is not possible.
-
-Now that a Cocoa runtime is used, there are no known issues
-with printing (even on older Mac OS X versions).  So, this
-routine always returns "true".
-
-(4.0)
-*/
-Boolean
-PrintTerminal_IsPrintingSupported ()
-{
-	Boolean		result = true;
-	
-	
-	return result;
-}// IsPrintingSupported
-
-
-/*!
 Allows the user to send the specified job to the printer.
 A preview interface is first displayed.
 
@@ -314,7 +293,11 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 	{
 		//NSWindow*				window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNull);
 		NSPasteboard*			textToPrintPasteboard = [NSPasteboard pasteboardWithUniqueName];
-		NSString*				pasteboardName = [textToPrintPasteboard.name autorelease];
+	#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
+		NSString*				pasteboardName = [textToPrintPasteboard name]; // non-property version does not seem to retain
+	#else
+		NSString*				pasteboardName = [textToPrintPasteboard.name autorelease]; // property uses "copy"
+	#endif
 		NSString*				titleString = ((nil != ptr->jobTitle)
 												? ptr->jobTitle
 												: @"");
