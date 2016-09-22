@@ -42,6 +42,47 @@
 
 
 
+#pragma mark Types
+
+/*!
+This protocol exists in order to suppress warnings about
+undeclared selectors used in "@selector()" calls below.
+There is code to dynamically check for selectors that are
+only available in the 10.8 SDK for XPC.
+*/
+@protocol CocoaFuture_LikeMountainLionXPC //{
+
+	// 10.8: selector to return autoreleased NSUserNotificationCenter* from NSUserNotificationCenter class
+	+ (NSUserNotificationCenter*)
+	defaultUserNotificationCenter;
+
+	// 10.8: selector to initialize an NSXPCConnection
+	- (id)
+	initWithServiceName:(NSString*)_;
+
+	// 10.8: selector to return autoreleased NSXPCInterface* from NSXPCInterface class
+	+ (NSXPCInterface*)
+	interfaceWithProtocol:(Protocol*)_;
+
+	// 10.8: selector to return a proxy for an NSXPCConnection
+	- (id)
+	remoteObjectProxyWithErrorHandler:(void (^)(NSError*))_;
+
+	// 10.8: selector to set invalidation handler for an NSXPCConnection
+	- (id)
+	setInvalidationHandler:(void (^)())_;
+
+	// 10.8: selector to set interruption handler for an NSXPCConnection
+	- (id)
+	setInterruptionHandler:(void (^)())_;
+
+	// 10.8: selector to return remote object interface for an NSXPCConnection
+	- (void)
+	setRemoteObjectInterface:(NSXPCInterface*)_;
+
+@end //}
+
+
 #pragma mark Public Methods
 
 /*!

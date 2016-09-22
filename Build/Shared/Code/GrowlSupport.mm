@@ -42,6 +42,29 @@
 #pragma mark Types
 
 /*!
+This protocol exists in order to suppress warnings about
+undeclared selectors used in "@selector()" calls below.
+There is code to dynamically check for selectors that are
+only available in the 10.8 SDK for system notifications.
+*/
+@protocol GrowlSupport_LikeMountainLionNotifications //{
+
+	// 10.8: selector to request delivery of a notification
+	- (void)
+	deliverNotification:(id)_;
+
+	// 10.8: selector to set sound name in a user notification object
+	- (void)
+	setSoundName:(NSString*)_;
+
+	// 10.8: selector to set subtitle in a user notification object
+	- (void)
+	setSubtitle:(NSString*)_;
+
+@end //}
+
+
+/*!
 Interfaces with Growl for notifications, if it is installed.
 */
 @interface GrowlSupport_Delegate : NSObject<GrowlApplicationBridgeDelegate> //{

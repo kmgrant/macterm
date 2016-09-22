@@ -38,21 +38,9 @@
 #define __MEMORYBLOCKLOCKER__
 
 // pseudo-standard-C++ includes
-#if __MWERKS__
-#   include <hash_map>
-#   define hash_map_namespace Metrowerks
-#elif (__GNUC__ > 3)
-#   include <ext/hash_map>
-#   define hash_map_namespace __gnu_cxx
-#elif (__GNUC__ == 3)
-#   include <ext/hash_map>
-#   define hash_map_namespace __gnu_cxx
-#elif (__GNUC__ < 3)
-#   include <hash_map>
-#   define hash_map_namespace
-#else
-#   include <hash_map>
-#   define hash_map_namespace
+#include <tr1/unordered_map>
+#ifndef unordered_map_namespace
+#	define unordered_map_namespace std::tr1
 #endif
 
 // Mac includes
@@ -125,8 +113,8 @@ protected:
 	incrementLockCount		(structure_reference_type			inReference);
 
 private:
-	typedef hash_map_namespace::hash_map< structure_reference_type, UInt16,
-											_AddrToLongHasher< structure_reference_type > >		CountMapType;
+	typedef unordered_map_namespace::unordered_map< structure_reference_type, UInt16,
+													_AddrToLongHasher< structure_reference_type > >		CountMapType;
 	CountMapType	_mapObject;		//!< repository for reference lock count information
 };
 

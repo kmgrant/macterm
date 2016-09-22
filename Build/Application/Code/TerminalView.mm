@@ -5448,13 +5448,14 @@ copyTranslationPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	Terminal_SetTextEncoding(inTerminalViewPtr->screen.ref, newInputEncoding);
 	
 	//Console_WriteValue("terminal input text encoding changed to", newInputEncoding);
-	if (0)
+#if 0
 	{
 		CFStringRef		nameCFString = CFStringConvertEncodingToIANACharSetName(newInputEncoding);
 		
 		
 		Console_WriteValueCFString("terminal input text encoding changed to (name)", nameCFString);
 	}
+#endif
 }// copyTranslationPreferences
 
 
@@ -7631,7 +7632,7 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 {
 	Boolean		result = true;
 	SInt32		columnCalculation = 0;
-	SInt64		rowCalculation = 0;
+	SInt32		rowCalculation = 0;
 	
 	
 	outDeltaColumn = 0;
@@ -7668,7 +7669,7 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 		}
 	}
 	
-	if (rowCalculation > inTerminalViewPtr->screen.cache.viewHeightInPixels)
+	if (rowCalculation > STATIC_CAST(inTerminalViewPtr->screen.cache.viewHeightInPixels, SInt32))
 	{
 		result = false;
 		outDeltaRow = rowCalculation - inTerminalViewPtr->screen.cache.viewHeightInPixels;

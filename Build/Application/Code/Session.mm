@@ -6574,11 +6574,13 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x69: // Print Screen (F13)
+	#if 0
 		if (0/* if not VT220 */)
 		{
 			result = Commands_ExecuteByID(kCommandPrintScreen);
 		}
 		else
+	#endif
 		{
 			// TEMPORARY: only makes sense for VT220 terminals
 			Session_UserInputKey(session, VSF18);

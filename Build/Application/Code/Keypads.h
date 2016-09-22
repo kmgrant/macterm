@@ -90,6 +90,25 @@ locating a target session.
 
 
 /*!
+Classes conform to this protocol in order to receive
+notifications about control keys clicked in the palette.
+*/
+@protocol Keypads_ControlKeyResponder //{
+
+@optional
+
+	// notification that control keypad has been removed
+	- (void)
+	controlKeypadHidden;
+
+	// notification that the specified ASCII code has been requested
+	- (void)
+	controlKeypadSentCharacterCode:(NSNumber*)_;
+
+@end //}
+
+
+/*!
 Implements the Control Keys palette.  See
 "KeypadControlKeysCocoa.xib".
 
@@ -464,7 +483,7 @@ void
 
 void
 	Keypads_RemoveResponder						(Keypads_WindowType			inKeypad,
-												 NSObject*					inTarget);
+												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >*
 
 void
 	Keypads_SetEventTarget						(Keypads_WindowType			inKeypad,
@@ -472,7 +491,7 @@ void
 
 void
 	Keypads_SetResponder						(Keypads_WindowType			inKeypad,
-												 NSObject*					inTarget);
+												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >*
 
 void
 	Keypads_SetVisible							(Keypads_WindowType			inKeypad,

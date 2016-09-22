@@ -43,25 +43,9 @@
 #include <vector>
 
 // pseudo-standard-C++ includes
-#if __MWERKS__
-#   include <hash_fun>
-#   include <hash_map>
-#   define hash_map_namespace Metrowerks
-#elif (__GNUC__ > 3)
-#   include <ext/hash_map>
-#   define hash_map_namespace __gnu_cxx
-#elif (__GNUC__ == 3)
-#   include <ext/stl_hash_fun.h>
-#   include <ext/hash_map>
-#   define hash_map_namespace __gnu_cxx
-#elif (__GNUC__ < 3)
-#   include <stl_hash_fun.h>
-#   include <hash_map>
-#   define hash_map_namespace
-#else
-#   include <hash_fun>
-#   include <hash_map>
-#   define hash_map_namespace
+#include <tr1/unordered_map>
+#ifndef unordered_map_namespace
+#	define unordered_map_namespace std::tr1
 #endif
 
 // Mac includes
@@ -628,14 +612,14 @@ protected:
 
 private:
 	typedef std::map< Preferences_Tag, class My_PreferenceDefinition* >		DefinitionPtrByTag;
-	typedef hash_map_namespace::hash_map
+	typedef unordered_map_namespace::unordered_map
 			<
 				CFStringRef,						// key type - name string
 				class My_PreferenceDefinition*,		// value type - preference setting data pointer
 				returnCFStringHashCode,				// hash code generator
 				isCFStringPairEqual					// key comparator
 			>	DefinitionPtrByKeyName;
-	typedef hash_map_namespace::hash_set
+	typedef unordered_map_namespace::unordered_set
 			<
 				CFStringRef,						// value type - name string
 				returnCFStringHashCode,				// hash code generator

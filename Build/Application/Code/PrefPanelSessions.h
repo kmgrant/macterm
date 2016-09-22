@@ -37,6 +37,7 @@
 
 // application includes
 #include "GenericPanelTabs.h"
+#include "Keypads.h"
 #include "Panel.h"
 #include "Preferences.h"
 #ifdef __OBJC__
@@ -243,7 +244,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Panel_Delegate,
+@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Keypads_ControlKeyResponder,
+																		Panel_Delegate,
 																		PrefsWindow_PanelInterface > //{
 {
 @private

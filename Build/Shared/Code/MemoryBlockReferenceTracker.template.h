@@ -36,21 +36,9 @@
 #define __MEMORYBLOCKREFERENCETRACKER__
 
 // pseudo-standard-C++ includes
-#if __MWERKS__
-#   include <hash_set>
-#   define hash_set_namespace Metrowerks
-#elif (__GNUC__ > 3)
-#   include <ext/hash_set>
-#   define hash_set_namespace __gnu_cxx
-#elif (__GNUC__ == 3)
-#   include <ext/hash_set>
-#   define hash_set_namespace __gnu_cxx
-#elif (__GNUC__ < 3)
-#   include <hash_set>
-#   define hash_set_namespace
-#else
-#   include <hash_set>
-#   define hash_set_namespace
+#include <tr1/unordered_set>
+#ifndef unordered_set_namespace
+#	define unordered_set_namespace std::tr1
 #endif
 
 
@@ -75,8 +63,8 @@ used.
 */
 template < typename structure_reference_type >
 class MemoryBlockReferenceTracker:
-public hash_set_namespace::hash_set< structure_reference_type,
-										_AddrToLongHasher< structure_reference_type > >
+public unordered_set_namespace::unordered_set< structure_reference_type,
+												_AddrToLongHasher< structure_reference_type > >
 {
 };
 

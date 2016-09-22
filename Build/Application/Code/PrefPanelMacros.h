@@ -46,6 +46,7 @@
 
 // application includes
 #include "GenericPanelNumberedList.h"
+#include "Keypads.h"
 #include "Panel.h"
 #include "Preferences.h"
 #include "PreferenceValue.objc++.h"
@@ -161,7 +162,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefPanelMacros_MacroEditorViewManager : Panel_ViewManager< Panel_Delegate,
+@interface PrefPanelMacros_MacroEditorViewManager : Panel_ViewManager< Keypads_ControlKeyResponder,
+																		Panel_Delegate,
 																		PrefsWindow_PanelInterface > //{
 {
 @private

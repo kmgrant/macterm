@@ -7,7 +7,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
 	<key>CFBundleIdentifier</key>
-	<string>net.macterm.frameworks.PyMacTerm</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

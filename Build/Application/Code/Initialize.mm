@@ -323,6 +323,7 @@ initApplicationCore ()
 		Localization_InitFlags		flags = 0L;
 		
 		
+	#if 0
 		// TEMPORARY; disable for now (revisit soon, after moving
 		// entire interface to Cocoa)
 		//if ([NSApp userInterfaceLayoutDirection] == NSUserInterfaceLayoutDirectionRightToLeft)
@@ -331,6 +332,7 @@ initApplicationCore ()
 			// then the text reads from the right side of a page to the left (the opposite of North America)
 			flags |= kLocalization_InitFlagReadTextRightToLeft;
 		}
+	#endif
 		
 		Localization_Init(flags);
 	}

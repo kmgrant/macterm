@@ -72,7 +72,7 @@ CGPoint						gArrangeWindowStackingOrigin = CGPointZero;
 id							gArrangeWindowDidEndTarget = nil;
 SEL							gArrangeWindowDidEndSelector = nil;
 EventTargetRef				gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
-id							gControlKeysResponder = nil;
+NSObject< Keypads_ControlKeyResponder >*		gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
 My_IntsByButton&			gAnimationStagesByButton ()		{ static My_IntsByButton x; return x; }
@@ -460,7 +460,17 @@ Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
 		{
 		case kKeypads_WindowTypeControlKeys:
 			gControlKeysEventTarget = nullptr; // clear this because it will be ignored now anyway
-			gControlKeysResponder = inCurrentTarget;
+			if ([inCurrentTarget conformsToProtocol:@protocol(Keypads_ControlKeyResponder)])
+			{
+				auto		asResponder = STATIC_CAST(inCurrentTarget, NSObject< Keypads_ControlKeyResponder >*);
+				
+				
+				gControlKeysResponder = asResponder;
+			}
+			else
+			{
+				NSLog(@"keypad responder does not conform to protocol correctly: %@", inCurrentTarget);
+			}
 			if (false == Keypads_IsVisible(kKeypads_WindowTypeControlKeys))
 			{
 				Keypads_SetVisible(inFromKeypad, true);
@@ -865,13 +875,7 @@ sendCharacter:(UInt8)	inCharacter
 	{
 		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadSentCharacterCode:)])
 		{
-			[gControlKeysResponder performSelector:@selector(controlKeypadSentCharacterCode:)
-													withObject:[NSNumber numberWithChar:inCharacter]];
-		}
-		else
-		{
-			NSLog(@"keypad responder does not respond to selector 'controlKeypadSentCharacterCode:': %@",
-					gControlKeysResponder);
+			[gControlKeysResponder controlKeypadSentCharacterCode:[NSNumber numberWithChar:inCharacter]];
 		}
 	}
 	else
@@ -1469,7 +1473,7 @@ windowWillClose:(NSNotification*)	aNotification
 	{
 		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadHidden)])
 		{
-			[gControlKeysResponder performSelector:@selector(controlKeypadHidden)];
+			[gControlKeysResponder controlKeypadHidden];
 		}
 	}
 }// windowWillClose:

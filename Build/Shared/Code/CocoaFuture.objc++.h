@@ -47,36 +47,33 @@
 
 #pragma mark Constants
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
-#define NSAppKitVersionNumber10_4 824
-#endif
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
-#define NSAppKitVersionNumber10_5 949
-#endif
-
 #if MAC_OS_X_VERSION_MIN_REQUIRED <= 1060 /* MAC_OS_X_VERSION_10_6 */
-#define NSAppKitVersionNumber10_6 1038
+#	define NSAppKitVersionNumber10_6 1038
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED <= 1070 /* MAC_OS_X_VERSION_10_7 */
-#define NSAppKitVersionNumber10_7 1138
+#	define NSAppKitVersionNumber10_7 1138
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED <= 1080 /* MAC_OS_X_VERSION_10_8 */
-#define NSAppKitVersionNumber10_8 1187
+#	define NSAppKitVersionNumber10_8 1187
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED <= 1090 /* MAC_OS_X_VERSION_10_9 */
-
-#define NSAppKitVersionNumber10_9 1265
-
-// NS_DESIGNATED_INITIALIZER was only added in the 10.10 SDK
-// but it is useful as a marker in earlier versions of code
-#ifndef NS_DESIGNATED_INITIALIZER
-#	define NS_DESIGNATED_INITIALIZER
+#	define NSAppKitVersionNumber10_9 1265
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 101000 /* MAC_OS_X_VERSION_10_10 */
+#	define NSAppKitVersionNumber10_10 1343
+#	ifndef NS_DESIGNATED_INITIALIZER
+//		NS_DESIGNATED_INITIALIZER was only added in the 10.10 SDK
+//		but it is useful as a marker in earlier versions of code
+#		define NS_DESIGNATED_INITIALIZER
+#	endif
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 101100 /* MAC_OS_X_VERSION_10_11 */
+#	define NSAppKitVersionNumber10_11 1404
 #endif
 
 

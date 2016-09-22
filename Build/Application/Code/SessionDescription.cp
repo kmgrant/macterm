@@ -44,25 +44,9 @@
 #include <vector>
 
 // pseudo-standard-C++ includes
-#if __MWERKS__
-#   include <hash_fun>
-#   include <hash_map>
-#   define hash_map_namespace Metrowerks
-#elif (__GNUC__ > 3)
-#   include <ext/hash_map>
-#   define hash_map_namespace __gnu_cxx
-#elif (__GNUC__ == 3)
-#   include <ext/stl_hash_fun.h>
-#   include <ext/hash_map>
-#   define hash_map_namespace __gnu_cxx
-#elif (__GNUC__ < 3)
-#   include <stl_hash_fun.h>
-#   include <hash_map>
-#   define hash_map_namespace
-#else
-#   include <hash_fun>
-#   include <hash_map>
-#   define hash_map_namespace
+#include <tr1/unordered_map>
+#ifndef unordered_map_namespace
+#	define unordered_map_namespace std::tr1
 #endif
 
 // Mac includes
@@ -1521,11 +1505,11 @@ parseFile	(SInt16				inFileReferenceNumber,
 	if (file != nullptr)
 	{
 		typedef std::vector< Ptr >	CStringList;
-		typedef hash_map_namespace::hash_map
+		typedef unordered_map_namespace::unordered_map
 				<
 					char const*,								// key type - name string
 					CStringList::size_type,						// value type - index into value array
-					hash_map_namespace::hash< char const* >,	// hash code generator
+					unordered_map_namespace::hash< char const* >,	// hash code generator
 					isStringPairEqual							// key comparator
 				> KeyNameToKeyValueArrayIndexHashMap;
 		char									keyName[32];
