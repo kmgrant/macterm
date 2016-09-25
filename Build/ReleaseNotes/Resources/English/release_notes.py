@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160924',
     '20160920',
     '20160915',
     '20160911',
@@ -547,6 +548,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160924': [
+        'Fixed possible exception during certain offscreen animations, such as search results.',
+    ],
     '20160920': [
         'Fixed possible crash in Print Preview on macOS Sierra.',
     ],

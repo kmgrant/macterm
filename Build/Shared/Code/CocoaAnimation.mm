@@ -551,6 +551,15 @@ createImageWindowFrom	(NSWindow*		inWindow,
 	newFrame.origin.y += inContentViewSection.origin.y;
 	newFrame.size = inContentViewSection.size;
 	
+	// guard against a possible exception if the given rectangle is bogus
+	if ((false == isfinite(newFrame.origin.x)) || (false == isfinite(newFrame.origin.y)) ||
+		(false == isfinite(newFrame.size.width)) || (false == isfinite(newFrame.size.height)))
+	{
+		Console_Warning(Console_WriteValueFloat4, "failed to create image window from rectangle at infinity",
+						newFrame.origin.x, newFrame.origin.y, newFrame.size.width, newFrame.size.height);
+		return nil;
+	}
+	
 	// now construct a fake window to display the same thing
 	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
 													backing:NSBackingStoreBuffered defer:NO];
