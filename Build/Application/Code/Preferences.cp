@@ -677,10 +677,10 @@ void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullpt
 																 Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*);
+Boolean					convertCFArrayToCGDeviceColor		(CFArrayRef, CGDeviceColor*);
 Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
-Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
+Boolean					convertCGDeviceColorToCFArray		(CGDeviceColor const*, CFArrayRef&);
 Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
-Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
 CFDictionaryRef			copyDefaultPrefDictionary				();
 CFStringRef				copyDomainUserSpecifiedName				(CFStringRef);
@@ -2486,20 +2486,25 @@ Preferences_ContextMergeInXMLData	(Preferences_ContextRef		inContext,
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
-		CFStringRef			errorCFString = nullptr;
-		CFPropertyListRef	root = CFPropertyListCreateFromXMLData
-									(kCFAllocatorDefault, inData, kCFPropertyListImmutable,
-										&errorCFString);
+		CFErrorRef				errorCFObject = nullptr;
+		CFPropertyListFormat		actualFormat = kCFPropertyListXMLFormat_v1_0;
+		CFPropertyListRef		root = CFPropertyListCreateWithData
+										(kCFAllocatorDefault, inData, kCFPropertyListImmutable,
+											&actualFormat, &errorCFObject);
 		
 		
 		if (nullptr == root)
 		{
-			if (nullptr != errorCFString)
+			if (nullptr != errorCFObject)
 			{
+				CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
+														true/* is retained */);
+				
+				
 				result = kPreferences_ResultBadVersionDataNotAvailable;
 				Console_Warning(Console_WriteValueCFString,
-								"unable to create preferences property list from XML data", errorCFString);
-				CFRelease(errorCFString), errorCFString = nullptr;
+								"unable to create preferences property list from XML data", errorDescription.returnCFStringRef());
+				CFRelease(errorCFObject), errorCFObject = nullptr;
 			}
 		}
 		else
@@ -5213,7 +5218,7 @@ createIndexed	(Preferences_Tag		inTag,
 /*!
 A convenience routine that calls create() with the typical
 key value type (typeCFArrayRef) and non-dictionary value size
-(sizeof(RGBColor)) for RGB colors.  This simplifies the
+(sizeof(CGDeviceColor)) for RGB colors.  This simplifies the
 construction of many preferences, as this type is very common.
 
 The array is expected to contain 3 CFNumberRefs that have
@@ -5229,7 +5234,7 @@ createRGBColor	(Preferences_Tag			inTag,
 				 Quills::Prefs::Class		inClass,
 				 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
-	create(inTag, inKeyName, typeCFArrayRef, sizeof(RGBColor), inClass, outResultPtrPtrOrNull);
+	create(inTag, inKeyName, typeCFArrayRef, sizeof(CGDeviceColor), inClass, outResultPtrPtrOrNull);
 }// My_PreferenceDefinition::createRGBColor
 
 
@@ -5595,6 +5600,54 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 
 
 /*!
+Reads an array of 3 CFNumber elements and puts their
+values into a CGDeviceColor structure.
+
+Returns "true" only if successful.
+
+(2016.09)
+*/
+Boolean
+convertCFArrayToCGDeviceColor	(CFArrayRef		inArray,
+								 CGDeviceColor*		outColorPtr)
+{
+	Boolean		result = false;
+	
+	
+	if ((nullptr != inArray) && (CFArrayGetCount(inArray) == 3))
+	{
+		CFNumberRef		redValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 0));
+		CFNumberRef		greenValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 1));
+		CFNumberRef		blueValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 2));
+		Float64			floatValue = 0L;
+		
+		
+		// CFNumber is technically more flexible than is allowed;
+		// so read a large signed value, even though a small unsigned
+		// value is what is assumed
+		if (CFNumberGetValue(redValue, kCFNumberFloat64Type, &floatValue))
+		{
+			outColorPtr->red = STATIC_CAST(floatValue, float);
+			if (CFNumberGetValue(greenValue, kCFNumberFloat64Type, &floatValue))
+			{
+				outColorPtr->green = STATIC_CAST(floatValue, float);
+				if (CFNumberGetValue(blueValue, kCFNumberFloat64Type, &floatValue))
+				{
+					outColorPtr->blue = STATIC_CAST(floatValue, float);
+					result = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		// unexpected number of elements
+	}
+	return result;
+}// convertCFArrayToCGDeviceColor
+
+
+/*!
 Reads an array of 4 CFNumber elements and puts their
 values into an HIRect structure in the order origin.x,
 origin.y, size.width, size.height.
@@ -5647,54 +5700,73 @@ convertCFArrayToHIRect	(CFArrayRef		inArray,
 
 
 /*!
-Reads an array of 3 CFNumber elements and puts their
-values into an RGBColor structure.
+Reads a CGDeviceColor structure and puts the values
+into an array of 3 CFNumber elements.
 
 Returns "true" only if successful.
 
-(3.1)
+(2016.09)
 */
 Boolean
-convertCFArrayToRGBColor	(CFArrayRef		inArray,
-							 RGBColor*		outColorPtr)
+convertCGDeviceColorToCFArray	(CGDeviceColor const*	inColorPtr,
+								 CFArrayRef&			outNewCFArray)
 {
 	Boolean		result = false;
 	
 	
-	if ((nullptr != inArray) && (CFArrayGetCount(inArray) == 3))
+	outNewCFArray = nullptr;
+	
+	if (nullptr != inColorPtr)
 	{
-		CFNumberRef		redValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 0));
-		CFNumberRef		greenValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 1));
-		CFNumberRef		blueValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 2));
-		Float64			floatValue = 0L;
+		CFNumberRef		componentValues[] = { nullptr, nullptr, nullptr };
+		SInt16			i = 0;
+		Float32			floatValue = 0L;
 		
 		
-		// CFNumber is technically more flexible than is allowed;
-		// so read a large signed value, even though a small unsigned
-		// value is what is assumed
-		if (CFNumberGetValue(redValue, kCFNumberFloat64Type, &floatValue))
+		// WARNING: this is not exception-safe
+		floatValue = inColorPtr->red;
+		componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+		if (nullptr != componentValues[i])
 		{
-			floatValue *= RGBCOLOR_INTENSITY_MAX;
-			outColorPtr->red = STATIC_CAST(floatValue, UInt16);
-			if (CFNumberGetValue(greenValue, kCFNumberFloat64Type, &floatValue))
+			++i;
+			floatValue = inColorPtr->green;
+			componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+			if (nullptr != componentValues[i])
 			{
-				floatValue *= RGBCOLOR_INTENSITY_MAX;
-				outColorPtr->green = STATIC_CAST(floatValue, UInt16);
-				if (CFNumberGetValue(blueValue, kCFNumberFloat64Type, &floatValue))
+				++i;
+				floatValue = inColorPtr->blue;
+				componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+				if (nullptr != componentValues[i])
 				{
-					floatValue *= RGBCOLOR_INTENSITY_MAX;
-					outColorPtr->blue = STATIC_CAST(floatValue, UInt16);
-					result = true;
+					++i;
+					
+					// store colors in array
+					outNewCFArray = CFArrayCreate(kCFAllocatorDefault,
+													REINTERPRET_CAST(componentValues, void const**),
+													sizeof(componentValues) / sizeof(CFNumberRef),
+													&kCFTypeArrayCallBacks);
+					if (nullptr != outNewCFArray)
+					{
+						// success!
+						result = true;
+					}
+					
+					--i;
+					CFRelease(componentValues[i]);
 				}
+				--i;
+				CFRelease(componentValues[i]);
 			}
+			--i;
+			CFRelease(componentValues[i]);
 		}
 	}
 	else
 	{
-		// unexpected number of elements
+		// unexpected input
 	}
 	return result;
-}// convertCFArrayToRGBColor
+}// convertCGDeviceColorToCFArray
 
 
 /*!
@@ -5765,79 +5837,6 @@ convertHIRectToCFArray	(HIRect const&	inRect,
 	}
 	return result;
 }// convertHIRectToCFArray
-
-
-/*!
-Reads an RGBColor structure and puts the values
-into an array of 3 CFNumber elements.
-
-Returns "true" only if successful.
-
-(3.1)
-*/
-Boolean
-convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
-							 CFArrayRef&		outNewCFArray)
-{
-	Boolean		result = false;
-	
-	
-	outNewCFArray = nullptr;
-	
-	if (nullptr != inColorPtr)
-	{
-		CFNumberRef		componentValues[] = { nullptr, nullptr, nullptr };
-		SInt16			i = 0;
-		Float32			floatValue = 0L;
-		
-		
-		// WARNING: this is not exception-safe
-		floatValue = inColorPtr->red;
-		floatValue /= RGBCOLOR_INTENSITY_MAX;
-		componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
-		if (nullptr != componentValues[i])
-		{
-			++i;
-			floatValue = inColorPtr->green;
-			floatValue /= RGBCOLOR_INTENSITY_MAX;
-			componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
-			if (nullptr != componentValues[i])
-			{
-				++i;
-				floatValue = inColorPtr->blue;
-				floatValue /= RGBCOLOR_INTENSITY_MAX;
-				componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
-				if (nullptr != componentValues[i])
-				{
-					++i;
-					
-					// store colors in array
-					outNewCFArray = CFArrayCreate(kCFAllocatorDefault,
-													REINTERPRET_CAST(componentValues, void const**),
-													sizeof(componentValues) / sizeof(CFNumberRef),
-													&kCFTypeArrayCallBacks);
-					if (nullptr != outNewCFArray)
-					{
-						// success!
-						result = true;
-					}
-					
-					--i;
-					CFRelease(componentValues[i]);
-				}
-				--i;
-				CFRelease(componentValues[i]);
-			}
-			--i;
-			CFRelease(componentValues[i]);
-		}
-	}
-	else
-	{
-		// unexpected input
-	}
-	return result;
-}// convertRGBColorToCFArray
 
 
 /*!
@@ -5945,42 +5944,40 @@ copyDefaultPrefDictionary ()
 	
 	if (urlObject.exists())
 	{
-		CFURLRef	fileURL = STATIC_CAST(urlObject.returnCFTypeRef(), CFURLRef);
-		CFDataRef   fileData = nullptr;
-		SInt32		errorCode = 0;
+		CFURLRef			fileURL = urlObject.returnCFURLRef();
+		CFRetainRelease		streamObject(CFReadStreamCreateWithFile(kCFAllocatorDefault, fileURL),
+											true/* is retained */);
 		
 		
-		unless (CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, fileURL, &fileData, 
-															nullptr/* properties */, nullptr/* desired properties */, &errorCode))
+		if (streamObject.exists() && CFReadStreamOpen(streamObject.returnCFReadStreamRef()))
 		{
-			// Not all data was successfully retrieved, but let the caller determine if anything
-			// important is missing.
-			// NOTE: Technically, the error code returned in "errorCode" is not an OSStatus.
-			//       If negative, it is an Apple error, and if positive it is scheme-specific.
-		}
-		
-		if (nullptr != fileData)
-		{
-			CFPropertyListRef   propertyList = nullptr;
-			CFStringRef			errorString = nullptr;
+			CFPropertyListRef   		propertyList = nullptr;
+			CFPropertyListFormat		actualFormat = kCFPropertyListXMLFormat_v1_0;
+			CFErrorRef				errorCFObject = nullptr;
 			
 			
-			propertyList = CFPropertyListCreateFromXMLData(kCFAllocatorDefault, fileData,
-															kCFPropertyListImmutable, &errorString);
+			propertyList = CFPropertyListCreateWithStream
+							(kCFAllocatorDefault, streamObject.returnCFReadStreamRef(),
+								0/* length or 0 for all */, kCFPropertyListImmutable,
+								&actualFormat, &errorCFObject);
 			if (nullptr != propertyList)
 			{
 				// the XML file actually contains a dictionary
 				result = CFUtilities_DictionaryCast(propertyList);
 			}
 			
-			if (nullptr != errorString)
+			if (nullptr != errorCFObject)
 			{
-				// could report/return error here...
-				CFRelease(errorString), errorString = nullptr;
+				CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
+														true/* is retained */);
+				
+				
+				Console_Warning(Console_WriteValueCFString,
+								"unable to create default preferences property list from XML data", errorDescription.returnCFStringRef());
+				CFRelease(errorCFObject), errorCFObject = nullptr;
 			}
 			
-			// finally, release the file data
-			CFRelease(fileData), fileData = nullptr;
+			CFReadStreamClose(streamObject.returnCFReadStreamRef());
 		}
 	}
 	
@@ -6486,10 +6483,10 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							RGBColor* const		data = REINTERPRET_CAST(outDataPtr, RGBColor*);
+							CGDeviceColor* const		data = REINTERPRET_CAST(outDataPtr, CGDeviceColor*);
 							
 							
-							if (false == convertCFArrayToRGBColor(valueCFArray, data))
+							if (false == convertCFArrayToCGDeviceColor(valueCFArray, data))
 							{
 								// failed; make black
 								data->red = data->green = data->blue = 0;
@@ -9093,11 +9090,11 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagTerminalColorANSICyanBold:
 			case kPreferences_TagTerminalColorANSIWhiteBold:
 				{
-					RGBColor const* const	data = REINTERPRET_CAST(inDataPtr, RGBColor const*);
-					CFArrayRef				colorCFArray = nullptr;
+					CGDeviceColor const* const	data = REINTERPRET_CAST(inDataPtr, CGDeviceColor const*);
+					CFArrayRef					colorCFArray = nullptr;
 					
 					
-					if (convertRGBColorToCFArray(data, colorCFArray))
+					if (convertCGDeviceColorToCFArray(data, colorCFArray))
 					{
 						assert(typeCFArrayRef == keyValueType);
 						inContextPtr->addArray(inDataPreferenceTag, keyName, colorCFArray);

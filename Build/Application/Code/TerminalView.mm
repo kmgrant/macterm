@@ -5026,7 +5026,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	UInt16						currentIndex = 0;
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Preferences_Tag				currentPrefsTag = '----';
-	RGBColor					colorValue;
+	CGDeviceColor				colorValue;
 	UInt16						result = 0;
 	
 	
@@ -5039,10 +5039,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5051,10 +5048,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5063,10 +5057,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5075,10 +5066,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5087,10 +5075,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5099,10 +5084,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5111,10 +5093,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5140,10 +5119,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenBaseColor(inTerminalViewPtr, currentColorID, &asDeviceColor);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -5156,10 +5132,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5168,10 +5141,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5180,10 +5150,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5192,10 +5159,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5204,10 +5168,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5216,10 +5177,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5228,10 +5186,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5240,10 +5195,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5252,10 +5204,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5264,10 +5213,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5276,10 +5222,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5288,10 +5231,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5300,10 +5240,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5312,10 +5249,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5324,10 +5258,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -5336,10 +5267,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		CGDeviceColor	asDeviceColor = ColorUtilities_CGDeviceColorMake(colorValue);
-		
-		
-		setScreenCoreColor(inTerminalViewPtr, currentIndex, &asDeviceColor);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	

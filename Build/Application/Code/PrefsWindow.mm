@@ -367,7 +367,7 @@ createSearchDictionary ()
 	
 	if (fileCFURLObject.exists())
 	{
-		CFURLRef	fileURL = REINTERPRET_CAST(fileCFURLObject.returnCFTypeRef(), CFURLRef);
+		CFURLRef	fileURL = fileCFURLObject.returnCFURLRef();
 		CFDataRef   fileData = nullptr;
 		SInt32		errorCode = 0;
 		
@@ -1100,6 +1100,7 @@ performImportPreferenceCollectionFromFile:(id)	sender
 	NSOpenPanel*	openPanel = [NSOpenPanel openPanel];
 	NSArray*		allowedTypes = @[
 										@"com.apple.property-list",
+										@"itermcolors",
 										@"plist"/* redundant, needed for older systems */,
 										@"xml",
 									];

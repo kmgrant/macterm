@@ -166,7 +166,7 @@ void				getPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
 void				handleMouseDown			(My_VectorCanvasPtr, Point);
 Boolean				inSplash				(Point, Point);
 VectorCanvas_Path*	pathElementWithPurpose	(My_VectorCanvasPtr, VectorCanvas_PathPurpose, Boolean = false);
-void				setPaletteColor			(My_VectorCanvasPtr, SInt16, RGBColor const&);
+void				setPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor const&);
 
 } // anonymous namespace
 
@@ -719,7 +719,7 @@ copyColorPreferences	(My_VectorCanvasPtr			inPtr,
 {
 	SInt16				currentIndex = 0;
 	Preferences_Tag		currentPrefsTag = '----';
-	RGBColor			colorValue;
+	CGDeviceColor		colorValue;
 	UInt16				result = 0;
 	
 	
@@ -1041,14 +1041,14 @@ pathElementWithPurpose	(My_VectorCanvasPtr			inPtr,
 /*!
 Changes the RGB color for the specified TEK color index.
 
-(3.1)
+(2016.09)
 */
 void
 setPaletteColor		(My_VectorCanvasPtr		inPtr,
 					 SInt16					inZeroBasedIndex,
-					 RGBColor const&		inColor)
+					 CGDeviceColor const&	inColor)
 {
-	inPtr->deviceColors[inZeroBasedIndex] = ColorUtilities_CGDeviceColorMake(inColor);
+	inPtr->deviceColors[inZeroBasedIndex] = inColor;
 }// setPaletteColor
 
 } // anonymous namespace

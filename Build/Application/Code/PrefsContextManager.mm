@@ -214,10 +214,10 @@ isDefault:(BOOL*)								outIsDefault
 	
 	if (Preferences_ContextIsValid(self->currentContext))
 	{
-		RGBColor			colorData;
+		CGDeviceColor		colorDataFloat;
 		Boolean				isDefault = false;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(self->currentContext, aTag,
-																		sizeof(colorData), &colorData,
+																		sizeof(colorDataFloat), &colorDataFloat,
 																		true/* search defaults */, &isDefault);
 		
 		
@@ -228,15 +228,6 @@ isDefault:(BOOL*)								outIsDefault
 		
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			CGDeviceColor	colorDataFloat;
-			
-			
-			colorDataFloat.red = colorData.red;
-			colorDataFloat.red /= RGBCOLOR_INTENSITY_MAX;
-			colorDataFloat.green = colorData.green;
-			colorDataFloat.green /= RGBCOLOR_INTENSITY_MAX;
-			colorDataFloat.blue = colorData.blue;
-			colorDataFloat.blue /= RGBCOLOR_INTENSITY_MAX;
 			result = [NSColor colorWithCalibratedRed:colorDataFloat.red green:colorDataFloat.green
 														blue:colorDataFloat.blue alpha:1.0];
 		}
@@ -287,7 +278,7 @@ defaultValue:(BOOL)							aDefault
 Writes a new user preference for the specified color to the current
 preferences context and returns true only if this succeeds.
 
-IMPORTANT:	Only tags with values of type RGBColor should be given!
+IMPORTANT:	Only tags with values of type CGDeviceColor should be given!
 			The given NSColor is automatically converted internally.
 
 (4.1)
@@ -311,21 +302,14 @@ forPreferenceTag:(Preferences_Tag)	aTag
 	{
 		CGDeviceColor	newColorFloat;
 		float			ignoredAlpha = 0;
-		RGBColor		newColorRGB;
 		
 		
 		[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue alpha:&ignoredAlpha];
-		newColorFloat.red *= RGBCOLOR_INTENSITY_MAX;
-		newColorFloat.green *= RGBCOLOR_INTENSITY_MAX;
-		newColorFloat.blue *= RGBCOLOR_INTENSITY_MAX;
-		newColorRGB.red = STATIC_CAST(newColorFloat.red, unsigned short);
-		newColorRGB.green = STATIC_CAST(newColorFloat.green, unsigned short);
-		newColorRGB.blue = STATIC_CAST(newColorFloat.blue, unsigned short);
 		
 		if (Preferences_ContextIsValid(self->currentContext))
 		{
 			Preferences_Result	prefsResult = Preferences_ContextSetData(self->currentContext, aTag,
-																			sizeof(newColorRGB), &newColorRGB);
+																			sizeof(newColorFloat), &newColorFloat);
 			
 			
 			result = (kPreferences_ResultOK == prefsResult);

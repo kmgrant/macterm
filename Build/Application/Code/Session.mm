@@ -5772,7 +5772,7 @@ autoCaptureSessionToFile	(My_SessionPtr		inPtr)
 	Boolean			result = false;
 	Boolean			releaseFileName = false;
 	CFStringRef		fileName = inPtr->autoCaptureFileName.returnCFStringRef();
-	CFURLRef		directoryURL = REINTERPRET_CAST(inPtr->autoCaptureDirectoryURL.returnCFTypeRef(), CFURLRef);
+	CFURLRef		directoryURL = inPtr->autoCaptureDirectoryURL.returnCFURLRef();
 	
 	
 	if ((nullptr == fileName) || (nullptr == directoryURL))
@@ -5887,7 +5887,7 @@ captureToFile	(My_SessionPtr		inPtr,
 		}
 		else
 		{
-			Boolean		captureOK = Terminal_FileCaptureBegin(inPtr->targetTerminals.front(), REINTERPRET_CAST(fullURL.returnCFTypeRef(), CFURLRef));
+			Boolean		captureOK = Terminal_FileCaptureBegin(inPtr->targetTerminals.front(), fullURL.returnCFURLRef());
 			if (false == captureOK)
 			{
 				Console_Warning(Console_WriteLine, "unable to start file capture from terminal");
@@ -6058,7 +6058,7 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 			
 			
 			//Console_WriteLine("setting capture file directory URL"); // debug
-			inPtr->autoCaptureDirectoryURL = REINTERPRET_CAST(newURL.returnCFTypeRef(), CFURLRef);
+			inPtr->autoCaptureDirectoryURL = newURL.returnCFURLRef();
 			++result;
 		}
 		else
@@ -7272,7 +7272,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 					CFRetainRelease			saveFileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &saveFile),
 														true/* is retained */);
-					CFRetainRelease			saveDirectoryURL(CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, REINTERPRET_CAST(saveFileURL.returnCFTypeRef(), CFURLRef)),
+					CFRetainRelease			saveDirectoryURL(CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, saveFileURL.returnCFURLRef()),
 																true/* is retained */);
 					
 					
@@ -7280,7 +7280,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 					// since capture files themselves are considered highly volatile
 					UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
 					
-					error = captureToFile(ptr, REINTERPRET_CAST(saveDirectoryURL.returnCFTypeRef(), CFURLRef), reply.saveFileName);
+					error = captureToFile(ptr, saveDirectoryURL.returnCFURLRef(), reply.saveFileName);
 					
 					if (noErr != error)
 					{

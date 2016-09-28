@@ -110,6 +110,9 @@ public:
 	CFRetainRelease (CFMutableStringRef, bool = false);
 	
 	inline
+	CFRetainRelease (CFReadStreamRef, bool = false);
+	
+	inline
 	CFRetainRelease (CFSetRef, bool = false);
 	
 	inline
@@ -117,6 +120,9 @@ public:
 	
 	inline
 	CFRetainRelease (CFTypeRef, bool = false);
+	
+	inline
+	CFRetainRelease (CFURLRef, bool = false);
 	
 	inline
 	CFRetainRelease (HIObjectRef, bool = false);
@@ -169,6 +175,9 @@ public:
 	inline CFMutableStringRef
 	returnCFMutableStringRef () const;
 	
+	inline CFReadStreamRef
+	returnCFReadStreamRef () const;
+	
 	inline CFSetRef
 	returnCFSetRef () const;
 	
@@ -177,6 +186,9 @@ public:
 	
 	inline CFTypeRef
 	returnCFTypeRef () const;
+	
+	inline CFURLRef
+	returnCFURLRef () const;
 	
 	inline HIObjectRef
 	returnHIObjectRef () const;
@@ -208,8 +220,10 @@ private:
 			CFArrayRef			array;
 			CFDictionaryRef		dictionary;
 			HIObjectRef			humanInterfaceObject;
+			CFReadStreamRef		readStream;
 			CFSetRef			set;
 			CFStringRef			string;
+			CFURLRef			url;
 		} _constant;
 		
 		union
@@ -571,6 +585,41 @@ _isMutable(true)
 
 /*!
 Creates a new reference using the value of an
+existing one that is a Core Foundation Read Stream
+type.  In debug mode, an assertion failure will
+occur if the given reference is not a
+CFReadStreamRef.
+
+CFRetain() is called on the reference unless
+"inIsAlreadyRetained" is true.  Regardless,
+CFRelease() is called at destruction or
+reassignment time.  This allows "inType" to
+come directly from a function call that creates
+a Core Foundation type.
+
+(2016.09)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFReadStreamRef		inType,
+					 bool				inIsAlreadyRetained)
+:
+_isMutable(false)
+{
+	_typeAs._constant.readStream = inType;
+	assert(_typeAs._constant.readStream == inType);
+	if (nullptr != _typeAs._constant.readStream)
+	{
+		assert(CFGetTypeID(_typeAs._constant.readStream) == CFReadStreamGetTypeID());
+		if (false == inIsAlreadyRetained)
+		{
+			CFRetain(_typeAs._constant.readStream);
+		}
+	}
+}// read-stream type constructor
+
+
+/*!
+Creates a new reference using the value of an
 existing one that is a Core Foundation String
 type.  In debug mode, an assertion failure will
 occur if the given reference is not a CFStringRef.
@@ -601,6 +650,40 @@ _isMutable(false)
 		}
 	}
 }// string type constructor
+
+
+/*!
+Creates a new reference using the value of an
+existing one that is a Core Foundation URL type.
+In debug mode, an assertion failure will occur
+if the given reference is not a CFURLRef.
+
+CFRetain() is called on the reference unless
+"inIsAlreadyRetained" is true.  Regardless,
+CFRelease() is called at destruction or
+reassignment time.  This allows "inType" to
+come directly from a function call that creates
+a Core Foundation type.
+
+(2016.09)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFURLRef	inType,
+					 bool		inIsAlreadyRetained)
+:
+_isMutable(false)
+{
+	_typeAs._constant.url = inType;
+	assert(_typeAs._constant.url == inType);
+	if (nullptr != _typeAs._constant.url)
+	{
+		assert(CFGetTypeID(_typeAs._constant.url) == CFURLGetTypeID());
+		if (false == inIsAlreadyRetained)
+		{
+			CFRetain(_typeAs._constant.url);
+		}
+	}
+}// URL type constructor
 
 
 /*!
@@ -914,6 +997,22 @@ const
 
 
 /*!
+Returns the CFReadStreamRef that this class instance is
+storing (and has retained), or nullptr if the internal
+reference is empty.
+
+(2016.09)
+*/
+CFReadStreamRef
+CFRetainRelease::
+returnCFReadStreamRef ()
+const
+{
+	return _typeAs._constant.readStream;
+}// returnCFReadStreamRef
+
+
+/*!
 Convenience method to cast the internal reference
 into a CFSetRef.  In debug mode, an assertion
 failure will occur if the reference is not really
@@ -970,6 +1069,22 @@ const
 	if (_isMutable) return _typeAs._modifiable.unspecified;
 	return _typeAs._constant.unspecified;
 }// returnCFTypeRef
+
+
+/*!
+Returns the CFURLRef that this class instance is
+storing (and has retained), or nullptr if the internal
+reference is empty.
+
+(2016.09)
+*/
+CFURLRef
+CFRetainRelease::
+returnCFURLRef ()
+const
+{
+	return _typeAs._constant.url;
+}// returnCFURLRef
 
 
 /*!

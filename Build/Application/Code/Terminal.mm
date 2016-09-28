@@ -7073,7 +7073,7 @@ printingReset ()
 			else
 			{
 				this->printingStream = StreamCapture_New(kSession_LineEndingLF);
-				if (false == StreamCapture_Begin(this->printingStream, REINTERPRET_CAST(this->printingFileURL.returnCFTypeRef(), CFURLRef)))
+				if (false == StreamCapture_Begin(this->printingStream, this->printingFileURL.returnCFURLRef()))
 				{
 					Console_Warning(Console_WriteLine, "failed to initiate capture to temporary file for printing");
 				}

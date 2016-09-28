@@ -453,15 +453,13 @@ windowDidLoad
 #endif
 	// set colors
 	{
-		RGBColor	colorInfo;
+		CGDeviceColor	colorInfo;
 		
 		
 		prefsResult = Preferences_GetData(kPreferences_TagTerminalColorNormalBackground, sizeof(colorInfo), &colorInfo);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			NSColor*	colorObject = [NSColor colorWithDeviceRed:((Float32)colorInfo.red / (Float32)RGBCOLOR_INTENSITY_MAX)
-										green:((Float32)colorInfo.green / (Float32)RGBCOLOR_INTENSITY_MAX)
-										blue:((Float32)colorInfo.blue / (Float32)RGBCOLOR_INTENSITY_MAX)
+			NSColor*	colorObject = [NSColor colorWithDeviceRed:colorInfo.red green:colorInfo.green blue:colorInfo.blue
 										alpha:1.0];
 			
 			
@@ -473,9 +471,7 @@ windowDidLoad
 			prefsResult = Preferences_GetData(kPreferences_TagTerminalColorNormalForeground, sizeof(colorInfo), &colorInfo);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				colorObject = [NSColor colorWithDeviceRed:((Float32)colorInfo.red / (Float32)RGBCOLOR_INTENSITY_MAX)
-								green:((Float32)colorInfo.green / (Float32)RGBCOLOR_INTENSITY_MAX)
-								blue:((Float32)colorInfo.blue / (Float32)RGBCOLOR_INTENSITY_MAX)
+				colorObject = [NSColor colorWithDeviceRed:colorInfo.red green:colorInfo.green blue:colorInfo.blue
 								alpha:1.0];
 				[commandLineField setTextColor:colorObject];
 			}

@@ -258,8 +258,8 @@ namespace {
 /*!
 Copies a preference tag for a color from the specified
 source context to the given destination.  All color
-data has the same size, which is currently that of an
-"RGBColor".
+data has the same size, which is currently that of a
+"CGDeviceColor".
 
 (4.0)
 */
@@ -271,7 +271,7 @@ copyColor	(Preferences_Tag			inSourceTag,
 			 Boolean*					outIsDefaultOrNull)
 {
 	Preferences_Result	result = kPreferences_ResultOK;
-	RGBColor			colorValue;
+	CGDeviceColor		colorValue;
 	
 	
 	result = Preferences_ContextGetData(inSource, inSourceTag, sizeof(colorValue), &colorValue,
