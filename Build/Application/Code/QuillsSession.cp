@@ -44,12 +44,14 @@
 
 // library includes
 #include <CFRetainRelease.h>
+#include <CFUtilities.h>
 #include <Console.h>
 #include <SoundSystem.h>
 #include <StringUtilities.h>
 
 // application includes
 #include "AppResources.h"
+#include "OtherApps.h"
 #include "SessionFactory.h"
 #include "URL.h"
 
@@ -159,7 +161,7 @@ Session::pseudo_terminal_device_name ()
 	
 	if (nullptr == _session)
 	{
-		throw std::runtime_error("specified session does not have this information");
+		QUILLS_THROW_MSG("specified session does not have this information");
 	}
 	else
 	{
@@ -185,7 +187,7 @@ Session::resource_location_string ()
 	
 	if (nullptr == _session)
 	{
-		throw std::runtime_error("specified session does not have this information");
+		QUILLS_THROW_MSG("specified session does not have this information");
 	}
 	else
 	{
@@ -211,7 +213,7 @@ Session::state_string ()
 	
 	if (nullptr == _session)
 	{
-		throw std::runtime_error("specified session does not have this information");
+		QUILLS_THROW_MSG("specified session does not have this information");
 	}
 	else
 	{
@@ -236,11 +238,17 @@ See header or "pydoc" for Python docstrings.
 void
 Session::handle_file	(std::string	inPathname)
 {
+	std::string::size_type const	kIndexOfSlash = inPathname.find_last_of('/');
 	std::string::size_type const	kIndexOfExtension = inPathname.find_last_of('.');
 	
 	
-	if (inPathname.npos != kIndexOfExtension)
+	if (inPathname.npos == kIndexOfExtension)
 	{
+		QUILLS_THROW_MSG("currently, file names must have types (extensions); failed to open '" << inPathname << "'");
+	}
+	else
+	{
+		std::string		baseName(inPathname.substr(kIndexOfSlash + 1/* skip slash */, (kIndexOfExtension - (kIndexOfSlash + 1))/* length */));
 		std::string		extensionName(inPathname.substr(kIndexOfExtension + 1/* skip dot */, inPathname.npos));
 		
 		
@@ -264,66 +272,75 @@ Session::handle_file	(std::string	inPathname)
 		}
 		else
 		{
-			LSItemInfoRecord	fileInfo;
-			FSRef				fileRef;
-			OSStatus			error = noErr;
-			
-			
-			bzero(&fileInfo, sizeof(fileInfo));
-			error = FSPathMakeRef(REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), &fileRef, nullptr/* is a directory */);
-			if (noErr != error)
+			if (extensionName == "session")
 			{
-				Console_Warning(Console_WriteValue, "unable to make path reference for given file, error", error);
-			}
-			else
-			{
-				error = LSCopyItemInfoForRef(&fileRef, kLSRequestTypeCreator, &fileInfo);
+				// TEMPORARY; should convert API to URL (or retire format)
+				FSRef		fileRef;
+				OSStatus		error = noErr;
+				
+				
+				error = FSPathMakeRef(REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), &fileRef, nullptr/* is a directory */);
 				if (noErr != error)
 				{
-					Console_Warning(Console_WriteValue, "unable to copy Launch Services item information for given file, error", error);
+					QUILLS_THROW_MSG("unable to make path reference for file '" << inPathname << "', error = " << error);
+				}
+				
+				// read a configuration set
+				if (false == SessionDescription_ReadFromFile(fileRef))
+				{
+					QUILLS_THROW_MSG("failed to parse file '" << inPathname << "'" << error);
+				}
+			}
+			else if (extensionName == "itermcolors")
+			{
+				CFRetainRelease		fileURL(CFURLCreateFromFileSystemRepresentation
+											(kCFAllocatorDefault, REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), inPathname.size(), false/* is directory */),
+											true/* is retained */);
+				CFRetainRelease		fileData(OtherApps_NewPropertyListFromFile(fileURL.returnCFURLRef()),
+												true/* is retained */);
+				
+				
+				if (false == fileData.exists())
+				{
+					QUILLS_THROW_MSG("failed to open file '" << inPathname << "'");
+				}
+				else if (CFDictionaryGetTypeID() != CFGetTypeID(fileData.returnCFTypeRef()))
+				{
+					QUILLS_THROW_MSG("expected root dictionary in file '" << inPathname << "'");
 				}
 				else
 				{
-					HFSUniStr255	nameBuffer;
+					CFRetainRelease			baseNameCFString(CFStringCreateWithCString(kCFAllocatorDefault, baseName.c_str(), kCFStringEncodingUTF8),
+																true/* is retained */);
+					CFDictionaryRef			asDictionary = CFUtilities_DictionaryCast(fileData.returnCFTypeRef());
+					Preferences_ContextRef	targetContext = nullptr; // nullptr for auto-create
+					OtherApps_Result			importError = OtherApps_ImportITermColors
+															(asDictionary, targetContext, baseNameCFString.returnCFStringRef());
 					
 					
-					error = FSGetCatalogInfo(&fileRef, kFSCatInfoNone, nullptr/* catalog info */,
-												&nameBuffer, nullptr/* spec record */, nullptr/* parent directory */);
-					if (noErr != error)
+					if (false == importError.ok())
 					{
-						Console_Warning(Console_WriteValue, "unable to copy catalog information for given file, error", error);
+						QUILLS_THROW_MSG("failed to import file '" << inPathname << "', error = " << importError.code());
 					}
 				}
 			}
-			
-			if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
-					fileInfo.filetype == AppResources_ReturnFileTypeForSessionDescriptions()) ||
-					(extensionName == "session"))
-			{
-				// read a configuration set
-				SessionDescription_ReadFromFile(fileRef);
-			}
-			else if ((//fileInfo.creator == AppResources_ReturnCreatorCode() &&
-							fileInfo.filetype == AppResources_ReturnFileTypeForMacroSets()) ||
-						(extensionName == "macros"))
+			else if (extensionName == "macros")
 			{
 				// UNIMPLEMENTED - import macros from text
+				Console_Warning(Console_WriteValueCString, "unsupported format for file", inPathname.c_str());
 			}
 			else
 			{
 				// no Python handler is installed for this file; use the default handler
-				inPathname = "file://" + inPathname;
+				CFRetainRelease		fileURL(CFURLCreateFromFileSystemRepresentation
+											(kCFAllocatorDefault, REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), inPathname.size(), false/* is directory */),
+											true/* is retained */);
 				
-				CFStringRef		urlCFString = CFStringCreateWithCString(kCFAllocatorDefault, inPathname.c_str(),
-																		kCFStringEncodingUTF8);
 				
-				
-				if (nullptr != urlCFString)
+				if ((false == fileURL.exists()) ||
+					(noErr != URL_ParseCFString(CFURLGetString(fileURL.returnCFURLRef()))))
 				{
-					// TEMPORARY: could (should?) throw exceptions, translated by SWIG
-					// into scripting language exceptions, if an error occurs here
-					UNUSED_RETURN(OSStatus)URL_ParseCFString(urlCFString);
-					CFRelease(urlCFString), urlCFString = nullptr;
+					QUILLS_THROW_MSG("failed to open URL for file '" << inPathname << "'");
 				}
 			}
 		}

@@ -70,14 +70,34 @@ Adds a new item to the list.
 h4. Import from File...
 
 Use this to create a new collection based on settings that were
- exported to a file previously.  This can be something that was
- created by you (see "Export to File...", below), something that
- was given to you by someone else, or even something that you
- downloaded from MacTerm's web site.
+ exported to a file previously, or that originated in another
+ supported application.  You may select any number of files to
+ import at once.  Remember that you can drag to reorder
+ collections in your list, even though they initially appear at
+ the bottom.
+
+The type of collection created, such as a Session or Format, is
+ determined by examining the kinds of settings in the imported
+ file.  Therefore, no matter which Preferences panel is showing,
+ the imported file will appear in the appropriate category.
+
+Currently you may import any previously-exported ".plist" file
+ created by MacTerm, or a ".itermcolors" file.  You can find
+ existing files in these formats from the MacTerm.net web site
+ and other sites such as "iterm2colorschemes.com".
 
 The new collection will try to use any name that was given in
- the file.  If the name is already in use then the collection
- will appear under a different name.
+ the file.  For MacTerm imports, if the name is already in use
+ then the collection will appear under a different name.  For
+ imports of ".itermcolors", the new collection name is based on
+ the file name and any existing collection with the same name
+ will automatically be updated.
+
+The ".itermcolors" file is mostly compatible with MacTerm but
+ there are some exceptions.  Text selection colors from the file
+ are translated into blink colors in MacTerm, and the background
+ color in the file is reused for the bold background and matte
+ background color in MacTerm.  The cursor text color is ignored.
 
 h3. "-" Button
 

@@ -51,6 +51,7 @@ public:
 	inline virtual ~ResultCode			();
 	inline virtual bool operator ==		(ResultCode const&) const;
 	inline virtual bool operator !=		(ResultCode const&) const;
+	inline virtual c_type code			() const;
 	inline virtual bool ok				() const;
 protected:
 private:
@@ -95,6 +96,24 @@ const
 {
 	return !(this->operator ==(inComparison));
 }// operator !=
+
+
+/*!
+Returns the internal code value.  Use this judiciously,
+probably only for logging errors.  It is preferable to
+directly compare against predefined constants for each
+valid code, or to use the ok() method.
+
+(2016.09)
+*/
+template < typename c_type >
+c_type
+ResultCode< c_type >::
+code ()
+const
+{
+	return this_resultCode;
+}// code
 
 
 /*!

@@ -1,5 +1,5 @@
-/*!	\file QuillsSWIG.h
-	\brief SWIG-specific code used by several modules.
+/*!	\file OtherApps.h
+	\brief Lists methods that interact with other programs.
 */
 /*###############################################################
 
@@ -32,40 +32,51 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSSWIG__
-#define __QUILLSSWIG__
+#ifndef __OTHERAPPS__
+#define __OTHERAPPS__
 
-// standard-C++ includes
-#include <sstream>
-#include <stdexcept>
+// Mac includes
+#include <CoreServices/CoreServices.h>
+
+// library includes
+#include <ResultCode.template.h>
+
+// application includes
+#include "Preferences.h"
+
+
+
+#pragma mark Constants
+
+/*!
+Possible return values from OtherApps module routines.
+*/
+typedef ResultCode< UInt16 >		OtherApps_Result;
+OtherApps_Result const	kOtherApps_ResultOK(0);					//!< no error
+OtherApps_Result const	kOtherApps_ResultGenericFailure(1);		//!< unspecified error occurred
 
 
 
 #pragma mark Public Methods
 
-// Helper macro for common case of throwing a std::runtime_error by
-// composing a message from a std::ostringstream.
-#define QUILLS_THROW_MSG(sequence_of_print_operators) \
-	do \
-	{ \
-		std::ostringstream	messageStream; \
-		messageStream << sequence_of_print_operators; \
-		throw std::runtime_error(messageStream.str()); \
-	} while (0)
+//!\name Creating Property Lists
+//@{
 
-// Originally exception-handling code would use SWIG_CATCH_UNKNOWN
-// to write a block similar to the following.  Unfortunately that
-// would not work well with SWIG_CATCH_STDEXCEPT because SWIG would
-// generate multiple catch-blocks for std::exception.  The solution
-// is to not use SWIG_CATCH_UNKNOWN, instead implementing the final
-// catch-all with the custom #define below.  SWIG_CATCH_STDEXCEPT
-// is also compatible with this code.
-#define QUILLS_CATCH_ALL \
-	catch (...) \
-	{ \
-		SWIG_exception_fail(SWIG_UnknownError, "unknown exception"); \
-	}
+CFPropertyListRef
+	OtherApps_NewPropertyListFromFile		(CFURLRef		inFile,
+											 CFErrorRef*		outErrorOrNull = nullptr);
 
+//@}
+
+//!\name Importing External Color Schemes
+//@{
+
+OtherApps_Result
+	OtherApps_ImportITermColors		(CFDictionaryRef				inXMLBasedDictionary,
+									 Preferences_ContextRef		inoutFormatToModifyOrNull,
+									 CFStringRef					inNameHintOrNull);
+
+//@}
 
 #endif
 

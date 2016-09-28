@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20160927',
     '20160924',
     '20160920',
     '20160915',
@@ -548,6 +549,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20160927': [
+        'Fixed slight rounding errors in certain cases when reading color settings from Preferences.',
+        'Preferences window now supports import of ".itermcolors" files, such as the huge list of color schemes available at <http://iterm2colorschemes.com/>.  From the Preferences window, you can click-and-hold the "+" button and select "Import from File…", then choose as many files as you want to import.  MacTerm translates most colors directly, with a few exceptions: the text selection colors are used as blink colors, the background color is reused for bold background and matte, and the cursor text color is ignored.  The name of the Format collection is derived from the file name (minus any path or extension), and any existing collection with the same name is automatically updated by future imports.',
+        'Import of ".itermcolors" files can also be performed by dragging one or more files to the MacTerm dock icon.',
+        'Import of ".itermcolors" files can also be performed by using a Finder contextual menu to "Open With" MacTerm.',
+    ],
     '20160924': [
         'Fixed possible exception during certain offscreen animations, such as search results.',
     ],
