@@ -497,17 +497,21 @@ TerminalView_Result
 	TerminalView_ScrollRowsTowardTopEdge		(TerminalViewRef			inView,
 												 UInt32						inNumberOfRowsToScroll);
 
-// USE TerminalView_GetScrollVerticalInfo() TO DETERMINE APPROPRIATE VALUES FOR THESE INTEGER RANGES
-TerminalView_Result
-	TerminalView_ScrollTo						(TerminalViewRef			inView,
-												 SInt32						inStartOfVerticalRange,
-												 SInt32						inStartOfHorizontalRange = 0);
-
 TerminalView_Result
 	TerminalView_ScrollToBeginning				(TerminalViewRef			inView);
 
 TerminalView_Result
+	TerminalView_ScrollToCell					(TerminalViewRef				inView,
+												 TerminalView_Cell const&	inCell);
+
+TerminalView_Result
 	TerminalView_ScrollToEnd					(TerminalViewRef			inView);
+
+// USE TerminalView_GetScrollVerticalInfo() TO DETERMINE APPROPRIATE VALUES FOR THESE INTEGER RANGES
+TerminalView_Result
+	TerminalView_ScrollToIndicatorPosition		(TerminalViewRef			inView,
+												 SInt32						inStartOfVerticalRange,
+												 SInt32						inStartOfHorizontalRange = 0);
 
 TerminalView_Result
 	TerminalView_SetDisplayMode					(TerminalViewRef			inView,

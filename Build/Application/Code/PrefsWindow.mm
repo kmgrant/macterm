@@ -2777,7 +2777,6 @@ initialize
 		
 		selectorFound = CocoaExtensions_PerformSelectorOnTargetWithValue
 						(@selector(setAllowsAutomaticWindowTabbing:), self.class, NO);
-		NSLog(@"custom, selector found, %d", (int)selectorFound);
 	}
 }// initialize
 

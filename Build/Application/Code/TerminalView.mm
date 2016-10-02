@@ -1647,8 +1647,9 @@ maximum value of a control; in particular, you would want
 to subtract one page (the view range size) to reflect the
 fact that the current value is always the top of the range.
 
-See also TerminalView_ScrollTo(), which is useful for
-handling live tracking of user interface elements.
+See also TerminalView_ScrollToIndicatorPosition(), which is
+useful for handling live tracking of user interface elements,
+and TerminalView_ScrollToCell() for other kinds of activity.
 
 \retval kTerminalView_ResultOK
 if no error occurred
@@ -1676,7 +1677,7 @@ TerminalView_GetScrollVerticalInfo	(TerminalViewRef	inView,
 		SInt16 const	kRows = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		// WARNING: this must use the same logic as TerminalView_ScrollTo()
+		// WARNING: this must use the same logic as TerminalView_ScrollToIndicatorPosition()
 		outStartOfMaximumRange = 0;
 		outPastEndOfMaximumRange = outStartOfMaximumRange + kScrollbackRows + kRows;
 		outStartOfView = outPastEndOfMaximumRange - kRows + viewPtr->screen.topVisibleEdgeInRows;
@@ -3039,58 +3040,6 @@ TerminalView_ScrollRowsTowardTopEdge	(TerminalViewRef	inView,
 
 
 /*!
-Scrolls the contents of the terminal screen to a particular
-location, as if the user dragged a scroll bar indicator.
-
-The given integer ranges do not necessarily correspond to any
-real value (such as row counts, or pixels); they could be
-scaled.  Always use TerminalView_GetScrollVerticalInfo() to
-set up the maximum range and value of a user interface element,
-at which point it is safe to pass the current value of that
-element to this routine.
-
-Currently, the horizontal value is ignored.
-
-\retval kTerminalView_ResultOK
-if no error occurred
-
-\retval kTerminalView_ResultInvalidID
-if the view reference is unrecognized
-
-\retval kTerminalView_ResultParameterError
-if a range is invalid
-
-(4.0)
-*/
-TerminalView_Result
-TerminalView_ScrollTo	(TerminalViewRef	inView,
-						 SInt32				inStartOfRangeV,
-						 SInt32				UNUSED_ARGUMENT(inStartOfRangeH))
-{
-	TerminalView_Result			result = kTerminalView_ResultOK;
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
-	else
-	{
-		SInt32 const	kScrollbackRows = Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref);
-		
-		
-		// update anchor
-		// WARNING: this must use the same logic as TerminalView_GetScrollVerticalInfo()
-		offsetTopVisibleEdge(viewPtr, (inStartOfRangeV - kScrollbackRows) - viewPtr->screen.topVisibleEdgeInRows);
-		
-		// just redraw everything
-		updateDisplay(viewPtr);
-		
-		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
-	}
-	return result;
-}// ScrollTo
-
-
-/*!
 Scrolls the contents of the terminal view as if the user
 clicked the “home” key on an extended keyboard - conveniently
 scrolling rows downward to show the very topmost row in the
@@ -3120,6 +3069,47 @@ TerminalView_ScrollToBeginning	(TerminalViewRef	inView)
 
 
 /*!
+Scrolls the contents of the terminal screen to focus on a
+certain row and column location.
+
+Currently, the horizontal value is ignored.
+
+See also TerminalView_ScrollToIndicatorPosition().
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if a range is invalid
+
+(2016.10)
+*/
+TerminalView_Result
+TerminalView_ScrollToCell	(TerminalViewRef				inView,
+							 TerminalView_Cell const&	inCell)
+{
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		if (viewPtr->screen.topVisibleEdgeInRows != inCell.second)
+		{
+			offsetTopVisibleEdge(viewPtr, inCell.second - viewPtr->screen.topVisibleEdgeInRows);
+			updateDisplay(viewPtr);
+			eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
+		}
+	}
+	return result;
+}// ScrollToCell
+
+
+/*!
 Scrolls the contents of the terminal view as if the user
 clicked the “end” key on an extended keyboard - conveniently
 scrolling rows upward to show the very bottommost row in the
@@ -3146,6 +3136,57 @@ TerminalView_ScrollToEnd	(TerminalViewRef	inView)
 	}
 	return result;
 }// ScrollToEnd
+
+
+/*!
+Scrolls the contents of the terminal screen to a particular
+location, as if the user dragged a scroll bar indicator.
+
+The given integer ranges do not necessarily correspond to any
+real value (such as row counts, or pixels); they could be
+scaled.  Always use TerminalView_GetScrollVerticalInfo() to
+set up the maximum range and value of a user interface element,
+at which point it is safe to pass the current value of that
+element to this routine.
+
+Currently, the horizontal value is ignored.
+
+See also TerminalView_ScrollToCell(), and other convenience
+functions for scrolling.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if a range is invalid
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_ScrollToIndicatorPosition	(TerminalViewRef		inView,
+										 SInt32				inStartOfRangeV,
+										 SInt32				UNUSED_ARGUMENT(inStartOfRangeH))
+{
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		SInt32 const	kScrollbackRows = Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref);
+		
+		
+		// WARNING: this must use the same logic as TerminalView_GetScrollVerticalInfo()
+		result = TerminalView_ScrollToCell(inView,
+											TerminalView_Cell(0/* currently not doing horizontal scrolling */,
+																(inStartOfRangeV - kScrollbackRows)));
+	}
+	return result;
+}// ScrollToIndicatorPosition
 
 
 /*!
@@ -4044,6 +4085,9 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 	
 	if ((nullptr != viewPtr) && (false == viewPtr->text.searchResults.empty()))
 	{
+		// try to scroll to the right part of the terminal view
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToCell(inView, viewPtr->text.toCurrentSearchResult->first);
+		
 		// the selection region is currently defined in the window’s local (content view) coordinates
 		HIShapeRef	selectionShape = getVirtualRangeAsNewHIShape(viewPtr, viewPtr->text.toCurrentSearchResult->first,
 																	viewPtr->text.toCurrentSearchResult->second,

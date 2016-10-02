@@ -6712,8 +6712,8 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			
 			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
-																		GetControl32BitValue(ptr->controls.scrollBarH));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->controls.scrollBarV),
+																							GetControl32BitValue(ptr->controls.scrollBarH));
 				break;
 			
 			default:
@@ -6742,7 +6742,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			
 			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->controls.scrollBarV));
 				break;
 			
 			default:

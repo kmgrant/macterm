@@ -551,6 +551,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20161002': [
+        'Fixed highlighting for Find commands to correctly auto-scroll to matches in the scrollback buffer.  Also, "Find Next" first visits all matches in the main screen top-down, before visiting matches in the scrollback bottom-up (newest first); and, "Find Previous" can be used to wrap around to matches starting from the top of the scrollback buffer.',
         'Fixed the Preferences and Session Info windows on macOS Sierra so that tab-related commands are not enabled.',
     ],
     '20160927': [
