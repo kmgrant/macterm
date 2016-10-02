@@ -41,6 +41,7 @@
 #endif
 
 // library includes
+#include <CocoaExtensions.objc++.h>
 #ifdef __OBJC__
 @class ListenerModel_StandardListener;
 #else
@@ -91,6 +92,29 @@ the following methods as well, not just the Panel interface.
 
 
 /*!
+Implements the window class of PrefsWindow_Controller.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefsWindow_Object : NSWindow //{
+{
+}
+
+// initializers
+	+ (void)
+	initialize;
+	- (instancetype)
+	initWithContentRect:(NSRect)_
+	styleMask:(NSUInteger)_
+	backing:(NSBackingStoreType)_
+	defer:(BOOL)_ NS_DESIGNATED_INITIALIZER;
+
+@end //}
+
+
+/*!
 Implements the Cocoa window that wraps the Cocoa version of
 the Preferences window that is under development.  See
 "PrefsWindowCocoa.xib".
@@ -127,7 +151,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // class methods
-	+ (id)
+	+ (instancetype)
 	sharedPrefsWindowController;
 
 // accessors

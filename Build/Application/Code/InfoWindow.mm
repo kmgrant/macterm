@@ -49,6 +49,7 @@
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <CommonEventHandlers.h>
 #import <Console.h>
@@ -637,7 +638,10 @@ showHideInfoWindow	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 #pragma mark -
-@implementation InfoWindow_SessionRow
+@implementation InfoWindow_SessionRow //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -672,6 +676,9 @@ dealloc
 	[dataByKey release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -782,14 +789,17 @@ forKey:(NSString*)	aKey
 }// setObject:forKey:
 
 
-@end // InfoWindow_SessionRow
+@end //} InfoWindow_SessionRow
 
 
 #pragma mark -
-@implementation InfoWindow_Controller
+@implementation InfoWindow_Controller //{
 
 
 static InfoWindow_Controller*	gInfoWindow_Controller = nil;
+
+
+#pragma mark Class Methods
 
 
 /*!
@@ -797,7 +807,7 @@ Returns the singleton.
 
 (4.0)
 */
-+ (id)
++ (instancetype)
 sharedInfoWindowController
 {
 	if (nil == gInfoWindow_Controller)
@@ -806,6 +816,9 @@ sharedInfoWindowController
 	}
 	return gInfoWindow_Controller;
 }// sharedInfoWindowController
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1172,11 +1185,14 @@ windowFrameAutosaveName
 }// windowFrameAutosaveName
 
 
-@end // InfoWindow_Controller
+@end //} InfoWindow_Controller
 
 
 #pragma mark -
-@implementation InfoWindow_Controller (InfoWindow_ControllerInternal)
+@implementation InfoWindow_Controller (InfoWindow_ControllerInternal) //{
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -1285,6 +1301,68 @@ removeSession:(SessionRef)		aSession
 }// removeSession:
 
 
-@end // InfoWindow_Controller (InfoWindow_ControllerInternal)
+@end //} InfoWindow_Controller (InfoWindow_ControllerInternal)
+
+
+#pragma mark -
+@implementation InfoWindow_Object //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Class initializer.
+
+(2016.10)
+*/
++ (void)
+initialize
+{
+	// guard against subclass scenario by doing this at most once
+	if (InfoWindow_Object.class == self)
+	{
+		BOOL	selectorFound = NO;
+		
+		
+		selectorFound = CocoaExtensions_PerformSelectorOnTargetWithValue
+						(@selector(setAllowsAutomaticWindowTabbing:), self.class, NO);
+		NSLog(@"custom, selector found, %d", (int)selectorFound);
+	}
+}// initialize
+
+
+/*!
+Designated initializer.
+
+(2016.10)
+*/
+- (instancetype)
+initWithContentRect:(NSRect)		contentRect
+styleMask:(NSUInteger)			windowStyle
+backing:(NSBackingStoreType)		bufferingType
+defer:(BOOL)					deferCreation
+{
+	self = [super initWithContentRect:contentRect styleMask:windowStyle backing:bufferingType defer:deferCreation];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContentRect:styleMask:backing:defer:
+
+
+/*!
+Destructor.
+
+(2016.10)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end //} InfoWindow_Object
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

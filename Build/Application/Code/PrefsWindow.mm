@@ -527,7 +527,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 #pragma mark -
-@implementation PrefsWindow_Collection
+@implementation PrefsWindow_Collection //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -739,11 +742,11 @@ isEqual:(id)	anObject
 }// isEqual:
 
 
-@end // PrefsWindow_Collection
+@end //} PrefsWindow_Collection
 
 
 #pragma mark -
-@implementation PrefsWindow_Controller
+@implementation PrefsWindow_Controller //{
 
 
 static PrefsWindow_Controller*	gPrefsWindow_Controller = nil;
@@ -752,12 +755,15 @@ static PrefsWindow_Controller*	gPrefsWindow_Controller = nil;
 @synthesize searchText = _searchText;
 
 
+#pragma mark Class Methods
+
+
 /*!
 Returns the singleton.
 
 (4.1)
 */
-+ (id)
++ (instancetype)
 sharedPrefsWindowController
 {
 	if (nil == gPrefsWindow_Controller)
@@ -766,6 +772,9 @@ sharedPrefsWindowController
 	}
 	return gPrefsWindow_Controller;
 }// sharedPrefsWindowController
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1969,11 +1978,11 @@ didEndSheet:(NSNotification*)	aNotification
 }// didEndSheet:
 
 
-@end // PrefsWindow_Controller
+@end //} PrefsWindow_Controller
 
 
 #pragma mark -
-@implementation PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+@implementation PrefsWindow_Controller (PrefsWindow_ControllerInternal) //{
 
 
 #pragma mark Class Methods
@@ -2742,6 +2751,68 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 }// setSourceListHidden:newWindowFrame:
 
 
-@end // PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+@end //} PrefsWindow_Controller (PrefsWindow_ControllerInternal)
+
+
+#pragma mark -
+@implementation PrefsWindow_Object //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Class initializer.
+
+(2016.10)
+*/
++ (void)
+initialize
+{
+	// guard against subclass scenario by doing this at most once
+	if (PrefsWindow_Object.class == self)
+	{
+		BOOL	selectorFound = NO;
+		
+		
+		selectorFound = CocoaExtensions_PerformSelectorOnTargetWithValue
+						(@selector(setAllowsAutomaticWindowTabbing:), self.class, NO);
+		NSLog(@"custom, selector found, %d", (int)selectorFound);
+	}
+}// initialize
+
+
+/*!
+Designated initializer.
+
+(2016.10)
+*/
+- (instancetype)
+initWithContentRect:(NSRect)		contentRect
+styleMask:(NSUInteger)			windowStyle
+backing:(NSBackingStoreType)		bufferingType
+defer:(BOOL)					deferCreation
+{
+	self = [super initWithContentRect:contentRect styleMask:windowStyle backing:bufferingType defer:deferCreation];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContentRect:styleMask:backing:defer:
+
+
+/*!
+Destructor.
+
+(2016.10)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end //} PrefsWindow_Object
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

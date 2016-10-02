@@ -59,6 +59,28 @@
 @class InfoWindow_SessionRow;
 
 /*!
+Implements the window class of InfoWindow_Controller.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface InfoWindow_Object : NSWindow //{
+{
+}
+
+// initializers
+	+ (void)
+	initialize;
+	- (instancetype)
+	initWithContentRect:(NSRect)_
+	styleMask:(NSUInteger)_
+	backing:(NSBackingStoreType)_
+	defer:(BOOL)_ NS_DESIGNATED_INITIALIZER;
+
+@end //}
+
+/*!
 Implements the Session Info window.  See "InfoWindowCocoa.xib".
 
 Note that this is only in the header for the sake of
@@ -73,7 +95,7 @@ changes to an interface declared in a ".mm" file.
 }
 
 // class methods
-	+ (id)
+	+ (instancetype)
 	sharedInfoWindowController;
 
 @end //}
