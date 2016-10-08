@@ -68,6 +68,7 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "Keypads.h"
+#import "NetEvents.h"
 #import "Panel.h"
 #import "Preferences.h"
 #import "SessionFactory.h"
@@ -2193,7 +2194,7 @@ Responds to a request to set the window stacking origin.
 performSetWindowStackingOrigin:(id)	sender
 {
 #pragma unused(sender)
-	Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin, typeQDPoint);
+	Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin, typeNetEvents_CGPoint);
 	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
 }// performSetWindowStackingOrigin:
 
