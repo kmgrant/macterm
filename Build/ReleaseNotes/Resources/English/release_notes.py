@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161009',
     '20161008',
     '20161002',
     '20160927',
@@ -551,6 +552,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161009': [
+        'Fixed possible error when using the Open command to launch sessions.',
+    ],
     '20161008': [
         'Fixed Preferences window General pane Special tab, which crashed when using the stacking-origin "Set…" button.',
     ],

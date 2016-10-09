@@ -288,7 +288,7 @@ Session::handle_file	(std::string	inPathname)
 				// read a configuration set
 				if (false == SessionDescription_ReadFromFile(fileRef))
 				{
-					QUILLS_THROW_MSG("failed to parse file '" << inPathname << "'" << error);
+					QUILLS_THROW_MSG("failed to parse file '" << inPathname << "'");
 				}
 			}
 			else if (extensionName == "itermcolors")

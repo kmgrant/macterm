@@ -56,7 +56,6 @@
 #include <AlertMessages.h>
 #include <CFRetainRelease.h>
 #include <CocoaBasic.h>
-#include <FileSelectionDialogs.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceLocker.template.h>
 #include <MemoryBlocks.h>
@@ -143,37 +142,6 @@ namespace {
 
 Boolean		overwriteFile		(SInt16, My_SessionFileConstPtr);
 Boolean		parseFile			(SInt16, My_SessionFilePtr);
-
-} // anonymous namespace
-
-#pragma mark Functors
-namespace {
-
-/*!
-This is a functor that determines if a pair of
-C (null-terminated) strings is identical.
-
-Model of STL Binary Predicate.
-
-(1.0)
-*/
-#pragma mark isStringPairEqual
-class isStringPairEqual:
-public std::binary_function< char const*/* argument 1 */, char const*/* argument 2 */, bool/* return */ >
-{
-public:
-	bool
-	operator()	(char const*	inString1,
-				 char const*	inString2)
-	const
-	{
-		return (CPP_STD::strcmp(inString1, inString2) == 0);
-	}
-
-protected:
-
-private:
-};
 
 } // anonymous namespace
 
@@ -728,7 +696,11 @@ SessionDescription_ReadFromFile		(FSRef const&	inFile)
 	
 	
 	error = FSOpenFork(&inFile, 0/* name length */, nullptr/* name */, fsRdPerm, &fileRefNum);
-	if (noErr == error)
+	if (noErr != error)
+	{
+		Console_Warning(Console_WriteValue, "failed to open file, error", error);
+	}
+	else
 	{
 		SessionDescription_Ref			sessionFile = nullptr;
 		SessionDescription_ContentType	sessionFileType = kSessionDescription_ContentTypeUnknown;
@@ -738,6 +710,7 @@ SessionDescription_ReadFromFile		(FSRef const&	inFile)
 		if (sessionFileType == kSessionDescription_ContentTypeUnknown)
 		{
 			// error
+			Console_Warning(Console_WriteLine, "failed to read file; unknown content");
 		}
 		else
 		{
@@ -748,6 +721,10 @@ SessionDescription_ReadFromFile		(FSRef const&	inFile)
 			
 			UNUSED_RETURN(SessionRef)SessionFactory_NewSessionFromDescription(terminalWindow, sessionFile, workspaceContext,
 																				0/* window index */);
+			
+			// session may still fail to open but at least the
+			// file has been parsed successfully…
+			result = true;
 		}
 		SessionDescription_Release(&sessionFile);
 		FSCloseFork(fileRefNum), fileRefNum = -1;
@@ -1507,10 +1484,8 @@ parseFile	(SInt16				inFileReferenceNumber,
 		typedef std::vector< Ptr >	CStringList;
 		typedef unordered_map_namespace::unordered_map
 				<
-					char const*,								// key type - name string
-					CStringList::size_type,						// value type - index into value array
-					unordered_map_namespace::hash< char const* >,	// hash code generator
-					isStringPairEqual							// key comparator
+					std::string,					// key type - name string
+					CStringList::size_type		// value type - index into value array
 				> KeyNameToKeyValueArrayIndexHashMap;
 		char									keyName[32];
 		char									keyValue[255];
