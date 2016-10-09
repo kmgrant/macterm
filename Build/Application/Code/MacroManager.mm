@@ -53,7 +53,6 @@
 #import <CocoaBasic.h>
 #import <Console.h>
 #import <ContextSensitiveMenu.h>
-#import <FileSelectionDialogs.h>
 #import <MemoryBlocks.h>
 #import <SoundSystem.h>
 #import <StringUtilities.h>

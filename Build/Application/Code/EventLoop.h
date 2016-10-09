@@ -86,6 +86,8 @@ enum
 @interface EventLoop_AppObject : NSApplication //{
 
 // NSApplication
+	- (BOOL)
+	presentError:(NSError*)_;
 	- (void)
 	presentError:(NSError*)_
 	modalForWindow:(NSWindow*)_
@@ -132,21 +134,6 @@ EventLoop_Result
 EventLoop_Result
 	EventLoop_StopMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
 												 ListenerModel_ListenerRef			inListener);
-
-//@}
-
-//!\name Responding to Events
-//@{
-
-// DEPRECATED
-Boolean
-	EventLoop_HandleColorPickerUpdate			(EventRecord*						inoutEventPtr);
-
-// DEPRECATED
-void
-	EventLoop_HandleNavigationUpdate			(NavEventCallbackMessage			inMessage,
-												 NavCBRecPtr						inParameters,
-												 NavCallBackUserData				inUserData);
 
 //@}
 

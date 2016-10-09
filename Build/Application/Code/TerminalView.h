@@ -158,7 +158,9 @@ enum TerminalView_Event
 typedef UInt16 TerminalView_TextFlags;
 enum
 {
-	kTerminalView_TextFlagInline = (1 << 0)		//!< strip end-of-line markers?
+	kTerminalView_TextFlagInline					= (1 << 0),		//!< strip end-of-line markers?
+	kTerminalView_TextFlagLineSeparatorLF 		= (1 << 1),		//!< use LF as line ending (default is CR)
+	kTerminalView_TextFlagLastLineHasSeparator 	= (1 << 2)		//!< also add end-of-line to end of text? (default is no)
 };
 
 #pragma mark Types
@@ -387,11 +389,6 @@ CFStringRef
 	TerminalView_ReturnCursorWordCopyAsUnicode	(TerminalViewRef				inView);
 
 // INEFFICIENT, USE WITH CARE; LOOK FOR OTHER APIS THAT CAN READ THE SELECTION WITHOUT COPYING IT
-Handle
-	TerminalView_ReturnSelectedTextAsNewHandle	(TerminalViewRef				inView,
-												 UInt16							inNumberOfSpacesToReplaceWithOneTabOrZero,
-												 TerminalView_TextFlags			inFlags);
-
 CFStringRef
 	TerminalView_ReturnSelectedTextCopyAsUnicode	(TerminalViewRef				inView,
 													 UInt16							inNumberOfSpacesToReplaceWithOneTabOrZero,

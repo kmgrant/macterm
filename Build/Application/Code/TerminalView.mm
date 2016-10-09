@@ -63,7 +63,6 @@
 #import <CommonEventHandlers.h>
 #import <ContextSensitiveMenu.h>
 #import <Console.h>
-#import <FileSelectionDialogs.h>
 #import <HIViewWrap.h>
 #import <ListenerModel.h>
 #import <Localization.h>
@@ -499,7 +498,6 @@ Boolean				getScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor*);
 void				getScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
 void				getScreenOrigin						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				getScreenOriginFloat				(My_TerminalViewPtr, Float32&, Float32&);
-Handle				getSelectedTextAsNewHandle			(My_TerminalViewPtr, UInt16, TerminalView_TextFlags);
 HIShapeRef			getSelectedTextAsNewHIShape			(My_TerminalViewPtr, Float32 = 0.0);
 RgnHandle			getSelectedTextAsNewRegion			(My_TerminalViewPtr);
 RgnHandle			getSelectedTextAsNewRegionOnScreen	(My_TerminalViewPtr);
@@ -520,7 +518,6 @@ Boolean				isMonospacedFont					(FMFontFamily);
 Boolean				isSmallIBeam						(My_TerminalViewPtr);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void				navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
 void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt32);
 void				populateContextualMenu				(My_TerminalViewPtr, NSMenu*);
@@ -1264,39 +1261,49 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 {
 	if (TerminalView_TextSelectionExists(inView))
 	{
-		NavDialogCreationOptions	dialogOptions;
-		NavDialogRef				navigationServicesDialog = nullptr;
 		My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-		OSStatus					error = noErr;
 		
 		
-		error = NavGetDefaultDialogCreationOptions(&dialogOptions);
-		if (noErr != error)
-		{
-			bzero(&dialogOptions, sizeof(dialogOptions));
-		}
-		// this call sets most of the options up front (parent window, etc.)
-		dialogOptions.optionFlags |= kNavDontAddTranslateItems;
-		Localization_GetCurrentApplicationNameAsCFString(&dialogOptions.clientName);
-		dialogOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
-		dialogOptions.parentWindow = HIViewGetWindow(viewPtr->contentHIView);
+		NSSavePanel*		savePanel = [NSSavePanel savePanel];
+		CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultCaptureFile),
+												CFRetainRelease::kAlreadyRetained);
+		CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptCaptureToFile),
+											CFRetainRelease::kAlreadyRetained);
 		
-		// now set things specific to this instance
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
-		dialogOptions.modality = kWindowModalityWindowModal;
 		
-		error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, 'ttxt'/* creator (TextEdit) */,
-										NewNavEventUPP(navigationFileCaptureDialogEvent), inView/* client data */,
-										&navigationServicesDialog);
-		Alert_ReportOSStatus(error);
-		if (noErr == error)
-		{
-			// display the dialog; it is a sheet, so this will return immediately
-			// and the dialog will close whenever the user is actually done with it
-			error = NavDialogRun(navigationServicesDialog);
-			Alert_ReportOSStatus(error);
-		}
+		[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
+		[savePanel setDirectory:nil];
+		[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+		[savePanel beginSheetModalForWindow:TerminalView_ReturnNSWindow(inView)
+					completionHandler:^(NSInteger aReturnCode)
+					{
+						if (NSFileHandlingPanelOKButton == aReturnCode)
+						{
+							CFRetainRelease		textSelection(TerminalView_ReturnSelectedTextCopyAsUnicode
+																(inView, 0/* spaces equal to one tab, or zero for no substitution */,
+																	kTerminalView_TextFlagLineSeparatorLF |
+																	kTerminalView_TextFlagLastLineHasSeparator),
+																CFRetainRelease::kAlreadyRetained);
+							
+							
+							if (textSelection.exists())
+							{
+								NSString*	asNSString = BRIDGE_CAST
+															(textSelection.returnCFStringRef(), NSString*);
+								NSError*	error = nil;
+								
+								
+								if (NO == [asNSString writeToURL:savePanel.URL atomically:YES
+														encoding:NSUTF8StringEncoding error:&error])
+								{
+									Sound_StandardAlert();
+									Console_Warning(Console_WriteValueCFString,
+													"failed to save selected text to file, error",
+													BRIDGE_CAST([error localizedDescription], CFStringRef));
+								}
+							}
+						}
+					}];
 	}
 }// DisplaySaveSelectedTextUI
 
@@ -2353,55 +2360,6 @@ TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
 	result = [viewPtr->contentNSView window];
 	return result;
 }// ReturnNSWindow
-
-
-/*!
-DEPRECATED.
-Use TerminalView_ReturnSelectedTextCopyAsUnicode()
-instead.
-
-Returns the contents of the current selection for
-the specified screen view, allocating a new handle.
-If there is no selection, an empty handle is returned.
-If any problems occur, nullptr is returned.
-
-Use the parameters to this routine to affect how the
-text is returned; for example, you can have the text
-returned inline, or delimited by carriage returns.
-The "inMaxSpacesToReplaceWithTabOrZero" value can be 0
-to perform no substitution, or a positive integer to
-indicate the longest range of consecutive spaces that
-should be replaced with a single tab before returning
-the text (all smaller ranges are also replaced by one
-tab).
-
-You must dispose of the returned handle yourself,
-using Memory_DisposeHandle().
-
-IMPORTANT:	Use this kind of routine very judiciously.
-			Copying data is very inefficient and is
-			almost never necessary, particularly for
-			scrollback rows which are immutable.  Use
-			other APIs to access text ranges in ways
-			that do not replicate bytes needlessly.
-
-(3.0)
-*/
-Handle
-TerminalView_ReturnSelectedTextAsNewHandle	(TerminalViewRef			inView,
-											 UInt16						inMaxSpacesToReplaceWithTabOrZero,
-											 TerminalView_TextFlags		inFlags)
-{
-    My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	Handle						result = nullptr;
-	
-	
-	if (nullptr != viewPtr)
-	{
-		result = getSelectedTextAsNewHandle(viewPtr, inMaxSpacesToReplaceWithTabOrZero, inFlags);
-	}
-	return result;
-}// ReturnSelectedTextAsNewHandle
 
 
 /*!
@@ -8214,73 +8172,6 @@ getScreenOriginFloat	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Internal version of TerminalView_ReturnSelectedTextAsNewHandle().
-
-DEPRECATED.  Use returnSelectedTextCopyAsUnicode() instead.
-
-(3.0)
-*/
-Handle
-getSelectedTextAsNewHandle	(My_TerminalViewPtr			inTerminalViewPtr,
-							 UInt16						inMaxSpacesToReplaceWithTabOrZero,
-							 TerminalView_TextFlags		inFlags)
-{
-    Handle		result = nullptr;
-	
-	
-	if (inTerminalViewPtr->text.selection.exists)
-	{
-		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
-		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
-		size_t const				kByteCount = getSelectedTextSize(inTerminalViewPtr);
-		
-		
-		result = Memory_NewHandle(kByteCount);
-		if (nullptr != result)
-		{
-			Terminal_Result				copyResult = kTerminal_ResultOK;
-			Terminal_LineStackStorage	lineIteratorData;
-			Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, kSelectionStart.second,
-																		&lineIteratorData);
-			Terminal_TextCopyFlags		flags = 0L;
-			char*						characters = nullptr;
-			SInt32						actualLength = 0L;
-			
-			
-			HLock(result);
-			characters = *result;
-			
-			if (inTerminalViewPtr->text.selection.isRectangular) flags |= kTerminal_TextCopyFlagsRectangular;
-			
-			copyResult = Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator,
-											kSelectionPastEnd.second - kSelectionStart.second,
-											kSelectionStart.first, kSelectionPastEnd.first - 1/* make inclusive range */,
-											characters, kByteCount, &actualLength,
-											(inFlags & kTerminalView_TextFlagInline) ? "" : "\015",
-											inMaxSpacesToReplaceWithTabOrZero, flags);
-			releaseRowIterator(inTerminalViewPtr, &lineIterator);
-			HUnlock(result);
-			
-			// signal fatal errors with a nullptr handle; a lack of
-			// space is not considered fatal, instead the truncated
-			// string is returned to the caller
-			if ((copyResult == kTerminal_ResultOK) ||
-				(copyResult == kTerminal_ResultNotEnoughMemory))
-			{
-				UNUSED_RETURN(OSStatus)Memory_SetHandleSize(result, actualLength * sizeof(char));
-			}
-			else
-			{
-				Memory_DisposeHandle(&result);
-			}
-		}
-	}
-	
-	return result;
-}// getSelectedTextAsNewHandle
-
-
-/*!
 Like getVirtualRangeAsNewHIShape(), except specifically for the
 current text selection.  Automatically takes into account
 rectangular shape, if applicable.
@@ -9384,112 +9275,6 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	}
 	return result;
 }// mainEventLoopEvent
-
-
-/*!
-Invoked by the Mac OS whenever something interesting happens
-in a Navigation Services file-capture-save-dialog attached to
-a terminal view’s window.
-
-(3.1)
-*/
-void
-navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
-								 	 NavCBRecPtr				inParameters,
-								 	 void*						inTerminalViewRef)
-{
-	TerminalViewRef		view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	
-	
-	switch (inMessage)
-	{
-	case kNavCBUserAction:
-		if (kNavUserActionSaveAs == inParameters->userAction)
-		{
-			NavReplyRecord		reply;
-			OSStatus			error = noErr;
-			
-			
-			// save file
-			error = NavDialogGetReply(inParameters->context/* dialog */, &reply);
-			if ((noErr == error) && (reply.validRecord))
-			{
-				FSRef	saveFile;
-				FSRef	temporaryFile;
-				OSType	captureFileCreator = 'ttxt';
-				
-				
-				// create a temporary file for “safe” saving, in addition to the user’s requested file
-				error = FileSelectionDialogs_CreateOrFindUserSaveFile
-						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
-				if (error == noErr)
-				{
-					Handle		textHandle = nullptr;
-					
-					
-					textHandle = TerminalView_ReturnSelectedTextAsNewHandle(view, 0/* spaces equal to one tab, or zero for no substitution */,
-																			0/* flags */);
-					if (nullptr != textHandle)
-					{
-						SInt16		fileRefNum = -1;
-						
-						
-						// open file for overwrite
-						error = FSOpenFork(&temporaryFile, 0/* name length */, nullptr/* name (implied from structure) */,
-											fsWrPerm, &fileRefNum);
-						if (noErr == error)
-						{
-							SInt32		total = GetHandleSize(textHandle);
-							ByteCount	byteCountToWrite = 0;
-							ByteCount	byteCountLeft = 0;
-							
-							
-							// overwrite existing files
-							error = FSSetForkSize(fileRefNum, fsFromStart, 0);
-							assert_noerr(error);
-							
-							// write text to the file; as long as bytes remain and no error
-							// has occurred, data remains to be written and should be written
-							byteCountToWrite = total;
-							while ((total > 0) && (noErr == error))
-							{
-								error = FSWriteFork(fileRefNum, fsFromMark, 0/* offset */,
-													byteCountToWrite, *textHandle, &byteCountLeft);
-								total -= byteCountLeft;
-								byteCountToWrite = total; // prepare for next loop
-							}
-							
-							UNUSED_RETURN(OSStatus)FSCloseFork(fileRefNum), fileRefNum = -1;
-							
-							// finally, “swap” the new file into the right place on disk
-							error = FSExchangeObjects(&temporaryFile, &saveFile);
-							if (noErr == error)
-							{
-								UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
-							}
-						}
-					}
-				}
-			}
-			Alert_ReportOSStatus(error);
-			error = FileSelectionDialogs_CompleteSave(&reply);
-			if (noErr != error)
-			{
-				Console_Warning(Console_WriteValue, "failed to complete save for file capture, error", error);
-			}
-		}
-		break;
-	
-	case kNavCBTerminate:
-		// clean up
-		NavDialogDispose(inParameters->context);
-		break;
-	
-	default:
-		// not handled
-		break;
-	}
-}// navigationFileCaptureDialogEvent
 
 
 /*!
@@ -12179,10 +11964,20 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 				// if requested, add a new-line
 				if (0 == (inFlags & kTerminalView_TextFlagInline))
 				{
-					// do not terminate last line
-					if (i < (kSelectionPastEnd.second - 1))
+					// do not terminate last line unless requested
+					if ((i < (kSelectionPastEnd.second - 1)) ||
+						(0 != (inFlags & kTerminalView_TextFlagLastLineHasSeparator)))
 					{
-						CFStringAppendCString(resultMutable, "\015", kCFStringEncodingASCII);
+						// TEMPORARY; should this also have the option of capturing
+						// text in other ways, such as the session’s default line-endings?
+						if (inFlags & kTerminalView_TextFlagLineSeparatorLF)
+						{
+							CFStringAppendCString(resultMutable, "\012", kCFStringEncodingASCII);
+						}
+						else
+						{
+							CFStringAppendCString(resultMutable, "\015", kCFStringEncodingASCII);
+						}
 					}
 				}
 				

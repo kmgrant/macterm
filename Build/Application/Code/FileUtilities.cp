@@ -170,7 +170,7 @@ descriptors and cannot be used with the File Manager.
 SInt16
 FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 {
-	SInt16		result = 0;
+	SInt16		result = -1;
 	FSRef		temporaryFilesFolder;
 	OSStatus	error = noErr;
 	

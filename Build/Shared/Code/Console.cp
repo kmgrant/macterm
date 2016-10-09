@@ -568,10 +568,10 @@ Console_WriteValueFourChars		(char const*	inLabel,
 	CFRetainRelease		typeCFString(CFStringCreateWithFormat
 										(kCFAllocatorDefault, nullptr/* options */,
 											CFSTR("%c%c%c%c"),
-											STATIC_CAST(0x000000FFUL & (inValue >> 0), unsigned char),
-											STATIC_CAST(0x000000FFUL & (inValue >> 8), unsigned char),
+											STATIC_CAST(0x000000FFUL & (inValue >> 24), unsigned char),
 											STATIC_CAST(0x000000FFUL & (inValue >> 16), unsigned char),
-											STATIC_CAST(0x000000FFUL & (inValue >> 24), unsigned char)),
+											STATIC_CAST(0x000000FFUL & (inValue >> 8), unsigned char),
+											STATIC_CAST(0x000000FFUL & (inValue >> 0), unsigned char)),
 											CFRetainRelease::kAlreadyRetained);
 	
 	

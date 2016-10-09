@@ -254,42 +254,6 @@ EventLoop_Done ()
 
 
 /*!
-This method handles Color Picker 2.0+ event
-requests in as simple a way as possible: by
-responding to update events.  Time is also
-given to other running threads.
-
-(3.0)
-*/
-Boolean
-EventLoop_HandleColorPickerUpdate	(EventRecord*		UNUSED_ARGUMENT(inoutEventPtr))
-{
-	Boolean		result = false; // event handled?
-	
-	
-	// no longer important with Carbon Events
-	return result;
-}// HandleColorPickerUpdate
-
-
-/*!
-This method handles Navigation Services event
-requests in as simple a way as possible: by
-responding to update events.  Time is also
-given to other running threads.
-
-(3.0)
-*/
-void
-EventLoop_HandleNavigationUpdate	(NavEventCallbackMessage	UNUSED_ARGUMENT(inMessage), 
-									 NavCBRecPtr				UNUSED_ARGUMENT(inParameters), 
-									 NavCallBackUserData		UNUSED_ARGUMENT(inUserData))
-{
-	// no longer important with Carbon Events
-}// HandleNavigationUpdate
-
-
-/*!
 Performs whatever action is appropriate in response
 to a user request to zoom the specified window.  The
 window zooms based on whatever state it is currently

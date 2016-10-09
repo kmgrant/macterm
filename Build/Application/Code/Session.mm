@@ -65,7 +65,6 @@
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <Console.h>
-#import <FileSelectionDialogs.h>
 #import <GrowlSupport.h>
 #import <ListenerModel.h>
 #import <Localization.h>
@@ -82,6 +81,7 @@
 #import "Clipboard.h"
 #import "Commands.h"
 #import "DialogUtilities.h"
+#import "FileUtilities.h"
 #import "GenericDialog.h"
 #import "Local.h"
 #import "MacroManager.h"
@@ -357,7 +357,6 @@ void						changeNotifyForSession				(My_SessionPtr, Session_Change, void*);
 void						changeStateAttributes				(My_SessionPtr, Session_StateAttributes,
 																 Session_StateAttributes);
 void						closeTerminalWindow					(My_SessionPtr);
-void						configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
 UInt16						copyAutoCapturePreferences			(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
@@ -368,13 +367,12 @@ My_HMHelpContentRecWrap&	createHelpTagForVectorGraphics		();
 IconRef						createSessionStateActiveIcon		();
 IconRef						createSessionStateDeadIcon			();
 void						detectLongLife						(EventLoopTimerRef, void*);
+void						handleSaveFromPanel				(My_SessionPtr, NSSavePanel*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 Boolean						isReadOnly							(My_SessionPtr);
 void						localEchoKey						(My_SessionPtr, UInt8);
 void						localEchoString						(My_SessionPtr, CFStringRef);
-void						navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
-void						navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
 void						pasteLineFromTimer					(EventLoopTimerRef, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
@@ -857,35 +855,37 @@ in that case.
 void
 Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 {
-	NavDialogCreationOptions	dialogOptions;
-	NavDialogRef				navigationServicesDialog = nullptr;
-	OSStatus					error = noErr;
+	NSSavePanel*		savePanel = [NSSavePanel savePanel];
+	CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultCaptureFile),
+											CFRetainRelease::kAlreadyRetained);
+	CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptCaptureToFile),
+										CFRetainRelease::kAlreadyRetained);
 	
 	
-	error = NavGetDefaultDialogCreationOptions(&dialogOptions);
-	if (noErr == error)
-	{
-		// this call sets most of the options up front (parent window, etc.)
-		configureSaveDialog(inRef, dialogOptions);
-		
-		// now set things specific to this instance
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
-		dialogOptions.modality = kWindowModalityWindowModal;
-	}
-	error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, 'ttxt'/* creator (TextEdit) */,
-									NewNavEventUPP(navigationFileCaptureDialogEvent), inRef/* client data */,
-									&navigationServicesDialog);
-	if (noErr == error)
-	{
-		// display the dialog; it is a sheet, so this will return immediately
-		// and the dialog will close whenever the user is actually done with it
-		error = NavDialogRun(navigationServicesDialog);
-		if (noErr != error)
-		{
-			Console_Warning(Console_WriteValue, "failed to display save panel for file capture, error", error);
-		}
-	}
+	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
+	[savePanel setDirectory:nil];
+	[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+	[savePanel beginSheetModalForWindow:Session_ReturnActiveNSWindow(inRef)
+				completionHandler:^(NSInteger aReturnCode)
+				{
+					if (NSFileHandlingPanelOKButton == aReturnCode)
+					{
+						My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+						
+						
+						// save file
+						if (false == captureToFile(ptr, BRIDGE_CAST(savePanel.directoryURL, CFURLRef),
+													BRIDGE_CAST(savePanel.nameFieldStringValue, CFStringRef)))
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteLine, "failed to initiate capture to file");
+						}
+						else
+						{
+							// UNIMPLEMENTED: set window proxy icon to match opened file?
+						}
+					}
+				}];
 }// DisplayFileCaptureSaveDialog
 
 
@@ -902,37 +902,27 @@ in that case.
 void
 Session_DisplaySaveDialog	(SessionRef		inRef)
 {
-	NavDialogCreationOptions	dialogOptions;
-	NavDialogRef				navigationServicesDialog = nullptr;
-	OSStatus					error = noErr;
+	NSSavePanel*		savePanel = [NSSavePanel savePanel];
+	CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultSession),
+											CFRetainRelease::kAlreadyRetained);
+	CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptSaveSession),
+										CFRetainRelease::kAlreadyRetained);
 	
 	
-	error = NavGetDefaultDialogCreationOptions(&dialogOptions);
-	if (noErr == error)
-	{
-		// this call sets most of the options up front (parent window, etc.)
-		configureSaveDialog(inRef, dialogOptions);
-		
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultSession, dialogOptions.saveFileName);
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptSaveSession, dialogOptions.message);
-		dialogOptions.modality = kWindowModalityWindowModal;
-	}
-	error = NavCreatePutFileDialog(&dialogOptions, AppResources_ReturnFileTypeForSessionDescriptions(),
-									AppResources_ReturnCreatorCode(),
-									NewNavEventUPP(navigationSaveDialogEvent),
-									inRef/* client data */, &navigationServicesDialog);
-	if (noErr != error)
-	{
-		Console_Warning(Console_WriteValue, "failed to create save panel for session, error", error);
-	}
-	
-	// display the dialog; it is a sheet, so this will return immediately
-	// and the dialog will close whenever the user is actually done with it
-	error = NavDialogRun(navigationServicesDialog);
-	if (noErr != error)
-	{
-		Console_Warning(Console_WriteValue, "failed to display save panel for session, error", error);
-	}
+	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
+	[savePanel setDirectory:nil];
+	[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+	[savePanel beginSheetModalForWindow:Session_ReturnActiveNSWindow(inRef)
+				completionHandler:^(NSInteger aReturnCode)
+				{
+					if (NSFileHandlingPanelOKButton == aReturnCode)
+					{
+						My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+						
+						
+						handleSaveFromPanel(ptr, savePanel);
+					}
+				}];
 }// DisplaySaveDialog
 
 
@@ -5863,7 +5853,7 @@ autoCaptureSessionToFile	(My_SessionPtr		inPtr)
 
 /*!
 Initiates a capture of the underlying terminal’s text stream
-to the given file.  Returns "noErr" unless there is a problem.
+to the given file.  Returns true unless there is a problem.
 
 (3.0)
 */
@@ -5887,7 +5877,6 @@ captureToFile	(My_SessionPtr		inPtr,
 		if (false == createOK)
 		{
 			Console_Warning(Console_WriteValueCFString, "unable to create specified capture file:", inNameOfFileToOverwrite);
-			result = ioErr; // arbitrary
 		}
 		else
 		{
@@ -5895,7 +5884,6 @@ captureToFile	(My_SessionPtr		inPtr,
 			if (false == captureOK)
 			{
 				Console_Warning(Console_WriteLine, "unable to start file capture from terminal");
-				result = ioErr; // arbitrary
 			}
 			else
 			{
@@ -5973,29 +5961,6 @@ closeTerminalWindow		(My_SessionPtr	inPtr)
 		TerminalWindow_Dispose(&inPtr->terminalWindow);
 	}
 }// closeTerminalWindow
-
-
-/*!
-Initializes a Navigation Services structure with values
-appropriate for save dialogs on a session window.
-
-This includes:
-- adding a flag to omit translation items
-- setting the application name
-- setting a generic preferences key
-- setting the parent window
-
-(3.1)
-*/
-void
-configureSaveDialog		(SessionRef					inRef,
-						 NavDialogCreationOptions&	inoutOptions)
-{
-	inoutOptions.optionFlags |= kNavDontAddTranslateItems;
-	Localization_GetCurrentApplicationNameAsCFString(&inoutOptions.clientName);
-	inoutOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
-	inoutOptions.parentWindow = Session_ReturnActiveWindow(inRef);
-}// configureSaveDialog
 
 
 /*!
@@ -6433,6 +6398,148 @@ detectLongLife	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	
 	if (Session_StateIsActiveUnstable(ref)) Session_SetState(ref, kSession_StateActiveStable);
 }// detectLongLife
+
+
+/*!
+Responds to an NSSavePanel that closed with the
+user selecting the primary action button.  See
+Session_DisplaySaveDialog().
+
+(2016.10)
+*/
+void
+handleSaveFromPanel		(My_SessionPtr		inPtr,
+						 NSSavePanel*		inSavePanel)
+{
+	NSError*	errorObject = nil;
+	OSStatus	error = noErr;
+	FSRef		saveDir;
+	FSRef		saveFile;
+	
+	
+	if (nil != errorObject)
+	{
+		[NSApp presentError:errorObject];
+	}
+	else
+	{
+		error = FSPathMakeRef(REINTERPRET_CAST(inSavePanel.directoryURL.path.UTF8String, UInt8 const*),
+								&saveDir, nullptr/* is directory */);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to find save directory, error", error);
+			Alert_ReportOSStatus(error);
+		}
+	}
+	
+	// TEMPORARY; until dependent code can be updated to stop
+	// using old File Manager calls, convert URL into FSRef
+	if (noErr == error)
+	{
+		NSRange		nameRange = NSMakeRange(0, inSavePanel.nameFieldStringValue.length);
+		UniChar*	buffer = new UniChar[nameRange.length];
+		
+		
+		[inSavePanel.nameFieldStringValue getCharacters:buffer range:nameRange];
+		
+		error = FSCreateFileUnicode(&saveDir, nameRange.length, buffer, kFSCatInfoNone, nullptr/* catalog info */,
+									&saveFile, nullptr/* returned spec. */);
+		if (dupFNErr == error)
+		{
+			// if file already exists, obtain the reference in another way
+			// (save panel will have asked user for permission to overwrite)
+			error = FSPathMakeRef(REINTERPRET_CAST(inSavePanel.URL.path.UTF8String, UInt8 const*), &saveFile, nullptr/* is directory */);
+		}
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to find or create save file specified in panel, error", error);
+			Alert_ReportOSStatus(error);
+		}
+		
+		delete [] buffer, buffer = nullptr;
+	}
+	
+	if (noErr == error)
+	{
+		// write to file, using in-memory model first
+		Session_Result			sessionError = kSession_ResultOK;
+		SessionDescription_Ref  saveFileMemoryModel = nullptr;
+		
+		
+		sessionError = Session_FillInSessionDescription(inPtr->selfRef, &saveFileMemoryModel);
+		if (sessionError != kSession_ResultOK)
+		{
+			Console_Warning(Console_WriteValue, "failed to generate session description, error", sessionError.code());
+			Alert_ReportOSStatus(resNotFound/* arbitrary */);
+		}
+		else
+		{
+			// now save to disk
+			SInt16		fileRefNum = -1;
+			FSRef		temporaryFile;
+			
+			
+			// open temporary file for overwrite (later, this will
+			// be swapped with the target file)
+			fileRefNum = FileUtilities_OpenTemporaryFile(temporaryFile);
+			if (fileRefNum <= 0)
+			{
+				Console_Warning(Console_WriteLine, "failed to open temporary file");
+				Alert_ReportOSStatus(writErr/* arbitrary */);
+			}
+			else
+			{
+				SessionDescription_Result	saveError = kSessionDescription_ResultOK;
+				
+				
+				UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
+				saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
+				UNUSED_RETURN(OSStatus)FSCloseFork(fileRefNum), fileRefNum = -1;
+				if (saveError != kSessionDescription_ResultOK)
+				{
+					Alert_ReportOSStatus(writErr/* arbitrary */);
+				}
+				else
+				{
+					error = FSExchangeObjects(&temporaryFile, &saveFile);
+					if (noErr != error)
+					{
+						// if a “safe” save fails, the volume may not support object exchange;
+						// so, fall back to overwriting the original file in that case
+						error = FSOpenFork(&saveFile, 0/* fork name length */, nullptr/* fork name */,
+											fsWrPerm, &fileRefNum);
+						if (noErr != error)
+						{
+							Console_Warning(Console_WriteValue, "failed to open target (data is still in temporary file), error", error);
+							Alert_ReportOSStatus(error);
+						}
+						else
+						{
+							// swap with temporary file failed; attempt save again,
+							// this time directly to the target location
+							UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
+							saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
+							if (kSessionDescription_ResultOK != saveError)
+							{
+								Console_Warning(Console_WriteValue, "failed to save session, error", saveError);
+							}
+							UNUSED_RETURN(OSStatus)FSCloseFork(fileRefNum), fileRefNum = -1;
+						}
+					}
+				}
+				
+				// delete the temporary; it will either contain a partial save file
+				// that did not successfully write, or it will contain whatever the
+				// user’s original file had (and the new file will be successfully
+				// in the user’s selected location, instead of temporary space)
+				UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
+			}
+			
+			// clean up
+			SessionDescription_Release(&saveFileMemoryModel);
+		}
+	}
+}// handleSaveFromPanel
 
 
 /*!
@@ -7233,212 +7340,6 @@ localEchoString		(My_SessionPtr		inPtr,
 		}
 	}
 }// localEchoString
-
-
-/*!
-Invoked by the Mac OS whenever something interesting
-happens in a Navigation Services file-capture-save-dialog
-attached to a session window.
-
-(3.0)
-*/
-void
-navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
-								 	 NavCBRecPtr				inParameters,
-								 	 void*						inSessionRef)
-{
-	SessionRef	session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	
-	
-	switch (inMessage)
-	{
-	case kNavCBUserAction:
-		if (kNavUserActionSaveAs == inParameters->userAction)
-		{
-			NavReplyRecord		reply;
-			OSStatus			error = noErr;
-			
-			
-			// save file
-			error = NavDialogGetReply(inParameters->context/* dialog */, &reply);
-			if ((noErr == error) && (reply.validRecord))
-			{
-				FSRef	saveFile;
-				FSRef	temporaryFile;
-				OSType	captureFileCreator = 'ttxt';
-				
-				
-				// TEMPORARY; should upgrade this to a more modern file API
-				// (will be much easier when moving to NSSavePanel in Cocoa)
-				error = FileSelectionDialogs_CreateOrFindUserSaveFile
-						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
-				if (noErr == error)
-				{
-					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-					CFRetainRelease			saveFileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &saveFile),
-														CFRetainRelease::kAlreadyRetained);
-					CFRetainRelease			saveDirectoryURL(CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, saveFileURL.returnCFURLRef()),
-																CFRetainRelease::kAlreadyRetained);
-					
-					
-					// delete the temporary file; this is ignored for file captures,
-					// since capture files themselves are considered highly volatile
-					UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
-					
-					error = captureToFile(ptr, saveDirectoryURL.returnCFURLRef(), reply.saveFileName);
-					
-					if (noErr != error)
-					{
-						Alert_ReportOSStatus(error);
-					}
-					// UNIMPLEMENTED: set window proxy icon to match opened file?
-				}
-			}
-			else
-			{
-				Console_Warning(Console_WriteLine, "save skipped, no valid reply record given");
-			}
-			Alert_ReportOSStatus(error);
-			error = FileSelectionDialogs_CompleteSave(&reply);
-			if (noErr != error)
-			{
-				Console_Warning(Console_WriteValue, "failed to complete save for file capture, error", error);
-			}
-		}
-		break;
-	
-	case kNavCBTerminate:
-		// clean up
-		NavDialogDispose(inParameters->context);
-		break;
-	
-	default:
-		// not handled
-		break;
-	}
-}// navigationFileCaptureDialogEvent
-
-
-/*!
-Invoked by the Mac OS whenever something interesting
-happens in a Navigation Services save-dialog attached
-to a session window.
-
-(3.0)
-*/
-void
-navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
-						 	 NavCBRecPtr				inParameters,
-						 	 void*						inSessionRef)
-{
-	OSStatus	error = noErr;
-	SessionRef	session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	
-	
-	switch (inMessage)
-	{
-	case kNavCBUserAction:
-		if (inParameters->userAction == kNavUserActionSaveAs)
-		{
-			NavReplyRecord		reply;
-			
-			
-			// save file
-			error = NavDialogGetReply(inParameters->context/* dialog */, &reply);
-			if ((error == noErr) && (reply.validRecord))
-			{
-				FSRef	saveFile;
-				FSRef	temporaryFile;
-				
-				
-				error = FileSelectionDialogs_CreateOrFindUserSaveFile
-						(reply, AppResources_ReturnCreatorCode(),
-							AppResources_ReturnFileTypeForSessionDescriptions(),
-							saveFile, temporaryFile);
-				if (error == noErr)
-				{
-					// now write to the file, using an in-memory model first
-					Session_Result			sessionError = kSession_ResultOK;
-					SessionDescription_Ref  saveFileMemoryModel = nullptr;
-					
-					
-					sessionError = Session_FillInSessionDescription(session, &saveFileMemoryModel);
-					if (sessionError == kSession_ResultOK)
-					{
-						// now save to disk
-						SInt16		fileRefNum = -1;
-						
-						
-						// open file for overwrite
-						error = FSOpenFork(&temporaryFile, 0/* fork name length */, nullptr/* fork name */, fsWrPerm, &fileRefNum);
-						if (error == noErr)
-						{
-							SessionDescription_Result	saveError = kSessionDescription_ResultOK;
-							
-							
-							UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
-							saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
-							FSCloseFork(fileRefNum), fileRefNum = -1;
-							if (saveError == kSessionDescription_ResultOK)
-							{
-								error = FSExchangeObjects(&temporaryFile, &saveFile);
-								if (error != noErr)
-								{
-									// if a “safe” save fails, the volume may not support object exchange;
-									// so, fall back to overwriting the original file in that case
-									error = FSOpenFork(&saveFile, 0/* fork name length */, nullptr/* fork name */, fsWrPerm, &fileRefNum);
-									if (error == noErr)
-									{
-										UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
-										saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
-										if (kSessionDescription_ResultOK != saveError)
-										{
-											Console_Warning(Console_WriteValue, "failed to save session, error", saveError);
-										}
-										FSCloseFork(fileRefNum), fileRefNum = -1;
-									}
-								}
-							}
-							else
-							{
-								error = writErr;
-							}
-							
-							// delete the temporary; it will either contain a partial save file
-							// that did not successfully write, or it will contain whatever the
-							// user’s original file had (and the new file will be successfully
-							// in the user’s selected location, instead of temporary space)
-							UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
-						}
-						
-						// clean up
-						SessionDescription_Release(&saveFileMemoryModel);
-					}
-					else
-					{
-						error = paramErr;
-					}
-				}
-			}
-			Alert_ReportOSStatus(error);
-			error = FileSelectionDialogs_CompleteSave(&reply);
-			if (noErr != error)
-			{
-				Console_Warning(Console_WriteValue, "failed to complete save for session", error);
-			}
-		}
-		break;
-	
-	case kNavCBTerminate:
-		// clean up
-		NavDialogDispose(inParameters->context);
-		break;
-	
-	default:
-		// not handled
-		break;
-	}
-}// navigationSaveDialogEvent
 
 
 /*!

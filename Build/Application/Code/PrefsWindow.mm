@@ -56,7 +56,6 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <FileSelectionDialogs.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
 #import <SoundSystem.h>
@@ -189,12 +188,6 @@ The private class interface.
 	model:(ListenerModel_Ref)_
 	preferenceChange:(ListenerModel_Event)_
 	context:(void*)_;
-
-// methods of the form required by NSSavePanel
-	- (void)
-	didEndExportPanel:(NSSavePanel*)_
-	returnCode:(int)_
-	contextInfo:(void*)_;
 
 // methods of the form required by NSOpenPanel
 	- (void)
@@ -1081,19 +1074,38 @@ Saves the contents of a preferences collection to a file.
 performExportPreferenceCollectionToFile:(id)	sender
 {
 #pragma unused(sender)
-	NSSavePanel*	savePanel = [NSSavePanel savePanel];
-	CFStringRef		saveFileCFString = nullptr;
-	CFStringRef		promptCFString = nullptr;
+	NSSavePanel*		savePanel = [NSSavePanel savePanel];
+	CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultExportPreferences),
+											CFRetainRelease::kAlreadyRetained);
+	CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptSavePrefs),
+										CFRetainRelease::kAlreadyRetained);
 	
 	
-	(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultExportPreferences, saveFileCFString);
-	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptSavePrefs, promptCFString);
-	[savePanel setMessage:(NSString*)promptCFString];
-	
-	[savePanel beginSheetForDirectory:nil file:(NSString*)saveFileCFString
-										modalForWindow:[self window] modalDelegate:self
-										didEndSelector:@selector(didEndExportPanel:returnCode:contextInfo:)
-										contextInfo:nullptr];
+	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
+	[savePanel setDirectory:nil];
+	[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+	[savePanel beginSheetModalForWindow:self.window
+				completionHandler:^(NSInteger aReturnCode)
+				{
+					if (NSFileHandlingPanelOKButton == aReturnCode)
+					{
+						// export the contents of the preferences context (the Preferences
+						// module automatically ignores settings that are not part of the
+						// right class, e.g. so that Default does not create a huge file)
+						CFURLRef				asURL = BRIDGE_CAST(savePanel.URL, CFURLRef);
+						Preferences_Result	writeResult = Preferences_ContextSaveAsXMLFileURL
+															([self currentPreferencesContext], asURL);
+						
+						
+						if (kPreferences_ResultOK != writeResult)
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteValueCFString, "unable to save file, URL",
+											BRIDGE_CAST([savePanel.URL absoluteString], CFStringRef));
+							Console_Warning(Console_WriteValue, "error", writeResult);
+						}
+					}
+				}];
 }// performExportPreferenceCollectionToFile:
 
 
@@ -2272,39 +2284,6 @@ currentPreferencesContext
 	assert(Preferences_ContextIsValid(result));
 	return result;
 }// currentPreferencesContext
-
-
-/*!
-A selector of the form required by NSSavePanel; it responds to
-an NSOKButton return code by saving the current preferences
-context to a file.
-
-(4.1)
-*/
-- (void)
-didEndExportPanel:(NSSavePanel*)	aPanel
-returnCode:(int)					aReturnCode
-contextInfo:(void*)					aContextPtr
-{
-#pragma unused(aContextPtr)
-	if (NSOKButton == aReturnCode)
-	{
-		// export the contents of the preferences context (the Preferences
-		// module automatically ignores settings that are not part of the
-		// right class, e.g. so that Default does not create a huge file)
-		CFURLRef			asURL = BRIDGE_CAST([aPanel URL], CFURLRef);
-		Preferences_Result	writeResult = Preferences_ContextSaveAsXMLFileURL([self currentPreferencesContext], asURL);
-		
-		
-		if (kPreferences_ResultOK != writeResult)
-		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteValueCFString, "unable to save file, URL",
-							(CFStringRef)[((NSURL*)asURL) absoluteString]);
-			Console_Warning(Console_WriteValue, "error", writeResult);
-		}
-	}
-}// didEndExportPanel:returnCode:contextInfo:
 
 
 /*!
