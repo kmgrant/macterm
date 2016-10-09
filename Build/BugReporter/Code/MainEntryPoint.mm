@@ -82,17 +82,17 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
 #pragma unused(aNotification)
 
-	NSAlert*	alertBox = [[[NSAlert alloc] init] autorelease];
-	NSString*	button1 = NSLocalizedString(@"Compose E-Mail", @"button label");
-	NSString*	button2 = NSLocalizedString(@"Quit Without Reporting", @"button label");
-	NSString*	messageText = NSLocalizedString
-								(@"MacTerm has quit because of a software defect.  Please notify the authors so this can be fixed.",
-									@"main message");
-	NSString*	helpText = NSLocalizedString
-							(@"A starting point for your mail message will be automatically created for you.",
-								@"main help text");
-	int			clickedButton = NSAlertFirstButtonReturn;
-	BOOL		sendMail = NO;
+	NSAlert*			alertBox = [[[NSAlert alloc] init] autorelease];
+	NSString*			button1 = NSLocalizedString(@"Compose E-Mail", @"button label");
+	NSString*			button2 = NSLocalizedString(@"Quit Without Reporting", @"button label");
+	NSString*			messageText = NSLocalizedString
+										(@"MacTerm has quit because of a software defect.  Please notify the authors so this can be fixed.",
+											@"main message");
+	NSString*			helpText = NSLocalizedString
+									(@"A starting point for your mail message will be automatically created for you.",
+										@"main help text");
+	NSModalResponse		clickedButton = NSAlertFirstButtonReturn;
+	BOOL				sendMail = NO;
 	
 	
 	// bring this process to the front

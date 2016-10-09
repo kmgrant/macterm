@@ -675,7 +675,7 @@ SessionDescription_Load ()
 										CFSTR("CONF")/* redundant, needed for older systems */ };
 	CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,
 									sizeof(kTypeList) / sizeof(CFStringRef), &kCFTypeArrayCallBacks),
-									true/* is retained */);
+									CFRetainRelease::kAlreadyRetained);
 	CFStringRef			promptCFString = nullptr;
 	CFStringRef			titleCFString = nullptr;
 	
@@ -2126,7 +2126,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 														(kCFAllocatorDefault,
 															valueList.at(keyNameToKeyValueArrayIndexIterator->second),
 															kCFStringEncodingMacRoman),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					
 					
 					sessionFileError = SessionDescription_SetStringData
@@ -2195,7 +2195,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 														(kCFAllocatorDefault,
 															valueList.at(keyNameToKeyValueArrayIndexIterator->second),
 															kCFStringEncodingMacRoman),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					
 					
 					sessionFileError = SessionDescription_SetStringData
@@ -2216,7 +2216,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 														(kCFAllocatorDefault,
 															valueList.at(keyNameToKeyValueArrayIndexIterator->second),
 															kCFStringEncodingMacRoman),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					
 					
 					sessionFileError = SessionDescription_SetStringData

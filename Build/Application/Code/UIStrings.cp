@@ -1804,7 +1804,7 @@ UIStrings_CreateFileOrDirectory		(FSRef const&						inParentRef,
 									 FSCatalogInfoBitmap				inWhichInfo,
 									 FSCatalogInfo const*				inInfoOrNull)
 {
-	CFRetainRelease		nameCFString(UIStrings_ReturnCopy(inWhichString), true/* is retained */);
+	CFRetainRelease		nameCFString(UIStrings_ReturnCopy(inWhichString), CFRetainRelease::kAlreadyRetained);
 	OSStatus			result = noErr;
 	
 	
@@ -1873,7 +1873,7 @@ UIStrings_MakeFSRef		(FSRef const&						inParentRef,
 						 UIStrings_FileOrFolderCFString		inWhichString,
 						 FSRef&								outFSRef)
 {
-	CFRetainRelease		nameCFString(UIStrings_ReturnCopy(inWhichString), true/* is retained */);
+	CFRetainRelease		nameCFString(UIStrings_ReturnCopy(inWhichString), CFRetainRelease::kAlreadyRetained);
 	OSStatus			result = noErr;
 	
 	

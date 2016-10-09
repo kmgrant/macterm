@@ -787,7 +787,7 @@ public std::unary_function< My_ContextInterfacePtr/* argument */, bool/* return 
 {
 public:
 	contextNameEqualTo	(CFStringRef	inName)
-	: _name(inName) {}
+	: _name(inName, CFRetainRelease::kNotYetRetained) {}
 	
 	bool
 	operator ()	(My_ContextInterfacePtr		inContextPtr)
@@ -1666,7 +1666,7 @@ Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 	if ((nullptr == inNameOrNullToAutoGenerateUniqueName) || (CFStringGetLength(inNameOrNullToAutoGenerateUniqueName) > 0))
 	{
 		CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 		CFStringRef			contextName = inNameOrNullToAutoGenerateUniqueName;
 		Boolean				releaseName = false;
 		Boolean				badInput = false;
@@ -2034,7 +2034,7 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 	else
 	{
 		My_TagSetAutoLocker		setPtr(gMyTagSetPtrLocks(), inRestrictedSetOrNull);
-		CFRetainRelease			sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
+		CFRetainRelease			sourceKeys(basePtr->returnKeyListCopy(), CFRetainRelease::kAlreadyRetained);
 		CFArrayRef				sourceKeysCFArray = (nullptr != setPtr)
 														? setPtr->contextKeys.returnCFArrayRef()
 														: sourceKeys.returnCFArrayRef();
@@ -2067,7 +2067,7 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 				if (addValue)
 				{
 					CFRetainRelease		keyValueCFType(basePtr->returnValueCopy(kKeyCFStringRef),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					
 					
 					destPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
@@ -2498,7 +2498,7 @@ Preferences_ContextMergeInXMLData	(Preferences_ContextRef		inContext,
 			if (nullptr != errorCFObject)
 			{
 				CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 				
 				
 				result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -2899,7 +2899,7 @@ Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
 	{
 		CFRetainRelease		targetDictionary(CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity or zero for no limit */,
 																		&kCFTypeDictionaryKeyCallBacks,
-																		&kCFTypeDictionaryValueCallBacks), true/* is retained */);
+																		&kCFTypeDictionaryValueCallBacks), CFRetainRelease::kAlreadyRetained);
 		OSStatus			error = noErr;
 		
 		
@@ -3248,7 +3248,7 @@ Preferences_CreateContextNameArray	(Quills::Prefs::Class	inClass,
 			if (inIncludeDefaultItem)
 			{
 				CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 				
 				
 				CFArraySetValueAtIndex(newArray, i, defaultName.returnCFStringRef());
@@ -3696,7 +3696,7 @@ Preferences_IsContextNameInUse		(Quills::Prefs::Class	inClass,
 		if (false == result)
 		{
 			CFRetainRelease		defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (kCFCompareEqualTo == CFStringCompare(defaultName.returnCFStringRef(), inProposedName, 0/* options */))
@@ -4169,14 +4169,14 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		CFStringRef			values[] = { CFSTR("__test_1__"), CFSTR("__test_2__") };
 		CFRetainRelease		testArray(CFArrayCreate(kCFAllocatorDefault, REINTERPRET_CAST(values, void const**),
 													sizeof(values) / sizeof(CFStringRef),
-													&kCFTypeArrayCallBacks), true/* is retained */);
+													&kCFTypeArrayCallBacks), CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease		copiedArray;
 		
 		
 		result &= Console_Assert("test array exists", testArray.exists());
 		result &= Console_Assert("test array is the right size", 2 == CFArrayGetCount(testArray.returnCFArrayRef()));
 		inTestObjectPtr->addArray(0/* do not notify */, CFSTR("__test_array_key__"), testArray.returnCFArrayRef());
-		copiedArray = inTestObjectPtr->returnArrayCopy(CFSTR("__test_array_key__"));
+		copiedArray.setWithNoRetain(inTestObjectPtr->returnArrayCopy(CFSTR("__test_array_key__")));
 		result &= Console_Assert("returned array exists", copiedArray.exists());
 		result &= Console_Assert("returned array is the right size", 2 == CFArrayGetCount(copiedArray.returnCFArrayRef()));
 	}
@@ -4186,7 +4186,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		char const* const	kData = "my test string";
 		size_t const		kDataSize = (1 + std::strlen(kData)) * sizeof(char);
 		CFRetainRelease		testData(CFDataCreate(kCFAllocatorDefault, REINTERPRET_CAST(kData, UInt8 const*),
-													kDataSize), true/* is retained */);
+													kDataSize), CFRetainRelease::kAlreadyRetained);
 		CFDataRef			testDataRef = REINTERPRET_CAST(testData.returnCFTypeRef(), CFDataRef);
 		CFRetainRelease		copiedValue;
 		
@@ -4194,7 +4194,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		result &= Console_Assert("test data exists", testData.exists());
 		result &= Console_Assert("test data is the right size", STATIC_CAST(kDataSize, CFIndex) == CFDataGetLength(testDataRef));
 		inTestObjectPtr->addData(0/* do not notify */, CFSTR("__test_data_key__"), REINTERPRET_CAST(testData.returnCFTypeRef(), CFDataRef));
-		copiedValue = inTestObjectPtr->returnValueCopy(CFSTR("__test_data_key__"));
+		copiedValue.setWithNoRetain(inTestObjectPtr->returnValueCopy(CFSTR("__test_data_key__")));
 		result &= Console_Assert("returned data exists", copiedValue.exists());
 		result &= Console_Assert("returned data is the right size",
 									STATIC_CAST(kDataSize, CFIndex) == CFDataGetLength(REINTERPRET_CAST
@@ -4299,17 +4299,17 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		
 		
 		inTestObjectPtr->addString(0/* do not notify */, CFSTR("__test_string_key_1__"), kString1);
-		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_1__"));
+		copiedString.setWithNoRetain(inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_1__")));
 		result &= Console_Assert("returned string 1 exists", copiedString.exists());
 		result &= Console_Assert("returned string 1 is correct",
 									kCFCompareEqualTo == CFStringCompare(copiedString.returnCFStringRef(), kString1, 0/* options */));
 		inTestObjectPtr->addString(0/* do not notify */, CFSTR("__test_string_key_2__"), kString2);
-		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__"));
+		copiedString.setWithNoRetain(inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__")));
 		result &= Console_Assert("returned string 2 exists", copiedString.exists());
 		result &= Console_Assert("returned string 2 is correct",
 									kCFCompareEqualTo == CFStringCompare(copiedString.returnCFStringRef(), kString2, 0/* options */));
 		inTestObjectPtr->deleteValue(CFSTR("__test_string_key_2__"));
-		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__"));
+		copiedString.setWithNoRetain(inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__")));
 		result &= Console_Assert("string 2 has been deleted", false == copiedString.exists());
 	}
 	
@@ -4357,7 +4357,7 @@ _dictionary(inDictionaryOrNull)
 {
 	if (nullptr == _dictionary.returnDictionary())
 	{
-		CFRetainRelease		newDictionary(createDictionary(), true/* is retained */);
+		CFRetainRelease		newDictionary(createDictionary(), CFRetainRelease::kAlreadyRetained);
 		
 		
 		_dictionary.setDictionary(newDictionary.returnCFMutableDictionaryRef());
@@ -4514,7 +4514,7 @@ My_ContextDefault::
 My_ContextDefault	(Quills::Prefs::Class	inClass)
 :
 My_ContextInterface(inClass),
-_contextName(CFSTR("Default")/* TEMPORARY - LOCALIZE  THIS */),
+_contextName(CFSTR("Default")/* TEMPORARY - LOCALIZE  THIS */, CFRetainRelease::kNotYetRetained),
 _dictionary()
 {
 	setImplementor(&_dictionary);
@@ -4658,8 +4658,9 @@ My_ContextFavorite	(Quills::Prefs::Class	inClass,
 					 CFStringRef			inDomainName)
 :
 My_ContextInterface(inClass),
-_contextName(inFavoriteName),
-_domainName((nullptr != inDomainName) ? inDomainName : createDomainName(inClass, inFavoriteName)),
+_contextName(inFavoriteName, CFRetainRelease::kNotYetRetained),
+_domainName((nullptr != inDomainName) ? inDomainName : createDomainName(inClass, inFavoriteName),
+			CFRetainRelease::kNotYetRetained),
 _dictionary(_domainName.returnCFStringRef())
 {
 	setImplementor(&_dictionary);
@@ -4786,7 +4787,7 @@ destroy ()
 			// then an entry with this name exists on disk; remove it from the list!
 			CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
 														(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-															favoritesListCFArray), true/* is retained */);
+															favoritesListCFArray), CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (false == mutableFavoritesList.exists()) result = kPreferences_ResultGenericFailure;
@@ -4828,7 +4829,7 @@ Preferences_Result
 My_ContextFavorite::
 rename	(CFStringRef	inNewName)
 {
-	_contextName.setCFTypeRef(inNewName);
+	_contextName.setWithRetain(inNewName);
 	return kPreferences_ResultOK;
 }// My_ContextFavorite::rename
 
@@ -4933,7 +4934,7 @@ save ()
 	{
 		CFRetainRelease		nameCFString(CFStringCreateExternalRepresentation
 											(kCFAllocatorDefault, this->returnName(), kMy_SavedNameEncoding,
-												'?'/* loss byte */), true/* is retained */);
+												'?'/* loss byte */), CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (nameCFString.exists())
@@ -4961,7 +4962,7 @@ save ()
 			// does not exist; add a new entry
 			CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
 														(kCFAllocatorDefault, 1 + CFArrayGetCount(favoritesListCFArray)/* capacity */,
-															favoritesListCFArray), true/* is retained */);
+															favoritesListCFArray), CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (false == mutableFavoritesList.exists()) throw std::bad_alloc();
@@ -5021,10 +5022,10 @@ shift	(My_ContextFavoritePtr		inRelativeTo,
 		CFIndex const		kOriginalIndexOfRef = findDomainIndexInArray(favoritesListCFArray, kRefDomainName);
 		assert(kOriginalIndexOfSelf >= 0);
 		assert(kOriginalIndexOfRef >= 0);
-		CFRetainRelease		favoritesList(favoritesListCFArray, true/* is retained */);
+		CFRetainRelease		favoritesList(favoritesListCFArray, CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
 													(kCFAllocatorDefault, 1 + CFArrayGetCount(favoritesListCFArray)/* capacity */,
-														favoritesListCFArray), true/* is retained */);
+														favoritesListCFArray), CFRetainRelease::kAlreadyRetained);
 		CFIndex				newIndexOfRef = -1;
 		
 		
@@ -5102,7 +5103,7 @@ My_PreferenceDefinition	(Preferences_Tag		inTag,
 						 Quills::Prefs::Class	inClass)
 :
 tag(inTag),
-keyName(inKeyName),
+keyName(inKeyName, CFRetainRelease::kNotYetRetained),
 keyValueType(inKeyValueType),
 nonDictionaryValueSize(inNonDictionaryValueSize),
 preferenceClass(inClass)
@@ -5206,7 +5207,7 @@ createIndexed	(Preferences_Tag		inTag,
 {
 	for (Preferences_Index i = 1; i <= inNumberOfIndexedKeys; ++i)
 	{
-		CFRetainRelease		generatedKeyName(createKeyAtIndex(inKeyNameTemplate, i), true/* is retained */);
+		CFRetainRelease		generatedKeyName(createKeyAtIndex(inKeyNameTemplate, i), CFRetainRelease::kAlreadyRetained);
 		
 		
 		create(Preferences_ReturnTagVariantForIndex(inTag, i), generatedKeyName.returnCFStringRef(),
@@ -5359,7 +5360,7 @@ My_TagSet::
 My_TagSet	(My_ContextInterfacePtr		inContextPtr)
 :
 selfRef(REINTERPRET_CAST(this, Preferences_TagSetRef)),
-contextKeys(inContextPtr->returnKeyListCopy(), true/* is retained */)
+contextKeys(inContextPtr->returnKeyListCopy(), CFRetainRelease::kAlreadyRetained)
 {
 #if 0
 	// DEBUG
@@ -5399,7 +5400,7 @@ My_TagSet::
 My_TagSet	(std::vector< Preferences_Tag > const&		inTags)
 :
 selfRef(REINTERPRET_CAST(this, Preferences_TagSetRef)),
-contextKeys(returnNewKeyListForTags(inTags), true/* is retained */)
+contextKeys(returnNewKeyListForTags(inTags), CFRetainRelease::kAlreadyRetained)
 {
 }// My_TagSet 1-argument (vector) constructor
 
@@ -5939,14 +5940,14 @@ copyDefaultPrefDictionary ()
 	CFDictionaryRef		result = nullptr;
 	CFRetainRelease		urlObject(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("DefaultPreferences"),
 															CFSTR("plist")/* type string */, nullptr/* subdirectory path */),
-									true/* is retained */);
+									CFRetainRelease::kAlreadyRetained);
 	
 	
 	if (urlObject.exists())
 	{
 		CFURLRef			fileURL = urlObject.returnCFURLRef();
 		CFRetainRelease		streamObject(CFReadStreamCreateWithFile(kCFAllocatorDefault, fileURL),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (streamObject.exists() && CFReadStreamOpen(streamObject.returnCFReadStreamRef()))
@@ -5969,7 +5970,7 @@ copyDefaultPrefDictionary ()
 			if (nullptr != errorCFObject)
 			{
 				CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 				
 				
 				Console_Warning(Console_WriteValueCFString,
@@ -5998,9 +5999,9 @@ copyDomainUserSpecifiedName		(CFStringRef	inDomainName)
 {
 	CFStringRef			result = nullptr;
 	CFRetainRelease		dataObject(CFPreferencesCopyAppValue(CFSTR("name"), inDomainName),
-									true/* is retained */);
+									CFRetainRelease::kAlreadyRetained);
 	CFRetainRelease		stringObject(CFPreferencesCopyAppValue(CFSTR("name-string"), inDomainName),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 	
 	
 	// in order to support many languages, the "name" field is stored as
@@ -6118,7 +6119,7 @@ createAllPreferencesContextsFromDisk ()
 					// be stored in the appropriate preferences domain on disk (the
 					// name is implicitly changed by copying in the source context)
 					Preferences_ContextWrap		savedFormat(Preferences_NewContextFromFavorites(Quills::Prefs::FORMAT, nullptr/* generate name */),
-															true/* is retained */);
+															Preferences_ContextWrap::kAlreadyRetained);
 					
 					
 					if (savedFormat.exists())
@@ -6168,7 +6169,7 @@ createAllPreferencesContextsFromDisk ()
 				// for verifying that it was created successfully)
 				CFStringRef const		kDomainName = CFUtilities_StringCast(CFArrayGetValueAtIndex
 																				(namesInClass, i));
-				CFRetainRelease			favoriteNameCFString(copyDomainUserSpecifiedName(kDomainName), true/* is retained */);
+				CFRetainRelease			favoriteNameCFString(copyDomainUserSpecifiedName(kDomainName), CFRetainRelease::kAlreadyRetained);
 				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(prefsClass, favoriteNameCFString.returnCFStringRef(), kDomainName);
 				
 				
@@ -7601,7 +7602,8 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagCaptureFileDirectoryObject:
 					{
 						assert(typeNetEvents_CFDataRef == keyValueType);
-						CFRetainRelease		dataObject(inContextPtr->returnValueCopy(keyName));
+						CFRetainRelease		dataObject(inContextPtr->returnValueCopy(keyName),
+														CFRetainRelease::kAlreadyRetained);
 						FSRef* const		data = REINTERPRET_CAST(outDataPtr, FSRef*);
 						
 						
@@ -8636,7 +8638,7 @@ if some component could not be set up properly
 OSStatus
 mergeInDefaultPreferences ()
 {
-	CFRetainRelease		defaultPrefDictionary(copyDefaultPrefDictionary(), true/* is retained */);
+	CFRetainRelease		defaultPrefDictionary(copyDefaultPrefDictionary(), CFRetainRelease::kAlreadyRetained);
 	OSStatus			result = noErr;
 	
 	
@@ -9749,7 +9751,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					if (kIsVirtualKey)
 					{
-						CFRetainRelease		virtualKeyName(virtualKeyCreateName(kKeyCode), true/* is retained */);
+						CFRetainRelease		virtualKeyName(virtualKeyCreateName(kKeyCode), CFRetainRelease::kAlreadyRetained);
 						
 						
 						if (virtualKeyName.exists())
@@ -9769,7 +9771,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 						UniChar				keyCodeAsUnicode = kKeyCode;
 						CFRetainRelease		characterCFString(CFStringCreateWithCharacters
 																(kCFAllocatorDefault, &keyCodeAsUnicode, 1),
-																true/* is retained */);
+																CFRetainRelease::kAlreadyRetained);
 						
 						
 						if (characterCFString.exists())
@@ -9861,7 +9863,7 @@ setApplicationPreference	(CFStringRef		inKey,
 #if 1
 	{
 		// for debugging
-		CFRetainRelease		descriptionObject(CFCopyDescription(inValue), true/* is retained */);
+		CFRetainRelease		descriptionObject(CFCopyDescription(inValue), CFRetainRelease::kAlreadyRetained);
 		char const*			keyString = nullptr;
 		char const*			descriptionString = nullptr;
 		Boolean				disposeKeyString = false;
@@ -10023,7 +10025,8 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagCaptureFileDirectoryObject:
 				{
 					FSRef const* const	data = REINTERPRET_CAST(inDataPtr, FSRef const*);
-					CFRetainRelease		object(Preferences_NewAliasDataFromObject(*data));
+					CFRetainRelease		object(Preferences_NewAliasDataFromObject(*data),
+												CFRetainRelease::kAlreadyRetained);
 					
 					
 					if (object.exists())
@@ -10425,7 +10428,8 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				if (inDataSize >= sizeof(Emulation_FullType))
 				{
 					Emulation_FullType const	data = *(REINTERPRET_CAST(inDataPtr, Emulation_FullType const*));
-					CFRetainRelease				nameCFString = Terminal_EmulatorReturnDefaultName(data);
+					CFRetainRelease				nameCFString(Terminal_EmulatorReturnDefaultName(data),
+																CFRetainRelease::kNotYetRetained);
 					
 					
 					assert(typeCFStringRef == keyValueType);
@@ -11086,7 +11090,7 @@ writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 										 Boolean					inMerge,
 										 Boolean					inClassKeysOnly)
 {
-	CFRetainRelease		keyListCFArrayObject(inContextPtr->returnKeyListCopy(), true/* is retained */);
+	CFRetainRelease		keyListCFArrayObject(inContextPtr->returnKeyListCopy(), CFRetainRelease::kAlreadyRetained);
 	CFArrayRef			keyListCFArray = keyListCFArrayObject.returnCFArrayRef();
 	OSStatus			result = noErr;
 	
@@ -11136,7 +11140,7 @@ writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 		
 		if (useKey)
 		{
-			CFRetainRelease		prefsValueCFProperty(inContextPtr->returnValueCopy(kKey), true/* is retained */);
+			CFRetainRelease		prefsValueCFProperty(inContextPtr->returnValueCopy(kKey), CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (prefsValueCFProperty.exists())

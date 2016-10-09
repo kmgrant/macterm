@@ -2227,7 +2227,7 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 	
 	if (nullptr != inName)
 	{
-		ptr->baseTitleString.setCFTypeRef(inName);
+		ptr->baseTitleString.setWithRetain(inName);
 	}
 	
 	if (nil != ptr->window)
@@ -2239,7 +2239,7 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 												(kCFAllocatorDefault, nullptr/* format options */,
 													CFSTR("~ %@ ~")/* LOCALIZE THIS? */,
 													ptr->baseTitleString.returnCFStringRef()),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (adornedCFString.exists())
@@ -2516,12 +2516,12 @@ windowInfo(WindowInfo_New()),
 isObscured(false),
 isDead(false),
 viewSizeIndependent(false),
-recentSheetContext(nullptr),
+recentSheetContext(),
 sheetType(kMy_SheetTypeNone),
 searchDialog(nullptr),
 recentSearchOptions(kFindDialog_OptionsDefault),
 recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
-					true/* is retained */),
+					CFRetainRelease::kAlreadyRetained),
 baseTitleString(),
 scrollProcUPP(nullptr), // reset below
 windowResizeHandler(),
@@ -2546,10 +2546,10 @@ growBoxClickUPP(nullptr),
 growBoxClickHandler(nullptr),
 toolbarEventUPP(nullptr),
 toolbarEventHandler(nullptr),
-sessionStateChangeEventListener(nullptr),
-terminalStateChangeEventListener(nullptr),
-terminalViewEventListener(nullptr),
-toolbarStateChangeEventListener(nullptr),
+sessionStateChangeEventListener(),
+terminalStateChangeEventListener(),
+terminalViewEventListener(),
+toolbarStateChangeEventListener(),
 screensToViews(),
 viewsToScreens(),
 allScreens(),
@@ -2787,16 +2787,15 @@ installedActions()
 	}
 	
 	// set up callbacks to receive various state change notifications
-	this->sessionStateChangeEventListener.setRef(ListenerModel_NewStandardListener(sessionStateChanged, this->selfRef/* context */),
-													true/* is retained */);
+	this->sessionStateChangeEventListener.setWithNoRetain(ListenerModel_NewStandardListener
+															(sessionStateChanged, this->selfRef/* context */));
 	SessionFactory_StartMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeState, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowInvalid, this->sessionStateChangeEventListener.returnRef());
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
-	this->terminalStateChangeEventListener.setRef(ListenerModel_NewStandardListener
-													(terminalStateChanged, this->selfRef/* context */),
-													true/* is retained */);
+	this->terminalStateChangeEventListener.setWithNoRetain(ListenerModel_NewStandardListener
+															(terminalStateChanged, this->selfRef/* context */));
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener.returnRef());
@@ -2804,9 +2803,8 @@ installedActions()
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener.returnRef());
-	this->terminalViewEventListener.setRef(ListenerModel_NewStandardListener
-											(terminalViewStateChanged, this->selfRef/* context */),
-											true/* is retained */);
+	this->terminalViewEventListener.setWithNoRetain(ListenerModel_NewStandardListener
+													(terminalViewStateChanged, this->selfRef/* context */));
 	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
 	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
 	
@@ -3750,7 +3748,7 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 		}
 	}
 	
-	inPtr->tab = tabWindow;
+	inPtr->tab.setWithRetain(tabWindow);
 	result = (nullptr != tabWindow);
 	
 	return result;
@@ -4230,7 +4228,7 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 		dataPtr->undoFontSize = inUndoFontSize;
 		dataPtr->undoFont = inUndoFont;
 		TerminalWindow_GetFontAndSize(inTerminalWindow, &fontName, &dataPtr->fontSize);
-		dataPtr->fontName = fontName;
+		dataPtr->fontName.setWithRetain(fontName);
 	}
 	{
 		CFStringRef		undoNameCFString = nullptr;
@@ -4511,7 +4509,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							{
 								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 																			(Quills::Prefs::FORMAT, collectionName),
-																			true/* is retained */);
+																			Preferences_ContextWrap::kAlreadyRetained);
 								
 								
 								if (namedSettings.exists())
@@ -4544,17 +4542,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							GenericDialog_Wrap				dialog;
 							PrefPanelFormats_ViewManager*	embeddedPanel = [[PrefPanelFormats_ViewManager alloc] init];
 							CFRetainRelease					addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
-																				true/* is retained */);
+																				CFRetainRelease::kAlreadyRetained);
 							CFRetainRelease					cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																			true/* is retained */);
+																			CFRetainRelease::kAlreadyRetained);
 							CFRetainRelease					okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																		true/* is retained */);
+																		CFRetainRelease::kAlreadyRetained);
 							
 							
 							// display the sheet
 							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
 																						embeddedPanel, temporaryContext),
-														true/* is retained */);
+														GenericDialog_Wrap::kAlreadyRetained);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -4698,15 +4696,15 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							GenericDialog_Wrap						dialog;
 							PrefPanelTerminals_ScreenViewManager*	embeddedPanel = [[PrefPanelTerminals_ScreenViewManager alloc] init];
 							CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																					true/* is retained */);
+																					CFRetainRelease::kAlreadyRetained);
 							CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																				true/* is retained */);
+																				CFRetainRelease::kAlreadyRetained);
 							
 							
 							// display the sheet
 							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
 																						embeddedPanel, temporaryContext),
-														true/* is retained */);
+														GenericDialog_Wrap::kAlreadyRetained);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -4760,7 +4758,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							{
 								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 																			(Quills::Prefs::TERMINAL, collectionName),
-																			true/* is retained */);
+																			Preferences_ContextWrap::kAlreadyRetained);
 								
 								
 								if (namedSettings.exists())
@@ -4839,7 +4837,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							{
 								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 																			(Quills::Prefs::TRANSLATION, collectionName),
-																			true/* is retained */);
+																			Preferences_ContextWrap::kAlreadyRetained);
 								Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
 								
 								
@@ -4888,17 +4886,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							GenericDialog_Wrap					dialog;
 							PrefPanelTranslations_ViewManager*	embeddedPanel = [[PrefPanelTranslations_ViewManager alloc] init];
 							CFRetainRelease						addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
-																					true/* is retained */);
+																					CFRetainRelease::kAlreadyRetained);
 							CFRetainRelease						cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																				true/* is retained */);
+																				CFRetainRelease::kAlreadyRetained);
 							CFRetainRelease						okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																			true/* is retained */);
+																			CFRetainRelease::kAlreadyRetained);
 							
 							
 							// display the sheet
 							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
 																						embeddedPanel, temporaryContext),
-														true/* is retained */);
+														GenericDialog_Wrap::kAlreadyRetained);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -5570,7 +5568,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 1 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED1.setCFTypeRef(itemRef);
+											ptr->toolbarItemLED1.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED1, nameCFString).ok())
@@ -5593,7 +5591,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 2 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED2.setCFTypeRef(itemRef);
+											ptr->toolbarItemLED2.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED2, nameCFString).ok())
@@ -5616,7 +5614,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 3 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED3.setCFTypeRef(itemRef);
+											ptr->toolbarItemLED3.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED3, nameCFString).ok())
@@ -5639,7 +5637,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 4 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED4.setCFTypeRef(itemRef);
+											ptr->toolbarItemLED4.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED4, nameCFString).ok())
@@ -5678,7 +5676,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// remember this item so its icon can be kept in sync with scroll lock state
 									if (isPermanentItem)
 									{
-										ptr->toolbarItemScrollLock.setCFTypeRef(itemRef);
+										ptr->toolbarItemScrollLock.setWithRetain(itemRef);
 									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
@@ -5829,7 +5827,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// remember this item so its icon can be kept in sync with the session state
 									if (isPermanentItem)
 									{
-										ptr->toolbarItemKillRestart.setCFTypeRef(itemRef);
+										ptr->toolbarItemKillRestart.setWithRetain(itemRef);
 									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
@@ -5864,7 +5862,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// then this is the bell item; remember it so it can be updated later
 									if (isPermanentItem)
 									{
-										ptr->toolbarItemBell.setCFTypeRef(itemRef);
+										ptr->toolbarItemBell.setWithRetain(itemRef);
 									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
@@ -6246,7 +6244,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					CFStringRef		nameCFString = BRIDGE_CAST([ptr->window title], CFStringRef);
 					
 					
-					ptr->preResizeTitleString.setCFTypeRef(nameCFString);
+					ptr->preResizeTitleString.setWithRetain(nameCFString);
 				}
 			}
 			else if ((kEventKind == kEventWindowBoundsChanging) && (ptr->preResizeTitleString.exists()))
@@ -6596,7 +6594,7 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 				
 				// save the font and size
 				dataPtr->fontSize = oldFontSize;
-				dataPtr->fontName = oldFontName;
+				dataPtr->fontName.setWithRetain(oldFontName);
 			}
 			break;
 		}
@@ -7876,7 +7874,8 @@ sheetContextBegin	(My_TerminalWindowPtr	inPtr,
 					 Quills::Prefs::Class	inClass,
 					 My_SheetType			inSheetType)
 {
-	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass), true/* is retained */);
+	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass),
+											Preferences_ContextWrap::kAlreadyRetained);
 	Preferences_ContextRef		result = nullptr;
 	
 	
@@ -7946,7 +7945,7 @@ sheetContextBegin	(My_TerminalWindowPtr	inPtr,
 		if (copyOK)
 		{
 			inPtr->sheetType = inSheetType;
-			inPtr->recentSheetContext.setRef(newContext.returnRef()); // this also retains the new context
+			inPtr->recentSheetContext.setWithRetain(newContext.returnRef());
 		}
 		else
 		{
@@ -8030,11 +8029,11 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 				AlertMessages_BoxWrap			box(Alert_NewWindowModal(TerminalWindow_ReturnNSWindow(terminalWindow)),
-													true/* is retained */);
+													AlertMessages_BoxWrap::kAlreadyRetained);
 				CFRetainRelease					dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowExcessiveErrorsPrimaryText),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 				CFRetainRelease					helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowExcessiveErrorsHelpText),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 				
 				
 				Alert_SetParamsFor(box.returnRef(), kAlert_StyleOK);

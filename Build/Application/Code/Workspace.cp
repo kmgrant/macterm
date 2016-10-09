@@ -41,7 +41,6 @@
 #include <Carbon/Carbon.h>
 
 // library includes
-#include <CFRetainRelease.h>
 #include <Console.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
@@ -54,7 +53,7 @@
 #pragma mark Types
 namespace {
 
-typedef std::vector< CFRetainRelease >	My_WorkspaceWindowList;
+typedef std::vector< HIWindowRef >	My_WorkspaceWindowList;
 
 struct My_Workspace
 {
@@ -95,7 +94,7 @@ Model of STL Unary Function.
 */
 #pragma mark windowObscurer
 class windowObscurer:
-public std::unary_function< CFRetainRelease const&/* argument */, void/* return */ >
+public std::unary_function< HIWindowRef/* argument */, void/* return */ >
 {
 public:
 	windowObscurer	(Boolean	inIsHidden)
@@ -105,10 +104,9 @@ public:
 	}
 	
 	void
-	operator()	(CFRetainRelease const&		inWindow)
+	operator()	(HIWindowRef		inWindow)
 	{
-		HIWindowRef			window = REINTERPRET_CAST(inWindow.returnHIObjectRef(), HIWindowRef);
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(inWindow);
 		
 		
 		if (terminalWindow != nullptr)
@@ -117,8 +115,14 @@ public:
 		}
 		else
 		{
-			if (_isHidden) HideWindow(window);
-			else ShowWindow(window);
+			if (_isHidden)
+			{
+				HideWindow(inWindow);
+			}
+			else
+			{
+				ShowWindow(inWindow);
+			}
 		}
 	}
 
@@ -211,8 +215,7 @@ Workspace_AddWindow		(Workspace_Ref	inWorkspace,
 		// to match the others in its group (for tab behavior)
 		if (false == ptr->contents.empty())
 		{
-			HIWindowRef		similarWindow = REINTERPRET_CAST(ptr->contents.front().returnHIObjectRef(),
-																HIWindowRef);
+			HIWindowRef		similarWindow = ptr->contents.front();
 			Rect			similarWindowBounds;
 			
 			
@@ -326,8 +329,7 @@ Workspace_ReturnWindowWithZeroBasedIndex	(Workspace_Ref	inWorkspace,
 	{
 		if (inIndex < ptr->contents.size())
 		{
-			result = REINTERPRET_CAST(ptr->contents[inIndex].returnHIObjectRef(),
-										HIWindowRef);
+			result = ptr->contents[inIndex];
 		}
 	}
 	return result;
@@ -368,11 +370,7 @@ Workspace_ReturnZeroBasedIndexOfWindow	(Workspace_Ref	inWorkspace,
 		for (; ((false == windowFound) && (toWindowRetainer != endWindowRetainers));
 				++toWindowRetainer, ++i)
 		{
-			HIWindowRef const	kWindow = REINTERPRET_CAST(toWindowRetainer->returnHIObjectRef(),
-															HIWindowRef);
-			
-			
-			if (kWindow == inWindowToFind)
+			if (*toWindowRetainer == inWindowToFind)
 			{
 				result = i;
 				windowFound = true;

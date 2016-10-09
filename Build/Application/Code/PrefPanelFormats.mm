@@ -824,10 +824,10 @@ didLoadContainerView:(NSView*)			aContainerView
 	self->idealFrame = [aContainerView frame];
 	
 	{
-		Preferences_ContextWrap		terminalConfig(Preferences_NewContext
-													(Quills::Prefs::TERMINAL), true/* is retained */);
-		Preferences_ContextWrap		translationConfig(Preferences_NewContext
-														(Quills::Prefs::TRANSLATION), true/* is retained */);
+		Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL),
+													Preferences_ContextWrap::kAlreadyRetained);
+		Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION),
+														Preferences_ContextWrap::kAlreadyRetained);
 		Terminal_Result				bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
 																		translationConfig.returnRef(),
 																		&self->sampleScreenBuffer);
@@ -1551,12 +1551,13 @@ performResetStandardColors:(id)		sender
 {
 #pragma unused(sender)
 	// check with the user first!
-	AlertMessages_BoxWrap	box(Alert_NewWindowModal([[self managedView] window]), true/* is retained */);
+	AlertMessages_BoxWrap	box(Alert_NewWindowModal([[self managedView] window]),
+								AlertMessages_BoxWrap::kAlreadyRetained);
 	UIStrings_Result		stringResult = kUIStrings_ResultOK;
 	CFRetainRelease			dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowANSIColorsResetPrimaryText),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 	CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowGenericCannotUndoHelpText),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 	
 	
 	assert(dialogTextCFString.exists());
@@ -1684,10 +1685,10 @@ didLoadContainerView:(NSView*)			aContainerView
 	self->idealFrame = [aContainerView frame];
 	
 	{
-		Preferences_ContextWrap		terminalConfig(Preferences_NewContext
-													(Quills::Prefs::TERMINAL), true/* is retained */);
-		Preferences_ContextWrap		translationConfig(Preferences_NewContext
-														(Quills::Prefs::TRANSLATION), true/* is retained */);
+		Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL),
+													Preferences_ContextWrap::kAlreadyRetained);
+		Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION),
+														Preferences_ContextWrap::kAlreadyRetained);
 		Terminal_Result				bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
 																		translationConfig.returnRef(),
 																		&self->sampleScreenBuffer);

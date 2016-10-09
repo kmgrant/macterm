@@ -71,8 +71,8 @@ file.
 void
 Localization_Init	(UInt32		inFlags)
 {
-	gApplicationNameCFString = CFBundleGetValueForInfoDictionaryKey
-								(AppResources_ReturnBundleForInfo(), CFSTR("CFBundleName"));
+	gApplicationNameCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
+											(AppResources_ReturnBundleForInfo(), CFSTR("CFBundleName")));
 	gLeftToRight = !(inFlags & kLocalization_InitFlagReadTextRightToLeft);
 }// Init
 

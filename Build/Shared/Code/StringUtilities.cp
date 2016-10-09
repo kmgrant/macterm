@@ -81,10 +81,9 @@ StringUtilities_CFNewStringsWithLines	(CFStringRef	inString)
 		
 		
 		CFStringGetLineBounds(inString, startCharacter, &startCharacter.location, &lineEndWithTerminator, &lineEndIndex);
-		lineCFString.setCFTypeRef(CFStringCreateWithSubstring(kCFAllocatorDefault, inString,
-																CFRangeMake(startCharacter.location,
-																			(lineEndIndex - startCharacter.location))),
-									true/* is retained */);
+		lineCFString.setWithNoRetain(CFStringCreateWithSubstring(kCFAllocatorDefault, inString,
+																		CFRangeMake(startCharacter.location,
+																					(lineEndIndex - startCharacter.location))));
 		CFArrayAppendValue(mutableResult, lineCFString.returnCFStringRef());
 		startCharacter.location = lineEndWithTerminator;
 	}

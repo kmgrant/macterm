@@ -100,7 +100,8 @@ Base::all_init	(std::string	initial_workspace)
 		
 		if (nullptr != pathCFURL)
 		{
-			CFRetainRelease		appBundle = CFBundleCreate(kCFAllocatorDefault, pathCFURL);
+			CFRetainRelease		appBundle(CFBundleCreate(kCFAllocatorDefault, pathCFURL),
+											CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (appBundle.exists())

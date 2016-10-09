@@ -843,7 +843,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				CFRetainRelease		jobTitle(((printScreen)
 												? UIStrings_ReturnCopy(kUIStrings_TerminalPrintScreenJobTitle)
 												: UIStrings_ReturnCopy(kUIStrings_TerminalPrintSelectionJobTitle)),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 				
 				
 				if (jobTitle.exists())
@@ -2359,7 +2359,8 @@ handleQuitReview ()
 		// display application-modal Close confirmation windows for each
 		// stable session window (windows that have opened recently are
 		// automatically skipped so as not to waste the user’s time)
-		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
+		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(),
+									AlertMessages_BoxWrap::kAlreadyRetained);
 		
 		
 		Alert_SetHelpButton(box.returnRef(), false);
@@ -3955,7 +3956,7 @@ openFiles:(NSArray*)			filenames
 			CFStringRef			titleCFString = CFSTR("Exception during file open"); // LOCALIZE THIS
 			CFRetainRelease		messageCFString(CFStringCreateWithCString
 												(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-												true/* is retained */); // LOCALIZE THIS?
+												CFRetainRelease::kAlreadyRetained); // LOCALIZE THIS?
 			
 			
 			Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
@@ -4634,7 +4635,7 @@ performNewByFavoriteName:(id)	sender
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::SESSION, collectionName),
-														true/* is retained */);
+														Preferences_ContextWrap::kAlreadyRetained);
 			
 			
 			if (namedSettings.exists())
@@ -4818,7 +4819,7 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::WORKSPACE, collectionName),
-														true/* is retained */);
+														Preferences_ContextWrap::kAlreadyRetained);
 			
 			
 			if (namedSettings.exists())
@@ -5015,7 +5016,8 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
 		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(view, 0/* Copy with Tab Substitution info */,
-												kTerminalView_TextFlagInline));
+												kTerminalView_TextFlagInline),
+											CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (false == selectedText.exists())
@@ -5132,7 +5134,7 @@ performMacroSwitchByFavoriteName:(id)	sender
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::MACRO_SET, collectionName),
-														true/* is retained */);
+														Preferences_ContextWrap::kAlreadyRetained);
 			
 			
 			if (namedSettings.exists())
@@ -5597,7 +5599,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 														(Quills::Prefs::TRANSLATION, collectionName),
-														true/* is retained */);
+														Preferences_ContextWrap::kAlreadyRetained);
 			Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
 			
 			
@@ -5956,7 +5958,7 @@ performFormatByFavoriteName:(id)	sender
 			{
 				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 															(Quills::Prefs::FORMAT, collectionName),
-															true/* is retained */);
+															Preferences_ContextWrap::kAlreadyRetained);
 				
 				
 				if (namedSettings.exists())
@@ -6770,7 +6772,7 @@ performSendMenuItemText:(id)	sender
 			CFStringRef			asCFString = BRIDGE_CAST([asMenuItem title], CFStringRef);
 			CFStringRef			completionCFString = asCFString;
 			CFRetainRelease		cursorCFString(TerminalView_ReturnCursorWordCopyAsUnicode(view),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 			CFRetainRelease		substringCFString;
 			
 			
@@ -6791,7 +6793,7 @@ performSendMenuItemText:(id)	sender
 					substringCFString = CFRetainRelease(CFStringCreateWithSubstring(kCFAllocatorDefault, asCFString,
 																					CFRangeMake(matchRange.location + matchRange.length,
 																								kOriginalCompletionLength - matchRange.length)),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					completionCFString = substringCFString.returnCFStringRef();
 				}
 			}
@@ -8140,7 +8142,8 @@ error:(NSString**)					outError // NOTE: really is NSString**, not NSError** (un
 	
 	if (nil != errorString)
 	{
-		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
+		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(),
+									AlertMessages_BoxWrap::kAlreadyRetained);
 		
 		
 		*outError = errorString;
@@ -8224,7 +8227,7 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 																				@"title of script error");
 				CFRetainRelease			messageCFString(CFStringCreateWithCString
 														(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-														true/* is retained */); // LOCALIZE THIS?
+														CFRetainRelease::kAlreadyRetained); // LOCALIZE THIS?
 				
 				
 				Console_WriteScriptError(BRIDGE_CAST(titleText, CFStringRef), messageCFString.returnCFStringRef());
@@ -8236,7 +8239,8 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 	
 	if (nil != errorString)
 	{
-		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
+		AlertMessages_BoxWrap	box(Alert_NewApplicationModal(),
+									AlertMessages_BoxWrap::kAlreadyRetained);
 		
 		
 		*outError = errorString;

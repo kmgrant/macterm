@@ -1043,9 +1043,8 @@ unitTest000_Begin ()
 	// create a listener, and arbitrarily pass in the address of this
 	// function as the event context (the listener code should assert
 	// that it received the right event context)
-	callbackWrapper.setRef(ListenerModel_NewStandardListener
-							(unitTest000_Callback1, REINTERPRET_CAST(unitTest000_Begin, void*)/* event context */),
-							true/* is retained */);
+	callbackWrapper.setWithNoRetain(ListenerModel_NewStandardListener
+									(unitTest000_Callback1, REINTERPRET_CAST(unitTest000_Begin, void*)/* event context */));
 	result &= Console_Assert("wrapper constructed", nullptr != callbackWrapper.returnRef());
 	
 	// create a model, for controlling event notifications

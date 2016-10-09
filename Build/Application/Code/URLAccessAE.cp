@@ -221,14 +221,14 @@ handleURL	(AEDesc const*		inFromWhichObject,
 									CFRetainRelease		urlCFString(CFStringCreateWithCString
 																	(kCFAllocatorDefault, urlString.c_str(),
 																		kCFStringEncodingUTF8),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 									CFRetainRelease		urlCFURL(CFURLCreateWithBytes
 																	(kCFAllocatorDefault,
 																		REINTERPRET_CAST
 																		(urlString.data(), UInt8 const*),
 																		urlString.size(), kCFStringEncodingUTF8,
 																		nullptr/* base URL */),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 									UInt8				filePath[MAXPATHLEN];
 									Boolean				importOK = false;
 									
@@ -268,7 +268,7 @@ handleURL	(AEDesc const*		inFromWhichObject,
 								CFStringRef			titleCFString = CFSTR("Exception while trying to handle URL from Apple Event"); // LOCALIZE THIS
 								CFRetainRelease		messageCFString(CFStringCreateWithCString
 																	(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-																	true/* is retained */); // LOCALIZE THIS?
+																	CFRetainRelease::kAlreadyRetained); // LOCALIZE THIS?
 								
 								
 								Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());

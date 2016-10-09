@@ -259,7 +259,7 @@ actionVersion6 ()
 		for (size_t i = 0; i < sizeof(keyLists) / sizeof(CFStringRef); ++i)
 		{
 			CFRetainRelease		valueList(CFPreferencesCopyAppValue(keyLists[i], kMacTelnetApplicationID),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (valueList.exists())
@@ -271,7 +271,7 @@ actionVersion6 ()
 				if (kArraySize > 0)
 				{
 					CFRetainRelease		newArray(CFArrayCreateMutable(kCFAllocatorDefault, 0/* capacity */, &kCFTypeArrayCallBacks),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 					
 					
 					for (CFIndex j = 0; j < kArraySize; ++j)
@@ -283,7 +283,7 @@ actionVersion6 ()
 						{
 							CFRetainRelease		newDomainCFString(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* maximum length */,
 																							oldDomainCFString),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 							
 							
 							UNUSED_RETURN(CFIndex)CFStringFindAndReplace(newDomainCFString.returnCFMutableStringRef(), kMacTelnetApplicationID,

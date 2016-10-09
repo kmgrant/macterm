@@ -926,7 +926,7 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
 	if (nullptr != result)
 	{
 		My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), result);
-		Preferences_ContextWrap		viewFormat = inFormatOrNull;
+		Preferences_ContextWrap		viewFormat(inFormatOrNull, Preferences_ContextWrap::kNotYetRetained);
 		
 		
 		// get the terminal format; if not found, use the default
@@ -944,7 +944,7 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
 			}
 			else
 			{
-				viewFormat.setRef(Preferences_NewCloneContext(defaultContext, true/* force detach */), true/* is retained */);
+				viewFormat.setWithNoRetain(Preferences_NewCloneContext(defaultContext, true/* force detach */));
 			}
 		}
 		
@@ -1054,14 +1054,13 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 		// (using the same rules as double-clicking)
 		if (false == viewPtr->text.selection.exists)
 		{
-			searchQueryCFString = TerminalView_ReturnCursorWordCopyAsUnicode(inView);
+			searchQueryCFString.setWithNoRetain(TerminalView_ReturnCursorWordCopyAsUnicode(inView));
 		}
 		else
 		{
 			// use current selection as a base
-			searchQueryCFString = CFRetainRelease(TerminalView_ReturnSelectedTextCopyAsUnicode
-													(inView, 0/* spaces to replace with tab */, 0/* flags */),
-													true/* is retained */);
+			searchQueryCFString.setWithNoRetain(TerminalView_ReturnSelectedTextCopyAsUnicode
+												(inView, 0/* spaces to replace with tab */, 0/* flags */));
 		}
 		
 		if (false == searchQueryCFString.exists())
@@ -1079,7 +1078,7 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 			// make a mutable copy and strip any end whitespace
 			searchQueryCFString = CFRetainRelease(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* maximum length, or zero */,
 																			searchQueryCFString.returnCFStringRef()),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 			CFStringTrimWhitespace(searchQueryCFString.returnCFMutableStringRef());
 			
 			// initiate search for base term; then, at every search
@@ -1132,7 +1131,7 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							handleMultiClick(viewPtr, 2);
 							completionCFString = CFRetainRelease(TerminalView_ReturnSelectedTextCopyAsUnicode
 																	(inView, 0/* spaces to replace with tab */, 0/* flags */),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 							TerminalView_SelectNothing(inView); // fix any highlighting changes caused by the “selection” above
 							if (false == completionCFString.exists())
 							{
@@ -1739,7 +1738,7 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 	if (viewPtr != nullptr)
 	{
 		CFRetainRelease		spokenText(returnSelectedTextCopyAsUnicode(viewPtr, 0/* space info */, kTerminalView_TextFlagInline),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (spokenText.exists())
@@ -4350,15 +4349,15 @@ My_TerminalView::
 My_TerminalView		(HIViewRef		inSuperclassViewInstance)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-encodingConfig(nullptr), // set later
-formatConfig(nullptr), // set later
+encodingConfig(), // set later
+formatConfig(), // set later
 configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
 isCocoa(false),
 accessibilityObject(AXUIElementCreateWithHIObjectAndIdentifier
-					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */), true/* is retained */),
+					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */), CFRetainRelease::kAlreadyRetained),
 encompassingNSView(nil),
 encompassingHIView(nullptr), // set later
 backgroundNSView(nil),
@@ -4398,8 +4397,8 @@ My_TerminalView		(TerminalView_ContentView*		inSuperclassViewInstance,
 					 TerminalView_BackgroundView*	inBackgroundView)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-encodingConfig(nullptr), // set later
-formatConfig(nullptr), // set later
+encodingConfig(), // set later
+formatConfig(), // set later
 configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
@@ -4448,7 +4447,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
 	this->screen.refreshRegion = NewRgn();
 	
-	this->encodingConfig.setRef(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
+	this->encodingConfig.setWithNoRetain(Preferences_NewContext(Quills::Prefs::TRANSLATION));
 	assert(this->encodingConfig.exists());
 	{
 		Boolean		setOK = TextTranslation_ContextSetEncoding(this->encodingConfig.returnRef(), kCFStringEncodingUTF8);
@@ -4457,7 +4456,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert(setOK);
 	}
 	
-	this->formatConfig.setRef(Preferences_NewCloneContext(inFormat, true/* detach */), true/* is retained */);
+	this->formatConfig.setWithNoRetain(Preferences_NewCloneContext(inFormat, true/* detach */));
 	assert(this->formatConfig.exists());
 	
 	this->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
@@ -4701,8 +4700,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	}
 	
 	// set up a callback to receive preference change notifications
-	this->screen.preferenceMonitor.setRef(ListenerModel_NewStandardListener(preferenceChangedForView, this->selfRef/* context */),
-											true/* is retained */);
+	this->screen.preferenceMonitor.setWithNoRetain(ListenerModel_NewStandardListener
+													(preferenceChangedForView, this->selfRef/* context */));
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
@@ -6197,7 +6196,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 																		autorelease];
 			CFRetainRelease			lineObject(CTLineCreateWithAttributedString
 												(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 			CTLineRef				asLineRef = REINTERPRET_CAST(lineObject.returnCFTypeRef(), CTLineRef);
 			NSPoint					drawingLocation = NSZeroPoint;
 			CGFloat					ascentMeasurement = 0;
@@ -8772,7 +8771,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 				// across more than one line
 				CFRetainRelease			asCFString(CFStringCreateWithCharactersNoCopy
 													(kCFAllocatorDefault, textStart, textPastEnd - textStart, kCFAllocatorNull/* deallocator */),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 				std::string				asUTF8;
 				std::pair< long, long >	wordInfo; // offset (zero-based), and count
 				
@@ -8793,7 +8792,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 					CFStringRef			titleCFString = CFSTR("Exception while trying to find double-clicked word"); // LOCALIZE THIS
 					CFRetainRelease		messageCFString(CFStringCreateWithCString
 														(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-														true/* is retained */); // LOCALIZE THIS?
+														CFRetainRelease::kAlreadyRetained); // LOCALIZE THIS?
 					
 					
 					Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
@@ -12138,7 +12137,8 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 						{
 							CFRetainRelease		spacesString(CFStringCreateMutable
 																(kCFAllocatorDefault,
-																	inMaxSpacesToReplaceWithTabOrZero));
+																	inMaxSpacesToReplaceWithTabOrZero),
+																	CFRetainRelease::kAlreadyRetained);
 							CFStringRef			singleSpaceString = CFSTR(" "); // LOCALIZE THIS?
 							CFStringRef			tabString = CFSTR("\011"); // LOCALIZE THIS?
 							
@@ -13332,25 +13332,25 @@ startMonitoringDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		
 		// ask to be notified of terminal bells
-		inTerminalViewPtr->screen.bellHandler.setRef(ListenerModel_NewStandardListener(audioEvent, inTerminalViewPtr->selfRef/* context */),
-														true/* is retained */);
+		inTerminalViewPtr->screen.bellHandler.setWithNoRetain(ListenerModel_NewStandardListener
+																(audioEvent, inTerminalViewPtr->selfRef/* context */));
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeAudioEvent, inTerminalViewPtr->screen.bellHandler.returnRef());
 		
 		// ask to be notified of video mode changes
-		inTerminalViewPtr->screen.videoModeMonitor.setRef(ListenerModel_NewStandardListener(receiveVideoModeChange, inTerminalViewPtr->selfRef/* context */),
-															true/* is retained */);
+		inTerminalViewPtr->screen.videoModeMonitor.setWithNoRetain(ListenerModel_NewStandardListener
+																	(receiveVideoModeChange, inTerminalViewPtr->selfRef/* context */));
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeVideoMode, inTerminalViewPtr->screen.videoModeMonitor.returnRef());
 		
 		// ask to be notified of screen buffer content changes
-		inTerminalViewPtr->screen.contentMonitor.setRef(ListenerModel_NewStandardListener(screenBufferChanged, inTerminalViewPtr->selfRef/* context */),
-														true/* is retained */);
+		inTerminalViewPtr->screen.contentMonitor.setWithNoRetain(ListenerModel_NewStandardListener
+																	(screenBufferChanged, inTerminalViewPtr->selfRef/* context */));
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeTextEdited, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeScrollActivity, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeXTermColor, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		
 		// ask to be notified of cursor changes
-		inTerminalViewPtr->screen.cursorMonitor.setRef(ListenerModel_NewStandardListener(screenCursorChanged, inTerminalViewPtr->selfRef/* context */),
-														true/* is retained */);
+		inTerminalViewPtr->screen.cursorMonitor.setWithNoRetain(ListenerModel_NewStandardListener
+																(screenCursorChanged, inTerminalViewPtr->selfRef/* context */));
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeCursorLocation, inTerminalViewPtr->screen.cursorMonitor.returnRef());
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeCursorState, inTerminalViewPtr->screen.cursorMonitor.returnRef());
 		
@@ -14644,7 +14644,8 @@ performFormatByFavoriteName:(id)	sender
 		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
 		{
 			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::FORMAT, collectionName), true/* is retained */);
+														(Quills::Prefs::FORMAT, collectionName),
+														Preferences_ContextWrap::kAlreadyRetained);
 			
 			
 			if (namedSettings.exists())
@@ -15140,8 +15141,10 @@ loadView
 	assert(nil != self.terminalPaddingView);
 	assert(nil != self.terminalBackgroundView);
 	
-	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL), true/* is retained */);
-	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION), true/* is retained */);
+	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL),
+												Preferences_ContextWrap::kAlreadyRetained);
+	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION),
+													Preferences_ContextWrap::kAlreadyRetained);
 	
 	
 	@try

@@ -97,7 +97,7 @@ CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 				CFRetainRelease		folderCFString(CFStringCreateWithCString(kCFAllocatorDefault,
 																				REINTERPRET_CAST(folderPath, char const*),
 																				kCFStringEncodingUTF8),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 				NSString*			filePath = [[(NSString*)folderCFString.returnCFStringRef()
 													stringByAppendingPathComponent:(NSString*)inName]
 												stringByAppendingPathExtension:@"plist"];

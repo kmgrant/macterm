@@ -491,7 +491,7 @@ fillInCharacterSetList	(Boolean	inForce)
 					dataPtr->base = currentBase;
 					dataPtr->menuItemEncoding = *availableEncodings;
 					dataPtr->textEncoding = *availableEncodings;
-					dataPtr->name.setCFTypeRef(encodingName);
+					dataPtr->name.setWithRetain(encodingName);
 					//Console_WriteValueCFString("adding", encodingName);
 					{
 						My_TextEncodingInfoList::size_type const	kLength = gTextEncodingInfoList().size();

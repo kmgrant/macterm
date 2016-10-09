@@ -2,31 +2,9 @@
 	\brief Convenient wrapper class for a Core Foundation object
 	(such as a CFStringRef, CFArrayRef, etc.).
 	
-	Use this to ensure a reference is automatically retained at
-	object construction or duplication time, and automatically
-	released when the object is destroyed.  Wrappers mean that
-	custom constructors and destructors are not required for a
-	class if it simply wants to hold onto a Core Foundation
-	object reference indefinitely.
-	
-	Debugging assertions are in place that call Core Foundation
-	APIs to verify the type IDs of references both when you
-	first construct an instance of this class and whenever you
-	ask for it to be converted into a specific (non-CFTypeRef)
-	type.
-	
-	This class also allows references to be null.  You can make
-	an existing object of this type equal to nullptr by calling
-	the clear() method, or by assigning to it a temporary
-	instance with no arguments, such as
-	"myCFRetainReleaseInstance = CFRetainRelease();"; or, use
-	"myCFRetainReleaseInstance = CFRetainRelease(nullptr);" if
-	you want to be more explicit (these are equivalent).
-	
-	Finally, CFRetainRelease can be release-only: it can be
-	initialized by a reference that is already retained (such as
-	something returned by a Create function), in which case no
-	CFRetain() is called but CFRelease() is still called.
+	See also "RetainRelease.template.h", which generalizes the
+	retain/release mechanisms at the cost of not allowing more
+	than one reference type per object.
 */
 /*###############################################################
 
@@ -74,6 +52,21 @@ CFRetain() when constructed, assigned or copied, and
 released with CFRelease() when it goes out of scope or
 is assigned, etc.
 
+Unlike the RetainRelease template, CFRetainRelease can
+be changed at any time to store any Core Foundation type,
+which makes it useful for things like containers and for
+cases that require both mutable and constant references.
+It is more dynamic however, meaning that certain mistakes
+can only be found as runtime assertions (RetainRelease
+templates can catch some errors at compile time).
+
+The set of explicitly-handled types is arbitrary, and
+can be extended as needed for convenience.  Note that it
+is always possible to store a Core Foundation reference
+of any kind into CFRetainRelease by using the constructor
+that accepts CFTypeRef; and, by calling returnCFTypeRef()
+and casting, the value can be retrieved.
+
 It is possible to have a nullptr value, and no CFRetain()
 or CFRelease() occurs in this case.  It is therefore safe
 to initialize to nullptr and later assign a value that
@@ -82,60 +75,81 @@ should be retained and released, etc.
 class CFRetainRelease
 {
 public:
+	enum ReferenceMutability
+	{
+		kReferenceConstant,		//!< reference can only be returned as a constant type
+		kReferenceMutable		//!< reference can be returned as either constant or mutable (e.g.
+								//!  returnCFStringRef() and returnCFMutableStringRef() both work
+								//!  if the reference was initialized from a mutable string); note
+								//!  that mutability cannot be “detected” from a reference value
+								//!  so it is stated explicitly where appropriate
+	};
+	
+	enum ReferenceState
+	{
+		kNotYetRetained,			//!< retain before storing, and release when done
+		kAlreadyRetained			//!< no retain, release when done (e.g. newly-allocated data)
+	};
+	
 	inline
 	CFRetainRelease ();
 	
 	inline
 	CFRetainRelease (CFRetainRelease const&);
 	
-	inline
-	CFRetainRelease (CFArrayRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFArrayRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFBundleRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFBundleRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFDictionaryRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFDictionaryRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFMutableArrayRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFMutableArrayRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFMutableDictionaryRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFMutableDictionaryRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFMutableSetRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFMutableSetRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFMutableStringRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFMutableStringRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFReadStreamRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFReadStreamRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFSetRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFSetRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFStringRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFStringRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (CFTypeRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFTypeRef, ReferenceState); // main constructor
 	
-	inline
-	CFRetainRelease (CFURLRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFURLRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (HIObjectRef, bool = false);
+	explicit inline
+	CFRetainRelease (CFWriteStreamRef, ReferenceState);
 	
-	inline
-	CFRetainRelease (PasteboardRef, bool = false);
+	explicit inline
+	CFRetainRelease (HIObjectRef, ReferenceState);
+	
+	explicit inline
+	CFRetainRelease (PasteboardRef, ReferenceState);
 	
 	virtual inline
 	~CFRetainRelease ();
 	
-	// IMPORTANT: It is clearer to call setCFTypeRef(), that is recommended.
+	// IMPORTANT: Calls to setWithRetain() or setWithNoRetain() are recommended.
 	// This assignment operator only exists to satisfy STL container implementations
 	// and other generic constructs that could not know about specific class methods.
+	// Since an assignment operator cannot give “already retained, release only”
+	// behavior, it assumes that every assigned reference must be retained.
 	virtual inline CFRetainRelease&
 	operator = (CFRetainRelease const&);
 	
@@ -190,55 +204,44 @@ public:
 	inline CFURLRef
 	returnCFURLRef () const;
 	
+	inline CFWriteStreamRef
+	returnCFWriteStreamRef () const;
+	
 	inline HIObjectRef
 	returnHIObjectRef () const;
 	
 	inline PasteboardRef
 	returnPasteboardRef () const;
 	
-	inline void
-	setCFMutableArrayRef (CFMutableArrayRef, bool = false);
+	static inline void
+	safeRelease	(CFTypeRef);
 	
-	inline void
-	setCFMutableDictionaryRef (CFMutableDictionaryRef, bool = false);
+	static inline void
+	safeRetain	(CFTypeRef);
 	
+	template < typename arg_type >
 	inline void
-	setCFMutableStringRef (CFMutableStringRef, bool = false);
+	setMutableWithNoRetain (arg_type);
 	
+	template < typename arg_type >
 	inline void
-	setCFTypeRef (CFTypeRef, bool = false);
+	setMutableWithRetain (arg_type);
+	
+	template < typename arg_type >
+	inline void
+	setWithNoRetain (arg_type);
+	
+	template < typename arg_type >
+	inline void
+	setWithRetain (arg_type);
 
 protected:
+	inline void
+	storeReference (void*, ReferenceState, ReferenceMutability); // see also setWithNoRetain() and setWithRetain()
 
 private:
-	// IMPORTANT: code below assumes these are all the same size and inherit from CFTypeRef
-	union
-	{
-		union
-		{
-			CFTypeRef			unspecified;
-			CFArrayRef			array;
-			CFDictionaryRef		dictionary;
-			HIObjectRef			humanInterfaceObject;
-			CFReadStreamRef		readStream;
-			CFSetRef			set;
-			CFStringRef			string;
-			CFURLRef			url;
-		} _constant;
-		
-		union
-		{
-			CFTypeRef				unspecified;
-			CFMutableArrayRef		array;
-			CFBundleRef				bundle;
-			CFMutableDictionaryRef	dictionary;
-			CFMutableSetRef			set;
-			CFMutableStringRef		string;
-			PasteboardRef			pasteboard;
-		} _modifiable;
-	} _typeAs;
-	
-	bool	_isMutable;
+	void*					_reference;		//!< any type that supports CFRetain()/CFRelease() (or Objective-C bridge)
+	ReferenceMutability		_mutability;		//!< determines use of unions above
 };
 
 
@@ -253,10 +256,9 @@ Creates a nullptr reference.
 CFRetainRelease::
 CFRetainRelease ()
 :
-_isMutable(false)
+_reference(nullptr),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.unspecified = nullptr;
-	assert(nullptr == _typeAs._constant.unspecified);
 }// default constructor
 
 
@@ -270,14 +272,10 @@ reference.
 CFRetainRelease::
 CFRetainRelease		(CFRetainRelease const&		inCopy)
 :
-_isMutable(inCopy._isMutable)
+_reference(inCopy._reference),
+_mutability(inCopy._mutability)
 {
-	_typeAs = inCopy._typeAs;
-	assert(_typeAs._constant.unspecified == inCopy._typeAs._constant.unspecified);
-	if (nullptr != _typeAs._constant.unspecified)
-	{
-		CFRetain(_typeAs._constant.unspecified);
-	}
+	safeRetain(_reference);
 }// copy constructor
 
 
@@ -287,9 +285,9 @@ existing one that is a generic Core Foundation
 type.
 
 CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
+"inIsAlreadyRetained" is kAlreadyRetained.
+Regardless, CFRelease() is called at destruction
+or reassignment time.  This allows "inType" to
 come directly from a function call that creates
 a Core Foundation type.
 
@@ -297,16 +295,14 @@ a Core Foundation type.
 */
 CFRetainRelease::
 CFRetainRelease		(CFTypeRef		inType,
-					 bool			inIsAlreadyRetained)
+					 ReferenceState	inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(CONST_CAST(inType, void*)),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.unspecified = inType;
-	assert(_typeAs._constant.unspecified == inType);
-	if ((nullptr != _typeAs._constant.unspecified) &&
-		(false == inIsAlreadyRetained))
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		CFRetain(_typeAs._constant.unspecified);
+		safeRetain(_reference);
 	}
 }// unspecified type constructor
 
@@ -317,30 +313,22 @@ existing one that is a Core Foundation Array
 type.  In debug mode, an assertion failure will
 occur if the given reference is not a CFArrayRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFArrayRef		inType,
-					 bool			inIsAlreadyRetained)
+					 ReferenceState	inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(CONST_CAST(REINTERPRET_CAST(inType, void const*), void*)),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.array = inType;
-	assert(_typeAs._constant.array == inType);
-	if (nullptr != _typeAs._constant.array)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._constant.array) == CFArrayGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._constant.array);
-		}
+		safeRetain(_reference);
 	}
 }// array type constructor
 
@@ -351,30 +339,22 @@ existing one that is a Core Foundation Bundle
 type.  In debug mode, an assertion failure will occur
 if the given reference is not a CFBundleRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFBundleRef	inType,
-					 bool			inIsAlreadyRetained)
+					 ReferenceState	inIsAlreadyRetained)
 :
-_isMutable(true)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._modifiable.bundle = inType;
-	assert(_typeAs._modifiable.bundle == inType);
-	if (nullptr != _typeAs._modifiable.bundle)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._modifiable.bundle) == CFBundleGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._modifiable.bundle);
-		}
+		safeRetain(_reference);
 	}
 }// bundle type constructor
 
@@ -385,30 +365,22 @@ existing one that is a Core Foundation Dictionary
 type.  In debug mode, an assertion failure will
 occur if the given reference is not a CFDictionaryRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFDictionaryRef	inType,
-					 bool				inIsAlreadyRetained)
+					 ReferenceState		inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(CONST_CAST(REINTERPRET_CAST(inType, void const*), void*)),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.dictionary = inType;
-	assert(_typeAs._constant.dictionary == inType);
-	if (nullptr != _typeAs._constant.dictionary)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._constant.dictionary) == CFDictionaryGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._constant.dictionary);
-		}
+		safeRetain(_reference);
 	}
 }// dictionary type constructor
 
@@ -419,30 +391,22 @@ existing one that is a Core Foundation Set type.
 In debug mode, an assertion failure will occur
 if the given reference is not a CFSetRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.7)
 */
 CFRetainRelease::
-CFRetainRelease		(CFSetRef	inType,
-					 bool		inIsAlreadyRetained)
+CFRetainRelease		(CFSetRef			inType,
+					 ReferenceState		inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(CONST_CAST(REINTERPRET_CAST(inType, void const*), void*)),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.set = inType;
-	assert(_typeAs._constant.set == inType);
-	if (nullptr != _typeAs._constant.set)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._constant.set) == CFSetGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._constant.set);
-		}
+		safeRetain(_reference);
 	}
 }// set type constructor
 
@@ -453,30 +417,22 @@ existing one that is a Core Foundation Mutable Array
 type.  In debug mode, an assertion failure will occur
 if the given reference is not a CFMutableArrayRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFMutableArrayRef		inType,
-					 bool					inIsAlreadyRetained)
+					 ReferenceState			inIsAlreadyRetained)
 :
-_isMutable(true)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._modifiable.array = inType;
-	assert(_typeAs._modifiable.array == inType);
-	if (nullptr != _typeAs._modifiable.array)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._modifiable.array) == CFArrayGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._modifiable.array);
-		}
+		safeRetain(_reference);
 	}
 }// mutable array type constructor
 
@@ -487,30 +443,22 @@ existing one that is a Core Foundation Mutable Dictionary
 type.  In debug mode, an assertion failure will occur
 if the given reference is not a CFMutableDictionaryRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFMutableDictionaryRef		inType,
-					 bool						inIsAlreadyRetained)
+					 ReferenceState				inIsAlreadyRetained)
 :
-_isMutable(true)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._modifiable.dictionary = inType;
-	assert(_typeAs._modifiable.dictionary == inType);
-	if (nullptr != _typeAs._modifiable.dictionary)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._modifiable.dictionary) == CFDictionaryGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._modifiable.dictionary);
-		}
+		safeRetain(_reference);
 	}
 }// mutable dictionary type constructor
 
@@ -521,30 +469,22 @@ existing one that is a Core Foundation Mutable Set
 type.  In debug mode, an assertion failure will occur
 if the given reference is not a CFMutableSetRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.7)
 */
 CFRetainRelease::
 CFRetainRelease		(CFMutableSetRef	inType,
-					 bool				inIsAlreadyRetained)
+					 ReferenceState		inIsAlreadyRetained)
 :
-_isMutable(true)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._modifiable.set = inType;
-	assert(_typeAs._modifiable.set == inType);
-	if (nullptr != _typeAs._modifiable.set)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._modifiable.set) == CFSetGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._modifiable.set);
-		}
+		safeRetain(_reference);
 	}
 }// mutable set type constructor
 
@@ -555,30 +495,22 @@ existing one that is a Core Foundation Mutable String
 type.  In debug mode, an assertion failure will occur
 if the given reference is not a CFMutableStringRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFMutableStringRef		inType,
-					 bool					inIsAlreadyRetained)
+					 ReferenceState			inIsAlreadyRetained)
 :
-_isMutable(true)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._modifiable.string = inType;
-	assert(_typeAs._modifiable.string == inType);
-	if (nullptr != _typeAs._modifiable.string)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._modifiable.string) == CFStringGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._modifiable.string);
-		}
+		safeRetain(_reference);
 	}
 }// mutable string type constructor
 
@@ -590,30 +522,22 @@ type.  In debug mode, an assertion failure will
 occur if the given reference is not a
 CFReadStreamRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2016.09)
 */
 CFRetainRelease::
 CFRetainRelease		(CFReadStreamRef		inType,
-					 bool				inIsAlreadyRetained)
+					 ReferenceState		inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._constant.readStream = inType;
-	assert(_typeAs._constant.readStream == inType);
-	if (nullptr != _typeAs._constant.readStream)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._constant.readStream) == CFReadStreamGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._constant.readStream);
-		}
+		safeRetain(_reference);
 	}
 }// read-stream type constructor
 
@@ -624,30 +548,22 @@ existing one that is a Core Foundation String
 type.  In debug mode, an assertion failure will
 occur if the given reference is not a CFStringRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(CFStringRef	inType,
-					 bool			inIsAlreadyRetained)
+					 ReferenceState	inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(CONST_CAST(REINTERPRET_CAST(inType, void const*), void*)),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.string = inType;
-	assert(_typeAs._constant.string == inType);
-	if (nullptr != _typeAs._constant.string)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._constant.string) == CFStringGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._constant.string);
-		}
+		safeRetain(_reference);
 	}
 }// string type constructor
 
@@ -658,32 +574,51 @@ existing one that is a Core Foundation URL type.
 In debug mode, an assertion failure will occur
 if the given reference is not a CFURLRef.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2016.09)
 */
 CFRetainRelease::
-CFRetainRelease		(CFURLRef	inType,
-					 bool		inIsAlreadyRetained)
+CFRetainRelease		(CFURLRef			inType,
+					 ReferenceState		inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(CONST_CAST(REINTERPRET_CAST(inType, void const*), void*)),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.url = inType;
-	assert(_typeAs._constant.url == inType);
-	if (nullptr != _typeAs._constant.url)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._constant.url) == CFURLGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._constant.url);
-		}
+		safeRetain(_reference);
 	}
 }// URL type constructor
+
+
+/*!
+Creates a new reference using the value of an
+existing one that is a Core Foundation Write Stream
+type.  In debug mode, an assertion failure will
+occur if the given reference is not a
+CFReadStreamRef.
+
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
+
+(2016.09)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFWriteStreamRef	inType,
+					 ReferenceState		inIsAlreadyRetained)
+:
+_reference(inType),
+_mutability(kReferenceMutable)
+{
+	if (kNotYetRetained == inIsAlreadyRetained)
+	{
+		safeRetain(_reference);
+	}
+}// write-stream type constructor
 
 
 /*!
@@ -691,27 +626,22 @@ Creates a new reference using the value of an
 existing one that is a Human Interface Object
 type.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.0)
 */
 CFRetainRelease::
 CFRetainRelease		(HIObjectRef	inType,
-					 bool			inIsAlreadyRetained)
+					 ReferenceState	inIsAlreadyRetained)
 :
-_isMutable(false)
+_reference(inType),
+_mutability(kReferenceConstant)
 {
-	_typeAs._constant.humanInterfaceObject = inType;
-	assert(_typeAs._constant.humanInterfaceObject == inType);
-	if ((nullptr != _typeAs._constant.humanInterfaceObject) &&
-		(false == inIsAlreadyRetained))
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		CFRetain(_typeAs._constant.humanInterfaceObject);
+		safeRetain(_reference);
 	}
 }// human interface object type constructor
 
@@ -720,30 +650,22 @@ _isMutable(false)
 Creates a new reference using the value of an
 existing one that is a Pasteboard type.
 
-CFRetain() is called on the reference unless
-"inIsAlreadyRetained" is true.  Regardless,
-CFRelease() is called at destruction or
-reassignment time.  This allows "inType" to
-come directly from a function call that creates
-a Core Foundation type.
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
 
 (2.1)
 */
 CFRetainRelease::
 CFRetainRelease		(PasteboardRef	inType,
-					 bool			inIsAlreadyRetained)
+					 ReferenceState	inIsAlreadyRetained)
 :
-_isMutable(true)
+_reference(inType),
+_mutability(kReferenceMutable)
 {
-	_typeAs._modifiable.pasteboard = inType;
-	assert(_typeAs._modifiable.pasteboard == inType);
-	if (nullptr != _typeAs._modifiable.pasteboard)
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		assert(CFGetTypeID(_typeAs._modifiable.pasteboard) == PasteboardGetTypeID());
-		if (false == inIsAlreadyRetained)
-		{
-			CFRetain(_typeAs._modifiable.pasteboard);
-		}
+		safeRetain(_reference);
 	}
 }// pasteboard type constructor
 
@@ -757,7 +679,7 @@ class instance, if any.
 CFRetainRelease::
 ~CFRetainRelease ()
 {
-	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
+	safeRelease(_reference);
 }// destructor
 
 
@@ -773,8 +695,7 @@ operator =	(CFRetainRelease const&		inCopy)
 {
 	if (&inCopy != this)
 	{
-		setCFTypeRef(inCopy.returnCFTypeRef());
-		_isMutable = inCopy._isMutable;
+		storeReference(inCopy._reference, kNotYetRetained, inCopy._mutability);
 	}
 	return *this;
 }// operator =
@@ -819,12 +740,9 @@ void
 CFRetainRelease::
 clear ()
 {
-	if (nullptr != _typeAs._constant.unspecified)
-	{
-		CFRelease(_typeAs._constant.unspecified);
-	}
-	_typeAs._constant.unspecified = nullptr;
-	_isMutable = false;
+	safeRelease(_reference);
+	_reference = nullptr;
+	_mutability = kReferenceConstant;
 }// clear
 
 
@@ -838,7 +756,7 @@ CFRetainRelease::
 exists ()
 const
 {
-	return (nullptr != _typeAs._constant.unspecified);
+	return (nullptr != returnCFTypeRef());
 }// exists
 
 
@@ -859,7 +777,7 @@ CFRetainRelease::
 isMutable ()
 const
 {
-	return _isMutable;
+	return (kReferenceMutable == _mutability);
 }// isMutable
 
 
@@ -876,9 +794,12 @@ CFRetainRelease::
 returnCFArrayRef ()
 const
 {
-	if (_isMutable) return returnCFMutableArrayRef();
-	assert((nullptr == _typeAs._constant.array) || (CFGetTypeID(_typeAs._constant.array) == CFArrayGetTypeID()));
-	return _typeAs._constant.array;
+	if (this->isMutable())
+	{
+		return returnCFMutableArrayRef();
+	}
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFArrayGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFArrayRef);
 }// returnCFArrayRef
 
 
@@ -895,9 +816,9 @@ CFRetainRelease::
 returnCFBundleRef ()
 const
 {
-	assert(_isMutable);
-	assert((nullptr == _typeAs._modifiable.bundle) || (CFGetTypeID(_typeAs._modifiable.bundle) == CFBundleGetTypeID()));
-	return _typeAs._modifiable.bundle;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFBundleGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFBundleRef);
 }// returnCFBundleRef
 
 
@@ -914,9 +835,12 @@ CFRetainRelease::
 returnCFDictionaryRef ()
 const
 {
-	if (_isMutable) return returnCFMutableDictionaryRef();
-	assert((nullptr == _typeAs._constant.dictionary) || (CFGetTypeID(_typeAs._constant.dictionary) == CFDictionaryGetTypeID()));
-	return _typeAs._constant.dictionary;
+	if (this->isMutable())
+	{
+		return returnCFMutableDictionaryRef();
+	}
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFDictionaryGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFDictionaryRef);
 }// returnCFDictionaryRef
 
 
@@ -933,9 +857,9 @@ CFRetainRelease::
 returnCFMutableArrayRef ()
 const
 {
-	assert(_isMutable);
-	assert((nullptr == _typeAs._modifiable.array) || (CFGetTypeID(_typeAs._modifiable.array) == CFArrayGetTypeID()));
-	return _typeAs._modifiable.array;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFArrayGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFMutableArrayRef);
 }// returnCFMutableArrayRef
 
 
@@ -952,9 +876,9 @@ CFRetainRelease::
 returnCFMutableDictionaryRef ()
 const
 {
-	assert(_isMutable);
-	assert((nullptr == _typeAs._modifiable.dictionary) || (CFGetTypeID(_typeAs._modifiable.dictionary) == CFDictionaryGetTypeID()));
-	return _typeAs._modifiable.dictionary;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFDictionaryGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFMutableDictionaryRef);
 }// returnCFMutableDictionaryRef
 
 
@@ -971,9 +895,9 @@ CFRetainRelease::
 returnCFMutableSetRef ()
 const
 {
-	assert(_isMutable);
-	assert((nullptr == _typeAs._modifiable.set) || (CFGetTypeID(_typeAs._modifiable.set) == CFSetGetTypeID()));
-	return _typeAs._modifiable.set;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFSetGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFMutableSetRef);
 }// returnCFMutableSetRef
 
 
@@ -990,9 +914,9 @@ CFRetainRelease::
 returnCFMutableStringRef ()
 const
 {
-	assert(_isMutable);
-	assert((nullptr == _typeAs._modifiable.string) || (CFGetTypeID(_typeAs._modifiable.string) == CFStringGetTypeID()));
-	return _typeAs._modifiable.string;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFStringGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFMutableStringRef);
 }// returnCFMutableStringRef
 
 
@@ -1008,7 +932,9 @@ CFRetainRelease::
 returnCFReadStreamRef ()
 const
 {
-	return _typeAs._constant.readStream;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFReadStreamGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFReadStreamRef);
 }// returnCFReadStreamRef
 
 
@@ -1025,9 +951,12 @@ CFRetainRelease::
 returnCFSetRef ()
 const
 {
-	if (_isMutable) return returnCFMutableSetRef();
-	assert((nullptr == _typeAs._constant.set) || (CFGetTypeID(_typeAs._constant.set) == CFSetGetTypeID()));
-	return _typeAs._constant.set;
+	if (this->isMutable())
+	{
+		return returnCFMutableSetRef();
+	}
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFSetGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFSetRef);
 }// returnCFSetRef
 
 
@@ -1044,9 +973,12 @@ CFRetainRelease::
 returnCFStringRef ()
 const
 {
-	if (_isMutable) return returnCFMutableStringRef();
-	assert((nullptr == _typeAs._constant.string) || (CFGetTypeID(_typeAs._constant.string) == CFStringGetTypeID()));
-	return _typeAs._constant.string;
+	if (this->isMutable())
+	{
+		return returnCFMutableStringRef();
+	}
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFStringGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFStringRef);
 }// returnCFStringRef
 
 
@@ -1066,8 +998,7 @@ CFRetainRelease::
 returnCFTypeRef ()
 const
 {
-	if (_isMutable) return _typeAs._modifiable.unspecified;
-	return _typeAs._constant.unspecified;
+	return _reference;
 }// returnCFTypeRef
 
 
@@ -1083,14 +1014,39 @@ CFRetainRelease::
 returnCFURLRef ()
 const
 {
-	return _typeAs._constant.url;
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFURLGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFURLRef);
 }// returnCFURLRef
+
+
+/*!
+Returns the CFWriteStreamRef that this class instance is
+storing (and has retained), or nullptr if the internal
+reference is empty.
+
+(2016.10)
+*/
+CFWriteStreamRef
+CFRetainRelease::
+returnCFWriteStreamRef ()
+const
+{
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFWriteStreamGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFWriteStreamRef);
+}// returnCFWriteStreamRef
 
 
 /*!
 Returns the HIObjectRef that this class instance is
 storing (and has retained), or nullptr if the internal
 reference is empty.
+
+WARNING:	This is a pure cast with no type checking.
+			Be sure that the CFRetainRelease was
+			initialized with some HIObjectRef value.
+
+DEPRECATED.  Do not use Carbon reference types.
 
 (1.1)
 */
@@ -1099,7 +1055,8 @@ CFRetainRelease::
 returnHIObjectRef ()
 const
 {
-	return _typeAs._constant.humanInterfaceObject;
+	//return returnRefCheckCFTypeID< HIObjectRef >(_reference, HIObjectGetTypeID()); // does not appear to be an ID for these
+	return REINTERPRET_CAST(_reference, HIObjectRef);
 }// returnHIObjectRef
 
 
@@ -1115,101 +1072,146 @@ CFRetainRelease::
 returnPasteboardRef ()
 const
 {
-	assert(_isMutable);
-	return _typeAs._modifiable.pasteboard;
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == PasteboardGetTypeID()));
+	return REINTERPRET_CAST(_reference, PasteboardRef);
 }// returnPasteboardRef
 
 
 /*!
-Use this instead of setCFTypeRef() when the embedded
-type is a mutable Core Foundation array.  This is
-necessary because CFTypeRef is a constant.
+Calls CFRelease() only if the given reference is not nullptr.
 
-(1.1)
+(2016.10)
 */
 void
 CFRetainRelease::
-setCFMutableArrayRef	(CFMutableArrayRef		inNewType,
-						 bool					inIsAlreadyRetained)
+safeRelease		(CFTypeRef	inReferenceOrNull)
 {
-	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
-	_typeAs._modifiable.array = inNewType;
-	_isMutable = true;
-	if ((nullptr != _typeAs._constant.unspecified) &&
-		(false == inIsAlreadyRetained))
+	if (nullptr != inReferenceOrNull)
 	{
-		CFRetain(_typeAs._constant.unspecified);
+		CFRelease(inReferenceOrNull);
 	}
-}// setCFMutableArrayRef
+}// safeRelease
 
 
 /*!
-Use this instead of setCFTypeRef() when the embedded
-type is a mutable Core Foundation dictionary.  This
-is necessary because CFTypeRef is a constant.
+Calls CFRetain() only if the given reference is not nullptr.
 
-(1.1)
+(2016.10)
 */
 void
 CFRetainRelease::
-setCFMutableDictionaryRef	(CFMutableDictionaryRef		inNewType,
-							 bool						inIsAlreadyRetained)
+safeRetain	(CFTypeRef	inReferenceOrNull)
 {
-	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
-	_typeAs._modifiable.dictionary = inNewType;
-	_isMutable = true;
-	if ((nullptr != _typeAs._constant.unspecified) &&
-		(false == inIsAlreadyRetained))
+	if (nullptr != inReferenceOrNull)
 	{
-		CFRetain(_typeAs._constant.unspecified);
+		CFRetain(inReferenceOrNull);
 	}
-}// setCFMutableDictionaryRef
+}// safeRetain
 
 
 /*!
-Use this instead of setCFTypeRef() when the embedded
-type is a mutable Core Foundation string.  This is
-necessary because CFTypeRef is a constant.
+Equivalent to constructing the object with "kAlreadyRetained"
+for a mutable type such as CFMutableStringRef.
 
-(2.0)
+IMPORTANT:	Use this variant for any mutable type, otherwise
+			an assertion will fail when future attempts are
+			made to use the type in a mutable way, such as by
+			calling returnCFMutableStringRef().
+
+(2016.10)
 */
+template < typename arg_type >
 void
 CFRetainRelease::
-setCFMutableStringRef	(CFMutableStringRef		inNewType,
-						 bool					inIsAlreadyRetained)
+setMutableWithNoRetain		(arg_type	inNewType)
 {
-	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
-	_typeAs._modifiable.string = inNewType;
-	_isMutable = true;
-	if ((nullptr != _typeAs._constant.unspecified) &&
-		(false == inIsAlreadyRetained))
-	{
-		CFRetain(_typeAs._constant.unspecified);
-	}
-}// setCFMutableStringRef
+	storeReference(inNewType, kAlreadyRetained, kReferenceMutable);
+}// setMutableWithNoRetain
 
 
 /*!
-Calls CFRelease() on the reference kept by this
-class instance, if any, and replaces it with the
-given reference.  CFRetain() is then called on
-the new reference, if the reference is not nullptr.
+Equivalent to constructing the object with "kNotYetRetained"
+for a mutable type such as CFMutableStringRef.
 
-(1.1)
+IMPORTANT:	Use this variant for any mutable type, otherwise
+			an assertion will fail when future attempts are
+			made to use the type in a mutable way, such as by
+			calling returnCFMutableStringRef().
+
+(2016.10)
+*/
+template < typename arg_type >
+void
+CFRetainRelease::
+setMutableWithRetain		(arg_type	inNewType)
+{
+	storeReference(inNewType, kNotYetRetained, kReferenceMutable);
+}// setMutableWithRetain
+
+
+/*!
+Equivalent to constructing the object with "kAlreadyRetained".
+Note that this cannot be used to remember mutable state; see
+setMutableWithNoRetain() and setMutableWithRetain().
+
+(2016.10)
+*/
+template < typename arg_type >
+void
+CFRetainRelease::
+setWithNoRetain		(arg_type	inNewType)
+{
+	storeReference(CONST_CAST(REINTERPRET_CAST(inNewType, void const*), void*),
+					kAlreadyRetained, kReferenceConstant);
+}// setWithNoRetain
+
+
+/*!
+Equivalent to constructing the object with "kNotYetRetained".
+Note that this cannot be used to remember mutable state; see
+setMutableWithNoRetain() and setMutableWithRetain().
+
+(2016.10)
+*/
+template < typename arg_type >
+void
+CFRetainRelease::
+setWithRetain		(arg_type	inNewType)
+{
+	storeReference(CONST_CAST(REINTERPRET_CAST(inNewType, void const*), void*),
+					kNotYetRetained, kReferenceConstant);
+}// setWithRetain
+
+
+/*!
+A helper for calls to setWithRetain() or setWithNoRetain()
+and similar methods.
+
+Not recommended for constructors, since this will take extra
+steps and constructors can initialize fields directly.
+
+Calls CFRelease() on the reference kept by this class instance,
+if any, and replaces it with the given reference.  CFRetain()
+is then called on the new reference, if the reference is not
+nullptr.
+
+(2016.10)
 */
 void
 CFRetainRelease::
-setCFTypeRef	(CFTypeRef		inNewType,
-				 bool			inIsAlreadyRetained)
+storeReference	(void*					inNewType,
+				 ReferenceState			inIsAlreadyRetained,
+				 ReferenceMutability		inMutability)
 {
-	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
-	_typeAs._constant.unspecified = inNewType;
-	if ((nullptr != _typeAs._constant.unspecified) &&
-		(false == inIsAlreadyRetained))
+	clear();
+	_reference = inNewType;
+	_mutability = inMutability;
+	if (kNotYetRetained == inIsAlreadyRetained)
 	{
-		CFRetain(_typeAs._constant.unspecified);
+		safeRetain(inNewType);
 	}
-}// setCFTypeRef
+}// storeReference
 
 #endif
 

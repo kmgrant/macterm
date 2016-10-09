@@ -12,6 +12,7 @@
 		0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */; };
 		0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */; };
 		0A42D789175C3110001F487B /* PrefsConverterCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */; };
+		0A8A38521DA83BFE000FD175 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A8A38511DA83BFE000FD175 /* CFRetainRelease.cp */; };
 		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
 		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
 		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
@@ -47,6 +48,8 @@
 		0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
 		0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
 		0A42D788175C3110001F487B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = PrefsConverter/Resources/English.lproj/PrefsConverterCocoa.xib; sourceTree = "<group>"; };
+		0A8A38511DA83BFE000FD175 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
+		0A8A38531DA83C06000FD175 /* CFRetainRelease.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
 		0AA19F511D88F44C00FD70FF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0AA19F521D88F44C00FD70FF /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrefsConverter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
@@ -75,9 +78,11 @@
 			children = (
 				0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */,
 				0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */,
+				0A8A38511DA83BFE000FD175 /* CFRetainRelease.cp */,
 				0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */,
 				0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */,
 				0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */,
+				0A8A38531DA83C06000FD175 /* CFRetainRelease.h */,
 				0A2D6A7D13B4361300714A1D /* CocoaUserDefaults.h */,
 				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
 			);
@@ -151,7 +156,7 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0460;
+				LastUpgradeCheck = 0800;
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
 						DevelopmentTeam = 8BA57X86ZM;
@@ -197,6 +202,7 @@
 			files = (
 				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */,
 				0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */,
+				0A8A38521DA83BFE000FD175 /* CFRetainRelease.cp in Sources */,
 				0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */,
 				0A2D6A7713B435F700714A1D /* CocoaUserDefaults.mm in Sources */,
 			);
@@ -292,6 +298,25 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0AA19F511D88F44C00FD70FF /* Debug.xcconfig */;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				OBJROOT = _Generated;
 				SDKROOT = macosx;
 				SYMROOT = _Generated;
@@ -306,6 +331,24 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0AA19F521D88F44C00FD70FF /* Production.xcconfig */;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				OBJROOT = _Generated;
 				SDKROOT = macosx;
 				SYMROOT = _Generated;

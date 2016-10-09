@@ -242,7 +242,7 @@ PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 	Preferences_ContextWrap		newContext(Preferences_NewContextFromFavorites
 											(Preferences_ContextReturnClass(inReferenceContextToCopy),
 												nullptr/* name, or nullptr to auto-generate */),
-											true/* is retained */);
+											Preferences_ContextWrap::kAlreadyRetained);
 	
 	
 	if (false == newContext.exists())
@@ -362,7 +362,7 @@ createSearchDictionary ()
 	CFDictionaryRef		result = nullptr;
 	CFRetainRelease		fileCFURLObject(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), CFSTR("PreferencesSearch"),
 																CFSTR("plist")/* type string */, nullptr/* subdirectory path */),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 	
 	
 	if (fileCFURLObject.exists())
@@ -391,7 +391,7 @@ createSearchDictionary ()
 			propertyList = CFPropertyListCreateWithData(kCFAllocatorDefault, fileData, kCFPropertyListImmutable, &actualFormat, &errorObject);
 			if (nullptr != errorObject)
 			{
-				CFRetainRelease		searchErrorCFString(CFErrorCopyDescription(errorObject), true/* is retained */);
+				CFRetainRelease		searchErrorCFString(CFErrorCopyDescription(errorObject), CFRetainRelease::kAlreadyRetained);
 				
 				
 				Console_WriteValueCFString("failed to create dictionary from 'PreferencesSearch.plist', error", searchErrorCFString.returnCFStringRef());
@@ -993,17 +993,18 @@ performCopyPreferenceCollectionToDefault:(id)	sender
 	}
 	else
 	{
-		AlertMessages_BoxWrap	box(Alert_NewWindowModal(self.window), true/* is retained */);
+		AlertMessages_BoxWrap	box(Alert_NewWindowModal(self.window),
+									AlertMessages_BoxWrap::kAlreadyRetained);
 		CFRetainRelease			dialogTextTemplateCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowCopyToDefaultPrimaryText),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease			dialogTextCFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
 																			dialogTextTemplateCFString.returnCFStringRef(),
 																			contextName),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowCopyToDefaultHelpText),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease			overwriteButtonCFString(UIStrings_ReturnCopy(kUIStrings_ButtonOverwrite),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 		
 		
 		assert(dialogTextCFString.exists());
@@ -1162,14 +1163,15 @@ performRemovePreferenceCollection:(id)	sender
 		}
 		else
 		{
-			AlertMessages_BoxWrap	box(Alert_NewWindowModal(self.window), true/* is retained */);
+			AlertMessages_BoxWrap	box(Alert_NewWindowModal(self.window),
+										AlertMessages_BoxWrap::kAlreadyRetained);
 			UIStrings_Result		stringResult = kUIStrings_ResultOK;
 			CFRetainRelease			dialogTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowDeleteCollectionPrimaryText),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 			CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowDeleteCollectionHelpText),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 			CFRetainRelease			deleteButtonCFString(UIStrings_ReturnCopy(kUIStrings_ButtonDelete),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 			
 			
 			assert(dialogTextCFString.exists());
@@ -2048,7 +2050,7 @@ inSearchField:(NSSearchField*)		aSearchField
 					CFRetainRelease		localizedKeyPhrase(CFBundleCopyLocalizedString(AppResources_ReturnApplicationBundle(),
 																						BRIDGE_CAST(asKeyPhrase, CFStringRef), nullptr/* default value */,
 																						CFSTR("PreferencesSearch")/* base name of ".strings" file */),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 					
 					
 					if (localizedKeyPhrase.exists())

@@ -910,7 +910,7 @@ currentValueDescriptor
 	// separately in the user interface (inheritance indicator)
 	// and NOT in the value; see "isInherited"
 	CFRetainRelease						defaultName(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowDefaultFavoriteName),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 	NSString*							asNSStringDefaultName = BRIDGE_CAST(defaultName.returnCFStringRef(), NSString*);
 	NSString*							currentValue = [_preferenceAccessObject stringValue];
 	PreferenceValue_StringDescriptor*	result = nil;

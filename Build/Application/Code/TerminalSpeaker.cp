@@ -349,8 +349,10 @@ My_TerminalSpeaker	(TerminalScreenRef		inScreenDataSource)
 screen(inScreenDataSource),
 isEnabled(true),
 isPaused(false),
-bellHandler(ListenerModel_NewStandardListener(audioEvent, this/* context, as TerminalSpeaker_Ref */), true/* is retained */),
-preferencesHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context, as TerminalSpeaker_Ref */), true/* is retained */),
+bellHandler(ListenerModel_NewStandardListener(audioEvent, this/* context, as TerminalSpeaker_Ref */),
+			ListenerModel_ListenerWrap::kAlreadyRetained),
+preferencesHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context, as TerminalSpeaker_Ref */),
+					ListenerModel_ListenerWrap::kAlreadyRetained),
 selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 {
 	// ask to be notified of terminal bells
@@ -441,7 +443,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				}
 				else
 				{
-					gCurrentBellSoundName = soundNameCFString;
+					gCurrentBellSoundName.setWithRetain(soundNameCFString);
 					gTerminalSoundDefault = (0 == CFStringGetLength(soundNameCFString));
 					gTerminalBellOff = false;
 				}

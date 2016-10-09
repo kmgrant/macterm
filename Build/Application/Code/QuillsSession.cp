@@ -115,14 +115,14 @@ _session(nullptr)
 		CFRetainRelease									dirObject(CFStringCreateWithCString(kCFAllocatorDefault,
 																							inWorkingDirectory.c_str(),
 																							kCFStringEncodingUTF8),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 		TerminalWindowRef								terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
 		Preferences_ContextRef							workspaceContext = nullptr;
 		
 		
 		std::transform(inArgV.begin(), inArgV.end(), args,
 						[](const std::string &s) { return CFStringCreateWithCString(kCFAllocatorDefault, s.c_str(), kCFStringEncodingUTF8); });
-		argsObject.setCFTypeRef(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks), true/* is retained */);
+		argsObject.setWithNoRetain(CFArrayCreate(kCFAllocatorDefault, args, argc, &kCFTypeArrayCallBacks));
 		_session = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argsObject.returnCFArrayRef()/* command */,
 																nullptr/* preferences context */, false/* reconfigure terminal */,
 																workspaceContext, 0/* window index */,
@@ -295,9 +295,9 @@ Session::handle_file	(std::string	inPathname)
 			{
 				CFRetainRelease		fileURL(CFURLCreateFromFileSystemRepresentation
 											(kCFAllocatorDefault, REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), inPathname.size(), false/* is directory */),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 				CFRetainRelease		fileData(OtherApps_NewPropertyListFromFile(fileURL.returnCFURLRef()),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 				
 				
 				if (false == fileData.exists())
@@ -311,7 +311,7 @@ Session::handle_file	(std::string	inPathname)
 				else
 				{
 					CFRetainRelease			baseNameCFString(CFStringCreateWithCString(kCFAllocatorDefault, baseName.c_str(), kCFStringEncodingUTF8),
-																true/* is retained */);
+																CFRetainRelease::kAlreadyRetained);
 					CFDictionaryRef			asDictionary = CFUtilities_DictionaryCast(fileData.returnCFTypeRef());
 					Preferences_ContextRef	targetContext = nullptr; // nullptr for auto-create
 					OtherApps_Result			importError = OtherApps_ImportITermColors
@@ -334,7 +334,7 @@ Session::handle_file	(std::string	inPathname)
 				// no Python handler is installed for this file; use the default handler
 				CFRetainRelease		fileURL(CFURLCreateFromFileSystemRepresentation
 											(kCFAllocatorDefault, REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), inPathname.size(), false/* is directory */),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 				
 				
 				if ((false == fileURL.exists()) ||

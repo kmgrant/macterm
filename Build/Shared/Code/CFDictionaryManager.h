@@ -156,7 +156,7 @@ standard exceptions.
 CFDictionaryManager::
 CFDictionaryManager	(CFDictionaryRef	inDictionary)
 :
-_dictionary(inDictionary)
+_dictionary(inDictionary, CFRetainRelease::kNotYetRetained)
 {
 	// defer to superclass
 }// 1-argument constructor
@@ -170,7 +170,7 @@ Retains a mutable dictionary.
 CFDictionaryManager::
 CFDictionaryManager	(CFMutableDictionaryRef		inDictionary)
 :
-_dictionary(inDictionary)
+_dictionary(inDictionary, CFRetainRelease::kNotYetRetained)
 {
 	// defer to superclass
 }// 1-argument constructor
@@ -339,7 +339,7 @@ void
 CFDictionaryManager::
 setCFDictionaryRef	(CFDictionaryRef	inDictionary)
 {
-	_dictionary.setCFTypeRef(inDictionary);
+	_dictionary.setWithRetain(inDictionary);
 }// setCFDictionaryRef
 
 
@@ -357,7 +357,7 @@ void
 CFDictionaryManager::
 setCFMutableDictionaryRef	(CFMutableDictionaryRef		inDictionary)
 {
-	_dictionary.setCFMutableDictionaryRef(inDictionary);
+	_dictionary.setMutableWithRetain(inDictionary);
 }// setCFMutableDictionaryRef
 
 #endif

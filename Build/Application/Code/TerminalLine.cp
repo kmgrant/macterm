@@ -65,7 +65,7 @@ textVectorSize(textVectorEnd - textVectorBegin),
 textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 				(kCFAllocatorDefault, textVectorBegin, kTerminalLine_MaximumCharacterCount,
 					kTerminalLine_MaximumCharacterCount/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
-				true/* is retained */),
+				CFRetainRelease::kAlreadyRetained),
 attributeInfo(nullptr)
 {
 	assert(textCFString.exists());
@@ -89,7 +89,7 @@ textVectorSize(textVectorEnd - textVectorBegin),
 textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 				(kCFAllocatorDefault, textVectorBegin, kTerminalLine_MaximumCharacterCount,
 					kTerminalLine_MaximumCharacterCount/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
-				true/* is retained */),
+				CFRetainRelease::kAlreadyRetained),
 attributeInfo(nullptr)
 {
 	assert(textCFString.exists());

@@ -143,7 +143,7 @@ ContextSensitiveMenu_NewItemGroup	(CFStringRef	inTitleOrNull)
 	}
 	else
 	{
-		gGroupTitle.setCFTypeRef(inTitleOrNull);
+		gGroupTitle.setWithRetain(inTitleOrNull);
 	}
 }// NewItemGroup
 

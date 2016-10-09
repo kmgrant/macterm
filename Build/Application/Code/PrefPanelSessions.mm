@@ -377,7 +377,7 @@ copyRemoteCommandLineString		(Session_Protocol	inProtocol,
 {
 	CFRetainRelease		newCommandLineObject(CFStringCreateMutable(kCFAllocatorDefault,
 																	0/* length, or 0 for unlimited */),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 	NSString*			portString = (0 == inPortNumber)
 										? nil
 										: [[NSNumber numberWithUnsignedInt:inPortNumber] stringValue];
@@ -904,7 +904,7 @@ setSessionFavoriteIndexes:(NSIndexSet*)		indexes
 				CFStringRef					asCFString = BRIDGE_CAST(collectionName, CFStringRef);
 				Preferences_ContextWrap		sessionContext(Preferences_NewContextFromFavorites
 															(Quills::Prefs::SESSION, asCFString),
-																true/* is retained */);
+																Preferences_ContextWrap::kAlreadyRetained);
 				
 				
 				//Console_WriteValueCFString("setting command line using context", asCFString);

@@ -572,7 +572,7 @@ Console_WriteValueFourChars		(char const*	inLabel,
 											STATIC_CAST(0x000000FFUL & (inValue >> 8), unsigned char),
 											STATIC_CAST(0x000000FFUL & (inValue >> 16), unsigned char),
 											STATIC_CAST(0x000000FFUL & (inValue >> 24), unsigned char)),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 	
 	
 	Console_WriteValueCFString(inLabel, typeCFString.returnCFStringRef());

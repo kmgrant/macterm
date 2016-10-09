@@ -180,7 +180,7 @@ FileSelectionDialogs_CreateOrFindUserSaveFile	(NavReplyRecord const&	inReply,
 					if (nullptr != absolutePathURL)
 					{
 						CFRetainRelease		absolutePathCFString(CFURLCopyFileSystemPath(absolutePathURL, kCFURLPOSIXPathStyle),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 						
 						
 						UNUSED_RETURN(Boolean)CocoaBasic_SetFileTypeCreator(absolutePathCFString.returnCFStringRef(), inNewFileType, inNewFileCreator);

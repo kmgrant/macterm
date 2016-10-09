@@ -267,7 +267,7 @@ Local_GetDefaultShellCommandLine	(CFArrayRef&	outNewArgumentsArray)
 									(kCFAllocatorDefault,
 										(nullptr != userInfoPtr) ? userInfoPtr->pw_shell : getenv("SHELL"),
 										kCFStringEncodingASCII),
-									true/* is retained */);
+									CFRetainRelease::kAlreadyRetained);
 	void const*			args[] = { userShell.returnCFStringRef() };
 	
 	
@@ -300,7 +300,7 @@ Local_GetLoginShellCommandLine		(CFArrayRef&	outNewArgumentsArray)
 {
 	Local_Result		result = kLocal_ResultInsufficientBufferSpace;
 	CFRetainRelease		userName(CFStringCreateWithCString(kCFAllocatorDefault, getenv("USER"), kCFStringEncodingASCII),
-									true/* is retained */);
+									CFRetainRelease::kAlreadyRetained);
 	void const*			args[] = { CFSTR("/usr/bin/login"), CFSTR("-p"), CFSTR("-f"), userName.returnCFStringRef() };
 	
 	
@@ -599,7 +599,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 	CFIndex const			kArgumentCount = CFArrayGetCount(inArgumentArray);
 	char**					argvCopy = new char*[1 + kArgumentCount];
 	char const*				targetDir = nullptr;
-	CFRetainRelease			targetDirCFString = inWorkingDirectoryOrNull;
+	CFRetainRelease			targetDirCFString(inWorkingDirectoryOrNull, CFRetainRelease::kNotYetRetained);
 	Boolean					deleteTargetDir = false;
 	Local_Result			result = kLocal_ResultOK;
 	
@@ -650,8 +650,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			targetDir = getenv("HOME");
 		}
 		
-		targetDirCFString.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, targetDir, kPathEncoding),
-										true/* is retained */);
+		targetDirCFString.setWithNoRetain(CFStringCreateWithCString(kCFAllocatorDefault, targetDir, kPathEncoding));
 	}
 	else
 	{
@@ -1306,8 +1305,8 @@ Local_UpdateCurrentDirectoryCache ()
 			
 			if (nullptr != ptr)
 			{
-				ptr->_recentDirectory.setCFTypeRef(CFStringCreateWithCString(kCFAllocatorDefault, longStrPair.second.c_str(),
-																				kCFStringEncodingUTF8), true/* is retained */);
+				ptr->_recentDirectory.setWithNoRetain(CFStringCreateWithCString(kCFAllocatorDefault, longStrPair.second.c_str(),
+																				kCFStringEncodingUTF8));
 			}
 		}
 	}
@@ -1329,9 +1328,9 @@ _processID(inProcessID),
 _stopped(false),
 _pseudoTerminal(inMasterTerminal),
 _slaveDeviceName(inSlaveDeviceName),
-_commandLine(inArgumentArray),
-_recentDirectory(CFSTR("")),
-_originalDirectory(inWorkingDirectory)
+_commandLine(inArgumentArray, CFRetainRelease::kNotYetRetained),
+_recentDirectory(CFSTR(""), CFRetainRelease::kNotYetRetained),
+_originalDirectory(inWorkingDirectory, CFRetainRelease::kNotYetRetained)
 {
 #if 0
 	Console_WriteLine("process created with argument array:");

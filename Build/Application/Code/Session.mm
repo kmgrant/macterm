@@ -964,14 +964,14 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 		GenericDialog_Wrap						dialog;
 		PrefPanelSessions_KeyboardViewManager*	embeddedPanel = [[PrefPanelSessions_KeyboardViewManager alloc] init];
 		CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																true/* is retained */);
+																CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 		
 		
 		dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(Session_ReturnActiveWindow(inRef), embeddedPanel,
 																	temporaryContext),
-									true/* is retained */);
+									GenericDialog_Wrap::kAlreadyRetained);
 		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 		GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 		GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -1063,12 +1063,12 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 		
 		if (kForceModal)
 		{
-			box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), true/* is retained */);
+			box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), AlertMessages_BoxWrap::kAlreadyRetained);
 		}
 		else
 		{
 			box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(window/* parent */),
-										true/* is retained */);
+										AlertMessages_BoxWrap::kAlreadyRetained);
 		}
 		
 		// TEMPORARY - this should really take into account whether the quit event is interactive
@@ -2942,15 +2942,13 @@ Session_SetProcess	(SessionRef			inRef,
 		char const* const	kDeviceName = Local_ProcessReturnSlaveDeviceName(ptr->mainProcess);
 		
 		
-		ptr->deviceNameString.setCFTypeRef(CFStringCreateWithCString
-											(kCFAllocatorDefault, kDeviceName, kCFStringEncodingASCII),
-											true/* is retained */);
+		ptr->deviceNameString.setWithNoRetain(CFStringCreateWithCString
+												(kCFAllocatorDefault, kDeviceName, kCFStringEncodingASCII));
 	}
-	ptr->commandLineArguments = Local_ProcessReturnCommandLine(ptr->mainProcess);
-	ptr->originalDirectoryString = Local_ProcessReturnOriginalDirectory(ptr->mainProcess);
-	ptr->resourceLocationString.setCFTypeRef(CFStringCreateByCombiningStrings
-												(kCFAllocatorDefault, ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" ")),
-												true/* is retained */);
+	ptr->commandLineArguments.setWithRetain(Local_ProcessReturnCommandLine(ptr->mainProcess));
+	ptr->originalDirectoryString.setWithRetain(Local_ProcessReturnOriginalDirectory(ptr->mainProcess));
+	ptr->resourceLocationString.setWithNoRetain(CFStringCreateByCombiningStrings
+												(kCFAllocatorDefault, ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" ")));
 	
 	changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef/* context */);
 }// SetProcess
@@ -3089,7 +3087,7 @@ Session_SetState	(SessionRef			inRef,
 									
 									if (nullptr != statusWithTime)
 									{
-										ptr->statusString.setCFTypeRef(statusWithTime);
+										ptr->statusString.setWithRetain(statusWithTime);
 										CFRelease(statusWithTime), statusWithTime = nullptr;
 									}
 									else
@@ -3111,7 +3109,7 @@ Session_SetState	(SessionRef			inRef,
 					if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessTerminated,
 										statusString).ok())
 					{
-						ptr->statusString.setCFTypeRef(statusString);
+						ptr->statusString.setWithRetain(statusString);
 					}
 				}
 			}
@@ -3119,18 +3117,18 @@ Session_SetState	(SessionRef			inRef,
 			{
 				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessNewborn,
 													statusString);
-				ptr->statusString.setCFTypeRef(statusString);
+				ptr->statusString.setWithRetain(statusString);
 			}
 			else if (kSession_StateActiveStable == ptr->status)
 			{
 				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessRunning,
 													statusString);
-				ptr->statusString.setCFTypeRef(statusString);
+				ptr->statusString.setWithRetain(statusString);
 			}
 			else
 			{
 				// ???
-				ptr->statusString.setCFTypeRef(CFSTR(""));
+				ptr->statusString.setWithRetain(CFSTR(""));
 			}
 			
 			setIconFromState(ptr);
@@ -3273,7 +3271,7 @@ Session_SetWindowUserDefinedTitle	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	ptr->alternateTitle.setCFTypeRef(CFStringCreateCopy(kCFAllocatorDefault, inWindowName));
+	ptr->alternateTitle.setWithNoRetain(CFStringCreateCopy(kCFAllocatorDefault, inWindowName));
 	changeNotifyForSession(ptr, kSession_ChangeWindowTitle, inRef);
 }// SetWindowUserDefinedTitle
 
@@ -5225,7 +5223,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI, kPasteboard))
 	{
 		CFRetainRelease		pendingLines(StringUtilities_CFNewStringsWithLines(pastedCFString),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 		Boolean				isOneLine = false;
 		Boolean				noWarning = false;
 		
@@ -5248,11 +5246,12 @@ Session_UserInputPaste	(SessionRef			inRef,
 									^{
 										// first join the text into one line (replace new-line sequences
 										// with single spaces), then Paste
-										CFRetainRelease		pastedLines(pendingLines.returnCFArrayRef());
+										CFRetainRelease		pastedLines(pendingLines.returnCFArrayRef(),
+																		CFRetainRelease::kNotYetRetained);
 										CFRetainRelease		joinedCFString(CFStringCreateByCombiningStrings(kCFAllocatorDefault,
 																											pastedLines.returnCFArrayRef(),
 																											CFSTR("")/* separator */),
-																			true/* is retained */);
+																			CFRetainRelease::kAlreadyRetained);
 										
 										
 										Session_UserInputCFString(inRef, joinedCFString.returnCFStringRef());
@@ -5260,7 +5259,8 @@ Session_UserInputPaste	(SessionRef			inRef,
 			auto					normalPasteResponder =
 									^{
 										My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), inRef);
-										CFRetainRelease			pastedLines(pendingLines.returnCFArrayRef());
+										CFRetainRelease			pastedLines(pendingLines.returnCFArrayRef(),
+																			CFRetainRelease::kNotYetRetained);
 										
 										
 										// regular Paste; periodically (but fairly rapidly) insert
@@ -5301,7 +5301,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 										// that might still exist; although very unlikely, this could
 										// happen if the user decided to invoke Paste again while a
 										// large and time-consuming Paste was already in progress
-										sessionPtr->pendingPasteLines.setCFTypeRef(pastedLines.returnCFArrayRef());
+										sessionPtr->pendingPasteLines.setWithRetain(pastedLines.returnCFArrayRef());
 										sessionPtr->pendingPasteCurrentLine = 0;
 									};
 			
@@ -5321,7 +5321,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 			{
 				// configure and display the confirmation alert
 				box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(Session_ReturnActiveWindow(inRef)),
-											true/* is retained */);
+											AlertMessages_BoxWrap::kAlreadyRetained);
 				
 				// set basics
 				Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
@@ -5329,9 +5329,9 @@ Session_UserInputPaste	(SessionRef			inRef,
 				// set message
 				{
 					CFRetainRelease		primaryTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowPasteLinesWarningPrimaryText),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 					CFRetainRelease		helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowPasteLinesWarningHelpText),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 					
 					
 					if (primaryTextCFString.exists() && helpTextCFString.exists())
@@ -5344,7 +5344,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 				// set title
 				{
 					CFRetainRelease		titleCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowPasteLinesWarningName),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					
 					
 					if (titleCFString.exists())
@@ -5356,9 +5356,9 @@ Session_UserInputPaste	(SessionRef			inRef,
 				// set buttons
 				{
 					CFRetainRelease		joinString(UIStrings_ReturnCopy(kUIStrings_ButtonMakeOneLine),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 					CFRetainRelease		pasteNormallyString(UIStrings_ReturnCopy(kUIStrings_ButtonPasteNormally),
-															true/* is retained */);
+															CFRetainRelease::kAlreadyRetained);
 					
 					
 					Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, joinString.returnCFStringRef());
@@ -5481,9 +5481,9 @@ My_Session	(Preferences_ContextRef		inConfigurationOrNull,
 configuration((nullptr == inConfigurationOrNull)
 				? Preferences_NewContext(Quills::Prefs::SESSION)
 				: Preferences_NewCloneContext(inConfigurationOrNull, true/* detach */),
-				true/* is retained */),
+				Preferences_ContextWrap::kAlreadyRetained),
 translationConfiguration(Preferences_NewContext(Quills::Prefs::TRANSLATION),
-							true/* is retained */),
+							Preferences_ContextWrap::kAlreadyRetained),
 readOnly(inIsReadOnly),
 restartInProgress(false),
 kind(kSession_TypeLocalNonLoginShell),
@@ -5513,10 +5513,13 @@ terminalViewTextInputUPP(nullptr), // set at window validation time
 terminalViewTextInputHandlers(), // set at window validation time
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
-windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged), true/* is retained */),
-terminalWindowListener(nullptr), // set at window validation time
-vectorWindowListener(ListenerModel_NewStandardListener(vectorGraphicsWindowChanged, this/* context */), true/* is retained */),
-preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */),
+windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged),
+							ListenerModel_ListenerWrap::kAlreadyRetained),
+terminalWindowListener(), // set at window validation time
+vectorWindowListener(ListenerModel_NewStandardListener(vectorGraphicsWindowChanged, this/* context */),
+						ListenerModel_ListenerWrap::kAlreadyRetained),
+preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */),
+					ListenerModel_ListenerWrap::kAlreadyRetained),
 autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
 autoActivateDragTimer(nullptr), // installed only as needed
 longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
@@ -5547,7 +5550,7 @@ inactivityWatchTimerUPP(nullptr),
 inactivityWatchTimer(nullptr),
 pendingPasteTimerUPP(nullptr),
 pendingPasteTimer(nullptr),
-recentSheetContext(nullptr),
+recentSheetContext(),
 sheetType(kMy_SessionSheetTypeNone),
 renameDialog(nullptr),
 weakRefEraser(this),
@@ -5808,11 +5811,12 @@ autoCaptureSessionToFile	(My_SessionPtr		inPtr)
 			
 			if (nullptr != fileName)
 			{
-				CFRetainRelease			composedName(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */, fileName));
+				CFRetainRelease			composedName(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */, fileName),
+														CFRetainRelease::kAlreadyRetained);
 				CFRetainRelease			dateCFString(CFStringCreateWithCString(kCFAllocatorDefault, dateFormatBuffer, kCFStringEncodingASCII),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 				CFRetainRelease			timeCFString(CFStringCreateWithCString(kCFAllocatorDefault, timeFormatBuffer, kCFStringEncodingASCII),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 				CFMutableStringRef		asMutableCFString = composedName.returnCFMutableStringRef();
 				CFIndex					replacementCount = 0;
 				
@@ -5870,7 +5874,7 @@ captureToFile	(My_SessionPtr		inPtr,
 {
 	Boolean				result = false;
 	CFRetainRelease		fullURL(CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, inDirectoryToCreateIfNecessary, inNameOfFileToOverwrite, false/* is directory */),
-								true/* is retained */);
+								CFRetainRelease::kAlreadyRetained);
 	
 	
 	if (false == fullURL.exists())
@@ -6040,7 +6044,7 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			//Console_WriteValueCFString("setting capture file name", stringValue); // debug
-			inPtr->autoCaptureFileName = stringValue;
+			inPtr->autoCaptureFileName.setWithRetain(stringValue);
 			++result;
 		}
 		else
@@ -6054,11 +6058,12 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 													sizeof(fsRefValue), &fsRefValue, inSearchDefaults);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			CFRetainRelease		newURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &fsRefValue));
+			CFRetainRelease		newURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &fsRefValue),
+										CFRetainRelease::kAlreadyRetained);
 			
 			
 			//Console_WriteLine("setting capture file directory URL"); // debug
-			inPtr->autoCaptureDirectoryURL = newURL.returnCFURLRef();
+			inPtr->autoCaptureDirectoryURL.setWithRetain(newURL.returnCFURLRef());
 			++result;
 		}
 		else
@@ -6767,7 +6772,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, REINTERPRET_CAST(characterPtr, char const*),
 																			kCFStringEncodingUTF8),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 					
 					
 					localEchoString(ptr, asObject.returnCFStringRef());
@@ -7271,9 +7276,9 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				{
 					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 					CFRetainRelease			saveFileURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &saveFile),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 					CFRetainRelease			saveDirectoryURL(CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, saveFileURL.returnCFURLRef()),
-																true/* is retained */);
+																CFRetainRelease::kAlreadyRetained);
 					
 					
 					// delete the temporary file; this is ignored for file captures,
@@ -8373,15 +8378,15 @@ setIconFromState	(My_SessionPtr	inPtr)
 	if ((inPtr->statusAttributes & kSession_StateAttributeNotification) ||
 		(inPtr->statusAttributes & kSession_StateAttributeOpenDialog))
 	{
-		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnCautionIconFilenameNoExtension());
+		inPtr->statusIconName.setWithRetain(AppResources_ReturnCautionIconFilenameNoExtension());
 	}
 	else if (kSession_StateDead == inPtr->status)
 	{
-		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension());
+		inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension());
 	}
 	else
 	{
-		inPtr->statusIconName.setCFTypeRef(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
+		inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
 	}
 }// setIconFromState
 
@@ -8445,7 +8450,8 @@ sheetContextBegin	(My_SessionPtr			inPtr,
 					 Quills::Prefs::Class	inClass,
 					 My_SessionSheetType	inSheetType)
 {
-	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass), true/* is retained */);
+	Preferences_ContextWrap		newContext(Preferences_NewContext(inClass),
+											Preferences_ContextWrap::kAlreadyRetained);
 	Preferences_ContextRef		result = nullptr;
 	
 	
@@ -8484,7 +8490,7 @@ sheetContextBegin	(My_SessionPtr			inPtr,
 		if (copyOK)
 		{
 			inPtr->sheetType = inSheetType;
-			inPtr->recentSheetContext.setRef(newContext.returnRef()); // this also retains the new context
+			inPtr->recentSheetContext.setWithRetain(newContext.returnRef());
 		}
 		else
 		{
@@ -8534,7 +8540,7 @@ terminalHoverLocalEchoString	(My_SessionPtr		inPtr,
 	My_HMHelpContentRecWrap&	tagData = createHelpTagForLocalEcho();
 	HIRect						globalCursorBounds;
 	CFRetainRelease				stringObject(CFStringCreateWithBytes(kCFAllocatorDefault, inBytes, inCount,
-																		kCFStringEncodingUTF8, false/* is external */), true/* is retained */);
+																		kCFStringEncodingUTF8, false/* is external */), CFRetainRelease::kAlreadyRetained);
 	
 	
 	tagData.rename(stringObject.returnCFStringRef(), nullptr/* alternate text */);
@@ -9008,7 +9014,7 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 			{
 				std::string			transmission = Quills::Session::keep_alive_transmission();
 				CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, transmission.c_str(), kCFStringEncodingUTF8),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 				
 				
 				if (asObject.exists())
@@ -9179,7 +9185,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				assert(error == noErr);
 			}
 			
-			ptr->terminalWindowListener.setRef(ListenerModel_NewStandardListener(terminalWindowChanged, session/* context */), true/* is retained */);
+			ptr->terminalWindowListener.setWithNoRetain(ListenerModel_NewStandardListener
+														(terminalWindowChanged, session/* context */));
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
 											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,

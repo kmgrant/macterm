@@ -997,7 +997,7 @@ extendWithText		(CGMutablePathRef				inoutPath,
 					 CFAttributedStringRef			inText)
 {
 	CFRetainRelease		coreTextLine(STATIC_CAST(CTLineCreateWithAttributedString(inText), CFTypeRef),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 	BOOL				horizontallyCentered = YES; // currently not a parameter
 	BOOL				result = NO;
 	

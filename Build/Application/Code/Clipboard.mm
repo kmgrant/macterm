@@ -648,14 +648,14 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 					CFRetainRelease		urlString(CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																			CFDataGetLength(textData), kCFStringEncodingUTF8,
 																			false/* is external */),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 					
 					
 					if (urlString.exists())
 					{
 						CFRetainRelease		urlObject(CFURLCreateWithString(kCFAllocatorDefault, urlString.returnCFStringRef(),
 																			nullptr/* base URL */),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 						
 						
 						if (urlObject.exists())
@@ -672,14 +672,14 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 								CFRetainRelease		pathCFString(CFStringCreateWithCString(kCFAllocatorDefault,
 																							REINTERPRET_CAST(pathBuffer, char const*),
 																							kCFStringEncodingUTF8),
-																	true/* is retained */);
+																	CFRetainRelease::kAlreadyRetained);
 								
 								
 								if (pathCFString.exists())
 								{
 									CFRetainRelease		workArea(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */,
 																							pathCFString.returnCFStringRef()),
-																	false/* is retained; used to set return value released by caller */);
+																	CFRetainRelease::kNotYetRetained/* add a retain anyway; used to set return value released by caller */);
 									
 									
 									if (workArea.exists())
@@ -1231,7 +1231,7 @@ updateClipboard		(PasteboardRef		inPasteboard)
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeText;
 		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
 		{
-			gCurrentRenderData = textToRender;
+			gCurrentRenderData.setWithRetain(textToRender);
 			
 			[controller->clipboardTextContent setEditable:YES];
 			[controller->clipboardTextContent setString:@""];

@@ -118,7 +118,7 @@ Prefs::define_macro		(unsigned int		index_in_set,
 	if (false == name.empty())
 	{
 		CFRetainRelease		nameObject(CFStringCreateWithCString(kCFAllocatorDefault, name.c_str(), kCFStringEncodingUTF8),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 		CFStringRef			nameCFString = nameObject.returnCFStringRef();
 		
 		
@@ -135,7 +135,7 @@ Prefs::define_macro		(unsigned int		index_in_set,
 	if (false == contents.empty())
 	{
 		CFRetainRelease		contentsObject(CFStringCreateWithCString(kCFAllocatorDefault, contents.c_str(), kCFStringEncodingUTF8),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 		CFStringRef			contentsCFString = contentsObject.returnCFStringRef();
 		
 		
@@ -173,7 +173,7 @@ Prefs::import_from_file		(std::string	inPathname,
 	{
 		// it appears to be an XML property list file; parse it
 		Preferences_ContextWrap		temporaryContext(Preferences_NewContext(Quills::Prefs::GENERAL),
-														true/* is retained */);
+														Preferences_ContextWrap::kAlreadyRetained);
 		
 		
 		if (false == temporaryContext.exists())
@@ -220,7 +220,7 @@ Prefs::import_from_file		(std::string	inPathname,
 			{
 				Preferences_ContextWrap		savedContext(Preferences_NewContextFromFavorites
 															(inferredClass, inferredName/* if nullptr, auto-generated */),
-															true/* is retained */);
+															Preferences_ContextWrap::kAlreadyRetained);
 				
 				
 				//Console_WriteValue("import file: inferred new preferences class", inferredClass);

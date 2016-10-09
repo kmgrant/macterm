@@ -255,10 +255,9 @@ Alert_NewWindowModal	(NSWindow*		inParentWindow)
 			
 			alertPtr->viewController = [[AlertMessages_VC alloc] init];
 			assert(nil != alertPtr->viewController);
-			alertPtr->genericDialog = GenericDialog_Wrap(GenericDialog_New(inParentWindow.contentView,
-																			alertPtr->viewController/* transfer ownership */,
-																			nullptr/* data set */, true/* is alert style */),
-															true/* is retained */);
+			alertPtr->genericDialog.setWithNoRetain(GenericDialog_New
+													(inParentWindow.contentView, alertPtr->viewController/* transfer ownership */,
+														nullptr/* data set */, true/* is alert style */));
 			assert(alertPtr->genericDialog.exists());
 			[alertPtr->viewController release]; // ownership transfers to "genericDialog"
 			
@@ -302,10 +301,9 @@ Alert_NewWindowModalParentCarbon	(HIWindowRef	inParentWindow)
 			
 			alertPtr->viewController = [[AlertMessages_VC alloc] init];
 			assert(nil != alertPtr->viewController);
-			alertPtr->genericDialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(inParentWindow,
-																						alertPtr->viewController/* transfer ownership */,
-																						nullptr/* data set */, true/* is alert style */),
-															true/* is retained */);
+			alertPtr->genericDialog.setWithNoRetain(GenericDialog_NewParentCarbon
+													(inParentWindow, alertPtr->viewController/* transfer ownership */,
+														nullptr/* data set */, true/* is alert style */));
 			assert(alertPtr->genericDialog.exists());
 			[alertPtr->viewController release]; // ownership transfers to "genericDialog"
 			
@@ -519,7 +517,7 @@ Alert_Message	(CFStringRef	inDialogText,
 				 CFStringRef	inHelpText,
 				 Boolean		inIsHelpButton)
 {
-	AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), true/* is retained */);
+	AlertMessages_BoxWrap	box(Alert_NewApplicationModal(), AlertMessages_BoxWrap::kAlreadyRetained);
 	
 	
 	Alert_SetHelpButton(box.returnRef(), inIsHelpButton);
@@ -620,7 +618,7 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode,
 			helpTextCFString = CFSTR("");
 		}
 		
-		box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), true/* is retained */);
+		box.setWithNoRetain(Alert_NewApplicationModal());
 		Alert_SetHelpButton(box.returnRef(), false);
 		if (inAssertion)
 		{
@@ -1186,7 +1184,7 @@ newButtonString		(CFRetainRelease&			outStringStorage,
 	
 	
 	stringResult = UIStrings_Copy(inButtonStringType, stringRef);
-	outStringStorage.setCFTypeRef(stringRef, true/* is retained */);
+	outStringStorage.setWithNoRetain(stringRef);
 }// newButtonString
 
 

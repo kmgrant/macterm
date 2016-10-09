@@ -185,7 +185,7 @@ FileUtilities_OpenTemporaryFile		(FSRef&		outTemporaryFile)
 		UniChar				fileName[32/* arbitrary! */];
 		CFRetainRelease		buffer(CFStringCreateMutableWithExternalCharactersNoCopy
 									(kCFAllocatorDefault, fileName, 0/* size */, sizeof(fileName) / sizeof(UniChar)/* capacity */,
-										kCFAllocatorNull/* deallocator */), true/* is retained */);
+										kCFAllocatorNull/* deallocator */), CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (false == buffer.exists())

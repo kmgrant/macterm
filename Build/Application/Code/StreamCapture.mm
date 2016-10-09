@@ -373,16 +373,16 @@ writtenNewLineSequence()
 	switch (inLineEndings)
 	{
 	case kSession_LineEndingCR:
-		this->writtenNewLineSequence = CFSTR("\015");
+		this->writtenNewLineSequence.setWithRetain(CFSTR("\015"));
 		break;
 	
 	case kSession_LineEndingCRLF:
-		this->writtenNewLineSequence = CFSTR("\015\012");
+		this->writtenNewLineSequence.setWithRetain(CFSTR("\015\012"));
 		break;
 	
 	case kSession_LineEndingLF:
 	default:
-		this->writtenNewLineSequence = CFSTR("\012");
+		this->writtenNewLineSequence.setWithRetain(CFSTR("\012"));
 		break;
 	}
 }// My_StreamCapture 1-argument constructor

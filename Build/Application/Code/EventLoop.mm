@@ -1219,7 +1219,8 @@ contextInfo:(void*)				aContext
 	}
 	else
 	{
-		AlertMessages_BoxWrap	box(Alert_NewWindowModal(nullptr/*aParentWindow*/), true/* is retained */);
+		AlertMessages_BoxWrap	box(Alert_NewWindowModal(nullptr/*aParentWindow*/),
+									AlertMessages_BoxWrap::kAlreadyRetained);
 		NSString*				dialogText = anError.localizedDescription;
 		NSString*				helpText = anError.localizedRecoverySuggestion;
 		NSString*				helpSearch = anError.helpAnchor;

@@ -2771,7 +2771,7 @@ Terminal_CreateContentsAEDesc	(TerminalScreenRef		inRef,
 		CFRetainRelease		mutableCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 											(kCFAllocatorDefault, buffer, totalLength, totalLength/* capacity */,
 												kCFAllocatorNull/* reallocator */),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (false == mutableCFString.exists()) result = memFullErr;
@@ -4912,14 +4912,18 @@ void
 Terminal_SetDumbTerminalRendering	(UniChar		inCharacter,
 									 char const*	inDescription)
 {
-	CFStringRef		descriptionCFString = CFStringCreateWithCString(kCFAllocatorDefault, inDescription, kCFStringEncodingUTF8);
+	CFRetainRelease		descriptionCFString(CFStringCreateWithCString
+											(kCFAllocatorDefault, inDescription, kCFStringEncodingUTF8),
+											CFRetainRelease::kAlreadyRetained);
 	
 	
-	if (nullptr == descriptionCFString) Console_Warning(Console_WriteLine, "unexpected error creating UTF-8 string for description");
+	if (false == descriptionCFString.exists())
+	{
+		Console_Warning(Console_WriteLine, "unexpected error creating UTF-8 string for description");
+	}
 	else
 	{
-		gDumbTerminalRenderings()[inCharacter] = descriptionCFString;
-		CFRelease(descriptionCFString), descriptionCFString = nullptr;
+		gDumbTerminalRenderings()[inCharacter].setWithRetain(descriptionCFString.returnCFStringRef());
 	}
 }// SetDumbTerminalRendering
 
@@ -6064,7 +6068,7 @@ lockUTF8(false),
 disableShifts(false),
 recentCodePointByte('\0'),
 inputTextEncoding(inInputTextEncoding),
-answerBackCFString(inAnswerBack),
+answerBackCFString(inAnswerBack, CFRetainRelease::kNotYetRetained),
 currentState(kMy_ParserStateInitial),
 stringAccumulatorState(kMy_ParserStateInitial),
 stringAccumulator(),
@@ -6738,14 +6742,16 @@ My_ScreenBuffer	(Preferences_ContextRef		inTerminalConfig,
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 refValidator(REINTERPRET_CAST(this, TerminalScreenRef), gTerminalScreenValidRefs()),
-configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */), true/* is retained */),
+configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */),
+				Preferences_ContextWrap::kAlreadyRetained),
 emulator(returnEmulator(inTerminalConfig), returnAnswerBackMessage(inTerminalConfig), returnTextEncoding(inTranslationConfig)),
 listeningSession(nullptr),
 speaker(nullptr),
 windowTitleCFString(),
 iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
-preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* context */), true/* is retained */),
+preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* context */),
+					ListenerModel_ListenerWrap::kAlreadyRetained),
 scrollbackBufferCachedSize(0),
 scrollbackBuffer(),
 screenBuffer(),
@@ -7006,7 +7012,7 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 		{
 			// print the captured text using the print dialog
 			CFRetainRelease		jobTitle(UIStrings_ReturnCopy(kUIStrings_TerminalPrintFromTerminalJobTitle),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (jobTitle.exists())
@@ -7065,7 +7071,7 @@ printingReset ()
 		else
 		{
 			this->printingFileURL = CFRetainRelease(CFURLCreateFromFSRef(kCFAllocatorDefault, &this->printingFile),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 			if (false == this->printingFileURL.exists())
 			{
 				Console_Warning(Console_WriteLine, "failed to find URL for temporary file for printing");
@@ -7420,7 +7426,7 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
 												(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
 													false/* is external representation */, bytesRequired, inLength/* maximum trim/repeat */),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (false == bufferAsCFString.exists())
@@ -8520,9 +8526,9 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
 												(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
 													false/* is external representation */, bytesRequired, inLength/* maximum trim/repeat */),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease		humanReadableCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* maximum length or 0 for no limit */),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 		UniChar*			deletedBufferPtr = nullptr;
 		
 		
@@ -13453,7 +13459,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				CFRetainRelease		titleCFString(CFStringCreateWithCString(kCFAllocatorDefault,
 																			inDataPtr->emulator.stringAccumulator.c_str(),
 																			inDataPtr->emulator.inputTextEncoding),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 				
 				
 				if (titleCFString.exists())
@@ -14989,7 +14995,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			if (kCharacterCountToCompose > 1)
 			{
 				CFRetainRelease		composedCharacter(CFStringCreateMutable(kCFAllocatorDefault, kCharacterCountToCompose),
-														true/* is retained */);
+														CFRetainRelease::kAlreadyRetained);
 				
 				
 				for (CFIndex j = i; j < (i + kCharacterCountToCompose); ++j)
@@ -16167,17 +16173,18 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			}
         	if ((escflg == 8) && (*c == 07 || *c == 033) && (ctr > 0))
 			{
-				CFStringRef		titleString = CFStringCreateWithPascalString(kCFAllocatorDefault, newname, CFStringGetSystemEncoding());
+				CFRetainRelease		titleString(CFStringCreateWithPascalString(kCFAllocatorDefault, newname, CFStringGetSystemEncoding()),
+												CFRetainRelease::kAlreadyRetained);
 				
 				
 				if (changeWindowTitle)
 				{
-					inDataPtr->windowTitleCFString.setCFTypeRef(titleString);
+					inDataPtr->windowTitleCFString.setWithRetain(titleString.returnCFStringRef());
 					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
 				}
 				if (changeIconTitle)
 				{
-					inDataPtr->iconTitleCFString.setCFTypeRef(titleString);
+					inDataPtr->iconTitleCFString.setWithRetain(titleString.returnCFStringRef());
 					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
 				}
            		if (*c != 07)
@@ -16186,7 +16193,6 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
             		--c;
                 	++ctr;
 				}
-				CFRelease(titleString);
             	goto ShortCut;
 			}
 		}/* if */
@@ -17789,7 +17795,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 													(kCFAllocatorDefault, kCFStringToSearch, contextPtr->queryCFString,
 														CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
 														contextPtr->searchFlags),
-													true/* already retained */);
+													CFRetainRelease::kAlreadyRetained);
 		
 		
 		if (resultsArray.exists())

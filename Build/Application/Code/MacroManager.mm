@@ -510,7 +510,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 				
 				case kMacroManager_ActionSendTextProcessingEscapes:
 					{
-						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), true/* is retained */);
+						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), CFRetainRelease::kAlreadyRetained);
 						
 						
 						if (false == finalCFString.exists())
@@ -529,7 +529,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 				case kMacroManager_ActionFindTextProcessingEscapes:
 					// find string after performing substitutions
 					{
-						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), true/* is retained */);
+						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), CFRetainRelease::kAlreadyRetained);
 						
 						
 						if (false == finalCFString.exists())
@@ -844,7 +844,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 	CFIndex const			kLength = CFStringGetLength(inBaseString);
 	CFStringRef				result = nullptr;
 	CFStringInlineBuffer	charBuffer;
-	CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */), true/* is retained */);
+	CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */), CFRetainRelease::kAlreadyRetained);
 	Boolean					substitutionError = false;
 	UniChar					octalSequenceCharCode = '\0'; // overwritten each time a \0nn is processed
 	SInt16					readOctal = -1;		// if 0, a \0 was read, and the first "n" (in \0nn) might be next;
@@ -1005,7 +1005,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 								unsigned int const			kLineCount = Terminal_ReturnRowCount(kTerminalScreen);
 								CFRetainRelease				numberCFString(CFStringCreateWithFormat
 																			(kCFAllocatorDefault, nullptr/* options */,
-																				CFSTR("%u"), kLineCount), true/* is retained */);
+																				CFSTR("%u"), kLineCount), CFRetainRelease::kAlreadyRetained);
 								
 								
 								CFStringAppend(finalCFString.returnCFMutableStringRef(), numberCFString.returnCFStringRef());
@@ -1078,10 +1078,9 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 									if ('q' == nextChar)
 									{
 										// copy the string and insert escapes at certain locations to perform quoting
-										workArea.setCFMutableStringRef
+										workArea.setMutableWithNoRetain
 													(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* max. length or zero */,
-																				selectedText),
-														true/* is retained */);
+																				selectedText));
 										if (workArea.exists())
 										{
 											CFRange const	kWholeString = CFRangeMake

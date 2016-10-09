@@ -133,7 +133,7 @@ Network_CopyIPAddresses		(std::vector< CFRetainRelease >&	inoutAddresses)
 			for (; nullptr != *hostList; ++hostList, ++hostIndex)
 			{
 				addressCFString = DNR_CopyResolvedHostAsCFString(currentHost, hostIndex/* index in array to use */);
-				inoutAddresses.push_back(addressCFString);
+				inoutAddresses.push_back(CFRetainRelease(addressCFString, CFRetainRelease::kAlreadyRetained));
 				if (nullptr != addressCFString)
 				{
 					result = true;

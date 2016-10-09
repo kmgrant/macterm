@@ -76,7 +76,7 @@ AppResources_Init	(CFBundleRef	inApplicationBundle)
 {
 	if (nullptr != inApplicationBundle)
 	{
-		gApplicationBundle() = inApplicationBundle;
+		gApplicationBundle().setMutableWithRetain(inApplicationBundle);
 	}
 }// Init
 
@@ -173,7 +173,7 @@ AppResources_LaunchResourceApplication	(CFStringRef			inDotAppDirectoryName,
 	CFRetainRelease			appURL(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(),
 															inDotAppDirectoryName, nullptr/* type string */,
 															nullptr/* subdirectory path */),
-									true/* is retained */);
+									CFRetainRelease::kAlreadyRetained);
 	
 	
 	if (false == appURL.exists())

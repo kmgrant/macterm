@@ -104,7 +104,7 @@ public:
 	inline HIViewWrap	(HIViewID const&	inID,
 						 WindowRef			inParentWindow);
 	
-	//! you should prefer setCFTypeRef(), which is clearer
+	//! you should prefer setWithRetain(), which is clearer
 	inline CFRetainRelease&
 	operator =	(CFRetainRelease const&);
 	
@@ -203,7 +203,7 @@ CFRetainRelease()
 HIViewWrap::
 HIViewWrap		(HIViewRef		inView)
 :
-CFRetainRelease(inView)
+CFRetainRelease(inView, CFRetainRelease::kNotYetRetained)
 {
 }// HIViewWrap 1-argument constructor
 
@@ -220,7 +220,7 @@ CFRetainRelease()
 	
 	error = GetControlByID(inWindow, &inID, &view);
 	if (noErr != error) view = nullptr; // nullify just in case
-	this->setCFTypeRef(view);
+	this->setWithRetain(view);
 }// HIViewWrap 2-argument constructor
 
 
@@ -262,7 +262,7 @@ acquireAccessibilityObject ()
 	else
 	{
 		result = AXUIElementCreateWithHIObjectAndIdentifier(this->returnHIObjectRef(), 0/* sub-part identifier */);
-		_accessibilityObject.setCFTypeRef(result, true/* is retained */);
+		_accessibilityObject.setWithNoRetain(result);
 	}
 	return result;
 }// acquireAccessibilityObject

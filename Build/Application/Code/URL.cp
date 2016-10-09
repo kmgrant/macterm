@@ -119,7 +119,8 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 							 TerminalViewRef	inView)
 {
 	CFRetainRelease		urlObject(TerminalView_ReturnSelectedTextCopyAsUnicode
-									(inView, 0, kTerminalView_TextFlagInline));
+									(inView, 0, kTerminalView_TextFlagInline),
+									CFRetainRelease::kAlreadyRetained);
 	Boolean				openFailed = true;
 	
 	
@@ -151,7 +152,7 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 					CFStringRef			titleCFString = CFSTR("Exception while trying to handle URL"); // LOCALIZE THIS
 					CFRetainRelease		messageCFString(CFStringCreateWithCString
 														(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
-														true/* is retained */); // LOCALIZE THIS?
+														CFRetainRelease::kAlreadyRetained); // LOCALIZE THIS?
 					
 					
 					Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
@@ -190,7 +191,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 	switch (inSpecialInternetLocationToOpen)
 	{
 	case kURL_InternetLocationApplicationHomePage:
-		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MyHomePageURL"));
+		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
+									(AppResources_ReturnBundleForInfo(), CFSTR("MyHomePageURL")));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
@@ -199,7 +201,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationApplicationSupportEMail:
-		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MySupportEMailURL"));
+		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
+									(AppResources_ReturnBundleForInfo(), CFSTR("MySupportEMailURL")));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
@@ -208,7 +211,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationApplicationUpdatesPage:
-		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MyUpdatesURL"));
+		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
+									(AppResources_ReturnBundleForInfo(), CFSTR("MyUpdatesURL")));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
@@ -217,7 +221,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationSourceCodeLicense:
-		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MySourceCodeLicenseURL"));
+		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
+									(AppResources_ReturnBundleForInfo(), CFSTR("MySourceCodeLicenseURL")));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
@@ -226,7 +231,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationProjectPage:
-		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MyProjectURL"));
+		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
+									(AppResources_ReturnBundleForInfo(), CFSTR("MyProjectURL")));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!

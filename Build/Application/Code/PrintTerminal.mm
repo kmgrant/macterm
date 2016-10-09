@@ -114,7 +114,7 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 @autoreleasepool {
 	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 	NSError*				error = nil;
 	NSString*				printFileString = [NSString stringWithContentsOfURL:BRIDGE_CAST(inFile, NSURL*)
 																				encoding:NSUTF8StringEncoding
@@ -157,7 +157,7 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 @autoreleasepool {
 	CFRetainRelease			selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
 											(inView, 0/* space/tab conversion, or zero */, 0/* flags */),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 	PrintTerminal_JobRef	result = nullptr;
 	
 	

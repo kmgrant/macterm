@@ -857,7 +857,7 @@ CFKeyValuePreferences::
 CFKeyValuePreferences	(CFStringRef	inTargetApplication)
 :
 CFKeyValueInterface(),
-_targetApplication(inTargetApplication)
+_targetApplication(inTargetApplication, CFRetainRelease::kNotYetRetained)
 {
 }// CFKeyValuePreferences 2-argument constructor
 
@@ -964,7 +964,7 @@ exists	(CFStringRef	inKey)
 const
 {
 	CFRetainRelease		ignoredValue(CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef()),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 	
 	
 	return ignoredValue.exists();
@@ -1076,8 +1076,8 @@ CFKeyValuePreferences::
 returnLong	(CFStringRef	inKey)
 const
 {
-	return CFPreferencesGetAppIntegerValue(inKey, _targetApplication.returnCFStringRef(),
-											nullptr/* exists/valid flag pointer */);
+	return STATIC_CAST(CFPreferencesGetAppIntegerValue(inKey, _targetApplication.returnCFStringRef(),
+														nullptr/* exists/valid flag pointer */), SInt32);
 }// returnLong
 
 

@@ -77,6 +77,11 @@ function when constructed, assigned or copied, and released
 with the specified release function when it goes out of scope
 or is assigned, etc.
 
+Unlike CFRetainRelease, this object can only store one type of
+value (enforced by template) but it has the flexibility to use
+any retain/release mechanism and it has more compile-time
+checks because of the single known reference type.
+
 It is possible to have a nullptr value, and no retain or
 release occurs in this case.  It is therefore safe to initialize
 to nullptr and later assign a value that should be retained and
@@ -92,6 +97,12 @@ template < typename reference_mgr_type >
 class RetainRelease
 {
 public:
+	enum ReferenceState
+	{
+		kNotYetRetained,			//!< retain before storing, and release when done
+		kAlreadyRetained			//!< no retain, release when done (e.g. newly-allocated data)
+	};
+	
 	typedef typename reference_mgr_type::reference_type		reference_type;
 	
 	inline
@@ -100,15 +111,17 @@ public:
 	inline
 	RetainRelease (RetainRelease const&);
 	
-	inline
-	RetainRelease (reference_type, bool = false);
+	explicit inline
+	RetainRelease (reference_type, ReferenceState);
 	
 	virtual inline
 	~RetainRelease ();
 	
-	// IMPORTANT: It is clearer to call setRef(), so that is recommended.
+	// IMPORTANT: Calls to setWithRetain() or setWithNoRetain() are recommended.
 	// This assignment operator only exists to satisfy STL container implementations
 	// and other generic constructs that could not know about specific class methods.
+	// Since an assignment operator cannot give “already retained, release only”
+	// behavior, it assumes that every assigned reference must be retained.
 	virtual inline RetainRelease&
 	operator = (RetainRelease const&);
 	
@@ -128,7 +141,10 @@ public:
 	returnRef () const;
 	
 	inline void
-	setRef (reference_type, bool = false);
+	setWithNoRetain (reference_type);
+	
+	inline void
+	setWithRetain (reference_type);
 
 protected:
 	inline void
@@ -136,9 +152,12 @@ protected:
 	
 	inline void
 	retain (reference_type) const;
+	
+	inline void
+	storeReference	 (reference_type, ReferenceState);
 
 private:
-	reference_type		_ref;
+	reference_type		_reference;
 };
 
 
@@ -151,10 +170,10 @@ Creates a nullptr reference.
 (2.4)
 */
 template < typename reference_mgr_type >
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 RetainRelease ()
 :
-_ref(nullptr)
+_reference(nullptr)
 {
 }// default constructor
 
@@ -166,14 +185,14 @@ The retainer is called on the reference.
 (2.4)
 */
 template < typename reference_mgr_type >
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 RetainRelease	(RetainRelease const&	inCopy)
 :
-_ref(inCopy._ref)
+_reference(inCopy._reference)
 {
-	if (nullptr != _ref)
+	if (nullptr != _reference)
 	{
-		this->retain(_ref);
+		this->retain(_reference);
 	}
 }// copy constructor
 
@@ -190,16 +209,16 @@ an object.
 (2.4)
 */
 template < typename reference_mgr_type >
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 RetainRelease	(reference_type		inRef,
-				 bool				inIsAlreadyRetained)
+				 ReferenceState		inIsAlreadyRetained)
 :
-_ref(inRef)
+_reference(inRef)
 {
-	_ref = inRef;
-	if ((nullptr != _ref) && (false == inIsAlreadyRetained))
+	_reference = inRef;
+	if ((nullptr != _reference) && (kNotYetRetained == inIsAlreadyRetained))
 	{
-		this->retain(_ref);
+		this->retain(_reference);
 	}
 }// reference initializer constructor
 
@@ -211,12 +230,12 @@ instance, if any.
 (2.4)
 */
 template < typename reference_mgr_type >
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 ~RetainRelease ()
 {
-	if (nullptr != _ref)
+	if (nullptr != _reference)
 	{
-		this->release(_ref), _ref = nullptr;
+		this->release(_reference), _reference = nullptr;
 	}
 }// destructor
 
@@ -228,13 +247,13 @@ a new instance, but updates this instance.
 (2.4)
 */
 template < typename reference_mgr_type >
-RetainRelease<reference_mgr_type>&
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >&
+RetainRelease< reference_mgr_type >::
 operator =		(RetainRelease const&	inCopy)
 {
 	if (&inCopy != this)
 	{
-		setRef(inCopy.returnRef());
+		storeReference(inCopy.returnRef(), kNotYetRetained);
 	}
 	return *this;
 }// operator =
@@ -255,7 +274,7 @@ NOTE:	Currently, this is a simple check by-value, and no
 */
 template < typename reference_mgr_type >
 bool
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 operator ==		(RetainRelease const&	inOther)
 {
 	return (returnRef() == inOther.returnRef());
@@ -269,7 +288,7 @@ The inverse of operator ==().
 */
 template < typename reference_mgr_type >
 bool
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 operator !=		(RetainRelease const&	inOther)
 {
 	return ! operator == (inOther);
@@ -284,14 +303,14 @@ necessary) on the previous value.
 */
 template < typename reference_mgr_type >
 void
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 clear ()
 {
-	if (nullptr != _ref)
+	if (nullptr != _reference)
 	{
-		this->release(_ref);
+		this->release(_reference);
 	}
-	_ref = nullptr;
+	_reference = nullptr;
 }// clear
 
 
@@ -302,11 +321,11 @@ Returns true if the internal reference is not nullptr.
 */
 template < typename reference_mgr_type >
 bool
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 exists ()
 const
 {
-	return (nullptr != _ref);
+	return (nullptr != _reference);
 }// exists
 
 
@@ -317,7 +336,7 @@ Invokes the reference manager’s release() method.
 */
 template < typename reference_mgr_type >
 void
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 release		(reference_type		inRef)
 const
 {
@@ -332,7 +351,7 @@ Invokes the reference manager’s retain() method.
 */
 template < typename reference_mgr_type >
 void
-RetainRelease<reference_mgr_type>::
+RetainRelease< reference_mgr_type >::
 retain		(reference_type		inRef)
 const
 {
@@ -348,13 +367,41 @@ reference is empty.
 (2.4)
 */
 template < typename reference_mgr_type >
-typename RetainRelease<reference_mgr_type>::reference_type
-RetainRelease<reference_mgr_type>::
+typename RetainRelease< reference_mgr_type >::reference_type
+RetainRelease< reference_mgr_type >::
 returnRef ()
 const
 {
-	return _ref;
+	return _reference;
 }// returnRef
+
+
+/*!
+Equivalent to constructing the object with "kAlreadyRetained".
+
+(2016.10)
+*/
+template < typename reference_mgr_type >
+void
+RetainRelease< reference_mgr_type >::
+setWithNoRetain		(reference_type		inNewType)
+{
+	storeReference(inNewType, kAlreadyRetained);
+}// setWithNoRetain
+
+
+/*!
+Equivalent to constructing the object with "kNotYetRetained".
+
+(2016.10)
+*/
+template < typename reference_mgr_type >
+void
+RetainRelease< reference_mgr_type >::
+setWithRetain	(reference_type		inNewType)
+{
+	storeReference(inNewType, kNotYetRetained);
+}// setWithRetain
 
 
 /*!
@@ -363,27 +410,27 @@ instance, if any, and replaces it with the given reference.
 The retainer is then called on the new reference, if the
 reference is not nullptr.
 
-(2.4)
+(2016.10)
 */
 template < typename reference_mgr_type >
 void
-RetainRelease<reference_mgr_type>::
-setRef	(reference_type		inNewType,
-		 bool				inIsAlreadyRetained)
+RetainRelease< reference_mgr_type >::
+storeReference	(reference_type		inNewType,
+				 ReferenceState		inIsAlreadyRetained)
 {
-	if (_ref != inNewType)
+	if (_reference != inNewType)
 	{
-		if (nullptr != _ref)
+		if (nullptr != _reference)
 		{
-			this->release(_ref);
+			this->release(_reference);
 		}
-		_ref = inNewType;
-		if ((nullptr != _ref) && (false == inIsAlreadyRetained))
+		_reference = inNewType;
+		if ((nullptr != _reference) && (kNotYetRetained == inIsAlreadyRetained))
 		{
-			this->retain(_ref);
+			this->retain(_reference);
 		}
 	}
-}// setRef
+}// storeReference
 
 #endif
 

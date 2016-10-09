@@ -97,7 +97,7 @@ OtherApps_ImportITermColors		(CFDictionaryRef				inXMLBasedDictionary,
 												? Preferences_NewContextFromFavorites
 													(Quills::Prefs::FORMAT, inNameHintOrNull)
 												: nullptr),
-												true/* is retained */);
+												Preferences_ContextWrap::kAlreadyRetained);
 		Preferences_ContextRef		targetContext = ((kIsNew)
 														? newContext.returnRef()
 														: inoutFormatToModifyOrNull);
@@ -289,7 +289,7 @@ OtherApps_NewPropertyListFromFile		(CFURLRef		inFile,
 {
 	CFPropertyListRef   	result = nullptr;
 	CFRetainRelease		streamObject(CFReadStreamCreateWithFile(kCFAllocatorDefault, inFile),
-										true/* is retained */);
+										CFRetainRelease::kAlreadyRetained);
 	
 	
 	if (streamObject.exists() && CFReadStreamOpen(streamObject.returnCFReadStreamRef()))
@@ -305,7 +305,7 @@ OtherApps_NewPropertyListFromFile		(CFURLRef		inFile,
 		if (nullptr != errorCFObject)
 		{
 			CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (nullptr != outErrorOrNull)

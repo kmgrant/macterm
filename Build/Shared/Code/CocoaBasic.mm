@@ -708,7 +708,7 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 {
 	NSString*			result = nil;
 	CFRetainRelease		urlRef(CFURLCreateFromFSRef(kCFAllocatorDefault, &inFileOrFolder),
-								true/* is retained */);
+								CFRetainRelease::kAlreadyRetained);
 	
 	
 	if (urlRef.exists())

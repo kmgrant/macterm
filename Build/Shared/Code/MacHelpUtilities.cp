@@ -63,7 +63,7 @@ have to worry about deleting it.
 void
 MacHelpUtilities_Init	(CFStringRef	inAppleTitleOfHelpFile)
 {
-	gHelpBookAppleTitleRetainer.setCFTypeRef(inAppleTitleOfHelpFile);
+	gHelpBookAppleTitleRetainer.setWithRetain(inAppleTitleOfHelpFile);
 }// Init
 
 

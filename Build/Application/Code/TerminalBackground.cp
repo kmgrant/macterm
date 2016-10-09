@@ -319,7 +319,8 @@ imageObject					(),
 image						(nullptr),
 isMatte						(true),
 dontDimBackgroundScreens	(false), // reset by callback
-preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */), true/* is retained */)
+preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */),
+								ListenerModel_ListenerWrap::kAlreadyRetained)
 {
 	OSStatus		error = noErr;
 	CGDeviceColor	initialColor;
@@ -372,13 +373,14 @@ My_TerminalBackground::
 setImageFromURLString	(CFStringRef	inURLCFString)
 {
 	CFRetainRelease		imageURLObject(CFURLCreateWithString
-										(kCFAllocatorDefault, inURLCFString, nullptr/* base URL */), true/* is retained */);
+										(kCFAllocatorDefault, inURLCFString, nullptr/* base URL */), CFRetainRelease::kAlreadyRetained);
 	CFURLRef			imageURL = CFUtilities_URLCast(imageURLObject.returnCFTypeRef());
-	CFRetainRelease		imageDataObject(CGImageSourceCreateWithURL(imageURL, nullptr/* options */), true/* is retained */);
+	CFRetainRelease		imageDataObject(CGImageSourceCreateWithURL(imageURL, nullptr/* options */), CFRetainRelease::kAlreadyRetained);
 	CGImageSourceRef	imageData = (CGImageSourceRef)imageDataObject.returnCFTypeRef();
 	
 	
-	this->imageObject = CGImageSourceCreateImageAtIndex(imageData, 0/* index */, nullptr/* options */);
+	this->imageObject.setWithNoRetain(CGImageSourceCreateImageAtIndex
+										(imageData, 0/* index */, nullptr/* options */));
 	
 	// for convenience, pre-cast the retained reference and store it
 	this->image = (CGImageRef)this->imageObject.returnCFTypeRef();

@@ -125,14 +125,14 @@ Undoables_Init	(Undoables_UndoHandlingMechanism	inUndoHandlingMechanism,
 				 CFStringRef						inDisabledRedoCommandNameOrNullIfRedoIsNotUsed)
 {
 	gUndoStackType = inUndoHandlingMechanism;
-	gDefaultUndoName().setCFTypeRef(inDisabledUndoCommandName);
+	gDefaultUndoName().setWithRetain(inDisabledUndoCommandName);
 	if (inDisabledRedoCommandNameOrNullIfRedoIsNotUsed == nullptr)
 	{
-		gDefaultRedoName().setCFTypeRef(CFSTR(""));
+		gDefaultRedoName().setWithRetain(CFSTR(""));
 	}
 	else
 	{
-		gDefaultRedoName().setCFTypeRef(inDisabledRedoCommandNameOrNullIfRedoIsNotUsed);
+		gDefaultRedoName().setWithRetain(inDisabledRedoCommandNameOrNullIfRedoIsNotUsed);
 	}
 }// Init
 
@@ -217,14 +217,14 @@ Undoables_NewAction		(CFStringRef					inUndoCommandName,
 		
 		
 		ptr->isRedoable = (inRedoCommandNameOrNullIfNotRedoable != nullptr);
-		ptr->undoCommandName.setCFTypeRef(inUndoCommandName);
+		ptr->undoCommandName.setWithRetain(inUndoCommandName);
 		if (inRedoCommandNameOrNullIfNotRedoable == nullptr)
 		{
-			ptr->redoCommandName.setCFTypeRef(CFSTR(""));
+			ptr->redoCommandName.setWithRetain(CFSTR(""));
 		}
 		else
 		{
-			ptr->redoCommandName.setCFTypeRef(inRedoCommandNameOrNullIfNotRedoable);
+			ptr->redoCommandName.setWithRetain(inRedoCommandNameOrNullIfNotRedoable);
 		}
 		ptr->actionProc = inHowToUndoAction;
 		ptr->contextID = inUserDefinedContextIdentifier;

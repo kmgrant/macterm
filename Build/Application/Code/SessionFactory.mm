@@ -327,7 +327,7 @@ public std::unary_function< Workspace_Ref/* argument */, bool/* return */ >
 {
 public:
 	workspaceContainsWindow	(HIWindowRef	inWindow)
-	: _window(inWindow)
+	: _window(inWindow, CFRetainRelease::kNotYetRetained)
 	{
 	}
 	
@@ -770,7 +770,7 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindow,
 		// pass the command line to the running shell
 		{
 			CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, buffer.c_str(), kCFStringEncodingUTF8),
-											true/* is retained */);
+											CFRetainRelease::kAlreadyRetained);
 			
 			
 			if (asObject.exists())
@@ -878,7 +878,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
 				{
 					Preferences_ContextWrap		macroSet(Preferences_NewContextFromFavorites(Quills::Prefs::MACRO_SET,
 																								macroSetNameCFString),
-															true/* is retained */);
+															Preferences_ContextWrap::kAlreadyRetained);
 					
 					
 					if (false == macroSet.exists())
@@ -1245,7 +1245,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 			{
 				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
 															(Quills::Prefs::SESSION, associatedSessionName),
-															true/* is retained */);
+															Preferences_ContextWrap::kAlreadyRetained);
 				
 				
 				if (false == namedSettings.exists())
@@ -1460,18 +1460,18 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 		{
 			GenericDialog_Wrap	dialog;
 			CFRetainRelease		addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 			CFRetainRelease		cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-												true/* is retained */);
+												CFRetainRelease::kAlreadyRetained);
 			CFRetainRelease		startSessionString(UIStrings_ReturnCopy(kUIStrings_ButtonStartSession),
-													true/* is retained */);
+													CFRetainRelease::kAlreadyRetained);
 			
 			
 			// display the sheet
 			dataObject.disableObservers = YES; // temporarily disable to prevent visible shift in window appearance
 			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
 																		embeddedPanel, temporaryContext),
-										true/* is retained */);
+										GenericDialog_Wrap::kAlreadyRetained);
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, startSessionString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -3042,7 +3042,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFRetainRelease				asCFString(CFStringCreateWithCString(kCFAllocatorDefault,
 																							preferredName.c_str(),
 																							kCFStringEncodingUTF8),
-																true/* is retained */);
+																CFRetainRelease::kAlreadyRetained);
 						Preferences_ContextRef		workspaceContext = Preferences_IsContextNameInUse
 																		(Quills::Prefs::WORKSPACE, asCFString.returnCFStringRef())
 																		? Preferences_NewContextFromFavorites
