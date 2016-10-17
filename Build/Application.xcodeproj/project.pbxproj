@@ -12,11 +12,13 @@
 		0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A06274A0FB3AF3C00EBC8BB /* __init__.py */; };
 		0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
 		0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */; };
+		0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A23A8D11C21077B00156B1E /* TextAttributes.mm */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */; };
+		0A30289D1DB2BE2500C1C557 /* Network.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289C1DB2BE2500C1C557 /* Network.mm */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
@@ -105,7 +107,6 @@
 		0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.mm */; };
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.mm */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
-		0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFF055432A400ACDF3A /* Network.cp */; };
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
 		0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */; };
 		0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */; };
@@ -212,28 +213,67 @@
 		0A03DBC9063F6BCC00C38B78 /* MacroManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacroManager.h; path = Application/Code/MacroManager.h; sourceTree = "<group>"; };
 		0A043B031D8F5A7200511F30 /* RegionUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegionUtilities.cp; path = Shared/Code/RegionUtilities.cp; sourceTree = "<group>"; };
 		0A043B051D8F5A7C00511F30 /* RegionUtilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RegionUtilities.h; path = Shared/Code/RegionUtilities.h; sourceTree = "<group>"; };
-		0A05299C15BBA1B200D62259 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/file/__init__.py; sourceTree = "<group>"; };
 		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
 		0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TranslucentMenuArrow.h; path = Application/Code/TranslucentMenuArrow.h; sourceTree = "<group>"; };
 		0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TranslucentMenuArrow.mm; path = Application/Code/TranslucentMenuArrow.mm; sourceTree = "<group>"; };
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
 		0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeam@2x.png"; path = "Application/Resources/CursorIBeam@2x.png"; sourceTree = "<group>"; };
-		0A0D315716E2F5440063914A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalScreenCocoa.xib; sourceTree = "<group>"; };
 		0A0D372719B43370005500DE /* CursorMoveCursor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorMoveCursor.png; path = Application/Resources/CursorMoveCursor.png; sourceTree = "<group>"; };
 		0A0D372819B43370005500DE /* CursorMoveCursor@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorMoveCursor@2x.png"; path = "Application/Resources/CursorMoveCursor@2x.png"; sourceTree = "<group>"; };
 		0A0D372919B43370005500DE /* CursorMoveCursorSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorMoveCursorSmall.png; path = Application/Resources/CursorMoveCursorSmall.png; sourceTree = "<group>"; };
 		0A0D372A19B43370005500DE /* CursorMoveCursorSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorMoveCursorSmall@2x.png"; path = "Application/Resources/CursorMoveCursorSmall@2x.png"; sourceTree = "<group>"; };
 		0A0D372B19B4338C005500DE /* CursorCrosshairs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorCrosshairs.png; path = Application/Resources/CursorCrosshairs.png; sourceTree = "<group>"; };
 		0A0D372C19B4338C005500DE /* CursorCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorCrosshairs@2x.png"; path = "Application/Resources/CursorCrosshairs@2x.png"; sourceTree = "<group>"; };
+		0A0E9F521DB17FF3006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F541DB18095006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
+		0A0E9F561DB180F2006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F581DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F5A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AlertMessagesCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F5C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChildProcessWindowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F5E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F601DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CommandLineCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F621DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DebugInterfaceCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F641DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FindDialogCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F661DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/GenericDialogCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F681DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/GenericPanelNumberedListCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F6A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/GenericPanelTabsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F6C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/InfoWindowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F6E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/KeypadArrangeWindowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F701DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/KeypadControlKeysCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F721DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/KeypadFullScreenCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F741DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F761DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F781DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F7A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F7C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelFullScreenCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F7E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralNotificationsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F801DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralOptionsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F821DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F841DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F861DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F881DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelSessionGraphicsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F8A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelSessionKeyboardCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F8C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F8E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelTerminalEmulationCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F901DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelTerminalOptionsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F921DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelTerminalScreenCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F941DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F961DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelWorkspaceOptionsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F981DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F9A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F9C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ResizeInfoCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F9E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
+		0A0E9FA01DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalViewCocoa.xib; sourceTree = "<group>"; };
+		0A0E9FA21DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9FA41DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
+		0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreenDisable.icns; path = Application/Resources/IconForFullScreenDisable.icns; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterRef.typedef.h; path = Application/Code/VectorInterpreterRef.typedef.h; sourceTree = "<group>"; };
-		0A183A061C4301DC0067B17C /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AlertMessagesCocoa.xib; sourceTree = "<group>"; };
 		0A1A06860ABA6236002C95D7 /* PrintTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintTerminal.h; path = Application/Code/PrintTerminal.h; sourceTree = "<group>"; };
 		0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrintTerminal.mm; path = Application/Code/PrintTerminal.mm; sourceTree = "<group>"; };
-		0A1BCD8905CA2B21005CF1E5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
 		0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusActive.icns; path = Application/Resources/IconForSessionStatusActive.icns; sourceTree = "<group>"; };
 		0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusDead.icns; path = Application/Resources/IconForSessionStatusDead.icns; sourceTree = "<group>"; };
 		0A1FE93E1A39F196003C81BA /* XPCCallPythonClient.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "XPCCallPythonClient.objc++.h"; path = "Shared/Code/XPCCallPythonClient.objc++.h"; sourceTree = "<group>"; };
@@ -245,11 +285,11 @@
 		0A2A06020DF4B8F900DF8C98 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = GrowlSDK/Frameworks/Growl.framework; sourceTree = SOURCE_ROOT; };
 		0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaExtensions.objc++.h"; path = "Shared/Code/CocoaExtensions.objc++.h"; sourceTree = "<group>"; };
 		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
-		0A2C796C1AFC663D00930395 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/GenericDialogCocoa.xib; sourceTree = "<group>"; };
 		0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TerminalLine.h; path = Application/Code/TerminalLine.h; sourceTree = "<group>"; };
 		0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalLine.cp; path = Application/Code/TerminalLine.cp; sourceTree = "<group>"; };
-		0A317CAD10A0C775002EDEFB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
-		0A32442115D74B0D001EBB98 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalOptionsCocoa.xib; sourceTree = "<group>"; };
+		0A30289A1DB294F400C1C557 /* IconForRefresh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForRefresh.png; path = Application/Resources/IconForRefresh.png; sourceTree = "<group>"; };
+		0A30289B1DB2BE1800C1C557 /* NetEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = "<group>"; };
+		0A30289C1DB2BE2500C1C557 /* Network.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Network.mm; path = Application/Code/Network.mm; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ListenerModel.mm; path = Shared/Code/ListenerModel.mm; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
@@ -300,7 +340,6 @@
 		0A4603FE0554376100ACDF3A /* Localization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Localization.h; path = Application/Code/Localization.h; sourceTree = "<group>"; };
 		0A4604080554376100ACDF3A /* MenuBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MenuBar.h; path = Application/Code/MenuBar.h; sourceTree = "<group>"; };
 		0A46040B0554376100ACDF3A /* NetEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = "<group>"; };
-		0A46040C0554376100ACDF3A /* Network.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Network.h; path = Application/Code/Network.h; sourceTree = "<group>"; };
 		0A46040F0554376100ACDF3A /* Panel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Panel.h; path = Application/Code/Panel.h; sourceTree = "<group>"; };
 		0A4604120554376100ACDF3A /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Preferences.h; path = Application/Code/Preferences.h; sourceTree = "<group>"; };
 		0A4604160554376100ACDF3A /* PrefPanelGeneral.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelGeneral.h; path = Application/Code/PrefPanelGeneral.h; sourceTree = "<group>"; };
@@ -363,7 +402,6 @@
 		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
 		0A46FDFB055432A400ACDF3A /* MenuBar.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MenuBar.cp; path = Application/Code/MenuBar.cp; sourceTree = "<group>"; };
 		0A46FDFE055432A400ACDF3A /* NetEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetEvents.cp; path = Application/Code/NetEvents.cp; sourceTree = "<group>"; };
-		0A46FDFF055432A400ACDF3A /* Network.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Network.cp; path = Application/Code/Network.cp; sourceTree = "<group>"; };
 		0A46FE01055432A400ACDF3A /* Panel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Panel.mm; path = Application/Code/Panel.mm; sourceTree = "<group>"; };
 		0A46FE03055432A400ACDF3A /* Preferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Preferences.cp; path = Application/Code/Preferences.cp; sourceTree = "<group>"; };
 		0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelGeneral.mm; path = Application/Code/PrefPanelGeneral.mm; sourceTree = "<group>"; };
@@ -397,19 +435,14 @@
 		0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelWorkspaces.icns; path = Application/Resources/IconForPrefPanelWorkspaces.icns; sourceTree = "<group>"; };
 		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
-		0A50591B157C64D300F257A1 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFullScreenCocoa.xib; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
-		0A5A6FCB1578783700EFCEAB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
 		0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForItemAddMenuSegment@2x.icns"; path = "Application/Resources/IconForItemAddMenuSegment@2x.icns"; sourceTree = "<group>"; };
 		0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenuSegment.icns; path = Application/Resources/IconForContextMenuSegment.icns; sourceTree = "<group>"; };
 		0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAddMenuSegment.icns; path = Application/Resources/IconForItemAddMenuSegment.icns; sourceTree = "<group>"; };
-		0A6000E915981886001CA6AA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
-		0A6315B912348AB4003890B8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
 		0A65F2C315882AD100B9E338 /* IconForContextMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForContextMenuSegment@2x.icns"; path = "Application/Resources/IconForContextMenuSegment@2x.icns"; sourceTree = "<group>"; };
-		0A66B705154E04DC00B98072 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
@@ -419,18 +452,15 @@
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
 		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
-		0A6C446A1D84C72B00E1B0E2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ChildProcessWindowCocoa.xib; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
 		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
-		0A7A74ED15A90A0F00E14184 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
-		0A839C3415805125000F001E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
@@ -456,8 +486,6 @@
 		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
 		0A9D796B12A2342B0006CECA /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/term/__init__.py; sourceTree = "<group>"; };
 		0A9D796C12A2342B0006CECA /* text.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = text.py; path = Application/PythonCode/pymacterm/term/text.py; sourceTree = "<group>"; };
-		0AA179F71468E4A500779DA9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/FindDialogCocoa.xib; sourceTree = "<group>"; };
-		0AA19F541D8A07CC00FD70FF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Shared/Resources/English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
 		0AA42A290F0C95B80057B393 /* Template-Application-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Application-Info.plist"; path = "Application/Resources/Template-Application-Info.plist"; sourceTree = "<group>"; };
 		0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-PyMacTerm.framework-Info.plist"; path = "Application/Resources/Template-PyMacTerm.framework-Info.plist"; sourceTree = "<group>"; };
 		0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Quills.framework-Info.plist"; path = "Application/Resources/Template-Quills.framework-Info.plist"; sourceTree = "<group>"; };
@@ -469,24 +497,14 @@
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AAB323314B2BC59002C6F33 /* IconForCaution.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCaution.icns; path = Application/Resources/IconForCaution.icns; sourceTree = "<group>"; };
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
-		0AAEFFC0111E77F100526983 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
 		0AB00A4E178D079D00C1D94A /* CursorIBeamSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeamSmall.png; path = Application/Resources/CursorIBeamSmall.png; sourceTree = "<group>"; };
 		0AB00A4F178D079D00C1D94A /* CursorIBeamSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeamSmall@2x.png"; path = "Application/Resources/CursorIBeamSmall@2x.png"; sourceTree = "<group>"; };
 		0AB0EF76110E99570099E055 /* Registrar.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Registrar.template.h; path = Shared/Code/Registrar.template.h; sourceTree = "<group>"; };
 		0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = WindowTitleDialog.mm; path = Shared/Code/WindowTitleDialog.mm; sourceTree = "<group>"; };
 		0AB19DA91D87556600D80A2D /* WindowTitleDialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WindowTitleDialog.h; path = Shared/Code/WindowTitleDialog.h; sourceTree = "<group>"; };
-		0AB2272F12D2D03F00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/DebugInterfaceCocoa.xib; sourceTree = "<group>"; };
-		0AB2273112D2D1DC00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
-		0AB2273312D2D27000D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/CommandLineCocoa.xib; sourceTree = "<group>"; };
-		0AB2273512D2D27A00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadArrangeWindowCocoa.xib; sourceTree = "<group>"; };
-		0AB2273712D2D34B00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadControlKeysCocoa.xib; sourceTree = "<group>"; };
-		0AB2273B12D2D37900D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadFullScreenCocoa.xib; sourceTree = "<group>"; };
-		0AB2273D12D2D3BB00D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
-		0AB2273F12D2D41300D663BB /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/__init__.py; sourceTree = "<group>"; };
 		0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaFuture.mm; path = Shared/Code/CocoaFuture.mm; sourceTree = "<group>"; };
 		0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaFuture.objc++.h"; path = "Shared/Code/CocoaFuture.objc++.h"; sourceTree = "<group>"; };
-		0ABBB09E1C9FA27B0024662E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalViewCocoa.xib; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
@@ -496,7 +514,6 @@
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTerminals.mm; path = Application/Code/PrefPanelTerminals.mm; sourceTree = "<group>"; };
 		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
-		0AC1A97D1C388B8100CEBDF3 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
 		0AC69F151877A697004E6019 /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Application/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
@@ -507,7 +524,6 @@
 		0AC6A6040AC4E45600FF6FC6 /* QuillsSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSession.h; path = Application/Code/QuillsSession.h; sourceTree = "<group>"; };
 		0AC6BAD20A8C0A8B00AFF37A /* MacTermQuills.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MacTermQuills.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForHide.icns; path = Application/Resources/IconForHide.icns; sourceTree = "<group>"; };
-		0AC8100C1221C89000687DB2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/InfoWindowCocoa.xib; sourceTree = "<group>"; };
 		0AC810AB1221EC5800687DB2 /* IconForNewSessionLogInShell.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForNewSessionLogInShell.icns; path = Application/Resources/IconForNewSessionLogInShell.icns; sourceTree = "<group>"; };
 		0AC810AC1221EC6100687DB2 /* IconForNewSessionShell.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForNewSessionShell.icns; path = Application/Resources/IconForNewSessionShell.icns; sourceTree = "<group>"; };
 		0AC810AD1221EC9300687DB2 /* IconForMacroSet.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForMacroSet.icns; path = Application/Resources/IconForMacroSet.icns; sourceTree = "<group>"; };
@@ -517,30 +533,23 @@
 		0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenu.icns; path = Application/Resources/IconForContextMenu.icns; sourceTree = "<group>"; };
 		0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOff.icns; path = Application/Resources/IconForScrollLockOff.icns; sourceTree = "<group>"; };
 		0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOn.icns; path = Application/Resources/IconForScrollLockOn.icns; sourceTree = "<group>"; };
-		0AC8F364188F6BC100686F55 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericDialog.mm; path = Application/Code/GenericDialog.mm; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
 		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0ACBF0101449232F00D17678 /* IconForKillSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKillSession.icns; path = Application/Resources/IconForKillSession.icns; sourceTree = "<group>"; };
-		0ACC40641A432446009D0D53 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaceOptionsCocoa.xib; sourceTree = "<group>"; };
-		0ACC40661A432446009D0D53 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
-		0ACC40681A433064009D0D53 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/GenericPanelNumberedListCocoa.xib; sourceTree = "<group>"; };
 		0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelNumberedList.mm; path = Application/Code/GenericPanelNumberedList.mm; sourceTree = "<group>"; };
 		0ACC406B1A433265009D0D53 /* GenericPanelNumberedList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GenericPanelNumberedList.h; path = Application/Code/GenericPanelNumberedList.h; sourceTree = "<group>"; };
-		0ACCB21E17934CB1001C3B75 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
 		0ACF35C517EBCC1500178DE2 /* Emulation.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Emulation.cp; path = Application/Code/Emulation.cp; sourceTree = "<group>"; };
 		0ACF35C717EBCC1C00178DE2 /* Emulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Emulation.h; path = Application/Code/Emulation.h; sourceTree = "<group>"; };
-		0ACFBF4712F13506008E4203 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
 		0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsEvents.cp; path = Application/Code/QuillsEvents.cp; sourceTree = "<group>"; };
 		0AD0B37B0A9EB8BD002064BA /* QuillsEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsEvents.h; path = Application/Code/QuillsEvents.h; sourceTree = "<group>"; };
 		0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsPrefs.cp; path = Application/Code/QuillsPrefs.cp; sourceTree = "<group>"; };
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
-		0AD0B46D179244A400CDC4C8 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionGraphicsCocoa.xib; sourceTree = "<group>"; };
 		0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationPrefix.pch; path = Application/Code/ApplicationPrefix.pch; sourceTree = "<group>"; };
 		0AD638F91350172E00035D4E /* RetainRelease.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RetainRelease.template.h; path = Shared/Code/RetainRelease.template.h; sourceTree = "<group>"; };
 		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
@@ -548,8 +557,6 @@
 		0AD7483813074260003E368B /* IconForPrint.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrint.icns; path = Application/Resources/IconForPrint.icns; sourceTree = "<group>"; };
 		0AD7B343176C3212004A1532 /* BoundName.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "BoundName.objc++.h"; path = "Shared/Code/BoundName.objc++.h"; sourceTree = "<group>"; };
 		0AD7B344176C3224004A1532 /* BoundName.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BoundName.mm; path = Shared/Code/BoundName.mm; sourceTree = "<group>"; };
-		0AD7CE34158AD31F000C3264 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/GenericPanelTabsCocoa.xib; sourceTree = "<group>"; };
-		0AD7D0BA158AE38B000C3264 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralOptionsCocoa.xib; sourceTree = "<group>"; };
 		0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsContextManager.mm; path = Application/Code/PrefsContextManager.mm; sourceTree = "<group>"; };
 		0AD7D0C4158AEBD9000C3264 /* PrefsContextManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PrefsContextManager.objc++.h"; path = "Application/Code/PrefsContextManager.objc++.h"; sourceTree = "<group>"; };
 		0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AddressDialog.mm; path = Application/Code/AddressDialog.mm; sourceTree = "<group>"; };
@@ -562,7 +569,6 @@
 		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
-		0AEBF395176409FB006068C7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelSessionKeyboardCocoa.xib; sourceTree = "<group>"; };
 		0AF4B5450A1D61C700D187A3 /* PrefPanelFullScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFullScreen.h; path = Application/Code/PrefPanelFullScreen.h; sourceTree = "<group>"; };
 		0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFullScreen.mm; path = Application/Code/PrefPanelFullScreen.mm; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
@@ -573,10 +579,7 @@
 		0AF502330F872D420068CB19 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
 		0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
-		0AF5AA2F159BD90E007E36DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelGeneralNotificationsCocoa.xib; sourceTree = "<group>"; };
-		0AF7636316F6C856008F90D9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminalEmulationCocoa.xib; sourceTree = "<group>"; };
 		0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefs.icns; path = Application/Resources/IconForPrefs.icns; sourceTree = "<group>"; };
-		0AF91B1D18445F15004A7588 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/ResizeInfoCocoa.xib; sourceTree = "<group>"; };
 		0AF931851592E0E6008A41C6 /* QuillsSWIG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSWIG.h; path = Application/Code/QuillsSWIG.h; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
@@ -614,6 +617,7 @@
 				0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */,
 				0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */,
 				0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */,
+				0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */,
 				0AC6BD970A8C0BB100AFF37A /* QuickTime.framework in Frameworks */,
 				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
 				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
@@ -642,6 +646,14 @@
 				0AFA78260B470136001FCE83 /* parse.py */,
 			);
 			name = url;
+			sourceTree = "<group>";
+		};
+		0A0E9FA51DB18F3C006A8BF5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		0A33CCEF07FABFBF00248DDF /* Shared */ = {
@@ -775,7 +787,7 @@
 				0A03DBC7063F6BA400C38B78 /* MacroManager.mm */,
 				0A46FDFB055432A400ACDF3A /* MenuBar.cp */,
 				0A46FDFE055432A400ACDF3A /* NetEvents.cp */,
-				0A46FDFF055432A400ACDF3A /* Network.cp */,
+				0A30289C1DB2BE2500C1C557 /* Network.mm */,
 				0A03A1EA1D9A297000411248 /* OtherApps.mm */,
 				0A46FE01055432A400ACDF3A /* Panel.mm */,
 				0AFF137E0AF421AD006CCA34 /* Preferences */,
@@ -836,7 +848,7 @@
 				0A03DBC9063F6BCC00C38B78 /* MacroManager.h */,
 				0A4604080554376100ACDF3A /* MenuBar.h */,
 				0A46040B0554376100ACDF3A /* NetEvents.h */,
-				0A46040C0554376100ACDF3A /* Network.h */,
+				0A30289B1DB2BE1800C1C557 /* NetEvents.h */,
 				0A03A1EC1D9A298A00411248 /* OtherApps.h */,
 				0A46040F0554376100ACDF3A /* Panel.h */,
 				0AFF137F0AF421C5006CCA34 /* Preferences */,
@@ -880,6 +892,7 @@
 				0A46FE73055433CA00ACDF3A /* Products */,
 				0A69E5250DDBACB100DA7874 /* Debug.xcconfig */,
 				0A7B831E19D66751000A4240 /* Production.xcconfig */,
+				0A0E9FA51DB18F3C006A8BF5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -906,7 +919,7 @@
 		0AA19F551D8A07E600FD70FF /* Shared XIBs */ = {
 			isa = PBXGroup;
 			children = (
-				0AA19F531D8A07CC00FD70FF /* WindowTitleDialogCocoa.xib */,
+				0A0E9F551DB180F2006A8BF5 /* WindowTitleDialogCocoa.xib */,
 			);
 			name = "Shared XIBs";
 			path = Shared/Resources;
@@ -974,47 +987,47 @@
 		0AFF112F0AF4202B006CCA34 /* XIBs */ = {
 			isa = PBXGroup;
 			children = (
-				0AB2273012D2D1DC00D663BB /* AddressDialogCocoa.xib */,
-				0A183A051C4301DC0067B17C /* AlertMessagesCocoa.xib */,
-				0A6C44691D84C72B00E1B0E2 /* ChildProcessWindowCocoa.xib */,
-				0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */,
-				0AB2273212D2D27000D663BB /* CommandLineCocoa.xib */,
-				0AB2272E12D2D03F00D663BB /* DebugInterfaceCocoa.xib */,
-				0AA179F61468E4A500779DA9 /* FindDialogCocoa.xib */,
-				0A2C796B1AFC663D00930395 /* GenericDialogCocoa.xib */,
-				0ACC40671A433064009D0D53 /* GenericPanelNumberedListCocoa.xib */,
-				0AD7CE33158AD31F000C3264 /* GenericPanelTabsCocoa.xib */,
-				0AC8100B1221C89000687DB2 /* InfoWindowCocoa.xib */,
-				0AB2273412D2D27A00D663BB /* KeypadArrangeWindowCocoa.xib */,
-				0AB2273A12D2D37900D663BB /* KeypadFullScreenCocoa.xib */,
-				0AB2273C12D2D3BB00D663BB /* KeypadFunctionKeysCocoa.xib */,
-				0AB2273612D2D34B00D663BB /* KeypadControlKeysCocoa.xib */,
-				0AB2273E12D2D41300D663BB /* KeypadVT220KeysCocoa.xib */,
-				0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */,
-				0A05299B15BBA1B200D62259 /* PrefPanelFormatGeneralCocoa.xib */,
-				0A7A74EC15A90A0F00E14184 /* PrefPanelFormatStandardColorsCocoa.xib */,
-				0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */,
-				0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */,
-				0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */,
-				0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */,
-				0AC1A97C1C388B8100CEBDF3 /* PrefPanelMacrosCocoa.xib */,
-				0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */,
-				0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */,
-				0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */,
-				0AC8F363188F6BC100686F55 /* PrefPanelSessionResourceCocoa.xib */,
-				0AF7636216F6C856008F90D9 /* PrefPanelTerminalEmulationCocoa.xib */,
-				0A32442015D74B0D001EBB98 /* PrefPanelTerminalOptionsCocoa.xib */,
-				0A0D315616E2F5440063914A /* PrefPanelTerminalScreenCocoa.xib */,
-				0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */,
-				0ACC40631A432446009D0D53 /* PrefPanelWorkspaceOptionsCocoa.xib */,
-				0ACC40651A432446009D0D53 /* PrefPanelWorkspaceWindowsCocoa.xib */,
-				0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */,
-				0AF91B1C18445F15004A7588 /* ResizeInfoCocoa.xib */,
-				0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */,
-				0ABBB09D1C9FA27B0024662E /* TerminalViewCocoa.xib */,
-				0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */,
-				0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */,
-				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
+				0A0E9F571DB18127006A8BF5 /* AddressDialogCocoa.xib */,
+				0A0E9F591DB18127006A8BF5 /* AlertMessagesCocoa.xib */,
+				0A0E9F5B1DB18127006A8BF5 /* ChildProcessWindowCocoa.xib */,
+				0A0E9F5D1DB18127006A8BF5 /* ClipboardCocoa.xib */,
+				0A0E9F5F1DB18127006A8BF5 /* CommandLineCocoa.xib */,
+				0A0E9F611DB18127006A8BF5 /* DebugInterfaceCocoa.xib */,
+				0A0E9F631DB18127006A8BF5 /* FindDialogCocoa.xib */,
+				0A0E9F651DB18127006A8BF5 /* GenericDialogCocoa.xib */,
+				0A0E9F671DB18127006A8BF5 /* GenericPanelNumberedListCocoa.xib */,
+				0A0E9F691DB18127006A8BF5 /* GenericPanelTabsCocoa.xib */,
+				0A0E9F6B1DB18127006A8BF5 /* InfoWindowCocoa.xib */,
+				0A0E9F6D1DB18127006A8BF5 /* KeypadArrangeWindowCocoa.xib */,
+				0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */,
+				0A0E9F711DB18127006A8BF5 /* KeypadFullScreenCocoa.xib */,
+				0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */,
+				0A0E9F751DB18127006A8BF5 /* KeypadVT220KeysCocoa.xib */,
+				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
+				0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */,
+				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
+				0A0E9F7B1DB18127006A8BF5 /* PrefPanelFullScreenCocoa.xib */,
+				0A0E9F7D1DB18127006A8BF5 /* PrefPanelGeneralNotificationsCocoa.xib */,
+				0A0E9F7F1DB18127006A8BF5 /* PrefPanelGeneralOptionsCocoa.xib */,
+				0A0E9F811DB18127006A8BF5 /* PrefPanelGeneralSpecialCocoa.xib */,
+				0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */,
+				0A0E9F851DB18127006A8BF5 /* PrefPanelSessionDataFlowCocoa.xib */,
+				0A0E9F871DB18127006A8BF5 /* PrefPanelSessionGraphicsCocoa.xib */,
+				0A0E9F891DB18127006A8BF5 /* PrefPanelSessionKeyboardCocoa.xib */,
+				0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */,
+				0A0E9F8D1DB18127006A8BF5 /* PrefPanelTerminalEmulationCocoa.xib */,
+				0A0E9F8F1DB18127006A8BF5 /* PrefPanelTerminalOptionsCocoa.xib */,
+				0A0E9F911DB18127006A8BF5 /* PrefPanelTerminalScreenCocoa.xib */,
+				0A0E9F931DB18127006A8BF5 /* PrefPanelTranslationsCocoa.xib */,
+				0A0E9F951DB18127006A8BF5 /* PrefPanelWorkspaceOptionsCocoa.xib */,
+				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
+				0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */,
+				0A0E9F9B1DB18127006A8BF5 /* ResizeInfoCocoa.xib */,
+				0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */,
+				0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */,
+				0A0E9F531DB18095006A8BF5 /* TerminalWindow.nib */,
+				0A0E9FA11DB18127006A8BF5 /* TerminalWindowCocoa.xib */,
+				0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */,
 			);
 			name = XIBs;
 			path = Application/Resources;
@@ -1082,6 +1095,7 @@
 				0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */,
 				0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */,
 				0AD7483813074260003E368B /* IconForPrint.icns */,
+				0A30289A1DB294F400C1C557 /* IconForRefresh.png */,
 				0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */,
 				0A3A2A21161D151500D489F6 /* IconForSearch.icns */,
 				0A3A2A24161D168900D489F6 /* IconForSearchKey.icns */,
@@ -1405,6 +1419,7 @@
 				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */,
 				0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */,
 				0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */,
+				0A30289D1DB2BE2500C1C557 /* Network.mm in Sources */,
 				0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */,
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
@@ -1456,7 +1471,6 @@
 				0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */,
 				0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
-				0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,
 				0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */,
 				0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */,
@@ -1503,228 +1517,340 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		0A05299B15BBA1B200D62259 /* PrefPanelFormatGeneralCocoa.xib */ = {
+		0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0A05299C15BBA1B200D62259 /* English */,
-			);
-			name = PrefPanelFormatGeneralCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0D315616E2F5440063914A /* PrefPanelTerminalScreenCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A0D315716E2F5440063914A /* English */,
-			);
-			name = PrefPanelTerminalScreenCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A183A051C4301DC0067B17C /* AlertMessagesCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A183A061C4301DC0067B17C /* English */,
-			);
-			name = AlertMessagesCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A1BCD8905CA2B21005CF1E5 /* English */,
-			);
-			name = TerminalWindow.nib;
-			sourceTree = "<group>";
-		};
-		0A2C796B1AFC663D00930395 /* GenericDialogCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A2C796C1AFC663D00930395 /* English */,
-			);
-			name = GenericDialogCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A317CAC10A0C775002EDEFB /* MainMenuCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A317CAD10A0C775002EDEFB /* English */,
+				0A0E9F521DB17FF3006A8BF5 /* English */,
 			);
 			name = MainMenuCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A32442015D74B0D001EBB98 /* PrefPanelTerminalOptionsCocoa.xib */ = {
+		0A0E9F531DB18095006A8BF5 /* TerminalWindow.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0A32442115D74B0D001EBB98 /* English */,
+				0A0E9F541DB18095006A8BF5 /* English */,
 			);
-			name = PrefPanelTerminalOptionsCocoa.xib;
+			name = TerminalWindow.nib;
 			sourceTree = "<group>";
 		};
-		0A50591A157C64D300F257A1 /* PrefPanelFullScreenCocoa.xib */ = {
+		0A0E9F551DB180F2006A8BF5 /* WindowTitleDialogCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0A50591B157C64D300F257A1 /* English */,
-			);
-			name = PrefPanelFullScreenCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A5A6FCA1578783700EFCEAB /* PrefsWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A5A6FCB1578783700EFCEAB /* English */,
-			);
-			name = PrefsWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A6000E815981886001CA6AA /* PrefPanelGeneralSpecialCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A6000E915981886001CA6AA /* English */,
-			);
-			name = PrefPanelGeneralSpecialCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A6315B812348AB4003890B8 /* ClipboardCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A6315B912348AB4003890B8 /* English */,
-			);
-			name = ClipboardCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A66B704154E04DC00B98072 /* VectorWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A66B705154E04DC00B98072 /* English */,
-			);
-			name = VectorWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A6C44691D84C72B00E1B0E2 /* ChildProcessWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A6C446A1D84C72B00E1B0E2 /* English */,
-			);
-			name = ChildProcessWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A7A74EC15A90A0F00E14184 /* PrefPanelFormatStandardColorsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A7A74ED15A90A0F00E14184 /* English */,
-			);
-			name = PrefPanelFormatStandardColorsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A839C3315805125000F001E /* PrefPanelTranslationsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A839C3415805125000F001E /* English */,
-			);
-			name = PrefPanelTranslationsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AA179F61468E4A500779DA9 /* FindDialogCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AA179F71468E4A500779DA9 /* English */,
-			);
-			name = FindDialogCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AA19F531D8A07CC00FD70FF /* WindowTitleDialogCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AA19F541D8A07CC00FD70FF /* English */,
+				0A0E9F561DB180F2006A8BF5 /* English */,
 			);
 			name = WindowTitleDialogCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AAEFFBF111E77F100526983 /* ServerBrowserCocoa.xib */ = {
+		0A0E9F571DB18127006A8BF5 /* AddressDialogCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AAEFFC0111E77F100526983 /* English */,
-			);
-			name = ServerBrowserCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AB2272E12D2D03F00D663BB /* DebugInterfaceCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AB2272F12D2D03F00D663BB /* English */,
-			);
-			name = DebugInterfaceCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AB2273012D2D1DC00D663BB /* AddressDialogCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AB2273112D2D1DC00D663BB /* English */,
+				0A0E9F581DB18127006A8BF5 /* English */,
 			);
 			name = AddressDialogCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AB2273212D2D27000D663BB /* CommandLineCocoa.xib */ = {
+		0A0E9F591DB18127006A8BF5 /* AlertMessagesCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AB2273312D2D27000D663BB /* English */,
+				0A0E9F5A1DB18127006A8BF5 /* English */,
+			);
+			name = AlertMessagesCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F5B1DB18127006A8BF5 /* ChildProcessWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F5C1DB18127006A8BF5 /* English */,
+			);
+			name = ChildProcessWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F5D1DB18127006A8BF5 /* ClipboardCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F5E1DB18127006A8BF5 /* English */,
+			);
+			name = ClipboardCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F5F1DB18127006A8BF5 /* CommandLineCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F601DB18127006A8BF5 /* English */,
 			);
 			name = CommandLineCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AB2273412D2D27A00D663BB /* KeypadArrangeWindowCocoa.xib */ = {
+		0A0E9F611DB18127006A8BF5 /* DebugInterfaceCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AB2273512D2D27A00D663BB /* English */,
+				0A0E9F621DB18127006A8BF5 /* English */,
+			);
+			name = DebugInterfaceCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F631DB18127006A8BF5 /* FindDialogCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F641DB18127006A8BF5 /* English */,
+			);
+			name = FindDialogCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F651DB18127006A8BF5 /* GenericDialogCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F661DB18127006A8BF5 /* English */,
+			);
+			name = GenericDialogCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F671DB18127006A8BF5 /* GenericPanelNumberedListCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F681DB18127006A8BF5 /* English */,
+			);
+			name = GenericPanelNumberedListCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F691DB18127006A8BF5 /* GenericPanelTabsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F6A1DB18127006A8BF5 /* English */,
+			);
+			name = GenericPanelTabsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F6B1DB18127006A8BF5 /* InfoWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F6C1DB18127006A8BF5 /* English */,
+			);
+			name = InfoWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F6D1DB18127006A8BF5 /* KeypadArrangeWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F6E1DB18127006A8BF5 /* English */,
 			);
 			name = KeypadArrangeWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AB2273612D2D34B00D663BB /* KeypadControlKeysCocoa.xib */ = {
+		0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AB2273712D2D34B00D663BB /* English */,
+				0A0E9F701DB18127006A8BF5 /* English */,
 			);
 			name = KeypadControlKeysCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AB2273A12D2D37900D663BB /* KeypadFullScreenCocoa.xib */ = {
+		0A0E9F711DB18127006A8BF5 /* KeypadFullScreenCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AB2273B12D2D37900D663BB /* English */,
+				0A0E9F721DB18127006A8BF5 /* English */,
 			);
 			name = KeypadFullScreenCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AB2273C12D2D3BB00D663BB /* KeypadFunctionKeysCocoa.xib */ = {
+		0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AB2273D12D2D3BB00D663BB /* English */,
+				0A0E9F741DB18127006A8BF5 /* English */,
 			);
 			name = KeypadFunctionKeysCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AB2273E12D2D41300D663BB /* KeypadVT220KeysCocoa.xib */ = {
+		0A0E9F751DB18127006A8BF5 /* KeypadVT220KeysCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AB2273F12D2D41300D663BB /* English */,
+				0A0E9F761DB18127006A8BF5 /* English */,
 			);
 			name = KeypadVT220KeysCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0ABBB09D1C9FA27B0024662E /* TerminalViewCocoa.xib */ = {
+		0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0ABBB09E1C9FA27B0024662E /* English */,
+				0A0E9F781DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelFormatGeneralCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F7A1DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelFormatStandardColorsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F7B1DB18127006A8BF5 /* PrefPanelFullScreenCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F7C1DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelFullScreenCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F7D1DB18127006A8BF5 /* PrefPanelGeneralNotificationsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F7E1DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelGeneralNotificationsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F7F1DB18127006A8BF5 /* PrefPanelGeneralOptionsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F801DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelGeneralOptionsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F811DB18127006A8BF5 /* PrefPanelGeneralSpecialCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F821DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelGeneralSpecialCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F841DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelMacrosCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F851DB18127006A8BF5 /* PrefPanelSessionDataFlowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F861DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelSessionDataFlowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F871DB18127006A8BF5 /* PrefPanelSessionGraphicsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F881DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelSessionGraphicsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F891DB18127006A8BF5 /* PrefPanelSessionKeyboardCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F8A1DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelSessionKeyboardCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F8C1DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelSessionResourceCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F8D1DB18127006A8BF5 /* PrefPanelTerminalEmulationCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F8E1DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelTerminalEmulationCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F8F1DB18127006A8BF5 /* PrefPanelTerminalOptionsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F901DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelTerminalOptionsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F911DB18127006A8BF5 /* PrefPanelTerminalScreenCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F921DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelTerminalScreenCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F931DB18127006A8BF5 /* PrefPanelTranslationsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F941DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelTranslationsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F951DB18127006A8BF5 /* PrefPanelWorkspaceOptionsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F961DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelWorkspaceOptionsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F981DB18127006A8BF5 /* English */,
+			);
+			name = PrefPanelWorkspaceWindowsCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F9A1DB18127006A8BF5 /* English */,
+			);
+			name = PrefsWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F9B1DB18127006A8BF5 /* ResizeInfoCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F9C1DB18127006A8BF5 /* English */,
+			);
+			name = ResizeInfoCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9F9E1DB18127006A8BF5 /* English */,
+			);
+			name = ServerBrowserCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9FA01DB18127006A8BF5 /* English */,
 			);
 			name = TerminalViewCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0AC1A97C1C388B8100CEBDF3 /* PrefPanelMacrosCocoa.xib */ = {
+		0A0E9FA11DB18127006A8BF5 /* TerminalWindowCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				0AC1A97D1C388B8100CEBDF3 /* English */,
+				0A0E9FA21DB18127006A8BF5 /* English */,
 			);
-			name = PrefPanelMacrosCocoa.xib;
+			name = TerminalWindowCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A0E9FA41DB18127006A8BF5 /* English */,
+			);
+			name = VectorWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0AC5687412CFC73800BAA7F0 /* Credits.html */ = {
@@ -1733,86 +1859,6 @@
 				0AC5687512CFC73800BAA7F0 /* English */,
 			);
 			name = Credits.html;
-			sourceTree = "<group>";
-		};
-		0AC8100B1221C89000687DB2 /* InfoWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AC8100C1221C89000687DB2 /* English */,
-			);
-			name = InfoWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AC8F363188F6BC100686F55 /* PrefPanelSessionResourceCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AC8F364188F6BC100686F55 /* English */,
-			);
-			name = PrefPanelSessionResourceCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0ACC40631A432446009D0D53 /* PrefPanelWorkspaceOptionsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0ACC40641A432446009D0D53 /* English */,
-			);
-			name = PrefPanelWorkspaceOptionsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0ACC40651A432446009D0D53 /* PrefPanelWorkspaceWindowsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0ACC40661A432446009D0D53 /* English */,
-			);
-			name = PrefPanelWorkspaceWindowsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0ACC40671A433064009D0D53 /* GenericPanelNumberedListCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0ACC40681A433064009D0D53 /* English */,
-			);
-			name = GenericPanelNumberedListCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0ACCB21D17934CB1001C3B75 /* PrefPanelSessionDataFlowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0ACCB21E17934CB1001C3B75 /* English */,
-			);
-			name = PrefPanelSessionDataFlowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0ACFBF4612F13506008E4203 /* TerminalWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0ACFBF4712F13506008E4203 /* English */,
-			);
-			name = TerminalWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AD0B46C179244A400CDC4C8 /* PrefPanelSessionGraphicsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AD0B46D179244A400CDC4C8 /* English */,
-			);
-			name = PrefPanelSessionGraphicsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AD7CE33158AD31F000C3264 /* GenericPanelTabsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AD7CE34158AD31F000C3264 /* English */,
-			);
-			name = GenericPanelTabsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AD7D0B9158AE38B000C3264 /* PrefPanelGeneralOptionsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AD7D0BA158AE38B000C3264 /* English */,
-			);
-			name = PrefPanelGeneralOptionsCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0ADA30D4188AF9FB00B313FC /* PreferencesSearch.strings */ = {
@@ -1829,38 +1875,6 @@
 				0AEA45D80642041B00E701DA /* English */,
 			);
 			name = Dictionary.sdef;
-			sourceTree = "<group>";
-		};
-		0AEBF394176409FB006068C7 /* PrefPanelSessionKeyboardCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AEBF395176409FB006068C7 /* English */,
-			);
-			name = PrefPanelSessionKeyboardCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AF5AA2E159BD90E007E36DE /* PrefPanelGeneralNotificationsCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AF5AA2F159BD90E007E36DE /* English */,
-			);
-			name = PrefPanelGeneralNotificationsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AF7636216F6C856008F90D9 /* PrefPanelTerminalEmulationCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AF7636316F6C856008F90D9 /* English */,
-			);
-			name = PrefPanelTerminalEmulationCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AF91B1C18445F15004A7588 /* ResizeInfoCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AF91B1D18445F15004A7588 /* English */,
-			);
-			name = ResizeInfoCocoa.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

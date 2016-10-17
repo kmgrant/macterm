@@ -50,7 +50,10 @@
 #import <AlertMessages.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CFRetainRelease.h>
+#import <CFUtilities.h>
 #import <CocoaBasic.h>
+#import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <ContextSensitiveMenu.h>
 #import <MemoryBlocks.h>
@@ -843,8 +846,9 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 	CFIndex const			kLength = CFStringGetLength(inBaseString);
 	CFStringRef				result = nullptr;
 	CFStringInlineBuffer	charBuffer;
-	CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */), CFRetainRelease::kAlreadyRetained);
-	Boolean					substitutionError = false;
+	CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */),
+											CFRetainRelease::kAlreadyRetained);
+	__block Boolean			substitutionError = false;
 	UniChar					octalSequenceCharCode = '\0'; // overwritten each time a \0nn is processed
 	SInt16					readOctal = -1;		// if 0, a \0 was read, and the first "n" (in \0nn) might be next;
 												// if 1, a \1 was read, and the first "n" (in \1nn) might be next;
@@ -867,8 +871,14 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 			
 			if (readOctal >= 0)
 			{
-				if (readOctal == 1) octalSequenceCharCode = '\100';
-				else octalSequenceCharCode = '\0';
+				if (readOctal == 1)
+				{
+					octalSequenceCharCode = '\100';
+				}
+				else
+				{
+					octalSequenceCharCode = '\0';
+				}
 				
 				switch (thisChar)
 				{
@@ -1028,21 +1038,127 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 					break;
 				
 				case 'i':
-					// IP address
+				case 'I':
+					// an arbitrary IP address ('i') or space-separated full list ('I');
+					// the setup for both of these cases is mostly the same so they
+					// are combined
 					{
-						std::vector< CFRetainRelease >		addressList;
+						bool const			sendSingleAddress = ('i' == nextChar);
+						__block CFArrayRef	localIPAddresses = nullptr;
+						__block Boolean		isComplete = false;
+						auto				copyAddressesBlock =
+											^{
+												Network_CopyLocalHostAddresses(localIPAddresses, &isComplete);
+											};
 						
 						
-						if (Network_CopyIPAddresses(addressList))
+						copyAddressesBlock();
+						if ((false == isComplete) || (0 == CFArrayGetCount(localIPAddresses)))
 						{
-							// TEMPORARY - should there be a way to select among available addresses?
-							assert(false == addressList.empty());
-							CFStringAppend(finalCFString.returnCFMutableStringRef(), addressList[0].returnCFStringRef());
+							auto	targetQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0/* flags */);
+							
+							
+							// release copy created by first call above
+							CFRelease(localIPAddresses), localIPAddresses = nullptr;
+							
+							// if the list is not ready, incur a short synchronous delay
+							// and retry once to see if the macro can then be completed
+							Console_Warning(Console_WriteLine, "macro: address list incomplete; waiting briefly, will retry");
+							// TEMPORARY; can replace with dispatch_barrier_sync() in later SDK
+						#if 0
+							dispatch_barrier_sync(targetQueue,
+													^{
+														CocoaExtensions_RunLaterInQueue(targetQueue, 3/* seconds */,
+									 													copyAddressesBlock);
+													});
+						#else
+							{
+								dispatch_semaphore_t		doneSignal = dispatch_semaphore_create(0);
+								
+								
+								dispatch_async(targetQueue,
+												^{
+													CocoaExtensions_RunLaterInQueue
+													(targetQueue, 5/* seconds */,
+														^{
+															copyAddressesBlock();
+															// return value ignored because this block does
+															// not need to know if a thread was awoken
+															UNUSED_RETURN(long)dispatch_semaphore_signal(doneSignal);
+														});
+												});
+								// return value ignored because wait time is “forever”
+								UNUSED_RETURN(long)dispatch_semaphore_wait(doneSignal, DISPATCH_TIME_FOREVER);
+								dispatch_release(doneSignal), doneSignal = nullptr;
+							}
+						#endif
+							if (false == isComplete)
+							{
+								Console_Warning(Console_WriteLine, "macro: address list is still incomplete, using as-is");
+							}
+							else
+							{
+								Console_Warning(Console_WriteLine, "macro: address list is now complete");
+							}
 						}
-						else
+						
+						if (nullptr == localIPAddresses)
 						{
 							substitutionError = true;
 						}
+						else
+						{
+							NSArray*	addressList = BRIDGE_CAST(localIPAddresses, NSArray*);
+							
+							
+							if (0 == addressList.count)
+							{
+								// TEMPORARY; determine if it is sensible to consider this an error
+								// (while nothing can be substituted, there was also nothing found
+								// and that may be a meaningful case)
+								substitutionError = true;
+							}
+							else if (sendSingleAddress)
+							{
+								// send one address; the rules for selecting it are arbitrary
+								CFStringRef		arbitraryAddress = BRIDGE_CAST([addressList objectAtIndex:0], CFStringRef);
+								
+								
+								if (nullptr == arbitraryAddress)
+								{
+									substitutionError = true;
+								}
+								else
+								{
+									CFStringAppend(finalCFString.returnCFMutableStringRef(), arbitraryAddress);
+								}
+							}
+							else
+							{
+								// send the entire list of addresses (space-separated); NOTE that
+								// this assumes individual addresses never contain spaces, no
+								// escaping of spaces in address strings is performed…
+								NSUInteger	addressIndex = 0;
+								
+								
+								for (id object : addressList)
+								{
+									assert([object isKindOfClass:NSString.class]);
+									NSString*	asString = STATIC_CAST(object, NSString*);
+									
+									
+									CFStringAppend(finalCFString.returnCFMutableStringRef(), BRIDGE_CAST(asString, CFStringRef));
+									++addressIndex;
+									if (addressIndex != addressList.count)
+									{
+										// space-separated values (no space at end)
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR(" "));
+									}
+								}
+							}
+						}
+						
+						CFRelease(localIPAddresses), localIPAddresses = nullptr;
 					}
 					++i; // skip special sequence character
 					break;

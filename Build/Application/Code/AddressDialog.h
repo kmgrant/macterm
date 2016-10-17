@@ -43,6 +43,8 @@
 
 #ifdef __OBJC__
 
+@class ListenerModel_StandardListener;
+
 /*!
 Implements drag and drop for the addresses table.
 
@@ -65,7 +67,21 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
-Implements the IP Addresses panel.
+Implements the IP Addresses window.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface AddressDialog_Window : NSPanel //{
+{
+}
+
+@end //}
+
+
+/*!
+Implements the IP Addresses window controller.
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
@@ -73,16 +89,24 @@ changes to an interface declared in a ".mm" file.
 */
 @interface AddressDialog_PanelController : NSWindowController //{
 {
-	NSMutableArray*		addressArray; // binding
+	ListenerModel_StandardListener*		_networkChangeListener;
+	NSMutableArray*						_addressObjectArray;
+	BOOL								_rebuildInProgress;
 }
 
 // class methods
 	+ (id)
 	sharedAddressPanelController;
 
+// accessors
+	@property (strong) NSArray*/* of AddressDialog_Address objects */
+	addressObjectArray; // binding
+	@property (assign) BOOL
+	rebuildInProgress; // binding
+
 // actions
 	- (IBAction)
-	rebuildAddressList:(id)_;
+	performIPAddressListRefresh:(id)_;
 
 @end //}
 

@@ -340,6 +340,7 @@ enum
 	kConstantsRegistry_ListenerModelDescriptorEventTargetForWindow				= 'wetg',
 	kConstantsRegistry_ListenerModelDescriptorEventTargetGlobal					= 'getg',
 	kConstantsRegistry_ListenerModelDescriptorMacroChanges						= 'Mcro',
+	kConstantsRegistry_ListenerModelDescriptorNetwork							= 'Netw',
 	kConstantsRegistry_ListenerModelDescriptorPreferences						= 'Pref',
 	kConstantsRegistry_ListenerModelDescriptorPreferencePanels					= 'PPnl',
 	kConstantsRegistry_ListenerModelDescriptorSessionChanges					= 'Sssn',

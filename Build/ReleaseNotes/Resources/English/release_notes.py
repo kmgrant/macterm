@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161014',
     '20161009',
     '20161008',
     '20161002',
@@ -552,6 +553,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161014': [
+        'Fixed "Network Addresses of This Mac" window to return correct results on macOS Sierra.',
+        '"IP Addresses of This Mac" is now called "Network Addresses of This Mac".',
+        '"Network Addresses of This Mac" window now refreshes its address list (asynchronously) whenever the system notes a significant change in the IPv4 or IPv6 configuration of the computer.',
+        '"Network Addresses of This Mac" window now has a toolbar, with an item for explicitly refreshing the address list at any time and an item for showing the status of any current query.',
+        'Macros of type "Enter Text with Substitutions" now recognize "\\I" as a space-separated list of ALL current addresses for the local host.  This allows you to send multiple address candidates to a script (say) in order to select the most appropriate address, whereas the "\\i" sequence is limited to a single address that is chosen arbitrarily.',
+        'Macros using "\\i" or "\\I" now attempt to use cached results from the most recent address query.  And, if the address list is in the process of being created or updated, they will now block briefly to increase the chance of using the most accurate information.',
+    ],
     '20161009': [
         'Fixed possible error when using the Open command to launch sessions.',
         'Save Selected Text command now creates files with Unix-style line endings (LF characters).',

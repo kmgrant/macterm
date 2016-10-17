@@ -38,8 +38,11 @@
 
 // library includes
 #import <BoundName.objc++.h>
+#import <CFRetainRelease.h>
 #import <Console.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
+#import <ListenerModel.h>
 
 // application includes
 #import "Network.h"
@@ -58,6 +61,20 @@ losing less user-friendly information about each address.
 // initializers
 	- (instancetype)
 	initWithDescription:(NSString*)_ NS_DESIGNATED_INITIALIZER;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface AddressDialog_PanelController (AddressDialog_PanelControllerInternal) //{
+
+// new methods
+	- (void)
+	model:(ListenerModel_Ref)_
+	networkChange:(ListenerModel_Event)_
+	context:(void*)_;
 
 @end //}
 
@@ -86,7 +103,10 @@ AddressDialog_Display ()
 
 
 #pragma mark -
-@implementation AddressDialog_Address
+@implementation AddressDialog_Address //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -105,11 +125,14 @@ initWithDescription:(NSString*)		aString
 }// initWithDescription:
 
 
-@end // AddressDialog_Address
+@end //} AddressDialog_Address
 
 
 #pragma mark -
-@implementation AddressDialog_AddressArrayController
+@implementation AddressDialog_AddressArrayController //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -126,6 +149,9 @@ init
 	[addressTableView setDraggingSourceOperationMask:NSDragOperationCopy forLocal:NO];
 	return self;
 }// init
+
+
+#pragma mark NSTableViewDataSource
 
 
 /*!
@@ -152,14 +178,21 @@ toPasteboard:(NSPasteboard*)		inoutPasteboard
 }// tableView:writeRowsWithIndexes:toPasteboard:
 
 
-@end // AddressDialog_AddressArrayController
+@end //} AddressDialog_AddressArrayController
 
 
 #pragma mark -
-@implementation AddressDialog_PanelController
+@implementation AddressDialog_PanelController //{
 
 
 static AddressDialog_PanelController*	gAddressDialog_PanelController = nil;
+
+
+@synthesize addressObjectArray = _addressObjectArray;
+@synthesize rebuildInProgress = _rebuildInProgress;
+
+
+#pragma mark Class Methods
 
 
 /*!
@@ -178,6 +211,9 @@ sharedAddressPanelController
 }
 
 
+#pragma mark Initializers
+
+
 /*!
 Designated initializer.
 
@@ -189,7 +225,8 @@ init
 	self = [super initWithWindowNibName:@"AddressDialogCocoa"];
 	if (nil != self)
 	{
-		[self rebuildAddressList:NSApp];
+		self->_addressObjectArray = [[NSMutableArray alloc] init];
+		self->_rebuildInProgress = NO;
 	}
 	return self;
 }// init
@@ -203,8 +240,36 @@ Destructor.
 - (void)
 dealloc
 {
+	Network_StopMonitoring(kNetwork_ChangeAddressListWillRebuild, [self->_networkChangeListener listenerRef]);
+	Network_StopMonitoring(kNetwork_ChangeAddressListDidRebuild, [self->_networkChangeListener listenerRef]);
+	[_networkChangeListener release];
+	[_addressObjectArray release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(2016.10)
+*/
+- (void)
+insertObject:(AddressDialog_Address*)	anAddress
+inAddressObjectArrayAtIndex:(unsigned long)	index
+{
+	[_addressObjectArray insertObject:anAddress atIndex:index];
+}
+- (void)
+removeObjectFromAddressObjectArrayAtIndex:(unsigned long)	index
+{
+	[_addressObjectArray removeObjectAtIndex:index];
+}// removeObjectFromAddressObjectArrayAtIndex:
+
+
+#pragma mark Actions
 
 
 /*!
@@ -214,30 +279,48 @@ address assignments for the network cards in the computer.
 (4.0)
 */
 - (IBAction)
-rebuildAddressList:(id)		sender
+performIPAddressListRefresh:(id)	sender
 {
 #pragma unused(sender)
-	// find IP addresses and store them in the bound array
-	typedef std::vector< CFRetainRelease >		My_AddressList;
-	My_AddressList	addressList;
-	Boolean			addressesFound = Network_CopyIPAddresses(addressList);
-	
-	
-	addressArray = [[NSMutableArray alloc] init];
-	if (addressesFound)
-	{
-		for (My_AddressList::size_type i = 0; i < addressList.size(); ++i)
-		{
-			NSString*	addressString = BRIDGE_CAST(addressList[i].returnCFStringRef(), NSString*);
-			
-			
-			[addressArray addObject:[[[AddressDialog_Address alloc] initWithDescription:addressString] autorelease]];
-		}
-	}
-}// rebuildAddressList:
+	Network_ResetLocalHostAddresses(); // triggers callbacks as needed
+}// performIPAddressListRefresh:
 
 
 #pragma mark NSWindowController
+
+
+/*!
+Initializations that depend on the window being defined
+(for everything else, use "init").
+
+(2016.10)
+*/
+- (void)
+windowDidLoad
+{
+	Network_Result		networkResult = kNetwork_ResultOK;
+	
+	
+	self->_networkChangeListener = [[ListenerModel_StandardListener alloc]
+									initWithTarget:self
+													eventFiredSelector:@selector(model:networkChange:context:)];
+	
+	networkResult = Network_StartMonitoring(kNetwork_ChangeAddressListWillRebuild, [self->_networkChangeListener listenerRef],
+											0/* flags */);
+	if (NO == networkResult.ok())
+	{
+		Console_Warning(Console_WriteLine, "address dialog failed to start monitoring will-rebuild-address-list; progress indicator may not be updated");
+	}
+	networkResult = Network_StartMonitoring(kNetwork_ChangeAddressListDidRebuild, [self->_networkChangeListener listenerRef],
+											0/* flags */);
+	if (NO == networkResult.ok())
+	{
+		Console_Warning(Console_WriteLine, "address dialog failed to start monitoring did-rebuild-address-list; UI may not be updated");
+	}
+	
+	// force interface to initialize (via callbacks)
+	[self performIPAddressListRefresh:NSApp];
+}// windowDidLoad
 
 
 /*!
@@ -256,6 +339,142 @@ windowFrameAutosaveName
 }// windowFrameAutosaveName
 
 
-@end // AddressDialog_PanelController
+@end //} AddressDialog_PanelController
+
+
+#pragma mark -
+@implementation AddressDialog_PanelController (AddressDialog_PanelControllerInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Called when a monitored network event occurs.  See
+"init" for the set of events that is monitored.
+
+(2016.10)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+networkChange:(ListenerModel_Event)		anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel, aContext)
+	switch (anEvent)
+	{
+	case kNetwork_ChangeAddressListWillRebuild:
+		{
+			// due to bindings, this will show a progress indicator
+			self.rebuildInProgress = YES;
+		}
+		break;
+	
+	case kNetwork_ChangeAddressListDidRebuild:
+		{
+			CFArrayRef		localRawAddressStringArrayCopy = nullptr;
+			
+			
+			// find the addresses (this makes a copy); since this is
+			// in response to a “did rebuild” event, the list should
+			// always be complete
+			Network_CopyLocalHostAddresses(localRawAddressStringArrayCopy);
+			
+			// create matching objects in bound array (this will cause
+			// the table in the panel to be updated, through bindings)
+			[[self mutableArrayValueForKeyPath:NSStringFromSelector(@selector(addressObjectArray))]
+												removeAllObjects];
+			for (id object : BRIDGE_CAST(localRawAddressStringArrayCopy, NSArray*))
+			{
+				assert([object isKindOfClass:NSString.class]);
+				NSString*	asString = STATIC_CAST(object, NSString*);
+				
+				
+				[self insertObject:[[[AddressDialog_Address alloc]
+										initWithDescription:asString] autorelease]
+									inAddressObjectArrayAtIndex:self->_addressObjectArray.count];
+			}
+			
+			// due to bindings, this will hide the progress indicator
+			// (should be handled by the refresh step above but this is
+			// done just to make sure it is gone)
+			self.rebuildInProgress = NO;
+			
+			CFRelease(localRawAddressStringArrayCopy), localRawAddressStringArrayCopy = nullptr;
+		}
+		break;
+	
+	default:
+		// ???
+		Console_Warning(Console_WriteValueFourChars,
+						"address dialog: network change handler received unexpected event", anEvent);
+		break;
+	}
+}// model:networkChange:context:
+
+
+@end //} AddressDialog_PanelController (AddressDialog_PanelController)
+
+
+#pragma mark -
+@implementation AddressDialog_Window //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Class initializer.
+
+(2016.10)
+*/
++ (void)
+initialize
+{
+	// guard against subclass scenario by doing this at most once
+	if (AddressDialog_Window.class == self)
+	{
+		BOOL	selectorFound = NO;
+		
+		
+		selectorFound = CocoaExtensions_PerformSelectorOnTargetWithValue
+						(@selector(setAllowsAutomaticWindowTabbing:), self.class, NO);
+	}
+}// initialize
+
+
+/*!
+Designated initializer.
+
+(2016.10)
+*/
+- (instancetype)
+initWithContentRect:(NSRect)		contentRect
+styleMask:(NSUInteger)			windowStyle
+backing:(NSBackingStoreType)		bufferingType
+defer:(BOOL)					deferCreation
+{
+	self = [super initWithContentRect:contentRect styleMask:windowStyle
+										backing:bufferingType defer:deferCreation];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContentRect:styleMask:backing:defer:
+
+
+/*!
+Destructor.
+
+(2016.10)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end //} AddressDialog_Window
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

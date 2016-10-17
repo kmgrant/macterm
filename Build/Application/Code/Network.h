@@ -36,23 +36,78 @@
 #ifndef __NETWORK__
 #define __NETWORK__
 
-// standard-C++ includes
-#include <string>
-#include <vector>
-
 // library includes
-#include <CFRetainRelease.h>
+#include <ListenerModel.h>
+#include <ResultCode.template.h>
+
+
+
+#pragma mark Constants
+
+/*!
+Possible return values from Network module routines.
+*/
+typedef ResultCode< UInt16 >	Network_Result;
+Network_Result const	kNetwork_ResultOK(0);					//!< no error
+Network_Result const	kNetwork_ResultParameterError(1);		//!< invalid input (e.g. a null pointer)
+Network_Result const	kNetwork_ResultMonitorFailed(2);			//!< unable to create requested monitor
+
+/*!
+Used with Network_StartMonitoring() and Network_StopMonitoring()
+to be notified of important changes.
+*/
+enum Network_Change
+{
+	kNetwork_ChangeAddressListWillRebuild	= 'WAdr',	//!< IPv4 or IPv6 state has significantly changed and the
+														//!  list of addresses from Network_ProcessIPAddresses() is
+														//!  about to be rebuilt (could use this opportunity to
+														//!  show graphical progress bars for example)
+	kNetwork_ChangeAddressListDidRebuild		= 'DAdr',	//!< current list of addresses has been updated; could
+														//!  reverse any "kNetwork_ChangeAddressListWillRebuild"
+														//!  response (such as hiding progress bars that were shown)
+														//!  and call Network_ProcessIPAddresses() to see new data
+};
+
+/*!
+Options for starting monitors.
+*/
+enum
+{
+	kNetwork_MonitorFlagNotifyOfInitialValue		= (1 << 0),		//!< when creating a monitor, immediately trigger it
+																//!  instead of waiting for the next update to data
+	kNetwork_DefaultMonitorFlags = (kNetwork_MonitorFlagNotifyOfInitialValue)
+};
+typedef UInt16		Network_MonitorFlags;
 
 
 
 #pragma mark Public Methods
 
-Boolean
-	Network_CopyIPAddresses				(std::vector< CFRetainRelease >&	inoutAddresses);
+//!\name Retrieving Network Information
+//@{
 
-bool
-	Network_CurrentIPAddressToString	(std::string&						inoutString,
-										 int&								inoutAddressType); // AF_INET or AF_INET6
+void
+	Network_CopyLocalHostAddresses	(CFArrayRef&,
+									 Boolean* = nullptr);
+
+void
+	Network_ResetLocalHostAddresses	();
+
+//@}
+
+//!\name Responding to Changes
+//@{
+
+Network_Result
+	Network_StartMonitoring			(Network_Change,
+									 ListenerModel_ListenerRef,
+									 Network_MonitorFlags = kNetwork_DefaultMonitorFlags);
+
+Network_Result
+	Network_StopMonitoring			(Network_Change,
+									 ListenerModel_ListenerRef);
+
+//@}
 
 #endif
 

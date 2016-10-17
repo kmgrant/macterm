@@ -226,6 +226,7 @@ IconForPrefPanelTranslations.icns \
 IconForPrefPanelWorkspaces.icns \
 IconForPrefs.icns \
 IconForPrint.icns \
+IconForRefresh.png \
 IconForRestartSession.icns \
 IconForSearch.icns \
 IconForSearchKey.icns \

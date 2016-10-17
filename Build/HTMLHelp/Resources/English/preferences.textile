@@ -564,7 +564,8 @@ table(deftable).
 (def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal[1]; e.g. @\177@ is delete|
 (def). |<(key). @\b@|(desc)<. backspace (equivalent to @\010@)|
 (def). |<(key). @\e@|(desc)<. escape (@^[@; equivalent to @\033@)|
-(def). |<(key). @\i@|(desc)<. dynamically substitute an IP address[2] of the computer|
+(def). |<(key). @\i@|(desc)<. dynamically substitute a network address[2] of the computer|
+(def). |<(key). @\I@|(desc)<. dynamically substitute space-separated list of all network addresses[2] of the computer|
 (def). |<(key). @\j@|(desc)<. dynamically substitute the terminal's current text selection, stripping all new-lines (to join into one line)|
 (def). |<(key). @\n@|(desc)<. new-line sequence for current session: either CR, CR-LF, CR-NULL or LF|
 (def). |<(key). @\q@|(desc)<. dynamically substitute the terminal's current text selection, stripping all new-lines and quoting (inserting backslashes before every space or tab)|
@@ -584,10 +585,15 @@ fn1. To see the octal versions of all ASCII characters,
  "Insert Control Key Character..." can be used to help insert the
  right code for a variety of keys.
 
-fn2. Currently there is no way to choose which IP address is actually
- sent with "\i".  You can use Window >> Show IP Addresses to
- see all the IP addresses that your computer has and drag the
- desired one into a terminal window.
+fn2. Currently there is no way to choose which network address is actually
+ sent with "\i", and the substitution may even change across different
+ invocations of your macro.  It is strongly recommended that you use
+ the newer form, "\I", which expands to a space-separated list of ALL
+ network addresses for your computer (in an unspecified order), allowing
+ you to inspect them individually and choose the most appropriate one.
+ You can use Window >> Network Addresses of This Mac to see all the IP
+ addresses that your computer has and drag the desired one into a
+ terminal window.
 
 h2(#workspaces). Workspaces
 

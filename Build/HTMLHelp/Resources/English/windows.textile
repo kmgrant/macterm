@@ -127,9 +127,9 @@ h2(#commandline). Command Line
 The command line is a special interface to the active terminal
  window.  See "the terminals page":terminals.html#commandline for more information.
 
-h2(#ipaddr). IP Addresses of This Mac
+h2(#ipaddr). Network Addresses of This Mac
 
-Using Window >> IP Addresses of This Mac or the equivalent command
+Using Window >> Network Addresses of This Mac or the equivalent command
  from MacTerm's Dock menu, you can display a floating window
  with a list of IPv4 and/or IPv6 addresses for your computer's
  network interfaces.
@@ -138,8 +138,8 @@ Each item in the list can be dragged with the mouse and dropped
  (into a terminal window, for instance), to type in that address.
 
 See also the Macros pane in the Preferences window, which can be
- used to define macros with text substitution (of the @\i@
- sequence) that include one of your computer's IP addresses.
+ used to define macros with text substitution that employ the
+ @\i@ or @\I@ address expansion sequences.
 
 h2(#keypads). Keypads
 

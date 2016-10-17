@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16A323" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AddressDialog_PanelController">
@@ -11,33 +10,33 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
-        <window title="IP Addresses of This Mac" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="Network Addresses of This Mac" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="1" userLabel="Window" customClass="AddressDialog_Window">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" nonactivatingPanel="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="191" y="792" width="300" height="100"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
-            <value key="minSize" type="size" width="300" height="100"/>
-            <value key="maxSize" type="size" width="400" height="200"/>
+            <rect key="contentRect" x="191" y="792" width="350" height="100"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1058"/>
+            <value key="minSize" type="size" width="350" height="100"/>
+            <value key="maxSize" type="size" width="400" height="300"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="300" height="100"/>
+                <rect key="frame" x="0.0" y="0.0" width="350" height="100"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <scrollView horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="3">
-                        <rect key="frame" x="0.0" y="0.0" width="300" height="100"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES"/>
+                    <scrollView misplaced="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="3">
+                        <rect key="frame" x="-1" y="21" width="352" height="80"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="t1I-OX-xhK">
-                            <rect key="frame" x="1" y="1" width="283" height="98"/>
+                            <rect key="frame" x="1" y="1" width="335" height="78"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" id="6">
-                                    <rect key="frame" x="0.0" y="0.0" width="283" height="98"/>
+                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" viewBased="YES" id="6">
+                                    <rect key="frame" x="0.0" y="0.0" width="335" height="78"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn editable="NO" width="280" minWidth="40" maxWidth="1000" id="8">
+                                        <tableColumn editable="NO" width="332" minWidth="40" maxWidth="1000" id="8">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -53,8 +52,8 @@
                                                 <binding destination="12" name="value" keyPath="arrangedObjects.boundName" id="47">
                                                     <dictionary key="options">
                                                         <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
-                                                        <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
                                                         <bool key="NSCreatesSortDescriptor" value="NO"/>
+                                                        <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
                                                     </dictionary>
                                                 </binding>
                                             </connections>
@@ -65,28 +64,72 @@
                                     </connections>
                                 </tableView>
                             </subviews>
-                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </clipView>
                         <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="46">
                             <rect key="frame" x="-100" y="-100" width="246" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="45">
-                            <rect key="frame" x="284" y="1" width="15" height="98"/>
+                            <rect key="frame" x="336" y="1" width="15" height="78"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" id="9AC-kY-PcD">
+                        <rect key="frame" x="4" y="1" width="348" height="17"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="You can drag selected addresses from this window." id="aHN-oJ-qdA">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
+            <toolbar key="toolbar" implicitIdentifier="AC7D2702-0EDF-4437-A907-268FF8ACCB37" explicitIdentifier="IPAddresses" displayMode="iconOnly" sizeMode="small" id="GXR-NM-ZHo">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="6E398216-512C-4A3E-AD33-92DA4868946A" label="Refresh" paletteLabel="Refresh List" tag="-1" image="IconForRefresh" id="apB-vj-QMI" userLabel="Refresh">
+                        <connections>
+                            <action selector="performIPAddressListRefresh:" target="-2" id="1BP-KM-nvx"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="FF3851B8-CC69-47A3-B6BF-6C10A8D0E760" label="" paletteLabel="Status" tag="-1" id="b5u-As-J07">
+                        <nil key="toolTip"/>
+                        <size key="minSize" width="16" height="16"/>
+                        <size key="maxSize" width="32" height="32"/>
+                        <progressIndicator key="view" wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="jNG-bj-ApM">
+                            <rect key="frame" x="13" y="14" width="16" height="16"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <connections>
+                                <binding destination="-2" name="hidden" keyPath="self.rebuildInProgress" id="8sJ-F0-gbh">
+                                    <dictionary key="options">
+                                        <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                    </dictionary>
+                                </binding>
+                                <binding destination="-2" name="animate" keyPath="self.rebuildInProgress" id="NjO-Te-Dok"/>
+                            </connections>
+                        </progressIndicator>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="Qfr-vW-KFP"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="3do-Uc-R6t"/>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="Qfr-vW-KFP"/>
+                    <toolbarItem reference="Qfr-vW-KFP"/>
+                    <toolbarItem reference="3do-Uc-R6t"/>
+                    <toolbarItem reference="b5u-As-J07"/>
+                    <toolbarItem reference="apB-vj-QMI"/>
+                </defaultToolbarItems>
+            </toolbar>
+            <contentBorderThickness minY="22"/>
         </window>
         <arrayController objectClassName="NSString" editable="NO" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" id="12" userLabel="Address Array Controller" customClass="AddressDialog_AddressArrayController">
             <declaredKeys>
-                <string>addressArray</string>
+                <string>addressObjectArray</string>
                 <string>description</string>
                 <string>boundName</string>
             </declaredKeys>
             <connections>
-                <binding destination="-2" name="contentArray" keyPath="self.addressArray" id="30">
+                <binding destination="-2" name="contentArray" keyPath="self.addressObjectArray" id="dyH-dq-yaC">
                     <dictionary key="options">
                         <bool key="NSConditionallySetsEditable" value="NO"/>
                         <bool key="NSRaisesForNotApplicableKeys" value="NO"/>
@@ -96,4 +139,7 @@
             </connections>
         </arrayController>
     </objects>
+    <resources>
+        <image name="IconForRefresh" width="128" height="128"/>
+    </resources>
 </document>
