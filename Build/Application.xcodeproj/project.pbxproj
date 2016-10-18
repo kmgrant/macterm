@@ -19,6 +19,7 @@
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */; };
 		0A30289D1DB2BE2500C1C557 /* Network.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289C1DB2BE2500C1C557 /* Network.mm */; };
+		0A3028A01DB5D46100C1C557 /* MenuUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
@@ -290,6 +291,8 @@
 		0A30289A1DB294F400C1C557 /* IconForRefresh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForRefresh.png; path = Application/Resources/IconForRefresh.png; sourceTree = "<group>"; };
 		0A30289B1DB2BE1800C1C557 /* NetEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = "<group>"; };
 		0A30289C1DB2BE2500C1C557 /* Network.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Network.mm; path = Application/Code/Network.mm; sourceTree = "<group>"; };
+		0A30289E1DB5D45200C1C557 /* MenuUtilities.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MenuUtilities.objc++.h"; path = "Shared/Code/MenuUtilities.objc++.h"; sourceTree = "<group>"; };
+		0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MenuUtilities.mm; path = Shared/Code/MenuUtilities.mm; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ListenerModel.mm; path = Shared/Code/ListenerModel.mm; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
@@ -679,6 +682,7 @@
 				0A33CCF607FAC04200248DDF /* ListenerModel.mm */,
 				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
+				0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
 				0A4FAF941525694700B8142A /* Popover.mm */,
 				0AF94E481477857900099BF2 /* PopoverManager.mm */,
@@ -717,6 +721,7 @@
 				0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */,
 				0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */,
 				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
+				0A30289E1DB5D45200C1C557 /* MenuUtilities.objc++.h */,
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
 				0A4FAF961525695400B8142A /* Popover.objc++.h */,
 				0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */,
@@ -1435,6 +1440,7 @@
 				0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */,
 				0AC6BB0A0A8C0BA000AFF37A /* SessionDescription.cp in Sources */,
 				0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */,
+				0A3028A01DB5D46100C1C557 /* MenuUtilities.mm in Sources */,
 				0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */,
 				0AC6BB0D0A8C0BA000AFF37A /* RecordAE.cp in Sources */,
 				0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */,

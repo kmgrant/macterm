@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161017',
     '20161014',
     '20161009',
     '20161008',
@@ -553,6 +554,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161017': [
+        'Fixed Preferences window General pane Notifications tab to show all available sound names for the bell setting.',
+    ],
     '20161014': [
         'Fixed "Network Addresses of This Mac" window to return correct results on macOS Sierra.',
         '"IP Addresses of This Mac" is now called "Network Addresses of This Mac".',

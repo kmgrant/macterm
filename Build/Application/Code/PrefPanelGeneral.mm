@@ -856,6 +856,13 @@ initializeWithContext:(void*)			aContext
 			initialIndex = currentIndex;
 		}
 		++currentIndex;
+		if (soundNamesOnly.count > 0)
+		{
+			// the dash "-" is translated into a separator by the menu delegate
+			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
+												initWithDescription:@"-"]
+											autorelease]];
+		}
 		for (NSString* soundName in soundNamesOnly)
 		{
 			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]

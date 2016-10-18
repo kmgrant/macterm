@@ -520,6 +520,10 @@ valid sounds to pass to CocoaBasic_PlaySoundByName().  This is
 useful for displaying a set of choices, such as a menu, to the
 user.
 
+The list may also contain strings consisting of single dashes
+("-"), which should not be treated as sound names; they can be
+used to place dividing lines.
+
 (1.0)
 */
 CFArrayRef
@@ -530,7 +534,6 @@ CocoaBasic_ReturnUserSoundNames ()
 												findFolder(kLocalDomain, kSystemSoundsFolderType),
 												findFolder(kSystemDomain, kSystemSoundsFolderType),
 											];
-	NSArray* const			kSupportedFileTypes = [NSSound soundUnfilteredTypes];
 	NSFileManager* const	kFileManager = [NSFileManager defaultManager];
 	BOOL					isDirectory = NO;
 	NSMutableArray*			result = [NSMutableArray array];
@@ -549,15 +552,27 @@ CocoaBasic_ReturnUserSoundNames ()
 				
 				if ((nil == soundFiles) && (nil != error))
 				{
-					Console_Warning(Console_WriteValueCFString, "failed to iterate over sound directories, error",
+					Console_Warning(Console_WriteValueCFString, "failed to iterate over sounds, directory",
+									BRIDGE_CAST(soundDirectory, CFStringRef));
+					Console_Warning(Console_WriteValueCFString, "directory listing error",
 									BRIDGE_CAST([error localizedDescription], CFStringRef));
 				}
-				
-				for (NSString* soundFile in soundFiles)
+				else if (soundFiles.count > 0)
 				{
-					if ([kSupportedFileTypes containsObject:[soundFile pathExtension]])
+					if (result.count > 0)
 					{
-						[result addObject:[soundFile stringByDeletingPathExtension]];
+						[result addObject:@"-"]; // suggest a separator in between sound source directories
+					}
+					
+					for (NSString* soundFile in soundFiles)
+					{
+						NSString*	soundName = [soundFile stringByDeletingPathExtension];
+						
+						
+						if (nil != [NSSound soundNamed:soundName])
+						{
+							[result addObject:soundName];
+						}
 					}
 				}
 			}
