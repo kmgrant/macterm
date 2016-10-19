@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161018',
     '20161017',
     '20161014',
     '20161009',
@@ -554,6 +555,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161018': [
+        'Fixed possible crash in Preferences window Macros and Workspaces panes, when clicking on table headings.',
+    ],
     '20161017': [
         'Fixed Preferences window General pane Notifications tab to show all available sound names for the bell setting.',
     ],

@@ -117,6 +117,7 @@ dealloc
 	[localizedIcon release];
 	[_listItemHeaderIndexes release];
 	[_listItemHeaders release];
+	[_itemHeaderSortDescriptors release];
 	[super dealloc];
 }// dealloc
 
@@ -233,13 +234,13 @@ initializeWithContext:(void*)			aContext
 	self->identifier = [givenIdentifier retain];
 	self->localizedName = [givenName retain];
 	self->localizedIcon = [givenIcon retain];
-	self->_itemHeaderSortDescriptors = [[@[
+	self->_itemHeaderSortDescriptors = [@[
 											// uses "id< GenericPanelNumberedList_ListItemHeader >" method names
 											[NSSortDescriptor sortDescriptorWithKey:@"self.numberedListIndexString" ascending:YES
 																					selector:@selector(localizedStandardCompare:)],
 											[NSSortDescriptor sortDescriptorWithKey:@"self.numberedListItemName" ascending:YES
 																					selector:@selector(localizedStandardCompare:)]
-										] retain] autorelease];
+										] retain];
 	self->_listItemHeaderIndexes = [[NSIndexSet alloc] initWithIndex:0];
 	self->_listItemHeaders = [NSArray array];
 	self->masterDriver = givenDriver;
