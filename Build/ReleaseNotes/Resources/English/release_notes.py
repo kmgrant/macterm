@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161022',
     '20161018',
     '20161017',
     '20161014',
@@ -555,6 +556,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161022': [
+        'Fixed the rendering of focus rings when using Full Keyboard Access to activate push-buttons and help buttons in various windows and sheets.',
+    ],
     '20161018': [
         'Fixed possible crash in Preferences window Macros and Workspaces panes, when clicking on table headings.',
     ],

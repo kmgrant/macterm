@@ -37,6 +37,7 @@
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
+		0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A90C79A1DBC557B005EABE0 /* CoreUI.mm */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0A9D796F12A234650006CECA /* __init__.py in pymacterm-term */ = {isa = PBXBuildFile; fileRef = 0A9D796B12A2342B0006CECA /* __init__.py */; };
 		0A9D797012A234650006CECA /* text.py in pymacterm-term */ = {isa = PBXBuildFile; fileRef = 0A9D796C12A2342B0006CECA /* text.py */; };
@@ -468,6 +469,8 @@
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
 		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
+		0A90C79A1DBC557B005EABE0 /* CoreUI.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CoreUI.mm; path = Shared/Code/CoreUI.mm; sourceTree = "<group>"; };
+		0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CoreUI.objc++.h"; path = "Shared/Code/CoreUI.objc++.h"; sourceTree = "<group>"; };
 		0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RandomWrap.h; path = Shared/Code/RandomWrap.h; sourceTree = "<group>"; };
 		0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = PreferencesSearch.plist; path = Application/Resources/PreferencesSearch.plist; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
@@ -676,6 +679,7 @@
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
+				0A90C79A1DBC557B005EABE0 /* CoreUI.mm */,
 				0A33CD0007FAC07A00248DDF /* FlagManager.cp */,
 				0A68811112F537A1005F418A /* GrowlSupport.mm */,
 				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
@@ -708,6 +712,7 @@
 				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
+				0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */,
 				0A9B318C0D538E8600C1616D /* FlagManager.h */,
 				0A68811012F5378C005F418A /* GrowlSupport.h */,
 				0A66CA450887464200FD616C /* HIViewWrap.h */,
@@ -1418,6 +1423,7 @@
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */,
 				0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */,
 				0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */,
+				0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */,
 				0A03A1EB1D9A297000411248 /* OtherApps.mm in Sources */,
 				0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */,
 				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */,

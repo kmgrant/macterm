@@ -41,11 +41,10 @@
 #endif
 
 // library includes
-#include <CocoaExtensions.objc++.h>
 #ifdef __OBJC__
+#	import <CocoaExtensions.objc++.h>
+@class CoreUI_HelpButton;
 @class ListenerModel_StandardListener;
-#else
-class ListenerModel_StandardListener;
 #endif
 
 // application includes
@@ -134,8 +133,8 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*		sourceListContainer;
 	IBOutlet NSTableView*	sourceListTableView;
 	IBOutlet NSView*		sourceListSegmentedControl;
-	IBOutlet NSButton*		sourceListHelpButton;
-	IBOutlet NSButton*		mainViewHelpButton;
+	IBOutlet CoreUI_HelpButton*		sourceListHelpButton;
+	IBOutlet CoreUI_HelpButton*		mainViewHelpButton;
 	IBOutlet NSView*		verticalSeparator;
 @private
 	NSIndexSet*							currentPreferenceCollectionIndexes;

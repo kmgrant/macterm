@@ -47,7 +47,10 @@ class NSView;
 
 // library includes
 #ifdef __OBJC__
+#	import <CoreUI.objc++.h>
 #	import <PopoverManager.objc++.h>
+@class CoreUI_Button;
+@class CoreUI_HelpButton;
 #endif
 #include <RetainRelease.template.h>
 
@@ -92,11 +95,11 @@ changes to an interface declared in a ".mm" file.
 															PopoverManager_Delegate > //{
 {
 @private
-	IBOutlet NSTabView*		viewContainer;
-	IBOutlet NSButton*		actionButton;
-	IBOutlet NSButton*		cancelButton;
-	IBOutlet NSButton*		otherButton;
-	IBOutlet NSButton*		helpButton;
+	IBOutlet NSTabView*			viewContainer;
+	IBOutlet CoreUI_Button*		actionButton;
+	IBOutlet CoreUI_Button*		cancelButton;
+	IBOutlet CoreUI_Button*		otherButton;
+	IBOutlet CoreUI_HelpButton*	helpButton;
 	void					(^_cleanupBlock)();
 	void					(^_helpButtonBlock)();
 	void					(^_primaryButtonBlock)();

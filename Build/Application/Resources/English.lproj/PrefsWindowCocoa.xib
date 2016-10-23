@@ -44,7 +44,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43">
+                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43" customClass="CoreUI_HelpButton">
                         <rect key="frame" x="5" y="4" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
@@ -55,7 +55,7 @@
                             <action selector="performContextSensitiveHelp:" target="-2" id="45"/>
                         </connections>
                     </button>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="122">
+                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="122" customClass="CoreUI_HelpButton">
                         <rect key="frame" x="225" y="4" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="123">
