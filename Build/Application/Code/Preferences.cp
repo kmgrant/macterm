@@ -8675,6 +8675,10 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 Adds default values for known preference keys.  Existing
 values are kept and any other defaults are added.
 
+The keys "name" and "name-string" are special, reserved
+for named collections and they should never be present
+in the global defaults.  They are removed if they exist.
+
 \retval noErr
 if successful
 
@@ -8700,6 +8704,11 @@ mergeInDefaultPreferences ()
 		// other values are written to the specified handles,
 		// where the data must be extracted for saving elsewhere
 		result = readPreferencesDictionary(defaultPrefDictionary.returnCFDictionaryRef(), true/* merge */);
+		
+		// also explicitly delete name keys if they exist globally
+		// (they should not)
+		setApplicationPreference(CFSTR("name"), nullptr);
+		setApplicationPreference(CFSTR("name-string"), nullptr);
 		
 		if (noErr == result)
 		{
