@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161024',
     '20161023',
     '20161022',
     '20161018',
@@ -557,6 +558,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161024': [
+        'Fixed Find dialog to be less stubborn when the Escape key is used: now the window closes immediately and cancels any search text that had been entered, instead of requiring multiple Escape presses to clear the field and then hide the window.',
+        'Fixed Find dialog to not add text to the search history if the window is closed by the Escape key.',
+    ],
     '20161023': [
         'Preferences window "Export to File…" (unless requested otherwise) now includes copies of missing inherited settings from the Default for that preference category.  This makes files easier to share, as they contain an exact snapshot of what was exported without any dependencies on the Default settings of the importing user.',
         'Preferences window "Export to File…" now provides a checkbox in the save panel to control inherited settings: you can choose to copy the current Default values into the file for a perfect snapshot, or keep the previous behavior of only writing settings that are not inherited.  Full copies may produce slightly larger files, and they do not make it easy to share settings between multiple collections.',

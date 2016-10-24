@@ -557,6 +557,9 @@ dealloc
 Updates a terminal view so that previously-found words are no
 longer highlighted.
 
+See the view manager property "searchContext" for a convenient
+way to find the current search context (local or global).
+
 (4.1)
 */
 - (void)
@@ -831,7 +834,7 @@ finalOptions:(FindDialog_Options)		options
 	
 	// make search history persistent for the window
 	NSMutableArray*		recentSearchesArray = self.historyArray;
-	if (nil != searchText)
+	if ((acceptedSearch) && (nil != searchText))
 	{
 		[recentSearchesArray removeObject:searchText]; // remove any older copy of this search phrase
 		[recentSearchesArray insertObject:searchText atIndex:0];
@@ -881,9 +884,7 @@ finalOptions:(FindDialog_Options)		options
 		else
 		{
 			// no previous search available; remove all highlighting
-			[self clearSearchHighlightingInContext:((YES == multiTerminal)
-													? kFindDialog_SearchContextGlobal
-													: kFindDialog_SearchContextLocal)];
+			[self clearSearchHighlightingInContext:aViewMgr.searchContext];
 		}
 	}
 	
@@ -1258,6 +1259,23 @@ setCaseInsensitiveSearch:(BOOL)		isCaseInsensitive
 /*!
 Accessor.
 
+(2016.10)
+*/
+- (FindDialog_SearchContext)
+searchContext
+{
+	FindDialog_SearchContext		result = ((self.multiTerminalSearch)
+											? kFindDialog_SearchContextGlobal
+											: kFindDialog_SearchContextLocal);
+	
+	
+	return result;
+}// searchContext
+
+
+/*!
+Accessor.
+
 (4.0)
 */
 - (BOOL)
@@ -1311,12 +1329,11 @@ doCommandBySelector:(SEL)	aSelector
 	
 	if (@selector(cancelOperation:) == aSelector)
 	{
-		// only cancel if the field is empty
-		if (0 == [[aTextView string] length])
-		{
-			[self performCloseAndRevert:self];
-			result = YES;
-		}
+		// force the field to be empty and remove highlighting
+		[self->responder findDialog:self clearSearchHighlightingInContext:self.searchContext];
+		aTextView.string = @"";
+		[self performCloseAndRevert:self];
+		result = YES;
 	}
 	else if (@selector(insertNewline:) == aSelector)
 	{

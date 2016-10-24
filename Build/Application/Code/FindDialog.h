@@ -160,6 +160,8 @@ changes to an interface declared in a ".mm" file.
 	caseInsensitiveSearch; // binding
 	@property (assign) BOOL
 	multiTerminalSearch; // binding
+	@property (readonly) FindDialog_SearchContext
+	searchContext;
 	@property (assign) BOOL
 	searchProgressHidden; // binding
 	@property (assign) BOOL
