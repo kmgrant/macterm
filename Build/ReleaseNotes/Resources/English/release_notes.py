@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161023',
     '20161022',
     '20161018',
     '20161017',
@@ -556,6 +557,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161023': [
+        'Preferences window "Export to File…" (unless requested otherwise) now includes copies of missing inherited settings from the Default for that preference category.  This makes files easier to share, as they contain an exact snapshot of what was exported without any dependencies on the Default settings of the importing user.',
+        'Preferences window "Export to File…" now provides a checkbox in the save panel to control inherited settings: you can choose to copy the current Default values into the file for a perfect snapshot, or keep the previous behavior of only writing settings that are not inherited.  Full copies may produce slightly larger files, and they do not make it easy to share settings between multiple collections.',
+    ],
     '20161022': [
         'Fixed the rendering of focus rings when using Full Keyboard Access to activate push-buttons and help buttons in various windows and sheets.',
     ],
@@ -754,7 +759,7 @@ notes_by_version = {
         'Preferences window Workspaces pane "Automatically enter Full Screen" setting is now applied to each window in the Workspace (up to 10).  This means that when the Workspace is spawned, every window in the Workspace will go Full Screen in Mission Control (if OS X default mode is selected).',
     ],
     '20141026': [
-        'Fixed possible crash in Preferences window Sessions pane Resource tab (and Custom New Session sheet) when using the "Remote Shell..." feature.',
+        'Fixed possible crash in Preferences window Sessions pane Resource tab (and Custom New Session sheet) when using the "Remote Shell…" feature.',
     ],
     '20141024': [
         'Minor font updates in a few areas to look at home on Mac OS X Yosemite.',
@@ -852,7 +857,7 @@ notes_by_version = {
         'The "I-beam" mouse pointer shape has been completely redesigned for terminal windows.  The new I-beam is red (for high contrast on colored terminals) and it is twice the size of a normal mouse pointer.  The new I-beam also looks good on Retina displays.',
     ],
     '20130705': [
-        'If the "Review..." button is selected from the Quit alert, the resulting series of Close alerts will no longer be displayed with the standard alert-opening animation (since this adds too much of a delay to the sequence).',
+        'If the "Review…" button is selected from the Quit alert, the resulting series of Close alerts will no longer be displayed with the standard alert-opening animation (since this adds too much of a delay to the sequence).',
     ],
     '20130704': [
         'Fixed "Arrange All Windows in Front" to follow the stagger preference and keep windows from going under the menu bar.',
@@ -899,7 +904,7 @@ notes_by_version = {
     '20130205': [
         'Version root has changed to 4.1; future builds will incorporate features intended for the upcoming 4.1 releease.',
         'Due to continuing challenges presented by Apple development tools and a lack of suitable testing hardware, the decision has been made to DROP SUPPORT for PowerPC-based Macs and versions of Mac OS X prior to Snow Leopard (10.6).  In other words, from now on, MacTerm will only work on Intel-based Macs that run Snow Leopard (10.6), Lion (10.7), Mountain Lion (10.8), or any system beyond that.',
-        'By dropping support for older systems and architectures, MacTerm is considerably smaller...less than half the size of any previous version!  This build requires just 9.5 MB of disk space and it is also a faster download.',
+        'By dropping support for older systems and architectures, MacTerm is considerably smaller…less than half the size of any previous version!  This build requires just 9.5 MB of disk space and it is also a faster download.',
     ],
     '20121129': [
         'This is the LAST VERSION TO SUPPORT MAC OS X VERSIONS 10.3 - 10.5.  Starting in 2013, only Snow Leopard (10.6), Lion (10.7) and Mountain Lion (10.8) and beyond will be supported.',
@@ -959,7 +964,7 @@ notes_by_version = {
     '20120520': [
         'Fixed contextual menus in Full Screen mode to hide actions that should not be available.',
         'Full Screen mode now includes "Exit Full Screen" as a contextual menu item.',
-        '"Print Screen..." is now also a contextual menu item.',
+        '"Print Screen…" is now also a contextual menu item.',
     ],
     '20120516': [
         'Vector graphics now use a thinner line for drawing text in vector fonts.',
@@ -1003,7 +1008,7 @@ notes_by_version = {
         'Default color schemes (created only in brand new installations) have been tweaked slightly so that ANSI colors look better.',
     ],
     '20111228': [
-        'Preferences window now supports generic import and export for ALL types of collections.  When any collection drawer is open you will now find an "Export to File..." command in the submenu of the gear button and an "Import from File..." command in the submenu of the "+" button.  These files are in XML property list format.',
+        'Preferences window now supports generic import and export for ALL types of collections.  When any collection drawer is open you will now find an "Export to File…" command in the submenu of the gear button and an "Import from File…" command in the submenu of the "+" button.  These files are in XML property list format.',
         'Added Prefs.import_from_file() to Quills, allowing preference file imports to be requested from Python.',
         'Help has been updated to describe how collections of preferences generally work.',
     ],
@@ -1083,7 +1088,7 @@ notes_by_version = {
         "Fixed Preferences window Sessions pane Resource tab (and Custom New Session sheet) so that command lines won't be silently ignored in certain cases after being constructed by one of the top buttons or the predefined Sessions menu.",
     ],
     '20110924': [
-        'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized from the Shell or Log-In Shell types.  The previous "Server Settings..." option is still available but it is now called Remote Shell.',
+        'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized from the Shell or Log-In Shell types.  The previous "Server Settings…" option is still available but it is now called Remote Shell.',
         'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a command line to be initialized by copying the command line of any other Session Favorite.  Note that this is not a permanent association, it is akin to copying and pasting from another set of preferences; and the command line can still be customized afterwards.',
     ],
     '20110910': [
@@ -1193,7 +1198,7 @@ notes_by_version = {
         'Fixed constraints on window resizing in certain sheets.',
     ],
     '20110608': [
-        'Preferences window Macros pane now has an "Insert Control Key Character..." button, which simplifies escape code entry in macros that allow substitution.',
+        'Preferences window Macros pane now has an "Insert Control Key Character…" button, which simplifies escape code entry in macros that allow substitution.',
     ],
     '20110607': [
         'Fixed a preferences problem that caused blank collections to be saved under the old names of renamed collections.',
@@ -1594,7 +1599,7 @@ notes_by_version = {
         'Fixed certain printing features to render more than one line to the printer!',
         'Printing is now preceded by a special dialog for influencing text layout.',
         'Printing now has intelligent defaults for portrait/landscape, text scaling, and font, based on the source terminal.',
-        'The "Page Setup..." menu command has been removed, as it is consolidated into the new layout dialog.',
+        'The "Page Setup…" menu command has been removed, as it is consolidated into the new layout dialog.',
         'The "Print One Copy" menu command has been removed.',
         'Terminal view contextual menus have new printing commands.',
     ],
@@ -2090,7 +2095,7 @@ notes_by_version = {
         'Preferences window Sessions pane Keyboard tab has been refined further.',
     ],
     '20080513': [
-        'The "Show IP Addresses..." command is now in the Window menu, and has been renamed "IP Addresses".',
+        'The "Show IP Addresses…" command is now in the Window menu, and has been renamed "IP Addresses".',
         'The IP Addresses window is now implemented using Cocoa, which made it trivial to support drags.',
         '"Send IP Address" was removed due to ambiguity; now, just use drag-and-drop from the IP Addresses window.',
     ],

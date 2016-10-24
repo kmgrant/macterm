@@ -322,6 +322,8 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowCollectionsDrawerDescription	= 'CDDs',
 	kUIStrings_PreferencesWindowCollectionsDrawerShowHideName	= 'SHCD',
 	kUIStrings_PreferencesWindowDefaultFavoriteName				= 'DefF',
+	kUIStrings_PreferencesWindowExportCopyDefaults			= 'ExCD',
+	kUIStrings_PreferencesWindowExportCopyDefaultsHelpText	= 'ECDH',
 	kUIStrings_PreferencesWindowFavoritesRemoveWarning			= 'DelW',
 	kUIStrings_PreferencesWindowFavoritesRemoveWarningHelpText	= 'DelH',
 	kUIStrings_PreferencesWindowIconName						= 'Icon',

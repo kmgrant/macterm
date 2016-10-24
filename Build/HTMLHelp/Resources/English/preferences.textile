@@ -145,16 +145,29 @@ Creates an editable field around the name of the item so that
 
 h4. Export to File...
 
-Use this to create a property list file containing all of the
- settings directly defined in the selected collection.  Settings
- that were never directly set for the collection will NOT be
- exported (if they are imported later, they will implicitly
- inherit whatever the Default settings are at that time).
+Use this to create a property list file containing settings from
+ the selected collection.
+
+You have a choice in how to handle inherited settings, via the
+ "Copy from Default as needed (inheritance not preserved on import)"
+ checkbox in the save panel.  If inherited settings are copied
+ from their current Default values, the file acts as a snapshot
+ of any defaults that you are using; therefore, a future import of
+ the file will create a collection based on the old snapshot and
+ not reflect any changes that may have been made to Default values
+ in the meantime.  Whereas, a file that does not copy inherited
+ values could be smaller and a future import will fill in any gaps
+ using the values in Default at the time of the import (even if
+ they have changed).
 
 Exported settings are a good way to share among users of MacTerm.
  For instance, if you are the administrator of a school you might
  want to export some settings and make them available to students
- so that everyone's computer can be configured fairly easily.
+ so that everyone's computer can be configured fairly easily.  If
+ you intend to share exported files, it is a good idea to enable
+ the checkbox in the save panel (to have settings copied from
+ Default as needed, creating a complete snapshot of what you
+ started from).
 
 h2(#inheritance). About Inherited Preferences
 

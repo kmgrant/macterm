@@ -1075,11 +1075,42 @@ performExportPreferenceCollectionToFile:(id)	sender
 {
 #pragma unused(sender)
 	NSSavePanel*		savePanel = [NSSavePanel savePanel];
+	NSBox*				accessoryView = nil;
+	NSButton*			exportAllOption = nil;
 	CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultExportPreferences),
 											CFRetainRelease::kAlreadyRetained);
 	CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptSavePrefs),
 										CFRetainRelease::kAlreadyRetained);
 	
+	
+	// configure extra options in the save panel
+	{
+		CFRetainRelease		exportAllTitleString(UIStrings_ReturnCopy
+													(kUIStrings_PreferencesWindowExportCopyDefaults),
+													CFRetainRelease::kAlreadyRetained);
+		CFRetainRelease		exportAllHelpString(UIStrings_ReturnCopy
+												(kUIStrings_PreferencesWindowExportCopyDefaultsHelpText),
+												CFRetainRelease::kAlreadyRetained);
+		
+		
+		// NOTE: in later SDK, might use "[NSButton checkboxWithTitle:target:action:]"
+		exportAllOption = [[NSButton alloc] initWithFrame:NSZeroRect];
+		exportAllOption.buttonType = NSSwitchButton;
+		exportAllOption.title = BRIDGE_CAST(exportAllTitleString.returnCFStringRef(), NSString*);
+		exportAllOption.toolTip = BRIDGE_CAST(exportAllHelpString.returnCFStringRef(), NSString*);
+		exportAllOption.state = NSOnState; // enable copy-defaults initially
+		[exportAllOption setFrameOrigin:NSMakePoint(0, 20)];
+		[exportAllOption sizeToFit];
+		
+		accessoryView = [[[NSBox alloc] initWithFrame:NSZeroRect] autorelease];
+		accessoryView.borderType = NSNoBorder;
+		accessoryView.boxType = NSBoxCustom;
+		accessoryView.title = @"";
+		[accessoryView addSubview:exportAllOption];
+		[accessoryView sizeToFit];
+		
+		savePanel.accessoryView = accessoryView;
+	}
 	
 	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
 	[savePanel setDirectory:nil];
@@ -1087,6 +1118,20 @@ performExportPreferenceCollectionToFile:(id)	sender
 	[savePanel beginSheetModalForWindow:self.window
 				completionHandler:^(NSInteger aReturnCode)
 				{
+					BOOL						isExportAll = (NSOnState == exportAllOption.state);
+					Preferences_ExportFlags		exportOptions = 0;
+					
+					
+					if (isExportAll)
+					{
+						// if selected by user, fill in any “gaps” in ordinary settings
+						// by copying the corresponding values from the Default
+						// (this means that the file will be “complete”, suitable for
+						// sharing but losing any knowledge of inheritance when imported
+						// at a later time)
+						exportOptions |= kPreferences_ExportFlagCopyDefaultsAsNeeded;
+					}
+					
 					if (NSFileHandlingPanelOKButton == aReturnCode)
 					{
 						// export the contents of the preferences context (the Preferences
@@ -1094,7 +1139,8 @@ performExportPreferenceCollectionToFile:(id)	sender
 						// right class, e.g. so that Default does not create a huge file)
 						CFURLRef				asURL = BRIDGE_CAST(savePanel.URL, CFURLRef);
 						Preferences_Result	writeResult = Preferences_ContextSaveAsXMLFileURL
-															([self currentPreferencesContext], asURL);
+															([self currentPreferencesContext],
+																exportOptions, asURL);
 						
 						
 						if (kPreferences_ResultOK != writeResult)

@@ -102,6 +102,21 @@ enum
 };
 
 /*!
+Controls the behavior of preference-saving functions.
+*/
+enum
+{
+	kPreferences_ExportFlagIncludeAllClasses			= (1 << 0),		//!< if source data contains any settings outside the
+																	//!  target tag set or class, export all settings (for
+																	//!  example, if a Session export contains any Format
+																	//!  settings, include Format-related settings too)
+	kPreferences_ExportFlagCopyDefaultsAsNeeded		= (1 << 1),		//!< if source data is missing any settings from the
+																	//!  target tag set or class, find defaults for those
+																	//!  and include them (instead of having missing data)
+};
+typedef UInt32 Preferences_ExportFlags;
+
+/*!
 All tags from the same preference class must have
 unique values.  The tags are grouped by class.
 When you call Preferences_GetData…() methods,
@@ -597,15 +612,12 @@ Preferences_Result
 
 Preferences_Result
 	Preferences_ContextSaveAsXMLData		(Preferences_ContextRef				inContext,
-											 Boolean							inIncludeOtherClassValues,
+											 Preferences_ExportFlags				inExportOptions,
 											 CFDataRef&							outData);
 
 Preferences_Result
-	Preferences_ContextSaveAsXMLFileRef		(Preferences_ContextRef				inContext,
-											 FSRef const&						inFile);
-
-Preferences_Result
 	Preferences_ContextSaveAsXMLFileURL		(Preferences_ContextRef				inContext,
+											 Preferences_ExportFlags				inExportOptions,
 											 CFURLRef							inURL);
 
 Preferences_Result

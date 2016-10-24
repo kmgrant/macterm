@@ -2863,9 +2863,20 @@ suitable for writing to a UTF-8-encoded text file.
 
 Normally only the keys that belong to the source context’s class
 are saved and any other settings are ignored.  To force all keys
-to be included, set "inIncludeOtherClassValues" to true (but
-note that this will make the data dictionary large if the source
-context contains unrelated settings such as global defaults).
+to be included, set "kPreferences_ExportFlagIncludeAllClasses" in
+"inExportOptions" (note that this will make the data dictionary
+very large if the source context contains unrelated settings such
+as global defaults).  This option is typically suitable only for
+debugging, to see every setting that has been made directly.
+
+A context is not required to contain every possible setting from
+its class; normally, when data is read back, any missing values
+are determined by “inheriting” from defaults at the time of the
+read.  If you want to export an exact snapshot however, filling
+in inheritance “gaps” by copying values explicitly from defaults,
+then set "kPreferences_ExportFlagCopyDefaultsAsNeeded" in the
+"inExportOptions" parameter.  This may produce a larger file but
+the data will always be imported exactly as it was.
 
 This data can later recreate a context using a method like
 Preferences_ContextMergeInXMLData().
@@ -2883,86 +2894,104 @@ if the specified context does not exist
 \retval kPreferences_ResultGenericFailure
 if any other problem prevents data generation
 
-(4.0)
+(2016.10)
 */
 Preferences_Result
 Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
-									 Boolean					inIncludeOtherClassValues,
+									 Preferences_ExportFlags		inExportOptions,
 									 CFDataRef&					outData)
 {
 	Preferences_Result		result = kPreferences_ResultGenericFailure;
 	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
-	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+	if (nullptr == ptr)
+	{
+		result = kPreferences_ResultInvalidContextReference;
+	}
 	else
 	{
 		CFRetainRelease		targetDictionary(CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity or zero for no limit */,
 																		&kCFTypeDictionaryKeyCallBacks,
-																		&kCFTypeDictionaryValueCallBacks), CFRetainRelease::kAlreadyRetained);
+																		&kCFTypeDictionaryValueCallBacks),
+												CFRetainRelease::kAlreadyRetained);
+		Boolean				currentClassOnly = (0 == (inExportOptions & kPreferences_ExportFlagIncludeAllClasses));
 		OSStatus			error = noErr;
 		
 		
 		error = writePreferencesDictionaryFromContext(ptr, targetDictionary.returnCFMutableDictionaryRef(),
-														false/* merge */, (false == inIncludeOtherClassValues));
-		if (noErr != error) result = kPreferences_ResultGenericFailure;
+														false/* merge */, currentClassOnly);
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValue, "failed to read source context into dictionary, error", error);
+			result = kPreferences_ResultGenericFailure;
+		}
 		else
 		{
-			outData = CFPropertyListCreateXMLData(kCFAllocatorDefault, targetDictionary.returnCFMutableDictionaryRef());
-			if (nullptr == outData) result = kPreferences_ResultGenericFailure;
-			else
+			Boolean		writeData = true; // initially...
+			
+			
+			if (inExportOptions & kPreferences_ExportFlagCopyDefaultsAsNeeded)
 			{
-				// success!
-				result = kPreferences_ResultOK;
+				// caller has requested that gaps be filled in using defaults;
+				// merge in data from the same class wherever it is missing
+				My_ContextInterfacePtr		defaultsPtr = nullptr;
+				
+				
+				if (getDefaultContext(Preferences_ContextReturnClass(inContext), defaultsPtr))
+				{
+					// attempt to read defaults of the same class as well
+					// (for conflicting settings, nothing is overwritten)
+					error = writePreferencesDictionaryFromContext
+							(defaultsPtr, targetDictionary.returnCFMutableDictionaryRef(),
+								true/* merge */, currentClassOnly);
+					if (noErr != error)
+					{
+						Console_Warning(Console_WriteValue, "failed to merge in default values, error", error);
+						result = kPreferences_ResultGenericFailure;
+						writeData = false;
+					}
+				}
+				else
+				{
+					Console_Warning(Console_WriteLine, "failed to find default context for class");
+					result = kPreferences_ResultGenericFailure;
+					writeData = false;
+				}
+			}
+			
+			if (writeData)
+			{
+				CFErrorRef		errorCFObject = nullptr;
+				
+				
+				outData = CFPropertyListCreateData
+							(kCFAllocatorDefault, targetDictionary.returnCFMutableDictionaryRef(),
+								kCFPropertyListXMLFormat_v1_0, 0/* options */, &errorCFObject);
+				if (nullptr == outData)
+				{
+					result = kPreferences_ResultGenericFailure;
+					Console_Warning(Console_WriteLine, "unable to create XML data for export of preferences");
+					if (nullptr != errorCFObject)
+					{
+						CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
+						CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
+																CFRetainRelease::kAlreadyRetained);
+						
+						
+						Console_Warning(Console_WriteValueCFString, "error", errorDescription.returnCFStringRef());
+					}
+				}
+				else
+				{
+					// success!
+					result = kPreferences_ResultOK;
+				}
 			}
 		}
 	}
 	return result;
 }// ContextSaveAsXMLData
-
-
-/*!
-Convenience method to invoke Preferences_ContextSaveAsXMLData()
-and then writing that data to an XML file, as specified by an
-FSRef.
-
-\retval kPreferences_ResultOK
-if no error occurred
-
-\retval kPreferences_ResultInvalidContextReference
-if the specified context does not exist
-
-\retval kPreferences_ResultGenericFailure
-if any other problem prevents a save
-
-(4.0)
-*/
-Preferences_Result
-Preferences_ContextSaveAsXMLFileRef		(Preferences_ContextRef		inContext,
-										 FSRef const&				inFile)
-{
-	Preferences_Result	result = kPreferences_ResultGenericFailure;
-	
-	
-	if (nullptr == inContext) result = kPreferences_ResultInvalidContextReference;
-	else
-	{
-		CFURLRef	fileURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &inFile);
-		
-		
-		if (nullptr == fileURL)
-		{
-			Console_Warning(Console_WriteLine, "unable to create URL for file");
-			result = kPreferences_ResultGenericFailure;
-		}
-		else
-		{
-			result = Preferences_ContextSaveAsXMLFileURL(inContext, fileURL);
-			CFRelease(fileURL), fileURL = nullptr;
-		}
-	}
-	return result;
-}// ContextSaveAsXMLFileRef
 
 
 /*!
@@ -2982,37 +3011,53 @@ if any other problem prevents a save
 */
 Preferences_Result
 Preferences_ContextSaveAsXMLFileURL		(Preferences_ContextRef		inContext,
+										 Preferences_ExportFlags		inExportOptions,
 										 CFURLRef					inFileURL)
 {
 	Preferences_Result	result = kPreferences_ResultGenericFailure;
 	
 	
-	if (nullptr == inContext) result = kPreferences_ResultInvalidContextReference;
+	if (nullptr == inContext)
+	{
+		result = kPreferences_ResultInvalidContextReference;
+	}
 	else
 	{
 		CFDataRef	xmlData = nullptr;
 		
 		
-		result = Preferences_ContextSaveAsXMLData(inContext, false/* include other class values */, xmlData);
+		result = Preferences_ContextSaveAsXMLData(inContext, inExportOptions, xmlData);
 		if (kPreferences_ResultOK == result)
 		{
-			SInt32		errorForFileURL = 0;
-			Boolean		writeOK = false;
+			CFRetainRelease		dataReleaser(xmlData, CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease		streamObject(CFWriteStreamCreateWithFile(kCFAllocatorDefault, inFileURL),
+												CFRetainRelease::kAlreadyRetained);
 			
 			
-			writeOK = CFURLWriteDataAndPropertiesToResource(inFileURL, xmlData, nullptr/* properties to write */,
-															&errorForFileURL);
-			if (false == writeOK)
+			if (streamObject.exists() && CFWriteStreamOpen(streamObject.returnCFWriteStreamRef()))
 			{
-				Console_Warning(Console_WriteValue, "unable to write XML data to file, URL error", errorForFileURL);
-				result = kPreferences_ResultGenericFailure;
+				CFIndex		bytesWritten = 0; // 0 or -1 on error
+				
+				
+				// IMPORTANT: since the property list has already been converted into
+				// XML data by Preferences_ContextSaveAsXMLData(), just write it out
+				// directly using the stream; if CFPropertyListWrite() were used
+				// instead, the result would be XML containing only a raw data element!
+				bytesWritten = CFWriteStreamWrite(streamObject.returnCFWriteStreamRef(),
+													CFDataGetBytePtr(xmlData), CFDataGetLength(xmlData));
+				if (bytesWritten > 0)
+				{
+					// success!
+					result = kPreferences_ResultOK;
+				}
+				else
+				{
+					result = kPreferences_ResultGenericFailure;
+					Console_Warning(Console_WriteLine, "unable to write XML data for export of preferences");
+				}
+				
+				CFWriteStreamClose(streamObject.returnCFWriteStreamRef());
 			}
-			else
-			{
-				// success!
-				result = kPreferences_ResultOK;
-			}
-			CFRelease(xmlData), xmlData = nullptr;
 		}
 	}
 	return result;
@@ -3369,21 +3414,24 @@ Preferences_DebugDumpContext	(Preferences_ContextRef		inContext)
 	Boolean					dumpOK = false;
 	
 	
-	prefsResult = Preferences_ContextSaveAsXMLData(inContext, true/* include other class values */, dataRef);
+	// include all classes in order to see an accurate view of everything
+	// that was directly saved in the specified context
+	prefsResult = Preferences_ContextSaveAsXMLData
+					(inContext, (kPreferences_ExportFlagIncludeAllClasses), dataRef);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		CFStringRef		asString = CFStringCreateFromExternalRepresentation
-									(kCFAllocatorDefault, dataRef, kCFStringEncodingUTF8);
+		CFRetainRelease		dataReleaser(dataRef, CFRetainRelease::kAlreadyRetained);
+		CFRetainRelease		asString(CFStringCreateFromExternalRepresentation
+										(kCFAllocatorDefault, dataRef, kCFStringEncodingUTF8),
+										CFRetainRelease::kAlreadyRetained);
 		
 		
-		if (nullptr != asString)
+		if (asString.exists())
 		{
 			Console_WriteValueAddress("dumping debug version of context", inContext);
-			Console_WriteValueCFString("context dump", asString);
+			Console_WriteValueCFString("context dump", asString.returnCFStringRef());
 			dumpOK = true;
-			CFRelease(asString), asString = nullptr;
 		}
-		CFRelease(dataRef), dataRef = nullptr;
 	}
 	
 	if (false == dumpOK)

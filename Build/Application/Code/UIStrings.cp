@@ -1236,6 +1236,16 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowDefaultFavoriteName"));
 		break;
 	
+	case kUIStrings_PreferencesWindowExportCopyDefaults:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Copy from Default as needed (inheritance not preserved on import)"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowExportCopyDefaults"));
+		break;
+	
+	case kUIStrings_PreferencesWindowExportCopyDefaultsHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("When sharing files between users, copying Default settings is recommended (as this creates a complete snapshot)."), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowExportCopyDefaultsHelpText"));
+		break;
+	
 	case kUIStrings_PreferencesWindowFavoritesRemoveWarning:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Remove item \"%1$@\" from the list?"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowFavoritesRemoveWarning; %1$@ will be a Favorite name from the list"));
