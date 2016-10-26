@@ -48,8 +48,8 @@ KV_TO_HEAD=$(CURDIR)/Tools/KeyValueToHTMLHeadTags.pl
 KV_TO_PLIST=$(CURDIR)/Tools/KeyValueToExactMatchProperties.pl
 
 define SOURCE_CSS_LOCALIZED_CONTENT
-$(call MAIN_SRC_SUB,$(1))/default.css \
-$(call MAIN_SRC_SUB,$(1))/main.css
+$(call MAIN_SRC,$(1))/default.css \
+$(call MAIN_SRC,$(1))/main.css
 endef
 
 define SOURCE_HTML

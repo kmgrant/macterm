@@ -57,6 +57,10 @@ notextile. </dl>
 
 notextile. </td>
 
+notextile. </tr>
+
+notextile. <tr>
+
 notextile. <td valign="top">
 
 notextile. <dl>
@@ -67,6 +71,14 @@ notextile. <dt>Other Applications</dt><dd>
 * "using Growl":content/growl.html
 
 notextile. </dd>
+
+notextile. </dl>
+
+notextile. </td>
+
+notextile. <td valign="top">
+
+notextile. <dl>
 
 notextile. <dt>Tutorials</dt><dd>
 

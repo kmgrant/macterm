@@ -6,29 +6,29 @@
 
 #lastupdated
 {
-	background:			#f2f2f2;
+	background:			#f2f2f2 linear-gradient(198deg, #fff, #efefef 50%, #fff);
 	color:				black;
 	clear:				both;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-short-body, system, sans-serif;
 	font-size:			smaller;
 	font-weight:		bold;
 	text-align:			center;
 	
 	margin-top:			0;
-	border-top:			solid #aaa 0.1em;
-	padding-top:		0.3em;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0.2em;
-	border-bottom:		solid #aaa 0.1em;
+	padding-bottom:		0;
+	border-bottom:		0;
 	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 #externalnavigation
@@ -46,70 +46,74 @@
 	color:				black;
 	float:				left;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
 	margin-bottom:		2em;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 #mainnavigation dl
 {
 	background:			transparent;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
+	margin-left:		0;
+	border-left:		0;
 	padding-left:		1em;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 #mainnavigation dt
 {
-	color:				#333;
+	background:			white;
+	color:				#444;
 	display:			block;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system, system, sans-serif;
 	font-size:			smaller;
-	font-style:			italic;
 	font-weight:		bold;
-	text-shadow:		#666 0.05em 0.1em 0.5em;
-	text-transform:		uppercase;
+	xtext-transform:		uppercase;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0.25em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0.30em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		-1em;
+	border-left:		0;
+	padding-left:		1em;
 	width:				100%;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		2em;
+}
+
+#mainnavigation dt:before
+{
+	xcontent:	'  •  ';
 }
 
 #mainnavigation dt.sectiontitle
@@ -119,42 +123,42 @@
 
 #mainnavigation dd
 {
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system, system, sans-serif;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		2em;
 	
 	margin-left:		1em;
-	border-left:		0em;
-	padding-left:		0em;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		1em;
 }
 
 #mainnavigation ul
 {
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 #mainnavigation li
@@ -162,13 +166,13 @@
 	list-style-type:	none;
 	white-space:		nowrap;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
 	margin-left:		-1em;
 	border-left:		solid transparent 0.1em;
@@ -176,7 +180,7 @@
 	width:				auto;
 	padding-right:		0.65em;
 	border-right:		solid transparent 0.2em;
-	margin-right:		0em;
+	margin-right:		0;
 }
 
 #mainnavigation a
@@ -189,21 +193,23 @@
 #mainnavigation a:active,
 #mainnavigation a:hover
 {
+	border-radius:		0.5em;
+	
 	margin-top:			0.2em;
-	border-top:			solid transparent 0.1em;
+	border-top:			solid transparent 0.09em;
 	padding-top:		0.1em;
 	height:				auto;
 	padding-bottom:		0.15em;
-	border-bottom:		solid transparent 0.1em;
+	border-bottom:		solid transparent 0.09em;
 	margin-bottom:		0.2em;
 	
 	margin-left:		1em;
-	border-left:		solid transparent 0.3em;
+	border-left:		solid transparent 0.1em;
 	padding-left:		0.65em;
 	width:				auto;
 	padding-right:		0.65em;
 	border-right:		solid transparent 0.1em;
-	margin-right:		0em;
+	margin-right:		0;
 }
 
 #mainnavigation a:link
@@ -226,8 +232,14 @@
 
 #mainnavigation a:hover
 {
-	background:			#eee;
-	color:				#29a;
+	background:			#f6f6f6;
+	color:				#000;
+	text-decoration:	none;
+	
+	border-top-color:	black;
+	border-bottom-color:black;
+	border-left-color:	black;
+	border-right-color:	black;
 }
 
 #footer
@@ -248,13 +260,13 @@
 	border-bottom:		solid #666 0.1em;
 	margin-bottom:		1em;
 	
-	margin-left:		0em;
-	border-left:		0em;
+	margin-left:		0;
+	border-left:		0;
 	padding-left:		1em;
 	width:				auto;
 	padding-right:		1em;
-	border-right:		0em;
-	margin-right:		0em;
+	border-right:		0;
+	margin-right:		0;
 }
 
 #footer a

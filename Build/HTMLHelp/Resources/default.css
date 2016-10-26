@@ -6,7 +6,7 @@ body
 {
 	background:			white;
 	color:				black;
-	font-family:		"Optima", sans-serif;
+	font-family:		-apple-system, system, sans-serif;
 	line-height:		210%;
 	
 	margin-top:			0;
@@ -31,22 +31,22 @@ a:visited,
 a:active,
 a:hover
 {
-	border-radius:		1em;
+	border-radius:		0.5em;
 	
-	margin-top:			0;
-	border-top:			0;
-	padding-top:		0.3em;
+	margin-top:			0.2em;
+	border-top:			solid transparent 0.09em;
+	padding-top:		0.1em;
 	height:				auto;
-	padding-bottom:		0.3em;
-	border-bottom:		solid transparent 0.1em;
-	margin-bottom:		0;
+	padding-bottom:		0.15em;
+	border-bottom:		solid transparent 0.09em;
+	margin-bottom:		0.2em;
 	
 	margin-left:		0;
-	border-left:		0;
-	padding-left:		0.9em;
+	border-left:		solid transparent 0.1em;
+	padding-left:		0.65em;
 	width:				auto;
-	padding-right:		0.9em;
-	border-right:		0;
+	padding-right:		0.65em;
+	border-right:		solid transparent 0.1em;
 	margin-right:		0;
 }
 
@@ -71,14 +71,20 @@ a:active
 a:hover
 {
 	background:			#eee;
-	color:				#29a;
+	color:				#000;
+	text-decoration:	none;
+	
+	border-top-color:	black;
+	border-bottom-color:black;
+	border-left-color:	black;
+	border-right-color:	black;
 }
 
 .navigation
 {
 	background-color:	#f2f2f2; /* okay because the body image color is known */
 	color:				black;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system, system, sans-serif;
 	font-style:			normal;
 	font-weight:		bold;
 	vertical-align:		middle;
@@ -130,12 +136,14 @@ a:hover
 
 .navigation a
 {
+	border-radius:		0.5em;
+	
 	margin-top:			0;
-	border-top:			solid transparent 0.1em;
+	border-top:			solid transparent 0.09em;
 	padding-top:		0.1em;
 	height:				auto;
 	padding-bottom:		0.1em;
-	border-bottom:		solid transparent 0.15em;
+	border-bottom:		solid transparent 0.09em;
 	margin-bottom:		0;
 	
 	margin-left:		0.25em;
@@ -143,7 +151,7 @@ a:hover
 	padding-left:		1em;
 	width:				auto;
 	padding-right:		1em;
-	border-right:		solid transparent 0.15em;
+	border-right:		solid transparent 0.1em;
 	margin-right:		0.25em;
 }
 
@@ -168,14 +176,20 @@ a:hover
 .navigation a:hover
 {
 	background:			#ddd;
-	color:				#29a;
+	color:				#000;
+	text-decoration:	none;
+	
+	border-top-color:	black;
+	border-bottom-color:black;
+	border-left-color:	black;
+	border-right-color:	black;
 }
 
 .pagetitle
 {
 	background-image:	white url('SubtleBorderTop.png') repeat-x;
 	color:				#333;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-headline, system, sans-serif;
 	line-height:		130%;
 	
 	margin-top:			0;
@@ -197,17 +211,17 @@ a:hover
 
 h2
 {
-	background:			#dedede linear-gradient(189deg, #dedede, #ccc 40%, #fff);
+	background:			#dedede linear-gradient(198deg, #dedede, #ccc 50%, #fff);
 	color:				black;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-subheadline, system, sans-serif;
 	line-height:		130%;
 	
 	margin-top:			0.85em;
 	border-top:			0;
-	padding-top:		0.05em;
+	padding-top:		0.11em;
 	height:				auto;
-	padding-bottom:		0;
-	border-bottom:		solid #aaa 0.075em;
+	padding-bottom:		0.11em;
+	border-bottom:		solid #9a9a9a 0.075em;
 	margin-bottom:		0.85em;
 	
 	margin-left:		-1.2em;
@@ -223,7 +237,7 @@ h3
 {
 	background:			white;
 	color:				black;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-short-headline, system, sans-serif;
 	line-height:		130%;
 	
 	margin-top:			0.45em;
@@ -247,7 +261,7 @@ h4
 {
 	background:			white linear-gradient(140deg, #fff, #efefef 10%, #fff);
 	color:				black;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-short-subheadline, system, sans-serif;
 	line-height:		130%;
 	
 	margin-top:			0.35em;
@@ -271,7 +285,7 @@ h5
 {
 	background:			white;
 	color:				black;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-short-subheadline, system, sans-serif;
 	line-height:		130%;
 	
 	margin-top:			0.25em;
@@ -295,7 +309,7 @@ h6
 {
 	background:			white;
 	color:				black;
-	font-family:		Optima, sans-serif;
+	font-family:		-apple-system-short-subheadline, system, sans-serif;
 	line-height:		130%;
 	
 	margin-top:			0.25em;
@@ -361,9 +375,10 @@ h6
 
 blockquote
 {
-	background:			white linear-gradient(-45deg, #ccc, #efefef 30%, #fff);
+	background:			white linear-gradient(-40deg, #ddd, #efefef 30%, #fff);
 	color:				#556;
 	font-style:			italic;
+	border-radius:		0.25em;
 	
 	margin-top:			0.5em;
 	border-top:			solid #efefef 0.1em;
@@ -374,7 +389,7 @@ blockquote
 	margin-bottom:		0;
 	
 	margin-left:		2em;
-	border-left:		solid #aaa 0.1em;
+	border-left:		solid #ddd 0.1em;
 	padding-left:		1.5em;
 	width:				auto;
 	padding-right:		1em;
