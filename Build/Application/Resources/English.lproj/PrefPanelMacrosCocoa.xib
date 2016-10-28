@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
         <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
@@ -85,7 +84,7 @@
                             <outlet property="nextKeyView" destination="k0d-1Y-PHD" id="MGl-z4-rdY"/>
                         </connections>
                     </button>
-                    <popUpButton verticalHuggingPriority="750" id="2058">
+                    <popUpButton verticalHuggingPriority="750" id="2058" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="219" y="299" width="235" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="2059">
@@ -121,7 +120,7 @@
                             <outlet property="nextKeyView" destination="JZl-6g-EGg" id="4zj-5G-Ab2"/>
                         </connections>
                     </button>
-                    <popUpButton verticalHuggingPriority="750" id="sjg-Q5-LAP">
+                    <popUpButton verticalHuggingPriority="750" id="sjg-Q5-LAP" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="219" y="235" width="235" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="TX5-hu-jjD">
@@ -148,7 +147,7 @@
                             <outlet property="nextKeyView" destination="5gV-de-2qw" id="9tm-ZO-uPb"/>
                         </connections>
                     </textField>
-                    <button verticalHuggingPriority="750" id="5gV-de-2qw">
+                    <button verticalHuggingPriority="750" id="5gV-de-2qw" customClass="CoreUI_SquareButton">
                         <rect key="frame" x="238" y="79" width="192" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" title="Insert Control Key Character…" bezelStyle="shadowlessSquare" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="xXN-l4-T3z">
@@ -239,8 +238,6 @@
                     </button>
                 </subviews>
             </view>
-            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
             <point key="canvasLocation" x="215" y="334"/>
         </box>
         <arrayController id="hK2-3k-bBp" userLabel="Modifier Key Choices">

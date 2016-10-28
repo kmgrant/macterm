@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10117"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
         <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
@@ -34,7 +33,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <colorWell id="1993">
+                    <colorWell id="1993" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="222" y="144" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -43,7 +42,7 @@
                             <outlet property="nextKeyView" destination="1994" id="2062"/>
                         </connections>
                     </colorWell>
-                    <colorWell id="1994">
+                    <colorWell id="1994" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="280" y="144" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -61,7 +60,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <colorWell id="1998">
+                    <colorWell id="1998" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="222" y="113" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -70,7 +69,7 @@
                             <outlet property="nextKeyView" destination="1999" id="2064"/>
                         </connections>
                     </colorWell>
-                    <colorWell id="1999">
+                    <colorWell id="1999" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="280" y="113" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -88,7 +87,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <colorWell id="2002">
+                    <colorWell id="2002" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="222" y="82" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -97,7 +96,7 @@
                             <outlet property="nextKeyView" destination="2003" id="2066"/>
                         </connections>
                     </colorWell>
-                    <colorWell id="2003">
+                    <colorWell id="2003" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="280" y="82" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -124,7 +123,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <colorWell enabled="NO" id="2006">
+                    <colorWell enabled="NO" id="2006" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="222" y="51" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -132,7 +131,7 @@
                             <outlet property="nextKeyView" destination="2007" id="2068"/>
                         </connections>
                     </colorWell>
-                    <colorWell id="2007">
+                    <colorWell id="2007" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="280" y="51" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -327,7 +326,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <colorWell enabled="NO" id="2428">
+                    <colorWell enabled="NO" id="2428" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="222" y="20" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -335,7 +334,7 @@
                             <outlet property="nextKeyView" destination="2429" id="2435"/>
                         </connections>
                     </colorWell>
-                    <colorWell id="2429">
+                    <colorWell id="2429" customClass="CoreUI_ColorButton">
                         <rect key="frame" x="280" y="20" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -386,7 +385,7 @@
                             <outlet property="nextKeyView" destination="1835" id="2461"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="2363">
+                    <button verticalHuggingPriority="750" id="2363" customClass="CoreUI_Button">
                         <rect key="frame" x="216" y="317" width="72" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Set…" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="2366">
@@ -498,17 +497,12 @@
                             </customView>
                         </subviews>
                     </customView>
-                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="4ic-GN-zlk">
+                    <box verticalHuggingPriority="750" boxType="separator" id="4ic-GN-zlk">
                         <rect key="frame" x="20" y="367" width="480" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <font key="titleFont" metaFont="system"/>
                     </box>
                 </subviews>
             </view>
-            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
             <point key="canvasLocation" x="378" y="341"/>
         </box>
     </objects>

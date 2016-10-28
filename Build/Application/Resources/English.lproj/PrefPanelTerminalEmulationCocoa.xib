@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelTerminals_EmulationViewManager">
@@ -48,7 +48,6 @@
                     <textField verticalHuggingPriority="750" id="1913">
                         <rect key="frame" x="72" y="329" width="144" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Base Emulator:" id="1914">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -58,7 +57,6 @@
                     <textField verticalHuggingPriority="750" id="2087">
                         <rect key="frame" x="73" y="297" width="144" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Identity:" id="2088">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -68,7 +66,6 @@
                     <textField verticalHuggingPriority="750" id="1917">
                         <rect key="frame" x="72" y="246" width="144" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Emulation Tweaks:" id="1918">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -78,7 +75,6 @@
                     <textField verticalHuggingPriority="750" id="1999">
                         <rect key="frame" x="17" y="347" width="128" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2002">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -88,7 +84,6 @@
                     <button id="2000">
                         <rect key="frame" x="16" y="329" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2001">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -102,7 +97,6 @@
                     <button id="2009">
                         <rect key="frame" x="16" y="297" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2010">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -116,7 +110,6 @@
                     <button id="2033">
                         <rect key="frame" x="16" y="246" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2034">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -126,10 +119,9 @@
                             <binding destination="-2" name="value" keyPath="self.emulationTweaks.inherited" id="2105"/>
                         </connections>
                     </button>
-                    <popUpButton verticalHuggingPriority="750" id="2058">
+                    <popUpButton verticalHuggingPriority="750" id="2058" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="219" y="323" width="179" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="2059">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
@@ -142,17 +134,16 @@
                             <outlet property="nextKeyView" destination="2089" id="2096"/>
                         </connections>
                     </popUpButton>
-                    <scrollView focusRingType="exterior" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="2073">
+                    <scrollView focusRingType="exterior" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="2073" customClass="CoreUI_ScrollView">
                         <rect key="frame" x="222" y="112" width="278" height="151"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" id="7DU-0G-OVu">
-                            <rect key="frame" x="1" y="17" width="276" height="133"/>
+                            <rect key="frame" x="1" y="0.0" width="276" height="150"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" headerView="2083" id="2074">
-                                    <rect key="frame" x="0.0" y="0.0" width="276" height="19"/>
+                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" headerView="2083" id="2074" customClass="CoreUI_Table">
+                                    <rect key="frame" x="0.0" y="0.0" width="276" height="133"/>
                                     <autoresizingMask key="autoresizingMask"/>
-                                    <animations/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
@@ -203,24 +194,18 @@
                                     </tableColumns>
                                 </tableView>
                             </subviews>
-                            <animations/>
-                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </clipView>
-                        <animations/>
                         <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="2075">
                             <rect key="frame" x="-100" y="-100" width="255.5" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
-                            <animations/>
                         </scroller>
                         <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="2076">
                             <rect key="frame" x="224" y="17" width="15" height="102"/>
                             <autoresizingMask key="autoresizingMask"/>
-                            <animations/>
                         </scroller>
                         <tableHeaderView key="headerView" id="2083">
                             <rect key="frame" x="0.0" y="0.0" width="276" height="17"/>
                             <autoresizingMask key="autoresizingMask"/>
-                            <animations/>
                         </tableHeaderView>
                         <connections>
                             <outlet property="nextKeyView" destination="2000" id="2098"/>
@@ -229,7 +214,6 @@
                     <textField verticalHuggingPriority="750" id="2089">
                         <rect key="frame" x="222" y="295" width="173" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="2090">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -243,7 +227,6 @@
                     <textField verticalHuggingPriority="750" id="2091">
                         <rect key="frame" x="219" y="20" width="284" height="84"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" id="2092">
                             <font key="font" metaFont="smallSystem"/>
                             <string key="title">The Identity should accurately describe the set of tweaks (for example, “xterm-256color”) so that applications will know what to use.</string>
@@ -252,11 +235,7 @@
                         </textFieldCell>
                     </textField>
                 </subviews>
-                <animations/>
             </view>
-            <animations/>
-            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
         </box>
     </objects>
 </document>

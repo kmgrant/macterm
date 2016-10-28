@@ -160,6 +160,17 @@ to precisely remove the observer later.
 @end //}
 
 
+@interface NSView (CocoaExtensions_NSView) //{
+
+// new methods
+	- (BOOL)
+	isKeyboardFocusInSubtree;
+	- (BOOL)
+	isKeyboardFocusOnSelf;
+
+@end //}
+
+
 @interface NSValue (CocoaExtensions_NSValue) //{
 
 // class methods: Core Graphics data

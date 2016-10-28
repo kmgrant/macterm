@@ -70,7 +70,7 @@ CocoaExtensions_RunLaterInQueue		(dispatch_queue_t const&	inQueue,
 
 
 #pragma mark -
-@implementation NSColor (CocoaExtensions_NSColor)
+@implementation NSColor (CocoaExtensions_NSColor) //{
 
 
 #pragma mark Class Methods
@@ -383,11 +383,11 @@ setAsForegroundInQDCurrentPort
 #endif
 
 
-@end // NSColor (CocoaExtensions_NSColor)
+@end //} NSColor (CocoaExtensions_NSColor)
 
 
 #pragma mark -
-@implementation CocoaExtensions_ObserverSpec //@{
+@implementation CocoaExtensions_ObserverSpec //{
 
 
 @synthesize context = _context;
@@ -408,11 +408,11 @@ dealloc
 }// dealloc
 
 
-@end //}
+@end //} CocoaExtensions_ObserverSpec
 
 
 #pragma mark -
-@implementation NSInvocation (CocoaExtensions_NSInvocation)
+@implementation NSInvocation (CocoaExtensions_NSInvocation) //{
 
 
 #pragma mark Class Methods
@@ -444,11 +444,11 @@ target:(id)						aTarget
 }// invocationWithSelector:target:
 
 
-@end // NSInvocation (CocoaExtensions_NSInvocation)
+@end //} NSInvocation (CocoaExtensions_NSInvocation)
 
 
 #pragma mark -
-@implementation NSObject (CocoaExtensions_NSObject)
+@implementation NSObject (CocoaExtensions_NSObject) //{
 
 
 #pragma mark New Methods: Simpler Notifications
@@ -682,11 +682,11 @@ removeObserversSpecifiedInArray:(NSArray*)	aSpecArray
 }// removeObserversSpecifiedInArray:
 
 
-@end // NSObject (CocoaExtensions_NSObject)
+@end //} NSObject (CocoaExtensions_NSObject)
 
 
 #pragma mark -
-@implementation NSValue (CocoaExtensions_NSValue)
+@implementation NSValue (CocoaExtensions_NSValue) //{
 
 
 #pragma mark Class Methods: Core Graphics Data
@@ -734,11 +734,74 @@ valueWithCGSize:(CGSize)	aSize
 }// valueWithCGSize:
 
 
-@end // NSValue (CocoaExtensions_NSValue)
+@end //} NSValue (CocoaExtensions_NSValue)
 
 
 #pragma mark -
-@implementation NSWindow (CocoaExtensions_NSWindow)
+@implementation NSView (CocoaExtensions_NSView) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns true if the current keyboard focus is any of
+the views in the subtree of the current view, including
+the view itself.
+
+This is useful for cases like scroll views that may
+want to render focus rings even if other subviews (like
+table views) are actually focused.
+
+(2016.10)
+*/
+- (BOOL)
+isKeyboardFocusInSubtree
+{
+	BOOL	result = NO;
+	
+	
+	if (self.window.isKeyWindow)
+	{
+		id		firstResponder = [self.window firstResponder];
+		
+		
+		if ([firstResponder isKindOfClass:NSView.class])
+		{
+			NSView*		asView = STATIC_CAST(firstResponder, NSView*);
+			
+			
+			result = ((self == asView) || ([asView isDescendantOf:self]));
+		}
+	}
+	
+	return result;
+}// isKeyboardFocusInSubtree
+
+
+/*!
+Returns true if the focus ring for the specified view
+should be drawn (if the view is the first responder
+of its window and that window is key).
+
+(2016.10)
+*/
+- (BOOL)
+isKeyboardFocusOnSelf
+{
+	BOOL	result = ((self.window.isKeyWindow) &&
+						(self == [self.window firstResponder]));
+	
+	
+	return result;
+}// isKeyboardFocusOnSelf
+
+
+@end //} NSView (CocoaExtensions_NSView)
+
+
+#pragma mark -
+@implementation NSWindow (CocoaExtensions_NSWindow) //{
 
 
 #pragma mark New Methods: Coordinate Translation
@@ -775,6 +838,6 @@ localToGlobalRelativeToTopForPoint:(NSPoint)	aLocalPoint
 }// localToGlobalRelativeToTopForPoint
 
 
-@end // NSWindow (CocoaExtensions_NSWindow)
+@end //} NSWindow (CocoaExtensions_NSWindow)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

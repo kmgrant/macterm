@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
         <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
@@ -25,7 +24,6 @@
                     <textField verticalHuggingPriority="750" id="2009">
                         <rect key="frame" x="72" y="360" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Duplication:" id="2012">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -35,7 +33,6 @@
                     <textField verticalHuggingPriority="750" id="2433">
                         <rect key="frame" x="72" y="267" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Capture to File:" id="2434">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -45,7 +42,6 @@
                     <textField verticalHuggingPriority="750" id="2013">
                         <rect key="frame" x="72" y="329" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Line Insertion Delay:" id="2016">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -55,7 +51,6 @@
                     <textField verticalHuggingPriority="750" id="2017">
                         <rect key="frame" x="72" y="298" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Scrolling Delay:" id="2020">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -65,7 +60,6 @@
                     <textField verticalHuggingPriority="750" id="2078">
                         <rect key="frame" x="17" y="378" width="128" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2079">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -75,7 +69,6 @@
                     <button id="2096">
                         <rect key="frame" x="16" y="360" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2097">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -89,7 +82,6 @@
                     <button id="2099">
                         <rect key="frame" x="16" y="329" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2100">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -103,7 +95,6 @@
                     <button id="2102">
                         <rect key="frame" x="16" y="298" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2103">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -117,7 +108,6 @@
                     <button id="2439">
                         <rect key="frame" x="16" y="267" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2440">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -130,7 +120,6 @@
                     <button id="2427">
                         <rect key="frame" x="220" y="359" width="322" height="18"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" title="Locally echo keystrokes" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="2428">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -143,7 +132,6 @@
                     <textField verticalHuggingPriority="750" id="2429">
                         <rect key="frame" x="222" y="327" width="72" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="2430">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -157,7 +145,6 @@
                     <textField verticalHuggingPriority="750" id="2431">
                         <rect key="frame" x="299" y="330" width="244" height="14"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="milliseconds" id="2432">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -167,7 +154,6 @@
                     <textField verticalHuggingPriority="750" id="2503">
                         <rect key="frame" x="222" y="296" width="72" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="2506">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -181,7 +167,6 @@
                     <textField verticalHuggingPriority="750" id="2504">
                         <rect key="frame" x="299" y="299" width="244" height="14"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="milliseconds" id="2505">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -191,7 +176,6 @@
                     <button id="2435">
                         <rect key="frame" x="220" y="266" width="322" height="18"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" title="Automatically write to directory:" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="2436">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -204,7 +188,6 @@
                     <pathControl verticalHuggingPriority="750" allowsExpansionToolTips="YES" id="2437">
                         <rect key="frame" x="237" y="236" width="306" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <pathCell key="cell" selectable="YES" editable="YES" alignment="left" pathStyle="popUp" id="2438">
                             <font key="font" metaFont="system"/>
                             <url key="url" string="file://localhost/"/>
@@ -221,7 +204,6 @@
                     <textField verticalHuggingPriority="750" id="2464">
                         <rect key="frame" x="219" y="212" width="120" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Log file name:" id="2465">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -234,7 +216,6 @@
                     <textField verticalHuggingPriority="750" id="2466">
                         <rect key="frame" x="346" y="210" width="194" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="2467">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -249,7 +230,6 @@
                     <button id="2469">
                         <rect key="frame" x="240" y="186" width="302" height="18"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" title="Generated name (allow substitutions)" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="2470">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
@@ -263,7 +243,6 @@
                     <textField verticalHuggingPriority="750" id="2473">
                         <rect key="frame" x="260" y="68" width="283" height="112"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" id="2474">
                             <font key="font" metaFont="smallSystem"/>
                             <string key="title">Recognized sequences:
@@ -280,11 +259,7 @@ Files with generated names can coexist with previous logs in the same directory,
                         </connections>
                     </textField>
                 </subviews>
-                <animations/>
             </view>
-            <animations/>
-            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
         </box>
         <userDefaultsController representsSharedInstance="YES" id="2493"/>
     </objects>

@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9060"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
         <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
     <objects>
@@ -39,7 +38,6 @@
                     <textField verticalHuggingPriority="750" id="1913">
                         <rect key="frame" x="18" y="297" width="484" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Customize the command as needed:" id="1914">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -49,7 +47,6 @@
                     <textField verticalHuggingPriority="750" id="Txe-Aj-IuL">
                         <rect key="frame" x="18" y="410" width="484" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Choose a command to start from:" id="MGV-aQ-RBb">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -59,7 +56,6 @@
                     <textField verticalHuggingPriority="750" id="2010">
                         <rect key="frame" x="223" y="35" width="279" height="28"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="You can modify these options using Preferences." id="2011">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -69,17 +65,15 @@
                     <textField verticalHuggingPriority="750" id="2089">
                         <rect key="frame" x="72" y="123" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Terminal:" id="2093">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" id="2090">
+                    <popUpButton verticalHuggingPriority="750" id="2090" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="219" y="117" width="236" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="2091">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
@@ -92,10 +86,9 @@
                             <outlet property="nextKeyView" destination="ZgY-RN-WYM" id="etC-4w-vXE"/>
                         </connections>
                     </popUpButton>
-                    <button id="2125">
+                    <button id="2125" customClass="CoreUI_SquareButton">
                         <rect key="frame" x="96" y="377" width="128" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="square" title="Shell" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2126">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -105,10 +98,9 @@
                             <outlet property="nextKeyView" destination="pKq-7k-NXT" id="UGB-DT-qYk"/>
                         </connections>
                     </button>
-                    <button id="pKq-7k-NXT">
+                    <button id="pKq-7k-NXT" customClass="CoreUI_SquareButton">
                         <rect key="frame" x="234" y="377" width="128" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="square" title="Log-In Shell" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="XaE-pY-5v8">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -118,10 +110,9 @@
                             <outlet property="nextKeyView" destination="FmE-b7-yDz" id="CbB-xX-FMU"/>
                         </connections>
                     </button>
-                    <button id="FmE-b7-yDz">
+                    <button id="FmE-b7-yDz" customClass="CoreUI_SquareButton">
                         <rect key="frame" x="372" y="377" width="128" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="square" title="Remote Shell…" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cgc-nx-gis">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="system"/>
@@ -132,18 +123,13 @@
                             <outlet property="nextKeyView" destination="X2w-tI-AfY" id="5cD-lf-4PF"/>
                         </connections>
                     </button>
-                    <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" id="2139">
+                    <box verticalHuggingPriority="750" boxType="separator" id="2139">
                         <rect key="frame" x="96" y="158" width="404" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
-                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        <font key="titleFont" metaFont="system"/>
                     </box>
                     <textField verticalHuggingPriority="750" id="2254">
                         <rect key="frame" x="17" y="248" width="73" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2257">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -153,7 +139,6 @@
                     <button id="2255">
                         <rect key="frame" x="16" y="227" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2256">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -167,7 +152,6 @@
                     <button id="2295">
                         <rect key="frame" x="16" y="123" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2296">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -181,17 +165,15 @@
                     <textField verticalHuggingPriority="750" id="Gvr-Q3-vOX">
                         <rect key="frame" x="72" y="97" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Format:" id="OHc-xa-SDk">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" id="ZgY-RN-WYM">
+                    <popUpButton verticalHuggingPriority="750" id="ZgY-RN-WYM" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="219" y="91" width="236" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="aQc-dY-Gm7">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
@@ -207,7 +189,6 @@
                     <button id="DaW-mz-kxn">
                         <rect key="frame" x="16" y="97" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="7gN-ms-Mpt">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -221,17 +202,15 @@
                     <textField verticalHuggingPriority="750" id="FD9-4l-TPx">
                         <rect key="frame" x="72" y="71" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Translation:" id="xO2-fj-mT2">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" id="z3T-Ui-0Kx">
+                    <popUpButton verticalHuggingPriority="750" id="z3T-Ui-0Kx" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="219" y="65" width="236" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="hVe-oJ-lfB">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
@@ -247,7 +226,6 @@
                     <button id="E3Z-Wg-2dV">
                         <rect key="frame" x="16" y="71" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="BDd-IJ-drT">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
@@ -260,17 +238,15 @@
                     <textField verticalHuggingPriority="750" id="xqC-E8-ocs">
                         <rect key="frame" x="94" y="351" width="214" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="…or copy a Session:" id="ZDs-RS-pmb">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" id="X2w-tI-AfY">
+                    <popUpButton verticalHuggingPriority="750" id="X2w-tI-AfY" customClass="CoreUI_MenuButton">
                         <rect key="frame" x="311" y="345" width="192" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" pullsDown="YES" id="GNP-dX-W6x">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
@@ -286,7 +262,6 @@
                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="rg9-HH-8kW">
                         <rect key="frame" x="96" y="181" width="404" height="108"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <animations/>
                         <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="BSc-qb-NX9">
                             <font key="font" metaFont="fixedUser"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -298,11 +273,7 @@
                         </connections>
                     </textField>
                 </subviews>
-                <animations/>
             </view>
-            <animations/>
-            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
             <connections>
                 <outlet property="nextKeyView" destination="DaW-mz-kxn" id="ZUQ-cx-jxF"/>
             </connections>

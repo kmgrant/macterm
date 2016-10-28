@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16A323" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
         <capability name="box content view" minToolsVersion="7.0"/>
     </dependencies>
@@ -70,10 +69,10 @@
                         <rect key="frame" x="218" y="35" width="5" height="315"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
                     </box>
-                    <segmentedControl verticalHuggingPriority="750" id="57">
-                        <rect key="frame" x="59" y="5" width="101" height="23"/>
+                    <segmentedControl verticalHuggingPriority="750" misplaced="YES" id="57">
+                        <rect key="frame" x="59" y="4" width="101" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="capsule" trackingMode="momentary" id="58">
+                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="automatic" trackingMode="momentary" id="58">
                             <font key="font" metaFont="system"/>
                             <segments>
                                 <segment toolTip="Create a Collection of this type." image="IconForItemAddMenuSegment" imageScaling="none" width="31">

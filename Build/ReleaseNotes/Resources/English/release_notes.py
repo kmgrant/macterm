@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161027',
     '20161024',
     '20161023',
     '20161022',
@@ -558,6 +559,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161027': [
+        'Fixed the rendering of focus rings when using Full Keyboard Access to activate pop-up menus, square buttons, color boxes and list views in various windows, sheets and floating keypads.',
+        'The minimum OS version of 10.10 is now enforced (previously it was specified in documentation but not necessarily required).',
+    ],
     '20161024': [
         'Fixed Find dialog to be less stubborn when the Escape key is used: now the window closes immediately and cancels any search text that had been entered, instead of requiring multiple Escape presses to clear the field and then hide the window.',
         'Fixed Find dialog to not add text to the search history if the window is closed by the Escape key.',

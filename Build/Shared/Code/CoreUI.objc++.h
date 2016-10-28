@@ -57,9 +57,31 @@ changes to an interface declared in a ".mm" file.
 */
 @interface CoreUI_Button : NSButton //{
 
-// initializers
-	- (instancetype)
-	initWithFrame:(NSRect)_;
+// NSView
+	- (void)
+	drawFocusRingMask;
+	- (void)
+	drawRect:(NSRect)_;
+	- (NSRect)
+	focusRingMaskBounds;
+
+@end //}
+
+
+/*!
+Custom subclass for color wells in order to provide
+a way to customize behavior when needed.
+
+This customizes the focus-ring layout and rendering to
+correct display glitches in layer-backed hierarchies.
+(Theoretically these can be fixed by adopting later
+SDKs but for now this is the only way forward.)
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface CoreUI_ColorButton : NSColorWell //{
 
 // NSView
 	- (void)
@@ -87,9 +109,98 @@ changes to an interface declared in a ".mm" file.
 */
 @interface CoreUI_HelpButton : NSButton //{
 
-// initializers
-	- (instancetype)
-	initWithFrame:(NSRect)_;
+// NSView
+	- (void)
+	drawFocusRingMask;
+	- (void)
+	drawRect:(NSRect)_;
+	- (NSRect)
+	focusRingMaskBounds;
+
+@end //}
+
+
+/*!
+Custom subclass for menu buttons in order to provide
+a way to customize behavior when needed.
+
+This customizes the focus-ring layout and rendering to
+correct display glitches in layer-backed hierarchies.
+(Theoretically these can be fixed by adopting later
+SDKs but for now this is the only way forward.)
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface CoreUI_MenuButton : NSPopUpButton //{
+
+// NSView
+	- (void)
+	drawFocusRingMask;
+	- (void)
+	drawRect:(NSRect)_;
+	- (NSRect)
+	focusRingMaskBounds;
+
+@end //}
+
+
+/*!
+Custom subclass for scroll views in order to provide
+a way to customize behavior when needed.
+
+This currently does nothing.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface CoreUI_ScrollView : NSScrollView //{
+
+@end //}
+
+
+/*!
+Custom subclass for square buttons in order to provide
+a way to customize behavior when needed.
+
+This customizes the focus-ring layout and rendering to
+correct display glitches in layer-backed hierarchies.
+(Theoretically these can be fixed by adopting later
+SDKs but for now this is the only way forward.)
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface CoreUI_SquareButton : NSButton //{
+
+// NSView
+	- (void)
+	drawFocusRingMask;
+	- (void)
+	drawRect:(NSRect)_;
+	- (NSRect)
+	focusRingMaskBounds;
+
+@end //}
+
+
+/*!
+Custom subclass for table views in order to provide
+a way to customize behavior when needed.
+
+This customizes the focus-ring layout and rendering to
+correct display glitches in layer-backed hierarchies.
+(Theoretically these can be fixed by adopting later
+SDKs but for now this is the only way forward.)
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface CoreUI_Table : NSTableView //{
 
 // NSView
 	- (void)

@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="DebugInterface_PanelController">
@@ -17,8 +16,8 @@
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="191" y="400" width="466" height="288"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
-            <value key="minSize" type="size" width="466" height="319"/>
-            <value key="maxSize" type="size" width="466" height="319"/>
+            <value key="minSize" type="size" width="466" height="288"/>
+            <value key="maxSize" type="size" width="466" height="288"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="466" height="288"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -109,7 +108,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="60">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" id="60" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="152" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -143,7 +142,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="73">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" id="73" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="112" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -161,7 +160,7 @@
                             <action selector="showTestTerminalWindow:" target="-2" id="77"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="129">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" id="129" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="46" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -179,7 +178,7 @@
                             <action selector="launchNewCallPythonClient:" target="-2" id="133"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="117">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" id="117" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="79" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -197,7 +196,7 @@
                             <action selector="showTestTerminalToolbar:" target="-2" id="120"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="134">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" id="134" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="13" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>

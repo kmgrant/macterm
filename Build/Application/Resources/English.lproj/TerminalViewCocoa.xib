@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment version="1060" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9532"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="TerminalView_Controller">
@@ -23,7 +22,7 @@
                     <rect key="frame" x="-1" y="-2" width="733" height="498"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <clipView key="contentView" id="Ka3-Tg-djC">
-                        <rect key="frame" x="1" y="1" width="731" height="496"/>
+                        <rect key="frame" x="1" y="1" width="716" height="496"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <customView id="cDo-Db-uy1" userLabel="Background View" customClass="TerminalView_BackgroundView">
@@ -49,7 +48,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="0.99798387289047241" horizontal="NO" id="e43-mT-axq">
-                        <rect key="frame" x="716" y="1" width="16" height="496"/>
+                        <rect key="frame" x="717" y="1" width="15" height="496"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
