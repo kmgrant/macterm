@@ -86,7 +86,6 @@ extern "C"
 #import <Registrar.template.h>
 #import <SoundSystem.h>
 #import <Undoables.h>
-#import <WindowInfo.h>
 
 // application includes
 #import "AppResources.h"
@@ -168,6 +167,7 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 namespace {
 
 typedef std::map< TerminalViewRef, TerminalScreenRef >			My_ScreenByTerminalView;
+typedef std::map< HIWindowRef, TerminalWindowRef >				My_TerminalWindowByHIWindowRef;
 typedef std::map< NSWindow*, TerminalWindowRef >				My_TerminalWindowByNSWindow;
 typedef std::vector< TerminalScreenRef >						My_TerminalScreenList;
 typedef std::vector< TerminalViewRef >							My_TerminalViewList;
@@ -203,7 +203,6 @@ struct My_TerminalWindow
 	CFRetainRelease				toolbarItemLED4;			// if present, LED #4 status item
 	CFRetainRelease				toolbarItemScrollLock;		// if present, scroll lock status item
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
-	WindowInfo_Ref				windowInfo;					// window information object for the terminal window
 	CGDirectDisplayID			staggerDisplay;				// the display the window was on at the time "staggerIndex" was set;
 															//     if the user attempts to stack windows and the window is now on
 															//     a different display, "staggerIndex" is ignored and reset
@@ -384,8 +383,9 @@ void					updateScrollBars				(My_TerminalWindowPtr);
 #pragma mark Variables
 namespace {
 
-My_TerminalWindowByNSWindow&	gCarbonTerminalNSWindows ()		{ static My_TerminalWindowByNSWindow x; return x; }
-My_TerminalWindowByNSWindow&	gCocoaTerminalNSWindows ()		{ static My_TerminalWindowByNSWindow x; return x; }
+My_TerminalWindowByHIWindowRef&	gTerminalWindowRefsByHIWindowRef ()	{ static My_TerminalWindowByHIWindowRef x; return x; }
+My_TerminalWindowByNSWindow&	gCarbonTerminalWindowRefsByNSWindow ()		{ static My_TerminalWindowByNSWindow x; return x; }
+My_TerminalWindowByNSWindow&	gTerminalWindowRefsByNSWindow ()		{ static My_TerminalWindowByNSWindow x; return x; }
 My_RefTracker&					gTerminalWindowValidRefs ()		{ static My_RefTracker x; return x; }
 My_TerminalWindowPtrLocker&		gTerminalWindowPtrLocks ()		{ static My_TerminalWindowPtrLocker x; return x; }
 IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
@@ -630,27 +630,9 @@ reference.
 Boolean
 TerminalWindow_ExistsFor	(WindowRef	inWindow)
 {
-	Boolean		result = false;
+	auto		toPair = gTerminalWindowRefsByHIWindowRef().find(inWindow);
+	Boolean		result = (gTerminalWindowRefsByHIWindowRef().end() != toPair);
 	
-	
-#if 0
-	if (inWindow != nullptr)
-	{
-		SInt16  kind = GetWindowKind(inWindow);
-		
-		
-		result = ((kind == WIN_CONSOLE) || (kind == WIN_CNXN) || (kind == WIN_SHELL));
-		if (result) result = (ScreenFactory_GetWindowActiveScreen(inWindow) != nullptr);
-	}
-#else
-	{
-		WindowInfo_Ref		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
-		
-		
-		result = ((nullptr != windowInfo) &&
-					(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_ReturnWindowDescriptor(windowInfo)));
-	}
-#endif
 	
 	return result;
 }// ExistsFor
@@ -1340,13 +1322,12 @@ TerminalWindowRef
 TerminalWindow_ReturnFromWindow		(WindowRef	inWindow)
 {
 	TerminalWindowRef	result = nullptr;
-	WindowInfo_Ref		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
+	auto				toPair = gTerminalWindowRefsByHIWindowRef().find(inWindow);
 	
 	
-	if ((nullptr != windowInfo) &&
-		(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_ReturnWindowDescriptor(windowInfo)))
+	if (gTerminalWindowRefsByHIWindowRef().end() != toPair)
 	{
-		result = REINTERPRET_CAST(WindowInfo_ReturnAuxiliaryDataPtr(windowInfo), TerminalWindowRef);
+		result = toPair->second;
 	}
 	
 	return result;
@@ -1748,16 +1729,16 @@ void
 TerminalWindow_SetFullScreenIconsEnabled	(Boolean	inAllTerminalWindowsHaveFullScreenIcons)
 {
 	My_TerminalWindowByNSWindow::const_iterator		toPair;
-	My_TerminalWindowByNSWindow::const_iterator		endPairs(gCarbonTerminalNSWindows().end());
+	My_TerminalWindowByNSWindow::const_iterator		endPairs(gCarbonTerminalWindowRefsByNSWindow().end());
 	
 	
-	for (toPair = gCarbonTerminalNSWindows().begin(); toPair != endPairs; ++toPair)
+	for (toPair = gCarbonTerminalWindowRefsByNSWindow().begin(); toPair != endPairs; ++toPair)
 	{
 		setCarbonWindowFullScreenIcon(REINTERPRET_CAST([toPair->first windowRef], HIWindowRef), inAllTerminalWindowsHaveFullScreenIcons);
 	}
 	
-	endPairs = gCocoaTerminalNSWindows().end();
-	for (toPair = gCocoaTerminalNSWindows().begin(); toPair != endPairs; ++toPair)
+	endPairs = gTerminalWindowRefsByNSWindow().end();
+	for (toPair = gTerminalWindowRefsByNSWindow().begin(); toPair != endPairs; ++toPair)
 	{
 		setCocoaWindowFullScreenIcon(toPair->first, inAllTerminalWindowsHaveFullScreenIcons);
 	}
@@ -2510,7 +2491,6 @@ toolbarItemLED3(),
 toolbarItemLED4(),
 toolbarItemScrollLock(),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
-windowInfo(WindowInfo_New()),
 // controls initialized below
 // toolbar initialized below
 isObscured(false),
@@ -2618,10 +2598,8 @@ installedActions()
 	// because this is relied upon by other code to find the
 	// terminal window data attached to the Mac OS window
 	assert(this->window != nil);
-	gCarbonTerminalNSWindows()[this->window] = this->selfRef;
-	WindowInfo_SetWindowDescriptor(this->windowInfo, kConstantsRegistry_WindowDescriptorAnyTerminal);
-	WindowInfo_SetAuxiliaryDataPtr(this->windowInfo, this->selfRef); // the auxiliary data is the "TerminalWindowRef"
-	WindowInfo_SetForWindow(returnCarbonWindow(this), this->windowInfo);
+	gCarbonTerminalWindowRefsByNSWindow()[this->window] = this->selfRef;
+	gTerminalWindowRefsByHIWindowRef()[returnCarbonWindow(this)] = this->selfRef;
 	
 	// set up the Help System
 	HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseTerminals);
@@ -3012,7 +2990,8 @@ My_TerminalWindow::
 		Boolean		noAnimations = false;
 		
 		
-		gCarbonTerminalNSWindows().erase(this->window);
+		gTerminalWindowRefsByHIWindowRef().erase(returnCarbonWindow(this));
+		gCarbonTerminalWindowRefsByNSWindow().erase(this->window);
 		
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
@@ -8468,18 +8447,18 @@ or nullptr if there is none.
 - (TerminalWindowRef)
 terminalWindowRef
 {
-	auto				toPair = gCarbonTerminalNSWindows().find(self);
+	auto				toPair = gCarbonTerminalWindowRefsByNSWindow().find(self);
 	TerminalWindowRef	result = nullptr;
 	
 	
-	if (gCarbonTerminalNSWindows().end() != toPair)
+	if (gCarbonTerminalWindowRefsByNSWindow().end() != toPair)
 	{
 		result = toPair->second;
 	}
 	else
 	{
-		toPair = gCocoaTerminalNSWindows().find(self);
-		if (gCocoaTerminalNSWindows().end() != toPair)
+		toPair = gTerminalWindowRefsByNSWindow().find(self);
+		if (gTerminalWindowRefsByNSWindow().end() != toPair)
 		{
 			result = toPair->second;
 		}

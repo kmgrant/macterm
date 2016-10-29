@@ -586,7 +586,6 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 			if (kLocal_ResultOK == localResult)
 			{
 				// success!
-				SetWindowKind(window, WIN_SHELL);
 				startTrackingSession(result, terminalWindow);
 				
 				// fix initial text encoding at the Session level; it is generally set for
@@ -2729,24 +2728,8 @@ forEachSessionInListDo		(SessionList const&					inList,
 	// traverse the list
 	for (auto sessionRef : inList)
 	{
-		Boolean		doInvoke = true;
-		
-		
-		if (0 == (inFilterFlags & kSessionFactory_SessionFilterFlagConsoleSessions))
-		{
-			HIWindowRef		sessionWindow = Session_ReturnActiveWindow(sessionRef);
-			
-			
-			if ((nullptr != sessionWindow) && (WIN_CONSOLE == GetWindowKind(sessionWindow)))
-			{
-				doInvoke = false;
-			}
-		}
-		
-		if (doInvoke)
-		{
-			SessionFactory_InvokeSessionOpProc(inProcPtr, sessionRef, inData1, inData2, inoutResultPtr);
-		}
+		// (no filter flags currently)
+		SessionFactory_InvokeSessionOpProc(inProcPtr, sessionRef, inData1, inData2, inoutResultPtr);
 	}
 }// forEachSessionInListDo
 

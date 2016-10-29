@@ -113,11 +113,9 @@ regardless of its class.
 typedef CFOptionFlags SessionFactory_SessionFilterFlags;
 enum
 {
-	kSessionFactory_SessionFilterFlagConsoleSessions	= (1L << 1), //!< sessions handling diagnostic output
 	kSessionFactory_SessionFilterFlagRegularSessions	= (1L << 0), //!< sessions running a local Unix program (usually a shell)
 	// use these convenient flags to group the above flags in consistent ways
-	kSessionFactory_SessionFilterFlagAllSessions		= kSessionFactory_SessionFilterFlagRegularSessions |
-															kSessionFactory_SessionFilterFlagConsoleSessions
+	kSessionFactory_SessionFilterFlagAllSessions		= kSessionFactory_SessionFilterFlagRegularSessions
 };
 
 #pragma mark Types

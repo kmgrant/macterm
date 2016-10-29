@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161028',
     '20161027',
     '20161024',
     '20161023',
@@ -559,6 +560,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161028': [
+        'Preferences window search field can now be focused directly by using the Find command from the menu bar (command-F key sequence).',
+    ],
     '20161027': [
         'Fixed the rendering of focus rings when using Full Keyboard Access to activate pop-up menus, square buttons, color boxes and list views in various windows, sheets and floating keypads.',
         'The minimum OS version of 10.10 is now enforced (previously it was specified in documentation but not necessarily required).',

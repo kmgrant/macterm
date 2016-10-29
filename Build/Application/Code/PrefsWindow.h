@@ -135,6 +135,7 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*		sourceListSegmentedControl;
 	IBOutlet CoreUI_HelpButton*		sourceListHelpButton;
 	IBOutlet CoreUI_HelpButton*		mainViewHelpButton;
+	IBOutlet NSSearchField*	searchField;
 	IBOutlet NSView*		verticalSeparator;
 @private
 	NSIndexSet*							currentPreferenceCollectionIndexes;
@@ -172,6 +173,8 @@ changes to an interface declared in a ".mm" file.
 	performDuplicatePreferenceCollection:(id)_;
 	- (IBAction)
 	performExportPreferenceCollectionToFile:(id)_;
+	- (IBAction)
+	performFind:(id)_;
 	- (IBAction)
 	performImportPreferenceCollectionFromFile:(id)_;
 	- (IBAction)

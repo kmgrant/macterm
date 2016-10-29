@@ -44,7 +44,6 @@
 // library includes
 #include <FlagManager.h>
 #include <ListenerModel.h>
-#include <WindowInfo.h>
 
 
 
@@ -204,99 +203,6 @@ enum
 	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOff	= 'XON ',
 	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn	= 'XOFF',
 	kConstantsRegistry_IconServicesIconToolbarItemStackWindows	= 'StkW'
-};
-
-//@}
-
-//!\name Window-Related Constants
-//@{
-
-/*!
-This list contains all tags used with the SetWindowProperty()
-API; kept in one place so they are known to be unique.
-*/
-enum
-{
-	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
-	kConstantsRegistry_WindowPropertyTypeWindowInfoRef	= 'WInf',	//!< data: WindowInfo_Ref
-	kConstantsRegistry_WindowPropertyTypeVectorCanvas	= 'VCnv'	//!< data: VectorCanvas_Ref
-};
-
-/*!
-Application window descriptors, used with Window Info.
-These are all to be considered of the type
-"WindowInfoDescriptor".  A descriptor should be unique
-to a class of application windows - often, only a single
-application window will have a particular descriptor
-(but most terminals, and all sheets of the same kind,
-share descriptors).
-
-You will find that certain code modules switch on
-window descriptors to determine what to do with an
-unknown window.  Therefore, every time a new kind of
-window is added to application, a unique descriptor for
-it should appear in the list below, and search source
-files (e.g. for "kConstantsRegistry_WindowDescriptor")
-to find switches that should perhaps be augmented to
-include a case for your new descriptor.
-
-IMPORTANT:	Use of descriptors has been reduced quite
-			a bit since Carbon Events came along.  It
-			is likely they will disappear eventually.
-*/
-enum
-{
-	// terminals
-	kConstantsRegistry_WindowDescriptorAnyTerminal			= 'Term',
-	kConstantsRegistry_WindowDescriptorDebuggingConsole		= 'cerr',
-	// floating windows
-	kConstantsRegistry_WindowDescriptorCommandLine			= 'CmdL',
-	kConstantsRegistry_WindowDescriptorKeypadWindoid		= 'Keyp',
-	kConstantsRegistry_WindowDescriptorFunctionWindoid		= 'FKey',
-	kConstantsRegistry_WindowDescriptorControlWindoid		= 'CKey',
-	// modeless dialogs and windows
-	kConstantsRegistry_WindowDescriptorPreferences			= 'Pref',
-	kConstantsRegistry_WindowDescriptorConnectionStatus		= 'Stat',
-	kConstantsRegistry_WindowDescriptorClipboard			= 'Clip',
-	kConstantsRegistry_WindowDescriptorStandardAboutBox		= 'Info',
-	kConstantsRegistry_WindowDescriptorCreditsBox			= 'Cred',
-	// modal dialogs and sheets
-	kConstantsRegistry_WindowDescriptorFind					= 'Find',
-	kConstantsRegistry_WindowDescriptorFormat				= 'Font',
-	kConstantsRegistry_WindowDescriptorNameNewFavorite		= 'DupF',
-	kConstantsRegistry_WindowDescriptorNewSessions			= 'NewS',
-	kConstantsRegistry_WindowDescriptorPasswordEntry		= 'Pswd',
-	kConstantsRegistry_WindowDescriptorScreenSize			= 'Size',
-	kConstantsRegistry_WindowDescriptorSessionEditor		= 'SFav',
-	kConstantsRegistry_WindowDescriptorSetWindowTitle		= 'WTtl',
-	kConstantsRegistry_WindowDescriptorTerminalEditor		= 'TFav'
-};
-
-/*!
-Possible return values from GetWindowKind() on application windows.
-*/
-enum
-{
-	WIN_CONSOLE		= kApplicationWindowKind + 2,			//!< console window
-	WIN_CNXN		= kApplicationWindowKind + 4,			//!< remote shells
-	WIN_SHELL		= kApplicationWindowKind + 5,			//!< local shells
-	WIN_TEK			= kApplicationWindowKind + 6,			//!< TEK windows
-	WIN_ICRG		= kApplicationWindowKind + 7			//!< Interactive Color Raster Graphics windows
-};
-
-//@}
-
-//!\name Menu-Related Constants
-//@{
-
-/*!
-This list contains all tags used with the SetMenuProperty()
-API; kept in one place so they are known to be unique.
-*/
-enum
-{
-	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
-	kConstantsRegistry_MenuPropertyTypeStateTrackerProcPtr		= 'STrk'	//!< data: MenuCommandStateTrackerProcPtr
 };
 
 //@}

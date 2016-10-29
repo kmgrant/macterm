@@ -63,7 +63,6 @@
 #import <MemoryBlocks.h>
 #import <RegionUtilities.h>
 #import <StringUtilities.h>
-#import <WindowInfo.h>
 
 // application includes
 #import "Commands.h"

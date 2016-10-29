@@ -2529,6 +2529,7 @@ isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
 	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
 						[inWindow isKindOfClass:[Popover_Window class]] ||
 						[[inWindow windowController] isKindOfClass:[VectorWindow_Controller class]] ||
+						[[inWindow windowController] isKindOfClass:[PrefsWindow_Controller class]] ||
 						[[inWindow windowController] isKindOfClass:[TerminalWindow_Controller class]]);
 	
 	
@@ -3477,8 +3478,7 @@ setUpWindowMenu		(NSMenu*	inMenu)
 	}
 	
 	// add the names of all open session windows to the menu
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions &
-										~kSessionFactory_SessionFilterFlagConsoleSessions,
+	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
 									addWindowMenuItemSessionOp,
 									&insertWhere/* data 1: menu info */, 0L/* data 2: undefined */,
 									&numberOfWindowMenuItemsAdded/* result: int*, number of items added */);
@@ -6656,8 +6656,19 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performFind:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFind, nullptr/* target */);
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
+	{
+		// assume that Cocoa window can handle this directly
+		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(performFind:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandFind, nullptr/* target */);
+	}
 }
 - (id)
 canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6666,6 +6677,12 @@ canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
 	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 	BOOL				result = (nullptr != terminalWindow);
 	
+	
+	if (NO == result)
+	{
+		// also permitted for the Preferences window
+		result = [[[NSApp mainWindow] windowController] isKindOfClass:PrefsWindow_Controller.class];
+	}
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -6956,18 +6973,11 @@ orderFrontPreferences:(id)	sender
 canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL					result = YES;
-	WindowInfo_Ref			windowInfoRef = nullptr;
-	WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
+	BOOL		result = YES;
 	
 	
-	// set the enabled state
-	windowInfoRef = WindowInfo_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
-	if (nullptr != windowInfoRef)
-	{
-		windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
-	}
-	result = (windowDescriptor != kConstantsRegistry_WindowDescriptorPreferences);
+	// allowed unless the Preferences window itself is active
+	result = (NO == [[[NSApp keyWindow] windowController] isKindOfClass:PrefsWindow_Controller.class]);
 	
 	return ((result) ? @(YES) : @(NO));
 }

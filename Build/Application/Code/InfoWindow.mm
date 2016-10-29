@@ -59,7 +59,6 @@
 #import <NIBLoader.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
-#import <WindowInfo.h>
 
 // application includes
 #import "Commands.h"

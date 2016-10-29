@@ -66,7 +66,6 @@
 #include <MemoryBlockReferenceTracker.template.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
-#include <WindowInfo.h>
 
 // application includes
 #include "AppResources.h"

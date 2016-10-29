@@ -45,7 +45,6 @@
 #include <CGContextSaveRestore.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
-#include <WindowInfo.h>
 
 // application includes
 #include "ConstantsRegistry.h"

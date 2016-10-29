@@ -59,7 +59,6 @@
 #import <Localization.h>
 #import <MemoryBlocks.h>
 #import <SoundSystem.h>
-#import <WindowInfo.h>
 
 // application includes
 #import "AppResources.h"
@@ -1156,6 +1155,25 @@ performExportPreferenceCollectionToFile:(id)	sender
 
 
 /*!
+Responds to a menu command by focusing on the search field.
+
+See also "performSearch:", which initiates a search based
+on the contents of the field.
+
+(2016.10)
+*/
+- (IBAction)
+performFind:(id)	sender
+{
+#pragma unused(sender)
+	if (NO == [self.window makeFirstResponder:self->searchField])
+	{
+		Sound_StandardAlert();
+	}
+}// performFind:
+
+
+/*!
 Adds a new preferences collection by asking the user for a
 file from which to import settings.
 
@@ -1283,22 +1301,15 @@ performRenamePreferenceCollection:(id)	sender
 /*!
 Responds to the user typing in the search field.
 
+See also "performFind:", which simply focuses the field.
+
 (4.1)
 */
 - (IBAction)
 performSearch:(id)		sender
 {
-	if ([sender isKindOfClass:[NSSearchField class]])
-	{
-		NSSearchField*		searchField = REINTERPRET_CAST(sender, NSSearchField*);
-		
-		
-		[PrefsWindow_Controller popUpResultsForQuery:self.searchText inSearchField:searchField];
-	}
-	else
-	{
-		Console_Warning(Console_WriteLine, "received 'performSearch:' message from unexpected sender");
-	}
+#pragma unused(sender)
+	[PrefsWindow_Controller popUpResultsForQuery:self.searchText inSearchField:self->searchField];
 }// performSearch:
 
 
@@ -1768,6 +1779,7 @@ windowDidLoad
 	assert(nil != sourceListSegmentedControl);
 	assert(nil != sourceListHelpButton);
 	assert(nil != mainViewHelpButton);
+	assert(nil != searchField);
 	assert(nil != verticalSeparator);
 	
 	NSRect const	kOriginalContainerFrame = [self->containerTabView frame];
