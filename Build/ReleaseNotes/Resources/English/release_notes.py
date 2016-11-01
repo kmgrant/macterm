@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161031',
     '20161028',
     '20161027',
     '20161024',
@@ -560,6 +561,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161031': [
+        'The "Make Screen Wider" and "Make Screen Taller" commands now cause a terminal window to adhere to the nearest screen edge if the right or bottom side of the window (respectively) is nearly touching the screen edge.  The extra space is filled by the matte region, similar to how resizing behaves when the sides of a window are dragged with the mouse.',
+    ],
     '20161028': [
         'Preferences window search field can now be focused directly by using the Find command from the menu bar (command-F key sequence).',
     ],

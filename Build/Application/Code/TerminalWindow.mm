@@ -4609,11 +4609,60 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						
 						// arbitrarily restrict the minimum size
-						if (columns < 10) columns = 10;
-						if (rows < 10) rows = 10;
+						if (columns < 10)
+						{
+							columns = 10;
+						}
+						if (rows < 10)
+						{
+							rows = 10;
+						}
 						
 						// resize the screen and the window
 						TerminalWindow_SetScreenDimensions(terminalWindow, columns, rows, true/* recordable */);
+						
+						// if the resulting window is close to a screen edge (less than
+						// the space of a terminal row or column), snap to the screen edge
+						{
+							HIWindowRef		windowRef = TerminalWindow_ReturnWindow(terminalWindow);
+							HIRect			frameBounds;
+							HIRect			screenBounds;
+							
+							
+							if ((noErr == HIWindowGetBounds(windowRef, kWindowStructureRgn,
+															kHICoordSpaceScreenPixel, &frameBounds)) &&
+								(noErr == HIWindowGetGreatestAreaDisplay(windowRef, kWindowStructureRgn,
+																			kHICoordSpaceScreenPixel,
+																			nullptr/* display ID */,
+																			&screenBounds)))
+							{
+								Float32 const	kRightPad = ((screenBounds.origin.x + screenBounds.size.width) -
+																(frameBounds.origin.x + frameBounds.size.width));
+								Float32 const	kBottomPad = ((screenBounds.origin.y + screenBounds.size.height) -
+																(frameBounds.origin.y + frameBounds.size.height));
+								Boolean			autoResize = false;
+								
+								
+								if (kRightPad < 15/* arbitrary */)
+								{
+									frameBounds.size.width += kRightPad;
+									autoResize = true;
+								}
+								
+								if (kBottomPad < 15/* arbitrary */)
+								{
+									frameBounds.size.height += kBottomPad;
+									autoResize = true;
+								}
+								
+								if (autoResize)
+								{
+									UNUSED_RETURN(OSStatus)HIWindowSetBounds(windowRef, kWindowStructureRgn,
+																				kHICoordSpaceScreenPixel,
+																				&frameBounds);
+								}
+							}
+						}
 						
 						result = noErr;
 					}
