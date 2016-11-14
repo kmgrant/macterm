@@ -422,29 +422,6 @@ Terminal_Result
 											 TextAttributes_Object		inAttributesToSet,
 											 TextAttributes_Object		inAttributesToClear);
 
-Terminal_Result
-	Terminal_CopyLineRange					(TerminalScreenRef			inScreen,
-											 Terminal_LineRef			inRow,
-											 UInt16						inZeroBasedStartColumn,
-											 SInt16						inZeroBasedEndColumnOrNegativeForLastColumn,
-											 char*						outBuffer,
-											 SInt32						inBufferLength,
-											 SInt32*					outActualLengthPtrOrNull,
-											 UInt16						inNumberOfSpacesPerTabOrZeroForNoSubstitution);
-
-Terminal_Result
-	Terminal_CopyRange						(TerminalScreenRef			inScreen,
-											 Terminal_LineRef			inStartRow,
-											 UInt32						inNumberOfRowsToConsider,
-											 UInt16						inZeroBasedStartColumnOnFirstRow,
-											 UInt16						inZeroBasedEndColumnOnLastRow,
-											 char*						outBuffer,
-											 SInt32						inBufferLength,
-											 SInt32*					outActualLengthPtrOrNull,
-											 char const*				inEndOfLineSequence,
-											 SInt16						inNumberOfSpacesPerTabOrZeroForNoSubstitution,
-											 Terminal_TextCopyFlags		inFlags);
-
 OSStatus
 	Terminal_CreateContentsAEDesc			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inStartRow,

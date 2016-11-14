@@ -51,9 +51,6 @@
 #import <utility>
 #import <vector>
 
-// GNU compiler includes
-#import <ext/algorithm>
-
 // UNIX includes
 extern "C"
 {
@@ -83,7 +80,6 @@ extern "C"
 #import "DebugInterface.h"
 #import "DialogUtilities.h"
 #import "Emulation.h"
-#import "EventLoop.h"
 #import "FileUtilities.h"
 #import "Preferences.h"
 #import "PrintTerminal.h"
@@ -92,7 +88,6 @@ extern "C"
 #import "StreamCapture.h"
 #import "TerminalLine.h"
 #import "TerminalSpeaker.h"
-#import "TerminalView.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"
 #import "UTF8Decoder.h"
@@ -1768,10 +1763,10 @@ void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_BufferChanges, My_ScreenBufferLine&);
 void						bufferEraseVisibleScreen				(My_ScreenBufferPtr, My_BufferChanges);
-void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
 void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&,
 																	 My_AttributeRule);
+void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
 void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
 																	 TextAttributes_Object = TextAttributes_Object(),
 																	 Boolean = true);
@@ -1791,13 +1786,11 @@ void						cursorRestore							(My_ScreenBufferPtr);
 void						cursorSave								(My_ScreenBufferPtr);
 void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
 Boolean						defineTrueColor							(My_ScreenBufferPtr, UInt8, UInt8, UInt8, TextAttributes_TrueColorID&);
-void						deleteLinePtr							(My_ScreenBufferLinePtr);
+void						deleteLinePtr							(My_ScreenBufferLinePtr&);
 void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
-void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
 void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
 Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt32,
 																	 My_ScreenLineOperationProcPtr, void*);
-void						getBufferOffsetCell						(My_ScreenBufferPtr, size_t, UInt16, UInt16&, SInt32&);
 inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
 My_ScreenBufferPtr			getVirtualScreenData					(TerminalScreenRef);
 void						highlightLED							(My_ScreenBufferPtr, SInt16);
@@ -1844,11 +1837,6 @@ void						tabStopInitialize						(My_ScreenBufferPtr);
 void*						threadForTerminalSearch					(void*);
 UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TextAttributes_Object,
 																	 TextAttributes_Object&);
-template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
-			typename dest_char_seq_iter, typename dest_char_seq_size_t >
-dest_char_seq_iter			whitespaceSensitiveCopy					(src_char_seq_const_iter, src_char_seq_size_t,
-																	 dest_char_seq_iter, dest_char_seq_size_t,
-																	 dest_char_seq_size_t*, src_char_seq_size_t);
 
 } // anonymous namespace
 
@@ -2425,258 +2413,6 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 	
 	return result;
 }// ChangeRangeAttributes
-
-
-/*!
-Copies a portion of a single line of text not exceeding the
-current visible width.  Trailing whitespace is skipped.
-
-DEPRECATED.  Use Terminal_GetLineRangePossibleCopy().
-
-\retval kTerminal_ResultOK
-if the data was copied successfully
-
-\retval kTerminal_ResultInvalidID
-if the specified screen reference is invalid
-
-\retval kTerminal_ResultInvalidIterator
-if the specified row reference is invalid
-
-\retval kTerminal_ResultParameterError
-if the given line number is too large or the given column
-numbers are out of range
-
-\retval kTerminal_ResultNotEnoughMemory
-if the specified buffer is too small; a truncated version of
-the text will be copied into the buffer
-
-(3.0)
-*/
-Terminal_Result
-Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
-						 Terminal_LineRef		inRow,
-						 UInt16					inZeroBasedStartColumn,
-						 SInt16					inZeroBasedEndColumnOrNegativeForLastColumn,
-						 char*					outBuffer,
-						 SInt32					inBufferLength,
-						 SInt32*				outActualLengthPtrOrNull,
-						 UInt16					inNumberOfSpacesPerTabOrZeroForNoSubstitution)
-{
-	Terminal_Result			result = kTerminal_ResultOK;
-	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
-	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
-	
-	
-	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
-	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
-	else
-	{
-		CFIndex const	kTextVectorSize = CFStringGetLength(iteratorPtr->currentLine().textCFString.returnCFMutableStringRef());
-		UInt16			endColumn = (inZeroBasedEndColumnOrNegativeForLastColumn < 0)
-										? STATIC_CAST(kTextVectorSize - 1, UInt16)
-										: inZeroBasedEndColumnOrNegativeForLastColumn;
-		
-		
-		if (endColumn >= kTextVectorSize)
-		{
-			result = kTerminal_ResultParameterError;
-		}
-		else
-		{
-			TerminalLine_TextIterator	textStartIter = nullptr;
-			SInt32						copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
-			
-			
-			textStartIter = iteratorPtr->currentLine().textVectorBegin;
-			std::advance(textStartIter, inZeroBasedStartColumn);
-			UNUSED_RETURN(char*)whitespaceSensitiveCopy(textStartIter, copyLength, outBuffer, copyLength,
-														&copyLength/* returned actual length */,
-														STATIC_CAST(inNumberOfSpacesPerTabOrZeroForNoSubstitution, SInt32));
-			if (outActualLengthPtrOrNull != nullptr) *outActualLengthPtrOrNull = copyLength;
-		}
-	}
-	
-	return result;
-}// CopyLineRange
-
-
-/*!
-Copies a portion of text from the specified screen into the
-given buffer - excluding trailing whitespace on each line.
-
-DEPRECATED.  See Terminal_GetLine() and Terminal_GetLineRange(),
-which are relatively efficient routines that also return
-ranges of Unicode characters.
-
-IMPORTANT:	This concept is under evaluation.  Probably,
-			most interactions with terminal data are not
-			necessary or, at a minimum, do not require
-			copying data - in the future MacTerm will
-			attempt to avoid duplicating large text blocks.
-
-The end-of-line sequence is inserted at line boundaries.
-This is currently assumed to be exactly ONE character long.
-
-NOTE:	You can set the first character of the sequence to
-		0, to specify that no character should be used to
-		separate lines.  You might do this if you want to
-		copy multiple lines of terminal text that “really
-		are one line”.
-
-In version 3.0, this method now copies text differently if
-the coordinates are to define a rectangular selection.
-That is, while normal Macintosh text selection includes all
-text in the rows between the start and end anchors, a text
-selection that is “rectangular” will only include text in
-the in-between rows that are part of the columns between
-the columns of the two anchor points.
-
-\retval kTerminal_ResultOK
-if the data was copied successfully
-
-\retval kTerminal_ResultInvalidID
-if the specified screen reference is invalid
-
-\retval kTerminal_ResultInvalidIterator
-if the specified row reference is invalid
-
-\retval kTerminal_ResultNotEnoughMemory
-if the specified buffer is too small; a truncated version
-of the text will be copied into the buffer
-
-(3.0)
-*/
-Terminal_Result
-Terminal_CopyRange	(TerminalScreenRef			inScreen,
-					 Terminal_LineRef			inStartRow,
-					 UInt32						inNumberOfRowsToConsider,
-					 UInt16						inZeroBasedStartColumnOnFirstRow,
-					 UInt16						inZeroBasedEndColumnOnLastRow,
-					 char*						outBuffer,
-					 SInt32						inBufferLength,
-					 SInt32*					outActualLengthPtrOrNull,
-					 char const*				inEndOfLineSequence,
-					 SInt16						inNumberOfSpacesPerTabOrZeroForNoSubstitution,
-					 Terminal_TextCopyFlags		inFlags)
-{
-	Terminal_Result			result = kTerminal_ResultOK;
-	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
-	My_LineIteratorPtr		iteratorPtr = getLineIterator(inStartRow);
-	
-	
-	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
-	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
-	else
-	{
-		char const* const	kOutBufferPastTheEndPtr = outBuffer + inBufferLength;
-		SInt32				copiedLength = 0L;
-		
-		
-		// copy text; the exact strategy depends on the range - if
-		// a range is fairly small, it may be possible to copy the
-		// data more efficiently
-		if (1 == inNumberOfRowsToConsider)
-		{
-			// same line - very simple, just copy a few characters
-			result = Terminal_CopyLineRange(inScreen, inStartRow, inZeroBasedStartColumnOnFirstRow, inZeroBasedEndColumnOnLastRow,
-											outBuffer, inBufferLength, &copiedLength, inNumberOfSpacesPerTabOrZeroForNoSubstitution);
-		}
-		else
-		{
-			// there are multiple lines of text
-			UInt16 const	kEOLLength = STATIC_CAST(CPP_STD::strlen(inEndOfLineSequence), UInt16);
-			Boolean			isEnd = false;
-			UInt16			lineCount = 0;
-			SInt16			currentX = 0;
-			SInt16			actualLineLength = 0L;
-			char*			destPtr = outBuffer;
-			
-			
-			for (; ((lineCount < inNumberOfRowsToConsider) && (false == isEnd)); iteratorPtr->goToNextLine(isEnd), ++lineCount)
-			{
-				char const* const	kDestLineStartPtr = destPtr; // pointer into destination buffer for start of current line
-				char const*			destLinePastTheEndPtr = nullptr;
-				SInt16				lineLength = 0;
-				
-				
-				// set up the extreme values
-				if ((inFlags & kTerminal_TextCopyFlagsRectangular) == 0)
-				{
-					// non-rectangular mode; the first and last lines are irregularly-shaped, but
-					// the remainder is rectangular, flushed to the left and right screen edges
-					if (0 == lineCount)
-					{
-						// first row in range
-						currentX = inZeroBasedStartColumnOnFirstRow;
-						lineLength = dataPtr->text.visibleScreen.numberOfColumnsPermitted - inZeroBasedStartColumnOnFirstRow;
-					}
-					else if ((lineCount == (inNumberOfRowsToConsider - 1)) || (&(iteratorPtr->currentLine()) == &(iteratorPtr->lastLine())))
-					{
-						// last row in range
-						currentX = 0;
-						lineLength = inZeroBasedEndColumnOnLastRow + 1;
-					}
-					else
-					{
-						// middle row
-						currentX = 0;
-						lineLength = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
-					}
-				}
-				else
-				{
-					// rectangular mode; all lines are uniform, and the left and right boundaries
-					// exactly match those of the anchor points, not flushing to the screen edges
-					currentX = inZeroBasedStartColumnOnFirstRow;
-					lineLength = STATIC_CAST(INTEGER_ABSOLUTE(inZeroBasedEndColumnOnLastRow - inZeroBasedStartColumnOnFirstRow) + 1, SInt16);
-				}
-				destLinePastTheEndPtr = destPtr + lineLength;
-				
-				// constrain to boundaries of output buffer, in case there
-				// really isn’t enough room for all the lines in the range
-				if (destLinePastTheEndPtr > kOutBufferPastTheEndPtr)
-				{
-					destLinePastTheEndPtr = kOutBufferPastTheEndPtr;
-				}
-				
-				// copy another line into the output buffer, replacing
-				// spaces with tabs as needed, omitting trailing whitespace
-				{
-					TerminalLine_TextIterator	textStartIter = nullptr;
-					
-					
-					textStartIter = iteratorPtr->currentLine().textVectorBegin;
-					std::advance(textStartIter, currentX);
-					destPtr = whitespaceSensitiveCopy(textStartIter, lineLength/* source length */,
-														destPtr/* destination start */,
-														STATIC_CAST(destLinePastTheEndPtr - kDestLineStartPtr, SInt16)/* destination length */,
-														&actualLineLength,
-														inNumberOfSpacesPerTabOrZeroForNoSubstitution/* number of spaces that equal one tab */);
-				}
-				
-				// if necessary, add the end-of-line sequence; skip it for the last line, and always
-				// skip it for rectangular selections; for regular selections, unless told otherwise
-				// skip it for any line where the copy range includes the right margin and the right
-				// margin character is non-whitespace (this is an XTerm-style way of allowing long
-				// pathnames to join when they are broken at the right margin)
-				if ((kEOLLength) && (&(iteratorPtr->currentLine()) != &(iteratorPtr->lastLine())))
-				{
-					if ((inFlags & kTerminal_TextCopyFlagsAlwaysNewLineAtRightMargin)/* force new-line? */ ||
-						(inFlags & kTerminal_TextCopyFlagsRectangular)/* rectangular selections always have new-lines */ ||
-						((currentX + actualLineLength) < dataPtr->text.visibleScreen.numberOfColumnsPermitted/* not at edge? */) ||
-						CPP_STD::isspace(*destPtr)/* new-line would always follow a line ending in spaces */)
-					{
-						*destPtr++ = *inEndOfLineSequence; // assumes it’s only one character!
-					}
-				}
-			}
-			copiedLength = (destPtr - outBuffer);
-		}
-		
-		if (outActualLengthPtrOrNull != nullptr) *outActualLengthPtrOrNull = copiedLength;
-	}
-	return result;
-}// CopyRange
 
 
 /*!
@@ -6938,6 +6674,15 @@ My_ScreenBuffer::
 																		kPreferences_ChangeContextBatchMode);
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
+	
+	for (My_ScreenBufferLinePtr& linePtrRef : this->scrollbackBuffer)
+	{
+		deleteLinePtr(linePtrRef);
+	}
+	for (My_ScreenBufferLinePtr& linePtrRef : this->screenBuffer)
+	{
+		deleteLinePtr(linePtrRef);
+	}
 	
 	//Console_WriteValueAddress("invalidated screen", this);
 }// My_ScreenBuffer destructor
@@ -14168,91 +13913,6 @@ bufferEraseVisibleScreen	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Inserts the specified number of blank characters at the current
-cursor position, truncating that many characters from the end of
-the line when the line is shifted.  The display is NOT updated.
-
-If "inAttributeRule" is "kMy_AttributeRuleCopyLatentBackground",
-then the background color attribute of each new blank character
-comes from the most recent background color setting.
-
-(2.6)
-*/
-void
-bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
-												 SInt16					inNumberOfBlankCharactersToInsert,
-												 My_AttributeRule		inAttributeRule)
-{
-	UInt16								numBlanksToAdd = inNumberOfBlankCharactersToInsert;
-	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
-	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_ScreenBufferLineList::iterator	toCursorLine;
-	TextAttributes_Object				copiedAttributes;
-	
-	
-	// wrap cursor
-	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
-	locateCursorLine(inDataPtr, toCursorLine);
-	
-	// since the caller cannot know for sure if the cursor wrapped,
-	// do bounds-checking between the screen edge and new location
-	if ((postWrapCursorX + numBlanksToAdd) >= inDataPtr->current.returnNumberOfColumnsPermitted())
-	{
-		numBlanksToAdd = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
-	}
-	
-	// change attributes if necessary
-	copiedAttributes = (*toCursorLine)->returnGlobalAttributes();
-	if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
-	{
-		copiedAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.latentAttributes);
-	}
-	
-	// update attributes
-	{
-		TerminalLine_TextAttributesList::iterator		pastVisibleEnd = (*toCursorLine)->returnMutableAttributeVector().begin();
-		TerminalLine_TextAttributesList::iterator		toCursorAttr = (*toCursorLine)->returnMutableAttributeVector().begin();
-		TerminalLine_TextAttributesList::iterator		toFirstRelocatedAttr;
-		TerminalLine_TextAttributesList::iterator		pastLastPreservedAttr;
-		
-		
-		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
-		
-		pastLastPreservedAttr = pastVisibleEnd;
-		
-		std::advance(toCursorAttr, postWrapCursorX);
-		toFirstRelocatedAttr = toCursorAttr;
-		std::advance(toFirstRelocatedAttr, numBlanksToAdd);
-		std::advance(pastLastPreservedAttr, -numBlanksToAdd);
-		
-		std::copy_backward(toCursorAttr, pastLastPreservedAttr, pastVisibleEnd);
-		std::fill(toCursorAttr, toFirstRelocatedAttr, copiedAttributes);
-	}
-	
-	// update text
-	{
-		TerminalLine_TextIterator		pastVisibleEnd = (*toCursorLine)->textVectorBegin;
-		TerminalLine_TextIterator		toCursorChar = (*toCursorLine)->textVectorBegin;
-		TerminalLine_TextIterator		toFirstRelocatedChar;
-		TerminalLine_TextIterator		pastLastPreservedChar;
-		
-		
-		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
-		
-		pastLastPreservedChar = pastVisibleEnd;
-		
-		std::advance(toCursorChar, postWrapCursorX);
-		toFirstRelocatedChar = toCursorChar;
-		std::advance(toFirstRelocatedChar, numBlanksToAdd);
-		std::advance(pastLastPreservedChar, -numBlanksToAdd);
-		
-		std::copy_backward(toCursorChar, pastLastPreservedChar, pastVisibleEnd);
-		std::fill(toCursorChar, toFirstRelocatedChar, ' ');
-	}
-}// bufferInsertBlanksAtCursorColumnWithoutUpdate
-
-
-/*!
 Inserts the specified number of blank lines, scrolling the
 remaining ones down and dropping any that fall off the end
 of the scrolling region.  The display is updated.
@@ -14343,6 +14003,91 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 		}
 	}
 }// bufferInsertBlankLines
+
+
+/*!
+Inserts the specified number of blank characters at the current
+cursor position, truncating that many characters from the end of
+the line when the line is shifted.  The display is NOT updated.
+
+If "inAttributeRule" is "kMy_AttributeRuleCopyLatentBackground",
+then the background color attribute of each new blank character
+comes from the most recent background color setting.
+
+(2.6)
+*/
+void
+bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
+												 SInt16					inNumberOfBlankCharactersToInsert,
+												 My_AttributeRule		inAttributeRule)
+{
+	UInt16								numBlanksToAdd = inNumberOfBlankCharactersToInsert;
+	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
+	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
+	My_ScreenBufferLineList::iterator	toCursorLine;
+	TextAttributes_Object				copiedAttributes;
+	
+	
+	// wrap cursor
+	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
+	locateCursorLine(inDataPtr, toCursorLine);
+	
+	// since the caller cannot know for sure if the cursor wrapped,
+	// do bounds-checking between the screen edge and new location
+	if ((postWrapCursorX + numBlanksToAdd) >= inDataPtr->current.returnNumberOfColumnsPermitted())
+	{
+		numBlanksToAdd = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
+	}
+	
+	// change attributes if necessary
+	copiedAttributes = (*toCursorLine)->returnGlobalAttributes();
+	if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
+	{
+		copiedAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.latentAttributes);
+	}
+	
+	// update attributes
+	{
+		TerminalLine_TextAttributesList::iterator		pastVisibleEnd = (*toCursorLine)->returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator		toCursorAttr = (*toCursorLine)->returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator		toFirstRelocatedAttr;
+		TerminalLine_TextAttributesList::iterator		pastLastPreservedAttr;
+		
+		
+		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
+		
+		pastLastPreservedAttr = pastVisibleEnd;
+		
+		std::advance(toCursorAttr, postWrapCursorX);
+		toFirstRelocatedAttr = toCursorAttr;
+		std::advance(toFirstRelocatedAttr, numBlanksToAdd);
+		std::advance(pastLastPreservedAttr, -numBlanksToAdd);
+		
+		std::copy_backward(toCursorAttr, pastLastPreservedAttr, pastVisibleEnd);
+		std::fill(toCursorAttr, toFirstRelocatedAttr, copiedAttributes);
+	}
+	
+	// update text
+	{
+		TerminalLine_TextIterator		pastVisibleEnd = (*toCursorLine)->textVectorBegin;
+		TerminalLine_TextIterator		toCursorChar = (*toCursorLine)->textVectorBegin;
+		TerminalLine_TextIterator		toFirstRelocatedChar;
+		TerminalLine_TextIterator		pastLastPreservedChar;
+		
+		
+		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
+		
+		pastLastPreservedChar = pastVisibleEnd;
+		
+		std::advance(toCursorChar, postWrapCursorX);
+		toFirstRelocatedChar = toCursorChar;
+		std::advance(toFirstRelocatedChar, numBlanksToAdd);
+		std::advance(pastLastPreservedChar, -numBlanksToAdd);
+		
+		std::copy_backward(toCursorChar, pastLastPreservedChar, pastVisibleEnd);
+		std::fill(toCursorChar, toFirstRelocatedChar, ' ');
+	}
+}// bufferInsertBlanksAtCursorColumnWithoutUpdate
 
 
 /*!
@@ -14882,7 +14627,7 @@ opposed to destroying it here).
 void
 deleteLinePtr	(My_ScreenBufferLinePtr&	inoutLinePtr)
 {
-	inoutLinePtr.reset();
+	inoutLinePtr.reset(); // might be shared
 }// deleteLinePtr
 
 
@@ -15114,1124 +14859,6 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Old terminal emulator implementation.  (Ugly, huh?)
-Version 3.1 finally scraps this implementation and
-moves to the fast, flexible and correct-by-construction
-callback-based mechanism.  For more information, see
-Terminal_EmulatorProcessData().
-
-(2.6)
-*/
-void
-emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 SInt32					inLength)
-{
-	enum
-	{
-		ASCII_ESC	= 0x1B		//!< escape character
-	};
-	SInt16						escflg = 0;//inDataPtr->current.escapeSequence.level;
-    SInt32						ctr = inLength; // 3.0 - use a COPY so string length parameter’s original value isn’t lost!!!
-	UInt8 const*				c = inBuffer;
-	My_CharacterSetInfoPtr		characterSetInfoPtr = nullptr; // which character set (G0 or G1) is being modified; used only for shift-in, -out
-	
-	
-	while (ctr > 0)
-	{
-		//if (inDataPtr->printing.enabled)
-		//{
-		//	TelnetPrinting_Spool(&inDataPtr->printing, c, &ctr/* count can decrease, depending on what is printed */);
-		//}
-		
-		while ((escflg == 0) && (ctr > 0) && (*c < 32))
-		{
-			switch (*c)
-			{
-			case 0x07: // control-G; sound bell
-				unless (inDataPtr->bellDisabled)
-				{
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeAudioEvent, inDataPtr->selfRef/* context */);
-				}
-				break;
-			
-			case 0x08: // control-H; backspace
-				if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-				else moveCursorLeftToEdge(inDataPtr); // do not extend past margin
-				break;
-			
-			case 0x09: // control-I; horizontal tab
-				moveCursorRightToNextTabStop(inDataPtr);
-				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, c, 1);
-				break;
-			
-			case 0x0A: // control-J; line feed
-			case 0x0B: // control-K; vertical tab
-			case 0x0C: // control-L; form feed
-				// all of these are interpreted the same for VT100;
-				// if LNM was received, this is a regular line feed,
-				// otherwise it is actually a new-line operation
-				moveCursorDownOrScroll(inDataPtr);
-				if (inDataPtr->modeNewLineOption) moveCursorLeftToEdge(inDataPtr);
-				break;
-			
-			case 0x0D: // control-M; carriage return
-				moveCursorLeftToEdge(inDataPtr);
-				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, c, 1);
-				break;
-			
-			case 0x0E: // control-N; shift-out
-				inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG1;
-				if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
-				{
-					// set attribute
-					inDataPtr->current.drawingAttributes.addAttributes(kTextAttributes_VTGraphics);
-				}
-				else
-				{
-					// clear attribute
-					inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_VTGraphics);
-				}
-				break;
-			
-			case 0x0F: // control-O; shift-in
-				inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
-				if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
-				{
-					// set attribute
-					inDataPtr->current.drawingAttributes.addAttributes(kTextAttributes_VTGraphics);
-				}
-				else
-				{
-					// clear attribute
-					inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_VTGraphics);
-				}
-				break;
-			
-			case 0x13: // control-S; resume transmission (XON)
-				break;
-			
-			case 0x15: // control-U; stop transmission (XOFF) except for XON and XOFF
-				break;
-			
-			case ASCII_ESC: // escapes are significant
-				++escflg;
-				break;
-			
-			default:
-				// ignore
-				break;
-			} 
-			++c;
-			--ctr;
-		} 
-		if ((escflg == 0) &&
-			(ctr > 0) &&
-			(*c & 0x80) &&
-			(*c < 0xA0) &&
-			(inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220)) // VT220 eightbit starts here
-		{											
-			switch (*c)								
-			{									
-			case 0x84: /* ind */		//same as ESC D
-				moveCursorDownOrScroll(inDataPtr);		
-				goto ShortCut;			
-			
-			case 0x85: /* nel */		//same as ESC E
-				moveCursorLeftToEdge(inDataPtr);
-				moveCursorDownOrScroll(inDataPtr);				
-				goto ShortCut;			
-			
-			case 0x88: /* hts */		//same as ESC H 
-				inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabSet;	
-				goto ShortCut;	
-			
-			case 0x8D: /* ri */			//same as ESC M
-				moveCursorUpOrScroll(inDataPtr);
-				goto ShortCut;
-			
-			case 0x9B: /* csi */		//same as ESC [ 
-				inDataPtr->emulator.clearEscapeSequenceParameters();
-				escflg = 2;			
-				++c;			//CCP			
-				--ctr;					
-				break;						
-			
-			case 0x86: /* ssa */			// - same as ESC F */
-			case 0x87: /* esa */			// - same as ESC G */
-			case 0x8E: /* ss2 */			// - same as ESC N */
-			case 0x8F: /* ss3 */			// - same as ESC O */
-			case 0x90: /* dcs */			// - same as ESC P */
-			case 0x93: /* sts */			// - same as ESC S */
-			case 0x96: /* spa */			// - same as ESC V */
-			case 0x97: /* epa */			// - same as ESC W */
-			case 0x9D: /* osc */			// - same as ESC ] */
-			case 0x9E: /* pm */				// - same as ESC ^ */
-			case 0x9F: /* apc */			// - same as ESC _ */
-			default:
-				goto ShortCut;				
-			} 					
-		}// end if vt220
-		
-		{
-			UniChar*							startPtr = nullptr;
-			TerminalLine_TextIterator			startIterator = nullptr;
-			TextAttributes_Object				attrib;
-			TextAttributes_Object				temporaryAttributes;
-			SInt16								preWriteCursorX = 0;
-			SInt16								extra = 0;
-			Boolean								wrapped = false;
-			My_ScreenBufferLineList::iterator	cursorLineIterator;
-			
-			
-			// WARNING: This is done once here, for efficiency, and is only
-			//			repeated below if the cursor actually moves vertically
-			//			(as evidenced by some moveCursor...() call that would
-			//			affect the cursor row).  Keep this in sync!!!
-			locateCursorLine(inDataPtr, cursorLineIterator);
-			
-			while ((escflg == 0) &&
-					(ctr > 0) &&
-					(*c >= 32) &&
-					!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220)))
-			{
-				// print lines of text one at a time
-				attrib = inDataPtr->current.drawingAttributes; /* current writing attribute */
-				wrapped = false; /* wrapped to next line (boolean) */
-				extra = 0; /* overwriting last character of line  */
-				
-				if (inDataPtr->current.cursorX >= inDataPtr->current.returnNumberOfColumnsPermitted())
-				{
-					if (inDataPtr->modeAutoWrap)
-					{
-						// wrap to next line 
-						moveCursorLeftToEdge(inDataPtr);
-						moveCursorDownOrScroll(inDataPtr);
-						locateCursorLine(inDataPtr, cursorLineIterator); // cursor changed rows...
-					}
-					else
-					{
-						// stay at right margin
-						moveCursorX(inDataPtr, inDataPtr->current.returnNumberOfColumnsPermitted() - 1);
-					}
-				}
-				
-				startPtr = (*cursorLineIterator)->textVectorBegin + inDataPtr->current.cursorX;
-				startIterator = (*cursorLineIterator)->textVectorBegin;
-				std::advance(startIterator, inDataPtr->current.cursorX);
-				preWriteCursorX = inDataPtr->current.cursorX;
-				while ((ctr > 0) &&
-						(*c >= 32) &&
-						(!wrapped) &&
-						!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220)))
-				{
-					// write characters on a single line
-					if (inDataPtr->modeInsertNotReplace)
-					{
-						bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */, kMy_AttributeRuleInitialize);
-					}
-					(*cursorLineIterator)->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib,
-																											temporaryAttributes);
-					(*cursorLineIterator)->returnMutableAttributeVector()[inDataPtr->current.cursorX] = temporaryAttributes;
-					++c;
-					--ctr;
-					if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
-					{
-						// advance the cursor position
-						moveCursorRight(inDataPtr);
-					}
-					else
-					{
-						// hit right margin
-						if (inDataPtr->modeAutoWrap)
-						{
-							// autowrap to start of next line (past-the-end cursor position triggers this)
-							moveCursorRight(inDataPtr);
-							wrapped = true; // terminate inner loop 
-						}
-						else
-						{
-							// stay at right margin
-							moveCursorRightToEdge(inDataPtr);
-							extra = 1; // cursor position doesn’t advance 
-						} 
-					} 
-				}
-				
-				// line has terminated, or invisible character arrived - update the terminal view(s)
-				// to display the printable characters received in the preceding loop
-				extra += inDataPtr->current.cursorX - preWriteCursorX;
-				if (*c == '\015')
-				{
-					// add the new line of text to the text-change region;
-					// this should trigger things like Terminal View updates
-					Terminal_RangeDescription	range;
-					
-					
-					//Console_WriteValue("text changed event: add new line, terminated by character", *c);
-					range.screen = inDataPtr->selfRef;
-					range.firstRow = inDataPtr->current.cursorY;
-					range.firstColumn = preWriteCursorX;
-					range.columnCount = extra;
-					range.rowCount = 1;
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
-				}
-				
-				StreamCapture_WriteUTF8Data(inDataPtr->captureStream, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
-			}/* while */
-		}
-		
-		// 3.0 - absorb any number of consecutive escape characters, they are meaningless
-		while ((escflg == 1) && (*c == ASCII_ESC) && (ctr > 0))
-		{
-			++c;
-			--ctr;
-		}
-		
-		while ((escflg == 1) && (ctr > 0))
-		{
-			// Basic escape sequence processing.  This indicates that an isolated
-			// ESC character (for a new sequence) has been read, but nothing else.
-			//
-			// IMPORTANT: Be sure to consult "inDataPtr->modeANSIEnabled" for each
-			//            of the following, because ANSI and VT52-compatible modes
-			//            are combined in the switch below.  Do not respond to ANSI
-			//            sequences while in VT52 mode, and vice-versa.
-			switch (*c)
-			{
-			case 0x08:
-				if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-				else moveCursorLeftToEdge(inDataPtr);
-				break;
-			
-			case '[':
-				if (inDataPtr->modeANSIEnabled)
-				{
-					// CSI (control sequence inducer)
-					inDataPtr->emulator.clearEscapeSequenceParameters();
-					++escflg;
-				}
-				break;
-			
-			case ']':
-				if (inDataPtr->modeANSIEnabled)
-				{
-					//if (ScreenFactory_GetConnectionDataOf(inDataPtr->selfRef)->Xterm) escflg = 6;
-					escflg = 6; // TEMP
-				}
-				else
-				{
-					// print screen
-					Commands_ExecuteByID(kCommandPrintScreen);
-				}
-				break;
-			
-			case '7':
-				if (inDataPtr->modeANSIEnabled) cursorSave(inDataPtr);
-				goto ShortCut;				
-			
-			case '8':
-				if (inDataPtr->modeANSIEnabled) cursorRestore(inDataPtr);
-				goto ShortCut;				
-			
-			case 'c':
-				if (inDataPtr->modeANSIEnabled) resetTerminal(inDataPtr);
-				break;
-			
-			case 'A':
-				unless (inDataPtr->modeANSIEnabled) My_VT100::VT52::cursorUp(inDataPtr);
-				goto ShortCut;
-			
-			case 'B':
-				unless (inDataPtr->modeANSIEnabled) My_VT100::VT52::cursorDown(inDataPtr);
-				goto ShortCut;
-			
-			case 'C':
-				unless (inDataPtr->modeANSIEnabled) My_VT100::VT52::cursorForward(inDataPtr);
-				goto ShortCut;
-			
-			case 'D':
-				if (inDataPtr->modeANSIEnabled) moveCursorDownOrScroll(inDataPtr);
-				else My_VT100::VT52::cursorBackward(inDataPtr);
-				goto ShortCut;				
-			
-			case 'E':
-				if (inDataPtr->modeANSIEnabled)
-				{
-					moveCursorLeftToEdge(inDataPtr);
-					moveCursorDownOrScroll(inDataPtr);
-				}
-				goto ShortCut;
-			
-			case 'F':
-				unless (inDataPtr->modeANSIEnabled) { /* enter graphics mode; unimplemented */ }
-				goto ShortCut;
-			
-			case 'G':
-				unless (inDataPtr->modeANSIEnabled) { /* exit graphics mode; unimplemented */ }
-				goto ShortCut;
-			
-			case 'H':
-				if (inDataPtr->modeANSIEnabled) inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabSet;
-				else moveCursor(inDataPtr, 0, 0); // home cursor in VT52 compatibility mode of VT100
-				goto ShortCut;
-			
-			case 'I':
-				unless (inDataPtr->modeANSIEnabled) moveCursorUpOrScroll(inDataPtr); // reverse line feed in VT52 compatibility mode of VT100
-				goto ShortCut;
-			
-			case 'J':
-				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorToEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse()); // erase to end of screen, in VT52 compatibility mode of VT100
-				goto ShortCut;
-			
-			case 'K':
-				unless (inDataPtr->modeANSIEnabled) bufferEraseFromCursorColumnToLineEnd(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse()); // erase to end of line, in VT52 compatibility mode of VT100
-				goto ShortCut;
-			
-			case 'M':
-				if (inDataPtr->modeANSIEnabled) moveCursorUpOrScroll(inDataPtr);
-				goto ShortCut;
-			
-			case 'V':
-				// print cursor line
-				unless (inDataPtr->modeANSIEnabled) { /* unimplemented */ }
-				goto ShortCut;
-			
-			case 'W':
-				// enter printer controller mode
-				unless (inDataPtr->modeANSIEnabled) { /* unimplemented */ }
-				goto ShortCut;
-			
-			case 'X':
-				// exit printer controller mode
-				unless (inDataPtr->modeANSIEnabled) { /* unimplemented */ }
-				goto ShortCut;
-			
-			case 'Y':
-				unless (inDataPtr->modeANSIEnabled)
-				{
-					// direct cursor address in VT52 compatibility mode of VT100;
-					// new cursor position is encoded as the next two characters
-					// (vertical first, then horizontal) offset by the octal
-					// value 037 (equal to decimal 31)
-					SInt16				newX = 0;
-					My_ScreenRowIndex	newY = 0;
-					
-					
-					newY = *(++c) - 32/* - 31 - 1 to convert from one-based to zero-based */;
-					if (--ctr > 0)
-					{
-						newX = *(++c) - 32/* - 31 - 1 to convert from one-based to zero-based */;
-						--ctr;
-					}
-					
-					// constrain the value and then change it safely
-					if (newX < 0) newX = 0;
-					if (newX >= inDataPtr->current.returnNumberOfColumnsPermitted())
-					{
-						newX = inDataPtr->current.returnNumberOfColumnsPermitted() - 1;
-					}
-					//if (newY < 0) newY = 0;
-					if (newY >= inDataPtr->screenBuffer.size())
-					{
-						newY = inDataPtr->screenBuffer.size() - 1;
-					}
-					moveCursor(inDataPtr, newX, newY);
-				}
-				goto ShortCut;
-			
-			case 'Z':
-				if (inDataPtr->modeANSIEnabled) My_VT100::deviceAttributes(inDataPtr);
-				else My_VT100::VT52::identify(inDataPtr);
-				goto ShortCut;
-			
-			case '=':
-				unless (inDataPtr->modeANSIEnabled) inDataPtr->modeApplicationKeys = true; // enter alternate keypad mode (application key sequences)
-				goto ShortCut;
-			
-			case '>':
-				unless (inDataPtr->modeANSIEnabled) inDataPtr->modeApplicationKeys = false; // exit alternate keypad mode (regular keypad characters)
-				goto ShortCut;
-			
-			case '<':
-				// enter ANSI mode (from VT52-compatible mode)
-				unless (inDataPtr->modeANSIEnabled) inDataPtr->modeANSIEnabled = true;
-				goto ShortCut;
-			
-			case '^':
-				// enter auto-print mode
-				unless (inDataPtr->modeANSIEnabled) { /* unimplemented */ }
-				goto ShortCut;
-			
-			case '_':
-				// exit auto-print mode
-				unless (inDataPtr->modeANSIEnabled) { /* unimplemented */ }
-				goto ShortCut;
-			
-			case ' ':
-			case '*':
-			case '#':
-				if (inDataPtr->modeANSIEnabled) escflg = 3;
-				break;
-			
-			case '(':
-				if (inDataPtr->modeANSIEnabled)
-				{
-					characterSetInfoPtr = &inDataPtr->vtG0;
-					escflg = 4;
-				}
-				break;
-			
-			case ')':
-				if (inDataPtr->modeANSIEnabled)
-				{
-					characterSetInfoPtr = &inDataPtr->vtG1;
-					escflg = 4;
-				}
-				break;
-			
-			default:
-				goto ShortCut;				
-			}
-			++c;
-			--ctr;
-		}/* while */
-		
-		while ((escflg == 2) && (ctr > 0))
-		{
-			// “control sequence” processing
-			switch (*c)
-			{
-			case 0x08:
-				if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-				else moveCursorLeftToEdge(inDataPtr);
-				break;
-			
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				// parse numeric parameter
-				{
-					// rename this incredibly long expression, since it’s needed a lot here!
-					SInt16&		valueRef = inDataPtr->emulator.argList
-											[inDataPtr->emulator.argLastIndex];
-					
-					
-					if (valueRef < 0) valueRef = 0;
-					valueRef *= 10;
-					valueRef += *c - '0';
-				}
-				break;
-			
-		#if 0
-			case '=':
-				// SCO-ANSI
-				escflg = 9;
-				break;
-		#endif
-			
-			case '?':
-				// DEC-private control sequence (see 'h' and 'l', that respectively do mode set/reset)
-				inDataPtr->emulator.argList[(inDataPtr->emulator.argLastIndex)++] = kMy_ParamPrivate;
-				break;
-			
-			case ';':
-				// parameter separator
-				++(inDataPtr->emulator.argLastIndex);
-				break;
-			
-			case 'A':
-				My_VT100::cursorUp(inDataPtr);
-				goto ShortCut;				
-			
-			case 'B':
-				My_VT100::cursorDown(inDataPtr);
-				goto ShortCut;				
-			
-			case 'C':
-				My_VT100::cursorForward(inDataPtr);
-				goto ShortCut;
-			
-			case 'D':
-				My_VT100::cursorBackward(inDataPtr);
-				goto ShortCut;
-			
-			case 'f':
-			case 'H':
-				// absolute cursor positioning
-				{
-					SInt16				newX = (0 == inDataPtr->emulator.argList[1])
-												? 0
-												: (inDataPtr->emulator.argList[1] != kMy_ParamUndefined)
-													? inDataPtr->emulator.argList[1] - 1
-													: 0/* default is home */;
-					My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.argList[0])
-												? 0
-												: (inDataPtr->emulator.argList[0] != kMy_ParamUndefined)
-													? inDataPtr->emulator.argList[0] - 1
-													: 0/* default is home */;
-					
-					
-					// offset according to the scrolling region (if any)
-					newY += inDataPtr->originRegionPtr->firstRow;
-					
-					// the new values are not checked for violation of constraints
-					// because constraints (including current origin mode) are
-					// automatically enforced by moveCursor...() routines
-					moveCursor(inDataPtr, newX, newY);
-				}
-				goto ShortCut;				
-		   
-			case 'i': // media copy
-				//if (inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] == 5)
-				//{		
-				//	TelnetPrinting_Begin(&inDataPtr->printing);
-				//}
-				escflg = 0;
-				break;
-			
-			case 'J':
-				My_VT100::eraseInDisplay(inDataPtr);
-				goto ShortCut;
-			
-			case 'K':
-				My_VT100::eraseInLine(inDataPtr);
-				goto ShortCut;
-			
-			case 'm':
-				// ANSI colors and other character attributes
-				{
-					SInt16		i = 0;
-					
-					
-					while (i <= inDataPtr->emulator.argLastIndex)
-					{
-						SInt16		p = 0;
-						
-						
-						if (inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] < 0)
-						{
-							inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = 0;
-						}
-						
-						p = inDataPtr->emulator.argList[i];
-						
-						// Note that a real VT100 will only understand 0-7 here.
-						// Other values are basically recognized because they are
-						// compatible with VT100 and are very often used (ANSI
-						// colors in particular).
-						if (p == 0) inDataPtr->current.drawingAttributes.removeStyleAndColorRelatedAttributes();
-						else if (p < 9) inDataPtr->current.drawingAttributes.addAttributes(styleOfVTParameter(p)); // set attribute
-						else if (p == 10) { /* set normal font - unsupported */ }
-						else if (p == 11) { /* set alternate font - unsupported */ }
-						else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
-						else if (p == 22) inDataPtr->current.drawingAttributes.removeAttributes(styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
-						else if ((p > 22) && (p < 29)) inDataPtr->current.drawingAttributes.removeAttributes(styleOfVTParameter(p - 20)); // clear attribute
-						else
-						{
-							if ((p >= 30) && (p <= 38))
-							{
-								inDataPtr->current.drawingAttributes.colorIndexForegroundSet(p - 30);
-							}
-							else if ((p >= 40) && (p <= 48))
-							{
-								inDataPtr->current.drawingAttributes.colorIndexBackgroundSet(p - 40);
-							}
-						}
-						++i;
-					}
-				}
-				goto ShortCut;
-			
-			case 't':
-				// XTerm window modification and state reporting
-				{
-					SInt16 const&	instruction = inDataPtr->emulator.argList[0];
-					
-					
-					switch (instruction)
-					{
-					case 1:
-						// de-iconify window
-						inDataPtr->windowMinimized = false;
-						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowMinimization, inDataPtr->selfRef/* context */);
-						break;
-					
-					case 2:
-						// iconify window
-						inDataPtr->windowMinimized = true;
-						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowMinimization, inDataPtr->selfRef/* context */);
-						break;
-					
-					default:
-						// SEE DISABLED BELOW
-						break;
-					}
-				}
-			#if 0 // TEMP
-				{
-					WindowRef		window = TerminalView_GetWindow(inDataPtr->view);
-					SInt16 const&	instruction = inDataPtr->emulator.argList[0];
-					
-					
-					// determine which modifier was received
-					switch (instruction)
-					{
-					//case 1 above
-					//case 2 above
-					
-					case 3:
-						// move window (X, Y coordinates are 2nd and 3rd parameters, respectively);
-						// since parameters are expected, first assert that exactly the right number
-						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.argLastIndex == 2)
-						{
-							SInt16		pixelLeft = inDataPtr->emulator.argList[1];
-							SInt16		pixelTop = inDataPtr->emulator.argList[2];
-							Rect		screenBounds;
-							
-							
-							// first, constrain the values to something reasonable;
-							// arbitrarily, use the window positioning boundaries as
-							// defined by the Mac OS (excludes the Dock and menu bar,
-							// etc.)
-							RegionUtilities_GetPositioningBounds(window, &screenBounds);
-							if (pixelLeft < screenBounds.left) pixelLeft = screenBounds.left;
-							if (pixelLeft > screenBounds.right) pixelLeft = screenBounds.right;
-							if (pixelTop < screenBounds.top) pixelTop = screenBounds.top;
-							if (pixelTop > screenBounds.bottom) pixelTop = screenBounds.bottom;
-							
-							// now move the window
-							MoveWindow(window, pixelLeft, pixelTop, false/* activate */);
-						}
-						break;
-					
-					case 4:
-						// disabled due to instability
-					#if 0
-						// resize terminal area (width and height in *pixels* are 2nd and 3rd parameters, respectively);
-						// since parameters are expected, first assert that exactly the right number
-						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.argLastIndex == 2)
-						{
-							SInt16					pixelWidth = inDataPtr->emulator.argList[1];
-							SInt16					pixelHeight = inDataPtr->emulator.argList[2];
-							UInt16					columns = 0;
-							TerminalView_RowIndex	rows = 0;
-							
-							
-							// first, constrain the values to something reasonable;
-							// arbitrarily, use the window positioning boundaries as
-							// defined by the Mac OS (excludes the Dock and menu bar,
-							// etc.)
-							{
-								Rect	screenBounds;
-								
-								
-								RegionUtilities_GetPositioningBounds(window, &screenBounds);
-								if (pixelWidth < 10) pixelWidth = 32; // arbitrary
-								if (pixelHeight < 10) pixelHeight = 32; // arbitrary
-								if (pixelWidth > (screenBounds.right - screenBounds.left))
-								{
-									pixelWidth = (screenBounds.right - screenBounds.left);
-								}
-								if (pixelHeight > (screenBounds.bottom - screenBounds.top))
-								{
-									pixelHeight = (screenBounds.bottom - screenBounds.top);
-								}
-							}
-							
-							// determine the closest terminal size to the requested pixel width and height
-							TerminalView_GetTheoreticalScreenDimensions(inDataPtr->view, pixelWidth, pixelHeight,
-																		false/* include insets */, &columns, &rows);
-							Terminal_SetVisibleScreenDimensions(inDataPtr->selfRef, columns, rows);
-						}
-					#endif
-						break;
-					
-					case 5:
-						// raise (activate) window
-						EventLoop_SelectBehindDialogWindows(window);
-						break;
-					
-					case 6:
-						// lower window (become last in Z-order)
-						SendBehind(window, kLastWindowOfGroup);
-						break;
-					
-					case 7:
-						// refresh (update) window
-						//RegionUtilities_RedrawWindowOnNextUpdate(window); // TEMPORARY; this changes too much (inefficient)
-						break;
-					
-					case 8:
-						// resize terminal area (width and height in *characters* are 2nd and 3rd parameters, respectively);
-						// since parameters are expected, first assert that exactly the right number
-						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.argLastIndex == 2)
-						{
-							SInt16	columns = inDataPtr->emulator.argList[1];
-							SInt16  rows = inDataPtr->emulator.argList[2];
-							
-							
-							// first, constrain the values to something reasonable;
-							// arbitrarily, each value must be at least 1
-							if (columns < 1) columns = 1;
-							if (columns > inDataPtr->text.visibleScreen.numberOfColumnsAllocated)
-							{
-								columns = inDataPtr->text.visibleScreen.numberOfColumnsAllocated;
-							}
-							if (rows < 1) rows = 1;
-							if (rows > 64/* arbitrary */) rows = 64;
-							
-							// now resize the screen
-							Terminal_SetVisibleScreenDimensions(inDataPtr->selfRef, columns, rows);
-						}
-						break;
-					
-					case 9:
-						// zoom window (2nd parameter of 0 means return from maximized state, parameter of 1 means Maximize);
-						// since parameters are expected, first assert that exactly the right number
-						// of values was given (otherwise, the input data may be bogus)
-						if (inDataPtr->emulator.argLastIndex == 1)
-						{
-							//Boolean		maximize = (inDataPtr->emulator.argList[1] == 1);
-							//WindowPartCode	inOrOut = (inDataPtr->emulator.argList[1] == 0)
-							//								? inZoomOut : inZoomIn;
-							
-							
-							EventLoop_HandleZoomEvent(window);
-						}
-						break;
-					
-					case 11:
-						// report window state; <CSI>1t if normal, <CSI>2t if iconified
-						{
-							SessionRef		session = returnListeningSession(inDataPtr);
-							
-							
-							if (nullptr != session)
-							{
-								if (IsWindowCollapsed(window)) inDataPtr->emulator.sendEscape(session, "\033[2t", 4);
-								else inDataPtr->emulator.sendEscape(session, "\033[1t", 4);
-							}
-						}
-						break;
-					
-					case 10:
-					case 12:
-					case 13:
-					case 14:
-					case 15:
-					case 16:
-					case 17:
-					case 18:
-					case 19:
-					case 20:
-					case 21:
-					case 22:
-					case 23:
-						// reporting function that is not currently handled
-						break;
-					
-					default:
-						// any number greater than or equal to 24 is a request to
-						// change the number of terminal lines to that amount
-						(Terminal_Result)setVisibleRowCount(inDataPtr, inDataPtr->emulator.argList[0]);
-						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScreenSize, inDataPtr->selfRef/* context */);
-						break;
-					}
-				}
-			#endif // TEMP
-				goto ShortCut;
-			
-			case 'q':
-				My_VT100::loadLEDs(inDataPtr);
-				goto ShortCut;
-			
-			case 'c':
-				if (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT220) My_VT220::primaryDeviceAttributes(inDataPtr);
-				else if (inDataPtr->emulator.primaryType == kEmulation_FullTypeVT100) My_VT100::deviceAttributes(inDataPtr);
-				goto ShortCut;
-			
-			case 'n':
-				My_VT100::deviceStatusReport(inDataPtr);
-				goto ShortCut;
-			
-			case 'L':
-				{
-					My_ScreenBufferLineList::iterator	cursorLineIterator;
-					
-					
-					locateCursorLine(inDataPtr, cursorLineIterator);
-					if (inDataPtr->emulator.argList[0] < 1)
-					{
-						inDataPtr->emulator.argList[0] = 1;
-					}
-					bufferInsertBlankLines(inDataPtr, inDataPtr->emulator.argList[0], cursorLineIterator, kMy_AttributeRuleInitialize);
-				}
-				goto ShortCut;				
-			
-			case 'M':
-				{
-					My_ScreenBufferLineList::iterator	cursorLineIterator;
-					
-					
-					locateCursorLine(inDataPtr, cursorLineIterator);
-					if (inDataPtr->emulator.argList[0] < 1)
-					{
-						inDataPtr->emulator.argList[0] = 1;
-					}
-					bufferRemoveLines(inDataPtr, inDataPtr->emulator.argList[0], cursorLineIterator, kMy_AttributeRuleCopyLast);
-				}
-				goto ShortCut;
-			
-			case '@':
-				if (inDataPtr->emulator.argList[0] < 1)
-					inDataPtr->emulator.argList[0] = 1;
-				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, inDataPtr->emulator.argList[0]/* number of blank characters */,
-																kMy_AttributeRuleInitialize);
-				goto ShortCut;
-			
-			case 'P':
-				if (inDataPtr->emulator.argList[0] < 1)
-					inDataPtr->emulator.argList[0] = 1;
-				bufferRemoveCharactersAtCursorColumn(inDataPtr, inDataPtr->emulator.argList[0], kMy_AttributeRuleCopyLast);
-				goto ShortCut;				
-			
-			case 'r':
-				My_VT100::setTopAndBottomMargins(inDataPtr);
-				goto ShortCut;
-			
-			case 'h':
-			  	// set mode
-				My_VT100::modeSetReset(inDataPtr, true/* set */);
-				goto ShortCut;				
-			
-			case 'l':
-				// reset mode
-				My_VT100::modeSetReset(inDataPtr, false/* set */);
-				goto ShortCut;				
-			
-			case 'g':
-				if (inDataPtr->emulator.argList[0] == 3)
-				  /* clear all tabs */
-					tabStopClearAll(inDataPtr);
-				else if (inDataPtr->emulator.argList[0] <= 0)
-				  /* clear tab at current position */
-					inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabClear;
-				goto ShortCut;				
-			
-			case '!':
-			case '\'':
-			case '\"':
-				++escflg;					
-				break;						
-			
-			default:			/* Dang blasted strays... */
-				goto ShortCut;				
-			}
-			++c;
-			--ctr;
-		}/* while */
-
-		while ((escflg == 3) && (ctr > 0))
-		{
-			// "#" handling
-			switch (*c)
-			{
-			case 0x08:
-				if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-				else moveCursorLeftToEdge(inDataPtr);
-				break;
-			
-			case '3': // double width and height, top half
-				
-				goto ShortCut;
-			
-			case '4': // double width and height, bottom half
-				
-				goto ShortCut;
-			
-			case '5': // normal
-				
-				goto ShortCut;
-			
-			case '6': // double width, normal height
-				
-				goto ShortCut;
-			
-			case '8': // alignment display
-				goto ShortCut;
-			
-			default:
-				goto ShortCut;
-			}
-			++c;
-			--ctr;
-		}/* while */
-
-		while ((escflg == 4) && (ctr > 0) && (characterSetInfoPtr != nullptr))
-		{
-			// "(" or ")" handling (respectively, selection of G0 or G1 character sets)
-			switch (*c)
-			{
-			case 0x08:
-				if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-				else moveCursorLeftToEdge(inDataPtr);
-				break;
-			
-			case 'A':
-				// U.K. character set, normal ROM, no graphics
-				characterSetInfoPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
-				characterSetInfoPtr->source = kMy_CharacterROMNormal;
-				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_VTGraphics); // clear graphics attribute
-				goto ShortCut;
-			
-			case 'B':
-				// U.S. character set, normal ROM, no graphics
-				characterSetInfoPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
-				characterSetInfoPtr->source = kMy_CharacterROMNormal;
-				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_VTGraphics); // clear graphics attribute
-				goto ShortCut;
-			
-			case '0':
-				// normal ROM, graphics mode
-				characterSetInfoPtr->source = kMy_CharacterROMNormal;
-				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOn;
-				inDataPtr->current.drawingAttributes.addAttributes(kTextAttributes_VTGraphics); // set graphics attribute
-				goto ShortCut;
-			
-			case '1':
-				// alternate ROM, no graphics
-				characterSetInfoPtr->source = kMy_CharacterROMAlternate;
-				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_VTGraphics); // clear graphics attribute
-				goto ShortCut;
-			
-			case '2':
-				// alternate ROM, graphics mode
-				characterSetInfoPtr->source = kMy_CharacterROMAlternate;
-				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOn;
-				inDataPtr->current.drawingAttributes.addAttributes(kTextAttributes_VTGraphics); // set graphics attribute
-				goto ShortCut;				
-			
-			default:
-				goto ShortCut;
-			}
-			++c;
-			--ctr;
-		}/* while */
-
-        // Handle XTerm rename functions, code contributed by Bill Rausch
-        // Modified by JMB to handle ESC]2; case as well.
-        // 3.0 - handling many more sequences now
-		if ((escflg >= 6) && (ctr > 0))
-		{
-			static char*	tmp = nullptr;
-			static Str255	newname;
-			Boolean			changeWindowTitle = false;
-			Boolean			changeIconTitle = false;
-			
-			
-			if ((escflg == 6) && ((*c == '0') || (*c == '1') || (*c == '2')))
-			{
-				if ((*c == '0') || (*c == '1')) changeIconTitle = true;
-				if ((*c == '0') || (*c == '2')) changeWindowTitle = true;
-				++escflg;
-            	++c;
-            	--ctr;
-			}
-			if ((escflg == 7) && (ctr > 0) && (*c == ';'))
-			{
-				--ctr;
-				++c;
-				++escflg;
-				newname[0] = 0;
-				tmp = (char*)&newname[1];
-			}
-			
-			while ((escflg == 8) && (ctr > 0) && (*c != 07) && (*c != 033))
-			{
-				if (*newname < 255)
-				{
-            	 	*tmp++ = *c;
-            		++(*newname);
-            	}
-            	++c;
-            	--ctr;
-			}
-        	if ((escflg == 8) && (*c == 07 || *c == 033) && (ctr > 0))
-			{
-				CFRetainRelease		titleString(CFStringCreateWithPascalString(kCFAllocatorDefault, newname, CFStringGetSystemEncoding()),
-												CFRetainRelease::kAlreadyRetained);
-				
-				
-				if (changeWindowTitle)
-				{
-					inDataPtr->windowTitleCFString.setWithRetain(titleString.returnCFStringRef());
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
-				}
-				if (changeIconTitle)
-				{
-					inDataPtr->iconTitleCFString.setWithRetain(titleString.returnCFStringRef());
-					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
-				}
-           		if (*c != 07)
-            	{
-            		// this will be undone after the "goto ShortCut" below
-            		--c;
-                	++ctr;
-				}
-            	goto ShortCut;
-			}
-		}/* if */
-		
-#if 0
-		while ((escflg == 8) && (ctr > 0) && (*c != 07))
-		{
-			*tmp++ = *c++;
-			--ctr;
-			++(*newname);
-		}
-		if ((escflg == 8) && (*c == 07) && (ctr > 0))
-		{
-			CFStringRef		titleString = CFStringCreateWithPascalString(kCFAllocatorDefault, newname, CFStringGetSystemEncoding());
-			
-			
-			if (nullptr != titleString)
-			{
-				inDataPtr->windowTitleCFString = titleString;
-				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowFrameTitle, inDataPtr->selfRef/* context */);
-				CFRelease(titleString);
-			}
-			goto ShortCut;
-		}
-#endif
-		
-		if ((escflg > 2) && (ctr > 0))
-		{
-ShortCut:
-			escflg = 0;
-			++c;
-			--ctr;
-		}
-	}/* while (ctr > 0) */
-	
-	//inDataPtr->current.escapeSequence.level = escflg;
-}// emulatorFrontEndOld
-
-
-/*!
 Erases the characters from the halfway point on the
 screen to the right edge of the specified line,
 clearing all attributes.  NO update events are sent.
@@ -16321,36 +14948,6 @@ forEachLineDo	(TerminalScreenRef				inRef,
 	}
 	return result;
 }// forEachLineDo
-
-
-/*!
-Given a character offset into a theoretically concatenated
-buffer, returns the row and column that would refer to that
-position.  Assumes each line is exactly the same number of
-characters.
-
-The "inEndOfLinePad" allows you to pretend each line ends
-with zero or more characters (e.g. a new-line sequence), so
-that if your buffer contains new-lines you can include them
-when calculating the proper cell location.
-
-The default results assume the main screen.  If your offset
-is really for the scrollback, simply negate the row number
-and subtract 1 (scrollback rows are represented as negative
-numbers).
-
-(3.1)
-*/
-void
-getBufferOffsetCell		(My_ScreenBufferPtr		inDataPtr,
-						 size_t					inBufferOffset,
-						 UInt16					inEndOfLinePad,
-						 UInt16&				outColumn,
-						 SInt32&				outRow)
-{
-	outRow = inBufferOffset / (inDataPtr->text.visibleScreen.numberOfColumnsAllocated + inEndOfLinePad);
-	outColumn = inBufferOffset % (inDataPtr->text.visibleScreen.numberOfColumnsAllocated + inEndOfLinePad);
-}// getBufferOffsetCell
 
 
 /*!
@@ -17820,8 +16417,6 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 				// translate all results ranges into external form; the
 				// caller understands rows and columns, etc. not offsets
 				// into a giant buffer
-				//getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
-				//getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, firstRow);
 				firstColumn = STATIC_CAST(toRange->location, UInt16);
 				if (false == kIsScreen)
 				{
@@ -18446,134 +17041,6 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// translateCharacter
-
-
-/*!
-Copies the specified number of characters from the
-source to the destination, dropping trailing blanks.
-If table is nonzero, then every series of this many
-consecutive spaces will be replaced with a single
-tab character.
-
-Returns an iterator just past the end of the copied
-data in the output buffer.  This allows you to use
-the iterator to insert a character immediately after
-the text that this routine copies.
-
-Also, the actual number of bytes copied is provided.
-It follows that if you were to advance the original
-buffer iterator by this amount, the result should be
-the returned iterator.
-
-NOTE:   This routine is generic.  It therefore works
-		with something as simple as an array of
-		characters, or as complex as an STL container
-		of characters - your choice!
-
-(3.0)
-*/
-template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
-			typename dest_char_seq_iter, typename dest_char_seq_size_t >
-dest_char_seq_iter
-whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
-							 src_char_seq_size_t		inSourceBufferLength,
-							 dest_char_seq_iter			outDestinationBuffer,
-							 dest_char_seq_size_t		inDestinationBufferLength,
-							 dest_char_seq_size_t*		outDestinationCopiedLengthPtr,
-							 src_char_seq_size_t		inNumberOfSpacesPerTabOrZeroForNoSubstitution)
-{
-	dest_char_seq_iter  result = outDestinationBuffer;
-	
-	
-	if (inSourceBufferLength > 0)
-	{
-		src_char_seq_const_iter		kPastSourceStartIterator;
-		src_char_seq_const_iter		pastSourceEndIterator;
-		src_char_seq_const_iter		sourceEndIterator;
-		src_char_seq_size_t			sourceLength = inSourceBufferLength;
-		
-		
-		// initialize “constant” past-source-start iterator
-		kPastSourceStartIterator = inSourceBuffer;
-		std::advance(kPastSourceStartIterator, -1);
-		
-		// initialize past-source-end iterator
-		pastSourceEndIterator = inSourceBuffer;
-		std::advance(pastSourceEndIterator, inSourceBufferLength);
-		
-		// initialize source-end iterator
-		sourceEndIterator = inSourceBuffer;
-		std::advance(sourceEndIterator, inSourceBufferLength - 1);
-		
-		// skip trailing blanks
-		while ((*sourceEndIterator == ' ') && (sourceEndIterator != kPastSourceStartIterator))
-		{
-			--sourceEndIterator;
-			--pastSourceEndIterator;
-			--sourceLength;
-		}
-		
-		// if the string contains non-blanks, continue
-		if (sourceEndIterator != kPastSourceStartIterator)
-		{
-			if (inNumberOfSpacesPerTabOrZeroForNoSubstitution == 0)
-			{
-				// straight character copy
-				src_char_seq_size_t		copiedLength = STATIC_CAST(INTEGER_MINIMUM(sourceLength, inDestinationBufferLength), src_char_seq_size_t);
-				
-				
-				__gnu_cxx::copy_n(inSourceBuffer, copiedLength, outDestinationBuffer);
-				result = outDestinationBuffer;
-				std::advance(result, copiedLength);
-			}
-			else
-			{
-				src_char_seq_const_iter		srcIter = inSourceBuffer;
-				dest_char_seq_iter			destIter = outDestinationBuffer;
-				dest_char_seq_iter			kPastDestinationEndIterator;
-				
-				
-				// initialize “constant” past-destination-end iterator
-				kPastDestinationEndIterator = outDestinationBuffer;
-				std::advance(kPastDestinationEndIterator, inDestinationBufferLength);
-				
-				// tab-replacement copy
-				while (srcIter != pastSourceEndIterator)
-				{
-					// direct copy for non-whitespace
-					while ((*srcIter != ' ') && (srcIter != pastSourceEndIterator) && (destIter != kPastDestinationEndIterator))
-					{
-						*destIter++ = STATIC_CAST(*srcIter++, UInt8);
-					}
-					
-					// for whitespace, replace with tabs when appropriate
-					if (srcIter != pastSourceEndIterator)
-					{
-						src_char_seq_size_t		numberOfConsecutiveSpaces = 0;
-						
-						
-						while ((*srcIter == ' ') && (srcIter != pastSourceEndIterator) && (destIter != kPastDestinationEndIterator))
-						{
-							*destIter++ = STATIC_CAST(*srcIter++, UInt8);
-							++numberOfConsecutiveSpaces;
-							if (numberOfConsecutiveSpaces == inNumberOfSpacesPerTabOrZeroForNoSubstitution)
-							{
-								// replace series of spaces with a tab
-								std::advance(destIter, -inNumberOfSpacesPerTabOrZeroForNoSubstitution);
-								*destIter++ = '\011';
-								numberOfConsecutiveSpaces = 0;
-							}
-						}
-					}
-				}
-				result = destIter;
-			}
-		}
-	}
-	
-	*outDestinationCopiedLengthPtr = STATIC_CAST(std::distance(outDestinationBuffer, result), dest_char_seq_size_t);
-	return result;
-}// whitespaceSensitiveCopy
 
 } // anonymous namespace
 
