@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2657" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment version="101201" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaDFRPlugin" version="7104"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+        <capability name="the Touch Bar" message="Use a version of macOS with Touch Bar support." minToolsVersion="8.1" minSystemVersion="10.12.1" requiredIntegratedClassName="NSTouchBar"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="TouchBar_Controller">
+            <connections>
+                <outlet property="_touchBar" destination="AeX-Rc-nTd" id="BDr-4I-2HH"/>
+                <outlet property="view" destination="jHg-u7-zVw" id="BB0-y5-q6i"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <touchBar id="AeX-Rc-nTd">
+            <touchBarItems>
+                <touchBarSpacerItem identifier="NSTouchBarItemIdentifierFlexibleSpace" id="A3s-h8-SI3"/>
+                <touchBarItemOtherItemsProxy identifier="NSTouchBarItemIdentifierOtherItemsProxy" id="tCR-nU-SDU"/>
+                <touchBarSpacerItem identifier="NSTouchBarItemIdentifierFlexibleSpace" id="wCf-r2-RLO"/>
+                <touchBarItem identifier="net.macterm.MacTerm.touchbaritem.fullscreen" id="zsk-By-biL">
+                    <viewController key="viewController" id="exY-0k-LdU">
+                        <button key="view" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Qq5-ZW-tqE">
+                            <rect key="frame" x="0.0" y="0.0" width="72" height="30"/>
+                            <buttonCell key="cell" type="push" bezelStyle="rounded" image="NSEnterFullScreenTemplate" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Xu7-C4-LoH">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="toggleFullScreen:" target="-1" id="MXC-XD-FQ0"/>
+                            </connections>
+                        </button>
+                    </viewController>
+                </touchBarItem>
+            </touchBarItems>
+            <point key="canvasLocation" x="118" y="-128"/>
+        </touchBar>
+        <customView id="jHg-u7-zVw">
+            <rect key="frame" x="0.0" y="0.0" width="163" height="96"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="NSEnterFullScreenTemplate" width="15" height="15"/>
+    </resources>
+</document>

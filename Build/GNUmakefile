@@ -247,6 +247,7 @@ English.lproj/TerminalWindow.nib
 APP_XIB_PREFIXES := \
 English.lproj/AddressDialogCocoa \
 English.lproj/AlertMessagesCocoa \
+English.lproj/ApplicationTouchBarCocoa \
 English.lproj/ChildProcessWindowCocoa \
 English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
@@ -256,6 +257,7 @@ English.lproj/GenericDialogCocoa \
 English.lproj/GenericPanelNumberedListCocoa \
 English.lproj/GenericPanelTabsCocoa \
 English.lproj/InfoWindowCocoa \
+English.lproj/InfoWindowTouchBarCocoa \
 English.lproj/KeypadArrangeWindowCocoa \
 English.lproj/KeypadControlKeysCocoa \
 English.lproj/KeypadFullScreenCocoa \
@@ -280,11 +282,14 @@ English.lproj/PrefPanelTranslationsCocoa \
 English.lproj/PrefPanelWorkspaceOptionsCocoa \
 English.lproj/PrefPanelWorkspaceWindowsCocoa \
 English.lproj/PrefsWindowCocoa \
+English.lproj/PrefsWindowTouchBarCocoa \
 English.lproj/ResizeInfoCocoa \
 English.lproj/ServerBrowserCocoa \
 English.lproj/TerminalViewCocoa \
 English.lproj/TerminalWindowCocoa \
-English.lproj/VectorWindowCocoa
+English.lproj/TerminalWindowTouchBarCocoa \
+English.lproj/VectorWindowCocoa \
+English.lproj/VectorWindowTouchBarCocoa
 SHARED_XIB_PREFIXES := \
 English.lproj/WindowTitleDialogCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \

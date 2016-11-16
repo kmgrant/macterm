@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161115',
     '20161031',
     '20161028',
     '20161027',
@@ -561,6 +562,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161115': [
+        'Preferences window has rudimentary (and experimental) support for the Touch Bar, initially only for Search.',
+        'Terminal windows have rudimentary (and experimental) support for the Touch Bar, initially only for Search and Full Screen.',
+        'Vector graphics windows have rudimentary (and experimental) support for the Touch Bar, initially only for Full Screen.',
+    ],
     '20161031': [
         'The "Make Screen Wider" and "Make Screen Taller" commands now cause a terminal window to adhere to the nearest screen edge if the right or bottom side of the window (respectively) is nearly touching the screen edge.  The extra space is filled by the matte region, similar to how resizing behaves when the sides of a window are dragged with the mouse.',
     ],

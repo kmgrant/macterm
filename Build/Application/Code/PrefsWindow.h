@@ -43,6 +43,8 @@
 // library includes
 #ifdef __OBJC__
 #	import <CocoaExtensions.objc++.h>
+#	import <CocoaFuture.objc++.h>
+#	import <TouchBar.objc++.h>
 @class CoreUI_HelpButton;
 @class ListenerModel_StandardListener;
 #endif
@@ -147,6 +149,7 @@ changes to an interface declared in a ".mm" file.
 	NSString*							_searchText;
 	NSSize								extraWindowContentSize; // stores extra content width and height (not belonging to a panel)
 	ListenerModel_StandardListener*		preferenceChangeListener;
+	TouchBar_Controller*				_touchBarController; // created on demand
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
 }
 

@@ -45,7 +45,10 @@ class NSWindow;
 // library includes
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
-#import <WindowTitleDialog.h>
+#ifdef __OBJC__
+#	include <TouchBar.objc++.h>
+#endif
+#include <WindowTitleDialog.h>
 
 // application includes
 #include "SessionRef.typedef.h"
@@ -98,6 +101,7 @@ changes to an interface declared in a ".mm" file.
 	ListenerModel_Ref		changeListenerModel;
 	VectorInterpreter_Ref	interpreterRef;
 	WindowTitleDialog_Ref	renameDialog;
+	TouchBar_Controller*		_touchBarController;
 }
 
 // initializers

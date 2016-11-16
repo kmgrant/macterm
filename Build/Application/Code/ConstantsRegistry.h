@@ -42,6 +42,9 @@
 #define __CONSTANTSREGISTRY__
 
 // library includes
+#ifdef __OBJC__
+#	include <CocoaFuture.objc++.h>
+#endif
 #include <FlagManager.h>
 #include <ListenerModel.h>
 
@@ -206,6 +209,21 @@ enum
 };
 
 //@}
+
+#ifdef __OBJC__
+//!\name Touch Bar Identifiers
+//@{
+
+extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDApplicationMain;
+extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDInfoWindowMain;
+extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDPrefsWindowMain;
+extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDTerminalWindowMain;
+extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDVectorWindowMain;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFind;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFullScreen;
+
+//@}
+#endif
 
 //!\name Undoable-Operation Context Identifiers
 //@{

@@ -50,6 +50,9 @@ class NSWindow;
 
 // library includes
 #include <ListenerModel.h>
+#ifdef __OBJC__
+#	import <TouchBar.objc++.h>
+#endif
 
 // application includes
 #include "ConstantsRegistry.h"
@@ -84,6 +87,10 @@ enum
 #ifdef __OBJC__
 
 @interface EventLoop_AppObject : NSApplication //{
+{
+	TouchBar_Controller*		_applicationTouchBarController;
+	TouchBar_Controller*		_terminalWindowTouchBarController;
+}
 
 // NSApplication
 	- (BOOL)
@@ -94,6 +101,10 @@ enum
 	delegate:(id)_
 	didPresentSelector:(SEL)_
 	contextInfo:(void*)_;
+
+// actions
+	- (IBAction)
+	toggleFullScreen:(id)_;
 
 @end //}
 

@@ -83,11 +83,47 @@ only available in the 10.8 SDK for XPC.
 @end //}
 
 
+/*!
+This protocol exists in order to suppress warnings about
+undeclared selectors used in "@selector()" calls below.
+There is code to dynamically check for selectors that are
+only available in the 10.12.1 SDK for NSTouchBar.
+*/
+@protocol CocoaFuture_LikeSierraTouchBar //{
+
+	// 10.12.1: selector to set array of allowed item identifiers for customization of an NSTouchBar
+	- (void)
+	setCustomizationAllowedItemIdentifiers:(NSArray*)_;
+
+	// 10.12.1: selector to set array of default item identifiers for customization of an NSTouchBar
+	- (void)
+	setCustomizationDefaultItemIdentifiers:(NSArray*)_;
+
+	// 10.12.1: selector to set customization identifier for an NSTouchBar
+	- (void)
+	setCustomizationIdentifier:(NSTouchBarCustomizationIdentifier)_;
+
+	// 10.12.1: selector to set customization label for an NSCustomTouchBarItem
+	- (void)
+	setCustomizationLabel:(NSString*)_;
+
+	// 10.12.1: selector to set array of default item identifiers for an NSTouchBar
+	- (void)
+	setDefaultItemIdentifiers:(NSArray*)_;
+
+	// 10.12.1: selector to set view controller for an NSCustomTouchBarItem
+	- (void)
+	setViewController:(NSViewController*)_;
+
+@end //}
+
+
 #pragma mark Public Methods
 
+
 /*!
-On Mac OS X 10.8 and later, "[[NSUserNotification alloc] init]";
-on earlier Mac OS X versions, "nil".
+On OS 10.8 and later, "[[NSUserNotification alloc] init]"; on
+earlier OS versions, "nil".
 
 This work-around is necessary because older code bases will not
 be able to directly refer to the class (it doesn’t exist).
@@ -133,11 +169,11 @@ CocoaFuture_AllocInitUserNotification ()
 
 
 /*!
-On Mac OS X 10.10 and later, "[[NSVisualEffectView alloc] initWithFrame:]";
-on earlier Mac OS X versions, "nil".
+On OS 10.10 and later, "[[NSVisualEffectView alloc] initWithFrame:]";
+on earlier OS versions, "nil".
 
-This work-around is necessary because older code bases will not be able to
-directly refer to the class (it doesn’t exist).
+This work-around is necessary because older code bases will not be
+able to directly refer to the class (it doesn’t exist).
 
 (1.10)
 */
@@ -186,8 +222,8 @@ CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect		inFrame)
 
 
 /*!
-On Mac OS X 10.8 and later, "[[NSXPCConnection alloc] initWithServiceName:aName]";
-on earlier Mac OS X versions, "nil".
+On OS 10.8 and later, "[[NSXPCConnection alloc] initWithServiceName:aName]";
+on earlier OS versions, "nil".
 
 This work-around is necessary because older code bases will not be able to
 directly refer to the class (it doesn’t exist).
@@ -237,10 +273,10 @@ CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*		inName)
 
 
 /*!
-On Mac OS X 10.8 and later, asks the Objective-C runtime for
-a handle to the NSUserNotificationCenter class and returns the
+On OS 10.8 and later, asks the Objective-C runtime for a
+handle to the NSUserNotificationCenter class and returns the
 result of the "defaultUserNotificationCenter" class method.
-Earlier Mac OS X versions will return "nil".
+Earlier OS versions will return "nil".
 
 This work-around is necessary because older code bases will
 not be able to directly refer to the class (as it doesn’t
@@ -283,8 +319,90 @@ CocoaFuture_DefaultUserNotificationCenter ()
 
 
 /*!
-On Mac OS X 10.8 and later, "[aConnection remoteObjectProxyWithErrorHandler:]";
-on earlier Mac OS X versions, no effect (returning "nil").
+On OS 10.12.1 and later, "inTouchBar.customizationAllowedItemIdentifiers = inIdentifierArray";
+on earlier OS versions, no effect.
+
+This work-around is necessary because older code bases will not be able
+to directly refer to the class (it doesn’t exist).
+
+(2016.11)
+*/
+void
+CocoaFuture_TouchBarSetCustomizationAllowedItemIdentifiers	(NSTouchBar*	inTouchBar,
+															 NSArray*		inIdentifierArray)
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101201 /* MAC_OS_X_VERSION_10_12_1 */
+	id		targetClass = objc_getClass("NSTouchBar");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSTouchBar class");
+	}
+	else
+	{
+		SEL		setSelector = @selector(setCustomizationAllowedItemIdentifiers:);
+		
+		
+		if ([targetClass instancesRespondToSelector:setSelector])
+		{
+			[inTouchBar performSelector:setSelector withObject:inIdentifierArray];
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSTouchBar found but it does not implement 'setCustomizationAllowedItemIdentifiers:'");
+		}
+	}
+#else
+	inTouchBar.customizationAllowedItemIdentifiers = inIdentifier;
+#endif
+}// TouchBarSetCustomizationAllowedItemIdentifiers
+
+
+/*!
+On OS 10.12.1 and later, "inTouchBar.customizationIdentifier = inIdentifier";
+on earlier OS versions, no effect.
+
+This work-around is necessary because older code bases will not be able
+to directly refer to the class (it doesn’t exist).
+
+(2016.11)
+*/
+void
+CocoaFuture_TouchBarSetCustomizationIdentifier	(NSTouchBar*						inTouchBar,
+												 NSTouchBarCustomizationIdentifier	inIdentifier)
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101201 /* MAC_OS_X_VERSION_10_12_1 */
+	id		targetClass = objc_getClass("NSTouchBar");
+	
+	
+	if (nil == targetClass)
+	{
+		Console_Warning(Console_WriteLine, "cannot find NSTouchBar class");
+	}
+	else
+	{
+		SEL		setSelector = @selector(setCustomizationIdentifier:);
+		
+		
+		if ([targetClass instancesRespondToSelector:setSelector])
+		{
+			[inTouchBar performSelector:setSelector withObject:inIdentifier];
+		}
+		else
+		{
+			Console_Warning(Console_WriteLine, "NSTouchBar found but it does not implement 'setCustomizationIdentifier:'");
+		}
+	}
+#else
+	inTouchBar.customizationIdentifier = inIdentifier;
+#endif
+}// TouchBarSetCustomizationIdentifier
+
+
+/*!
+On OS 10.8 and later, "[aConnection remoteObjectProxyWithErrorHandler:]";
+on earlier OS versions, no effect (returning "nil").
 
 This work-around is necessary because older code bases will not be able to
 directly refer to the class (it doesn’t exist).
@@ -328,11 +446,11 @@ CocoaFuture_XPCConnectionRemoteObjectProxy	(NSXPCConnection*		inConnection,
 
 
 /*!
-On Mac OS X 10.8 and later, "[aConnection resume]"; on earlier Mac OS X
+On OS 10.8 and later, "[aConnection resume]"; on earlier OS
 versions, no effect.
 
-This work-around is necessary because older code bases will not be able to
-directly refer to the class (it doesn’t exist).
+This work-around is necessary because older code bases will
+not be able to directly refer to the class (it doesn’t exist).
 
 (1.11)
 */
@@ -369,11 +487,11 @@ CocoaFuture_XPCConnectionResume		(NSXPCConnection*		inConnection)
 
 
 /*!
-On Mac OS X 10.8 and later, "aConnection.interruptionHandler = aBlock";
-on earlier Mac OS X versions, no effect.
+On OS 10.8 and later, "aConnection.interruptionHandler = aBlock";
+on earlier OS versions, no effect.
 
-This work-around is necessary because older code bases will not be able to
-directly refer to the class (it doesn’t exist).
+This work-around is necessary because older code bases will not
+be able to directly refer to the class (it doesn’t exist).
 
 (1.11)
 */
@@ -411,11 +529,11 @@ CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*		inConnection
 
 
 /*!
-On Mac OS X 10.8 and later, "aConnection.invalidationHandler = aBlock";
-on earlier Mac OS X versions, no effect.
+On OS 10.8 and later, "aConnection.invalidationHandler = aBlock";
+on earlier OS versions, no effect.
 
-This work-around is necessary because older code bases will not be able to
-directly refer to the class (it doesn’t exist).
+This work-around is necessary because older code bases will not
+be able to directly refer to the class (it doesn’t exist).
 
 (1.11)
 */
@@ -453,11 +571,11 @@ CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*		inConnection
 
 
 /*!
-On Mac OS X 10.8 and later, "aConnection.remoteObjectInterface = anInterface";
-on earlier Mac OS X versions, no effect.
+On OS 10.8 and later, "aConnection.remoteObjectInterface = anInterface";
+on earlier OS versions, no effect.
 
-This work-around is necessary because older code bases will not be able to
-directly refer to the class (it doesn’t exist).
+This work-around is necessary because older code bases will not be able
+to directly refer to the class (it doesn’t exist).
 
 (1.11)
 */
@@ -495,11 +613,11 @@ CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*		inConnectio
 
 
 /*!
-On Mac OS X 10.8 and later, "[NSXPCInterface interfaceWithProtocol:aProtocol]";
-on earlier Mac OS X versions, "nil".
+On OS 10.8 and later, "[NSXPCInterface interfaceWithProtocol:aProtocol]";
+on earlier OS versions, "nil".
 
-This work-around is necessary because older code bases will not be able to
-directly refer to the class (it doesn’t exist).
+This work-around is necessary because older code bases will not be able
+to directly refer to the class (it doesn’t exist).
 
 (1.11)
 */

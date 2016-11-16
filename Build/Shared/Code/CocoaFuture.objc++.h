@@ -76,13 +76,17 @@
 #	define NSAppKitVersionNumber10_11 1404
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= 101200 /* MAC_OS_X_VERSION_10_12 */
+#	define NSAppKitVersionNumber10_12 1504
+#endif
+
 
 
 #pragma mark Types
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070 /* MAC_OS_X_VERSION_10_7 */
 
-// Things that are implemented ONLY on Mac OS X 10.7 and beyond.
+// Things that are implemented ONLY on OS 10.7 and beyond.
 // These declarations should match the latest SDK.
 //
 // WARNING:	You MUST use "respondsToSelector:" or an equivalent
@@ -150,7 +154,7 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
 
-// Things that are implemented ONLY on Mac OS X 10.8 and beyond.
+// Things that are implemented ONLY on OS 10.8 and beyond.
 // These declarations should match the latest SDK.
 //
 // WARNING:	You MUST use "respondsToSelector:" or an equivalent
@@ -190,9 +194,10 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 #endif
 
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101200 /* MAC_OS_X_VERSION_10_12 */
 
-// Things that are implemented ONLY on Mac OS X 10.12 and beyond.
+// Things that are implemented ONLY on OS 10.12 and beyond.
 // These declarations should match the latest SDK.
 //
 // WARNING:	You MUST use "respondsToSelector:" or an equivalent
@@ -216,6 +221,52 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 #endif // MAC_OS_X_VERSION_10_12
 
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101201 /* MAC_OS_X_VERSION_10_12_1 */
+
+// Things that are implemented ONLY on OS 10.12.1 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
+
+@class NSColorPickerTouchBarItem;
+@class NSCustomTouchBarItem;
+@class NSTouchBar;
+@class NSTouchBarItem;
+
+typedef NSString* NSTouchBarCustomizationIdentifier;
+typedef NSString* NSTouchBarItemIdentifier;
+
+
+@interface NSApplication (NSApplicationExtensionsFromSierra) //{
+
+// new methods
+	- (IBAction)
+	toggleTouchBarCustomizationPalette:(id)_;
+
+@end //}
+
+
+@interface NSResponder (NSResponderExtensionsFromSierra) //{
+
+// new methods
+	- (void)
+	setTouchBar:(NSTouchBar*)_;
+	- (NSTouchBar*)
+	touchBar;
+
+@end //}
+
+
+#endif // MAC_OS_X_VERSION_10_12_1
+
+
 
 #pragma mark Public Methods
 
@@ -223,34 +274,42 @@ id// NSUserNotification*
 	CocoaFuture_AllocInitUserNotification				();
 
 id// NSVisualEffectView*
-	CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect				inFrame);
+	CocoaFuture_AllocInitVisualEffectViewWithFrame		(CGRect);
 
 id// NSXPCConnection*
-	CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*			inName);
+	CocoaFuture_AllocInitXPCConnectionWithServiceName	(NSString*);
 
 id// NSUserNotificationCenter*
 	CocoaFuture_DefaultUserNotificationCenter			();
 
+void
+	CocoaFuture_TouchBarSetCustomizationIdentifier		(NSTouchBar*,
+														 NSTouchBarCustomizationIdentifier);
+
+void
+	CocoaFuture_TouchBarSetCustomizationAllowedItemIdentifiers	(NSTouchBar*,
+														 NSArray*);
+
 id
-	CocoaFuture_XPCConnectionRemoteObjectProxy			(NSXPCConnection*	inConnection,
-														 void (^inHandler)(NSError*));
+	CocoaFuture_XPCConnectionRemoteObjectProxy			(NSXPCConnection*,
+														 void (^)(NSError*));
 
 void
-	CocoaFuture_XPCConnectionResume						(NSXPCConnection*	inConnection);
+	CocoaFuture_XPCConnectionResume						(NSXPCConnection*);
 
 void
-	CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*	inConnection,
-														 void				(^inBlock)());
+	CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*,
+														 void (^)());
 
 void
-	CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*	inConnection,
-														 void				(^inBlock)());
+	CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*,
+														 void (^)());
 
 void
-	CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*	inConnection,
-														 NSXPCInterface*	inInterface);
+	CocoaFuture_XPCConnectionSetRemoteObjectInterface	(NSXPCConnection*,
+														 NSXPCInterface*);
 
 id// NSXPCInterface*
-	CocoaFuture_XPCInterfaceWithProtocol				(Protocol*			inProtocol);
+	CocoaFuture_XPCInterfaceWithProtocol				(Protocol*);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

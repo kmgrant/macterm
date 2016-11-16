@@ -787,6 +787,7 @@ init
 		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->windowMinSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->extraWindowContentSize = NSZeroSize; // set later
+		self->_touchBarController = nil; // created on demand
 		self->activePanel = nil;
 		self->_searchText = [@"" copy];
 		
@@ -824,6 +825,7 @@ dealloc
 																kPreferences_ChangeContextName);
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
 																kPreferences_ChangeNumberOfContexts);
+	[_touchBarController release];
 	[preferenceChangeListener release];
 	[currentPreferenceCollectionIndexes release];
 	[currentPreferenceCollections release];
@@ -1754,6 +1756,50 @@ toolbarSelectableItemIdentifiers:(NSToolbar*)	toolbar
 {
 	return [self toolbarAllowedItemIdentifiers:toolbar];
 }// toolbarSelectableItemIdentifiers:
+
+
+#pragma mark NSResponder
+
+
+/*!
+On OS 10.12.1 and beyond, returns a Touch Bar to display
+at the top of the hardware keyboard (when available) or
+in any Touch Bar simulator window.
+
+This method should not be called except by the OS.
+
+(2016.11)
+*/
+- (NSTouchBar*)
+makeTouchBar
+{
+	NSTouchBar*		result = nil;
+	
+	
+	if (nil == _touchBarController)
+	{
+		_touchBarController = [[TouchBar_Controller alloc] initWithNibName:@"PrefsWindowTouchBarCocoa"];
+		_touchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDPrefsWindowMain;
+		_touchBarController.customizationAllowedItemIdentifiers =
+		@[
+			kConstantsRegistry_TouchBarItemIDFind,
+			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
+							NSTouchBarItemIdentifierFlexibleSpace),
+			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
+							NSTouchBarItemIdentifierFixedSpaceSmall),
+			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
+							NSTouchBarItemIdentifierFixedSpaceLarge)
+		];
+		// (NOTE: default item identifiers are set in the NIB)
+	}
+	
+	// the controller should force the NIB to load and define
+	// the Touch Bar, using the settings above and in the NIB
+	result = _touchBarController.touchBar;
+	assert(nil != result);
+	
+	return result;
+}// makeTouchBar
 
 
 #pragma mark NSWindowController

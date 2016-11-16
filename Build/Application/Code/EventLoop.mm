@@ -63,6 +63,7 @@
 #import <MemoryBlocks.h>
 #import <RegionUtilities.h>
 #import <StringUtilities.h>
+#import <TouchBar.objc++.h>
 
 // application includes
 #import "Commands.h"
@@ -143,7 +144,7 @@ CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventT
 																		receiveWindowActivated,
 																		CarbonEventSetInClass
 																			(CarbonEventClass(kEventClassWindow),
-																				kEventWindowActivated),
+																				kEventWindowActivated, kEventWindowDeactivated),
 																		nullptr/* user data */);
 Console_Assertion					_4(gCarbonEventWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
 EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
@@ -1050,8 +1051,9 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Embellishes "kEventWindowActivated" of "kEventClassWindow"
-by resetting the mouse cursor.
+Embellishes "kEventWindowActivated" and "kEventWindowActivated"
+of "kEventClassWindow" by resetting the mouse cursor and
+updating the Touch Bar.
 
 (3.1)
 */
@@ -1066,9 +1068,17 @@ receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	
 	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowActivated);
+	assert((kEventKind == kEventWindowActivated) || (kEventKind == kEventWindowDeactivated));
 	
-	[[NSCursor arrowCursor] set];
+	if (kEventKind == kEventWindowActivated)
+	{
+		[[NSCursor arrowCursor] set];
+	}
+	
+	// invalidate the application-level Touch Bar so that the
+	// terminal window Touch Bar can always be activated
+	// (TEMPORARY; only needed until Carbon transition is done)
+	CocoaExtensions_PerformSelectorOnTargetWithValue(@selector(setTouchBar:), NSApp, nil);
 	
 	// IMPORTANT: Do not interfere with this event.
 	result = eventNotHandledErr;
@@ -1123,6 +1133,62 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 #pragma mark -
 @implementation EventLoop_AppObject //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2016.11)
+*/
+- (id)
+init
+{
+	self = [super init];
+	if (nil != self)
+	{
+		_terminalWindowTouchBarController = nil; // created on demand
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2016.11)
+*/
+- (void)
+dealloc
+{
+	[_terminalWindowTouchBarController release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Actions
+
+
+/*!
+TEMPORARY.
+
+This implements an action that needs to be forwarded to
+a Carbon window by starting from an object known to
+Interface Builder.  In this case, the Commands_Executor
+forwarding class knows how to find the active Carbon
+window correctly (whereas “first responder” may not).
+
+To be removed when Carbon windows are retired.
+
+(2016.11)
+*/
+- (IBAction)
+toggleFullScreen:(id)	sender
+{
+	[[Commands_Executor sharedExecutor] toggleFullScreen:sender];
+}// toggleFullScreen:
 
 
 #pragma mark NSApplication
@@ -1250,6 +1316,82 @@ contextInfo:(void*)				aContext
 							didPresentSelector:aDidPresentSelector contextInfo:aContext];
 	}
 }// presentError:modalForWindow:delegate:didPresentSelector:contextInfo:
+
+
+#pragma mark NSResponder
+
+
+/*!
+On OS 10.12.1 and beyond, returns a Touch Bar to display
+at the top of the hardware keyboard (when available) or
+in any Touch Bar simulator window.
+
+This method should not be called except by the OS.
+
+(2016.11)
+*/
+- (NSTouchBar*)
+makeTouchBar
+{
+	NSTouchBar*		result = nil;
+	
+	
+	// in order to be able to return a Touch Bar for a Carbon window,
+	// the application instance acts as the first responder in the
+	// chain and returns an appropriate bar (this approach is
+	// temporary; when using a pure Cocoa terminal window, it will
+	// make more sense to move the Touch Bar to that controller)
+	if (nullptr != TerminalWindow_ReturnFromMainWindow())
+	{
+		if (nil == _terminalWindowTouchBarController)
+		{
+			_terminalWindowTouchBarController = [[TouchBar_Controller alloc] initWithNibName:@"TerminalWindowTouchBarCocoa"];
+			_terminalWindowTouchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDTerminalWindowMain;
+			_terminalWindowTouchBarController.customizationAllowedItemIdentifiers =
+			@[
+				kConstantsRegistry_TouchBarItemIDFind,
+				kConstantsRegistry_TouchBarItemIDFullScreen,
+				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
+								NSTouchBarItemIdentifierFlexibleSpace),
+				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
+								NSTouchBarItemIdentifierFixedSpaceSmall),
+				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
+								NSTouchBarItemIdentifierFixedSpaceLarge)
+			];
+			// (NOTE: default item identifiers are set in the NIB)
+		}
+		
+		// the controller should force the NIB to load and define
+		// the Touch Bar, using the settings above and in the NIB
+		result = _terminalWindowTouchBarController.touchBar;
+		assert(nil != result);
+	}
+	else
+	{
+		if (nil == _applicationTouchBarController)
+		{
+			_applicationTouchBarController = [[TouchBar_Controller alloc] initWithNibName:@"ApplicationTouchBarCocoa"];
+			_applicationTouchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDApplicationMain;
+			_applicationTouchBarController.customizationAllowedItemIdentifiers =
+			@[
+				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
+								NSTouchBarItemIdentifierFlexibleSpace),
+				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
+								NSTouchBarItemIdentifierFixedSpaceSmall),
+				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
+								NSTouchBarItemIdentifierFixedSpaceLarge)
+			];
+			// (NOTE: default item identifiers are set in the NIB)
+		}
+		
+		// the controller should force the NIB to load and define
+		// the Touch Bar, using the settings above and in the NIB
+		result = _applicationTouchBarController.touchBar;
+		assert(nil != result);
+	}
+	
+	return result;
+}// makeTouchBar
 
 
 @end //}

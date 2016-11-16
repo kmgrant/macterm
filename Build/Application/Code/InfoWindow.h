@@ -47,6 +47,11 @@
 #endif
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#ifdef __OBJC__
+#	include <TouchBar.objc++.h>
+#endif
+
 // application includes
 #include "SessionRef.typedef.h"
 
@@ -92,6 +97,8 @@ changes to an interface declared in a ".mm" file.
 @public
 	IBOutlet NSTableView*	infoTable;
 	NSMutableArray*			dataArray;
+@private
+	TouchBar_Controller*		_touchBarController;
 }
 
 // class methods
