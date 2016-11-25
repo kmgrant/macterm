@@ -200,39 +200,9 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		}
 		break;
 	
-	case kURL_InternetLocationApplicationSupportEMail:
-		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
-									(AppResources_ReturnBundleForInfo(), CFSTR("MySupportEMailURL")));
-		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
-		{
-			// success!
-			result = true;
-		}
-		break;
-	
 	case kURL_InternetLocationApplicationUpdatesPage:
 		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
 									(AppResources_ReturnBundleForInfo(), CFSTR("MyUpdatesURL")));
-		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
-		{
-			// success!
-			result = true;
-		}
-		break;
-	
-	case kURL_InternetLocationSourceCodeLicense:
-		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
-									(AppResources_ReturnBundleForInfo(), CFSTR("MySourceCodeLicenseURL")));
-		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
-		{
-			// success!
-			result = true;
-		}
-		break;
-	
-	case kURL_InternetLocationProjectPage:
-		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
-									(AppResources_ReturnBundleForInfo(), CFSTR("MyProjectURL")));
 		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!

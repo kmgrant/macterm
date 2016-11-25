@@ -702,23 +702,49 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			// whether it would work long-term.  Opening a web page is simple, is
 			// pretty fast, is something the user can bookmark in other ways and
 			// is easy to maintain, so that is the final solution.
-			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationUpdatesPage);
+			if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationUpdatesPage))
+			{
+				Sound_StandardAlert();
+			}
 			break;
 		
 		case kCommandURLHomePage:
-			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage);
+			if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage))
+			{
+				Sound_StandardAlert();
+			}
 			break;
 		
 		case kCommandURLAuthorMail:
-			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationApplicationSupportEMail);
-			break;
-		
-		case kCommandURLSourceLicense:
-			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceCodeLicense);
-			break;
-		
-		case kCommandURLProjectStatus:
-			UNUSED_RETURN(Boolean)URL_OpenInternetLocation(kURL_InternetLocationProjectPage);
+			{
+				CFStringRef				appVersionCFString = CFUtilities_StringCast
+																(CFBundleGetValueForInfoDictionaryKey
+																	(AppResources_ReturnBundleForInfo(),
+																		CFSTR("CFBundleVersion")));
+				NSMutableDictionary*	appEnvDict = [[[NSMutableDictionary alloc] initWithCapacity:1/* arbitrary */]
+														autorelease];
+				NSRunningApplication*	runHandle = nil;
+				CFErrorRef				errorRef = nullptr;
+				
+				
+				// MUST correspond to environment variables expected
+				// by the Bug Reporter internal application (also,
+				// every value must be an NSString* type)
+				[appEnvDict setValue:@"1" forKey:@"BUG_REPORTER_MACTERM_COMMENT_EMAIL_ONLY"];
+				if (nullptr != appVersionCFString)
+				{
+					[appEnvDict setValue:BRIDGE_CAST(appVersionCFString, NSString*) forKey:@"BUG_REPORTER_MACTERM_VERSION"];
+				}
+				runHandle = AppResources_LaunchBugReporter(BRIDGE_CAST(appEnvDict, CFDictionaryRef), &errorRef);
+				if (nullptr != errorRef)
+				{
+					[NSApp presentError:BRIDGE_CAST(errorRef, NSError*)];
+				}
+				else
+				{
+					// success (E-mail application should have opened)
+				}
+			}
 			break;
 		
 		//case kCommandNewSessionLoginShell:

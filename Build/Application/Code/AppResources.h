@@ -65,6 +65,10 @@ Boolean
 																		 FSRef&							outFSRef);
 
 NSRunningApplication*
+	AppResources_LaunchBugReporter										(CFDictionaryRef,
+																		 CFErrorRef*);
+
+NSRunningApplication*
 	AppResources_LaunchPrintPreview										(CFDictionaryRef,
 																		 CFErrorRef*);
 

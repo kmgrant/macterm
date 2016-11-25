@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161125',
     '20161115',
     '20161031',
     '20161028',
@@ -562,6 +563,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161125': [
+        'The "Provide MacTerm Feedback" command (which launches a URL to help you compose E-mail) now tries to include the OS version and application version automatically.  In addition, the E-mail trigger is now performed by a separate internal application that is sandboxed.',
+    ],
     '20161115': [
         'Preferences window has rudimentary (and experimental) support for the Touch Bar, initially only for Search.',
         'Terminal windows have rudimentary (and experimental) support for the Touch Bar, initially only for Search and Full Screen.',

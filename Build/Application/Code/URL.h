@@ -56,10 +56,7 @@ Internet locations that are special to MacTerm.
 enum URL_InternetLocation
 {
 	kURL_InternetLocationApplicationHomePage		= '.com',	//!< home page of this program
-	kURL_InternetLocationApplicationSupportEMail	= 'Mail',	//!< E-mail address for support
-	kURL_InternetLocationApplicationUpdatesPage		= 'Updt',	//!< information on updates for this version
-	kURL_InternetLocationSourceCodeLicense			= 'CGPL',	//!< GNU General Public License
-	kURL_InternetLocationProjectPage				= 'Proj'	//!< project page, for downloading source code
+	kURL_InternetLocationApplicationUpdatesPage		= 'Updt'	//!< information on updates for this version
 };
 
 enum URL_Type

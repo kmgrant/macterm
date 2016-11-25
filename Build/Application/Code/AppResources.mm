@@ -118,6 +118,34 @@ AppResources_GetArbitraryResourceFileFSRef	(CFStringRef	inName,
 
 /*!
 Asynchronously launches a separate application that
+allows the user to send E-mail to the authors.  A
+new instance is produced each time, allowing multiple
+reports to exist simultaneously in the background.
+
+Environment variables set in the dictionary should
+match those used by the “Bug Reporter” internal
+application to customize the behavior (such as the
+presence or absence of a crash-reporting alert).
+
+See AppResources_LaunchResourceApplication() for
+more on the remaining parameters and return value.
+
+(2016.11)
+*/
+NSRunningApplication*
+AppResources_LaunchBugReporter	(CFDictionaryRef		inEnvironment,
+								 CFErrorRef*			outErrorOrNull)
+{
+	NSRunningApplication*	result = AppResources_LaunchResourceApplication
+										(CFSTR("BugReporter.app"), inEnvironment, outErrorOrNull);
+	
+	
+	return result;
+}// LaunchBugReporter
+
+
+/*!
+Asynchronously launches a separate application that
 displays a preview of terminal text and allows the
 user to print.  A new instance is produced each time,
 allowing multiple previews to exist simultaneously

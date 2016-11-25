@@ -119,8 +119,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandCheckForUpdates					'ChUp'
 #define kCommandURLHomePage						'.com'
 #define kCommandURLAuthorMail					'Mail'
-#define kCommandURLSourceLicense				'CGPL'
-#define kCommandURLProjectStatus				'Proj'
 
 // File menu
 #define kCommandNewSessionDefaultFavorite		'NSDF'

@@ -47,7 +47,9 @@
 
 // library includes
 #include <CFRetainRelease.h>
-#include <GrowlSupport.h>
+#if ! CONSOLE_EXCLUDES_GROWL_SUPPORT
+#	include <GrowlSupport.h>
+#endif
 #include <ListenerModel.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
@@ -262,6 +264,7 @@ void
 Console_WriteScriptError	(CFStringRef		inTitle,
 							 CFStringRef		inDescription)
 {
+#if ! CONSOLE_EXCLUDES_GROWL_SUPPORT
 	if (GrowlSupport_IsAvailable())
 	{
 		CFStringRef		growlNotificationName = CFSTR("Script error"); // MUST match "Growl Registration Ticket.growlRegDict"
@@ -270,6 +273,7 @@ Console_WriteScriptError	(CFStringRef		inTitle,
 		GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways, growlNotificationName, inTitle, inDescription);
 	}
 	else
+#endif
 	{
 		char const*		cStringTitle = CFStringGetCStringPtr(inTitle, kCFStringEncodingUTF8);
 		

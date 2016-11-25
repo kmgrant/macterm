@@ -27,22 +27,17 @@
 
 ###############################################################*/
 
-#import "UniversalDefines.h"
-
-// standard-C++ includes
-#import <iostream>
+#import <UniversalDefines.h>
 
 // Mac includes
 #import <AppKit/AppKit.h>
-#import <Cocoa/Cocoa.h>
-#import <CoreFoundation/CoreFoundation.h>
 
 // library includes
-#import <CFUtilities.h>
+#import <Console.h>
 
 
 
-#pragma mark Internal Method Prototypes
+#pragma mark Types
 
 /*!
 The delegate for NSApplication.
@@ -64,116 +59,140 @@ Main entry point.
 */
 int
 main	(int			argc,
-		 const char*	argv[])
+		 char const*	argv[])
 {
 	return NSApplicationMain(argc, argv);
 }
 
 
-#pragma mark Internal Methods
-
-@implementation BugReporterAppDelegate
+#pragma mark -
+@implementation BugReporterAppDelegate //{
 
 
 #pragma mark NSApplicationDelegate
 
+
+/*!
+Effectively the main entry point; called by the OS when
+the launch is complete.
+
+(4.0)
+*/
 - (void)
 applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
 #pragma unused(aNotification)
-
-	NSAlert*			alertBox = [[[NSAlert alloc] init] autorelease];
-	NSString*			button1 = NSLocalizedString(@"Compose E-Mail", @"button label");
-	NSString*			button2 = NSLocalizedString(@"Quit Without Reporting", @"button label");
-	NSString*			messageText = NSLocalizedString
-										(@"MacTerm has quit because of a software defect.  Please notify the authors so this can be fixed.",
-											@"main message");
-	NSString*			helpText = NSLocalizedString
-									(@"A starting point for your mail message will be automatically created for you.",
-										@"main help text");
-	NSModalResponse		clickedButton = NSAlertFirstButtonReturn;
-	BOOL				sendMail = NO;
+	NSString*	appVersionString = nil;
+	BOOL		isCrash = NO;
+	BOOL		showBugAlert = NO;
+	BOOL		sendMail = NO;
 	
 	
-	// bring this process to the front
-	[NSApp activateIgnoringOtherApps:YES];
-	
-	// display an error to the user, with options
-	alertBox.messageText = messageText;
-	alertBox.informativeText = helpText;
-	UNUSED_RETURN(NSButton*)[alertBox addButtonWithTitle:button1];
-	UNUSED_RETURN(NSButton*)[alertBox addButtonWithTitle:button2];
-	clickedButton = [alertBox runModal];
-	switch (clickedButton)
+	// check environment variables for special action requests
+	// and information (otherwise take no action); some actions
+	// below may be able to adapt when information is missing
 	{
-	case NSAlertSecondButtonReturn:
-		// quit without doing anything
-		break;
-	
-	case NSAlertFirstButtonReturn:
-	default:
-		// compose an E-mail with details on the error
-		sendMail = YES;
-		break;
+		char const*		varValue; // set and reused below
+		
+		
+		varValue = getenv("BUG_REPORTER_MACTERM_COMMENT_EMAIL_ONLY");
+		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+		{
+			// launching process wants to proceed directly to E-mail
+			// without displaying any local user interface
+			Console_WriteLine("Received request to send E-mail.");
+			showBugAlert = NO;
+			sendMail = YES;
+			isCrash = NO;
+		}
+		
+		varValue = getenv("BUG_REPORTER_MACTERM_BUG");
+		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+		{
+			// launching process wants to report some kind of problem
+			Console_WriteLine("Received defect notification from parent.");
+			showBugAlert = YES;
+			varValue = getenv("BUG_REPORTER_MACTERM_CRASH");
+			if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+			{
+				// launching process has definitely detected a crash
+				Console_WriteLine("Received crash notification from parent.");
+				isCrash = YES;
+			}
+		}
+		
+		varValue = getenv("BUG_REPORTER_MACTERM_VERSION");
+		if (nullptr != varValue)
+		{
+			Console_WriteLine("Received version information.");
+			appVersionString = [NSString stringWithUTF8String:varValue];
+		}
 	}
 	
-	// if appropriate, ask a mail program to compose a new E-mail
+	if (showBugAlert)
+	{
+		NSAlert*			alertBox = [[[NSAlert alloc] init] autorelease];
+		NSString*			button1 = NSLocalizedString(@"Compose E-Mail", @"button label");
+		NSString*			button2 = NSLocalizedString(@"Quit Without Reporting", @"button label");
+		NSString*			messageText = ((isCrash)
+											? NSLocalizedString
+												(@"MacTerm has quit because of a software defect.  Please report this so the problem can be fixed.",
+													@"crash message")
+											: NSLocalizedString
+												(@"MacTerm has detected a software defect.  Please report this so the problem can be fixed.",
+													@"regular bug message"));
+		NSString*			helpText = NSLocalizedString
+										(@"A starting point for your mail message will be automatically created for you.",
+											@"main help text");
+		NSModalResponse		clickedButton = NSAlertFirstButtonReturn;
+		
+		
+		// bring this process to the front
+		[NSApp activateIgnoringOtherApps:YES];
+		
+		// display an error to the user, with options
+		alertBox.messageText = messageText;
+		alertBox.informativeText = helpText;
+		UNUSED_RETURN(NSButton*)[alertBox addButtonWithTitle:button1];
+		UNUSED_RETURN(NSButton*)[alertBox addButtonWithTitle:button2];
+		clickedButton = [alertBox runModal];
+		switch (clickedButton)
+		{
+		case NSAlertSecondButtonReturn:
+			// quit without doing anything
+			break;
+		
+		case NSAlertFirstButtonReturn:
+		default:
+			// compose an E-mail with details on the error
+			sendMail = YES;
+			break;
+		}
+	}
+	
+	// if appropriate, ask a mail program to compose a new E-mail;
+	// note that this can be a direct result of multiple scenarios
+	// above so it should be handled carefully (as the results can
+	// vary slightly, e.g. showing different messages)
 	if (sendMail)
 	{
-		CFStringRef		theURLCFString = CFUtilities_StringCast
-											(CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(),
-												CFSTR("BugReporterMailURLToOpen")));
-		CFBundleRef		buggyAppBundle = nullptr;
+		NSString*		mailKey = ((isCrash)
+									? @"BugReporterMailURLForCrash"
+									: ((showBugAlert)
+										? @"BugReporterMailURLForDefect"
+										: @"BugReporterMailURLForComment"));
+		id				dictValueMailURLString = [[NSBundle mainBundle] objectForInfoDictionaryKey:mailKey];
+		NSString*		mailURLString = nil; // set below
 		unsigned int	failureMode = 0;
 		BOOL			failedToSubmitReport = NO;
 		
 		
-		// “load” the buggy application bundle, which assumes that this app
-		// is physically located within the Resources folder of that bundle
-		// (so in particular, THIS WILL NOT WORK IN TESTING unless you
-		// PHYSICALLY MOVE the built executable into the Resources directory
-		// of a built application bundle!!!)
-		{
-			// create “...Foo.app/Contents/Resources/BugReporter.app”
-			CFURLRef	bugReporterBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-			
-			
-			if (nullptr != bugReporterBundleURL)
-			{
-				// create “...Foo.app/Contents/Resources”
-				CFURLRef	buggyAppBundleResourcesURL = CFURLCreateCopyDeletingLastPathComponent
-															(kCFAllocatorDefault, bugReporterBundleURL);
-				
-				
-				if (nullptr != buggyAppBundleResourcesURL)
-				{
-					// create “...Foo.app/Contents”
-					CFURLRef	buggyAppBundleContentsURL = CFURLCreateCopyDeletingLastPathComponent
-															(kCFAllocatorDefault, buggyAppBundleResourcesURL);
-					
-					
-					if (nullptr != buggyAppBundleContentsURL)
-					{
-						CFURLRef	buggyAppBundleURL = CFURLCreateCopyDeletingLastPathComponent
-														(kCFAllocatorDefault, buggyAppBundleContentsURL);
-						
-						
-						if (nullptr != buggyAppBundleURL)
-						{
-							buggyAppBundle = CFBundleCreate(kCFAllocatorDefault, buggyAppBundleURL);
-							CFRelease(buggyAppBundleURL), buggyAppBundleURL = nullptr;
-						}
-						CFRelease(buggyAppBundleContentsURL), buggyAppBundleContentsURL = nullptr;
-					}
-					CFRelease(buggyAppBundleResourcesURL), buggyAppBundleResourcesURL = nullptr;
-				}
-				CFRelease(bugReporterBundleURL), bugReporterBundleURL = nullptr;
-			}
-		}
+		assert([dictValueMailURLString isKindOfClass:NSString.class]);
+		mailURLString = STATIC_CAST(dictValueMailURLString, NSString*);
 		
 		// launch the bug report URL given in this application’s Info.plist
 		// (most likely a mail URL that creates a new E-mail message)
-		if (nullptr == theURLCFString)
+		if (nil == mailURLString)
 		{
 			failedToSubmitReport = YES;
 			failureMode = 1;
@@ -186,12 +205,10 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 			// string, with the expectation that it will end up in the body.
 			// Note that this extra information is NOT localized because I
 			// want to be able to read it!
-			CFMutableStringRef		modifiedURLCFString = CFStringCreateMutableCopy
-															(kCFAllocatorDefault, CFStringGetLength(theURLCFString),
-																theURLCFString);
+			NSMutableString*	modifiedURLString = [mailURLString mutableCopy];
 			
 			
-			if (nullptr == modifiedURLCFString)
+			if (nil == modifiedURLString)
 			{
 				failedToSubmitReport = YES;
 				failureMode = 2;
@@ -205,10 +222,8 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 			#define BUG_REPORT_INCLUDES_APP_VERSION		1
 				
 			#if BUG_REPORT_INCLUDES_PREAMBLE
-				CFStringAppendCString
-					(modifiedURLCFString,
-						"%0D---%0D%0DThe%20following%20information%20will%20help%20the%20authors%20with%20debugging.%20%20"
-						"Please%20keep%20it%20in%20this%20message.%0D", kCFStringEncodingUTF8);
+				[modifiedURLString appendString:@"%0D---%0D%0DThe%20following%20information%20helps%20to%20solve%20problems%20and%20answer%20questions.%20%20"
+													"Please%20keep%20it%20in%20this%20message.%0D"];
 			#endif
 				
 				// generate OS version information
@@ -220,43 +235,35 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 															stringByAddingPercentEncodingWithAllowedCharacters:allowedChars];
 					
 					
-					CFStringAppend(modifiedURLCFString, CFSTR("%20%20Mac%20OS%20X%20"));
-					CFStringAppend(modifiedURLCFString, BRIDGE_CAST(versionString, CFStringRef));
-					CFStringAppend(modifiedURLCFString, CFSTR("%0D"));
+					[modifiedURLString appendString:@"%20%20OS%20"];
+					[modifiedURLString appendString:versionString];
+					[modifiedURLString appendString:@"%0D"];
 				}
 			#endif
 				
 				// generate application version information
 				// (again, this must be in URL-encoded format!)
 			#if BUG_REPORT_INCLUDES_APP_VERSION
-				// NOTE: again, as mentioned above, this will only be defined if the
-				// BugReporter is physically located in the bundle's "Contents/Resources"
-				if (nullptr != buggyAppBundle)
+				// depends on environment given above
+				if (nil == appVersionString)
 				{
-					CFStringRef		appVersionCFString = CFUtilities_StringCast
-															(CFBundleGetValueForInfoDictionaryKey
-																(buggyAppBundle, CFSTR("CFBundleVersion")));
-					
-					
-					if (nullptr == appVersionCFString)
-					{
-						CFStringAppend(modifiedURLCFString, CFSTR("%20%20Could%20not%20find%20application%20version!%0D"));
-					}
-					else
-					{
-						CFStringAppend(modifiedURLCFString, CFSTR("%20%20Application%20Version%20"));
-						CFStringAppend(modifiedURLCFString, appVersionCFString);
-						CFStringAppend(modifiedURLCFString, CFSTR("%0D"));
-					}
+					[modifiedURLString appendString:@"%20%20Could%20not%20find%20application%20version!%0D"];
+				}
+				else
+				{
+					[modifiedURLString appendString:@"%20%20Application%20Version%20"];
+					[modifiedURLString appendString:appVersionString];
+					[modifiedURLString appendString:@"%0D"];
 				}
 			#endif
+				[modifiedURLString appendString:@"%0D---%0D%0D"];
 				
 				// finally, create a URL out of the modified URL string, and open it!
 				{
-					CFURLRef	bugReporterURL = CFURLCreateWithString(kCFAllocatorDefault, modifiedURLCFString, nullptr/* base */);
+					NSURL*	mailURL = [NSURL URLWithString:modifiedURLString];
 					
 					
-					if (nullptr == bugReporterURL)
+					if (nil == mailURL)
 					{
 						failedToSubmitReport = YES;
 						failureMode = 3;
@@ -266,48 +273,49 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 						// launch mail program with a new message pointed to the bug address
 						// and containing all of the special information above (that is, if
 						// the user’s mail program respects all mailto: URL specifications!)
-						OSStatus	error = LSOpenCFURLRef(bugReporterURL, nullptr/* launched URL */);
+						NSRunningApplication*			launchedApp = nil;
+						NSDictionary< NSString*, id >*	launchConfigDict = @{};
+						NSError*						error = nil;
 						
 						
-						if (noErr != error)
+						launchedApp = [[NSWorkspace sharedWorkspace]
+										openURL:mailURL
+												options:(NSWorkspaceLaunchWithErrorPresentation |
+															NSWorkspaceLaunchInhibitingBackgroundOnly |
+															NSWorkspaceLaunchAsync)
+												configuration:launchConfigDict
+												error:&error];
+						if ((nil == launchedApp) || (nil != error))
 						{
 							failedToSubmitReport = YES;
 							failureMode = 4;
+							
+							if (nil != error)
+							{
+								// NOTE: since "NSWorkspaceLaunchWithErrorPresentation" is
+								// also given in the options above, it is possible for both
+								// the basic error message and a system-provided one to
+								// appear; as a contrived example, if the URL type were
+								// something bogus and unrecognized instead of "mailto:",
+								// the error presented below would be something like “unable
+								// to open file” but the system would pop up an elaborate
+								// alert allowing the user to search the App Store instead
+								[NSApp presentError:error];
+							}
 						}
-						CFRelease(bugReporterURL), bugReporterURL = nullptr;
 					}
 				}
-				CFRelease(modifiedURLCFString), modifiedURLCFString = nullptr;
+				
+				[modifiedURLString release], modifiedURLString = nil;
 			}
-			//CFRelease(theURLCFString), theURLCFString = nullptr; // not released because CFBundleGetValueForInfoDictionaryKey() does not make a copy
 		}
 		
-		if (nullptr != buggyAppBundle)
-		{
-			CFRelease(buggyAppBundle), buggyAppBundle = nullptr;
-		}
-		
-		// if even this fails, the user can’t report bugs with this program!
+		// there is a problem with the report and/or E-mail steps;
+		// depending on the issue, a more descriptive error alert
+		// may also have been presented above (or more logging)
 		if (failedToSubmitReport)
 		{
-			// display an error
-			NSAlert*	errorBox = [[[NSAlert alloc] init] autorelease];
-			
-			
-			button1 = NSLocalizedString(@"Quit Without Reporting", @"button label");
-			messageText = NSLocalizedString
-							(@"Unfortunately there has been a problem reporting this bug automatically.",
-								@"submission failure message");
-			helpText = NSLocalizedString
-						(@"Please visit the main web site to report this issue, instead.",
-							@"submission failure help message");
-			NSLog(@"Failed to submit bug report in the normal fashion (internal failure mode: %d).", failureMode);
-			
-			errorBox.messageText = messageText;
-			errorBox.informativeText = helpText;
-			UNUSED_RETURN(NSButton*)[errorBox addButtonWithTitle:button1];
-			
-			UNUSED_RETURN(int)[errorBox runModal];
+			Console_Warning(Console_WriteValue, "Failed to submit bug report in the normal fashion; internal failure mode", failureMode);
 		}
 	}
 	
@@ -316,6 +324,6 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 }// applicationDidFinishLaunching:
 
 
-@end // BugReporterAppDelegate
+@end //} BugReporterAppDelegate
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

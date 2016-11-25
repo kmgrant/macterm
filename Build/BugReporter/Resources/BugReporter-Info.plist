@@ -2,8 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>BugReporterMailURLToOpen</key>
-	<string>mailto:kmg@mac.com?subject=MacTerm%20Crash%20Report&amp;body=Please%20describe%20the%20problem%20below.%0D%0D</string>
+	<key>BugReporterMailURLForComment</key>
+	<string>mailto:kmg@mac.com?subject=MacTerm&amp;body=</string>
+	<key>BugReporterMailURLForCrash</key>
+	<string>mailto:kmg@mac.com?subject=MacTerm%20Crash%20Report&amp;body=Please%20describe,%20in%20as%20much%20detail%20as%20possible,%20what%20was%20happening%20just%20before%20MacTerm%20quit.%0D%0D</string>
+	<key>BugReporterMailURLForDefect</key>
+	<string>mailto:kmg@mac.com?subject=MacTerm%20Defect&amp;body=Please%20describe%20the%20problem%20in%20detail.%0D%0D</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
