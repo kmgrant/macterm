@@ -67,6 +67,65 @@ to use bindings and controllers for this purpose failed...
 
 
 /*!
+This protocol is not meant to be implemented; it exists only
+to ensure that the required selectors are known to Objective-C
+(eliminating warnings for checking them).  The selectors are
+passed to "control:textView:doCommandBySelector:"; see
+"CommandLine_TerminalLikeComboBoxDelegate".
+*/
+@protocol __CommandLine_TerminalLikeComboBoxDelegateMethods //{
+
+	// send session’s designated backspace or delete character;
+	// this should not be performed unless the field is empty!
+	- (void)
+	commandLineSendDeleteCharacter:(id)_;
+
+	// send escape character without clearing local command line
+	- (void)
+	commandLineSendEscapeCharacter:(id)_;
+
+	// send local command line text (no new-line), then control-D;
+	// this causes most shells to page-complete or log out, and
+	// causes most other programs to end multi-line input/output
+	- (void)
+	commandLineSendTextThenEndOfFile:(id)_;
+
+	// send local command line text to session and then send the
+	// session’s designated new-line character or sequence
+	- (void)
+	commandLineSendTextThenNewLine:(id)_;
+
+	// send local command line text to session WITHOUT any new-line
+	- (void)
+	commandLineSendTextThenNothing:(id)_;
+
+	// send local command line text (no new-line), then a Tab; this
+	// causes most shells to “complete” a command or file name, and
+	// causes most editors to insert a tab character (note that the
+	// user must use Shift-Tab to change local keyboard focus)
+	- (void)
+	commandLineSendTextThenTab:(id)_;
+
+	// send control-L without clearing local command line (this
+	// typically causes the terminal to erase all lines and move
+	// the cursor to home)
+	- (void)
+	commandLineTerminalClear:(id)_;
+
+@end // }
+
+
+/*!
+The "control:textView:doCommandBySelector:" from the parent
+protocol has been extended to also receive the selectors
+from "__CommandLine_TerminalLikeComboBoxDelegateMethods".
+*/
+@protocol CommandLine_TerminalLikeComboBoxDelegate < NSComboBoxDelegate > //{
+
+@end // }
+
+
+/*!
 A special customization of a combo box that makes it look
 more like a terminal window.  See "CommandLineCocoa.xib".
 
@@ -75,10 +134,21 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface CommandLine_TerminalLikeComboBox : NSComboBox //{
+{
+	id < CommandLine_TerminalLikeComboBoxDelegate >		delegate_;
+}
 
-// NSTextField
+// accessors
+	- (id < CommandLine_TerminalLikeComboBoxDelegate >)
+	delegate;
 	- (void)
-	textDidBeginEditing:(NSNotification*)_;
+	setDelegate:(id< CommandLine_TerminalLikeComboBoxDelegate >)_;
+
+// NSResponder
+	- (BOOL)
+	becomeFirstResponder;
+	- (BOOL)
+	performKeyEquivalent:(NSEvent*)_;
 
 @end //}
 
@@ -91,10 +161,14 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface CommandLine_PanelController : NSWindowController //{
+@interface CommandLine_PanelController : NSWindowController < CommandLine_TerminalLikeComboBoxDelegate > //{
 {
-	NSMutableString*							commandLineText; // binding
 	IBOutlet CommandLine_TerminalLikeComboBox*	commandLineField;
+	IBOutlet NSTextField*						incompleteTextField;
+@private
+	NSMutableString*							_commandLineText;
+	NSMutableArray*								_incompleteCommandFragments;
+	NSColor*									_textCursorNSColor;
 	BOOL										_multiTerminalInput;
 }
 
@@ -105,14 +179,27 @@ changes to an interface declared in a ".mm" file.
 // actions
 	- (IBAction)
 	displayHelp:(id)_;
-	- (IBAction)
-	sendText:(id)_;
 
-// accessors
+// accessors: array values
+	- (void)
+	insertObject:(NSString*)_
+	inIncompleteCommandFragmentsAtIndex:(unsigned long)_;
+	- (void)
+	removeObjectFromIncompleteCommandFragmentsAtIndex:(unsigned long)_;
+
+// accessors: general
+	@property (strong) NSString*
+	commandLineText; // binding
+	@property (assign, readonly) NSString*
+	incompleteCommandLineText; // binding; depends on "incompleteCommandFragments"
 	@property (assign) BOOL
 	multiTerminalInput;
 	- (NSColor*)
-	textColor;
+	textBackgroundNSColor;
+	@property (strong, readonly) NSColor*
+	textCursorNSColor;
+	- (NSColor*)
+	textForegroundNSColor;
 
 @end //}
 

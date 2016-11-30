@@ -2655,6 +2655,28 @@ Session_SendDataCFString	(SessionRef		inRef,
 
 
 /*!
+Sends a request to delete one composed character sequence.
+Depending upon the user preference, this may send a
+backspace or a delete character.
+
+(2016.11)
+*/
+void
+Session_SendDeleteBackward	(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	char					deleteChar[] = { 0x7F/* delete */ };
+	
+	
+	if (ptr->eventKeys.deleteSendsBackspace)
+	{
+		deleteChar[0] = 0x08; // backspace
+	}
+	Session_SendData(inRef, deleteChar, sizeof(deleteChar));
+}// SendDeleteBackward
+
+
+/*!
 Sends any data waiting to be sent (i.e. in the buffer) to the
 local or remote process for the given session immediately,
 clearing out the buffer if possible.  Returns the number of

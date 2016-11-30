@@ -514,6 +514,9 @@ CFIndex
 											 CFStringRef						inBuffer,
 											 CFIndex							inFirstCharacter = 0);
 
+void
+	Session_SendDeleteBackward				(SessionRef							inRef);
+
 SInt16
 	Session_SendFlush						(SessionRef							inRef);
 

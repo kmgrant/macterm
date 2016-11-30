@@ -124,19 +124,35 @@ notextile. <a id="helpusingthefloatingcommandline"></a><!-- must use this exact 
 
 Use Window >> Command Line to display a floating window for
  entering text locally.  Unlike typing directly into a terminal,
- nothing you type in the floating window is seen until you press
- the *Return* key (which also sends a new-line sequence to the
- terminal).
+ nothing you type in the floating window is seen until you take
+ an action to send it, such as pressing the *Return* key.
 
-You can use the down-arrow key or the mouse to access a list of
- previously-entered command lines.  The field supports the usual
- Mac editing short-cuts, such as option-left-arrow to skip to the
- previous word.  It also supports some shell-like short-cuts, such
- as control-A and control-E to jump to the beginning and end,
- respectively.
+MacTerm locally recognizes certain key sequences, many of which
+ give the Command Line window more shell-like behavior.  The
+ following table lists those special key sequences and also
+ contains reminders for other standard system sequences that
+ are often useful in the Command Line:
 
-The colors of the command line are read from your Default Format
- preferences when the window is first displayed.
+table(deftable).
+(def). |_<(key). Key or Sequence|_<(desc). Effect|
+(def). |<(key). ⏎ (Return)|(desc)<. send text from command line and then send the current session's new-line sequence; in addition, the command is captured to the history list if the command was sent without using intermediate actions such as Tab|
+(def). |<(key). ⌘⏎ (Return)|(desc)<. send text from command line but DO NOT send any new-line sequence|
+(def). |<(key). Tab|(desc)<. send text from command line and then send a tab character (@\011@)|
+(def). |<(key). ⇧-Tab|(desc)<. standard system command for changing keyboard focus in Command Line window (backwards)|
+(def). |<(key). ⌫ (Delete)|(desc)<. if the Command Line field is empty, immediately send a backspace or delete character, depending on session settings (no new-line); otherwise, locally erase one character in the Command Line field|
+(def). |<(key). ⎋ (Escape)|(desc)<. immediately send an escape character (no new-line); useful for controlling the editor mode in "vim"|
+(def). |<(key). ⌘L|(desc)<. show the Command Line window, or switch focus to it if another window is focused|
+(def). |<(key). ⌘W|(desc)<. hide the Command Line window if it has keyboard focus|
+(def). |<(key). ⌘~|(desc)<. switch focus to another window, including to/from a terminal window|
+(def). |<(key). ⇣ (down-arrow)|(desc)<. show list of previously-entered command lines|
+(def). |<(key). @⌃D@|(desc)<. send text from command line and then send end-of-file (@\004@); for most commands, this terminates multi-line input or output; in many shells, this is interpreted as "show completions" or even "log out"|
+(def). |<(key). @⌃L@|(desc)<. immediately send a control-L character (no new-line); this usually causes the terminal screen to clear; any command-line text entered so far is preserved|
+(def). |<(key). others|(desc)<. standard system editing short-cuts for movement, deletion, selection, etc. are supported; any other text is entered into the field directly|
+
+The font and colors of the command line are read from your
+ Default Format preferences when the window is first displayed.
+ (If you change these settings later, you must restart MacTerm to
+ see the new settings reflected in the Command Line.)
 
 h2. Window Operations
 

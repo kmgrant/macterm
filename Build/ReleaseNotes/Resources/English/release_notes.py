@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161129',
     '20161125',
     '20161115',
     '20161031',
@@ -563,6 +564,19 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161129': [
+        'Fixed floating Command Line window so that pressing Return when the field is empty will send the appropriate new-line sequence for the target session instead of doing nothing.',
+        'Fixed floating Command Line window to also use the font, cursor color and text-selection colors from Default Format preferences (in addition to the existing use of foreground and background colors).  This avoids contrast problems with certain default color schemes and gives the Command Line an appearance that is more consistent with a terminal.',
+        'Floating Command Line window now remaps Control-D for shell-like behavior, immediately sending all the text in the field (no new-line), followed by an end-of-file character.  This allows shells to present multi-line completions, and allows other types of terminal programs to see an end-of-file (such as to terminate multi-line input or output).',
+        'Floating Command Line window now remaps Control-L, immediately sending a control-L character (no new-line).  This usually causes the terminal screen to clear.   Any command-line text entered so far is preserved.',
+        'Floating Command Line window now remaps the Tab key for shell-like behavior, immediately sending all the text in the field (no new-line), followed by a tab character.  This allows shells to perform simple completions, and allows tabs to be typed into text editors.  Since the Tab key has been remapped, the only supported method for switching keyboard focus within the Command Line window is to go backwards with shift-Tab.',
+        'Floating Command Line window now remaps command-Return to send text immediately WITHOUT a new-line at the end.  This allows you to use the command-line window continuously no matter what the context (for instance, you can enter single-letter commands in terminal-based programs without adding a new-line).',
+        'Floating Command Line window now remaps the Delete key when the command-line field is empty, immediately sending the appropriate delete or backspace character for the target session (no new-line).  If the target terminal is running a shell or other interactive program, this should cause an equivalent backspace by one.  If the Command Line field is not empty, the deletion affects only the local field (as before).',
+        'Floating Command Line window now remaps the Escape key, immediately sending an escape character (no new-line).  If for example the running program is the "vim" editor, this would cause a mode switch.',
+        'Floating Command Line window now displays "incomplete" text alongside the edit field if any text has been sent without a new-line (such as text sent by the new Tab key mapping).  This text appears until the next Return key is pressed.',
+        'Floating Command Line window history now only stores "complete" commands (entered as one line with a Return when no "incomplete" fragments were sent previously).',
+        'Help has been updated to describe all the new key-mapping features of the Command Line.',
+    ],
     '20161125': [
         'The "Provide MacTerm Feedback" command (which launches a URL to help you compose E-mail) now tries to include the OS version and application version automatically.  In addition, the E-mail trigger is now performed by a separate internal application that is sandboxed.',
     ],
