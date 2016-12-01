@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2657" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="EventLoop_AppObject">
@@ -578,12 +578,14 @@ Gw
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Map" id="883">
                         <items>
-                            <menuItem title="Delete Sends ←" keyEquivalent="[" id="907">
+                            <menuItem title="Delete Sends ←" id="907">
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="performDeleteMapToBackspace:" target="945" id="1054"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Delete Sends ⌫" keyEquivalent="]" id="908">
+                            <menuItem title="Delete Sends ⌫" id="908">
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="performDeleteMapToDelete:" target="945" id="1055"/>
                                 </connections>
@@ -768,6 +770,16 @@ Gw
                                     <action selector="performMacroSwitchDefault:" target="945" id="1145"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Select Next Macro Set" keyEquivalent="]" id="cHd-CO-5Fz">
+                                <connections>
+                                    <action selector="performMacroSwitchNext:" target="945" id="P2J-3u-tNn"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Select Previous Macro Set" keyEquivalent="[" id="ccr-zG-ydo">
+                                <connections>
+                                    <action selector="performMacroSwitchPrevious:" target="945" id="MdM-LN-vTd"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
@@ -775,7 +787,8 @@ Gw
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Window" systemMenu="window" id="24">
                         <items>
-                            <menuItem title="Minimize" keyEquivalent="m" id="23">
+                            <menuItem title="Minimize" keyEquivalent="" id="23">
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" control="YES" command="YES"/>
                                 <connections>
                                     <action selector="performMinimizeSetup:" target="945" id="1105"/>
                                 </connections>

@@ -683,6 +683,10 @@ Actions related to macros.
 	performMacroSwitchDefault:(id)_;
 	- (IBAction)
 	performMacroSwitchByFavoriteName:(id)_;
+	- (IBAction)
+	performMacroSwitchNext:(id)_;
+	- (IBAction)
+	performMacroSwitchPrevious:(id)_;
 
 @end //}
 

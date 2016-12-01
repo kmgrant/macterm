@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20161130',
     '20161129',
     '20161125',
     '20161115',
@@ -564,6 +565,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20161130': [
+        'Added "Select Next Macro Set" and "Select Previous Macro Set" commands to the Macros menu, for easier switching between macros.',
+        'The key equivalents for Delete key remapping commands have been removed, and now command-[ and command-] are used for the new macro-switching commands.',
+    ],
     '20161129': [
         'Fixed floating Command Line window so that pressing Return when the field is empty will send the appropriate new-line sequence for the target session instead of doing nothing.',
         'Fixed floating Command Line window to also use the font, cursor color and text-selection colors from Default Format preferences (in addition to the existing use of foreground and background colors).  This avoids contrast problems with certain default color schemes and gives the Command Line an appearance that is more consistent with a terminal.',

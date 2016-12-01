@@ -291,6 +291,7 @@ ListenerModel_ListenerRef	gSessionWindowStateChangeEventListener = nullptr;
 UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
 Boolean						gCurrentQuitCancelled = false;
 UInt16						gCurrentQuitInitialSessionCount = 0;
+UInt16						gCurrentMacroSetIndex = 0;
 ListenerModel_Ref&			gCommandExecutionListenerModel	(Boolean	inDispose = false)
 {
 	static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
@@ -5259,6 +5260,96 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	
 	setItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMacroSwitchNext:(id)		sender
+{
+#pragma unused(sender)
+	std::vector< Preferences_ContextRef >	macroSets;
+	Boolean									switchOK = false;
+	
+	
+	// NOTE: this list includes “Default”
+	if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+		(false == macroSets.empty()))
+	{
+		// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		
+		
+		if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
+		{
+			gCurrentMacroSetIndex = 0;
+		}
+		else
+		{
+			++gCurrentMacroSetIndex;
+		}
+		
+		macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+		switchOK = macrosResult.ok();
+	}
+	
+	if (false == switchOK)
+	{
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMacroSwitchPrevious:(id)		sender
+{
+#pragma unused(sender)
+	std::vector< Preferences_ContextRef >	macroSets;
+	Boolean									switchOK = false;
+	
+	
+	// NOTE: this list includes “Default”
+	if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+		(false == macroSets.empty()))
+	{
+		// NOTE: this should be quite similar to "performMacroSwitchNext:"
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		
+		
+		if (gCurrentMacroSetIndex < 1)
+		{
+			gCurrentMacroSetIndex = (macroSets.size() - 1);
+		}
+		else
+		{
+			--gCurrentMacroSetIndex;
+		}
+		
+		macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+		switchOK = macrosResult.ok();
+	}
+	
+	if (false == switchOK)
+	{
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformMacroSwitchPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	
 	
 	return ((result) ? @(YES) : @(NO));
 }
