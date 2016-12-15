@@ -94,6 +94,7 @@ struct My_GenericDialog
 	NSView*							modalToView;			//!< if not nil, a view whose hierarchy is unusable while the dialog is open
 	HIWindowRef						parentCarbonWindow;		//!< legacy; if parent is a Carbon window, specify it here
 	Boolean							isAlert;				//!< this may affect the window appearance or behavior
+	Boolean							delayedKeyEquivalents;	//!< key equivalents such as the default button are only set a short time after the dialog is displayed
 	GenericDialog_ViewManager*		containerViewManager;	//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
 	Panel_ViewManager*				hostedViewManager;		//!< new-style; the Cocoa view manager for the primary user interface
 	PopoverManager_Ref				popoverManager;			//!< object to help display popover window
@@ -526,6 +527,29 @@ GenericDialog_ReturnViewManager		(GenericDialog_Ref	inDialog)
 
 
 /*!
+Specifies whether or not key equivalents for buttons
+are installed only after a short delay.
+
+This is strongly recommended for alerts that may
+display important messages or have destructive
+commands (such as alerts), as it prevents the user
+from inadvertently dismissing the window the instant
+it appears.
+
+(2016.12)
+*/
+void
+GenericDialog_SetDelayedKeyEquivalents	(GenericDialog_Ref		inDialog,
+										 Boolean				inKeyEquivalentsDelayed)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	ptr->delayedKeyEquivalents = inKeyEquivalentsDelayed;
+}// SetDelayedKeyEquivalents
+
+
+/*!
 Associates arbitrary user data with your dialog.
 Retrieve with GenericDialog_ReturnImplementation().
 
@@ -688,6 +712,7 @@ selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
 modalToView						(inModalToNSViewOrNull),
 parentCarbonWindow				(inParentCarbonWindowOrNull),
 isAlert							(inIsAlert),
+delayedKeyEquivalents			(false),
 containerViewManager			(nil), // set later if necessary
 hostedViewManager				([inHostedViewManagerOrNull retain]),
 popoverManager					(nullptr), // created as needed
@@ -832,6 +857,7 @@ localizedName:(NSString*)			aName
 localizedIcon:(NSImage*)			anImage
 viewManager:(Panel_ViewManager*)	aViewManager
 {
+	GenericDialog_Retain(aDialogRef);
 	self = [super initWithNibNamed:@"GenericDialogCocoa"
 									delegate:self
 									context:@{
@@ -839,12 +865,10 @@ viewManager:(Panel_ViewManager*)	aViewManager
 												@"localizedName": aName,
 												@"localizedIcon": anImage,
 												@"viewManager": aViewManager,
+												@"dialogRef": [NSValue valueWithPointer:aDialogRef],
 											}];
 	if (nil != self)
 	{
-		GenericDialog_Retain(aDialogRef);
-		self->dialogRef = aDialogRef;
-		
 		aViewManager.panelParent = self;
 		
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -1034,12 +1058,20 @@ initializeWithContext:(void*)			aContext
 	NSString*			givenName = [asDictionary objectForKey:@"localizedName"];
 	NSImage*			givenIcon = [asDictionary objectForKey:@"localizedIcon"];
 	Panel_ViewManager*	givenViewManager = [asDictionary objectForKey:@"viewManager"];
+	NSValue*			givenDialogRefValue = [asDictionary objectForKey:@"dialogRef"];
 	
 	
 	self->identifier = [givenIdentifier retain];
 	self->localizedName = [givenName retain];
 	self->localizedIcon = [givenIcon retain];
 	self->mainViewManager = [givenViewManager retain];
+	{
+		assert(nil != givenDialogRefValue);
+		GenericDialog_Ref	givenDialogRef = STATIC_CAST([givenDialogRefValue pointerValue], GenericDialog_Ref);
+		
+		
+		self->dialogRef = givenDialogRef;
+	}
 	
 	assert(nil != self->mainViewManager);
 }// panelViewManager:initializeWithContext:
@@ -1180,6 +1212,45 @@ panelViewManager:(Panel_ViewManager*)			aViewManager
 willChangePanelVisibility:(Panel_Visibility)	aVisibility
 {
 #pragma unused(aViewManager)
+	// determine if the key equivalents for buttons should be
+	// initially disabled; if so, remove them here and install
+	// a delayed invocation to put them back
+	if ((kPanel_VisibilityDisplayed == aVisibility) &&
+		(nullptr != self->dialogRef))
+	{
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		auto						setKeyEquivalentsBlock =
+									^{
+										NSButton*	keyButton = self->cancelButton;
+										
+										
+										if ((nil == keyButton) || (keyButton.isHidden))
+										{
+											keyButton = self->actionButton;
+										}
+										UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:keyButton];
+										self.managedView.window.defaultButtonCell = self->actionButton.cell;
+										[self.managedView.window enableKeyEquivalentForDefaultButtonCell];
+										[self->actionButton display];
+									};
+		
+		
+		// delay the availability of the Return-key mapping if requested
+		// or if there is exactly one button in the dialog
+		if ((ptr->delayedKeyEquivalents) ||
+			((nil == self.secondButtonBlock) && (nil == self.thirdButtonBlock)))
+		{
+			[self.managedView.window disableKeyEquivalentForDefaultButtonCell];
+			self.managedView.window.defaultButtonCell = nil;
+			UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:self->helpButton];
+			CocoaExtensions_RunLater(1.0/* arbitrary delay in seconds */, setKeyEquivalentsBlock);
+		}
+		else
+		{
+			setKeyEquivalentsBlock();
+		}
+	}
+	
 	// forward to child view
 	[self->mainViewManager.delegate panelViewManager:self->mainViewManager willChangePanelVisibility:aVisibility];
 }// panelViewManager:willChangePanelVisibility:

@@ -196,6 +196,10 @@ Panel_ViewManager*
 	GenericDialog_ReturnViewManager				(GenericDialog_Ref					inDialog);
 
 void
+	GenericDialog_SetDelayedKeyEquivalents		(GenericDialog_Ref					inDialog,
+												 Boolean							inKeyEquivalentsDelayed);
+
+void
 	GenericDialog_SetImplementation				(GenericDialog_Ref					inDialog,
 												 void*								inDataPtr);
 
