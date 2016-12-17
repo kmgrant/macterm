@@ -168,13 +168,58 @@ enum
 #include "TerminalViewRef.typedef.h"
 
 /*!
-Since a terminal view can have a potentially huge scrollback
-buffer, it is important to use the data type below (and not
-just some integer) to represent pixel measurements.  Right
-now the pixel height is the only measure that could become
-very large.
+This object wraps pixel values to guard against accidental
+conversions or other misuse (such as a value in units other
+than pixels).  It also stores both the precise and pixel-grid
+version of a pixel value, allowing Core Graphics renderings
+to retain exact calculation results that cannot be preserved
+in legacy QuickDraw views.  QuickDraw support will eventually
+be removed.
+
+The storage sizes are also template parameters so that this
+can use less space if the pixel range is not expected to be
+big (for example, terminal display width versus the entire
+pixel range of the terminal scrollback region).
 */
-typedef UInt32												TerminalView_PixelHeight;
+template < typename discrete_type, typename precise_type >
+struct TerminalView_PixelValue
+{
+public:
+    explicit TerminalView_PixelValue ()
+    : pixels_(0.0)
+    {
+    }
+	
+    void
+	setIntegralPixels	(discrete_type		inIntegralPixelCount)
+    {
+		pixels_ = inIntegralPixelCount;
+    }
+	
+    void
+	setPrecisePixels	(precise_type		inExactPixelRange)
+    {
+		pixels_ = inExactPixelRange;
+    }
+	
+	discrete_type
+	integralPixels () const
+	{
+		return STATIC_CAST(pixels_, discrete_type);
+	}
+	
+	precise_type
+	precisePixels () const
+	{
+		return pixels_;
+	}
+
+private:
+    precise_type	pixels_; // Core Graphics high-precision value
+};
+
+typedef TerminalView_PixelValue< SInt16, Float32 >	TerminalView_PixelWidth;
+typedef TerminalView_PixelValue< SInt32, CGFloat >	TerminalView_PixelHeight;
 
 /*!
 Since a terminal view can have a potentially huge scrollback
@@ -538,12 +583,12 @@ void
 
 Boolean
 	TerminalView_GetIdealSize					(TerminalViewRef			inView,
-												 UInt16&					outWidthInPixels,
+												 TerminalView_PixelWidth&	outWidthInPixels,
 												 TerminalView_PixelHeight&	outHeightInPixels);
 
 void
 	TerminalView_GetTheoreticalScreenDimensions	(TerminalViewRef			inView,
-												 UInt16						inWidthInPixels,
+												 TerminalView_PixelWidth	inWidthInPixels,
 												 TerminalView_PixelHeight	inHeightInPixels,
 												 UInt16*					outColumnCount,
 												 TerminalView_RowIndex*		outRowCount);
@@ -552,8 +597,8 @@ void
 	TerminalView_GetTheoreticalViewSize			(TerminalViewRef			inView,
 												 UInt16						inColumnCount,
 												 TerminalView_RowIndex		inRowCount,
-												 UInt16*					outWidthInPixels,
-												 TerminalView_PixelHeight*	outHeightInPixels);
+												 TerminalView_PixelWidth&	outWidthInPixels,
+												 TerminalView_PixelHeight&	outHeightInPixels);
 
 //@}
 
@@ -620,7 +665,7 @@ Boolean
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,
 												 CFStringRef				inFontFamilyNameOrNull,
-												 UInt16						inFontSizeOrZero);
+												 Float32					inFontSizeOrZero);
 
 //@}
 

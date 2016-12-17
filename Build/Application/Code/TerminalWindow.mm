@@ -1689,7 +1689,7 @@ See also setViewFormatPreferences().
 void
 TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 								 CFStringRef			inFontFamilyNameOrNull,
-								 UInt16					inFontSizeOrZero)
+								 Float32				inFontSizeOrZero)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	TerminalViewRef					activeView = getActiveView(ptr);
@@ -2716,14 +2716,14 @@ installedActions()
 	assert(nullptr != newScreen);
 	if (nullptr != newScreen)
 	{
-		UInt16						screenWidth = 0;
-		TerminalView_PixelHeight	screenHeight = 0;
+		TerminalView_PixelWidth		screenWidth;
+		TerminalView_PixelHeight	screenHeight;
 		
 		
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
 											Terminal_ReturnColumnCount(newScreen), Terminal_ReturnRowCount(newScreen),
-											&screenWidth, &screenHeight);
-		setStandardState(this, screenWidth, STATIC_CAST(screenHeight, UInt16), true/* resize window */);
+											screenWidth, screenHeight);
+		setStandardState(this, screenWidth.integralPixels(), screenHeight.integralPixels(), true/* resize window */);
 	}
 	
 	// stagger the window (this is effective for newly-created windows
@@ -7801,13 +7801,13 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 	if (false == inPtr->allViews.empty())
 	{
 		TerminalViewRef				activeView = getActiveView(inPtr);
-		UInt16						screenWidth = 0;
-		TerminalView_PixelHeight	screenHeight = 0;
+		TerminalView_PixelWidth		screenWidth;
+		TerminalView_PixelHeight	screenHeight;
 		
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
-											inColumns, inRows, &screenWidth, &screenHeight);
-		setStandardState(inPtr, screenWidth, STATIC_CAST(screenHeight, UInt16), true/* resize window */, inAnimateWindowChanges);
+											inColumns, inRows, screenWidth, screenHeight);
+		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels(), true/* resize window */, inAnimateWindowChanges);
 	}
 }// setWindowToIdealSizeForDimensions
 
@@ -7825,13 +7825,13 @@ setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 	if (false == inPtr->allViews.empty())
 	{
 		TerminalViewRef				activeView = getActiveView(inPtr);
-		UInt16						screenWidth = 0;
-		TerminalView_PixelHeight	screenHeight = 0;
+		TerminalView_PixelWidth		screenWidth;
+		TerminalView_PixelHeight	screenHeight;
 		
 		
 		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
 									screenWidth, screenHeight);
-		setStandardState(inPtr, screenWidth, STATIC_CAST(screenHeight, UInt16), true/* resize window */);
+		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels(), true/* resize window */);
 	}
 }// setWindowToIdealSizeForFont
 

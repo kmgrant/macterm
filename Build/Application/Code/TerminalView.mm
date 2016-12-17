@@ -368,7 +368,7 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 			// these settings should only ever be modified by recalculateCachedDimensions(),
 			// and that routine should be called when any dependent factor, such as font,
 			// is changed; see that routine’s documentation for more information
-			UInt16			viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
+TerminalView_PixelWidth		viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
 TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the current dimensions of the content view
 		} cache;
 	} screen;
@@ -390,11 +390,11 @@ TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the curre
 				SInt16		size;			// point size of text written in the font indicated by "familyName"
 			} normalMetrics,	// metrics for text meant to fit in a single cell (normal)
 			  doubleMetrics;	// metrics for text meant to fit in 4 cells, not 1 cell (double-width/height)
-			Float32			scaleWidthPerCharacter;	// a multiplier (normally 1.0) to force characters from the font to fit in a different width
-			SInt16			baseWidthPerCharacter;	// value of "widthPerCharacter" without any scaling applied
-			SInt16			widthPerCharacter;	// number of pixels wide each character is (multiply by 2 on double-width lines);
+			Float32			scaleWidthPerCell;	// a multiplier (normally 1.0) to force characters from the font to fit in a different width
+TerminalView_PixelWidth		baseWidthPerCell;	// value of "widthPerCell" without any scaling applied
+TerminalView_PixelWidth		widthPerCell;	// number of pixels wide each character is (multiply by 2 on double-width lines);
 												// generally, you should call getRowCharacterWidth() instead of referencing this!
-			SInt16			heightPerCharacter;	// number of pixels high each character is (multiply by 2 if double-height text)
+TerminalView_PixelHeight	heightPerCell;	// number of pixels high each character is (multiply by 2 if double-height text)
 			Float32			thicknessHorizontalLines;	// thickness of non-bold horizontal lines in manually-drawn glyphs; diagonal lines may use based on angle
 			Float32			thicknessHorizontalBold;	// thickness of bold horizontal lines in manually-drawn glyphs; diagonal lines may use based on angle
 			Float32			thicknessVerticalLines;		// thickness of non-bold vertical lines in manually-drawn glyphs; diagonal lines may use based on angle
@@ -490,7 +490,7 @@ Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalVi
 Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, Float32&, Float32&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor*);
 void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
-SInt16				getRowCharacterWidth				(My_TerminalViewPtr, TerminalView_RowIndex);
+TerminalView_PixelWidth		getRowCharacterWidth		(My_TerminalViewPtr, TerminalView_RowIndex);
 void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, Rect*);
 void				getScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
 void				getScreenColorsForAttributes		(My_TerminalViewPtr, TextAttributes_Object, CGDeviceColor*, CGDeviceColor*, Boolean*);
@@ -1613,7 +1613,7 @@ Returns true only if successful.
 */
 Boolean
 TerminalView_GetIdealSize	(TerminalViewRef			inView,
-							 UInt16&					outWidthInPixels,
+							 TerminalView_PixelWidth&	outWidthInPixels,
 							 TerminalView_PixelHeight&	outHeightInPixels)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -1627,15 +1627,15 @@ TerminalView_GetIdealSize	(TerminalViewRef			inView,
 		
 		highPrecision = viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
 						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
-		highPrecision *= viewPtr->text.font.widthPerCharacter;
-		highPrecision += viewPtr->screen.cache.viewWidthInPixels;
-		outWidthInPixels = STATIC_CAST(highPrecision, UInt16);
+		highPrecision *= viewPtr->text.font.widthPerCell.precisePixels();
+		highPrecision += viewPtr->screen.cache.viewWidthInPixels.precisePixels();
+		outWidthInPixels.setPrecisePixels(highPrecision);
 		
 		highPrecision = viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
 						+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale;
-		highPrecision *= viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
-		highPrecision += viewPtr->screen.cache.viewHeightInPixels;
-		outHeightInPixels = STATIC_CAST(highPrecision, TerminalView_PixelHeight);
+		highPrecision *= viewPtr->text.font.widthPerCell.precisePixels(); // yes, width, because this is an “em” scale factor
+		highPrecision += viewPtr->screen.cache.viewHeightInPixels.precisePixels();
+		outHeightInPixels.setPrecisePixels(highPrecision);
 		
 		result = true;
 	}
@@ -1687,7 +1687,8 @@ TerminalView_GetScrollVerticalInfo	(TerminalViewRef	inView,
 		outStartOfMaximumRange = 0;
 		outPastEndOfMaximumRange = outStartOfMaximumRange + kScrollbackRows + kRows;
 		outStartOfView = outPastEndOfMaximumRange - kRows + viewPtr->screen.topVisibleEdgeInRows;
-		outPastEndOfView = outStartOfView + (viewPtr->screen.cache.viewHeightInPixels / viewPtr->text.font.heightPerCharacter);
+		outPastEndOfView = outStartOfView + (viewPtr->screen.cache.viewHeightInPixels.precisePixels() /
+												viewPtr->text.font.heightPerCell.precisePixels());
 	}
 	return result;
 }// GetScrollVerticalInfo
@@ -1800,7 +1801,7 @@ TerminalView_GetTheoreticalViewSize().
 */
 void
 TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef			inView,
-												 UInt16						inWidthInPixels,
+												 TerminalView_PixelWidth	inWidthInPixels,
 												 TerminalView_PixelHeight	inHeightInPixels,
 												 UInt16*					outColumnCount,
 												 TerminalView_RowIndex*		outRowCount)
@@ -1811,16 +1812,16 @@ TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef			inView,
 	
 	// Remove padding, border and margins before scaling remainder to find number of characters.
 	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalViewSize() and TerminalView_GetIdealSize().
-	highPrecision = STATIC_CAST(inWidthInPixels, Float32) / STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32);
+	highPrecision = inWidthInPixels.precisePixels() / viewPtr->text.font.widthPerCell.precisePixels();
 	highPrecision -= (viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
 						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale);
 	*outColumnCount = STATIC_CAST(highPrecision, UInt16);
 	if (*outColumnCount < 1) *outColumnCount = 1;
-	highPrecision = inHeightInPixels
-					- STATIC_CAST(viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
+	highPrecision = inHeightInPixels.precisePixels()
+					- (STATIC_CAST(viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
 									+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale, Float32)
-						* STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, because this is an “em” scale factor */, Float32);
-	highPrecision /= STATIC_CAST(viewPtr->text.font.heightPerCharacter, Float32);
+						* viewPtr->text.font.widthPerCell.precisePixels()); // yes, width, because this is an “em” scale factor
+	highPrecision /= viewPtr->text.font.heightPerCell.precisePixels();
 	*outRowCount = STATIC_CAST(highPrecision, UInt16);
 	if (*outRowCount < 1) *outRowCount = 1;
 }// GetTheoreticalScreenDimensions
@@ -1841,8 +1842,8 @@ void
 TerminalView_GetTheoreticalViewSize		(TerminalViewRef			inView,
 										 UInt16						inColumnCount,
 										 TerminalView_RowIndex		inRowCount,
-										 UInt16*					outWidthInPixels,
-										 TerminalView_PixelHeight*	outHeightInPixels)
+										 TerminalView_PixelWidth&	outWidthInPixels,
+										 TerminalView_PixelHeight&	outHeightInPixels)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	Float32						highPrecision = 0.0;
@@ -1852,13 +1853,13 @@ TerminalView_GetTheoreticalViewSize		(TerminalViewRef			inView,
 	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalScreenDimensions() and TerminalView_GetIdealSize().
 	highPrecision = inColumnCount + viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
 					+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
-	highPrecision *= viewPtr->text.font.widthPerCharacter;
-	*outWidthInPixels = STATIC_CAST(highPrecision, SInt16);
-	highPrecision = STATIC_CAST(inRowCount, Float32) * STATIC_CAST(viewPtr->text.font.heightPerCharacter, Float32);
-	highPrecision += STATIC_CAST(viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
+	highPrecision *= viewPtr->text.font.widthPerCell.precisePixels();
+	outWidthInPixels.setPrecisePixels(highPrecision);
+	highPrecision = STATIC_CAST(inRowCount, Float32) * viewPtr->text.font.heightPerCell.precisePixels();
+	highPrecision += (STATIC_CAST(viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
 									+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale, Float32)
-						* viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
-	*outHeightInPixels = STATIC_CAST(highPrecision, SInt16);
+						* viewPtr->text.font.widthPerCell.precisePixels()); // yes, width, because this is an “em” scale factor
+	outHeightInPixels.setPrecisePixels(highPrecision);
 }// GetTheoreticalViewSize
 
 
@@ -3624,7 +3625,7 @@ if the display mode currently sets the size automatically
 TerminalView_Result
 TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 								 CFStringRef		inFontFamilyNameOrNull,
-								 UInt16				inFontSizeOrZero)
+								 Float32			inFontSizeOrZero)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	TerminalView_Result			result = kTerminalView_ResultOK;
@@ -4455,8 +4456,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->text.selection.inhibited = false;
 	this->screen.leftVisibleEdgeInColumns = 0;
 	this->screen.topVisibleEdgeInRows = 0;
-	this->screen.cache.viewWidthInPixels = 0; // set later...
-	this->screen.cache.viewHeightInPixels = 0; // set later...
+	this->screen.cache.viewWidthInPixels.setIntegralPixels(0); // set later...
+	this->screen.cache.viewHeightInPixels.setIntegralPixels(0); // set later...
 	this->screen.sizeNotMatchedWithView = false;
 	this->screen.focusRingEnabled = true;
 	this->screen.isReverseVideo = 0;
@@ -4987,14 +4988,14 @@ calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	// the bottom of the area
 	TextFontByName(inTerminalViewPtr->text.font.familyName);
 	TextSize(outPointSize);
-	while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCharacter) <
-			INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCharacter))
+	while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCell) <
+			INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels()))
 	{
 		TextSize(++outPointSize);
 	}
 	GetFontInfo(&info);
 	while (STATIC_CAST(info.ascent + info.descent + info.leading, unsigned int) >=
-			INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCharacter))
+			INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCell.integralPixels()))
 	{
 		TextSize(--outPointSize);
 		GetFontInfo(&info);
@@ -6187,7 +6188,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					// in the same family and Cocoa does not seem as capable as QuickDraw in
 					// terms of inventing a bold rendering for such fonts; as a work-around
 					// text is drawn TWICE (the second at a slight offset from the original)
-					drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCharacter / 30)); // arbitrary
+					drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 30)); // arbitrary
 					
 					CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
 					CTLineDraw(asLineRef, inDrawingContext);
@@ -6282,18 +6283,18 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
 			{
 				// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
-				Move(STATIC_CAST(inCharacterCount * INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCharacter), SInt16), 0);
+				Move(STATIC_CAST(inCharacterCount * INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels()), SInt16), 0);
 			}
 			else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
 			{
 				// bottom half of double-sized text; force the text to use
 				// twice the normal font metrics
-				CGFloat const	kHOffsetPerGlyph = INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCharacter);
+				CGFloat const	kHOffsetPerGlyph = INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels());
 				SInt16			i = 0;
 				Point			oldPen;
 				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
 															kHOffsetPerGlyph + 4,
-															inBoundaries.size.height/*INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCharacter)*/ + 4);
+															inBoundaries.size.height/*INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCell)*/ + 4);
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -6318,17 +6319,17 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
 						(false == inTerminalViewPtr->text.font.isMonospaced) ||
-						(1.0 != inTerminalViewPtr->text.font.scaleWidthPerCharacter))
+						(1.0 != inTerminalViewPtr->text.font.scaleWidthPerCell))
 			{
 				// proportional font, or bold, or otherwise non-standard width; force the text
 				// to draw one character at a time so that the character offset can be corrected
-				CGFloat const	kHOffsetPerGlyph = inTerminalViewPtr->text.font.widthPerCharacter;
+				CGFloat const	kHOffsetPerGlyph = inTerminalViewPtr->text.font.widthPerCell.integralPixels();
 				SInt16			i = 0;
 				char			previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
 				Point			oldPen;
 				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
 															kHOffsetPerGlyph + 4,
-															inBoundaries.size.height/*inTerminalViewPtr->text.font.heightPerCharacter*/ + 4);
+															inBoundaries.size.height/*inTerminalViewPtr->text.font.heightPerCell.precisePixels()*/ + 4);
 				
 				
 				for (i = 0; i < inCharacterCount; ++i)
@@ -7560,8 +7561,8 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 								 Float32&				outDeltaRow)
 {
 	Boolean		result = true;
-	SInt32		columnCalculation = 0;
-	SInt32		rowCalculation = 0;
+	Float32		columnCalculation = 0;
+	Float32		rowCalculation = 0;
 	
 	
 	outDeltaColumn = 0;
@@ -7598,37 +7599,37 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 		}
 	}
 	
-	if (rowCalculation > STATIC_CAST(inTerminalViewPtr->screen.cache.viewHeightInPixels, SInt32))
+	if (rowCalculation > inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels())
 	{
 		result = false;
-		outDeltaRow = rowCalculation - inTerminalViewPtr->screen.cache.viewHeightInPixels;
-		rowCalculation = inTerminalViewPtr->screen.cache.viewHeightInPixels;
+		outDeltaRow = rowCalculation - inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels();
+		rowCalculation = inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels();
 	}
 	
 	// TEMPORARY: this needs to take into account double-height text
-	rowCalculation /= inTerminalViewPtr->text.font.heightPerCharacter;
-	outDeltaRow /= inTerminalViewPtr->text.font.heightPerCharacter;
+	rowCalculation /= inTerminalViewPtr->text.font.heightPerCell.precisePixels();
+	outDeltaRow /= inTerminalViewPtr->text.font.heightPerCell.precisePixels();
 	
-	if (columnCalculation > inTerminalViewPtr->screen.cache.viewWidthInPixels)
+	if (columnCalculation > inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels())
 	{
 		result = false;
-		outDeltaColumn = columnCalculation - inTerminalViewPtr->screen.cache.viewWidthInPixels;
-		columnCalculation = inTerminalViewPtr->screen.cache.viewWidthInPixels;
+		outDeltaColumn = columnCalculation - inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels();
+		columnCalculation = inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels();
 	}
 	
 	{
-		SInt16 const	kWidthPerCharacter = getRowCharacterWidth(inTerminalViewPtr, rowCalculation);
+		TerminalView_PixelWidth const	kWidthPerCell = getRowCharacterWidth(inTerminalViewPtr, rowCalculation);
 		
 		
-		columnCalculation /= kWidthPerCharacter;
-		outDeltaColumn /= kWidthPerCharacter;
+		columnCalculation /= kWidthPerCell.precisePixels();
+		outDeltaColumn /= kWidthPerCell.precisePixels();
 	}
 	
 	columnCalculation += inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
 	rowCalculation += inTerminalViewPtr->screen.topVisibleEdgeInRows;
 	
 	outCell.first = STATIC_CAST(columnCalculation, SInt16);
-	outCell.second = rowCalculation;
+	outCell.second = STATIC_CAST(rowCalculation, TerminalView_RowIndex);
 	
 	return result;
 }// findVirtualCellFromScreenPoint
@@ -7671,7 +7672,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 {
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
-	SInt16						sectionTopEdge = STATIC_CAST(inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter, SInt16);
+	SInt16						sectionTopEdge = STATIC_CAST(inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCell.integralPixels(), SInt16);
 	TerminalView_RowIndex		topRow = 0;
 	
 	
@@ -7697,7 +7698,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	// now set the top and bottom edges based on the requested row
 	outBoundsPtr->top = sectionTopEdge;
-	outBoundsPtr->bottom = sectionTopEdge + inTerminalViewPtr->text.font.heightPerCharacter;
+	outBoundsPtr->bottom = sectionTopEdge + inTerminalViewPtr->text.font.heightPerCell.integralPixels();
 	
 	// account for double-height rows
 	getVirtualVisibleRegion(inTerminalViewPtr, nullptr/* left */, &topRow, nullptr/* right */, nullptr/* bottom */);
@@ -7742,14 +7743,14 @@ the double-width attribute set.
 
 (3.0)
 */
-SInt16
+TerminalView_PixelWidth
 getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 						 TerminalView_RowIndex	inLineNumber)
 {
 	TextAttributes_Object		globalAttributes;
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
-	SInt16						result = inTerminalViewPtr->text.font.widthPerCharacter;
+	TerminalView_PixelWidth		result = inTerminalViewPtr->text.font.widthPerCell;
 	
 	
 	rowIterator = findRowIterator(inTerminalViewPtr, inLineNumber, &rowIteratorData);
@@ -7758,7 +7759,7 @@ getRowCharacterWidth	(My_TerminalViewPtr		inTerminalViewPtr,
 		UNUSED_RETURN(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
 		if (globalAttributes.hasDoubleAny())
 		{
-			result = STATIC_CAST(INTEGER_TIMES_2(result), SInt16);
+			result.setPrecisePixels(result.precisePixels() * 2.0);
 		}
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
 	}
@@ -7790,15 +7791,15 @@ getRowSectionBounds		(My_TerminalViewPtr		inTerminalViewPtr,
 						 SInt16					inCharacterCount,
 						 Rect*					outBoundsPtr)
 {
-	SInt16		widthPerCharacter = getRowCharacterWidth(inTerminalViewPtr, inZeroBasedRowIndex);
+	TerminalView_PixelWidth		widthPerCell = getRowCharacterWidth(inTerminalViewPtr, inZeroBasedRowIndex);
 	
 	
 	// first find the row bounds, as this defines two of the resulting edges
 	getRowBounds(inTerminalViewPtr, inZeroBasedRowIndex, outBoundsPtr);
 	
 	// now set the rectangle’s left and right edges based on the requested column range
-	outBoundsPtr->left = inZeroBasedStartingColumnNumber * widthPerCharacter;
-	outBoundsPtr->right = (inZeroBasedStartingColumnNumber + inCharacterCount) * widthPerCharacter;
+	outBoundsPtr->left = inZeroBasedStartingColumnNumber * widthPerCell.integralPixels();
+	outBoundsPtr->right = (inZeroBasedStartingColumnNumber + inCharacterCount) * widthPerCell.integralPixels();
 }// getRowSectionBounds
 
 
@@ -8317,10 +8318,10 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 		sortAnchors(selectionStart, selectionPastEnd, true/* is a rectangular selection */);
 		
 		// set up rectangle bounding area to be highlighted
-		selectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-										selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
-										(selectionPastEnd.first - selectionStart.first) * inTerminalViewPtr->text.font.widthPerCharacter,
-										(selectionPastEnd.second - selectionStart.second) * inTerminalViewPtr->text.font.heightPerCharacter);
+		selectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels(),
+										selectionStart.second * inTerminalViewPtr->text.font.heightPerCell.precisePixels(),
+										(selectionPastEnd.first - selectionStart.first) * inTerminalViewPtr->text.font.widthPerCell.precisePixels(),
+										(selectionPastEnd.second - selectionStart.second) * inTerminalViewPtr->text.font.heightPerCell.precisePixels());
 		
 		// the final selection region is the portion of the full rectangle
 		// that fits within the current screen boundaries
@@ -8349,12 +8350,12 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 		// bounds of first (possibly partial) line to be highlighted
 		{
 			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
-			partialSelectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter + inInsets,
-												selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
-												inTerminalViewPtr->screen.cache.viewWidthInPixels -
-													selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter -
+			partialSelectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() + inInsets,
+												selectionStart.second * inTerminalViewPtr->text.font.heightPerCell.precisePixels() + inInsets,
+												inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels() -
+													selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() -
 													2.0f * inInsets,
-												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
+												inTerminalViewPtr->text.font.heightPerCell.precisePixels()/* no insets here, due to shrunk mid-section */);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
 			rectShape = HIShapeCreateWithRect(&clippedRect);
 			if (nullptr != rectShape)
@@ -8368,9 +8369,9 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 		{
 			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
 			partialSelectionBounds = CGRectMake(inInsets,
-												(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter - inInsets,
-												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter - 2.0f * inInsets,
-												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
+												(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCell.precisePixels() - inInsets,
+												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() - 2.0f * inInsets,
+												inTerminalViewPtr->text.font.heightPerCell.precisePixels()/* no insets here, due to shrunk mid-section */);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
 			rectShape = HIShapeCreateWithRect(&clippedRect);
 			if (nullptr != rectShape)
@@ -8384,10 +8385,10 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 		{
 			// highlight extends across more than two lines - fill in the space in between
 			partialSelectionBounds = CGRectMake(inInsets,
-												(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
-												inTerminalViewPtr->screen.cache.viewWidthInPixels - 2.0f * inInsets,
+												(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCell.precisePixels() + inInsets,
+												inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels() - 2.0f * inInsets,
 												(selectionPastEnd.second - selectionStart.second - 2/* skip first and last lines */) *
-													inTerminalViewPtr->text.font.heightPerCharacter - 2.0f * inInsets);
+													inTerminalViewPtr->text.font.heightPerCell.precisePixels() - 2.0f * inInsets);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
 			rectShape = HIShapeCreateWithRect(&clippedRect);
 			if (nullptr != rectShape)
@@ -8501,10 +8502,10 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 			
 			// set up rectangle bounding area to be highlighted
 			RegionUtilities_SetRect(&selectionBounds,
-									selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-									STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
-									selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
-									STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
+									selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
+									STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
+									selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
+									STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
 			
 			// the final selection region is the portion of the full rectangle
 			// that fits within the current screen boundaries
@@ -8529,19 +8530,19 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 				
 				// bounds of first (possibly partial) line to be highlighted
 				RegionUtilities_SetRect(&partialSelectionBounds,
-										selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
-										STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
-										inTerminalViewPtr->screen.cache.viewWidthInPixels,
-										STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
+										selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
+										STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
+										inTerminalViewPtr->screen.cache.viewWidthInPixels.integralPixels(),
+										STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(result, &clippedRect);
 				
 				// bounds of last (possibly partial) line to be highlighted
 				RegionUtilities_SetRect(&partialSelectionBounds,
 										0,
-										STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
-										selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
-										STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
+										STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
+										selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
+										STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(clippedRegion, &clippedRect);
 				UnionRgn(clippedRegion, result, result);
@@ -8551,9 +8552,9 @@ getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
 					// highlight extends across more than two lines - fill in the space in between
 					RegionUtilities_SetRect(&partialSelectionBounds,
 											0,
-											STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter,
-											inTerminalViewPtr->screen.cache.viewWidthInPixels,
-											STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCharacter);
+											STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
+											inTerminalViewPtr->screen.cache.viewWidthInPixels.integralPixels(),
+											STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
 					SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 					RectRgn(clippedRegion, &clippedRect);
 					UnionRgn(clippedRegion, result, result);
@@ -8734,9 +8735,12 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	
 	// determine the view size within its parent
 	{
-		Float32 const	kMaximumViewWidth = terminalViewBounds.size.width;
-		Float32 const	kMaximumViewHeight = terminalViewBounds.size.height; 
+		TerminalView_PixelWidth		maximumViewWidth;
+		TerminalView_PixelHeight	maximumViewHeight;
 		
+		
+		maximumViewWidth.setPrecisePixels(terminalViewBounds.size.width);
+		maximumViewHeight.setPrecisePixels(terminalViewBounds.size.height);
 		
 		// if the display mode is zooming, choose a font size to fill the new boundaries
 		if (viewPtr->displayMode == kTerminalView_DisplayModeZoom)
@@ -8758,13 +8762,13 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			
 			// choose an appropriate font size to best fill the area; favor maximum
 			// width over height, but reduce the font size if the characters overrun
-			if (viewPtr->screen.cache.viewWidthInPixels > 0)
+			if (viewPtr->screen.cache.viewWidthInPixels.integralPixels() > 0)
 			{
 				UInt16		loopGuard = 0;
 				
 				
-				while ((STATIC_CAST(CharWidth('A'), Float32) * viewPtr->text.font.scaleWidthPerCharacter *
-						STATIC_CAST(visibleColumns, Float32)) < kMaximumViewWidth)
+				while ((STATIC_CAST(CharWidth('A'), Float32) * viewPtr->text.font.scaleWidthPerCell *
+						STATIC_CAST(visibleColumns, Float32)) < maximumViewWidth.precisePixels())
 				{
 					TextSize(++fontSize);
 					if (++loopGuard > 100/* arbitrary */) break;
@@ -8777,14 +8781,14 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			{
 				TextSize(viewPtr->text.font.normalMetrics.size);
 			}
-			if (viewPtr->screen.cache.viewHeightInPixels > 0)
+			if (viewPtr->screen.cache.viewHeightInPixels.integralPixels() > 0)
 			{
 				FontInfo	info;
 				UInt16		loopGuard = 0;
 				
 				
 				GetFontInfo(&info);
-				while (((info.ascent + info.descent + info.leading) * visibleRows) >= kMaximumViewHeight)
+				while (((info.ascent + info.descent + info.leading) * visibleRows) >= maximumViewHeight.integralPixels())
 				{
 					TextSize(--fontSize);
 					GetFontInfo(&info);
@@ -8808,9 +8812,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			
 			
 			// normal mode; resize the underlying terminal screen
-			TerminalView_GetTheoreticalScreenDimensions(view, STATIC_CAST(kMaximumViewWidth, UInt16),
-														STATIC_CAST(kMaximumViewHeight, UInt16),
-														&columns, &rows);
+			TerminalView_GetTheoreticalScreenDimensions(view, maximumViewWidth, maximumViewHeight, &columns, &rows);
 			Terminal_SetVisibleScreenDimensions(viewPtr->screen.ref, columns, STATIC_CAST(rows, UInt16));
 			recalculateCachedDimensions(viewPtr);
 		}
@@ -8820,18 +8822,17 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	// keep the focus/padding background the right padding distance
 	// away from the text
 	{
-		Float32 const	kPadLeft = (viewPtr->screen.paddingLeftEmScale *
-									STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32));
-		Float32 const	kPadRight = (viewPtr->screen.paddingRightEmScale *
-										STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32));
+		Float32 const	kPadLeft = (viewPtr->screen.paddingLeftEmScale * viewPtr->text.font.widthPerCell.precisePixels());
+		Float32 const	kPadRight = (viewPtr->screen.paddingRightEmScale * viewPtr->text.font.widthPerCell.precisePixels());
 		Float32 const	kPadTop = (viewPtr->screen.paddingTopEmScale *
-									STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, this is an “em” scale */, Float32));
+									viewPtr->text.font.widthPerCell.precisePixels()/* yes, width, this is an “em” scale */);
 		Float32 const	kPadBottom = (viewPtr->screen.paddingBottomEmScale *
-										STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, this is an “em” scale */, Float32));
-		HIRect			terminalFocusFrame = CGRectMake(0, 0, kPadLeft + viewPtr->screen.cache.viewWidthInPixels + kPadRight,
-														kPadTop + viewPtr->screen.cache.viewHeightInPixels + kPadBottom);
-		HIRect			terminalInteriorFrame = CGRectMake(kPadLeft, kPadTop, viewPtr->screen.cache.viewWidthInPixels,
-															viewPtr->screen.cache.viewHeightInPixels);
+										viewPtr->text.font.widthPerCell.precisePixels()/* yes, width, this is an “em” scale */);
+		HIRect			terminalFocusFrame = CGRectMake(0, 0, kPadLeft + viewPtr->screen.cache.viewWidthInPixels.precisePixels() + kPadRight,
+														kPadTop + viewPtr->screen.cache.viewHeightInPixels.precisePixels() + kPadBottom);
+		HIRect			terminalInteriorFrame = CGRectMake(kPadLeft, kPadTop,
+															viewPtr->screen.cache.viewWidthInPixels.precisePixels(),
+															viewPtr->screen.cache.viewHeightInPixels.precisePixels());
 		
 		
 		// TEMPORARY: this should in fact respect margin values too
@@ -9840,13 +9841,12 @@ void
 recalculateCachedDimensions		(My_TerminalViewPtr		inTerminalViewPtr)
 {
 	//UInt32 const	kScrollbackLines = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
-	UInt16 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	UInt16 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
+	Float32 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
+	Float32 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 	
 	
-	inTerminalViewPtr->screen.cache.viewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	inTerminalViewPtr->screen.cache.viewHeightInPixels = STATIC_CAST(kVisibleLines, SInt32) *
-															STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
+	inTerminalViewPtr->screen.cache.viewWidthInPixels.setPrecisePixels(kVisibleWidth * inTerminalViewPtr->text.font.widthPerCell.precisePixels());
+	inTerminalViewPtr->screen.cache.viewHeightInPixels.setPrecisePixels(kVisibleLines * inTerminalViewPtr->text.font.heightPerCell.precisePixels());
 }// recalculateCachedDimensions
 
 
@@ -10774,8 +10774,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// if the terminal is currently in password mode, annotate the cursor
 						if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
 						{
-							CGFloat const	newHeight = viewPtr->text.font.heightPerCharacter; // TEMPORARY; does not handle double-height lines (probably does not need to)
-							CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCharacter * 0.33/* arbitrary */), CGFloat);
+							CGFloat const	newHeight = viewPtr->text.font.heightPerCell.precisePixels(); // TEMPORARY; does not handle double-height lines (probably does not need to)
+							CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCell.precisePixels() * 0.33/* arbitrary */), CGFloat);
 							CGRect			fullRectangleBounds = cursorFloatBounds;
 							CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
 							
@@ -10783,7 +10783,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// the cursor may not be block-size so convert to a block rectangle
 							// before determining the placement of the oval inset
 							fullRectangleBounds.origin.y = fullRectangleBounds.origin.y + fullRectangleBounds.size.height - newHeight;
-							fullRectangleBounds.size.width = viewPtr->text.font.widthPerCharacter;
+							fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
 							fullRectangleBounds.size.height = newHeight;
 							RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
 							++dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
@@ -12406,7 +12406,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	if (inCharacterWidthScalingOrZero > 0)
 	{
-		inTerminalViewPtr->text.font.scaleWidthPerCharacter = inCharacterWidthScalingOrZero;
+		inTerminalViewPtr->text.font.scaleWidthPerCell = inCharacterWidthScalingOrZero;
 	}
 	
 	// set the font metrics (including double size)
@@ -12716,10 +12716,10 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 			[inoutDictionary setObject:sourceFont forKey:NSFontAttributeName];
 		}
 		
-		if (1.0 != inTerminalViewPtr->text.font.scaleWidthPerCharacter)
+		if (1.0 != inTerminalViewPtr->text.font.scaleWidthPerCell)
 		{
-			[inoutDictionary setObject:[NSNumber numberWithFloat:((inTerminalViewPtr->text.font.baseWidthPerCharacter * inTerminalViewPtr->text.font.scaleWidthPerCharacter) -
-																	inTerminalViewPtr->text.font.baseWidthPerCharacter)]
+			[inoutDictionary setObject:[NSNumber numberWithFloat:((inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels() * inTerminalViewPtr->text.font.scaleWidthPerCell) -
+																	inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels())]
 										forKey:NSKernAttributeName];
 		}
 		else
@@ -12883,7 +12883,8 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	getRowBounds(inTerminalViewPtr, inY, &rowBounds);
 	
-	RegionUtilities_SetPoint(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY), rowBounds.bottom - rowBounds.top);
+	RegionUtilities_SetPoint(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY).integralPixels(),
+								rowBounds.bottom - rowBounds.top);
 	
 	outBoundsPtr->left = inX * characterSizeInPixels.h;
 	outBoundsPtr->top = rowBounds.top;
@@ -12965,18 +12966,17 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		
 		// TEMPORARY; eventually store floating-point values instead of casting
 		inTerminalViewPtr->text.font.normalMetrics.ascent = STATIC_CAST([sourceFont ascender], SInt16);
-		inTerminalViewPtr->text.font.heightPerCharacter = STATIC_CAST([sourceFont defaultLineHeightForFont], SInt16);
+		inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels([sourceFont defaultLineHeightForFont]);
 		inTerminalViewPtr->text.font.isMonospaced = (YES == [sourceFont isFixedPitch]);
 		
 		// Set the width per character.
 		if (inTerminalViewPtr->text.font.isMonospaced)
 		{
-			inTerminalViewPtr->text.font.baseWidthPerCharacter = STATIC_CAST([sourceFont maximumAdvancement].width, SInt16);
+			inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont maximumAdvancement].width);
 		}
 		else
 		{
-			inTerminalViewPtr->text.font.baseWidthPerCharacter = STATIC_CAST([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width,
-																				SInt16);
+			inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width);
 		}
 	}
 	else
@@ -12986,7 +12986,7 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		
 		GetFontInfo(&fontInfo);
 		inTerminalViewPtr->text.font.normalMetrics.ascent = fontInfo.ascent;
-		inTerminalViewPtr->text.font.heightPerCharacter = fontInfo.ascent + fontInfo.descent + fontInfo.leading;
+		inTerminalViewPtr->text.font.heightPerCell.setIntegralPixels(fontInfo.ascent + fontInfo.descent + fontInfo.leading);
 		inTerminalViewPtr->text.font.isMonospaced = isMonospacedFont
 													(FMGetFontFamilyFromName(inTerminalViewPtr->text.font.familyName));
 		
@@ -13005,21 +13005,21 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		// amount proportional to the font size.
 		if (inTerminalViewPtr->text.font.isMonospaced)
 		{
-			inTerminalViewPtr->text.font.baseWidthPerCharacter = CharWidth('A');
+			inTerminalViewPtr->text.font.baseWidthPerCell.setIntegralPixels(CharWidth('A'));
 		}
 		else
 		{
-			inTerminalViewPtr->text.font.baseWidthPerCharacter = fontInfo.widMax;
+			inTerminalViewPtr->text.font.baseWidthPerCell.setIntegralPixels(fontInfo.widMax);
 		}
 	}
 	
 	// scale the font width according to user preferences
 	{
-		Float32		reduction = inTerminalViewPtr->text.font.baseWidthPerCharacter;
+		Float32		reduction = inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels();
 		
 		
-		reduction *= inTerminalViewPtr->text.font.scaleWidthPerCharacter;
-		inTerminalViewPtr->text.font.widthPerCharacter = STATIC_CAST(reduction, SInt16);
+		reduction *= inTerminalViewPtr->text.font.scaleWidthPerCell;
+		inTerminalViewPtr->text.font.widthPerCell.setPrecisePixels(reduction);
 	}
 	
 	// now use the font metrics to determine how big double-width text should be
@@ -13027,9 +13027,9 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 						inTerminalViewPtr->text.font.doubleMetrics.ascent);
 	
 	// the thickness of lines in certain glyphs is also scaled with the font size
-	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max(1.0f, inTerminalViewPtr->text.font.widthPerCharacter / 5.0f); // arbitrary
+	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max(1.0f, inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 5.0f); // arbitrary
 	inTerminalViewPtr->text.font.thicknessHorizontalBold = 2.0f * inTerminalViewPtr->text.font.thicknessHorizontalLines; // arbitrary
-	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max(1.0f, inTerminalViewPtr->text.font.heightPerCharacter / 7.0f); // arbitrary
+	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max(1.0f, inTerminalViewPtr->text.font.heightPerCell.precisePixels() / 7.0f); // arbitrary
 	inTerminalViewPtr->text.font.thicknessVerticalBold = 2.0f * inTerminalViewPtr->text.font.thicknessVerticalLines; // arbitrary
 }// setUpScreenFontMetrics
 	
@@ -14601,8 +14601,8 @@ drawRect:(NSRect)	aRect
 		{
 			// draw only the requested area; convert from pixels to screen cells
 			HIPoint const&		kTopLeftAnchor = clipBounds.origin;
-			HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.y + clipBounds.size.height,
-																	clipBounds.origin.x + clipBounds.size.width);
+			HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.x + clipBounds.size.width,
+																	clipBounds.origin.y + clipBounds.size.height);
 			TerminalView_Cell	leftTopCell;
 			TerminalView_Cell	rightBottomCell;
 			Float32				deltaColumn = 0.0;
@@ -14735,8 +14735,8 @@ drawRect:(NSRect)	aRect
 			// if the terminal is currently in password mode, annotate the cursor
 			if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
 			{
-				CGFloat const	newHeight = viewPtr->text.font.heightPerCharacter; // TEMPORARY; does not handle double-height lines (probably does not need to)
-				CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCharacter * 0.33/* arbitrary */), CGFloat);
+				CGFloat const	newHeight = viewPtr->text.font.heightPerCell.precisePixels(); // TEMPORARY; does not handle double-height lines (probably does not need to)
+				CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCell.precisePixels() * 0.33/* arbitrary */), CGFloat);
 				CGRect			fullRectangleBounds = cursorFloatBounds;
 				CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
 				
@@ -14744,7 +14744,7 @@ drawRect:(NSRect)	aRect
 				// the cursor may not be block-size so convert to a block rectangle
 				// before determining the placement of the oval inset
 				fullRectangleBounds.origin.y = fullRectangleBounds.origin.y + fullRectangleBounds.size.height - newHeight;
-				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCharacter;
+				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
 				fullRectangleBounds.size.height = newHeight;
 				RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
 				++dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary

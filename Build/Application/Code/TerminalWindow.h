@@ -317,7 +317,7 @@ void
 void
 	TerminalWindow_SetFontAndSize					(TerminalWindowRef			inRef,
 													 CFStringRef				inFontFamilyNameOrNull,
-													 UInt16						inFontSizeOrZero);
+													 Float32					inFontSizeOrZero);
 
 void
 	TerminalWindow_SetObscured						(TerminalWindowRef			inRef,
