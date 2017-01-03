@@ -66,6 +66,7 @@ TerminalWindow_Controller*&		gDebugInterface_TestTerminalWindowController()
 
 Boolean		gDebugInterface_LogsDeviceState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
+Boolean		gDebugInterface_LogsTerminalEcho = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
 
 
@@ -412,6 +413,35 @@ setLogsTeletypewriterState:(BOOL)	aFlag
 /*!
 Accessor.
 
+(2016.12)
+*/
+- (BOOL)
+logsTerminalEcho
+{
+	return gDebugInterface_LogsTerminalEcho;
+}
+- (void)
+setLogsTerminalEcho:(BOOL)		aFlag
+{
+	if (aFlag != gDebugInterface_LogsTerminalEcho)
+	{
+		if (aFlag)
+		{
+			Console_WriteLine("started logging of terminal state (echo)");
+		}
+		else
+		{
+			Console_WriteLine("stopped logging of terminal state (echo)");
+		}
+		
+		gDebugInterface_LogsTerminalEcho = aFlag;
+	}
+}// setLogsTerminalEcho:
+
+
+/*!
+Accessor.
+
 (4.0)
 */
 - (BOOL)
@@ -426,11 +456,11 @@ setLogsTerminalState:(BOOL)		aFlag
 	{
 		if (aFlag)
 		{
-			Console_WriteLine("started logging of terminal state");
+			Console_WriteLine("started logging of terminal state (except echo)");
 		}
 		else
 		{
-			Console_WriteLine("stopped logging of terminal state");
+			Console_WriteLine("stopped logging of terminal state (except echo)");
 		}
 		
 		gDebugInterface_LogsTerminalState = aFlag;

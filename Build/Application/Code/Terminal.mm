@@ -8230,9 +8230,27 @@ stateTransition		(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< standard handler transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() || DebugInterface_LogsTerminalEcho())
 	{
-		Console_WriteValueFourChars(">>>     standard handler transition to state  ", inOldNew.second);
+		if (kMy_ParserStateAccumulateForEcho == inOldNew.second)
+		{
+			// echo logging is a special case because it is quite common
+			// and showing it may make it harder to notice other states
+			// (NOTE: since all emulators currently defer to the default
+			// emulator to echo, it is only logged here)
+			if (DebugInterface_LogsTerminalEcho())
+			{
+				Console_WriteLine(">>>     standard handler transition to ECHO state");
+			}
+		}
+		else
+		{
+			// any other state is logged normally
+			if (DebugInterface_LogsTerminalState())
+			{
+				Console_WriteValueFourChars(">>>     standard handler transition to state  ", inOldNew.second);
+			}
+		}
 	}
 	
 	// decide what to do based on the proposed transition
@@ -8383,7 +8401,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< dumb terminal transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     dumb terminal transition to state  ", inOldNew.second);
 	}
@@ -8447,7 +8465,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< UTF-8 handler transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     UTF-8 handler transition to state  ", inOldNew.second);
 	}
@@ -9618,7 +9636,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 ANSI transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     VT100 ANSI transition to state  ", inOldNew.second);
 	}
@@ -10767,7 +10785,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 VT52 transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     VT100 VT52 transition to state  ", inOldNew.second);
 	}
@@ -11223,7 +11241,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT102 transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     VT102 transition to state  ", inOldNew.second);
 	}
@@ -12003,7 +12021,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT220 transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     VT220 transition to state  ", inOldNew.second);
 	}
@@ -12843,7 +12861,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
 		Console_WriteValueFourChars(">>>     XTerm transition to state  ", inOldNew.second);
 	}
@@ -13144,9 +13162,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState())
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
 	{
-		Console_WriteValueFourChars(">>>     XTerm transition to state  ", inOldNew.second);
+		Console_WriteValueFourChars(">>>     XTerm (core) transition to state  ", inOldNew.second);
 	}
 	
 	// decide what to do based on the proposed transition

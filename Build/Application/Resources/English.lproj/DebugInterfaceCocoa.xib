@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16C67" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="DebugInterface_PanelController">
@@ -14,16 +15,14 @@
         <window title="Debugging Options" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
-            <rect key="contentRect" x="191" y="400" width="466" height="288"/>
+            <rect key="contentRect" x="191" y="400" width="466" height="312"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
-            <value key="minSize" type="size" width="466" height="288"/>
-            <value key="maxSize" type="size" width="466" height="288"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="466" height="288"/>
+                <rect key="frame" x="0.0" y="0.0" width="466" height="312"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button wantsLayer="YES" id="47">
-                        <rect key="frame" x="184" y="250" width="264" height="18"/>
+                        <rect key="frame" x="184" y="274" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -32,7 +31,7 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <buttonCell key="cell" type="check" title="Log Terminal State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="48">
+                        <buttonCell key="cell" type="check" title="Log Terminal State (Except Echo)" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="48">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -40,8 +39,8 @@
                             <binding destination="-2" name="value" keyPath="self.logsTerminalState" id="51"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" id="52">
-                        <rect key="frame" x="184" y="230" width="264" height="18"/>
+                    <button wantsLayer="YES" misplaced="YES" id="52">
+                        <rect key="frame" x="184" y="234" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -58,8 +57,8 @@
                             <binding destination="-2" name="value" keyPath="self.logsTerminalInputChar" id="55"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" id="112">
-                        <rect key="frame" x="184" y="210" width="264" height="18"/>
+                    <button wantsLayer="YES" misplaced="YES" id="112">
+                        <rect key="frame" x="184" y="214" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -77,7 +76,7 @@
                         </connections>
                     </button>
                     <textField wantsLayer="YES" verticalHuggingPriority="750" id="56">
-                        <rect key="frame" x="17" y="251" width="146" height="17"/>
+                        <rect key="frame" x="17" y="275" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -92,7 +91,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" id="58">
+                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="58">
                         <rect key="frame" x="17" y="162" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -108,7 +107,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="60" customClass="CoreUI_Button">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="60" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="152" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -126,7 +125,7 @@
                             <action selector="dumpStateOfActiveTerminal:" target="-2" id="62"/>
                         </connections>
                     </button>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" id="72">
+                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="72">
                         <rect key="frame" x="17" y="122" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -142,7 +141,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="73" customClass="CoreUI_Button">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="73" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="112" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -160,7 +159,7 @@
                             <action selector="showTestTerminalWindow:" target="-2" id="77"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="129" customClass="CoreUI_Button">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="129" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="46" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -178,7 +177,7 @@
                             <action selector="launchNewCallPythonClient:" target="-2" id="133"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="117" customClass="CoreUI_Button">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="117" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="79" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -196,7 +195,7 @@
                             <action selector="showTestTerminalToolbar:" target="-2" id="120"/>
                         </connections>
                     </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" id="134" customClass="CoreUI_Button">
+                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="134" customClass="CoreUI_Button">
                         <rect key="frame" x="180" y="13" width="182" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -212,6 +211,24 @@
                         </buttonCell>
                         <connections>
                             <action selector="setTestTerminalToActiveSessionData:" target="-2" id="137"/>
+                        </connections>
+                    </button>
+                    <button wantsLayer="YES" misplaced="YES" id="yBK-8Y-YCX">
+                        <rect key="frame" x="184" y="254" width="264" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <contentFilters>
+                            <ciFilter name="CIColorInvert">
+                                <configuration>
+                                    <null key="inputImage"/>
+                                </configuration>
+                            </ciFilter>
+                        </contentFilters>
+                        <buttonCell key="cell" type="check" title="Log Terminal Echo State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="pck-Cm-LWf">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="self.logsTerminalEcho" id="9GI-08-zix"/>
                         </connections>
                     </button>
                 </subviews>

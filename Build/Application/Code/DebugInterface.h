@@ -73,18 +73,14 @@ changes to an interface declared in a ".mm" file.
 	showTestTerminalWindow:(id)_;
 
 // accessors
-	- (BOOL)
-	logsTerminalInputChar;
-	- (void)
-	setLogsTerminalInputChar:(BOOL)_; // binding
-	- (BOOL)
-	logsTeletypewriterState;
-	- (void)
-	setLogsTeletypewriterState:(BOOL)_; // binding
-	- (BOOL)
-	logsTerminalState;
-	- (void)
-	setLogsTerminalState:(BOOL)_; // binding
+	@property (assign) BOOL
+	logsTerminalInputChar; // binding
+	@property (assign) BOOL
+	logsTeletypewriterState; // binding
+	@property (assign) BOOL
+	logsTerminalEcho; //binding
+	@property (assign) BOOL
+	logsTerminalState; //binding
 
 @end //}
 
@@ -95,6 +91,7 @@ changes to an interface declared in a ".mm" file.
 // These are exposed for maximum efficiency.
 extern Boolean		gDebugInterface_LogsDeviceState;
 extern Boolean		gDebugInterface_LogsTerminalInputChar;
+extern Boolean		gDebugInterface_LogsTerminalEcho;
 extern Boolean		gDebugInterface_LogsTerminalState;
 
 
@@ -122,6 +119,16 @@ inline Boolean
 	{
 	#ifndef NDEBUG
 		return gDebugInterface_LogsDeviceState;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
+	DebugInterface_LogsTerminalEcho			()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsTerminalEcho;
 	#else
 		return false;
 	#endif
