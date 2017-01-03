@@ -9,7 +9,7 @@
 /*###############################################################
 
 	Simple Cocoa Wrappers Library
-	© 2008-2016 by Kevin Grant
+	© 2008-2017 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
