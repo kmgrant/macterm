@@ -368,8 +368,8 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 			// these settings should only ever be modified by recalculateCachedDimensions(),
 			// and that routine should be called when any dependent factor, such as font,
 			// is changed; see that routine’s documentation for more information
-TerminalView_PixelWidth		viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
-TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the current dimensions of the content view
+			TerminalView_PixelWidth		viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
+			TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the current dimensions of the content view
 		} cache;
 	} screen;
 	
@@ -487,7 +487,7 @@ Terminal_LineRef	findRowIterator						(My_TerminalViewPtr, TerminalView_RowIndex
 Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, TerminalView_RowIndex, TerminalView_RowIndex,
 														 Terminal_LineStackStorage*);
 Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
-Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, Float32&, Float32&);
+Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, SInt16&, SInt16&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor*);
 void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
 TerminalView_PixelWidth		getRowCharacterWidth		(My_TerminalViewPtr, TerminalView_RowIndex);
@@ -2685,7 +2685,7 @@ TerminalView_ScrollAround	(TerminalViewRef	inView,
 	}
 	else if (inColumnCountDelta < 0)
 	{
-		result = TerminalView_ScrollColumnsTowardRightEdge(inView, inColumnCountDelta);
+		result = TerminalView_ScrollColumnsTowardRightEdge(inView, -inColumnCountDelta);
 	}
 	
 	if (inRowCountDelta > 0)
@@ -2694,7 +2694,7 @@ TerminalView_ScrollAround	(TerminalViewRef	inView,
 	}
 	else if (inRowCountDelta < 0)
 	{
-		result = TerminalView_ScrollRowsTowardBottomEdge(inView, inRowCountDelta);
+		result = TerminalView_ScrollRowsTowardBottomEdge(inView, -inRowCountDelta);
 	}
 	
 	return result;
@@ -3046,7 +3046,7 @@ if a range is invalid
 (2016.10)
 */
 TerminalView_Result
-TerminalView_ScrollToCell	(TerminalViewRef				inView,
+TerminalView_ScrollToCell	(TerminalViewRef			inView,
 							 TerminalView_Cell const&	inCell)
 {
 	TerminalView_Result			result = kTerminalView_ResultOK;
@@ -3124,7 +3124,7 @@ if a range is invalid
 (4.0)
 */
 TerminalView_Result
-TerminalView_ScrollToIndicatorPosition	(TerminalViewRef		inView,
+TerminalView_ScrollToIndicatorPosition	(TerminalViewRef	inView,
 										 SInt32				inStartOfRangeV,
 										 SInt32				UNUSED_ARGUMENT(inStartOfRangeH))
 {
@@ -7505,14 +7505,10 @@ findVirtualCellFromLocalPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 	localToScreen(inTerminalViewPtr, &offsetH, &offsetV);
 	{
 		HIPoint		screenPixelPosition = CGPointMake(offsetH, offsetV);
-		Float32		deltaColumn = 0.0;
-		Float32		deltaRow = 0.0;
 		
 		
 		result = findVirtualCellFromScreenPoint(inTerminalViewPtr, screenPixelPosition, outCell,
-												deltaColumn, deltaRow);
-		outDeltaColumn = STATIC_CAST(deltaColumn, SInt16); // TEMPORARY; lost precision here
-		outDeltaRow = STATIC_CAST(deltaRow, SInt16);
+												outDeltaColumn, outDeltaRow);
 	}
 	
 #if 0
@@ -7557,79 +7553,101 @@ Boolean
 findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 								 HIPoint				inScreenLocalPixelPosition,
 								 TerminalView_Cell&		outCell,
-								 Float32&				outDeltaColumn,
-								 Float32&				outDeltaRow)
+								 SInt16&				outDeltaColumn,
+								 SInt16&				outDeltaRow)
 {
 	Boolean		result = true;
 	Float32		columnCalculation = 0;
 	Float32		rowCalculation = 0;
+	Float32		deltaColumnCalculation = 0;
+	Float32		deltaRowCalculation = 0;
+	SInt16		minimumDeltaColumns = 0;
+	SInt16		minimumDeltaRows = 0;
 	
-	
-	outDeltaColumn = 0;
-	outDeltaRow = 0;
 	
 	// adjust point to fit in local screen area
 	{
-		// NOTE: This code starts in units of pixels for convenience,
-		// but must convert to units of columns and rows upon return.
 		Float32		offsetH = inScreenLocalPixelPosition.x;
 		Float32		offsetV = inScreenLocalPixelPosition.y;
 		
 		
+		// NOTE: This code starts in units of pixels for convenience,
+		// but must convert to units of columns and rows upon return.
 		if (offsetH < 0)
 		{
 			result = false;
-			outDeltaColumn = offsetH;
 			columnCalculation = 0;
+			deltaColumnCalculation = offsetH;
+			minimumDeltaColumns = -1;
 		}
 		else
 		{
-			columnCalculation = STATIC_CAST(offsetH, SInt16);
+			Float32 const		kScreenPrecisePixelWidth = inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels();
+			
+			
+			columnCalculation = offsetH;
+			if (columnCalculation > kScreenPrecisePixelWidth)
+			{
+				result = false;
+				deltaColumnCalculation = (offsetH - kScreenPrecisePixelWidth);
+				columnCalculation = kScreenPrecisePixelWidth;
+				minimumDeltaColumns = +1;
+			}
 		}
 		
+		// NOTE: This code starts in units of pixels for convenience,
+		// but must convert to units of columns and rows upon return.
 		if (offsetV < 0)
 		{
 			result = false;
-			outDeltaRow = offsetV;
 			rowCalculation = 0;
+			deltaRowCalculation = offsetV;
+			minimumDeltaRows = -1;
 		}
 		else
 		{
-			rowCalculation = STATIC_CAST(offsetV, SInt32);
+			Float32 const		kScreenPrecisePixelHeight = inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels();
+			
+			
+			rowCalculation = offsetV;
+			if (rowCalculation > kScreenPrecisePixelHeight)
+			{
+				result = false;
+				deltaRowCalculation = (offsetV - kScreenPrecisePixelHeight);
+				rowCalculation = kScreenPrecisePixelHeight;
+				minimumDeltaRows = +1;
+			}
 		}
 	}
 	
-	if (rowCalculation > inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels())
-	{
-		result = false;
-		outDeltaRow = rowCalculation - inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels();
-		rowCalculation = inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels();
-	}
-	
 	// TEMPORARY: this needs to take into account double-height text
+	// (or, redefine normal-height rows to be independent here?)
 	rowCalculation /= inTerminalViewPtr->text.font.heightPerCell.precisePixels();
-	outDeltaRow /= inTerminalViewPtr->text.font.heightPerCell.precisePixels();
-	
-	if (columnCalculation > inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels())
-	{
-		result = false;
-		outDeltaColumn = columnCalculation - inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels();
-		columnCalculation = inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels();
-	}
+	deltaRowCalculation /= inTerminalViewPtr->text.font.heightPerCell.precisePixels();
 	
 	{
 		TerminalView_PixelWidth const	kWidthPerCell = getRowCharacterWidth(inTerminalViewPtr, rowCalculation);
 		
 		
 		columnCalculation /= kWidthPerCell.precisePixels();
-		outDeltaColumn /= kWidthPerCell.precisePixels();
+		deltaColumnCalculation /= kWidthPerCell.precisePixels();
 	}
 	
 	columnCalculation += inTerminalViewPtr->screen.leftVisibleEdgeInColumns;
 	rowCalculation += inTerminalViewPtr->screen.topVisibleEdgeInRows;
 	
-	outCell.first = STATIC_CAST(columnCalculation, SInt16);
-	outCell.second = STATIC_CAST(rowCalculation, TerminalView_RowIndex);
+	outCell.first = STATIC_CAST(floor(columnCalculation), SInt16);
+	outCell.second = STATIC_CAST(floor(rowCalculation), TerminalView_RowIndex);
+	
+	// the change value potentially has a minimum value (and not
+	// necessarily zero) to ensure that positions outside the
+	// screen will definitely shift by at least one unit
+	outDeltaColumn = ((deltaColumnCalculation < 0)
+						? std::min(STATIC_CAST(floor(deltaColumnCalculation), SInt16), minimumDeltaColumns)
+						: std::max(STATIC_CAST(floor(deltaColumnCalculation), SInt16), minimumDeltaColumns));
+	outDeltaRow = ((deltaRowCalculation < 0)
+					? std::min(STATIC_CAST(floor(deltaRowCalculation), SInt16), minimumDeltaRows)
+					: std::max(STATIC_CAST(floor(deltaRowCalculation), SInt16), minimumDeltaRows));
 	
 	return result;
 }// findVirtualCellFromScreenPoint
@@ -10628,8 +10646,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.right, clipBounds.bottom);
 							TerminalView_Cell	leftTopCell;
 							TerminalView_Cell	rightBottomCell;
-							Float32				deltaColumn = 0;
-							Float32				deltaRow = 0;
+							SInt16				deltaColumn = 0;
+							SInt16				deltaRow = 0;
 							
 							
 							// figure out what cells to draw
@@ -14605,8 +14623,8 @@ drawRect:(NSRect)	aRect
 																	clipBounds.origin.y + clipBounds.size.height);
 			TerminalView_Cell	leftTopCell;
 			TerminalView_Cell	rightBottomCell;
-			Float32				deltaColumn = 0.0;
-			Float32				deltaRow = 0.0;
+			SInt16				deltaColumn = 0;
+			SInt16				deltaRow = 0;
 			
 			
 			// figure out what cells to draw

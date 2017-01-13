@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170112',
     '20161130',
     '20161129',
     '20161125',
@@ -565,6 +566,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170112': [
+        'Fixed terminal view text selection in the scrollback buffer, which was off by one line in some recent builds.',
+        'Fixed terminal view text selections to correctly auto-scroll the terminal in either direction when moving past the top or bottom.',
+    ],
     '20161130': [
         'Added "Select Next Macro Set" and "Select Previous Macro Set" commands to the Macros menu, for easier switching between macros.',
         'The key equivalents for Delete key remapping commands have been removed, and now command-[ and command-] are used for the new macro-switching commands.',

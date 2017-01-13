@@ -2386,7 +2386,7 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 						{
 							if (isEnd)
 							{
-								Console_Warning(Console_WriteLine, "exceeded row boundaries when changing attributes of a range");
+								//Console_Warning(Console_WriteLine, "exceeded row boundaries when changing attributes of a range");
 								break;
 							}
 							
