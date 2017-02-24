@@ -15,6 +15,7 @@ parser does not care what the keys are, or what order they are in.
 Parser -- class to translate key-value-pair syntax into Python data
 
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -175,8 +176,8 @@ def _test():
     """Runs all of this module's "doctest" test cases.
     """
     import doctest
-    import pymacterm.file.kvp
-    return doctest.testmod(pymacterm.file.kvp)
+    from . import file_kvp
+    return doctest.testmod(file_kvp)
 
 if __name__ == '__main__':
     _test()

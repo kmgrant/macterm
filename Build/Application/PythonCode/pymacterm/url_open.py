@@ -16,6 +16,7 @@ telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -25,7 +26,7 @@ __version__ = '4.0.0'
 
 # note: Quills is a compiled module, library path must be set properly
 import quills
-from pymacterm.url.parse import \
+from .url_parse import \
     file as _parse_file, \
     ftp as _parse_ftp, \
     sftp as _parse_sftp, \
@@ -304,10 +305,10 @@ def _test():
     """Runs all of this module's "doctest" test cases.
     """
     import doctest
-    import pymacterm.url.open
+    from . import url_open
     result = None
     try:
-        result = doctest.testmod(pymacterm.url.open)
+        result = doctest.testmod(url_open)
     except Exception as _:
         import sys
         print("unexpected exception caught: %s" % str(_), file=sys.stderr)

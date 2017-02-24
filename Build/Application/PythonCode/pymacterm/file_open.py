@@ -9,6 +9,7 @@ script -- run any executable file as a Session
 session -- start a Session according to a ".session" key-value-pair file
 
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -16,7 +17,7 @@ __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '1 January 2008'
 __version__ = '4.0.0'
 
-import pymacterm.file.kvp
+from . import file_kvp
 # note: Quills is a compiled module, library path must be set properly
 import quills
 
@@ -45,7 +46,7 @@ def macros(pathname):
 
     """
     with open(pathname, 'rU') as mfile:
-        parser = pymacterm.file.kvp.Parser(file_object=mfile)
+        parser = file_kvp.Parser(file_object=mfile)
         defs = parser.results()
         macro_set = quills.Prefs(quills.Prefs.MACRO_SET)
         for key in defs:
@@ -97,7 +98,7 @@ def session(pathname):
 
     """
     with open(pathname, 'rU') as ifh:
-        parser = pymacterm.file.kvp.Parser(file_object=ifh)
+        parser = file_kvp.Parser(file_object=ifh)
         defs = parser.results()
         if 'command' in defs:
             args = defs['command'].split()
@@ -109,5 +110,5 @@ def _test():
     """Runs all of this module's "doctest" test cases.
     """
     import doctest
-    import pymacterm.file.open
-    return doctest.testmod(pymacterm.file.open)
+    from . import file_open
+    return doctest.testmod(file_open)

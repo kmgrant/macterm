@@ -7,6 +7,7 @@ find_word -- scan around a starting point to find the range of the word
 get_dumb_rendering -- string to describe a Unicode character in a dumb terminal
 
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -281,5 +282,5 @@ def _test():
     """Runs all of this module's "doctest" test cases.
     """
     import doctest
-    import pymacterm.term.text
-    return doctest.testmod(pymacterm.term.text)
+    from . import term_text
+    return doctest.testmod(term_text)

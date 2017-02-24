@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		0A03A1EB1D9A297000411248 /* OtherApps.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A03A1EA1D9A297000411248 /* OtherApps.mm */; };
 		0A043B041D8F5A7200511F30 /* RegionUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A043B031D8F5A7200511F30 /* RegionUtilities.cp */; };
-		0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A06274A0FB3AF3C00EBC8BB /* __init__.py */; };
-		0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0A06274F0FB3AF4900EBC8BB /* __init__.py */; };
 		0A0777411DCBC815004C9F78 /* TouchBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A0777401DCBC815004C9F78 /* TouchBar.mm */; };
 		0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */; };
 		0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */; };
@@ -24,7 +22,6 @@
 		0A3028A01DB5D46100C1C557 /* MenuUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
-		0A377E630D38806B001F3573 /* open.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; };
 		0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */; };
@@ -38,11 +35,14 @@
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
-		0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A90C79A1DBC557B005EABE0 /* CoreUI.mm */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
-		0A9D796F12A234650006CECA /* __init__.py in pymacterm-term */ = {isa = PBXBuildFile; fileRef = 0A9D796B12A2342B0006CECA /* __init__.py */; };
-		0A9D797012A234650006CECA /* text.py in pymacterm-term */ = {isa = PBXBuildFile; fileRef = 0A9D796C12A2342B0006CECA /* text.py */; };
+		0A998CB01E5F62D30002C083 /* file_kvp.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA31E5F62400002C083 /* file_kvp.py */; };
+		0A998CB11E5F62D30002C083 /* file_open.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA41E5F62400002C083 /* file_open.py */; };
+		0A998CB21E5F62D30002C083 /* term_text.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA51E5F62400002C083 /* term_text.py */; };
+		0A998CB31E5F62D30002C083 /* url_open.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA61E5F62400002C083 /* url_open.py */; };
+		0A998CB41E5F62D30002C083 /* url_parse.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA71E5F62400002C083 /* url_parse.py */; };
+		0A998CB51E5F62D30002C083 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA91E5F62570002C083 /* utilities.py */; };
 		0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */; };
@@ -136,9 +136,6 @@
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
 		0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF94E481477857900099BF2 /* PopoverManager.mm */; };
-		0AFA782C0B470144001FCE83 /* parse.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* parse.py */; };
-		0AFA782D0B470144001FCE83 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* utilities.py */; };
-		0AFA782E0B470144001FCE83 /* open.py in pymacterm-url */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* open.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -157,54 +154,21 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		0A0627530FB3AFA700EBC8BB /* pymacterm-file */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm/file";
-			dstSubfolderSpec = 0;
-			files = (
-				0A06274B0FB3AF3C00EBC8BB /* __init__.py in pymacterm-file */,
-				0A766E0B0FB54D8E00259E56 /* kvp.py in pymacterm-file */,
-				0A377E630D38806B001F3573 /* open.py in pymacterm-file */,
-			);
-			name = "pymacterm-file";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0A0627580FB3AFF200EBC8BB /* pymacterm-url */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm/url";
-			dstSubfolderSpec = 0;
-			files = (
-				0A0627500FB3AF4900EBC8BB /* __init__.py in pymacterm-url */,
-				0AFA782E0B470144001FCE83 /* open.py in pymacterm-url */,
-				0AFA782C0B470144001FCE83 /* parse.py in pymacterm-url */,
-			);
-			name = "pymacterm-url";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0A9AF6810AF5A81100E7DF18 /* pymacterm */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm";
 			dstSubfolderSpec = 0;
 			files = (
+				0A998CB01E5F62D30002C083 /* file_kvp.py in pymacterm */,
+				0A998CB11E5F62D30002C083 /* file_open.py in pymacterm */,
+				0A998CB21E5F62D30002C083 /* term_text.py in pymacterm */,
+				0A998CB31E5F62D30002C083 /* url_open.py in pymacterm */,
+				0A998CB41E5F62D30002C083 /* url_parse.py in pymacterm */,
+				0A998CB51E5F62D30002C083 /* utilities.py in pymacterm */,
 				0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */,
-				0AFA782D0B470144001FCE83 /* utilities.py in pymacterm */,
 			);
 			name = pymacterm;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0A9D796812A2340A0006CECA /* pymacterm-term */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm/term";
-			dstSubfolderSpec = 0;
-			files = (
-				0A9D796F12A234650006CECA /* __init__.py in pymacterm-term */,
-				0A9D797012A234650006CECA /* text.py in pymacterm-term */,
-			);
-			name = "pymacterm-term";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -216,8 +180,6 @@
 		0A03DBC9063F6BCC00C38B78 /* MacroManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacroManager.h; path = Application/Code/MacroManager.h; sourceTree = "<group>"; };
 		0A043B031D8F5A7200511F30 /* RegionUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegionUtilities.cp; path = Shared/Code/RegionUtilities.cp; sourceTree = "<group>"; };
 		0A043B051D8F5A7C00511F30 /* RegionUtilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RegionUtilities.h; path = Shared/Code/RegionUtilities.h; sourceTree = "<group>"; };
-		0A06274A0FB3AF3C00EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/file/__init__.py; sourceTree = "<group>"; };
-		0A06274F0FB3AF4900EBC8BB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/url/__init__.py; sourceTree = "<group>"; };
 		0A0777381DCB9D00004C9F78 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A07773D1DCBC130004C9F78 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/InfoWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A0777401DCBC815004C9F78 /* TouchBar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TouchBar.mm; path = Shared/Code/TouchBar.mm; sourceTree = "<group>"; };
@@ -311,7 +273,6 @@
 		0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextDataFile.cp; path = Shared/Code/TextDataFile.cp; sourceTree = "<group>"; };
 		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
-		0A377E610D38804B001F3573 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymacterm/file/open.py; sourceTree = "<group>"; };
 		0A3A2A21161D151500D489F6 /* IconForSearch.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearch.icns; path = Application/Resources/IconForSearch.icns; sourceTree = "<group>"; };
 		0A3A2A24161D168900D489F6 /* IconForSearchKey.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearchKey.icns; path = Application/Resources/IconForSearchKey.icns; sourceTree = "<group>"; };
 		0A3C2C1A140C73E000739966 /* CocoaAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaAnimation.h; path = Shared/Code/CocoaAnimation.h; sourceTree = "<group>"; };
@@ -466,7 +427,6 @@
 		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
 		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
-		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymacterm/file/kvp.py; sourceTree = "<group>"; };
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
@@ -482,6 +442,12 @@
 		0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = PreferencesSearch.plist; path = Application/Resources/PreferencesSearch.plist; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
 		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
+		0A998CA31E5F62400002C083 /* file_kvp.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = file_kvp.py; path = Application/PythonCode/pymacterm/file_kvp.py; sourceTree = "<group>"; };
+		0A998CA41E5F62400002C083 /* file_open.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = file_open.py; path = Application/PythonCode/pymacterm/file_open.py; sourceTree = "<group>"; };
+		0A998CA51E5F62400002C083 /* term_text.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = term_text.py; path = Application/PythonCode/pymacterm/term_text.py; sourceTree = "<group>"; };
+		0A998CA61E5F62400002C083 /* url_open.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = url_open.py; path = Application/PythonCode/pymacterm/url_open.py; sourceTree = "<group>"; };
+		0A998CA71E5F62400002C083 /* url_parse.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = url_parse.py; path = Application/PythonCode/pymacterm/url_parse.py; sourceTree = "<group>"; };
+		0A998CA91E5F62570002C083 /* utilities.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = utilities.py; path = Application/PythonCode/pymacterm/utilities.py; sourceTree = "<group>"; };
 		0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTerm.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A9B317E0D538E2800C1616D /* TextDataFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextDataFile.h; path = Shared/Code/TextDataFile.h; sourceTree = "<group>"; };
 		0A9B31800D538E3C00C1616D /* StringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StringUtilities.h; path = Shared/Code/StringUtilities.h; sourceTree = "<group>"; };
@@ -497,8 +463,6 @@
 		0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockPtrLocker.template.h; path = Shared/Code/MemoryBlockPtrLocker.template.h; sourceTree = "<group>"; };
 		0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceLocker.template.h; path = Shared/Code/MemoryBlockReferenceLocker.template.h; sourceTree = "<group>"; };
 		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
-		0A9D796B12A2342B0006CECA /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/term/__init__.py; sourceTree = "<group>"; };
-		0A9D796C12A2342B0006CECA /* text.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = text.py; path = Application/PythonCode/pymacterm/term/text.py; sourceTree = "<group>"; };
 		0AA42A290F0C95B80057B393 /* Template-Application-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Application-Info.plist"; path = "Application/Resources/Template-Application-Info.plist"; sourceTree = "<group>"; };
 		0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-PyMacTerm.framework-Info.plist"; path = "Application/Resources/Template-PyMacTerm.framework-Info.plist"; sourceTree = "<group>"; };
 		0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Quills.framework-Info.plist"; path = "Application/Resources/Template-Quills.framework-Info.plist"; sourceTree = "<group>"; };
@@ -598,9 +562,6 @@
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
 		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
 		0AF995F30CC3C849000A11DC /* IconForBellOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOn.icns; path = Application/Resources/IconForBellOn.icns; sourceTree = "<group>"; };
-		0AFA78260B470136001FCE83 /* parse.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = parse.py; path = Application/PythonCode/pymacterm/url/parse.py; sourceTree = "<group>"; };
-		0AFA78270B470136001FCE83 /* utilities.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; lineEnding = 0; name = utilities.py; path = Application/PythonCode/pymacterm/utilities.py; sourceTree = "<group>"; };
-		0AFA78280B470136001FCE83 /* open.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = open.py; path = Application/PythonCode/pymacterm/url/open.py; sourceTree = "<group>"; };
 		0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventHandlerWrap.template.h; path = Shared/Code/CarbonEventHandlerWrap.template.h; sourceTree = "<group>"; };
 		0AFD12B5087A147D00439BEA /* NIBLoader.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NIBLoader.cp; path = Shared/Code/NIBLoader.cp; sourceTree = "<group>"; };
 		0AFD12B7087A148B00439BEA /* NIBLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NIBLoader.h; path = Shared/Code/NIBLoader.h; sourceTree = "<group>"; };
@@ -641,26 +602,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0A06273F0FB3AF1200EBC8BB /* file */ = {
-			isa = PBXGroup;
-			children = (
-				0A06274A0FB3AF3C00EBC8BB /* __init__.py */,
-				0A766E0A0FB54D8E00259E56 /* kvp.py */,
-				0A377E610D38804B001F3573 /* open.py */,
-			);
-			name = file;
-			sourceTree = "<group>";
-		};
-		0A0627410FB3AF2300EBC8BB /* url */ = {
-			isa = PBXGroup;
-			children = (
-				0A06274F0FB3AF4900EBC8BB /* __init__.py */,
-				0AFA78280B470136001FCE83 /* open.py */,
-				0AFA78260B470136001FCE83 /* parse.py */,
-			);
-			name = url;
-			sourceTree = "<group>";
-		};
 		0A0E9FA51DB18F3C006A8BF5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -925,15 +866,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		0A9D796A12A2341C0006CECA /* term */ = {
-			isa = PBXGroup;
-			children = (
-				0A9D796B12A2342B0006CECA /* __init__.py */,
-				0A9D796C12A2342B0006CECA /* text.py */,
-			);
-			name = term;
-			sourceTree = "<group>";
-		};
 		0AA19F551D8A07E600FD70FF /* Shared XIBs */ = {
 			isa = PBXGroup;
 			children = (
@@ -994,10 +926,12 @@
 			isa = PBXGroup;
 			children = (
 				0AB3B2640F0C1B69000559AB /* __init__.py */,
-				0A06273F0FB3AF1200EBC8BB /* file */,
-				0A9D796A12A2341C0006CECA /* term */,
-				0A0627410FB3AF2300EBC8BB /* url */,
-				0AFA78270B470136001FCE83 /* utilities.py */,
+				0A998CA31E5F62400002C083 /* file_kvp.py */,
+				0A998CA41E5F62400002C083 /* file_open.py */,
+				0A998CA51E5F62400002C083 /* term_text.py */,
+				0A998CA61E5F62400002C083 /* url_open.py */,
+				0A998CA71E5F62400002C083 /* url_parse.py */,
+				0A998CA91E5F62570002C083 /* utilities.py */,
 			);
 			name = pymacterm;
 			sourceTree = "<group>";
@@ -1243,9 +1177,6 @@
 				0A79B1EB0AF71FEA0052ECD3 /* Auto-Date Property List */,
 				0A9AF64A0AF5A50500E7DF18 /* Resources */,
 				0A9AF6810AF5A81100E7DF18 /* pymacterm */,
-				0A0627530FB3AFA700EBC8BB /* pymacterm-file */,
-				0A9D796812A2340A0006CECA /* pymacterm-term */,
-				0A0627580FB3AFF200EBC8BB /* pymacterm-url */,
 			);
 			buildRules = (
 			);

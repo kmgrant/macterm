@@ -9,6 +9,7 @@ slash_free_path -- remove all leading and trailing slashes
 sort_dict -- for testing, return deterministic "dict" description
 
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -19,7 +20,7 @@ __version__ = '4.0.0'
 def command_data(cmdline_tuple, allow_nonzero_exit=False):
     """command_data(tuple) -> string
 
-    Runs a program and returns its standard output as a
+    Run a program and return its standard output as a
     string without any editing.  If there is ANY problem
     running the program, the result will be None unless
     the keyword argument "allow_nonzero_exit" is True.
@@ -162,8 +163,9 @@ def sort_dict(keys_values):
 def _test():
     """Runs all of this module's "doctest" test cases.
     """
-    import doctest, pymacterm.utilities
-    return doctest.testmod(pymacterm.utilities)
+    import doctest
+    from . import utilities
+    return doctest.testmod(utilities)
 
 if __name__ == '__main__':
     _test()

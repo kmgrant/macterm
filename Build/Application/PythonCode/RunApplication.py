@@ -17,6 +17,7 @@ This exposure to Python simplifies debugging, and gives you extensibility and
 configuration options that most applications lack!  This file shows just a few
 examples of what you can do...look for more information at MacTerm.net.
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -39,9 +40,9 @@ if __name__ == "__main__":
                   file=sys.stderr)
         print("Python path:", sys.path, file=sys.stderr)
         raise err
-    import pymacterm.file.open
-    import pymacterm.term.text
-    import pymacterm.url.open
+    import pymacterm.file_open
+    import pymacterm.term_text
+    import pymacterm.url_open
     from pymacterm.utilities import command_data as command_data
 
     # undo environment settings made by the "MacTerm" script, so as not
@@ -210,24 +211,24 @@ if __name__ == "__main__":
         pymacterm.run_all_tests()
 
     # register MacTerm features that are actually implemented in Python!
-    Session.on_urlopen_call(pymacterm.url.open.file, 'file')
-    Session.on_urlopen_call(pymacterm.url.open.ftp, 'ftp')
-    Session.on_urlopen_call(pymacterm.url.open.sftp, 'sftp')
-    Session.on_urlopen_call(pymacterm.url.open.ssh, 'ssh')
-    Session.on_urlopen_call(pymacterm.url.open.telnet, 'telnet')
-    Session.on_urlopen_call(pymacterm.url.open.x_man_page, 'x-man-page')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'bash')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'command')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'csh')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'pl')
-    Session.on_fileopen_call(pymacterm.file.open.prefs, 'plist')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'py')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'sh')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'tcl')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'tcsh')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'tool')
-    Session.on_fileopen_call(pymacterm.file.open.prefs, 'xml')
-    Session.on_fileopen_call(pymacterm.file.open.script, 'zsh')
+    Session.on_urlopen_call(pymacterm.url_open.file, 'file')
+    Session.on_urlopen_call(pymacterm.url_open.ftp, 'ftp')
+    Session.on_urlopen_call(pymacterm.url_open.sftp, 'sftp')
+    Session.on_urlopen_call(pymacterm.url_open.ssh, 'ssh')
+    Session.on_urlopen_call(pymacterm.url_open.telnet, 'telnet')
+    Session.on_urlopen_call(pymacterm.url_open.x_man_page, 'x-man-page')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'bash')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'command')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'csh')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'pl')
+    Session.on_fileopen_call(pymacterm.file_open.prefs, 'plist')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'py')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'sh')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'tcl')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'tcsh')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'tool')
+    Session.on_fileopen_call(pymacterm.file_open.prefs, 'xml')
+    Session.on_fileopen_call(pymacterm.file_open.script, 'zsh')
 
     def pids_cwds(pids_tuple):
         """A callback, invoked by MacTerm, whenever the current working
@@ -270,14 +271,14 @@ if __name__ == "__main__":
     #Session.set_keep_alive_transmission(".")
 
     try:
-        Terminal.on_seekword_call(pymacterm.term.text.find_word)
+        Terminal.on_seekword_call(pymacterm.term_text.find_word)
     except Exception as _:
         print("warning, exception while trying to register word finder for",
               "double clicks:", _)
 
     for i in range(0, 256):
         try:
-            rendering = pymacterm.term.text.get_dumb_rendering(i)
+            rendering = pymacterm.term_text.get_dumb_rendering(i)
             Terminal.set_dumb_string_for_char(i, rendering)
         except Exception as _:
             print("warning, exception while setting character code %i:" % i, _)
