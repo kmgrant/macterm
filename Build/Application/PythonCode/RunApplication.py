@@ -25,6 +25,11 @@ __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
 __version__ = '4.0.0'
 
+def warn(*args, **kwargs):
+    """Shorthand for printing to sys.stderr.
+    """
+    print(*args, file=sys.stderr, **kwargs)
+
 if __name__ == "__main__":
     import os
     import string
@@ -34,15 +39,15 @@ if __name__ == "__main__":
         from quills import Base, Events, Prefs, Session, Terminal
     except ImportError as err:
         import sys
-        print("Unable to import Quills.", file=sys.stderr)
+        warn("Unable to import Quills.")
         if "DYLD_LIBRARY_PATH" in os.environ:
-            print("Shared library path:", os.environ["DYLD_LIBRARY_PATH"],
-                  file=sys.stderr)
-        print("Python path:", sys.path, file=sys.stderr)
+            warn("Shared library path:", os.environ["DYLD_LIBRARY_PATH"])
+        warn("Python path:", sys.path)
         raise err
     import pymacterm.file_open
     import pymacterm.term_text
     import pymacterm.url_open
+    from pymacterm.utilities import bytearray_to_str as bytearray_to_str
     from pymacterm.utilities import command_data as command_data
 
     # undo environment settings made by the "MacTerm" script, so as not
@@ -114,7 +119,7 @@ if __name__ == "__main__":
     #
     # EXAMPLE
     #     def app_will_finish():
-    #         print("this is the 2nd half of my script")
+    #         print("This is the 2nd half of my script.")
     #
     # --------------------------------------------------------------------------
     # initial_workspace() -> string
@@ -142,34 +147,34 @@ if __name__ == "__main__":
     #
     # --------------------------------------------------------------------------
     if "MACTERM_SKIP_CUSTOM_LIBS" in os.environ:
-        print("MacTerm: ignoring any 'customize_macterm' module",
-              "(environment setting)")
+        warn("MacTerm: Ignoring any 'customize_macterm' module",
+             "(environment setting).")
     else:
         try:
             # try to import using the obsolete name, and emit a console warning
             # if it exists
             import customize_mactelnet
-            print("MacTerm: warning, 'customize_mactelnet' legacy module",
-                  "will be ignored; rename it to 'customize_macterm'")
+            warn("MacTerm: Warning, 'customize_mactelnet' legacy module",
+                 "will be ignored; rename it to 'customize_macterm'.")
         except ImportError as err:
             pass
         try:
             import customize_macterm
             USER_SYMS = dir(customize_macterm)
             if '__file__' in USER_SYMS:
-                print("MacTerm: imported 'customize_macterm' module from",
+                print("MacTerm: Imported 'customize_macterm' module from",
                       customize_macterm.__file__) # could be a list
             else:
-                print("MacTerm: imported 'customize_macterm' module")
+                print("MacTerm: Imported 'customize_macterm' module.")
             # look for valid user overrides (EVERYTHING used here should be
             # documented above and initialized at the beginning)
-            print("MacTerm: module contains:", USER_SYMS)
+            print("MacTerm: Module contains:", USER_SYMS)
             if 'app_will_finish' in USER_SYMS:
-                print("MacTerm: employing user customization 'app_will_finish'")
+                print("MacTerm: Employing user customization 'app_will_finish'.")
                 app_will_finish = customize_macterm.app_will_finish
             if 'initial_workspace' in USER_SYMS:
-                print("MacTerm: employing user customization",
-                      "'initial_workspace'")
+                print("MacTerm: Employing user customization",
+                      "'initial_workspace'.")
                 initial_workspace = customize_macterm.initial_workspace
         except ImportError as err:
             # assume the module was never created, and ignore (nothing is
@@ -195,13 +200,13 @@ if __name__ == "__main__":
 
     # preamble
     NOW_DT = datetime.datetime.now()
-    print("MacTerm: %s" % NOW_DT.strftime("%A, %B %d, %Y, %I:%M %p"))
+    print("MacTerm: %s." % NOW_DT.strftime("%A, %B %d, %Y, %I:%M %p"))
 
     # load all required MacTerm modules
     Base.all_init(initial_workspace=initial_workspace())
 
     # banner
-    print("MacTerm: Base initialization complete.  This is version %s." %
+    print("MacTerm: Base initialization complete; this is version %s." %
           Base.version())
 
     # optionally invoke some unit tests
@@ -245,6 +250,7 @@ if __name__ == "__main__":
             cmd = ['/usr/sbin/lsof', '-a', '-d', 'cwd', '-Fn']
             for pid in pids_tuple:
                 cmd.extend(('-p', str(pid)))
+            cmd = tuple(cmd)
             # allow nonzero exits; if a list of process IDs is given and ANY of
             # them doesn't return something, the others might still return
             # valid data
@@ -253,15 +259,16 @@ if __name__ == "__main__":
                 # each line of output has a single letter type prefix; the
                 # first should be a line with, e.g. "p12345" (process ID);
                 # the second should be the directory, e.g. "n/some/path"
-                fields = all_output.split('\n')
+                fields = all_output.split(bytearray('\n', encoding='UTF-8'))
                 pid = None
                 for field in fields:
-                    if (len(field) > 1) and (field[0] == 'p'):
-                        pid = int(field[1:])
+                    if (len(field) > 1) and (field[0] == ord('p')):
+                        pid = int(bytearray_to_str(field[1:]))
                         path = None
-                    elif (len(field) > 1) and (field[0] == 'n'):
-                        path = field[1:]
+                    elif (len(field) > 1) and (field[0] == ord('n')):
+                        path = bytearray_to_str(field[1:])
                         if (pid is not None) and (path is not None):
+                            print("set", repr(pid), "to", repr(path))
                             result[pid] = path
                             pid = None
         return result
@@ -273,15 +280,15 @@ if __name__ == "__main__":
     try:
         Terminal.on_seekword_call(pymacterm.term_text.find_word)
     except Exception as _:
-        print("warning, exception while trying to register word finder for",
-              "double clicks:", _)
+        warn("Warning, exception while trying to register word finder for",
+             "double clicks:", _)
 
     for i in range(0, 256):
         try:
             rendering = pymacterm.term_text.get_dumb_rendering(i)
             Terminal.set_dumb_string_for_char(i, rendering)
         except Exception as _:
-            print("warning, exception while setting character code %i:" % i, _)
+            warn("Warning, exception while setting character code %i:" % i, _)
 
     # banner
     print("MacTerm: Full initialization complete.")

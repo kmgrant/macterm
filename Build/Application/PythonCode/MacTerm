@@ -12,6 +12,7 @@ such as /Library/Frameworks; but it's nice to have all the files together, and
 definitely nice when users don't need an installer or administrator privileges.
 
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -52,6 +53,11 @@ if __name__ == "__main__":
     import pymacterm.versions
     LATEST_PREFS_VERSION = pymacterm.versions.prefs_version
     MAC_OS_NAME = pymacterm.utilities.mac_os_name()
+    PY2 = pymacterm.utilities.is_py2()
+    if PY2:
+        print("MacTerm: Some variant of Python 2.x (or less) is running.")
+    else:
+        print("MacTerm: Some variant of Python 3.x (or greater) is running.")
 
     # Notes on the platform-dependent setup below:
     #
@@ -117,24 +123,25 @@ if __name__ == "__main__":
         USER_PREFS_VERSION = 0
         if ALL_OUTPUT is not None:
             try:
-                LINES = ALL_OUTPUT.split('\n')
+                LINES = ALL_OUTPUT.split(bytearray('\n', encoding='UTF-8'))
                 USER_PREFS_VERSION = int(LINES[0])
             except ValueError as _:
-                print("exception when trying to find integer",
-                      "from prefs-version", _)
-        print("MacTerm: latest preferences are version", LATEST_PREFS_VERSION,
-              "and user preferences are version", USER_PREFS_VERSION)
+                warn("Exception when trying to find integer",
+                     "from prefs-version", _)
+        print("MacTerm: Latest preferences are version %d "
+              "and user preferences are version %d." %
+              (LATEST_PREFS_VERSION, USER_PREFS_VERSION))
         if (LATEST_PREFS_VERSION > USER_PREFS_VERSION) and \
            (USER_PREFS_VERSION > 0):
             CONV_PATH = path_join(BUNDLE_DIR, 'Contents', 'Resources',
                                   'PrefsConverter.app', 'Contents',
                                   'MacOS', 'PrefsConverter')
-            print("MacTerm: launching Preferences Converter application",
+            print("MacTerm: Launching Preferences Converter application",
                   "(%s)..." % CONV_PATH)
             EXIT_STATUS = subprocess.call(CONV_PATH, shell=False)
             if EXIT_STATUS != 0:
-                print("MacTerm: preferences converter exited with",
-                      "nonzero status", EXIT_STATUS)
+                warn("MacTerm: Preferences converter exited with",
+                     "nonzero status: %d" % EXIT_STATUS)
 
     # put the initial bundle location in the environment, for convenience
     # when initializing other components
@@ -194,8 +201,8 @@ if __name__ == "__main__":
         else:
             SANDBOX_PROFILE_PATH = path_join(BUNDLE_DIR, 'Contents',
                                              'Resources', 'Application.sb')
-        print("MacTerm: sandboxing has been enabled using restrictions from",
-              "the profile '%s'" % SANDBOX_PROFILE_PATH)
+        print("MacTerm: Sandboxing has been enabled using restrictions from",
+              "the profile '%s'." % SANDBOX_PROFILE_PATH)
         sys.argv.insert(0, SANDBOX_PROFILE_PATH)
         sys.argv.insert(0, '-f')
         sys.argv.insert(0, '/usr/bin/sandbox-exec')
@@ -210,7 +217,7 @@ if __name__ == "__main__":
             DEBUGGER_PATH = path_join("/", "Applications", "Xcode.app",
                                       "Contents", "Developer",
                                       "usr", "bin", "lldb")
-        print("MacTerm: lldb has been enabled")
+        print("MacTerm: Debugging with lldb has been enabled.")
         sys.argv.insert(0, '--')
         sys.argv.insert(0, DEBUGGER_PATH)
 
