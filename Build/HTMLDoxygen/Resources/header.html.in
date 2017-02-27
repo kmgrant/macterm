@@ -8,7 +8,7 @@
 	<meta name="description" content="Developer documentation for the MacTerm terminal emulator.">
 	
 	<link rel="author" href="mailto:kmg%40mac%2Ecom">
-	<link rel="search" href="http://www.macterm.net/search/">
+	<link rel="search" href="https://www.macterm.net/search/">
 	<link rel="index" href="files.html">
 	
 	<link rel="stylesheet" type="text/css" href="code.css" title="Default">
@@ -19,8 +19,8 @@
 <div class="navigation">
 	MacTerm.net
 	<ul>
-	<li><a href="http://macterm.net/">Home</a></li>
-	<li><a href="http://macterm.net/developer/">For Developers</a></li>
+	<li><a href="https://www.macterm.net/">Home</a></li>
+	<li><a href="https://www.macterm.net/developer/">For Developers</a></li>
 	</ul>
 </div>
 
@@ -28,7 +28,7 @@
 
 <div class="content">
 	<div class="project-search">
-	<form action="http://macterm.net/search/results.html" id="cse-search-box">
+	<form action="https://www.macterm.net/search/results.html" id="cse-search-box">
 	<div>
 		<input type="hidden" name="cx" value="013568045674297986199:-w5bl_indp0" />
 		<input type="hidden" name="cof" value="FORID:9" />
@@ -37,7 +37,7 @@
 		<input type="submit" name="sa" value="Go" />
 	</div>
 	</form>
-	<script type="text/javascript" src="http://www.google.com/coop/cse/brand?form=cse-search-box&lang=en"></script>
+	<script type="text/javascript" src="https://www.google.com/coop/cse/brand?form=cse-search-box&lang=en"></script>
 	</div>
 	
 	<h2>$title</h2><!-- template -->

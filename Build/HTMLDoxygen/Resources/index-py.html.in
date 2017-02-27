@@ -8,7 +8,7 @@
 	<meta name="description" content="Developer documentation for the MacTerm terminal emulator.">
 	
 	<link rel="author" href="mailto:kmg%40mac%2Ecom">
-	<link rel="search" href="http://www.macterm.net/search/">
+	<link rel="search" href="https://www.macterm.net/search/">
 	<link rel="index" href="files.html">
 	
 	<link rel="stylesheet" type="text/css" href="code.css" title="Default">
@@ -18,9 +18,9 @@
 <div class="navigation">
 	MacTerm.net
 	<ul>
-	<li><a href="http://macterm.net/">Home</a></li>
-	<li><a href="http://macterm.net/developer/">For Developers</a></li>
-	<li><a href="http://macterm.net/developer/quills/">Quills</a></li>
+	<li><a href="https://www.macterm.net/">Home</a></li>
+	<li><a href="https://www.macterm.net/developer/">For Developers</a></li>
+	<li><a href="https://www.macterm.net/developer/quills/">Quills</a></li>
 	</ul>
 </div>
 

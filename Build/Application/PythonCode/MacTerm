@@ -84,14 +84,14 @@ if __name__ == "__main__":
     elif MAC_OS_NAME in ("Mavericks", "Mountain Lion", "Lion", "Snow Leopard",
                          "Leopard", "Tiger", "Panther"):
         warn("This MacTerm version requires at least macOS 10.10 ",
-             "(Yosemite).  Visit 'http://www.macterm.net/' to download",
+             "(Yosemite).  Visit 'https://www.macterm.net/' to download",
              "version 4.0.0 for use on older systems.")
         sys.exit(1)
     else:
         # must be new OS version (very old versions are rejected by the
         # minimum-version setting in the bundle's Info.plist)
         warn("WARNING: Your OS version hasn't been tested with this",
-             "MacTerm version.  Visit 'http://www.macterm.net/' to check",
+             "MacTerm version.  Visit 'https://www.macterm.net/' to check",
              "for updates or report bugs.")
         PY_INTERPRETER = path_join(MACOS_DIR, DEFAULT_WRAPPER)
         QUILLS_FW_VER = DEFAULT_QUILLS_FW_VER

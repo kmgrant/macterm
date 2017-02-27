@@ -6,7 +6,7 @@ notextile. <div class="navigation">
 
 notextile. </div>
 
-p(#externalnavigation). "MacTerm.net":http://www.macterm.net/
+p(#externalnavigation). "MacTerm.net":https://www.macterm.net/
 
 notextile. <table id="mainnavigation">
 

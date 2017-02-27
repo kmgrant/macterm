@@ -27,7 +27,7 @@ ABOUT THE MACTERM PROJECT
   to "git" and the repository is currently on GitHub (see below).
   
   Useful web resources:
-    http://www.macterm.net/
+    https://www.macterm.net/
     https://github.com/kmgrant/macterm
     http://www.swig.org/
     http://www.doxygen.org/

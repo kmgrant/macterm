@@ -9,7 +9,7 @@ REPORTING BUGS
   recently moved to GitHub, issue-tracking may resume there;
   check "https://github.com/kmgrant/macterm/issues" periodically.
   
-  Please see http://www.macterm.net/bug-reporter/ for a variety
+  Please see https://www.macterm.net/bug-reporter/ for a variety
   of advice on submitting useful bug reports.
 
                                         Kevin Grant (kmg@mac.com)

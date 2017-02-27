@@ -125,6 +125,9 @@ def generate_html(ofh, template_lines, subst_kv, **kwargs):
     - The pattern '<http://...>' is replaced by HTML that links to
       the specified URL.
     
+    - The pattern '<https://...>' is replaced by HTML that links to
+      the specified secure URL.
+    
     The section and/or loop hierarchy is as follows (lower levels
     implicitly have access to variables defined by parents):
     
@@ -274,7 +277,10 @@ def generate_html(ofh, template_lines, subst_kv, **kwargs):
                 # loop; must be within a 'VERSION' loop
                 if 'version_notes' in sub_vars:
                     for release_note in sub_vars['version_notes']:
-                        sub_vars['release_note'] = http_link_regex.sub(r'<a href="\1">\1</a>', release_note)
+                        modified_note = release_note
+                        modified_note = http_link_regex.sub(r'<a href="\1">\1</a>', modified_note)
+                        modified_note = http_link_regex.sub(r'<a href="\1">\1</a>', modified_note)
+                        sub_vars['release_note'] = modified_note
                         write_section_lines()
             else:
                 write_section_lines()
@@ -361,6 +367,7 @@ if __name__ == '__main__':
     begin_loop_regex = re.compile(r'BEGIN-LOOP:([^ ]+) ')
     end_loop_regex =     re.compile(r'END-LOOP:([^ ]+) ')
     http_link_regex = re.compile(r'<(http://[^>]*)>')
+    https_link_regex = re.compile(r'<(https://[^>]*)>')
     
     # write an index file based on actual versions
     with open(path.join(dest_dir, "index.html"), 'w') as index_out:

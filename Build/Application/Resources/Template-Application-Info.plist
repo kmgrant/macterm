@@ -261,9 +261,9 @@
 		<string>DefaultFormat4</string>
 	</array>
 	<key>MyHomePageURL</key>
-	<string>http://www.macterm.net/</string>
+	<string>https://www.macterm.net/</string>
 	<key>MyUpdatesURL</key>
-	<string>http://www.macterm.net/updates/daily.html</string>
+	<string>https://www.macterm.net/updates/daily.html</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
