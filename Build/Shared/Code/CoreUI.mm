@@ -68,14 +68,8 @@ drawFocusRingMask
 	// the boundaries of it); the settings below are meant to
 	// match the current system appearance/layout (as such, in
 	// the future they may require adjustment)
-	NSRect		focusRingDrawingBounds = NSInsetRect(self.bounds, 7, 7);
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBounds];
 	
-	
-	// button frames are weird; they occupy a space much larger
-	// than the rounded-rectangle of the button itself and not
-	// even perfectly-centered within that space…
-	focusRingDrawingBounds.origin.y -= 2; // meant to match system layout
-	focusRingDrawingBounds.size.height += 1; // meant to match system layout
 	
 	// based on the rules for drawing (for both NSSetFocusRingStyle()
 	// and the new-style "focusRingMaskBounds"), “filling” the target
@@ -113,8 +107,10 @@ drawRect:(NSRect)	aRect
 		// now draw the focus ring in the right place
 		// (TEMPORARY, hopefully; linking to future SDK may
 		// allow the button to be drawn correctly)
+		[NSGraphicsContext saveGraphicsState];
 		NSSetFocusRingStyle(NSFocusRingOnly);
 		[self drawFocusRingMask];
+		[NSGraphicsContext restoreGraphicsState];
 	}
 }// drawRect:
 
@@ -131,8 +127,14 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 focusRingMaskBounds
 {
 	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = self.bounds;
+	NSRect		result = NSInsetRect(self.bounds, 7, 7);
 	
+	
+	// button frames are weird; they occupy a space much larger
+	// than the rounded-rectangle of the button itself and not
+	// even perfectly-centered within that space…
+	result.origin.y -= 2; // meant to match system layout
+	result.size.height += 1; // meant to match system layout
 	
 	return result;
 }// focusRingMaskBounds
@@ -166,7 +168,7 @@ drawFocusRingMask
 	// the boundaries of it); the settings below are meant to
 	// match the current system appearance/layout (as such, in
 	// the future they may require adjustment)
-	NSRect		focusRingDrawingBounds = NSInsetRect(self.bounds, 4, 4);
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBounds];
 	
 	
 	// based on the rules for drawing (for both NSSetFocusRingStyle()
@@ -205,8 +207,10 @@ drawRect:(NSRect)	aRect
 		// now draw the focus ring in the right place
 		// (TEMPORARY, hopefully; linking to future SDK may
 		// allow the button to be drawn correctly)
+		[NSGraphicsContext saveGraphicsState];
 		NSSetFocusRingStyle(NSFocusRingOnly);
 		[self drawFocusRingMask];
+		[NSGraphicsContext restoreGraphicsState];
 	}
 }// drawRect:
 
@@ -223,7 +227,7 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 focusRingMaskBounds
 {
 	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = self.bounds;
+	NSRect		result = NSInsetRect(self.bounds, 5, 5);
 	
 	
 	return result;
@@ -258,11 +262,8 @@ drawFocusRingMask
 	// the boundaries of it); the settings below are meant to
 	// match the current system appearance/layout (as such, in
 	// the future they may require adjustment)
-	NSRect		focusRingDrawingBounds = NSInsetRect(self.bounds, 3, 3);
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBounds];
 	
-	
-	// adjust to match help button as drawn by superclass
-	focusRingDrawingBounds.size.height -= 1; // meant to match system layout
 	
 	// based on the rules for drawing (for both NSSetFocusRingStyle()
 	// and the new-style "focusRingMaskBounds"), “filling” the target
@@ -300,8 +301,10 @@ drawRect:(NSRect)	aRect
 		// now draw the focus ring in the right place
 		// (TEMPORARY, hopefully; linking to future SDK may
 		// allow the button to be drawn correctly)
+		[NSGraphicsContext saveGraphicsState];
 		NSSetFocusRingStyle(NSFocusRingOnly);
 		[self drawFocusRingMask];
+		[NSGraphicsContext restoreGraphicsState];
 	}
 }// drawRect:
 
@@ -318,8 +321,11 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 focusRingMaskBounds
 {
 	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = self.bounds;
+	NSRect		result = NSInsetRect(self.bounds, 3, 3);
 	
+	
+	// adjust to match help button as drawn by superclass
+	result.size.height -= 1; // meant to match system layout
 	
 	return result;
 }// focusRingMaskBounds
@@ -353,15 +359,8 @@ drawFocusRingMask
 	// the boundaries of it); the settings below are meant to
 	// match the current system appearance/layout (as such, in
 	// the future they may require adjustment)
-	NSRect		focusRingDrawingBounds = NSInsetRect(self.bounds, 3, 3);
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBounds];
 	
-	
-	// button frames are weird; they occupy a space much larger
-	// than the rounded-rectangle of the button itself and not
-	// even perfectly-centered within that space…
-	focusRingDrawingBounds.origin.y -= 0.5; // meant to match system layout
-	focusRingDrawingBounds.size.width -= 1; // meant to match system layout
-	focusRingDrawingBounds.size.height -= 1; // meant to match system layout
 	
 	// based on the rules for drawing (for both NSSetFocusRingStyle()
 	// and the new-style "focusRingMaskBounds"), “filling” the target
@@ -399,8 +398,10 @@ drawRect:(NSRect)	aRect
 		// now draw the focus ring in the right place
 		// (TEMPORARY, hopefully; linking to future SDK may
 		// allow the button to be drawn correctly)
+		[NSGraphicsContext saveGraphicsState];
 		NSSetFocusRingStyle(NSFocusRingOnly);
 		[self drawFocusRingMask];
+		[NSGraphicsContext restoreGraphicsState];
 	}
 }// drawRect:
 
@@ -417,8 +418,15 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 focusRingMaskBounds
 {
 	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = self.bounds;
+	NSRect		result = NSInsetRect(self.bounds, 3, 3);
 	
+	
+	// button frames are weird; they occupy a space much larger
+	// than the rounded-rectangle of the button itself and not
+	// even perfectly-centered within that space…
+	result.origin.y -= 0.5; // meant to match system layout
+	result.size.width -= 1; // meant to match system layout
+	result.size.height -= 1; // meant to match system layout
 	
 	return result;
 }// focusRingMaskBounds
@@ -459,7 +467,7 @@ drawFocusRingMask
 	// the boundaries of it); the settings below are meant to
 	// match the current system appearance/layout (as such, in
 	// the future they may require adjustment)
-	NSRect		focusRingDrawingBounds = NSInsetRect(self.bounds, 3, 3);
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBounds];
 	
 	
 	// based on the rules for drawing (for both NSSetFocusRingStyle()
@@ -498,8 +506,10 @@ drawRect:(NSRect)	aRect
 		// now draw the focus ring in the right place
 		// (TEMPORARY, hopefully; linking to future SDK may
 		// allow the button to be drawn correctly)
+		[NSGraphicsContext saveGraphicsState];
 		NSSetFocusRingStyle(NSFocusRingOnly);
 		[self drawFocusRingMask];
+		[NSGraphicsContext restoreGraphicsState];
 	}
 }// drawRect:
 
@@ -516,7 +526,7 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 focusRingMaskBounds
 {
 	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = self.bounds;
+	NSRect		result = NSInsetRect(self.bounds, 3, 3);
 	
 	
 	return result;
@@ -527,70 +537,77 @@ focusRingMaskBounds
 
 
 #pragma mark -
-@implementation CoreUI_Table //{
+@implementation CoreUI_SquareButtonCell //{
+
+
+#pragma mark NSCell
 
 
 /*!
 Invoked by the OS to find the boundaries of the focus ring,
-and by "drawRect:" for a transition period to render the
-focus ring while depending on an older SDK.
+and by "drawWithFrame:inView:" for a transition period to
+render the focus ring while depending on an older SDK.
 
 NOTE:	Invoked by the system only on OS 10.7 or later, and
 		less often than one might think.
 
-(2016.10)
+(2017.03)
 */
 - (void)
-drawFocusRingMask
+drawFocusRingMaskWithFrame:(NSRect)		aCellFrame
+inView:(NSView*)						aControlView
 {
-	// IMPORTANT: make consistent with "focusRingMaskBounds";
+	// IMPORTANT: agree with "focusRingMaskBoundsForFrame:inView";
 	// fill the exact shape of the focus ring however (not just
 	// the boundaries of it); the settings below are meant to
 	// match the current system appearance/layout (as such, in
 	// the future they may require adjustment)
-	NSRect		focusRingDrawingBounds = NSInsetRect(self.bounds, 3, 3);
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBoundsForFrame:aCellFrame inView:aControlView];
 	
 	
 	// based on the rules for drawing (for both NSSetFocusRingStyle()
 	// and the new-style "focusRingMaskBounds"), “filling” the target
 	// area will cause only a focus ring to appear
 	[[NSBezierPath bezierPathWithRect:focusRingDrawingBounds] fill];
-}// drawFocusRingMask
+}// drawFocusRingMaskWithFrame:inView:
 
 
 /*!
 Corrects the appearance of focus rings in views on top
 of visual-effect views or other layer-backed views.  If
 the view has the keyboard focus (first responder), the
-superclass "drawRect:" is called without focus and
-then "drawFocusRingMask" is called with a ring-only
-style in place.
+superclass "drawWithFrame:inView:" is called without
+focus and then "drawFocusRingMaskWithFrame:inView:" is
+called with a ring-only style in place.
 
-(2016.10)
+(2017.03)
 */
 - (void)
-drawRect:(NSRect)	aRect
+drawWithFrame:(NSRect)		aCellFrame
+inView:(NSView*)			aControlView
 {
-	if ((NO == [self isKeyboardFocusOnSelf]) || (NO == NSEqualRects(aRect, self.bounds)))
+	if (NO == [self showsFirstResponder])
 	{
 		// normal case; superclass handles this fine
-		[super drawRect:aRect];
+		[super drawWithFrame:aCellFrame inView:aControlView];
 	}
 	else
 	{
-		// temporarily resign first responder to “trick” the
-		// base class into not rendering a focus ring…
-		UNUSED_RETURN(BOOL)[self.window makeFirstResponder:nil];
-		[super drawRect:aRect];
-		UNUSED_RETURN(BOOL)[self.window makeFirstResponder:self];
+		// temporarily turn off display of first-responder to “trick”
+		// the base class into not rendering a focus ring…
+		[self setShowsFirstResponder:NO];
+		[super drawWithFrame:aCellFrame inView:aControlView];
+		[self setShowsFirstResponder:YES];
 		
 		// now draw the focus ring in the right place
 		// (TEMPORARY, hopefully; linking to future SDK may
-		// allow the button to be drawn correctly)
+		// allow the cell to be drawn correctly)
+		[NSGraphicsContext saveGraphicsState];
 		NSSetFocusRingStyle(NSFocusRingOnly);
-		[self drawFocusRingMask];
+		[self drawFocusRingMaskWithFrame:aCellFrame inView:aControlView];
+		[NSGraphicsContext restoreGraphicsState];
 	}
-}// drawRect:
+}// drawWithFrame:inView:
 
 
 /*!
@@ -599,17 +616,26 @@ Invoked by the OS to find the boundaries of the focus ring.
 NOTE:	Invoked only on OS 10.7 or later, and less often
 		than one might think.
 
-(2016.10)
+(2017.03)
 */
 - (NSRect)
-focusRingMaskBounds
+focusRingMaskBoundsForFrame:(NSRect)		aCellFrame
+inView:(NSView*)						aControlView
 {
-	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = self.bounds;
+#pragma unused(aControlView)
+	// IMPORTANT: make consistent with "drawFocusRingMaskWithFrame:inView:"
+	NSRect		result = NSInsetRect(aCellFrame, 3, 3);
 	
 	
 	return result;
-}// focusRingMaskBounds
+}// focusRingMaskBoundsForFrame:inView:
+
+
+@end //}
+
+
+#pragma mark -
+@implementation CoreUI_Table //{
 
 
 @end //}

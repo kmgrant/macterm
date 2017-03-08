@@ -2579,6 +2579,12 @@ withAnimation:(BOOL)												isAnimated
 			// that this step is implied if the visibility changes above)
 			[self rebuildSourceList];
 		}
+		
+		// move the first responder to the logical starting point of
+		// the new panel (this makes keyboard navigation more natural
+		// if the user selected the panel from the toolbar; and, it
+		// ensures correct keyboard focus when the window first opens)
+		[self.window makeFirstResponder:[aPanel logicalFirstResponder]];
 	}
 }// displayPanel:withAnimation:
 

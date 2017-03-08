@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelTranslations_ViewManager">
             <connections>
-                <outlet property="logicalFirstResponder" destination="1974" id="1998"/>
-                <outlet property="logicalLastResponder" destination="1962" id="2011"/>
+                <outlet property="logicalFirstResponder" destination="1974" id="B9p-QP-qyW"/>
+                <outlet property="logicalLastResponder" destination="1962" id="xm9-ai-Vy0"/>
                 <outlet property="translationTableView" destination="1974" id="2002"/>
                 <outlet property="view" destination="1835" id="wzg-Ue-H0M"/>
             </connections>
@@ -64,7 +64,7 @@
                         </buttonCell>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.backupFontEnabled" id="1964"/>
-                            <outlet property="nextKeyView" destination="1962" id="2010"/>
+                            <outlet property="nextKeyView" destination="1962" id="meg-0z-PDV"/>
                         </connections>
                     </button>
                     <textField verticalHuggingPriority="750" id="1944">
@@ -98,6 +98,7 @@
                         <connections>
                             <action selector="performBackupFontSelection:" target="-2" id="2001"/>
                             <binding destination="-2" name="enabled" keyPath="self.backupFontEnabled" id="1966"/>
+                            <outlet property="nextKeyView" destination="1974" id="WlK-vj-gdb"/>
                         </connections>
                     </button>
                     <scrollView focusRingType="exterior" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1971" customClass="CoreUI_ScrollView">
@@ -143,7 +144,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <connections>
-                            <outlet property="nextKeyView" destination="1927" id="2009"/>
+                            <outlet property="nextKeyView" destination="1927" id="r6I-7h-AgY"/>
                         </connections>
                     </scrollView>
                     <textField verticalHuggingPriority="750" id="2003">

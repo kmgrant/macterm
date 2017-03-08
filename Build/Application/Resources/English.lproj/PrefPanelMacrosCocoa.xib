@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelMacros_MacroEditorViewManager">
@@ -175,31 +176,31 @@
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         <size key="cellSize" width="36" height="25"/>
                         <size key="intercellSpacing" width="10" height="2"/>
-                        <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" inset="2" id="n9E-gY-dqP">
+                        <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" inset="2" id="n9E-gY-dqP" customClass="CoreUI_SquareButtonCell">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <cells>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" tag="1" inset="2" id="5tc-OY-rs1">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" tag="1" inset="2" id="5tc-OY-rs1" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </column>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="GI9-9C-bIe">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="GI9-9C-bIe" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </column>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="0dg-z8-uBS">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="0dg-z8-uBS" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </column>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="U82-Zn-vj8">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="U82-Zn-vj8" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>

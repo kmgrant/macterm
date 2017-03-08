@@ -291,7 +291,12 @@ didLoadContainerView:(NSView*)			aContainerView
 	[self->detailView addTabViewItem:tabItem];
 	[tabItem release];
 	
-	[self->masterDriver containerViewDidLoadForNumberedListViewManager:self];
+	if ([self->masterDriver respondsToSelector:@selector(containerViewDidLoadForNumberedListViewManager:)])
+	{
+		[self->masterDriver containerViewDidLoadForNumberedListViewManager:self];
+	}
+	
+	[[self->masterView enclosingScrollView] setNextKeyView:[self->detailViewManager logicalFirstResponder]];
 }// panelViewManager:didLoadContainerView:
 
 

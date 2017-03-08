@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_KeyboardViewManager">
@@ -114,25 +115,25 @@
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         <size key="cellSize" width="48" height="25"/>
                         <size key="intercellSpacing" width="-1" height="2"/>
-                        <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" inset="2" id="2111">
+                        <buttonCell key="prototype" type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" inset="2" id="2111" customClass="CoreUI_SquareButtonCell">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <cells>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" tag="1" inset="2" id="2110">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" tag="1" inset="2" id="2110" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </column>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2112">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2112" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </column>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2113">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2113" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>

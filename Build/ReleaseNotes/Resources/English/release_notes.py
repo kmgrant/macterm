@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170307',
     '20170112',
     '20161130',
     '20161129',
@@ -566,6 +567,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170307': [
+        'Fixed keyboard navigation behavior when using Full Keyboard Access in some panels of the Preferences window and corresponding sheets.  Previously, there were locations that stopped recognizing Tab key-presses.',
+        'Fixed a few remaining cases of incorrectly-rendered focus rings when using Full Keyboard Access to activate controls in the Preferences window and corresponding sheets.',
+    ],
     '20170112': [
         'Fixed terminal view text selection in the scrollback buffer, which was off by one line in some recent builds.',
         'Fixed terminal view text selections to correctly auto-scroll the terminal in either direction when moving past the top or bottom.',

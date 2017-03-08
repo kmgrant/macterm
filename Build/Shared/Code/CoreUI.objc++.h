@@ -150,8 +150,6 @@ changes to an interface declared in a ".mm" file.
 Custom subclass for scroll views in order to provide
 a way to customize behavior when needed.
 
-This currently does nothing.
-
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
@@ -188,6 +186,32 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Custom subclass for square button cells in order to
+provide a way to customize behavior when needed.
+
+This customizes the focus-ring layout and rendering to
+correct display glitches in layer-backed hierarchies.
+(Theoretically these can be fixed by adopting later
+SDKs but for now this is the only way forward.)
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface CoreUI_SquareButtonCell : NSButtonCell //{
+
+// NSCell
+	- (void)
+	drawFocusRingMaskWithFrame:(NSRect)_
+	inView:(NSView*)_;
+	- (NSRect)
+	focusRingMaskBoundsForFrame:(NSRect)_
+	inView:(NSView*)_;
+
+@end //}
+
+
+/*!
 Custom subclass for table views in order to provide
 a way to customize behavior when needed.
 
@@ -201,14 +225,6 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface CoreUI_Table : NSTableView //{
-
-// NSView
-	- (void)
-	drawFocusRingMask;
-	- (void)
-	drawRect:(NSRect)_;
-	- (NSRect)
-	focusRingMaskBounds;
 
 @end //}
 

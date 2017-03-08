@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -9,8 +9,8 @@
         <customObject id="-2" userLabel="File's Owner" customClass="GenericPanelNumberedList_ViewManager">
             <connections>
                 <outlet property="detailView" destination="YFA-kb-iPx" id="nqZ-rQ-R87"/>
-                <outlet property="logicalFirstResponder" destination="Zo2-f9-FhP" id="OGF-4D-n31"/>
-                <outlet property="logicalLastResponder" destination="YFA-kb-iPx" id="UnD-gw-6fR"/>
+                <outlet property="logicalFirstResponder" destination="YFA-kb-iPx" id="1K6-7X-25p"/>
+                <outlet property="logicalLastResponder" destination="Zo2-f9-FhP" id="UVf-sU-dOw"/>
                 <outlet property="masterView" destination="Zo2-f9-FhP" id="QwI-v6-2SM"/>
                 <outlet property="view" destination="1835" id="NJD-Z2-GaU"/>
             </connections>
@@ -98,9 +98,6 @@
                             <rect key="frame" x="0.0" y="0.0" width="172" height="17"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
-                        <connections>
-                            <outlet property="nextKeyView" destination="YFA-kb-iPx" id="3g8-hH-uus"/>
-                        </connections>
                     </scrollView>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="bYi-4Z-l44">
                         <rect key="frame" x="212" y="259" width="89" height="17"/>
@@ -121,7 +118,7 @@
                         <font key="font" metaFont="system"/>
                         <tabViewItems/>
                         <connections>
-                            <outlet property="nextKeyView" destination="Zo2-f9-FhP" id="upK-jE-hz2"/>
+                            <outlet property="nextKeyView" destination="Zo2-f9-FhP" id="vut-B3-080"/>
                         </connections>
                     </tabView>
                 </subviews>
