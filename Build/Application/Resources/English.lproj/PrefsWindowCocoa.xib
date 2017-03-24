@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -150,6 +150,7 @@
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </searchFieldCell>
+                        <accessibility description="Search For Preferences"/>
                         <connections>
                             <action selector="performSearch:" target="-2" id="ar9-gX-GtF"/>
                             <binding destination="-2" name="value" keyPath="self.searchText" id="IGX-C2-yuF"/>
@@ -198,6 +199,7 @@
                                                         </connections>
                                                     </tableColumn>
                                                 </tableColumns>
+                                                <accessibility description="Preference Collections for Selected Category"/>
                                                 <connections>
                                                     <binding destination="20" name="content" keyPath="arrangedObjects" id="95"/>
                                                     <binding destination="20" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="95" id="97"/>

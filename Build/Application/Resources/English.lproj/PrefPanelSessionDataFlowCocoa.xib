@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_DataFlowViewManager">
@@ -73,6 +74,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Local Echo: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.localEcho.inheritEnabled" id="2450"/>
                             <binding destination="-2" name="value" keyPath="self.localEcho.inherited" id="2449"/>
@@ -86,6 +88,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Line Insertion Delay: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.lineInsertionDelay.inheritEnabled" id="2452"/>
                             <binding destination="-2" name="value" keyPath="self.lineInsertionDelay.inherited" id="2451"/>
@@ -99,6 +102,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Scrolling Delay: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.scrollingDelay.inheritEnabled" id="2501"/>
                             <binding destination="-2" name="value" keyPath="self.scrollingDelay.inherited" id="2500"/>
@@ -112,6 +116,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="File Capture: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.captureToFile.inheritEnabled" id="2459"/>
                             <binding destination="-2" name="value" keyPath="self.captureToFile.inherited" id="2458"/>
@@ -137,6 +142,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Line Insertion Delay in Milliseconds"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.lineInsertionDelay.numberStringValue" id="2468"/>
                             <outlet property="nextKeyView" destination="2503" id="2508"/>
@@ -159,6 +165,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Scrolling Delay in Milliseconds"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.scrollingDelay.numberStringValue" id="2510"/>
                             <outlet property="nextKeyView" destination="2435" id="2509"/>
@@ -180,6 +187,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Automatically Capture File to Directory"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.captureToFile.enabled" id="2463"/>
                             <outlet property="nextKeyView" destination="2437" id="2446"/>
@@ -195,6 +203,7 @@
                                 <string>public.folder</string>
                             </allowedTypes>
                         </pathCell>
+                        <accessibility description="Directory for Capture File"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.captureToFile.directoryPathURLValue" id="2489"/>
                             <binding destination="-2" name="enabled" keyPath="self.captureToFile.enabled" id="2478"/>
@@ -221,6 +230,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Capture File Name"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.captureToFile.enabled" id="2480"/>
                             <binding destination="-2" name="value" keyPath="self.captureToFile.fileNameStringValue" id="2484"/>

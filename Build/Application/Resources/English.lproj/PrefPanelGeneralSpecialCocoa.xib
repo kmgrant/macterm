@@ -65,6 +65,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Flash Terminal Cursor"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.cursorFlashes" id="1993"/>
                             <outlet property="nextKeyView" destination="1999" id="2052"/>
@@ -77,6 +78,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Set Window Stacking Origin"/>
                         <connections>
                             <action selector="performSetWindowStackingOrigin:" target="-2" id="2001"/>
                             <outlet property="nextKeyView" destination="2002" id="2053"/>
@@ -106,6 +108,7 @@
                                 <buttonCell type="radio" title="Terminal screen size" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="2003">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Window Resize Affects Terminal Screen Size"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.windowResizeEffectTerminalScreenSize" id="2040"/>
                                     </connections>
@@ -113,6 +116,7 @@
                                 <buttonCell type="radio" title="Text size" imagePosition="left" alignment="left" inset="2" id="2004">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Window Resize Affects Terminal Text Size"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.windowResizeEffectTextSize" id="2042"/>
                                     </connections>
@@ -138,6 +142,7 @@
                                 <buttonCell type="radio" title="Default Session Favorite" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="2015">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Command-N Opens Default Session Favorite"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.newCommandDefaultSessionFavorite" id="2044"/>
                                     </connections>
@@ -145,6 +150,7 @@
                                 <buttonCell type="radio" title="Shell" imagePosition="left" alignment="left" inset="2" id="2014">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Command-N Opens a Shell"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.newCommandShell" id="2046"/>
                                     </connections>
@@ -152,6 +158,7 @@
                                 <buttonCell type="radio" title="Log–In Shell" imagePosition="left" alignment="left" inset="2" id="2016">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Command-N Opens a Log-In Shell"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.newCommandLogInShell" id="2048"/>
                                     </connections>
@@ -159,6 +166,7 @@
                                 <buttonCell type="radio" title="Custom New Session" imagePosition="left" alignment="left" inset="2" id="2017">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Command-N Opens the Custom New Session Sheet"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.newCommandCustomNewSession" id="2050"/>
                                     </connections>
@@ -620,6 +628,7 @@
                                 <string>bo</string>
                             </allowedInputSourceLocales>
                         </textFieldCell>
+                        <accessibility description="Spaces Per Tab for “Copy With Tab Substitution”"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.spacesPerTab.numberStringValue" id="2088">
                                 <dictionary key="options">
@@ -654,6 +663,7 @@
                                 <buttonCell type="square" title="▊" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" tag="1" inset="2" id="2065" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Terminal Cursor: Block Shape"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.cursorShapeIsBlock" id="2075"/>
                                     </connections>
@@ -663,6 +673,7 @@
                                 <buttonCell type="square" title="│" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2068" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Terminal Cursor: Vertical Bar Shape"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.cursorShapeIsVerticalBar" id="2077"/>
                                     </connections>
@@ -672,6 +683,7 @@
                                 <buttonCell type="square" title="▁" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2069" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Terminal Cursor: Underline Shape"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.cursorShapeIsUnderline" id="2079"/>
                                     </connections>
@@ -681,6 +693,7 @@
                                 <buttonCell type="square" title="┃" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2070" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Terminal Cursor: Bold Vertical Bar Shape"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.cursorShapeIsThickVerticalBar" id="2081"/>
                                     </connections>
@@ -690,6 +703,7 @@
                                 <buttonCell type="square" title="▂" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2071" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Terminal Cursor: Bold Underline Shape"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.cursorShapeIsThickUnderline" id="2083"/>
                                     </connections>

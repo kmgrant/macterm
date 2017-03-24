@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelFormats_GeneralViewManager">
@@ -37,6 +38,7 @@
                         <rect key="frame" x="222" y="144" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Normal Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.normalForegroundColor.colorValue" id="2348"/>
                             <outlet property="nextKeyView" destination="1994" id="2062"/>
@@ -46,6 +48,7 @@
                         <rect key="frame" x="280" y="144" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Normal Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.normalBackgroundColor.colorValue" id="2349"/>
                             <outlet property="nextKeyView" destination="1998" id="2063"/>
@@ -64,6 +67,7 @@
                         <rect key="frame" x="222" y="113" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Bold Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.boldForegroundColor.colorValue" id="2388"/>
                             <outlet property="nextKeyView" destination="1999" id="2064"/>
@@ -73,6 +77,7 @@
                         <rect key="frame" x="280" y="113" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Bold Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.boldBackgroundColor.colorValue" id="2389"/>
                             <outlet property="nextKeyView" destination="2002" id="2065"/>
@@ -91,6 +96,7 @@
                         <rect key="frame" x="222" y="82" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Blinking Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.blinkingForegroundColor.colorValue" id="2399"/>
                             <outlet property="nextKeyView" destination="2003" id="2066"/>
@@ -100,6 +106,7 @@
                         <rect key="frame" x="280" y="82" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Blinking Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.blinkingBackgroundColor.colorValue" id="2400"/>
                             <outlet property="nextKeyView" destination="2006" id="2067"/>
@@ -127,6 +134,7 @@
                         <rect key="frame" x="222" y="51" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Matte Text Color"/>
                         <connections>
                             <outlet property="nextKeyView" destination="2007" id="2068"/>
                         </connections>
@@ -135,6 +143,7 @@
                         <rect key="frame" x="280" y="51" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Matte Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.matteBackgroundColor.colorValue" id="2401"/>
                             <outlet property="nextKeyView" destination="2428" id="2446"/>
@@ -183,6 +192,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Normal Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.normalForegroundColor.inheritEnabled" id="2351"/>
                             <binding destination="-2" name="value" keyPath="self.normalForegroundColor.inherited" id="2350"/>
@@ -196,6 +206,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Bold Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.boldForegroundColor.inheritEnabled" id="2394"/>
                             <binding destination="-2" name="value" keyPath="self.boldForegroundColor.inherited" id="2390"/>
@@ -209,6 +220,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Blinking Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.blinkingForegroundColor.inheritEnabled" id="2396"/>
                             <binding destination="-2" name="value" keyPath="self.blinkingForegroundColor.inherited" id="2395"/>
@@ -222,6 +234,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Matte Text Color: Restore to Default Value"/>
                         <connections>
                             <outlet property="nextKeyView" destination="2150" id="2416"/>
                         </connections>
@@ -233,6 +246,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Font: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.fontFamily.inheritEnabled" id="2355"/>
                             <binding destination="-2" name="value" keyPath="self.fontFamily.inherited" id="2354"/>
@@ -246,6 +260,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Font Size: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.fontSize.inheritEnabled" id="2357"/>
                             <binding destination="-2" name="value" keyPath="self.fontSize.inherited" id="2356"/>
@@ -259,6 +274,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Character Width: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.characterWidth.inheritEnabled" id="2359"/>
                             <binding destination="-2" name="value" keyPath="self.characterWidth.inherited" id="2358"/>
@@ -272,6 +288,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Normal Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.normalBackgroundColor.inheritEnabled" id="2353"/>
                             <binding destination="-2" name="value" keyPath="self.normalBackgroundColor.inherited" id="2352"/>
@@ -285,6 +302,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Bold Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.boldBackgroundColor.inheritEnabled" id="2393"/>
                             <binding destination="-2" name="value" keyPath="self.boldBackgroundColor.inherited" id="2392"/>
@@ -298,6 +316,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Blinking Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.blinkingBackgroundColor.inheritEnabled" id="2398"/>
                             <binding destination="-2" name="value" keyPath="self.blinkingBackgroundColor.inherited" id="2397"/>
@@ -311,6 +330,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Matte Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.matteBackgroundColor.inheritEnabled" id="2403"/>
                             <binding destination="-2" name="value" keyPath="self.matteBackgroundColor.inherited" id="2442"/>
@@ -330,6 +350,7 @@
                         <rect key="frame" x="222" y="20" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Cursor Text Color"/>
                         <connections>
                             <outlet property="nextKeyView" destination="2429" id="2435"/>
                         </connections>
@@ -338,6 +359,7 @@
                         <rect key="frame" x="280" y="20" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Cursor Background Color"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.autoSetCursorColor.numberValue" id="2471">
                                 <dictionary key="options">
@@ -355,6 +377,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Cursor Text Color: Restore to Default Value"/>
                         <connections>
                             <outlet property="nextKeyView" destination="2431" id="2436"/>
                         </connections>
@@ -366,6 +389,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Cursor Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.cursorBackgroundColor.inheritEnabled" id="2444"/>
                             <binding destination="-2" name="value" keyPath="self.cursorBackgroundColor.inherited" id="2443"/>
@@ -379,6 +403,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Automatic Cursor Color Setting: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.autoSetCursorColor.inheritEnabled" id="2457"/>
                             <binding destination="-2" name="value" keyPath="self.autoSetCursorColor.inherited" id="2456"/>
@@ -392,6 +417,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Set Terminal Font and Size"/>
                         <connections>
                             <action selector="performFontSelection:" target="-2" id="2369"/>
                             <outlet property="nextKeyView" destination="2376" id="2407"/>
@@ -425,6 +451,7 @@
                         <rect key="frame" x="220" y="254" width="282" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <sliderCell key="cell" continuous="YES" state="on" alignment="left" minValue="0.59999999999999998" maxValue="1.3999999999999999" doubleValue="1" tickMarkPosition="below" numberOfTickMarks="9" allowsTickMarkValuesOnly="YES" sliderType="linear" id="2377"/>
+                        <accessibility description="Character Width from 60 to 140"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.characterWidth.numberValue" id="2425"/>
                             <outlet property="nextKeyView" destination="1993" id="2406"/>
@@ -464,6 +491,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Automatically Choose Cursor Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.autoSetCursorColor.numberValue" id="2454"/>
                             <outlet property="nextKeyView" destination="Pej-lc-bVd" id="kBL-zH-QJg"/>

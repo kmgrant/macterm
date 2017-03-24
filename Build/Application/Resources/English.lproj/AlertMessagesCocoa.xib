@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AlertMessages_VC">
@@ -34,6 +35,7 @@
                         <color key="textColor" red="0.20000000300000001" green="0.20000000300000001" blue="0.20000000300000001" alpha="1" colorSpace="calibratedRGB"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
+                    <accessibility description="Alert Title"/>
                     <connections>
                         <binding destination="-2" name="value" keyPath="self.titleText" id="YVV-hL-Qlb">
                             <dictionary key="options">
@@ -47,10 +49,12 @@
                 <customView id="veC-t9-gpm" userLabel="Dialog Text" customClass="AlertMessages_TextView">
                     <rect key="frame" x="108" y="46" width="322" height="20"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <accessibility description="Alert Message"/>
                 </customView>
                 <customView id="i9s-bA-TTg" userLabel="Help Text" customClass="AlertMessages_TextView">
                     <rect key="frame" x="108" y="20" width="322" height="18"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <accessibility description="Alert Details"/>
                 </customView>
             </subviews>
             <point key="canvasLocation" x="230" y="292"/>

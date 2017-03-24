@@ -56,6 +56,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Show Menu Bar on Demand in Full Screen"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.menuBarShownOnDemand" id="1949"/>
                             <binding destination="-2" name="enabled" keyPath="self.nonSystemMechanismEnabled" id="hzK-r5-V1W"/>
@@ -69,6 +70,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Show Scroll Bar in Full Screen"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.scrollBarVisible" id="1950"/>
                             <outlet property="nextKeyView" destination="1919" id="TlL-BS-VM6"/>
@@ -81,6 +83,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Show Window Frame in Full Screen"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.nonSystemMechanismEnabled" id="wfS-nh-V6o"/>
                             <binding destination="-2" name="value" keyPath="self.windowFrameVisible" id="1951"/>
@@ -94,6 +97,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Allow “Force Quit” Command in Full Screen"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.forceQuitEnabled" id="1953"/>
                             <binding destination="-2" name="enabled" keyPath="self.nonSystemMechanismEnabled" id="JkK-VG-Dnr"/>
@@ -107,6 +111,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Use Fast (Non-System) Full Screen Mode"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.nonSystemMechanismEnabled" id="ROn-xa-sdk"/>
                             <outlet property="nextKeyView" destination="1935" id="1962"/>
@@ -119,6 +124,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Display “Off Switch” in Full Screen"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.offSwitchWindowEnabled" id="1957"/>
                         </connections>

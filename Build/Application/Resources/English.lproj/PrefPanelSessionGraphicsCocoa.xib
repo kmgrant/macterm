@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_GraphicsViewManager">
@@ -79,6 +80,7 @@
                                 <buttonCell type="radio" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="1994">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="TEK Graphics Off"/>
                                 </buttonCell>
                                 <buttonCell type="radio" imagePosition="left" alignment="left" inset="2" id="1995">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -113,6 +115,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Graphics Mode: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.graphicsMode.inheritEnabled" id="2063"/>
                             <binding destination="-2" name="value" keyPath="self.graphicsMode.inherited" id="2065"/>
@@ -126,6 +129,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Graphics Screen Cleared on PAGE: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.pageClearsScreen.inheritEnabled" id="2061"/>
                             <binding destination="-2" name="value" keyPath="self.pageClearsScreen.inherited" id="2059"/>

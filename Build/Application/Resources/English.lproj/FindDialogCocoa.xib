@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="FindDialog_VC">
@@ -65,6 +66,7 @@
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </searchFieldCell>
+                        <accessibility description="Terminal Search"/>
                         <connections>
                             <action selector="performSearch:" target="-2" id="YTW-LL-gbs"/>
                             <binding destination="-2" name="value" keyPath="self.searchText" id="nwe-Tu-a8R"/>
@@ -87,6 +89,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold" size="12"/>
                         </buttonCell>
+                        <accessibility description="Search Current Window Only"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.multiTerminalSearch" id="6d5-KA-lI3">
                                 <dictionary key="options">
@@ -104,6 +107,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold" size="12"/>
                         </buttonCell>
+                        <accessibility description="Search All Windows"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.multiTerminalSearch" id="dNh-M2-F44">
                                 <dictionary key="options">
@@ -135,6 +139,7 @@
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Search Error"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.statusText" id="21X-Ux-b3P"/>
                         </connections>

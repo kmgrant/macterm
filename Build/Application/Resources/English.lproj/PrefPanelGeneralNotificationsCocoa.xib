@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -90,6 +90,7 @@
                                 <buttonCell type="radio" title="None" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="1994">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Background Notification: None"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.backgroundNotificationNone" id="2024"/>
                                     </connections>
@@ -97,6 +98,7 @@
                                 <buttonCell type="radio" title="Modify the Dock icon" imagePosition="left" alignment="left" inset="2" id="1995">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Background Notification: Modify Dock Icon"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.backgroundNotificationChangeDockIcon" id="2026"/>
                                     </connections>
@@ -104,6 +106,7 @@
                                 <buttonCell type="radio" title="…and bounce the Dock icon" imagePosition="left" alignment="left" inset="2" id="1997">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Background Notification: Modify and Bounce Dock Icon Once"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.backgroundNotificationAnimateIcon" id="2028"/>
                                     </connections>
@@ -111,6 +114,7 @@
                                 <buttonCell type="radio" title="…and bounce repeatedly" imagePosition="left" alignment="left" inset="2" id="1998">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Background Notification: Modify Dock Icon and Bounce Repeatedly"/>
                                     <connections>
                                         <binding destination="-2" name="value" keyPath="self.backgroundNotificationDisplayMessage" id="2030"/>
                                     </connections>
@@ -148,6 +152,7 @@
                                 </connections>
                             </menu>
                         </popUpButtonCell>
+                        <accessibility description="Terminal Bell Sound Name"/>
                         <connections>
                             <binding destination="2003" name="content" keyPath="arrangedObjects" id="2010"/>
                             <binding destination="2003" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="2010" id="2015"/>

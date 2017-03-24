@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelTerminals_ScreenViewManager">
@@ -69,6 +70,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Terminal Width: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.screenWidth.inheritEnabled" id="2088"/>
                             <binding destination="-2" name="value" keyPath="self.screenWidth.inherited" id="2087"/>
@@ -82,6 +84,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Terminal Height: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.screenHeight.inheritEnabled" id="2090"/>
                             <binding destination="-2" name="value" keyPath="self.screenHeight.inherited" id="2089"/>
@@ -95,6 +98,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Terminal Scrollback Behavior: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.scrollback.inheritEnabled" id="2116"/>
                             <binding destination="-2" name="value" keyPath="self.scrollback.inherited" id="2113"/>
@@ -108,6 +112,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Terminal Width in Columns"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.screenWidth.numberStringValue" id="2106">
                                 <dictionary key="options">
@@ -143,6 +148,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Terminal Height in Rows"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.screenHeight.numberStringValue" id="2107">
                                 <dictionary key="options">
@@ -169,6 +175,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="2075"/>
                         </popUpButtonCell>
+                        <accessibility description="Terminal Scrollback Behavior"/>
                         <connections>
                             <binding destination="2067" name="content" keyPath="arrangedObjects" id="2084"/>
                             <binding destination="2067" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="2084" id="2085"/>
@@ -184,6 +191,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Scrollback Size in Rows"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.scrollback.rowsEnabled" id="2120"/>
                             <binding destination="-2" name="value" keyPath="self.scrollback.rowsNumberStringValue" id="2118">

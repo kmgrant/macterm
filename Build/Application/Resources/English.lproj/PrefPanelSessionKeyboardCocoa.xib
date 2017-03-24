@@ -124,18 +124,21 @@
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" state="on" borderStyle="border" tag="1" inset="2" id="2110" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="No Emacs Meta Key"/>
                                 </buttonCell>
                             </column>
                             <column>
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2112" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Emacs Meta: Option Key"/>
                                 </buttonCell>
                             </column>
                             <column>
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="2113" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Emacs Meta: Shift and Option Keys"/>
                                 </buttonCell>
                             </column>
                         </cells>
@@ -163,6 +166,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="2092"/>
                         </popUpButtonCell>
+                        <accessibility description="New-Line Setting"/>
                         <connections>
                             <binding destination="2157" name="content" keyPath="arrangedObjects" id="2163"/>
                             <binding destination="2157" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="2163" id="2165"/>
@@ -177,6 +181,7 @@
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
+                        <accessibility description="Interrupt-Process Key"/>
                         <connections>
                             <action selector="performChooseInterruptProcessKey:" target="-2" id="2306"/>
                             <binding destination="-2" name="value" keyPath="self.isEditingKeyInterruptProcess" id="2312"/>
@@ -200,6 +205,7 @@
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
+                        <accessibility description="Scroll Lock Key"/>
                         <connections>
                             <action selector="performChooseSuspendKey:" target="-2" id="2309"/>
                             <binding destination="-2" name="value" keyPath="self.isEditingKeySuspend" id="2314"/>
@@ -223,6 +229,7 @@
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
+                        <accessibility description="Scroll Unlock Key"/>
                         <connections>
                             <action selector="performChooseResumeKey:" target="-2" id="2308"/>
                             <binding destination="-2" name="value" keyPath="self.isEditingKeyResume" id="2316"/>
@@ -241,6 +248,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Emacs Cursor Map to Arrows"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.emacsArrowKeys.numberValue" id="2241"/>
                             <outlet property="nextKeyView" destination="2109" id="2249"/>
@@ -253,6 +261,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Delete-Key Mapped to Backspace"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.deleteKeySendsBackspace.numberValue" id="2245"/>
                             <outlet property="nextKeyView" destination="2090" id="2251"/>
@@ -274,6 +283,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Interrupt-Process Key: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.keyInterruptProcess.inheritEnabled" id="2261"/>
                             <binding destination="-2" name="value" keyPath="self.keyInterruptProcess.inherited" id="2260"/>
@@ -287,6 +297,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Scroll Lock Key: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.keySuspend.inheritEnabled" id="2267"/>
                             <binding destination="-2" name="value" keyPath="self.keySuspend.inherited" id="2266"/>
@@ -300,6 +311,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Scroll Unlock Key: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.keyResume.inheritEnabled" id="2273"/>
                             <binding destination="-2" name="value" keyPath="self.keyResume.inherited" id="2272"/>
@@ -313,6 +325,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Emacs Cursor: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.emacsArrowKeys.inheritEnabled" id="2282"/>
                             <binding destination="-2" name="value" keyPath="self.emacsArrowKeys.inherited" id="2281"/>
@@ -326,6 +339,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Emacs Meta Key: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.mappingForEmacsMeta.inheritEnabled" id="2288"/>
                             <binding destination="-2" name="value" keyPath="self.mappingForEmacsMeta.inherited" id="2287"/>
@@ -339,6 +353,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Delete-Key Mapping: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.deleteKeySendsBackspace.inheritEnabled" id="2294"/>
                             <binding destination="-2" name="value" keyPath="self.deleteKeySendsBackspace.inherited" id="2293"/>
@@ -352,6 +367,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="New-Line Setting: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.mappingForNewLine.inheritEnabled" id="2300"/>
                             <binding destination="-2" name="value" keyPath="self.mappingForNewLine.inherited" id="2299"/>

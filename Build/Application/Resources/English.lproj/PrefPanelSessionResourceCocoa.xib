@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelSessions_ResourceViewManager">
@@ -79,6 +80,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="2092"/>
                         </popUpButtonCell>
+                        <accessibility description="Terminal Preference"/>
                         <connections>
                             <binding destination="Xiw-MV-yEY" name="content" keyPath="arrangedObjects" id="S8K-eW-Kbz"/>
                             <binding destination="Xiw-MV-yEY" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="S8K-eW-Kbz" id="bW5-e0-zwS"/>
@@ -143,6 +145,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Command Line: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.commandLine.inheritEnabled" id="LKA-uK-tb8"/>
                             <binding destination="-2" name="value" keyPath="self.commandLine.inherited" id="A5K-Lx-i1K"/>
@@ -156,6 +159,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Terminal Preference: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.terminalFavorite.inheritEnabled" id="euO-hA-8fL"/>
                             <binding destination="-2" name="value" keyPath="self.terminalFavorite.inherited" id="rnV-FU-xzf"/>
@@ -179,6 +183,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="riB-Bc-M7s"/>
                         </popUpButtonCell>
+                        <accessibility description="Format Preference"/>
                         <connections>
                             <binding destination="gzS-4c-By3" name="content" keyPath="arrangedObjects" id="3rX-Ve-ekI"/>
                             <binding destination="gzS-4c-By3" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="3rX-Ve-ekI" id="A6h-fR-RpX"/>
@@ -193,6 +198,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Format Preference: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.formatFavorite.inheritEnabled" id="24V-iv-G2r"/>
                             <binding destination="-2" name="value" keyPath="self.formatFavorite.inherited" id="JMX-mN-zjV"/>
@@ -216,6 +222,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="y0Z-t3-mTU"/>
                         </popUpButtonCell>
+                        <accessibility description="Translation Preference"/>
                         <connections>
                             <binding destination="zt6-tG-GaH" name="content" keyPath="arrangedObjects" id="NgK-YY-c5I"/>
                             <binding destination="zt6-tG-GaH" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="NgK-YY-c5I" id="aG3-cy-b5N"/>
@@ -230,6 +237,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Translation Preference: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.translationFavorite.inheritEnabled" id="SZC-mi-Kcn"/>
                             <binding destination="-2" name="value" keyPath="self.translationFavorite.inherited" id="cqt-AF-rll"/>
@@ -252,6 +260,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="HYx-dD-85I"/>
                         </popUpButtonCell>
+                        <accessibility description="Session to Copy"/>
                         <connections>
                             <binding destination="2157" name="content" keyPath="arrangedObjects" id="etO-zS-9hc"/>
                             <binding destination="2157" name="contentValues" keyPath="arrangedObjects" previousBinding="etO-zS-9hc" id="og1-CV-zNc"/>
@@ -267,6 +276,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Command Line"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.commandLine.stringValue" id="2rz-Gi-QM6"/>
                             <outlet property="nextKeyView" destination="2090" id="9L7-sM-2cf"/>

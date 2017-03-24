@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelFormats_StandardColorsViewManager">
@@ -37,6 +38,7 @@
                         <rect key="frame" x="222" y="325" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Black Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.blackNormalColor.colorValue" id="2307"/>
                             <outlet property="nextKeyView" destination="1994" id="2062"/>
@@ -46,6 +48,7 @@
                         <rect key="frame" x="280" y="325" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Black Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.blackBoldColor.colorValue" id="2306"/>
                             <outlet property="nextKeyView" destination="1998" id="2063"/>
@@ -64,6 +67,7 @@
                         <rect key="frame" x="222" y="294" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Red Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.redNormalColor.colorValue" id="2300"/>
                             <outlet property="nextKeyView" destination="1999" id="2064"/>
@@ -73,6 +77,7 @@
                         <rect key="frame" x="280" y="294" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Red Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.redBoldColor.colorValue" id="2301"/>
                             <outlet property="nextKeyView" destination="2002" id="2065"/>
@@ -91,6 +96,7 @@
                         <rect key="frame" x="222" y="263" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Green Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.greenNormalColor.colorValue" id="2312"/>
                             <outlet property="nextKeyView" destination="2003" id="2066"/>
@@ -100,6 +106,7 @@
                         <rect key="frame" x="280" y="263" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Green Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.greenBoldColor.colorValue" id="2313"/>
                             <outlet property="nextKeyView" destination="2006" id="2067"/>
@@ -127,6 +134,7 @@
                         <rect key="frame" x="222" y="232" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Yellow Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.yellowNormalColor.colorValue" id="2314"/>
                             <outlet property="nextKeyView" destination="2007" id="2068"/>
@@ -136,6 +144,7 @@
                         <rect key="frame" x="280" y="232" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Yellow Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.yellowBoldColor.colorValue" id="2315"/>
                             <outlet property="nextKeyView" destination="2010" id="2069"/>
@@ -154,6 +163,7 @@
                         <rect key="frame" x="222" y="201" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Blue Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.blueNormalColor.colorValue" id="2316"/>
                             <outlet property="nextKeyView" destination="2011" id="2070"/>
@@ -163,6 +173,7 @@
                         <rect key="frame" x="280" y="201" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Blue Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.blueBoldColor.colorValue" id="2317"/>
                             <outlet property="nextKeyView" destination="2014" id="2071"/>
@@ -181,6 +192,7 @@
                         <rect key="frame" x="222" y="170" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Magenta Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.magentaNormalColor.colorValue" id="2318"/>
                             <outlet property="nextKeyView" destination="2015" id="2072"/>
@@ -190,6 +202,7 @@
                         <rect key="frame" x="280" y="170" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Magenta Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.magentaBoldColor.colorValue" id="2319"/>
                             <outlet property="nextKeyView" destination="2018" id="2073"/>
@@ -208,6 +221,7 @@
                         <rect key="frame" x="222" y="139" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Cyan Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.cyanNormalColor.colorValue" id="2320"/>
                             <outlet property="nextKeyView" destination="2019" id="2074"/>
@@ -217,6 +231,7 @@
                         <rect key="frame" x="280" y="139" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="Cyan Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.cyanBoldColor.colorValue" id="2321"/>
                             <outlet property="nextKeyView" destination="2053" id="2075"/>
@@ -235,6 +250,7 @@
                         <rect key="frame" x="222" y="108" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="White Text Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.whiteNormalColor.colorValue" id="2322"/>
                             <outlet property="nextKeyView" destination="2054" id="2076"/>
@@ -244,6 +260,7 @@
                         <rect key="frame" x="280" y="108" width="50" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <color key="color" red="0.05813049898" green="0.055541899059999997" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <accessibility description="White Background Color"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.whiteBoldColor.colorValue" id="2323"/>
                             <outlet property="nextKeyView" destination="2021" id="HOu-rA-K7C"/>
@@ -277,6 +294,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Black Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.blackNormalColor.inheritEnabled" id="2310"/>
                             <binding destination="-2" name="value" keyPath="self.blackNormalColor.inherited" id="2309"/>
@@ -290,6 +308,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Red Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.redNormalColor.inheritEnabled" id="2305"/>
                             <binding destination="-2" name="value" keyPath="self.redNormalColor.inherited" id="2303"/>
@@ -303,6 +322,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Green Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.greenNormalColor.inheritEnabled" id="2325"/>
                             <binding destination="-2" name="value" keyPath="self.greenNormalColor.inherited" id="2324"/>
@@ -316,6 +336,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Yellow Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.yellowNormalColor.inheritEnabled" id="2329"/>
                             <binding destination="-2" name="value" keyPath="self.yellowNormalColor.inherited" id="2328"/>
@@ -329,6 +350,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Blue Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.blueNormalColor.inheritEnabled" id="2333"/>
                             <binding destination="-2" name="value" keyPath="self.blueNormalColor.inherited" id="2332"/>
@@ -342,6 +364,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Magenta Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.magentaNormalColor.inheritEnabled" id="2337"/>
                             <binding destination="-2" name="value" keyPath="self.magentaNormalColor.inherited" id="2336"/>
@@ -355,6 +378,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Cyan Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.cyanNormalColor.inheritEnabled" id="2339"/>
                             <binding destination="-2" name="value" keyPath="self.cyanNormalColor.inherited" id="2338"/>
@@ -368,6 +392,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="White Text Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.whiteNormalColor.inheritEnabled" id="2343"/>
                             <binding destination="-2" name="value" keyPath="self.whiteNormalColor.inherited" id="2342"/>
@@ -381,6 +406,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Black Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.blackBoldColor.inheritEnabled" id="2311"/>
                             <binding destination="-2" name="value" keyPath="self.blackBoldColor.inherited" id="2308"/>
@@ -394,6 +420,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Red Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.redBoldColor.inheritEnabled" id="2304"/>
                             <binding destination="-2" name="value" keyPath="self.redBoldColor.inherited" id="2302"/>
@@ -407,6 +434,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Green Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.greenBoldColor.inheritEnabled" id="2327"/>
                             <binding destination="-2" name="value" keyPath="self.greenBoldColor.inherited" id="2326"/>
@@ -420,6 +448,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Yellow Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.yellowBoldColor.inheritEnabled" id="2331"/>
                             <binding destination="-2" name="value" keyPath="self.yellowBoldColor.inherited" id="2330"/>
@@ -433,6 +462,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Blue Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.blueBoldColor.inheritEnabled" id="2335"/>
                             <binding destination="-2" name="value" keyPath="self.blueBoldColor.inherited" id="2334"/>
@@ -446,6 +476,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Magenta Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.magentaBoldColor.inheritEnabled" id="2347"/>
                             <binding destination="-2" name="value" keyPath="self.magentaBoldColor.inherited" id="2346"/>
@@ -459,6 +490,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Cyan Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.cyanBoldColor.inheritEnabled" id="2341"/>
                             <binding destination="-2" name="value" keyPath="self.cyanBoldColor.inherited" id="2340"/>
@@ -472,6 +504,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="White Background Color: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.whiteBoldColor.inheritEnabled" id="2345"/>
                             <binding destination="-2" name="value" keyPath="self.whiteBoldColor.inherited" id="2344"/>

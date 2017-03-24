@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -88,6 +88,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Base Emulator: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.baseEmulator.inheritEnabled" id="2102"/>
                             <binding destination="-2" name="value" keyPath="self.baseEmulator.inherited" id="2101"/>
@@ -101,6 +102,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Identity: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.identity.inheritEnabled" id="2103"/>
                             <binding destination="-2" name="value" keyPath="self.identity.inherited" id="2104"/>
@@ -114,6 +116,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Emulation Tweaks: Restore to Default Values"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.emulationTweaks.inheritEnabled" id="2106"/>
                             <binding destination="-2" name="value" keyPath="self.emulationTweaks.inherited" id="2105"/>
@@ -127,6 +130,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="2060"/>
                         </popUpButtonCell>
+                        <accessibility description="Base Emulator Type"/>
                         <connections>
                             <binding destination="2052" name="content" keyPath="arrangedObjects" id="2061"/>
                             <binding destination="2052" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="2061" id="2063"/>
@@ -192,6 +196,7 @@
                                             </connections>
                                         </tableColumn>
                                     </tableColumns>
+                                    <accessibility description="Emulation Tweaks"/>
                                 </tableView>
                             </subviews>
                         </clipView>
@@ -219,6 +224,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Terminal Emulator Identity"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.identity.stringValue" id="2109"/>
                             <outlet property="nextKeyView" destination="2073" id="2097"/>

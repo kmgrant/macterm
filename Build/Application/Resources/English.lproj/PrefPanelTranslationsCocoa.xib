@@ -95,6 +95,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Set Backup Font"/>
                         <connections>
                             <action selector="performBackupFontSelection:" target="-2" id="2001"/>
                             <binding destination="-2" name="enabled" keyPath="self.backupFontEnabled" id="1966"/>
@@ -132,6 +133,7 @@
                                             </connections>
                                         </tableColumn>
                                     </tableColumns>
+                                    <accessibility description="Character Encoding Type"/>
                                 </tableView>
                             </subviews>
                         </clipView>

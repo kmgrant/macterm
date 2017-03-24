@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelTerminals_OptionsViewManager">
@@ -115,6 +116,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Line Wrap: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.wrapLines.inheritEnabled" id="2006"/>
                             <binding destination="-2" name="value" keyPath="self.wrapLines.inherited" id="2004"/>
@@ -128,6 +130,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Eight-Bit: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.eightBit.inheritEnabled" id="2014"/>
                             <binding destination="-2" name="value" keyPath="self.eightBit.inherited" id="2013"/>
@@ -141,6 +144,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Save on Clear: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.saveLinesOnClear.inheritEnabled" id="2032"/>
                             <binding destination="-2" name="value" keyPath="self.saveLinesOnClear.inherited" id="2031"/>
@@ -154,6 +158,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Normal Keypad Top Row: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.normalKeypadTopRow.inheritEnabled" id="2042"/>
                             <binding destination="-2" name="value" keyPath="self.normalKeypadTopRow.inherited" id="2041"/>
@@ -167,6 +172,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Local Page Keys: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.localPageKeys.inheritEnabled" id="2044"/>
                             <binding destination="-2" name="value" keyPath="self.localPageKeys.inherited" id="2043"/>

@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170324',
     '20170307',
     '20170112',
     '20161130',
@@ -567,6 +568,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170324': [
+        'Support for Voice Over and related technologies has significantly improved, as accessibility descriptions have been added to a wide variety of user interface elements.  Voice Over will now clearly identify the effect of any control (such as, the group of settings that the control belongs to).  Also, some controls that previously had no label at all are now identified by Voice Over.',
+    ],
     '20170307': [
         'Fixed keyboard navigation behavior when using Full Keyboard Access in some panels of the Preferences window and corresponding sheets.  Previously, there were locations that stopped recognizing Tab key-presses.',
         'Fixed a few remaining cases of incorrectly-rendered focus rings when using Full Keyboard Access to activate controls in the Preferences window and corresponding sheets.',

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -76,6 +76,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
+                        <accessibility description="Look Up Host Name"/>
                         <connections>
                             <action selector="lookUpHostName:" target="-2" id="1883"/>
                             <binding destination="-2" name="enabled" keyPath="self.hidesProgress" id="1891"/>
@@ -98,6 +99,7 @@
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </comboBoxCell>
+                        <accessibility description="Server Host Name"/>
                         <connections>
                             <binding destination="1470" name="content" keyPath="arrangedObjects" id="1896"/>
                             <binding destination="-2" name="value" keyPath="self.hostName" previousBinding="1896" id="1897">
@@ -112,7 +114,7 @@
                     <button toolTip="Browse nearby services" id="1840" customClass="CoreUI_SquareButton">
                         <rect key="frame" x="414" y="412" width="105" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="square" title="Find a Server…" bezelStyle="shadowlessSquare" image="814D4C51-ABAF-4304-BFDA-8C31A9B1C799" imagePosition="overlaps" alignment="center" borderStyle="border" inset="2" id="1879">
+                        <buttonCell key="cell" type="square" title="Find a Server…" bezelStyle="shadowlessSquare" image="A4BE67B3-2FDB-4800-B116-F713E39F2874" imagePosition="overlaps" alignment="center" borderStyle="border" inset="2" id="1879">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -144,6 +146,7 @@
                                 <string>NSAllRomanInputSourcesLocaleIdentifier</string>
                             </allowedInputSourceLocales>
                         </textFieldCell>
+                        <accessibility description="Server Port Number"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.portNumber" id="1911">
                                 <dictionary key="options">
@@ -179,6 +182,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="1874"/>
                         </popUpButtonCell>
+                        <accessibility description="Server Connection Protocol"/>
                         <connections>
                             <binding destination="850" name="content" keyPath="arrangedObjects" id="1888"/>
                             <binding destination="850" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="1888" id="1889"/>
@@ -212,6 +216,7 @@
                                 <string>NSAllRomanInputSourcesLocaleIdentifier</string>
                             </allowedInputSourceLocales>
                         </textFieldCell>
+                        <accessibility description="Optional Server User ID"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.userID" id="1912">
                                 <dictionary key="options">
@@ -335,6 +340,7 @@
                                                     </connections>
                                                 </tableColumn>
                                             </tableColumns>
+                                            <accessibility description="Nearby Services"/>
                                         </tableView>
                                     </subviews>
                                 </clipView>
@@ -370,7 +376,7 @@
         </box>
     </objects>
     <resources>
-        <image name="814D4C51-ABAF-4304-BFDA-8C31A9B1C799" width="1" height="1">
+        <image name="A4BE67B3-2FDB-4800-B116-F713E39F2874" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw

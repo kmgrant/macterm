@@ -66,6 +66,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Macro Invocation Key: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.macroKey.inheritEnabled" id="3GK-BA-yig"/>
                             <binding destination="-2" name="value" keyPath="self.macroKey.inherited" id="uho-lH-DcW"/>
@@ -79,6 +80,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Macro Modifier Keys: Restore to Default Values"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.macroModifiers.inheritEnabled" id="Bi3-fO-jj6"/>
                             <binding destination="-2" name="value" keyPath="self.macroModifiers.inherited" id="crr-Kf-40Q"/>
@@ -93,6 +95,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="2060"/>
                         </popUpButtonCell>
+                        <accessibility description="Key to Invoke Macro"/>
                         <connections>
                             <binding destination="7fk-9M-ORg" name="content" keyPath="arrangedObjects" id="8CO-VI-o1J"/>
                             <binding destination="-2" name="selectedObject" keyPath="self.macroKey.currentValueDescriptor" previousBinding="8CO-VI-o1J" id="Gxn-zz-MnK"/>
@@ -115,6 +118,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Macro Action: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.macroAction.inheritEnabled" id="etL-kx-7PW"/>
                             <binding destination="-2" name="value" keyPath="self.macroAction.inherited" id="QLv-80-Q39"/>
@@ -129,6 +133,7 @@
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" id="moW-r0-Wlx"/>
                         </popUpButtonCell>
+                        <accessibility description="Macro Action"/>
                         <connections>
                             <binding destination="Ekf-L3-1ks" name="content" keyPath="arrangedObjects" id="uMX-oH-wzO"/>
                             <binding destination="-2" name="selectedObject" keyPath="self.macroAction.currentValueDescriptor" previousBinding="uMX-oH-wzO" id="pyg-RF-Ong"/>
@@ -143,6 +148,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Macro Text (Action-Dependent)"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.macroContents.stringValue" id="Xzp-CJ-TbO"/>
                             <outlet property="nextKeyView" destination="5gV-de-2qw" id="9tm-ZO-uPb"/>
@@ -185,24 +191,28 @@
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" tag="1" inset="2" id="5tc-OY-rs1" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Macro Modifier Key: Command"/>
                                 </buttonCell>
                             </column>
                             <column>
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="GI9-9C-bIe" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Macro Modifier Key: Option"/>
                                 </buttonCell>
                             </column>
                             <column>
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="0dg-z8-uBS" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Macro Modifier Key: Control"/>
                                 </buttonCell>
                             </column>
                             <column>
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="U82-Zn-vj8" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="Macro Modifier Key: Shift"/>
                                 </buttonCell>
                             </column>
                         </cells>
@@ -220,6 +230,7 @@
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
+                        <accessibility description="Ordinary Character to Invoke Macro"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.macroKey.currentOrdinaryCharacter" id="ivo-Vn-wFe"/>
                             <outlet property="nextKeyView" destination="Sem-ZU-nnH" id="OWA-2P-Y4p"/>
@@ -232,6 +243,7 @@
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
+                        <accessibility description="Macro Text: Restore to Default Value"/>
                         <connections>
                             <binding destination="-2" name="enabled" keyPath="self.macroContents.inheritEnabled" id="y3M-Fs-KzD"/>
                             <binding destination="-2" name="value" keyPath="self.macroContents.inherited" id="4sk-te-WX1"/>
