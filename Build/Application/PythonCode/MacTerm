@@ -238,5 +238,5 @@ if __name__ == "__main__":
         os.execve(sys.argv[0], sys.argv, os.environ)
     except OSError as _:
         warn("Exception raised while attempting to run",
-             sys.argv[0], sys.argv, ":", _.message)
+             sys.argv[0], sys.argv, ":", _)
     sys.exit(1)
