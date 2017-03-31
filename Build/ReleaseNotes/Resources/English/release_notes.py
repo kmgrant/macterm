@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170330',
     '20170324',
     '20170307',
     '20170112',
@@ -568,6 +569,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170330': [
+        'Preferences window toolbar now has pop-up menu short-cuts to display particular tabs within a category.  The button icon can be pressed for normal behavior, and the menu portion can be used to go directly to a tab.',
+    ],
     '20170324': [
         'Support for Voice Over and related technologies has significantly improved, as accessibility descriptions have been added to a wide variety of user interface elements.  Voice Over will now clearly identify the effect of any control (such as, the group of settings that the control belongs to).  Also, some controls that previously had no label at all are now identified by Voice Over.',
     ],

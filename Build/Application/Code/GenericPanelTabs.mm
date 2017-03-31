@@ -492,6 +492,19 @@ withAnimation:(BOOL)								isAnimated
 
 
 /*!
+Returns the number of items that will be covered by a call
+to "panelParentEnumerateChildViewManagers".
+
+(2017.03)
+*/
+- (NSUInteger)
+panelParentChildCount
+{
+	return self->viewManagerArray.count;
+}// panelParentChildCount
+
+
+/*!
 Returns an enumerator over the Panel_ViewManager* objects
 for the tabs in this view.
 

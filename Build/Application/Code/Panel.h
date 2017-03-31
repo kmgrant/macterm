@@ -191,6 +191,10 @@ managing multiple child panels.
 	panelParentDisplayChildWithIdentifier:(NSString*)_
 	withAnimation:(BOOL)_;
 
+	// respond with the number of items that "panelParentEnumerateChildViewManagers" would cover
+	- (NSUInteger)
+	panelParentChildCount;
+
 	// respond with an ordered enumeration of all Panel_ViewManager* values managed by the parent
 	- (NSEnumerator*)
 	panelParentEnumerateChildViewManagers;

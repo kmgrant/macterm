@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12118" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12118"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -15,15 +15,15 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
-            <rect key="frame" x="0.0" y="0.0" width="520" height="296"/>
+        <box autoresizesSubviews="NO" misplaced="YES" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
+            <rect key="frame" x="0.0" y="0.0" width="610" height="296"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <view key="contentView" id="qNk-LM-Zwz">
-                <rect key="frame" x="0.0" y="0.0" width="520" height="296"/>
+                <rect key="frame" x="0.0" y="0.0" width="610" height="296"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" id="1913">
-                        <rect key="frame" x="17" y="259" width="200" height="17"/>
+                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1913">
+                        <rect key="frame" x="18" y="259" width="199" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Access Control:" id="1914">
                             <font key="font" metaFont="systemBold"/>
@@ -31,8 +31,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="1915">
-                        <rect key="frame" x="17" y="139" width="200" height="17"/>
+                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1915">
+                        <rect key="frame" x="18" y="139" width="199" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Method:" id="1916">
                             <font key="font" metaFont="systemBold"/>
@@ -40,8 +40,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="1917">
-                        <rect key="frame" x="17" y="55" width="200" height="17"/>
+                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1917">
+                        <rect key="frame" x="18" y="55" width="199" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Deactivation:" id="1918">
                             <font key="font" metaFont="systemBold"/>
@@ -129,8 +129,8 @@
                             <binding destination="-2" name="value" keyPath="self.offSwitchWindowEnabled" id="1957"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="1944">
-                        <rect key="frame" x="238" y="90" width="265" height="42"/>
+                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1944">
+                        <rect key="frame" x="238" y="90" width="354" height="42"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="System method is more integrated but it is slower (animated) and most Access Control options are unavailable." id="1945">
                             <font key="font" metaFont="smallSystem"/>
@@ -138,8 +138,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="1946">
-                        <rect key="frame" x="238" y="20" width="248" height="28"/>
+                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1946">
+                        <rect key="frame" x="238" y="20" width="354" height="28"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="You can also press ⌃⌘F or use the toolbar to turn off Full Screen." id="1947">
                             <font key="font" metaFont="smallSystem"/>

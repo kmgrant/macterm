@@ -136,16 +136,6 @@ in the source list.
 
 @end //}
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-void				copyContextToDefaults					(Preferences_ContextRef);
-CFDictionaryRef		createSearchDictionary					();
-void				deleteContext							(Preferences_ContextRef);
-OSStatus			receiveHICommand						(EventHandlerCallRef, EventRef, void*);
-
-} // anonymous namespace
-
 /*!
 The private class interface.
 */
@@ -195,6 +185,16 @@ The private class interface.
 	contextInfo:(void*)_;
 
 @end //}
+
+#pragma mark Internal Method Prototypes
+namespace {
+
+void				copyContextToDefaults					(Preferences_ContextRef);
+CFDictionaryRef		createSearchDictionary					();
+void				deleteContext							(Preferences_ContextRef);
+OSStatus			receiveHICommand						(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
 namespace {
@@ -1698,16 +1698,141 @@ itemForItemIdentifier:(NSString*)	itemIdentifier
 willBeInsertedIntoToolbar:(BOOL)	flag
 {
 #pragma unused(toolbar, flag)
-	NSToolbarItem*		result = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-	Panel_ViewManager*	itemPanel = [self->panelsByID objectForKey:itemIdentifier];
-	
-	
 	// NOTE: no need to handle standard items here
+	NSToolbarItem*			result = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+	Panel_ViewManager*		itemPanel = [self->panelsByID objectForKey:itemIdentifier];
+	NSButton*				categoryButton = [[NSButton alloc]
+												initWithFrame:NSMakeRect(0, 0, 36, 36)/* arbitrary frame */];
+	
+	
+	// configure a button to activate the main category
+	// (which exists regardless of any sub-panels)
+	categoryButton.action = itemPanel.panelDisplayAction;
+	categoryButton.target = itemPanel.panelDisplayTarget;
+	categoryButton.buttonType = NSMomentaryPushInButton;
+	categoryButton.bordered = NO;
+	categoryButton.title = @"";
+	categoryButton.image = [itemPanel panelIcon];
+	categoryButton.image.size = NSMakeSize(32, 32); // arbitrary size (approximate standard icons); see note below for "menuFormRepresentation" though
+	if (NO == [categoryButton.cell accessibilitySetOverrideValue:[itemPanel panelName] forAttribute:NSAccessibilityDescriptionAttribute])
+	{
+		//NSLog(@"warning, failed to set toolbar button cell accessibility label"); // debug
+	}
+	
 	assert(nil != itemPanel);
-	[result setLabel:[itemPanel panelName]];
-	[result setImage:[itemPanel panelIcon]];
-	[result setAction:itemPanel.panelDisplayAction];
-	[result setTarget:itemPanel.panelDisplayTarget];
+	result.label = [itemPanel panelName];
+	result.image = [itemPanel panelIcon];
+	result.action = itemPanel.panelDisplayAction;
+	result.target = itemPanel.panelDisplayTarget;
+	result.menuFormRepresentation = [[NSMenuItem alloc]
+										initWithTitle:@""
+														action:nil
+														keyEquivalent:@""];
+	// note: it is not clear why but setting the MENU icon size
+	// affects the icon displayed in the button itself; make
+	// sure that the menu icon size approximates a normal toolbar
+	// icon’s size
+	result.menuFormRepresentation.image = result.image;
+	result.menuFormRepresentation.image.size = NSMakeSize(32, 32); // shrink default image, which is too large
+	result.menuFormRepresentation.title = result.label;
+	result.menuFormRepresentation.action = result.action;
+	result.menuFormRepresentation.target = result.target;
+	
+	if ([itemPanel conformsToProtocol:@protocol(Panel_Parent)] &&
+		([STATIC_CAST(itemPanel, id< Panel_Parent >) panelParentChildCount] > 1))
+	{
+		// main button is available as direct action but
+		// a pop-up menu button is included underneath
+		// for access to sub-categories (tabs)
+		id< Panel_Parent >	asParent = STATIC_CAST(itemPanel, id< Panel_Parent >);
+		NSPopUpButton*		menuButton = [[NSPopUpButton alloc]
+											initWithFrame:NSMakeRect(0, 0, 60, 44)/* arbitrary frame */
+															pullsDown:YES];
+		NSMenu*				newMenu = [[NSMenu alloc] initWithTitle:@""];
+		NSMenu*				subMenu = [[NSMenu alloc] initWithTitle:@""]; // for overflow only; excludes title item
+		
+		
+		// pull-down buttons determine their appearance by using
+		// the properties of the first item (an item which is then
+		// not displayed in the menu); insert a dummy item to
+		// ensure that the menu only contains items for sub-panels
+		// and to ensure that the button has the right appearance
+		{
+			NSMenuItem*		defaultView = [[NSMenuItem alloc]
+											initWithTitle:@""
+															action:result.action
+															keyEquivalent:@""];
+			
+			
+			// note: icon is shown in the normal category button subview
+			//defaultView.image = [itemPanel panelIcon];
+			//defaultView.image.size = NSMakeSize(32, 32); // shrink default image, which is too large
+			[newMenu addItem:defaultView];
+		}
+		
+		// add an item for each sub-category, using the settings
+		// of each panel to determine how the menu command looks
+		// and what it does
+		for (Panel_ViewManager* childPanel in
+				[asParent panelParentEnumerateChildViewManagers])
+		{
+			NSMenuItem*		newItem = [[NSMenuItem alloc]
+										initWithTitle:[childPanel panelName]
+														action:childPanel.panelDisplayAction
+														keyEquivalent:@""];
+			
+			
+			newItem.target = childPanel.panelDisplayTarget;
+			// child items do not need an icon (the parent does,
+			// and currently parent and child have the same icon)
+			//newItem.image = [itemPanel panelIcon];
+			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
+			[newMenu addItem:newItem];
+			[subMenu addItem:[newItem copy]];
+		}
+		
+		// configure the rest of the menu button; note that the arrow
+		// position is important but it is only visible through the cell
+		menuButton.menu = newMenu;
+		menuButton.action = result.action;
+		menuButton.target = result.target;
+		menuButton.buttonType = NSMomentaryPushInButton;
+		menuButton.bordered = YES;
+		menuButton.bezelStyle = NSShadowlessSquareBezelStyle;
+		menuButton.showsBorderOnlyWhileMouseInside = YES;
+		if ([menuButton.cell isKindOfClass:NSPopUpButtonCell.class])
+		{
+			NSPopUpButtonCell*	asPopUpButtonCell = STATIC_CAST(menuButton.cell, NSPopUpButtonCell*);
+			
+			
+			// put the arrow on the edge instead of in the center
+			asPopUpButtonCell.arrowPosition = NSPopUpArrowAtBottom;
+		}
+		
+		// when the normal category button appears on top of the menu,
+		// it is helpful to also give it hover-border behavior (otherwise
+		// it is hard to guess what will happen when clicking)
+		categoryButton.bordered = YES;
+		categoryButton.bezelStyle = NSShadowlessSquareBezelStyle;
+		categoryButton.showsBorderOnlyWhileMouseInside = YES;
+		[categoryButton setFrameOrigin:NSMakePoint(4, 4)]; // if there is a difference between the two button heights above, offset the subview
+		
+		[menuButton addSubview:categoryButton];
+		result.view = menuButton;
+		[result.menuFormRepresentation setSubmenu:subMenu];
+	}
+	else
+	{
+		// button is displayed by itself, no menu underneath
+		result.view = categoryButton;
+		
+		// note: may choose to disable roll-over highlight (non-standard
+		// for ordinary toolbar items but more consistent with the look
+		// and behavior of items in this particular toolbar)
+		categoryButton.bordered = YES;
+		categoryButton.bezelStyle = NSShadowlessSquareBezelStyle;
+		categoryButton.showsBorderOnlyWhileMouseInside = YES;
+	}
 	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -1903,7 +2028,7 @@ windowDidLoad
 	
 	// “indent” the toolbar items slightly so they are further away
 	// from the window’s controls (such as the close button)
-	for (UInt16 i = 0; i < 1/* arbitrary */; ++i)
+	for (UInt16 i = 0; i < 0/* arbitrary */; ++i)
 	{
 		[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
 	}
@@ -2059,6 +2184,19 @@ withAnimation:(BOOL)								isAnimated
 {
 	[self displayPanelOrTabWithIdentifier:anIdentifier withAnimation:isAnimated];
 }// panelParentDisplayChildWithIdentifier:withAnimation:
+
+
+/*!
+Returns the number of items that will be covered by a call
+to "panelParentEnumerateChildViewManagers".
+
+(2017.03)
+*/
+- (NSUInteger)
+panelParentChildCount
+{
+	return self->panelsByID.count;
+}// panelParentChildCount
 
 
 /*!
