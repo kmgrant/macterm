@@ -1746,7 +1746,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		// for access to sub-categories (tabs)
 		id< Panel_Parent >	asParent = STATIC_CAST(itemPanel, id< Panel_Parent >);
 		NSPopUpButton*		menuButton = [[NSPopUpButton alloc]
-											initWithFrame:NSMakeRect(0, 0, 60, 44)/* arbitrary frame */
+											initWithFrame:NSMakeRect(0, 0, 54, 42)/* arbitrary frame */
 															pullsDown:YES];
 		NSMenu*				newMenu = [[NSMenu alloc] initWithTitle:@""];
 		NSMenu*				subMenu = [[NSMenu alloc] initWithTitle:@""]; // for overflow only; excludes title item
@@ -1815,7 +1815,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		categoryButton.bordered = YES;
 		categoryButton.bezelStyle = NSShadowlessSquareBezelStyle;
 		categoryButton.showsBorderOnlyWhileMouseInside = YES;
-		[categoryButton setFrameOrigin:NSMakePoint(4, 4)]; // if there is a difference between the two button heights above, offset the subview
+		[categoryButton setFrameOrigin:NSMakePoint(3, 3)]; // if there is a difference between the two button heights above, offset the subview
 		
 		[menuButton addSubview:categoryButton];
 		result.view = menuButton;
@@ -2940,7 +2940,7 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 	^{
 		// all of the changes in this block will animate simultaneously
 		[NSAnimationContext beginGrouping];
-		[[NSAnimationContext currentContext] setDuration:0.22];
+		[[NSAnimationContext currentContext] setDuration:0.12];
 		{
 			[self.window.animator setFrame:aNewWindowFrame display:YES];
 			[[self->containerTabView animator] setFrame:panelFrame];
