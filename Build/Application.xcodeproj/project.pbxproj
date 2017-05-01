@@ -47,7 +47,6 @@
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
-		0AC69F161877A697004E6019 /* UTF8Decoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC69F151877A697004E6019 /* UTF8Decoder.cp */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
@@ -132,6 +131,7 @@
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; };
 		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
+		0AEE250E1EB6EF300057DD6F /* UTF8Decoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */; };
 		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
@@ -493,8 +493,6 @@
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
-		0AC69F151877A697004E6019 /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Application/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
-		0AC69F171877A733004E6019 /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Application/Code/UTF8Decoder.h; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
 		0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsSession.cp; path = Application/Code/QuillsSession.cp; sourceTree = "<group>"; };
@@ -546,6 +544,8 @@
 		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
+		0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Shared/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
+		0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Shared/Code/UTF8Decoder.h; sourceTree = "<group>"; };
 		0AF4B5450A1D61C700D187A3 /* PrefPanelFullScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFullScreen.h; path = Application/Code/PrefPanelFullScreen.h; sourceTree = "<group>"; };
 		0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFullScreen.mm; path = Application/Code/PrefPanelFullScreen.mm; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
@@ -644,6 +644,7 @@
 				0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */,
 				0A0777401DCBC815004C9F78 /* TouchBar.mm */,
 				0A46FE36055432A400ACDF3A /* Undoables.cp */,
+				0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */,
 				0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */,
 				0AD7B343176C3212004A1532 /* BoundName.objc++.h */,
 				0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */,
@@ -690,6 +691,7 @@
 				0A0777421DCBC824004C9F78 /* TouchBar.objc++.h */,
 				0A9B31840D538E4D00C1616D /* Undoables.h */,
 				0A4604520554376100ACDF3A /* UniversalDefines.h */,
+				0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */,
 				0AB19DA91D87556600D80A2D /* WindowTitleDialog.h */,
 				0A1FE93E1A39F196003C81BA /* XPCCallPythonClient.objc++.h */,
 				0AA19F551D8A07E600FD70FF /* Shared XIBs */,
@@ -770,7 +772,6 @@
 				0A46FE2D055432A400ACDF3A /* TextTranslation.cp */,
 				0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
-				0AC69F151877A697004E6019 /* UTF8Decoder.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE21055432A400ACDF3A /* VectorCanvas.mm */,
 				0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */,
@@ -837,7 +838,6 @@
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,
 				0A4604510554376100ACDF3A /* Undoables.h */,
 				0A4604540554376100ACDF3A /* URL.h */,
-				0AC69F171877A733004E6019 /* UTF8Decoder.h */,
 				0A4604360554376100ACDF3A /* VectorCanvas.h */,
 				0A4604370554376100ACDF3A /* VectorInterpreter.h */,
 				0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */,
@@ -1379,6 +1379,7 @@
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
+				0AEE250E1EB6EF300057DD6F /* UTF8Decoder.cp in Sources */,
 				0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */,
 				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */,
 				0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */,
@@ -1404,7 +1405,6 @@
 				0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */,
 				0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */,
 				0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */,
-				0AC69F161877A697004E6019 /* UTF8Decoder.cp in Sources */,
 				0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */,
 				0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */,
 				0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */,
