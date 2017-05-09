@@ -104,10 +104,16 @@ public:
 	CFRetainRelease (CFBundleRef, ReferenceState);
 	
 	explicit inline
+	CFRetainRelease (CFDataRef, ReferenceState);
+	
+	explicit inline
 	CFRetainRelease (CFDictionaryRef, ReferenceState);
 	
 	explicit inline
 	CFRetainRelease (CFMutableArrayRef, ReferenceState);
+	
+	explicit inline
+	CFRetainRelease (CFMutableDataRef, ReferenceState);
 	
 	explicit inline
 	CFRetainRelease (CFMutableDictionaryRef, ReferenceState);
@@ -174,11 +180,17 @@ public:
 	inline CFBundleRef
 	returnCFBundleRef () const;
 	
+	inline CFDataRef
+	returnCFDataRef () const;
+	
 	inline CFDictionaryRef
 	returnCFDictionaryRef () const;
 	
 	inline CFMutableArrayRef
 	returnCFMutableArrayRef () const;
+	
+	inline CFMutableDataRef
+	returnCFMutableDataRef () const;
 	
 	inline CFMutableDictionaryRef
 	returnCFMutableDictionaryRef () const;
@@ -360,6 +372,32 @@ _mutability(kReferenceMutable)
 
 
 /*!
+Creates a new reference using the value of an existing
+one that is a Core Foundation Data type.  In debug mode,
+an assertion failure will occur if the given reference
+is not a CFDataRef.
+
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
+
+(2017.05)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFDataRef			inType,
+					 ReferenceState		inIsAlreadyRetained)
+:
+_reference(CONST_CAST(REINTERPRET_CAST(inType, void const*), void*)),
+_mutability(kReferenceConstant)
+{
+	if (kNotYetRetained == inIsAlreadyRetained)
+	{
+		safeRetain(_reference);
+	}
+}// data type constructor
+
+
+/*!
 Creates a new reference using the value of an
 existing one that is a Core Foundation Dictionary
 type.  In debug mode, an assertion failure will
@@ -435,6 +473,32 @@ _mutability(kReferenceMutable)
 		safeRetain(_reference);
 	}
 }// mutable array type constructor
+
+
+/*!
+Creates a new reference using the value of an existing
+one that is a Core Foundation Mutable Data type.  In
+debug mode, an assertion failure will occur if the
+given reference is not a CFMutableDataRef.
+
+CFRetain() is conditionally called on the reference
+based on "inIsAlreadyRetained"; for details, see
+comments for main constructor.
+
+(2017.05)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFMutableDataRef	inType,
+					 ReferenceState		inIsAlreadyRetained)
+:
+_reference(inType),
+_mutability(kReferenceMutable)
+{
+	if (kNotYetRetained == inIsAlreadyRetained)
+	{
+		safeRetain(_reference);
+	}
+}// mutable data type constructor
 
 
 /*!
@@ -824,6 +888,28 @@ const
 
 /*!
 Convenience method to cast the internal reference
+into a CFDataRef.  In debug mode, an assertion
+failure will occur if the reference is not really
+a CFDataRef or CFMutableDataRef.
+
+(2017.05)
+*/
+CFDataRef
+CFRetainRelease::
+returnCFDataRef ()
+const
+{
+	if (this->isMutable())
+	{
+		return returnCFMutableDataRef();
+	}
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFDataGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFDataRef);
+}// returnCFDataRef
+
+
+/*!
+Convenience method to cast the internal reference
 into a CFDictionaryRef.  In debug mode, an assertion
 failure will occur if the reference is not really
 a CFDictionaryRef or CFMutableDictionaryRef.
@@ -861,6 +947,25 @@ const
 	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFArrayGetTypeID()));
 	return REINTERPRET_CAST(_reference, CFMutableArrayRef);
 }// returnCFMutableArrayRef
+
+
+/*!
+Convenience method to cast the internal reference
+into a CFMutableDataRef.  In debug mode, an
+assertion failure will occur if the reference is
+not really a CFMutableDataRef.
+
+(2017.05)
+*/
+CFMutableDataRef
+CFRetainRelease::
+returnCFMutableDataRef ()
+const
+{
+	assert(this->isMutable());
+	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFDataGetTypeID()));
+	return REINTERPRET_CAST(_reference, CFMutableDataRef);
+}// returnCFMutableDataRef
 
 
 /*!
