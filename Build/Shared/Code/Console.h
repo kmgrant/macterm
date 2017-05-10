@@ -233,6 +233,10 @@ void
 									 UInt32				in32BitValue);
 
 void
+	Console_WriteValueCFError		(char const*		inLabel,
+									 CFErrorRef			inError);
+
+void
 	Console_WriteValueCFString		(char const*		inLabel,
 									 CFStringRef		inValue);
 

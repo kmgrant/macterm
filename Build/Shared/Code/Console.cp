@@ -410,6 +410,24 @@ Console_WriteValueBitFlags		(char const*	inLabel,
 
 
 /*!
+Writes a string of the form "label = “error description”" to
+the console (with a new-line) .
+
+(2017.05)
+*/
+void
+Console_WriteValueCFError	(char const*	inLabel,
+							 CFErrorRef		inError)
+{
+	CFRetainRelease		errorDescriptionCFString(CFErrorCopyDescription(inError),
+													CFRetainRelease::kAlreadyRetained);
+	
+	
+	Console_WriteValueCFString(inLabel, errorDescriptionCFString.returnCFStringRef());
+}// Console_WriteValueCFError
+
+
+/*!
 Writes the value of a Core Foundation string.  A
 string of the form "label = “value”" is written
 to the console (with a new-line).
