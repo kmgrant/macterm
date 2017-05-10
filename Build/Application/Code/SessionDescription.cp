@@ -644,14 +644,13 @@ SessionDescription_Load ()
 	CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,
 									sizeof(kTypeList) / sizeof(CFStringRef), &kCFTypeArrayCallBacks),
 									CFRetainRelease::kAlreadyRetained);
-	CFStringRef			promptCFString = nullptr;
-	CFStringRef			titleCFString = nullptr;
+	CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptOpenSession),
+										CFRetainRelease::kAlreadyRetained);
 	
 	
-	UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
-	UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
 	UNUSED_RETURN(Boolean)CocoaBasic_FileOpenPanelDisplay
-	(^(CFURLRef		inURL) {
+	(promptCFString.returnCFStringRef(), fileTypes.returnCFArrayRef(),
+	^(CFURLRef		inURL) {
 		FSRef		fileRef;
 		OSStatus	error = noErr;
 		
@@ -671,7 +670,7 @@ SessionDescription_Load ()
 			Console_WriteValueCFString("unable to open file", CFURLGetString(inURL));
 			Console_WriteValue("error", error);
 		}
-	}, promptCFString, titleCFString, fileTypes.returnCFArrayRef());
+	});
 }// Load
 
 

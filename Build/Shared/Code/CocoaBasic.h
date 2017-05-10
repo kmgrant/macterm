@@ -102,10 +102,9 @@ void
 	CocoaBasic_AboutPanelDisplay					();
 
 Boolean
-	CocoaBasic_FileOpenPanelDisplay					(void (^inOpenURLHandler)(CFURLRef),
-													 CFStringRef = nullptr,
-													 CFStringRef = nullptr,
-													 CFArrayRef = nullptr);
+	CocoaBasic_FileOpenPanelDisplay					(CFStringRef,
+													 CFArrayRef,
+													 void (^inOpenURLHandler)(CFURLRef));
 
 //@}
 

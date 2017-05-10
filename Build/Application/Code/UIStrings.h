@@ -369,10 +369,7 @@ enum UIStrings_SystemDialogCFString
 	kUIStrings_SystemDialogPromptOpenPrefs		= 'PmOP',
 	kUIStrings_SystemDialogPromptOpenSession	= 'PmOS',
 	kUIStrings_SystemDialogPromptSavePrefs		= 'PmSP',
-	kUIStrings_SystemDialogPromptSaveSession	= 'PmSS',
-	kUIStrings_SystemDialogPromptPickColor		= 'PmPC',
-	kUIStrings_SystemDialogTitleOpenPrefs		= 'TtOP',
-	kUIStrings_SystemDialogTitleOpenSession		= 'TtOS'
+	kUIStrings_SystemDialogPromptSaveSession	= 'PmSS'
 };
 
 /*!

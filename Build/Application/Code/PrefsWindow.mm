@@ -178,12 +178,6 @@ The private class interface.
 	preferenceChange:(ListenerModel_Event)_
 	context:(void*)_;
 
-// methods of the form required by NSOpenPanel
-	- (void)
-	didEndImportPanel:(NSOpenPanel*)_
-	returnCode:(int)_
-	contextInfo:(void*)_;
-
 @end //}
 
 #pragma mark Internal Method Prototypes
@@ -1185,23 +1179,44 @@ file from which to import settings.
 performImportPreferenceCollectionFromFile:(id)	sender
 {
 #pragma unused(sender)
-	NSOpenPanel*	openPanel = [NSOpenPanel openPanel];
-	NSArray*		allowedTypes = @[
-										@"com.apple.property-list",
-										@"itermcolors",
-										@"plist"/* redundant, needed for older systems */,
-										@"xml",
-									];
-	CFStringRef		promptCFString = nullptr;
+	NSArray*			allowedTypes = @[
+											@"com.apple.property-list",
+											@"itermcolors",
+											@"plist"/* redundant, needed for older systems */,
+											@"xml",
+										];
+	CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptOpenPrefs),
+										CFRetainRelease::kAlreadyRetained);
+	Boolean				accepted = false;
 	
 	
-	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenPrefs, promptCFString);
-	[openPanel setMessage:(NSString*)promptCFString];
-	
-	[openPanel beginSheetForDirectory:nil file:nil types:allowedTypes
-										modalForWindow:[self window] modalDelegate:self
-										didEndSelector:@selector(didEndImportPanel:returnCode:contextInfo:)
-										contextInfo:nullptr];
+	accepted = CocoaBasic_FileOpenPanelDisplay
+	(promptCFString.returnCFStringRef(), BRIDGE_CAST(allowedTypes, CFArrayRef),
+	^(CFURLRef		inFileURL)
+	{
+		NSURL*		asNSURL = BRIDGE_CAST(inFileURL, NSURL*);
+		FSRef		fileRef;
+		OSStatus	error = noErr;
+		
+		
+		if (CFURLGetFSRef(inFileURL, &fileRef))
+		{
+			error = FileUtilities_OpenDocument(fileRef);
+		}
+		else
+		{
+			error = kURLInvalidURLError;
+		}
+		
+		if (noErr != error)
+		{
+			// TEMPORARY; should probably display a more user-friendly alert for this...
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValueCFString, "unable to open file, URL",
+							BRIDGE_CAST([asNSURL absoluteString], CFStringRef));
+			Console_Warning(Console_WriteValue, "error", error);
+		}
+	});
 }// performImportPreferenceCollectionFromFile:
 
 
@@ -2526,52 +2541,6 @@ currentPreferencesContext
 	assert(Preferences_ContextIsValid(result));
 	return result;
 }// currentPreferencesContext
-
-
-/*!
-A selector of the form required by NSOpenPanel; it responds to
-an NSOKButton return code by opening the selected file(s).
-The files are opened via Apple Events because there are already
-event handlers defined that have the appropriate effect on
-Preferences.
-
-(4.1)
-*/
-- (void)
-didEndImportPanel:(NSOpenPanel*)	aPanel
-returnCode:(int)					aReturnCode
-contextInfo:(void*)					aContextPtr
-{
-#pragma unused(aContextPtr)
-	if (NSOKButton == aReturnCode)
-	{
-		// open the files via Apple Events
-		for (NSURL* currentFileURL in [aPanel URLs])
-		{
-			FSRef		fileRef;
-			OSStatus	error = noErr;
-			
-			
-			if (CFURLGetFSRef(BRIDGE_CAST(currentFileURL, CFURLRef), &fileRef))
-			{
-				error = FileUtilities_OpenDocument(fileRef);
-			}
-			else
-			{
-				error = kURLInvalidURLError;
-			}
-			
-			if (noErr != error)
-			{
-				// TEMPORARY; should probably display a more user-friendly alert for this...
-				Sound_StandardAlert();
-				Console_Warning(Console_WriteValueCFString, "unable to open file, URL",
-								BRIDGE_CAST([currentFileURL absoluteString], CFStringRef));
-				Console_Warning(Console_WriteValue, "error", error);
-			}
-		}
-	}
-}// didEndImportPanel:returnCode:contextInfo:
 
 
 /*!

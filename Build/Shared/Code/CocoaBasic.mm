@@ -143,14 +143,14 @@ CocoaBasic_CreateFileAndDirectoriesWithData		(CFURLRef		inDirectoryURL,
 
 /*!
 Shows a modal panel for opening any number of files and
-automatically handling them via Apple Events.  The panel
+automatically handling them via a block.  The panel
 resolves aliases, does not allow the user to choose
-directories, and allows the user to try opening any type
-of file (despite the list).
+directories, and only allows the user to open files of
+the given types.
 
-All of the arguments can be "nullptr" to choose defaults.
-The defaults are: no message, no title, and allowing all
-possible file types.
+The first two arguments can be "nullptr" to use defaults.
+The defaults are: no message, and allowing all possible
+file types.
 
 The file type list is sophisticated and can accept
 anything you would imagine: file name extensions, HFS
@@ -158,13 +158,12 @@ four-character codes, and reverse-domain-style UTIs.
 
 Returns true only if the user tried to open something.
 
-(1.0)
+(2017.05)
 */
 Boolean
-CocoaBasic_FileOpenPanelDisplay		(void		(^inOpenURLHandler)(CFURLRef),
-									 CFStringRef	inMessage,
-									 CFStringRef	inWindowTitle,
-									 CFArrayRef		inAllowedFileTypes)
+CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
+									 CFArrayRef		inAllowedFileTypes,
+									 void			(^inOpenURLHandler)(CFURLRef))
 {
 @autoreleasepool {
 	NSOpenPanel*	thePanel = [NSOpenPanel openPanel];
@@ -172,17 +171,15 @@ CocoaBasic_FileOpenPanelDisplay		(void		(^inOpenURLHandler)(CFURLRef),
 	Boolean			result = false;
 	
 	
+	// NOTE: newer versions of the dialog display the message but they
+	// seem to ignore the "title" string entirely
 	if (nullptr != inMessage)
 	{
 		[thePanel setMessage:BRIDGE_CAST(inMessage, NSString*)];
 	}
-	if (nullptr != inWindowTitle)
-	{
-		[thePanel setTitle:BRIDGE_CAST(inWindowTitle, NSString*)];
-	}
 	[thePanel setCanChooseDirectories:NO];
 	[thePanel setCanChooseFiles:YES];
-	[thePanel setAllowsOtherFileTypes:YES];
+	[thePanel setAllowsOtherFileTypes:NO];
 	[thePanel setAllowsMultipleSelection:YES];
 	[thePanel setResolvesAliases:YES];
 	thePanel.allowedFileTypes = BRIDGE_CAST(inAllowedFileTypes, NSArray*);

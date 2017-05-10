@@ -1462,24 +1462,6 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 													CFSTR("kUIStrings_SystemDialogPromptSaveSession"));
 		break;
 	
-	case kUIStrings_SystemDialogPromptPickColor:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Please choose a color."),
-													CFSTR("SystemDialogs"),
-													CFSTR("kUIStrings_SystemDialogPromptPickColor"));
-		break;
-	
-	case kUIStrings_SystemDialogTitleOpenPrefs:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Import Preferences"),
-													CFSTR("SystemDialogs"),
-													CFSTR("kUIStrings_SystemDialogTitleOpenPrefs"));
-		break;
-	
-	case kUIStrings_SystemDialogTitleOpenSession:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Open Session"),
-													CFSTR("SystemDialogs"),
-													CFSTR("kUIStrings_SystemDialogTitleOpenSession"));
-		break;
-	
 	default:
 		// ???
 		result = kUIStrings_ResultNoSuchString;
