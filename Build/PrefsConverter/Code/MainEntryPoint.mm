@@ -88,6 +88,7 @@ My_PrefsResult		actionVersion4	();
 My_PrefsResult		actionVersion5	();
 My_PrefsResult		actionVersion6	();
 My_PrefsResult		actionVersion7	();
+My_PrefsResult		actionVersion8	();
 
 } // anonymous namespace
 
@@ -362,6 +363,121 @@ actionVersion7 ()
 	return result;
 }// actionVersion7
 
+
+/*!
+Upgrades from version 7 to version 8.  Data that used
+alias format is converted into bookmark data.
+
+(2017.05)
+*/
+My_PrefsResult
+actionVersion8 ()
+{
+	My_PrefsResult		result = kMy_PrefsResultOK;
+	CFRetainRelease		favoriteSessionDomains(CFPreferencesCopyValue(CFSTR("favorite-sessions"), kMacTermApplicationID,
+																		kCFPreferencesCurrentUser, kCFPreferencesAnyHost),
+												CFRetainRelease::kAlreadyRetained);
+	NSMutableArray*		allSessionDomains = [[NSMutableArray alloc] init];
+	
+	
+	// find all possible domains that could have old settings
+	if (favoriteSessionDomains.exists())
+	{
+		if (CFArrayGetTypeID() != CFGetTypeID(favoriteSessionDomains.returnCFTypeRef()))
+		{
+			// expected the saved value to be an array
+			std::cerr << "MacTerm Preferences Converter: actionVersion8(): 'favorite-sessions' value does not have array type, ignoring" << std::endl;
+		}
+		else
+		{
+			[allSessionDomains setArray:BRIDGE_CAST(favoriteSessionDomains.returnCFArrayRef(), NSArray*)];
+		}
+	}
+	[allSessionDomains addObject:BRIDGE_CAST(kMacTermApplicationID, NSString*)];
+	
+	// convert old alias records to new bookmarks in all
+	// the places that have them; then, delete the old ones
+	for (NSString* searchDomain in allSessionDomains)
+	{
+		CFStringRef const	kSearchDomainAsCFString = BRIDGE_CAST(searchDomain, CFStringRef);
+		CFRetainRelease		apparentAliasData(CFPreferencesCopyValue(CFSTR("terminal-capture-directory-alias"),
+																		kSearchDomainAsCFString,
+																		kCFPreferencesCurrentUser, kCFPreferencesAnyHost),
+													CFRetainRelease::kAlreadyRetained);
+		
+		
+		if (apparentAliasData.exists())
+		{
+			if (CFDataGetTypeID() != CFGetTypeID(apparentAliasData.returnCFTypeRef()))
+			{
+				// expected the saved value to be a data blob
+				std::cerr << "MacTerm Preferences Converter: actionVersion8(): subdomain 'terminal-capture-directory-alias' value does not have raw data type, ignoring" << std::endl;
+			}
+			else
+			{
+				// convert the alias to a bookmark and store that instead
+				CFRetainRelease		bookmarkData(CFURLCreateBookmarkDataFromAliasRecord
+													(kCFAllocatorDefault, apparentAliasData.returnCFDataRef()),
+													CFRetainRelease::kAlreadyRetained);
+				
+				
+				if (bookmarkData.exists())
+				{
+					CFDataRef const		kAsDataRef = bookmarkData.returnCFDataRef();
+					
+					
+					// store the bookmark under the new key name (this must
+					// agree with what MacTerm uses to read it now)
+					CFPreferencesSetValue(CFSTR("terminal-capture-directory-bookmark"), kAsDataRef,
+											kSearchDomainAsCFString, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+					
+					// debug: recreate the URL to see what it pointed to
+					// (this helps to see that the conversion was OK)
+				#if 0
+					{
+						CFURLBookmarkResolutionOptions	resolveOptions = (kCFBookmarkResolutionWithoutUIMask/* |
+																			kCFBookmarkResolutionWithoutMountingMask*/);
+						CFErrorRef						errorCFObject = nullptr;
+						Boolean							isStale = false;
+						CFRetainRelease					recreatedURL(CFURLCreateByResolvingBookmarkData
+																		(kCFAllocatorDefault, kAsDataRef, resolveOptions,
+																			nullptr/* relative-URL info */, nullptr/* properties to include */,
+																			&isStale, &errorCFObject),
+																		CFRetainRelease::kAlreadyRetained);
+						
+						
+						if (false == recreatedURL.exists())
+						{
+							if (nullptr != errorCFObject)
+							{
+								CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
+								
+								
+								CFShow(CFSTR("failed to recreate URL, error:"));
+								CFShow(errorCFObject);
+							}
+						}
+						else
+						{
+							CFShow(CFSTR("recreated URL:")); // debug
+							CFShow(recreatedURL.returnCFURLRef()); // debug
+						}
+					}
+				#endif
+				}
+			}
+			
+			// finally, remove the original alias data from this domain
+			CFPreferencesSetValue(CFSTR("terminal-capture-directory-alias"), nullptr/* delete value */,
+									kSearchDomainAsCFString, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+		}
+	}
+	
+	[allSessionDomains release], allSessionDomains = nil;
+	
+	return result;
+}// actionVersion8
+
 } // anonymous namespace
 
 
@@ -382,7 +498,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 	// "actionVersionX()" and add a call to it below, in a form
 	// similar to what has been done for previous versions.  Finally,
 	// note that the version should never be decremented.
-	SInt16 const	kCurrentPrefsVersion = 7;
+	SInt16 const	kCurrentPrefsVersion = 8;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
@@ -513,6 +629,11 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 		{
 			// Version 7 deleted some obsolete keys.
 			actionResult = actionVersion7();
+		}
+		if (diskVersion < 8)
+		{
+			// Version 8 converts alias data into bookmark data.
+			actionResult = actionVersion8();
 		}
 		// IMPORTANT: The maximum version considered here should be the
 		//            current value of "kCurrentPrefsVersion"!!!

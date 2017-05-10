@@ -1680,8 +1680,8 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 									initWithPreferencesTag:kPreferences_TagCaptureFileName
 															contextManager:aContextMgr];
 		self->directoryPathObject = [[PreferenceValue_FileSystemObject alloc]
-										initWithPreferencesTag:kPreferences_TagCaptureFileDirectoryObject
-																contextManager:aContextMgr isDirectory:YES];
+										initWithURLInfoPreferencesTag:kPreferences_TagCaptureFileDirectoryURL
+																		contextManager:aContextMgr isDirectory:YES];
 		
 		// monitor the preferences context manager so that observers
 		// of preferences in sub-objects can be told to expect changes

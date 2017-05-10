@@ -178,17 +178,22 @@ Manages bindings for a single color preference.
 
 /*!
 Manages bindings for any preference whose value is
-defined to be a pointer to an FSRef.  The value is
+defined to be a pointer to a CFURLRef.  The value is
 exposed to user interfaces only as a string.
 */
 @interface PreferenceValue_FileSystemObject : PreferenceValue_InheritedSingleTag //{
 {
 	BOOL	isDirectory;
+	BOOL	isURLInfoObject;
 }
 
 // initializers
 	- (instancetype)
-	initWithPreferencesTag:(Preferences_Tag)_
+	initWithURLPreferencesTag:(Preferences_Tag)_
+	contextManager:(PrefsContextManager_Object*)_
+	isDirectory:(BOOL)_;
+	- (instancetype)
+	initWithURLInfoPreferencesTag:(Preferences_Tag)_
 	contextManager:(PrefsContextManager_Object*)_
 	isDirectory:(BOOL)_;
 

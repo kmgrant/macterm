@@ -1171,10 +1171,10 @@ setNilPreferenceValue
 /*!
 Designated initializer.
 
-(4.1)
+(2017.05)
 */
 - (instancetype)
-initWithPreferencesTag:(Preferences_Tag)		aTag
+initWithURLPreferencesTag:(Preferences_Tag)		aTag
 contextManager:(PrefsContextManager_Object*)	aContextMgr
 isDirectory:(BOOL)								aDirectoryFlag
 {
@@ -1182,9 +1182,30 @@ isDirectory:(BOOL)								aDirectoryFlag
 	if (nil != self)
 	{
 		self->isDirectory = aDirectoryFlag;
+		self->isURLInfoObject = NO;
 	}
 	return self;
-}// initWithPreferencesTag:contextManager:
+}// initWithURLPreferencesTag:contextManager:isDirectory:
+
+
+/*!
+Designated initializer.
+
+(2017.05)
+*/
+- (instancetype)
+initWithURLInfoPreferencesTag:(Preferences_Tag)		aTag
+contextManager:(PrefsContextManager_Object*)		aContextMgr
+isDirectory:(BOOL)									aDirectoryFlag
+{
+	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
+	if (nil != self)
+	{
+		self->isDirectory = aDirectoryFlag;
+		self->isURLInfoObject = YES;
+	}
+	return self;
+}// initWithURLInfoPreferencesTag:contextManager:isDirectory:
 
 
 #pragma mark New Methods
@@ -1206,29 +1227,59 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 	
 	if (Preferences_ContextIsValid(sourceContext))
 	{
-		FSRef				fileObjectValue;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
-																		sizeof(fileObjectValue), &fileObjectValue,
-																		true/* search defaults */, &isDefault);
+		CFURLRef			fileURLValue = nullptr;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
+		
+		if (self->isURLInfoObject)
+		{
+			// preferences tag uses CFURLRef indirectly
+			// through the Preferences_URLInfo structure
+			Preferences_URLInfo		urlInfo;
+			
+			
+			prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
+														sizeof(urlInfo), &urlInfo,
+														true/* search defaults */, &isDefault);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				fileURLValue = urlInfo.urlRef;
+				if (urlInfo.isStale)
+				{
+					// if the retrieved URL came from a stale bookmark, the
+					// new URL should be saved back to preferences
+					Preferences_Result		updateResult = Preferences_ContextSetData
+															(sourceContext, self.preferencesTag,
+																sizeof(urlInfo), &urlInfo);
+					
+					
+					Console_Warning(Console_WriteValueCFString, "stale bookmark was saved, new URL", CFURLGetString(urlInfo.urlRef));
+					if (kPreferences_ResultOK != updateResult)
+					{
+						// failed to update (ignore for now)
+						Console_Warning(Console_WriteValue, "unable to save updated bookmark, error", updateResult);
+					}
+				}
+			}
+		}
+		else
+		{
+			// preferences tag uses a CFURLRef directly
+			prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
+														sizeof(fileURLValue), &fileURLValue,
+														true/* search defaults */, &isDefault);
+		}
 		
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			OSStatus	error = noErr;
-			UInt8		objectPath[PATH_MAX];
-			
-			
-			// note that this call returns a null-terminated string; but out
-			// of paranoia, the array is terminated at its end anyway
-			error = FSRefMakePath(&fileObjectValue, objectPath, sizeof(objectPath));
-			objectPath[sizeof(objectPath) - 1] = '\0';
-			if (noErr == error)
-			{
-				result = BRIDGE_CAST(CFStringCreateWithCString(kCFAllocatorDefault,
-																REINTERPRET_CAST(objectPath, char const*),
-																kCFStringEncodingUTF8), NSString*);
-				[result autorelease];
-			}
+			result = BRIDGE_CAST(CFURLCopyFileSystemPath(fileURLValue, kCFURLPOSIXPathStyle), NSString*);
+		}
+		
+		// the Preferences module always creates a new URL so
+		// release whatever was returned
+		if (nullptr != fileURLValue)
+		{
+			CFRelease(fileURLValue), fileURLValue = nullptr;
 		}
 	}
 	
@@ -1285,17 +1336,34 @@ setStringValue:(NSString*)	aString
 		
 		if (Preferences_ContextIsValid(targetContext))
 		{
-			FSRef		fileObjectValue;
-			Boolean		pathIsDirectory = false;
-			OSStatus	error = FSPathMakeRef(REINTERPRET_CAST([aString UTF8String], UInt8 const *),
-												&fileObjectValue, &pathIsDirectory);
+			NSURL*		fileURLValue = [NSURL fileURLWithPath:aString isDirectory:self->isDirectory];
 			
 			
-			if ((noErr == error) && (self->isDirectory == STATIC_CAST(pathIsDirectory, BOOL)))
+			if (nil != fileURLValue)
 			{
-				Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
-																				sizeof(fileObjectValue), &fileObjectValue);
+				CFURLRef			asCFURL = BRIDGE_CAST(fileURLValue, CFURLRef);
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
 				
+				
+				if (self->isURLInfoObject)
+				{
+					// preferences tag uses CFURLRef indirectly
+					// through the Preferences_URLInfo structure
+					Preferences_URLInfo		urlInfo;
+					
+					
+					bzero(&urlInfo, sizeof(urlInfo));
+					urlInfo.urlRef = asCFURL;
+					urlInfo.isStale = false; // (this is ignored when setting the value)
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
+																sizeof(urlInfo), &urlInfo);
+				}
+				else
+				{
+					// preferences tag uses a CFURLRef directly
+					prefsResult = Preferences_ContextSetData(targetContext, self.preferencesTag,
+																sizeof(asCFURL), &asCFURL);
+				}
 				
 				if (kPreferences_ResultOK == prefsResult)
 				{

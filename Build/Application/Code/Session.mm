@@ -5850,10 +5850,10 @@ autoCaptureSessionToFile	(My_SessionPtr		inPtr)
 			}
 		}
 		
-		Console_WriteValueCFString("capture file directory", CFURLGetString(directoryURL));
-		Console_WriteValueCFString("capture file name", fileName);
+		//Console_WriteValueCFString("capture file directory", CFURLGetString(directoryURL)); // debug
+		//Console_WriteValueCFString("capture file name", fileName); // debug
 		Boolean		captureOK = captureToFile(inPtr, directoryURL, fileName);
-		if (captureOK)
+		if (false == captureOK)
 		{
 			Console_Warning(Console_WriteLine, "session failed to start file capture");
 		}
@@ -6000,8 +6000,8 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 								 Boolean					inSearchDefaults)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	FSRef					fsRefValue;
 	CFStringRef				stringValue = nullptr;
+	Preferences_URLInfo		urlInfoValue;
 	Boolean					flag = false;
 	UInt16					result = 0;
 	
@@ -6032,6 +6032,7 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 		{
 			//Console_WriteValueCFString("setting capture file name", stringValue); // debug
 			inPtr->autoCaptureFileName.setWithRetain(stringValue);
+			CFRelease(stringValue), stringValue = nullptr; // Preferences module creates a new string
 			++result;
 		}
 		else
@@ -6041,16 +6042,13 @@ copyAutoCapturePreferences		(My_SessionPtr				inPtr,
 			inPtr->autoCaptureToFile = false; // need directory information in order to capture
 		}
 		
-		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagCaptureFileDirectoryObject,
-													sizeof(fsRefValue), &fsRefValue, inSearchDefaults);
+		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagCaptureFileDirectoryURL,
+													sizeof(urlInfoValue), &urlInfoValue, inSearchDefaults);
 		if (kPreferences_ResultOK == prefsResult)
 		{
-			CFRetainRelease		newURL(CFURLCreateFromFSRef(kCFAllocatorDefault, &fsRefValue),
-										CFRetainRelease::kAlreadyRetained);
-			
-			
-			//Console_WriteLine("setting capture file directory URL"); // debug
-			inPtr->autoCaptureDirectoryURL.setWithRetain(newURL.returnCFURLRef());
+			//NSLog(@"setting capture file directory URL to “%@”", BRIDGE_CAST(urlValue, NSURL*)); // debug
+			inPtr->autoCaptureDirectoryURL.setWithRetain(urlInfoValue.urlRef);
+			CFRelease(urlInfoValue.urlRef), urlInfoValue.urlRef = nullptr; // Preferences module creates a new URL
 			++result;
 		}
 		else

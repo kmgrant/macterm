@@ -211,8 +211,8 @@ table(deftable).
 (defbottom). |\2(desc). A PAGE command in TEK data causes the active graphics window to be erased instead of opening a new active window.|
 (deftop). |(key). @terminal-capture-auto-start@|(types). _true or false_|
 (defbottom). |\2(desc). File captures begin automatically when the session starts, using the file name given by @terminal-capture-file-name-string@ and the directory given by @terminal-capture-directory-alias@.|
-(deftop). |(key). @terminal-capture-directory-alias@|(types). _data_: alias information|
-(defbottom). |\2(desc). Automatically-captured file is saved to this location.  The data is a system "alias record" that contains enough information to resolve the directory location later even if (say) the user has since renamed it.  See @terminal-capture-auto-start@.|
+(deftop). |(key). @terminal-capture-directory-bookmark@|(types). _data_: Core Foundation URL bookmark|
+(defbottom). |\2(desc). Automatically-captured file is saved to this location.  The data is a system "URL bookmark" that contains enough information to resolve the directory location later even if (say) the user has since renamed it.  See @terminal-capture-auto-start@.|
 (deftop). |(key). @terminal-capture-file-name-is-generated@|(types). _true or false_|
 (defbottom). |\2(desc). The name string of @terminal-capture-file-name-string@ is allowed to contain special sequences that are replaced at save time with current information (such as the date or time).|
 (deftop). |(key). @terminal-capture-file-name-string@|(types). _string_: file name (literal or with substitutions)|

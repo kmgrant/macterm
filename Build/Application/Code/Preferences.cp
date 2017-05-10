@@ -888,9 +888,9 @@ Preferences_Init ()
 									sizeof(CFStringRef), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCaptureAutoStart,
 										CFSTR("terminal-capture-auto-start"), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::create(kPreferences_TagCaptureFileDirectoryObject,
-									CFSTR("terminal-capture-directory-alias"), typeNetEvents_CFDataRef,
-									sizeof(FSRef), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::create(kPreferences_TagCaptureFileDirectoryURL,
+									CFSTR("terminal-capture-directory-bookmark"), typeNetEvents_CFDataRef,
+									sizeof(Preferences_URLInfo), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileName,
 									CFSTR("terminal-capture-file-name-string"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
@@ -1400,86 +1400,6 @@ Preferences_RunTests ()
 
 
 /*!
-Allocates a Core Foundation data object with the contents of an
-alias.  When finished with it, call CFRelease().
-
-This is typically used when storing a file path preference to
-disk; and for that, you are more likely to use high-level APIs
-such as Preferences_ContextSetData().
-
-(4.0)
-*/
-CFDataRef
-Preferences_NewAliasDataFromAlias		(AliasHandle	inAlias)
-{
-	CFDataRef	result = CFDataCreate(kCFAllocatorDefault,
-										REINTERPRET_CAST(*inAlias, UInt8*),
-										GetHandleSize(REINTERPRET_CAST(inAlias, Handle)));
-	
-	
-	return result;
-}// NewAliasDataFromAlias
-
-
-/*!
-A convenient short-cut for directly constructing alias data for
-an existing file or directory.  When finished with it, call
-CFRelease().
-
-Equivalent to calling FSNewAlias() on the given object, and then
-passing the alias to Preferences_NewAliasDataFromAlias().
-
-(4.0)
-*/
-CFDataRef
-Preferences_NewAliasDataFromObject		(FSRef const&	inObject)
-{
-	CFDataRef		result = nullptr;
-	AliasHandle		alias = nullptr;
-	OSStatus		error = FSNewAlias(nullptr/* from file */, &inObject, &alias);
-	
-	
-	if (noErr == error)
-	{
-		result = Preferences_NewAliasDataFromAlias(alias);
-		Memory_DisposeHandle(REINTERPRET_CAST(&alias, Handle*));
-	}
-	return result;
-}// NewAliasDataFromObject
-
-
-/*!
-Allocates a new handle with the given alias data.  When finished,
-call Preferences_DisposeAlias().
-
-This is typically used when reading a file path preference from
-disk; and for that, you are more likely to use high-level APIs
-such as Preferences_ContextGetData().
-
-(4.0)
-*/
-AliasHandle
-Preferences_NewAliasFromData	(CFDataRef		inAliasHandleData)
-{
-	CFIndex const	kDataSize = CFDataGetLength(inAliasHandleData);
-	AliasHandle		result = nullptr;
-	
-	
-	if (kDataSize > 0)
-	{
-		result = REINTERPRET_CAST(Memory_NewHandle(kDataSize), AliasHandle);
-		if (nullptr != result)
-		{
-			CFDataGetBytes(inAliasHandleData, CFRangeMake(0, kDataSize),
-							REINTERPRET_CAST(*result, UInt8*));
-			
-		}
-	}
-	return result;
-}// NewAliasFromData
-
-
-/*!
 Creates a new preferences context that copies the data of the
 specified original context.  The new context is automatically
 retained, so you need to invoke Preferences_ReleaseContext()
@@ -1876,18 +1796,6 @@ Preferences_RetainContext	(Preferences_ContextRef		inRef)
 {
 	gMyContextRefLocks().acquireLock(inRef);
 }// RetainContext
-
-
-/*!
-Frees an alias created by Preferences_NewAliasFromData().
-
-(4.0)
-*/
-void
-Preferences_DisposeAlias	(AliasHandle*		inoutAliasPtr)
-{
-	Memory_DisposeHandle(REINTERPRET_CAST(inoutAliasPtr, Handle*));
-}// DisposeAlias
 
 
 /*!
@@ -2486,7 +2394,7 @@ Preferences_ContextMergeInXMLData	(Preferences_ContextRef		inContext,
 	else
 	{
 		CFErrorRef				errorCFObject = nullptr;
-		CFPropertyListFormat		actualFormat = kCFPropertyListXMLFormat_v1_0;
+		CFPropertyListFormat	actualFormat = kCFPropertyListXMLFormat_v1_0;
 		CFPropertyListRef		root = CFPropertyListCreateWithData
 										(kCFAllocatorDefault, inData, kCFPropertyListImmutable,
 											&actualFormat, &errorCFObject);
@@ -2496,14 +2404,11 @@ Preferences_ContextMergeInXMLData	(Preferences_ContextRef		inContext,
 		{
 			if (nullptr != errorCFObject)
 			{
-				CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
-														CFRetainRelease::kAlreadyRetained);
+				CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
 				
 				
 				result = kPreferences_ResultBadVersionDataNotAvailable;
-				Console_Warning(Console_WriteValueCFString,
-								"unable to create preferences property list from XML data", errorDescription.returnCFStringRef());
-				CFRelease(errorCFObject), errorCFObject = nullptr;
+				Console_Warning(Console_WriteValueCFError, "unable to create preferences property list from XML data, error", errorCFObject);
 			}
 		}
 		else
@@ -2974,11 +2879,9 @@ Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
 					if (nullptr != errorCFObject)
 					{
 						CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
-						CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
-																CFRetainRelease::kAlreadyRetained);
 						
 						
-						Console_Warning(Console_WriteValueCFString, "error", errorDescription.returnCFStringRef());
+						Console_Warning(Console_WriteValueCFError, "unable to create property list data, error", errorCFObject);
 					}
 				}
 				else
@@ -5999,8 +5902,8 @@ copyDefaultPrefDictionary ()
 		
 		if (streamObject.exists() && CFReadStreamOpen(streamObject.returnCFReadStreamRef()))
 		{
-			CFPropertyListRef   		propertyList = nullptr;
-			CFPropertyListFormat		actualFormat = kCFPropertyListXMLFormat_v1_0;
+			CFPropertyListRef   	propertyList = nullptr;
+			CFPropertyListFormat	actualFormat = kCFPropertyListXMLFormat_v1_0;
 			CFErrorRef				errorCFObject = nullptr;
 			
 			
@@ -6016,13 +5919,10 @@ copyDefaultPrefDictionary ()
 			
 			if (nullptr != errorCFObject)
 			{
-				CFRetainRelease		errorDescription(CFErrorCopyDescription(errorCFObject),
-														CFRetainRelease::kAlreadyRetained);
+				CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
 				
 				
-				Console_Warning(Console_WriteValueCFString,
-								"unable to create default preferences property list from XML data", errorDescription.returnCFStringRef());
-				CFRelease(errorCFObject), errorCFObject = nullptr;
+				Console_Warning(Console_WriteValueCFError, "unable to create default preferences property list from XML data, error", errorCFObject);
 			}
 			
 			CFReadStreamClose(streamObject.returnCFReadStreamRef());
@@ -7646,13 +7546,16 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagCaptureFileDirectoryObject:
+				case kPreferences_TagCaptureFileDirectoryURL:
 					{
 						assert(typeNetEvents_CFDataRef == keyValueType);
-						CFRetainRelease		dataObject(inContextPtr->returnValueCopy(keyName),
-														CFRetainRelease::kAlreadyRetained);
-						FSRef* const		data = REINTERPRET_CAST(outDataPtr, FSRef*);
+						CFRetainRelease				dataObject(inContextPtr->returnValueCopy(keyName),
+																CFRetainRelease::kAlreadyRetained);
+						Preferences_URLInfo* const	data = REINTERPRET_CAST(outDataPtr, Preferences_URLInfo*);
 						
+						
+						(*data).urlRef = nullptr;
+						(*data).isStale = false;
 						
 						if (false == dataObject.exists())
 						{
@@ -7661,26 +7564,34 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							CFDataRef		objectAsData = CFUtilities_DataCast(dataObject.returnCFTypeRef());
-							AliasHandle		alias = Preferences_NewAliasFromData(objectAsData);
+							CFDataRef						objectAsData = dataObject.returnCFDataRef();
+							CFURLBookmarkResolutionOptions	resolveOptions = (kCFBookmarkResolutionWithoutUIMask/* |
+																				kCFBookmarkResolutionWithoutMountingMask*/);
+							CFErrorRef						errorCFObject = nullptr;
+							Boolean							isStale = false;
+							CFURLRef						newDirectoryURL = CFURLCreateByResolvingBookmarkData
+																				(kCFAllocatorDefault, objectAsData,
+																					resolveOptions, nullptr/* relative-URL info */,
+																					nullptr/* properties to include */,
+																					&isStale, &errorCFObject);
 							
 							
-							if (nullptr == alias)
+							if (nullptr == newDirectoryURL)
 							{
 								result = kPreferences_ResultBadVersionDataNotAvailable;
+								if (nullptr != errorCFObject)
+								{
+									CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
+									
+									
+									Console_Warning(Console_WriteValueCFError, "unable to create capture-file directory URL from bookmark data, error", errorCFObject);
+								}
 							}
 							else
 							{
-								Boolean		wasChanged = false;
-								OSStatus	error = FSResolveAlias(nullptr/* from file */, alias,
-																	data, &wasChanged);
-								
-								
-								if (noErr != error)
-								{
-									result = kPreferences_ResultBadVersionDataNotAvailable;
-								}
-								Preferences_DisposeAlias(&alias);
+								(*data).urlRef = newDirectoryURL;
+								(*data).isStale = isStale;
+								// do not release because the URL is returned
 							}
 						}
 					}
@@ -10078,14 +9989,35 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagCaptureFileDirectoryObject:
+			case kPreferences_TagCaptureFileDirectoryURL:
 				{
-					FSRef const* const	data = REINTERPRET_CAST(inDataPtr, FSRef const*);
-					CFRetainRelease		object(Preferences_NewAliasDataFromObject(*data),
-												CFRetainRelease::kAlreadyRetained);
+					// NOTE: the "isStale" field is used when retrieving the value
+					// but is ignored here when storing a new value
+					Preferences_URLInfo const* const	data = REINTERPRET_CAST(inDataPtr, Preferences_URLInfo const*);
+					CFURLBookmarkCreationOptions		creationOptions = (kCFURLBookmarkCreationSuitableForBookmarkFile);
+					CFErrorRef							errorCFObject = nullptr;
+					CFRetainRelease						object(CFURLCreateBookmarkData
+																(kCFAllocatorDefault, (*data).urlRef,
+																	creationOptions,
+																	nullptr/* properties to include */,
+																	nullptr/* relative-URL info */,
+																	&errorCFObject),
+																CFRetainRelease::kAlreadyRetained);
 					
 					
-					if (object.exists())
+					if (false == object.exists())
+					{
+						Console_Warning(Console_WriteLine, "unable to create capture-file directory bookmark from URL");
+						Console_Warning(Console_WriteValueCFString, "problem URL", CFURLGetString((*data).urlRef));
+						if (nullptr != errorCFObject)
+						{
+							CFRetainRelease		errorReleaser(errorCFObject, CFRetainRelease::kAlreadyRetained);
+							
+							
+							Console_Warning(Console_WriteValueCFError, "unable to create bookmark data, error", errorCFObject);
+						}
+					}
+					else
 					{
 						assert(typeNetEvents_CFDataRef == keyValueType);
 						inContextPtr->addData(inDataPreferenceTag, keyName,

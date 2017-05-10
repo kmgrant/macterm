@@ -252,7 +252,7 @@ enum
 	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
 	kPreferences_TagBackgroundNewDataHandler			= 'ndhn',	//!< data: "UInt16" (Session_Watch; kSession_WatchForPassiveData or kSession_WatchNothing)
 	kPreferences_TagCaptureAutoStart					= 'capt',	//!< data: "Boolean"
-	kPreferences_TagCaptureFileDirectoryObject			= 'cfdr',	//!< data: "FSRef"
+	kPreferences_TagCaptureFileDirectoryURL				= 'cfdu',	//!< data: "Preferences_URLInfo"
 	kPreferences_TagCaptureFileName						= 'cfnm',	//!< data: "CFStringRef"
 	kPreferences_TagCaptureFileNameAllowsSubstitutions	= 'cfns',	//!< data: "Boolean"
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
@@ -429,6 +429,16 @@ struct Preferences_ChangeContext
 	Preferences_ContextRef		contextRef;		//!< if nullptr, the preference is global; otherwise, it occurred in this context
 	Boolean						firstCall;		//!< whether or not this is the first time the preference notification has occurred
 												//!  (if so, the value of the preference reflects its initial value)
+};
+
+/*!
+In order to communicate both a URL and its “stale” condition
+after resolving a bookmark, this structure is used.
+*/
+struct Preferences_URLInfo
+{
+	CFURLRef	urlRef;		//!< the URL of a file that was resolved from a bookmark
+	Boolean		isStale;	//!< set to true only if CFURLRef is “new” (different than original bookmark); it should then be stored
 };
 
 
@@ -691,23 +701,6 @@ Preferences_Result
 	Preferences_SetData						(Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataSize,
 											 void const*						inDataPtr);
-
-//@}
-
-//!\name Alias Management
-//@{
-
-CFDataRef
-	Preferences_NewAliasDataFromAlias		(AliasHandle						inAlias);
-
-CFDataRef
-	Preferences_NewAliasDataFromObject		(FSRef const&						inObject);
-
-AliasHandle
-	Preferences_NewAliasFromData			(CFDataRef							inAliasHandleData);
-
-void
-	Preferences_DisposeAlias				(AliasHandle*						inoutAliasPtr);
 
 //@}
 
