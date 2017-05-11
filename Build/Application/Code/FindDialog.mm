@@ -457,6 +457,17 @@ FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
 								TerminalView_FindVirtualRange(view, highlightRange);
 							}
 						}
+						
+						// scroll to the first result
+						if (0 == (inFlags & kFindDialog_OptionDoNotScrollToMatch))
+						{
+							// show the user where the text is; delay this slightly to avoid
+							// animation interference caused by the closing of the popover
+							CocoaExtensions_RunLater(0.1/* seconds */,
+							^{
+								TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus(terminalWindowRef));
+							});
+						}
 					}
 				}
 			}
@@ -612,8 +623,14 @@ looks like it might be expensive, this function automatically
 avoids initiating the search, to keep the user interface very
 responsive.  Always set "isNotFinal" to NO for final queries,
 i.e. those that cause the dialog to close and results to be
-permanently highlighted.  The flag "outDidSearch" is set to
-YES if the search actually occurred.
+permanently highlighted.
+
+If "isAnimated" is YES, the terminal is asked to scroll to the
+position where the first match is found, and a small animation
+may run to highlight the text.
+
+The flag "outDidSearch" is set to YES if the search actually
+occurred.
 
 (4.0)
 */
@@ -655,6 +672,7 @@ didSearch:(BOOL*)				outDidSearch
 		if (isNotFinal)
 		{
 			searchFlags |= kFindDialog_OptionNotFinal;
+			searchFlags |= kFindDialog_OptionDoNotScrollToMatch;
 		}
 		
 		if (allTerminals)
@@ -853,21 +871,6 @@ finalOptions:(FindDialog_Options)		options
 		
 		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
 														notFinal:NO didSearch:&didSearch];
-		
-		// determine if animation should occur
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagNoAnimations,
-									sizeof(noAnimations), &noAnimations))
-		{
-			noAnimations = false; // assume a value, if preference can’t be found
-		}
-		
-		unless (noAnimations)
-		{
-			// show the user where the text is; delay this slightly to avoid
-			// animation interference caused by the closing of the popover
-			CocoaExtensions_RunLater(0.1/* seconds */, ^{ [self zoomToSearchResults]; });
-		}
 	}
 	else
 	{

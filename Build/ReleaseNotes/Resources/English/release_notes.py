@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170511',
     '20170330',
     '20170324',
     '20170307',
@@ -569,6 +570,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170511': [
+        'Macros with an Action of "Find in Local Terminal Verbatim" or "Find in Local Terminal with Substitutions" will now cause automatic scrolling when invoked, just like a normal search would do.  This allows you to write macros that jump back to a certain point in the scrollback, for example, based on a pattern match.',
+    ],
     '20170330': [
         'Preferences window toolbar now has pop-up menu short-cuts to display particular tabs within a category.  The button icon can be pressed for normal behavior, and the menu portion can be used to go directly to a tab.',
     ],

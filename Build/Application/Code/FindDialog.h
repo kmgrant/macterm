@@ -60,6 +60,7 @@ enum
 	kFindDialog_OptionCaseInsensitive		= (1 << 0),
 	kFindDialog_OptionAllOpenTerminals		= (1 << 1),
 	kFindDialog_OptionNotFinal				= (1 << 2), // internal option
+	kFindDialog_OptionDoNotScrollToMatch	= (1 << 3), // internal option
 	kFindDialog_OptionsDefault				= kFindDialog_OptionCaseInsensitive
 };
 
