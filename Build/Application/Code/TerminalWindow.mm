@@ -7868,6 +7868,7 @@ sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 				break;
 			
 			case kMy_SheetTypeScreenSize:
+				installUndoScreenDimensionChanges(ref);
 				setScreenPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			

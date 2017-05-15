@@ -893,11 +893,43 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandUndo:
-			Undoables_UndoLastAction();
+			{
+				NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+				
+				
+				// NOTE: Carbon windows in Cocoa appear to provide their own
+				// NSUndoManager instance, which is useless; detect this and
+				// ensure NSUndoManager is only used for pure Cocoa windows
+				if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+				{
+					[undoManager undo];
+				}
+				else
+				{
+					// legacy
+					Undoables_UndoLastAction();
+				}
+			}
 			break;
 		
 		case kCommandRedo:
-			Undoables_RedoLastUndo();
+			{
+				NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+				
+				
+				// NOTE: Carbon windows in Cocoa appear to provide their own
+				// NSUndoManager instance, which is useless; detect this and
+				// ensure NSUndoManager is only used for pure Cocoa windows
+				if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+				{
+					[undoManager redo];
+				}
+				else
+				{
+					// legacy
+					Undoables_RedoLastUndo();
+				}
+			}
 			break;
 		
 		case kCommandCut:
@@ -4532,19 +4564,39 @@ performRedo:(id)	sender
 canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	CFStringRef		redoCommandName = nullptr;
-	Boolean			isEnabled = false;
 	BOOL			result = NO;
+	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
-	Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
-	if (false == EventLoop_IsMainWindowFullScreen())
+	// NOTE: Carbon windows in Cocoa appear to provide their own
+	// NSUndoManager instance, which is useless; detect this and
+	// ensure NSUndoManager is only used for pure Cocoa windows
+	if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+		result = [undoManager canRedo];
+		if (result)
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:[undoManager redoMenuItemTitle]];
+		}
+	}
+	else
+	{
+		CFStringRef		redoCommandName = nullptr;
+		Boolean			isEnabled = false;
 		
 		
-		[asMenuItem setTitle:(NSString*)redoCommandName];
-		result = (isEnabled) ? YES : NO;
+		Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
+		if (false == EventLoop_IsMainWindowFullScreen())
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:BRIDGE_CAST(redoCommandName, NSString*)];
+			result = (isEnabled) ? YES : NO;
+		}
 	}
 	
 	return ((result) ? @(YES) : @(NO));
@@ -4611,19 +4663,39 @@ performUndo:(id)	sender
 canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	CFStringRef		undoCommandName = nullptr;
-	Boolean			isEnabled = false;
 	BOOL			result = NO;
+	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
-	Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
-	if (false == EventLoop_IsMainWindowFullScreen())
+	// NOTE: Carbon windows in Cocoa appear to provide their own
+	// NSUndoManager instance, which is useless; detect this and
+	// ensure NSUndoManager is only used for pure Cocoa windows
+	if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
 	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+		result = [undoManager canUndo];
+		if (result)
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:[undoManager undoMenuItemTitle]];
+		}
+	}
+	else
+	{
+		CFStringRef		undoCommandName = nullptr;
+		Boolean			isEnabled = false;
 		
 		
-		[asMenuItem setTitle:(NSString*)undoCommandName];
-		result = (isEnabled) ? YES : NO;
+		Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
+		if (false == EventLoop_IsMainWindowFullScreen())
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:BRIDGE_CAST(undoCommandName, NSString*)];
+			result = (isEnabled) ? YES : NO;
+		}
 	}
 	
 	return ((result) ? @(YES) : @(NO));

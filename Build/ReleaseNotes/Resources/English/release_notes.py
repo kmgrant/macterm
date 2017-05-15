@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170515',
     '20170511',
     '20170330',
     '20170324',
@@ -570,6 +571,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170515': [
+        'Fixed Undo and Redo commands in certain text fields such as the floating Command Line.',
+        'Undo and Redo can once again be used for changes made with "Custom Screen Size...".',
+    ],
     '20170511': [
         'Macros with an Action of "Find in Local Terminal Verbatim" or "Find in Local Terminal with Substitutions" will now cause automatic scrolling when invoked, just like a normal search would do.  This allows you to write macros that jump back to a certain point in the scrollback, for example, based on a pattern match.',
     ],
