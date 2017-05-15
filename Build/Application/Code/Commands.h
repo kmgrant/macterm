@@ -188,7 +188,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandWrapMode						'Wrap'
 #define kCommandClearScreenSavesLines			'CSSL'
 #define kCommandJumpScrolling					'Jump'
-#define kCommandTerminalEmulatorSetup			'Emul'
 #define kCommandWatchNothing					'WOff'
 #define kCommandWatchForActivity				'Notf'
 #define kCommandWatchForInactivity				'Idle'
@@ -766,8 +765,6 @@ Actions to change various terminal behaviors.
 	performSpeechToggle:(id)_;
 	- (IBAction)
 	performSuspendToggle:(id)_;
-	- (IBAction)
-	performTerminalCustomSetup:(id)_;
 
 @end //}
 

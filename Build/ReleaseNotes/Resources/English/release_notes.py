@@ -574,6 +574,7 @@ notes_by_version = {
     '20170515': [
         'Fixed Undo and Redo commands in certain text fields such as the floating Command Line.',
         'Undo and Redo can once again be used for changes made with "Custom Screen Size...".',
+        'The "Custom Terminal Setup..." command has been removed (it was never implemented and always emitted an error sound when used).  Several terminal settings can be changed dynamically using the commands in the Terminal menu.  Screen dimensions can be changed with the "Custom Screen Size..." command in the View menu.',
     ],
     '20170511': [
         'Macros with an Action of "Find in Local Terminal Verbatim" or "Find in Local Terminal with Substitutions" will now cause automatic scrolling when invoked, just like a normal search would do.  This allows you to write macros that jump back to a certain point in the scrollback, for example, based on a pattern match.',

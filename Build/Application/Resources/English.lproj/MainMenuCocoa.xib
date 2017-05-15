@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2657" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12120"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="EventLoop_AppObject">
@@ -507,12 +507,6 @@ Gw
                             <menuItem title="Jump Scrolling" keyEquivalent="j" id="899">
                                 <connections>
                                     <action selector="performJumpScrolling:" target="945" id="1042"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Custom Terminal Setup…" id="900">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="performTerminalCustomSetup:" target="945" id="1043"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="893"/>

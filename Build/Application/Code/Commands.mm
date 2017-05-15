@@ -1084,11 +1084,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see TerminalWindow.mm
 		//	break;
 		
-		case kCommandTerminalEmulatorSetup:
-			// UNIMPLEMENTED
-			Sound_StandardAlert();
-			break;
-		
 		case kCommandBellEnabled:
 			if (isTerminal)
 			{
@@ -6007,14 +6002,6 @@ canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	setItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performTerminalCustomSetup:(id)		sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTerminalEmulatorSetup, nullptr/* target */);
 }
 
 
