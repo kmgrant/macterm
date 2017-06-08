@@ -27,13 +27,16 @@
 ###############################################################*/
 
 #import <CocoaExtensions.objc++.h>
+#import <UniversalDefines.h>
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
 // library includes
 #import <CocoaFuture.objc++.h>
+#if COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
 #import <ColorUtilities.h>
+#endif
 
 
 

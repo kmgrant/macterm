@@ -401,7 +401,7 @@ CocoaFuture_TouchBarSetCustomizationIdentifier	(NSTouchBar*						inTouchBar,
 
 
 /*!
-On OS 10.8 and later, "[aConnection remoteObjectProxyWithErrorHandler:]";
+On OS 10.8 and later, "[inConnection remoteObjectProxyWithErrorHandler:]";
 on earlier OS versions, no effect (returning "nil").
 
 This work-around is necessary because older code bases will not be able to
@@ -438,7 +438,7 @@ CocoaFuture_XPCConnectionRemoteObjectProxy	(NSXPCConnection*		inConnection,
 		}
 	}
 #else
-	result = [aConnection remoteObjectProxyWithErrorHandler:inHandler];
+	result = [inConnection remoteObjectProxyWithErrorHandler:inHandler];
 #endif
 	
 	return result;
@@ -446,7 +446,7 @@ CocoaFuture_XPCConnectionRemoteObjectProxy	(NSXPCConnection*		inConnection,
 
 
 /*!
-On OS 10.8 and later, "[aConnection resume]"; on earlier OS
+On OS 10.8 and later, "[inConnection resume]"; on earlier OS
 versions, no effect.
 
 This work-around is necessary because older code bases will
@@ -487,7 +487,7 @@ CocoaFuture_XPCConnectionResume		(NSXPCConnection*		inConnection)
 
 
 /*!
-On OS 10.8 and later, "aConnection.interruptionHandler = aBlock";
+On OS 10.8 and later, "inConnection.interruptionHandler = aBlock";
 on earlier OS versions, no effect.
 
 This work-around is necessary because older code bases will not
@@ -529,7 +529,7 @@ CocoaFuture_XPCConnectionSetInterruptionHandler		(NSXPCConnection*		inConnection
 
 
 /*!
-On OS 10.8 and later, "aConnection.invalidationHandler = aBlock";
+On OS 10.8 and later, "inConnection.invalidationHandler = aBlock";
 on earlier OS versions, no effect.
 
 This work-around is necessary because older code bases will not
@@ -571,7 +571,7 @@ CocoaFuture_XPCConnectionSetInvalidationHandler		(NSXPCConnection*		inConnection
 
 
 /*!
-On OS 10.8 and later, "aConnection.remoteObjectInterface = anInterface";
+On OS 10.8 and later, "inConnection.remoteObjectInterface = anInterface";
 on earlier OS versions, no effect.
 
 This work-around is necessary because older code bases will not be able
