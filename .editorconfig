@@ -17,3 +17,6 @@ insert_final_newline = true
 
 [**/Makefile*]
 indent_style = tab
+
+[**/GNUmakefile*]
+indent_style = tab

@@ -234,7 +234,7 @@ define custom_index_for_py
 endef
 
 define open_browser_to_page
-	echo 'open location "file://$(strip $(1))"' | osascript
+	open "file://$(strip $(1))"
 endef
 
 define strip_unwanted_sections
