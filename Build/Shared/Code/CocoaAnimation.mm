@@ -41,7 +41,7 @@
 #pragma mark Constants
 namespace {
 
-size_t const	kCurveLength = 10; // arbitrary (number of elements in curve arrays)
+size_t const	kCurveLength = 8; // arbitrary (number of elements in curve arrays)
 
 /*!
 Effects used by CocoaAnimation_WindowFrameAnimator.  These
@@ -345,7 +345,7 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 		[imageWindow setLevel:[inTargetWindow level]];
 		[[[CocoaAnimation_WindowFrameAnimator alloc]
 			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-								fromFrame:oldFrame toFrame:newFrame totalDelay:0.03
+								fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
 								delayDistribution:kMy_AnimationTimeDistributionEaseOut
 								effect:kMy_AnimationEffectFadeOut] autorelease];
 		
@@ -376,6 +376,7 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 	{
 		float const		kAnimationDelay = 0.002f;
 		float const		kXInset = (0.10f * NSWidth(actualFrame)); // arbitrary
+		float const		kYInset = (0.10f * NSHeight(actualFrame)); // keep aspect ratio the same
 		NSRect			oldFrame = actualFrame;
 		NSRect			newFrame = actualFrame;
 		NSWindow*		imageWindow = nil;
@@ -389,10 +390,10 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 												autorelease];
 		
 		// start from a location that is slightly offset from the target window
-		oldFrame.origin.x += kXInset/* arbitrary */;
-		oldFrame.origin.y += (0.25 * NSHeight(actualFrame))/* arbitrary */;
-		oldFrame.size.width -= (2.0 * kXInset)/* arbitrary */;
-		oldFrame.size.height -= (2.0 * kXInset)/* arbitrary */;
+		oldFrame.origin.x += kXInset; // arbitrary
+		oldFrame.origin.y += kYInset; // arbitrary
+		oldFrame.size.width -= (2.0 * kXInset);
+		oldFrame.size.height -= (2.0 * kYInset);
 		
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
@@ -563,6 +564,8 @@ createImageWindowFrom	(NSWindow*		inWindow,
 	// now construct a fake window to display the same thing
 	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
 													backing:NSBackingStoreBuffered defer:NO];
+	[result setOpaque:NO];
+	result.backgroundColor = [NSColor clearColor];
 	
 	// capture the image of the original window
 	@autoreleasepool
@@ -717,7 +720,6 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.2f;
 				self->frameAlphas[i++] = 0.3f;
 				self->frameAlphas[i++] = 0.4f;
 				self->frameAlphas[i++] = 0.5f;
@@ -726,7 +728,6 @@ simplified:(BOOL)									isSimplified
 				self->frameAlphas[i++] = 0.8f;
 				self->frameAlphas[i++] = 0.9f;
 				self->frameAlphas[i++] = 0.95f;
-				self->frameAlphas[i++] = 1.0f;
 				assert(kCurveLength == i);
 			}
 			break;
@@ -736,8 +737,7 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.85f;
-				self->frameAlphas[i++] = 0.7f;
+				self->frameAlphas[i++] = 0.8f;
 				self->frameAlphas[i++] = 0.55f;
 				self->frameAlphas[i++] = 0.45f;
 				self->frameAlphas[i++] = 0.35f;
@@ -745,7 +745,6 @@ simplified:(BOOL)									isSimplified
 				self->frameAlphas[i++] = 0.2f;
 				self->frameAlphas[i++] = 0.15f;
 				self->frameAlphas[i++] = 0.1f;
-				self->frameAlphas[i++] = 0.05f;
 				assert(kCurveLength == i);
 			}
 			break;
@@ -762,7 +761,7 @@ simplified:(BOOL)									isSimplified
 		// be increased to smooth out the animation over time, and right
 		// now the frame count is fairly inflexible)
 		{
-			float const		kPerUnitLinearDelay = STATIC_CAST(baseDuration, float) / kCurveLength;
+			size_t		i = 0;
 			
 			
 			if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
@@ -770,29 +769,30 @@ simplified:(BOOL)									isSimplified
 				// assign initial values assuming a unit curve only; be
 				// sure that the total number is equal to the frame count
 				// so that any user-specified total delay is not exceeded
-				size_t		i = 0;
+				float		scaleTotal = 0.0;
 				
 				
-				self->frameDelays[i++] = 0.7;
-				self->frameDelays[i++] = 0.8;
-				self->frameDelays[i++] = 0.9;
-				self->frameDelays[i++] = 0.9;
-				self->frameDelays[i++] = 1.0;
-				self->frameDelays[i++] = 1.0;
-				self->frameDelays[i++] = 1.1;
-				self->frameDelays[i++] = 1.1;
-				self->frameDelays[i++] = 1.2;
-				self->frameDelays[i++] = 1.3;
+				self->frameDelays[i] = 0.8; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 0.9; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 0.9; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 1.0; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 1.0; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 1.1; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 1.1; scaleTotal += self->frameDelays[i]; ++i;
+				self->frameDelays[i] = 1.2; scaleTotal += self->frameDelays[i]; ++i;
 				assert(kCurveLength == i);
-			}
-			for (size_t i = 0; i < kCurveLength; ++i)
-			{
-				if (kMy_AnimationTimeDistributionEaseOut == aDistribution)
+				for (i = 0; i < kCurveLength; ++i)
 				{
 					// scale the unit curve accordingly
-					self->frameDelays[i] *= kPerUnitLinearDelay;
+					self->frameDelays[i] *= (baseDuration / scaleTotal);
 				}
-				else
+			}
+			else
+			{
+				float const		kPerUnitLinearDelay = STATIC_CAST(baseDuration, float) / kCurveLength;
+				
+				
+				for (i = 0; i < kCurveLength; ++i)
 				{
 					// linear
 					self->frameDelays[i] = kPerUnitLinearDelay;
@@ -836,10 +836,13 @@ totalDelay:(NSTimeInterval)							aDuration
 delayDistribution:(My_AnimationTimeDistribution)	aDistribution
 effect:(My_AnimationEffect)							anEffect
 {
+	BOOL	isSimplified = ((NSWidth(theActualWindow.frame) * NSHeight(theActualWindow.frame)) > 80000/* arbitrary */);
+	
+	
 	return [self initWithTransition:aTransition imageWindow:aBorderlessWindow finalWindow:theActualWindow
 									fromFrame:sourceRect toFrame:targetRect totalDelay:aDuration
 									delayDistribution:aDistribution effect:anEffect
-									simplified:(NSAppKitVersionNumber < NSAppKitVersionNumber10_6)/* arbitrary */];
+									simplified:isSimplified];
 }// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:
 
 

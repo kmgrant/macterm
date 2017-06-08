@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170607',
     '20170515',
     '20170511',
     '20170330',
@@ -571,6 +572,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170607': [
+        'Fixed a problem where animation frames would always have rectangular corners, even for shaped windows.',
+        'Animations are generally faster now.',
+    ],
     '20170515': [
         'Fixed Undo and Redo commands in certain text fields such as the floating Command Line.',
         'Undo and Redo can once again be used for changes made with "Custom Screen Size...".',
