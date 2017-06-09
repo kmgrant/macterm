@@ -2,14 +2,14 @@
 	\brief Useful routines to deal with Core Foundation types.
 	
 	Core Foundation APIs do not validate input for efficiency
-	reasons, but you can use these “safe” operators to create
+	reasons, but you can use these ‚Äúsafe‚Äù operators to create
 	debugging-mode assertions around certain kinds of operations
 	on Core Foundation types.
 */
 /*###############################################################
 
 	Data Access Library
-	© 1998-2017 by Kevin Grant
+	¬© 1998-2017 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

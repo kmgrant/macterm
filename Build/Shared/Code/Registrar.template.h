@@ -6,7 +6,7 @@
 /*###############################################################
 
 	Data Access Library
-	© 1998-2017 by Kevin Grant
+	¬© 1998-2017 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -49,7 +49,7 @@ it is removed.
 
 Another application is to declare one of these within the
 code of a constructor or destructor, attached to a different
-list of references that track “unstable” pointers.  This is
+list of references that track ‚Äúunstable‚Äù pointers.  This is
 useful for debugging if code is called using a pointer to a
 data structure that is technically partially defined due to
 construction or destruction.

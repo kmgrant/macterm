@@ -1,6 +1,6 @@
 /*!	\file MemoryBlockReferenceTracker.template.h
 	\brief Keeps track of every address that is considered
-	ÒvalidÓ.  Usually coupled with instances of the
+	â€œvalidâ€.  Usually coupled with instances of the
 	Registrar class, which will automatically add and
 	remove addresses at construction and destruction time
 	respectively.
@@ -8,7 +8,7 @@
 /*###############################################################
 
 	Data Access Library
-	© 1998-2017 by Kevin Grant
+	Â© 1998-2017 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -58,7 +58,7 @@ public:
 
 /*!
 Stores a set of references (pointers) to a data structure.
-Useful for checking that a reference is ÒvalidÓ before it is
+Useful for checking that a reference is â€œvalidâ€ before it is
 used.
 */
 template < typename structure_reference_type >

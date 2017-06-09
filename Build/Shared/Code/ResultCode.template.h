@@ -3,7 +3,7 @@
 	plagued with implicit type conversions.
 	
 	Use this instead of integers or enumerations when
-	creating result codes for a moduleÕs routines.  This
+	creating result codes for a moduleâ€™s routines.  This
 	is inherently safer because it creates something that
 	cannot accidentally be assigned to or compared with
 	a regular integer.  It also opens some flexibility if
@@ -12,7 +12,7 @@
 /*###############################################################
 
 	Data Access Library
-	© 1998-2017 by Kevin Grant
+	Â© 1998-2017 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
