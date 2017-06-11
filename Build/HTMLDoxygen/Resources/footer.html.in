@@ -1,5 +1,14 @@
+	
+	</section>
+</article>
 
-</div>
+<footer>
+	<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+		<ul>
+			$navpath
+		</ul>
+	</div>
+</footer>
 
 </body>
 </html>

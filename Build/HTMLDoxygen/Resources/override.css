@@ -1,0 +1,29 @@
+/* local rules meant to customize "doxygen.css" behavior */
+
+div.directory{
+	border:		0;
+}
+
+.headertitle{
+	display: none;
+}
+
+.header{
+	background-color:	transparent;
+	background-image:	none;
+	border:				0 !important;
+	height:				0;
+}
+
+h2.groupheader{
+	border:			0;
+}
+
+h2.memtitle{
+	margin-left:	0;
+}
+
+.navpath ul{
+	background-image:	none;
+	border:				0;
+}
