@@ -36,9 +36,18 @@
 #define __MEMORYBLOCKREFERENCETRACKER__
 
 // pseudo-standard-C++ includes
-#include <tr1/unordered_set>
-#ifndef unordered_set_namespace
-#	define unordered_set_namespace std::tr1
+#if __has_include(<tr1/unordered_set>)
+#	include <tr1/unordered_set>
+#	ifndef unordered_set_namespace
+#		define unordered_set_namespace std::tr1
+#	endif
+#elif __has_include(<unordered_set>)
+#	include <unordered_set>
+#	ifndef unordered_set_namespace
+#		define unordered_set_namespace std
+#	endif
+#else
+#	error "Do not know how to find <unordered_set> with this compiler."
 #endif
 
 

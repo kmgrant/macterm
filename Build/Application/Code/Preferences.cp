@@ -43,9 +43,26 @@
 #include <vector>
 
 // pseudo-standard-C++ includes
-#include <tr1/unordered_map>
-#ifndef unordered_map_namespace
-#	define unordered_map_namespace std::tr1
+#if __has_include(<tr1/unordered_map>)
+#	include <tr1/unordered_map>
+#	include <tr1/unordered_set>
+#	ifndef unordered_map_namespace
+#		define unordered_map_namespace std::tr1
+#	endif
+#	ifndef unordered_set_namespace
+#		define unordered_set_namespace std::tr1
+#	endif
+#elif __has_include(<unordered_map>)
+#	include <unordered_map>
+#	include <unordered_set>
+#	ifndef unordered_map_namespace
+#		define unordered_map_namespace std
+#	endif
+#	ifndef unordered_set_namespace
+#		define unordered_set_namespace std
+#	endif
+#else
+#	error "Do not know how to find <unordered_map> with this compiler."
 #endif
 
 // Mac includes
@@ -618,7 +635,7 @@ private:
 				returnCFStringHashCode,				// hash code generator
 				isCFStringPairEqual					// key comparator
 			>	DefinitionPtrByKeyName;
-	typedef unordered_map_namespace::unordered_set
+	typedef unordered_set_namespace::unordered_set
 			<
 				CFStringRef,						// value type - name string
 				returnCFStringHashCode,				// hash code generator

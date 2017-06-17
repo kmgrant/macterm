@@ -38,9 +38,18 @@
 #define __MEMORYBLOCKLOCKER__
 
 // pseudo-standard-C++ includes
-#include <tr1/unordered_map>
-#ifndef unordered_map_namespace
-#	define unordered_map_namespace std::tr1
+#if __has_include(<tr1/unordered_map>)
+#	include <tr1/unordered_map>
+#	ifndef unordered_map_namespace
+#		define unordered_map_namespace std::tr1
+#	endif
+#elif __has_include(<unordered_map>)
+#	include <unordered_map>
+#	ifndef unordered_map_namespace
+#		define unordered_map_namespace std
+#	endif
+#else
+#	error "Do not know how to find <unordered_map> with this compiler."
 #endif
 
 // Mac includes
