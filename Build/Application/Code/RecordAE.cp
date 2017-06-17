@@ -44,7 +44,6 @@
 // application includes
 #include "AppleEventUtilities.h"
 #include "ConstantsRegistry.h"
-#include "Terminology.h"
 
 
 

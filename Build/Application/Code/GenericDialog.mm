@@ -70,7 +70,6 @@
 #import "AppResources.h"
 #import "Commands.h"
 #import "Session.h"
-#import "Terminology.h"
 #import "UIStrings.h"
 
 

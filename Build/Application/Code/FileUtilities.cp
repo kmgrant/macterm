@@ -46,7 +46,6 @@
 #include "ConstantsRegistry.h"
 #include "Folder.h"
 #include "RecordAE.h"
-#include "Terminology.h"
 
 
 
@@ -115,7 +114,7 @@ FileUtilities_OpenDocuments		(AEDescList const&	inList)
 	result = AppleEventUtilities_InitAEDesc(&openDocumentsEvent);
 	if (noErr == result)
 	{
-		result = RecordAE_CreateRecordableAppleEvent(kASRequiredSuite, kAEOpenDocuments,
+		result = RecordAE_CreateRecordableAppleEvent('aevt'/* a.k.a. kCoreEventClass */, kAEOpenDocuments,
 														&openDocumentsEvent);
 		if (noErr == result)
 		{

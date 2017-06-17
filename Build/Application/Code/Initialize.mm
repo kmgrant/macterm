@@ -77,7 +77,6 @@
 #import "SessionFactory.h"
 #import "TerminalBackground.h"
 #import "TerminalView.h"
-#import "Terminology.h"
 #import "UIStrings.h"
 
 

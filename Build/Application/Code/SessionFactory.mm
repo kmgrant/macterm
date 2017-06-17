@@ -77,7 +77,6 @@
 #import "Terminal.h"
 #import "TerminalView.h"
 #import "TerminalWindow.h"
-#import "Terminology.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"
 #import "Workspace.h"
@@ -577,7 +576,6 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindow,
 		if (nullptr != result)
 		{
 			Local_Result	localResult = kLocal_ResultOK;
-			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
 			
 			
 			// see also SessionFactory_RespawnSession(), which must do something similar

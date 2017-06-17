@@ -94,7 +94,6 @@
 #import "Terminal.h"
 #import "TerminalView.h"
 #import "TerminalWindow.h"
-#import "Terminology.h"
 #import "TextTranslation.h"
 #import "UIStrings.h"
 #import "VectorCanvas.h"

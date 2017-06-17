@@ -58,7 +58,6 @@
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */; };
 		0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0007FAC07A00248DDF /* FlagManager.cp */; };
 		0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE36055432A400ACDF3A /* Undoables.cp */; };
-		0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */; };
 		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */; };
 		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */; };
 		0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A984182083452E6002E1BCE /* TerminalBackground.cp */; };
@@ -100,7 +99,6 @@
 		0AC6BB3A0A8C0BA100AFF37A /* Initialize.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE8055432A400ACDF3A /* Initialize.mm */; };
 		0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD6055432A400ACDF3A /* FileUtilities.cp */; };
 		0AC6BB3C0A8C0BA100AFF37A /* TerminalView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE28055432A400ACDF3A /* TerminalView.mm */; };
-		0AC6BB3D0A8C0BA100AFF37A /* URLAccessAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE39055432A400ACDF3A /* URLAccessAE.cp */; };
 		0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC6055432A400ACDF3A /* Console.cp */; };
 		0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */; };
 		0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */; };
@@ -286,7 +284,6 @@
 		0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TerminalGlyphDrawing.objc++.h"; path = "Application/Code/TerminalGlyphDrawing.objc++.h"; sourceTree = "<group>"; };
 		0A442C4F1B810760008B046B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppleEventUtilities.h; path = Application/Code/AppleEventUtilities.h; sourceTree = "<group>"; };
-		0A4603BD0554376100ACDF3A /* BasicTypesAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BasicTypesAE.h; path = Application/Code/BasicTypesAE.h; sourceTree = "<group>"; };
 		0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventUtilities.template.h; path = Shared/Code/CarbonEventUtilities.template.h; sourceTree = "<group>"; };
 		0A4603C00554376100ACDF3A /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Clipboard.h; path = Application/Code/Clipboard.h; sourceTree = "<group>"; };
 		0A4603C50554376100ACDF3A /* ColorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ColorUtilities.h; path = Shared/Code/ColorUtilities.h; sourceTree = "<group>"; };
@@ -333,12 +330,10 @@
 		0A4604400554376100ACDF3A /* TerminalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalView.h; path = Application/Code/TerminalView.h; sourceTree = "<group>"; };
 		0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalViewRef.typedef.h; path = Application/Code/TerminalViewRef.typedef.h; sourceTree = "<group>"; };
 		0A4604420554376100ACDF3A /* TerminalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindow.h; path = Application/Code/TerminalWindow.h; sourceTree = "<group>"; };
-		0A4604430554376100ACDF3A /* Terminology.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Terminology.h; path = Application/Code/Terminology.h; sourceTree = "<group>"; };
 		0A4604470554376100ACDF3A /* TextTranslation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextTranslation.h; path = Application/Code/TextTranslation.h; sourceTree = "<group>"; };
 		0A4604510554376100ACDF3A /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
 		0A4604520554376100ACDF3A /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
 		0A4604540554376100ACDF3A /* URL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = URL.h; path = Application/Code/URL.h; sourceTree = "<group>"; };
-		0A4604550554376100ACDF3A /* URLAccessAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = URLAccessAE.h; path = Application/Code/URLAccessAE.h; sourceTree = "<group>"; };
 		0A4604570554376100ACDF3A /* VTKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VTKeys.h; path = Application/Code/VTKeys.h; sourceTree = "<group>"; };
 		0A46045A0554376100ACDF3A /* Workspace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Workspace.h; path = Application/Code/Workspace.h; sourceTree = "<group>"; };
 		0A46059305543D7C00ACDF3A /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
@@ -351,7 +346,6 @@
 		0A46C56C15D864B700843BBC /* PreferenceValue.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PreferenceValue.mm; path = Application/Code/PreferenceValue.mm; sourceTree = "<group>"; };
 		0A46FDB8055432A400ACDF3A /* AlertMessages.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AlertMessages.mm; path = Application/Code/AlertMessages.mm; sourceTree = "<group>"; };
 		0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppleEventUtilities.cp; path = Application/Code/AppleEventUtilities.cp; sourceTree = "<group>"; };
-		0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BasicTypesAE.cp; path = Application/Code/BasicTypesAE.cp; sourceTree = "<group>"; };
 		0A46FDBC055432A400ACDF3A /* Clipboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Clipboard.mm; path = Application/Code/Clipboard.mm; sourceTree = "<group>"; };
 		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Commands.mm; path = Application/Code/Commands.mm; sourceTree = "<group>"; };
@@ -394,7 +388,6 @@
 		0A46FE2D055432A400ACDF3A /* TextTranslation.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextTranslation.cp; path = Application/Code/TextTranslation.cp; sourceTree = "<group>"; };
 		0A46FE36055432A400ACDF3A /* Undoables.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Undoables.cp; path = Shared/Code/Undoables.cp; sourceTree = "<group>"; };
 		0A46FE38055432A400ACDF3A /* URL.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = URL.cp; path = Application/Code/URL.cp; sourceTree = "<group>"; };
-		0A46FE39055432A400ACDF3A /* URLAccessAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = URLAccessAE.cp; path = Application/Code/URLAccessAE.cp; sourceTree = "<group>"; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = "<group>"; };
 		0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalToolbar.mm; path = Application/Code/TerminalToolbar.mm; sourceTree = "<group>"; };
 		0A47A0AC14B3EBE000E39136 /* TerminalToolbar.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "TerminalToolbar.objc++.h"; path = "Application/Code/TerminalToolbar.objc++.h"; sourceTree = "<group>"; };
@@ -543,7 +536,6 @@
 		0AE1F38D0AF41DA200D2DC13 /* MacTerm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MacTerm; path = Application/PythonCode/MacTerm; sourceTree = "<group>"; };
 		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
-		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
 		0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Shared/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
 		0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Shared/Code/UTF8Decoder.h; sourceTree = "<group>"; };
 		0AF4B5450A1D61C700D187A3 /* PrefPanelFullScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFullScreen.h; path = Application/Code/PrefPanelFullScreen.h; sourceTree = "<group>"; };
@@ -910,14 +902,8 @@
 		0AD0B0A60A9EABDF002064BA /* AppleScript */ = {
 			isa = PBXGroup;
 			children = (
-				0AEA45D70642041B00E701DA /* Dictionary.sdef */,
-				0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */,
-				0A4603BD0554376100ACDF3A /* BasicTypesAE.h */,
 				0A46FE0F055432A400ACDF3A /* RecordAE.cp */,
 				0A4604200554376100ACDF3A /* RecordAE.h */,
-				0A4604430554376100ACDF3A /* Terminology.h */,
-				0A46FE39055432A400ACDF3A /* URLAccessAE.cp */,
-				0A4604550554376100ACDF3A /* URLAccessAE.h */,
 			);
 			name = AppleScript;
 			sourceTree = "<group>";
@@ -1369,7 +1355,6 @@
 				0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */,
 				0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */,
 				0A03A1EB1D9A297000411248 /* OtherApps.mm in Sources */,
-				0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */,
 				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */,
 				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */,
 				0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */,
@@ -1417,7 +1402,6 @@
 				0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */,
 				0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */,
 				0AC6BB3C0A8C0BA100AFF37A /* TerminalView.mm in Sources */,
-				0AC6BB3D0A8C0BA100AFF37A /* URLAccessAE.cp in Sources */,
 				0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */,
 				0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */,
 				0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */,
@@ -1864,14 +1848,6 @@
 				0ADA30D5188AF9FB00B313FC /* English */,
 			);
 			name = PreferencesSearch.strings;
-			sourceTree = "<group>";
-		};
-		0AEA45D70642041B00E701DA /* Dictionary.sdef */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AEA45D80642041B00E701DA /* English */,
-			);
-			name = Dictionary.sdef;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

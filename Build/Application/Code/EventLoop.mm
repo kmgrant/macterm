@@ -72,7 +72,6 @@
 #import "MenuBar.h"
 #import "QuillsSession.h"
 #import "Session.h"
-#import "Terminology.h"
 
 
 

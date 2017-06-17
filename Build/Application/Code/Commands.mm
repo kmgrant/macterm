@@ -95,10 +95,8 @@ extern "C"
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalView.h"
-#import "Terminology.h"
 #import "UIStrings.h"
 #import "URL.h"
-#import "URLAccessAE.h"
 #import "VectorCanvas.h"
 #import "VectorInterpreter.h"
 #import "VectorWindow.h"
@@ -4992,17 +4990,36 @@ other application.
 receiveGetURLEvent:(NSAppleEventDescriptor*)	receivedEvent
 replyEvent:(NSAppleEventDescriptor*)			replyEvent
 {
-#pragma unused(replyEvent)
-	AEDesc		reply;
-	// TEMPORARY: this uses older functions and has not yet been ported to Cocoa
-	OSErr		error = URLAccessAE_HandleUniformResourceLocator([receivedEvent aeDesc], &reply, 0/* data */);
+	BOOL			openOK = NO;
+	id< NSObject >	directObject = [receivedEvent paramDescriptorForKeyword:keyDirectObject];
+	NSString*		errorString = nil;
 	
 	
-	if (noErr != error)
+	if (NO == [directObject respondsToSelector:@selector(stringValue)])
 	{
-		Console_Warning(Console_WriteValue, "URL open failed, error", error);
+		errorString = @"Failed to open URL from event.";
+		Console_Warning(Console_WriteLine, "failed to open URL from event");
 	}
-	// reply is currently ignored - TEMPORARY
+	else
+	{
+		NSString*	theURLString = [[receivedEvent paramDescriptorForKeyword:keyDirectObject] stringValue];
+		NSURL*		theURL = [NSURL URLWithString:theURLString];
+		
+		
+		openOK = [[NSWorkspace sharedWorkspace] openURL:theURL];
+		if (NO == openOK)
+		{
+			errorString = [NSString stringWithFormat:@"Failed to open URL “%@”.", theURLString];
+			Console_Warning(Console_WriteValueCFString, "failed to open URL", BRIDGE_CAST(theURLString, CFStringRef));
+		}
+	}
+	
+	// give a reply if possible
+	if ((nil != errorString) && (typeNull != [replyEvent descriptorType]))
+	{
+		[replyEvent setParamDescriptor:[NSAppleEventDescriptor descriptorWithString:errorString]
+										forKeyword:keyErrorString];
+	}
 }
 
 

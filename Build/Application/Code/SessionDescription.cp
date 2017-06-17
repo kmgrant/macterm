@@ -68,7 +68,6 @@
 #include "Preferences.h"
 #include "SessionFactory.h"
 #include "TerminalView.h"
-#include "Terminology.h"
 #include "UIStrings.h"
 
 

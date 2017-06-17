@@ -60,7 +60,6 @@
 #include "QuillsSession.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"
-#include "Terminology.h"
 
 
 
