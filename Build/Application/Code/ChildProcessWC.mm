@@ -405,7 +405,7 @@ newWindow
 	// by default, put this window offscreen (presumably it is not
 	// meant to display anything locally, as the child process
 	// version of the window will suffice)
-	[result setFrameOrigin:NSMakePoint(-16000, -16000)/* arbitrary */ display:NO];
+	[result setFrameOrigin:NSMakePoint(-16000, -16000)/* arbitrary */];
 	
 	// the proxy must be displayed so that its close operation
 	// can be used to detect the end of the process, and so

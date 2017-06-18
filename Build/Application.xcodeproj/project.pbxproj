@@ -198,7 +198,6 @@
 		0A0E9F561DB180F2006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F581DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F5A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AlertMessagesCocoa.xib; sourceTree = "<group>"; };
-		0A0E9F5C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChildProcessWindowCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F5E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F601DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CommandLineCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F621DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DebugInterfaceCocoa.xib; sourceTree = "<group>"; };
@@ -928,7 +927,6 @@
 				0A0E9F571DB18127006A8BF5 /* AddressDialogCocoa.xib */,
 				0A0E9F591DB18127006A8BF5 /* AlertMessagesCocoa.xib */,
 				0A1022131DDBE78700CEE0DF /* ApplicationTouchBarCocoa.xib */,
-				0A0E9F5B1DB18127006A8BF5 /* ChildProcessWindowCocoa.xib */,
 				0A0E9F5D1DB18127006A8BF5 /* ClipboardCocoa.xib */,
 				0A0E9F5F1DB18127006A8BF5 /* CommandLineCocoa.xib */,
 				0A0E9F611DB18127006A8BF5 /* DebugInterfaceCocoa.xib */,
@@ -1520,14 +1518,6 @@
 				0A0E9F5A1DB18127006A8BF5 /* English */,
 			);
 			name = AlertMessagesCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F5B1DB18127006A8BF5 /* ChildProcessWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A0E9F5C1DB18127006A8BF5 /* English */,
-			);
-			name = ChildProcessWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F5D1DB18127006A8BF5 /* ClipboardCocoa.xib */ = {
