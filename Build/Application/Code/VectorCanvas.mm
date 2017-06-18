@@ -1397,7 +1397,11 @@ performPrintScreen:(id)		sender
 	
 	if ([self bounds].size.width > [self bounds].size.height)
 	{
+	#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090 /* MAC_OS_X_VERSION_10_9 */
 		[printInfo setOrientation:NSLandscapeOrientation];
+	#else
+		[printInfo setOrientation:NSPaperOrientationLandscape];
+	#endif
 	}
 	
 	[[NSPrintOperation printOperationWithView:self printInfo:printInfo]

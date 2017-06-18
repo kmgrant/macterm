@@ -45,9 +45,6 @@
 #import <map>
 #import <vector>
 
-// GNU extension includes
-#import <ext/numeric>
-
 // UNIX includes
 extern "C"
 {
@@ -2576,9 +2573,13 @@ installedActions()
 			{
 				std::vector< UInt16 >	numberList(contextList.size());
 				RandomWrap				generator;
+				UInt16					counter = 0;
 				
 				
-				__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
+				for (auto toNumber = numberList.begin(); toNumber != numberList.end(); ++toNumber, ++counter)
+				{
+					*toNumber = counter;
+				}
 				std::random_shuffle(numberList.begin(), numberList.end(), generator);
 				inFontInfoOrNull = contextList[numberList[0]];
 			}

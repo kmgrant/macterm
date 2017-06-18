@@ -44,9 +44,6 @@
 #include <functional>
 #include <vector>
 
-// GNU extension includes
-#include <ext/numeric>
-
 // Mac includes
 #include <CoreServices/CoreServices.h>
 

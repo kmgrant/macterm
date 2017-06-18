@@ -59,7 +59,7 @@ Creates a new screen buffer line.
 TerminalLine_Object::
 TerminalLine_Object ()
 :
-textVectorBegin(REINTERPRET_CAST(std::malloc(kTerminalLine_MaximumCharacterCount * sizeof(UniChar)), UniChar*)),
+textVectorBegin(REINTERPRET_CAST(malloc(kTerminalLine_MaximumCharacterCount * sizeof(UniChar)), UniChar*)),
 textVectorEnd(textVectorBegin + kTerminalLine_MaximumCharacterCount),
 textVectorSize(textVectorEnd - textVectorBegin),
 textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
@@ -83,7 +83,7 @@ existing one.
 TerminalLine_Object::
 TerminalLine_Object	(TerminalLine_Object const&		inCopy)
 :
-textVectorBegin(REINTERPRET_CAST(std::malloc(kTerminalLine_MaximumCharacterCount * sizeof(UniChar)), UniChar*)),
+textVectorBegin(REINTERPRET_CAST(malloc(kTerminalLine_MaximumCharacterCount * sizeof(UniChar)), UniChar*)),
 textVectorEnd(textVectorBegin + kTerminalLine_MaximumCharacterCount),
 textVectorSize(textVectorEnd - textVectorBegin),
 textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
