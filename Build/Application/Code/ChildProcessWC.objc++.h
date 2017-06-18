@@ -98,10 +98,14 @@ but that may change.
 
 // initializers
 	- (instancetype)
+	initWithCoder:(NSCoder*)_;
+	- (instancetype)
 	initWithRunningApp:(NSRunningApplication*)_;
 	- (instancetype)
 	initWithRunningApp:(NSRunningApplication*)_
 	atExit:(ChildProcessWC_AtExitBlockType)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype)
+	initWithWindow:(NSWindow*)_;
 
 @end //}
 

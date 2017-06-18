@@ -55,6 +55,8 @@ The private class interface.
 // new methods
 	- (void)
 	handleChildExit;
+	- (NSWindow*)
+	newWindow;
 
 @end //}
 
@@ -119,6 +121,22 @@ atExit:(ChildProcessWC_AtExitBlockType)					anExitBlock
 
 
 /*!
+This exists only because it is the designated initializer
+of the base class and should still be “valid”.  In reality,
+it is not an expected way to use the derived class.
+
+(2017.06)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+#pragma unused(aCoder)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithRunningApp:nil];
+}// initWithCoder:
+
+
+/*!
 Convenience initializer.
 
 (2016.09)
@@ -139,7 +157,10 @@ Designated initializer.
 initWithRunningApp:(NSRunningApplication*)	aRunningApp
 atExit:(ChildProcessWC_AtExitBlockType)		anExitBlock
 {
-	self = [super initWithWindowNibName:@"ChildProcessWindowCocoa"];
+	NSWindow*	window = [self newWindow];
+	
+	
+	self = [super initWithWindow:window];
 	if (nil != self)
 	{
 		_childApplication = [aRunningApp retain];
@@ -167,7 +188,23 @@ atExit:(ChildProcessWC_AtExitBlockType)		anExitBlock
 		[gChildProcessWindowProxies() addObject:self];
 	}
 	return self;
-}// initWithRunningApp:modalToWindow:
+}// initWithRunningApp:atExit:
+
+
+/*!
+This exists only because it is the designated initializer
+of the base class and should still be “valid”.  In reality,
+it is not an expected way to use the derived class.
+
+(2017.06)
+*/
+- (instancetype)
+initWithWindow:(NSWindow*)		aWindow
+{
+#pragma unused(aWindow)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithRunningApp:nil];
+}// initWithWindow:
 
 
 /*!
@@ -246,41 +283,6 @@ context:(void*)						aContext
 		}
 	}
 }// observeValueForKeyPath:ofObject:change:context:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init...".)
-
-(2016.09)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-	
-	// enable "windowDidBecomeMain:", etc.
-	self.window.delegate = self;
-	
-	// by default, put this window offscreen (presumably it is not
-	// meant to display anything locally, as the child process
-	// version of the window will suffice)
-	[self.window setFrame:NSMakeRect(-40000, -40000, 1, 1)/* arbitrary */ display:NO];
-	
-	// the proxy must be displayed so that its close operation
-	// can be used to detect the end of the process, and so
-	// that the user can select it as part of the window cycle;
-	// although, "orderBack:" is preferred because that creates
-	// a more natural cycling (the child process window will
-	// already be active, and rotating back to the parent
-	// should cause every other window to be visited before
-	// seeing the child again)
-	[self.window orderBack:nil];
-}// windowDidLoad
 
 
 #pragma mark NSWindowDelegate
@@ -375,6 +377,48 @@ handleChildExit
 		_exitHandled = YES;
 	}
 }// handleChildExit
+
+
+/*!
+Creates a local window in the application that acts as a proxy
+for a window in a different process.  See the initializer.
+
+(2017.06)
+*/
+- (NSWindow*)
+newWindow
+{
+	NSWindow*		result = [[NSWindow alloc]
+								initWithContentRect:NSMakeRect(0, 0, 1, 1)
+												#if MAC_OS_X_VERSION_MIN_REQUIRED < 101200 /* MAC_OS_X_VERSION_10_12 */
+													styleMask:NSTitledWindowMask
+												#else
+													styleMask:NSWindowStyleMaskTitled
+												#endif
+													backing:NSBackingStoreBuffered
+													defer:NO];
+	
+	
+	// enable "windowDidBecomeMain:", etc.
+	result.delegate = self;
+	
+	// by default, put this window offscreen (presumably it is not
+	// meant to display anything locally, as the child process
+	// version of the window will suffice)
+	[result setFrameOrigin:NSMakePoint(-16000, -16000)/* arbitrary */ display:NO];
+	
+	// the proxy must be displayed so that its close operation
+	// can be used to detect the end of the process, and so
+	// that the user can select it as part of the window cycle;
+	// although, "orderBack:" is preferred because that creates
+	// a more natural cycling (the child process window will
+	// already be active, and rotating back to the parent
+	// should cause every other window to be visited before
+	// seeing the child again)
+	[result orderBack:nil];
+	
+	return result;
+}// newWindow
 
 
 @end //} ChildProcessWC_Object (ChildProcessWC_ObjectInternal)

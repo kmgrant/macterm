@@ -248,7 +248,6 @@ APP_XIB_PREFIXES := \
 English.lproj/AddressDialogCocoa \
 English.lproj/AlertMessagesCocoa \
 English.lproj/ApplicationTouchBarCocoa \
-English.lproj/ChildProcessWindowCocoa \
 English.lproj/ClipboardCocoa \
 English.lproj/CommandLineCocoa \
 English.lproj/DebugInterfaceCocoa \
