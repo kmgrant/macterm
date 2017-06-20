@@ -96,6 +96,8 @@ Manages the Server Browser user interface.
 
 // initializers
 	- (instancetype)
+	init DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initWithPosition:(CGPoint)_
 	relativeToParentWindow:(NSWindow*)_
 	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
@@ -429,6 +431,20 @@ viewHandlerFromRef:(ServerBrowser_Ref)		aRef
 {
 	return REINTERPRET_CAST(aRef, ServerBrowser_Handler*);
 }// viewHandlerFromRef
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+init
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithPosition:CGPointZero relativeToParentWindow:nil dataObserver:nil];
+}// init
 
 
 /*!
@@ -995,6 +1011,37 @@ dealloc
 @synthesize hidesErrorMessage = _hidesErrorMessage;
 @synthesize hidesProgress = _hidesProgress;
 @synthesize protocolDefinitions = _protocolDefinitions;
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+#pragma unused(aCoder)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithResponder:nil dataObserver:nil];
+}// initWithCoder:
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithNibName:(NSString*)		aNibName
+bundle:(NSBundle*)				aBundle
+{
+#pragma unused(aNibName, aBundle)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithResponder:nil dataObserver:nil];
+}// initWithNibName:bundle:
 
 
 /*!

@@ -135,6 +135,8 @@ once the application moves to Cocoa completely.
 
 // initializers
 	- (instancetype)
+	init DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initWithCommand:(UInt32)_
 	andEventTarget:(EventTargetRef)_
 	andDelay:(Float32)_ NS_DESIGNATED_INITIALIZER;
@@ -178,6 +180,8 @@ with an NSMenuItem, via setRepresentedObject:.
 }
 
 // initializers
+	- (instancetype)
+	init;
 	- (instancetype)
 	initWithSession:(SessionRef)_ NS_DESIGNATED_INITIALIZER;
 
@@ -3708,6 +3712,20 @@ textSelectionExists ()
 
 #pragma mark -
 @implementation Commands_DelayedCommand
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+init
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithCommand:0L andEventTarget:nullptr andDelay:0.0];
+}// init
 
 
 /*!
@@ -8463,6 +8481,19 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 
 #pragma mark -
 @implementation Commands_SessionWrap
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+init
+{
+	return [self initWithSession:nullptr];
+}// init
 
 
 /*!

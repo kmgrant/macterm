@@ -98,6 +98,8 @@ Mac OS X versions, raw strings do not bind properly.)
 	- (instancetype)
 	initAsOff;
 	- (instancetype)
+	initWithBoundName:(NSString*)_;
+	- (instancetype)
 	initWithDescription:(NSString*)_;
 	- (instancetype)
 	initWithDescription:(NSString*)_
@@ -404,6 +406,19 @@ initAsOff
 	}
 	return self;
 }// initAsOff
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithBoundName:(NSString*)	aDescription
+{
+	return [self initWithDescription:aDescription];
+}// initWithBoundName:
 
 
 /*!

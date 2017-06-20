@@ -72,6 +72,12 @@
 #	endif
 #endif
 
+// this should be used in the same place that you might otherwise
+// find NS_DESIGNATED_INITIALIZER, to show initializers that are
+// NOT supported by the subclass (e.g. runtime error); if a class
+// does this, it should define some new designated initializer
+#define DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED <= 101100 /* MAC_OS_X_VERSION_10_11 */
 #	define NSAppKitVersionNumber10_11 1404
 #endif

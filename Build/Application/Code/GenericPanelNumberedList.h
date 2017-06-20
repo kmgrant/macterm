@@ -114,7 +114,7 @@ with the master view.  Typically an object must handle
 these methods so that changes to the selection have
 the appropriate effect on the detail view.
 */
-@protocol GenericPanelNumberedList_Master //{
+@protocol GenericPanelNumberedList_Master < NSObject > //{
 
 @required
 

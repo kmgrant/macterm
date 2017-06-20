@@ -50,6 +50,8 @@ instead of "description".
 
 // initializers
 	- (instancetype)
+	init;
+	- (instancetype)
 	initWithBoundName:(NSString*)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors

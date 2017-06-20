@@ -681,6 +681,44 @@ description
 /*!
 Designated initializer.
 
+(2017.06)
+*/
+- (instancetype)
+init
+{
+	self = [super init];
+	if (nil != self)
+	{
+		self->_preferencesIndex = 0;
+	}
+	return self;
+}// init
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+The class argument must be Quills::Prefs::WORKSPACE.
+
+(2017.06)
+*/
+- (instancetype)
+initWithDefaultContextInClass:(Quills::Prefs::Class)	aClass
+{
+	assert(Quills::Prefs::WORKSPACE == aClass);
+	self = [super initWithDefaultContextInClass:aClass];
+	if (nil != self)
+	{
+		self->_preferencesIndex = 0;
+	}
+	return self;
+}// initWithDefaultContextInClass:
+
+
+/*!
+Designated initializer.
+
 (4.1)
 */
 - (instancetype)
@@ -719,30 +757,34 @@ Accessor.
 - (NSString*)
 windowName
 {
-	NSString*				result = @"";
-	assert(0 != self.preferencesIndex);
-	Preferences_Tag const	windowTitleIndexedTag = Preferences_ReturnTagVariantForIndex
-													(kPreferences_TagIndexedWindowTitle, self.preferencesIndex);
-	CFStringRef				nameCFString = nullptr;
-	Preferences_Result		prefsResult = Preferences_ContextGetData
-											(self.currentContext, windowTitleIndexedTag,
-												sizeof(nameCFString), &nameCFString,
-												false/* search defaults */);
+	NSString*	result = @"";
 	
 	
-	if (kPreferences_ResultBadVersionDataNotAvailable == prefsResult)
+	if (0 != self.preferencesIndex)
 	{
-		// this is possible for indexed tags, as not all indexes
-		// in the range may have data defined; ignore
-		//Console_Warning(Console_WriteValue, "failed to retrieve window title preference, error", prefsResult);
-	}
-	else if (kPreferences_ResultOK != prefsResult)
-	{
-		Console_Warning(Console_WriteValue, "failed to retrieve window title preference, error", prefsResult);
-	}
-	else
-	{
-		result = BRIDGE_CAST(nameCFString, NSString*);
+		Preferences_Tag const	windowTitleIndexedTag = Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowTitle, self.preferencesIndex);
+		CFStringRef				nameCFString = nullptr;
+		Preferences_Result		prefsResult = Preferences_ContextGetData
+												(self.currentContext, windowTitleIndexedTag,
+													sizeof(nameCFString), &nameCFString,
+													false/* search defaults */);
+		
+		
+		if (kPreferences_ResultBadVersionDataNotAvailable == prefsResult)
+		{
+			// this is possible for indexed tags, as not all indexes
+			// in the range may have data defined; ignore
+			//Console_Warning(Console_WriteValue, "failed to retrieve window title preference, error", prefsResult);
+		}
+		else if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to retrieve window title preference, error", prefsResult);
+		}
+		else
+		{
+			result = BRIDGE_CAST(nameCFString, NSString*);
+		}
 	}
 	
 	return result;
@@ -750,18 +792,20 @@ windowName
 - (void)
 setWindowName:(NSString*)	aWindowName
 {
-	assert(0 != self.preferencesIndex);
-	Preferences_Tag const	windowTitleIndexedTag = Preferences_ReturnTagVariantForIndex
-													(kPreferences_TagIndexedWindowTitle, self.preferencesIndex);
-	CFStringRef				asCFStringRef = BRIDGE_CAST(aWindowName, CFStringRef);
-	Preferences_Result		prefsResult = Preferences_ContextSetData
-											(self.currentContext, windowTitleIndexedTag,
-												sizeof(asCFStringRef), &asCFStringRef);
-	
-	
-	if (kPreferences_ResultOK != prefsResult)
+	if (0 != self.preferencesIndex)
 	{
-		Console_Warning(Console_WriteValue, "failed to set window title preference, error", prefsResult);
+		Preferences_Tag const	windowTitleIndexedTag = Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowTitle, self.preferencesIndex);
+		CFStringRef				asCFStringRef = BRIDGE_CAST(aWindowName, CFStringRef);
+		Preferences_Result		prefsResult = Preferences_ContextSetData
+												(self.currentContext, windowTitleIndexedTag,
+													sizeof(asCFStringRef), &asCFStringRef);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to set window title preference, error", prefsResult);
+		}
 	}
 }// setWindowName:
 

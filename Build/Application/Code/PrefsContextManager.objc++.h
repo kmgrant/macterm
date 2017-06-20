@@ -63,7 +63,7 @@ interface).
 
 // initializers
 	- (instancetype)
-	init;
+	init NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initWithDefaultContextInClass:(Quills::Prefs::Class)_ NS_DESIGNATED_INITIALIZER;
 

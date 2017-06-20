@@ -40,6 +40,19 @@
 
 
 /*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+init
+{
+	return [self initWithBoundName:@""];
+}// init
+
+
+/*!
 Designated initializer.
 
 (1.9)

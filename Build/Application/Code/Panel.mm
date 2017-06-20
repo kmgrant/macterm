@@ -67,6 +67,37 @@ NSString*	kPanel_IdealSizeDidChangeNotification =
 
 
 /*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+#pragma unused(aCoder)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithNibNamed:@"" delegate:nil context:nil];
+}// initWithCoder:
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithNibName:(NSString*)		aNibName
+bundle:(NSBundle*)				aBundle
+{
+#pragma unused(aNibName, aBundle)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithNibNamed:@"" delegate:nil context:nil];
+}// initWithNibName:bundle:
+
+
+/*!
 Designated initializer.
 
 (4.1)

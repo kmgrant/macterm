@@ -158,6 +158,15 @@ frame appearance.
 
 // initializers
 	- (instancetype)
+	initWithContentRect:(NSRect)_
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
+	styleMask:(NSUInteger)_
+#else
+	styleMask:(NSWindowStyleMask)_
+#endif
+	backing:(NSBackingStoreType)_
+	defer:(BOOL)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initWithView:(NSView*)_
 	style:(Popover_WindowStyle)_
 	attachedToPoint:(NSPoint)_

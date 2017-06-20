@@ -60,6 +60,10 @@ losing less user-friendly information about each address.
 
 // initializers
 	- (instancetype)
+	init;
+	- (instancetype)
+	initWithBoundName:(NSString*)_;
+	- (instancetype)
 	initWithDescription:(NSString*)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
@@ -107,6 +111,32 @@ AddressDialog_Display ()
 
 
 #pragma mark Initializers
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+init
+{
+	return [self initWithDescription:@""];
+}// init
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithBoundName:(NSString*)		aString
+{
+	return [self initWithDescription:aString];
+}// initWithBoundName:
 
 
 /*!

@@ -865,8 +865,7 @@ finalOptions:(FindDialog_Options)		options
 	// highlight search results
 	if (acceptedSearch)
 	{
-		Boolean		noAnimations = false;
-		BOOL		didSearch = NO;
+		BOOL	didSearch = NO;
 		
 		
 		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
@@ -1002,6 +1001,37 @@ awakeFromNib
 @synthesize searchText = _searchText;
 @synthesize statusText = _statusText;
 @synthesize successfulSearch = _successfulSearch;
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+#pragma unused(aCoder)
+	assert(false && "invalid way to initialize derived class");
+	return [self initForTerminalWindow:nullptr responder:nil initialOptions:0];
+}// initWithCoder:
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithNibName:(NSString*)		aNibName
+bundle:(NSBundle*)				aBundle
+{
+#pragma unused(aNibName, aBundle)
+	assert(false && "invalid way to initialize derived class");
+	return [self initForTerminalWindow:nullptr responder:nil initialOptions:0];
+}// initWithNibName:bundle:
 
 
 /*!

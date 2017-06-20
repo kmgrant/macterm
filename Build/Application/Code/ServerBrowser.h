@@ -179,6 +179,11 @@ changes to an interface declared in a ".mm" file.
 
 // initializers
 	- (instancetype)
+	initWithCoder:(NSCoder*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
+	initWithNibName:(NSString*)_
+	bundle:(NSBundle*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initWithResponder:(id< ServerBrowser_VCDelegate >)_
 	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)

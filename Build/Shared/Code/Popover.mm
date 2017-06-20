@@ -211,6 +211,30 @@ to contain the entire rendering of the popover window frame
 
 
 /*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithContentRect:(NSRect)	aRect
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
+styleMask:(NSUInteger)			aStyleMask
+#else
+styleMask:(NSWindowStyleMask)	aStyleMask
+#endif
+backing:(NSBackingStoreType)	aBackingStoreType
+defer:(BOOL)					aDeferFlag
+{
+#pragma unused(aRect, aStyleMask, aBackingStoreType, aDeferFlag)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithView:nil style:kPopover_WindowStyleNormal
+								attachedToPoint:NSZeroPoint
+								inWindow:nil vibrancy:NO];
+}
+
+
+/*!
 Convenience initializer; assumes a value for vibrancy.
 
 (1.4)

@@ -133,6 +133,11 @@ changes to an interface declared in a ".mm" file.
 
 // initializers
 	- (instancetype)
+	initWithCoder:(NSCoder*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
+	initWithNibName:(NSString*)_
+	bundle:(NSBundle*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initForTerminalWindow:(TerminalWindowRef)_
 	responder:(id< FindDialog_VCDelegate >)_
 	initialOptions:(FindDialog_Options)_ NS_DESIGNATED_INITIALIZER;

@@ -121,9 +121,8 @@ atExit:(ChildProcessWC_AtExitBlockType)					anExitBlock
 
 
 /*!
-This exists only because it is the designated initializer
-of the base class and should still be “valid”.  In reality,
-it is not an expected way to use the derived class.
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
 
 (2017.06)
 */
@@ -192,9 +191,8 @@ atExit:(ChildProcessWC_AtExitBlockType)		anExitBlock
 
 
 /*!
-This exists only because it is the designated initializer
-of the base class and should still be “valid”.  In reality,
-it is not an expected way to use the derived class.
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
 
 (2017.06)
 */

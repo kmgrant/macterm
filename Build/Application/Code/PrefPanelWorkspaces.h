@@ -129,6 +129,10 @@ window title) to be updated.
 
 // initializers
 	- (instancetype)
+	init NS_DESIGNATED_INITIALIZER;
+	- (instancetype)
+	initWithDefaultContextInClass:(Quills::Prefs::Class)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initWithIndex:(Preferences_Index)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors

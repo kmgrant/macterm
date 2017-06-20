@@ -43,6 +43,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
+#	import <CocoaFuture.objc++.h>
 #else
 class NSString;
 #endif
@@ -228,9 +229,14 @@ changes to an interface declared in a ".mm" file.
 
 // initializers
 	- (instancetype)
+	initWithCoder:(NSCoder*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
+	initWithNibName:(NSString*)_
+	bundle:(NSBundle*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
+	- (instancetype)
 	initWithNibNamed:(NSString*)_
 	delegate:(id< Panel_Delegate >)_
-	context:(void*)_;
+	context:(void*)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
 	@property (assign) id< Panel_Delegate >

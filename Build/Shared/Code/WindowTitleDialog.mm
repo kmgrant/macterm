@@ -259,9 +259,8 @@ viewHandlerFromRef:(WindowTitleDialog_Ref)		aRef
 
 
 /*!
-This exists only because it is the designated initializer
-of the base class and should still be “valid”.  In reality,
-it is not an expected way to use the derived class.
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
 
 (2016.09)
 */
@@ -640,14 +639,13 @@ returnInitialTitleTextForManagedView:(NSView*)	aManagedView
 
 
 /*!
-This exists only because it is the designated initializer
-of the base class and should still be “valid”.  In reality,
-it is not an expected way to use the derived class.
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
 
 (2016.09)
 */
 - (instancetype)
-initWithCoder:(NSCoder*)		aCoder
+initWithCoder:(NSCoder*)	aCoder
 {
 #pragma unused(aCoder)
 	assert(false && "invalid way to initialize derived class");
@@ -656,9 +654,8 @@ initWithCoder:(NSCoder*)		aCoder
 
 
 /*!
-This exists only because it is the designated initializer
-of the base class and should still be “valid”.  In reality,
-it is not an expected way to use the derived class.
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
 
 (2016.09)
 */
