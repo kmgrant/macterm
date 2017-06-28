@@ -1669,110 +1669,139 @@ performActionFrom:(id)				sender
 forButton:(GenericDialog_ItemID)	aButton
 {
 #pragma unused(sender)
-	BOOL	userAccepted = (kGenericDialog_ItemIDButton1 == aButton);
-	BOOL	keepDialog = ((kGenericDialog_ItemIDHelpButton == aButton) ||
-							(kGenericDialog_ItemIDButton3 == aButton));
-	
-	
-	// locally lock/unlock the object in case the subsequent block
-	// decides to destroy the dialog
+	// buttons cannot reasonably perform any actions while the
+	// dialog is not yet defined
+	if (nullptr != self->dialogRef)
 	{
-		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
-		BOOL						hasCustomEffect = (ptr->closeEffects.end() != ptr->closeEffects.find(aButton));
+		BOOL	userAccepted = (kGenericDialog_ItemIDButton1 == aButton);
+		BOOL	keepDialog = ((kGenericDialog_ItemIDHelpButton == aButton) ||
+								(kGenericDialog_ItemIDButton3 == aButton));
 		
 		
-		// determine if the dialog should be automatically destroyed
-		if (hasCustomEffect)
-		{
-			// respect any custom behaviors
-			keepDialog = (kGenericDialog_DialogEffectNone == ptr->closeEffects[aButton]);
-			if (kGenericDialog_DialogEffectCloseImmediately == ptr->closeEffects[aButton])
-			{
-				PopoverManager_SetAnimationType(ptr->popoverManager, kPopoverManager_AnimationTypeNone);
-			}
-		}
-	}
-	
-	if (NO == keepDialog)
-	{
-		// inform the panel that it has finished
-		[self panelViewManager:self->mainViewManager
-								didFinishUsingContainerView:self->mainViewManager.managedView
-								userAccepted:userAccepted];
-	}
-	
-	// perform any action associated with the button; note that
-	// action blocks ought not to destroy the dialog (technically
-	// they can but it is better for dialogs to use the routine
-	// GenericDialog_SetItemDialogEffect() consistently)
-	switch (aButton)
-	{
-	case kGenericDialog_ItemIDButton1:
-		if (nil != self.primaryButtonBlock)
-		{
-			self.primaryButtonBlock();
-		}
-		break;
-	
-	case kGenericDialog_ItemIDButton2:
-		if (nil != self.secondButtonBlock)
-		{
-			self.secondButtonBlock();
-		}
-		break;
-	
-	case kGenericDialog_ItemIDButton3:
-		if (nil != self.thirdButtonBlock)
-		{
-			self.thirdButtonBlock();
-		}
-		break;
-	
-	case kGenericDialog_ItemIDHelpButton:
-		if (nil != self.helpButtonBlock)
-		{
-			self.helpButtonBlock();
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	
-	// if required, remove the dialog from view
-	if (NO == keepDialog)
-	{
-		// hide the dialog and (if application-modal) end the modal session
+		// locally lock/unlock the object in case the subsequent block
+		// decides to destroy the dialog
 		{
 			My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+			BOOL						hasCustomEffect = (ptr->closeEffects.end() != ptr->closeEffects.find(aButton));
 			
 			
-			if (nil != ptr->popoverManager)
+			// determine if the dialog should be automatically destroyed
+			if (hasCustomEffect)
 			{
-				PopoverManager_RemovePopover(ptr->popoverManager, userAccepted);
-			}
-			
-			// if a modal session is in progress, end it
-			if ((nil == ptr->modalToView) && (nullptr == ptr->parentCarbonWindow))
-			{
-				// TEMPORARY; might want to use NSModalSession objects
-				// so that this cannot end just any open dialog
-				[NSApp stopModal];
+				// respect any custom behaviors
+				keepDialog = (kGenericDialog_DialogEffectNone == ptr->closeEffects[aButton]);
+				if (kGenericDialog_DialogEffectCloseImmediately == ptr->closeEffects[aButton])
+				{
+					PopoverManager_SetAnimationType(ptr->popoverManager, kPopoverManager_AnimationTypeNone);
+				}
 			}
 		}
 		
-		// allow the caller to perform any custom actions prior to the
-		// release of the dialog
-		if (nil != self.cleanupBlock)
+		if (NO == keepDialog)
 		{
-			self.cleanupBlock();
+			// inform the panel that it has finished
+			[self panelViewManager:self->mainViewManager
+									didFinishUsingContainerView:self->mainViewManager.managedView
+									userAccepted:userAccepted];
 		}
 		
-		// release the dialog (this must happen outside any lock-block);
-		// note that this could destroy the object if there are no other
-		// retain calls in effect
-		GenericDialog_Release(&self->dialogRef);
+		// perform any action associated with the button; note that
+		// action blocks ought not to destroy the dialog (technically
+		// they can but it is better for dialogs to use the routine
+		// GenericDialog_SetItemDialogEffect() consistently)
+		switch (aButton)
+		{
+		case kGenericDialog_ItemIDButton1:
+			if (nil != self.primaryButtonBlock)
+			{
+				self.primaryButtonBlock();
+			}
+			break;
+		
+		case kGenericDialog_ItemIDButton2:
+			if (nil != self.secondButtonBlock)
+			{
+				self.secondButtonBlock();
+			}
+			break;
+		
+		case kGenericDialog_ItemIDButton3:
+			if (nil != self.thirdButtonBlock)
+			{
+				self.thirdButtonBlock();
+			}
+			break;
+		
+		case kGenericDialog_ItemIDHelpButton:
+			if (nil != self.helpButtonBlock)
+			{
+				self.helpButtonBlock();
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+		
+		// if required, remove the dialog from view
+		if (NO == keepDialog)
+		{
+			// hide the dialog and (if application-modal) end the modal session
+			{
+				My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+				
+				
+				if (nil != ptr->popoverManager)
+				{
+					PopoverManager_RemovePopover(ptr->popoverManager, userAccepted);
+				}
+				
+				// if a modal session is in progress, end it
+				if ((nil == ptr->modalToView) && (nullptr == ptr->parentCarbonWindow))
+				{
+					// TEMPORARY; might want to use NSModalSession objects
+					// so that this cannot end just any open dialog
+					[NSApp stopModal];
+				}
+			}
+			
+			// allow the caller to perform any custom actions prior to the
+			// release of the dialog
+			if (nil != self.cleanupBlock)
+			{
+				self.cleanupBlock();
+			}
+			
+			// be paranoid and force the window to hide since that is the
+			// intent, regardless of the retain-count of the dialog; this is
+			// done after a brief delay because the action that makes the
+			// window visible after a button press may not have even happened
+			// yet (e.g. a scenario that was found: if user hits a button key
+			// equivalent very quickly as the window is animating open, the
+			// dialog is released but end-of-animation causes the window to
+			// stay open, unable to respond to any further user input); in
+			// the future this might be avoided by holding references to
+			// animations and explicitly ending them if a window close is
+			// initiated by the user, instead of having background tasks that
+			// set incorrect window states
+			{
+				NSWindow*	window = [[self->mainViewManager view] window];
+				
+				
+				[window retain];
+				CocoaExtensions_RunLater(0.5/* arbitrary (exceed animation time) */,
+											^{
+												[window orderOut:NSApp];
+												[window release];
+											});
+			}
+			
+			// release the dialog (this must happen outside any lock-block);
+			// note that this could destroy the object if there are no other
+			// retain calls in effect
+			GenericDialog_Release(&self->dialogRef);
+		}
 	}
 }// performActionFrom:forButton:
 

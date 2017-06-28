@@ -889,7 +889,16 @@ moveToIdealPositionAfterDelay:(float)	aDelayInSeconds
 {
 	if (NO == self->isAutoPositionQueued)
 	{
-		CocoaExtensions_RunLater(aDelayInSeconds, ^{ [self moveToIdealPosition]; });
+		//__weak typeof(self)	weakSelf = self; // future
+		PopoverManager_WC*		strongSelf = self;
+		
+		
+		[strongSelf retain];
+		CocoaExtensions_RunLater(aDelayInSeconds,
+									^{
+										[strongSelf moveToIdealPosition];
+										[strongSelf release]; // TEMPORARY
+									});
 		self->isAutoPositionQueued = YES;
 	}
 }// moveToIdealPositionAfterDelay
@@ -1046,7 +1055,15 @@ afterDelay:(float)					aDelay
 			}
 			else
 			{
-				CocoaExtensions_RunLater(aDelay, ^{ [self->containerWindow close]; });
+				NSWindow*	window = self->containerWindow;
+				
+				
+				[window retain];
+				CocoaExtensions_RunLater(aDelay,
+											^{
+												[window close];
+												[window release];
+											});
 			}
 		}
 		break;
@@ -1078,7 +1095,15 @@ afterDelay:(float)					aDelay
 			}
 			else
 			{
-				CocoaExtensions_RunLater(aDelay, ^{ [self->containerWindow close]; });
+				NSWindow*	window = self->containerWindow;
+				
+				
+				[window retain];
+				CocoaExtensions_RunLater(aDelay,
+											^{
+												[window close];
+												[window release];
+											});
 			}
 		}
 		break;

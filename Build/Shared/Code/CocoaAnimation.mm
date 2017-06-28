@@ -90,6 +90,7 @@ Core Animation was available).
 	NSRect				targetFrame;
 	unsigned int		frameCount;
 	unsigned int		currentFrame;
+	BOOL				animationDone;
 	NSTimeInterval*		frameDelays;
 	float*				frameAlphas;
 	float*				frameOffsetsH;
@@ -130,7 +131,8 @@ Core Animation was available).
 #pragma mark Internal Method Prototypes
 namespace {
 
-NSWindow*	createImageWindowFrom	(NSWindow*, NSRect);
+NSWindow*	createImageWindowFromImage			(NSWindow*, NSImage*);
+NSWindow*	createImageWindowFromWindowRect		(NSWindow*, NSRect);
 
 } // anonymous namespace
 
@@ -168,7 +170,7 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		NSRect			oldFrame = [inRelativeToWindow frame];
 		NSRect			newFrame = NSZeroRect;
 		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
-		NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
+		NSWindow*		imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 										autorelease];
 		
 		
@@ -223,7 +225,7 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
+	NSWindow*	imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 								autorelease];
 	NSRect		oldFrame = [imageWindow frame];
 	NSRect		newFrame = NSZeroRect;
@@ -267,10 +269,10 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 @autoreleasepool {
-	NSWindow*		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-									autorelease];
-	NSRect			oldFrame = [imageWindow frame];
-	NSRect			newFrame = NSZeroRect;
+	NSWindow*	imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
+								autorelease];
+	NSRect		oldFrame = [imageWindow frame];
+	NSRect		newFrame = NSZeroRect;
 	
 	
 	newFrame.origin.x = inEndLocation.origin.x;
@@ -316,7 +318,7 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 @autoreleasepool {
 	if ([inTargetWindow isVisible])
 	{
-		NSWindow*	imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
+		NSWindow*	imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
 									autorelease];
 		NSRect		oldFrame = [imageWindow frame];
 		NSRect		newFrame = [imageWindow frame];
@@ -358,8 +360,13 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 
 
 /*!
-Animates "inTargetWindow" as if it were a sheet opening
-on a parent window.
+Animates "inTargetWindow" as if it were a sheet opening on a
+parent window.
+
+If "inTargetWindow" implements CocoaAnimation_WindowImageProvider,
+that protocol determines the appearance of the animation window;
+otherwise, the image is inferred by asking the "contentView" of
+"inTargetWindow" to render itself (which may omit frame details).
 
 (1.10)
 */
@@ -375,8 +382,8 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 	if (useAnimation)
 	{
 		float const		kAnimationDelay = 0.002f;
-		float const		kXInset = (0.10f * NSWidth(actualFrame)); // arbitrary
-		float const		kYInset = (0.10f * NSHeight(actualFrame)); // keep aspect ratio the same
+		float const		kXInset = (0.18f * NSWidth(actualFrame)); // arbitrary
+		float const		kYInset = (0.18f * NSHeight(actualFrame)); // keep aspect ratio the same
 		NSRect			oldFrame = actualFrame;
 		NSRect			newFrame = actualFrame;
 		NSWindow*		imageWindow = nil;
@@ -386,8 +393,20 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		[inTargetWindow setFrameTopLeftPoint:NSMakePoint(-5000, -5000)];
 		[inTargetWindow orderFront:nil];
 		
-		imageWindow = [createImageWindowFrom(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-												autorelease];
+		if ([inTargetWindow conformsToProtocol:@protocol(CocoaAnimation_WindowImageProvider)])
+		{
+			id< CocoaAnimation_WindowImageProvider >	asProvider = STATIC_CAST(inTargetWindow,
+																					id< CocoaAnimation_WindowImageProvider >);
+			NSImage*	frameImage = [asProvider windowImage];
+			
+			
+			imageWindow = createImageWindowFromImage(inTargetWindow, frameImage);
+		}
+		else
+		{
+			imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
+															autorelease];
+		}
 		
 		// start from a location that is slightly offset from the target window
 		oldFrame.origin.x += kXInset; // arbitrary
@@ -437,7 +456,7 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 												 CGRect			inStartLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFrom
+	NSWindow*	imageWindow = [createImageWindowFromWindowRect
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
 															inStartLocation.size.width, inStartLocation.size.height))
 								autorelease];
@@ -484,7 +503,7 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 														 CGRect			inStartLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFrom
+	NSWindow*	imageWindow = [createImageWindowFromWindowRect
 								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
 															inStartLocation.size.width, inStartLocation.size.height))
 								autorelease];
@@ -524,6 +543,64 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 namespace {
 
 /*!
+Creates a new, borderless window whose content view is an image
+view that renders the specified image.  The image view size is
+set to match the frame origin and size of the original window,
+regardless of the image size.
+
+This is very useful as a basis for animations, because it allows
+a window to appear to be moving in a way that does not require
+the original window to continue to exist after this call returns.
+
+(2017.06)
+*/
+NSWindow*
+createImageWindowFromImage	(NSWindow*	inWindow,
+							 NSImage*	inImage)
+{
+	NSWindow*	result = nil;
+	NSRect		newFrame = [inWindow frame];
+	
+	
+	// construct a fake window to display the same thing
+	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
+													backing:NSBackingStoreBuffered defer:NO];
+	[result setOpaque:NO];
+	result.backgroundColor = [NSColor clearColor];
+	
+	// capture the image of the original window
+	@autoreleasepool
+	{
+		NSView*		contentView = STATIC_CAST(result.contentView, NSView*);
+		
+		
+		// with Core Animation and Mac OS X 10.6 and beyond, the NSImage
+		// can be directly set as the contents of a layer-backed view
+		[contentView setWantsLayer:YES];
+		if (nil != contentView.layer)
+		{
+			contentView.layer.contents = inImage;
+		}
+		else
+		{
+			// prior to Core Animation, an image view is required
+			NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(newFrame), NSHeight(newFrame));
+			NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
+			
+			
+			Console_Warning(Console_WriteLine, "expected to find a valid Core Animation layer; falling back to image view");
+			[imageView setImageScaling:NSImageScaleAxesIndependently];
+			[imageView setImage:inImage];
+			[result setContentView:imageView];
+			[imageView release], imageView = nil;
+		}
+	}
+	
+	return result;
+}// createImageWindowFromImage
+
+
+/*!
 Creates a new, borderless window whose content view is an
 image view that renders the specified portion of the given
 window.   The rectangle is a section of the content view’s
@@ -539,8 +616,8 @@ tends to be much more lightweight.
 (1.8)
 */
 NSWindow*
-createImageWindowFrom	(NSWindow*		inWindow,
-						 NSRect			inContentViewSection)
+createImageWindowFromWindowRect		(NSWindow*		inWindow,
+									 NSRect			inContentViewSection)
 {
 	NSWindow*	result = nil;
 	NSView*		originalContentView = [inWindow contentView];
@@ -605,7 +682,7 @@ createImageWindowFrom	(NSWindow*		inWindow,
 	}
 	
 	return result;
-}// createImageWindowFrom
+}// createImageWindowFromWindowRect
 
 } // anonymous namespace
 
@@ -679,6 +756,7 @@ simplified:(BOOL)									isSimplified
 			self->frameCount -= ((reduceFrameRate) ? 2 : 6); // arbitrary reducation
 		}
 		self->currentFrame = 0;
+		self->animationDone = NO;
 		self->frameDelays = new NSTimeInterval[kCurveLength];
 		if ((kMy_AnimationEffectFadeIn == anEffect) ||
 			(kMy_AnimationEffectFadeOut == anEffect))
@@ -814,6 +892,18 @@ simplified:(BOOL)									isSimplified
 		
 		// begin animation
 		[self nextAnimationStep];
+		
+		// make absolutely sure that the image window is hidden
+		// after a short period (otherwise it would leave a
+		// floating image on the screen that the user cannot
+		// remove)
+		[self->borderlessWindow retain]; // retain in case block runs after final release
+		CocoaExtensions_RunLater(2.0/* seconds; arbitrary */,
+									^{
+										self->animationDone = YES;
+										[self->borderlessWindow orderOut:nil];
+										[self->borderlessWindow release]; // balance retain above
+									});
 	}
 	return self;
 }// initWithTransition:imageWindow:finalWindow:fromFrame:toFrame:totalDelay:delayDistribution:effect:simplified:
@@ -940,13 +1030,15 @@ nextAnimationStep
 	
 	// step to next frame
 	self->currentFrame += (kCurveLength / self->frameCount);
-	if (self->currentFrame < kCurveLength)
+	if ((NO == self->animationDone) && (self->currentFrame < kCurveLength))
 	{
 		CocoaExtensions_RunLater(self->frameDelays[self->currentFrame],
 									^{ [self nextAnimationStep]; });
 	}
 	else
 	{
+		self->animationDone = YES;
+		
 		// force final frame to be exact
 		[self->borderlessWindow setFrame:self->targetFrame display:YES];
 		

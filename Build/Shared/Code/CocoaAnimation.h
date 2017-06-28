@@ -38,6 +38,27 @@ class NSWindow;
 #endif
 
 
+#pragma mark Types
+
+#ifdef __OBJC__
+
+/*!
+If a window conforms to this protocol, the provided image will
+be used for animation instead of inferring an image by trying
+to render the content view into a buffer.
+*/
+@protocol CocoaAnimation_WindowImageProvider < NSObject > //{
+
+@required
+
+	// return (autoreleased) image rendering entire frame and content, with alpha
+	- (NSImage*)
+	windowImage;
+
+@end //}
+
+#endif
+
 
 #pragma mark Public Methods
 

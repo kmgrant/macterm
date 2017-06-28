@@ -29,6 +29,7 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <CocoaAnimation.h>
 #import <CocoaFuture.objc++.h>
 
 
@@ -132,12 +133,13 @@ the window change its appearance while it is on screen.  One
 exception to this is "setHasArrow:", which will simply update the
 frame appearance.
 */
-@interface Popover_Window : NSWindow //{
+@interface Popover_Window : NSWindow < CocoaAnimation_WindowImageProvider > //{
 {
 @private
 	NSMutableArray*			registeredObservers;
 	NSWindow*				popoverParentWindow;
 	NSView*					embeddedView;
+	NSImage*				_animationImage;
 	NSColor*				_borderOuterColor;
 	NSColor*				_borderPrimaryColor;
 	NSColor*				_borderOuterDisplayColor;

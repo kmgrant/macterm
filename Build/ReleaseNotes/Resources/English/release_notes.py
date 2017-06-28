@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170627',
     '20170607',
     '20170515',
     '20170511',
@@ -572,6 +573,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170627': [
+        'Fixed a possible crash triggered by moving the parent window of a sheet.',
+        'Fixed a possible crash triggered by immediately closing a sheet that had just opened.',
+        'Fixed zoom animations that kept the last frame visible.',
+        'Animations for opening sheets now display a complete picture of the content instead of just a frame.',
+    ],
     '20170607': [
         'Fixed a problem where animation frames would always have rectangular corners, even for shaped windows.',
         'Animations are generally faster now.',

@@ -99,6 +99,8 @@ The private class interface.
 	fixViewFrame;
 	- (NSPoint)
 	idealFrameOriginForPoint:(NSPoint)_;
+	- (NSImage*)
+	newWindowImage;
 	- (void)
 	redisplay;
 	- (void)
@@ -110,7 +112,7 @@ The private class interface.
 	- (Popover_Properties)
 	arrowPlacement;
 	- (NSColor*)
-	backgroundColorPatternImage;
+	backgroundFrameImageAsColor;
 	- (NSBezierPath*)
 	backgroundPath;
 	- (Popover_Properties)
@@ -121,6 +123,8 @@ The private class interface.
 @interface Popover_Window () //{
 
 // accessors
+	@property (copy) NSImage*
+	animationImage;
 	@property (copy) NSColor*
 	borderOuterDisplayColor;
 	@property (copy) NSColor*
@@ -134,6 +138,11 @@ The private class interface.
 #pragma mark -
 @implementation Popover_Window
 
+
+/*!
+An image of the window frame and content; used for animations.
+*/
+@synthesize animationImage = _animationImage;
 
 /*!
 The height determines how “slender” the frame arrow’s triangle is.
@@ -369,6 +378,39 @@ vibrancy:(BOOL)					aVisualEffectFlag
 			// add view as subview
 			[[self contentView] addSubview:self->embeddedView];
 			
+			// ensure that the display is updated after certain changes
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(arrowHeight)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderOuterColor)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderPrimaryColor)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasArrow)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)] autorelease]];
+			[registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
+			
+			// ensure that frame-dependent property changes will cause the
+			// frame to be synchronized with the new values (note that the
+			// "setBorderWidth:" method already requires the border to fit
+			// within the margin so that value is not monitored here)
+			[registeredObservers addObject:[self newObserverFromSelector:@selector(viewMargin)
+																			ofObject:self
+																			options:(NSKeyValueObservingOptionNew |
+																						NSKeyValueObservingOptionOld)
+																			context:nullptr]];
+			
+			// subscribe to notifications
+			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
+								performSelector:@selector(windowDidBecomeKey:)];
+			[self whenObject:self postsNote:NSWindowDidResignKeyNotification
+								performSelector:@selector(windowDidResignKey:)];
+			[self whenObject:self postsNote:NSWindowDidResizeNotification
+								performSelector:@selector(windowDidResize:)];
+			
+			// use the style parameter to modify default values
+			[self applyStyle:aStyle];
+			
+			// construct the content image before the NSVisualEffectView
+			// is added, otherwise it may not render the content at all
+			self->_animationImage = [self newWindowImage];
+			
 			// if supported by the runtime OS, add a vibrancy effect to
 			// make the entire window more translucent than transparent
 			// (NOTE: this does not currently mix well with the arrow
@@ -430,35 +472,6 @@ vibrancy:(BOOL)					aVisualEffectFlag
 									BRIDGE_CAST([inException name], CFStringRef));
 				}
 			}
-			
-			// ensure that the display is updated after certain changes
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(arrowHeight)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderOuterColor)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderPrimaryColor)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasArrow)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
-			
-			// ensure that frame-dependent property changes will cause the
-			// frame to be synchronized with the new values (note that the
-			// "setBorderWidth:" method already requires the border to fit
-			// within the margin so that value is not monitored here)
-			[registeredObservers addObject:[self newObserverFromSelector:@selector(viewMargin)
-																			ofObject:self
-																			options:(NSKeyValueObservingOptionNew |
-																						NSKeyValueObservingOptionOld)
-																			context:nullptr]];
-			
-			// subscribe to notifications
-			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
-								performSelector:@selector(windowDidBecomeKey:)];
-			[self whenObject:self postsNote:NSWindowDidResignKeyNotification
-								performSelector:@selector(windowDidResignKey:)];
-			[self whenObject:self postsNote:NSWindowDidResizeNotification
-								performSelector:@selector(windowDidResize:)];
-			
-			// use the style parameter to modify default values
-			[self applyStyle:aStyle];
 		}
 	}
 	return self;
@@ -475,6 +488,7 @@ dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
 	
+	[_animationImage release];
 	[_borderOuterColor release];
 	[_borderOuterDisplayColor release];
 	[_borderPrimaryColor release];
@@ -755,6 +769,26 @@ setViewMargin:(float)	aValue
 	{
 		viewMargin = MAX(aValue, 0.0);
 	}
+}
+
+
+#pragma mark CocoaAnimation_WindowImageProvider
+
+
+/*!
+Returns the most recently constructed rendering of the entire
+popover window’s frame and content.  Currently, this is only
+created once (at initialization time).
+
+(2017.06)
+*/
+- (NSImage*)
+windowImage
+{
+	NSImage*	result = self.animationImage;
+	
+	
+	return result;
 }
 
 
@@ -1199,53 +1233,52 @@ as an NSColor so that it can be rendered naturally by NSWindow.
 (1.0)
 */
 - (NSColor*)
-backgroundColorPatternImage
+backgroundFrameImageAsColor
 {
-	NSColor*	result = nil;
-	NSImage*	patternImage = [[NSImage alloc] initWithSize:self.frame.size];
+	NSColor*		result = nil;
+	NSImage*		patternImage = [[NSImage alloc] initWithSize:self.frame.size];
+	BOOL const		kDebug = NO;
 	
 	
 	[patternImage lockFocus];
+	
 	[NSGraphicsContext saveGraphicsState];
 	{
-		BOOL const		kDebug = NO;
 		NSBezierPath*	sourcePath = [self backgroundPath];
-		NSRect			localRect = self.frame;
 		
 		
-		localRect.origin.x = 0;
-		localRect.origin.y = 0;
+		[sourcePath addClip];
 		
-		if (kDebug)
-		{
-			NSRectClip(localRect);
-		}
-		else
-		{
-			[sourcePath addClip];
-		}
-		
-		[self.popoverBackgroundColor set];
+		[self.popoverBackgroundColor setFill];
 		[sourcePath fill];
 		if (self.borderWidth > 0)
 		{
 			// double width since drawing is clipped inside the path
-			[sourcePath setLineWidth:(self.borderWidth * 2.0f)];
-			[self.borderPrimaryDisplayColor set];
+			[sourcePath setLineWidth:(MAX(self.borderWidth * 2.0f, 1.0f))];
+			[self.borderPrimaryDisplayColor setStroke];
 			[sourcePath stroke];
-			[sourcePath setLineWidth:self.borderWidth - 1.0f]; // arbitrary shift
-			[self.borderOuterDisplayColor set];
+			[sourcePath setLineWidth:(MAX(self.borderWidth, 2.0f) - 1.0f)]; // arbitrary shift
+			[self.borderOuterDisplayColor setStroke];
 			[sourcePath stroke];
-		}
-		
-		if (kDebug)
-		{
-			// for debugging: show the entire frame’s actual rectangle
-			[[NSColor redColor] set];
-			NSFrameRectWithWidth(localRect, 3.0/* arbitrary */);
 		}
 	}
 	[NSGraphicsContext restoreGraphicsState];
+	
+	// for debugging: show the entire frame’s actual rectangle (this
+	// must be in a separate save/restore bracket to ensure that
+	// clipping and line-drawing is correct)
+	if (kDebug)
+	{
+		NSRect		localRect = NSMakeRect(0, 0, NSWidth(self.frame), NSHeight(self.frame));
+		
+		
+		[NSGraphicsContext saveGraphicsState];
+		NSRectClip(localRect);
+		[[NSColor redColor] setFill];
+		NSFrameRectWithWidth(localRect, 3.0/* arbitrary */);
+		[NSGraphicsContext restoreGraphicsState];
+	}
+	
 	[patternImage unlockFocus];
 	
 	result = [NSColor colorWithPatternImage:patternImage];
@@ -1830,6 +1863,79 @@ isGraphiteTheme
 
 
 /*!
+Returns a rendering of the entire popover window’s frame and
+content.  This is typically only needed for animations.  See
+also the method "backgroundFrameImageAsColor".
+
+The caller must release the image.
+
+IMPORTANT: Once the window has been fully initialized, the
+presence of a visual effect view may prevent the content from
+being included in the image (in other words, only the frame
+will be visible).  This is called early in the initialization
+phase so that the initial image is OK.
+
+(2017.06)
+*/
+- (NSImage*)
+newWindowImage
+{
+	BOOL		wasVisible = self.isVisible;
+	NSPoint		oldFrameOrigin = self.frame.origin;
+	NSColor*	patternColor = [self backgroundFrameImageAsColor];
+	NSImage*	result = nil;
+	
+	
+	if (NO == wasVisible)
+	{
+		// show the window offscreen so its image is defined
+		[self setFrameOrigin:NSMakePoint(-5000, -5000)];
+		[self orderFront:nil];
+	}
+	
+	@try
+	{
+		NSView*				contentView = STATIC_CAST([self contentView], NSView*);
+		NSBitmapImageRep*	imageRep = nil;
+		NSImage*			contentImage = [[[NSImage alloc] init] autorelease];
+		
+		
+		// create image with the frame of the window (no content)
+		result = [[patternColor patternImage] retain];
+		
+		// create an image with the content of the window (no frame)
+		[contentView lockFocus];
+		imageRep = [[NSBitmapImageRep alloc] initWithFocusedViewRect:contentView.bounds];
+		[contentView unlockFocus];
+		[contentImage addRepresentation:imageRep];
+		[imageRep release], imageRep = nil;
+		
+		// now overlay the current content of the window; note that this
+		// does not work for windows containing an NSVisualEffectView
+		// and it may also fail for other windows with layer effects
+		[result lockFocus];
+		[contentImage drawInRect:contentView.frame fromRect:NSZeroRect
+									operation:NSCompositeSourceOver fraction:1.0];
+		[result unlockFocus];
+	}
+	@catch (NSException*	inException)
+	{
+		Console_Warning(Console_WriteValueCFString, "popover background color has no image, exception",
+						BRIDGE_CAST([inException name], CFStringRef));
+	}
+	
+	// restore window position and visibility
+	if (NO == wasVisible)
+	{
+		[self orderOut:NSApp];
+		[self setFrameOrigin:oldFrameOrigin];
+	}
+	
+	return result;
+}
+
+
+/*!
 Forces the window to redo its layout and render itself again.
 
 (1.0)
@@ -1861,7 +1967,7 @@ updateBackground
 	// call superclass to avoid overridden version from this class
 	@autoreleasepool
 	{
-		[super setBackgroundColor:[self backgroundColorPatternImage]];
+		[super setBackgroundColor:[self backgroundFrameImageAsColor]];
 	}
 	
 	if ([self isVisible])
