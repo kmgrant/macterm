@@ -136,7 +136,7 @@ The private class interface.
 #pragma mark Internal Methods
 
 #pragma mark -
-@implementation Popover_Window
+@implementation Popover_Window //{
 
 
 /*!
@@ -240,7 +240,7 @@ defer:(BOOL)					aDeferFlag
 	return [self initWithView:nil style:kPopover_WindowStyleNormal
 								attachedToPoint:NSZeroPoint
 								inWindow:nil vibrancy:NO];
-}
+}// initWithContentRect:styleMask:backing:defer:
 
 
 /*!
@@ -256,7 +256,7 @@ inWindow:(NSWindow*)			aWindow
 {
 	return [self initWithView:aView style:aStyle attachedToPoint:aPoint
 								inWindow:aWindow vibrancy:YES];
-}
+}// initWithView:style:attachedToPoint:inWindow:
 
 
 /*!
@@ -475,7 +475,7 @@ vibrancy:(BOOL)					aVisualEffectFlag
 		}
 	}
 	return self;
-}
+}// initWithView:style:attachedToPoint:inWindow:vibrancy:
 
 
 /*!
@@ -500,10 +500,24 @@ dealloc
 	[registeredObservers release];
 	
 	[super dealloc];
-}
+}// dealloc
 
 
-#pragma mark Utilities
+#pragma mark New Methods: Utilities
+
+
+/*!
+Returns the region that the window should occupy globally if the
+embedded view has the given local frame.
+
+(1.1)
+*/
+- (NSRect)
+frameRectForViewRect:(NSRect)	aRect
+{
+	return [self.class frameRectForViewRect:aRect viewMargin:self.viewMargin arrowHeight:self.arrowHeight
+											side:self->windowPropertyFlags];
+}// frameRectForViewRect:
 
 
 /*!
@@ -530,21 +544,7 @@ setStandardArrowProperties:(BOOL)	aHasArrowFlag
 		self.arrowBaseWidth = 0.0;
 		self.arrowHeight = 0.0;
 	}
-}
-
-
-/*!
-Returns the region that the window should occupy globally if the
-embedded view has the given local frame.
-
-(1.1)
-*/
-- (NSRect)
-frameRectForViewRect:(NSRect)	aRect
-{
-	return [self.class frameRectForViewRect:aRect viewMargin:self.viewMargin arrowHeight:self.arrowHeight
-											side:self->windowPropertyFlags];
-}
+}// setStandardArrowProperties:
 
 
 /*!
@@ -558,10 +558,10 @@ viewRectForFrameRect:(NSRect)	aRect
 {
 	return [self.class viewRectForFrameRect:aRect viewMargin:self.viewMargin arrowHeight:self.arrowHeight
 											side:self->windowPropertyFlags];
-}
+}// viewRectForFrameRect:
 
 
-#pragma mark Window Location
+#pragma mark New Methods: Window Location
 
 
 /*!
@@ -602,7 +602,7 @@ onSide:(Popover_Properties)		aSide
 		[self updateBackground];
 		//NSEnableScreenUpdates();
 	}
-}
+}// setPoint:onSide:
 
 
 /*!
@@ -635,10 +635,10 @@ preferredSide:(Popover_Properties)			aSide
 	
 	[self setPoint:aPoint onSide:chosenSide];
 	self->isAutoPositioning = YES;
-}
+}// setPointWithAutomaticPositioning:preferredSide:
 
 
-#pragma mark Accessors
+#pragma mark Accessors: General
 
 
 /*!
@@ -675,7 +675,7 @@ setArrowBaseWidth:(float)	aValue
 	}
 	
 	[self redisplay];
-}
+}// setArrowBaseWidth:
 
 
 /*!
@@ -712,7 +712,7 @@ setBorderWidth:(float)	aValue
 		
 		[self updateBackground];
 	}
-}
+}// setBorderWidth:
 
 
 /*!
@@ -747,7 +747,7 @@ setCornerRadius:(float)		aValue
 	
 	// synchronize arrow size
 	self.arrowBaseWidth = self.arrowBaseWidth;
-}
+}// setCornerRadius:
 
 
 /*!
@@ -769,7 +769,7 @@ setViewMargin:(float)	aValue
 	{
 		viewMargin = MAX(aValue, 0.0);
 	}
-}
+}// setViewMargin:
 
 
 #pragma mark CocoaAnimation_WindowImageProvider
@@ -789,7 +789,7 @@ windowImage
 	
 	
 	return result;
-}
+}// windowImage
 
 
 #pragma mark NSKeyValueObserving
@@ -862,7 +862,7 @@ context:(void*)						aContext
 			}
 		}
 	}
-}
+}// observeValueForKeyPath:ofObject:change:context:
 
 
 #pragma mark NSObject (NSMenuValidation)
@@ -882,7 +882,7 @@ validateMenuItem:(NSMenuItem*)	item
 		return [self->popoverParentWindow validateMenuItem:item];
 	}
 	return [super validateMenuItem:item];
-}
+}// validateMenuItem:
 
 
 #pragma mark NSWindow
@@ -897,7 +897,7 @@ Overrides the NSWindow implementation.
 canBecomeMainWindow
 {
 	return NO;
-}
+}// canBecomeMainWindow
 
 
 /*!
@@ -909,7 +909,7 @@ Overrides the NSWindow implementation.
 canBecomeKeyWindow
 {
 	return YES;
-}
+}// canBecomeKeyWindow
 
 
 /*!
@@ -921,7 +921,7 @@ Overrides the NSWindow implementation.
 isExcludedFromWindowsMenu
 {
 	return YES;
-}
+}// isExcludedFromWindowsMenu
 
 
 /*!
@@ -942,7 +942,7 @@ performClose:(id)	sender
 	{
 		[super performClose:sender];
 	}
-}
+}// performClose:
 
 
 /*!
@@ -955,7 +955,7 @@ cause an equivalent (semi-transparent) image to be the background.
 setBackgroundColor:(NSColor*)	aValue
 {
 	self.popoverBackgroundColor = aValue;
-}
+}// setBackgroundColor:
 
 
 #pragma mark NSWindowNotifications
@@ -973,7 +973,7 @@ windowDidBecomeKey:(NSNotification*)	aNotification
 	self.borderOuterDisplayColor = self.borderOuterColor;
 	self.borderPrimaryDisplayColor = self.borderPrimaryColor;
 	[self updateBackground];
-}
+}// windowDidBecomeKey:
 
 
 /*!
@@ -988,7 +988,7 @@ windowDidResignKey:(NSNotification*)	aNotification
 	self.borderOuterDisplayColor = [NSColor colorWithCalibratedRed:0.95f green:0.95f blue:0.95f alpha:1.0f];
 	self.borderPrimaryDisplayColor = [NSColor colorWithCalibratedRed:0.65f green:0.65f blue:0.65f alpha:1.0f];
 	[self updateBackground];
-}
+}// windowDidResignKey:
 
 
 /*!
@@ -1001,14 +1001,428 @@ windowDidResize:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
 	[self redisplay];
-}
+}// windowDidResize:
 
 
-@end // Popover_Window
+@end //} Popover_Window
 
 
 #pragma mark -
-@implementation Popover_Window (Popover_WindowInternal)
+@implementation Popover_Window (Popover_WindowInternal) //{
+
+
+#pragma mark Class Methods: General
+
+
+/*!
+A helper to determine the offset from the nearest corner that
+an arrow’s tip should have, given the specified corner arc size
+and width of the arrow’s triangular base.
+
+(1.0)
+*/
++ (float)
+arrowInsetWithCornerRadius:(float)	aCornerRadius
+baseWidth:(float)					anArrowBaseWidth
+{
+	return (aCornerRadius + (anArrowBaseWidth / 2.0f));
+}// arrowInsetWithCornerRadius:baseWidth:
+
+
+/*!
+Returns the arrow placement portion of the specified properties.
+
+(1.1)
+*/
++ (Popover_Properties)
+arrowPlacement:(Popover_Properties)		aFlagSet
+{
+	BOOL	result = (aFlagSet & kPopover_PropertyMaskArrow);
+	
+	
+	return result;
+}// arrowPlacement:
+
+
+/*!
+Returns window properties to frame the popover window in a way that is
+considered optimal for the given constraints.  A preferred side must
+be specified to help break ties.
+
+Note that this is a class method so that dependencies on measurements
+are more explicit.  This will encourage the development of a future
+algorithm that relies on fewer inputs!
+
+(1.1)
+*/
++ (Popover_Properties)
+bestSideForViewOfSize:(NSSize)		aViewSize
+andMargin:(float)					aViewMargin
+arrowHeight:(float)					anArrowHeight
+arrowInset:(float)					anArrowInset
+at:(NSPoint)						aPoint
+onParentWindow:(NSWindow*)			aWindow
+preferredSide:(Popover_Properties)	aSide
+{
+	NSRect const	kScreenFrame = ((nil != aWindow) && (nil != [aWindow screen]))
+									? [[aWindow screen] visibleFrame]
+									: [[NSScreen mainScreen] visibleFrame];
+	NSPoint const	kPointOnScreen = (nil != aWindow)
+										? [self.class convertToScreenFromWindow:aWindow point:aPoint]
+										: aPoint;
+	Popover_Properties		result = kPopover_PositionBottom;
+	
+	
+	// pretend the given view size actually included the margins
+	// (the margins are not otherwise needed)
+	aViewSize.width += aViewMargin * 2.0;
+	aViewSize.height += aViewMargin * 2.0;
+	
+	Popover_Properties const	kCandidatePositions[] =
+								{
+									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow,
+									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameLeftOfArrow,
+									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameRightOfArrow,
+									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameAboveArrow,
+									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameBelowArrow,
+									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameLeftOfArrow,
+									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameRightOfArrow,
+									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameAboveArrow,
+									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameBelowArrow,
+									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameLeftOfArrow,
+									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameRightOfArrow,
+									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameAboveArrow
+								};
+	size_t const				kCandidateCount = sizeof(kCandidatePositions) / sizeof(Popover_Properties);
+	float						greatestArea = 0.0;
+	
+	
+	// find the window and arrow placement that leaves the greatest
+	// portion of the popover view on screen
+	result = 0; // initially...
+	for (size_t i = 0; i < kCandidateCount; ++i)
+	{
+		NSRect		viewRect = NSMakeRect(0, 0, aViewSize.width, aViewSize.height);
+		NSRect		frameRect = [self.class frameRectForViewRect:viewRect viewMargin:aViewMargin
+																	arrowHeight:anArrowHeight side:kCandidatePositions[i]];
+		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:frameRect.size arrowInset:anArrowInset
+																		at:kPointOnScreen side:kCandidatePositions[i]];
+		
+		
+		// adjust to position on screen
+		frameRect.origin.x = idealOrigin.x;
+		frameRect.origin.y = idealOrigin.y;
+		
+		// see if this rectangle shows more of the view than the previous best
+		{
+			NSRect const	kIntersectionRegion = NSIntersectionRect(frameRect, kScreenFrame);
+			float const		kIntersectionArea = (kIntersectionRegion.size.width * kIntersectionRegion.size.height);
+			
+			
+			if (kIntersectionArea > greatestArea)
+			{
+				greatestArea = kIntersectionArea;
+				result = kCandidatePositions[i];
+			}
+			else if ((kIntersectionArea > (greatestArea - 0.001)) && (kIntersectionArea < (greatestArea + 0.001))) // arbitrary
+			{
+				// if this is no better than the previous choice but it
+				// is the preferred side, choose it anyway
+				if (kCandidatePositions[i] == aSide)
+				{
+					result = aSide;
+				}
+			}
+		}
+	}
+		
+	return result;
+}// bestSideForViewOfSize:andMargin:arrowHeight:arrowInset:at:onParentWindow:preferredSide:
+
+
+/*!
+Returns a lower-left corner for the window frame that would be
+ideal for a popover with the given characteristics.
+
+Note however that the result is only a shifted version of the
+original point; so if you want something in screen coordinates
+the original point must already be in screen coordinates.
+
+(1.1)
+*/
++ (NSPoint)
+idealFrameOriginForSize:(NSSize)	aFrameSize
+arrowInset:(float)					anArrowInset
+at:(NSPoint)						aPoint
+side:(Popover_Properties)			aSide
+{
+	NSPoint		result = aPoint;
+	
+	
+	switch (aSide)
+	{
+	case kPopover_PositionTopLeft:
+		result.x -= (aFrameSize.width - anArrowInset);
+		break;
+	
+	case kPopover_PositionTopRight:
+		result.x -= anArrowInset;
+		break;
+	
+	case kPopover_PositionBottomLeft:
+		result.y -= aFrameSize.height;
+		result.x -= (aFrameSize.width - anArrowInset);
+		break;
+	
+	case kPopover_PositionBottom:
+		result.y -= aFrameSize.height;
+		result.x -= aFrameSize.width / 2.0;
+		break;
+	
+	case kPopover_PositionBottomRight:
+		result.x -= anArrowInset;
+		result.y -= aFrameSize.height;
+		break;
+	
+	case kPopover_PositionLeftTop:
+		result.x -= aFrameSize.width;
+		result.y -= anArrowInset;
+		break;
+	
+	case kPopover_PositionLeft:
+		result.x -= aFrameSize.width;
+		result.y -= aFrameSize.height / 2.0;
+		break;
+	
+	case kPopover_PositionLeftBottom:
+		result.x -= aFrameSize.width;
+		result.y -= (aFrameSize.height - anArrowInset);
+		break;
+	
+	case kPopover_PositionRightTop:
+		result.y -= anArrowInset;
+		break;
+	
+	case kPopover_PositionRight:
+		result.y -= aFrameSize.height / 2.0;
+		break;
+	
+	case kPopover_PositionRightBottom:
+		result.y -= (aFrameSize.height - anArrowInset);
+		break;
+	
+	case kPopover_PositionTop:
+	default:
+		result.x -= aFrameSize.width / 2.0;
+		break;
+	}
+	
+    return result;
+}// idealFrameOriginForSize:arrowInset:at:side:
+
+
+/*!
+Returns YES only if the current system appearance is
+using the graphite theme (grayscale).  This is used
+to determine if frames should use color.
+
+(2016.06)
+*/
++ (BOOL)
+isGraphiteTheme
+{
+	return (NSGraphiteControlTint == [NSColor currentControlTint]);
+}// isGraphiteTheme
+
+
+/*!
+Returns the window placement portion of the specified properties.
+
+(1.1)
+*/
++ (Popover_Properties)
+windowPlacement:(Popover_Properties)	aFlagSet
+{
+	BOOL	result = (aFlagSet & kPopover_PropertyMaskPlaceFrame);
+	
+	
+	return result;
+}// windowPlacement:
+
+
+#pragma mark Class Methods: Frame Conversion
+
+
+/*!
+Given a point in window coordinates (e.g. by passing "nil"
+to an NSView conversion method), returns the screen
+coordinates.  See also "convertToWindow:fromScreenPoint:".
+
+Currently this is implemented by adding the frame origin.
+
+(1.2)
+*/
++ (NSPoint)
+convertToScreenFromWindow:(NSWindow*)	aWindow
+point:(NSPoint)							aPoint
+{
+	return NSMakePoint(aPoint.x + NSMinX(aWindow.frame), aPoint.y + NSMinY(aWindow.frame));
+}// convertToScreenFromWindow:point:
+
+
+/*!
+Given a point in screen coordinates, returns the window
+coordinates.  See also "convertToScreenFromWindow:point:".
+
+Currently this is implemented by subtracting the frame origin.
+
+(1.2)
+*/
++ (NSPoint)
+convertToWindow:(NSWindow*)		aWindow
+fromScreenPoint:(NSPoint)		aPoint
+{
+	return NSMakePoint(aPoint.x - NSMinX(aWindow.frame), aPoint.y - NSMinY(aWindow.frame));
+}// convertToWindow:fromScreenPoint:
+
+
+/*!
+Returns an NSWindow frame rectangle (relative to the window
+position on screen) appropriate for the specified view size and
+related parameters.
+
+This boundary is not completely visible to the user because the
+arrow and all of the space around the arrow appears in the frame
+rectangle too.
+
+This should be consistent with the calculations for the method
+"viewRectForFrameRect:viewMargin:arrowHeight:side:".
+
+(1.1)
+*/
++ (NSRect)
+frameRectForViewRect:(NSRect)	aRect
+viewMargin:(float)				aViewMargin
+arrowHeight:(float)				anArrowHeight
+side:(Popover_Properties)		aSide
+{
+	float const		kOffsetArrowSide = (anArrowHeight + aViewMargin);
+	float const		kOffsetNonArrowSide = (aViewMargin);
+	NSRect	result = aRect;
+	
+	
+	switch (aSide)
+	{
+	case kPopover_PositionLeft:
+	case kPopover_PositionLeftTop:
+	case kPopover_PositionLeftBottom:
+		result.origin.x -= kOffsetNonArrowSide;
+		result.origin.y -= kOffsetNonArrowSide;
+		result.size.width += (kOffsetNonArrowSide + kOffsetArrowSide);
+		result.size.height += (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		break;
+	
+	case kPopover_PositionRight:
+	case kPopover_PositionRightTop:
+	case kPopover_PositionRightBottom:
+		result.origin.x -= kOffsetArrowSide;
+		result.origin.y -= kOffsetNonArrowSide;
+		result.size.width += (kOffsetArrowSide + kOffsetNonArrowSide);
+		result.size.height += (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		break;
+	
+	case kPopover_PositionBottom:
+	case kPopover_PositionBottomLeft:
+	case kPopover_PositionBottomRight:
+		result.origin.x -= kOffsetNonArrowSide;
+		result.origin.y -= kOffsetNonArrowSide;
+		result.size.width += (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		result.size.height += (kOffsetArrowSide + kOffsetNonArrowSide);
+		break;
+	
+	case kPopover_PositionTop:
+	case kPopover_PositionTopLeft:
+	case kPopover_PositionTopRight:
+	default:
+		result.origin.x -= kOffsetNonArrowSide;
+		result.origin.y -= kOffsetArrowSide;
+		result.size.width += (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		result.size.height += (kOffsetNonArrowSide + kOffsetArrowSide);
+		break;
+	}
+	return result;
+}// frameRectForViewRect:viewMargin:arrowHeight:side:
+
+
+/*!
+Returns an NSView frame rectangle (relative to its window content
+view) appropriate for the specified window-relative frame and
+related parameters.
+
+This boundary is not completely visible to the user because the
+arrow and all of the space around the arrow appears in the frame
+rectangle too.
+
+This should be consistent with the calculations for the method
+"frameRectForViewRect:viewMargin:arrowHeight:side:".
+
+(1.1)
+*/
++ (NSRect)
+viewRectForFrameRect:(NSRect)	aRect
+viewMargin:(float)				aViewMargin
+arrowHeight:(float)				anArrowHeight
+side:(Popover_Properties)		aSide
+{
+	float const		kOffsetArrowSide = (anArrowHeight + aViewMargin);
+	float const		kOffsetNonArrowSide = (aViewMargin);
+	NSRect	result = aRect;
+	
+	
+	switch (aSide)
+	{
+	case kPopover_PositionLeft:
+	case kPopover_PositionLeftTop:
+	case kPopover_PositionLeftBottom:
+		result.origin.x += kOffsetNonArrowSide;
+		result.origin.y += kOffsetNonArrowSide;
+		result.size.width -= (kOffsetNonArrowSide + kOffsetArrowSide);
+		result.size.height -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		break;
+	
+	case kPopover_PositionRight:
+	case kPopover_PositionRightTop:
+	case kPopover_PositionRightBottom:
+		result.origin.x += kOffsetArrowSide;
+		result.origin.y += kOffsetNonArrowSide;
+		result.size.width -= (kOffsetArrowSide + kOffsetNonArrowSide);
+		result.size.height -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		break;
+	
+	case kPopover_PositionBottom:
+	case kPopover_PositionBottomLeft:
+	case kPopover_PositionBottomRight:
+		result.origin.x += kOffsetNonArrowSide;
+		result.origin.y += kOffsetNonArrowSide;
+		result.size.width -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		result.size.height -= (kOffsetArrowSide + kOffsetNonArrowSide);
+		break;
+	
+	case kPopover_PositionTop:
+	case kPopover_PositionTopLeft:
+	case kPopover_PositionTopRight:
+	default:
+		result.origin.x += kOffsetNonArrowSide;
+		result.origin.y += kOffsetArrowSide;
+		result.size.width -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
+		result.size.height -= (kOffsetNonArrowSide + kOffsetArrowSide);
+		break;
+	}
+	return result;
+}// viewRectForFrameRect:viewMargin:arrowHeight:side:
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -1067,7 +1481,7 @@ appendArrowToPath:(NSBezierPath*)	aPath
 		[aPath lineToPoint:tipPt];
 		[aPath lineToPoint:endPt];
 	}
-}
+}// appendArrowToPath:
 
 
 /*!
@@ -1163,7 +1577,186 @@ applyStyle:(Popover_WindowStyle)	aStyle
 		assert(false && "unsupported style type");
 		break;
 	}
-}
+}// applyStyle:
+
+
+/*!
+The per-window version of "convertToScreenFromWindow:point:".
+
+(1.2)
+*/
+- (NSPoint)
+convertToScreenFromWindowPoint:(NSPoint)	aPoint
+{
+	return [self.class convertToScreenFromWindow:self point:aPoint];
+}// convertToScreenFromWindowPoint:
+
+
+/*!
+The per-window version of "convertToWindow:fromScreenPoint:".
+
+(1.2)
+*/
+- (NSPoint)
+convertToWindowFromScreenPoint:(NSPoint)	aPoint
+{
+	return [self.class convertToWindow:self fromScreenPoint:aPoint];
+}// convertToWindowFromScreenPoint:
+
+
+/*!
+Updates the location and size of the embedded content view so
+that it is correct for the current configuration of the popover
+(arrow position, offsets, etc.).
+
+(1.1)
+*/
+- (void)
+fixViewFrame
+{
+	self->viewFrame = [self viewRectForFrameRect:self.frame];
+	self->viewFrame.origin = [self convertToWindowFromScreenPoint:self->viewFrame.origin];
+	[self->embeddedView setFrame:self->viewFrame];
+}// fixViewFrame
+
+
+/*!
+Instead of "idealFrameOriginForSize:arrowInset:at:side:", call this
+to automatically use the properties of the current instance (should
+not be called from an initializer).
+
+(1.1)
+*/
+- (NSPoint)
+idealFrameOriginForPoint:(NSPoint)		aPoint
+{
+	return [self.class idealFrameOriginForSize:self.frame.size arrowInset:self.arrowInset
+												at:((self->popoverParentWindow)
+													? [self.class convertToScreenFromWindow:self->popoverParentWindow
+																							point:aPoint]
+													: aPoint)
+												side:self->windowPropertyFlags];
+}// idealFrameOriginForPoint:
+
+
+/*!
+Returns a rendering of the entire popover window’s frame and
+content.  This is typically only needed for animations.  See
+also the method "backgroundFrameImageAsColor".
+
+The caller must release the image.
+
+IMPORTANT: Once the window has been fully initialized, the
+presence of a visual effect view may prevent the content from
+being included in the image (in other words, only the frame
+will be visible).  This is called early in the initialization
+phase so that the initial image is OK.
+
+(2017.06)
+*/
+- (NSImage*)
+newWindowImage
+{
+	BOOL		wasVisible = self.isVisible;
+	NSPoint		oldFrameOrigin = self.frame.origin;
+	NSColor*	patternColor = [self backgroundFrameImageAsColor];
+	NSImage*	result = nil;
+	
+	
+	if (NO == wasVisible)
+	{
+		// show the window offscreen so its image is defined
+		[self setFrameOrigin:NSMakePoint(-5000, -5000)];
+		[self orderFront:nil];
+	}
+	
+	@try
+	{
+		NSView*				contentView = STATIC_CAST([self contentView], NSView*);
+		NSBitmapImageRep*	imageRep = nil;
+		NSImage*			contentImage = [[[NSImage alloc] init] autorelease];
+		
+		
+		// create image with the frame of the window (no content)
+		result = [[patternColor patternImage] retain];
+		
+		// create an image with the content of the window (no frame)
+		[contentView lockFocus];
+		imageRep = [[NSBitmapImageRep alloc] initWithFocusedViewRect:contentView.bounds];
+		[contentView unlockFocus];
+		[contentImage addRepresentation:imageRep];
+		[imageRep release], imageRep = nil;
+		
+		// now overlay the current content of the window; note that this
+		// does not work for windows containing an NSVisualEffectView
+		// and it may also fail for other windows with layer effects
+		[result lockFocus];
+		[contentImage drawInRect:contentView.frame fromRect:NSZeroRect
+									operation:NSCompositeSourceOver fraction:1.0];
+		[result unlockFocus];
+	}
+	@catch (NSException*	inException)
+	{
+		Console_Warning(Console_WriteValueCFString, "popover background color has no image, exception",
+						BRIDGE_CAST([inException name], CFStringRef));
+	}
+	
+	// restore window position and visibility
+	if (NO == wasVisible)
+	{
+		[self orderOut:NSApp];
+		[self setFrameOrigin:oldFrameOrigin];
+	}
+	
+	return result;
+}// newWindowImage
+
+
+/*!
+Forces the window to redo its layout and render itself again.
+
+(1.0)
+*/
+- (void)
+redisplay
+{
+	if (NO == self->resizeInProgress)
+	{
+		self->resizeInProgress = YES;
+		//NSDisableScreenUpdates();
+		[self fixViewFrame];
+		[self updateBackground];
+		//NSEnableScreenUpdates();
+		self->resizeInProgress = NO;
+	}
+}// redisplay
+
+
+/*!
+Forces the window to render itself again.
+
+(1.0)
+*/
+- (void)
+updateBackground
+{
+	//NSDisableScreenUpdates();
+	// call superclass to avoid overridden version from this class
+	@autoreleasepool
+	{
+		[super setBackgroundColor:[self backgroundFrameImageAsColor]];
+	}
+	
+	if ([self isVisible])
+	{
+		[self display];
+		[self invalidateShadow];
+	}
+	//NSEnableScreenUpdates();
+}// updateBackground
+
+
+#pragma mark Accessors
 
 
 /*!
@@ -1181,37 +1774,7 @@ arrowInset
 	
 	
 	return [self.class arrowInsetWithCornerRadius:kRadius baseWidth:self->arrowBaseWidth];
-}
-
-
-/*!
-A helper to determine the offset from the nearest corner that
-an arrow’s tip should have, given the specified corner arc size
-and width of the arrow’s triangular base.
-
-(1.0)
-*/
-+ (float)
-arrowInsetWithCornerRadius:(float)	aCornerRadius
-baseWidth:(float)					anArrowBaseWidth
-{
-	return (aCornerRadius + (anArrowBaseWidth / 2.0f));
-}
-
-
-/*!
-Returns the arrow placement portion of the specified properties.
-
-(1.1)
-*/
-+ (Popover_Properties)
-arrowPlacement:(Popover_Properties)		aFlagSet
-{
-	BOOL	result = (aFlagSet & kPopover_PropertyMaskArrow);
-	
-	
-	return result;
-}
+}// arrowInset
 
 
 /*!
@@ -1223,7 +1786,7 @@ Returns the arrow placement portion of the current properties.
 arrowPlacement
 {
 	return [self.class arrowPlacement:self->windowPropertyFlags];
-}
+}// arrowPlacement
 
 
 /*!
@@ -1286,7 +1849,7 @@ backgroundFrameImageAsColor
 	[patternImage release];
 	
 	return result;
-}
+}// backgroundFrameImageAsColor
 
 
 /*!
@@ -1508,558 +2071,7 @@ backgroundPath
 	[result closePath];
 	
 	return result;
-}
-
-
-/*!
-Returns window properties to frame the popover window in a way that is
-considered optimal for the given constraints.  A preferred side must
-be specified to help break ties.
-
-Note that this is a class method so that dependencies on measurements
-are more explicit.  This will encourage the development of a future
-algorithm that relies on fewer inputs!
-
-(1.1)
-*/
-+ (Popover_Properties)
-bestSideForViewOfSize:(NSSize)		aViewSize
-andMargin:(float)					aViewMargin
-arrowHeight:(float)					anArrowHeight
-arrowInset:(float)					anArrowInset
-at:(NSPoint)						aPoint
-onParentWindow:(NSWindow*)			aWindow
-preferredSide:(Popover_Properties)	aSide
-{
-	NSRect const	kScreenFrame = ((nil != aWindow) && (nil != [aWindow screen]))
-									? [[aWindow screen] visibleFrame]
-									: [[NSScreen mainScreen] visibleFrame];
-	NSPoint const	kPointOnScreen = (nil != aWindow)
-										? [self.class convertToScreenFromWindow:aWindow point:aPoint]
-										: aPoint;
-	Popover_Properties		result = kPopover_PositionBottom;
-	
-	
-	// pretend the given view size actually included the margins
-	// (the margins are not otherwise needed)
-	aViewSize.width += aViewMargin * 2.0;
-	aViewSize.height += aViewMargin * 2.0;
-	
-	Popover_Properties const	kCandidatePositions[] =
-								{
-									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow,
-									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameLeftOfArrow,
-									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameRightOfArrow,
-									kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameAboveArrow,
-									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameBelowArrow,
-									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameLeftOfArrow,
-									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameRightOfArrow,
-									kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameAboveArrow,
-									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameBelowArrow,
-									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameLeftOfArrow,
-									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameRightOfArrow,
-									kPopover_PropertyArrowEnd | kPopover_PropertyPlaceFrameAboveArrow
-								};
-	size_t const				kCandidateCount = sizeof(kCandidatePositions) / sizeof(Popover_Properties);
-	float						greatestArea = 0.0;
-	
-	
-	// find the window and arrow placement that leaves the greatest
-	// portion of the popover view on screen
-	result = 0; // initially...
-	for (size_t i = 0; i < kCandidateCount; ++i)
-	{
-		NSRect		viewRect = NSMakeRect(0, 0, aViewSize.width, aViewSize.height);
-		NSRect		frameRect = [self.class frameRectForViewRect:viewRect viewMargin:aViewMargin
-																	arrowHeight:anArrowHeight side:kCandidatePositions[i]];
-		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:frameRect.size arrowInset:anArrowInset
-																		at:kPointOnScreen side:kCandidatePositions[i]];
-		
-		
-		// adjust to position on screen
-		frameRect.origin.x = idealOrigin.x;
-		frameRect.origin.y = idealOrigin.y;
-		
-		// see if this rectangle shows more of the view than the previous best
-		{
-			NSRect const	kIntersectionRegion = NSIntersectionRect(frameRect, kScreenFrame);
-			float const		kIntersectionArea = (kIntersectionRegion.size.width * kIntersectionRegion.size.height);
-			
-			
-			if (kIntersectionArea > greatestArea)
-			{
-				greatestArea = kIntersectionArea;
-				result = kCandidatePositions[i];
-			}
-			else if ((kIntersectionArea > (greatestArea - 0.001)) && (kIntersectionArea < (greatestArea + 0.001))) // arbitrary
-			{
-				// if this is no better than the previous choice but it
-				// is the preferred side, choose it anyway
-				if (kCandidatePositions[i] == aSide)
-				{
-					result = aSide;
-				}
-			}
-		}
-	}
-		
-	return result;
-}
-
-
-/*!
-Given a point in window coordinates (e.g. by passing "nil"
-to an NSView conversion method), returns the screen
-coordinates.  See also "convertToWindow:fromScreenPoint:".
-
-Currently this is implemented by adding the frame origin.
-
-(1.2)
-*/
-+ (NSPoint)
-convertToScreenFromWindow:(NSWindow*)	aWindow
-point:(NSPoint)							aPoint
-{
-	return NSMakePoint(aPoint.x + NSMinX(aWindow.frame), aPoint.y + NSMinY(aWindow.frame));
-}
-
-
-/*!
-Given a point in screen coordinates, returns the window
-coordinates.  See also "convertToScreenFromWindow:point:".
-
-Currently this is implemented by subtracting the frame origin.
-
-(1.2)
-*/
-+ (NSPoint)
-convertToWindow:(NSWindow*)		aWindow
-fromScreenPoint:(NSPoint)		aPoint
-{
-	return NSMakePoint(aPoint.x - NSMinX(aWindow.frame), aPoint.y - NSMinY(aWindow.frame));
-}
-
-
-/*!
-The per-window version of "convertToScreenFromWindow:point:".
-
-(1.2)
-*/
-- (NSPoint)
-convertToScreenFromWindowPoint:(NSPoint)	aPoint
-{
-	return [self.class convertToScreenFromWindow:self point:aPoint];
-}
-
-
-/*!
-The per-window version of "convertToWindow:fromScreenPoint:".
-
-(1.2)
-*/
-- (NSPoint)
-convertToWindowFromScreenPoint:(NSPoint)	aPoint
-{
-	return [self.class convertToWindow:self fromScreenPoint:aPoint];
-}
-
-
-/*!
-Updates the location and size of the embedded content view so
-that it is correct for the current configuration of the popover
-(arrow position, offsets, etc.).
-
-(1.1)
-*/
-- (void)
-fixViewFrame
-{
-	self->viewFrame = [self viewRectForFrameRect:self.frame];
-	self->viewFrame.origin = [self convertToWindowFromScreenPoint:self->viewFrame.origin];
-	[self->embeddedView setFrame:self->viewFrame];
-}
-
-
-/*!
-Returns an NSWindow frame rectangle (relative to the window
-position on screen) appropriate for the specified view size and
-related parameters.
-
-This boundary is not completely visible to the user because the
-arrow and all of the space around the arrow appears in the frame
-rectangle too.
-
-This should be consistent with the calculations for the method
-"viewRectForFrameRect:viewMargin:arrowHeight:side:".
-
-(1.1)
-*/
-+ (NSRect)
-frameRectForViewRect:(NSRect)	aRect
-viewMargin:(float)				aViewMargin
-arrowHeight:(float)				anArrowHeight
-side:(Popover_Properties)		aSide
-{
-	float const		kOffsetArrowSide = (anArrowHeight + aViewMargin);
-	float const		kOffsetNonArrowSide = (aViewMargin);
-	NSRect	result = aRect;
-	
-	
-	switch (aSide)
-	{
-	case kPopover_PositionLeft:
-	case kPopover_PositionLeftTop:
-	case kPopover_PositionLeftBottom:
-		result.origin.x -= kOffsetNonArrowSide;
-		result.origin.y -= kOffsetNonArrowSide;
-		result.size.width += (kOffsetNonArrowSide + kOffsetArrowSide);
-		result.size.height += (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		break;
-	
-	case kPopover_PositionRight:
-	case kPopover_PositionRightTop:
-	case kPopover_PositionRightBottom:
-		result.origin.x -= kOffsetArrowSide;
-		result.origin.y -= kOffsetNonArrowSide;
-		result.size.width += (kOffsetArrowSide + kOffsetNonArrowSide);
-		result.size.height += (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		break;
-	
-	case kPopover_PositionBottom:
-	case kPopover_PositionBottomLeft:
-	case kPopover_PositionBottomRight:
-		result.origin.x -= kOffsetNonArrowSide;
-		result.origin.y -= kOffsetNonArrowSide;
-		result.size.width += (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		result.size.height += (kOffsetArrowSide + kOffsetNonArrowSide);
-		break;
-	
-	case kPopover_PositionTop:
-	case kPopover_PositionTopLeft:
-	case kPopover_PositionTopRight:
-	default:
-		result.origin.x -= kOffsetNonArrowSide;
-		result.origin.y -= kOffsetArrowSide;
-		result.size.width += (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		result.size.height += (kOffsetNonArrowSide + kOffsetArrowSide);
-		break;
-	}
-	return result;
-}
-
-
-/*!
-Instead of "idealFrameOriginForSize:arrowInset:at:side:", call this
-to automatically use the properties of the current instance (should
-not be called from an initializer).
-
-(1.1)
-*/
-- (NSPoint)
-idealFrameOriginForPoint:(NSPoint)		aPoint
-{
-	return [self.class idealFrameOriginForSize:self.frame.size arrowInset:self.arrowInset
-												at:((self->popoverParentWindow)
-													? [self.class convertToScreenFromWindow:self->popoverParentWindow
-																							point:aPoint]
-													: aPoint)
-												side:self->windowPropertyFlags];
-}
-
-
-/*!
-Returns a lower-left corner for the window frame that would be
-ideal for a popover with the given characteristics.
-
-Note however that the result is only a shifted version of the
-original point; so if you want something in screen coordinates
-the original point must already be in screen coordinates.
-
-(1.1)
-*/
-+ (NSPoint)
-idealFrameOriginForSize:(NSSize)	aFrameSize
-arrowInset:(float)					anArrowInset
-at:(NSPoint)						aPoint
-side:(Popover_Properties)			aSide
-{
-	NSPoint		result = aPoint;
-	
-	
-	switch (aSide)
-	{
-	case kPopover_PositionTopLeft:
-		result.x -= (aFrameSize.width - anArrowInset);
-		break;
-	
-	case kPopover_PositionTopRight:
-		result.x -= anArrowInset;
-		break;
-	
-	case kPopover_PositionBottomLeft:
-		result.y -= aFrameSize.height;
-		result.x -= (aFrameSize.width - anArrowInset);
-		break;
-	
-	case kPopover_PositionBottom:
-		result.y -= aFrameSize.height;
-		result.x -= aFrameSize.width / 2.0;
-		break;
-	
-	case kPopover_PositionBottomRight:
-		result.x -= anArrowInset;
-		result.y -= aFrameSize.height;
-		break;
-	
-	case kPopover_PositionLeftTop:
-		result.x -= aFrameSize.width;
-		result.y -= anArrowInset;
-		break;
-	
-	case kPopover_PositionLeft:
-		result.x -= aFrameSize.width;
-		result.y -= aFrameSize.height / 2.0;
-		break;
-	
-	case kPopover_PositionLeftBottom:
-		result.x -= aFrameSize.width;
-		result.y -= (aFrameSize.height - anArrowInset);
-		break;
-	
-	case kPopover_PositionRightTop:
-		result.y -= anArrowInset;
-		break;
-	
-	case kPopover_PositionRight:
-		result.y -= aFrameSize.height / 2.0;
-		break;
-	
-	case kPopover_PositionRightBottom:
-		result.y -= (aFrameSize.height - anArrowInset);
-		break;
-	
-	case kPopover_PositionTop:
-	default:
-		result.x -= aFrameSize.width / 2.0;
-		break;
-	}
-	
-    return result;
-}
-
-
-/*!
-Returns YES only if the current system appearance is
-using the graphite theme (grayscale).  This is used
-to determine if frames should use color.
-
-(2016.06)
-*/
-+ (BOOL)
-isGraphiteTheme
-{
-	return (NSGraphiteControlTint == [NSColor currentControlTint]);
-}
-
-
-/*!
-Returns a rendering of the entire popover window’s frame and
-content.  This is typically only needed for animations.  See
-also the method "backgroundFrameImageAsColor".
-
-The caller must release the image.
-
-IMPORTANT: Once the window has been fully initialized, the
-presence of a visual effect view may prevent the content from
-being included in the image (in other words, only the frame
-will be visible).  This is called early in the initialization
-phase so that the initial image is OK.
-
-(2017.06)
-*/
-- (NSImage*)
-newWindowImage
-{
-	BOOL		wasVisible = self.isVisible;
-	NSPoint		oldFrameOrigin = self.frame.origin;
-	NSColor*	patternColor = [self backgroundFrameImageAsColor];
-	NSImage*	result = nil;
-	
-	
-	if (NO == wasVisible)
-	{
-		// show the window offscreen so its image is defined
-		[self setFrameOrigin:NSMakePoint(-5000, -5000)];
-		[self orderFront:nil];
-	}
-	
-	@try
-	{
-		NSView*				contentView = STATIC_CAST([self contentView], NSView*);
-		NSBitmapImageRep*	imageRep = nil;
-		NSImage*			contentImage = [[[NSImage alloc] init] autorelease];
-		
-		
-		// create image with the frame of the window (no content)
-		result = [[patternColor patternImage] retain];
-		
-		// create an image with the content of the window (no frame)
-		[contentView lockFocus];
-		imageRep = [[NSBitmapImageRep alloc] initWithFocusedViewRect:contentView.bounds];
-		[contentView unlockFocus];
-		[contentImage addRepresentation:imageRep];
-		[imageRep release], imageRep = nil;
-		
-		// now overlay the current content of the window; note that this
-		// does not work for windows containing an NSVisualEffectView
-		// and it may also fail for other windows with layer effects
-		[result lockFocus];
-		[contentImage drawInRect:contentView.frame fromRect:NSZeroRect
-									operation:NSCompositeSourceOver fraction:1.0];
-		[result unlockFocus];
-	}
-	@catch (NSException*	inException)
-	{
-		Console_Warning(Console_WriteValueCFString, "popover background color has no image, exception",
-						BRIDGE_CAST([inException name], CFStringRef));
-	}
-	
-	// restore window position and visibility
-	if (NO == wasVisible)
-	{
-		[self orderOut:NSApp];
-		[self setFrameOrigin:oldFrameOrigin];
-	}
-	
-	return result;
-}
-
-
-/*!
-Forces the window to redo its layout and render itself again.
-
-(1.0)
-*/
-- (void)
-redisplay
-{
-	if (NO == self->resizeInProgress)
-	{
-		self->resizeInProgress = YES;
-		//NSDisableScreenUpdates();
-		[self fixViewFrame];
-		[self updateBackground];
-		//NSEnableScreenUpdates();
-		self->resizeInProgress = NO;
-	}
-}
-
-
-/*!
-Forces the window to render itself again.
-
-(1.0)
-*/
-- (void)
-updateBackground
-{
-	//NSDisableScreenUpdates();
-	// call superclass to avoid overridden version from this class
-	@autoreleasepool
-	{
-		[super setBackgroundColor:[self backgroundFrameImageAsColor]];
-	}
-	
-	if ([self isVisible])
-	{
-		[self display];
-		[self invalidateShadow];
-	}
-	//NSEnableScreenUpdates();
-}
-
-
-/*!
-Returns an NSView frame rectangle (relative to its window content
-view) appropriate for the specified window-relative frame and
-related parameters.
-
-This boundary is not completely visible to the user because the
-arrow and all of the space around the arrow appears in the frame
-rectangle too.
-
-This should be consistent with the calculations for the method
-"frameRectForViewRect:viewMargin:arrowHeight:side:".
-
-(1.1)
-*/
-+ (NSRect)
-viewRectForFrameRect:(NSRect)	aRect
-viewMargin:(float)				aViewMargin
-arrowHeight:(float)				anArrowHeight
-side:(Popover_Properties)		aSide
-{
-	float const		kOffsetArrowSide = (anArrowHeight + aViewMargin);
-	float const		kOffsetNonArrowSide = (aViewMargin);
-	NSRect	result = aRect;
-	
-	
-	switch (aSide)
-	{
-	case kPopover_PositionLeft:
-	case kPopover_PositionLeftTop:
-	case kPopover_PositionLeftBottom:
-		result.origin.x += kOffsetNonArrowSide;
-		result.origin.y += kOffsetNonArrowSide;
-		result.size.width -= (kOffsetNonArrowSide + kOffsetArrowSide);
-		result.size.height -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		break;
-	
-	case kPopover_PositionRight:
-	case kPopover_PositionRightTop:
-	case kPopover_PositionRightBottom:
-		result.origin.x += kOffsetArrowSide;
-		result.origin.y += kOffsetNonArrowSide;
-		result.size.width -= (kOffsetArrowSide + kOffsetNonArrowSide);
-		result.size.height -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		break;
-	
-	case kPopover_PositionBottom:
-	case kPopover_PositionBottomLeft:
-	case kPopover_PositionBottomRight:
-		result.origin.x += kOffsetNonArrowSide;
-		result.origin.y += kOffsetNonArrowSide;
-		result.size.width -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		result.size.height -= (kOffsetArrowSide + kOffsetNonArrowSide);
-		break;
-	
-	case kPopover_PositionTop:
-	case kPopover_PositionTopLeft:
-	case kPopover_PositionTopRight:
-	default:
-		result.origin.x += kOffsetNonArrowSide;
-		result.origin.y += kOffsetArrowSide;
-		result.size.width -= (kOffsetNonArrowSide + kOffsetNonArrowSide);
-		result.size.height -= (kOffsetNonArrowSide + kOffsetArrowSide);
-		break;
-	}
-	return result;
-}
-
-
-/*!
-Returns the window placement portion of the specified properties.
-
-(1.1)
-*/
-+ (Popover_Properties)
-windowPlacement:(Popover_Properties)	aFlagSet
-{
-	BOOL	result = (aFlagSet & kPopover_PropertyMaskPlaceFrame);
-	
-	
-	return result;
-}
+}// backgroundPath
 
 
 /*!
@@ -2071,9 +2083,9 @@ Returns the window placement portion of this popover’s properties.
 windowPlacement
 {
 	return [self.class windowPlacement:self->windowPropertyFlags];
-}
+}// windowPlacement
 
 
-@end // Popover_Window (Popover_WindowInternal)
+@end //} Popover_Window (Popover_WindowInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

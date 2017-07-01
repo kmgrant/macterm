@@ -180,15 +180,15 @@ frame appearance.
 	inWindow:(NSWindow*)_
 	vibrancy:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 
-// utilities
+// new methods: utilities
+	- (NSRect)
+	frameRectForViewRect:(NSRect)_;
 	- (void)
 	setStandardArrowProperties:(BOOL)_;
 	- (NSRect)
 	viewRectForFrameRect:(NSRect)_;
-	- (NSRect)
-	frameRectForViewRect:(NSRect)_;
 
-// window location
+// new methods: window location
 	- (void)
 	setPoint:(NSPoint)_
 	onSide:(Popover_Properties)_;
