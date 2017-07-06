@@ -48,7 +48,7 @@
 
 #pragma mark Types
 
-@interface PopoverManager_WC : NSWindowController //{
+@interface PopoverManager_WC : NSWindowController< Popover_ResizeDelegate > //{
 {
 @public
 	PopoverManager_Ref				selfRef;				// identical to address of structure, but typed as ref
@@ -98,11 +98,18 @@
 	idealArrowPositionForFrame:(NSRect)_
 	parentWindow:(NSWindow*)_;
 	- (void)
+	makeKeyAndOrderFront;
+	- (void)
+	makeKeyAndOrderFrontIfVisible;
+	- (void)
 	moveToIdealPosition;
 	- (void)
 	moveToIdealPositionAfterDelay:(float)_;
 	- (void)
-	popOver;
+	orderFrontIfVisible;
+	- (void)
+	popOverMakeKey:(BOOL)_
+	forceVisible:(BOOL)_;
 	- (void)
 	popUnder;
 	- (void)
@@ -357,13 +364,22 @@ receiveWindowActivationChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 			{
 				[windowController popUnder];
 			}
+			else if (kPopoverManager_BehaviorTypeFloating == windowController->behaviorType)
+			{
+				[windowController orderFrontIfVisible];
+			}
 		}
 		else
 		{
 			// allow other normal windows to sit above background popovers
-			//if (kPopoverManager_BehaviorTypeDialog == windowController->behaviorType)
+			if (kPopoverManager_BehaviorTypeDialog == windowController->behaviorType)
 			{
-				[windowController popOver];
+				[windowController makeKeyAndOrderFrontIfVisible];
+				HiliteWindow(windowController->parentCarbonWindow, false);
+			}
+			else if (kPopoverManager_BehaviorTypeFloating == windowController->behaviorType)
+			{
+				[windowController orderFrontIfVisible];
 				HiliteWindow(windowController->parentCarbonWindow, false);
 			}
 		}
@@ -441,7 +457,11 @@ receiveWindowGetClickActivation		(EventHandlerCallRef		inHandlerCallRef,
 		// the popover should remain on top
 		if (kPopoverManager_BehaviorTypeDialog == windowController->behaviorType)
 		{
-			[windowController popOver];
+			[windowController makeKeyAndOrderFrontIfVisible];
+		}
+		else if (kPopoverManager_BehaviorTypeFloating == windowController->behaviorType)
+		{
+			[windowController orderFrontIfVisible];
 		}
 	}
 	
@@ -482,7 +502,11 @@ receiveWindowGetClickModality	(EventHandlerCallRef		inHandlerCallRef,
 		// the popover should remain on top
 		if (kPopoverManager_BehaviorTypeDialog == windowController->behaviorType)
 		{
-			[windowController popOver];
+			[windowController makeKeyAndOrderFrontIfVisible];
+		}
+		else if (kPopoverManager_BehaviorTypeFloating == windowController->behaviorType)
+		{
+			[windowController orderFrontIfVisible];
 		}
 	}
 	
@@ -590,11 +614,12 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		}
 	#endif
 		
-		self->selfRef = (PopoverManager_Ref)self;
+		self->selfRef = STATIC_CAST(self, PopoverManager_Ref);
 		self->delegatePtr = new MemoryBlocks_WeakPairWrap< PopoverManager_WC*, id >(self);
 		self->delegatePtr->assign(anObject);
 		self->containerWindow = aPopover;
 		[self->containerWindow retain];
+		self->containerWindow.resizeDelegate = self;
 		self->logicalFirstResponder = aView;
 		self->animationType = animationSpec;
 		self->behaviorType = behaviorSpec;
@@ -775,7 +800,7 @@ display
 		break;
 	}
 	[[self parentCocoaWindow] addChildWindow:self->containerWindow ordered:NSWindowAbove];
-	[self popOver];
+	[self makeKeyAndOrderFront];
 }// display
 
 
@@ -796,7 +821,8 @@ idealAnchorPointForFrame:(NSRect)	parentFrame
 parentWindow:(NSWindow*)			parentWindow
 {
 #pragma unused(parentWindow)
-	NSPoint		result = [self->delegatePtr->returnTargetRef() idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
+	NSPoint		result = [self->delegatePtr->returnTargetRef()
+							popoverManager:self->selfRef idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
@@ -814,7 +840,8 @@ IMPORTANT:	This must be implemented by the delegate.
 idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
-	Popover_Properties	result = [self->delegatePtr->returnTargetRef() idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
+	Popover_Properties	result = [self->delegatePtr->returnTargetRef()
+									popoverManager:self->selfRef idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
@@ -833,8 +860,10 @@ See also "setToIdealSize".
 - (NSSize)
 idealSize
 {
-	NSSize		result = [self->delegatePtr->returnTargetRef() idealSize];
+	NSSize		result = NSMakeSize(100, 100); // arbitrary (delegate must override)
 	
+	
+	[self->delegatePtr->returnTargetRef() popoverManager:self->selfRef getIdealSize:&result];
 	
 	return result;
 }// idealSize
@@ -850,6 +879,37 @@ isVisible
 {
 	return [self->containerWindow isVisible];
 }// isVisible
+
+
+/*!
+Moves the popover window to the appropriate window level,
+orders it in front and gives it keyboard focus.
+
+See also "makeKeyAndOrderFrontIfVisible".
+
+(2017.06)
+*/
+- (void)
+makeKeyAndOrderFront
+{
+	[self popOverMakeKey:YES forceVisible:YES];
+}// makeKeyAndOrderFront
+
+
+/*!
+If the popover is visible, moves it to the appropriate window
+level, orders it in front and gives it keyboard focus;
+otherwise, does nothing.
+
+See also "orderFrontIfVisible".
+
+(2017.06)
+*/
+- (void)
+makeKeyAndOrderFrontIfVisible
+{
+	[self popOverMakeKey:YES forceVisible:NO];
+}// makeKeyAndOrderFrontIfVisible
 
 
 /*!
@@ -905,6 +965,19 @@ moveToIdealPositionAfterDelay:(float)	aDelayInSeconds
 
 
 /*!
+If the popover is visible, moves it to the appropriate window
+level and orders it in front; otherwise, does nothing.
+
+(2017.06)
+*/
+- (void)
+orderFrontIfVisible
+{
+	[self popOverMakeKey:NO forceVisible:NO];
+}// orderFrontIfVisible
+
+
+/*!
 Returns the Cocoa window that represents the parent
 window, even if that is a Carbon window.
 
@@ -928,30 +1001,47 @@ parentCocoaWindow
 
 
 /*!
-Moves the popover window to the appropriate window level
-and gives it the keyboard focus.
+If the popover is visible or "aForceVisibleFlag" is YES,
+moves the popover window to the appropriate window level
+and orders it in front.  Also sets the keyboard focus if
+requested.
 
-(2.7)
+Although you can call this directly in special cases, it
+is probably more convenient to use the methods that
+delegate to this one, like "makeKeyAndOrderFrontIfVisible".
+
+(2017.06)
 */
 - (void)
-popOver
+popOverMakeKey:(BOOL)	aBecomeKeyFlag
+forceVisible:(BOOL)		aForceVisibleFlag
 {
-#if POPOVER_MANAGER_SUPPORTS_CARBON
-	// TEMPORARY; in Carbon-Cocoa hybrid environments popovers do not necessarily
-	// handle the parent window correctly in all situations, so the simplest
-	// solution is just to force the parent window to deactivate (in the future
-	// when all windows are pure Cocoa, it should be very easy to support cases
-	// where popovers do not dim their parent windows at any time)
-	if (nil != self->parentCarbonWindow)
+	if ([self isVisible] || (aForceVisibleFlag))
 	{
-		UNUSED_RETURN(OSStatus)ActivateWindow(self->parentCarbonWindow, false/* activate */);
+	#if POPOVER_MANAGER_SUPPORTS_CARBON
+		// TEMPORARY; in Carbon-Cocoa hybrid environments popovers do not necessarily
+		// handle the parent window correctly in all situations, so the simplest
+		// solution is just to force the parent window to deactivate (in the future
+		// when all windows are pure Cocoa, it should be very easy to support cases
+		// where popovers do not dim their parent windows at any time)
+		if (nil != self->parentCarbonWindow)
+		{
+			UNUSED_RETURN(OSStatus)ActivateWindow(self->parentCarbonWindow, false/* activate */);
+		}
+	#endif
+		
+		[self->containerWindow setLevel:([[self parentCocoaWindow] level] + 1)];
+		if (aBecomeKeyFlag)
+		{
+			[self->containerWindow makeFirstResponder:self->logicalFirstResponder];
+			[self->containerWindow makeKeyAndOrderFront:nil];
+		}
+		else
+		{
+			[self->containerWindow orderFront:nil];
+		}
 	}
-#endif
-	
-	[self->containerWindow setLevel:([[self parentCocoaWindow] level] + 1)];
-	[self->containerWindow makeFirstResponder:self->logicalFirstResponder];
-	[self->containerWindow makeKeyAndOrderFront:nil];
-}// popOver
+}// popOverMakeKey:forceVisible:
 
 
 /*!
@@ -1120,14 +1210,11 @@ size of its content view.
 - (void)
 setToIdealSize
 {
-	NSRect		parentFrame = [self->containerWindow frame];
-	NSSize		newSize = [self idealSize];
+	NSRect		parentFrame = [self->containerWindow frameRectForViewSize:[self idealSize]];
 	
-	
-	parentFrame.size.width = newSize.width;
-	parentFrame.size.height = newSize.height;
 	
 	[self->containerWindow setFrame:parentFrame display:NO];
+	self->containerWindow.minSize = parentFrame.size;
 }// setToIdealSize
 
 
@@ -1183,6 +1270,36 @@ changeFont:(id)		sender
 }// changeFont:
 
 
+#pragma mark Popover_ResizeDelegate
+
+
+/*!
+Assists the dynamic resize of a popover window by indicating
+whether or not there are per-axis constraints on resizing.
+
+This is implemented by using the similar method from
+PopoverManager_Delegate.
+
+(2017.05)
+*/
+- (void)
+popover:(Popover_Window*)			aPopover
+getHorizontalResizeAllowed:(BOOL*)	outHorizontalFlagPtr
+getVerticalResizeAllowed:(BOOL*)	outVerticalFlagPtr
+{
+#pragma unused(aPopover)
+	id		delegate = self->delegatePtr->returnTargetRef();
+	
+	
+	if ([delegate respondsToSelector:@selector(popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:)])
+	{
+		[delegate popoverManager:self->selfRef
+									getHorizontalResizeAllowed:outHorizontalFlagPtr
+									getVerticalResizeAllowed:outVerticalFlagPtr];
+	}
+}// popover:getHorizontalResizeAllowed:getVerticalResizeAllowed:
+
+
 #pragma mark Notifications
 
 
@@ -1196,9 +1313,9 @@ other applications.
 applicationDidBecomeActive:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	if ([self isVisible] && [self->containerWindow isKeyWindow])
+	if ([self->containerWindow isKeyWindow])
 	{
-		[self popOver];
+		[self makeKeyAndOrderFrontIfVisible];
 	}
 }// applicationDidBecomeActive:
 
@@ -1234,14 +1351,17 @@ parentWindowDidBecomeKey:(NSNotification*)		aNotification
 	
 	if (newKeyWindow == [self parentCocoaWindow])
 	{
-		//if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
 			// allow other normal windows to sit above background popovers
-			if ([self isVisible])
-			{
-				[self popOver];
-				// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
-			}
+			[self makeKeyAndOrderFrontIfVisible];
+			// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
+		}
+		else if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+		{
+			// allow other normal windows to sit above background popovers
+			[self makeKeyAndOrderFrontIfVisible];
+			// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
 		}
 	}
 }// parentWindowDidBecomeKey:
@@ -1375,6 +1495,15 @@ windowDidResignKey:(NSNotification*)		aNotification
 					}
 				}
 			#endif
+			}
+		}
+		else if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+		{
+			// floating windows stay on top but relinquish focus
+			removePopover = NO;
+			if ([self isVisible])
+			{
+				[self orderFrontIfVisible];
 			}
 		}
 		

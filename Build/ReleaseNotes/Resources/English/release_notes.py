@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170705',
     '20170627',
     '20170607',
     '20170515',
@@ -573,6 +574,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170705': [
+        'Popover windows and sheets can now be resized.',
+        'Popover window and sheet appearances have been slightly tweaked.',
+        'Find dialog now spawns a window with a more normal button layout.',
+        'Rename dialog now spawns a window with a more normal button layout.',
+        'Server Browser expanded layout has slightly changed.',
+    ],
     '20170627': [
         'Fixed a possible crash triggered by moving the parent window of a sheet.',
         'Fixed a possible crash triggered by immediately closing a sheet that had just opened.',

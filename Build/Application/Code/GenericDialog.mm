@@ -113,18 +113,6 @@ typedef MemoryBlockReferenceLocker< GenericDialog_Ref, My_GenericDialog >	My_Gen
 
 
 /*!
-This view ensures that the arrow cursor is used.
-*/
-@interface GenericDialog_ContentView : NSBox //{
-
-// NSView
-	- (void)
-	resetCursorRects;
-
-@end //}
-
-
-/*!
 This view can be used to debug the boundaries of
 the panel.
 */
@@ -356,16 +344,18 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 				if (nil == ptr->popoverWindow)
 				{
 					newPopoverWindow = [[Popover_Window alloc] initWithView:ptr->containerViewManager.managedView
-																			style:((ptr->isAlert)
-																					? ((shouldRunModal)
-																						? kPopover_WindowStyleAlertAppModal
-																						: kPopover_WindowStyleAlertSheet)
-																					: ((shouldRunModal)
-																						? kPopover_WindowStyleDialogAppModal
-																						: kPopover_WindowStyleDialogSheet))
+																			windowStyle:((ptr->isAlert)
+																						? ((shouldRunModal)
+																							? kPopover_WindowStyleAlertAppModal
+																							: kPopover_WindowStyleAlertSheet)
+																						: ((shouldRunModal)
+																							? kPopover_WindowStyleDialogAppModal
+																							: kPopover_WindowStyleDialogSheet))
+																			arrowStyle:kPopover_ArrowStyleNone
 																			attachedToPoint:NSMakePoint(0, 0)/* TEMPORARY */
 																			inWindow:[ptr->modalToView window]];
 					ptr->popoverWindow = newPopoverWindow;
+					ptr->popoverWindow.arrowHeight = 0;
 					
 					// make application-modal windows movable
 					if (shouldRunModal)
@@ -403,6 +393,18 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 				}
 				
 				ptr->containerViewManager.cleanupBlock = inImplementationReleaseBlock;
+				
+				// apply size constraints to the window as appropriate
+				{
+					NSSize		idealSize = ptr->popoverWindow.frame.size;
+					NSRect		idealFrame = ptr->popoverWindow.frame;
+					
+					
+					[ptr->containerViewManager.delegate panelViewManager:ptr->containerViewManager requestingIdealSize:&idealSize];
+					idealFrame = [ptr->popoverWindow frameRectForViewSize:idealSize];
+					ptr->popoverWindow.minSize = idealFrame.size;
+					[ptr->popoverWindow setFrame:idealFrame display:NO];
+				}
 				
 				[ptr->containerViewManager.delegate panelViewManager:ptr->containerViewManager willChangePanelVisibility:kPanel_VisibilityDisplayed];
 				PopoverManager_DisplayPopover(ptr->popoverManager);
@@ -774,29 +776,6 @@ loadViewManager ()
 
 
 #pragma mark -
-@implementation GenericDialog_ContentView //{
-
-
-#pragma mark NSView
-
-
-/*!
-Sets the cursor to an arrow when the mouse is over the
-dialog window’s content view.
-
-(2016.05)
-*/
-- (void)
-resetCursorRects
-{
-	[self addCursorRect:self.bounds cursor:[NSCursor arrowCursor]];
-}// resetCursorRects
-
-
-@end //}
-
-
-#pragma mark -
 @implementation GenericDialog_PanelView //{
 
 
@@ -1111,7 +1090,7 @@ didLoadContainerView:(NSView*)			aContainerView
 	assert(aViewManager == self);
 	assert(aContainerView == self.managedView);
 	
-	[self whenObject:self->viewContainer postsNote:NSViewFrameDidChangeNotification
+	[self whenObject:self.managedView.window postsNote:NSWindowDidResizeNotification
 						performSelector:@selector(parentViewFrameDidChange:)];
 	[self whenObject:self->mainViewManager.delegate postsNote:kPanel_IdealSizeDidChangeNotification
 						performSelector:@selector(childViewIdealSizeDidChange:)];
@@ -1177,9 +1156,21 @@ Specifies a sensible width and height for this panel.
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
-#pragma unused(aViewManager)
-	// copy the size used for the popover
-	*outIdealSize = [self idealSize];
+	NSWindow*	viewWindow = aViewManager.view.window;
+	NSSize		popoverFrameSize = viewWindow.frame.size;
+	
+	
+	*outIdealSize = popoverFrameSize; // set a default in case the queries fail below
+	
+	// copy the size of the main view in the popover
+	[self popoverManager:nil getIdealSize:&popoverFrameSize];
+	{
+		NSRect		mockFrame = NSMakeRect(0, 0, popoverFrameSize.width, popoverFrameSize.height);
+		NSRect		contentFrame = [viewWindow contentRectForFrameRect:mockFrame];
+		
+		
+		*outIdealSize = contentFrame.size;
+	}
 }// panelViewManager:requestingIdealSize:
 
 
@@ -1460,15 +1451,53 @@ panelResizeAxes
 
 
 /*!
+Assists the dynamic resize of a popover window by indicating
+whether or not there are per-axis constraints on resizing.
+
+(2017.05)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getHorizontalResizeAllowed:(BOOL*)		outHorizontalFlagPtr
+getVerticalResizeAllowed:(BOOL*)		outVerticalFlagPtr
+{
+#pragma unused(aPopoverManager)
+	Panel_ResizeConstraint const	kConstraints = [self panelResizeAxes];
+	
+	
+	*outHorizontalFlagPtr = ((kPanel_ResizeConstraintHorizontal == kConstraints) ||
+								(kPanel_ResizeConstraintBothAxes == kConstraints));
+	*outVerticalFlagPtr = ((kPanel_ResizeConstraintVertical == kConstraints) ||
+								(kPanel_ResizeConstraintBothAxes == kConstraints));
+}// popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:
+
+
+/*!
+Returns the dimensions the popover should initially have.
+
+(2017.05)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getIdealSize:(NSSize*)					outSizePtr
+{
+#pragma unused(aPopoverManager)
+	*outSizePtr = self->initialPanelSize;
+}// popoverManager:getIdealSize:
+
+
+/*!
 Returns the proper position of the popover arrow tip (if any),
 relative to its parent window; also called during window resizing.
 
 (4.1)
 */
 - (NSPoint)
-idealAnchorPointForFrame:(NSRect)	parentFrame
-parentWindow:(NSWindow*)			parentWindow
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealAnchorPointForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
+#pragma unused(aPopoverManager)
 	NSPoint		result = NSMakePoint(0, 0);
 	
 	
@@ -1521,7 +1550,7 @@ parentWindow:(NSWindow*)			parentWindow
 	}
 	
 	return result;
-}// idealAnchorPointForFrame:parentWindow:
+}// popoverManager:idealAnchorPointForFrame:parentWindow:
 
 
 /*!
@@ -1530,28 +1559,17 @@ Returns the desired popover arrow placement.
 (4.1)
 */
 - (Popover_Properties)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
 idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame, parentWindow)
+#pragma unused(aPopoverManager, parentFrame, parentWindow)
 	Popover_Properties		result = (kPopover_PropertyArrowMiddle |
 										kPopover_PropertyPlaceFrameBelowArrow);
 	
 	
 	return result;
-}// idealArrowPositionForFrame:parentWindow:
-
-
-/*!
-Returns the dimensions the popover should initially have.
-
-(4.1)
-*/
-- (NSSize)
-idealSize
-{
-	return self->initialPanelSize;
-}// idealSize
+}// popoverManager:idealArrowPositionForFrame:parentWindow:
 
 
 #pragma mark NSColorPanel

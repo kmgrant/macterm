@@ -1835,7 +1835,7 @@ IMPORTANT:	This is only a hint.  Panels must be prepared
 - (Panel_ResizeConstraint)
 panelResizeAxes
 {
-	return kPanel_ResizeConstraintVertical;
+	return kPanel_ResizeConstraintNone;
 }// panelResizeAxes
 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -40,15 +40,15 @@
                 </menuItem>
             </items>
         </menu>
-        <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View">
-            <rect key="frame" x="0.0" y="0.0" width="541" height="61"/>
+        <box autoresizesSubviews="NO" misplaced="YES" borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View">
+            <rect key="frame" x="0.0" y="0.0" width="541" height="70"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <view key="contentView" id="zSs-NM-dSR">
-                <rect key="frame" x="0.0" y="0.0" width="541" height="61"/>
+                <rect key="frame" x="0.0" y="0.0" width="541" height="70"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="185" customClass="CoreUI_HelpButton">
-                        <rect key="frame" x="13" y="24" width="25" height="25"/>
+                        <rect key="frame" x="13" y="33" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="198">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -58,9 +58,9 @@
                             <action selector="performContextSensitiveHelp:" target="-2" id="d6s-3P-PP1"/>
                         </connections>
                     </button>
-                    <searchField wantsLayer="YES" verticalHuggingPriority="750" id="191" customClass="FindDialog_SearchField">
-                        <rect key="frame" x="43" y="26" width="221" height="22"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <searchField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="191" customClass="FindDialog_SearchField">
+                        <rect key="frame" x="43" y="35" width="299" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Live Search" bezelStyle="round" sendsSearchStringImmediately="YES" maximumRecents="10" id="192">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -75,15 +75,15 @@
                             <outlet property="viewManager" destination="-2" id="CXU-Ha-zSR"/>
                         </connections>
                     </searchField>
-                    <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="216">
-                        <rect key="frame" x="272" y="29" width="16" height="16"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="216">
+                        <rect key="frame" x="350" y="38" width="16" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <connections>
                             <binding destination="-2" name="hidden" keyPath="self.searchProgressHidden" id="218"/>
                         </connections>
                     </progressIndicator>
                     <button verticalHuggingPriority="750" id="mrc-hN-Jzt">
-                        <rect key="frame" x="44" y="-1" width="115" height="19"/>
+                        <rect key="frame" x="44" y="8" width="115" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="recessed" title="Current Window" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="UMk-wU-g7d">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -100,10 +100,10 @@
                             </binding>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="Pf2-qq-wXH">
-                        <rect key="frame" x="167" y="-1" width="97" height="19"/>
+                    <button verticalHuggingPriority="750" misplaced="YES" id="Pf2-qq-wXH">
+                        <rect key="frame" x="167" y="8" width="30" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="recessed" title="All Terminals" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cfc-51-ciR">
+                        <buttonCell key="cell" type="recessed" title="All" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cfc-51-ciR">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold" size="12"/>
                         </buttonCell>
@@ -117,23 +117,9 @@
                             </binding>
                         </connections>
                     </button>
-                    <button id="xEh-gR-ZXh">
-                        <rect key="frame" x="312" y="2" width="212" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Case-insensitive (A=a)" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="qJk-AF-HcI">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                            <connections>
-                                <binding destination="-2" name="value" keyPath="self.caseInsensitiveSearch" id="vPc-jk-PAW"/>
-                            </connections>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.caseInsensitiveSearch" id="o7j-te-bOu"/>
-                        </connections>
-                    </button>
-                    <textField verticalHuggingPriority="750" id="vuI-97-oC9">
-                        <rect key="frame" x="313" y="29" width="189" height="14"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="vuI-97-oC9">
+                        <rect key="frame" x="372" y="12" width="156" height="14"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="-" id="xQN-PX-OkS">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -144,16 +130,59 @@
                             <binding destination="-2" name="value" keyPath="self.statusText" id="21X-Ux-b3P"/>
                         </connections>
                     </textField>
-                    <imageView id="cws-Sm-u4V">
-                        <rect key="frame" x="292" y="30" width="16" height="16"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <imageView misplaced="YES" id="cws-Sm-u4V">
+                        <rect key="frame" x="350" y="12" width="16" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="IconForCaution" id="wYr-4M-wmh"/>
                         <connections>
                             <binding destination="-2" name="hidden" keyPath="self.successfulSearch" id="LKh-UQ-GNW"/>
                         </connections>
                     </imageView>
+                    <button verticalHuggingPriority="750" misplaced="YES" id="UVR-wu-6oq">
+                        <rect key="frame" x="449" y="28" width="83" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Search" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RSs-18-FQZ">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performCloseAndSearch:" target="-2" id="Ngb-by-g6Y"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" misplaced="YES" id="b6Z-QK-Py2">
+                        <rect key="frame" x="368" y="28" width="82" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ebE-aU-y6U">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performCloseAndRevert:" target="-2" id="BSE-dq-D3G"/>
+                        </connections>
+                    </button>
+                    <button misplaced="YES" id="xEh-gR-ZXh">
+                        <rect key="frame" x="272" y="10" width="72" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="A=a" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="qJk-AF-HcI">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <connections>
+                                <binding destination="-2" name="value" keyPath="self.caseInsensitiveSearch" id="vPc-jk-PAW"/>
+                            </connections>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="self.caseInsensitiveSearch" id="o7j-te-bOu"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="131.5" y="313"/>
         </box>
         <userDefaultsController representsSharedInstance="YES" id="3XC-uQ-s0w"/>
     </objects>

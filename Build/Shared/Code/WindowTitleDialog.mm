@@ -64,6 +64,7 @@ Manages the rename-window user interface.
 	NSWindow*									_targetCocoaWindow;		// the window to be renamed, if Cocoa
 #if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
 	HIWindowRef									_targetCarbonWindow;		// the window to be renamed, if Carbon
+	NSSize										_idealSize;				// minimum size of the managed view
 #endif
 	BOOL										_animated;				// YES if there should be animation when opening/closing
 	PopoverManager_Ref							_popoverMgr;				// manages common aspects of popover window behavior
@@ -106,27 +107,10 @@ Manages the rename-window user interface.
 	renamedCocoaWindow;
 
 // PopoverManager_Delegate
-	- (NSPoint)
-	idealAnchorPointForFrame:(NSRect)_
-	parentWindow:(NSWindow*)_;
-	- (Popover_Properties)
-	idealArrowPositionForFrame:(NSRect)_
-	parentWindow:(NSWindow*)_;
-	- (NSSize)
-	idealSize;
+	// (undeclared)
 
 // WindowTitleDialog_VCDelegate
-	- (void)
-	titleDialog:(WindowTitleDialog_VC*)_
-	didLoadManagedView:(NSView*)_;
-	- (void)
-	titleDialog:(WindowTitleDialog_VC*)_
-	didFinishUsingManagedView:(NSView*)_
-	acceptingRename:(BOOL)_
-	finalTitle:(NSString*)_;
-	- (NSString*)
-	titleDialog:(WindowTitleDialog_VC*)_
-	returnInitialTitleTextForManagedView:(NSView*)_;
+	// (undeclared)
 
 @end //}
 
@@ -304,6 +288,7 @@ whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
 		_targetCarbonWindow = aCarbonWindow;
 	#endif
 		_popoverMgr = nullptr;
+		_idealSize = NSZeroSize; // set later
 		_animated = anAnimationFlag;
 		_initBlock = Block_copy(anInitBlock);
 		_closeNotifyBlock = Block_copy(aFinalBlock);
@@ -458,6 +443,37 @@ renamedCocoaWindow
 
 
 /*!
+Assists the dynamic resize of a popover window by indicating
+whether or not there are per-axis constraints on resizing.
+
+(2017.05)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getHorizontalResizeAllowed:(BOOL*)		outHorizontalFlagPtr
+getVerticalResizeAllowed:(BOOL*)		outVerticalFlagPtr
+{
+#pragma unused(aPopoverManager)
+	*outHorizontalFlagPtr = YES;
+	*outVerticalFlagPtr = NO;
+}// popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:
+
+
+/*!
+Returns the initial view size for the popover.
+
+(2017.05)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getIdealSize:(NSSize*)					outSizePtr
+{
+#pragma unused(aPopoverManager)
+	*outSizePtr = _idealSize;
+}// popoverManager:getIdealSize:
+
+
+/*!
 Returns the location (relative to the window) where the
 popover’s arrow tip should appear.  The location of the
 popover itself depends on the arrow placement chosen by
@@ -466,9 +482,11 @@ popover itself depends on the arrow placement chosen by
 (4.0)
 */
 - (NSPoint)
-idealAnchorPointForFrame:(NSRect)	parentFrame
-parentWindow:(NSWindow*)			parentWindow
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealAnchorPointForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
+#pragma unused(aPopoverManager)
 	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
 	NSRect		managedViewFrame = [_managedView frame];
 	NSPoint		result = NSMakePoint(CGFLOAT_DIV_2(parentFrame.size.width), parentFrame.size.height - 12/* arbitrary */);
@@ -484,7 +502,7 @@ parentWindow:(NSWindow*)			parentWindow
 		result.y -= managedViewFrame.size.height; // arbitrary; force the popover to be onscreen
 	}
 	return result;
-}// idealAnchorPointForParentWindowFrame:
+}// popoverManager:idealAnchorPointForFrame:parentWindow:
 
 
 /*!
@@ -493,31 +511,16 @@ Returns arrow placement information for the popover.
 (4.0)
 */
 - (Popover_Properties)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
 idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame, parentWindow)
+#pragma unused(aPopoverManager, parentFrame, parentWindow)
 	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
 	
 	
 	return result;
-}// idealArrowPositionForParentWindowFrame:
-
-
-/*!
-Returns the initial size for the popover.
-
-(4.0)
-*/
-- (NSSize)
-idealSize
-{
-	NSRect		frameRect = [_containerWindow frameRectForViewRect:[_managedView frame]];
-	NSSize		result = frameRect.size;
-	
-	
-	return result;
-}// idealSize
+}// popoverManager:idealArrowPositionForFrame:parentWindow:
 
 
 #pragma mark WindowTitleDialog_VCDelegate
@@ -551,11 +554,12 @@ didLoadManagedView:(NSView*)			aManagedView
 		}
 		
 		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																style:kPopover_WindowStyleDialogSheet
+																windowStyle:kPopover_WindowStyleDialogSheet
+																arrowStyle:kPopover_ArrowStyleDefaultRegularSize
 																attachedToPoint:NSZeroPoint/* see delegate */
 																inWindow:asNSWindow];
+		_idealSize = [_managedView frame].size;
 		[_containerWindow setReleasedWhenClosed:NO];
-		[_containerWindow setStandardArrowProperties:YES];
 	#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
 		if (nullptr != _targetCarbonWindow)
 		{

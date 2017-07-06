@@ -124,26 +124,10 @@ Manages the Server Browser user interface.
 	parentCocoaWindow;
 
 // PopoverManager_Delegate
-	- (NSPoint)
-	idealAnchorPointForFrame:(NSRect)_
-	parentWindow:(NSWindow*)_;
-	- (Popover_Properties)
-	idealArrowPositionForFrame:(NSRect)_
-	parentWindow:(NSWindow*)_;
-	- (NSSize)
-	idealSize;
+	// (undeclared)
 
 // ServerBrowser_VCDelegate
-	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	didLoadManagedView:(NSView*)_;
-	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	didFinishUsingManagedView:(NSView*)_;
-	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	setManagedView:(NSView*)_
-	toScreenFrame:(NSRect)_;
+	// (undeclared)
 
 @end //}
 
@@ -627,8 +611,8 @@ willPositionSheet:(NSWindow*)	sheet
 usingRect:(NSRect)				rect
 {
 #pragma unused(window, sheet)
-	NSRect	result = rect;
-	NSRect	someFrame = [_containerWindow frameRectForViewRect:NSZeroRect];
+	NSRect		result = rect;
+	NSRect		someFrame = [_containerWindow frameRectForViewSize:NSZeroSize];
 	
 	
 	// move an arbitrary distance away from the top edge
@@ -652,6 +636,38 @@ usingRect:(NSRect)				rect
 
 
 /*!
+Assists the dynamic resize of a popover window by indicating
+whether or not there are per-axis constraints on resizing.
+
+(2017.05)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getHorizontalResizeAllowed:(BOOL*)		outHorizontalFlagPtr
+getVerticalResizeAllowed:(BOOL*)		outVerticalFlagPtr
+{
+#pragma unused(aPopoverManager)
+	*outHorizontalFlagPtr = YES;
+	//*outVerticalFlagPtr = NO;
+	*outVerticalFlagPtr = YES;
+}// popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:
+
+
+/*!
+Returns the initial view size for the popover.
+
+(2017.05)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getIdealSize:(NSSize*)					outSizePtr
+{
+#pragma unused(aPopoverManager)
+	*outSizePtr = [_managedView frame].size;
+}// popoverManager:getIdealSize:
+
+
+/*!
 Returns the location (relative to the window) where the
 popover’s arrow tip should appear.  The location of the
 popover itself depends on the arrow placement chosen by
@@ -660,15 +676,16 @@ popover itself depends on the arrow placement chosen by
 (4.0)
 */
 - (NSPoint)
-idealAnchorPointForFrame:(NSRect)	parentFrame
-parentWindow:(NSWindow*)			parentWindow
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealAnchorPointForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame, parentWindow)
+#pragma unused(aPopoverManager, parentFrame, parentWindow)
 	NSPoint		result = NSMakePoint(_parentRelativeArrowTip.x, _parentRelativeArrowTip.y);
 	
 	
 	return result;
-}// idealAnchorPointForFrame:parentWindow:
+}// popoverManager:idealAnchorPointForFrame:parentWindow:
 
 
 /*!
@@ -677,31 +694,16 @@ Returns arrow placement information for the popover.
 (4.0)
 */
 - (Popover_Properties)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
 idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
-#pragma unused(parentFrame, parentWindow)
+#pragma unused(aPopoverManager, parentFrame, parentWindow)
 	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
 	
 	
 	return result;
-}// idealArrowPositionForFrame:parentWindow:
-
-
-/*!
-Returns the initial size for the popover.
-
-(4.0)
-*/
-- (NSSize)
-idealSize
-{
-	NSRect		frameRect = [_containerWindow frameRectForViewRect:[_managedView frame]];
-	NSSize		result = frameRect.size;
-	
-	
-	return result;
-}// idealSize
+}// popoverManager:idealArrowPositionForFrame:parentWindow:
 
 
 #pragma mark ServerBrowser_VCDelegate
@@ -732,7 +734,8 @@ didLoadManagedView:(NSView*)		aManagedView
 	if (nil == _containerWindow)
 	{
 		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																style:kPopover_WindowStyleNormal
+																windowStyle:kPopover_WindowStyleNormal
+																arrowStyle:kPopover_ArrowStyleDefaultRegularSize
 																attachedToPoint:NSZeroPoint/* see delegate */
 																inWindow:[self parentCocoaWindow]];
 		[_containerWindow setDelegate:self];
@@ -794,7 +797,7 @@ setManagedView:(NSView*)			aManagedView
 toScreenFrame:(NSRect)				aRect
 {
 #pragma unused(aBrowser, aManagedView)
-	NSRect	windowFrame = [_containerWindow frameRectForViewRect:aRect];
+	NSRect		windowFrame = [_containerWindow frameRectForViewSize:aRect.size];
 	
 	
 	[_containerWindow setFrame:windowFrame display:YES animate:YES];
@@ -1595,7 +1598,7 @@ setHidesDiscoveredHosts:(BOOL)		flag
 	_hidesDiscoveredHosts = flag;
 	if (flag)
 	{
-		Float32 const	kPersistentHeight = 200; // IMPORTANT: must agree with NIB layout!!!
+		Float32 const	kPersistentHeight = 250; // IMPORTANT: must agree with NIB layout!!!
 		Float32			deltaHeight = (kPersistentHeight - kOldFrame.size.height);
 		
 		

@@ -36,6 +36,23 @@
 #pragma mark Constants
 
 /*!
+Use these with "setStandardPropertiesForArrowStyle:" to
+create the specified standard arrow appearance.  See that
+method for more information on the affected properties.
+
+If you do not want an arrow at all, set the style to
+"kPopover_ArrowStyleNone".
+*/
+typedef enum
+{
+	kPopover_ArrowStyleNone					= 0,
+	kPopover_ArrowStyleDefaultRegularSize	= 1,
+	kPopover_ArrowStyleDefaultSmallSize		= 2,
+	kPopover_ArrowStyleDefaultMiniSize		= 3
+} Popover_ArrowStyle;
+
+
+/*!
 Window properties of the same type occupy the same bit range, but
 unrelated properties are in different ranges; they can therefore be
 combined.  For example, a window can be positioned to the left of
@@ -107,7 +124,7 @@ for producing standard appearances).  They only
 affect appearance and not behavior but you should
 ensure that the window behavior is consistent.
 */
-enum Popover_WindowStyle
+typedef enum
 {
 	kPopover_WindowStyleNormal			= 0,
 	kPopover_WindowStyleHelp			= 1,
@@ -115,10 +132,32 @@ enum Popover_WindowStyle
 	kPopover_WindowStyleDialogSheet		= 3,
 	kPopover_WindowStyleAlertAppModal	= 4,
 	kPopover_WindowStyleAlertSheet		= 5
-};
+} Popover_WindowStyle;
 
 
 #pragma mark Types
+
+@class Popover_Window;
+
+
+/*!
+This protocol helps the window-resizing code determine how
+to arrange and constrain the window while the user is
+dragging the mouse.
+*/
+@protocol Popover_ResizeDelegate < NSObject > //{
+
+@optional
+
+	// provide YES for one or both axes that should allow resizing to take place;
+	// if not implemented, the assumption is that the window can resize both ways
+	- (void)
+	popover:(Popover_Window*)_
+	getHorizontalResizeAllowed:(BOOL*)_
+	getVerticalResizeAllowed:(BOOL*)_;
+
+@end //}
+
 
 /*!
 A popover-style window that works on many versions of Mac OS X.
@@ -139,23 +178,36 @@ frame appearance.
 	NSMutableArray*			registeredObservers;
 	NSWindow*				popoverParentWindow;
 	NSView*					embeddedView;
-	NSImage*				_animationImage;
+	NSImage*				_animationContentImage;
+	NSImage*				_animationFullImage;
+	NSTrackingArea*			_trackTopEdge;
+	NSTrackingArea*			_trackLeftEdge;
+	NSTrackingArea*			_trackMainFrame;
+	NSTrackingArea*			_trackRightEdge;
+	NSTrackingArea*			_trackBottomEdge;
 	NSColor*				_borderOuterColor;
 	NSColor*				_borderPrimaryColor;
 	NSColor*				_borderOuterDisplayColor;
 	NSColor*				_borderPrimaryDisplayColor;
 	NSColor*				_popoverBackgroundColor;
-	NSRect					viewFrame;
-	float					arrowBaseWidth;
-	float					_arrowHeight;
-	float					borderWidth;
-	float					cornerRadius;
-	float					viewMargin;
-	BOOL					resizeInProgress;
-	BOOL					_hasArrow;
+	id< Popover_ResizeDelegate >	_resizeDelegate;
+	NSPoint					_userResizeClickScreenPoint;
+	CGFloat					_userResizeOriginalCenterX;
+	CGFloat					_arrowBaseWidth;
+	CGFloat					_arrowHeight;
+	CGFloat					_borderWidth;
+	CGFloat					_cornerRadius;
+	CGFloat					_viewMargin;
+	BOOL					_layoutInProgress;
+	BOOL					_allowHorizontalResize;
+	BOOL					_allowVerticalResize;
 	BOOL					_hasRoundCornerBesideArrow;
-	BOOL					isAutoPositioning;
-	Popover_Properties		windowPropertyFlags;
+	BOOL					_isBeingResizedByUser;
+	BOOL					_userResizeTop;
+	BOOL					_userResizeLeft;
+	BOOL					_userResizeRight;
+	BOOL					_userResizeBottom;
+	Popover_Properties		_windowPropertyFlags;
 }
 
 // initializers
@@ -170,23 +222,25 @@ frame appearance.
 	defer:(BOOL)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initWithView:(NSView*)_
-	style:(Popover_WindowStyle)_
+	windowStyle:(Popover_WindowStyle)_
+	arrowStyle:(Popover_ArrowStyle)_
 	attachedToPoint:(NSPoint)_
 	inWindow:(NSWindow*)_;
 	- (instancetype)
 	initWithView:(NSView*)_
-	style:(Popover_WindowStyle)_
+	windowStyle:(Popover_WindowStyle)_
+	arrowStyle:(Popover_ArrowStyle)_
 	attachedToPoint:(NSPoint)_
 	inWindow:(NSWindow*)_
 	vibrancy:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods: utilities
-	- (NSRect)
-	frameRectForViewRect:(NSRect)_;
 	- (void)
-	setStandardArrowProperties:(BOOL)_;
+	applyArrowStyle:(Popover_ArrowStyle)_;
+	- (void)
+	applyWindowStyle:(Popover_WindowStyle)_;
 	- (NSRect)
-	viewRectForFrameRect:(NSRect)_;
+	frameRectForViewSize:(NSSize)_;
 
 // new methods: window location
 	- (void)
@@ -205,19 +259,21 @@ frame appearance.
 	popoverBackgroundColor;
 
 // accessors: general
-	@property (assign) float
+	@property (assign) CGFloat
 	arrowBaseWidth;
-	@property (assign) float
+	@property (assign) CGFloat
 	arrowHeight;
-	@property (assign) float
+	@property (assign) CGFloat
 	borderWidth;
-	@property (assign) float
+	@property (assign) CGFloat
 	cornerRadius;
 	@property (assign) BOOL
 	hasRoundCornerBesideArrow;
-	@property (assign) BOOL
+	@property (readonly) BOOL
 	hasArrow;
-	@property (assign) float
+	@property (assign) id< Popover_ResizeDelegate >
+	resizeDelegate;
+	@property (assign) CGFloat
 	viewMargin;
 
 // NSWindow

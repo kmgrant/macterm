@@ -77,7 +77,8 @@ enum PopoverManager_AnimationType
 enum PopoverManager_BehaviorType
 {
 	kPopoverManager_BehaviorTypeStandard	= 0,	//!< popover can be implicitly dismissed
-	kPopoverManager_BehaviorTypeDialog		= 1		//!< popover can never be implicitly dismissed
+	kPopoverManager_BehaviorTypeDialog		= 1,	//!< popover can never be implicitly dismissed
+	kPopoverManager_BehaviorTypeFloating	= 2		//!< popover remains displayed above most other elements
 };
 
 #pragma mark Types
@@ -90,20 +91,34 @@ must conform to this protocol.
 */
 @protocol PopoverManager_Delegate //{
 
+@required
+
 	// return the proper position of the popover arrow tip (if any), relative
 	// to its parent window; also called during window resizing
 	- (NSPoint)
+	popoverManager:(PopoverManager_Ref)_
 	idealAnchorPointForFrame:(NSRect)_
 	parentWindow:(NSWindow*)_;
 
 	// return the desired popover arrow placement
 	- (Popover_Properties)
+	popoverManager:(PopoverManager_Ref)_
 	idealArrowPositionForFrame:(NSRect)_
 	parentWindow:(NSWindow*)_;
 
-	// return the dimensions the popover should initially have
-	- (NSSize)
-	idealSize;
+	// provide initial dimensions for popover
+	- (void)
+	popoverManager:(PopoverManager_Ref)_
+	getIdealSize:(NSSize*)_;
+
+@optional
+
+	// provide YES for one or both axes that should allow resizing to take place;
+	// if not implemented, the assumption is that the window can resize both ways
+	- (void)
+	popoverManager:(PopoverManager_Ref)_
+	getHorizontalResizeAllowed:(BOOL*)_
+	getVerticalResizeAllowed:(BOOL*)_;
 
 @end //}
 

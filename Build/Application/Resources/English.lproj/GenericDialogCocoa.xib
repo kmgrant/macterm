@@ -20,7 +20,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <box borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View" customClass="GenericDialog_ContentView">
+        <box borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View">
             <rect key="frame" x="0.0" y="0.0" width="468" height="52"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <view key="contentView" id="m3r-NZ-anf">
