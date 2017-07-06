@@ -88,10 +88,10 @@ window.
 void
 Localization_AdjustHelpNSButton		(NSButton*		inHelpButton)
 {
-	Float32		xOffset = 0;
-	Float32		yOffset = 15; // arbitrary
-	Float32		buttonWidth = NSWidth([inHelpButton frame]);
-	Float32		buttonHeight = NSHeight([inHelpButton frame]);
+	CGFloat		xOffset = 0;
+	CGFloat		yOffset = 15; // arbitrary
+	CGFloat		buttonWidth = NSWidth([inHelpButton frame]);
+	CGFloat		buttonHeight = NSHeight([inHelpButton frame]);
 	
 	
 	if (false == Localization_IsLeftToRight())
@@ -133,10 +133,10 @@ Localization_ArrangeNSButtonArray	(CFArrayRef		inNSButtonArray)
 	if ([asNSArray count] > 0)
 	{
 		NSButton*	firstButton = STATIC_CAST([asNSArray objectAtIndex:0], NSButton*);
-		Float32		defaultYOffset = [firstButton frame].origin.y;
-		Float32		xOffset = 0;
-		Float32		yOffset = defaultYOffset;
-		Float32		buttonHeight = NSHeight([firstButton frame]);
+		CGFloat		defaultYOffset = [firstButton frame].origin.y;
+		CGFloat		xOffset = 0;
+		CGFloat		yOffset = defaultYOffset;
+		CGFloat		buttonHeight = NSHeight([firstButton frame]);
 		
 		
 		if (false == Localization_IsLeftToRight())
@@ -144,10 +144,10 @@ Localization_ArrangeNSButtonArray	(CFArrayRef		inNSButtonArray)
 			// in right-to-left locales, the action buttons
 			// are anchored in the bottom-left corner and
 			// the default button is leftmost
-			xOffset = 20/* arbitrary but according to UI guidelines */;
+			xOffset = 20.0/* arbitrary but according to UI guidelines */;
 			for (NSButton* button in asNSArray)
 			{
-				UInt16		buttonWidth = Localization_AutoSizeNSButton(button);
+				CGFloat		buttonWidth = Localization_AutoSizeNSButton(button);
 				
 				
 				// in Cocoa the “frame” of a button appears to also
@@ -168,7 +168,7 @@ Localization_ArrangeNSButtonArray	(CFArrayRef		inNSButtonArray)
 			xOffset = NSWidth(parentFrame) - 20/* arbitrary but according to UI guidelines */;
 			for (NSButton* button in asNSArray)
 			{
-				UInt16		buttonWidth = Localization_AutoSizeNSButton(button);
+				CGFloat		buttonWidth = Localization_AutoSizeNSButton(button);
 				
 				
 				// in Cocoa the “frame” of a button appears to also
@@ -197,15 +197,15 @@ Note that this routine currently ignores other attributes of
 a button that might affect its layout, such as the presence
 of an image.
 
-(2.5)
+(2017.06)
 */
-UInt16
+CGFloat
 Localization_AutoSizeNSButton	(NSButton*		inButton,
-								 UInt16			inMinimumWidth,
+								 CGFloat		inMinimumWidth,
 								 Boolean		inResize)
 {
 @autoreleasepool {
-	UInt16		result = inMinimumWidth;
+	CGFloat		result = inMinimumWidth;
 	
 	
 	if (nil != inButton)
@@ -217,7 +217,7 @@ Localization_AutoSizeNSButton	(NSButton*		inButton,
 																	}].width;
 		
 		
-		result = STATIC_CAST(stringWidth + INTEGER_TIMES_2(MINIMUM_BUTTON_TITLE_CUSHION), UInt16);
+		result = (stringWidth + CGFLOAT_TIMES_2(MINIMUM_BUTTON_TITLE_CUSHION));
 		if (result < inMinimumWidth)
 		{
 			result = inMinimumWidth;

@@ -151,9 +151,9 @@ void
 void
 	Localization_ArrangeNSButtonArray			(CFArrayRef					inNSButtonArray);
 
-UInt16
+CGFloat
 	Localization_AutoSizeNSButton				(NSButton*					inButton,
-												 UInt16						inMinimumWidth = 92/* includes spacing */,
+												 CGFloat					inMinimumWidth = 92.0/* includes spacing */,
 												 Boolean					inResize = true);
 
 //@}
