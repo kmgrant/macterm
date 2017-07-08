@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170708',
     '20170705',
     '20170627',
     '20170607',
@@ -574,6 +575,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170708': [
+        'Fixed Print Preview keyboard focus chain (allowing the slider to be activated using the keyboard, for example).',
+        'Print Preview now shows only two decimal places for font sizes inserted by moving the slider.',
+    ],
     '20170705': [
         'Popover windows and sheets can now be resized.',
         'Popover window and sheet appearances have been slightly tweaked.',

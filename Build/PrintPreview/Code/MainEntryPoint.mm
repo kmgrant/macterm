@@ -433,7 +433,7 @@ landscape:(BOOL)			landscapeMode
 		previewFont = [aFont retain];
 		pageSetup = [NSPrintInfo sharedPrintInfo];
 		paperInfo = [[NSString string] retain];
-		[self setFontSize:[[NSNumber numberWithFloat:[previewFont pointSize]] stringValue]];
+		[self setFontSize:[NSString stringWithFormat:@"%.2f", STATIC_CAST([previewFont pointSize], float)]];
 		
 		// initialize the page setup to some values that are saner
 		// for printing terminal text
@@ -579,12 +579,16 @@ setFontSize:(NSString*)		aString
 {
 	if (aString != fontSize)
 	{
+		float const		kAsFloat = [aString floatValue];
+		NSString*		formattedString = [NSString stringWithFormat:@"%.2f", kAsFloat];
+		
+		
 		[fontSize release];
-		fontSize = [aString retain];
+		fontSize = [formattedString retain];
 		
 		if (nil != self->previewFont)
 		{
-			self->previewFont = [NSFont fontWithName:[self->previewFont fontName] size:[aString floatValue]];
+			self->previewFont = [NSFont fontWithName:[self->previewFont fontName] size:kAsFloat];
 			[self->previewPane setFont:self->previewFont];
 		}
 	}
