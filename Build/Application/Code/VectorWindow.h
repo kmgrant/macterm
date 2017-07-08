@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VECTORWINDOW__
-#define __VECTORWINDOW__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -195,7 +194,5 @@ VectorWindow_Result
 										 CFStringRef				inTitle);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

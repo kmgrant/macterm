@@ -37,8 +37,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSBASE__
-#define __QUILLSBASE__
+#pragma once
 
 // standard-C++ includes
 #include <string>
@@ -105,7 +104,5 @@ private:
 };
 
 } // namespace Quills
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

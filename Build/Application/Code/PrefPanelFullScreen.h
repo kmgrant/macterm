@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFPANELFULLSCREEN__
-#define __PREFPANELFULLSCREEN__
+#pragma once
 
 // application includes
 #include "Panel.h"
@@ -99,7 +98,5 @@ changes to an interface declared in a ".mm" file.
 
 Preferences_TagSetRef
 	PrefPanelFullScreen_NewTagSet	();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

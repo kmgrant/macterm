@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __DEBUGINTERFACE__
-#define __DEBUGINTERFACE__
+#pragma once
 
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
@@ -143,7 +142,5 @@ inline Boolean
 		return false;
 	#endif
 	}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

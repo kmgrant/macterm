@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MEMORYBLOCKLOCKER__
-#define __MEMORYBLOCKLOCKER__
+#pragma once
 
 // pseudo-standard-C++ includes
 #if __has_include(<tr1/unordered_map>)
@@ -364,7 +363,5 @@ const
 {
 	return &(this->operator *());
 }// operator -> const
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

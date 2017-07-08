@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSTERMINAL__
-#define __QUILLSTERMINAL__
+#pragma once
 
 // standard-C++ includes
 #include <stdexcept>
@@ -144,7 +143,5 @@ returned range should surround the original offset location.\n\
 #endif
 
 } // namespace Quills
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

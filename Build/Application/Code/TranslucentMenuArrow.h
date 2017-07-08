@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TRANSLUCENTMENUARROW__
-#define __TRANSLUCENTMENUARROW__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -75,9 +74,5 @@ menu arrow view.
 @end //}
 
 #endif // __OBJC__
-
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

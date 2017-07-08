@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFERENCEVALUE__
-#define __PREFERENCEVALUE__
+#pragma once
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -545,7 +544,5 @@ typically bound to a pop-up menu.
 	valueDescriptorArray; // binding
 
 @end //}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -57,8 +57,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFERENCES__
-#define __PREFERENCES__
+#pragma once
 
 // standard-C++ includes
 #include <vector>
@@ -776,9 +775,5 @@ a constructor that allows you to store pre-retained (e.g. newly
 allocated) contexts too.
 */
 typedef RetainRelease< _Preferences_ContextRefMgr >		Preferences_ContextWrap;
-
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

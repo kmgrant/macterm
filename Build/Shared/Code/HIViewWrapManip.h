@@ -41,8 +41,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __HIVIEWWRAPMANIP__
-#define __HIVIEWWRAPMANIP__
+#pragma once
 
 // standard-C++ includes
 #include <iostream>
@@ -402,9 +401,5 @@ operator <<		(HIViewWrap&					inoutView,
 	assert_noerr(error);
 	return inoutView;
 }// operator <<
-
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

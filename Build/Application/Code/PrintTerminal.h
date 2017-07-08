@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PRINTTERMINAL__
-#define __PRINTTERMINAL__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -100,7 +99,5 @@ PrintTerminal_Result
 											 HIWindowRef				inParentWindowOrNull);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -30,10 +30,9 @@
 
 ###############################################################*/
 
-#import <UniversalDefines.h>
+#include <UniversalDefines.h>
 
-#ifndef __MENUUTILITIES__
-#define __MENUUTILITIES__
+#pragma once
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -54,7 +53,5 @@ Replaces items named "-" (dash) with real separators.
 	menuNeedsUpdate:(NSMenu*)_;
 
 @end //}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

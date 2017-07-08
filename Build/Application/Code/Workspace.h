@@ -35,8 +35,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __WORKSPACE__
-#define __WORKSPACE__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -115,7 +114,5 @@ UInt16
 												 HIWindowRef				inWindow);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

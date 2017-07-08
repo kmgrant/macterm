@@ -33,13 +33,10 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALWINDOWREF__
-#define __TERMINALWINDOWREF__
+#pragma once
 
 #pragma mark Types
 
 typedef struct OpaqueTerminalWindow*	TerminalWindowRef;	//!< the primary type of window
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

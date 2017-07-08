@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __COMMONEVENTHANDLERS__
-#define __COMMONEVENTHANDLERS__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -427,7 +426,5 @@ const
 {
 	return _installed;
 }// isInstalled
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

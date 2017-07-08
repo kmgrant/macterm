@@ -42,8 +42,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALWINDOW__
-#define __TERMINALWINDOW__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -410,7 +409,5 @@ TerminalWindowRef
 	TerminalWindow_ReturnFromWindow					(WindowRef					inWindow);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

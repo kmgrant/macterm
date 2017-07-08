@@ -28,15 +28,12 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __HIVIEWWRAP_FWD__
-#define __HIVIEWWRAP_FWD__
+#pragma once
 
 
 
 #pragma mark Types
 
 class HIViewWrap;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

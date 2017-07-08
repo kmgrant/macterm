@@ -50,8 +50,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __COMMANDS__
-#define __COMMANDS__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -1050,7 +1049,5 @@ Commands_Result
 											 ListenerModel_ListenerRef	inCommandImplementor);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

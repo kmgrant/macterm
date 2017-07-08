@@ -28,8 +28,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __STRINGUTILITIES__
-#define __STRINGUTILITIES__
+#pragma once
 
 // standard-C++ includes
 #include <string>
@@ -57,7 +56,5 @@ void
 												 std::string&		outBuffer);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

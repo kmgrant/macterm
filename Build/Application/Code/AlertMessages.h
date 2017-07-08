@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __ALERTMESSAGES__
-#define __ALERTMESSAGES__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -299,8 +298,6 @@ void
 										 CFStringRef				inNewText);
 
 //@}
-
-#endif
 
 
 

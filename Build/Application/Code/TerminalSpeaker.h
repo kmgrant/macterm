@@ -46,8 +46,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALSPEAKER__
-#define __TERMINALSPEAKER__
+#pragma once
 
 // application includes
 #include "TerminalScreenRef.typedef.h"
@@ -119,7 +118,5 @@ TerminalSpeaker_Result
 												 CFStringRef				inCFString);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

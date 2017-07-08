@@ -48,8 +48,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __SESSIONFACTORY__
-#define __SESSIONFACTORY__
+#pragma once
 
 // standard-C++ includes
 #include <vector>
@@ -348,7 +347,5 @@ void
 													 ListenerModel_ListenerRef		inListener);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __RANDOMWRAP__
-#define __RANDOMWRAP__
+#pragma once
 
 // standard-C includes
 #include <cstdlib>
@@ -98,7 +97,5 @@ const
 	result %= inDomain;
 	return result;
 }// operator ()
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

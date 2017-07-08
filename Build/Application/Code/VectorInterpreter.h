@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VECTORINTERPRETER__
-#define __VECTORINTERPRETER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -142,7 +141,5 @@ VectorInterpreter_Mode
 	VectorInterpreter_ReturnMode			(VectorInterpreter_Ref		inGraphicID);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

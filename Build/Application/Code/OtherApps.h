@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __OTHERAPPS__
-#define __OTHERAPPS__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -77,7 +76,5 @@ OtherApps_Result
 									 CFStringRef					inNameHintOrNull);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

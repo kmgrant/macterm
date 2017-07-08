@@ -37,8 +37,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALBACKGROUND__
-#define __TERMINALBACKGROUND__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -67,7 +66,5 @@ OSStatus
 										 CFStringRef	inImageURLOrNull = nullptr);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

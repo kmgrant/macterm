@@ -40,8 +40,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __HELPSYSTEM__
-#define __HELPSYSTEM__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -176,7 +175,5 @@ const
 {
 	return (kHelpSystem_ResultOK == _resultCode);
 }
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

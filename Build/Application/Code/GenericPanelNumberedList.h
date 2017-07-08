@@ -39,8 +39,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __GENERICPANELNUMBEREDLIST__
-#define __GENERICPANELNUMBEREDLIST__
+#pragma once
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -184,7 +183,5 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 #endif // __OBJC__
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

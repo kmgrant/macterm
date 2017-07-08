@@ -31,8 +31,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __COLORUTILITIES__
-#define __COLORUTILITIES__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -86,7 +85,5 @@ void
 	ColorUtilities_SetGrayPenPattern			();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

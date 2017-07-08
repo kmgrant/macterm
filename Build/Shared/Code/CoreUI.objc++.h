@@ -30,10 +30,9 @@
 
 ###############################################################*/
 
-#import <UniversalDefines.h>
+#include <UniversalDefines.h>
 
-#ifndef __COREUI__
-#define __COREUI__
+#pragma once
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -227,7 +226,5 @@ changes to an interface declared in a ".mm" file.
 @interface CoreUI_Table : NSTableView //{
 
 @end //}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

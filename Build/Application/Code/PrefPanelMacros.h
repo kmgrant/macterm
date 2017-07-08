@@ -41,8 +41,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFPANELMACROS__
-#define __PREFPANELMACROS__
+#pragma once
 
 // application includes
 #include "GenericPanelNumberedList.h"
@@ -203,7 +202,5 @@ changes to an interface declared in a ".mm" file.
 
 Preferences_TagSetRef
 	PrefPanelMacros_NewTagSet			();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

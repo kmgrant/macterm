@@ -38,8 +38,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSEVENTS__
-#define __QUILLSEVENTS__
+#pragma once
 
 // application includes
 #include "QuillsCallbacks.typedef.h"
@@ -114,7 +113,5 @@ you MUST call Base.all_done() to clean up application modules.\n\
 #endif
 
 } // namespace Quills
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

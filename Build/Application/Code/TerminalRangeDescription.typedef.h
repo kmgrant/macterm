@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALRANGEDESCRIPTION__
-#define __TERMINALRANGEDESCRIPTION__
+#pragma once
 
 #include "TerminalScreenRef.typedef.h"
 
@@ -50,7 +49,5 @@ struct Terminal_RangeDescription
 	UInt32				rowCount;			//!< number of rows the range covers (it is rectangular, not flush to the edges)
 };
 typedef Terminal_RangeDescription const*	Terminal_RangeDescriptionConstPtr;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

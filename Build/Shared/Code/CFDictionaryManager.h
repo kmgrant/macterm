@@ -30,8 +30,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CFDICTIONARYMANAGER__
-#define __CFDICTIONARYMANAGER__
+#pragma once
 
 // standard-C++ includes
 #include <stdexcept>
@@ -359,7 +358,5 @@ setCFMutableDictionaryRef	(CFMutableDictionaryRef		inDictionary)
 {
 	_dictionary.setMutableWithRetain(inDictionary);
 }// setCFMutableDictionaryRef
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

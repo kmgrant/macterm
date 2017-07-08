@@ -33,14 +33,11 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALVIEWREF__
-#define __TERMINALVIEWREF__
+#pragma once
 
 #pragma mark Types
 
 typedef struct OpaqueTerminalView*		TerminalViewRef;	//!< painting and interactive view of a
 															//!  terminal window
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

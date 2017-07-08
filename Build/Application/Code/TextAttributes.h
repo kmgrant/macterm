@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TEXTATTRIBUTES__
-#define __TEXTATTRIBUTES__
+#pragma once
 
 // library includes
 #include <Console.h>
@@ -1054,8 +1053,5 @@ const
 {
 	return inRange.returnValue(_upper, _lower);
 }// returnValueInRange
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

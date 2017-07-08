@@ -30,8 +30,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MEMORYBLOCKS__
-#define __MEMORYBLOCKS__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -111,8 +110,6 @@ void
 										 void*							inNewTarget);
 
 //@}
-
-#endif
 
 
 

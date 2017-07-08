@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CONTEXTSENSITIVEMENU__
-#define __CONTEXTSENSITIVEMENU__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -66,7 +65,5 @@ void
 	ContextSensitiveMenu_NewItemGroup			(CFStringRef		inTitleOrNull = nullptr);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

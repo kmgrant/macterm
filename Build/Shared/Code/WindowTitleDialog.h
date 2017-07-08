@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __WINDOWTITLEDIALOG__
-#define __WINDOWTITLEDIALOG__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -179,7 +178,5 @@ void
 
 void
 	WindowTitleDialog_Display						(WindowTitleDialog_Ref					inDialog);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

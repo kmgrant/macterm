@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __APPLEEVENTUTILITIES__
-#define __APPLEEVENTUTILITIES__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -94,7 +93,5 @@ OSErr
 Boolean
 	AppleEventUtilities_RetrieveReplyError			(AppleEventPtr			inReplyAppleEventPtr,
 													 OSStatus*				outErrorPtr);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

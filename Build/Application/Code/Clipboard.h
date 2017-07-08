@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CLIPBOARD__
-#define __CLIPBOARD__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -240,7 +239,5 @@ Boolean
 	Clipboard_WindowIsVisible			();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

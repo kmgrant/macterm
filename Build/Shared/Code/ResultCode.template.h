@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __RESULTCODE__
-#define __RESULTCODE__
+#pragma once
 
 
 
@@ -133,7 +132,5 @@ const
 {
 	return (0 == this_resultCode);
 }// ok
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

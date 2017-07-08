@@ -26,8 +26,9 @@
 
 ###############################################################*/
 
-#ifndef __COCOAANIMATION__
-#define __COCOAANIMATION__
+#include <UniversalDefines.h>
+
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -94,7 +95,5 @@ void
 															 CGRect);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

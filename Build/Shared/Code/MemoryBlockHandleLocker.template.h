@@ -29,8 +29,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MEMORYBLOCKHANDLELOCKER__
-#define __MEMORYBLOCKHANDLELOCKER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -122,7 +121,5 @@ releaseLock	(structure_reference_type	inReference,
 	if (newLockCount == 0) HUnlock(REINTERPRET_CAST(inReference, Handle));
 	if (inoutPtrPtr != nullptr) *inoutPtrPtr = nullptr;
 }// releaseLock
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VECTORCANVAS__
-#define __VECTORCANVAS__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -197,7 +196,5 @@ SInt16
 										 SessionRef					inSession);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

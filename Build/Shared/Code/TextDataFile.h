@@ -48,8 +48,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TEXTDATAFILE__
-#define __TEXTDATAFILE__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -205,7 +204,5 @@ Boolean
 											 char const*					inPropertyName,
 											 CGDeviceColor const*			inValuePtr,
 											 TextDataFile_ValueBrackets		inBrackets = kTextDataFile_ValueBracketsCurlyBraces);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

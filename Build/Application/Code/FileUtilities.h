@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __FILEUTILITIES__
-#define __FILEUTILITIES__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -55,7 +54,5 @@ SInt16
 	FileUtilities_OpenTemporaryFile			(FSRef&					outTemporaryFile);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

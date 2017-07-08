@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CFUTILITIES__
-#define __CFUTILITIES__
+#pragma once
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -243,8 +242,6 @@ inline CFURLRef
 		}
 		return REINTERPRET_CAST(inApparentCFURLRef, CFURLRef);
 	}
-
-#endif
 
 //@}
 

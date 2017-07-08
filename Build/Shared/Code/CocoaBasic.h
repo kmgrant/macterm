@@ -26,8 +26,9 @@
 
 ###############################################################*/
 
-#ifndef __COCOABASIC__
-#define __COCOABASIC__
+#include <UniversalDefines.h>
+
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -139,7 +140,5 @@ NSWindow*
 #endif
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

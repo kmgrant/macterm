@@ -33,13 +33,10 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VECTORINTERPRETERREF__
-#define __VECTORINTERPRETERREF__
+#pragma once
 
 #pragma mark Types
 
 typedef struct VectorInterpreter_OpaqueStruct*	VectorInterpreter_Ref;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

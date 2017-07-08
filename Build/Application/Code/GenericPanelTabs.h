@@ -40,8 +40,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __GENERICPANELTABS__
-#define __GENERICPANELTABS__
+#pragma once
 
 // standard-C++ includes
 #include <map>
@@ -98,7 +97,5 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 #endif // __OBJC__
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

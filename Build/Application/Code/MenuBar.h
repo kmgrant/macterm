@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MENUBAR__
-#define __MENUBAR__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -98,7 +97,5 @@ MenuID
 	MenuBar_ReturnUniqueMenuID						();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

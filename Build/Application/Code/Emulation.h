@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __EMULATION__
-#define __EMULATION__
+#pragma once
 
 
 
@@ -98,9 +97,5 @@ enum
 	kEmulation_FullTypeXTerm256Color = kEmulation_BaseTypeXTerm | kEmulation_VariantXTerm256Color,
 	kEmulation_FullTypeDumb = kEmulation_BaseTypeDumb | kEmulation_VariantDumb1 // “dumb” terminals
 };
-
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

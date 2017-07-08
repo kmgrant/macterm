@@ -30,8 +30,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __REGISTRAR__
-#define __REGISTRAR__
+#pragma once
 
 
 
@@ -95,7 +94,5 @@ Registrar< address_type, set_type >::
 {
 	_registry.erase(_ref);
 }// Registrar destructor
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

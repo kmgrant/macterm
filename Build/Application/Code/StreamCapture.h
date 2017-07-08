@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __STREAMCAPTURE__
-#define __STREAMCAPTURE__
+#pragma once
 
 // application includes
 #include "Session.h"
@@ -92,7 +91,5 @@ void
 										 size_t						inLength);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

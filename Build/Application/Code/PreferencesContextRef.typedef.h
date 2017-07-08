@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFERENCESCONTEXTREF__
-#define __PREFERENCESCONTEXTREF__
+#pragma once
 
 #pragma mark Types
 
@@ -50,7 +49,5 @@ be directly associated with a known and named collection that
 is saved to disk.
 */
 typedef struct Preferences_OpaqueContext*	Preferences_ContextRef;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

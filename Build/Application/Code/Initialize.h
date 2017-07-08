@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __INITIALIZE__
-#define __INITIALIZE__
+#pragma once
 
 
 
@@ -53,7 +52,5 @@ void
 	Initialize_ApplicationShutDownRemainingComponents		();
 
 //@}
-
-#endif // __INITIALIZE__
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

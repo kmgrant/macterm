@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSCALLBACKS_TYPEDEF__
-#define __QUILLSCALLBACKS_TYPEDEF__
+#pragma once
 
 // standard-C++ includes
 #include <map>
@@ -58,7 +57,5 @@ typedef void (*FunctionReturnVoidArg1VoidPtrArg2CharPtr) (void*, char*);
 typedef void (*FunctionReturnVoidArg1VoidPtr) (void*);
 
 } // namespace Quills
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

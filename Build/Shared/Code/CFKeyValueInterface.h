@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CFKEYVALUEINTERFACE__
-#define __CFKEYVALUEINTERFACE__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -1124,7 +1123,5 @@ const
 {
 	return _targetApplication.returnCFStringRef();
 }// returnTargetApplication
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -28,8 +28,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __UTF8DECODER__
-#define __UTF8DECODER__
+#pragma once
 
 // standard-C++ includes
 #include <string>
@@ -410,7 +409,5 @@ isStartingByte	(UInt8		inByte)
 			isFirstOfFour(inByte) || isFirstOfFive(inByte) || isFirstOfSix(inByte));
 #endif
 }// UTF8Decoder_StateMachine::isStartingByte
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

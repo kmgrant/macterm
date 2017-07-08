@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __COMMANDLINE__
-#define __COMMANDLINE__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -217,7 +216,5 @@ void
 
 void
 	CommandLine_Display			();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

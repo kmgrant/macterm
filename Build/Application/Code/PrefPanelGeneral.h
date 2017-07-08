@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFPANELGENERAL__
-#define __PREFPANELGENERAL__
+#pragma once
 
 // application includes
 #include "GenericPanelTabs.h"
@@ -273,7 +272,5 @@ Preferences_TagSetRef
 
 Preferences_TagSetRef
 	PrefPanelGeneral_NewTagSet				();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

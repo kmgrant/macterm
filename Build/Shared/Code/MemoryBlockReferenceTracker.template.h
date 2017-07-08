@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MEMORYBLOCKREFERENCETRACKER__
-#define __MEMORYBLOCKREFERENCETRACKER__
+#pragma once
 
 // pseudo-standard-C++ includes
 #if __has_include(<tr1/unordered_set>)
@@ -88,7 +87,5 @@ const
 {
 	return REINTERPRET_CAST(inAddress, size_t);
 }// operator ()
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

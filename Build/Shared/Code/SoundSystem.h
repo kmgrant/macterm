@@ -28,8 +28,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __SOUNDSYSTEM__
-#define __SOUNDSYSTEM__
+#pragma once
 
 
 
@@ -42,7 +41,5 @@ void
 	Sound_StandardAlert				();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

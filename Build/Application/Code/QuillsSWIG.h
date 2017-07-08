@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSSWIG__
-#define __QUILLSSWIG__
+#pragma once
 
 // standard-C++ includes
 #include <sstream>
@@ -65,8 +64,5 @@
 	{ \
 		SWIG_exception_fail(SWIG_UnknownError, "unknown exception"); \
 	}
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

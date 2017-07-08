@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSSESSION__
-#define __QUILLSSESSION__
+#pragma once
 
 // standard-C++ includes
 #include <map>
@@ -416,7 +415,5 @@ call to on_urlopen_call().\n\
 #endif
 
 } // namespace Quills
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

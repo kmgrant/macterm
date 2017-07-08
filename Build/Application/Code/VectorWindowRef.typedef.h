@@ -33,13 +33,10 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VECTORWINDOWREF__
-#define __VECTORWINDOWREF__
+#pragma once
 
 #pragma mark Types
 
 typedef struct VectorWindow_OpaqueStruct*	VectorWindow_Ref;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

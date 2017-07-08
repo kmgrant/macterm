@@ -39,8 +39,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __DEBUGGINGCONSOLE__
-#define __DEBUGGINGCONSOLE__
+#pragma once
 
 // standard-C++ includes
 #include <string>
@@ -361,7 +360,5 @@ Console_BlockTracker::
 {
 	Console_WriteValueCString("Block exited:", _name.c_str());
 }
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

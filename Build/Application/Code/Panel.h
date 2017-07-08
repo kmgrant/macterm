@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PANEL__
-#define __PANEL__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -289,7 +288,5 @@ changes to an interface declared in a ".mm" file.
 class Panel_ViewManager;
 
 #endif // __OBJC__
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

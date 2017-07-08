@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __DRAGANDDROP__
-#define __DRAGANDDROP__
+#pragma once
 
 
 
@@ -69,8 +68,5 @@ void
 											 CGRect const&	inArea);
 
 //@}
-
-#endif
-
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

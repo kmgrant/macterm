@@ -59,8 +59,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __UISTRINGS__
-#define __UISTRINGS__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -536,7 +535,5 @@ CFStringRef
 	}
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

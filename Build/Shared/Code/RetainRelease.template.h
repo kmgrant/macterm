@@ -63,8 +63,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __RETAINRELEASE__
-#define __RETAINRELEASE__
+#pragma once
 
 
 
@@ -431,7 +430,5 @@ storeReference	(reference_type		inNewType,
 		}
 	}
 }// storeReference
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __INTERNETPREFS__
-#define __INTERNETPREFS__
+#pragma once
 
 
 
@@ -41,7 +40,5 @@
 
 void
 	InternetPrefs_Init							();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

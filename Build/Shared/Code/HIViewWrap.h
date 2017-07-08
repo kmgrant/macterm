@@ -29,8 +29,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __HIVIEWWRAP__
-#define __HIVIEWWRAP__
+#pragma once
 
 // library includes
 #include <CFRetainRelease.h>
@@ -292,7 +291,5 @@ const
 	UNUSED_RETURN(OSStatus)GetControlID(this->operator HIViewRef(), &result);
 	return result;
 }// identifier
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

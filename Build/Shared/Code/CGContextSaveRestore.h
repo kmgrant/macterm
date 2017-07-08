@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CGCONTEXTSAVERESTORE__
-#define __CGCONTEXTSAVERESTORE__
+#pragma once
 
 
 
@@ -187,7 +186,5 @@ setCGContextRef		(CGContextRef	inNewContext)
 	_context = inNewContext;
 	if (nullptr != _context) CGContextSaveGState(_context);
 }// setCGContextRef
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

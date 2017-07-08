@@ -33,13 +33,10 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALSCREENREF__
-#define __TERMINALSCREENREF__
+#pragma once
 
 #pragma mark Types
 
 typedef struct OpaqueTerminalScreen*	TerminalScreenRef;	//!< data source for a terminal screen
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

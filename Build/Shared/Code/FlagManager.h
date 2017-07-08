@@ -29,8 +29,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __FLAGMANAGER__
-#define __FLAGMANAGER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -61,7 +60,5 @@ Boolean
 	FlagManager_Test		(FlagManager_Flag		inFlag);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

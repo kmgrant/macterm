@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __ADDRESSDIALOG__
-#define __ADDRESSDIALOG__
+#pragma once
 
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
@@ -118,7 +117,5 @@ changes to an interface declared in a ".mm" file.
 
 void
 	AddressDialog_Display						();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

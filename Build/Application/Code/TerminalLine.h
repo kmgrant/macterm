@@ -37,8 +37,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALLINE__
-#define __TERMINALLINE__
+#pragma once
 
 // standard-C++ includes
 #include <list>
@@ -523,8 +522,5 @@ const
 {
 	return (false == (this->operator ==(inObjectPtr)));
 }// TerminalLine_Handle::operator != (TerminalLine_Object const*)
-
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

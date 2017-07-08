@@ -48,8 +48,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __POPOVERMANAGER__
-#define __POPOVERMANAGER__
+#pragma once
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -165,7 +164,5 @@ void
 void
 	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref				inRef,
 												 Float32						inDelay);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

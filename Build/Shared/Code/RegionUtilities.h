@@ -29,8 +29,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __REGIONUTILITIES__
-#define __REGIONUTILITIES__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -102,7 +101,5 @@ void
 												 SInt16				inTop,
 												 SInt16				inRight,
 												 SInt16				inBottom);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

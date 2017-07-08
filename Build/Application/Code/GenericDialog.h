@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __GENERICDIALOG__
-#define __GENERICDIALOG__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -217,8 +216,6 @@ void
 	GenericDialog_SetItemTitle					(GenericDialog_Ref					inDialog,
 												 GenericDialog_ItemID				inItemID,
 												 CFStringRef						inButtonTitle);
-
-#endif
 
 
 

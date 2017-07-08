@@ -35,8 +35,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFPANELWORKSPACES__
-#define __PREFPANELWORKSPACES__
+#pragma once
 
 // application includes
 #include "GenericPanelNumberedList.h"
@@ -263,7 +262,5 @@ changes to an interface declared in a ".mm" file.
 
 Preferences_TagSetRef
 	PrefPanelWorkspaces_NewTagSet		();
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

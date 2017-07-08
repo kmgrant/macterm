@@ -33,8 +33,7 @@
 
 ###############################################################*/
 
-#ifndef __UNIVERSALDEFINES__
-#define __UNIVERSALDEFINES__
+#pragma once
 
 // standard-C includes
 #ifdef __cplusplus
@@ -208,8 +207,6 @@ inline double FLOAT64_DIV_8		(double a)				{ return (a / 8.0); }				//!< divide 
 #	define CGFLOAT_DIV_3(a)			STATIC_CAST(FLOAT64_DIV_3((a)), float)
 #	define CGFLOAT_DIV_4(a)			STATIC_CAST(FLOAT64_DIV_4((a)), float)
 #	define CGFLOAT_DIV_8(a)			STATIC_CAST(FLOAT64_DIV_8((a)), float)
-#endif
-
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

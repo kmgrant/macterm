@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __KEYPADS__
-#define __KEYPADS__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -496,7 +495,5 @@ void
 void
 	Keypads_SetVisible							(Keypads_WindowType			inKeypad,
 												 Boolean					inIsVisible);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

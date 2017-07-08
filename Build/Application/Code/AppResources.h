@@ -36,8 +36,9 @@
 
 ###############################################################*/
 
-#ifndef __APPRESOURCES__
-#define __APPRESOURCES__
+#include <UniversalDefines.h>
+
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -441,7 +442,5 @@ inline CFStringRef
 }
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

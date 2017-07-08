@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CARBONEVENTHANDLERWRAP__
-#define __CARBONEVENTHANDLERWRAP__
+#pragma once
 
 // standard-C++ includes
 #include <set>
@@ -481,7 +480,5 @@ CarbonEventHandlerWrapGeneric< CarbonEventSet >
 (inTarget, inProcPtr, inEvents, inDataToPassToHandler)
 {
 }// CarbonEventHandlerWrap 4-argument constructor
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

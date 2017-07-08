@@ -40,8 +40,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __DIALOGUTILITIES__
-#define __DIALOGUTILITIES__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -77,7 +76,5 @@ OSStatus
 
 void
 	TextFontByName							(ConstStringPtr			inFontName);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

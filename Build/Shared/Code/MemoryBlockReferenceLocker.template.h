@@ -31,8 +31,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MEMORYBLOCKREFERENCELOCKER__
-#define __MEMORYBLOCKREFERENCELOCKER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -141,7 +140,5 @@ releaseLock	(structure_reference_type	inReference,
 	}
 	assert(newLockCount < oldLockCount);
 }// releaseLock
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

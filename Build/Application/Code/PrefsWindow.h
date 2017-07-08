@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFSWINDOW__
-#define __PREFSWINDOW__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -201,7 +200,5 @@ void
 	PrefsWindow_AddCollection		(Preferences_ContextRef		inReferenceContextToCopy,
 									 Preferences_TagSetRef		inTagSetOrNull = nullptr,
 									 UInt32						inPrefPanelShowCommandIDOrZero = 0);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

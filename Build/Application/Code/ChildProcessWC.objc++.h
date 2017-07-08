@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CHILDPROCESSWC__
-#define __CHILDPROCESSWC__
+#pragma once
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -108,7 +107,5 @@ but that may change.
 	initWithWindow:(NSWindow*)_;
 
 @end //}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

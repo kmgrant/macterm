@@ -45,8 +45,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINAL__
-#define __TERMINAL__
+#pragma once
 
 // standard-C++ includes
 #include <vector>
@@ -661,7 +660,5 @@ void
 	Terminal_DebugDumpDetailedSnapshot		(TerminalScreenRef			inScreen);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

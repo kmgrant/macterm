@@ -29,8 +29,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MEMORYBLOCKPTRLOCKER__
-#define __MEMORYBLOCKPTRLOCKER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -291,7 +290,5 @@ unitTest ()
 	
 	return result;
 }// unitTest
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

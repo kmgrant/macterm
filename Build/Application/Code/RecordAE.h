@@ -43,8 +43,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __RECORDAE__
-#define __RECORDAE__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -86,7 +85,5 @@ AEAddressDesc const*
 	RecordAE_ReturnSelfAddress				();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

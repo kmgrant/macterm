@@ -38,8 +38,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __FOLDERMANAGER__
-#define __FOLDERMANAGER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -79,7 +78,5 @@ enum
 OSStatus
 	Folder_GetFSRef			(Folder_Ref		inFolderType,
 							 FSRef&			outFolderFSRef);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

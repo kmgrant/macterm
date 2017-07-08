@@ -43,8 +43,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __UNDOABLES__
-#define __UNDOABLES__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -177,7 +176,5 @@ void
 void
 	Undoables_GetUndoCommandInfo		(CFStringRef&						outCommandText,
 										 Boolean*							outCommandEnabled);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

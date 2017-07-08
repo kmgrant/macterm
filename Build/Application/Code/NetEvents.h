@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __NETEVENTS__
-#define __NETEVENTS__
+#pragma once
 
 
 
@@ -251,7 +250,5 @@ enum
 };
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

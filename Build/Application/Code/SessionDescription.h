@@ -38,8 +38,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __SESSIONDESCRIPTION__
-#define __SESSIONDESCRIPTION__
+#pragma once
 
 
 
@@ -337,7 +336,5 @@ Boolean
 	SessionDescription_ReadFromFile				(FSRef const&						inFile);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

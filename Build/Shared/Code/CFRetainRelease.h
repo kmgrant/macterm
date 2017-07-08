@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CFRETAINRELEASE__
-#define __CFRETAINRELEASE__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -1317,7 +1316,5 @@ storeReference	(void*					inNewType,
 		safeRetain(inNewType);
 	}
 }// storeReference
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

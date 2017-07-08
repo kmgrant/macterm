@@ -32,8 +32,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __PREFSCONTEXTMANAGER__
-#define __PREFSCONTEXTMANAGER__
+#pragma once
 
 // library includes
 #import <CocoaFuture.objc++.h>
@@ -90,7 +89,5 @@ interface).
 	forPreferenceTag:(Preferences_Tag)_;
 
 @end //}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

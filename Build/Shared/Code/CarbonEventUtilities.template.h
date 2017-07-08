@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CARBONEVENTUTILITIES__
-#define __CARBONEVENTUTILITIES__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -111,7 +110,5 @@ CarbonEventUtilities_GetEventParameterVariableSize	(EventRef			inEvent,
 	}
 	return result;
 }// GetEventParameterVariableSize
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

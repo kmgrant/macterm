@@ -40,8 +40,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __LOCALIZATION__
-#define __LOCALIZATION__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -157,7 +156,5 @@ CGFloat
 												 Boolean					inResize = true);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

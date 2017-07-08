@@ -26,8 +26,9 @@
 
 ###############################################################*/
 
-#ifndef __COCOAUSERDEFAULTS__
-#define __COCOAUSERDEFAULTS__
+#include <UniversalDefines.h>
+
+#pragma once
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -43,7 +44,5 @@ void
 
 void
 	CocoaUserDefaults_DeleteDomain			(CFStringRef);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

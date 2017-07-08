@@ -36,8 +36,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __DNR__
-#define __DNR__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -76,7 +75,5 @@ void
 CFStringRef
 	DNR_CopyResolvedHostAsCFString	(struct hostent const*	inDNR,
 									 int					inWhichIndex);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __FINDDIALOG__
-#define __FINDDIALOG__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -240,7 +239,5 @@ UInt32
 
 void
 	FindDialog_StandardCloseNotifyProc	(FindDialog_Ref					inDialogThatClosed);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

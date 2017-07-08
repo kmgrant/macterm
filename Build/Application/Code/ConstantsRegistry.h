@@ -38,8 +38,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __CONSTANTSREGISTRY__
-#define __CONSTANTSREGISTRY__
+#pragma once
 
 // library includes
 #ifdef __OBJC__
@@ -300,7 +299,5 @@ enum
 };
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

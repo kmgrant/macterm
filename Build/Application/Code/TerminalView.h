@@ -49,8 +49,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TERMINALVIEW__
-#define __TERMINALVIEW__
+#pragma once
 
 // standard-C++ includes
 #include <utility>
@@ -718,7 +717,5 @@ void
 	TerminalView_ZoomToSelection				(TerminalViewRef					inView);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

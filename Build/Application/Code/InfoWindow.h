@@ -37,8 +37,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __INFOWINDOW__
-#define __INFOWINDOW__
+#pragma once
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -127,7 +126,5 @@ SessionRef
 
 void
 	InfoWindow_SetVisible				(Boolean		inIsVisible);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

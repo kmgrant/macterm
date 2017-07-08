@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MACHELPUTILITIES__
-#define __MACHELPUTILITIES__
+#pragma once
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -48,7 +47,5 @@ void
 
 OSStatus
 	MacHelpUtilities_LaunchHelpSystemWithSearch			(CFStringRef		inSearchString);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -47,8 +47,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __LISTENERMODEL__
-#define __LISTENERMODEL__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -342,7 +341,5 @@ a constructor that allows you to store pre-retained (e.g. newly
 allocated) listeners too.
 */
 typedef RetainRelease<_ListenerModel_ListenerRefMgr>	ListenerModel_ListenerWrap;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

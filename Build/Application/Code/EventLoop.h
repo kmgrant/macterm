@@ -37,8 +37,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __EVENTLOOP__
-#define __EVENTLOOP__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -219,7 +218,5 @@ WindowRef
 	EventLoop_ReturnRealFrontWindow				();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

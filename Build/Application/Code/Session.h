@@ -42,8 +42,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __SESSION__
-#define __SESSION__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -718,7 +717,5 @@ void
 											 TerminalWindowRef					inTerminalWindow);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

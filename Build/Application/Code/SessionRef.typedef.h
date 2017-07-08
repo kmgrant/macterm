@@ -33,13 +33,10 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __SESSIONREF__
-#define __SESSIONREF__
+#pragma once
 
 #pragma mark Types
 
 typedef struct Session_OpaqueStructure*		SessionRef;
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

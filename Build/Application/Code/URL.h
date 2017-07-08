@@ -39,8 +39,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __URL__
-#define __URL__
+#pragma once
 
 // application includes
 #include "TerminalScreenRef.typedef.h"
@@ -104,7 +103,5 @@ URL_Type
 URL_Type
 	URL_ReturnTypeFromCharacterRange	(char const*					inBegin,
 										 char const*					inPastEnd);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __TEXTTRANSLATION__
-#define __TEXTTRANSLATION__
+#pragma once
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -96,7 +95,5 @@ CFStringEncoding
 	TextTranslation_ReturnIndexedCharacterSet	(UInt16					inOneBasedIndex);
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

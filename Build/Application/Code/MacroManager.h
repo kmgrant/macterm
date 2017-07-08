@@ -52,8 +52,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __MACROMANAGER__
-#define __MACROMANAGER__
+#pragma once
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -217,7 +216,5 @@ inline MacroManager_KeyID
 	}
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

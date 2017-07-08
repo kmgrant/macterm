@@ -34,8 +34,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __LOCAL__
-#define __LOCAL__
+#pragma once
 
 // standard-C++ includes
 #include <map>
@@ -192,7 +191,5 @@ void
 	Local_UpdateCurrentDirectoryCache		();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

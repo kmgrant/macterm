@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __VTKEYS__
-#define __VTKEYS__
+#pragma once
 
 
 
@@ -226,7 +225,5 @@ enum
 	VSF3			= 149, //!< PF3 (programmable function key); / on Mac keypad
 	VSF4			= 150  //!< PF4 (programmable function key); * on Mac keypad
 };
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

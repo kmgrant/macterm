@@ -26,8 +26,9 @@
 
 ###############################################################*/
 
-#ifndef __GROWLSUPPORT__
-#define __GROWLSUPPORT__
+#include <UniversalDefines.h>
+
+#pragma once
 
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -93,7 +94,5 @@ void
 	GrowlSupport_PreferencesPaneDisplay			();
 
 //@}
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

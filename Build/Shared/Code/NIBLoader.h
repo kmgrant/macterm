@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __NIBLOADER__
-#define __NIBLOADER__
+#pragma once
 
 // standard-C includes
 #include <strings.h>
@@ -248,7 +247,5 @@ const
 {
 	return HIViewWrap(inID, _window);
 }// returnHIViewWithID
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

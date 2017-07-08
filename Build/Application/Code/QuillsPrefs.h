@@ -37,8 +37,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __QUILLSPREFS__
-#define __QUILLSPREFS__
+#pragma once
 
 // standard-C++ includes
 #include <string>
@@ -193,7 +192,5 @@ modify the specified macros, and anything that depends on them\n\
 #endif
 
 } // namespace Quills
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

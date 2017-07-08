@@ -33,8 +33,7 @@
 
 #include <UniversalDefines.h>
 
-#ifndef __SERVERBROWSER__
-#define __SERVERBROWSER__
+#pragma once
 
 // Mac includes
 #ifdef __OBJC__
@@ -291,7 +290,5 @@ void
 
 void
 	ServerBrowser_Remove		(ServerBrowser_Ref		inDialog);
-
-#endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
