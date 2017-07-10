@@ -120,7 +120,7 @@ particular window index.  The window name can be
 changed, causing the corresponding preferences (the
 window title) to be updated.
 */
-@interface PrefPanelWorkspaces_WindowInfo : PrefsContextManager_Object< GenericPanelNumberedList_ListItemHeader > //{
+@interface PrefPanelWorkspaces_WindowInfo : PrefsContextManager_Object< GenericPanelNumberedList_ItemBinding > //{
 {
 @private
 	Preferences_Index	_preferencesIndex;

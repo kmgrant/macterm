@@ -810,7 +810,7 @@ setWindowName:(NSString*)	aWindowName
 }// setWindowName:
 
 
-#pragma mark GenericPanelNumberedList_ListItemHeader
+#pragma mark GenericPanelNumberedList_ItemBinding
 
 
 /*!
@@ -903,12 +903,12 @@ Accessor.
 selectedWindowInfo
 {
 	PrefPanelWorkspaces_WindowInfo*		result = nil;
-	NSUInteger							currentIndex = [self.listItemHeaderIndexes firstIndex];
+	NSUInteger							currentIndex = [self.listItemBindingIndexes firstIndex];
 	
 	
 	if (NSNotFound != currentIndex)
 	{
-		result = [self.listItemHeaders objectAtIndex:currentIndex];
+		result = [self.listItemBindings objectAtIndex:currentIndex];
 	}
 	
 	return result;
@@ -945,7 +945,7 @@ initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewM
 						];
 	
 	
-	aViewManager.listItemHeaders = listData;
+	aViewManager.listItemBindings = listData;
 }// initializeNumberedListViewManager:
 
 
@@ -991,7 +991,7 @@ toDataSet:(GenericPanelNumberedList_DataSet*)						newStructPtr
 		{
 			// update each object in the list to use the new context
 			// (so that, for instance, the right names are displayed)
-			for (PrefPanelWorkspaces_WindowInfo* eachInfo in aViewManager.listItemHeaders)
+			for (PrefPanelWorkspaces_WindowInfo* eachInfo in aViewManager.listItemBindings)
 			{
 				[eachInfo setCurrentContext:asContext];
 			}
@@ -1838,7 +1838,7 @@ toDataSet:(void*)						newDataSet
 	//GenericPanelNumberedList_DataSet*	oldStructPtr = REINTERPRET_CAST(oldDataSet, GenericPanelNumberedList_DataSet*);
 	GenericPanelNumberedList_DataSet*	newStructPtr = REINTERPRET_CAST(newDataSet, GenericPanelNumberedList_DataSet*);
 	Preferences_ContextRef				asPrefsContext = REINTERPRET_CAST(newStructPtr->parentPanelDataSetOrNull, Preferences_ContextRef);
-	Preferences_Index					asIndex = STATIC_CAST(1 + newStructPtr->selectedListItem, Preferences_Index); // index is one-based
+	Preferences_Index					asIndex = STATIC_CAST(1 + newStructPtr->selectedDataArrayIndex, Preferences_Index); // index is one-based
 	
 	
 	if (self.isPanelUserInterfaceLoaded)

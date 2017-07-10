@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170709',
     '20170708',
     '20170705',
     '20170627',
@@ -575,6 +576,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170709': [
+        'Fixed Preferences window Macros pane so that the panel shows the settings for the selected macro even after the list has been sorted differently.',
+        'Fixed Preferences window Workspaces pane Windows tab so that the panel shows the settings for the selected window even after the list has been sorted differently.',
+    ],
     '20170708': [
         'Fixed Print Preview keyboard focus chain (allowing the slider to be activated using the keyboard, for example).',
         'Print Preview now shows only two decimal places for font sizes inserted by moving the slider.',

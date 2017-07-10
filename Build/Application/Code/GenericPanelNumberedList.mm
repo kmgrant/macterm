@@ -64,8 +64,8 @@
 @implementation GenericPanelNumberedList_ViewManager
 
 
-@synthesize itemHeaderSortDescriptors = _itemHeaderSortDescriptors;
-@synthesize listItemHeaders = _listItemHeaders;
+@synthesize itemBindingSortDescriptors = _itemBindingSortDescriptors;
+@synthesize listItemBindings = _listItemBindings;
 
 
 /*!
@@ -115,9 +115,9 @@ dealloc
 	[identifier release];
 	[localizedName release];
 	[localizedIcon release];
-	[_listItemHeaderIndexes release];
-	[_listItemHeaders release];
-	[_itemHeaderSortDescriptors release];
+	[_listItemBindingIndexes release];
+	[_listItemBindings release];
+	[_itemBindingSortDescriptors release];
 	[super dealloc];
 }// dealloc
 
@@ -158,38 +158,46 @@ configurations).
 (4.1)
 */
 - (NSIndexSet*)
-listItemHeaderIndexes
+listItemBindingIndexes
 {
-	return [[_listItemHeaderIndexes retain] autorelease];
+	return [[_listItemBindingIndexes retain] autorelease];
 }
 - (void)
-setListItemHeaderIndexes:(NSIndexSet*)		anIndexSet
+setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
 {
-	if (_listItemHeaderIndexes != anIndexSet)
+	if (_listItemBindingIndexes != anIndexSet)
 	{
 		GenericPanelNumberedList_DataSet	oldStruct;
 		GenericPanelNumberedList_DataSet	newStruct;
+		NSUInteger							oldBindingIndex = [self.listItemBindingIndexes firstIndex];
+		NSUInteger							newBindingIndex = [anIndexSet firstIndex];
 		
 		
-		[self willChangeValueForKey:@"listItemHeaderIndexes"];
+		[self willChangeValueForKey:@"listItemBindingIndexes"];
 		
 		bzero(&oldStruct, sizeof(oldStruct));
 		bzero(&newStruct, sizeof(newStruct));
 		oldStruct.parentPanelDataSetOrNull = nullptr;
-		oldStruct.selectedListItem = [_listItemHeaderIndexes firstIndex];
-		if (NSNotFound == oldStruct.selectedListItem)
+		if (oldBindingIndex < [self->itemArrayController.arrangedObjects count])
 		{
-			oldStruct.selectedListItem = 0; // require a selection at all times
+			oldStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self->itemArrayController.arrangedObjects objectAtIndex:oldBindingIndex]];
 		}
-		newStruct.parentPanelDataSetOrNull = nullptr;
+		if (NSNotFound == oldStruct.selectedDataArrayIndex)
+		{
+			oldStruct.selectedDataArrayIndex = 0; // require a selection at all times
+		}
 		
 		// update the value
-		[_listItemHeaderIndexes release];
-		_listItemHeaderIndexes = [anIndexSet retain];
-		newStruct.selectedListItem = [_listItemHeaderIndexes firstIndex];
-		if (NSNotFound == newStruct.selectedListItem)
+		[_listItemBindingIndexes release];
+		_listItemBindingIndexes = [anIndexSet retain];
+		newStruct.parentPanelDataSetOrNull = nullptr;
+		if (newBindingIndex < [self->itemArrayController.arrangedObjects count])
 		{
-			newStruct.selectedListItem = 0; // require a selection at all times
+			newStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self->itemArrayController.arrangedObjects objectAtIndex:newBindingIndex]];
+		}
+		if (NSNotFound == newStruct.selectedDataArrayIndex)
+		{
+			newStruct.selectedDataArrayIndex = 0; // require a selection at all times
 		}
 		
 		// notify the master of the new selection
@@ -202,9 +210,9 @@ setListItemHeaderIndexes:(NSIndexSet*)		anIndexSet
 															didChangeFromDataSet:&oldStruct
 															toDataSet:&newStruct];
 		
-		[self didChangeValueForKey:@"listItemHeaderIndexes"];
+		[self didChangeValueForKey:@"listItemBindingIndexes"];
 	}
-}// setListItemHeaderIndexes:
+}// setListItemBindingIndexes:
 
 
 #pragma mark Panel_Delegate
@@ -234,15 +242,15 @@ initializeWithContext:(void*)			aContext
 	self->identifier = [givenIdentifier retain];
 	self->localizedName = [givenName retain];
 	self->localizedIcon = [givenIcon retain];
-	self->_itemHeaderSortDescriptors = [@[
-											// uses "id< GenericPanelNumberedList_ListItemHeader >" method names
-											[NSSortDescriptor sortDescriptorWithKey:@"self.numberedListIndexString" ascending:YES
+	self->_itemBindingSortDescriptors = [@[
+											// uses "id< GenericPanelNumberedList_ItemBinding >" method names
+											[NSSortDescriptor sortDescriptorWithKey:@"numberedListIndexString" ascending:YES
 																					selector:@selector(localizedStandardCompare:)],
-											[NSSortDescriptor sortDescriptorWithKey:@"self.numberedListItemName" ascending:YES
+											[NSSortDescriptor sortDescriptorWithKey:@"numberedListItemName" ascending:YES
 																					selector:@selector(localizedStandardCompare:)]
 										] retain];
-	self->_listItemHeaderIndexes = [[NSIndexSet alloc] initWithIndex:0];
-	self->_listItemHeaders = [NSArray array];
+	self->_listItemBindingIndexes = [[NSIndexSet alloc] initWithIndex:0];
+	self->_listItemBindings = [[NSArray alloc] init];
 	self->masterDriver = givenDriver;
 	self->detailViewManager = [givenDetailViewManager retain];
 	self->detailViewManager.panelParent = self;
@@ -282,6 +290,7 @@ didLoadContainerView:(NSView*)			aContainerView
 	assert(nil != masterView);
 	assert(nil != detailView);
 	assert(nil != detailViewManager);
+	assert(nil != itemArrayController);
 	
 	NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[self->detailViewManager panelIdentifier]];
 	
@@ -391,23 +400,27 @@ toDataSet:(void*)						newDataSet
 #pragma unused(aViewManager)
 	GenericPanelNumberedList_DataSet	oldStruct;
 	GenericPanelNumberedList_DataSet	newStruct;
+	NSUInteger							oldBindingIndex = [self.listItemBindingIndexes firstIndex];
 	
 	
-	// the "listItemHeaders" property needs to send update
+	// the "listItemBindings" property needs to send update
 	// notifications so that (for instance) list displays
 	// will be refreshed
-	[self willChangeValueForKey:@"listItemHeaders"];
+	[self willChangeValueForKey:@"listItemBindings"];
 	
 	bzero(&oldStruct, sizeof(oldStruct));
 	oldStruct.parentPanelDataSetOrNull = oldDataSet;
-	oldStruct.selectedListItem = [self.listItemHeaderIndexes firstIndex];
-	if (NSNotFound == oldStruct.selectedListItem)
+	if (oldBindingIndex < [self->itemArrayController.arrangedObjects count])
 	{
-		oldStruct.selectedListItem = 0; // require a selection at all times
+		oldStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self->itemArrayController.arrangedObjects objectAtIndex:oldBindingIndex]];
+	}
+	if (NSNotFound == oldStruct.selectedDataArrayIndex)
+	{
+		oldStruct.selectedDataArrayIndex = 0; // require a selection at all times
 	}
 	bzero(&newStruct, sizeof(newStruct));
 	newStruct.parentPanelDataSetOrNull = newDataSet;
-	newStruct.selectedListItem = 0; // reset the current selection
+	newStruct.selectedDataArrayIndex = 0; // reset the current selection
 	
 	[self->masterDriver numberedListViewManager:self
 												didChangeFromDataSet:&oldStruct
@@ -417,10 +430,10 @@ toDataSet:(void*)						newDataSet
 														didChangeFromDataSet:&oldStruct
 														toDataSet:&newStruct];
 	
-	[self didChangeValueForKey:@"listItemHeaders"];
+	[self didChangeValueForKey:@"listItemBindings"];
 	
 	// change the displayed selection
-	self.listItemHeaderIndexes = [NSIndexSet indexSetWithIndex:newStruct.selectedListItem];
+	self.listItemBindingIndexes = [NSIndexSet indexSetWithIndex:0];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -599,7 +612,7 @@ to saved preferences).
 - (NSArray*)
 primaryDisplayBindingKeys
 {
-	return @[@"listItemHeaderIndexes", @"listItemHeaders"];
+	return @[@"listItemBindingIndexes", @"listItemBindings"];
 }
 
 

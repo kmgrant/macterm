@@ -66,7 +66,7 @@ particular macro index.  The macro name can be
 changed, causing the corresponding preferences (the
 macro name) to be updated.
 */
-@interface PrefPanelMacros_MacroInfo : PrefsContextManager_Object< GenericPanelNumberedList_ListItemHeader > //{
+@interface PrefPanelMacros_MacroInfo : PrefsContextManager_Object< GenericPanelNumberedList_ItemBinding > //{
 {
 @private
 	Preferences_Index	_preferencesIndex;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -9,6 +9,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="GenericPanelNumberedList_ViewManager">
             <connections>
                 <outlet property="detailView" destination="YFA-kb-iPx" id="nqZ-rQ-R87"/>
+                <outlet property="itemArrayController" destination="XIJ-HM-VSf" id="Ijz-KM-JV5"/>
                 <outlet property="logicalFirstResponder" destination="YFA-kb-iPx" id="1K6-7X-25p"/>
                 <outlet property="logicalLastResponder" destination="Zo2-f9-FhP" id="UVf-sU-dOw"/>
                 <outlet property="masterView" destination="Zo2-f9-FhP" id="QwI-v6-2SM"/>
@@ -17,11 +18,11 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <arrayController id="XIJ-HM-VSf" userLabel="List Item Headers">
+        <arrayController automaticallyRearrangesObjects="YES" id="XIJ-HM-VSf" userLabel="List Item Bindings">
             <connections>
-                <binding destination="-2" name="sortDescriptors" keyPath="self.itemHeaderSortDescriptors" previousBinding="1Fb-rF-lOg" id="SAQ-MY-Zuf"/>
-                <binding destination="-2" name="selectionIndexes" keyPath="self.listItemHeaderIndexes" id="1Fb-rF-lOg"/>
-                <binding destination="-2" name="contentArray" keyPath="self.listItemHeaders" id="RRN-Y5-T5Q"/>
+                <binding destination="-2" name="sortDescriptors" keyPath="self.itemBindingSortDescriptors" previousBinding="1Fb-rF-lOg" id="l9a-rp-Luk"/>
+                <binding destination="-2" name="selectionIndexes" keyPath="self.listItemBindingIndexes" id="1Fb-rF-lOg"/>
+                <binding destination="-2" name="contentArray" keyPath="self.listItemBindings" id="RRN-Y5-T5Q"/>
             </connections>
         </arrayController>
         <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
@@ -58,7 +59,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <connections>
-                                                <binding destination="XIJ-HM-VSf" name="value" keyPath="arrangedObjects.self.numberedListIndexString" id="3Eh-9w-bE3">
+                                                <binding destination="XIJ-HM-VSf" name="value" keyPath="arrangedObjects.numberedListIndexString" id="ppn-cy-HBC">
                                                     <dictionary key="options">
                                                         <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
                                                         <bool key="NSConditionallySetsEditable" value="YES"/>
@@ -79,7 +80,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                             <connections>
-                                                <binding destination="XIJ-HM-VSf" name="value" keyPath="arrangedObjects.self.numberedListItemName" id="8UC-X7-dxg"/>
+                                                <binding destination="XIJ-HM-VSf" name="value" keyPath="arrangedObjects.numberedListItemName" id="kUf-NS-geA"/>
                                             </connections>
                                         </tableColumn>
                                     </tableColumns>
@@ -99,7 +100,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="bYi-4Z-l44">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="bYi-4Z-l44">
                         <rect key="frame" x="212" y="259" width="89" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Selected Item" id="4BA-CH-8UW">

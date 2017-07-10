@@ -66,7 +66,8 @@ class NSView;
 When "panelViewManager:didChangeFromDataSet:toDataSet:"
 is called on the detail view, the “data set” is of this
 structure type.  It contains both the data set from the
-parent and the index of the selected item in the list.
+parent and the index of the selected item in the list
+(relative to the original array, ignoring sorting).
 
 If the parent panel’s data set has changed, both the old
 and new copies of the structure will have the same
@@ -78,7 +79,7 @@ only the selected list item values will be defined.
 */
 struct GenericPanelNumberedList_DataSet
 {
-	NSUInteger	selectedListItem;
+	NSUInteger	selectedDataArrayIndex;
 	void*		parentPanelDataSetOrNull;
 };
 
@@ -90,7 +91,7 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@protocol GenericPanelNumberedList_ListItemHeader < NSObject > //{
+@protocol GenericPanelNumberedList_ItemBinding < NSObject > //{
 
 @required
 
@@ -119,7 +120,7 @@ the appropriate effect on the detail view.
 
 	// the very first call; use this to ensure the data in the list is
 	// defined so that any bindings will work properly (e.g. set the
-	// property "listItemHeaders" to an array of new objects)
+	// property "listItemBindings" to an array of new objects)
 	- (void)
 	initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)_;
 
@@ -151,26 +152,27 @@ changes to an interface declared in a ".mm" file.
 {
 	IBOutlet NSTableView*	masterView;
 	IBOutlet NSTabView*		detailView;
+	IBOutlet NSArrayController*		itemArrayController;
 @private
 	NSString*								identifier;
 	NSString*								localizedName;
 	NSImage*								localizedIcon;
 	id< GenericPanelNumberedList_Master >	masterDriver;
 	Panel_ViewManager*						detailViewManager;
-	NSIndexSet*								_listItemHeaderIndexes;
-	NSArray*								_listItemHeaders;
-	NSArray*								_itemHeaderSortDescriptors;
+	NSIndexSet*								_listItemBindingIndexes;
+	NSArray*								_listItemBindings;
+	NSArray*								_itemBindingSortDescriptors;
 }
 
 // accessors
 	@property (strong) NSString*
 	headingTitleForNameColumn;
 	@property (strong) NSArray*
-	itemHeaderSortDescriptors; // binding
+	itemBindingSortDescriptors; // binding
 	@property (retain) NSIndexSet*
-	listItemHeaderIndexes; // binding; selected item from "listItemHeaders" (when changed, the master is notified)
+	listItemBindingIndexes; // binding; selected item from "listItemBindings" (when changed, the master is notified)
 	@property (retain) NSArray*
-	listItemHeaders; // binding; array of id< GenericPanelNumberedList_ListItemHeader >
+	listItemBindings; // binding
 
 // initializers
 	- (instancetype)
