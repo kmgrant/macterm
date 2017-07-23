@@ -147,32 +147,49 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface GenericPanelNumberedList_ViewManager : Panel_ViewManager< Panel_Delegate, Panel_Parent,
+@interface GenericPanelNumberedList_ViewManager : Panel_ViewManager< NSSplitViewDelegate,
+																		Panel_Delegate,
+																		Panel_Parent,
 																		PrefsWindow_PanelInterface > //{
 {
-	IBOutlet NSTableView*	masterView;
-	IBOutlet NSTabView*		detailView;
-	IBOutlet NSArrayController*		itemArrayController;
 @private
 	NSString*								identifier;
 	NSString*								localizedName;
 	NSImage*								localizedIcon;
-	id< GenericPanelNumberedList_Master >	masterDriver;
-	Panel_ViewManager*						detailViewManager;
+	NSArrayController*						_itemArrayController;
+	NSView*									_masterContainer;
+	id< GenericPanelNumberedList_Master >	_masterDriver;
+	NSTableView*							_masterView;
+	NSView*									_detailContainer;
+	NSTabView*								_detailView;
+	Panel_ViewManager*						_detailViewManager;
+	NSSplitView*							_splitView;
 	NSIndexSet*								_listItemBindingIndexes;
 	NSArray*								_listItemBindings;
 	NSArray*								_itemBindingSortDescriptors;
 }
 
 // accessors
+	@property (strong) IBOutlet NSView*
+	detailContainer;
+	@property (strong) IBOutlet NSTabView*
+	detailView;
 	@property (strong) NSString*
 	headingTitleForNameColumn;
+	@property (strong) IBOutlet NSArrayController*
+	itemArrayController;
 	@property (strong) NSArray*
 	itemBindingSortDescriptors; // binding
 	@property (retain) NSIndexSet*
 	listItemBindingIndexes; // binding; selected item from "listItemBindings" (when changed, the master is notified)
 	@property (retain) NSArray*
 	listItemBindings; // binding
+	@property (strong) IBOutlet NSView*
+	masterContainer;
+	@property (strong) IBOutlet NSTableView*
+	masterView;
+	@property (strong) IBOutlet NSSplitView*
+	splitView;
 
 // initializers
 	- (instancetype)

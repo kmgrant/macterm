@@ -44,7 +44,6 @@
 #	import <CocoaExtensions.objc++.h>
 #	import <CocoaFuture.objc++.h>
 #	import <TouchBar.objc++.h>
-@class CoreUI_HelpButton;
 @class ListenerModel_StandardListener;
 #endif
 
@@ -130,25 +129,23 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet NSView*		windowFirstResponder;
 	IBOutlet NSView*		windowLastResponder;
 	IBOutlet NSTabView*		containerTabView;
-	IBOutlet NSView*		sourceListBackdrop;
-	IBOutlet NSView*		sourceListContainer;
 	IBOutlet NSTableView*	sourceListTableView;
-	IBOutlet NSView*		sourceListSegmentedControl;
-	IBOutlet CoreUI_HelpButton*		sourceListHelpButton;
-	IBOutlet CoreUI_HelpButton*		mainViewHelpButton;
 	IBOutlet NSSearchField*	searchField;
-	IBOutlet NSView*		verticalSeparator;
 @private
 	NSIndexSet*							currentPreferenceCollectionIndexes;
 	NSMutableArray*						currentPreferenceCollections;
 	NSMutableArray*						panelIDArray; // ordered array of "panelIdentifier" values
 	NSMutableDictionary*				panelsByID; // view managers (Panel_ViewManager subclass) from "panelIdentifier" keys
+	NSMutableDictionary*				panelSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
 	NSMutableDictionary*				windowSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
 	NSMutableDictionary*				windowMinSizesByID; // NSArray* values (each with 2 NSNumber*) from "panelIdentifier" keys
 	NSString*							_searchText;
-	NSSize								extraWindowContentSize; // stores extra content width and height (not belonging to a panel)
 	ListenerModel_StandardListener*		preferenceChangeListener;
+	BOOL								_sourceListHidden;
 	TouchBar_Controller*				_touchBarController; // created on demand
+	NSView*								_detailContainer;
+	NSView*								_masterContainer;
+	NSSplitView*						_splitView;
 	Panel_ViewManager< PrefsWindow_PanelInterface >*	activePanel;
 }
 
@@ -161,8 +158,16 @@ changes to an interface declared in a ".mm" file.
 	currentPreferenceCollectionIndexes; // binding
 	- (NSArray*)
 	currentPreferenceCollections; // binding
+	@property (strong) IBOutlet NSView*
+	detailContainer;
+	@property (strong) IBOutlet NSView*
+	masterContainer;
 	@property (copy) NSString*
 	searchText; // binding
+	@property (assign) BOOL
+	sourceListHidden;
+	@property (strong) IBOutlet NSSplitView*
+	splitView;
 
 // actions
 	- (IBAction)
@@ -185,8 +190,6 @@ changes to an interface declared in a ".mm" file.
 	performRenamePreferenceCollection:(id)_;
 	- (IBAction)
 	performSearch:(id)_;
-	- (IBAction)
-	performSegmentedControlAction:(id)_;
 
 @end //}
 

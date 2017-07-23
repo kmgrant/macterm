@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170723',
     '20170709',
     '20170708',
     '20170705',
@@ -576,6 +577,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170723': [
+        'Preferences window collection list can now be resized horizontally.',
+        'Preferences window collection list now has a more modern appearance, with embedded icon buttons.',
+        'Preferences window Macros pane macro list can now be resized independently, and the macro editor is resizable.',
+        'Preferences window Workspaces pane Windows tab window list can now be resized independently.',
+        'Preferences window search field has moved into the toolbar, and the bottom bar has been removed.',
+        'Preferences window help button has moved into the lower-right corner of the panel region.',
+    ],
     '20170709': [
         'Fixed Preferences window Macros pane so that the panel shows the settings for the selected macro even after the list has been sorted differently.',
         'Fixed Preferences window Workspaces pane Windows tab so that the panel shows the settings for the selected window even after the list has been sorted differently.',

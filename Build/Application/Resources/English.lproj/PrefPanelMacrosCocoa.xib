@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -32,7 +32,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="520" height="342"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" id="1913">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="1913">
                         <rect key="frame" x="72" y="305" width="144" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Invoke With:" id="1914">
@@ -41,7 +41,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="2087">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2087">
                         <rect key="frame" x="73" y="273" width="144" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Modifiers:" id="2088">
@@ -50,7 +50,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="1999">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="1999">
                         <rect key="frame" x="17" y="323" width="128" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2002">
@@ -102,7 +102,7 @@
                             <outlet property="nextKeyView" destination="cVm-Sm-Aif" id="3Z7-MJ-v2q"/>
                         </connections>
                     </popUpButton>
-                    <textField verticalHuggingPriority="750" id="wnX-Nb-Eqh">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="wnX-Nb-Eqh">
                         <rect key="frame" x="73" y="241" width="144" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Action:" id="80b-xb-jRw">
@@ -125,8 +125,8 @@
                             <outlet property="nextKeyView" destination="JZl-6g-EGg" id="4zj-5G-Ab2"/>
                         </connections>
                     </button>
-                    <popUpButton verticalHuggingPriority="750" id="sjg-Q5-LAP" customClass="CoreUI_MenuButton">
-                        <rect key="frame" x="219" y="235" width="235" height="26"/>
+                    <popUpButton verticalHuggingPriority="750" misplaced="YES" id="sjg-Q5-LAP" customClass="CoreUI_MenuButton">
+                        <rect key="frame" x="219" y="235" width="284" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="TX5-hu-jjD">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -140,9 +140,9 @@
                             <outlet property="nextKeyView" destination="dtb-O9-wQR" id="Eg6-QY-4OZ"/>
                         </connections>
                     </popUpButton>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="dtb-O9-wQR">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" id="dtb-O9-wQR">
                         <rect key="frame" x="238" y="112.5" width="262" height="116.5"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="9Xd-fg-KiN">
                             <font key="font" metaFont="fixedUser" size="11"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -167,9 +167,9 @@
                             <outlet property="nextKeyView" destination="2000" id="Zx2-Cv-u7L"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="RPF-ge-z8g">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" id="RPF-ge-z8g">
                         <rect key="frame" x="85" y="20" width="417" height="51"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Not all key combinations will be available to macros (for example, if you have short-cuts defined in System Preferences)." id="ZcO-of-RKI">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -222,7 +222,7 @@
                             <outlet property="nextKeyView" destination="sjg-Q5-LAP" id="rt5-zx-k5P"/>
                         </connections>
                     </matrix>
-                    <textField verticalHuggingPriority="750" id="cVm-Sm-Aif">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="cVm-Sm-Aif">
                         <rect key="frame" x="459" y="302" width="41" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="TWO-3c-Lhx">

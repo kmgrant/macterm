@@ -49,9 +49,29 @@
 
 #pragma mark Types
 
+
+/*!
+Private properties.
+*/
+@interface GenericPanelNumberedList_ViewManager () //{
+
+// accessors
+	@property (strong) Panel_ViewManager*
+	detailViewManager;
+	@property (strong) id< GenericPanelNumberedList_Master >
+	masterDriver;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
 @interface GenericPanelNumberedList_ViewManager (GenericPanelNumberedList_ViewManagerInternal) //{
 
 // new methods
+	- (CGFloat)
+	idealDetailContainerWidth;
 	- (NSArray*)
 	primaryDisplayBindingKeys;
 
@@ -64,8 +84,59 @@
 @implementation GenericPanelNumberedList_ViewManager
 
 
+/*!
+The superview of the embedded panel, and the view whose frame
+defines the right-hand region of the split view.
+*/
+@synthesize detailContainer = _detailContainer;
+
+/*!
+The embedded panel.
+*/
+@synthesize detailView = _detailView;
+
+/*!
+The object that is the view controller for the embedded panel.
+*/
+@synthesize detailViewManager = _detailViewManager;
+
+/*!
+The object that controls access to an array of elements in the
+numbered list (bound to the columns of the table view).
+*/
+@synthesize itemArrayController = _itemArrayController;
+
+/*!
+The rules for sorting columns of the numbered list.
+*/
 @synthesize itemBindingSortDescriptors = _itemBindingSortDescriptors;
+
+/*!
+The objects that are managed by "itemArrayController".
+*/
 @synthesize listItemBindings = _listItemBindings;
+
+/*!
+The superview of the numbered list, and the view whose frame
+defines the left-hand region of the split view.
+*/
+@synthesize masterContainer = _masterContainer;
+
+/*!
+The object that is notified of activity in the master, such as
+clicks in different items of the numbered list.
+*/
+@synthesize masterDriver = _masterDriver;
+
+/*!
+The numbered list itself; see also "masterContainer".
+*/
+@synthesize masterView = _masterView;
+
+/*!
+The superview of the master and detail views, with a separator line.
+*/
+@synthesize splitView = _splitView;
 
 
 /*!
@@ -111,7 +182,7 @@ Destructor.
 - (void)
 dealloc
 {
-	detailViewManager.panelParent = nil;
+	self.detailViewManager.panelParent = nil;
 	[identifier release];
 	[localizedName release];
 	[localizedIcon release];
@@ -135,7 +206,7 @@ configurations).
 - (NSString*)
 headingTitleForNameColumn
 {
-	NSTableColumn*		nameColumn = [self->masterView.tableColumns objectAtIndex:1];
+	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
 	
 	
 	return [nameColumn.headerCell stringValue];
@@ -143,7 +214,7 @@ headingTitleForNameColumn
 - (void)
 setHeadingTitleForNameColumn:(NSString*)	aNewTitle
 {
-	NSTableColumn*		nameColumn = [self->masterView.tableColumns objectAtIndex:1];
+	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
 	
 	
 	[nameColumn.headerCell setStringValue:aNewTitle];
@@ -178,9 +249,9 @@ setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
 		bzero(&oldStruct, sizeof(oldStruct));
 		bzero(&newStruct, sizeof(newStruct));
 		oldStruct.parentPanelDataSetOrNull = nullptr;
-		if (oldBindingIndex < [self->itemArrayController.arrangedObjects count])
+		if (oldBindingIndex < [self.itemArrayController.arrangedObjects count])
 		{
-			oldStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self->itemArrayController.arrangedObjects objectAtIndex:oldBindingIndex]];
+			oldStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self.itemArrayController.arrangedObjects objectAtIndex:oldBindingIndex]];
 		}
 		if (NSNotFound == oldStruct.selectedDataArrayIndex)
 		{
@@ -191,9 +262,9 @@ setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
 		[_listItemBindingIndexes release];
 		_listItemBindingIndexes = [anIndexSet retain];
 		newStruct.parentPanelDataSetOrNull = nullptr;
-		if (newBindingIndex < [self->itemArrayController.arrangedObjects count])
+		if (newBindingIndex < [self.itemArrayController.arrangedObjects count])
 		{
-			newStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self->itemArrayController.arrangedObjects objectAtIndex:newBindingIndex]];
+			newStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self.itemArrayController.arrangedObjects objectAtIndex:newBindingIndex]];
 		}
 		if (NSNotFound == newStruct.selectedDataArrayIndex)
 		{
@@ -201,18 +272,111 @@ setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
 		}
 		
 		// notify the master of the new selection
-		[self->masterDriver numberedListViewManager:self
+		[self.masterDriver numberedListViewManager:self
 													didChangeFromDataSet:&oldStruct
 													toDataSet:&newStruct];
 		
 		// notify the detail view of the new selection
-		[self->detailViewManager.delegate panelViewManager:self->detailViewManager
+		[self.detailViewManager.delegate panelViewManager:self.detailViewManager
 															didChangeFromDataSet:&oldStruct
 															toDataSet:&newStruct];
 		
 		[self didChangeValueForKey:@"listItemBindingIndexes"];
 	}
 }// setListItemBindingIndexes:
+
+
+#pragma mark NSSplitViewDelegate
+
+
+/*!
+Ensures that the right-hand side of the split does not
+make the panel any smaller than its minimum size.
+
+(2017.07)
+*/
+- (CGFloat)
+splitView:(NSSplitView*)			sender
+constrainMaxCoordinate:(CGFloat)	aProposedMaxX
+ofSubviewAt:(NSInteger)				aDividerIndex
+{
+#pragma unused(sender)
+	CGFloat		result = aProposedMaxX;
+	
+	
+	assert(0 == aDividerIndex);
+	
+	// LOCALIZE THIS
+	result = MIN(NSWidth(self.splitView.frame) - [self idealDetailContainerWidth], aProposedMaxX);
+	
+	return result;
+}// splitView:constrainMaxCoordinate:ofSubviewAt:
+
+
+/*!
+Ensures that the right-hand side of the split does not
+make the panel any smaller than its minimum size.
+
+(2017.07)
+*/
+- (CGFloat)
+splitView:(NSSplitView*)			sender
+constrainMinCoordinate:(CGFloat)	aProposedMinX
+ofSubviewAt:(NSInteger)				aDividerIndex
+{
+#pragma unused(sender)
+	CGFloat		result = aProposedMinX;
+	
+	
+	assert(0 == aDividerIndex);
+	
+	return result;
+}// splitView:constrainMinCoordinate:ofSubviewAt:
+
+
+/*!
+Ensures that resizing applies to the panel, unless the
+existing list size would cramp the panel below its
+minimum size.
+
+(2017.07)
+*/
+- (void)
+splitView:(NSSplitView*)			sender
+resizeSubviewsWithOldSize:(NSSize)	anOriginalSize
+{
+#pragma unused(sender)
+	NSSize		newSize = self.splitView.frame.size;
+	NSSize		sizeDifference = NSMakeSize(newSize.width - anOriginalSize.width,
+											newSize.height - anOriginalSize.height);
+	CGFloat		masterWidth = 0; // initially...
+	CGFloat		detailWidth = 0; // initially...
+	CGFloat		suggestedDetailWidth = MAX(NSWidth(self.detailContainer.frame) + (sizeDifference.width * 0.75/* arbitrary */),
+											[self idealDetailContainerWidth]);
+	
+	
+	// LOCALIZE THIS (assumes left-to-right arrangement)
+	if (suggestedDetailWidth > [self idealDetailContainerWidth])
+	{
+		// when relatively large, assign an arbitrary width for the list
+		// (note: this seems to avoid a LOT of quirks in NSSplitView)
+		masterWidth = 280.0; // arbitrary
+	}
+	else
+	{
+		// distribute the change
+		masterWidth = (newSize.width - suggestedDetailWidth - self.splitView.dividerThickness);
+		if (masterWidth < 0)
+		{
+			masterWidth = 0;
+		}
+	}
+	detailWidth = (newSize.width - masterWidth - self.splitView.dividerThickness);
+	
+	self.masterContainer.frame = NSMakeRect(0, 0, masterWidth, newSize.height);
+	self.detailContainer.frame = NSMakeRect(self.masterContainer.frame.origin.x + NSWidth(self.masterContainer.frame) + self.splitView.dividerThickness,
+											self.masterContainer.frame.origin.y, detailWidth, newSize.height);
+}// splitView:resizeSubviewsWithOldSize:
 
 
 #pragma mark Panel_Delegate
@@ -251,13 +415,13 @@ initializeWithContext:(void*)			aContext
 										] retain];
 	self->_listItemBindingIndexes = [[NSIndexSet alloc] initWithIndex:0];
 	self->_listItemBindings = [[NSArray alloc] init];
-	self->masterDriver = givenDriver;
-	self->detailViewManager = [givenDetailViewManager retain];
-	self->detailViewManager.panelParent = self;
+	self.masterDriver = givenDriver;
+	self.detailViewManager = [givenDetailViewManager retain];
+	self.detailViewManager.panelParent = self;
 	
-	assert(nil != self->detailViewManager);
+	assert(nil != self.detailViewManager);
 	
-	[self->masterDriver initializeNumberedListViewManager:self];
+	[self.masterDriver initializeNumberedListViewManager:self];
 }// panelViewManager:initializeWithContext:
 
 
@@ -272,7 +436,7 @@ requestingEditType:(Panel_EditType*)	outEditType
 {
 #pragma unused(aViewManager)
 	*outEditType = kPanel_EditTypeNormal;
-	[self->detailViewManager.delegate panelViewManager:aViewManager requestingEditType:outEditType];
+	[self.detailViewManager.delegate panelViewManager:aViewManager requestingEditType:outEditType];
 }// panelViewManager:requestingEditType:
 
 
@@ -287,25 +451,29 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != masterView);
-	assert(nil != detailView);
-	assert(nil != detailViewManager);
-	assert(nil != itemArrayController);
+	assert(nil != self.itemArrayController);
+	assert(nil != self.masterContainer);
+	assert(nil != self.masterView);
+	assert(nil != self.detailContainer);
+	assert(nil != self.detailView);
+	assert(nil != self.detailViewManager);
+	assert(nil != self.splitView);
+	assert(self == self.splitView.delegate);
 	
-	NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[self->detailViewManager panelIdentifier]];
+	NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[self.detailViewManager panelIdentifier]];
 	
 	
-	[tabItem setView:[self->detailViewManager managedView]];
-	[tabItem setInitialFirstResponder:[self->detailViewManager logicalFirstResponder]];
-	[self->detailView addTabViewItem:tabItem];
+	[tabItem setView:[self.detailViewManager managedView]];
+	[tabItem setInitialFirstResponder:[self.detailViewManager logicalFirstResponder]];
+	[self.detailView addTabViewItem:tabItem];
 	[tabItem release];
 	
-	if ([self->masterDriver respondsToSelector:@selector(containerViewDidLoadForNumberedListViewManager:)])
+	if ([self.masterDriver respondsToSelector:@selector(containerViewDidLoadForNumberedListViewManager:)])
 	{
-		[self->masterDriver containerViewDidLoadForNumberedListViewManager:self];
+		[self.masterDriver containerViewDidLoadForNumberedListViewManager:self];
 	}
 	
-	[[self->masterView enclosingScrollView] setNextKeyView:[self->detailViewManager logicalFirstResponder]];
+	[[self.masterView enclosingScrollView] setNextKeyView:[self.detailViewManager logicalFirstResponder]];
 }// panelViewManager:didLoadContainerView:
 
 
@@ -320,19 +488,20 @@ requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
 	NSRect		containerFrame = [[self managedView] frame];
-	//NSRect		masterFrame = [self->masterView frame];
-	NSRect		defaultDetailFrame = [self->detailView frame];
-	NSSize		panelIdealSize = defaultDetailFrame.size;
+	NSRect		masterFrame = self.masterContainer.frame;
+	//NSRect		detailFrame = self.detailContainer.frame;
+	NSRect		defaultDetailViewFrame = self.detailView.frame;
+	NSSize		panelIdealSize = defaultDetailViewFrame.size; // initially...
 	
 	
-	[self->detailViewManager.delegate panelViewManager:aViewManager requestingIdealSize:&panelIdealSize];
-	panelIdealSize.width = MAX(panelIdealSize.width, NSWidth(defaultDetailFrame));
-	panelIdealSize.height = MAX(panelIdealSize.height, NSHeight(defaultDetailFrame));
+	[self.detailViewManager.delegate panelViewManager:aViewManager requestingIdealSize:&panelIdealSize];
+	panelIdealSize.width = MAX(panelIdealSize.width, NSWidth(defaultDetailViewFrame));
+	panelIdealSize.height = MAX(panelIdealSize.height, NSHeight(defaultDetailViewFrame));
 	
 	// set total size, including space required by numbered-list interface
 	*outIdealSize = panelIdealSize;
-	outIdealSize->width += (NSWidth(containerFrame) - NSWidth(defaultDetailFrame));
-	outIdealSize->height += (NSHeight(containerFrame) - NSHeight(defaultDetailFrame));
+	outIdealSize->width += (NSWidth(masterFrame) + self.splitView.dividerThickness);
+	outIdealSize->height += (NSHeight(containerFrame) - NSHeight(defaultDetailViewFrame));
 }// panelViewManager:requestingIdealSize:
 
 
@@ -347,7 +516,7 @@ didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager)
 	// forward to detail view
-	[self->detailViewManager.delegate panelViewManager:self->detailViewManager didPerformContextSensitiveHelp:sender];
+	[self.detailViewManager.delegate panelViewManager:self.detailViewManager didPerformContextSensitiveHelp:sender];
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -362,7 +531,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 {
 #pragma unused(aViewManager)
 	// forward to detail view
-	[self->detailViewManager.delegate panelViewManager:self->detailViewManager willChangePanelVisibility:aVisibility];
+	[self.detailViewManager.delegate panelViewManager:self.detailViewManager willChangePanelVisibility:aVisibility];
 }// panelViewManager:willChangePanelVisibility:
 
 
@@ -377,7 +546,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager)
 	// forward to detail view
-	[self->detailViewManager.delegate panelViewManager:self->detailViewManager didChangePanelVisibility:aVisibility];
+	[self.detailViewManager.delegate panelViewManager:self.detailViewManager didChangePanelVisibility:aVisibility];
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -410,9 +579,9 @@ toDataSet:(void*)						newDataSet
 	
 	bzero(&oldStruct, sizeof(oldStruct));
 	oldStruct.parentPanelDataSetOrNull = oldDataSet;
-	if (oldBindingIndex < [self->itemArrayController.arrangedObjects count])
+	if (oldBindingIndex < [self.itemArrayController.arrangedObjects count])
 	{
-		oldStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self->itemArrayController.arrangedObjects objectAtIndex:oldBindingIndex]];
+		oldStruct.selectedDataArrayIndex = [self.listItemBindings indexOfObject:[self.itemArrayController.arrangedObjects objectAtIndex:oldBindingIndex]];
 	}
 	if (NSNotFound == oldStruct.selectedDataArrayIndex)
 	{
@@ -422,11 +591,11 @@ toDataSet:(void*)						newDataSet
 	newStruct.parentPanelDataSetOrNull = newDataSet;
 	newStruct.selectedDataArrayIndex = 0; // reset the current selection
 	
-	[self->masterDriver numberedListViewManager:self
+	[self.masterDriver numberedListViewManager:self
 												didChangeFromDataSet:&oldStruct
 												toDataSet:&newStruct];
 	
-	[self->detailViewManager.delegate panelViewManager:self->detailViewManager
+	[self.detailViewManager.delegate panelViewManager:self.detailViewManager
 														didChangeFromDataSet:&oldStruct
 														toDataSet:&newStruct];
 	
@@ -452,7 +621,7 @@ userAccepted:(BOOL)						isAccepted
 {
 #pragma unused(aViewManager)
 	// forward to detail view
-	[self->detailViewManager.delegate panelViewManager:self->detailViewManager didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
+	[self.detailViewManager.delegate panelViewManager:self.detailViewManager didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
 }// panelViewManager:didFinishUsingContainerView:userAccepted:
 
 
@@ -498,7 +667,7 @@ for the panels in this view.
 - (NSEnumerator*)
 panelParentEnumerateChildViewManagers
 {
-	return [[[@[self->detailViewManager] retain] autorelease] objectEnumerator];
+	return [[[@[self.detailViewManager] retain] autorelease] objectEnumerator];
 }// panelParentEnumerateChildViewManagers
 
 
@@ -561,7 +730,7 @@ IMPORTANT:	This is only a hint.  Panels must be prepared
 panelResizeAxes
 {
 	// return the detail view’s constraint
-	Panel_ResizeConstraint	result = [self->detailViewManager panelResizeAxes];
+	Panel_ResizeConstraint	result = [self.detailViewManager panelResizeAxes];
 	
 	
 	return result;
@@ -586,9 +755,9 @@ preferencesClass
 	Quills::Prefs::Class	result = Quills::Prefs::GENERAL;
 	
 	
-	if ([self->detailViewManager conformsToProtocol:@protocol(PrefsWindow_PanelInterface)])
+	if ([self.detailViewManager conformsToProtocol:@protocol(PrefsWindow_PanelInterface)])
 	{
-		result = [STATIC_CAST(self->detailViewManager, id< PrefsWindow_PanelInterface >) preferencesClass];
+		result = [STATIC_CAST(self.detailViewManager, id< PrefsWindow_PanelInterface >) preferencesClass];
 	}
 	
 	return result;
@@ -600,6 +769,35 @@ preferencesClass
 
 #pragma mark -
 @implementation GenericPanelNumberedList_ViewManager (GenericPanelNumberedList_ViewManagerInternal) //{
+
+
+/*!
+Returns the “ideal” width for the "detailContainer" view, which
+should represent the frame of the right-hand side of the split
+view (useful in split-view delegate methods, for instance).
+
+(2017.07)
+*/
+- (CGFloat)
+idealDetailContainerWidth
+{
+	CGFloat		result = 0; // see below
+	NSSize		panelIdealSize = self.detailViewManager.view.frame.size;
+	
+	
+	// LOCALIZE THIS
+	// IMPORTANT: For simplicity, the layout (in Interface Builder)
+	// is such that the width of the embedded panel is identical to
+	// the width of the "detailContainer".  This allows the ideal
+	// width of the detail view to be sufficient to decide the width
+	// of the entire detail container.  If that ever changes, e.g.
+	// if border insets are introduced, this function must change.
+	[self.detailViewManager.delegate panelViewManager:self.detailViewManager
+														requestingIdealSize:&panelIdealSize];
+	result = panelIdealSize.width;
+	
+	return result;
+}// idealDetailContainerWidth
 
 
 /*!

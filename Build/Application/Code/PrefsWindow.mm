@@ -90,6 +90,11 @@ NSKeyedArchive of an NSIndexSet object (dragged row index).
 */
 NSString*	kMy_PrefsWindowSourceListDataType = @"net.macterm.MacTerm.prefswindow.sourcelistdata";
 
+/*!
+The toolbar item ID for the search field.
+*/
+NSString*	kMy_PrefsWindowToolbarItemIDSearch	= @"net.macterm.MacTerm.toolbaritem.prefsearch";
+
 } // anonymous namespace
 
 #pragma mark Types
@@ -137,6 +142,21 @@ in the source list.
 @end //}
 
 /*!
+Toolbar item for search field.
+*/
+@interface PrefsWindow_ToolbarItemSearch : NSToolbarItem //{
+{
+@private
+	NSSearchField*		_searchField;
+}
+
+// initializers
+	- (instancetype)
+	initWithField:(NSSearchField*)_;
+
+@end //}
+
+/*!
 The private class interface.
 */
 @interface PrefsWindow_Controller (PrefsWindow_ControllerInternal) //{
@@ -160,6 +180,8 @@ The private class interface.
 	- (void)
 	displayPanelOrTabWithIdentifier:(NSString*)_
 	withAnimation:(BOOL)_;
+	- (CGFloat)
+	idealDetailContainerWidth;
 	- (void)
 	rebuildSourceList;
 	- (void)
@@ -732,13 +754,79 @@ isEqual:(id)	anObject
 
 
 #pragma mark -
+@implementation PrefsWindow_ToolbarItemSearch //{
+
+
+/*!
+Designated initializer.
+
+(2017.07)
+*/
+- (instancetype)
+initWithField:(NSSearchField*)	aField
+{
+	self = [super initWithItemIdentifier:kMy_PrefsWindowToolbarItemIDSearch];
+	if (nil != self)
+	{
+		_searchField = aField; // view will be retained by item
+		[self setView:aField];
+		[self setEnabled:YES];
+		[self setLabel:@""];
+		[self setPaletteLabel:NSLocalizedString(@"Search for Preferences", @"toolbar item palette name; for finding settings")];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2017.07)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end //}
+
+
+#pragma mark -
 @implementation PrefsWindow_Controller //{
 
 
 static PrefsWindow_Controller*	gPrefsWindow_Controller = nil;
 
 
+/*!
+The superview of the embedded panel, and the view whose frame
+defines the right-hand region of the split view.
+*/
+@synthesize detailContainer = _detailContainer;
+
+/*!
+The superview of the source list of preferences collections, and
+the view whose frame defines the left-hand region of the split view.
+*/
+@synthesize masterContainer = _masterContainer;
+
+/*!
+Text currently entered in the search field.
+*/
 @synthesize searchText = _searchText;
+
+/*!
+Set to YES if the source list should be removed; otherwise, the
+split-view will constrain its size so that the list is available.
+*/
+@synthesize sourceListHidden = _sourceListHidden;
+
+/*!
+The superview of the master and detail views, with a separator line.
+*/
+@synthesize splitView = _splitView;
 
 
 #pragma mark Class Methods
@@ -778,9 +866,9 @@ init
 		self->currentPreferenceCollections = [[NSMutableArray alloc] init];
 		self->panelIDArray = [[NSMutableArray arrayWithCapacity:7/* arbitrary */] retain];
 		self->panelsByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
+		self->panelSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
 		self->windowMinSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
-		self->extraWindowContentSize = NSZeroSize; // set later
 		self->_touchBarController = nil; // created on demand
 		self->activePanel = nil;
 		self->_searchText = [@"" copy];
@@ -825,6 +913,7 @@ dealloc
 	[currentPreferenceCollections release];
 	[panelIDArray release];
 	[panelsByID release];
+	[panelSizesByID release];
 	[windowSizesByID release];
 	[windowMinSizesByID release];
 	[super dealloc];
@@ -1330,43 +1419,6 @@ performSearch:(id)		sender
 }// performSearch:
 
 
-/*!
-Responds to a “remove collection” segment click.
-
-(No other commands need to be handled because they are
-already bound to items in menus that the other segments
-display.)
-
-(4.1)
-*/
-- (IBAction)
-performSegmentedControlAction:(id)	sender
-{
-	if ([sender isKindOfClass:[NSSegmentedControl class]])
-	{
-		NSSegmentedControl*		segments = REINTERPRET_CAST(sender, NSSegmentedControl*);
-		
-		
-		// IMPORTANT: this should agree with the button arrangement
-		// in the Preferences window’s NIB file...
-		if (0 == [segments selectedSegment])
-		{
-			// this is redundantly handled as the “quick click” action
-			// for the button; it is also in the segment’s pop-up menu
-			[self performAddNewPreferenceCollection:sender];
-		}
-		else if (1 == [segments selectedSegment])
-		{
-			[self performRemovePreferenceCollection:sender];
-		}
-	}
-	else
-	{
-		Console_Warning(Console_WriteLine, "received 'performSegmentedControlAction:' message from unexpected sender");
-	}
-}// performSegmentedControlAction:
-
-
 #pragma mark NSColorPanel
 
 
@@ -1417,6 +1469,146 @@ changeFont:(id)		sender
 		[self->activePanel changeFont:sender];
 	}
 }// changeFont:
+
+
+#pragma mark NSSplitViewDelegate
+
+
+/*!
+Ensures that the right-hand side of the split does not
+make the panel any smaller than its minimum size.
+
+(2017.07)
+*/
+- (CGFloat)
+splitView:(NSSplitView*)			sender
+constrainMaxCoordinate:(CGFloat)	aProposedMaxX
+ofSubviewAt:(NSInteger)				aDividerIndex
+{
+#pragma unused(sender)
+	CGFloat		result = aProposedMaxX;
+	
+	
+	assert(0 == aDividerIndex);
+	
+	if (self.sourceListHidden)
+	{
+		result = 0;
+	}
+	else
+	{
+		// LOCALIZE THIS
+		result = MIN(NSWidth(self.splitView.frame) - [self idealDetailContainerWidth], aProposedMaxX);
+		if (result < 0)
+		{
+			result = 0;
+		}
+	}
+	
+	return result;
+}// splitView:constrainMaxCoordinate:ofSubviewAt:
+
+
+/*!
+Ensures that the right-hand side of the split does not
+make the panel any smaller than its minimum size.
+
+(2017.07)
+*/
+- (CGFloat)
+splitView:(NSSplitView*)			sender
+constrainMinCoordinate:(CGFloat)	aProposedMinX
+ofSubviewAt:(NSInteger)				aDividerIndex
+{
+#pragma unused(sender)
+	CGFloat		result = aProposedMinX;
+	
+	
+	assert(0 == aDividerIndex);
+	
+	if (self.sourceListHidden)
+	{
+		result = 0;
+	}
+	else
+	{
+		result = MAX(aProposedMinX, 155/* arbitrary */);
+	}
+	
+	return result;
+}// splitView:constrainMinCoordinate:ofSubviewAt:
+
+
+/*!
+Ensures that resizing applies to the panel, unless the
+existing list size would cramp the panel below its
+minimum size.
+
+(2017.07)
+*/
+- (void)
+splitView:(NSSplitView*)			sender
+resizeSubviewsWithOldSize:(NSSize)	anOriginalSize
+{
+#pragma unused(sender)
+	NSSize		newSize = self.splitView.frame.size;
+	NSSize		sizeDifference = NSMakeSize(newSize.width - anOriginalSize.width,
+											newSize.height - anOriginalSize.height);
+	CGFloat		masterWidth = 0; // initially...
+	CGFloat		detailWidth = 0; // initially...
+	CGFloat		suggestedDetailWidth = MAX(NSWidth(self.detailContainer.frame) + (sizeDifference.width * 0.75/* arbitrary */),
+											[self idealDetailContainerWidth]);
+	
+	
+	// LOCALIZE THIS (assumes left-to-right arrangement)
+	if (self.sourceListHidden)
+	{
+		masterWidth = 0;
+	}
+	else if (suggestedDetailWidth > [self idealDetailContainerWidth])
+	{
+		// when relatively large, assign an arbitrary width for the list
+		// (note: this seems to avoid a LOT of quirks in NSSplitView)
+		masterWidth = 200.0; // arbitrary
+	}
+	else
+	{
+		// distribute the change
+		masterWidth = (newSize.width - suggestedDetailWidth - self.splitView.dividerThickness);
+		if (masterWidth < 0)
+		{
+			masterWidth = 0;
+		}
+	}
+	detailWidth = (newSize.width - masterWidth - self.splitView.dividerThickness);
+	
+	self.masterContainer.frame = NSMakeRect(0, 0, masterWidth, newSize.height);
+	self.detailContainer.frame = NSMakeRect(self.masterContainer.frame.origin.x + NSWidth(self.masterContainer.frame) + self.splitView.dividerThickness,
+											self.masterContainer.frame.origin.y, detailWidth, newSize.height);
+}// splitView:resizeSubviewsWithOldSize:
+
+
+/*!
+Returns YES only if the specified view is allowed to resize
+at this time.
+
+(2017.07)
+*/
+- (BOOL)
+splitView:(NSSplitView*)				sender
+shouldAdjustSizeOfSubview:(NSView*)		view
+{
+#pragma unused(sender)
+	BOOL	result = YES;
+	
+	
+	if ((view == self.masterContainer) && (self.sourceListHidden))
+	{
+		result = NO;
+	}
+	
+	return result;
+}// splitView:shouldAdjustSizeOfSubview:
 
 
 #pragma mark NSTableDataSource
@@ -1715,6 +1907,14 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 #pragma unused(toolbar, flag)
 	// NOTE: no need to handle standard items here
 	NSToolbarItem*			result = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+	
+	
+	if ([itemIdentifier isEqualToString:kMy_PrefsWindowToolbarItemIDSearch])
+	{
+		result = [[[PrefsWindow_ToolbarItemSearch alloc] initWithField:self->searchField] autorelease];
+		return result; // TEMPORARY
+	}
+	
 	Panel_ViewManager*		itemPanel = [self->panelsByID objectForKey:itemIdentifier];
 	NSButton*				categoryButton = [[NSButton alloc]
 												initWithFrame:NSMakeRect(0, 0, 36, 36)/* arbitrary frame */];
@@ -1863,8 +2063,11 @@ in the given toolbar.
 toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
-	NSArray*	result = [[self->panelIDArray copy] autorelease];
+	NSMutableArray*		result = [[self->panelIDArray mutableCopy] autorelease];
 	
+	
+	[result addObject:NSToolbarFlexibleSpaceItemIdentifier];
+	[result addObject:kMy_PrefsWindowToolbarItemIDSearch];
 	
 	return result;
 }// toolbarAllowedItemIdentifiers:
@@ -1959,16 +2162,16 @@ windowDidLoad
 	assert(nil != windowFirstResponder);
 	assert(nil != windowLastResponder);
 	assert(nil != containerTabView);
-	assert(nil != sourceListBackdrop);
-	assert(nil != sourceListContainer);
 	assert(nil != sourceListTableView);
-	assert(nil != sourceListSegmentedControl);
-	assert(nil != sourceListHelpButton);
-	assert(nil != mainViewHelpButton);
 	assert(nil != searchField);
-	assert(nil != verticalSeparator);
+	assert(nil != self.detailContainer);
+	assert(nil != self.masterContainer);
+	assert(nil != self.splitView);
+	assert(self == self.splitView.delegate);
 	
-	NSRect const	kOriginalContainerFrame = [self->containerTabView frame];
+	NSRect const	kOriginalDetailContainerFrame = self.detailContainer.frame;
+	NSRect const	kOriginalPanelContainerFrame = self->containerTabView.frame;
+	NSSize			extraWindowContentSize = NSZeroSize; // set below
 	
 	
 	// create all panels
@@ -2049,12 +2252,13 @@ windowDidLoad
 	}
 	
 	// remember how much bigger the window’s content is than the container view
+	// (NOTE: this changes whenever the split is resized)
 	{
 		NSRect	contentFrame = [[self window] contentRectForFrameRect:[[self window] frame]];
 		
 		
-		self->extraWindowContentSize = NSMakeSize(NSWidth(contentFrame) - NSWidth(kOriginalContainerFrame),
-													NSHeight(contentFrame) - NSHeight(kOriginalContainerFrame));
+		extraWindowContentSize = NSMakeSize(NSWidth(contentFrame) - NSWidth(kOriginalDetailContainerFrame),
+											NSHeight(contentFrame) - NSHeight(kOriginalDetailContainerFrame));
 	}
 	
 	// add each panel as a subview and hide all except the first;
@@ -2065,11 +2269,14 @@ windowDidLoad
 		Panel_ViewManager*	viewMgr = [self->panelsByID objectForKey:panelIdentifier];
 		NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:panelIdentifier];
 		NSView*				panelContainer = [viewMgr managedView];
-		NSRect				panelFrame = kOriginalContainerFrame;
+		NSRect				panelFrame = kOriginalPanelContainerFrame;
 		NSSize				panelIdealSize = panelFrame.size;
 		
 		
 		[viewMgr.delegate panelViewManager:viewMgr requestingIdealSize:&panelIdealSize];
+		
+		// include space for bottom-right help button
+		panelIdealSize.height += 48; // padding around button plus button height
 		
 		// due to layout constraints, it is sufficient to make the
 		// panel container match the parent view frame (except with
@@ -2084,14 +2291,14 @@ windowDidLoad
 		// (this changes whenever the user resizes the window)
 		{
 			NSArray*	sizeArray = nil;
-			NSSize		windowSize = NSMakeSize(panelIdealSize.width + self->extraWindowContentSize.width,
-												panelIdealSize.height + self->extraWindowContentSize.height);
+			NSSize		windowSize = NSMakeSize(panelIdealSize.width + extraWindowContentSize.width,
+												panelIdealSize.height + extraWindowContentSize.height);
 			
 			
 			// only inspector-style windows include space for a source list
 			if (kPanel_EditTypeInspector != [viewMgr panelEditType])
 			{
-				windowSize.width -= NSWidth([self->sourceListContainer frame]);
+				windowSize.width -= NSWidth(self.masterContainer.frame);
 			}
 			
 			// choose a frame size that uses the panel’s ideal size
@@ -2104,7 +2311,18 @@ windowDidLoad
 			// also require (for now, at least) that the window be
 			// no smaller than this initial size, whenever this
 			// particular panel is displayed
+			sizeArray = @[
+							[NSNumber numberWithFloat:windowSize.width],
+							[NSNumber numberWithFloat:windowSize.height],
+						];
 			[self->windowMinSizesByID setObject:sizeArray forKey:panelIdentifier];
+			
+			// set initial value for panel size (can change based on split view)
+			sizeArray = @[
+							[NSNumber numberWithFloat:panelIdealSize.width],
+							[NSNumber numberWithFloat:panelIdealSize.height],
+						];
+			[self->panelSizesByID setObject:sizeArray forKey:panelIdentifier];
 		}
 		
 		[tabItem setView:panelContainer];
@@ -2561,8 +2779,7 @@ withAnimation:(BOOL)												isAnimated
 	if (aPanel != self->activePanel)
 	{
 		NSRect	newWindowFrame = NSZeroRect; // set later
-		BOOL	wasShowingSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);/*((NO == self->sourceListContainer.isHidden) &&
-										(self->sourceListContainer.frame.size.width > 0));*/
+		BOOL	wasShowingSourceList = (kPanel_EditTypeInspector == [self->activePanel panelEditType]);/*(self.sourceListHidden)*/
 		BOOL	willShowSourceList = (kPanel_EditTypeInspector == [aPanel panelEditType]); // initially...
 		
 		
@@ -2617,6 +2834,7 @@ withAnimation:(BOOL)												isAnimated
 				
 				
 				minSize = NSMakeSize(newMinWidth, newMinHeight);
+				minSize.width = MAX(minSize.width, 750); // force enough space for all icons and search field
 				[self.window setContentMinSize:minSize];
 			}
 			
@@ -2778,6 +2996,41 @@ withAnimation:(BOOL)							isAnimated
 
 
 /*!
+Returns the “ideal” width for the "detailContainer" view, which
+should represent the frame of the right-hand side of the split
+view (useful in split-view delegate methods, for instance).
+
+(2017.07)
+*/
+- (CGFloat)
+idealDetailContainerWidth
+{
+	CGFloat		result = 0; // see below
+	NSArray*	panelSizeArray = [self->panelSizesByID objectForKey:[self->activePanel panelIdentifier]];
+	
+	
+	// LOCALIZE THIS
+	// IMPORTANT: For simplicity, the layout (in Interface Builder)
+	// is such that the width of the embedded panel is identical to
+	// the width of the "detailContainer".  This allows the ideal
+	// width of the detail view to be sufficient to decide the width
+	// of the entire detail container.  If that ever changes, e.g.
+	// if border insets are introduced, this function must change.
+	if (0 == panelSizeArray.count)
+	{
+		// should never happen (array is set up at load time)
+		result = self.detailContainer.frame.size.width;
+	}
+	else
+	{
+		result = [[panelSizeArray objectAtIndex:0] floatValue];
+	}
+	
+	return result;
+}// idealDetailContainerWidth
+
+
+/*!
 Called when a monitored preference is changed.  See the
 initializer for the set of events that is monitored.
 
@@ -2882,26 +3135,11 @@ the window, animating any other views to match.
 setSourceListHidden:(BOOL)		aHiddenFlag
 newWindowFrame:(NSRect)			aNewWindowFrame
 {
-	NSRect		newWindowContentFrame = [self.window contentRectForFrameRect:aNewWindowFrame];
-	NSRect		listFrame;
-	NSRect		panelFrame;
-	
-	
-	// the darker backdrop behind the list makes the
-	// slide animation less jarring
-	self->sourceListBackdrop.hidden = aHiddenFlag;
-	
-	// calculate the new size and location of the panel
-	panelFrame = NSMakeRect((aHiddenFlag) ? 0 : NSWidth(sourceListContainer.frame), containerTabView.frame.origin.y,
-							NSWidth(newWindowContentFrame) - ((aHiddenFlag) ? 0 : self->extraWindowContentSize.width),
-							NSHeight(newWindowContentFrame) - self->extraWindowContentSize.height);
-	
-	// calculate the new size and location of the list,
-	// potentially moving it to an invisible location (after
-	// the animation ends, the list is hidden anyway)
-	listFrame = sourceListContainer.frame;
-	listFrame.origin.x = ((aHiddenFlag) ? -self->extraWindowContentSize.width : 0); // “slide” effect
-	listFrame.size.height = NSHeight(panelFrame);
+	if (aHiddenFlag)
+	{
+		self.sourceListHidden = aHiddenFlag;
+		[self->sourceListTableView enclosingScrollView].hidden = aHiddenFlag;
+	}
 	
 	// animate changes to other views (NOTE: can replace this with a
 	// more advanced block-based approach when using a later SDK)
@@ -2912,29 +3150,7 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 		[[NSAnimationContext currentContext] setDuration:0.12];
 		{
 			[self.window.animator setFrame:aNewWindowFrame display:YES];
-			[[self->containerTabView animator] setFrame:panelFrame];
-			if (NO == aHiddenFlag)
-			{
-				sourceListContainer.hidden = aHiddenFlag;
-				sourceListSegmentedControl.hidden = aHiddenFlag;
-				sourceListHelpButton.hidden = (NO == aHiddenFlag);
-				verticalSeparator.hidden = aHiddenFlag;
-				mainViewHelpButton.hidden = aHiddenFlag;
-			}
-			[sourceListContainer.animator setFrame:listFrame];
-			[sourceListContainer.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
-			[sourceListSegmentedControl.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
-			[verticalSeparator.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
-			[mainViewHelpButton.animator setAlphaValue:((aHiddenFlag) ? 0.0 : 1.0)];
-			[sourceListHelpButton.animator setAlphaValue:((aHiddenFlag) ? 1.0 : 0.0)]; // this alternate help button appears when there is no list
-			if (aHiddenFlag)
-			{
-				sourceListContainer.hidden = aHiddenFlag;
-				sourceListSegmentedControl.hidden = aHiddenFlag;
-				sourceListHelpButton.hidden = (NO == aHiddenFlag);
-				verticalSeparator.hidden = aHiddenFlag;
-				mainViewHelpButton.hidden = aHiddenFlag;
-			}
+			// nothing else currently
 		}
 		[NSAnimationContext endGrouping];
 	});
@@ -2944,7 +3160,22 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 	// is sometimes not completely redrawn on its left side)
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, STATIC_CAST(0.32 * NSEC_PER_SEC, int64_t)), dispatch_get_main_queue(),
 	^{
-		[containerTabView setNeedsDisplay:YES];
+		NSRect	tmpFrame = self.splitView.frame;
+		
+		
+		if (NO == aHiddenFlag)
+		{
+			self.sourceListHidden = aHiddenFlag;
+			[self->sourceListTableView enclosingScrollView].hidden = aHiddenFlag;
+		}
+		
+		// force a refresh of the split-view layout
+		tmpFrame.size.width += 1;
+		self.splitView.frame = tmpFrame;
+		tmpFrame.size.width -= 1;
+		self.splitView.frame = tmpFrame;
+		
+		[REINTERPRET_CAST(self.window.contentView, NSView*) setNeedsDisplay:YES];
 	});
 }// setSourceListHidden:newWindowFrame:
 

@@ -190,20 +190,6 @@ inline CFStringRef
 }
 
 inline CFStringRef
-	AppResources_ReturnItemAddIconFilenameNoExtension					()
-{
-	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
-	return CFSTR("IconForItemAdd");
-}
-
-inline CFStringRef
-	AppResources_ReturnItemRemoveIconFilenameNoExtension				()
-{
-	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
-	return CFSTR("IconForItemRemove");
-}
-
-inline CFStringRef
 	AppResources_ReturnKeypadArrowDownIconFilenameNoExtension			()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"

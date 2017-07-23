@@ -1,28 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefsWindow_Controller">
             <connections>
                 <outlet property="containerTabView" destination="149" id="157"/>
-                <outlet property="mainViewHelpButton" destination="122" id="PvT-6e-Kaq"/>
+                <outlet property="detailContainer" destination="Ym7-wy-WMQ" id="nA9-cE-PtK"/>
+                <outlet property="masterContainer" destination="NYq-3V-grs" id="0eO-We-29o"/>
                 <outlet property="searchField" destination="vkn-sq-ZCZ" id="Qjc-aZ-7gs"/>
-                <outlet property="sourceListBackdrop" destination="Gn9-3w-3yM" id="jJ6-S0-gYI"/>
-                <outlet property="sourceListContainer" destination="24" id="84"/>
-                <outlet property="sourceListHelpButton" destination="43" id="Yzi-5z-idS"/>
-                <outlet property="sourceListSegmentedControl" destination="57" id="87"/>
-                <outlet property="sourceListTableView" destination="27" id="85"/>
-                <outlet property="verticalSeparator" destination="37" id="tDw-J4-A4R"/>
+                <outlet property="sourceListTableView" destination="2uo-Zh-hqu" id="51T-bv-mqd"/>
+                <outlet property="splitView" destination="i6l-gZ-ZuL" id="rpl-dc-hwi"/>
                 <outlet property="window" destination="3" id="14"/>
-                <outlet property="windowFirstResponder" destination="24" id="141"/>
-                <outlet property="windowLastResponder" destination="122" id="142"/>
+                <outlet property="windowFirstResponder" destination="pgD-dZ-Wfj" id="cjF-SR-1bg"/>
+                <outlet property="windowLastResponder" destination="43" id="bpJ-CD-PSj"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <searchField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="vkn-sq-ZCZ">
+            <rect key="frame" x="0.0" y="0.0" width="160" height="22"/>
+            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search" usesSingleLineMode="YES" bezelStyle="round" sendsWholeSearchString="YES" id="twk-95-Uqr">
+                <font key="font" metaFont="system"/>
+                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+            </searchFieldCell>
+            <accessibility description="Search For Preferences"/>
+            <connections>
+                <action selector="performSearch:" target="-2" id="ar9-gX-GtF"/>
+                <binding destination="-2" name="value" keyPath="self.searchText" id="IGX-C2-yuF"/>
+                <outlet property="nextKeyView" destination="43" id="9xr-0F-7Mv"/>
+            </connections>
+        </searchField>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <arrayController clearsFilterPredicateOnInsertion="NO" id="20" userLabel="Current Preferences Contexts">
             <declaredKeys>
@@ -45,196 +56,195 @@
                 <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43" customClass="CoreUI_HelpButton">
-                        <rect key="frame" x="5" y="4" width="25" height="25"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="performContextSensitiveHelp:" target="-2" id="45"/>
-                        </connections>
-                    </button>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="122" customClass="CoreUI_HelpButton">
-                        <rect key="frame" x="225" y="4" width="25" height="25"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="123">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="performContextSensitiveHelp:" target="-2" id="125"/>
-                        </connections>
-                    </button>
-                    <box wantsLayer="YES" horizontalHuggingPriority="750" boxType="separator" id="37">
-                        <rect key="frame" x="218" y="35" width="5" height="315"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
-                    </box>
-                    <segmentedControl verticalHuggingPriority="750" misplaced="YES" id="57">
-                        <rect key="frame" x="59" y="4" width="101" height="25"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="automatic" trackingMode="momentary" id="58">
-                            <font key="font" metaFont="system"/>
-                            <segments>
-                                <segment toolTip="Create a Collection of this type." image="IconForItemAddMenuSegment" imageScaling="none" width="31">
-                                    <nil key="label"/>
-                                    <menu key="menu" id="59">
-                                        <items>
-                                            <menuItem title="New Collection" id="60">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="performAddNewPreferenceCollection:" target="-2" id="70"/>
-                                                </connections>
-                                            </menuItem>
-                                            <menuItem title="Import from File…" id="61">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="performImportPreferenceCollectionFromFile:" target="-2" id="71"/>
-                                                </connections>
-                                            </menuItem>
-                                        </items>
-                                    </menu>
-                                </segment>
-                                <segment toolTip="Delete a Collection." image="IconForItemRemove" imageScaling="none" width="31" tag="1">
-                                    <nil key="label"/>
-                                </segment>
-                                <segment toolTip="More commands applicable to Collections." image="IconForContextMenuSegment" imageScaling="none" width="31">
-                                    <nil key="label"/>
-                                    <menu key="menu" id="63">
-                                        <items>
-                                            <menuItem title="Copy Collection Settings to Default…" id="64">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="performCopyPreferenceCollectionToDefault:" target="-2" id="skx-0q-Xer"/>
-                                                </connections>
-                                            </menuItem>
-                                            <menuItem title="Duplicate Collection" id="YIo-8d-34j">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="performDuplicatePreferenceCollection:" target="-2" id="wYQ-sj-fiB"/>
-                                                </connections>
-                                            </menuItem>
-                                            <menuItem title="Rename Collection" id="65">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="performRenamePreferenceCollection:" target="-2" id="69"/>
-                                                </connections>
-                                            </menuItem>
-                                            <menuItem title="Export to File…" id="66">
-                                                <modifierMask key="keyEquivalentModifierMask"/>
-                                                <connections>
-                                                    <action selector="performExportPreferenceCollectionToFile:" target="-2" id="68"/>
-                                                </connections>
-                                            </menuItem>
-                                        </items>
-                                    </menu>
-                                </segment>
-                            </segments>
-                        </segmentedCell>
-                        <connections>
-                            <action selector="performSegmentedControlAction:" target="-2" id="73"/>
-                        </connections>
-                    </segmentedControl>
-                    <tabView drawsBackground="NO" type="noTabsNoBorder" id="149">
-                        <rect key="frame" x="220" y="36" width="280" height="314"/>
+                    <splitView misplaced="YES" dividerStyle="paneSplitter" vertical="YES" id="i6l-gZ-ZuL">
+                        <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <font key="font" metaFont="system"/>
-                        <tabViewItems/>
-                    </tabView>
-                    <searchField wantsLayer="YES" verticalHuggingPriority="750" id="vkn-sq-ZCZ">
-                        <rect key="frame" x="280" y="6" width="200" height="22"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search for Preferences" usesSingleLineMode="YES" bezelStyle="round" sendsWholeSearchString="YES" id="twk-95-Uqr">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                        </searchFieldCell>
-                        <accessibility description="Search For Preferences"/>
-                        <connections>
-                            <action selector="performSearch:" target="-2" id="ar9-gX-GtF"/>
-                            <binding destination="-2" name="value" keyPath="self.searchText" id="IGX-C2-yuF"/>
-                        </connections>
-                    </searchField>
-                    <box boxType="custom" borderType="none" id="Gn9-3w-3yM">
-                        <rect key="frame" x="0.0" y="36" width="221" height="314"/>
-                        <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
-                        <view key="contentView" id="8RG-0I-ZGL">
-                            <rect key="frame" x="0.0" y="0.0" width="221" height="314"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <subviews>
-                                <scrollView focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="22" horizontalPageScroll="10" verticalLineScroll="22" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="24">
-                                    <rect key="frame" x="0.0" y="0.0" width="220" height="314"/>
-                                    <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
-                                    <clipView key="contentView" drawsBackground="NO" id="A2q-66-WeZ">
-                                        <rect key="frame" x="0.0" y="0.0" width="220" height="314"/>
+                        <subviews>
+                            <customView wantsLayer="YES" id="NYq-3V-grs">
+                                <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <scrollView wantsLayer="YES" focusRingType="none" misplaced="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="pgD-dZ-Wfj" userLabel="Source List Container">
+                                        <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <subviews>
-                                            <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowHeight="20" id="27">
-                                                <rect key="frame" x="0.0" y="0.0" width="220" height="314"/>
-                                                <autoresizingMask key="autoresizingMask"/>
-                                                <size key="intercellSpacing" width="3" height="2"/>
-                                                <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
-                                                <tableColumns>
-                                                    <tableColumn width="217" minWidth="40" maxWidth="1000" id="29">
-                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                            <font key="font" metaFont="smallSystem"/>
-                                                            <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
-                                                            <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
-                                                        </tableHeaderCell>
-                                                        <textFieldCell key="dataCell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" alignment="left" title="Text Cell" usesSingleLineMode="YES" bezelStyle="round" id="32">
-                                                            <font key="font" metaFont="system"/>
-                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                        </textFieldCell>
-                                                        <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <clipView key="contentView" wantsLayer="YES" drawsBackground="NO" id="IIL-1d-XyW">
+                                            <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <tableView wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" viewBased="YES" id="2uo-Zh-hqu">
+                                                    <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <size key="intercellSpacing" width="3" height="2"/>
+                                                    <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                                    <tableColumns>
+                                                        <tableColumn width="197" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
+                                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
+                                                                <font key="font" metaFont="smallSystem"/>
+                                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                                <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
+                                                            </tableHeaderCell>
+                                                            <textFieldCell key="dataCell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" alignment="left" title="Text Cell" usesSingleLineMode="YES" bezelStyle="round" id="yON-BS-iR1">
+                                                                <font key="font" metaFont="system"/>
+                                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            </textFieldCell>
+                                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                                            <connections>
+                                                                <binding destination="20" name="value" keyPath="arrangedObjects.boundName" id="Rks-sK-x96">
+                                                                    <dictionary key="options">
+                                                                        <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
+                                                                    </dictionary>
+                                                                </binding>
+                                                                <binding destination="20" name="editable" keyPath="arrangedObjects.editable" id="PuH-PR-7nM"/>
+                                                            </connections>
+                                                        </tableColumn>
+                                                    </tableColumns>
+                                                    <accessibility description="Preference Collections for Selected Category"/>
+                                                    <connections>
+                                                        <binding destination="20" name="content" keyPath="arrangedObjects" id="H9M-5Z-2GJ"/>
+                                                        <binding destination="20" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="H9M-5Z-2GJ" id="1fV-UY-Gpy"/>
+                                                        <binding destination="20" name="sortDescriptors" keyPath="sortDescriptors" previousBinding="1fV-UY-Gpy" id="cEt-B4-zSi"/>
+                                                        <outlet property="dataSource" destination="-2" id="OnR-IT-A37"/>
+                                                    </connections>
+                                                </tableView>
+                                            </subviews>
+                                            <nil key="backgroundColor"/>
+                                        </clipView>
+                                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="UUB-ts-tRR">
+                                            <rect key="frame" x="0.0" y="327" width="36" height="15"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="n5I-WZ-gS3">
+                                            <rect key="frame" x="-15" y="-7.5" width="15" height="0.0"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                    </scrollView>
+                                    <popUpButton misplaced="YES" id="tWX-dl-QI9" userLabel="Contextual Menu">
+                                        <rect key="frame" x="104" y="8" width="40" height="26"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="SCl-A2-khl" id="Nma-1l-Vlx">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="menu"/>
+                                            <menu key="menu" id="Ry7-Ff-HN1">
+                                                <items>
+                                                    <menuItem image="NSActionTemplate" hidden="YES" id="SCl-A2-khl">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
                                                         <connections>
-                                                            <binding destination="20" name="value" keyPath="arrangedObjects.boundName" id="100">
-                                                                <dictionary key="options">
-                                                                    <bool key="NSAllowsEditingMultipleValuesSelection" value="NO"/>
-                                                                </dictionary>
-                                                            </binding>
-                                                            <binding destination="20" name="editable" keyPath="arrangedObjects.editable" id="90"/>
+                                                            <action selector="performAddNewPreferenceCollection:" target="-2" id="0z2-K7-Hfw"/>
                                                         </connections>
-                                                    </tableColumn>
-                                                </tableColumns>
-                                                <accessibility description="Preference Collections for Selected Category"/>
-                                                <connections>
-                                                    <binding destination="20" name="content" keyPath="arrangedObjects" id="95"/>
-                                                    <binding destination="20" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="95" id="97"/>
-                                                    <binding destination="20" name="sortDescriptors" keyPath="sortDescriptors" previousBinding="97" id="99"/>
-                                                    <outlet property="dataSource" destination="-2" id="88"/>
-                                                </connections>
-                                            </tableView>
-                                        </subviews>
-                                        <nil key="backgroundColor"/>
-                                    </clipView>
-                                    <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="26">
-                                        <rect key="frame" x="1" y="297" width="185" height="15"/>
-                                        <autoresizingMask key="autoresizingMask"/>
-                                    </scroller>
-                                    <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="25">
-                                        <rect key="frame" x="224" y="17" width="15" height="102"/>
-                                        <autoresizingMask key="autoresizingMask"/>
-                                    </scroller>
-                                </scrollView>
-                            </subviews>
-                        </view>
-                        <color key="fillColor" red="0.76680871212121215" green="0.76680871212121215" blue="0.76680871212121215" alpha="1" colorSpace="calibratedRGB"/>
-                    </box>
+                                                    </menuItem>
+                                                    <menuItem title="Copy Collection Settings to Default…" id="aoH-Qt-5kg">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performCopyPreferenceCollectionToDefault:" target="-2" id="OzD-4q-DGi"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="Rename Collection" id="MFn-fi-pNo">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performRenamePreferenceCollection:" target="-2" id="XCh-yt-uLF"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="Duplicate Collection" id="eIq-hQ-jBi">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performDuplicatePreferenceCollection:" target="-2" id="6e1-ZF-Rk9"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="Export to File…" id="dcg-v0-i6K">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performExportPreferenceCollectionToFile:" target="-2" id="3fe-eK-eRM"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                </items>
+                                            </menu>
+                                        </popUpButtonCell>
+                                    </popUpButton>
+                                    <button verticalHuggingPriority="750" misplaced="YES" id="sHr-od-26D" userLabel="Remove Button">
+                                        <rect key="frame" x="56" y="8" width="40" height="26"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="YcL-VU-gW3">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="performRemovePreferenceCollection:" target="-2" id="Aql-VQ-aOQ"/>
+                                        </connections>
+                                    </button>
+                                    <popUpButton misplaced="YES" id="Ep5-r3-AVL" userLabel="Add Menu">
+                                        <rect key="frame" x="8" y="8" width="40" height="26"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="vu9-l9-42m" id="0ac-va-NF9" userLabel="Pop Up Button">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="menu"/>
+                                            <menu key="menu" id="htN-ng-B3d">
+                                                <items>
+                                                    <menuItem image="NSAddTemplate" hidden="YES" id="vu9-l9-42m">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performAddNewPreferenceCollection:" target="-2" id="MsO-gP-Td9"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="New Collection" id="j3P-NJ-SVU">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performAddNewPreferenceCollection:" target="-2" id="o5N-lT-0S2"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="Import from File…" id="43B-6L-bM0">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="performImportPreferenceCollectionFromFile:" target="-2" id="FTS-m4-zax"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                </items>
+                                            </menu>
+                                        </popUpButtonCell>
+                                    </popUpButton>
+                                </subviews>
+                            </customView>
+                            <customView id="Ym7-wy-WMQ">
+                                <rect key="frame" x="210" y="0.0" width="290" height="350"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <tabView misplaced="YES" drawsBackground="NO" type="noTabsNoBorder" id="149">
+                                        <rect key="frame" x="0.0" y="0.0" width="290" height="350"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                        <tabViewItems/>
+                                    </tabView>
+                                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" id="43" userLabel="Help Button" customClass="CoreUI_HelpButton">
+                                        <rect key="frame" x="239" y="22" width="25" height="25"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                        <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="performContextSensitiveHelp:" target="-2" id="45"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </customView>
+                        </subviews>
+                        <holdingPriorities>
+                            <real value="250"/>
+                            <real value="250"/>
+                        </holdingPriorities>
+                        <connections>
+                            <outlet property="delegate" destination="-2" id="WHe-69-fv0"/>
+                        </connections>
+                    </splitView>
                 </subviews>
             </view>
-            <contentBorderThickness minY="36"/>
-            <connections>
-                <outlet property="initialFirstResponder" destination="24" id="133"/>
-            </connections>
             <point key="canvasLocation" x="-6" y="-53"/>
         </window>
     </objects>
     <resources>
-        <image name="IconForContextMenuSegment" width="16" height="16"/>
-        <image name="IconForItemAddMenuSegment" width="16" height="16"/>
-        <image name="IconForItemRemove" width="16" height="16"/>
+        <image name="NSActionTemplate" width="14" height="14"/>
+        <image name="NSAddTemplate" width="11" height="11"/>
+        <image name="NSRemoveTemplate" width="11" height="11"/>
     </resources>
 </document>
