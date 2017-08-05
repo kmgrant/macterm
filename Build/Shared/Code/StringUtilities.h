@@ -38,13 +38,52 @@
 
 
 
+#pragma mark Types
+
+/*!
+Used to iterate over composed character sequences.
+*/
+typedef void (^StringUtilities_ComposedCharacterBlock) (CFStringRef, CFRange, Boolean&);
+
+/*!
+Caches information about a string; for details, see the
+StringUtilities_StudyRange() function.
+
+All of the data is for PRIVATE use by string functions
+to gain efficiency.
+*/
+struct StringUtilities_DataFromStudy
+{
+	CFHashCode	stringHashValue_;					//!< sanity check to avoid using stale data
+	CFIndex		composedCharacterSequenceCount_;	//!< maximum possible array length
+	CFIndex		firstNonTrivialCCSIndex_;			//!< first CCS that could be multi-cell
+	
+	StringUtilities_DataFromStudy ()
+	:
+	stringHashValue_(0),
+	composedCharacterSequenceCount_(0),
+	firstNonTrivialCCSIndex_(0)
+	{
+	}
+};
+
+
+
 #pragma mark Public Methods
+
+//!\name Module Tests
+//@{
+
+void
+	StringUtilities_RunTests					();
+
+//@}
 
 //!\name String Tokenizing
 //@{
 
 CFArrayRef
-	StringUtilities_CFNewStringsWithLines		(CFStringRef		inString);
+	StringUtilities_CFNewStringsWithLines		(CFStringRef);
 
 //@}
 
@@ -52,8 +91,34 @@ CFArrayRef
 //@{
 
 void
-	StringUtilities_CFToUTF8					(CFStringRef		inString,
-												 std::string&		outBuffer);
+	StringUtilities_CFToUTF8					(CFStringRef,
+												 std::string&);
+
+//@}
+
+//!\name Unicode Utilities
+//@{
+
+void
+	StringUtilities_ForEachComposedCharacterSequence	(CFStringRef,
+														 StringUtilities_ComposedCharacterBlock);
+
+void
+	StringUtilities_ForEachComposedCharacterSequenceInRange	(CFStringRef,
+														 CFRange,
+														 StringUtilities_ComposedCharacterBlock);
+
+UnicodeScalarValue
+	StringUtilities_ReturnUnicodeSymbol					(CFStringRef);
+
+void
+	StringUtilities_Study								(CFStringRef,
+														 StringUtilities_DataFromStudy&);
+
+void
+	StringUtilities_StudyInRange						(CFStringRef,
+														 CFRange,
+														 StringUtilities_DataFromStudy&);
 
 //@}
 

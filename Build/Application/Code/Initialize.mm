@@ -107,10 +107,15 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// used for anything particularly important, arc4random() is better
 	::srandom(TickCount());
 	
+	Console_Init();
+	
 //#define RUN_MODULE_TESTS (defined DEBUG)
 #define RUN_MODULE_TESTS 0
 	
-	Console_Init();
+#if RUN_MODULE_TESTS
+	StringUtilities_RunTests();
+#endif
+	
 #if RUN_MODULE_TESTS
 	//Console_RunTests();
 #endif
