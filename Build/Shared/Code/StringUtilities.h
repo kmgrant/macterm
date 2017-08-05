@@ -47,7 +47,7 @@ typedef void (^StringUtilities_ComposedCharacterBlock) (CFStringRef, CFRange, Bo
 
 /*!
 Caches information about a string; for details, see the
-StringUtilities_StudyRange() function.
+StringUtilities_StudyInRange() function.
 
 All of the data is for PRIVATE use by string functions
 to gain efficiency.

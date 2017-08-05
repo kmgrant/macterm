@@ -1,4 +1,4 @@
-/*!	\file StringUtilities.cp
+/*!	\file StringUtilities.mm
 	\brief General-purpose routines for dealing with text.
 */
 /*###############################################################
@@ -26,22 +26,22 @@
 
 ###############################################################*/
 
-#include <StringUtilities.h>
-#include <UniversalDefines.h>
+#import <StringUtilities.h>
+#import <UniversalDefines.h>
 
 // standard-C includes
-#include <cstring>
+#import <cstring>
 
 // standard-C++ includes
-#include <string>
+#import <string>
 
 // Mac includes
-#include <CoreServices/CoreServices.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <CFRetainRelease.h>
-#include <Console.h>
-#include <UTF8Decoder.h>
+#import <CFRetainRelease.h>
+#import <Console.h>
+#import <UTF8Decoder.h>
 
 
 
@@ -479,6 +479,19 @@ unitTest_StudyInRange_000 ()
 		result &= Console_Assert("study, mixed, #CCS", 7 == studyData.composedCharacterSequenceCount_);
 		result &= Console_Assert("study, mixed, length", 8 == CFStringGetLength(testString));
 		result &= Console_Assert("study, mixed, 1st non-trivial index", 3 == studyData.firstNonTrivialCCSIndex_);
+	}
+	
+	// entirely non-trivial case
+	{
+		StringUtilities_DataFromStudy	studyData;
+		CFStringRef						testString = BRIDGE_CAST(@"😐😐😐😐😐", CFStringRef); // only Emoji
+		
+		
+		StringUtilities_Study(testString, studyData);
+		result &= Console_Assert("study, Emoji, hash", 0 != studyData.stringHashValue_);
+		result &= Console_Assert("study, Emoji, #CCS", 5 == studyData.composedCharacterSequenceCount_);
+		result &= Console_Assert("study, Emoji, length", 10 == CFStringGetLength(testString));
+		result &= Console_Assert("study, Emoji, 1st non-trivial index", 0 == studyData.firstNonTrivialCCSIndex_);
 	}
 	
 	return result;
