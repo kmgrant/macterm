@@ -259,6 +259,12 @@
 		<string>DefaultFormat2</string>
 		<string>DefaultFormat3</string>
 		<string>DefaultFormat4</string>
+		<string>DefaultFormat5</string>
+		<string>DefaultFormat6</string>
+		<string>DefaultFormat7</string>
+		<string>DefaultFormat8</string>
+		<string>DefaultFormat9</string>
+		<string>DefaultFormat10</string>
 	</array>
 	<key>MyHomePageURL</key>
 	<string>https://www.macterm.net/</string>

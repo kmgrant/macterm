@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<data>
+	//5GAGEAaQByAHcAYQB5AA==
+	</data>
+	<key>name-string</key>
+	<string>Fairway</string>
+	<key>terminal-color-blinking-background-rgb</key>
+	<array>
+		<real>0.05821363627910614</real>
+		<real>0.31701576709747314</real>
+		<real>0.09283873438835144</real>
+	</array>
+	<key>terminal-color-blinking-foreground-rgb</key>
+	<array>
+		<real>1</real>
+		<real>1</real>
+		<real>1</real>
+	</array>
+	<key>terminal-color-bold-background-rgb</key>
+	<array>
+		<real>0.8505014181137085</real>
+		<real>1</real>
+		<real>0.85572826862335205</real>
+	</array>
+	<key>terminal-color-bold-foreground-rgb</key>
+	<array>
+		<real>0.17939838767051697</real>
+		<real>0.42071545124053955</real>
+		<real>0.23102575540542603</real>
+	</array>
+	<key>terminal-color-cursor-auto</key>
+	<false/>
+	<key>terminal-color-cursor-background-rgb</key>
+	<array>
+		<real>0.25098040699958801</real>
+		<real>0.50196081399917603</real>
+		<real>0.0</real>
+	</array>
+	<key>terminal-color-matte-background-rgb</key>
+	<array>
+		<real>0.05821363627910614</real>
+		<real>0.31701576709747314</real>
+		<real>0.09283873438835144</real>
+	</array>
+	<key>terminal-color-normal-background-rgb</key>
+	<array>
+		<real>0.8505014181137085</real>
+		<real>1</real>
+		<real>0.85572826862335205</real>
+	</array>
+	<key>terminal-color-normal-foreground-rgb</key>
+	<array>
+		<real>0.0</real>
+		<real>0.0</real>
+		<real>0.0</real>
+	</array>
+</dict>
+</plist>

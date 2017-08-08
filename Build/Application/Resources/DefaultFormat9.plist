@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<data>
+	//5UAGUAYQBsAA==
+	</data>
+	<key>name-string</key>
+	<string>Teal</string>
+	<key>terminal-color-blinking-background-rgb</key>
+	<array>
+		<real>1</real>
+		<real>1</real>
+		<real>1</real>
+	</array>
+	<key>terminal-color-blinking-foreground-rgb</key>
+	<array>
+		<real>0.051305443048477173</real>
+		<real>0.40175759792327881</real>
+		<real>0.40636706352233887</real>
+	</array>
+	<key>terminal-color-bold-background-rgb</key>
+	<array>
+		<real>0.050980392843484879</real>
+		<real>0.40000000596046448</real>
+		<real>0.40784314274787903</real>
+	</array>
+	<key>terminal-color-bold-foreground-rgb</key>
+	<array>
+		<real>1</real>
+		<real>1</real>
+		<real>1</real>
+	</array>
+	<key>terminal-color-cursor-background-rgb</key>
+	<array>
+		<real>0.12595513463020325</real>
+		<real>0.98638546466827393</real>
+		<real>0.99901878833770752</real>
+	</array>
+	<key>terminal-color-matte-background-rgb</key>
+	<array>
+		<real>0.0</real>
+		<real>0.0</real>
+		<real>0.0</real>
+	</array>
+	<key>terminal-color-normal-background-rgb</key>
+	<array>
+		<real>0.0</real>
+		<real>0.40000000596046448</real>
+		<real>0.40000000596046448</real>
+	</array>
+	<key>terminal-color-normal-foreground-rgb</key>
+	<array>
+		<real>0.72549021244049072</real>
+		<real>0.99215686321258545</real>
+		<real>0.96470588445663452</real>
+	</array>
+</dict>
+</plist>

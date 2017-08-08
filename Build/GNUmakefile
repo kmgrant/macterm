@@ -189,6 +189,12 @@ DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \
 DefaultFormat4.plist \
+DefaultFormat5.plist \
+DefaultFormat6.plist \
+DefaultFormat7.plist \
+DefaultFormat8.plist \
+DefaultFormat9.plist \
+DefaultFormat10.plist \
 GlyphForPatternDarkGray.png \
 GlyphForPatternLightGray.png \
 GlyphForPatternMediumGray.png \

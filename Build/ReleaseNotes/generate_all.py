@@ -279,7 +279,7 @@ def generate_html(ofh, template_lines, subst_kv, **kwargs):
                     for release_note in sub_vars['version_notes']:
                         modified_note = release_note
                         modified_note = http_link_regex.sub(r'<a href="\1">\1</a>', modified_note)
-                        modified_note = http_link_regex.sub(r'<a href="\1">\1</a>', modified_note)
+                        modified_note = https_link_regex.sub(r'<a href="\1">\1</a>', modified_note)
                         sub_vars['release_note'] = modified_note
                         write_section_lines()
             else:

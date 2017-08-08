@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<data>
+	//5IAGUAYQByAHQAaAA=
+	</data>
+	<key>name-string</key>
+	<string>Hearth</string>
+	<key>terminal-color-blinking-background-rgb</key>
+	<array>
+		<real>0.41977861523628235</real>
+		<real>0.15015631914138794</real>
+		<real>0.01189129427075386</real>
+	</array>
+	<key>terminal-color-blinking-foreground-rgb</key>
+	<array>
+		<real>0.99278843402862549</real>
+		<real>0.64703857898712158</real>
+		<real>0.30134019255638123</real>
+	</array>
+	<key>terminal-color-bold-background-rgb</key>
+	<array>
+		<real>0.62566179037094116</real>
+		<real>0.213150754570961</real>
+		<real>0.020780809223651886</real>
+	</array>
+	<key>terminal-color-bold-foreground-rgb</key>
+	<array>
+		<real>0.99278843402862549</real>
+		<real>0.64703857898712158</real>
+		<real>0.30134019255638123</real>
+	</array>
+	<key>terminal-color-cursor-background-rgb</key>
+	<array>
+		<real>0.98851346969604492</real>
+		<real>0.88400578498840332</real>
+		<real>0.038684885948896408</real>
+	</array>
+	<key>terminal-color-matte-background-rgb</key>
+	<array>
+		<real>0.98851346969604492</real>
+		<real>0.88400578498840332</real>
+		<real>0.038684885948896408</real>
+	</array>
+	<key>terminal-color-normal-background-rgb</key>
+	<array>
+		<real>0.62566179037094116</real>
+		<real>0.213150754570961</real>
+		<real>0.020780809223651886</real>
+	</array>
+	<key>terminal-color-normal-foreground-rgb</key>
+	<array>
+		<real>1</real>
+		<real>1</real>
+		<real>1</real>
+	</array>
+</dict>
+</plist>

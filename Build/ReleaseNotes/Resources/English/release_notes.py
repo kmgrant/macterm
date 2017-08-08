@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170807',
     '20170723',
     '20170709',
     '20170708',
@@ -577,6 +578,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170807': [
+        'Six new default color schemes have been added, for a total of 10 schemes.  These will NOT be automatically installed unless there are NO other custom Formats in your list (or you are a new user).  You may also download the schemes individually from <https://www.macterm.net/extras/>.  Multiple files can be easily installed at once by dragging downloaded ".plist" files onto the MacTerm application icon in the Dock.',
+    ],
     '20170723': [
         'Preferences window collection list can now be resized horizontally.',
         'Preferences window collection list now has a more modern appearance, with embedded icon buttons.',
