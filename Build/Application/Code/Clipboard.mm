@@ -60,7 +60,6 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "AppleEventUtilities.h"
 #import "Clipboard.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"

@@ -65,7 +65,6 @@
 #import "ConstantsRegistry.h"
 #import "EventLoop.h"
 #import "FileUtilities.h"
-#import "HelpSystem.h"
 #import "Panel.h"
 #import "Preferences.h"
 #import "PrefPanelFormats.h"

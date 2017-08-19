@@ -46,9 +46,7 @@
 #include "AlertMessages.h"
 #include "AppResources.h"
 #include "Commands.h"
-#include "HelpSystem.h"
 #include "Initialize.h"
-#include "Preferences.h"
 #include "UIStrings.h"
 
 

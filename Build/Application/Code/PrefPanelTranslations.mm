@@ -53,7 +53,6 @@
 #import <MemoryBlocks.h>
 
 // application includes
-#import "AppResources.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
 #import "Panel.h"

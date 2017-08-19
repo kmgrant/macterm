@@ -71,7 +71,6 @@ class NSWindow;
 #include "Preferences.h"
 #include "TerminalRangeDescription.typedef.h"
 #include "TerminalScreenRef.typedef.h"
-#include "TextAttributes.h"
 
 
 

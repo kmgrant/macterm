@@ -55,7 +55,6 @@
 #import "AppResources.h"
 #import "Commands.h"
 #import "DialogUtilities.h"
-#import "EventLoop.h"
 #import "GenericDialog.h"
 #import "HelpSystem.h"
 #import "UIStrings.h"

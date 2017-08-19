@@ -49,7 +49,6 @@
 #import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "Preferences.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"

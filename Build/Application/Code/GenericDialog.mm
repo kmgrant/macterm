@@ -67,7 +67,6 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "AppResources.h"
 #import "Commands.h"
 #import "Session.h"
 #import "UIStrings.h"

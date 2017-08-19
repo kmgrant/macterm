@@ -64,16 +64,13 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "Keypads.h"
 #import "NetEvents.h"
 #import "Panel.h"
 #import "Preferences.h"
-#import "SessionFactory.h"
 #import "TerminalView.h"
-#import "TerminalWindow.h"
 #import "UIStrings.h"
 
 

@@ -50,7 +50,6 @@
 #include <StringUtilities.h>
 
 // application includes
-#include "AppResources.h"
 #include "OtherApps.h"
 #include "SessionFactory.h"
 #include "URL.h"

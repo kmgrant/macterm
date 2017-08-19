@@ -56,11 +56,9 @@
 #import <SoundSystem.h>
 
 // application includes
-#import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
-#import "Keypads.h"
 #import "MacroManager.h"
 #import "Panel.h"
 #import "Preferences.h"

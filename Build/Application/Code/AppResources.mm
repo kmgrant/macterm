@@ -45,7 +45,6 @@
 
 // application includes
 #include "ConstantsRegistry.h"
-#include "Local.h"
 #include "UIStrings.h"
 
 

@@ -60,13 +60,10 @@ extern "C"
 #import <SoundSystem.h>
 
 // application includes
-#import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "GenericPanelTabs.h"
 #import "HelpSystem.h"
 #import "Keypads.h"
-#import "NetEvents.h"
 #import "Panel.h"
 #import "Preferences.h"
 #import "ServerBrowser.h"

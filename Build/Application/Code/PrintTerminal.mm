@@ -47,14 +47,13 @@
 
 // library includes
 #import <FlagManager.h>
+#import <SoundSystem.h>
 
 // application includes
 #import "AppResources.h"
 #import "ChildProcessWC.objc++.h"
 #import "Console.h"
 #import "ConstantsRegistry.h"
-#import "HelpSystem.h"
-#import "SoundSystem.h"
 #import "Terminal.h"
 #import "TerminalView.h"
 
