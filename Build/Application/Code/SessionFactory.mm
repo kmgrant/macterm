@@ -144,8 +144,7 @@ TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 														 Boolean = false);
 Workspace_Ref			createWorkspace					();
 Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef = nullptr, UInt16 = 0);
-void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
-														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
+void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionBlock);
 void					forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
 void					handleNewSessionDialogClose		(GenericDialog_Ref, Boolean);
@@ -1500,56 +1499,36 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
-When you need to perform an operation on a select subset
-of all sessions, use this method.  Session references can
-be used to obtain a wealth of information about a session
-(including pointers to other data structures), and to
-manipulate those sessions (for example, hiding a session’s
-window).
+Performs the specified operation on every session in
+the list.  The list must NOT change during iteration;
+if that condition cannot be guaranteed, you must call
+SessionFactory_ForEachSessionInFrozenList() instead.
 
-The filter flags indicate which sessions you wish to
-operate upon.  Often, you pass
-"kSessionFactory_SessionFilterFlagAllSessions" to indicate
-that you want every session.
-
-You also provide a routine that operates on each session
-from the subset you indicate.  Your routine defines what
-"inoutResultPtr" is, and the meaning of "inData1" and
-"inData2".
-
-The last argument, "inFinal", is CRITICAL for any loop
-that might modify the list during the iteration: when
-"inFinal" is true, the iteration occurs on a copy of the
-list as it existed on entry to this function, allowing
-your iterations to modify the real list without creating
-chaos in your iteration.
-
-(3.0)
+(2017.09)
 */
 void
-SessionFactory_ForEachSessionDo		(SessionFactory_SessionFilterFlags	inFilterFlags,
-									 SessionFactory_SessionOpProcPtr	inProcPtr,
-									 void*								inData1,
-									 SInt32								inData2,
-									 void*								inoutResultPtr,
-									 Boolean							inFinal)
+SessionFactory_ForEachSessionInReadOnlyList		(SessionFactory_SessionBlock	inBlock)
 {
-	if (inFinal)
-	{
-		// during final iterations, make A COPY of the list, because
-		// the iteration may well delete items in the list itself!
-		SessionList		listCopy = gSessionListSortedByCreationTime();
-		
-		
-		forEachSessionInListDo(listCopy, inFilterFlags, inProcPtr, inData1, inData2, inoutResultPtr);
-	}
-	else
-	{
-		// ordinary iterations can use the actual list, but they MUST
-		// NOT INSERT OR DELETE any items in the list!
-		forEachSessionInListDo(gSessionListSortedByCreationTime(), inFilterFlags, inProcPtr, inData1, inData2, inoutResultPtr);
-	}
-}// ForEachSessionDo
+	forEachSessionInListDo(gSessionListSortedByCreationTime(), inBlock);
+}// ForEachSessionInReadOnlyList
+
+
+/*!
+Performs the specified operation on every session in
+a copy of the session list.  This version is required
+if the primary list of sessions can be changed during
+your loop iteration.
+
+(2017.09)
+*/
+void
+SessionFactory_ForEachSessionInFrozenList	(SessionFactory_SessionBlock	inBlock)
+{
+	SessionList		listCopy = gSessionListSortedByCreationTime();
+	
+	
+	forEachSessionInListDo(listCopy, inBlock);
+}// ForEachSessionInFrozenList
 
 
 /*!
@@ -2717,17 +2696,12 @@ except it operates on the specific list given.
 */
 void
 forEachSessionInListDo		(SessionList const&					inList,
-							 SessionFactory_SessionFilterFlags	inFilterFlags,
-							 SessionFactory_SessionOpProcPtr	inProcPtr,
-							 void*								inData1,
-							 SInt32								inData2,
-							 void*								inoutResultPtr)
+							 SessionFactory_SessionBlock		inBlock)
 {
 	// traverse the list
 	for (auto sessionRef : inList)
 	{
-		// (no filter flags currently)
-		SessionFactory_InvokeSessionOpProc(inProcPtr, sessionRef, inData1, inData2, inoutResultPtr);
+		inBlock(sessionRef);
 	}
 }// forEachSessionInListDo
 

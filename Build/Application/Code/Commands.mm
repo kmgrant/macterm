@@ -243,9 +243,7 @@ namespace {
 
 void				activateAnotherWindow							(Boolean, Boolean);
 BOOL				activeCarbonWindowHasSelectedText				();
-BOOL				addWindowMenuItemForSession						(SessionRef, My_MenuItemInsertionInfoConstPtr,
-																	 CFStringRef);
-void				addWindowMenuItemSessionOp						(SessionRef, void*, SInt32, void*);
+BOOL				addWindowMenuItemForSession						(SessionRef, NSMenu*, int, CFStringRef);
 NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
 void				changeNotifyForCommandExecution					(UInt32);
 BOOL				handleQuitReview								();
@@ -254,7 +252,6 @@ Boolean				isAnyListenerForCommandExecution				(UInt32);
 BOOL				isCarbonWindow									(id);
 BOOL				isCocoaWindowMoreImportantThanCarbon			(NSWindow*);
 BOOL				isWindowVisible									(NSWindow*);
-void				moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef, void*, SInt32, void*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 BOOL				quellAutoNew									();
@@ -2231,14 +2228,15 @@ Returns true only if an item was added.
 (4.0)
 */
 BOOL
-addWindowMenuItemForSession		(SessionRef							inSession,
-								 My_MenuItemInsertionInfoConstPtr	inMenuInfoPtr,
-								 CFStringRef						inWindowName)
+addWindowMenuItemForSession		(SessionRef			inSession,
+								 NSMenu*			inMenu,
+								 int				inItemIndex,
+								 CFStringRef		inWindowName)
 {
 	BOOL			result = NO;
-	NSMenuItem*		newItem = [inMenuInfoPtr->menu insertItemWithTitle:(NSString*)inWindowName
-																		action:nil keyEquivalent:@""
-																		atIndex:inMenuInfoPtr->atItemIndex];
+	NSMenuItem*		newItem = [inMenu insertItemWithTitle:BRIDGE_CAST(inWindowName, NSString*)
+															action:nil keyEquivalent:@""
+															atIndex:inItemIndex];
 	
 	
 	if (nil != newItem)
@@ -2264,43 +2262,6 @@ addWindowMenuItemForSession		(SessionRef							inSession,
 	}
 	return result;
 }// addWindowMenuItemForSession
-
-
-/*!
-This method, of standard "SessionFactory_SessionOpProcPtr"
-form, adds the specified session to the Window menu.
-
-(4.0)
-*/
-void
-addWindowMenuItemSessionOp	(SessionRef		inSession,
-							 void*			inWindowMenuInfoPtr,
-							 SInt32			UNUSED_ARGUMENT(inData2),
-							 void*			inoutResultPtr)
-{
-	CFStringRef							nameCFString = nullptr;
-	My_MenuItemInsertionInfoConstPtr	menuInfoPtr = REINTERPRET_CAST
-														(inWindowMenuInfoPtr, My_MenuItemInsertionInfoConstPtr);
-	int*								numberOfItemsAddedPtr = REINTERPRET_CAST(inoutResultPtr, int*);
-	
-	
-	// if the session has a window, use its title if possible
-	if (false == Session_GetWindowUserDefinedTitle(inSession, nameCFString).ok())
-	{
-		// no window yet; find a descriptive string for this session
-		// (resource location will be a remote URL or local Unix command)
-		nameCFString = Session_ReturnResourceLocationCFString(inSession);
-	}
-	if (nullptr == nameCFString)
-	{
-		nameCFString = CFSTR("<no name or URL found>"); // LOCALIZE THIS?
-	}
-	
-	if (addWindowMenuItemForSession(inSession, menuInfoPtr, nameCFString))
-	{
-		++(*numberOfItemsAddedPtr);
-	}
-}// addWindowMenuItemSessionOp
 
 
 /*!
@@ -2373,7 +2334,7 @@ handleQuitReview ()
 						// which window is being referred to, each window is moved to the center
 						// of the main screen using a slide animation prior to popping open an
 						// alert.  In addition, all background windows become translucent.
-						Boolean		cancelQuit = false;
+						__block Boolean		cancelQuit = false;
 						
 						
 						result = YES;
@@ -2384,10 +2345,63 @@ handleQuitReview ()
 						// iterate over each session in a MODAL fashion, highlighting a window
 						// and either displaying an alert or discarding the window if it has only
 						// been open a short time
-						SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
-														moveWindowAndDisplayTerminationAlertSessionOp,
-														0L/* data 1 */, 0L/* data 2 */, &cancelQuit/* result */,
-														true/* is a final iteration: use a copy of the list? */);
+						SessionFactory_ForEachSessionInFrozenList
+						(^(SessionRef	inSession)
+						{
+							unless (gCurrentQuitCancelled)
+							{
+								HIWindowRef		window = Session_ReturnActiveWindow(inSession);
+								
+								
+								if (nullptr != window)
+								{
+									Session_TerminationDialogOptions	dialogOptions = kSession_TerminationDialogOptionModal;
+									
+									
+									// when displaying a single Close alert over a single
+									// window, a standard opening animation is fine; it is
+									// now suppressed however if there will be a series
+									// of alert windows opened in a sequence
+									if (1 != gCurrentQuitInitialSessionCount)
+									{
+										dialogOptions |= kSession_TerminationDialogOptionNoAlertAnimation;
+									}
+									
+									// if the window was obscured, show it first
+									if (false == IsWindowVisible(window))
+									{
+										TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+										
+										
+										TerminalWindow_SetObscured(terminalWindow, false);
+									}
+									
+									// all windows became translucent; make sure the alert one is opaque
+									UNUSED_RETURN(OSStatus)SetWindowAlpha(window, 1.0);
+									
+									// enforce a tiny delay between messages, otherwise it may be hard
+									// for the user to realize that a new message has appeared for a
+									// different window
+									{
+										UInt32		finalTick = 0L;
+										
+										
+										Delay(8, &finalTick);
+									}
+									
+									Session_DisplayTerminationWarning(inSession, dialogOptions,
+																		^{
+																			// action to take if Quit is cancelled; this flag will
+																			// cause the last-animated window to return to its
+																			// previous position, and prevent any remaining windows
+																			// from displaying Close-confirmation messages
+																			gCurrentQuitCancelled = YES;
+																		});
+									
+									cancelQuit = gCurrentQuitCancelled;
+								}
+							}
+						});
 						
 						// prevent tabs from shifting during this process
 						UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
@@ -2616,79 +2630,6 @@ isWindowVisible		(NSWindow*		inWindow)
 	
 	return result;
 }// isWindowVisible
-
-
-/*!
-Of "SessionFactory_SessionOpProcPtr" form, this routine
-slides the specified session’s window(s) into the center
-of the screen and then displays a MODAL alert asking the
-user if the session should close.  The "inoutResultPtr"
-should be a Boolean pointer that, on output, is false
-only if the user cancels the close.
-
-(4.0)
-*/
-void
-moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
-												 void*			UNUSED_ARGUMENT(inData1),
-												 SInt32			UNUSED_ARGUMENT(inData2),
-												 void*			inoutResultPtr)
-{
-	unless (gCurrentQuitCancelled)
-	{
-		HIWindowRef		window = Session_ReturnActiveWindow(inSession);
-		Boolean*		outFlagPtr = REINTERPRET_CAST(inoutResultPtr, Boolean*);
-		
-		
-		if (nullptr != window)
-		{
-			Session_TerminationDialogOptions	dialogOptions = kSession_TerminationDialogOptionModal;
-			
-			
-			// when displaying a single Close alert over a single
-			// window, a standard opening animation is fine; it is
-			// now suppressed however if there will be a series
-			// of alert windows opened in a sequence
-			if (1 != gCurrentQuitInitialSessionCount)
-			{
-				dialogOptions |= kSession_TerminationDialogOptionNoAlertAnimation;
-			}
-			
-			// if the window was obscured, show it first
-			if (false == IsWindowVisible(window))
-			{
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
-				
-				
-				TerminalWindow_SetObscured(terminalWindow, false);
-			}
-			
-			// all windows became translucent; make sure the alert one is opaque
-			UNUSED_RETURN(OSStatus)SetWindowAlpha(window, 1.0);
-			
-			// enforce a tiny delay between messages, otherwise it may be hard
-			// for the user to realize that a new message has appeared for a
-			// different window
-			{
-				UInt32		finalTick = 0L;
-				
-				
-				Delay(8, &finalTick);
-			}
-			
-			Session_DisplayTerminationWarning(inSession, dialogOptions,
-												^{
-													// action to take if Quit is cancelled; this flag will
-													// cause the last-animated window to return to its
-													// previous position, and prevent any remaining windows
-													// from displaying Close-confirmation messages
-													gCurrentQuitCancelled = YES;
-												});
-			
-			*outFlagPtr = gCurrentQuitCancelled;
-		}
-	}
-}// moveWindowAndDisplayTerminationAlertSessionOp
 
 
 /*!
@@ -3508,17 +3449,11 @@ windows and their states.
 void
 setUpWindowMenu		(NSMenu*	inMenu)
 {
-	int const					kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
-	int const					kDividerIndex = kFirstWindowItemIndex - 1;
-	int							deletedItemIndex = -1;
-	int							numberOfWindowMenuItemsAdded = 0;
-	My_MenuItemInsertionInfo	insertWhere;
+	int const		kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
+	int const		kDividerIndex = kFirstWindowItemIndex - 1;
+	int				deletedItemIndex = -1;
+	__block int		numberOfWindowMenuItemsAdded = 0;
 	
-	
-	// set up callback data
-	bzero(&insertWhere, sizeof(insertWhere));
-	insertWhere.menu = inMenu;
-	insertWhere.atItemIndex = kDividerIndex; // because, the divider is not present at insertion time
 	
 	// erase previous items
 	while (-1 != (deletedItemIndex = indexOfItemWithAction(inMenu, @selector(orderFrontSpecificWindow:))))
@@ -3534,10 +3469,29 @@ setUpWindowMenu		(NSMenu*	inMenu)
 	}
 	
 	// add the names of all open session windows to the menu
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
-									addWindowMenuItemSessionOp,
-									&insertWhere/* data 1: menu info */, 0L/* data 2: undefined */,
-									&numberOfWindowMenuItemsAdded/* result: int*, number of items added */);
+	SessionFactory_ForEachSessionInReadOnlyList
+	(^(SessionRef	inSession)
+	{
+		CFStringRef		nameCFString = nullptr;
+		
+		
+		// if the session has a window, use its title if possible
+		if (false == Session_GetWindowUserDefinedTitle(inSession, nameCFString).ok())
+		{
+			// no window yet; find a descriptive string for this session
+			// (resource location will be a remote URL or local Unix command)
+			nameCFString = Session_ReturnResourceLocationCFString(inSession);
+		}
+		if (nullptr == nameCFString)
+		{
+			nameCFString = CFSTR("<no name or URL found>"); // LOCALIZE THIS?
+		}
+		
+		if (addWindowMenuItemForSession(inSession, inMenu, kDividerIndex, nameCFString))
+		{
+			++numberOfWindowMenuItemsAdded;
+		}
+	});
 	
 	// if any were added, include a dividing line (note also that this
 	// item must be erased above)

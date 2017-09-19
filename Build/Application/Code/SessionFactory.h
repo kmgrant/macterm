@@ -97,26 +97,6 @@ enum
 														//!  otherwise, works like "kSessionFactory_ListInCreationOrder"
 };
 
-/*!
-These flags filter out a list of sessions.  This helps
-simply iteration code because you can prevent your
-callback from being invoked at all for sessions in a
-certain category, rather than taking the more compute-
-intensive approach of checking each session yourself.
-
-Combine flags to create larger subsets of sessions.
-Use "kSessionFactorySessionFilterFlagAllSessions" when
-you know you want to be told about every session,
-regardless of its class.
-*/
-typedef CFOptionFlags SessionFactory_SessionFilterFlags;
-enum
-{
-	kSessionFactory_SessionFilterFlagRegularSessions	= (1L << 0), //!< sessions running a local Unix program (usually a shell)
-	// use these convenient flags to group the above flags in consistent ways
-	kSessionFactory_SessionFilterFlagAllSessions		= kSessionFactory_SessionFilterFlagRegularSessions
-};
-
 #pragma mark Types
 
 typedef std::vector< TerminalWindowRef >	SessionFactory_TerminalWindowList;
@@ -124,28 +104,11 @@ typedef std::vector< TerminalWindowRef >	SessionFactory_TerminalWindowList;
 #pragma mark Callbacks
 
 /*!
-Session Operation Routine
+Session Block
 
-This procedure type defines a convenient function that,
-among other things, can be used as an iterator of all
-terminal windows representing sessions.  A wealth of
-useful information can be found using only the provided
-parameters, shielding code in the rest of MacTerm from
-the actual session list implementation.
+This type of block is used in SessionFactory_ForEachSessionDo().
 */
-typedef void (*SessionFactory_SessionOpProcPtr)	(SessionRef		inSession,
-												 void*			inData1,
-												 SInt32			inData2,
-												 void*			inoutResultPtr);
-inline void
-SessionFactory_InvokeSessionOpProc	(SessionFactory_SessionOpProcPtr	inProc,
-									 SessionRef							inSession,
-									 void*								inData1,
-									 SInt32								inData2,
-									 void*								inoutResultPtr)
-{
-	(*inProc)(inSession, inData1, inData2, inoutResultPtr);
-}
+typedef void (^SessionFactory_SessionBlock)	(SessionRef);
 
 /*!
 Terminal Window Operation Routine
@@ -275,12 +238,10 @@ SessionRef
 //@{
 
 void
-	SessionFactory_ForEachSessionDo					(SessionFactory_SessionFilterFlags	inFilterFlags,
-													 SessionFactory_SessionOpProcPtr	inProcPtr,
-													 void*							inData1,
-													 SInt32							inData2,
-													 void*							inoutResultPtr,
-													 Boolean						inFinal = false);
+	SessionFactory_ForEachSessionInFrozenList		(SessionFactory_SessionBlock	inBlock);
+
+void
+	SessionFactory_ForEachSessionInReadOnlyList		(SessionFactory_SessionBlock	inBlock);
 
 void
 	SessionFactory_ForEveryTerminalWindowDo			(SessionFactory_TerminalWindowOpProcPtr	inProcPtr,

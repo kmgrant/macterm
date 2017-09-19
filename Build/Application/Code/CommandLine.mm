@@ -77,13 +77,6 @@ The private class interface.
 
 @end //} CommandLine_TerminalLikeComboBox
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-void	sendInputSessionOp		(SessionRef, void*, SInt32, void*);
-
-} // anonymous namespace
-
 #pragma mark Variables
 namespace {
 
@@ -886,32 +879,6 @@ windowFrameAutosaveName
 @end //} CommandLine_PanelController
 
 
-#pragma mark Internal Methods
-namespace {
-
-/*!
-This method, of standard "SessionFactory_SessionOpProcPtr"
-form, is used for the “multi-terminal input” mode to send
-the same input to all sessions.
-
-(4.1)
-*/
-void
-sendInputSessionOp	(SessionRef		inSession,
-					 void*			inInputCFStringRef,
-					 SInt32			inNewLineFlag,
-					 void*			UNUSED_ARGUMENT(inoutResultPtr))
-{
-	Session_UserInputCFString(inSession, BRIDGE_CAST(inInputCFStringRef, CFStringRef));
-	if (inNewLineFlag)
-	{
-		Session_SendNewline(inSession, kSession_EchoCurrentSessionValue);
-	}
-}// sendInputSessionOp
-
-} // anonymous namespace
-
-
 #pragma mark -
 @implementation CommandLine_PanelController (CommandLine_PanelControllerInternal) //{
 
@@ -924,7 +891,7 @@ panel.
 (2016.11)
 */
 - (void)
-sendText:(NSString*)		aString
+sendText:(NSString*)	aString
 newLine:(BOOL)			aNewLineFlag
 addingToHistory:(BOOL)	aHistoryFlag
 {
@@ -948,10 +915,15 @@ addingToHistory:(BOOL)	aHistoryFlag
 		
 		if (self.multiTerminalInput)
 		{
-			SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions,
-											sendInputSessionOp,
-											STATIC_CAST(aString, void*)/* data 1: input string */,
-											aNewLineFlag/* data 2: new-line flag */, nullptr/* result: unused */);
+			SessionFactory_ForEachSessionInReadOnlyList
+			(^(SessionRef	inSession)
+			{
+				Session_UserInputCFString(inSession, BRIDGE_CAST(aString, CFStringRef));
+				if (aNewLineFlag)
+				{
+					Session_SendNewline(inSession, kSession_EchoCurrentSessionValue);
+				}
+			});
 		}
 		else
 		{
