@@ -2,17 +2,26 @@
                       How to Build MacTerm             2009-09-03
 
 PREREQUISITES
-  Build with the latest macOS and the most recent Xcode.
+  Build with the latest macOS but Xcode 8.x.  MacTerm does not
+  yet work with Xcode 9 (the LLVM compiler tries to emulate GCC
+  but has changed to the point where it cannot build using the
+  older SDK below).
+  
+  Xcode 8.x can be installed if you have another Xcode but it
+  must be under a different name like "/Applications/Xcode8.app".
+  In addition, you must switch the command-line tool set, as in
+  "sudo xcode-select /Applications/Xcode8.app/Contents/Developer"
+  (assuming the /Applications/Xcode8.app installation above).
+  Build scripts in MacTerm will use "make" to run "xcodebuild"
+  from the command line.
   
   Currently, MacTerm requires the 10.6 SDK, which is not included
   with Xcode anymore.  Download the SDK separately from Apple's
   developer site, and put the "MacOSX10.6.sdk" directory in the
   following location (alongside other SDKs):
-      /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
-  (Unfortunately, even minor App Store updates to Xcode will
-  obliterate manually-copied SDKs.  This process must be repeated
-  if Xcode is updated!  Keeping a side copy of the 10.6 SDK is
-  advisable.)
+      /Applications/Xcode8.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
+  (This process must be repeated if Xcode is updated!  Keeping a
+  side copy of the 10.6 SDK is advisable.)
   
   Work is being done to adopt more recent SDKs; the primary issue
   is that the 10.7 SDK abandons all Carbon APIs.  Many parts of
