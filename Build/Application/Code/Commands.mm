@@ -276,7 +276,6 @@ void				setUpTranslationTablesMenu						(NSMenu*);
 void				setUpWindowMenu									(NSMenu*);
 void				setUpWorkspaceFavoritesMenu						(NSMenu*);
 void				setWindowMenuItemMarkForSession					(SessionRef, NSMenuItem* = nil);
-void				showWindowTerminalWindowOp						(TerminalWindowRef, void*, SInt32, void*);
 BOOL				textSelectionExists								();
 
 } // anonymous namespace
@@ -1364,8 +1363,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandShowAllHiddenWindows:
 			// show all windows
-			SessionFactory_ForEveryTerminalWindowDo(showWindowTerminalWindowOp, 0L/* data 1 - unused */,
-													0L/* data 2 - unused */, nullptr/* pointer to result - unused */);
+			SessionFactory_ForEachTerminalWindow
+			(^(TerminalWindowRef	inTerminalWindow,
+			   Boolean&				UNUSED_ARGUMENT(outStopFlag))
+			{
+				TerminalWindow_SetObscured(inTerminalWindow, false);
+			});
 			break;
 		
 		case kCommandStackWindows:
@@ -2345,8 +2348,9 @@ handleQuitReview ()
 						// iterate over each session in a MODAL fashion, highlighting a window
 						// and either displaying an alert or discarding the window if it has only
 						// been open a short time
-						SessionFactory_ForEachSessionInFrozenList
-						(^(SessionRef	inSession)
+						SessionFactory_ForEachSessionCopyList
+						(^(SessionRef	inSession,
+						   Boolean&		UNUSED_ARGUMENT(outStopFlag))
 						{
 							unless (gCurrentQuitCancelled)
 							{
@@ -3469,8 +3473,9 @@ setUpWindowMenu		(NSMenu*	inMenu)
 	}
 	
 	// add the names of all open session windows to the menu
-	SessionFactory_ForEachSessionInReadOnlyList
-	(^(SessionRef	inSession)
+	SessionFactory_ForEachSession
+	(^(SessionRef	inSession,
+	   Boolean&		UNUSED_ARGUMENT(outStopFlag))
 	{
 		CFStringRef		nameCFString = nullptr;
 		
@@ -3616,22 +3621,6 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 		}
 	}
 }// setWindowMenuItemMarkForSession
-
-
-/*!
-This routine, of "SessionFactory_TerminalWindowOpProcPtr"
-form, redisplays the specified, obscured terminal window.
-
-(4.0)
-*/
-void
-showWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
-								 void*				UNUSED_ARGUMENT(inData1),
-								 SInt32				UNUSED_ARGUMENT(inData2),
-								 void*				UNUSED_ARGUMENT(inoutResultPtr))
-{
-	TerminalWindow_SetObscured(inTerminalWindow, false);
-}// showWindowTerminalWindowOp
 
 
 /*!
@@ -6792,20 +6781,19 @@ performShowHiddenWindows:(id)	sender
 canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	SessionFactory_TerminalWindowList const&			windowList = SessionFactory_ReturnTerminalWindowList();
-	SessionFactory_TerminalWindowList::const_iterator	toWindow = windowList.begin();
-	SessionFactory_TerminalWindowList::const_iterator	pastEndWindows = windowList.end();
-	BOOL												result = NO;
+	__block BOOL	result = NO;
 	
 	
-	for (; toWindow != pastEndWindows; ++toWindow)
+	SessionFactory_ForEachTerminalWindow
+	(^(TerminalWindowRef	inTerminalWindow,
+	   Boolean&				outStop)
 	{
-		if (TerminalWindow_IsObscured(*toWindow))
+		if (TerminalWindow_IsObscured(inTerminalWindow))
 		{
 			result = YES;
-			break;
+			outStop = true;
 		}
-	}
+	});
 	
 	return ((result) ? @(YES) : @(NO));
 }

@@ -915,8 +915,9 @@ addingToHistory:(BOOL)	aHistoryFlag
 		
 		if (self.multiTerminalInput)
 		{
-			SessionFactory_ForEachSessionInReadOnlyList
-			(^(SessionRef	inSession)
+			SessionFactory_ForEachSession
+			(^(SessionRef	inSession,
+			   Boolean&		UNUSED_ARGUMENT(outStopFlag))
 			{
 				Session_UserInputCFString(inSession, BRIDGE_CAST(aString, CFStringRef));
 				if (aNewLineFlag)

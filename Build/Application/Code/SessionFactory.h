@@ -97,47 +97,28 @@ enum
 														//!  otherwise, works like "kSessionFactory_ListInCreationOrder"
 };
 
-#pragma mark Types
-
-typedef std::vector< TerminalWindowRef >	SessionFactory_TerminalWindowList;
-
 #pragma mark Callbacks
 
 /*!
 Session Block
 
-This type of block is used in SessionFactory_ForEachSessionDo().
+This type of block is used in SessionFactory_ForEachSession() and
+SessionFactory_ForEachSessionCopyList().  If the stop flag is set by
+the block, iteration will end early.
 */
-typedef void (^SessionFactory_SessionBlock)	(SessionRef);
+typedef void (^SessionFactory_SessionBlock)	(SessionRef, Boolean&);
 
 /*!
-Terminal Window Operation Routine
+Terminal Window Block
 
-This procedure type defines a convenient function that,
-among other things, can be used as an iterator of all
-terminal windows of any kind.  A wealth of useful
-information can be found using only the provided
-parameters, shielding code in the rest of MacTerm from
-the actual terminal window list implementation.
+This is used in SessionFactory_ForEachTerminalWindow().  If the stop
+flag is set by the block, iteration will end early.
 
-Note that it is sometimes more appropriate to iterate
-over Sessions than Terminal Windows.  Carefully consider
-what you are trying to do, so that you iterate at the
-right level of abstraction.
+Note that it is sometimes more appropriate to iterate over Sessions
+than Terminal Windows.  Carefully consider what you are trying to do
+so that you iterate at the right level of abstraction.
 */
-typedef void (*SessionFactory_TerminalWindowOpProcPtr)	(TerminalWindowRef		inTerminalWindow,
-														 void*					inData1,
-														 SInt32					inData2,
-														 void*					inoutResultPtr);
-inline void
-SessionFactory_InvokeTerminalWindowOpProc	(SessionFactory_TerminalWindowOpProcPtr		inUserRoutine,
-											 TerminalWindowRef							inTerminalWindow,
-											 void*										inData1,
-											 SInt32										inData2,
-											 void*										inoutResultPtr)
-{
-	(*inUserRoutine)(inTerminalWindow, inData1, inData2, inoutResultPtr);
-}
+typedef void (^SessionFactory_TerminalWindowBlock)	(TerminalWindowRef, Boolean&);
 
 
 
@@ -238,20 +219,13 @@ SessionRef
 //@{
 
 void
-	SessionFactory_ForEachSessionInFrozenList		(SessionFactory_SessionBlock	inBlock);
+	SessionFactory_ForEachSession					(SessionFactory_SessionBlock	inBlock);
 
 void
-	SessionFactory_ForEachSessionInReadOnlyList		(SessionFactory_SessionBlock	inBlock);
+	SessionFactory_ForEachSessionCopyList			(SessionFactory_SessionBlock	inBlock);
 
 void
-	SessionFactory_ForEveryTerminalWindowDo			(SessionFactory_TerminalWindowOpProcPtr	inProcPtr,
-													 void*							inData1,
-													 SInt32							inData2,
-													 void*							inoutResultPtr);
-
-// FOR SPECIAL USES ONLY
-SessionFactory_TerminalWindowList const&
-	SessionFactory_ReturnTerminalWindowList			();
+	SessionFactory_ForEachTerminalWindow			(SessionFactory_TerminalWindowBlock		inBlock);
 
 //@}
 

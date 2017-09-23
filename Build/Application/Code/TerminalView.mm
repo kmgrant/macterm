@@ -542,7 +542,6 @@ void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, 
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				screenToLocalRect					(My_TerminalViewPtr, Rect*);
-void				setAlphaTerminalWindowOp			(TerminalWindowRef, void*, SInt32, void*);
 void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
@@ -9278,12 +9277,29 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				if (gApplicationIsSuspended)
 				{
 					alpha = fadeAlpha;
-					SessionFactory_ForEveryTerminalWindowDo(setAlphaTerminalWindowOp, &alpha/* data 1 */, 0/* data 2 */, nullptr/* result */);
 				}
-				else
+				
+				SessionFactory_ForEachTerminalWindow
+				(^(TerminalWindowRef	inTerminalWindow,
+				   Boolean&				UNUSED_ARGUMENT(outStopFlag))
 				{
-					SessionFactory_ForEveryTerminalWindowDo(setAlphaTerminalWindowOp, &alpha/* data 1 */, 0/* data 2 */, nullptr/* result */);
-				}
+					HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
+													? TerminalWindow_ReturnWindow(inTerminalWindow)
+													: nullptr;
+					HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
+														? TerminalWindow_ReturnTabWindow(inTerminalWindow)
+														: nullptr;
+					
+					
+					if (nullptr != kTabWindow)
+					{
+						UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, alpha);
+					}
+					if (nullptr != kWindow)
+					{
+						UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, alpha);
+					}
+				});
 			}
 		}
 		break;
@@ -12221,39 +12237,6 @@ screenToLocalRect	(My_TerminalViewPtr		inTerminalViewPtr,
 		screenToLocal(inTerminalViewPtr, &inoutScreenOriginBoundsPtr->right, &inoutScreenOriginBoundsPtr->bottom);
 	}
 }// screenToLocalRect
-
-
-/*!
-This routine, of "SessionFactory_TerminalWindowOpProcPtr"
-form, changes the opacity of the specified terminal window.
-The "inAlphaFloatPtr" must be a pointer to a "float".
-
-(4.0)
-*/
-void
-setAlphaTerminalWindowOp	(TerminalWindowRef	inTerminalWindow,
-							 void*				inAlphaFloatPtr,
-							 SInt32				UNUSED_ARGUMENT(inData2),
-							 void*				UNUSED_ARGUMENT(inoutResultPtr))
-{
-	float const*		kAlphaPtr = REINTERPRET_CAST(inAlphaFloatPtr, float const*);
-	HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
-									? TerminalWindow_ReturnWindow(inTerminalWindow)
-									: nullptr;
-	HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
-										? TerminalWindow_ReturnTabWindow(inTerminalWindow)
-										: nullptr;
-	
-	
-	if (nullptr != kTabWindow)
-	{
-		UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, *kAlphaPtr);
-	}
-	if (nullptr != kWindow)
-	{
-		UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, *kAlphaPtr);
-	}
-}// setAlphaTerminalWindowOp
 
 
 /*!

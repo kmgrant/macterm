@@ -88,6 +88,7 @@
 namespace {
 
 typedef std::vector< SessionRef >						SessionList;
+typedef std::vector< TerminalWindowRef >				TerminalWindowList;
 typedef std::multimap< TerminalWindowRef, SessionRef >	TerminalWindowToSessionsMap;
 typedef std::vector< Workspace_Ref >					MyWorkspaceList;
 
@@ -145,8 +146,7 @@ TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 Workspace_Ref			createWorkspace					();
 Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef = nullptr, UInt16 = 0);
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionBlock);
-void					forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&,
-														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
+void					forEachTerminalWindowInListDo	(TerminalWindowList const&, SessionFactory_TerminalWindowBlock);
 void					handleNewSessionDialogClose		(GenericDialog_Ref, Boolean);
 Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
@@ -200,7 +200,7 @@ EventHandlerRef					gCarbonEventSessionProcessDataHandler = nullptr;
 EventHandlerRef					gCarbonEventSessionSetStateHandler = nullptr;
 EventHandlerRef					gCarbonEventWindowFocusHandler = nullptr;
 SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
-SessionFactory_TerminalWindowList&	gTerminalWindowListSortedByCreationTime ()	{ static SessionFactory_TerminalWindowList x; return x; }
+TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
 MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
 TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindowToSessionsMap x; return x; }
 
@@ -1502,15 +1502,15 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 Performs the specified operation on every session in
 the list.  The list must NOT change during iteration;
 if that condition cannot be guaranteed, you must call
-SessionFactory_ForEachSessionInFrozenList() instead.
+SessionFactory_ForEachSessionCopyList() instead.
 
 (2017.09)
 */
 void
-SessionFactory_ForEachSessionInReadOnlyList		(SessionFactory_SessionBlock	inBlock)
+SessionFactory_ForEachSession	(SessionFactory_SessionBlock	inBlock)
 {
 	forEachSessionInListDo(gSessionListSortedByCreationTime(), inBlock);
-}// ForEachSessionInReadOnlyList
+}// ForEachSession
 
 
 /*!
@@ -1522,46 +1522,31 @@ your loop iteration.
 (2017.09)
 */
 void
-SessionFactory_ForEachSessionInFrozenList	(SessionFactory_SessionBlock	inBlock)
+SessionFactory_ForEachSessionCopyList	(SessionFactory_SessionBlock	inBlock)
 {
 	SessionList		listCopy = gSessionListSortedByCreationTime();
 	
 	
 	forEachSessionInListDo(listCopy, inBlock);
-}// ForEachSessionInFrozenList
+}// ForEachSessionCopyList
 
 
 /*!
-When you need to perform an operation on every
-terminal window, use this method.  Terminal window
-references can be used to obtain a wealth of
-information about a terminal window (including
-pointers to other data structures), and to
-manipulate those windows (for example, changing
-its colors).
+Performs the specified operation on every terminal window
+in the list.  The list must NOT change during iteration;
+if that condition cannot be guaranteed, you must call
+SessionFactory_ForEachSessionCopyList() instead (and
+extract the terminal window from each session).
 
-You also provide a routine that operates on each
-screen from the subset you indicate.  Your routine
-defines what "inoutResultPtr" is, and the meaning of
-"inData1" and "inData2".
-
-WARNING:	It is not safe to use this routine with
-			an iterator that destroys terminal
-			windows, sessions, or other “first class”
-			objects.
-
-(3.0)
+(2017.09)
 */
 void
-SessionFactory_ForEveryTerminalWindowDo		(SessionFactory_TerminalWindowOpProcPtr		inProcPtr,
-											 void*										inData1,
-											 SInt32										inData2,
-											 void*										inoutResultPtr)
+SessionFactory_ForEachTerminalWindow	(SessionFactory_TerminalWindowBlock		inBlock)
 {
 	// ordinary iterations can use the actual list, but they MUST
 	// NOT INSERT OR DELETE any items in the list!
-	forEveryTerminalWindowInListDo(gTerminalWindowListSortedByCreationTime(), inProcPtr, inData1, inData2, inoutResultPtr);
-}// ForEveryTerminalWindowDo
+	forEachTerminalWindowInListDo(gTerminalWindowListSortedByCreationTime(), inBlock);
+}// ForEachTerminalWindow
 
 
 /*!
@@ -1876,23 +1861,6 @@ SessionFactory_ReturnStateCount		(Session_State		inStateToCheckFor)
 	
 	return result;
 }// ReturnStateCount
-
-
-/*!
-Returns the list of open terminal windows, in the order they
-were created.
-
-IMPORTANT:	The SessionFactory_ForEveryTerminalWindowDo() API
-			is more stable; this API could go away if the
-			mechanism for storing this list is changed.
-
-(4.1)
-*/
-SessionFactory_TerminalWindowList const&
-SessionFactory_ReturnTerminalWindowList ()
-{
-	return gTerminalWindowListSortedByCreationTime();
-}// ReturnTerminalWindowList
 
 
 /*!
@@ -2689,42 +2657,53 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
-Internal version of SessionFactory_ForEachSessionDo(),
-except it operates on the specific list given.
+Internal version of SessionFactory_ForEachSession(), except
+it operates on the specific list given.
 
-(3.1)
+(2017.09)
 */
 void
-forEachSessionInListDo		(SessionList const&					inList,
-							 SessionFactory_SessionBlock		inBlock)
+forEachSessionInListDo		(SessionList const&				inList,
+							 SessionFactory_SessionBlock	inBlock)
 {
+	Boolean		stopFlag = false;
+	
+	
 	// traverse the list
 	for (auto sessionRef : inList)
 	{
-		inBlock(sessionRef);
+		inBlock(sessionRef, stopFlag);
+		if (stopFlag)
+		{
+			break;
+		}
 	}
 }// forEachSessionInListDo
 
 
 /*!
-Internal version of SessionFactory_ForEveryTerminalWindowDo(),
+Internal version of SessionFactory_ForEachTerminalWindow(),
 except it operates on the specific list given.
 
-(3.1)
+(2017.09)
 */
 void
-forEveryTerminalWindowInListDo	(SessionFactory_TerminalWindowList const&	inList,
-								 SessionFactory_TerminalWindowOpProcPtr		inProcPtr,
-								 void*										inData1,
-								 SInt32										inData2,
-								 void*										inoutResultPtr)
+forEachTerminalWindowInListDo	(TerminalWindowList const&				inList,
+								 SessionFactory_TerminalWindowBlock		inBlock)
 {
+	Boolean		stopFlag = false;
+	
+	
 	// traverse the list
 	for (auto terminalWindowRef : inList)
 	{
-		SessionFactory_InvokeTerminalWindowOpProc(inProcPtr, terminalWindowRef, inData1, inData2, inoutResultPtr);
+		inBlock(terminalWindowRef, stopFlag);
+		if (stopFlag)
+		{
+			break;
+		}
 	}
-}// forEveryTerminalWindowInListDo
+}// forEachTerminalWindowInListDo
 
 
 /*!
@@ -3567,7 +3546,7 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	// the idea here is to shuffle the list so that the given
 	// window is at the end, and then all matching items are just
 	// erased off the end of the list
-	SessionFactory_TerminalWindowList&		targetList = gTerminalWindowListSortedByCreationTime();
+	TerminalWindowList&		targetList = gTerminalWindowListSortedByCreationTime();
 	targetList.erase(std::remove(targetList.begin(), targetList.end(), inTerminalWindow),
 						targetList.end());
 	assert(targetList.end() == std::find(targetList.begin(), targetList.end(), inTerminalWindow));

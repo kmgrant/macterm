@@ -1084,10 +1084,7 @@ a particular window is full-screen.
 Boolean
 TerminalWindow_IsFullScreenMode ()
 {
-	SessionFactory_TerminalWindowList const&			terminalWindowList = SessionFactory_ReturnTerminalWindowList();
-	SessionFactory_TerminalWindowList::const_iterator	toWindow = terminalWindowList.begin();
-	SessionFactory_TerminalWindowList::const_iterator	pastEndWindows = terminalWindowList.end();
-	Boolean												result = false;
+	__block Boolean		result = false;
 	
 	
 	// NOTE: although this could be implemented with a simple
@@ -1096,14 +1093,16 @@ TerminalWindow_IsFullScreenMode ()
 	// is missed and the counter is out of date); this is a
 	// small-N linear search that can be changed later if
 	// necessary
-	for (; toWindow != pastEndWindows; ++toWindow)
+	SessionFactory_ForEachTerminalWindow
+	(^(TerminalWindowRef	inTerminalWindow,
+	   Boolean&				outStop)
 	{
-		if (TerminalWindow_IsFullScreen(*toWindow))
+		if (TerminalWindow_IsFullScreen(inTerminalWindow))
 		{
 			result = true;
-			break;
+			outStop = YES;
 		}
-	}
+	});
 	
 	return result;
 }// IsFullScreenMode

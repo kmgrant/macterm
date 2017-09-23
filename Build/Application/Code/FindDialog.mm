@@ -288,30 +288,32 @@ Returns the number of matches.
 (4.1)
 */
 UInt32
-FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
-									 TerminalWindowRef				inStartTerminalWindow,
-									 FindDialog_Options				inFlags,
-									 Boolean*						outDidSearchOrNull)
+FindDialog_SearchWithoutDialog		(CFStringRef			inQueryBaseOrNullToClear,
+									 TerminalWindowRef		inStartTerminalWindow,
+									 FindDialog_Options		inFlags,
+									 Boolean*				outDidSearchOrNull)
 {
-	UInt32		result = 0;
+	UInt32										result = 0;
+	__block std::vector< TerminalWindowRef >	allWindowsList;
 	
 	
 	// remove highlighting from any previous searches
+	// and find all terminal window objects for later use
 	if (inFlags & kFindDialog_OptionAllOpenTerminals)
 	{
-		SessionFactory_TerminalWindowList const&	searchedWindows = SessionFactory_ReturnTerminalWindowList();
-		
-		
-		for (auto terminalWindowRef : searchedWindows)
+		SessionFactory_ForEachTerminalWindow
+		(^(TerminalWindowRef	inTerminalWindow,
+		   Boolean&				UNUSED_ARGUMENT(outStop))
 		{
-			if (TerminalWindow_IsValid(terminalWindowRef))
+			if (TerminalWindow_IsValid(inTerminalWindow))
 			{
-				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindowRef);
+				TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(inTerminalWindow);
 				
 				
 				TerminalView_FindNothing(view);
+				allWindowsList.push_back(inTerminalWindow);
 			}
-		}
+		});
 	}
 	else
 	{
@@ -339,8 +341,8 @@ FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
 		NSCharacterSet*								whitespaceSet = [NSCharacterSet whitespaceCharacterSet];
 		NSString*									asNSString = BRIDGE_CAST(inQueryBaseOrNullToClear, NSString*);
 		NSString*									trimmedString = [asNSString stringByTrimmingCharactersInSet:whitespaceSet];
-		SessionFactory_TerminalWindowList			singleWindowList;
-		SessionFactory_TerminalWindowList const*	searchedWindows = &singleWindowList;
+		std::vector< TerminalWindowRef >			singleWindowList;
+		std::vector< TerminalWindowRef > const*		searchedWindows = &singleWindowList;
 		
 		
 		if (nullptr != outDidSearchOrNull)
@@ -384,7 +386,7 @@ FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
 		else if (inFlags & kFindDialog_OptionAllOpenTerminals)
 		{
 			// search more than one terminal and highlight results in all!
-			searchedWindows = &(SessionFactory_ReturnTerminalWindowList());
+			searchedWindows = &allWindowsList;
 		}
 		else
 		{

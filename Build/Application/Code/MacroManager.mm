@@ -583,9 +583,16 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 				
 				case kMacroManager_ActionSelectMatchingWindow:
 					{
-						SessionFactory_TerminalWindowList const&	windowList = SessionFactory_ReturnTerminalWindowList();
 						TerminalWindowRef							activeTerminalWindow = TerminalWindow_ReturnFromMainWindow();
+						__block std::vector< TerminalWindowRef >	windowList;
 						
+						
+						SessionFactory_ForEachTerminalWindow
+						(^(TerminalWindowRef	inTerminalWindow,
+						   Boolean&				UNUSED_ARGUMENT(outStop))
+						{
+							windowList.push_back(inTerminalWindow);
+						});
 						
 						if ((nullptr != activeTerminalWindow) && (windowList.size() > 1))
 						{
