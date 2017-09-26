@@ -19,7 +19,7 @@
 # IMPORTANT: MacTerm's build system assumes /opt/swig
 # regardless of what you may customize here.  See the
 # Xcode configuration files for a SWIG_PREFIX variable.
-swigversion=3.0.10
+swigversion=3.0.12
 prefix_with_ver=/opt/swig-${swigversion}
 prefix_no_ver=/opt/swig
 
@@ -33,7 +33,7 @@ ln -snf ${prefix_with_ver} ${prefix_no_ver}
 --with-boost=no \
 --without-pcre \
 --disable-ccache \
---with-python=/System/Library/Frameworks/Python.framework/Versions/2.6/bin/python \
+--with-python=/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python \
 --without-allegrocl \
 --without-android \
 --without-cffi \

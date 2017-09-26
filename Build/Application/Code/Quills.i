@@ -239,9 +239,9 @@ _Quills_PropagateExceptions		(void*			inResultObject,
 		{
 			excMessage += inContext2OrNull;
 		}
-		Py_XDECREF(excType), excType = nullptr;
-		Py_XDECREF(excValue), excValue = nullptr;
-		Py_XDECREF(excTrace), excTrace = nullptr;
+		Py_XDECREF(excType); excType = nullptr;
+		Py_XDECREF(excValue); excValue = nullptr;
+		Py_XDECREF(excTrace); excTrace = nullptr;
 		if (false == excMessage.empty()) throw std::runtime_error(excMessage);
 	}
 }// _Quills_PropagateExceptions
@@ -272,7 +272,7 @@ CallPythonLongVectorReturnStringByLong	(void*							inPythonFunctionObject,
 		
 		if (nullptr == argValue)
 		{
-			Py_DECREF(arguments), arguments = nullptr;
+			Py_DECREF(arguments); arguments = nullptr;
 			throw _Quills_CallbackError("Unable to construct long integer object for argument list", pythonDef);
 		}
 		PyTuple_SET_ITEM(arguments, i, argValue);
@@ -280,7 +280,7 @@ CallPythonLongVectorReturnStringByLong	(void*							inPythonFunctionObject,
 	arguments = Py_BuildValue("(O)", arguments); // produce ((tuple)), as required to pass a single argument of a tuple
 	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = nullptr;
+	Py_DECREF(arguments); arguments = nullptr;
 	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
 	if (nullptr != pythonResult)
 	{
@@ -316,7 +316,7 @@ CallPythonLongVectorReturnStringByLong	(void*							inPythonFunctionObject,
 			result[PyInt_AsLong(aKey)] = PyString_AsString(stringValue);
 		}
 	}
-	Py_XDECREF(pythonResult), pythonResult = nullptr;
+	Py_XDECREF(pythonResult); pythonResult = nullptr;
 	
 	return result;
 }
@@ -339,9 +339,9 @@ CallPythonStringReturnVoid	(void*	inPythonFunctionObject,
 	arguments = Py_BuildValue("(s)", inoutString);
 	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = nullptr;
+	Py_DECREF(arguments); arguments = nullptr;
 	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
-	Py_XDECREF(pythonResult), pythonResult = nullptr;
+	Py_XDECREF(pythonResult); pythonResult = nullptr;
 }
 %}
 #endif
@@ -366,7 +366,7 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 	arguments = Py_BuildValue("(s)", inoutString);
 	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = nullptr;
+	Py_DECREF(arguments); arguments = nullptr;
 	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
 	if (nullptr != pythonResult)
 	{
@@ -381,7 +381,7 @@ CallPythonStringReturnString	(void*	inPythonFunctionObject,
 		stringPtr = PyString_AsString(pythonResult);
 		result = stringPtr;
 	}
-	Py_XDECREF(pythonResult), pythonResult = nullptr;
+	Py_XDECREF(pythonResult); pythonResult = nullptr;
 	
 	return result;
 }
@@ -410,7 +410,7 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 	arguments = Py_BuildValue("(s,l)", inoutString, inLong);
 	assert(nullptr != arguments);
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	Py_DECREF(arguments), arguments = nullptr;
+	Py_DECREF(arguments); arguments = nullptr;
 	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
 	if (nullptr != pythonResult)
 	{
@@ -437,7 +437,7 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 		}
 		result.second = PyInt_AsLong(item1);
 	}
-	Py_XDECREF(pythonResult), pythonResult = nullptr;
+	Py_XDECREF(pythonResult); pythonResult = nullptr;
 	
 	return result;
 }
@@ -458,9 +458,9 @@ CallPythonVoidReturnVoid	(void*	inPythonFunctionObject)
 	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
 	//arguments = Py_BuildValue("{items}");
 	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
-	//Py_DECREF(arguments), arguments = nullptr;
+	//Py_DECREF(arguments); arguments = nullptr;
 	_Quills_PropagateExceptions(pythonResult, PyEval_GetFuncName(pythonDef), PyEval_GetFuncDesc(pythonDef));
-	Py_XDECREF(pythonResult), pythonResult = nullptr;
+	Py_XDECREF(pythonResult); pythonResult = nullptr;
 }
 %}
 #endif
