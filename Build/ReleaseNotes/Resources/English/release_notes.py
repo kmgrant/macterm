@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20170925',
     '20170807',
     '20170723',
     '20170709',
@@ -578,6 +579,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20170925': [
+        'Fixed major problem with process launch failures on macOS High Sierra.',
+    ],
     '20170807': [
         'Six new default color schemes have been added, for a total of 10 schemes.  These will NOT be automatically installed unless there are NO other custom Formats in your list (or you are a new user).  You may also download the schemes individually from <https://www.macterm.net/extras/>.  Multiple files can be easily installed at once by dragging downloaded ".plist" files onto the MacTerm application icon in the Dock.',
     ],
