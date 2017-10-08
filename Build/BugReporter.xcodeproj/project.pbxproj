@@ -10,7 +10,6 @@
 		0A33CC4E07FABA6500248DDF /* BugReporterPrefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */; };
 		0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5507FABAF800248DDF /* UniversalDefines.h */; };
 		0A5C6C7B1597B26E0094E3FD /* BugReporterCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */; };
-		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
 		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
 		0AB013101DE84EF000155C69 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AB0130F1DE84EF000155C69 /* AppKit.framework */; };
 		0AB013131DE8513700155C69 /* Console.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AB013121DE8513700155C69 /* Console.cp */; };
@@ -42,7 +41,6 @@
 		0A5C6C7A1597B26E0094E3FD /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = BugReporter/Resources/English.lproj/BugReporterCocoa.xib; sourceTree = "<group>"; };
 		0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0AA19F501D88F29900FD70FF /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
-		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = BugReporter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = BugReporter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 		0AB0130C1DE8200C00155C69 /* BugReporter-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "BugReporter-Info.plist"; path = "BugReporter/Resources/BugReporter-Info.plist"; sourceTree = "<group>"; };
 		0AB0130D1DE83F0300155C69 /* BugReporter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = BugReporter.entitlements; path = BugReporter/BugReporter.entitlements; sourceTree = "<group>"; };
@@ -100,7 +98,6 @@
 				0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */,
 				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
 				0AB0130C1DE8200C00155C69 /* BugReporter-Info.plist */,
-				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
 				0A5C6C791597B26E0094E3FD /* BugReporterCocoa.xib */,
 				0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */,
 				0AA19F501D88F29900FD70FF /* Production.xcconfig */,
@@ -188,7 +185,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */,
 				0A5C6C7B1597B26E0094E3FD /* BugReporterCocoa.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

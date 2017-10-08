@@ -15,7 +15,6 @@
 		0A6C44581D83780600E1B0E2 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44551D83780600E1B0E2 /* CocoaExtensions.mm */; };
 		0A6C44591D83780600E1B0E2 /* CocoaExtensions.objc++.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A6C44561D83780600E1B0E2 /* CocoaExtensions.objc++.h */; };
 		0A6C445E1D83888300E1B0E2 /* PrintPreview.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */; };
-		0A6C44641D84A0A300E1B0E2 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C44631D84A0A300E1B0E2 /* IconForBundle.icns */; };
 		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
 /* End PBXBuildFile section */
 
@@ -49,7 +48,6 @@
 		0A6C445B1D83827D00E1B0E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrintPreview/Resources/Base.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
 		0A6C445C1D83827D00E1B0E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrintPreview/Resources/Base.lproj/TerminalPrintDialogCocoa.xib; sourceTree = "<group>"; };
 		0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrintPreview.entitlements; path = PrintPreview/PrintPreview.entitlements; sourceTree = "<group>"; };
-		0A6C44631D84A0A300E1B0E2 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrintPreview/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = PrintPreview/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
 		8D0C4E970486CD37000505A6 /* PrintPreview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrintPreview.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -92,7 +90,6 @@
 				0A5C6C661597B1870094E3FD /* Cocoa.framework */,
 				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
 				0A33CC4D07FABA6500248DDF /* PrintPreviewPrefix.pch */,
-				0A6C44631D84A0A300E1B0E2 /* IconForBundle.icns */,
 				0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */,
 				0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */,
 				0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */,
@@ -186,7 +183,6 @@
 				0A6C445E1D83888300E1B0E2 /* PrintPreview.entitlements in Resources */,
 				0A46C3A81D80CF650035E6A8 /* PrintPreviewCocoa.xib in Resources */,
 				0A6C44541D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib in Resources */,
-				0A6C44641D84A0A300E1B0E2 /* IconForBundle.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
