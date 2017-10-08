@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171008',
     '20170925',
     '20170807',
     '20170723',
@@ -579,6 +580,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171008': [
+        'Changed main application icon artwork and added a much larger rendering that is visible in certain places such as Quick Look.',
+    ],
     '20170925': [
         'Fixed major problem with process launch failures on macOS High Sierra.',
     ],
