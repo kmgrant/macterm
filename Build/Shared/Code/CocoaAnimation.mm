@@ -77,6 +77,8 @@ enum My_AnimationTransition
 
 } // anonymous namespace
 
+#pragma mark Types
+
 /*!
 A class for performing animations on windows that
 works on older Mac OS X versions (that is, before
@@ -131,7 +133,7 @@ Core Animation was available).
 #pragma mark Internal Method Prototypes
 namespace {
 
-NSWindow*	createImageWindowFromImage			(NSWindow*, NSImage*);
+NSWindow*	createImageWindowFromImage			(NSWindow*, NSImage*, NSRect = NSZeroRect);
 NSWindow*	createImageWindowFromWindowRect		(NSWindow*, NSRect);
 
 } // anonymous namespace
@@ -546,7 +548,8 @@ namespace {
 Creates a new, borderless window whose content view is an image
 view that renders the specified image.  The image view size is
 set to match the frame origin and size of the original window,
-regardless of the image size.
+regardless of the image size, unless a custom rectangle is given.
+(The custom rectangle is relative to the window origin.)
 
 This is very useful as a basis for animations, because it allows
 a window to appear to be moving in a way that does not require
@@ -556,11 +559,25 @@ the original window to continue to exist after this call returns.
 */
 NSWindow*
 createImageWindowFromImage	(NSWindow*	inWindow,
-							 NSImage*	inImage)
+							 NSImage*	inImage,
+							 NSRect		inCustomRectOrZeroRect)
 {
 	NSWindow*	result = nil;
-	NSRect		newFrame = [inWindow frame];
+	NSRect		windowFrame = [inWindow frame];
+	NSRect		contentFrame = [inWindow contentRectForFrameRect:windowFrame];
+	NSRect		newFrame = (NSIsEmptyRect(inCustomRectOrZeroRect)
+							? windowFrame
+							: NSOffsetRect(inCustomRectOrZeroRect, contentFrame.origin.x, contentFrame.origin.y));
 	
+	
+	// guard against a possible exception if the given rectangle is bogus
+	if ((false == isfinite(newFrame.origin.x)) || (false == isfinite(newFrame.origin.y)) ||
+		(false == isfinite(newFrame.size.width)) || (false == isfinite(newFrame.size.height)))
+	{
+		Console_Warning(Console_WriteValueFloat4, "failed to create image window from rectangle at infinity",
+						newFrame.origin.x, newFrame.origin.y, newFrame.size.width, newFrame.size.height);
+		return nil;
+	}
 	
 	// construct a fake window to display the same thing
 	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
@@ -568,32 +585,22 @@ createImageWindowFromImage	(NSWindow*	inWindow,
 	[result setOpaque:NO];
 	result.backgroundColor = [NSColor clearColor];
 	
-	// capture the image of the original window
+	// capture the image of the original window (a regular image view is used
+	// instead of just assigning the image to a layer because the documentation
+	// for CALayer states that setting the "contents" of a layer is not correct
+	// when the layer is associated with a view; on macOS High Sierra, an image
+	// assigned to a layer in a view is not rendered at all)
 	@autoreleasepool
 	{
-		NSView*		contentView = STATIC_CAST(result.contentView, NSView*);
+		NSView*			contentView = STATIC_CAST(result.contentView, NSView*);
+		NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(newFrame), NSHeight(newFrame));
+		NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
 		
 		
-		// with Core Animation and Mac OS X 10.6 and beyond, the NSImage
-		// can be directly set as the contents of a layer-backed view
-		[contentView setWantsLayer:YES];
-		if (nil != contentView.layer)
-		{
-			contentView.layer.contents = inImage;
-		}
-		else
-		{
-			// prior to Core Animation, an image view is required
-			NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(newFrame), NSHeight(newFrame));
-			NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
-			
-			
-			Console_Warning(Console_WriteLine, "expected to find a valid Core Animation layer; falling back to image view");
-			[imageView setImageScaling:NSImageScaleAxesIndependently];
-			[imageView setImage:inImage];
-			[result setContentView:imageView];
-			[imageView release], imageView = nil;
-		}
+		[imageView setImageScaling:NSImageScaleAxesIndependently];
+		[imageView setImage:inImage];
+		[result setContentView:imageView];
+		[imageView release], imageView = nil;
 	}
 	
 	return result;
@@ -621,28 +628,7 @@ createImageWindowFromWindowRect		(NSWindow*		inWindow,
 {
 	NSWindow*	result = nil;
 	NSView*		originalContentView = [inWindow contentView];
-	NSRect		newFrame = [inWindow frame];
 	
-	
-	// set up the window to cover its original content exactly
-	newFrame.origin.x += inContentViewSection.origin.x;
-	newFrame.origin.y += inContentViewSection.origin.y;
-	newFrame.size = inContentViewSection.size;
-	
-	// guard against a possible exception if the given rectangle is bogus
-	if ((false == isfinite(newFrame.origin.x)) || (false == isfinite(newFrame.origin.y)) ||
-		(false == isfinite(newFrame.size.width)) || (false == isfinite(newFrame.size.height)))
-	{
-		Console_Warning(Console_WriteValueFloat4, "failed to create image window from rectangle at infinity",
-						newFrame.origin.x, newFrame.origin.y, newFrame.size.width, newFrame.size.height);
-		return nil;
-	}
-	
-	// now construct a fake window to display the same thing
-	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
-													backing:NSBackingStoreBuffered defer:NO];
-	[result setOpaque:NO];
-	result.backgroundColor = [NSColor clearColor];
 	
 	// capture the image of the original window
 	@autoreleasepool
@@ -659,26 +645,8 @@ createImageWindowFromWindowRect		(NSWindow*		inWindow,
 		[windowImage addRepresentation:imageRep];
 		[imageRep release], imageRep = nil;
 		
-		// with Core Animation and Mac OS X 10.6 and beyond, the NSImage
-		// can be directly set as the contents of a layer-backed view
-		[contentView setWantsLayer:YES];
-		if (nil != contentView.layer)
-		{
-			contentView.layer.contents = windowImage;
-		}
-		else
-		{
-			// prior to Core Animation, an image view is required
-			NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(inContentViewSection), NSHeight(inContentViewSection));
-			NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
-			
-			
-			Console_Warning(Console_WriteLine, "expected to find a valid Core Animation layer; falling back to image view");
-			[imageView setImageScaling:NSImageScaleAxesIndependently];
-			[imageView setImage:windowImage];
-			[result setContentView:imageView];
-			[imageView release], imageView = nil;
-		}
+		// create a window to display this image
+		result = createImageWindowFromImage(inWindow, windowImage, inContentViewSection);
 	}
 	
 	return result;

@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171012',
     '20171008',
     '20170925',
     '20170807',
@@ -580,6 +581,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171012': [
+        'Fixed missing animations on macOS High Sierra.',
+    ],
     '20171008': [
         'Changed main application icon artwork and added a much larger rendering that is visible in certain places such as Quick Look.',
     ],
