@@ -1346,123 +1346,123 @@ virtualKeyToUnicode		(UInt16		inVirtualKeyCode)
 	// (yes, these really are assigned as bizarrely as they seem...)
 	switch (inVirtualKeyCode)
 	{
-	case 0x24:
+	case kVK_Return: // 0x24
 		result = NSCarriageReturnCharacter;
 		break;
 	
-	case 0x33:
+	case kVK_Delete: // 0x33
 		result = NSBackspaceCharacter;
 		break;
 	
-	case 0x35:
+	case kVK_Escape: // 0x35
 		result = 0x001B; // the “escape” key
 		break;
 	
-	case 0x47:
+	case kVK_ANSI_KeypadClear: // 0x47
 		result = 0x2327; // the “clear” key
 		break;
 	
-	case 0x4C:
+	case kVK_ANSI_KeypadEnter: // 0x4C
 		result = NSEnterCharacter;
 		break;
 	
-	case 0x60:
+	case kVK_F5: // 0x60
 		result = NSF5FunctionKey;
 		break;
 	
-	case 0x61:
+	case kVK_F6: // 0x61
 		result = NSF6FunctionKey;
 		break;
 	
-	case 0x62:
+	case kVK_F7: // 0x62
 		result = NSF7FunctionKey;
 		break;
 	
-	case 0x63:
+	case kVK_F3: // 0x63
 		result = NSF3FunctionKey;
 		break;
 	
-	case 0x64:
+	case kVK_F8: // 0x64
 		result = NSF8FunctionKey;
 		break;
 	
-	case 0x65:
+	case kVK_F9: // 0x65
 		result = NSF9FunctionKey;
 		break;
 	
-	case 0x67:
+	case kVK_F11: // 0x67
 		result = NSF11FunctionKey;
 		break;
 	
-	case 0x69:
+	case kVK_F13: // 0x69
 		result = NSF13FunctionKey;
 		break;
 	
-	case 0x6A:
+	case kVK_F16: // 0x6A
 		result = NSF16FunctionKey;
 		break;
 	
-	case 0x6B:
+	case kVK_F14: // 0x6B
 		result = NSF14FunctionKey;
 		break;
 	
-	case 0x6D:
+	case kVK_F10: // 0x6D
 		result = NSF10FunctionKey;
 		break;
 	
-	case 0x6F:
+	case kVK_F12: // 0x6F
 		result = NSF12FunctionKey;
 		break;
 	
-	case 0x71:
+	case kVK_F15: // 0x71
 		result = NSF15FunctionKey;
 		break;
 	
-	case 0x73:
+	case kVK_Home: // 0x73
 		result = NSHomeFunctionKey;
 		break;
 	
-	case 0x74:
+	case kVK_PageUp: // 0x74
 		result = NSPageUpFunctionKey;
 		break;
 	
-	case 0x75:
+	case kVK_ForwardDelete: // 0x75
 		result = NSDeleteCharacter;
 		break;
 	
-	case 0x76:
+	case kVK_F4: // 0x76
 		result = NSF4FunctionKey;
 		break;
 	
-	case 0x77:
+	case kVK_End: // 0x77
 		result = NSEndFunctionKey;
 		break;
 	
-	case 0x78:
+	case kVK_F2: // 0x78
 		result = NSF2FunctionKey;
 		break;
 	
-	case 0x79:
+	case kVK_PageDown: // 0x79
 		result = NSPageDownFunctionKey;
 		break;
 	
-	case 0x7A:
+	case kVK_F1: // 0x7A
 		result = NSF1FunctionKey;
 		break;
 	
-	case 0x7B:
+	case kVK_LeftArrow: // 0x7B
 		result = NSLeftArrowFunctionKey;
 		break;
 	
-	case 0x7C:
+	case kVK_RightArrow: // 0x7C
 		result = NSRightArrowFunctionKey;
 		break;
 	
-	case 0x7D:
+	case kVK_DownArrow: // 0x7D
 		result = NSDownArrowFunctionKey;
 		break;
 	
-	case 0x7E:
+	case kVK_UpArrow: // 0x7E
 		result = NSUpArrowFunctionKey;
 		break;
 	

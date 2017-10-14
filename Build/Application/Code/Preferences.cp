@@ -10765,123 +10765,123 @@ virtualKeyCreateName	(UInt16		inVirtualKeyCode)
 	// (yes, these really are assigned as bizarrely as they seem...)
 	switch (inVirtualKeyCode)
 	{
-	case 0x24:
+	case kVK_Return: // 0x24
 		result = CFSTR("return");
 		break;
 	
-	case 0x33:
+	case kVK_Delete: // 0x33
 		result = CFSTR("backward-delete");
 		break;
 	
-	case 0x35:
+	case kVK_Escape: // 0x35
 		result = CFSTR("escape");
 		break;
 	
-	case 0x47:
+	case kVK_ANSI_KeypadClear: // 0x47
 		result = CFSTR("clear");
 		break;
 	
-	case 0x4C:
+	case kVK_ANSI_KeypadEnter: // 0x4C
 		result = CFSTR("enter");
 		break;
 	
-	case 0x60:
+	case kVK_F5: // 0x60
 		result = CFSTR("f5");
 		break;
 	
-	case 0x61:
+	case kVK_F6: // 0x61
 		result = CFSTR("f6");
 		break;
 	
-	case 0x62:
+	case kVK_F7: // 0x62
 		result = CFSTR("f7");
 		break;
 	
-	case 0x63:
+	case kVK_F3: // 0x63
 		result = CFSTR("f3");
 		break;
 	
-	case 0x64:
+	case kVK_F8: // 0x64
 		result = CFSTR("f8");
 		break;
 	
-	case 0x65:
+	case kVK_F9: // 0x65
 		result = CFSTR("f9");
 		break;
 	
-	case 0x67:
+	case kVK_F11: // 0x67
 		result = CFSTR("f11");
 		break;
 	
-	case 0x69:
+	case kVK_F13: // 0x69
 		result = CFSTR("f13");
 		break;
 	
-	case 0x6A:
+	case kVK_F16: // 0x6A
 		result = CFSTR("f16");
 		break;
 	
-	case 0x6B:
+	case kVK_F14: // 0x6B
 		result = CFSTR("f14");
 		break;
 	
-	case 0x6D:
+	case kVK_F10: // 0x6D
 		result = CFSTR("f10");
 		break;
 	
-	case 0x6F:
+	case kVK_F12: // 0x6F
 		result = CFSTR("f12");
 		break;
 	
-	case 0x71:
+	case kVK_F15: // 0x71
 		result = CFSTR("f15");
 		break;
 	
-	case 0x73:
+	case kVK_Home: // 0x73
 		result = CFSTR("home");
 		break;
 	
-	case 0x74:
+	case kVK_PageUp: // 0x74
 		result = CFSTR("page-up");
 		break;
 	
-	case 0x75:
+	case kVK_ForwardDelete: // 0x75
 		result = CFSTR("forward-delete");
 		break;
 	
-	case 0x76:
+	case kVK_F4: // 0x76
 		result = CFSTR("f4");
 		break;
 	
-	case 0x77:
+	case kVK_End: // 0x77
 		result = CFSTR("end");
 		break;
 	
-	case 0x78:
+	case kVK_F2: // 0x78
 		result = CFSTR("f2");
 		break;
 	
-	case 0x79:
+	case kVK_PageDown: // 0x79
 		result = CFSTR("page-down");
 		break;
 	
-	case 0x7A:
+	case kVK_F1: // 0x7A
 		result = CFSTR("f1");
 		break;
 	
-	case 0x7B:
+	case kVK_LeftArrow: // 0x7B
 		result = CFSTR("left-arrow");
 		break;
 	
-	case 0x7C:
+	case kVK_RightArrow: // 0x7C
 		result = CFSTR("right-arrow");
 		break;
 	
-	case 0x7D:
+	case kVK_DownArrow: // 0x7D
 		result = CFSTR("down-arrow");
 		break;
 	
-	case 0x7E:
+	case kVK_UpArrow: // 0x7E
 		result = CFSTR("up-arrow");
 		break;
 	
@@ -10939,123 +10939,123 @@ virtualKeyParseName	(CFStringRef	inName,
 		// (yes, these really are assigned as bizarrely as they seem...)
 		if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("return"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x24;
+			outCharacterOrKeyCode = kVK_Return; // 0x24
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("backward-delete"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x33;
+			outCharacterOrKeyCode = kVK_Delete; // 0x33
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("escape"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x35;
+			outCharacterOrKeyCode = kVK_Escape; // 0x35
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("clear"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x47;
+			outCharacterOrKeyCode = kVK_ANSI_KeypadClear; // 0x47
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("enter"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x4C;
+			outCharacterOrKeyCode = kVK_ANSI_KeypadEnter; // 0x4C
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f5"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x60;
+			outCharacterOrKeyCode = kVK_F5; // 0x60
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f6"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x61;
+			outCharacterOrKeyCode = kVK_F6; // 0x61
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f7"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x62;
+			outCharacterOrKeyCode = kVK_F7; // 0x62
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f3"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x63;
+			outCharacterOrKeyCode = kVK_F3; // 0x63
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f8"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x64;
+			outCharacterOrKeyCode = kVK_F8; // 0x64
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f9"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x65;
+			outCharacterOrKeyCode = kVK_F9; // 0x65
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f11"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x67;
+			outCharacterOrKeyCode = kVK_F11; // 0x67
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f13"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x69;
+			outCharacterOrKeyCode = kVK_F13; // 0x69
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f16"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x6A;
+			outCharacterOrKeyCode = kVK_F16; // 0x6A
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f14"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x6B;
+			outCharacterOrKeyCode = kVK_F14; // 0x6B
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f10"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x6D;
+			outCharacterOrKeyCode = kVK_F10; // 0x6D
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f12"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x6F;
+			outCharacterOrKeyCode = kVK_F12; // 0x6F
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f15"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x71;
+			outCharacterOrKeyCode = kVK_F15; // 0x71
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("home"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x73;
+			outCharacterOrKeyCode = kVK_Home; // 0x73
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page-up"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x74;
+			outCharacterOrKeyCode = kVK_PageUp; // 0x74
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("forward-delete"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x75;
+			outCharacterOrKeyCode = kVK_ForwardDelete; // 0x75
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f4"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x76;
+			outCharacterOrKeyCode = kVK_F4; // 0x76
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("end"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x77;
+			outCharacterOrKeyCode = kVK_End; // 0x77
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f2"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x78;
+			outCharacterOrKeyCode = kVK_F2; // 0x78
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page-down"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x79;
+			outCharacterOrKeyCode = kVK_PageDown; // 0x79
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f1"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x7A;
+			outCharacterOrKeyCode = kVK_F1; // 0x7A
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("left-arrow"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x7B;
+			outCharacterOrKeyCode = kVK_LeftArrow; // 0x7B
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("right-arrow"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x7C;
+			outCharacterOrKeyCode = kVK_RightArrow; // 0x7C
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("down-arrow"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x7D;
+			outCharacterOrKeyCode = kVK_DownArrow; // 0x7D
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("up-arrow"), kCompareFlags))
 		{
-			outCharacterOrKeyCode = 0x7E;
+			outCharacterOrKeyCode = kVK_UpArrow; // 0x7E
 		}
 		else
 		{

@@ -6644,67 +6644,67 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	// scan for keys that invoke instant commands
 	switch (virtualKeyCode)
 	{
-	case 0x7A: // F1
+	case kVK_F1: // 0x7A
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF6);
 		break;
 	
-	case 0x78: // F2
+	case kVK_F2: // 0x78
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF7);
 		break;
 	
-	case 0x63: // F3
+	case kVK_F3: // 0x63
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF8);
 		break;
 	
-	case 0x76: // F4
+	case kVK_F4: // 0x76
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF9);
 		break;
 	
-	case 0x60: // F5
+	case kVK_F5: // 0x60
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF10);
 		break;
 	
-	case 0x61: // F6
+	case kVK_F6: // 0x61
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF11);
 		break;
 	
-	case 0x62: // F7
+	case kVK_F7: // 0x62
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF12);
 		break;
 	
-	case 0x64: // F8
+	case kVK_F8: // 0x64
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF13);
 		break;
 	
-	case 0x65: // F9
+	case kVK_F9: // 0x65
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF14);
 		break;
 	
-	case 0x6D: // F10
+	case kVK_F10: // 0x6D
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF15_220HELP);
 		break;
 	
-	case 0x67: // F11
+	case kVK_F11: // 0x67
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF16_220DO);
 		break;
 	
-	case 0x6F: // F12
+	case kVK_F12: // 0x6F
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF17);
 		break;
 	
-	case 0x69: // Print Screen (F13)
+	case kVK_F13: // 0x69 (Print Screen)
 	#if 0
 		if (0/* if not VT220 */)
 		{
@@ -6718,12 +6718,12 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
-	case 0x6B: // F14
+	case kVK_F14: // 0x6B
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF19);
 		break;
 	
-	case 0x71: // F15
+	case kVK_F15: // 0x71
 		// TEMPORARY: only makes sense for VT220 terminals
 		Session_UserInputKey(session, VSF20);
 		break;
@@ -6768,26 +6768,22 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
-	case 0x7B: // Left arrow
-	case 0x3B: // Left arrow on non-extended keyboards
+	case kVK_LeftArrow: // 0x7B
 		Session_UserInputKey(session, VSLT, eventModifiers);
 		result = true;
 		break;
 	
-	case 0x7C: // Right arrow
-	case 0x3C: // Right arrow on non-extended keyboards
+	case kVK_RightArrow: // 0x7C
 		Session_UserInputKey(session, VSRT, eventModifiers);
 		result = true;
 		break;
 	
-	case 0x7D: // Down arrow
-	case 0x3D: // Down arrow on non-extended keyboards
+	case kVK_DownArrow: // 0x7D
 		Session_UserInputKey(session, VSDN, eventModifiers);
 		result = true;
 		break;
 	
-	case 0x7E: // Up arrow
-	case 0x3E: // Up arrow on non-extended keyboards
+	case kVK_UpArrow: // 0x7E
 		Session_UserInputKey(session, VSUP, eventModifiers);
 		result = true;
 		break;
@@ -7925,7 +7921,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			// corrects known bug in system key mapping
 			// NOTE: This is based on old NCSA Telnet code.  Does this even *matter* anymore?
 			if ((controlKeyPressInfo.virtualKeyCode == 0x34) ||
-				(controlKeyPressInfo.virtualKeyCode == 0x4C))
+				(controlKeyPressInfo.virtualKeyCode == kVK_ANSI_KeypadEnter/* 0x4C */))
 			{
 				// fix for PowerBook 540’s bad KCHR; map control-C to Return
 				controlKeyPressInfo.characterCode = 13;
@@ -7985,7 +7981,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		// perform key-based key or character mappings
 		switch (controlKeyPressInfo.virtualKeyCode)
 		{
-		case 0x33: // backspace
+		case kVK_Delete: // 0x33
 			// handle mapping BS to DEL, flipping on option-delete or command-delete
 			{
 				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);

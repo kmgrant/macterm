@@ -593,181 +593,181 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
 									self.placeholderDescriptor,
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x33), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Delete/* 0x33 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌫ Backward Delete", @"PrefPanelMacros"/* table */,
 																				@"key: backward delete")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x75), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_ForwardDelete/* 0x75 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌦ Forward Delete", @"PrefPanelMacros"/* table */,
 																				@"key: forward delete")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x73), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Home/* 0x73 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"↖︎ Home", @"PrefPanelMacros"/* table */,
 																				@"key: home")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x77), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_End/* 0x77 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"↘︎ End", @"PrefPanelMacros"/* table */,
 																				@"key: end")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x74), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_PageUp/* 0x74 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇞ Page Up", @"PrefPanelMacros"/* table */,
 																				@"key: page up")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x79), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_PageDown/* 0x79 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇟ Page Down", @"PrefPanelMacros"/* table */,
 																				@"key: page down")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x7E), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_UpArrow/* 0x7E */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇡ Up Arrow", @"PrefPanelMacros"/* table */,
 																				@"key: up arrow")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x7D), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_DownArrow/* 0x7D */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇣ Down Arrow", @"PrefPanelMacros"/* table */,
 																				@"key: down arrow")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x7B), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_LeftArrow/* 0x7B */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇠ Left Arrow", @"PrefPanelMacros"/* table */,
 																				@"key: left arrow")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x7C), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_RightArrow/* 0x7C */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇢ Right Arrow", @"PrefPanelMacros"/* table */,
 																				@"key: right arrow")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x47), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_ANSI_KeypadClear/* 0x47 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌧ Clear", @"PrefPanelMacros"/* table */,
 																				@"key: clear")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x35), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Escape/* 0x35 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⎋ Escape", @"PrefPanelMacros"/* table */,
 																				@"key: escape")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x24), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Return/* 0x24 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"↩︎ Return", @"PrefPanelMacros"/* table */,
 																				@"key: return")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x4C), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_ANSI_KeypadEnter/* 0x4C */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌤ Enter", @"PrefPanelMacros"/* table */,
 																				@"key: enter")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x7A), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F1/* 0x7A */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F1 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F1")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x78), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F2/* 0x78 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F2 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F2")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x63), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F3/* 0x63 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F3 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F3")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x76), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F4/* 0x76 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F4 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F4")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x60), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F5/* 0x60 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F5 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F5")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x61), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F6/* 0x61 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F6 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F6")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x62), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F7/* 0x62 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F7 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F7")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x64), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F8/* 0x64 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F8 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F8")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x65), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F9/* 0x65 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F9 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F9")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x6D), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F10/* 0x6D */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F10 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F10")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x67), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F11/* 0x67 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F11 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F11")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x6F), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F12/* 0x6F */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F12 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F12")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x69), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F13/* 0x69 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F13 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F13")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x6B), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F14/* 0x6B */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F14 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F14")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x71), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F15/* 0x71 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F15 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F15")]
 										autorelease],
 									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, 0x6A), UInt32)
+										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F16/* 0x6A */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F16 Function Key", @"PrefPanelMacros"/* table */,
 																				@"key: F16")]

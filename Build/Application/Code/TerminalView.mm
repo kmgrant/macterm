@@ -11061,9 +11061,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				result = eventNotHandledErr; // initially...
 				switch (virtualKeyCode)
 				{
-				case 0x3B:
-				case 0x7B:
-					// left arrow
+				case kVK_LeftArrow: // 0x7B
 					if (false == viewPtr->text.selection.readOnly)
 					{
 						if (modifiers == shiftKey)
@@ -11142,9 +11140,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					}
 					break;
 				
-				case 0x3C:
-				case 0x7C:
-					// right arrow
+				case kVK_RightArrow: // 0x7C
 					if (false == viewPtr->text.selection.readOnly)
 					{
 						if (modifiers == shiftKey)
@@ -11223,9 +11219,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					}
 					break;
 				
-				case 0x3E:
-				case 0x7E:
-					// up arrow
+				case kVK_UpArrow: // 0x7E
 					if (false == viewPtr->text.selection.readOnly)
 					{
 						if (modifiers == shiftKey)
@@ -11260,9 +11254,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					}
 					break;
 				
-				case 0x3D:
-				case 0x7D:
-					// down arrow
+				case kVK_DownArrow: // 0x7D
 					if (false == viewPtr->text.selection.readOnly)
 					{
 						if (modifiers == shiftKey)
