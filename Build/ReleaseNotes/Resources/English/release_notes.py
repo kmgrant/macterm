@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171016',
     '20171012',
     '20171008',
     '20170925',
@@ -581,6 +582,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171016': [
+        'Macros with an Action of "Open URL", "New Window with Command" or "Select Window by Title" are now always enabled in the Macros menu, even if no terminal window is active.',
+        'The "Select Next Macro Set" and "Select Previous Macro Set" commands in the Macros menu are now always available, even if no terminal window is active.',
+    ],
     '20171012': [
         'Fixed missing animations on macOS High Sierra.',
     ],

@@ -355,11 +355,18 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 Sets the title and key equivalent of the specified menu item
 based on the given macro in the set.
 
+Given information on the state of the application (terminal
+window in front, etc.), a hint is returned to indicate whether
+or not the macro item should be enabled.  The state is not
+directly changed here because the enabled state of a menu item
+is typically handled at the command level. 
+
 (4.0)
 */
-void
+Boolean
 MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 								 UInt16						inOneBasedMacroIndex,
+								 Boolean					inIsTerminalWindowActive,
 								 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
 {
 	Preferences_Index const	kMacroPrefIndex = STATIC_CAST(inOneBasedMacroIndex, Preferences_Index);
@@ -368,8 +375,10 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 											: inMacroSetOrNullForActiveSet;
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	CFStringRef				nameCFString = nullptr;
+	MacroManager_Action		macroAction = kMacroManager_ActionSendTextVerbatim;
 	MacroManager_KeyID		macroKeyID = 0;
 	UInt32					modifiers = 0;
+	Boolean					result = false;
 	
 	
 	// retrieve name
@@ -437,6 +446,46 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 		// set a dummy value
 		[inMenuItem setKeyEquivalentModifierMask:0];
 	}
+	
+	// retrieve action
+	prefsResult = Preferences_ContextGetData
+					(prefsContext,
+						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, kMacroPrefIndex),
+						sizeof(macroAction), &macroAction, false/* search defaults too */);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		result = true; // initially...
+		
+		// determine if this type of macro should be enabled, given
+		// the information on the current context
+		switch (macroAction)
+		{
+		case kMacroManager_ActionHandleURL:
+		case kMacroManager_ActionNewWindowWithCommand:
+		case kMacroManager_ActionSelectMatchingWindow:
+			// these types of actions can always be taken
+			result = true;
+			break;
+		
+		case kMacroManager_ActionSendTextVerbatim:
+		case kMacroManager_ActionSendTextProcessingEscapes:
+		case kMacroManager_ActionFindTextVerbatim:
+		case kMacroManager_ActionFindTextProcessingEscapes:
+			// these types of actions require a terminal window
+			result = inIsTerminalWindowActive;
+			break;
+		
+		default:
+			break;
+		}
+	}
+	else
+	{
+		// set a default value
+		result = inIsTerminalWindowActive;
+	}
+	
+	return result;
 }// UpdateMenuItem
 
 
@@ -471,7 +520,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 										: inMacroSetOrNullForActiveSet;
 	
 	
-	if ((nullptr != context) && (nullptr != session))
+	if (nullptr != context)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		CFStringRef				actionCFString = nullptr;
@@ -499,18 +548,25 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 				{
 				case kMacroManager_ActionSendTextVerbatim:
 					// send string to the session as-is
-					Session_UserInputCFString(session, actionCFString);
-					result = kMacroManager_ResultOK;
+					if (nullptr != session)
+					{
+						Session_UserInputCFString(session, actionCFString);
+						result = kMacroManager_ResultOK;
+					}
 					break;
 				
 				case kMacroManager_ActionFindTextVerbatim:
 					// find string as-is without performing substitutions
-					UNUSED_RETURN(NSUInteger)FindDialog_SearchWithoutDialog(actionCFString, Session_ReturnActiveTerminalWindow(session),
-																			kFindDialog_OptionsAllOff);
-					result = kMacroManager_ResultOK;
+					if (nullptr != session)
+					{
+						UNUSED_RETURN(NSUInteger)FindDialog_SearchWithoutDialog(actionCFString, Session_ReturnActiveTerminalWindow(session),
+																				kFindDialog_OptionsAllOff);
+						result = kMacroManager_ResultOK;
+					}
 					break;
 				
 				case kMacroManager_ActionSendTextProcessingEscapes:
+					if (nullptr != session)
 					{
 						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), CFRetainRelease::kAlreadyRetained);
 						
@@ -530,6 +586,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 				
 				case kMacroManager_ActionFindTextProcessingEscapes:
 					// find string after performing substitutions
+					if (nullptr != session)
 					{
 						CFRetainRelease		finalCFString(returnStringCopyWithSubstitutions(actionCFString, session), CFRetainRelease::kAlreadyRetained);
 						
@@ -537,6 +594,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 						if (false == finalCFString.exists())
 						{
 							Console_WriteLine("macro was not handled due to substitution errors");
+							result = kMacroManager_ResultGenericFailure;
 						}
 						else
 						{
@@ -594,7 +652,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 							windowList.push_back(inTerminalWindow);
 						});
 						
-						if ((nullptr != activeTerminalWindow) && (windowList.size() > 1))
+						if (windowList.size() > 0)
 						{
 							NSString*			actionNSString = BRIDGE_CAST(actionCFString, NSString*);
 							TerminalWindowRef	wrapAroundMatch = nullptr;

@@ -5148,8 +5148,8 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 	Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
 	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
 	UInt16					macroIndex = STATIC_CAST([asMenuItem tag], UInt16);
-	BOOL					result = ((nullptr != TerminalWindow_ReturnFromMainWindow()) &&
-										(nullptr != currentMacros));
+	Boolean					isTerminalWindowActive = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL					result = (nullptr != currentMacros);
 	
 	
 	if (nullptr == currentMacros)
@@ -5182,7 +5182,13 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	else
 	{
-		MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */);
+		Boolean		macroIsUsable = MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */, isTerminalWindowActive);
+		
+		
+		if ((result) && (false == macroIsUsable))
+		{
+			result = NO;
+		}
 	}
 	
 	return ((result) ? @(YES) : @(NO));
@@ -5229,7 +5235,7 @@ performMacroSwitchByFavoriteName:(id)	sender
 - (id)
 canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	BOOL			result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL			result = YES;
 	BOOL			isChecked = NO;
 	NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
 	
@@ -5274,7 +5280,7 @@ performMacroSwitchDefault:(id)	sender
 - (id)
 canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL	result = YES;
 	BOOL	isChecked = (MacroManager_ReturnDefaultMacros() == MacroManager_ReturnCurrentMacros());
 	
 	
@@ -5300,7 +5306,7 @@ performMacroSwitchNone:(id)		sender
 - (id)
 canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL	result = YES;
 	BOOL	isChecked = (nullptr == MacroManager_ReturnCurrentMacros());
 	
 	
@@ -5348,7 +5354,7 @@ performMacroSwitchNext:(id)		sender
 canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL	result = YES;
 	
 	
 	return ((result) ? @(YES) : @(NO));
@@ -5393,7 +5399,7 @@ performMacroSwitchPrevious:(id)		sender
 canPerformMacroSwitchPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL	result = YES;
 	
 	
 	return ((result) ? @(YES) : @(NO));
