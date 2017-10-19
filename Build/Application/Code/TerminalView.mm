@@ -9469,7 +9469,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		}
 		
 		// user macros
-		MacroManager_AddContextualMenuGroup(inoutMenu); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
+		MacroManager_AddContextualMenuGroup(inoutMenu, nullptr/* current macro set */, true/* search defaults */); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
 		
 		// other text-selection-related commands
 		ContextSensitiveMenu_NewItemGroup();

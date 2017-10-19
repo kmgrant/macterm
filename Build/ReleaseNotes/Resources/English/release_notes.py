@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171018',
     '20171016',
     '20171012',
     '20171008',
@@ -582,6 +583,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171018': [
+        'Macros menu now displays the names and key equivalents of inherited macros when non-Default sets are in effect, prefixed by "(Default)".  This clarifies behavior that has always existed: any menu item "slot" not filled by a particular macro set will continue to allow the Default action for that slot.  This allows you to define a combination of behaviors: things you always want available (that you mark as Inherited in other sets), and things that are unique to a selected macro set.  Note that technically inheritance is defined on a per-setting basis so you have the option of having a set that inherits an action but changes the corresponding key equivalent, for instance.',
+        'Contextual menus that display macros (when text is selected, for example) will now also display applicable macros inherited from Default.',
+    ],
     '20171016': [
         'Macros with an Action of "Open URL", "New Window with Command" or "Select Window by Title" are now always enabled in the Macros menu, even if no terminal window is active.',
         'The "Select Next Macro Set" and "Select Previous Macro Set" commands in the Macros menu are now always available, even if no terminal window is active.',

@@ -5182,7 +5182,8 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 	}
 	else
 	{
-		Boolean		macroIsUsable = MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */, isTerminalWindowActive);
+		Boolean		macroIsUsable = MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */, isTerminalWindowActive,
+																currentMacros, true/* show inherited */);
 		
 		
 		if ((result) && (false == macroIsUsable))

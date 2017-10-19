@@ -47,7 +47,7 @@ Every list starts with a Default item.  If you do not want to
  those collections.  The Default items also have special meanings
  for each category:
 
-* The Default under "Macros" determines the set of macros that is first enabled in the Macros menu for any session that does not specify its own macro set (such as log-in shells).
+* The Default under "Macros" determines the set of macros that is first enabled in the Macros menu for any session that does not specify its own macro set (such as log-in shells).  Also, when you select a different macro set in the Macros menu, any menu item that is not implemented by the new macro set will continue to display the corresponding item from the Default macro set.  You can use this to define a mixture of actions that are always available and a subset of actions that can change.
 
 * The Default under "Workspaces" determines what sessions spawn when MacTerm starts.  (You can use this to spawn several windows automatically if you wish.  You can also choose to disable all window slots in the Default Workspace so that no windows are spawned at startup time.)
 
@@ -434,14 +434,16 @@ bq. Each set in this category has an additional list
 Macro sets are completely arbitrary actions that you can bind
  to almost any key combinations you wish!
 
-Only macros from the active set, if any, are enabled, and these
- are shown in the Macros menu along with their key equivalents.
- The active set can also be changed using the Macros menu.
+The Macros menu displays macros that are currently in effect,
+ along with their key equivalents.  You can only choose one
+ set at a time but the menu will also show actions inherited
+ from Default (actions in slots not reimplemented by the set
+ that you have chosen).  See the "Default Item" section above.
 
-If the "None" set is chosen, all macros are disabled.  Otherwise,
- the macros in the active set can be used by typing a key
- equivalent (the macro's main key, plus some optional combination
- of modifiers) or by selecting its name from the Macros menu.
+The active set can be changed using the Macros menu.  If the "None"
+ set is chosen, all macros are disabled.  Otherwise, the macros
+ can be used by typing the key equivalent displayed in the menu
+ or by selecting its name from the Macros menu.
 
 h3. Macro List
 

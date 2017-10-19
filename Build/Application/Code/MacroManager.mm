@@ -124,7 +124,8 @@ WARNING:	This assumes that ContextSensitiveMenu_Init()
 */
 void
 MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
-										 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
+					 					 Preferences_ContextRef		inMacroSetOrNullForActiveSet,
+										 Boolean					inCheckDefaults)
 {
 	SessionRef			activeSession = SessionFactory_ReturnUserFocusSession();
 	TerminalWindowRef	activeTerminalWindow = (Session_IsValid(activeSession))
@@ -160,7 +161,7 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 			// retrieve action
 			prefsResult = Preferences_ContextGetData
 							(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
-								sizeof(actionType), &actionType, false/* search defaults too */);
+								sizeof(actionType), &actionType, inCheckDefaults);
 			if ((kPreferences_ResultOK == prefsResult) &&
 				((kMacroManager_ActionSendTextProcessingEscapes == actionType) ||
 					(kMacroManager_ActionFindTextProcessingEscapes == actionType)))
@@ -168,7 +169,7 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 				// retrieve contents
 				prefsResult = Preferences_ContextGetData
 								(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
-									sizeof(contentsCFString), &contentsCFString, false/* search defaults too */);
+									sizeof(contentsCFString), &contentsCFString, inCheckDefaults);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					NSString*	contentsNSString = BRIDGE_CAST(contentsCFString, NSString*);
@@ -184,7 +185,7 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 						// retrieve name
 						prefsResult = Preferences_ContextGetData
 										(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
-											sizeof(nameCFString), &nameCFString, false/* search defaults too */);
+											sizeof(nameCFString), &nameCFString, inCheckDefaults);
 						if (kPreferences_ResultOK == prefsResult)
 						{
 							newItem = [[NSMenuItem alloc] initWithTitle:BRIDGE_CAST(nameCFString, NSString*)
@@ -367,9 +368,11 @@ Boolean
 MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 								 UInt16						inOneBasedMacroIndex,
 								 Boolean					inIsTerminalWindowActive,
-								 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
+								 Preferences_ContextRef		inMacroSetOrNullForActiveSet,
+								 Boolean					inCheckDefaults)
 {
 	Preferences_Index const	kMacroPrefIndex = STATIC_CAST(inOneBasedMacroIndex, Preferences_Index);
+	Preferences_ContextRef	defaultContext = returnDefaultMacroSet(false/* retain */);
 	Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
 											? gCurrentMacroSet()
 											: inMacroSetOrNullForActiveSet;
@@ -378,16 +381,29 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	MacroManager_Action		macroAction = kMacroManager_ActionSendTextVerbatim;
 	MacroManager_KeyID		macroKeyID = 0;
 	UInt32					modifiers = 0;
+	Boolean					isMenuDisplayingDefault = (prefsContext == defaultContext);
+	Boolean					isDefault = false; // see below
 	Boolean					result = false;
 	
 	
 	// retrieve name
 	prefsResult = Preferences_ContextGetData
 					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, kMacroPrefIndex),
-						sizeof(nameCFString), &nameCFString, false/* search defaults too */);
+						sizeof(nameCFString), &nameCFString, inCheckDefaults, &isDefault);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		[inMenuItem setTitle:(NSString*)nameCFString];
+		if ((isDefault) && (false == isMenuDisplayingDefault))
+		{
+			NSString*	templateNSString = NSLocalizedString(@" (Default)  %@",
+																@"used in Macros menu when non-Default set is displaying macro inherited from Default");
+			
+			
+			[inMenuItem setTitle:[NSString stringWithFormat:templateNSString, BRIDGE_CAST(nameCFString, NSString*)]];
+		}
+		else
+		{
+			[inMenuItem setTitle:BRIDGE_CAST(nameCFString, NSString*)];
+		}
 		CFRelease(nameCFString), nameCFString = nullptr;
 	}
 	else
@@ -402,7 +418,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	// retrieve key code
 	prefsResult = Preferences_ContextGetData
 					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, kMacroPrefIndex),
-						sizeof(macroKeyID), &macroKeyID, false/* search defaults too */);
+						sizeof(macroKeyID), &macroKeyID, inCheckDefaults, &isDefault);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
@@ -427,7 +443,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	prefsResult = Preferences_ContextGetData
 					(prefsContext,
 						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, kMacroPrefIndex),
-						sizeof(modifiers), &modifiers, false/* search defaults too */);
+						sizeof(modifiers), &modifiers, inCheckDefaults, &isDefault);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		unsigned int	abbreviatedModifiers = 0;
@@ -451,7 +467,7 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 	prefsResult = Preferences_ContextGetData
 					(prefsContext,
 						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, kMacroPrefIndex),
-						sizeof(macroAction), &macroAction, false/* search defaults too */);
+						sizeof(macroAction), &macroAction, inCheckDefaults, &isDefault);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		result = true; // initially...

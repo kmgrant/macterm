@@ -166,13 +166,15 @@ MacroManager_Result
 
 void
 	MacroManager_AddContextualMenuGroup	(NSMenu*					inoutContextualMenu,
-										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet,
+										 Boolean					inCheckDefaults);
 
 Boolean
 	MacroManager_UpdateMenuItem			(NSMenuItem*				inMenuItem,
 										 UInt16						inOneBasedMacroIndex,
 										 Boolean					inIsTerminalWindowActive,
-										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet,
+										 Boolean					inCheckDefaults);
 
 //@}
 
