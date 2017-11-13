@@ -59,6 +59,7 @@
 #import <MacHelpUtilities.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
+#import <ParameterDecoder.h>
 #import <Undoables.h>
 
 // application includes
@@ -166,6 +167,10 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		Commands_Init();
 	#if RUN_MODULE_TESTS
 		//Commands_RunTests();
+	#endif
+		
+	#if RUN_MODULE_TESTS
+		ParameterDecoder_RunTests();
 	#endif
 		
 		TerminalBackground_Init();

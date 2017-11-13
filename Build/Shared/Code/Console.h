@@ -194,6 +194,21 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 #define static_assert_named(n,e) \
 	typedef char n[2 * (e) - 1]
 
+// usage: e.g. Console_TestAssert(x == 3, Console_WriteValue, "str", x); if
+// the condition fails, an ASSERTION FAILURE message appears and then the
+// specified function is called, e.g. to print a variable’s actual value
+#define Console_TestAssert(e, f, args...) \
+	do { if (false == Console_Assert(#e, (e))) { f(args); } } while (0)
+
+// usage: e.g. Console_TestAssert(result, x == 3, Console_WriteValue, "str", x);
+// if the condition fails, an ASSERTION FAILURE message appears, the specified
+// result variable is set to "false" and then the specified function is called,
+// e.g. to print a variable’s actual value; this form is useful for unit tests
+// that perform a long chain of assertions where any failure should be detected
+// (obviously the given flag should be initially "true" before all tests begin)
+#define Console_TestAssertUpdate(cumulativeFlag, e, f, args...) \
+	do { if (false == Console_Assert(#e, (e))) { cumulativeFlag = false; f(args); } } while (0)
+
 // usage: e.g. Console_Warning(Console_WriteValue, "message", 25); // Console_WriteValue("message", 25);
 // the first argument is a function, and all remaining arguments are the function parameters
 // IMPORTANT: the "args..." and " , ##" syntax only work in GNU compilers

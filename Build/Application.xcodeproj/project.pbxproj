@@ -31,6 +31,7 @@
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
+		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
@@ -400,6 +401,8 @@
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
+		0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterDecoder.cp; path = Shared/Code/ParameterDecoder.cp; sourceTree = "<group>"; };
+		0A56CB211FB6BF6100750D35 /* ParameterDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ParameterDecoder.h; path = Shared/Code/ParameterDecoder.h; sourceTree = "<group>"; };
 		0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForItemAddMenuSegment@2x.icns"; path = "Application/Resources/IconForItemAddMenuSegment@2x.icns"; sourceTree = "<group>"; };
 		0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenuSegment.icns; path = Application/Resources/IconForContextMenuSegment.icns; sourceTree = "<group>"; };
 		0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAddMenuSegment.icns; path = Application/Resources/IconForItemAddMenuSegment.icns; sourceTree = "<group>"; };
@@ -627,6 +630,7 @@
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
+				0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */,
 				0A4FAF941525694700B8142A /* Popover.mm */,
 				0AF94E481477857900099BF2 /* PopoverManager.mm */,
 				0A043B031D8F5A7200511F30 /* RegionUtilities.cp */,
@@ -669,6 +673,7 @@
 				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
 				0A30289E1DB5D45200C1C557 /* MenuUtilities.objc++.h */,
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
+				0A56CB211FB6BF6100750D35 /* ParameterDecoder.h */,
 				0A4FAF961525695400B8142A /* Popover.objc++.h */,
 				0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */,
 				0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */,
@@ -1430,6 +1435,7 @@
 				0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */,
 				0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */,
 				0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */,
+				0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */,
 				0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */,
 				0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */,
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
