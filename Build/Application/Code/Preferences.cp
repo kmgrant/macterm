@@ -1232,6 +1232,8 @@ Preferences_Init ()
 									sizeof(OptionBits), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminal24BitColorEnabled,
 										CFSTR("terminal-emulator-enable-color-24bit"), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagSixelGraphicsEnabled,
+										CFSTR("terminal-emulator-sixel-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
 										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermBackgroundColorEraseEnabled,
@@ -8081,6 +8083,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				switch (inDataPreferenceTag)
 				{
 				case kPreferences_TagDataReceiveDoNotStripHighBit:
+				case kPreferences_TagSixelGraphicsEnabled:
 				case kPreferences_TagTerminal24BitColorEnabled:
 				case kPreferences_TagTerminalClearSavesLines:
 				case kPreferences_TagTerminalLineWrap:
@@ -10365,16 +10368,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
-			case kPreferences_TagDataReceiveDoNotStripHighBit:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
-				}
-				break;
-			
 			case kPreferences_TagMapKeypadTopRowForVT220:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
@@ -10419,16 +10412,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagTerminalClearSavesLines:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
-				}
-				break;
-			
 			case kPreferences_TagTerminalEmulatorType:
 				if (inDataSize >= sizeof(Emulation_FullType))
 				{
@@ -10443,16 +10426,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					{
 						inContextPtr->addString(inDataPreferenceTag, keyName, nameCFString.returnCFStringRef());
 					}
-				}
-				break;
-			
-			case kPreferences_TagTerminalLineWrap:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -10506,7 +10479,11 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagDataReceiveDoNotStripHighBit:
+			case kPreferences_TagSixelGraphicsEnabled:
 			case kPreferences_TagTerminal24BitColorEnabled:
+			case kPreferences_TagTerminalClearSavesLines:
+			case kPreferences_TagTerminalLineWrap:
 			case kPreferences_TagVT100FixLineWrappingBug:
 			case kPreferences_TagXTerm256ColorsEnabled:
 			case kPreferences_TagXTermBackgroundColorEraseEnabled:

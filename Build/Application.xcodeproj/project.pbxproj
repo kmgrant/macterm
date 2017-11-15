@@ -36,6 +36,7 @@
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
+		0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */; };
 		0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A90C79A1DBC557B005EABE0 /* CoreUI.mm */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0A998CB01E5F62D30002C083 /* file_kvp.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA31E5F62400002C083 /* file_kvp.py */; };
@@ -423,6 +424,8 @@
 		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
+		0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SixelDecoder.cp; path = Application/Code/SixelDecoder.cp; sourceTree = "<group>"; };
+		0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SixelDecoder.h; path = Application/Code/SixelDecoder.h; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
@@ -755,6 +758,7 @@
 				0A46FE14055432A400ACDF3A /* Session.mm */,
 				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.mm */,
+				0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */,
 				0A64C5EA1059E423005B8A48 /* StreamCapture.mm */,
 				0A46FE25055432A400ACDF3A /* Terminal.mm */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
@@ -815,6 +819,7 @@
 				0A4604260554376100ACDF3A /* SessionDescription.h */,
 				0A4604280554376100ACDF3A /* SessionFactory.h */,
 				0A4604290554376100ACDF3A /* SessionRef.typedef.h */,
+				0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */,
 				0A64C5EC1059E432005B8A48 /* StreamCapture.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
 				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
@@ -1405,6 +1410,7 @@
 				0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */,
 				0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */,
 				0AC6BB3C0A8C0BA100AFF37A /* TerminalView.mm in Sources */,
+				0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */,
 				0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */,
 				0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */,
 				0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */,

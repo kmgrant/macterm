@@ -292,6 +292,7 @@ enum
 	kPreferences_TagMapArrowsForEmacs					= 'mapE',	//!< data: "Boolean"
 	kPreferences_TagMapKeypadTopRowForVT220				= 'mapK',	//!< data: "Boolean"
 	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"
+	kPreferences_TagSixelGraphicsEnabled				= 'sxel',	//!< data: "Boolean"
 	kPreferences_TagTerminal24BitColorEnabled			= 'c24b',	//!< data: "Boolean"
 	kPreferences_TagTerminalAnswerBackMessage			= 'ansb',	//!< data: "CFStringRef"
 	kPreferences_TagTerminalClearSavesLines				= 'clsv',	//!< data: "Boolean"

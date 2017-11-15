@@ -306,6 +306,7 @@
 		<string>identify</string>
 		<string>off</string>
 		<string>print</string>
+		<string>sixel</string>
 		<string>terminal</string>
 		<string>vt100</string>
 		<string>vt102</string>

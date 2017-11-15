@@ -404,6 +404,17 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 													forKey:@"description"];
 		[asMutableArray addObject:valueObject];
 		
+		// SIXEL graphics support
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagSixelGraphicsEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"VT340 Sixel Graphics",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
 		// XTerm 256-color support
 		valueObject = [[[PreferenceValue_Flag alloc]
 						initWithPreferencesTag:kPreferences_TagXTerm256ColorsEnabled

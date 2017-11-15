@@ -85,6 +85,7 @@ extern "C"
 #import "PrintTerminal.h"
 #import "QuillsTerminal.h"
 #import "Session.h"
+#import "SixelDecoder.h"
 #import "StreamCapture.h"
 #import "TerminalLine.h"
 #import "TerminalSpeaker.h"
@@ -341,6 +342,8 @@ enum
 	kMy_ParserStateSeenESCJ						= 'ESCJ',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCK						= 'ESCK',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCM						= 'ESCM',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCP						= 'ESCP',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPParamsq				= 'EP;q',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCn						= 'ESCn',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCo						= 'ESCo',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCY						= 'ESCY',	//!< generic state used to define emulator-specific states, below
@@ -947,6 +950,7 @@ public:
 		kVariantFlagXTerm256Color		= (1 << 1),		//!< corresponds to kPreferences_TagXTerm256ColorsEnabled
 		kVariantFlagXTermAlterWindow	= (1 << 2),		//!< corresponds to kPreferences_TagXTermWindowAlterationEnabled
 		kVariantFlagXTermBCE			= (1 << 3),		//!< corresponds to kPreferences_TagXTermBackgroundColorEraseEnabled
+		kVariantFlagSixelGraphics		= (1 << 4),		//!< corresponds to kPreferences_TagSixelGraphicsEnabled
 	};
 	
 	struct Callbacks
@@ -1027,14 +1031,17 @@ public:
 	Boolean								disableShifts;			//!< prevents shift-in, shift-out, and any related old-style character set mechanism from working;
 																//!  usually this should be set only when a Unicode encoding is present (which is large enough to
 																//!  support all characters, making alternate sets unnecessary), but it is a separate state anyway
-	UInt8								recentCodePointByte;	//!< for 8-bit encodings, the most recent byte read; see also "multiByteDecoder"
 	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
 	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
+	UInt32								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
 	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
 	UTF8Decoder_StateMachine			multiByteDecoder;		//!< as individual bytes are processed, this tracks complete or invalid sequences
-	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
+	UInt8								recentCodePointByte;	//!< for 8-bit encodings, the most recent byte read; see also "multiByteDecoder"
+	Boolean								addedSixel;				//!< keep track of previous requests to install the same variant
+	Boolean								addedXTerm;				//!< since multiple variants reuse these callbacks, only insert them once
+	Boolean								allowSixelScrolling;	//!< whether or not the screen scrolls when a Sixel cursor goes past the bottom
 	SInt16								argLastIndex;			//!< zero-based last parameter position in the "values" array
 	ParameterList						argList;				//!< all values provided for the current escape sequence
 	ParameterList						parameterMarkList;		//!< this list has the same size as "argList"; in parallel with "argList", it sets only two values:
@@ -1052,7 +1059,6 @@ public:
 	My_RGBComponentList*				trueColorTableGreens;	//!< green components for all 24-bit colors; allocated only for supporting terminals
 	My_RGBComponentList*				trueColorTableBlues;	//!< blue components for all 24-bit colors; allocated only for supporting terminals
 	UInt16								trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
-	Boolean								addedXTerm;				//!< since multiple variants reuse these callbacks, only insert them once
 
 protected:
 	My_EmulatorEchoDataProcPtr
@@ -1116,6 +1122,9 @@ public:
 	
 	UInt32
 	returnScrollbackRows	(Preferences_ContextRef, Boolean = true);
+	
+	Boolean
+	returnSixelGraphics		(Preferences_ContextRef);
 	
 	CFStringEncoding
 	returnTextEncoding		(Preferences_ContextRef);
@@ -1336,6 +1345,24 @@ public:
 	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
+};
+
+/*!
+A lightweight terminal implementation, suitable ONLY as a
+pre-callback.  Implements the Sixel graphics sequences.
+*/
+class My_SixelCore
+{
+public:
+	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
+	
+	enum State
+	{
+		// Ideally these are "protected", but loop evasion code requires them.
+		kStateGraphicsBegin			= kMy_ParserStateSeenESCPParamsq,	//!< saw DCS and optional parameters with terminator 'q'
+		kStateGraphicsAcquireStr	= 'SAcS',							//!< continuously copy Sixel data string
+	};
 };
 
 /*!
@@ -1579,6 +1606,7 @@ public:
 	{
 		// Ideally these are "protected", but XTerm may require them.
 		kStateCSISecondaryDA	= kMy_ParserStateSeenESCLeftSqBracketGreaterThan,	//!< parameter list indicates secondary device attributes
+		kStateDCS				= kMy_ParserStateSeenESCP,				//!< device control string
 		kStateDECSCA			= 'VSCA',								//!< select character attributes
 		kStateDECSCL			= 'VSCL',								//!< compatibility level
 		kStateDECSTR			= kMy_ParserStateSeenESCLeftSqBracketExPointp,	//!< soft terminal reset
@@ -1653,6 +1681,7 @@ public:
 		kStateSCSG3Swedish1		= kMy_ParserStateSeenESCPlusH,			//!< select character set for G3, Swedish
 		kStateSCSG3Swedish2		= kMy_ParserStateSeenESCPlus7,			//!< select character set for G3, Swedish (alternate)
 		kStateSCSG3Swiss		= kMy_ParserStateSeenESCPlusEquals,		//!< select character set for G3, Swiss
+		kStateST				= kMy_ParserStateSeenESCBackslash,		//!< string terminator
 	};
 };
 
@@ -1726,7 +1755,6 @@ public:
 		kStateSWTAcquireStr		= kMy_ParserStateSeenESCRightSqBracket2Semi,			//!< seen ESC]2, gathering characters of string
 		kStateSetColor			= kMy_ParserStateSeenESCRightSqBracket4,				//!< subsequent string is a color specification
 		kStateColorAcquireStr	= kMy_ParserStateSeenESCRightSqBracket4Semi,			//!< seen ESC]4, gathering characters of string
-		kStateStringTerminator	= kMy_ParserStateSeenESCBackslash,						//!< perform action according to accumulated string
 	};
 };
 
@@ -3020,6 +3048,13 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 										(states.second == My_XTermCore::kStateSWITAcquireStr))
 									{
 										interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
+									}
+									else if (states.second == My_SixelCore::kStateGraphicsAcquireStr)
+									{
+										static UInt32 const		kMaxBytesPerImage = (2048 * 1024); // arbitrary (TEMPORARY; make user-configurable?)
+										
+										
+										interrupt = (dataPtr->emulator.stateRepetitions > kMaxBytesPerImage);
 									}
 								}
 								
@@ -5801,14 +5836,17 @@ primaryType(inPrimaryEmulation),
 isUTF8Encoding(kCFStringEncodingUTF8 == inInputTextEncoding),
 lockUTF8(false),
 disableShifts(false),
-recentCodePointByte('\0'),
 inputTextEncoding(inInputTextEncoding),
 answerBackCFString(inAnswerBack, CFRetainRelease::kNotYetRetained),
+stateRepetitions(0),
 currentState(kMy_ParserStateInitial),
 stringAccumulatorState(kMy_ParserStateInitial),
 stringAccumulator(),
 multiByteDecoder(),
-stateRepetitions(0),
+recentCodePointByte('\0'),
+addedSixel(false),
+addedXTerm(false),
+allowSixelScrolling(false),
 argLastIndex(0),
 argList(kMy_MaximumANSIParameters),
 parameterMarkList(kMy_MaximumANSIParameters),
@@ -5823,7 +5861,6 @@ trueColorTableReds(nullptr),
 trueColorTableGreens(nullptr),
 trueColorTableBlues(nullptr),
 trueColorTableNextID(0),
-addedXTerm(false),
 eightBitReceiver(false),
 eightBitTransmitter(false),
 lockSevenBitTransmit(false)
@@ -6582,6 +6619,19 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 		this->emulator.trueColorTableGreens = new My_RGBComponentList();
 		this->emulator.trueColorTableBlues = new My_RGBComponentList();
 	}
+	if (returnSixelGraphics(inTerminalConfig))
+	{
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlagSixelGraphics;
+		if (false == this->emulator.addedSixel)
+		{
+			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+													My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
+																			My_SixelCore::stateDeterminant,
+																			My_SixelCore::stateTransition,
+																			nullptr/* reset - override is not allowed in a pre-callback */));
+			this->emulator.addedSixel = true;
+		}
+	}
 	if (returnXTerm256(inTerminalConfig))
 	{
 		this->emulator.supportedVariants |= My_Emulator::kVariantFlagXTerm256Color;
@@ -6593,7 +6643,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 																			My_XTermCore::stateTransition,
 																			nullptr/* reset - override is not allowed in a pre-callback */));
 			this->emulator.addedXTerm = true;
-		}	
+		}
 	}
 	if (returnXTermBackgroundColorErase(inTerminalConfig))
 	{
@@ -7052,6 +7102,29 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig,
 
 
 /*!
+Reads "kPreferences_TagSixelGraphicsEnabled" from a
+Preferences context, and returns either that value or the
+default of true if none was found.
+
+(2017.11)
+*/
+Boolean
+My_ScreenBuffer::
+returnSixelGraphics		(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagSixelGraphicsEnabled,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = true; // arbitrary
+	
+	return result;
+}// returnSixelGraphics
+
+
+/*!
 Reads "kPreferences_TagTextEncodingIANAName" or
 "kPreferences_TagTextEncodingID" from a Preferences context,
 and returns either that value or the default of UTF-8 if none
@@ -7398,6 +7471,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			
 			case 'o':
 				inNowOutNext.second = kMy_ParserStateSeenESCo;
+				break;
+			
+			case 'P':
+				inNowOutNext.second = kMy_ParserStateSeenESCP;
 				break;
 			
 			case 'Y':
@@ -8413,6 +8490,306 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// My_DumbTerminal::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+Sixel-specific graphics states based on the characters of
+the given buffer.
+
+(2017.11)
+*/
+UInt32
+My_SixelCore::
+stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
+					 My_ParserStatePair&	inNowOutNext,
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
+					 Boolean&				outHandled)
+{
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	switch (inNowOutNext.first)
+	{
+	case My_VT220::kStateDCS:
+		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
+		break;
+	
+	case kStateGraphicsBegin:
+		inNowOutNext.second = kStateGraphicsAcquireStr;
+		result = 0; // do not absorb the unknown
+		break;
+	
+	case kStateGraphicsAcquireStr:
+		switch (kTriggerChar)
+		{
+		case '\033':
+			inNowOutNext.second = kMy_ParserStateSeenESC;
+			break;
+		
+		default:
+			// continue extending the string until a known terminator is found
+			inNowOutNext.second = kStateGraphicsAcquireStr;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	default:
+		// other states are not handled at all
+		outHandled = false;
+		break;
+	}
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< Sixel handler in state", inNowOutNext.first);
+	//Console_WriteValueFourChars(">>>     Sixel handler proposes state", inNowOutNext.second);
+	//Console_WriteValueUnicodePoint("        Sixel handler bases this at least on character", kTriggerChar);
+	
+	return result;
+}// My_SixelCore::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that responds to
+Sixel-specific graphics state changes.
+
+(2017.11)
+*/
+UInt32
+My_SixelCore::
+stateTransition		(My_ScreenBufferPtr			inDataPtr,
+					 My_ParserStatePair const&	inOldNew,
+					 Boolean&					outHandled)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< Sixel handler transition from state", inOldNew.first);
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
+	{
+		Console_WriteValueFourChars(">>>     Sixel handler transition to state  ", inOldNew.second);
+	}
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inOldNew.second)
+	{
+	case My_VT100::kStateRM:
+	case My_VT100::kStateSM:
+		{
+			Boolean const	kParameterIsSet = (My_VT100::kStateSM == inOldNew.second);
+			
+			
+			// defer the entire set/reset handler to the actual terminal emulator
+			// but check for a Sixel parameter here
+			outHandled = false;
+			
+			switch (inDataPtr->emulator.argList[0])
+			{
+			case kMy_ParamPrivate: // DEC-private control sequence
+				{
+					SInt16		i = 0;
+					
+					
+					for (i = 1/* skip the meta-parameter */; i <= inDataPtr->emulator.argLastIndex; ++i)
+					{
+						switch (inDataPtr->emulator.argList[i])
+						{
+						case 80:
+							// in Sixel mode, request to turn scrolling on/off
+							inDataPtr->emulator.allowSixelScrolling = kParameterIsSet;
+							if (kParameterIsSet)
+							{
+								Console_WriteLine("request to allow Sixel scrolling");
+							}
+							else
+							{
+								Console_WriteLine("request to prohibit Sixel scrolling");
+							}
+							break;
+						
+						default:
+							break;
+						}
+					}
+				}
+				break;
+			
+			default:
+				break;
+			}
+		}
+		break;
+	
+	case kStateGraphicsBegin:
+		//Console_WriteLine("preparing to read Sixel data"); // debug
+		inDataPtr->emulator.stringAccumulator.clear();
+		inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
+		break;
+	
+	case kStateGraphicsAcquireStr:
+		{
+			//Console_WriteLine("reading Sixel data"); // debug
+			if (inDataPtr->emulator.isUTF8Encoding)
+			{
+				if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
+				{
+					std::copy(inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
+								inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
+								std::back_inserter(inDataPtr->emulator.stringAccumulator));
+					result = 1;
+				}
+			}
+			else
+			{
+				inDataPtr->emulator.stringAccumulator.push_back(STATIC_CAST(inDataPtr->emulator.recentCodePoint(), UInt8));
+				result = 1;
+			}
+		}
+		break;
+	
+	case My_VT220::kStateST:
+		// when a Sixel image is complete, process the contents of the buffer
+		switch (inDataPtr->emulator.stringAccumulatorState)
+		{
+		case kStateGraphicsBegin:
+			{
+				//Console_WriteLine("stopped reading Sixel data"); // debug
+				
+				UInt16		aspectRatioV = 2; // see below
+				UInt16		aspectRatioH = 1; // see below
+				Boolean		zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]); // otherwise, they change to the background color
+				
+				
+				if (zeroValuePixelsKeepColor)
+				{
+					Console_WriteLine("Sixel image is configured to not change the color of zero-value pixels"); // debug
+				}
+				
+				// the following according to the VT330/VT340 manual
+				switch (inDataPtr->emulator.argList[0])
+				{
+				case 2:
+					aspectRatioV = 5;
+					aspectRatioH = 1;
+					break;
+				
+				case 3:
+				case 4:
+					aspectRatioV = 3;
+					aspectRatioH = 1;
+					break;
+				
+				case 7:
+				case 8:
+				case 9:
+					aspectRatioV = 1;
+					aspectRatioH = 1;
+					break;
+				
+				case 0:
+				case 1:
+				case 5:
+				case 6:
+				default:
+					// 2:1 (see above)
+					break;
+				}
+				
+				Console_WriteValue("set Sixel aspect ratio height to", aspectRatioV);
+				Console_WriteValue("set Sixel aspect ratio width to", aspectRatioH);
+				
+				if (inDataPtr->emulator.argList[2] >= 0)
+				{
+					Console_Warning(Console_WriteValue, "ignoring Sixel grid size parameter", inDataPtr->emulator.argList[2]);
+				}
+				
+				// parse the Sixel data
+				{
+					SixelDecoder_StateMachine	sixelDecoder;
+					size_t						processedBytes = 0;
+					
+					
+					Console_WriteValueCString("accumulated string", inDataPtr->emulator.stringAccumulator.c_str());
+					for (UInt8 aByte : inDataPtr->emulator.stringAccumulator)
+					{
+						SixelDecoder_StateMachine::State const	kOriginalState = sixelDecoder.returnState();
+						SInt16									loopGuard = 0;
+						Boolean									byteNotUsed = true;
+						
+						
+						while (byteNotUsed)
+						{
+							sixelDecoder.goNextState(aByte, byteNotUsed);
+							//Console_WriteValueFourChars("Sixel parser state", sixelDecoder.returnState());
+							if ((byteNotUsed) && (kOriginalState == sixelDecoder.returnState()))
+							{
+								// no way to proceed
+								break;
+							}
+							++loopGuard;
+							if (loopGuard > 100/* arbitrary */)
+							{
+								Sound_StandardAlert();
+								Console_Warning(Console_WriteLine, "Sixel decoder forced to break after unexpected tight loop");
+								break;
+							}
+						}
+						++processedBytes;
+					}
+					if (processedBytes < inDataPtr->emulator.stringAccumulator.size())
+					{
+						Console_Warning(Console_WriteValue, "Sixel decoder did not handle entire data string; bytes left",
+										inDataPtr->emulator.stringAccumulator.size() - processedBytes);
+					}
+					Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
+					Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
+					
+					// documentation for VT300 says that an end new-line is automatically added 
+					sixelDecoder.commandVector.push_back('-');
+					
+					//Console_WriteLine("final command list:");
+					//for (UInt8 commandChar : sixelDecoder.commandVector)
+					//{
+					//	Console_WriteValueCharacter("cmd", commandChar);
+					//}
+				}
+				
+				inDataPtr->emulator.stringAccumulator.clear();
+				inDataPtr->emulator.stringAccumulatorState = kMy_ParserStateInitial;
+			}
+			break;
+		
+		default:
+			// ignore
+			outHandled = false;
+			break;
+		}
+		break;
+	
+	default:
+		// other state transitions are not handled at all
+		outHandled = false;
+		break;
+	}
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	return result;
+}// My_SixelCore::stateTransition
 
 
 /*!
@@ -11669,6 +12046,8 @@ primaryDeviceAttributes		(My_ScreenBufferPtr		inDataPtr)
 		// (62) service class 2 terminal
 		// (1) if 132 columns
 		// (2) if printer port
+		// (3) if ReGIS graphics
+		// (4) if Sixel graphics
 		// (6) if selective erase
 		// (7) if DRCS
 		// (8) if UDK
@@ -11680,6 +12059,10 @@ primaryDeviceAttributes		(My_ScreenBufferPtr		inDataPtr)
 			inDataPtr->emulator.sendEscape(session, ";1", 2);
 		}
 		inDataPtr->emulator.sendEscape(session, ";2", 2);
+		if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagSixelGraphics))
+		{
+			inDataPtr->emulator.sendEscape(session, ";4", 2);
+		}
 		inDataPtr->emulator.sendEscape(session, ";6", 2);
 		// insert any other parameters here, with semicolons
 		inDataPtr->emulator.sendEscape(session, "c", 1);
@@ -11733,6 +12116,10 @@ returnCSINextState		(My_ParserState			inPreviousState,
 		// terminals can be omitted, since they will be handled in the VT102 fallback
 		switch (inCodePoint)
 		{
+		case 'q':
+			result = kMy_ParserStateSeenESCPParamsq;
+			break;
+		
 		case 'X':
 			result = kMy_ParserStateSeenESCLeftSqBracketParamsX;
 			break;
@@ -11965,6 +12352,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIPrivate:
 	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
 	case kStateCSISecondaryDA:
+	case kStateDCS:
 		inNowOutNext.second = My_VT220::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 		break;
 	
@@ -12167,6 +12555,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		// flag to mark the control sequence as secondary device attributes
 		inDataPtr->emulator.argList[inDataPtr->emulator.argLastIndex] = kMy_ParamSecondaryDA;
 		++(inDataPtr->emulator.argLastIndex);
+		break;
+	
+	case kStateDCS:
+		Console_WriteLine("device control string");
+		inDataPtr->emulator.clearEscapeSequenceParameters();
 		break;
 	
 	case kStateDECSCA:
@@ -13023,7 +13416,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			switch (kTriggerChar)
 			{
 			case '\007':
-				inNowOutNext.second = kStateStringTerminator;
+				inNowOutNext.second = My_VT220::kStateST;
 				break;
 			
 			case '\033':
@@ -13050,7 +13443,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			switch (kTriggerChar)
 			{
 			case '\007':
-				inNowOutNext.second = kStateStringTerminator;
+				inNowOutNext.second = My_VT220::kStateST;
 				break;
 			
 			case '\033':
@@ -13077,7 +13470,7 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			switch (kTriggerChar)
 			{
 			case '\007':
-				inNowOutNext.second = kStateStringTerminator;
+				inNowOutNext.second = My_VT220::kStateST;
 				break;
 			
 			case '\033':
@@ -13119,11 +13512,6 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			// ignore
 			outHandled = false;
 		}
-		break;
-	
-	case kStateStringTerminator:
-		// ignore
-		outHandled = false;
 		break;
 	
 	default:
@@ -13206,7 +13594,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
-	case kStateStringTerminator:
+	case My_VT220::kStateST:
 		// a window and/or icon title can actually be terminated in multiple
 		// ways; if a new-style XTerm string terminator is seen, then the
 		// action must be chosen based on the state that most recently used
@@ -13239,6 +13627,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						changeNotifyForTerminal(inDataPtr, kTerminal_ChangeWindowIconTitle, inDataPtr->selfRef/* context */);
 					}
 				}
+				
+				inDataPtr->emulator.stringAccumulator.clear();
+				inDataPtr->emulator.stringAccumulatorState = kMy_ParserStateInitial;
 			}
 			else
 			{
@@ -13291,6 +13682,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					Console_Warning(Console_WriteValue, "failed to parse XTerm color string; sscanf() result", scanResult);
 					Console_Warning(Console_WriteValueCString, "discarding unrecognized syntax for XTerm color string", stringPtr);
 				}
+				
+				inDataPtr->emulator.stringAccumulator.clear();
+				inDataPtr->emulator.stringAccumulatorState = kMy_ParserStateInitial;
 			}
 			else
 			{
