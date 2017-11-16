@@ -1059,6 +1059,8 @@ public:
 	My_RGBComponentList*				trueColorTableGreens;	//!< green components for all 24-bit colors; allocated only for supporting terminals
 	My_RGBComponentList*				trueColorTableBlues;	//!< blue components for all 24-bit colors; allocated only for supporting terminals
 	UInt16								trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
+	UInt16								bitmapTableNextID;		//!< basis for new IDs; current entry for storing new bitmaps in bitmap table
+	NSMutableArray*						bitmapTableBitmapReps;	//!< NSArray of NSBitmapImageRep*; bitmaps by index (ID)
 
 protected:
 	My_EmulatorEchoDataProcPtr
@@ -1354,6 +1356,9 @@ pre-callback.  Implements the Sixel graphics sequences.
 class My_SixelCore
 {
 public:
+	static NSInteger const		kDefaultCellPixelsH = 15; //!< number of dots across to define a terminal cell at normal width
+	static NSInteger const		kDefaultCellPixelsV = 12; //!< number of dots down to define a terminal cell at normal height
+	
 	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 	
@@ -1813,6 +1818,7 @@ My_ScreenBufferLinePtr		createLinePtr							();
 void						cursorRestore							(My_ScreenBufferPtr);
 void						cursorSave								(My_ScreenBufferPtr);
 void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
+Boolean						defineBitmap							(My_ScreenBufferPtr, TextAttributes_BitmapID&);
 Boolean						defineTrueColor							(My_ScreenBufferPtr, UInt8, UInt8, UInt8, TextAttributes_TrueColorID&);
 void						deleteLinePtr							(My_ScreenBufferLinePtr&);
 void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
@@ -2201,6 +2207,69 @@ Terminal_BellIsEnabled		(TerminalScreenRef	inRef)
 	}
 	return result;
 }// BellIsEnabled
+
+
+/*!
+Returns the bitmap image representation for the given ID,
+which is defined (usually along with several other bitmaps)
+if bitmap terminal sequences are received.  The ID may be
+used in more than one place.
+
+The bitmap is meant to have a resolution suitable for
+rendering within a single default-sized character cell,
+with no surrounding space except any defined by the pixels
+of the image itself.  It is considered read-only at this
+stage; anything that normally overwrites a terminal cell’s
+attributes may clear the cell’s bitmaps however.
+
+The TextAttributes_Object type can be used to extract the
+TextAttributes_BitmapID value for a section of text, and
+to determine what a bitmap is for.
+
+\retval kTerminal_ResultOK
+if no error occurred
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference is invalid
+
+\retval kTerminal_ResultParameterError
+if the specified ID is not valid
+
+\retval kTerminal_ResultUnsupported
+if the specified terminal was not configured for bitmaps
+
+(2017.11)
+*/
+Terminal_Result
+Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
+							 TextAttributes_BitmapID	inID,
+							 NSBitmapImageRep*&			outImageRepresentation)
+{
+	Terminal_Result		result = kTerminal_ResultOK;
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	
+	
+	outImageRepresentation = nil; // initially...
+	
+	if (nullptr == dataPtr)
+	{
+		result = kTerminal_ResultInvalidID;
+	}
+	else
+	{
+		if (inID > kTextAttributes_BitmapIDMaximum)
+		{
+			result = kTerminal_ResultParameterError;
+		}
+		else
+		{
+			// INCOMPLETE; 
+			result = kTerminal_ResultUnsupported;
+		}
+	}
+	
+	return result;
+}// BitmapGetFromID
 
 
 /*!
@@ -5861,6 +5930,8 @@ trueColorTableReds(nullptr),
 trueColorTableGreens(nullptr),
 trueColorTableBlues(nullptr),
 trueColorTableNextID(0),
+bitmapTableNextID(0),
+bitmapTableBitmapReps(nil),
 eightBitReceiver(false),
 eightBitTransmitter(false),
 lockSevenBitTransmit(false)
@@ -5881,6 +5952,7 @@ My_Emulator::~My_Emulator()
 	delete trueColorTableReds;
 	delete trueColorTableGreens;
 	delete trueColorTableBlues;
+	[bitmapTableBitmapReps release];
 }// My_Emulator destructor
 
 
@@ -8755,6 +8827,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					}
 					Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
 					Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
+					
+					// determine the terminal cells that will need to have a bitmap association
+					// INCOMPLETE
+					//defineBitmap(inDataPtr, ...);
 					
 					// documentation for VT300 says that an end new-line is automatically added 
 					sixelDecoder.commandVector.push_back('-');
@@ -14919,6 +14995,87 @@ cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 	*outCursorXPtr = inDataPtr->current.cursorX;
 	*outCursorYPtr = inDataPtr->current.cursorY;
 }// cursorWrapIfNecessaryGetLocation
+
+
+/*!
+Creates a bitmap and assigns it an ID.  (See the public
+Terminal_BitmapGetFromID() API.)  Returns true only if
+successful.
+
+As noted in "TextAttributes.h", there is a limit to the
+number of possible IDs and they will be reused (oldest
+first) when the limit is exceeded.
+
+Currently there is no mechanism for intelligently reusing
+bitmap IDs.  It is up to you to avoid calling this method
+if you can tell that the resulting bitmap already exists.
+
+Also, ideally you use simple color attributes (or even
+“true color” attributes via defineTrueColor()) to display
+solid colors, instead of bitmaps.  Keep track of what
+your pixel values ultimately are so that all-same-color
+bitmap requests can be converted into simpler cells.
+
+A bitmap may be constructed incrementally and grow its
+definition according to other coordinate systems prior to
+being finalized.  It may also be the case that a much
+larger image is constructed first, and then split into an
+appropriate number of terminal cell bitmaps.  If bitmaps
+are split in this way and the total dimensions are not
+even multiples of the cell, it is important to keep all
+bitmaps the same size; for instance, include transparent
+pixels in edge bitmaps to allow an image to appear to
+occupy less space than the bitmaps actually occupy.
+
+(2017.11)
+*/
+Boolean
+defineBitmap	(My_ScreenBufferPtr			inDataPtr,
+				 TextAttributes_BitmapID&	outBitmapID)
+{
+	Boolean		result = false;
+	
+	
+	// NOTE: currently no automatic reuse; always define new object
+	outBitmapID = inDataPtr->emulator.bitmapTableNextID;
+	if (kTextAttributes_BitmapIDMaximum == inDataPtr->emulator.bitmapTableNextID)
+	{
+		inDataPtr->emulator.bitmapTableNextID = 0;
+	}
+	else
+	{
+		// currently a bitmap cell follows the VT300 series’ definition
+		// for 80-column characters, which is 15×12 pixels each
+		NSInteger const		kPixelsWide = My_SixelCore::kDefaultCellPixelsH;
+		NSInteger const		kPixelsHigh = My_SixelCore::kDefaultCellPixelsV;
+		NSInteger const		kBitsPerSample = 8; // currently, 0-255 values defined
+		NSInteger const		kSamplesPerPixel = 4; // red, green, blue, alpha
+		NSInteger const		kBitsPerPixel = (kBitsPerSample * kSamplesPerPixel);
+		NSInteger const		kBytesPerRow = ((kBitsPerPixel / 8) * kPixelsWide);
+		NSBitmapImageRep*	bitmapRep = [[NSBitmapImageRep alloc]
+											initWithBitmapDataPlanes:nullptr
+																		pixelsWide:kPixelsWide
+																		pixelsHigh:kPixelsHigh
+																		bitsPerSample:kBitsPerSample
+																		samplesPerPixel:kSamplesPerPixel
+																		hasAlpha:YES
+																		isPlanar:NO
+																		colorSpaceName:NSCalibratedRGBColorSpace
+																		bytesPerRow:kBytesPerRow
+																		bitsPerPixel:kBitsPerPixel];
+		
+		
+		++(inDataPtr->emulator.bitmapTableNextID);
+		if (nil == inDataPtr->emulator.bitmapTableBitmapReps)
+		{
+			inDataPtr->emulator.bitmapTableBitmapReps = [[NSMutableArray alloc] init];
+		}
+		[inDataPtr->emulator.bitmapTableBitmapReps addObject:bitmapRep];
+		[bitmapRep release]; bitmapRep = nil;
+	}
+	
+	return result;
+}// defineBitmap
 
 
 /*!

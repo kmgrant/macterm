@@ -50,6 +50,13 @@
 // standard-C++ includes
 #include <vector>
 
+// Mac includes
+#ifdef __OBJC__
+@class NSBitmapImageRep;
+#else
+class NSBitmapImageRep;
+#endif
+
 // library includes
 #include "ListenerModel.h"
 
@@ -573,6 +580,16 @@ Terminal_Result
 
 Boolean
 	Terminal_WindowIsToBeMinimized			(TerminalScreenRef			inScreen);
+
+//@}
+
+//!\name Bitmap Definitions
+//@{
+
+Terminal_Result
+	Terminal_BitmapGetFromID				(TerminalScreenRef			inScreen,
+											 TextAttributes_BitmapID	inID,
+											 NSBitmapImageRep*&			outImageRepresentation);
 
 //@}
 
