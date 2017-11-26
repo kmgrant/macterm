@@ -226,6 +226,12 @@ void
 	Console_WriteScriptError		(CFStringRef		inTitle,
 									 CFStringRef		inDescription);
 
+OSStatus
+	Console_WriteShapeElement		(int				inMessage,
+									 HIShapeRef			inShape,
+									 CGRect const*		inRectPtr,
+									 void*				inRefCon);
+
 void
 	Console_WriteStackTrace			(UInt16				inDepth = 0);
 

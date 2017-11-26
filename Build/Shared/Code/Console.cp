@@ -285,6 +285,47 @@ Console_WriteScriptError	(CFStringRef		inTitle,
 
 
 /*!
+A routine of standard "HIShapeEnumerateProcPtr" form, this
+can be used with HIShapeEnumerate() to see the components
+of a shape in the console.  Currently the exact appearance
+of the log message cannot be customized but there are log
+messages at the beginning and end of the iteration as well
+as log messages for each rectangle, showing the 4 values.
+
+(2017.11)
+*/
+OSStatus
+Console_WriteShapeElement	(int			inMessage,
+							 HIShapeRef		inShape,
+							 CGRect const*	inRectPtr,
+							 void*			UNUSED_ARGUMENT(inRefCon))
+{
+	OSStatus	result = noErr;
+	
+	
+	if (kHIShapeEnumerateInit == inMessage)
+	{
+		Console_WriteValueAddress("begin dump, shape", inShape);
+	}
+	else if (kHIShapeEnumerateTerminate == inMessage)
+	{
+		Console_WriteValueAddress("end dump, shape", inShape);
+	}
+	else if (kHIShapeEnumerateRect == inMessage)
+	{
+		Console_WriteValueFloat4("rectangle", inRectPtr->origin.x, inRectPtr->origin.y,
+									inRectPtr->size.width, inRectPtr->size.height);
+	}
+	else
+	{
+		// ???
+	}
+	
+	return result;
+}// WriteShapeElement
+
+
+/*!
 Prints a debugging call stack trace to the standard error
 stream, up to the maximum number of symbols.  If the count
 is zero, an arbitrary depth is chosen.
