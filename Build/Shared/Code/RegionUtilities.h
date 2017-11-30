@@ -77,10 +77,6 @@ void
 												 Rect*				outOldBoundsPtrOrNull,
 												 Boolean			inNoInsets = false);
 
-#define LocalToGlobalRegion(r)	RegionUtilities_LocalToGlobal(r)
-void
-	RegionUtilities_LocalToGlobal				(RgnHandle			inoutRegion);
-
 Boolean
 	RegionUtilities_NearPoints					(Point				inPoint1,
 												 Point				inPoint2);

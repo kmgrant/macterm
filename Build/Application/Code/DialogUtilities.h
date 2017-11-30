@@ -61,9 +61,6 @@ void
 											 CFStringRef&			outCFString);
 
 void
-	OutlineRegion							(RgnHandle				inoutRegion);
-
-void
 	SetControlText							(ControlRef				inControl,
 											 ConstStringPtr			inText);
 

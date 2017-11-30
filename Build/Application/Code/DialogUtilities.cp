@@ -101,28 +101,6 @@ GetControlTextAsCFString	(ControlRef		inControl,
 
 
 /*!
-Removes the interior of a region so that
-it ends up describing only its outline.
-
-(2.6)
-*/
-void
-OutlineRegion	(RgnHandle		inoutRegion)
-{
-	RgnHandle	tempRgn = NewRgn();
-	
-	
-	if (tempRgn != nullptr)
-	{
-		CopyRgn(inoutRegion, tempRgn);
-		InsetRgn(tempRgn, 1, 1);
-		DiffRgn(inoutRegion, tempRgn, inoutRegion);
-		DisposeRgn(tempRgn), tempRgn = nullptr;
-	}
-}// OutlineRegion
-
-
-/*!
 This method uses the SetControlData() API to
 change the text of an editable text control.
 

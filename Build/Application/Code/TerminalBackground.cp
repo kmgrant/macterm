@@ -44,6 +44,7 @@
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFUtilities.h>
+#include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
@@ -167,6 +168,7 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlDeactivate },
 									{ kEventClassControl, kEventControlHitTest },
 									{ kEventClassControl, kEventControlTrack },
+									{ kEventClassControl, kEventControlGetPartBounds },
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlGetFocusPart },
 									{ kEventClassControl, kEventControlSetFocusPart },
@@ -537,10 +539,8 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 			if (noErr == result)
 			{
 				// paint background color and draw background picture, if any
-				Rect		bounds;
-				Rect		clipBounds;
 				CGRect		floatBounds;
-				HIRect		floatClipBounds;
+				CGRect		floatClipBounds;
 				HIShapeRef	optionalTargetShape = nullptr;
 				
 				
@@ -549,8 +549,6 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				// determine boundaries of the content view being drawn;
 				// ensure view-local coordinates
 				HIViewGetBounds(view, &floatBounds);
-				GetControlBounds(view, &bounds);
-				RegionUtilities_OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				// maybe a focus region has been provided
 				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamShape, typeHIShapeRef,
@@ -562,25 +560,15 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					floatClipBounds = floatBounds;
 				}
-				RegionUtilities_SetRect(&clipBounds, STATIC_CAST(floatClipBounds.origin.x, SInt16),
-										STATIC_CAST(floatClipBounds.origin.y, SInt16),
-										STATIC_CAST(floatClipBounds.origin.x + floatClipBounds.size.width, SInt16),
-										STATIC_CAST(floatClipBounds.origin.y + floatClipBounds.size.height, SInt16));
 				
-				{
-					RGBColor	tmpColor;
-					
-					
-					tmpColor.red = STATIC_CAST(STATIC_CAST(RGBCOLOR_INTENSITY_MAX, Float32) * backgroundColor.red, unsigned short);
-					tmpColor.green = STATIC_CAST(STATIC_CAST(RGBCOLOR_INTENSITY_MAX, Float32) * backgroundColor.green, unsigned short);
-					tmpColor.blue = STATIC_CAST(STATIC_CAST(RGBCOLOR_INTENSITY_MAX, Float32) * backgroundColor.blue, unsigned short);
-					RGBBackColor(&tmpColor);
-				}
 				if ((false == IsControlActive(view)) && (false == dataPtr->dontDimBackgroundScreens))
 				{
-					UseInactiveColors();
+					backgroundColor = CocoaBasic_GetGray(backgroundColor, 0.5);
 				}
-				EraseRect(&clipBounds);
+				CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green, backgroundColor.blue, 1.0/* alpha */);
+				CGContextSetAllowsAntialiasing(drawingContext, false);
+				CGContextFillRect(drawingContext, CGRectIntegral(floatClipBounds));
+				CGContextSetAllowsAntialiasing(drawingContext, true);
 				
 				if (nullptr != dataPtr->image)
 				{
@@ -989,6 +977,16 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			}
 			break;
 		
+		case kEventControlGetPartBounds:
+			//Console_WriteLine("HI OBJECT control get part bounds for terminal background");
+			result = CallNextEventHandler(inHandlerCallRef, inEvent);
+			if ((noErr == result) || (eventNotHandledErr == result))
+			{
+				// this function also handles get-bounds
+				result = receiveBackgroundRegionRequest(inHandlerCallRef, inEvent, dataPtr);
+			}
+			break;
+		
 		case kEventControlGetPartRegion:
 			//Console_WriteLine("HI OBJECT control get part region for terminal background");
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
@@ -1071,7 +1069,8 @@ receiveBackgroundHitTest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef)
 
 
 /*!
-Handles "kEventControlGetPartRegion" of "kEventClassControl".
+Handles "kEventControlGetPartRegion" and "kEventControlGetPartBounds"
+of "kEventClassControl".
 
 Returns the boundaries of the requested view part.
 
@@ -1086,11 +1085,13 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 	My_TerminalBackgroundPtr	dataPtr = inMyTerminalBackgroundPtr;
 	UInt32 const				kEventClass = GetEventClass(inEvent);
 	UInt32 const				kEventKind = GetEventKind(inEvent);
+	Boolean const				kIsBounds = (kEventKind == kEventControlGetPartBounds);
 	
 	
 	//Console_WriteLine("event handler: terminal background region request");
 	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlGetPartRegion);
+	assert((kEventKind == kEventControlGetPartRegion) ||
+			(kEventKind == kEventControlGetPartBounds));
 	{
 		HIViewRef	view = nullptr;
 		
@@ -1100,14 +1101,24 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 		if (noErr == result)
 		{
 			HIViewPartCode		partNeedingRegion = kControlNoPart;
+			OSStatus			error = noErr;
+			Boolean				prefersShape = false;
 			
 			
-			// determine the part whose region is needed
+			// check region-specific parameters
+			if (false == kIsBounds)
+			{
+				// determine if a shape can be provided
+				UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPrefersShape, typeBoolean,
+																				prefersShape);
+			}
+			
+			// determine the part whose boundary or region is needed
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode,
 															partNeedingRegion);
 			if (noErr == result)
 			{
-				Rect	partBounds;
+				HIRect		partBounds;
 				
 				
 				// IMPORTANT: All regions are currently rectangles, so this code is simplified.
@@ -1119,40 +1130,93 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 				case kControlOpaqueMetaPart:
 				case kControlClickableMetaPart:
 				case kTerminalBackground_ContentPartText:
-					GetControlBounds(dataPtr->view, &partBounds);
-					RegionUtilities_SetRect(&partBounds, 0, 0, partBounds.right - partBounds.left, partBounds.bottom - partBounds.top);
+					{
+						error = HIViewGetBounds(dataPtr->view, &partBounds);
+						if (noErr == error)
+						{
+							result = noErr;
+						}
+						else
+						{
+							result = eventNotHandledErr;
+						}
+					}
 					break;
 				
 				case kTerminalBackground_ContentPartVoid:
 				default:
-					bzero(&partBounds, sizeof(partBounds));
+					partBounds = CGRectZero;
 					break;
 				}
 				
 				//Console_WriteValue("request was for region code", partNeedingRegion);
 				//Console_WriteValueFloat4("returned terminal background region bounds",
-				//							STATIC_CAST(partBounds.left, Float32),
-				//							STATIC_CAST(partBounds.top, Float32),
-				//							STATIC_CAST(partBounds.right, Float32),
-				//							STATIC_CAST(partBounds.bottom, Float32));
+				//							partBounds.origin.x, partBounds.origin.y,
+				//							partBounds.size.width, partBounds.size.height);
 				
-				// attach the rectangle to the event, because sometimes this is most efficient
-				result = SetEventParameter(inEvent, kEventParamControlPartBounds,
-													typeQDRectangle, sizeof(partBounds), &partBounds);
-				
-				// perhaps a region was given that should be filled in
+				if (kIsBounds)
 				{
+					// set rectangular bounds
+					result = SetEventParameter(inEvent, kEventParamControlPartBounds,
+												typeHIRect, sizeof(partBounds), &partBounds);
+				}
+				else
+				{
+					// set region/shape
 					RgnHandle	regionToSet = nullptr;
-					OSStatus	error = noErr;
+					Boolean		setRegion = false;
 					
 					
-					error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlRegion, typeQDRgnHandle,
-																	regionToSet);
-					if (noErr == error)
+					if (prefersShape)
 					{
-						// modify the given region, which effectively returns the boundaries to the caller
-						RectRgn(regionToSet, &partBounds);
-						result = noErr;
+						HIShapeRef		shapeToReturn = HIShapeCreateWithRect(&partBounds);
+						
+						
+						if (nullptr == shapeToReturn)
+						{
+							setRegion = true;
+						}
+						else
+						{
+							error = SetEventParameter(inEvent, kEventParamShape,
+														typeHIShapeRef, sizeof(shapeToReturn), &shapeToReturn);
+							if (noErr != error)
+							{
+								setRegion = true;
+							}
+							else
+							{
+								result = noErr;
+							}
+							
+							// shape is retained by the system
+							CFRelease(shapeToReturn); shapeToReturn = nullptr;
+						}
+					}
+					else
+					{
+						setRegion = true;
+					}
+					
+					if (setRegion)
+					{
+						error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlRegion, typeQDRgnHandle,
+																		regionToSet);
+						if (noErr != error)
+						{
+							result = eventNotHandledErr;
+						}
+						else
+						{
+							Rect	intRect;
+							
+							
+							RegionUtilities_SetRect(&intRect, 0, 0, STATIC_CAST(partBounds.size.width, SInt16),
+													STATIC_CAST(partBounds.size.height, SInt16));
+							// modify the given region, which effectively returns the boundaries to the caller
+							RectRgn(regionToSet, &intRect);
+							result = noErr;
+						}
 					}
 				}
 			}

@@ -437,9 +437,6 @@ CFStringRef
 													 UInt16							inNumberOfSpacesToReplaceWithOneTabOrZero,
 													 TerminalView_TextFlags			inFlags);
 
-RgnHandle
-	TerminalView_ReturnSelectedTextAsNewRegion	(TerminalViewRef				inView);
-
 size_t
 	TerminalView_ReturnSelectedTextSize			(TerminalViewRef				inView);
 
@@ -711,9 +708,6 @@ void
 
 void
 	TerminalView_ZoomToSearchResults			(TerminalViewRef					inView);
-
-void
-	TerminalView_ZoomToSelection				(TerminalViewRef					inView);
 
 //@}
 

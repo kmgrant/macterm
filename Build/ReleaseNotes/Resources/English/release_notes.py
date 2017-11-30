@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171129',
     '20171018',
     '20171016',
     '20171012',
@@ -583,6 +584,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171129': [
+        'Fixed case where drag-and-drop highlight was not completely erased.',
+        'Fixed slight alignment problem with certain animations such as "Find Cursor" and search results.',
+        'Terminal view cursor rendering has slightly changed after internal improvements to the handling of shapes.  The cursor now has a nicer fit with surrounding text.',
+    ],
     '20171018': [
         'Macros menu now displays the names and key equivalents of inherited macros when non-Default sets are in effect, prefixed by "(Default)".  This clarifies behavior that has always existed: any menu item "slot" not filled by a particular macro set will continue to allow the Default action for that slot.  This allows you to define a combination of behaviors: things you always want available (that you mark as Inherited in other sets), and things that are unique to a selected macro set.  Note that technically inheritance is defined on a per-setting basis so you have the option of having a set that inherits an action but changes the corresponding key equivalent, for instance.',
         'Contextual menus that display macros (when text is selected, for example) will now also display applicable macros inherited from Default.',

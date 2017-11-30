@@ -230,23 +230,6 @@ typedef std::vector< CGDeviceColor >			My_CGColorList;
 typedef std::map< UInt16, CGDeviceColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
 typedef std::vector< EventTime >				My_TimeIntervalList;
 
-/*!
-A wrapper that calls HIViewConvertRegion() at construction
-time, and optionally at destruction time to undo the effects
-of its conversion.
-*/
-struct My_RegionConverter
-{
-	My_RegionConverter	(RgnHandle, HIViewRef, HIViewRef, Boolean = false);
-	~My_RegionConverter	();
-	
-	RgnHandle	region;			//!< the region, retained only by reference, that is converted
-	HIViewRef	source;			//!< source view for HIViewConvertRegion()
-	HIViewRef	destination;	//!< source view for HIViewConvertRegion()
-	Boolean		convertBack;	//!< if true, at destruction time HIViewConvertRegion() is called with inverted arguments;
-								//!  otherwise, it is not called at all, and the region is considered permanently changed
-};
-
 class My_XTerm256Table;
 
 // TEMPORARY: This structure is transitioning to C++, and so initialization
@@ -301,7 +284,7 @@ struct My_TerminalView
 			My_TimeIntervalList		delays;		// duration to wait after each animation stage
 			SInt16					stage;		// which color and delay is currently being used
 			SInt16					stageDelta;	// +1 or -1, current direction of change
-			RgnHandle				region;		// used to optimize redraws during animation
+			HIMutableShapeRef		region;		// used to optimize redraws during animation
 		} rendering;
 		
 		struct
@@ -330,15 +313,14 @@ struct My_TerminalView
 		ListenerModel_ListenerWrap	preferenceMonitor;		// listener for changes to preferences that affect a particular view
 		ListenerModel_ListenerWrap	bellHandler;			// listener for bell signals from the terminal screen
 		ListenerModel_ListenerWrap	videoModeMonitor;		// listener for changes to the reverse-video setting
-		RgnHandle					refreshRegion;			// used to optimize redraws
+		HIMutableShapeRef			refreshRegion;			// used to optimize redraws
 		EventLoopTimerUPP			refreshTimerUPP;		// UPP for the equivalent timer ref
 		EventLoopTimerRef			refreshTimerRef;		// timer to invoke HIViewSetNeedsDisplayInRegion() at controlled intervals
 		
 		struct
 		{
-			RgnHandle			boundsAsRegion;	// update region for cursor (may or may not correspond to "bounds")
-			Rect				bounds;			// the rectangle of the cursor’s visible region, relative to the content pane!!!
-			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursor’s outline region
+			HIMutableShapeRef	updatedShape;	// update region for cursor (may or may not correspond to "bounds")
+			CGRect				bounds;			// the rectangle of the cursor’s visible region, relative to the content pane!!!
 			MyCursorState		currentState;	// whether the cursor is visible
 			MyCursorState		ghostState;		// whether the cursor ghost is visible
 			Boolean				inhibited;		// if true, the cursor can never be displayed regardless of its state
@@ -499,13 +481,9 @@ void				getScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CG
 void				getScreenOrigin						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				getScreenOriginFloat				(My_TerminalViewPtr, Float32&, Float32&);
 HIShapeRef			getSelectedTextAsNewHIShape			(My_TerminalViewPtr, Float32 = 0.0);
-RgnHandle			getSelectedTextAsNewRegion			(My_TerminalViewPtr);
-RgnHandle			getSelectedTextAsNewRegionOnScreen	(My_TerminalViewPtr);
 size_t				getSelectedTextSize					(My_TerminalViewPtr);
 HIShapeRef			getVirtualRangeAsNewHIShape			(My_TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&,
 														 Float32, Boolean);
-RgnHandle			getVirtualRangeAsNewRegion			(My_TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
-RgnHandle			getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
 void				getVirtualVisibleRegion				(My_TerminalViewPtr, UInt16*, TerminalView_RowIndex*, UInt16*, TerminalView_RowIndex*);
 void				handleMultiClick					(My_TerminalViewPtr, UInt16);
 void				handleNewViewContainerBounds		(HIViewRef, Float32, Float32, void*);
@@ -541,7 +519,6 @@ CFStringRef			returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr, UInt16, Term
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
-void				screenToLocalRect					(My_TerminalViewPtr, Rect*);
 void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
@@ -552,7 +529,7 @@ void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
 														 Float32 = 1.0);
-void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, Rect*, RgnHandle,
+void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, CGRect*, HIMutableShapeRef,
 														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
@@ -560,7 +537,7 @@ Boolean				startMonitoringDataSource			(My_TerminalViewPtr, TerminalScreenRef);
 Boolean				stopMonitoringDataSource			(My_TerminalViewPtr, TerminalScreenRef);
 void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 void				updateDisplay						(My_TerminalViewPtr);
-void				updateDisplayInRegion				(My_TerminalViewPtr, RgnHandle);
+void				updateDisplayInShape				(My_TerminalViewPtr, HIShapeRef);
 void				updateDisplayTimer					(EventLoopTimerRef, void*);
 void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TextAttributes_Object);
 void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TextAttributes_Object, Boolean, Float32 = 1.0);
@@ -627,7 +604,7 @@ struct My_PreferenceProxies	gPreferenceProxies;
 Boolean						gApplicationIsSuspended = false;
 Boolean						gTerminalViewInitialized = false;
 My_TerminalViewPtrLocker&	gTerminalViewPtrLocks ()				{ static My_TerminalViewPtrLocker x; return x; }
-RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = NewRgn(); assert(nullptr != x); return x; }
+HIMutableShapeRef			gInvalidationScratchRegion ()			{ static HIMutableShapeRef x = HIShapeCreateMutable(); assert(nullptr != x); return x; }
 My_XTerm256Table&			gColorGrid ()							{ static My_XTerm256Table x; return x; }
 
 } // anonymous namespace
@@ -657,6 +634,7 @@ TerminalView_Init ()
 									{ kEventClassControl, kEventControlDeactivate },
 									{ kEventClassControl, kEventControlDraw },
 									{ kEventClassControl, kEventControlGetData },
+									{ kEventClassControl, kEventControlGetPartBounds },
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlHitTest },
 									{ kEventClassControl, kEventControlSetCursor },
@@ -1190,18 +1168,12 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							// specify that menu should pop up at cursor location
 							{
 								Rect		screenRect;
-								Rect		cursorRect;
 								HIRect		cursorHIRect;
 								
 								
 								RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->contentHIView), &screenRect);
 								
-								cursorRect = viewPtr->screen.cursor.bounds;
-								
-								cursorHIRect.origin.x = cursorRect.left;
-								cursorHIRect.origin.y = cursorRect.top;
-								cursorHIRect.size.width = cursorRect.right - cursorRect.left;
-								cursorHIRect.size.height = cursorRect.bottom - cursorRect.top;
+								cursorHIRect = viewPtr->screen.cursor.bounds;
 								
 								HIRectConvert(&cursorHIRect, kHICoordSpaceView, viewPtr->contentHIView,
 												kHICoordSpaceScreenPixel, nullptr/* target object */);
@@ -1553,16 +1525,9 @@ TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
 	outGlobalBounds.size = CGSizeMake(0, 0);
 	if (viewPtr != nullptr)
 	{
-		Rect	globalCursorBounds;
-		
-		
-		globalCursorBounds = viewPtr->screen.cursor.bounds;
-		screenToLocalRect(viewPtr, &globalCursorBounds);
-		QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &globalCursorBounds);
-		
-		outGlobalBounds = CGRectMake(globalCursorBounds.left, globalCursorBounds.top,
-										globalCursorBounds.right - globalCursorBounds.left,
-										globalCursorBounds.bottom - globalCursorBounds.top);
+		outGlobalBounds = viewPtr->screen.cursor.bounds;
+		UNUSED_RETURN(OSStatus)HIRectConvert(&outGlobalBounds, kHICoordSpaceView, viewPtr->contentHIView,
+												kHICoordSpaceScreenPixel, nullptr/* target object */);
 	}
 }// GetCursorGlobalBounds
 
@@ -2360,25 +2325,6 @@ TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
 	result = [viewPtr->contentNSView window];
 	return result;
 }// ReturnNSWindow
-
-
-/*!
-Returns a region in coordinates LOCAL to the given
-view’s window, describing the highlighted text.
-You must destroy this region yourself!
-
-(2.6)
-*/
-RgnHandle
-TerminalView_ReturnSelectedTextAsNewRegion		(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	RgnHandle					result = nullptr;
-	
-	
-	result = getSelectedTextAsNewRegion(viewPtr);
-	return result;
-}// ReturnSelectedTextAsNewRegion
 
 
 /*!
@@ -3991,27 +3937,21 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 	{
 		HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-		HIRect				cursorViewBounds = CGRectZero;
-		CGRect				cursorCGRect = CGRectZero;
-		Rect				cursorRect;
+		HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
+		HIRect				windowContentBounds = CGRectZero;
+		CGRect				cursorCGRect = viewPtr->screen.cursor.bounds;
 		
-		
-		cursorRect = viewPtr->screen.cursor.bounds;
-		
-		screenToLocalRect(viewPtr, &cursorRect);
 		
 		// since the region is currently defined in content-local coordinates,
 		// the “height” of the “view” containing the selection is actually
 		// going to be the entire content view and not just the screen part
-		UNUSED_RETURN(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &cursorViewBounds);
+		UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
+		UNUSED_RETURN(OSStatus)HIViewConvertRect(&cursorCGRect, viewPtr->contentHIView, windowContentHIView);
 		
 		// translate the selection area into Cocoa coordinates that are
 		// relative to the content view of the window
-		cursorCGRect.origin.x = cursorRect.left;
-		cursorCGRect.origin.y = cursorViewBounds.size.height - cursorRect.bottom;
-		cursorCGRect.size.width = cursorRect.right - cursorRect.left;
-		cursorCGRect.size.height = cursorRect.bottom - cursorRect.top;
-		cursorCGRect = CGRectInset(cursorCGRect, -30, -30); // arbitrary
+		cursorCGRect.origin.y = windowContentBounds.size.height - (cursorCGRect.origin.y + cursorCGRect.size.height);
+		cursorCGRect = CGRectInset(cursorCGRect, -50, -50); // arbitrary
 		
 		// animate!
 		if (nullptr != terminalWindow)
@@ -4055,19 +3995,22 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 		{
 			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
 			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-			HIRect				selectionViewBounds = CGRectZero;
+			HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
+			HIRect				windowContentBounds = CGRectZero;
 			CGRect				selectionCGRect = CGRectZero;
 			
+			
+			UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
 			
 			// since the region is currently defined in content-local coordinates,
 			// the “height” of the “view” containing the selection is actually
 			// going to be the entire content view and not just the screen part
-			UNUSED_RETURN(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
+			UNUSED_RETURN(OSStatus)HIViewConvertRect(&selectionCGRect, viewPtr->contentHIView, windowContentHIView);
 			
 			// translate the selection area into Cocoa coordinates that are
 			// relative to the content view of the window
-			UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
-			selectionCGRect.origin.y = selectionViewBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
+			selectionCGRect.origin.y = windowContentBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
 			
 			// animate!
 			if (nullptr != terminalWindow)
@@ -4084,97 +4027,8 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 }// ZoomToSearchResults
 
 
-/*!
-Displays an animation that helps the user locate
-the currently-selected text.
-
-(3.0)
-*/
-void
-TerminalView_ZoomToSelection	(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if ((viewPtr != nullptr) && (viewPtr->text.selection.exists))
-	{
-		RgnHandle	selectionRegion = getSelectedTextAsNewRegion(viewPtr);
-		
-		
-		if (selectionRegion != nullptr)
-		{
-			Rect	selectionBounds;
-			HIRect	screenContentFloatBounds;
-			Rect	screenContentBounds;
-			
-			
-			// find global rectangle of selection
-			QDLocalToGlobalRegion(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), selectionRegion);
-			GetRegionBounds(selectionRegion, &selectionBounds);
-			
-			// find global rectangle of the screen area
-			UNUSED_RETURN(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
-			RegionUtilities_SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
-									STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
-			screenToLocalRect(viewPtr, &screenContentBounds);
-			QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
-			
-			// animate!
-			UNUSED_RETURN(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
-			
-			DisposeRgn(selectionRegion), selectionRegion = nullptr;
-		}
-	}
-}// ZoomToSelection
-
-
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Calls HIViewConvertRegion() to convert the specified region
-into a new coordinate system.
-
-(4.0)
-*/
-My_RegionConverter::
-My_RegionConverter	(RgnHandle		inoutRegion,
-					 HIViewRef		inSource,
-					 HIViewRef		inDestination,
-					 Boolean		inConvertBack)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-region			(inoutRegion),
-source			(inSource),
-destination		(inDestination),
-convertBack		(inConvertBack)
-{
-	OSStatus	error = HIViewConvertRegion(region, source, destination);
-	
-	
-	assert_noerr(error);
-}// My_RegionConverter constructor
-
-
-/*!
-For instances configured to convert back, once again calls
-HIViewConvertRegion() to restore the region to its previous
-coordinate system.
-
-(4.0)
-*/
-My_RegionConverter::
-~My_RegionConverter ()
-{
-	if (convertBack)
-	{
-		OSStatus	error = HIViewConvertRegion(region, destination, source);
-		
-		
-		assert_noerr(error);
-	}
-}// My_RegionConverter destructor
-
 
 /*!
 Initializes all tables, after which they can be used to
@@ -4403,7 +4257,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
-	this->screen.refreshRegion = NewRgn();
+	this->screen.refreshRegion = HIShapeCreateMutable();
 	
 	this->encodingConfig.setWithNoRetain(Preferences_NewContext(Quills::Prefs::TRANSLATION));
 	assert(this->encodingConfig.exists());
@@ -4462,7 +4316,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
-	this->screen.cursor.boundsAsRegion = NewRgn();
+	this->screen.cursor.updatedShape = HIShapeCreateMutable();
 	this->screen.cursor.inhibited = false;
 	this->screen.cursor.isCustomColor = false;
 	this->screen.currentRenderContext = nullptr;
@@ -4621,7 +4475,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		}
 		this->animation.rendering.stage = 0;
 		this->animation.rendering.stageDelta = +1;
-		this->animation.rendering.region = NewRgn();
+		this->animation.rendering.region = HIShapeCreateMutable();
 		this->animation.cursor.blinkAlpha = 1.0;
 	}
 	
@@ -4768,9 +4622,9 @@ My_TerminalView::
 		DisposeEventLoopTimerUPP(this->screen.refreshTimerUPP), this->screen.refreshTimerUPP = nullptr;
 	}
 	
-	DisposeRgn(this->animation.rendering.region), this->animation.rendering.region = nullptr;
-	DisposeRgn(this->screen.cursor.boundsAsRegion), this->screen.cursor.boundsAsRegion = nullptr;
-	DisposeRgn(this->screen.refreshRegion), this->screen.refreshRegion = nullptr;
+	CFRelease(this->animation.rendering.region); this->animation.rendering.region = nullptr;
+	CFRelease(this->screen.cursor.updatedShape); this->screen.cursor.updatedShape = nullptr;
+	CFRelease(this->screen.refreshRegion); this->screen.refreshRegion = nullptr;
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
 	// release strong references to data sources
@@ -4868,7 +4722,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
-		updateDisplayInRegion(ptr, ptr->animation.rendering.region);
+		updateDisplayInShape(ptr, ptr->animation.rendering.region);
 		
 		//
 		// cursor
@@ -4878,7 +4732,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		ptr->animation.cursor.blinkAlpha = kAlphaByPhase[ptr->animation.rendering.stage];
 		
 		// invalidate the cursor
-		updateDisplayInRegion(ptr, ptr->screen.cursor.boundsAsRegion);
+		updateDisplayInShape(ptr, ptr->screen.cursor.updatedShape);
 	}
 }// animateBlinkingItems
 
@@ -6048,8 +5902,6 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// with QuickDraw backgrounds without them (NOTE: adjusting
 		// width is not reasonable because it refers to the whole range,
 		// which might encompass several characters)
-		//sectionBounds.origin.x += 1;
-		sectionBounds.size.height -= 3;
 		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
@@ -6059,9 +5911,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// timer when it is not needed
 		if (inAttributes.hasBlink())
 		{
-			RectRgn(gInvalidationScratchRegion(), &intBounds);
-			UnionRgn(gInvalidationScratchRegion(), viewPtr->animation.rendering.region,
-						viewPtr->animation.rendering.region);
+			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(viewPtr->animation.rendering.region, &sectionBounds);
 			
 			viewPtr->screen.currentRenderBlinking = true;
 		}
@@ -7339,15 +7189,10 @@ eraseSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	if (false == inTerminalViewPtr->screen.currentRenderNoBackground)
 	{
-		if (inTerminalViewPtr->isCocoa)
-		{
-			CGContextFillRect(inDrawingContext, CGRectMake(outRowSectionBounds.origin.x - 0.5f, outRowSectionBounds.origin.y - 0.5f,
-															outRowSectionBounds.size.width + 1, outRowSectionBounds.size.height + 1));
-		}
-		else
-		{
-			EraseRect(&intBounds);
-		}
+		CGContextSetAllowsAntialiasing(inDrawingContext, false);
+		CGContextFillRect(inDrawingContext, CGRectMake(outRowSectionBounds.origin.x, outRowSectionBounds.origin.y,
+														outRowSectionBounds.size.width, outRowSectionBounds.size.height));
+		CGContextSetAllowsAntialiasing(inDrawingContext, true);
 	}
 }// eraseSection
 
@@ -7677,9 +7522,6 @@ bottom-half-double-height row global attributes, such
 that a double-size line is twice as big as a normal
 line’s boundaries.
 
-To convert this to coordinates local to the window,
-use screenToLocalRect().
-
 (3.0)
 */
 void
@@ -7795,9 +7637,6 @@ This routine respects the top-half-double-height and
 bottom-half-double-height row global attributes, such
 that a double-size line is twice as big as a normal
 line’s boundaries.
-
-To convert this to coordinates local to the window,
-use screenToLocalRect().
 
 (3.0)
 */
@@ -8210,44 +8049,6 @@ getSelectedTextAsNewHIShape		(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Internal version of TerminalView_ReturnSelectedTextAsNewRegion().
-
-DEPRECATED.  Use getSelectedTextAsNewRegionOnScreen() instead.
-
-(2.6)
-*/
-RgnHandle
-getSelectedTextAsNewRegion		(My_TerminalViewPtr		inTerminalViewPtr)
-{
-	RgnHandle	result = getVirtualRangeAsNewRegion(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
-													inTerminalViewPtr->text.selection.range.second,
-													inTerminalViewPtr->text.selection.isRectangular);
-	
-	
-	return result;
-}// getSelectedTextAsNewRegion
-
-
-/*!
-Like getVirtualRangeAsNewRegionOnScreen(), except specifically
-for the current text selection.  Automatically takes into
-account rectangular shape, if applicable.
-
-(3.1)
-*/
-RgnHandle
-getSelectedTextAsNewRegionOnScreen		(My_TerminalViewPtr		inTerminalViewPtr)
-{
-	RgnHandle	result = getVirtualRangeAsNewRegionOnScreen(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
-															inTerminalViewPtr->text.selection.range.second,
-															inTerminalViewPtr->text.selection.isRectangular);
-	
-	
-	return result;
-}// getSelectedTextAsNewRegionOnScreen
-
-
-/*!
 Returns the size in bytes of the current selection for
 the specified window, or zero.
 
@@ -8353,7 +8154,6 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 	{
 		// then the area to be highlighted is irregularly shaped; this is more complex...
 		HIMutableShapeRef	mutableResult = nullptr;
-		HIShapeRef			rectShape = nullptr;
 		CGRect				clippedRect;
 		CGRect				partialSelectionBounds;
 		
@@ -8374,12 +8174,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 													2.0f * inInsets,
 												inTerminalViewPtr->text.font.heightPerCell.precisePixels()/* no insets here, due to shrunk mid-section */);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
-			rectShape = HIShapeCreateWithRect(&clippedRect);
-			if (nullptr != rectShape)
-			{
-				HIShapeUnion(mutableResult, rectShape, mutableResult);
-				CFRelease(rectShape), rectShape = nullptr;
-			}
+			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
 		}
 		
 		// bounds of last (possibly partial) line to be highlighted
@@ -8390,12 +8185,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() - 2.0f * inInsets,
 												inTerminalViewPtr->text.font.heightPerCell.precisePixels()/* no insets here, due to shrunk mid-section */);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
-			rectShape = HIShapeCreateWithRect(&clippedRect);
-			if (nullptr != rectShape)
-			{
-				HIShapeUnion(mutableResult, rectShape, mutableResult);
-				CFRelease(rectShape), rectShape = nullptr;
-			}
+			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
 		}
 		
 		if ((selectionPastEnd.second - selectionStart.second) > 2)
@@ -8407,12 +8197,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 												(selectionPastEnd.second - selectionStart.second - 2/* skip first and last lines */) *
 													inTerminalViewPtr->text.font.heightPerCell.precisePixels() - 2.0f * inInsets);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
-			rectShape = HIShapeCreateWithRect(&clippedRect);
-			if (nullptr != rectShape)
-			{
-				HIShapeUnion(mutableResult, rectShape, mutableResult);
-				CFRelease(rectShape), rectShape = nullptr;
-			}
+			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
 		}
 		
 		result = mutableResult;
@@ -8420,169 +8205,6 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	return result;
 }// getVirtualRangeAsNewHIShape
-
-
-/*!
-Returns a new region locating the specified area of the
-terminal view, LOCAL to its window port.  You must dispose of
-the region yourself.
-
-DEPRECATED.  Use getVirtualRangeAsNewRegionOnScreen() instead.
-
-(3.1)
-*/
-RgnHandle
-getVirtualRangeAsNewRegion		(My_TerminalViewPtr			inTerminalViewPtr,
-								 TerminalView_Cell const&	inSelectionStart,
-								 TerminalView_Cell const&	inSelectionPastEnd,
-								 Boolean					inIsRectangular)
-{
-	RgnHandle	result = getVirtualRangeAsNewRegionOnScreen(inTerminalViewPtr, inSelectionStart,
-															inSelectionPastEnd, inIsRectangular);
-	
-	
-	if (nullptr != result)
-	{
-		// now convert the region to be in QuickDraw local coordinates,
-		// which are the same as those of the window content view
-		HIPoint		offsetAmount = CGPointMake(0, 0);
-		OSStatus	error = noErr;
-		
-		
-		error = HIViewConvertPoint(&offsetAmount, inTerminalViewPtr->contentHIView,
-									HIViewWrap(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView)));
-		assert_noerr(error);
-		OffsetRgn(result, STATIC_CAST(offsetAmount.x, SInt16), STATIC_CAST(offsetAmount.y, SInt16));
-	}
-	return result;
-}// getVirtualRangeAsNewRegion
-
-
-/*!
-Returns a new region locating the specified area of the
-terminal view, relative to itself: for example, the first
-character in the top-left corner has origin (0, 0) in
-pixels.  You must dispose of the region yourself.
-
-(3.1)
-*/
-RgnHandle
-getVirtualRangeAsNewRegionOnScreen	(My_TerminalViewPtr			inTerminalViewPtr,
-									 TerminalView_Cell const&	inSelectionStart,
-									 TerminalView_Cell const&	inSelectionPastEnd,
-									 Boolean					inIsRectangular)
-{
-	RgnHandle	result = NewRgn();
-	
-	
-	if (nullptr != result)
-	{
-		HIRect				floatBounds;
-		Rect				screenBounds;
-		TerminalView_Cell	selectionStart;
-		TerminalView_Cell	selectionPastEnd;
-		OSStatus			error = noErr;
-		
-		
-		// find clipping region
-		error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &floatBounds);
-		assert_noerr(error);
-		RegionUtilities_SetRect(&screenBounds, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16), STATIC_CAST(floatBounds.size.height, SInt16));
-		
-		selectionStart = inSelectionStart;
-		selectionPastEnd = inSelectionPastEnd;
-		
-		// normalize coordinates with respect to visible area of virtual screen
-		{
-			TerminalView_RowIndex	top = 0;
-			UInt16					left = 0;
-			
-			
-			getVirtualVisibleRegion(inTerminalViewPtr, &left, &top, nullptr/* right */, nullptr/* bottom */);
-			selectionStart.second -= top;
-			selectionStart.first -= left;
-			selectionPastEnd.second -= top;
-			selectionPastEnd.first -= left;
-		}
-		
-		if ((INTEGER_ABSOLUTE(selectionPastEnd.second - selectionStart.second) <= 1) ||
-			(inIsRectangular))
-		{
-			// then the area to be highlighted is a rectangle; this simplifies things...
-			Rect	clippedRect;
-			Rect	selectionBounds;
-			
-			
-			// make the points the “right way around”, in case the first point is
-			// technically to the right of or below the second point
-			sortAnchors(selectionStart, selectionPastEnd, true/* is a rectangular selection */);
-			
-			// set up rectangle bounding area to be highlighted
-			RegionUtilities_SetRect(&selectionBounds,
-									selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
-									STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
-									selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
-									STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
-			
-			// the final selection region is the portion of the full rectangle
-			// that fits within the current screen boundaries
-			SectRect(&selectionBounds, &screenBounds, &clippedRect);
-			RectRgn(result, &clippedRect);
-		}
-		else
-		{
-			// then the area to be highlighted is irregularly shaped; this is more complex...
-			RgnHandle	clippedRegion = NewRgn();
-			
-			
-			if (nullptr != clippedRegion)
-			{
-				Rect	clippedRect;
-				Rect	partialSelectionBounds;
-				
-				
-				// make the points the “right way around”, in case the first point is
-				// technically to the right of or below the second point
-				sortAnchors(selectionStart, selectionPastEnd, false/* is a rectangular selection */);
-				
-				// bounds of first (possibly partial) line to be highlighted
-				RegionUtilities_SetRect(&partialSelectionBounds,
-										selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
-										STATIC_CAST(selectionStart.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
-										inTerminalViewPtr->screen.cache.viewWidthInPixels.integralPixels(),
-										STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
-				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
-				RectRgn(result, &clippedRect);
-				
-				// bounds of last (possibly partial) line to be highlighted
-				RegionUtilities_SetRect(&partialSelectionBounds,
-										0,
-										STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
-										selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.integralPixels(),
-										STATIC_CAST(selectionPastEnd.second, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
-				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
-				RectRgn(clippedRegion, &clippedRect);
-				UnionRgn(clippedRegion, result, result);
-				
-				if ((selectionPastEnd.second - selectionStart.second) > 2)
-				{
-					// highlight extends across more than two lines - fill in the space in between
-					RegionUtilities_SetRect(&partialSelectionBounds,
-											0,
-											STATIC_CAST(selectionStart.second + 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels(),
-											inTerminalViewPtr->screen.cache.viewWidthInPixels.integralPixels(),
-											STATIC_CAST(selectionPastEnd.second - 1, SInt16) * inTerminalViewPtr->text.font.heightPerCell.integralPixels());
-					SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
-					RectRgn(clippedRegion, &clippedRect);
-					UnionRgn(clippedRegion, result, result);
-				}
-				
-				DisposeRgn(clippedRegion), clippedRegion = nullptr;
-			}
-		}
-	}
-	return result;
-}// getVirtualRangeAsNewRegionOnScreen
 
 
 /*!
@@ -8874,7 +8496,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		}
 		else
 		{
-			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.updatedShape);
 		}
 	}
 }// handleNewViewContainerBounds
@@ -9086,14 +8708,19 @@ invalidateRowSection	(My_TerminalViewPtr		inTerminalViewPtr,
 						 UInt16					inCharacterCount)
 {
   	Rect	textBounds;
+	CGRect	floatBounds;
 	
 	
 	// mark the specified area; it is already in “screen coordinates”,
-	// which match the view coordinates used by updateDisplayInRegion()
+	// which match the view coordinates used by updateDisplayInShape()
 	getRowSectionBounds(inTerminalViewPtr, inLineNumber, inStartingColumnNumber, inCharacterCount, &textBounds);
+	floatBounds = CGRectIntegral(CGRectMake(textBounds.left, textBounds.top,
+											textBounds.right - textBounds.left,
+											textBounds.bottom - textBounds.top));
 	
-	RectRgn(gInvalidationScratchRegion(), &textBounds);
-	updateDisplayInRegion(inTerminalViewPtr, gInvalidationScratchRegion());
+	UNUSED_RETURN(OSStatus)HIShapeSetEmpty(gInvalidationScratchRegion());
+	UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(gInvalidationScratchRegion(), &floatBounds);
+	updateDisplayInShape(inTerminalViewPtr, gInvalidationScratchRegion());
 }// invalidateRowSection
 
 
@@ -9794,7 +9421,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				// invalidate the entire old cursor region (in case it is bigger than the new one)
-				updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+				updateDisplayInShape(viewPtr, viewPtr->screen.cursor.updatedShape);
 				
 				// find the new cursor region
 				getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
@@ -9804,10 +9431,10 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				}
 				else
 				{
-					setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
+					setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.updatedShape);
 					
 					// invalidate the new cursor region (in case it is bigger than the old one)
-					updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+					updateDisplayInShape(viewPtr, viewPtr->screen.cursor.updatedShape);
 				}
 			}
 			break;
@@ -10240,6 +9867,12 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			}
 			break;
 		
+		case kEventControlGetPartBounds:
+			//Console_WriteLine("HI OBJECT control get part bounds for terminal view");
+			// this function also handles get-bounds
+			result = receiveTerminalViewRegionRequest(inHandlerCallRef, inEvent, view);
+			break;
+		
 		case kEventControlGetPartRegion:
 			//Console_WriteLine("HI OBJECT control get part region for terminal view");
 			result = receiveTerminalViewRegionRequest(inHandlerCallRef, inEvent, view);
@@ -10561,9 +10194,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// draw text
 				if (nullptr != viewPtr)
 				{
-					Rect		clipBounds;
 					HIRect		floatBounds;
-					CGRect		floatClipBounds;
+					CGRect		clipBounds;
 					HIShapeRef	optionalTargetShape = nullptr;
 					
 					
@@ -10571,25 +10203,38 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					// determine boundaries of the content view being drawn;
 					// ensure view-local coordinates
-					HIViewGetBounds(view, &floatBounds);
+					UNUSED_RETURN(OSStatus)HIViewGetBounds(view, &floatBounds);
 					
 					// maybe a focus region has been provided
 					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamShape, typeHIShapeRef,
 																		optionalTargetShape))
 					{
-						UNUSED_RETURN(CGRect*)HIShapeGetBounds(optionalTargetShape, &floatClipBounds);
-						RegionUtilities_SetRect(&clipBounds,
-												STATIC_CAST(floatClipBounds.origin.x, SInt16),
-												STATIC_CAST(floatClipBounds.origin.y, SInt16),
-												STATIC_CAST((floatClipBounds.origin.x + floatClipBounds.size.width), SInt16),
-												STATIC_CAST((floatClipBounds.origin.y + floatClipBounds.size.height), SInt16));
+						UNUSED_RETURN(CGRect*)HIShapeGetBounds(optionalTargetShape, &clipBounds);
 					}
 					else
 					{
-						SetRectRgn(gInvalidationScratchRegion(), 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
-									STATIC_CAST(floatBounds.size.height, SInt16));
-						GetRegionBounds(gInvalidationScratchRegion(), &clipBounds);
+						clipBounds = CGRectMake(0, 0, floatBounds.size.width, floatBounds.size.height);
 					}
+					clipBounds = CGRectIntegral(clipBounds);
+					
+					// IMPORTANT: after transitioning to Core Graphics and precise
+					// pixels, drawing artifacts appear if the view attempts to
+					// merge its drawing with the background view; this will not
+					// be resolved for Carbon, it will simply be handled in the
+					// Cocoa version (and the view is opaque in the meantime); see
+					// also the get-region handler for the opaque region
+				#if 1
+					{
+						CGDeviceColor		backgroundColor;
+						
+						
+						getScreenBaseColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &backgroundColor);
+						CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green, backgroundColor.blue, 1.0/* alpha */);
+						CGContextSetAllowsAntialiasing(drawingContext, false);
+						CGContextFillRect(drawingContext, clipBounds);
+						CGContextSetAllowsAntialiasing(drawingContext, true);
+					}
+				#endif
 					
 					if ((partCode == kTerminalView_ContentPartText) ||
 						(partCode == kControlEntireControl) ||
@@ -10612,7 +10257,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (dragHighlight)
 							{
-								DragAndDrop_ShowHighlightBackground(drawingContext, floatBounds);
+								DragAndDrop_ShowHighlightBackground(drawingContext, CGRectInset(floatBounds, 2, 2));
 								// frame is drawn at the end, after any content
 							}
 							else
@@ -10658,8 +10303,9 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					#else
 						{
 							// draw only the requested area; convert from pixels to screen cells
-							HIPoint const		kTopLeftAnchor = CGPointMake(clipBounds.left, clipBounds.top);
-							HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.right, clipBounds.bottom);
+							HIPoint const		kTopLeftAnchor = clipBounds.origin;
+							HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.x + clipBounds.size.width,
+																					clipBounds.origin.y + clipBounds.size.height);
 							TerminalView_Cell	leftTopCell;
 							TerminalView_Cell	rightBottomCell;
 							SInt16				deltaColumn = 0;
@@ -10746,7 +10392,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (dragHighlight)
 							{
-								DragAndDrop_ShowHighlightFrame(drawingContext, floatBounds);
+								DragAndDrop_ShowHighlightFrame(drawingContext, CGRectInset(floatBounds, 2, 2));
 							}
 						}
 					}
@@ -10779,14 +10425,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					{
 						CGContextSaveRestore	_(drawingContext);
 						TextAttributes_Object	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-						CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left - 1,
-																				viewPtr->screen.cursor.bounds.top - 1,
-																				viewPtr->screen.cursor.bounds.right -
-																					viewPtr->screen.cursor.bounds.left
-																					+ 1/* TEMPORARY Quartz/QD conversion */,
-																				viewPtr->screen.cursor.bounds.bottom -
-																					viewPtr->screen.cursor.bounds.top
-																					+ 1/* TEMPORARY Quartz/QD conversion */);
+						CGRect					cursorFloatBounds = viewPtr->screen.cursor.bounds;
 						
 						
 						// flip colors and paint at the current blink alpha value
@@ -10803,7 +10442,9 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 												cursorBlinks(viewPtr)
 												? viewPtr->animation.cursor.blinkAlpha
 												: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
+						CGContextSetAllowsAntialiasing(drawingContext, false);
 						CGContextFillRect(drawingContext, cursorFloatBounds);
+						CGContextSetAllowsAntialiasing(drawingContext, true);
 						
 						// if the terminal is currently in password mode, annotate the cursor
 						if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
@@ -10820,7 +10461,6 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
 							fullRectangleBounds.size.height = newHeight;
 							RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
-							++dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
 							
 							// draw the dot in the middle of the cell that the cursor occupies
 							if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
@@ -10845,6 +10485,53 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// draw the cursor at its ghost location (with ghost appearance)
 						// UNIMPLEMENTED
 					}
+					
+					// debug: show the update region as a solid color
+				#if 0
+					{
+						static UInt16	colorCounter = 0;
+						CGDeviceColor	debugColor = { 0.0, 0.0, 0.0 };
+						
+						
+						// rotate through a few different colors so that
+						// adjacent updates in different areas are more likely
+						// to be seen as distinct
+						++colorCounter;
+						if (1 == colorCounter)
+						{
+							debugColor = { 1.0, 0.0, 0.0 };
+						}
+						else if (2 == colorCounter)
+						{
+							debugColor = { 0.0, 1.0, 0.0 };
+						}
+						else if (3 == colorCounter)
+						{
+							debugColor = { 1.0, 1.0, 0.0 };
+						}
+						else if (4 == colorCounter)
+						{
+							debugColor = { 0.0, 0.0, 1.0 };
+						}
+						else if (5 == colorCounter)
+						{
+							debugColor = { 0.5, 0.5, 0.5 };
+						}
+						else
+						{
+							colorCounter = 0;
+						}
+						
+						if (0 != colorCounter)
+						{
+							CGContextSetRGBFillColor(drawingContext, debugColor.red, debugColor.green,
+														debugColor.blue, 1.0/* alpha */);
+							CGContextSetAllowsAntialiasing(drawingContext, false);
+							CGContextFillRect(drawingContext, clipBounds);
+							CGContextSetAllowsAntialiasing(drawingContext, true);
+						}
+					}
+				#endif
 				}
 			}
 			
@@ -11319,7 +11006,8 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 
 
 /*!
-Handles "kEventControlGetPartRegion" of "kEventClassControl".
+Handles "kEventControlGetPartRegion" and "kEventControlGetPartBounds"
+of "kEventClassControl".
 
 Invoked by Mac OS X whenever the boundaries of a particular
 part of a terminal view must be determined.
@@ -11334,10 +11022,12 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 	OSStatus		result = eventNotHandledErr;
 	UInt32 const	kEventClass = GetEventClass(inEvent);
 	UInt32 const	kEventKind = GetEventKind(inEvent);
+	Boolean const	kIsBounds = (kEventKind == kEventControlGetPartBounds);
 	
 	
 	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlGetPartRegion);
+	assert((kEventKind == kEventControlGetPartRegion) ||
+			(kEventKind == kEventControlGetPartBounds));
 	{
 		HIViewRef	view = nullptr;
 		
@@ -11349,7 +11039,17 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 		if (noErr == result)
 		{
 			HIViewPartCode		partNeedingRegion = kControlNoPart;
+			OSStatus			error = noErr;
+			Boolean				prefersShape = false;
 			
+			
+			// check region-specific parameters
+			if (false == kIsBounds)
+			{
+				// determine if a shape can be provided
+				UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPrefersShape, typeBoolean,
+																				prefersShape);
+			}
 			
 			// determine the focus part
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode,
@@ -11357,7 +11057,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 			if (noErr == result)
 			{
 				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-				Rect						partBounds;
+				HIRect						partBounds;
 				
 				
 				// IMPORTANT: All regions are currently rectangles, so this code is simplified.
@@ -11367,15 +11067,44 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				case kControlStructureMetaPart:
 				case kControlContentMetaPart:
 				case kTerminalView_ContentPartText:
-					GetControlBounds(viewPtr->contentHIView, &partBounds);
-					RegionUtilities_OffsetRect(&partBounds, -partBounds.left, -partBounds.top); // make view-relative coordinates
+					{
+						error = HIViewGetBounds(viewPtr->contentHIView, &partBounds);
+						if (noErr == error)
+						{
+							result = noErr;
+						}
+						else
+						{
+							result = eventNotHandledErr;
+						}
+					}
 					break;
 				
 				case kControlOpaqueMetaPart:
+				#if 0
 					// the text area is designed to draw on top of a background widget,
 					// so in general it is not really considered opaque anywhere (this
 					// could be changed for certain cases, however)
-					bzero(&partBounds, sizeof(partBounds));
+					partBounds = CGRectZero;
+				#else
+					// IMPORTANT: after transitioning to Core Graphics and precise
+					// pixels, drawing artifacts appear if the view attempts to
+					// merge its drawing with the background view; this will not
+					// be resolved for Carbon, it will simply be handled in the
+					// Cocoa version (and the view is opaque in the meantime); see
+					// also the drawing handler for the background fill
+					{
+						error = HIViewGetBounds(viewPtr->contentHIView, &partBounds);
+						if (noErr == error)
+						{
+							result = noErr;
+						}
+						else
+						{
+							result = eventNotHandledErr;
+						}
+					}
+				#endif
 					break;
 				
 				case kTerminalView_ContentPartCursor:
@@ -11383,12 +11112,13 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 					break;
 				
 				case kTerminalView_ContentPartCursorGhost:
-					partBounds = viewPtr->screen.cursor.ghostBounds;
+					// (note: never implemented)
+					partBounds = viewPtr->screen.cursor.bounds;
 					break;
 				
 				case kTerminalView_ContentPartVoid:
 				default:
-					bzero(&partBounds, sizeof(partBounds));
+					partBounds = CGRectZero;
 					break;
 				}
 				
@@ -11403,25 +11133,72 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				
 				//Console_WriteValue("request was for region code", partNeedingRegion);
 				//Console_WriteValueFloat4("returned terminal view region bounds",
-				//							STATIC_CAST(partBounds.left, Float32),
-				//							STATIC_CAST(partBounds.top, Float32),
-				//							STATIC_CAST(partBounds.right, Float32),
-				//							STATIC_CAST(partBounds.bottom, Float32));
+				//							partBounds.origin.x, partBounds.origin.y,
+				//							partBounds.size.width, partBounds.size.height);
 				
-				// modify the given region, which effectively returns the boundaries to the caller
-				if (noErr == result)
+				if (kIsBounds)
 				{
+					// set rectangular bounds
+					result = SetEventParameter(inEvent, kEventParamControlPartBounds,
+												typeHIRect, sizeof(partBounds), &partBounds);
+				}
+				else
+				{
+					// set region/shape
 					RgnHandle	regionToSet = nullptr;
-					OSStatus	error = noErr;
+					Boolean		setRegion = false;
 					
 					
-					error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlRegion, typeQDRgnHandle,
-																	regionToSet);
-					if (noErr != error) result = eventNotHandledErr;
+					if (prefersShape)
+					{
+						HIShapeRef		shapeToReturn = HIShapeCreateWithRect(&partBounds);
+						
+						
+						if (nullptr == shapeToReturn)
+						{
+							setRegion = true;
+						}
+						else
+						{
+							error = SetEventParameter(inEvent, kEventParamShape,
+														typeHIShapeRef, sizeof(shapeToReturn), &shapeToReturn);
+							if (noErr != error)
+							{
+								setRegion = true;
+							}
+							else
+							{
+								result = noErr;
+							}
+							
+							// shape is retained by the system
+							CFRelease(shapeToReturn); shapeToReturn = nullptr;
+						}
+					}
 					else
 					{
-						RectRgn(regionToSet, &partBounds);
-						result = noErr;
+						setRegion = true;
+					}
+					
+					if (setRegion)
+					{
+						error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlRegion, typeQDRgnHandle,
+																		regionToSet);
+						if (noErr != error)
+						{
+							result = eventNotHandledErr;
+						}
+						else
+						{
+							Rect	intRect;
+							
+							
+							RegionUtilities_SetRect(&intRect, 0, 0, STATIC_CAST(partBounds.size.width, SInt16),
+													STATIC_CAST(partBounds.size.height, SInt16));
+							// modify the given region, which effectively returns the boundaries to the caller
+							RectRgn(regionToSet, &intRect);
+							result = noErr;
+						}
 					}
 				}
 			}
@@ -11535,22 +11312,48 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 							// otherwise, it will cause the selection to be cancelled
 							if (viewPtr->text.selection.exists)
 							{
-								RgnHandle	dragRgn = nullptr;
+								HIShapeRef	selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
+								RgnHandle	dragRgn = NewRgn();
+								OSStatus	error = noErr;
 								
 								
-								dragRgn = getSelectedTextAsNewRegion(viewPtr);
-								if (dragRgn != nullptr)
+								if (nullptr == selectionShape)
+								{
+									error = memPCErr;
+								}
+								else
+								{
+									error = HIShapeGetAsQDRgn(selectionShape, dragRgn);
+								}
+								
+								if (noErr == error)
 								{
 									mouseInSelection = PtInRgn(localMouse, dragRgn);
 									if ((mouseInSelection) && WaitMouseMoved(localMouse))
 									{
 										EventRecord		event;
+										Point			convertedOrigin;
 										
 										
 										// the user has attempted to drag text; track the drag
 										SetPortWindowPort(GetControlOwner(view));
-										LocalToGlobalRegion(dragRgn);
-										OutlineRegion(dragRgn);
+										RegionUtilities_SetPoint(&convertedOrigin, 0, 0);
+										screenToLocal(viewPtr, &convertedOrigin.h, &convertedOrigin.v);
+										LocalToGlobal(&convertedOrigin);
+										OffsetRgn(dragRgn, convertedOrigin.h, convertedOrigin.v);
+										{
+											// convert the region into an outline 
+											RgnHandle	tempRgn = NewRgn();
+											
+											
+											if (tempRgn != nullptr)
+											{
+												CopyRgn(dragRgn, tempRgn);
+												InsetRgn(tempRgn, 1, 1);
+												DiffRgn(dragRgn, tempRgn, dragRgn);
+												DisposeRgn(tempRgn), tempRgn = nullptr;
+											}
+										}
 										event.where = localMouse;
 										SetPortWindowPort(GetControlOwner(view));
 										LocalToGlobal(&event.where);
@@ -11564,7 +11367,8 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										// no drag, but unshifted click; cancel the selection
 										TerminalView_SelectNothing(viewPtr->selfRef);
 									}
-									DisposeRgn(dragRgn), dragRgn = nullptr;
+									DisposeRgn(dragRgn); dragRgn = nullptr;
+									CFRelease(selectionShape); selectionShape = nullptr;
 								}
 							}
 							
@@ -12068,6 +11872,12 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				invalidateRowSection(viewPtr, i, rangeInfoPtr->firstColumn, rangeInfoPtr->columnCount);
 			}
+			
+			// when multiple rows change, just redraw everything
+			if (rangeInfoPtr->rowCount > 1)
+			{
+				updateDisplay(viewPtr);
+			}
 		}
 		break;
 	
@@ -12079,7 +11889,7 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (viewPtr->animation.timer.isActive)
 			{
-				SetEmptyRgn(viewPtr->animation.rendering.region);
+				UNUSED_RETURN(OSStatus)HIShapeSetEmpty(viewPtr->animation.rendering.region);
 			}
 			recalculateCachedDimensions(viewPtr);
 			
@@ -12087,6 +11897,8 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			viewPtr->text.selection.range.first.second += rangeInfoPtr->rowDelta;
 			viewPtr->text.selection.range.second.second += rangeInfoPtr->rowDelta;
 			highlightCurrentSelection(viewPtr, true/* highlight */, true/* draw */);
+			
+			updateDisplay(viewPtr);
 		}
 		break;
 	
@@ -12141,8 +11953,33 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			(inTerminalChange == kTerminal_ChangeCursorState));
 	if (viewPtr->screen.cursor.currentState != kMyCursorStateInvisible)
 	{
-		// when moving or hiding/showing the cursor, invalidate its original rectangle
-		updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+		//
+		// IMPORTANT: An odd inefficiency crops up in Cocoa views if the two
+		// cursor rectangles are simply invalidated: a request is generated
+		// to refresh the entire region of text in between the two cursor
+		// positions!  This is because Cocoa likes to refresh a few large
+		// rectangles instead of lots of small ones; that might make sense
+		// when the update region forms a strange shape but it’s overkill
+		// for two cursor locations that really are tiny rectangles.  To
+		// make updating more sensible, the cursor shapes are rendered
+		// immediately without altering the update-region.
+		//
+		
+		if (viewPtr->isCocoa)
+		{
+			CGRect		oldCursorRect = CGRectZero;
+			
+			
+			UNUSED_RETURN(CGRect*)HIShapeGetBounds(viewPtr->screen.cursor.updatedShape, &oldCursorRect);
+			[viewPtr->contentNSView displayRect:NSRectFromCGRect(oldCursorRect)];
+		}
+		else
+		{
+			// when moving or hiding/showing the cursor, invalidate its original rectangle
+			updateDisplayInShape(viewPtr, viewPtr->screen.cursor.updatedShape);
+		}
+		
+		//UNUSED_RETURN(OSStatus)HIShapeEnumerate(viewPtr->screen.cursor.updatedShape, kHIShapeParseFromTopLeft, Console_WriteShapeElement, nullptr/* ref. con. */); // debug
 		if (inTerminalChange == kTerminal_ChangeCursorLocation)
 		{
 			// in addition, when moving, recalculate the new bounds and invalidate again
@@ -12159,8 +11996,17 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			else
 			{
 				//Console_WriteValuePair("notification passed new location", cursorX, cursorY);
-				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.boundsAsRegion);
-				updateDisplayInRegion(viewPtr, viewPtr->screen.cursor.boundsAsRegion);
+				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.updatedShape);
+				//UNUSED_RETURN(OSStatus)HIShapeEnumerate(viewPtr->screen.cursor.updatedShape, kHIShapeParseFromTopLeft, Console_WriteShapeElement, nullptr/* ref. con. */); // debug
+				
+				if (viewPtr->isCocoa)
+				{
+					[viewPtr->contentNSView displayRect:NSRectFromCGRect(viewPtr->screen.cursor.bounds)];
+				}
+				else
+				{
+					updateDisplayInShape(viewPtr, viewPtr->screen.cursor.updatedShape);
+				}
 			}
 		}
 	}
@@ -12205,30 +12051,6 @@ screenToLocal	(My_TerminalViewPtr		inTerminalViewPtr,
 		(*inoutVerticalPixelOffsetFromScreenOrigin) += origin.v;
 	}
 }// screenToLocal
-
-
-/*!
-Translates a boundary in the coordinate system of a
-screen so that it is relative to the origin of the
-window itself.  In version 2.6, the program always
-assumed that the screen origin was the top-left
-corner of the window, which made it extremely hard
-to change.  Now, this routine is invoked everywhere
-to ensure that, before pixel offsets are used to
-refer to the screen, they are translated correctly.
-
-(3.0)
-*/
-void
-screenToLocalRect	(My_TerminalViewPtr		inTerminalViewPtr,
-					 Rect*					inoutScreenOriginBoundsPtr)
-{
-	if (inoutScreenOriginBoundsPtr != nullptr)
-	{
-		screenToLocal(inTerminalViewPtr, &inoutScreenOriginBoundsPtr->left, &inoutScreenOriginBoundsPtr->top);
-		screenToLocal(inTerminalViewPtr, &inoutScreenOriginBoundsPtr->right, &inoutScreenOriginBoundsPtr->bottom);
-	}
-}// screenToLocalRect
 
 
 /*!
@@ -12307,7 +12129,7 @@ setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 		// redraw the cursor if necessary
 		if (renderCursor)
 		{
-			updateDisplayInRegion(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.boundsAsRegion);
+			updateDisplayInShape(inTerminalViewPtr, inTerminalViewPtr->screen.cursor.updatedShape);
 		}
 	}
 }// setCursorVisibility
@@ -12436,7 +12258,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		else
 		{
 			setUpCursorBounds(inTerminalViewPtr, cursorX, cursorY, &inTerminalViewPtr->screen.cursor.bounds,
-								inTerminalViewPtr->screen.cursor.boundsAsRegion);
+								inTerminalViewPtr->screen.cursor.updatedShape);
 		}
 	}
 	
@@ -12835,8 +12657,8 @@ of the terminal cursor if it were located at the specified
 row and column in the terminal screen.
 
 It is usually a good idea to also precalculate an equivalent
-region for the rectangle; if so, pass a valid region for
-"inoutBoundsRegionOrNull".		
+update shape for the rectangle; if so, pass a valid mutable
+shape for "inoutUpdatedShapeOrNull".		
 
 (3.0)
 */
@@ -12844,8 +12666,8 @@ void
 setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 					 SInt16						inX,
 					 SInt16						inY,
-					 Rect*						outBoundsPtr,
-					 RgnHandle					inoutBoundsRegionOrNull,
+					 CGRect*					outBoundsPtr,
+					 HIMutableShapeRef			inoutUpdatedShapeOrNull,
 					 TerminalView_CursorType	inTerminalCursorType)
 {
 	enum
@@ -12853,16 +12675,14 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		// cursor dimensions, in pixels
 		// (NOTE: these currently hack in Quartz/QuickDraw conversion factors
 		// and will eventually change)
-		kTerminalCursorUnderscoreHeight = 4,
-		kTerminalCursorThickUnderscoreHeight = 6,
-		kTerminalCursorVerticalLineWidth = 4,
-		kTerminalCursorThickVerticalLineWidth = 6
+		kTerminalCursorUnderscoreHeight = 1,
+		kTerminalCursorThickUnderscoreHeight = 2,
+		kTerminalCursorVerticalLineWidth = 1,
+		kTerminalCursorThickVerticalLineWidth = 2
 	};
-	
 	
 	Point						characterSizeInPixels; // based on font metrics
 	Rect						rowBounds;
-	Rect						maximumCursorBounds;
 	UInt16						thickness = 0; // used for non-block-shaped cursors
 	TerminalView_CursorType		terminalCursorType = inTerminalCursorType;
 	
@@ -12879,13 +12699,8 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	RegionUtilities_SetPoint(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY).integralPixels(),
 								rowBounds.bottom - rowBounds.top);
 	
-	outBoundsPtr->left = inX * characterSizeInPixels.h;
-	outBoundsPtr->top = rowBounds.top;
-	
-	maximumCursorBounds.left = outBoundsPtr->left;
-	maximumCursorBounds.top = rowBounds.top;
-	maximumCursorBounds.bottom = maximumCursorBounds.top + characterSizeInPixels.v;
-	maximumCursorBounds.right = maximumCursorBounds.left + characterSizeInPixels.h;
+	outBoundsPtr->origin.x = inX * characterSizeInPixels.h;
+	outBoundsPtr->origin.y = rowBounds.top;
 	
 	switch (terminalCursorType)
 	{
@@ -12894,9 +12709,9 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		thickness = (terminalCursorType == kTerminalView_CursorTypeUnderscore)
 						? kTerminalCursorUnderscoreHeight
 						: kTerminalCursorThickUnderscoreHeight;
-		outBoundsPtr->top += (characterSizeInPixels.v - thickness);
-		outBoundsPtr->right = outBoundsPtr->left + characterSizeInPixels.h;	
-		outBoundsPtr->bottom = outBoundsPtr->top + thickness;
+		outBoundsPtr->origin.y += (characterSizeInPixels.v - thickness);
+		outBoundsPtr->size.width = characterSizeInPixels.h;	
+		outBoundsPtr->size.height = thickness;
 		break;
 	
 	case kTerminalView_CursorTypeVerticalLine:
@@ -12904,28 +12719,31 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		thickness = (terminalCursorType == kTerminalView_CursorTypeVerticalLine)
 						? kTerminalCursorVerticalLineWidth
 						: kTerminalCursorThickVerticalLineWidth;
-		outBoundsPtr->right = outBoundsPtr->left + thickness;
-		outBoundsPtr->bottom = outBoundsPtr->top + characterSizeInPixels.v;
+		outBoundsPtr->size.width = thickness;
+		outBoundsPtr->size.height = characterSizeInPixels.v;
 		break;
 	
 	case kTerminalView_CursorTypeBlock:
 	default:
-		outBoundsPtr->right = outBoundsPtr->left + characterSizeInPixels.h;
-		outBoundsPtr->bottom = outBoundsPtr->top + characterSizeInPixels.v;
+		outBoundsPtr->size.width = characterSizeInPixels.h;
+		outBoundsPtr->size.height = characterSizeInPixels.v;
 		break;
 	}
 	
-	if (nullptr != inoutBoundsRegionOrNull)
+	if (nullptr != inoutUpdatedShapeOrNull)
 	{
-		// TEMPORARY; not clear why correctional factors are needed now
-		// but it seems that QuickDraw update regions interact badly
-		// with Core Graphics drawings and trigger anti-aliasing effects
-		// unless they are forced to overlap all filled-rectangle edges
-		maximumCursorBounds.top -= 1;
-		maximumCursorBounds.left -= 1;
-		maximumCursorBounds.right += 2;
-		maximumCursorBounds.bottom += 3;
-		RectRgn(inoutBoundsRegionOrNull, &maximumCursorBounds);
+		CGRect		updatedBounds;
+		
+		
+		// specify the update region for the cursor (always full-size because
+		// it may need to erase a previous cursor when changing cursor shape)
+		updatedBounds.origin.x = (outBoundsPtr->origin.x);
+		updatedBounds.origin.y = (rowBounds.top);
+		updatedBounds.size.width = (characterSizeInPixels.h);
+		updatedBounds.size.height = (characterSizeInPixels.v);
+		updatedBounds = CGRectIntegral(updatedBounds);
+		UNUSED_RETURN(OSStatus)HIShapeSetEmpty(inoutUpdatedShapeOrNull);
+		UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(inoutUpdatedShapeOrNull, &updatedBounds);
 	}
 }// setUpCursorBounds
 
@@ -13468,6 +13286,8 @@ updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
 		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
 	}
+	
+	UNUSED_RETURN(OSStatus)HIShapeSetEmpty(inTerminalViewPtr->screen.refreshRegion);
 }// updateDisplay
 
 
@@ -13476,16 +13296,19 @@ Arranges for the specified portion of the terminal screen to be
 redrawn at the next opportunity.  The region should be relative
 to the main content view.
 
-(4.0)
+(2017.11)
 */
 void
-updateDisplayInRegion	(My_TerminalViewPtr		inTerminalViewPtr,
-						 RgnHandle				inoutRegion)
+updateDisplayInShape	(My_TerminalViewPtr		inTerminalViewPtr,
+						 HIShapeRef				inRegion)
 {
 	// it is potentially slow to call HIViewSetNeedsDisplay() here, so instead
 	// an internal region is maintained and refreshed regularly via a timer
-	UnionRgn(inTerminalViewPtr->screen.refreshRegion, inoutRegion, inTerminalViewPtr->screen.refreshRegion);
-}// updateDisplayInRegion
+	UNUSED_RETURN(OSStatus)HIShapeUnion(inTerminalViewPtr->screen.refreshRegion, inRegion, inTerminalViewPtr->screen.refreshRegion);
+	
+	// if necessary for debugging, dump the new shape of the update region
+	//UNUSED_RETURN(OSStatus)HIShapeEnumerate(inTerminalViewPtr->screen.refreshRegion, kHIShapeParseFromTopLeft, Console_WriteShapeElement, nullptr/* ref. con. */); // debug
+}// updateDisplayInShape
 
 
 /*!
@@ -13509,20 +13332,18 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), ref);
 	
 	
-	if (false == EmptyRgn(ptr->screen.refreshRegion))
+	if (false == HIShapeIsEmpty(ptr->screen.refreshRegion))
 	{
 		if (ptr->isCocoa)
 		{
-			Rect	regionBounds;
+			CGRect	regionBounds;
 			NSRect	floatBounds;
 			
 			
 			// invalidate the same screen region in all views
 			// (requires translation into each view’s space)
-			GetRegionBounds(ptr->screen.refreshRegion, &regionBounds);
-			floatBounds = NSMakeRect(regionBounds.left, regionBounds.top,
-										regionBounds.right - regionBounds.left,
-										regionBounds.bottom - regionBounds.top);
+			UNUSED_RETURN(CGRect*)HIShapeGetBounds(ptr->screen.refreshRegion, &regionBounds);
+			floatBounds = NSRectFromCGRect(regionBounds);
 			[ptr->contentNSView setNeedsDisplayInRect:floatBounds];
 			
 			floatBounds = [ptr->paddingNSView convertRect:floatBounds fromView:ptr->contentNSView];
@@ -13538,25 +13359,15 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			
 			if (IsValidControlHandle(currentView))
 			{
-				// no need to convert for first view, input region is assumed
-				// to already be in its coordinate system
-				UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInRegion(currentView, ptr->screen.refreshRegion, true);
-				{
-					My_RegionConverter	contentToPadding(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
-					
-					
-					UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInRegion(contentToPadding.destination, ptr->screen.refreshRegion, true);
-					currentView = HIViewGetSuperview(currentView);
-					{
-						My_RegionConverter	paddingToBackground(ptr->screen.refreshRegion, currentView, HIViewGetSuperview(currentView), true/* translate back */);
-						
-						
-						UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInRegion(paddingToBackground.destination, ptr->screen.refreshRegion, true);
-					}
-				}
+				//UNUSED_RETURN(OSStatus)HIViewSetSubviewsNeedDisplayInShape(currentView, ptr->screen.refreshRegion, true);
+				UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInShape(currentView, ptr->screen.refreshRegion, true);
+				
+				// if necessary for debugging, dump the shape of the update region
+				//UNUSED_RETURN(OSStatus)HIShapeEnumerate(ptr->screen.refreshRegion, kHIShapeParseFromTopLeft, Console_WriteShapeElement, nullptr/* ref. con. */); // debug
 			}
 		}
-		SetEmptyRgn(ptr->screen.refreshRegion);
+		
+		UNUSED_RETURN(OSStatus)HIShapeSetEmpty(ptr->screen.refreshRegion);
 	}
 }// updateDisplayTimer
 
@@ -14635,20 +14446,6 @@ drawRect:(NSRect)	aRect
 				OSStatus		error = noErr;
 				
 				
-				// TEMPORARY - account for QuickDraw/Quartz differences until conversion is complete
-				{
-					HIMutableShapeRef		offsetCopy = HIShapeCreateMutableCopy(selectionShape);
-					
-					
-					if (nullptr != offsetCopy)
-					{
-						HIShapeOffset(offsetCopy, -1.0, -1.0);
-						
-						CFRelease(selectionShape), selectionShape = nullptr;
-						selectionShape = offsetCopy;
-					}
-				}
-				
 				// draw outline
 				CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
 				CGContextSetLineCap(drawingContext, kCGLineCapRound);
@@ -14699,14 +14496,7 @@ drawRect:(NSRect)	aRect
 		{
 			CGContextSaveRestore		_(drawingContext);
 			TextAttributes_Object		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-			CGRect						cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
-																		viewPtr->screen.cursor.bounds.top,
-																		viewPtr->screen.cursor.bounds.right -
-																			viewPtr->screen.cursor.bounds.left
-																			- 2/* TEMPORARY Quartz/QD conversion */,
-																		viewPtr->screen.cursor.bounds.bottom -
-																			viewPtr->screen.cursor.bounds.top
-																			- 2/* TEMPORARY Quartz/QD conversion */);
+			CGRect						cursorFloatBounds = viewPtr->screen.cursor.bounds;
 			
 			
 			// flip colors and paint at the current blink alpha value
@@ -14723,7 +14513,7 @@ drawRect:(NSRect)	aRect
 									cursorBlinks(viewPtr)
 									? viewPtr->animation.cursor.blinkAlpha
 									: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
-			CGContextFillRect(drawingContext, cursorFloatBounds);
+			CGContextFillRect(drawingContext, CGRectIntegral(cursorFloatBounds));
 			
 			// if the terminal is currently in password mode, annotate the cursor
 			if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
@@ -14740,7 +14530,6 @@ drawRect:(NSRect)	aRect
 				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
 				fullRectangleBounds.size.height = newHeight;
 				RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
-				++dotBounds.origin.x; // TEMPORARY: figure out why this correction seems necessary
 				
 				// draw the dot in the middle of the cell that the cursor occupies
 				if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
@@ -14764,6 +14553,53 @@ drawRect:(NSRect)	aRect
 			// render cursor ghost
 			// UNIMPLEMENTED
 		}
+		
+		// debug: show the update region as a solid color
+	#if 0
+		{
+			static UInt16	colorCounter = 0;
+			CGDeviceColor	debugColor = { 0.0, 0.0, 0.0 };
+			
+			
+			// rotate through a few different colors so that
+			// adjacent updates in different areas are more likely
+			// to be seen as distinct
+			++colorCounter;
+			if (1 == colorCounter)
+			{
+				debugColor = { 1.0, 0.0, 0.0 };
+			}
+			else if (2 == colorCounter)
+			{
+				debugColor = { 0.0, 1.0, 0.0 };
+			}
+			else if (3 == colorCounter)
+			{
+				debugColor = { 1.0, 1.0, 0.0 };
+			}
+			else if (4 == colorCounter)
+			{
+				debugColor = { 0.0, 0.0, 1.0 };
+			}
+			else if (5 == colorCounter)
+			{
+				debugColor = { 0.5, 0.5, 0.5 };
+			}
+			else
+			{
+				colorCounter = 0;
+			}
+			
+			if (0 != colorCounter)
+			{
+				CGContextSetRGBFillColor(drawingContext, debugColor.red, debugColor.green,
+											debugColor.blue, 1.0/* alpha */);
+				CGContextSetAllowsAntialiasing(drawingContext, false);
+				CGContextFillRect(drawingContext, clipBounds);
+				CGContextSetAllowsAntialiasing(drawingContext, true);
+			}
+		}
+	#endif
 	}
 }// drawRect:
 

@@ -398,26 +398,6 @@ RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
 
 
 /*!
-Converts a region to global coordinates by translating
-the origin of its bounding box relative to that of the
-current QuickDraw graphics port (owning window’s
-content region).
-
-(2.6)
-*/
-void
-RegionUtilities_LocalToGlobal	(RgnHandle		inoutRegion)
-{
-	Point	where;
-	
-	
-	RegionUtilities_SetPoint(&where, 0, 0);
-	LocalToGlobal(&where);
-	OffsetRgn(inoutRegion, where.h, where.v);
-}// RegionUtilities_LocalToGlobal
-
-
-/*!
 Returns true only if the specified points are equal or
 “close”, as defined by the user interface guidelines
 for the amount the mouse can move in any direction and
