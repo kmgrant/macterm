@@ -390,28 +390,33 @@ setAsForegroundInQDCurrentPort
 
 
 #pragma mark -
-@implementation CocoaExtensions_ObserverSpec //{
+@implementation NSImage (CocoaExtensions_NSImage) //{
 
 
-@synthesize context = _context;
-@synthesize keyPath = _keyPath;
-@synthesize observedObject = _observedObject;
+#pragma mark New Methods
 
 
 /*!
-Destructor.
+Creates a new image out of a portion of this image.
 
-(2016.09)
+(2017.11)
 */
-- (void)
-dealloc
+- (NSImage*)
+imageFromSubRect:(NSRect)	aRect
 {
-	[_keyPath release];
-	[super dealloc];
-}// dealloc
+	NSImage*	result = [[[NSImage alloc]
+							initWithSize:aRect.size] autorelease];
+	
+	
+	[result lockFocus];
+	[self drawAtPoint:NSZeroPoint fromRect:aRect operation:NSCompositeCopy fraction:1.0];
+	[result unlockFocus];
+	
+	return result;
+}// imageFromSubRect
 
 
-@end //} CocoaExtensions_ObserverSpec
+@end //} 
 
 
 #pragma mark -
@@ -842,5 +847,30 @@ localToGlobalRelativeToTopForPoint:(NSPoint)	aLocalPoint
 
 
 @end //} NSWindow (CocoaExtensions_NSWindow)
+
+
+#pragma mark -
+@implementation CocoaExtensions_ObserverSpec //{
+
+
+@synthesize context = _context;
+@synthesize keyPath = _keyPath;
+@synthesize observedObject = _observedObject;
+
+
+/*!
+Destructor.
+
+(2016.09)
+*/
+- (void)
+dealloc
+{
+	[_keyPath release];
+	[super dealloc];
+}// dealloc
+
+
+@end //} CocoaExtensions_ObserverSpec
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

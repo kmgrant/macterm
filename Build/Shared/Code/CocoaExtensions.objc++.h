@@ -74,6 +74,15 @@
 @end //}
 
 
+@interface NSImage (CocoaExtensions_NSImage) //{
+
+// new methods
+	- (NSImage*)
+	imageFromSubRect:(NSRect)_;
+
+@end //}
+
+
 @interface NSInvocation (CocoaExtensions_NSInvocation) //{
 
 // class methods
@@ -160,17 +169,6 @@ to precisely remove the observer later.
 @end //}
 
 
-@interface NSView (CocoaExtensions_NSView) //{
-
-// new methods
-	- (BOOL)
-	isKeyboardFocusInSubtree;
-	- (BOOL)
-	isKeyboardFocusOnSelf;
-
-@end //}
-
-
 @interface NSValue (CocoaExtensions_NSValue) //{
 
 // class methods: Core Graphics data
@@ -180,6 +178,17 @@ to precisely remove the observer later.
 	valueWithCGRect:(CGRect)_;
 	+ (NSValue*)
 	valueWithCGSize:(CGSize)_;
+
+@end //}
+
+
+@interface NSView (CocoaExtensions_NSView) //{
+
+// new methods
+	- (BOOL)
+	isKeyboardFocusInSubtree;
+	- (BOOL)
+	isKeyboardFocusOnSelf;
 
 @end //}
 
