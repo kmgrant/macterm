@@ -67,6 +67,7 @@ extern "C"
 #import <AlertMessages.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
+#import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
@@ -386,7 +387,8 @@ enum My_AttributeRule
 {
 	kMy_AttributeRuleInitialize				= 0,	//!< newly-created lines have cleared attributes
 	kMy_AttributeRuleCopyLast				= 1,	//!< newly-created lines copy all of the attributes of the line that used to be at the end (or, for
-													//!  insertions of characters on a single line, new characters copy the attributes of the last character)
+													//!  insertions of characters on a single line, new characters copy the attributes of the last character);
+													//!  special exceptions are made to NOT copy certain attributes such as bitmap IDs
 	kMy_AttributeRuleCopyLatentBackground	= 2		//!< newly-created lines or characters have cleared attributes EXCEPT they copy the latent background color
 };
 
@@ -1033,7 +1035,7 @@ public:
 																//!  support all characters, making alternate sets unnecessary), but it is a separate state anyway
 	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
 	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
-	UInt32								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
+	UInt64								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
 	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
@@ -1060,7 +1062,8 @@ public:
 	My_RGBComponentList*				trueColorTableBlues;	//!< blue components for all 24-bit colors; allocated only for supporting terminals
 	UInt16								trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
 	UInt16								bitmapTableNextID;		//!< basis for new IDs; current entry for storing new bitmaps in bitmap table
-	NSMutableArray*						bitmapTableBitmapReps;	//!< NSArray of NSBitmapImageRep*; bitmaps by index (ID)
+	NSMutableArray*						bitmapImageTable;		//!< NSArray of NSImage*; shared (“whole image”) bitmap representations by index (ID)
+	NSMutableArray*						bitmapSegmentTable;		//!< NSArray of NSImage*; single-cell bitmap representations by index (ID)
 
 protected:
 	My_EmulatorEchoDataProcPtr
@@ -1356,9 +1359,6 @@ pre-callback.  Implements the Sixel graphics sequences.
 class My_SixelCore
 {
 public:
-	static NSInteger const		kDefaultCellPixelsH = 15; //!< number of dots across to define a terminal cell at normal width
-	static NSInteger const		kDefaultCellPixelsV = 12; //!< number of dots down to define a terminal cell at normal height
-	
 	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
 	
@@ -1818,7 +1818,7 @@ My_ScreenBufferLinePtr		createLinePtr							();
 void						cursorRestore							(My_ScreenBufferPtr);
 void						cursorSave								(My_ScreenBufferPtr);
 void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
-Boolean						defineBitmap							(My_ScreenBufferPtr, TextAttributes_BitmapID&);
+Boolean						defineBitmap							(My_ScreenBufferPtr, NSImage*, NSRect, TextAttributes_BitmapID&);
 Boolean						defineTrueColor							(My_ScreenBufferPtr, UInt8, UInt8, UInt8, TextAttributes_TrueColorID&);
 void						deleteLinePtr							(My_ScreenBufferLinePtr&);
 void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
@@ -2243,13 +2243,13 @@ if the specified terminal was not configured for bitmaps
 Terminal_Result
 Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
 							 TextAttributes_BitmapID	inID,
-							 NSBitmapImageRep*&			outImageRepresentation)
+							 NSImage*&					outImageObject)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
-	outImageRepresentation = nil; // initially...
+	outImageObject = nil; // initially...
 	
 	if (nullptr == dataPtr)
 	{
@@ -2257,14 +2257,14 @@ Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
 	}
 	else
 	{
-		if (inID > kTextAttributes_BitmapIDMaximum)
+		if ((nil == dataPtr->emulator.bitmapSegmentTable) ||
+			(inID >= dataPtr->emulator.bitmapSegmentTable.count))
 		{
 			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
-			// INCOMPLETE; 
-			result = kTerminal_ResultUnsupported;
+			outImageObject = [dataPtr->emulator.bitmapSegmentTable objectAtIndex:inID];
 		}
 	}
 	
@@ -3120,7 +3120,8 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 									}
 									else if (states.second == My_SixelCore::kStateGraphicsAcquireStr)
 									{
-										static UInt32 const		kMaxBytesPerImage = (2048 * 1024); // arbitrary (TEMPORARY; make user-configurable?)
+										// arbitrarily allow massive image data sizes (TEMPORARY; make user-configurable?)
+										static UInt64 const		kMaxBytesPerImage = (20 * 1024 * 1024);
 										
 										
 										interrupt = (dataPtr->emulator.stateRepetitions > kMaxBytesPerImage);
@@ -5931,7 +5932,8 @@ trueColorTableGreens(nullptr),
 trueColorTableBlues(nullptr),
 trueColorTableNextID(0),
 bitmapTableNextID(0),
-bitmapTableBitmapReps(nil),
+bitmapImageTable(nil),
+bitmapSegmentTable(nil),
 eightBitReceiver(false),
 eightBitTransmitter(false),
 lockSevenBitTransmit(false)
@@ -5952,7 +5954,8 @@ My_Emulator::~My_Emulator()
 	delete trueColorTableReds;
 	delete trueColorTableGreens;
 	delete trueColorTableBlues;
-	[bitmapTableBitmapReps release];
+	[bitmapImageTable release];
+	[bitmapSegmentTable release];
 }// My_Emulator destructor
 
 
@@ -8739,10 +8742,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			{
 				//Console_WriteLine("stopped reading Sixel data"); // debug
 				
-				UInt16		aspectRatioV = 2; // see below
-				UInt16		aspectRatioH = 1; // see below
-				Boolean		zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]); // otherwise, they change to the background color
+				SixelDecoder_StateMachine	sixelDecoder;
+				Boolean						zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]); // otherwise, they change to the background color
 				
+				
+				sixelDecoder.aspectRatioV = 2; // see below
+				sixelDecoder.aspectRatioH = 1; // see below
 				
 				if (zeroValuePixelsKeepColor)
 				{
@@ -8753,21 +8758,21 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				switch (inDataPtr->emulator.argList[0])
 				{
 				case 2:
-					aspectRatioV = 5;
-					aspectRatioH = 1;
+					sixelDecoder.aspectRatioV = 5;
+					sixelDecoder.aspectRatioH = 1;
 					break;
 				
 				case 3:
 				case 4:
-					aspectRatioV = 3;
-					aspectRatioH = 1;
+					sixelDecoder.aspectRatioV = 3;
+					sixelDecoder.aspectRatioH = 1;
 					break;
 				
 				case 7:
 				case 8:
 				case 9:
-					aspectRatioV = 1;
-					aspectRatioH = 1;
+					sixelDecoder.aspectRatioV = 1;
+					sixelDecoder.aspectRatioH = 1;
 					break;
 				
 				case 0:
@@ -8779,8 +8784,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					break;
 				}
 				
-				Console_WriteValue("set Sixel aspect ratio height to", aspectRatioV);
-				Console_WriteValue("set Sixel aspect ratio width to", aspectRatioH);
+				Console_WriteValue("default pan (Sixel aspect ratio height) set to", sixelDecoder.aspectRatioV);
+				Console_WriteValue("default pad (Sixel aspect ratio width) set to", sixelDecoder.aspectRatioH);
 				
 				if (inDataPtr->emulator.argList[2] >= 0)
 				{
@@ -8789,8 +8794,18 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				// parse the Sixel data
 				{
-					SixelDecoder_StateMachine	sixelDecoder;
-					size_t						processedBytes = 0;
+					// NOTE: the dimensions and ratio values chosen by default are
+					// based on what the VT300 series uses for 80-column mode; it
+					// may eventually be good to vary these values based on the
+					// purpose of input Sixel data (for instance, 132-column mode
+					// apparently uses 9 pixels wide instead of 15, and if custom
+					// character sets are ever supported then their default pixel
+					// height is 3:1 over the width)  
+					UInt16		defaultCellPixelsH = 15; // number of dots across to define a terminal cell at normal width
+					UInt16		defaultCellPixelsV = 12; // number of dots down to define a terminal cell at normal height
+					UInt16		sixelSizeH = 1; // number of normal pixels occupied horizontally for each “sixel”
+					UInt16		sixelSizeV = 1; // number of normal pixels occupied vertically for each “sixel”
+					size_t		processedBytes = 0;
 					
 					
 					Console_WriteValueCString("accumulated string", inDataPtr->emulator.stringAccumulator.c_str());
@@ -8825,15 +8840,127 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						Console_Warning(Console_WriteValue, "Sixel decoder did not handle entire data string; bytes left",
 										inDataPtr->emulator.stringAccumulator.size() - processedBytes);
 					}
-					Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
-					Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
-					
-					// determine the terminal cells that will need to have a bitmap association
-					// INCOMPLETE
-					//defineBitmap(inDataPtr, ...);
 					
 					// documentation for VT300 says that an end new-line is automatically added 
 					sixelDecoder.commandVector.push_back('-');
+					++(sixelDecoder.graphicsCursorY);
+					
+					Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
+					Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
+					Console_WriteValue("apparent width in “sixels”", 1 + sixelDecoder.graphicsCursorMaxX);
+					Console_WriteValue("apparent height in “sixels”", 1 + sixelDecoder.graphicsCursorMaxY);
+					Console_WriteValue("final pan (aspect ratio, vertical)", sixelDecoder.aspectRatioV);
+					Console_WriteValue("final pad (aspect ratio, horizontal)", sixelDecoder.aspectRatioH);
+					sixelDecoder.getSixelSize(sixelSizeH, sixelSizeV);
+					Console_WriteValue("calculated “sixel” width", sixelSizeH);
+					Console_WriteValue("calculated “sixel” height", sixelSizeV);
+					
+					// determine the terminal cells that will need to have a bitmap association
+					{
+						UInt16 const	kTotalPixelsH = ((1 + sixelDecoder.graphicsCursorMaxX) * sixelSizeH);
+						UInt16 const	kTotalPixelsV = ((1 + sixelDecoder.graphicsCursorMaxY) * sixelSizeV);
+						UInt16 const	kCellsCoveredH = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(kTotalPixelsH, Float32) /
+																									STATIC_CAST(defaultCellPixelsH, Float32)),
+																							UInt16));
+						UInt16 const	kCellsCoveredV = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(kTotalPixelsV, Float32) /
+																									STATIC_CAST(defaultCellPixelsV, Float32)),
+																							UInt16));
+						NSImage*		completeImage = nil;
+						NSRect			subImageRect = NSZeroRect; // initialized below
+						
+						
+						// INCOMPLETE
+						Console_WriteValue("range of terminal text cells covered by image, horizontally", kCellsCoveredH);
+						Console_WriteValue("range of terminal text cells covered by image, vertically", kCellsCoveredV);
+						
+						// create a single image initially, which is held in case the user
+						// wants to perform any whole-image operations such as Copy; then
+						// assign sections of the image for rendering in different cells
+						{
+							NSInteger const		kBitsPerSample = 8; // currently, 0-255 values defined
+							NSInteger const		kSamplesPerPixel = 4; // red, green, blue, alpha
+							NSInteger const		kBitsPerPixel = (kBitsPerSample * kSamplesPerPixel);
+							NSInteger const		kBytesPerRow = ((kBitsPerPixel / 8) * kTotalPixelsH);
+							NSBitmapImageRep*	bitmapRep = nil;
+							
+							
+							// when the planes are set to "nullptr" at initialization time, the
+							// internal buffer ("bitmapData" property) is owned by the object
+							bitmapRep = [[NSBitmapImageRep alloc]
+											initWithBitmapDataPlanes:nullptr
+																		pixelsWide:kTotalPixelsH
+																		pixelsHigh:kTotalPixelsV
+																		bitsPerSample:kBitsPerSample
+																		samplesPerPixel:kSamplesPerPixel
+																		hasAlpha:YES
+																		isPlanar:NO
+																		colorSpaceName:NSCalibratedRGBColorSpace
+																		bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
+																		bytesPerRow:kBytesPerRow
+																		bitsPerPixel:kBitsPerPixel];
+							completeImage = [[NSImage alloc] initWithSize:NSZeroSize];
+							[completeImage addRepresentation:bitmapRep];
+							completeImage.size = bitmapRep.size;
+							
+							// INCOMPLETE; use parsed commands to set pixel colors 
+						}
+						
+						// initialize first sub-rectangle (rendered by one terminal cell)
+						subImageRect = NSMakeRect(0, completeImage.size.height - defaultCellPixelsH,
+													defaultCellPixelsH, defaultCellPixelsV);
+						
+						// since the image is being rendered inline by the terminal, shift the text
+						// cursor location according to the number of text cells that are occupied
+						UInt16 const		kOriginalCursorX = inDataPtr->current.cursorX;
+						for (UInt16 i = 0; i < kCellsCoveredV; ++i)
+						{
+							My_ScreenBufferLineList::iterator	cursorLineIterator;
+							
+							
+							moveCursorX(inDataPtr, kOriginalCursorX);
+							subImageRect.origin.x = 0;
+							locateCursorLine(inDataPtr, cursorLineIterator);
+							for (UInt16 j = 0; j < kCellsCoveredH; ++j)
+							{
+								TextAttributes_BitmapID		cellBitmapID;
+								// TEMPORARY; for now just set a color to highlight the area
+								TextAttributes_Object		newAttributes = kTextAttributes_StyleInverse;
+								//TextAttributes_Object		newAttributes;
+								
+								
+								// set attributes on all affected text cells to allow them to render their
+								// assigned portion of the overall image
+								if (false == defineBitmap(inDataPtr, completeImage, subImageRect, cellBitmapID))
+								{
+									Console_Warning(Console_WriteLine, "failed to allocate a cell bitmap");
+								}
+								else
+								{
+									newAttributes.bitmapIDForegroundSet(cellBitmapID);
+								}
+								changeLineRangeAttributes(inDataPtr, *(*cursorLineIterator),
+															inDataPtr->current.cursorX, 1 + inDataPtr->current.cursorX,
+															newAttributes/* attributes to set */,
+															TextAttributes_Object(0xFFFFFFFF, 0xFFFFFFFF)/* attributes to clear */);
+								
+								moveCursorRight(inDataPtr);
+								subImageRect.origin.x += subImageRect.size.width;
+							}
+							
+							// scrolling is technically controlled by a terminal parameter sequence
+							// but in the future it may be good to let the user force image scrolling
+							if (inDataPtr->emulator.allowSixelScrolling)
+							{
+								moveCursorDownOrScroll(inDataPtr);
+							}
+							else
+							{
+								moveCursorDown(inDataPtr);
+							}
+							subImageRect.origin.y -= subImageRect.size.height;
+						}
+						[completeImage release]; completeImage = nil;
+					}
 					
 					//Console_WriteLine("final command list:");
 					//for (UInt8 commandChar : sixelDecoder.commandVector)
@@ -14447,9 +14574,16 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			My_ScreenBufferLinePtr		lineTemplate = createLinePtr();
 			
 			
+			// copy attributes of the last character, making a special exception
+			// to prevent bitmaps from being copied
 			std::copy((*inInsertionLine)->returnAttributeVector().begin(),
 						(*inInsertionLine)->returnAttributeVector().end(),
 						lineTemplate->returnMutableAttributeVector().begin());
+			for (auto& attributeFlags : lineTemplate->returnMutableAttributeVector())
+			{
+				attributeFlags.bitmapIDForegroundSet(0);
+				attributeFlags.removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
+			}
 			lineTemplate->returnMutableGlobalAttributes() = (*inInsertionLine)->returnGlobalAttributes();
 			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
 		}
@@ -14646,7 +14780,11 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	copiedAttributes = (*toCursorLine)->returnGlobalAttributes();
 	if (kMy_AttributeRuleCopyLast == inAttributeRule)
 	{
+		// copy attributes of the last character, making a special exception
+		// to prevent bitmaps from being copied
 		copiedAttributes = (*toCursorLine)->returnAttributeVector()[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
+		copiedAttributes.bitmapIDForegroundSet(0);
+		copiedAttributes.removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
 	}
 	else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 	{
@@ -14763,9 +14901,16 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			std::advance(toCopiedLine, -1);
+			// copy attributes of the last character, making a special exception
+			// to prevent bitmaps from being copied
 			std::copy((*toCopiedLine)->returnAttributeVector().begin(),
 						(*toCopiedLine)->returnAttributeVector().end(),
 						lineTemplate->returnMutableAttributeVector().begin());
+			for (auto& attributeFlags : lineTemplate->returnMutableAttributeVector())
+			{
+				attributeFlags.bitmapIDForegroundSet(0);
+				attributeFlags.removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
+			}
 			lineTemplate->returnMutableGlobalAttributes() = (*toCopiedLine)->returnGlobalAttributes();
 			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
 		}
@@ -15031,47 +15176,55 @@ occupy less space than the bitmaps actually occupy.
 */
 Boolean
 defineBitmap	(My_ScreenBufferPtr			inDataPtr,
+				 NSImage*					inSourceImage,
+				 NSRect						inSubRect,
 				 TextAttributes_BitmapID&	outBitmapID)
 {
 	Boolean		result = false;
+	NSImage*	imageObject = [inSourceImage imageFromSubRect:inSubRect];
 	
 	
-	// NOTE: currently no automatic reuse; always define new object
+	// define new ID within range of allowed IDs
 	outBitmapID = inDataPtr->emulator.bitmapTableNextID;
 	if (kTextAttributes_BitmapIDMaximum == inDataPtr->emulator.bitmapTableNextID)
 	{
-		inDataPtr->emulator.bitmapTableNextID = 0;
+		inDataPtr->emulator.bitmapTableNextID = 0; // start reusing IDs
 	}
 	else
 	{
-		// currently a bitmap cell follows the VT300 series’ definition
-		// for 80-column characters, which is 15×12 pixels each
-		NSInteger const		kPixelsWide = My_SixelCore::kDefaultCellPixelsH;
-		NSInteger const		kPixelsHigh = My_SixelCore::kDefaultCellPixelsV;
-		NSInteger const		kBitsPerSample = 8; // currently, 0-255 values defined
-		NSInteger const		kSamplesPerPixel = 4; // red, green, blue, alpha
-		NSInteger const		kBitsPerPixel = (kBitsPerSample * kSamplesPerPixel);
-		NSInteger const		kBytesPerRow = ((kBitsPerPixel / 8) * kPixelsWide);
-		NSBitmapImageRep*	bitmapRep = [[NSBitmapImageRep alloc]
-											initWithBitmapDataPlanes:nullptr
-																		pixelsWide:kPixelsWide
-																		pixelsHigh:kPixelsHigh
-																		bitsPerSample:kBitsPerSample
-																		samplesPerPixel:kSamplesPerPixel
-																		hasAlpha:YES
-																		isPlanar:NO
-																		colorSpaceName:NSCalibratedRGBColorSpace
-																		bytesPerRow:kBytesPerRow
-																		bitsPerPixel:kBitsPerPixel];
-		
-		
 		++(inDataPtr->emulator.bitmapTableNextID);
-		if (nil == inDataPtr->emulator.bitmapTableBitmapReps)
+	}
+	
+	// create bitmap storage if necessary
+	if (nil == inDataPtr->emulator.bitmapImageTable)
+	{
+		inDataPtr->emulator.bitmapImageTable = [[NSMutableArray alloc] init];
+	}
+	if (nil == inDataPtr->emulator.bitmapSegmentTable)
+	{
+		inDataPtr->emulator.bitmapSegmentTable = [[NSMutableArray alloc] init];
+	}
+	
+	// add objects to storage
+	if (nil != imageObject)
+	{
+		result = true;
+		if (inDataPtr->emulator.bitmapTableNextID >= inDataPtr->emulator.bitmapSegmentTable.count)
 		{
-			inDataPtr->emulator.bitmapTableBitmapReps = [[NSMutableArray alloc] init];
+			[inDataPtr->emulator.bitmapImageTable
+				addObject:inSourceImage];
+			[inDataPtr->emulator.bitmapSegmentTable
+				addObject:imageObject];
 		}
-		[inDataPtr->emulator.bitmapTableBitmapReps addObject:bitmapRep];
-		[bitmapRep release]; bitmapRep = nil;
+		else
+		{
+			[inDataPtr->emulator.bitmapImageTable
+				replaceObjectAtIndex:inDataPtr->emulator.bitmapTableNextID
+										withObject:inSourceImage];
+			[inDataPtr->emulator.bitmapSegmentTable
+				replaceObjectAtIndex:inDataPtr->emulator.bitmapTableNextID
+										withObject:imageObject];
+		}
 	}
 	
 	return result;

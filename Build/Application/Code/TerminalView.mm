@@ -5887,7 +5887,59 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 					sectionBounds);
 	
 	// draw the text or graphics
-	if ((nullptr != inLineTextBufferAsCFStringOrNull) && (0 != inLineTextBufferLength))
+	if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
+	{
+		// bitmap has been defined
+		static std::set< TextAttributes_BitmapID >	gIDsWithErrors;
+		Terminal_Result				terminalResult = kTerminal_ResultOK;
+		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapIDForeground();
+		NSImage*					imageObject = nil;
+		
+		
+		terminalResult = Terminal_BitmapGetFromID(viewPtr->screen.ref, bitmapID, imageObject);
+		if (kTerminal_ResultOK != terminalResult)
+		{
+			if (gIDsWithErrors.find(bitmapID) == gIDsWithErrors.end())
+			{
+				Console_Warning(Console_WriteValue, "failed to find bitmap, error", terminalResult);
+				gIDsWithErrors.insert(bitmapID); // suppress future warnings
+			}
+		}
+		else if (nil == imageObject)
+		{
+			if (gIDsWithErrors.find(bitmapID) == gIDsWithErrors.end())
+			{
+				Console_Warning(Console_WriteLine, "failed to find bitmap: no image object");
+				gIDsWithErrors.insert(bitmapID); // suppress future warnings
+			}
+		}
+		else
+		{
+			NSRect				targetNSRect = NSMakeRect(sectionBounds.origin.x, sectionBounds.origin.y,
+															sectionBounds.size.width, sectionBounds.size.height);
+			NSDictionary*		hintDict = @{}; // from NSString* to id
+			NSGraphicsContext*	graphicsContext = [NSGraphicsContext
+													graphicsContextWithGraphicsPort:viewPtr->screen.currentRenderContext
+																					flipped:YES];
+			auto				oldInterpolation = [graphicsContext imageInterpolation];
+			
+			
+			[NSGraphicsContext saveGraphicsState];
+			[NSGraphicsContext setCurrentContext:graphicsContext];
+			[graphicsContext setImageInterpolation:NSImageInterpolationNone]; // TEMPORARY; may want this to be an option
+			CGContextSetAllowsAntialiasing(viewPtr->screen.currentRenderContext, false);
+			[imageObject drawInRect:targetNSRect fromRect:NSZeroRect/* empty = whole image */
+									operation:(inAttributes.hasSelection()
+												? NSCompositePlusDarker
+												: NSCompositeSourceOver)
+									fraction:1.0
+									respectFlipped:YES hints:hintDict];
+			CGContextSetAllowsAntialiasing(viewPtr->screen.currentRenderContext, true);
+			[graphicsContext setImageInterpolation:oldInterpolation];
+			[NSGraphicsContext restoreGraphicsState];
+		}
+	}
+	else if ((nullptr != inLineTextBufferAsCFStringOrNull) && (0 != inLineTextBufferLength))
 	{
 		Rect	intBounds;
 		
@@ -7733,7 +7785,12 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	isCustom = false; // initially...
 	if (inAttributes.hasAttributes(kTextAttributes_EnableForeground))
 	{
-		if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsTrueColorID))
+		if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
+		{
+			// color bits may be enabled but they have a different purpose in this case
+			isCustom = false;
+		}
+		else if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsTrueColorID))
 		{
 			// a “true color” was chosen
 			TextAttributes_TrueColorID	colorID = inAttributes.colorIDForeground();

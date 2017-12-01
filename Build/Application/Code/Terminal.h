@@ -52,9 +52,9 @@
 
 // Mac includes
 #ifdef __OBJC__
-@class NSBitmapImageRep;
+@class NSImage;
 #else
-class NSBitmapImageRep;
+class NSImage;
 #endif
 
 // library includes
@@ -589,7 +589,7 @@ Boolean
 Terminal_Result
 	Terminal_BitmapGetFromID				(TerminalScreenRef			inScreen,
 											 TextAttributes_BitmapID	inID,
-											 NSBitmapImageRep*&			outImageRepresentation);
+											 NSImage*&					outImageObject);
 
 //@}
 
