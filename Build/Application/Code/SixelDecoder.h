@@ -85,6 +85,12 @@ struct SixelDecoder_StateMachine
 	SInt16									integerAccumulator;			//!< reset to 0 but grows as digit characters are encountered
 	UInt16									graphicsCursorX;			//!< horizontal position relative to start of image
 	UInt16									graphicsCursorY;			//!< vertical position relative to start of image
+	UInt16									graphicsCursorMaxX;			//!< largest value ever seen for "graphicsCursorX"
+	UInt16									graphicsCursorMaxY;			//!< largest value ever seen for "graphicsCursorY"
+	UInt16									aspectRatioH;				//!< a “pad” value (can initialize but may be overridden by parsing raster attributes)
+	UInt16									aspectRatioV;				//!< a “pan” value (can initialize but may be overridden by parsing raster attributes)
+	UInt16									suggestedImageWidth;		//!< auto-filled background area, width, in “sixels”
+	UInt16									suggestedImageHeight;		//!< auto-filled background area, height, in “sixels”
 	
 	//! Constructs state machine.
 	SixelDecoder_StateMachine ();
@@ -92,6 +98,14 @@ struct SixelDecoder_StateMachine
 	//! Returns values of the (up to 6) pixels indicated by a raw Sixel data value.
 	static void
 	getSixelBits	(UInt8, Boolean&, Boolean&, Boolean&, Boolean&, Boolean&, Boolean&);
+	
+	//! Returns number of dots vertically and horizontally that a “sixel” occupies, at stored aspect ratio.
+	void
+	getSixelSize	(UInt16&, UInt16&);
+	
+	//! Returns number of dots vertically and horizontally that a “sixel” occupies, given an aspect ratio.
+	static void
+	getSixelSizeFromPanPad	(UInt16, UInt16, UInt16&, UInt16&);
 	
 	//! Short-cut for combining stateTransition() and stateDeterminant().
 	void

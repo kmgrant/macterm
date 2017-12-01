@@ -63,6 +63,12 @@ repetitionCount(0),
 integerAccumulator(0),
 graphicsCursorX(0),
 graphicsCursorY(0),
+graphicsCursorMaxX(0),
+graphicsCursorMaxY(0),
+aspectRatioH(0),
+aspectRatioV(0),
+suggestedImageWidth(0),
+suggestedImageHeight(0),
 currentState(kStateInitial)
 {
 }// SixelDecoder_StateMachine default constructor
@@ -100,6 +106,61 @@ getSixelBits	(UInt8		inByte,
 
 
 /*!
+Returns number of dots vertically and horizontally that a
+“sixel” occupies, for the stored aspect ratio.
+
+See the 4-argument version of this method for details.
+
+(2017.11)
+*/
+void
+SixelDecoder_StateMachine::
+getSixelSize	(UInt16&	outSixelHeight,
+				 UInt16&	outSixelWidth)
+{
+	SixelDecoder_StateMachine::getSixelSizeFromPanPad(this->aspectRatioV, this->aspectRatioH, outSixelHeight, outSixelWidth);
+}// getSixelSize
+
+
+/*!
+Returns number of dots vertically and horizontally that a
+“sixel” occupies, given an aspect ratio.
+
+The aspect ratio values can correspond directly to the
+integers parsed from either the terminal parameters that
+introduce Sixel data, or raster attributes in the Sixel
+data itself.  The ratio is defined as “pan / pad” but the
+VT300 series will also round to the nearest integer; this
+means that at least one of the two output height and width
+will be set to 1, and the other will be set to a rounded
+integer based on whichever fraction is bigger (“pan / pad”
+or “pad / pan”).
+
+(2017.11)
+*/
+void
+SixelDecoder_StateMachine::
+getSixelSizeFromPanPad		(UInt16		inPan,
+							 UInt16		inPad,
+							 UInt16&	outSixelHeight,
+							 UInt16&	outSixelWidth)
+{
+	// prevent fractions from rounding down to zero: interpret as
+	// “round whichever ratio is bigger and set the other side to 1”
+	if (inPan > inPad)
+	{
+		outSixelWidth = 1;
+		outSixelHeight = STATIC_CAST(roundf(STATIC_CAST(inPan, Float32) / STATIC_CAST(inPad, Float32)), UInt16);
+	}
+	else
+	{
+		outSixelWidth = STATIC_CAST(roundf(STATIC_CAST(inPad, Float32) / STATIC_CAST(inPan, Float32)), UInt16);
+		outSixelHeight = 1;
+	}
+}// getSixelSizeFromPanPad
+
+
+/*!
 Returns the state machine to its initial state and clears
 stored values.
 
@@ -115,10 +176,17 @@ reset ()
 	paramDecoderPendingState = ParameterDecoder_StateMachine::kStateInitial;
 	haveSetRasterAttributes = false;
 	byteRegister = '\0';
-	integerAccumulator = 0;
+	repetitionCharacter = '?';
 	repetitionCount = 0;
+	integerAccumulator = 0;
 	graphicsCursorX = 0;
 	graphicsCursorY = 0;
+	graphicsCursorMaxX = 0;
+	graphicsCursorMaxY = 0;
+	aspectRatioH = 0;
+	aspectRatioV = 0;
+	suggestedImageWidth = 0;
+	suggestedImageHeight = 0;
 	currentState = kStateInitial;
 }// SixelDecoder_StateMachine::reset
 
@@ -429,11 +497,46 @@ stateTransition		(State		inNextState)
 		if (kPreviousState != inNextState)
 		{
 			// store all accumulated data
+			UInt16		i = 0;
+			
+			
 			this->parameterDecoder.stateTransition(this->paramDecoderPendingState);
 			for (SInt16 paramValue : this->parameterDecoder.parameterValues)
 			{
 				// TEMPORARY; just log for now
 				Console_WriteValue("found raster attributes parameter", paramValue);
+				switch (i)
+				{
+				case 0:
+					// pan (pixel aspect ratio, numerator)
+					Console_WriteValue("found pan parameter (pixel aspect ratio, numerator)", paramValue);
+					this->aspectRatioV = paramValue;
+					break;
+				
+				case 1:
+					// pad (pixel aspect ratio, denominator)
+					Console_WriteValue("found pad parameter (pixel aspect ratio, denominator)", paramValue);
+					this->aspectRatioH = paramValue;
+					break;
+				
+				case 2:
+					// suggested image width (used for background fill)
+					Console_WriteValue("found suggested image width", paramValue);
+					this->suggestedImageWidth = paramValue;
+					break;
+				
+				case 3:
+					// suggested image height (used for background fill)
+					Console_WriteValue("found suggested image height", paramValue);
+					this->suggestedImageHeight = paramValue;
+					break;
+				
+				default:
+					// ???
+					Console_WriteValue("ignoring unexpected raster attributes parameter", paramValue);
+					break;
+				}
+				++i;
 			}
 		}
 		break;
@@ -448,12 +551,23 @@ stateTransition		(State		inNextState)
 		{
 			this->graphicsCursorX = 0;
 			++(this->graphicsCursorY);
+			if (this->graphicsCursorMaxY < this->graphicsCursorY)
+			{
+				this->graphicsCursorMaxY = this->graphicsCursorY;
+			}
 		}
 		break;
 	
 	case kStateLineFeed:
 		{
+			// according to the VT330/VT340 manual, a Graphics New Line also
+			// causes the cursor to return to the left margin (next line)
+			this->graphicsCursorX = 0;
 			++(this->graphicsCursorY);
+			if (this->graphicsCursorMaxY < this->graphicsCursorY)
+			{
+				this->graphicsCursorMaxY = this->graphicsCursorY;
+			}
 		}
 		break;
 	
@@ -619,6 +733,11 @@ stateTransition		(State		inNextState)
 			else
 			{
 				commandVector.push_back(this->byteRegister);
+				++(this->graphicsCursorX);
+				if (this->graphicsCursorMaxX < this->graphicsCursorX)
+				{
+					this->graphicsCursorMaxX = this->graphicsCursorX;
+				}
 			}
 		}
 		break;
