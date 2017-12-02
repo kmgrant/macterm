@@ -8708,14 +8708,24 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateGraphicsBegin:
-		//Console_WriteLine("preparing to read Sixel data"); // debug
-		inDataPtr->emulator.stringAccumulator.clear();
-		inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
+		{
+			if (DebugInterface_LogsSixelDecoderState())
+			{
+				//Console_WriteLine("preparing to read Sixel data"); // debug
+			}
+			
+			inDataPtr->emulator.stringAccumulator.clear();
+			inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
+		}
 		break;
 	
 	case kStateGraphicsAcquireStr:
 		{
-			//Console_WriteLine("reading Sixel data"); // debug
+			if (DebugInterface_LogsSixelDecoderState())
+			{
+				//Console_WriteLine("reading Sixel data"); // debug
+			}
+			
 			if (inDataPtr->emulator.isUTF8Encoding)
 			{
 				if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
@@ -8740,7 +8750,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		{
 		case kStateGraphicsBegin:
 			{
-				//Console_WriteLine("stopped reading Sixel data"); // debug
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					//Console_WriteLine("stopped reading Sixel data"); // debug
+				}
 				
 				SixelDecoder_StateMachine	sixelDecoder;
 				Boolean						zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]); // otherwise, they change to the background color
@@ -8751,7 +8764,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				if (zeroValuePixelsKeepColor)
 				{
-					Console_WriteLine("Sixel image is configured to not change the color of zero-value pixels"); // debug
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteLine("Sixel image is configured to not change the color of zero-value pixels"); // debug
+					}
 				}
 				
 				// the following according to the VT330/VT340 manual
@@ -8784,8 +8800,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					break;
 				}
 				
-				Console_WriteValue("default pan (Sixel aspect ratio height) set to", sixelDecoder.aspectRatioV);
-				Console_WriteValue("default pad (Sixel aspect ratio width) set to", sixelDecoder.aspectRatioH);
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_WriteValue("default pan (Sixel aspect ratio height) set to", sixelDecoder.aspectRatioV);
+					Console_WriteValue("default pad (Sixel aspect ratio width) set to", sixelDecoder.aspectRatioH);
+				}
 				
 				if (inDataPtr->emulator.argList[2] >= 0)
 				{
@@ -8808,7 +8827,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					size_t		processedBytes = 0;
 					
 					
-					Console_WriteValueCString("accumulated string", inDataPtr->emulator.stringAccumulator.c_str());
+					if (DebugInterface_LogsSixelInput())
+					{
+						Console_WriteValueCString("accumulated string", inDataPtr->emulator.stringAccumulator.c_str());
+					}
 					for (UInt8 aByte : inDataPtr->emulator.stringAccumulator)
 					{
 						SixelDecoder_StateMachine::State const	kOriginalState = sixelDecoder.returnState();
@@ -8819,12 +8841,17 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						while (byteNotUsed)
 						{
 							sixelDecoder.goNextState(aByte, byteNotUsed);
-							//Console_WriteValueFourChars("Sixel parser state", sixelDecoder.returnState());
+							if (DebugInterface_LogsSixelInput())
+							{
+								//Console_WriteValueFourChars("Sixel parser state", sixelDecoder.returnState());
+							}
+							
 							if ((byteNotUsed) && (kOriginalState == sixelDecoder.returnState()))
 							{
 								// no way to proceed
 								break;
 							}
+							
 							++loopGuard;
 							if (loopGuard > 100/* arbitrary */)
 							{
@@ -8845,15 +8872,18 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					sixelDecoder.commandVector.push_back('-');
 					++(sixelDecoder.graphicsCursorY);
 					
-					Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
-					Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
-					Console_WriteValue("apparent width in “sixels”", 1 + sixelDecoder.graphicsCursorMaxX);
-					Console_WriteValue("apparent height in “sixels”", 1 + sixelDecoder.graphicsCursorMaxY);
-					Console_WriteValue("final pan (aspect ratio, vertical)", sixelDecoder.aspectRatioV);
-					Console_WriteValue("final pad (aspect ratio, horizontal)", sixelDecoder.aspectRatioH);
 					sixelDecoder.getSixelSize(sixelSizeH, sixelSizeV);
-					Console_WriteValue("calculated “sixel” width", sixelSizeH);
-					Console_WriteValue("calculated “sixel” height", sixelSizeV);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
+						Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
+						Console_WriteValue("apparent width in “sixels”", 1 + sixelDecoder.graphicsCursorMaxX);
+						Console_WriteValue("apparent height in “sixels”", 1 + sixelDecoder.graphicsCursorMaxY);
+						Console_WriteValue("final pan (aspect ratio, vertical)", sixelDecoder.aspectRatioV);
+						Console_WriteValue("final pad (aspect ratio, horizontal)", sixelDecoder.aspectRatioH);
+						Console_WriteValue("calculated “sixel” width", sixelSizeH);
+						Console_WriteValue("calculated “sixel” height", sixelSizeV);
+					}
 					
 					// determine the terminal cells that will need to have a bitmap association
 					{
@@ -8870,8 +8900,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						
 						
 						// INCOMPLETE
-						Console_WriteValue("range of terminal text cells covered by image, horizontally", kCellsCoveredH);
-						Console_WriteValue("range of terminal text cells covered by image, vertically", kCellsCoveredV);
+						if (DebugInterface_LogsSixelDecoderState())
+						{
+							Console_WriteValue("range of terminal text cells covered by image, horizontally", kCellsCoveredH);
+							Console_WriteValue("range of terminal text cells covered by image, vertically", kCellsCoveredV);
+						}
 						
 						// create a single image initially, which is held in case the user
 						// wants to perform any whole-image operations such as Copy; then
@@ -8932,7 +8965,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 								// assigned portion of the overall image
 								if (false == defineBitmap(inDataPtr, completeImage, subImageRect, cellBitmapID))
 								{
-									Console_Warning(Console_WriteLine, "failed to allocate a cell bitmap");
+									if (DebugInterface_LogsSixelDecoderState())
+									{
+										Console_Warning(Console_WriteLine, "failed to allocate a cell bitmap");
+									}
 								}
 								else
 								{
@@ -8962,11 +8998,14 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						[completeImage release]; completeImage = nil;
 					}
 					
-					//Console_WriteLine("final command list:");
-					//for (UInt8 commandChar : sixelDecoder.commandVector)
-					//{
-					//	Console_WriteValueCharacter("cmd", commandChar);
-					//}
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						//Console_WriteLine("final command list:");
+						//for (UInt8 commandChar : sixelDecoder.commandVector)
+						//{
+						//	Console_WriteValueCharacter("cmd", commandChar);
+						//}
+					}
 				}
 				
 				inDataPtr->emulator.stringAccumulator.clear();
@@ -12761,7 +12800,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateDCS:
-		Console_WriteLine("device control string");
+		if (DebugInterface_LogsTerminalState())
+		{
+			Console_WriteLine("device control string");
+		}
 		inDataPtr->emulator.clearEscapeSequenceParameters();
 		break;
 	

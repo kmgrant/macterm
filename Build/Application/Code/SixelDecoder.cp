@@ -41,6 +41,9 @@
 #include <Console.h>
 #include <ParameterDecoder.h>
 
+// application includes
+#include "DebugInterface.h"
+
 
 
 #pragma mark Public Methods
@@ -294,7 +297,10 @@ stateDeterminant	(UInt8		inNextByte,
 				
 				default:
 					// ???
-					Console_Warning(Console_WriteValueCharacter, "current state (“repeat begin”) saw unexpected input", inNextByte);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_Warning(Console_WriteValueCharacter, "current state (“repeat begin”) saw unexpected input", inNextByte);
+					}
 					stateAcceptsAnyInput = true;
 					break;
 				}
@@ -354,7 +360,10 @@ stateDeterminant	(UInt8		inNextByte,
 		case 0x20: // space
 			// silently ignore various whitespace arbitrarily since these
 			// appear to be common in the output of Sixel data generators
-			//Console_Warning(Console_WriteValue, "ignoring part of Sixel data, character", this->byteRegister);
+			if (DebugInterface_LogsSixelDecoderState())
+			{
+				//Console_Warning(Console_WriteValue, "ignoring part of Sixel data, character", this->byteRegister);
+			}
 			break;
 		
 		case '"':
@@ -362,7 +371,10 @@ stateDeterminant	(UInt8		inNextByte,
 				// raster attributes (must be first)
 				if (this->haveSetRasterAttributes)
 				{
-					Console_Warning(Console_WriteLine, "Sixel raster attributes encountered more than once; ignoring");
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_Warning(Console_WriteLine, "Sixel raster attributes encountered more than once; ignoring");
+					}
 					result = kStateSetPixels;
 				}
 				else
@@ -411,7 +423,10 @@ stateDeterminant	(UInt8		inNextByte,
 			{
 				if ((inNextByte < 0x3F) || (inNextByte > 0x7E))
 				{
-					Console_Warning(Console_WriteValueCharacter, "ignoring invalid Sixel data, character", inNextByte);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_Warning(Console_WriteValueCharacter, "ignoring invalid Sixel data, character", inNextByte);
+					}
 					outByteNotUsed = true;
 				}
 				else
@@ -424,11 +439,13 @@ stateDeterminant	(UInt8		inNextByte,
 	}
 	
 	// for debugging
-	//if (outByteNotUsed)
-	//{
-	//	Console_WriteLine("                      Sixel byte not used");
-	//}
-	//Console_WriteValueFourChars("                      Sixel next state", result);
+#if 0
+	if (outByteNotUsed)
+	{
+		Console_WriteLine("                      Sixel byte not used");
+	}
+	Console_WriteValueFourChars("                      Sixel next state", result);
+#endif
 	
 #if 0
 	if (result == this->currentState)
@@ -457,8 +474,11 @@ stateTransition		(State		inNextState)
 	
 	
 	// for debugging
-	//Console_WriteValueFourChars("Sixel original state", kPreviousState);
-	//Console_WriteValueFourChars("Sixel transition to state", inNextState);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars("Sixel decoder original state", kPreviousState);
+		Console_WriteValueFourChars("Sixel decoder transition to state", inNextState);
+	}
 	
 	this->currentState = inNextState;
 	
@@ -476,11 +496,17 @@ stateTransition		(State		inNextState)
 		{
 			if (this->haveSetRasterAttributes)
 			{
-				Console_Warning(Console_WriteLine, "Sixel raster attributes encountered more than once; ignoring");
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_Warning(Console_WriteLine, "Sixel raster attributes encountered more than once; ignoring");
+				}
 			}
 			else
 			{
-				//Console_WriteLine("Sixel raster attributes");
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					//Console_WriteLine("Sixel raster attributes");
+				}
 				this->haveSetRasterAttributes = true;
 				this->parameterDecoder.reset();
 			}
@@ -503,37 +529,55 @@ stateTransition		(State		inNextState)
 			this->parameterDecoder.stateTransition(this->paramDecoderPendingState);
 			for (SInt16 paramValue : this->parameterDecoder.parameterValues)
 			{
-				// TEMPORARY; just log for now
-				Console_WriteValue("found raster attributes parameter", paramValue);
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_WriteValue("found raster attributes parameter", paramValue);
+				}
+				
 				switch (i)
 				{
 				case 0:
 					// pan (pixel aspect ratio, numerator)
-					Console_WriteValue("found pan parameter (pixel aspect ratio, numerator)", paramValue);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteValue("found pan parameter (pixel aspect ratio, numerator)", paramValue);
+					}
 					this->aspectRatioV = paramValue;
 					break;
 				
 				case 1:
 					// pad (pixel aspect ratio, denominator)
-					Console_WriteValue("found pad parameter (pixel aspect ratio, denominator)", paramValue);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteValue("found pad parameter (pixel aspect ratio, denominator)", paramValue);
+					}
 					this->aspectRatioH = paramValue;
 					break;
 				
 				case 2:
 					// suggested image width (used for background fill)
-					Console_WriteValue("found suggested image width", paramValue);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteValue("found suggested image width", paramValue);
+					}
 					this->suggestedImageWidth = paramValue;
 					break;
 				
 				case 3:
 					// suggested image height (used for background fill)
-					Console_WriteValue("found suggested image height", paramValue);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteValue("found suggested image height", paramValue);
+					}
 					this->suggestedImageHeight = paramValue;
 					break;
 				
 				default:
 					// ???
-					Console_WriteValue("ignoring unexpected raster attributes parameter", paramValue);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteValue("ignoring unexpected raster attributes parameter", paramValue);
+					}
 					break;
 				}
 				++i;
@@ -597,13 +641,19 @@ stateTransition		(State		inNextState)
 				this->integerAccumulator *= 10;
 				this->integerAccumulator += (this->byteRegister - '0');
 				this->repetitionCount = this->integerAccumulator; 
-				//Console_WriteValue("updated repetition count", this->repetitionCount);
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					//Console_WriteValue("updated repetition count", this->repetitionCount);
+				}
 			}
 			break;
 		
 		default:
 			// ???
-			Console_Warning(Console_WriteValue, "assertion failure, repeat-count expected digit but byte ASCII", STATIC_CAST(this->byteRegister, SInt16));
+			if (DebugInterface_LogsSixelDecoderState())
+			{
+				Console_Warning(Console_WriteValue, "assertion failure, repeat-count expected digit but byte ASCII", STATIC_CAST(this->byteRegister, SInt16));
+			}
 			break;
 		}
 		break;
@@ -613,7 +663,10 @@ stateTransition		(State		inNextState)
 			// set the character to be repeated
 			if ((this->byteRegister < 0x3F) || (this->byteRegister > 0x7E))
 			{
-				Console_Warning(Console_WriteValue, "ignoring request for Sixel repetition; out of range, character", this->byteRegister);
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_Warning(Console_WriteValue, "ignoring request for Sixel repetition; out of range, character", this->byteRegister);
+				}
 				this->repetitionCharacter = '?';
 			}
 			else
@@ -626,8 +679,11 @@ stateTransition		(State		inNextState)
 	case kStateRepeatApply:
 		if (kPreviousState != inNextState)
 		{
-			Console_WriteValue("repetition count", this->repetitionCount);
-			Console_WriteValueCharacter("repetition character", this->repetitionCharacter);
+			if (DebugInterface_LogsSixelDecoderState())
+			{
+				Console_WriteValue("repetition count", this->repetitionCount);
+				Console_WriteValueCharacter("repetition character", this->repetitionCharacter);
+			}
 			commandVector.reserve(commandVector.size() + this->repetitionCount);
 			for (UInt16 i = 0; i < this->repetitionCount; ++i)
 			{
@@ -638,7 +694,10 @@ stateTransition		(State		inNextState)
 	
 	case kStateSetColorInitParams:
 		{
-			//Console_WriteLine("Sixel set color");
+			if (DebugInterface_LogsSixelDecoderState())
+			{
+				//Console_WriteLine("Sixel set color");
+			}
 			this->parameterDecoder.reset();
 		}
 		break;
@@ -664,7 +723,10 @@ stateTransition		(State		inNextState)
 												: this->parameterDecoder.parameterValues[0]);
 				
 				
-				Console_WriteValue("set color number", kColorNumber);
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_WriteValue("set color number", kColorNumber);
+				}
 			}
 			for (SInt16 paramValue : this->parameterDecoder.parameterValues)
 			{
@@ -680,13 +742,19 @@ stateTransition		(State		inNextState)
 							// hue, lightness and saturation (HLS), a.k.a. hue, saturation and brightness (HSB)
 							if ((i + 3) >= this->parameterDecoder.parameterValues.size())
 							{
-								Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
+								if (DebugInterface_LogsSixelDecoderState())
+								{
+									Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
+								}
 							}
 							else
 							{
-								Console_WriteValue("HLS color, hue component (°)", this->parameterDecoder.parameterValues[i + 1]);
-								Console_WriteValue("HLS color, lightness component (%)", this->parameterDecoder.parameterValues[i + 2]);
-								Console_WriteValue("HLS color, saturation component (%)", this->parameterDecoder.parameterValues[i + 3]);
+								if (DebugInterface_LogsSixelDecoderState())
+								{
+									Console_WriteValue("HLS color, hue component (°)", this->parameterDecoder.parameterValues[i + 1]);
+									Console_WriteValue("HLS color, lightness component (%)", this->parameterDecoder.parameterValues[i + 2]);
+									Console_WriteValue("HLS color, saturation component (%)", this->parameterDecoder.parameterValues[i + 3]);
+								}
 							}
 							break;
 						
@@ -694,25 +762,37 @@ stateTransition		(State		inNextState)
 							// red, green, blue (RGB)
 							if ((i + 3) >= this->parameterDecoder.parameterValues.size())
 							{
-								Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
+								if (DebugInterface_LogsSixelDecoderState())
+								{
+									Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
+								}
 							}
 							else
 							{
-								Console_WriteValue("RGB color, red component (%)", this->parameterDecoder.parameterValues[i + 1]);
-								Console_WriteValue("RGB color, green component (%)", this->parameterDecoder.parameterValues[i + 2]);
-								Console_WriteValue("RGB color, blue component (%)", this->parameterDecoder.parameterValues[i + 3]);
+								if (DebugInterface_LogsSixelDecoderState())
+								{
+									Console_WriteValue("RGB color, red component (%)", this->parameterDecoder.parameterValues[i + 1]);
+									Console_WriteValue("RGB color, green component (%)", this->parameterDecoder.parameterValues[i + 2]);
+									Console_WriteValue("RGB color, blue component (%)", this->parameterDecoder.parameterValues[i + 3]);
+								}
 							}
 							break;
 						
 						default:
 							// ???
-							Console_Warning(Console_WriteValue, "unrecognized color type", paramValue);
+							if (DebugInterface_LogsSixelDecoderState())
+							{
+								Console_Warning(Console_WriteValue, "unrecognized color type", paramValue);
+							}
 							break;
 						}
 						break;
 					
 					default:
-						Console_WriteValue("found color setting parameter", paramValue);
+						if (DebugInterface_LogsSixelDecoderState())
+						{
+							Console_WriteValue("found color setting parameter", paramValue);
+						}
 						break;
 					}
 				}
@@ -726,9 +806,12 @@ stateTransition		(State		inNextState)
 			if ((this->byteRegister < 0x3F) || (this->byteRegister > 0x7E))
 			{
 				// this should only be encountered while in the set-pixels command state
-				Console_Warning(Console_WriteValueCharacter, "ignoring invalid data for set-pixels, character", this->byteRegister);
-				//Console_Warning(Console_WriteValueFourChars, "ignoring invalid data while in state", this->currentState);
-				//Console_Warning(Console_WriteValueFourChars, "ignoring invalid data when asked to go to state", inNextState);
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_Warning(Console_WriteValueCharacter, "ignoring invalid data for set-pixels, character", this->byteRegister);
+					//Console_Warning(Console_WriteValueFourChars, "ignoring invalid data while in state", this->currentState);
+					//Console_Warning(Console_WriteValueFourChars, "ignoring invalid data when asked to go to state", inNextState);
+				}
 			}
 			else
 			{
@@ -744,7 +827,10 @@ stateTransition		(State		inNextState)
 	
 	default:
 		// ???
-		Console_Warning(Console_WriteValueCharacter, "ignoring invalid data for set-pixels, character", this->byteRegister);
+		if (DebugInterface_LogsSixelDecoderState())
+		{
+			Console_Warning(Console_WriteValueCharacter, "ignoring invalid data for set-pixels, character", this->byteRegister);
+		}
 		break;
 	}
 }// SixelDecoder_StateMachine::stateTransition

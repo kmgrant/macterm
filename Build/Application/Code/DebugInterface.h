@@ -73,6 +73,8 @@ changes to an interface declared in a ".mm" file.
 
 // accessors
 	@property (assign) BOOL
+	logsSixelDecoderState; //binding
+	@property (assign) BOOL
 	logsTerminalInputChar; // binding
 	@property (assign) BOOL
 	logsTeletypewriterState; // binding
@@ -89,6 +91,7 @@ changes to an interface declared in a ".mm" file.
 
 // These are exposed for maximum efficiency.
 extern Boolean		gDebugInterface_LogsDeviceState;
+extern Boolean		gDebugInterface_LogsSixelDecoderState;
 extern Boolean		gDebugInterface_LogsTerminalInputChar;
 extern Boolean		gDebugInterface_LogsTerminalEcho;
 extern Boolean		gDebugInterface_LogsTerminalState;
@@ -102,6 +105,23 @@ void
 
 void
 	DebugInterface_DisplayTestTerminal		();
+
+inline Boolean
+	DebugInterface_LogsSixelDecoderState	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsSixelDecoderState;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
+	DebugInterface_LogsSixelInput	()
+	{
+		// for now, log SIXEL input string whenever state is logged
+		return DebugInterface_LogsSixelDecoderState();
+	}
 
 inline Boolean
 	DebugInterface_LogsTerminalInputChar	()

@@ -65,6 +65,7 @@ TerminalWindow_Controller*&		gDebugInterface_TestTerminalWindowController()
 } // anonymous namespace
 
 Boolean		gDebugInterface_LogsDeviceState = false;
+Boolean		gDebugInterface_LogsSixelDecoderState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalEcho = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
@@ -350,6 +351,35 @@ showTestTerminalWindow:(id)		sender
 
 
 #pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(2017.12)
+*/
+- (BOOL)
+logsSixelDecoderState
+{
+	return gDebugInterface_LogsSixelDecoderState;
+}
+- (void)
+setLogsSixelDecoderState:(BOOL)		aFlag
+{
+	if (aFlag != gDebugInterface_LogsSixelDecoderState)
+	{
+		if (aFlag)
+		{
+			Console_WriteLine("started logging of SIXEL decoder state");
+		}
+		else
+		{
+			Console_WriteLine("stopped logging of SIXEL decoder state");
+		}
+		
+		gDebugInterface_LogsSixelDecoderState = aFlag;
+	}
+}// setLogsSixelDecoderState:
 
 
 /*!

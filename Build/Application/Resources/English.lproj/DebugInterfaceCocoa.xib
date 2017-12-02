@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16C67" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17B1003" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,14 +15,14 @@
         <window title="Debugging Options" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
-            <rect key="contentRect" x="191" y="400" width="466" height="312"/>
+            <rect key="contentRect" x="191" y="400" width="466" height="355"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
-            <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="466" height="312"/>
+            <view key="contentView" misplaced="YES" id="2">
+                <rect key="frame" x="0.0" y="0.0" width="466" height="355"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button wantsLayer="YES" id="47">
-                        <rect key="frame" x="184" y="274" width="264" height="18"/>
+                        <rect key="frame" x="184" y="317" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -40,7 +40,7 @@
                         </connections>
                     </button>
                     <button wantsLayer="YES" misplaced="YES" id="52">
-                        <rect key="frame" x="184" y="234" width="264" height="18"/>
+                        <rect key="frame" x="184" y="277" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -58,7 +58,7 @@
                         </connections>
                     </button>
                     <button wantsLayer="YES" misplaced="YES" id="112">
-                        <rect key="frame" x="184" y="214" width="264" height="18"/>
+                        <rect key="frame" x="184" y="257" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -75,8 +75,8 @@
                             <binding destination="-2" name="value" keyPath="self.logsTeletypewriterState" id="116"/>
                         </connections>
                     </button>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" id="56">
-                        <rect key="frame" x="17" y="275" width="146" height="17"/>
+                    <textField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="56">
+                        <rect key="frame" x="17" y="318" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -91,7 +91,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="58">
+                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="58">
                         <rect key="frame" x="17" y="162" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -125,7 +125,7 @@
                             <action selector="dumpStateOfActiveTerminal:" target="-2" id="62"/>
                         </connections>
                     </button>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="72">
+                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="72">
                         <rect key="frame" x="17" y="122" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
@@ -214,7 +214,7 @@
                         </connections>
                     </button>
                     <button wantsLayer="YES" misplaced="YES" id="yBK-8Y-YCX">
-                        <rect key="frame" x="184" y="254" width="264" height="18"/>
+                        <rect key="frame" x="184" y="297" width="264" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <contentFilters>
                             <ciFilter name="CIColorInvert">
@@ -231,9 +231,27 @@
                             <binding destination="-2" name="value" keyPath="self.logsTerminalEcho" id="9GI-08-zix"/>
                         </connections>
                     </button>
+                    <button wantsLayer="YES" misplaced="YES" id="uPX-aU-Umx">
+                        <rect key="frame" x="184" y="237" width="264" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <contentFilters>
+                            <ciFilter name="CIColorInvert">
+                                <configuration>
+                                    <null key="inputImage"/>
+                                </configuration>
+                            </ciFilter>
+                        </contentFilters>
+                        <buttonCell key="cell" type="check" title="Log Sixel Graphics Decoder State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="Pom-eV-Sqc">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="self.logsSixelDecoderState" id="YQa-Ry-mMk"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="244" y="357"/>
+            <point key="canvasLocation" x="244" y="378.5"/>
         </window>
     </objects>
 </document>
