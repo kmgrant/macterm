@@ -83,12 +83,13 @@ def command_data(cmdline_tuple, allow_nonzero_exit=False):
         if (cmd_run.returncode == 0) or allow_nonzero_exit:
             if is_py2():
                 # raw string; encoding is required
+                cmd_stdout = unicode(cmd_stdout, errors='ignore')
                 result = bytearray(cmd_stdout, encoding='utf-8')
             else:
                 # encoding is implied by "bytes" object that is created
                 result = bytearray(cmd_stdout)
     except Exception as err:
-        #print("exception in subprocess.Popen of %r:" % cmdline_tuple, err)
+        print("exception in subprocess.Popen of %r: %s" % (cmdline_tuple, str(err)))
         pass
     return result
 

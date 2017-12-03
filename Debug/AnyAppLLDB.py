@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 
 # Runs the debugger on an internal application that is packaged
 # inside the main bundle.
@@ -58,6 +59,7 @@ def pid_for_running_app_named(app_exec_name):
             if bytearray(APP_ABSOLUTE_PATH, encoding=ENCODING) in line:
                 #warn("match:", line) # debug
                 elements = line.split(bytearray(' ', encoding=ENCODING))
+                elements = [x for x in elements if len(x) > 0]
                 pid = elements[0]
                 result = int(pid)
                 #break # check all, allowing print-outs for similar matches
