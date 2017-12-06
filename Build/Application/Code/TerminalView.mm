@@ -5873,6 +5873,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 {
 	My_TerminalViewPtr	viewPtr = REINTERPRET_CAST(inTerminalViewPtr, My_TerminalViewPtr);
 	CGRect				sectionBounds;
+	Rect				intBounds;
 	
 	
 	// set up context foreground and background colors appropriately
@@ -5886,32 +5887,31 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 					inZeroBasedStartColumnNumber, inZeroBasedStartColumnNumber + inLineTextBufferLength,
 					sectionBounds);
 	
+	// TEMPORARY - for QuickDraw use only
+	RegionUtilities_SetRect(&intBounds, STATIC_CAST(sectionBounds.origin.x, short), STATIC_CAST(sectionBounds.origin.y, short),
+							STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
+							STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
+	
 	// draw the text or graphics
 	if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
 	{
 		// bitmap has been defined
-		static std::set< TextAttributes_BitmapID >	gIDsWithErrors;
 		Terminal_Result				terminalResult = kTerminal_ResultOK;
 		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapIDForeground();
 		NSImage*					imageObject = nil;
 		
 		
 		terminalResult = Terminal_BitmapGetFromID(viewPtr->screen.ref, bitmapID, imageObject);
-		if (kTerminal_ResultOK != terminalResult)
+		if ((kTerminal_ResultOK != terminalResult) || (nil == imageObject))
 		{
-			if (gIDsWithErrors.find(bitmapID) == gIDsWithErrors.end())
-			{
-				Console_Warning(Console_WriteValue, "failed to find bitmap, error", terminalResult);
-				gIDsWithErrors.insert(bitmapID); // suppress future warnings
-			}
-		}
-		else if (nil == imageObject)
-		{
-			if (gIDsWithErrors.find(bitmapID) == gIDsWithErrors.end())
-			{
-				Console_Warning(Console_WriteLine, "failed to find bitmap: no image object");
-				gIDsWithErrors.insert(bitmapID); // suppress future warnings
-			}
+			// do not log image errors because there could potentially be
+			// many of them (such as, one per cell of the image); instead,
+			// add a special rendering to the terminal cell
+			CFStringRef		errorString = CFSTR("!");
+			
+			
+			drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
+								CFStringGetLength(errorString), errorString, kTextAttributes_StyleInverse);
 		}
 		else
 		{
@@ -5941,14 +5941,6 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	}
 	else if ((nullptr != inLineTextBufferAsCFStringOrNull) && (0 != inLineTextBufferLength))
 	{
-		Rect	intBounds;
-		
-		
-		// TEMPORARY - for QuickDraw use only
-		RegionUtilities_SetRect(&intBounds, STATIC_CAST(sectionBounds.origin.x, short), STATIC_CAST(sectionBounds.origin.y, short),
-								STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
-								STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
-		
 		// TEMPORARY...these kinds of offsets make no sense whatsoever
 		// and yet Core Graphics drawings seem to be utterly misaligned
 		// with QuickDraw backgrounds without them (NOTE: adjusting

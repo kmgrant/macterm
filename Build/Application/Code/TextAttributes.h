@@ -362,6 +362,9 @@ struct TextAttributes_Object
 	removeAttributes	(TextAttributes_Object);
 	
 	inline void
+	removeImageRelatedAttributes ();
+	
+	inline void
 	removeStyleAndColorRelatedAttributes ();
 	
 	inline UInt32
@@ -1095,6 +1098,24 @@ TextAttributes_Object::removeAttributes		(TextAttributes_Object	inAttributes)
 	_upper &= ~(inAttributes._upper);
 	_lower &= ~(inAttributes._lower);
 }// removeAttributes
+
+
+/*!
+Removes all attributes related to bitmaps.  (This is important when
+attributes are copied, as usually the new copy should not continue
+to have the same image as the original.)
+
+(2017.12)
+*/
+void
+TextAttributes_Object::removeImageRelatedAttributes ()
+{
+	if (hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
+	{
+		bitmapIDForegroundSet(0);
+		removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
+	}
+}// removeImageRelatedAttributes
 
 
 /*!

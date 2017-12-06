@@ -8870,6 +8870,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					
 					// documentation for VT300 says that an end new-line is automatically added 
 					sixelDecoder.commandVector.push_back('-');
+					sixelDecoder.graphicsCursorX = 0;
 					++(sixelDecoder.graphicsCursorY);
 					
 					sixelDecoder.getSixelSize(sixelSizeH, sixelSizeV);
@@ -8995,6 +8996,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							}
 							subImageRect.origin.y -= subImageRect.size.height;
 						}
+						moveCursorX(inDataPtr, kOriginalCursorX);
+						
 						[completeImage release]; completeImage = nil;
 					}
 					
@@ -14616,15 +14619,14 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			My_ScreenBufferLinePtr		lineTemplate = createLinePtr();
 			
 			
-			// copy attributes of the last character, making a special exception
+			// copy attributes of the insertion line, making a special exception
 			// to prevent bitmaps from being copied
 			std::copy((*inInsertionLine)->returnAttributeVector().begin(),
 						(*inInsertionLine)->returnAttributeVector().end(),
 						lineTemplate->returnMutableAttributeVector().begin());
 			for (auto& attributeFlags : lineTemplate->returnMutableAttributeVector())
 			{
-				attributeFlags.bitmapIDForegroundSet(0);
-				attributeFlags.removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
+				attributeFlags.removeImageRelatedAttributes();
 			}
 			lineTemplate->returnMutableGlobalAttributes() = (*inInsertionLine)->returnGlobalAttributes();
 			inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, lineTemplate);
@@ -14825,8 +14827,10 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 		// copy attributes of the last character, making a special exception
 		// to prevent bitmaps from being copied
 		copiedAttributes = (*toCursorLine)->returnAttributeVector()[inDataPtr->current.returnNumberOfColumnsPermitted() - 1];
-		copiedAttributes.bitmapIDForegroundSet(0);
-		copiedAttributes.removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
+		if (copiedAttributes.hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
+		{
+			copiedAttributes.removeImageRelatedAttributes();
+		}
 	}
 	else if (kMy_AttributeRuleCopyLatentBackground == inAttributeRule)
 	{
@@ -14943,15 +14947,14 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			
 			
 			std::advance(toCopiedLine, -1);
-			// copy attributes of the last character, making a special exception
-			// to prevent bitmaps from being copied
+			// copy attributes of the previous last line, making a special
+			// exception to prevent bitmaps from being copied
 			std::copy((*toCopiedLine)->returnAttributeVector().begin(),
 						(*toCopiedLine)->returnAttributeVector().end(),
 						lineTemplate->returnMutableAttributeVector().begin());
 			for (auto& attributeFlags : lineTemplate->returnMutableAttributeVector())
 			{
-				attributeFlags.bitmapIDForegroundSet(0);
-				attributeFlags.removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
+				attributeFlags.removeImageRelatedAttributes();
 			}
 			lineTemplate->returnMutableGlobalAttributes() = (*toCopiedLine)->returnGlobalAttributes();
 			inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, lineTemplate);
@@ -15079,6 +15082,9 @@ changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 			
 			// ...however, do not propagate text highlighting to text rendered from now on
 			inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_Selected);
+			
+			// ...do not propagate images either
+			inDataPtr->current.drawingAttributes.removeImageRelatedAttributes();
 		}
 	}
 	
