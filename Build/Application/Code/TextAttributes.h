@@ -60,7 +60,7 @@ TextAttributes_BitmapID.
 */
 enum
 {
-	kTextAttributes_BitmapIDBits			= 11,
+	kTextAttributes_BitmapIDBits			= 22,
 	kTextAttributes_BitmapIDMaximum			= ((1 << kTextAttributes_BitmapIDBits) - 1)
 };
 
@@ -95,7 +95,7 @@ NOTE:	Bitmap IDs are reused after a time.  In theory this
 		complex scheme for remembering the bitmap ID values
 		of every bitmap segment in the terminal.
 */
-typedef UInt16 TextAttributes_BitmapID;
+typedef UInt32 TextAttributes_BitmapID;
 
 /*!
 As color specifications are received through terminal
@@ -161,12 +161,14 @@ Upper 32-bit range ("_upper" field):
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │  └────── 9: use custom background color index (bits 31-21)?
  │  │  │  │   │  │  │  │   │  │  │  │   │  │  │  │     │  │  │  │   │  │
  │  │  │  │   │  │  │  │   │  │  │  └───┴──┴──┴──┴─────┴──┴──┴──┴───┴──┴───────── 20-10: index for unique foreground color from a palette [1];
- │  │  │  │   │  │  │  │   │  │  │                                                       or, if bit 7 is set, a TextAttributes_TrueColorID
+ │  │  │  │   │  │  │  │   │  │  │                                                       or, if bit 7 is set, a TextAttributes_TrueColorID;
+ │  │  │  │   │  │  │  │   │  │  │                                                       or, if bit 6 is set, lower bits of TextAttributes_BitmapID
+ │  │  │  │   │  │  │  │   │  │  │                                                       (it may not be a combination of these)
  │  │  │  │   │  │  │  │   │  │  │
  └──┴──┴──┴───┴──┴──┴──┴───┴──┴──┴─────────────────── 31-21: index for unique background color from a palette [1];
                                                              or, if bit 7 is set, a TextAttributes_TrueColorID;
-                                                             or, if bit 6 is set, a TextAttributes_BitmapID (it
-                                                             may not be a combination of these)
+                                                             or, if bit 6 is set, upper bits of TextAttributes_BitmapID
+                                                             (it may not be a combination of these)
 </pre>
 
 Lower 32-bit range ("_lower" field):
@@ -223,9 +225,10 @@ Space has been allocated for larger index values in the future.
 Note that if the “color index is TextAttributes_TrueColorID” bit is
 set, this field is actually an TextAttributes_TrueColorID that can
 be resolved to a set of high-precision color components.  And, if
-the “color index is TextAttributes_BitmapID” bit is set, the lower
-(foreground) version of this field is a TextAttributes_BitmapID
-indicating that the terminal cell renders a 15×12 bitmap image.
+the “color index is TextAttributes_BitmapID” bit is set, the bits
+of both the foreground and background portions combine to represent
+a TextAttributes_BitmapID indicating that the terminal cell renders
+a portion of a bitmap image.
 
 [2] The 2-bit double text mode values can be one of the following
 (but please use defined constants instead of these numbers):
@@ -287,10 +290,10 @@ struct TextAttributes_Object
 	addAttributes	(TextAttributes_Object);
 	
 	inline TextAttributes_BitmapID
-	bitmapIDForeground () const;
+	bitmapID () const;
 	
 	inline void
-	bitmapIDForegroundSet	(TextAttributes_BitmapID);
+	bitmapIDSet	(TextAttributes_BitmapID);
 	
 	inline void
 	clear ();
@@ -379,8 +382,7 @@ private:
 TextAttributes_Object::BitRange const	kTextAttributes_MaskDoubleText(0x03, 10 + 0);
 
 //! the mask and shift for the bits required to represent any bitmap ID value
-//! (this must be at least as large as TextAttributes_BitmapID)
-TextAttributes_Object::BitRange const	kTextAttributes_MaskBitmapIDForeground(kTextAttributes_BitmapIDMaximum, 64 - 2 * kTextAttributes_BitmapIDBits);
+TextAttributes_Object::BitRange const	kTextAttributes_MaskBitmapID(kTextAttributes_BitmapIDMaximum, 64 - kTextAttributes_BitmapIDBits);
 
 //! the mask and shift for the bits required to represent any color index value
 //! (this must be at least as large as TextAttributes_TrueColorID)
@@ -400,7 +402,7 @@ TextAttributes_Object const		kTextAttributes_Invalid
 TextAttributes_Object const		kTextAttributes_CannotErase
 								(0,				0x00008000);
 
-//! if set, foreground index is a TextAttributes_BitmapID values
+//! if set, foreground AND background index combine to form TextAttributes_BitmapID values
 TextAttributes_Object const		kTextAttributes_ColorIndexIsBitmapID
 								(0x00000040,	0);
 
@@ -736,35 +738,35 @@ TextAttributes_Object::addAttributes	(TextAttributes_Object	inAttributes)
 
 
 /*!
-Returns the bitmap ID for rendering the foreground (text).
+Returns the bitmap ID for rendering a portion of an image.
 
 IMPORTANT:	You must only call this for attributes that set
 			the "kTextAttributes_ColorIndexIsBitmapID" bit.
 
-(2017.11)
+(2017.12)
 */
 TextAttributes_BitmapID
-TextAttributes_Object::bitmapIDForeground ()
+TextAttributes_Object::bitmapID ()
 const
 {
 	assert(this->hasAttributes(kTextAttributes_ColorIndexIsBitmapID));
-	return STATIC_CAST(colorIndexForeground(), TextAttributes_BitmapID);
-}// bitmapIDForeground
+	return STATIC_CAST(this->returnValueInRange(kTextAttributes_MaskBitmapID), TextAttributes_BitmapID);
+}// bitmapID
 
 
 /*!
-Changes the bitmap ID for rendering the foreground (text),
+Changes the bitmap ID for rendering a portion of an image,
 adding the "kTextAttributes_ColorIndexIsBitmapID" bit.
 
-(2017.11)
+(2017.12)
 */
 void
-TextAttributes_Object::bitmapIDForegroundSet		(TextAttributes_BitmapID	inID)
+TextAttributes_Object::bitmapIDSet		(TextAttributes_BitmapID	inID)
 {
-	colorIndexForegroundSet(STATIC_CAST(inID, UInt16));
+	kTextAttributes_MaskBitmapID.addExclusivelyTo(_upper, _lower, inID);
 	this->addAttributes(kTextAttributes_ColorIndexIsBitmapID);
-	assert(bitmapIDForeground() == inID);
-}// bitmapIDForegroundSet
+	assert(bitmapID() == inID); // debug
+}// bitmapIDSet
 
 
 /*!
@@ -1112,7 +1114,7 @@ TextAttributes_Object::removeImageRelatedAttributes ()
 {
 	if (hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
 	{
-		bitmapIDForegroundSet(0);
+		bitmapIDSet(0);
 		removeAttributes(kTextAttributes_ColorIndexIsBitmapID);
 	}
 }// removeImageRelatedAttributes

@@ -56,7 +56,6 @@ Constructor.
 SixelDecoder_StateMachine::
 SixelDecoder_StateMachine ()
 :
-commandVector(),
 parameterDecoder(),
 paramDecoderPendingState(ParameterDecoder_StateMachine::kStateInitial),
 haveSetRasterAttributes(false),
@@ -72,45 +71,65 @@ aspectRatioH(0),
 aspectRatioV(0),
 suggestedImageWidth(0),
 suggestedImageHeight(0),
+colorCreator(nullptr),
+colorChooser(nullptr),
+sixelHandler(nullptr),
 currentState(kStateInitial)
 {
 }// SixelDecoder_StateMachine default constructor
 
 
 /*!
-Returns the values of the (up to 6) pixels indicated by
-the given raw Sixel data.  The exact meaning of the
-pixels, such as shape, must be determined by looking at
-the rest of the Sixel data stream.
+Destructor.
 
-(2017.11)
+(2017.12)
+*/
+SixelDecoder_StateMachine::
+~SixelDecoder_StateMachine ()
+{
+	if (nullptr != colorCreator)
+	{
+		Block_release(colorCreator);
+	}
+	if (nullptr != colorChooser)
+	{
+		Block_release(colorChooser);
+	}
+	if (nullptr != sixelHandler)
+	{
+		Block_release(sixelHandler);
+	}
+}// SixelDecoder_StateMachine destructor
+
+
+/*!
+Returns the values of the (up to 6) pixels indicated by the given
+raw Sixel data.  The exact meaning of the pixels, such as shape,
+must be determined by looking at the rest of the Sixel data stream.
+
+(2017.12)
 */
 void
 SixelDecoder_StateMachine::
-getSixelBits	(UInt8		inByte,
-				 Boolean&	outIsTopPixelSet,
-				 Boolean&	outIsPixel2Set,
-				 Boolean&	outIsPixel3Set,
-				 Boolean&	outIsPixel4Set,
-				 Boolean&	outIsPixel5Set,
-				 Boolean&	outIsPixel6Set)
+getSixelBits	(UInt8				inByte,
+				 std::bitset<6>&	outTopToBottomPixelSetFlags)
 {
 	// read 6 bits
 	UInt8 const		kBitsValue = (inByte - 0x3F);
 	
 	
-	outIsTopPixelSet = (0 != (kBitsValue & 0x01));
-	outIsPixel2Set = (0 != (kBitsValue & 0x02));
-	outIsPixel3Set = (0 != (kBitsValue & 0x04));
-	outIsPixel4Set = (0 != (kBitsValue & 0x08));
-	outIsPixel5Set = (0 != (kBitsValue & 0x10));
-	outIsPixel6Set = (0 != (kBitsValue & 0x20));
+	outTopToBottomPixelSetFlags.set(0, (0 != (kBitsValue & 0x01)));
+	outTopToBottomPixelSetFlags.set(1, (0 != (kBitsValue & 0x02)));
+	outTopToBottomPixelSetFlags.set(2, (0 != (kBitsValue & 0x04)));
+	outTopToBottomPixelSetFlags.set(3, (0 != (kBitsValue & 0x08)));
+	outTopToBottomPixelSetFlags.set(4, (0 != (kBitsValue & 0x10)));
+	outTopToBottomPixelSetFlags.set(5, (0 != (kBitsValue & 0x20)));
 }// getSixelBits
 
 
 /*!
-Returns number of dots vertically and horizontally that a
-“sixel” occupies, for the stored aspect ratio.
+Returns number of dots vertically (for each of the 6 bits) and
+horizontally that a “sixel” occupies, for the stored aspect ratio.
 
 See the 4-argument version of this method for details.
 
@@ -120,24 +139,24 @@ void
 SixelDecoder_StateMachine::
 getSixelSize	(UInt16&	outSixelHeight,
 				 UInt16&	outSixelWidth)
+const
 {
 	SixelDecoder_StateMachine::getSixelSizeFromPanPad(this->aspectRatioV, this->aspectRatioH, outSixelHeight, outSixelWidth);
 }// getSixelSize
 
 
 /*!
-Returns number of dots vertically and horizontally that a
-“sixel” occupies, given an aspect ratio.
+Returns number of dots vertically (for each of the 6 bits) and
+horizontally that a “sixel” occupies, given an aspect ratio.
 
-The aspect ratio values can correspond directly to the
-integers parsed from either the terminal parameters that
-introduce Sixel data, or raster attributes in the Sixel
-data itself.  The ratio is defined as “pan / pad” but the
-VT300 series will also round to the nearest integer; this
-means that at least one of the two output height and width
-will be set to 1, and the other will be set to a rounded
-integer based on whichever fraction is bigger (“pan / pad”
-or “pad / pan”).
+The aspect ratio values can correspond directly to the integers
+parsed from either the terminal parameters that introduce Sixel
+data, or raster attributes in the Sixel data itself.  The ratio
+is defined as “pan / pad” but the VT300 series will also round
+to the nearest integer; this means that at least one of the two
+output height and width will be set to 1, and the other will be
+set to a rounded integer based on whichever fraction is bigger
+(“pan / pad” or “pad / pan”).
 
 (2017.11)
 */
@@ -164,8 +183,46 @@ getSixelSizeFromPanPad		(UInt16		inPan,
 
 
 /*!
-Returns the state machine to its initial state and clears
-stored values.
+Invoked continuously as state transitions occur in the decoder
+and commands are found (either individually or as part of a
+repetition sequence), this responds by calling any "sixelHandler"
+that has been defined.
+
+The raw command character is suitable for a call to getSixelBits()
+and the repeat count is at least 1.
+
+(2017.12)
+*/
+void
+SixelDecoder_StateMachine::
+handleCommandCharacter	(UInt8		inRawCommandCharacter,
+						 UInt16		inRepeatCount)
+{
+	if (DebugInterface_LogsSixelDecoderState())
+	{
+		Console_WriteValueCharacter("handle sixel with value", inRawCommandCharacter);
+		if (inRepeatCount > 1)
+		{
+			Console_WriteValueCharacter("repeat count", inRepeatCount);
+		}
+	}
+	
+	if (nullptr != this->sixelHandler)
+	{
+		this->sixelHandler(inRawCommandCharacter, inRepeatCount);
+	}
+	
+	this->graphicsCursorX += inRepeatCount;
+	if (this->graphicsCursorMaxX < this->graphicsCursorX)
+	{
+		this->graphicsCursorMaxX = this->graphicsCursorX;
+	}
+}// handleCommandCharacter
+
+
+/*!
+Returns the state machine to its initial state and clears stored
+values, except for blocks installed by setColorChooser(), etc.
 
 (2017.11)
 */
@@ -174,7 +231,6 @@ SixelDecoder_StateMachine::
 reset ()
 {
 	// these steps should probably agree with the constructor...
-	commandVector.clear();
 	parameterDecoder.reset();
 	paramDecoderPendingState = ParameterDecoder_StateMachine::kStateInitial;
 	haveSetRasterAttributes = false;
@@ -190,13 +246,78 @@ reset ()
 	aspectRatioV = 0;
 	suggestedImageWidth = 0;
 	suggestedImageHeight = 0;
+	// (do not reset any of the blocks here)
 	currentState = kStateInitial;
 }// SixelDecoder_StateMachine::reset
 
 
 /*!
-Uses the current state and the given byte to determine
-the next decoder state.
+Installs a block that will be invoked continuously during parsing
+whenever a color is requested.
+
+If this is called more than once, any previous block is released
+and no longer invoked by the decoder.
+
+(2017.12)
+*/
+void
+SixelDecoder_StateMachine::
+setColorChooser		(SixelDecoder_ColorChooser		inHandler)
+{
+	if (nullptr != this->colorChooser)
+	{
+		Block_release(this->colorChooser);
+	}
+	this->colorChooser = Block_copy(inHandler);
+}// setColorChooser
+
+
+/*!
+Installs a block that will be invoked continuously during parsing
+whenever a new color is defined.
+
+If this is called more than once, any previous block is released
+and no longer invoked by the decoder.
+
+(2017.12)
+*/
+void
+SixelDecoder_StateMachine::
+setColorCreator		(SixelDecoder_ColorCreator	inHandler)
+{
+	if (nullptr != this->colorCreator)
+	{
+		Block_release(this->colorCreator);
+	}
+	this->colorCreator = Block_copy(inHandler);
+}// setColorCreator
+
+
+/*!
+Installs a block that will be invoked continuously during parsing
+whenever a sixel is defined (either as a single value or a
+repetition sequence).
+
+If this is called more than once, any previous block is released
+and no longer invoked by the decoder.
+
+(2017.12)
+*/
+void
+SixelDecoder_StateMachine::
+setSixelHandler		(SixelDecoder_SixelHandler		inHandler)
+{
+	if (nullptr != this->sixelHandler)
+	{
+		Block_release(this->sixelHandler);
+	}
+	this->sixelHandler = Block_copy(inHandler);
+}// setSixelHandler
+
+
+/*!
+Uses the current state and the given byte to determine the next
+decoder state.
 
 (2017.11)
 */
@@ -684,11 +805,9 @@ stateTransition		(State		inNextState)
 				Console_WriteValue("repetition count", this->repetitionCount);
 				Console_WriteValueCharacter("repetition character", this->repetitionCharacter);
 			}
-			commandVector.reserve(commandVector.size() + this->repetitionCount);
-			for (UInt16 i = 0; i < this->repetitionCount; ++i)
-			{
-				commandVector.push_back(this->repetitionCharacter);
-			}
+			handleCommandCharacter(this->repetitionCharacter, this->repetitionCount);
+			this->repetitionCharacter = '?';
+			this->repetitionCount = 0;
 		}
 		break;
 	
@@ -711,92 +830,123 @@ stateTransition		(State		inNextState)
 	case kStateSetColorApplyParams:
 		if (kPreviousState != inNextState)
 		{
-			// store all accumulated data
-			UInt16		i = 0;
+			// process all accumulated data
+			UInt16		colorNumber = 0;
 			
 			
 			this->parameterDecoder.stateTransition(this->paramDecoderPendingState);
+			
 			if (this->parameterDecoder.parameterValues.size() > 0)
 			{
-				UInt16 const	kColorNumber = ((kParameterDecoder_Undefined == this->parameterDecoder.parameterValues[0])
-												? 0
-												: this->parameterDecoder.parameterValues[0]);
-				
+				colorNumber = ((kParameterDecoder_Undefined == this->parameterDecoder.parameterValues[0])
+								? 0
+								: this->parameterDecoder.parameterValues[0]);
 				
 				if (DebugInterface_LogsSixelDecoderState())
 				{
-					Console_WriteValue("set color number", kColorNumber);
+					Console_WriteValue("color number", colorNumber);
 				}
-			}
-			for (SInt16 paramValue : this->parameterDecoder.parameterValues)
-			{
-				// TEMPORARY; just log for now
-				if (0 != i)
+				
+				if (1 == this->parameterDecoder.parameterValues.size())
 				{
-					switch (i)
+					// select color (as opposed to define-color)
+					if (nullptr != this->colorChooser)
 					{
-					case 1:
-						switch (paramValue)
+						this->colorChooser(colorNumber);
+					}
+				}
+				else
+				{
+					UInt16		i = 0;
+					
+					
+					for (SInt16 paramValue : this->parameterDecoder.parameterValues)
+					{
+						switch (i)
 						{
-						case 1:
-							// hue, lightness and saturation (HLS), a.k.a. hue, saturation and brightness (HSB)
-							if ((i + 3) >= this->parameterDecoder.parameterValues.size())
-							{
-								if (DebugInterface_LogsSixelDecoderState())
-								{
-									Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
-								}
-							}
-							else
-							{
-								if (DebugInterface_LogsSixelDecoderState())
-								{
-									Console_WriteValue("HLS color, hue component (°)", this->parameterDecoder.parameterValues[i + 1]);
-									Console_WriteValue("HLS color, lightness component (%)", this->parameterDecoder.parameterValues[i + 2]);
-									Console_WriteValue("HLS color, saturation component (%)", this->parameterDecoder.parameterValues[i + 3]);
-								}
-							}
+						case 0:
+							// ignore (color number was already processed above)
 							break;
 						
-						case 2:
-							// red, green, blue (RGB)
-							if ((i + 3) >= this->parameterDecoder.parameterValues.size())
+						case 1: // may process up to 4 total values
+							switch (paramValue)
 							{
+							case 1:
+								// hue, lightness and saturation (HLS), a.k.a. hue, saturation and brightness (HSB)
+								if ((i + 3) >= this->parameterDecoder.parameterValues.size())
+								{
+									if (DebugInterface_LogsSixelDecoderState())
+									{
+										Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
+									}
+								}
+								else
+								{
+									if (DebugInterface_LogsSixelDecoderState())
+									{
+										Console_WriteValue("HLS color, hue component (°)", this->parameterDecoder.parameterValues[i + 1]);
+										Console_WriteValue("HLS color, lightness component (%)", this->parameterDecoder.parameterValues[i + 2]);
+										Console_WriteValue("HLS color, saturation component (%)", this->parameterDecoder.parameterValues[i + 3]);
+									}
+									
+									if (nullptr != this->colorCreator)
+									{
+										this->colorCreator(colorNumber, kSixelDecoder_ColorTypeHLS,
+															this->parameterDecoder.parameterValues[i + 1],
+															this->parameterDecoder.parameterValues[i + 2],
+															this->parameterDecoder.parameterValues[i + 3]);
+									}
+								}
+								break;
+							
+							case 2:
+								// red, green, blue (RGB)
+								if ((i + 3) >= this->parameterDecoder.parameterValues.size())
+								{
+									if (DebugInterface_LogsSixelDecoderState())
+									{
+										Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
+									}
+								}
+								else
+								{
+									if (DebugInterface_LogsSixelDecoderState())
+									{
+										Console_WriteValue("RGB color, red component (%)", this->parameterDecoder.parameterValues[i + 1]);
+										Console_WriteValue("RGB color, green component (%)", this->parameterDecoder.parameterValues[i + 2]);
+										Console_WriteValue("RGB color, blue component (%)", this->parameterDecoder.parameterValues[i + 3]);
+									}
+									
+									if (nullptr != this->colorCreator)
+									{
+										this->colorCreator(colorNumber, kSixelDecoder_ColorTypeRGB,
+															this->parameterDecoder.parameterValues[i + 1],
+															this->parameterDecoder.parameterValues[i + 2],
+															this->parameterDecoder.parameterValues[i + 3]);
+									}
+								}
+								break;
+							
+							default:
+								// ???
 								if (DebugInterface_LogsSixelDecoderState())
 								{
-									Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
+									Console_Warning(Console_WriteValue, "unrecognized color type", paramValue);
 								}
-							}
-							else
-							{
-								if (DebugInterface_LogsSixelDecoderState())
-								{
-									Console_WriteValue("RGB color, red component (%)", this->parameterDecoder.parameterValues[i + 1]);
-									Console_WriteValue("RGB color, green component (%)", this->parameterDecoder.parameterValues[i + 2]);
-									Console_WriteValue("RGB color, blue component (%)", this->parameterDecoder.parameterValues[i + 3]);
-								}
+								break;
 							}
 							break;
 						
 						default:
-							// ???
 							if (DebugInterface_LogsSixelDecoderState())
 							{
-								Console_Warning(Console_WriteValue, "unrecognized color type", paramValue);
+								Console_WriteValue("found color setting parameter", paramValue);
 							}
 							break;
 						}
-						break;
-					
-					default:
-						if (DebugInterface_LogsSixelDecoderState())
-						{
-							Console_WriteValue("found color setting parameter", paramValue);
-						}
-						break;
+						++i;
 					}
 				}
-				++i;
 			}
 		}
 		break;
@@ -815,12 +965,7 @@ stateTransition		(State		inNextState)
 			}
 			else
 			{
-				commandVector.push_back(this->byteRegister);
-				++(this->graphicsCursorX);
-				if (this->graphicsCursorMaxX < this->graphicsCursorX)
-				{
-					this->graphicsCursorMaxX = this->graphicsCursorX;
-				}
+				handleCommandCharacter(this->byteRegister, 1/* count */);
 			}
 		}
 		break;

@@ -5897,7 +5897,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	{
 		// bitmap has been defined
 		Terminal_Result				terminalResult = kTerminal_ResultOK;
-		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapIDForeground();
+		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
 		NSImage*					imageObject = nil;
 		
 		

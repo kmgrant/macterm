@@ -1060,8 +1060,8 @@ public:
 	My_RGBComponentList*				trueColorTableReds;		//!< red components for all 24-bit colors; allocated only for supporting terminals
 	My_RGBComponentList*				trueColorTableGreens;	//!< green components for all 24-bit colors; allocated only for supporting terminals
 	My_RGBComponentList*				trueColorTableBlues;	//!< blue components for all 24-bit colors; allocated only for supporting terminals
-	UInt16								trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
-	UInt16								bitmapTableNextID;		//!< basis for new IDs; current entry for storing new bitmaps in bitmap table
+	TextAttributes_TrueColorID			trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
+	TextAttributes_BitmapID				bitmapTableNextID;		//!< basis for new IDs; current entry for storing new bitmaps in bitmap table
 	NSMutableArray*						bitmapImageTable;		//!< NSArray of NSImage*; shared (“whole image”) bitmap representations by index (ID)
 	NSMutableArray*						bitmapSegmentTable;		//!< NSArray of NSImage*; single-cell bitmap representations by index (ID)
 
@@ -1800,6 +1800,7 @@ void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&,
 																	 My_AttributeRule);
 void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
+void						bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr, NSImage*, UInt16, UInt16, UInt16, UInt16, Boolean, Boolean);
 void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
 																	 TextAttributes_Object = TextAttributes_Object(),
 																	 Boolean = true);
@@ -5916,7 +5917,7 @@ multiByteDecoder(),
 recentCodePointByte('\0'),
 addedSixel(false),
 addedXTerm(false),
-allowSixelScrolling(false),
+allowSixelScrolling(true),
 argLastIndex(0),
 argList(kMy_MaximumANSIParameters),
 parameterMarkList(kMy_MaximumANSIParameters),
@@ -8755,12 +8756,12 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					//Console_WriteLine("stopped reading Sixel data"); // debug
 				}
 				
-				SixelDecoder_StateMachine	sixelDecoder;
-				Boolean						zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]); // otherwise, they change to the background color
+				SixelDecoder_StateMachine			sixelDecoder;
+				SixelDecoder_StateMachine const&	decoderRef = sixelDecoder; // so copied blocks can refer to object without copying object
+				UInt16								initialAspectRatioV = 2; // see below
+				UInt16								initialAspectRatioH = 1; // see below
+				Boolean								zeroValuePixelsKeepColor = false; // see below
 				
-				
-				sixelDecoder.aspectRatioV = 2; // see below
-				sixelDecoder.aspectRatioH = 1; // see below
 				
 				if (zeroValuePixelsKeepColor)
 				{
@@ -8774,21 +8775,21 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				switch (inDataPtr->emulator.argList[0])
 				{
 				case 2:
-					sixelDecoder.aspectRatioV = 5;
-					sixelDecoder.aspectRatioH = 1;
+					initialAspectRatioV = 5;
+					initialAspectRatioH = 1;
 					break;
 				
 				case 3:
 				case 4:
-					sixelDecoder.aspectRatioV = 3;
-					sixelDecoder.aspectRatioH = 1;
+					initialAspectRatioV = 3;
+					initialAspectRatioH = 1;
 					break;
 				
 				case 7:
 				case 8:
 				case 9:
-					sixelDecoder.aspectRatioV = 1;
-					sixelDecoder.aspectRatioH = 1;
+					initialAspectRatioV = 1;
+					initialAspectRatioH = 1;
 					break;
 				
 				case 0:
@@ -8802,16 +8803,22 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				if (DebugInterface_LogsSixelDecoderState())
 				{
-					Console_WriteValue("default pan (Sixel aspect ratio height) set to", sixelDecoder.aspectRatioV);
-					Console_WriteValue("default pad (Sixel aspect ratio width) set to", sixelDecoder.aspectRatioH);
+					Console_WriteValue("default pan (Sixel aspect ratio height) set to", initialAspectRatioV);
+					Console_WriteValue("default pad (Sixel aspect ratio width) set to", initialAspectRatioH);
 				}
+				
+				// determine if “off” bits use the current color or revert to the background color
+				zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]);
 				
 				if (inDataPtr->emulator.argList[2] >= 0)
 				{
 					Console_Warning(Console_WriteValue, "ignoring Sixel grid size parameter", inDataPtr->emulator.argList[2]);
 				}
 				
-				// parse the Sixel data
+				// process the Sixel data
+				// (TEMPORARY; may need to have a background thread that separates terminal
+				// cell processing from image processing so that control can return to the
+				// terminal while very large images are being constructed)
 				{
 					// NOTE: the dimensions and ratio values chosen by default are
 					// based on what the VT300 series uses for 80-column mode; it
@@ -8820,17 +8827,240 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					// apparently uses 9 pixels wide instead of 15, and if custom
 					// character sets are ever supported then their default pixel
 					// height is 3:1 over the width)  
-					UInt16		defaultCellPixelsH = 15; // number of dots across to define a terminal cell at normal width
-					UInt16		defaultCellPixelsV = 12; // number of dots down to define a terminal cell at normal height
-					UInt16		sixelSizeH = 1; // number of normal pixels occupied horizontally for each “sixel”
-					UInt16		sixelSizeV = 1; // number of normal pixels occupied vertically for each “sixel”
-					size_t		processedBytes = 0;
+					__block NSColor*				currentColor = nil; // if "nil", use background color
+					__block NSMutableDictionary*	colorsByIndex = [[[NSMutableDictionary alloc] init] autorelease];
+					NSImage*						completeImage = nil;
+					NSBitmapImageRep*				bitmapRep = nil;
+					UInt16							defaultCellPixelsH = 9; // number of dots across to define a terminal cell at normal width
+					UInt16							defaultCellPixelsV = 12; // number of dots down to define a terminal cell at normal height
+					UInt16							totalPixelsH = 0;
+					UInt16							totalPixelsV = 0;
+					UInt16							sixelSizeH = 1; // number of normal pixels occupied horizontally for each “sixel”
+					UInt16							sixelSizeV = 1; // number of normal pixels occupied vertically for each “sixel”
+					size_t							processedBytes = 0;
 					
 					
 					if (DebugInterface_LogsSixelInput())
 					{
 						Console_WriteValueCString("accumulated string", inDataPtr->emulator.stringAccumulator.c_str());
 					}
+					
+					// the exact size of the image cannot be determined without parsing
+					// all of the sixel data; therefore, this is done in two passes
+					// (at the end of the first pass, the configuration of the image
+					// and final graphics cursor position are used to find the size)
+					sixelDecoder.reset();
+					sixelDecoder.aspectRatioV = initialAspectRatioV; // default only; can change if raster attributes are parsed
+					sixelDecoder.aspectRatioH = initialAspectRatioH;
+					for (UInt8 aByte : inDataPtr->emulator.stringAccumulator)
+					{
+						SixelDecoder_StateMachine::State const	kOriginalState = sixelDecoder.returnState();
+						SInt16									loopGuard = 0;
+						Boolean									byteNotUsed = true;
+						
+						
+						while (byteNotUsed)
+						{
+							sixelDecoder.goNextState(aByte, byteNotUsed);
+							if ((byteNotUsed) && (kOriginalState == sixelDecoder.returnState()))
+							{
+								// no way to proceed
+								break;
+							}
+							++loopGuard;
+							if (loopGuard > 100/* arbitrary */)
+							{
+								break;
+							}
+						}
+					}
+					
+					// now that the maximum movement of the graphics cursor and
+					// pixel aspect ratio are known, specify the image dimensions 
+					sixelDecoder.getSixelSize(sixelSizeV, sixelSizeH);
+					totalPixelsH = ((1 + sixelDecoder.graphicsCursorMaxX) * sixelSizeH);
+					totalPixelsV = ((1 + sixelDecoder.graphicsCursorMaxY) * sixelSizeV * 6/* sixel has 6 bits, one per vertical plot */);
+					
+					// allocate a large enough bitmap image
+					{
+						NSInteger const		kBitsPerSample = 8; // currently, 0-255 values defined
+						NSInteger const		kSamplesPerPixel = 4; // red, green, blue, alpha
+						NSInteger const		kBitsPerPixel = (kBitsPerSample * kSamplesPerPixel);
+						NSInteger const		kBytesPerRow = ((kBitsPerPixel / 8) * totalPixelsH);
+						
+						
+						// when the planes are set to "nullptr" at initialization time, the
+						// internal buffer ("bitmapData" property) is owned by the object
+						bitmapRep = [[NSBitmapImageRep alloc]
+										initWithBitmapDataPlanes:nullptr
+																	pixelsWide:totalPixelsH
+																	pixelsHigh:totalPixelsV
+																	bitsPerSample:kBitsPerSample
+																	samplesPerPixel:kSamplesPerPixel
+																	hasAlpha:YES
+																	isPlanar:NO
+																	colorSpaceName:NSCalibratedRGBColorSpace
+																	bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
+																	bytesPerRow:kBytesPerRow
+																	bitsPerPixel:kBitsPerPixel];
+						completeImage = [[NSImage alloc] initWithSize:NSZeroSize];
+						[completeImage addRepresentation:bitmapRep];
+						completeImage.size = bitmapRep.size;
+					}
+					
+					// now reset the decoder and repeat the parsing sequence,
+					// this time with an appropriately-allocated image and
+					// blocks of code defined; this will cause the parser to
+					// call the blocks as key states are entered and ultimately
+					// set colored pixels in the bitmap buffer
+					sixelDecoder.reset();
+					sixelDecoder.aspectRatioV = initialAspectRatioV; // default only; can change if raster attributes are parsed
+					sixelDecoder.aspectRatioH = initialAspectRatioH;
+					sixelDecoder.setColorCreator(^(UInt16 colorIndex, SixelDecoder_ColorType colorType,
+													UInt16 component1, UInt16 component2, UInt16 component3)
+					{
+						// create and select non-default color
+						NSNumber*	colorNumber = [NSNumber numberWithInteger:colorIndex];
+						NSColor*	newColor = nil;
+						
+						
+						switch (colorType)
+						{
+						case kSixelDecoder_ColorTypeHLS:
+							// note: given in HLS order, not HSB border (flipping last two values)
+							newColor = [NSColor colorWithCalibratedHue:(component1 / 360.0) saturation:(component3 / 100.0)
+																		brightness:(component2 / 100.0) alpha:1.0];
+							break;
+						
+						case kSixelDecoder_ColorTypeRGB:
+							newColor = [NSColor colorWithCalibratedRed:(component1 / 100.0) green:(component2 / 100.0)
+																		blue:(component3 / 100.0) alpha:1.0];
+							break;
+						
+						default:
+							// ???
+							break;
+						}
+						if ((nil == newColor) || (nil == colorNumber))
+						{
+							Console_Warning(Console_WriteValue, "failed to define Sixel color, index", colorIndex);
+						}
+						else
+						{
+							// the VT330/340 manual says that a VT300 would only fill the width/height
+							// when zero-pixels are set to use the current background (as opposed to
+							// keeping their previous color); this isn’t practical though because image
+							// conversion utilities typically provide only the sixel data string and
+							// not the introductory terminal sequence that would specify a color mode,
+							// causing images to have large gaps if no background fill is performed
+							//Boolean const	kAutoFillBackground = (false == zeroValuePixelsKeepColor);
+							Boolean const	kAutoFillBackground = true;
+							Boolean const	kFirstColor = (0 == colorsByIndex.count);
+							
+							
+							[colorsByIndex setObject:newColor forKey:colorNumber];
+							
+							if ((kAutoFillBackground) && (kFirstColor) &&
+								(decoderRef.suggestedImageWidth > 0) && (decoderRef.suggestedImageHeight > 0))
+							{
+								// the first time a color is defined, fill the image background
+								// (the VT300 manual specifies only the region that is filled, as
+								// the width/height from raster attributes; it isn’t clear what
+								// “background color” should be; this interpretation is somewhat
+								// arbitrary but it seems compatible with known image utilities)
+								for (UInt16 i = 0; i < decoderRef.suggestedImageWidth; ++i)
+								{
+									auto const	kPixelX = (sixelSizeH * i);
+									
+									
+									for (UInt16 j = 0; j < decoderRef.suggestedImageHeight; ++j)
+									{
+										auto const	kPixelY = (sixelSizeV * (6/* bits per sixel */ + j));
+										
+										
+										for (auto k = 0; k < sixelSizeV; ++k)
+										{
+											for (auto l = 0; l < sixelSizeH; ++l)
+											{
+												[bitmapRep setColor:newColor atX:(kPixelX + l) y:(kPixelY + k)];
+											}
+										}
+									}
+								}
+							}
+						}
+					});
+					sixelDecoder.setColorChooser(^(UInt16 index)
+					{
+						// select color (see also the color creator above)
+						NSNumber*	colorNumber = [NSNumber numberWithInteger:index];
+						
+						
+						currentColor = [colorsByIndex objectForKey:colorNumber];
+					});
+					sixelDecoder.setSixelHandler(^(UInt8 rawChar, UInt16 repeatCount)
+					{
+						// process a sixel (render up to 6 points in a vertical line,
+						// where each position’s real pixel size depends on the aspect
+						// ratio that was defined)
+						std::bitset<6>	topToBottomOnOffFlags;
+						
+						
+						SixelDecoder_StateMachine::getSixelBits(rawChar, topToBottomOnOffFlags);
+						if (topToBottomOnOffFlags.none() && (zeroValuePixelsKeepColor))
+						{
+							// in this configuration, no pixels in the line of 6 are changing
+						}
+						else
+						{
+							// at least one pixel will change
+							NSColor*	onColor = ((nil == currentColor) // see earlier definition; "nil" used to mean “background”
+													? [NSColor clearColor]
+													: currentColor);
+							NSColor*	offColor = ((zeroValuePixelsKeepColor)
+													? nil
+													: [NSColor clearColor]);
+							
+							
+							for (UInt16 i = 0; i < repeatCount; ++i)
+							{
+								auto const	kPixelX = (sixelSizeH * (decoderRef.graphicsCursorX + i));
+								
+								
+								for (decltype(topToBottomOnOffFlags.size()) j = 0; j < topToBottomOnOffFlags.size(); ++j)
+								{
+									auto const	kPixelY = (sixelSizeV * (decoderRef.graphicsCursorY * topToBottomOnOffFlags.size() + j));
+									
+									
+									if (topToBottomOnOffFlags.test(j))
+									{
+										// draw
+										for (auto k = 0; k < sixelSizeV; ++k)
+										{
+											for (auto l = 0; l < sixelSizeH; ++l)
+											{
+												[bitmapRep setColor:onColor atX:(kPixelX + l) y:(kPixelY + k)];
+											}
+										}
+									}
+									else
+									{
+										// erase or ignore
+										if (nil != offColor)
+										{
+											for (auto k = 0; k < sixelSizeV; ++k)
+											{
+												for (auto l = 0; l < sixelSizeH; ++l)
+												{
+													[bitmapRep setColor:offColor atX:(kPixelX + l) y:(kPixelY + k)];
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					});
 					for (UInt8 aByte : inDataPtr->emulator.stringAccumulator)
 					{
 						SixelDecoder_StateMachine::State const	kOriginalState = sixelDecoder.returnState();
@@ -8868,12 +9098,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 										inDataPtr->emulator.stringAccumulator.size() - processedBytes);
 					}
 					
-					// documentation for VT300 says that an end new-line is automatically added 
-					sixelDecoder.commandVector.push_back('-');
-					sixelDecoder.graphicsCursorX = 0;
-					++(sixelDecoder.graphicsCursorY);
-					
-					sixelDecoder.getSixelSize(sixelSizeH, sixelSizeV);
 					if (DebugInterface_LogsSixelDecoderState())
 					{
 						Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
@@ -8886,129 +9110,31 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						Console_WriteValue("calculated “sixel” height", sixelSizeV);
 					}
 					
-					// determine the terminal cells that will need to have a bitmap association
-					{
-						UInt16 const	kTotalPixelsH = ((1 + sixelDecoder.graphicsCursorMaxX) * sixelSizeH);
-						UInt16 const	kTotalPixelsV = ((1 + sixelDecoder.graphicsCursorMaxY) * sixelSizeV);
-						UInt16 const	kCellsCoveredH = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(kTotalPixelsH, Float32) /
-																									STATIC_CAST(defaultCellPixelsH, Float32)),
-																							UInt16));
-						UInt16 const	kCellsCoveredV = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(kTotalPixelsV, Float32) /
-																									STATIC_CAST(defaultCellPixelsV, Float32)),
-																							UInt16));
-						NSImage*		completeImage = nil;
-						NSRect			subImageRect = NSZeroRect; // initialized below
-						
-						
-						// INCOMPLETE
-						if (DebugInterface_LogsSixelDecoderState())
-						{
-							Console_WriteValue("range of terminal text cells covered by image, horizontally", kCellsCoveredH);
-							Console_WriteValue("range of terminal text cells covered by image, vertically", kCellsCoveredV);
-						}
-						
-						// create a single image initially, which is held in case the user
-						// wants to perform any whole-image operations such as Copy; then
-						// assign sections of the image for rendering in different cells
-						{
-							NSInteger const		kBitsPerSample = 8; // currently, 0-255 values defined
-							NSInteger const		kSamplesPerPixel = 4; // red, green, blue, alpha
-							NSInteger const		kBitsPerPixel = (kBitsPerSample * kSamplesPerPixel);
-							NSInteger const		kBytesPerRow = ((kBitsPerPixel / 8) * kTotalPixelsH);
-							NSBitmapImageRep*	bitmapRep = nil;
-							
-							
-							// when the planes are set to "nullptr" at initialization time, the
-							// internal buffer ("bitmapData" property) is owned by the object
-							bitmapRep = [[NSBitmapImageRep alloc]
-											initWithBitmapDataPlanes:nullptr
-																		pixelsWide:kTotalPixelsH
-																		pixelsHigh:kTotalPixelsV
-																		bitsPerSample:kBitsPerSample
-																		samplesPerPixel:kSamplesPerPixel
-																		hasAlpha:YES
-																		isPlanar:NO
-																		colorSpaceName:NSCalibratedRGBColorSpace
-																		bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
-																		bytesPerRow:kBytesPerRow
-																		bitsPerPixel:kBitsPerPixel];
-							completeImage = [[NSImage alloc] initWithSize:NSZeroSize];
-							[completeImage addRepresentation:bitmapRep];
-							completeImage.size = bitmapRep.size;
-							
-							// INCOMPLETE; use parsed commands to set pixel colors 
-						}
-						
-						// initialize first sub-rectangle (rendered by one terminal cell)
-						subImageRect = NSMakeRect(0, completeImage.size.height - defaultCellPixelsH,
-													defaultCellPixelsH, defaultCellPixelsV);
-						
-						// since the image is being rendered inline by the terminal, shift the text
-						// cursor location according to the number of text cells that are occupied
-						UInt16 const		kOriginalCursorX = inDataPtr->current.cursorX;
-						for (UInt16 i = 0; i < kCellsCoveredV; ++i)
-						{
-							My_ScreenBufferLineList::iterator	cursorLineIterator;
-							
-							
-							moveCursorX(inDataPtr, kOriginalCursorX);
-							subImageRect.origin.x = 0;
-							locateCursorLine(inDataPtr, cursorLineIterator);
-							for (UInt16 j = 0; j < kCellsCoveredH; ++j)
-							{
-								TextAttributes_BitmapID		cellBitmapID;
-								// TEMPORARY; for now just set a color to highlight the area
-								TextAttributes_Object		newAttributes = kTextAttributes_StyleInverse;
-								//TextAttributes_Object		newAttributes;
-								
-								
-								// set attributes on all affected text cells to allow them to render their
-								// assigned portion of the overall image
-								if (false == defineBitmap(inDataPtr, completeImage, subImageRect, cellBitmapID))
-								{
-									if (DebugInterface_LogsSixelDecoderState())
-									{
-										Console_Warning(Console_WriteLine, "failed to allocate a cell bitmap");
-									}
-								}
-								else
-								{
-									newAttributes.bitmapIDForegroundSet(cellBitmapID);
-								}
-								changeLineRangeAttributes(inDataPtr, *(*cursorLineIterator),
-															inDataPtr->current.cursorX, 1 + inDataPtr->current.cursorX,
-															newAttributes/* attributes to set */,
-															TextAttributes_Object(0xFFFFFFFF, 0xFFFFFFFF)/* attributes to clear */);
-								
-								moveCursorRight(inDataPtr);
-								subImageRect.origin.x += subImageRect.size.width;
-							}
-							
-							// scrolling is technically controlled by a terminal parameter sequence
-							// but in the future it may be good to let the user force image scrolling
-							if (inDataPtr->emulator.allowSixelScrolling)
-							{
-								moveCursorDownOrScroll(inDataPtr);
-							}
-							else
-							{
-								moveCursorDown(inDataPtr);
-							}
-							subImageRect.origin.y -= subImageRect.size.height;
-						}
-						moveCursorX(inDataPtr, kOriginalCursorX);
-						
-						[completeImage release]; completeImage = nil;
-					}
-					
+					// write complete image for debugging (helps to separate possible issues
+					// with terminal display from issues with raw image content)
 					if (DebugInterface_LogsSixelDecoderState())
 					{
-						//Console_WriteLine("final command list:");
-						//for (UInt8 commandChar : sixelDecoder.commandVector)
-						//{
-						//	Console_WriteValueCharacter("cmd", commandChar);
-						//}
+						NSData*		imageData = [completeImage TIFFRepresentation];
+						NSString*	filePath = @"/tmp/macterm_sixel_image.tiff";
+						
+						
+						if (NO == [[NSFileManager defaultManager] createFileAtPath:filePath contents:imageData attributes:nil])
+						{
+							Console_Warning(Console_WriteValueCFString, "failed to write debugging image, path", BRIDGE_CAST(filePath, CFStringRef));
+						}
 					}
+					
+					// determine the terminal cells that will need to have a bitmap association
+					// scrolling is technically controlled by a terminal parameter sequence
+					// but in the future it may be good to let the user force image scrolling
+					Boolean const	kScrollWithImage = inDataPtr->emulator.allowSixelScrolling;
+					// according to VT300 series documentation, the text cursor does not move
+					// from its original position if scrolling is disabled
+					Boolean const	kRestoreCursor = (false == kScrollWithImage);
+					bufferInsertInlineImageWithoutUpdate(inDataPtr, completeImage, totalPixelsH, totalPixelsV,
+															defaultCellPixelsH, defaultCellPixelsV,
+															kScrollWithImage, kRestoreCursor);
+					[completeImage release]; completeImage = nil;
 				}
 				
 				inDataPtr->emulator.stringAccumulator.clear();
@@ -14754,6 +14880,109 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 		std::fill(toCursorChar, toFirstRelocatedChar, ' ');
 	}
 }// bufferInsertBlanksAtCursorColumnWithoutUpdate
+
+
+/*!
+Shifts the text cursor based on the number of terminal cells
+required to render the given image, updating the attributes
+of all affected cells to display individual segments of the
+image.  The display is NOT updated.
+
+If "inAllowScrolling" is set to true, the terminal scrolls
+if the cursor shifts past the bottom of the screen and will
+continue to scroll as long as the image grows that way.
+
+If "inRestoreCursor" is set to true, the cursor returns to
+its original position after the image is inserted instead
+of having a new location at the end of the image.
+
+(2017.12)
+*/
+void
+bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
+										 NSImage*				inCompleteImage,
+										 UInt16					inTotalPixelsH,
+										 UInt16					inTotalPixelsV,
+										 UInt16					inCellPixelsH,
+										 UInt16					inCellPixelsV,
+										 Boolean				inAllowScrolling,
+										 Boolean				inRestoreCursor)
+{
+	UInt16 const	kCellsCoveredH = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(inTotalPixelsH, Float32) /
+																				STATIC_CAST(inCellPixelsH, Float32)),
+																		UInt16));
+	UInt16 const	kCellsCoveredV = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(inTotalPixelsV, Float32) /
+																				STATIC_CAST(inCellPixelsV, Float32)),
+																		UInt16));
+	NSRect			subImageRect = NSZeroRect; // initialized below
+	
+	
+	if (DebugInterface_LogsSixelDecoderState())
+	{
+		Console_WriteValue("range of terminal text cells covered by image, horizontally", kCellsCoveredH);
+		Console_WriteValue("range of terminal text cells covered by image, vertically", kCellsCoveredV);
+	}
+	
+	// initialize first sub-rectangle (rendered by one terminal cell)
+	subImageRect = NSMakeRect(0, inCompleteImage.size.height - inCellPixelsV,
+								inCellPixelsH, inCellPixelsV);
+	
+	// since the image is being rendered inline by the terminal, shift the text
+	// cursor location according to the number of text cells that are occupied
+	UInt16 const		kOriginalCursorX = inDataPtr->current.cursorX;
+	UInt16 const		kOriginalCursorY = inDataPtr->current.cursorY;
+	for (UInt16 i = 0; i < kCellsCoveredV; ++i)
+	{
+		My_ScreenBufferLineList::iterator	cursorLineIterator;
+		
+		
+		moveCursorX(inDataPtr, kOriginalCursorX);
+		subImageRect.origin.x = 0;
+		locateCursorLine(inDataPtr, cursorLineIterator);
+		for (UInt16 j = 0; j < kCellsCoveredH; ++j)
+		{
+			TextAttributes_BitmapID		cellBitmapID;
+			TextAttributes_Object		newAttributes;
+			
+			
+			// set attributes on all affected text cells to allow them to render their
+			// assigned portion of the overall image
+			if (false == defineBitmap(inDataPtr, inCompleteImage, subImageRect, cellBitmapID))
+			{
+				if (DebugInterface_LogsSixelDecoderState())
+				{
+					Console_Warning(Console_WriteLine, "failed to allocate a cell bitmap");
+				}
+			}
+			else
+			{
+				newAttributes.bitmapIDSet(cellBitmapID);
+			}
+			changeLineRangeAttributes(inDataPtr, *(*cursorLineIterator),
+										inDataPtr->current.cursorX, 1 + inDataPtr->current.cursorX,
+										newAttributes/* attributes to set */,
+										TextAttributes_Object(0xFFFFFFFF, 0xFFFFFFFF)/* attributes to clear */);
+			
+			moveCursorRight(inDataPtr);
+			subImageRect.origin.x += subImageRect.size.width;
+		}
+		
+		if (inAllowScrolling)
+		{
+			moveCursorDownOrScroll(inDataPtr);
+		}
+		else
+		{
+			moveCursorDown(inDataPtr);
+		}
+		subImageRect.origin.y -= subImageRect.size.height;
+	}
+	moveCursorX(inDataPtr, kOriginalCursorX);
+	if (inRestoreCursor)
+	{
+		moveCursorY(inDataPtr, kOriginalCursorY);
+	}
+}// bufferInsertInlineImageWithoutUpdate
 
 
 /*!

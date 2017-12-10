@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171210',
     '20171129',
     '20171018',
     '20171016',
@@ -584,6 +585,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171210': [
+        'Terminal views can now display inline bitmap images expressed in the Sixel format from the VT300 series of terminals.  While this first implementation is NOT optimized in any way (and therefore can be slow for larger images), it should reliably render a wide variety of images in this format.  It is not currently possible to customize the behavior of the renderer except by specifying standard Sixel parameters.  There is a minor known issue with scrolling that can be avoided by using a raw dumping program such as "cat" to send Sixel data; for example, it is better to "cat" data from a file or pipe data from a conversion program to "cat".',
+        'Preferences window Terminals pane Emulation tab now offers the tweak "VT340 Sixel Graphics", which is enabled by default.',
+    ],
     '20171129': [
         'Fixed case where drag-and-drop highlight was not completely erased.',
         'Fixed slight alignment problem with certain animations such as "Find Cursor" and search results.',
