@@ -289,6 +289,7 @@ enum
 {
 	kPreferences_TagDataReceiveDoNotStripHighBit		= '8bit',	//!< data: "Boolean"
 	kPreferences_TagEmacsMetaKey						= 'meta',	//!< data: "UInt16" (Session_EmacsMetaKey)
+	kPreferences_TagITermGraphicsEnabled				= 'itrm',	//!< data: "Boolean"
 	kPreferences_TagMapArrowsForEmacs					= 'mapE',	//!< data: "Boolean"
 	kPreferences_TagMapKeypadTopRowForVT220				= 'mapK',	//!< data: "Boolean"
 	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"

@@ -387,6 +387,10 @@ void
 	Session_DisplayFileCaptureSaveDialog	(SessionRef							inRef);
 
 void
+	Session_DisplayFileDownloadNameUI		(SessionRef							inRef,
+											 CFStringRef						inFileName);
+
+void
 	Session_DisplaySaveDialog				(SessionRef							inRef);
 
 void

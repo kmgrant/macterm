@@ -74,6 +74,15 @@
 @end //}
 
 
+@interface NSData (CocoaExtensions_NSData) //{
+
+// initializers
+	- (instancetype)
+	initWithBase64EncodingOSImplementation:(NSString*)_;
+
+@end //}
+
+
 @interface NSImage (CocoaExtensions_NSImage) //{
 
 // new methods

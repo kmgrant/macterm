@@ -444,11 +444,13 @@
 	<string>vt100</string>
 	<key>terminal-emulator-enable-color-24bit</key>
 	<true/>
+	<key>terminal-emulator-iterm-enable-graphics</key>
+	<true/>
+	<key>terminal-emulator-sixel-enable-graphics</key>
+	<true/>
 	<key>terminal-emulator-type</key>
 	<string>vt100</string>
 	<key>terminal-emulator-vt100-fix-line-wrapping-bug</key>
-	<true/>
-	<key>terminal-emulator-sixel-enable-graphics</key>
 	<true/>
 	<key>terminal-emulator-xterm-enable-background-color-erase</key>
 	<true/>

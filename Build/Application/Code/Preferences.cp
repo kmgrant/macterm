@@ -999,6 +999,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowTitle, kPreferences_MaximumWorkspaceSize,
 											CFSTR("window-%02u-name-string"), typeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::WORKSPACE);
+	My_PreferenceDefinition::createFlag(kPreferences_TagITermGraphicsEnabled,
+										CFSTR("terminal-emulator-iterm-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagKeepAlivePeriodInMinutes,
 									CFSTR("data-send-keepalive-period-minutes"), typeNetEvents_CFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
@@ -1089,6 +1091,8 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagServerUserID,
 									CFSTR("server-user-id"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::createFlag(kPreferences_TagSixelGraphicsEnabled,
+										CFSTR("terminal-emulator-sixel-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTektronixMode,
 									CFSTR("tek-mode"), typeCFStringRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
@@ -1232,8 +1236,6 @@ Preferences_Init ()
 									sizeof(OptionBits), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminal24BitColorEnabled,
 										CFSTR("terminal-emulator-enable-color-24bit"), Quills::Prefs::TERMINAL);
-	My_PreferenceDefinition::createFlag(kPreferences_TagSixelGraphicsEnabled,
-										CFSTR("terminal-emulator-sixel-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
 										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermBackgroundColorEraseEnabled,
@@ -8083,6 +8085,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				switch (inDataPreferenceTag)
 				{
 				case kPreferences_TagDataReceiveDoNotStripHighBit:
+				case kPreferences_TagITermGraphicsEnabled:
 				case kPreferences_TagSixelGraphicsEnabled:
 				case kPreferences_TagTerminal24BitColorEnabled:
 				case kPreferences_TagTerminalClearSavesLines:
@@ -10480,6 +10483,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				break;
 			
 			case kPreferences_TagDataReceiveDoNotStripHighBit:
+			case kPreferences_TagITermGraphicsEnabled:
 			case kPreferences_TagSixelGraphicsEnabled:
 			case kPreferences_TagTerminal24BitColorEnabled:
 			case kPreferences_TagTerminalClearSavesLines:

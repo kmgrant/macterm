@@ -889,6 +889,36 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 
 
 /*!
+When a file has been downloaded (e.g. the terminal
+intercepts a sequence with embedded data), call this to
+show the name of the file in a temporary user interface.
+
+Currently this is implemented by briefly showing the
+file name in a floating “tool tip” at the cursor location,
+which will fade away after a short time. 
+
+(2017.12)
+*/
+void
+Session_DisplayFileDownloadNameUI	(SessionRef		inRef,
+									 CFStringRef	inFileName)
+{
+	My_HMHelpContentRecWrap&	tagData = createHelpTagForLocalEcho(); // reuse the “local echo” tag
+	HIRect						globalCursorBounds;
+	
+	
+	tagData.rename(inFileName, nullptr/* alternate text */);
+	TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
+										(Session_ReturnActiveTerminalWindow(inRef)),
+										globalCursorBounds);
+	tagData.setFrame(globalCursorBounds);
+	UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
+	// this call does not immediately hide the tag, but rather after a short delay
+	UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+}// DisplayFileDownloadNameUI
+
+
+/*!
 Displays the Save dialog for the given terminal window,
 handling the user’s response automatically.  The dialog
 could be a sheet, so this routine may return immediately

@@ -393,6 +393,17 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 													forKey:@"description"];
 		[asMutableArray addObject:valueObject];
 		
+		// iTerm2 graphics support
+		valueObject = [[[PreferenceValue_Flag alloc]
+						initWithPreferencesTag:kPreferences_TagITermGraphicsEnabled
+												contextManager:aContextMgr]
+						autorelease];
+		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"iTerm Graphics",
+																			@"PrefPanelTerminals"/* table */,
+																			@"description of terminal feature")
+													forKey:@"description"];
+		[asMutableArray addObject:valueObject];
+		
 		// VT100 line-wrapping bug
 		valueObject = [[[PreferenceValue_Flag alloc]
 						initWithPreferencesTag:kPreferences_TagVT100FixLineWrappingBug

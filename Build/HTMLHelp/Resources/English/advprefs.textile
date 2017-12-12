@@ -261,6 +261,8 @@ table(deftable).
 (defbottom). |\2(desc). The name sent to the session when asked about terminal type; defaults to the current emulator name.|
 (deftop). |(key). @terminal-emulator-enable-color-24bit@|(types). _true or false_|
 (defbottom). |\2(desc). Arbitrary RGB color terminal sequences are allowed, using 8 bits per element.|
+(deftop). |(key). @terminal-emulator-iterm-enable-graphics@|(types). _true or false_|
+(defbottom). |\2(desc). The iTerm2 base64-encoded image dump format is supported.|
 (deftop). |(key). @terminal-emulator-sixel-enable-graphics@|(types). _true or false_|
 (defbottom). |\2(desc). The Sixel graphics format is supported, including terminal sequences to start/end graphics commands.|
 (deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@|

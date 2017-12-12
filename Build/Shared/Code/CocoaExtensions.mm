@@ -40,6 +40,23 @@
 
 
 
+#pragma mark Types
+
+/*!
+This protocol exists in order to suppress warnings about
+undeclared selectors used in "@selector()" calls below.
+There is code to dynamically check for selectors that may
+not be available in the runtime OS.
+*/
+@protocol CocoaExtensions_LikeSnowLeopardNSData //{
+
+	// 10.6: selector to initialize with encoded base64 data
+	- (id)
+	initWithBase64Encoding:(NSString*)_;
+
+@end //}
+
+
 #pragma mark Public Methods
 
 
@@ -387,6 +404,45 @@ setAsForegroundInQDCurrentPort
 
 
 @end //} NSColor (CocoaExtensions_NSColor)
+
+
+#pragma mark -
+@implementation NSData (CocoaExtensions_NSData) //{
+
+
+#pragma mark Initializers
+
+
+/*!
+According to documentation, "initWithBase64Encoding:" has
+been implemented by NSData since 10.6 but wasn’t declared
+in the SDK until later; this method makes the OS version
+of the method available in a convenient way without having
+to worry about compiler warnings or make runtime checks in
+calling code.
+
+NOTE:	The initializer mentioned above has also been
+		deprecated in later SDKs; callers should therefore
+		eventually use "initWithBase64EncodedData:options:".
+
+(2017.12)
+*/
+- (instancetype)
+initWithBase64EncodingOSImplementation:(NSString*)		aString
+{
+	self = nil;
+	if ([NSData instancesRespondToSelector:@selector(initWithBase64Encoding:)])
+	{
+		id		result = [NSData alloc];
+		
+		
+		self = [result performSelector:@selector(initWithBase64Encoding:) withObject:aString];
+	}
+	return self;
+}// initWithBase64EncodingOSImplementation:
+
+
+@end //} NSData (CocoaExtensions_NSData)
 
 
 #pragma mark -

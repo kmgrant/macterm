@@ -330,6 +330,10 @@ enum
 	kMy_ParserStateSeenESCRightSqBracket2Semi	= 'E]2;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket3Semi	= 'E]3;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCRightSqBracket4Semi	= 'E]4;',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket13		= 'E]13',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket133		= ']133',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket1337	= '1337',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightSqBracket1337Semi= '337;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCA						= 'ESCA',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCB						= 'ESCB',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCC						= 'ESCC',	//!< generic state used to define emulator-specific states, below
@@ -953,6 +957,7 @@ public:
 		kVariantFlagXTermAlterWindow	= (1 << 2),		//!< corresponds to kPreferences_TagXTermWindowAlterationEnabled
 		kVariantFlagXTermBCE			= (1 << 3),		//!< corresponds to kPreferences_TagXTermBackgroundColorEraseEnabled
 		kVariantFlagSixelGraphics		= (1 << 4),		//!< corresponds to kPreferences_TagSixelGraphicsEnabled
+		kVariantFlagITermGraphics		= (1 << 5),		//!< corresponds to kPreferences_TagITermGraphicsEnabled
 	};
 	
 	struct Callbacks
@@ -1041,6 +1046,7 @@ public:
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
 	UTF8Decoder_StateMachine			multiByteDecoder;		//!< as individual bytes are processed, this tracks complete or invalid sequences
 	UInt8								recentCodePointByte;	//!< for 8-bit encodings, the most recent byte read; see also "multiByteDecoder"
+	Boolean								addedITerm;				//!< keep track of previous requests to install the same variant
 	Boolean								addedSixel;				//!< keep track of previous requests to install the same variant
 	Boolean								addedXTerm;				//!< since multiple variants reuse these callbacks, only insert them once
 	Boolean								allowSixelScrolling;	//!< whether or not the screen scrolls when a Sixel cursor goes past the bottom
@@ -1115,6 +1121,9 @@ public:
 	
 	Boolean
 	returnForceSave		(Preferences_ContextRef);
+	
+	Boolean
+	returnITermGraphics		(Preferences_ContextRef);
 	
 	Session_LineEnding
 	returnLineEndings ();
@@ -1350,6 +1359,25 @@ public:
 	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
+};
+
+/*!
+A lightweight terminal implementation, suitable ONLY as a
+pre-callback.  Implements custom iTerm2 sequences.
+*/
+class My_ITermCore
+{
+public:
+	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
+	
+	enum State
+	{
+		// Ideally these are "protected", but loop evasion code requires them.
+		kStateITermCustomBegin		= kMy_ParserStateSeenESCRightSqBracket1337Semi,	//!< saw custom iTerm2 ESC]1337; sequence
+		kStateITermAcquireStr		= 'iAcS',							//!< continuously copy iTerm2 data string
+		kStateITermStringTerminator	= kMy_ParserStateSeenControlG		//!< end of custom data stream
+	};
 };
 
 /*!
@@ -3126,6 +3154,14 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 										
 										
 										interrupt = (dataPtr->emulator.stateRepetitions > kMaxBytesPerImage);
+									}
+									else if (states.second == My_ITermCore::kStateITermAcquireStr)
+									{
+										// arbitrarily allow massive image data sizes (TEMPORARY; make user-configurable?)
+										static UInt64 const		kMaxBytesITerm2 = (20 * 1024 * 1024);
+										
+										
+										interrupt = (dataPtr->emulator.stateRepetitions > kMaxBytesITerm2);
 									}
 								}
 								
@@ -5915,6 +5951,7 @@ stringAccumulatorState(kMy_ParserStateInitial),
 stringAccumulator(),
 multiByteDecoder(),
 recentCodePointByte('\0'),
+addedITerm(false),
 addedSixel(false),
 addedXTerm(false),
 allowSixelScrolling(true),
@@ -6695,6 +6732,19 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 		this->emulator.trueColorTableGreens = new My_RGBComponentList();
 		this->emulator.trueColorTableBlues = new My_RGBComponentList();
 	}
+	if (returnITermGraphics(inTerminalConfig))
+	{
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlagITermGraphics;
+		if (false == this->emulator.addedITerm)
+		{
+			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+													My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
+																			My_ITermCore::stateDeterminant,
+																			My_ITermCore::stateTransition,
+																			nullptr/* reset - override is not allowed in a pre-callback */));
+			this->emulator.addedITerm = true;
+		}
+	}
 	if (returnSixelGraphics(inTerminalConfig))
 	{
 		this->emulator.supportedVariants |= My_Emulator::kVariantFlagSixelGraphics;
@@ -7049,6 +7099,29 @@ returnForceSave		(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnForceSave
+
+
+/*!
+Reads "kPreferences_TagITermGraphicsEnabled" from a
+Preferences context, and returns either that value or the
+default of true if none was found.
+
+(2017.12)
+*/
+Boolean
+My_ScreenBuffer::
+returnITermGraphics		(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagITermGraphicsEnabled,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = true; // arbitrary
+	
+	return result;
+}// returnITermGraphics
 
 
 /*!
@@ -7451,6 +7524,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	// some characters are independent of the current state by default
 	switch (kTriggerChar)
 	{
+	case '\007':
+		inNowOutNext.second = kMy_ParserStateSeenControlG;
+		break;
+	
 	case '\033':
 		inNowOutNext.second = kMy_ParserStateSeenESC;
 		break;
@@ -8201,6 +8278,52 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1Semi;
 				break;
 			
+			case '3':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket13;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket13:
+			switch (kTriggerChar)
+			{
+			case '3':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket133;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket133:
+			switch (kTriggerChar)
+			{
+			case '7':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1337;
+				break;
+			
+			default:
+				inNowOutNext.second = kDefaultNextState;
+				result = 0; // do not absorb the unknown
+				break;
+			}
+			break;
+		
+		case kMy_ParserStateSeenESCRightSqBracket1337:
+			switch (kTriggerChar)
+			{
+			case ';':
+				inNowOutNext.second = kMy_ParserStateSeenESCRightSqBracket1337Semi;
+				break;
+			
 			default:
 				inNowOutNext.second = kDefaultNextState;
 				result = 0; // do not absorb the unknown
@@ -8566,6 +8689,468 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// My_DumbTerminal::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+iTerm2-specific states based on the characters of the
+given buffer.
+
+(2017.12)
+*/
+UInt32
+My_ITermCore::
+stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
+					 My_ParserStatePair&	inNowOutNext,
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
+					 Boolean&				outHandled)
+{
+	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	switch (inNowOutNext.first)
+	{
+	case My_VT220::kStateDCS:
+		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
+		break;
+	
+	case kStateITermCustomBegin:
+		inNowOutNext.second = kStateITermAcquireStr;
+		result = 0; // do not absorb the unknown
+		break;
+	
+	case kStateITermAcquireStr:
+		switch (kTriggerChar)
+		{
+		case '\007':
+			inNowOutNext.second = kStateITermStringTerminator;
+			break;
+		
+		case '\033':
+			inNowOutNext.second = kMy_ParserStateSeenESC;
+			break;
+		
+		default:
+			// continue extending the string until a known terminator is found
+			inNowOutNext.second = kStateITermAcquireStr;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	default:
+		// other states are not handled at all
+		outHandled = false;
+		break;
+	}
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< iTerm handler in state", inNowOutNext.first);
+	//Console_WriteValueFourChars(">>>     iTerm handler proposes state", inNowOutNext.second);
+	//Console_WriteValueUnicodePoint("        iTerm handler bases this at least on character", kTriggerChar);
+	
+	return result;
+}// My_ITermCore::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that responds to
+iTerm2-specific state changes.
+
+(2017.12)
+*/
+UInt32
+My_ITermCore::
+stateTransition		(My_ScreenBufferPtr			inDataPtr,
+					 My_ParserStatePair const&	inOldNew,
+					 Boolean&					outHandled)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< iTerm handler transition from state", inOldNew.first);
+	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
+	{
+		Console_WriteValueFourChars(">>>     iTerm handler transition to state  ", inOldNew.second);
+	}
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inOldNew.second)
+	{
+	case kStateITermCustomBegin:
+		{
+			if (DebugInterface_LogsTerminalState())
+			{
+				Console_WriteLine("preparing to read iTerm data"); // debug
+			}
+			
+			inDataPtr->emulator.stringAccumulator.clear();
+			inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
+		}
+		break;
+	
+	case kStateITermAcquireStr:
+		{
+			if (DebugInterface_LogsTerminalState())
+			{
+				Console_WriteLine("reading iTerm data"); // debug
+			}
+			
+			if (inDataPtr->emulator.isUTF8Encoding)
+			{
+				if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
+				{
+					std::copy(inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
+								inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
+								std::back_inserter(inDataPtr->emulator.stringAccumulator));
+					result = 1;
+				}
+			}
+			else
+			{
+				inDataPtr->emulator.stringAccumulator.push_back(STATIC_CAST(inDataPtr->emulator.recentCodePoint(), UInt8));
+				result = 1;
+			}
+		}
+		break;
+	
+	case kStateITermStringTerminator:
+		// when custom data stream is complete, process the contents of the buffer
+		switch (inDataPtr->emulator.stringAccumulatorState)
+		{
+		case kStateITermCustomBegin:
+			{
+				if (DebugInterface_LogsTerminalState())
+				{
+					Console_WriteLine("stopped reading iTerm data"); // debug
+				}
+				
+				// this format is documented at: "http://www.iterm2.com/documentation-images.html"
+				// INCOMPLETE
+				NSString*			asNSString = [NSString stringWithUTF8String:inDataPtr->emulator.stringAccumulator.c_str()];
+				NSMutableArray*		equalsSeparated = [[asNSString componentsSeparatedByString:@"="] mutableCopy];
+				
+				
+				if (equalsSeparated.count < 2)
+				{
+					Console_Warning(Console_WriteValue, "unable to parse; expected key=value but fragment count", equalsSeparated.count);
+				}
+				else
+				{
+					id			objectKey = [equalsSeparated objectAtIndex:0];
+					assert([objectKey isKindOfClass:NSString.class]);
+					NSString*	stringKey = STATIC_CAST(objectKey, NSString*);
+					NSString*	stringValue = nil; // set below
+					
+					
+					[equalsSeparated removeObjectAtIndex:0];
+					stringValue = [equalsSeparated componentsJoinedByString:@"="]; // allow equal signs in the remainder
+					
+					if ([stringKey isEqualToString:@"File"] || [stringKey isEqualToString:@"file"])
+					{
+						// custom iTerm2 sequence for downloading file data
+						NSArray*	colonSeparated = [stringValue componentsSeparatedByString:@":"];
+						
+						
+						if (colonSeparated.count != 2)
+						{
+							Console_Warning(Console_WriteValue, "expected two colon-separated fragments but saw count", colonSeparated.count);
+						}
+						else
+						{
+							id			objectEntry0 = [colonSeparated objectAtIndex:0];
+							id			objectEntry1 = [colonSeparated objectAtIndex:1];
+							assert([objectEntry0 isKindOfClass:NSString.class]);
+							assert([objectEntry1 isKindOfClass:NSString.class]);
+							NSString*	argumentsString = STATIC_CAST(objectEntry0, NSString*);
+							NSArray*	semicolonSeparated = [argumentsString componentsSeparatedByString:@";"];
+							NSString*	dataString = STATIC_CAST(objectEntry1, NSString*);
+							UInt16		totalPixelsH = 0; // reset below
+							UInt16		totalPixelsV = 0; // reset below
+							UInt16		defaultCellPixelsH = 9; // reset below
+							UInt16		defaultCellPixelsV = 12; // reset below
+							UInt16		suggestedCellCountH = 0;
+							UInt16		suggestedCellCountV = 0;
+							Boolean		isBase64 = true; // see below
+							Boolean		dumpImage = false;
+							Boolean		ignoreAspectRatio = false;
+							
+							
+							for (id argObject in semicolonSeparated)
+							{
+								assert([argObject isKindOfClass:NSString.class]);
+								NSString*			argString = STATIC_CAST(argObject, NSString*);
+								NSMutableArray*		argKeyValue = [[argString componentsSeparatedByString:@"="] mutableCopy];
+								
+								
+								if (argKeyValue.count < 2)
+								{
+									Console_Warning(Console_WriteValueCFString, "expected key=value; unable to process string", BRIDGE_CAST(argumentsString, CFStringRef));
+								}
+								else
+								{
+									id			objectArgName = [argKeyValue objectAtIndex:0];
+									assert([objectArgName isKindOfClass:NSString.class]);
+									NSString*	argName = STATIC_CAST(objectArgName, NSString*);
+									NSString*	argValue = nil; // see below
+									
+									
+									[argKeyValue removeObjectAtIndex:0];
+									argValue = [argKeyValue componentsJoinedByString:@"="]; // allow equal signs in the value itself
+									
+									//Console_WriteValueCFString("received argument name", BRIDGE_CAST(argName, CFStringRef)); // debug
+									//Console_WriteValueCFString("received argument value", BRIDGE_CAST(argValue, CFStringRef)); // debug
+									
+									if ([argName isEqualToString:@"name"])
+									{
+										// the name is actually a string encoded in base64
+										NSData*		decodedName = [[[NSData alloc] initWithBase64EncodingOSImplementation:argValue]
+																	autorelease];
+										NSString*	decodedString = [[NSString alloc] initWithData:decodedName encoding:NSUTF8StringEncoding];
+										
+										
+										if (nil == decodedString)
+										{
+											Console_Warning(Console_WriteLine, "failed to decode base64 for 'name' argument");
+										}
+										else
+										{
+											SessionRef		session = returnListeningSession(inDataPtr);
+											
+											
+											if (nil == session)
+											{
+												Console_Warning(Console_WriteValueCFString, "no session found for terminal; ignoring file name",
+																BRIDGE_CAST(decodedString, CFStringRef));
+											}
+											else
+											{
+												Session_DisplayFileDownloadNameUI(session, BRIDGE_CAST(decodedString, CFStringRef));
+											}
+										}
+									}
+									else if ([argName isEqualToString:@"inline"])
+									{
+										if ([argValue isEqualToString:@"1"] || [argValue isEqualToString:@"true"])
+										{
+											dumpImage = true;
+										}
+									}
+									else if ([argName isEqualToString:@"size"])
+									{
+										// total image data size in bytes; not used right now
+										Console_Warning(Console_WriteLine, "ignored argument 'size'");
+									}
+									else if ([argName isEqualToString:@"preserveAspectRatio"])
+									{
+										if ([argValue isEqualToString:@"0"] || [argValue isEqualToString:@"false"])
+										{
+											ignoreAspectRatio = true;
+											Console_WriteLine("ignoring image aspect ratio"); // debug
+										}
+										else
+										{
+											ignoreAspectRatio = false;
+										}
+									}
+									else if ([argName isEqualToString:@"width"] || [argName isEqualToString:@"height"])
+									{
+										Boolean		isWidth = [argName isEqualToString:@"width"]; // otherwise, height
+										
+										
+										if ([argValue isEqualToString:@"auto"])
+										{
+											// implied for zero values (see below)
+											if (isWidth)
+											{
+												totalPixelsH = 0;
+											}
+											else
+											{
+												totalPixelsV = 0;
+											}
+										}
+										else
+										{
+											if ([argValue hasSuffix:@"px"])
+											{
+												// number of pixels
+												NSScanner*		valueScanner = [NSScanner scannerWithString:argValue];
+												NSString*		subValue = nil;
+												
+												
+												if ([valueScanner scanUpToString:@"px" intoString:&subValue])
+												{
+													UInt16 const	kPixelCount = STATIC_CAST([subValue integerValue], UInt16);
+													
+													
+													if (isWidth)
+													{
+														totalPixelsH = kPixelCount;
+													}
+													else
+													{
+														totalPixelsV = kPixelCount;
+													}
+													
+													//Console_WriteValue("set image pixel width/height", kPixelCount); // debug
+												}
+											}
+											else if ([argValue hasSuffix:@"%"])
+											{
+												// INCOMPLETE; percent not supported for arbitrary values but it is
+												// easy to support some common absolute percentages
+												if ([argValue isEqualToString:@"100%"])
+												{
+													if (isWidth)
+													{
+														suggestedCellCountH = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+													}
+													else
+													{
+														suggestedCellCountV = inDataPtr->screenBuffer.size();
+													}
+												}
+												else
+												{
+													Console_Warning(Console_WriteValueCFString, "ignored unusual width/height percentage value (try '100%')", BRIDGE_CAST(argValue, CFStringRef));
+												}
+											}
+											else
+											{
+												// number of ordinary cells to occupy; this is handled by scaling
+												// the “pixels per cell” later, when the image dimensions are final
+												UInt16 const	kCellCount = STATIC_CAST([argValue integerValue], UInt16);
+												
+												
+												if (isWidth)
+												{
+													suggestedCellCountH = kCellCount;
+												}
+												else
+												{
+													suggestedCellCountV = kCellCount;
+												}
+												
+												//Console_WriteValue("set image cell count across/down", kCellCount); // debug
+											}
+										}
+									}
+									else
+									{
+										// ???
+										Console_Warning(Console_WriteValueCFString, "ignored argument with name", BRIDGE_CAST(argName, CFStringRef));
+										// INCOMPLETE; process arguments
+									}
+								}
+							}
+							
+							if (isBase64)
+							{
+								NSData*		decodedData = [[[NSData alloc] initWithBase64EncodingOSImplementation:dataString]
+															autorelease];
+								
+								
+								if (nil == decodedData)
+								{
+									Console_Warning(Console_WriteLine, "unable to process given string; expected base64 format");
+								}
+								else
+								{
+									if (dumpImage)
+									{
+										Boolean const	kScrollWithImage = true;
+										Boolean const	kRestoreCursor = false;
+										NSImage*		decodedImage = [[[NSImage alloc] initWithData:decodedData] autorelease];
+										
+										
+										if (0 == totalPixelsH)
+										{
+											// automatically determine width
+											totalPixelsH = STATIC_CAST(decodedImage.size.width, UInt16);
+										}
+										
+										if (0 == totalPixelsV)
+										{
+											// automatically determine height
+											totalPixelsV = STATIC_CAST(decodedImage.size.height, UInt16);
+										}
+										
+										if (false == ignoreAspectRatio)
+										{
+											Console_Warning(Console_WriteLine, "preservation of aspect ratio is not implemented");
+										}
+										
+										if (0 != suggestedCellCountH)
+										{
+											// use given number of cells across
+											defaultCellPixelsH = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(totalPixelsH, Float32) /
+																											STATIC_CAST(suggestedCellCountH, Float32)),
+																									UInt16));
+										}
+										
+										if (0 != suggestedCellCountV)
+										{
+											// use given number of cells down
+											defaultCellPixelsV = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(totalPixelsV, Float32) /
+																											STATIC_CAST(suggestedCellCountV, Float32)),
+																									UInt16));
+										}
+										
+										bufferInsertInlineImageWithoutUpdate(inDataPtr, decodedImage, totalPixelsH, totalPixelsV,
+																				defaultCellPixelsH, defaultCellPixelsV,
+																				kScrollWithImage, kRestoreCursor);
+									}
+									else
+									{
+										Console_Warning(Console_WriteLine, "recognized and decoded image but file downloading is not implemented; try using 'inline=1'");
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						// ???
+						Console_Warning(Console_WriteValueCFString, "unable to process given string; unsupported key", BRIDGE_CAST(stringKey, CFStringRef));
+					}
+				}
+				
+				inDataPtr->emulator.stringAccumulator.clear();
+				inDataPtr->emulator.stringAccumulatorState = kMy_ParserStateInitial;
+			}
+			break;
+		
+		default:
+			// ignore
+			outHandled = false;
+			break;
+		}
+		break;
+	
+	default:
+		// other state transitions are not handled at all
+		outHandled = false;
+		break;
+	}
+	
+	// WARNING: Do not call any other full emulator here!  This is a
+	//          pre-callback ONLY, which is designed to fall through
+	//          to something else (such as a VT100).
+	
+	return result;
+}// My_ITermCore::stateTransition
 
 
 /*!
