@@ -963,6 +963,11 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 													CFSTR("kUIStrings_FileDefaultExportPreferences; please localize the name but keep the .plist suffix"));
 		break;
 	
+	case kUIStrings_FileDefaultImageFile:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("untitled.png"), CFSTR("FileOrFolderNames"),
+													CFSTR("kUIStrings_FileDefaultImageFile; please localize the name but keep the .png suffix"));
+		break;
+	
 	case kUIStrings_FileDefaultMacroSet:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("untitled.macros"), CFSTR("FileOrFolderNames"),
 													CFSTR("kUIStrings_FileDefaultMacroSet; please localize the name but keep the .macros suffix"));
@@ -1451,6 +1456,18 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter a name for the file to contain your settings."),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogPromptSavePrefs"));
+		break;
+	
+	case kUIStrings_SystemDialogPromptSaveSelectedImage:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter a name for the file to contain the selected image."),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogPromptSaveSelectedImage"));
+		break;
+	
+	case kUIStrings_SystemDialogPromptSaveSelectedText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Enter a name for the file to contain the selected text."),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogPromptSaveSelectedText"));
 		break;
 	
 	case kUIStrings_SystemDialogPromptSaveSession:

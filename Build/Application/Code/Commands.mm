@@ -784,7 +784,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandSaveText:
-			TerminalView_DisplaySaveSelectedTextUI(activeView);
+			TerminalView_DisplaySaveSelectionUI(activeView);
 			break;
 		
 		case kCommandNewDuplicateSession:

@@ -401,7 +401,7 @@ void
 	TerminalView_DisplayCompletionsUI			(TerminalViewRef				inView);
 
 void
-	TerminalView_DisplaySaveSelectedTextUI		(TerminalViewRef				inView);
+	TerminalView_DisplaySaveSelectionUI			(TerminalViewRef				inView);
 
 TerminalView_Result
 	TerminalView_FindNothing					(TerminalViewRef				inView);
@@ -430,6 +430,9 @@ void
 
 CFStringRef
 	TerminalView_ReturnCursorWordCopyAsUnicode	(TerminalViewRef				inView);
+
+CFArrayRef
+	TerminalView_ReturnSelectedImageArrayCopy	(TerminalViewRef				inView);
 
 // INEFFICIENT, USE WITH CARE; LOOK FOR OTHER APIS THAT CAN READ THE SELECTION WITHOUT COPYING IT
 CFStringRef

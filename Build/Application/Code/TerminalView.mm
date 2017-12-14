@@ -457,8 +457,7 @@ void				drawSingleColorPattern				(CGContextRef, CGColorRef, CGRect, id);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
 														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
-void				drawTerminalScreenRunOp				(TerminalScreenRef, UInt16, CFStringRef, Terminal_LineRef, UInt16,
-														 TextAttributes_Object, void*);
+void				drawTerminalScreenRunOp				(My_TerminalViewPtr, UInt16, CFStringRef, UInt16, TextAttributes_Object);
 void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, CFIndex,
 														 CFStringRef, TextAttributes_Object);
 void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char,
@@ -471,6 +470,7 @@ Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, TerminalView_R
 Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
 Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, SInt16&, SInt16&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor*);
+void				getImagesInVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, NSMutableArray*);
 void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
 TerminalView_PixelWidth		getRowCharacterWidth		(My_TerminalViewPtr, TerminalView_RowIndex);
 void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, Rect*);
@@ -1213,9 +1213,9 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 
 /*!
 Displays a dialog allowing the user to choose a destination
-file, and then writes all selected text from the specified
-view to that file.  If no text is selected, no user interface
-appears.
+file, and then writes the selected data to that file (either
+a range of text or bitmap images that cross the selected
+region).  If nothing is selected, no user interface appears.
 
 This call returns immediately.  The save will only occur when
 the user eventually commits the sheet that appears.  The user
@@ -1228,55 +1228,122 @@ to substitute tabs for consecutive spaces).
 (3.1)
 */
 void
-TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
+TerminalView_DisplaySaveSelectionUI		(TerminalViewRef	inView)
 {
 	if (TerminalView_TextSelectionExists(inView))
 	{
 		My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+		NSMutableArray*				selectedImages = [[[NSMutableArray alloc] init] autorelease];
+		NSSavePanel*				savePanel = [NSSavePanel savePanel];
 		
 		
-		NSSavePanel*		savePanel = [NSSavePanel savePanel];
-		CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultCaptureFile),
-												CFRetainRelease::kAlreadyRetained);
-		CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptCaptureToFile),
-											CFRetainRelease::kAlreadyRetained);
-		
-		
-		[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
-		[savePanel setDirectory:nil];
-		[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
-		[savePanel beginSheetModalForWindow:TerminalView_ReturnNSWindow(inView)
-					completionHandler:^(NSInteger aReturnCode)
-					{
-						if (NSFileHandlingPanelOKButton == aReturnCode)
-						{
-							CFRetainRelease		textSelection(TerminalView_ReturnSelectedTextCopyAsUnicode
-																(inView, 0/* spaces equal to one tab, or zero for no substitution */,
-																	kTerminalView_TextFlagLineSeparatorLF |
-																	kTerminalView_TextFlagLastLineHasSeparator),
-																CFRetainRelease::kAlreadyRetained);
-							
-							
-							if (textSelection.exists())
+		getImagesInVirtualRange(viewPtr, viewPtr->text.selection.range, selectedImages);
+		if (selectedImages.count > 0)
+		{
+			// currently, only a single image can be saved
+			if (1 == selectedImages.count)
+			{
+				NSImage*			imageObject = [selectedImages objectAtIndex:0];
+				CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultImageFile),
+														CFRetainRelease::kAlreadyRetained);
+				CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptSaveSelectedImage),
+													CFRetainRelease::kAlreadyRetained);
+				
+				
+				[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
+				[savePanel setDirectory:nil];
+				[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+				[savePanel setAllowedFileTypes:@[@"png", @"tiff", @"bmp", @"gif", @"jpg", @"jpeg"]];
+				[savePanel beginSheetModalForWindow:TerminalView_ReturnNSWindow(inView)
+							completionHandler:^(NSInteger aReturnCode)
 							{
-								NSString*	asNSString = BRIDGE_CAST
-															(textSelection.returnCFStringRef(), NSString*);
-								NSError*	error = nil;
-								
-								
-								if (NO == [asNSString writeToURL:savePanel.URL atomically:YES
-														encoding:NSUTF8StringEncoding error:&error])
+								if (NSFileHandlingPanelOKButton == aReturnCode)
 								{
-									Sound_StandardAlert();
-									Console_Warning(Console_WriteValueCFString,
-													"failed to save selected text to file, error",
-													BRIDGE_CAST([error localizedDescription], CFStringRef));
+									// determine a bitmap representation that is consistent with the file name
+									NSData*					imageData = [imageObject TIFFRepresentation];
+									NSBitmapImageRep*		imageRep = [NSBitmapImageRep imageRepWithData:imageData];
+									NSDictionary*			propertyDict = @{
+																				NSImageCompressionFactor: @(1.0)
+																			};
+									NSBitmapImageFileType	imageFileType = NSPNGFileType;
+									NSError*				error = nil;
+									
+									
+									// TEMPORARY; there is probably a better way to do this...
+									if ([savePanel.URL.path hasSuffix:@"tiff"])
+									{
+										imageFileType = NSTIFFFileType;
+									}
+									else if ([savePanel.URL.path hasSuffix:@"bmp"])
+									{
+										imageFileType = NSBMPFileType;
+									}
+									else if ([savePanel.URL.path hasSuffix:@"gif"])
+									{
+										imageFileType = NSGIFFileType;
+									}
+									else if ([savePanel.URL.path hasSuffix:@"jpg"] || [savePanel.URL.path hasSuffix:@"jpeg"])
+									{
+										imageFileType = NSJPEGFileType;
+									}
+									
+									imageData = [imageRep representationUsingType:imageFileType properties:propertyDict];
+									if (NO == [imageData writeToURL:savePanel.URL options:0L error:&error])
+									{
+										Sound_StandardAlert();
+										Console_Warning(Console_WriteValueCFString,
+														"failed to save selected text to file, error",
+														BRIDGE_CAST([error localizedDescription], CFStringRef));
+									}
+								}
+							}];
+			}
+		}
+		else
+		{
+			// save selected text
+			CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultCaptureFile),
+													CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptSaveSelectedText),
+												CFRetainRelease::kAlreadyRetained);
+			
+			
+			[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
+			[savePanel setDirectory:nil];
+			[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+			[savePanel beginSheetModalForWindow:TerminalView_ReturnNSWindow(inView)
+						completionHandler:^(NSInteger aReturnCode)
+						{
+							if (NSFileHandlingPanelOKButton == aReturnCode)
+							{
+								CFRetainRelease		textSelection(TerminalView_ReturnSelectedTextCopyAsUnicode
+																	(inView, 0/* spaces equal to one tab, or zero for no substitution */,
+																		kTerminalView_TextFlagLineSeparatorLF |
+																		kTerminalView_TextFlagLastLineHasSeparator),
+																	CFRetainRelease::kAlreadyRetained);
+								
+								
+								if (textSelection.exists())
+								{
+									NSString*	asNSString = BRIDGE_CAST
+																(textSelection.returnCFStringRef(), NSString*);
+									NSError*	error = nil;
+									
+									
+									if (NO == [asNSString writeToURL:savePanel.URL atomically:YES
+															encoding:NSUTF8StringEncoding error:&error])
+									{
+										Sound_StandardAlert();
+										Console_Warning(Console_WriteValueCFString,
+														"failed to save selected text to file, error",
+														BRIDGE_CAST([error localizedDescription], CFStringRef));
+									}
 								}
 							}
-						}
-					}];
+						}];
+		}
 	}
-}// DisplaySaveSelectedTextUI
+}// DisplaySaveSelectionUI
 
 
 /*!
@@ -2325,6 +2392,30 @@ TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
 	result = [viewPtr->contentNSView window];
 	return result;
 }// ReturnNSWindow
+
+
+/*!
+Returns a new array of NSImage* values that refer to
+“complete” images within the text selection range.
+(In other words, an image is returned if it even
+slightly in the highlighted region.)
+
+Use CFRelease() to dispose of the array when finished.
+
+(2017.12)
+*/
+CFArrayRef
+TerminalView_ReturnSelectedImageArrayCopy	(TerminalViewRef	inView)
+{
+    My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	NSMutableArray*				mutableArray = [[NSMutableArray alloc] init];
+	CFArrayRef					result = BRIDGE_CAST(mutableArray, CFArrayRef);
+	
+	
+	getImagesInVirtualRange(viewPtr, viewPtr->text.selection.range, mutableArray);
+	
+	return result;
+}// ReturnSelectedImageArrayCopy
 
 
 /*!
@@ -5573,11 +5664,22 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 					// correct scrollback behavior at the moment
 					lineIterator = findRowIterator(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
 													&lineIteratorData);
-					if (nullptr == lineIterator) break;
+					if (nullptr == lineIterator)
+					{
+						break;
+					}
 					
-					iteratorResult = Terminal_ForEachLikeAttributeRunDo
-										(inTerminalViewPtr->screen.ref, lineIterator/* starting row */,
-											drawTerminalScreenRunOp, inTerminalViewPtr/* context, passed to callback */);
+					iteratorResult = Terminal_ForEachLikeAttributeRun
+										(inTerminalViewPtr->screen.ref, lineIterator,
+											^(UInt16					inLineTextBufferLength,
+											  CFStringRef				inLineTextBufferAsCFStringOrNull,
+											  Terminal_LineRef			UNUSED_ARGUMENT(inRow),
+											  UInt16					inZeroBasedStartColumnNumber,
+											  TextAttributes_Object		inAttributes)
+											{
+												drawTerminalScreenRunOp(inTerminalViewPtr, inLineTextBufferLength, inLineTextBufferAsCFStringOrNull,
+																		inZeroBasedStartColumnNumber, inAttributes);
+											});
 					if (iteratorResult != kTerminal_ResultOK)
 					{
 						// did not draw successfully...?
@@ -5858,32 +5960,29 @@ graphics port origin is equal to the screen origin.
 
 For efficiency, this routine does not preserve or
 restore state; do that on your own before invoking
-Terminal_ForEachLikeAttributeRunDo().
+Terminal_ForEachLikeAttributeRun().
 
-(3.0)
+(2017.12)
 */
 void
-drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
+drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 							 UInt16						inLineTextBufferLength,
 							 CFStringRef				inLineTextBufferAsCFStringOrNull,
-							 Terminal_LineRef			UNUSED_ARGUMENT(inRow),
 							 UInt16						inZeroBasedStartColumnNumber,
-							 TextAttributes_Object		inAttributes,
-							 void*						inTerminalViewPtr)
+							 TextAttributes_Object		inAttributes)
 {
-	My_TerminalViewPtr	viewPtr = REINTERPRET_CAST(inTerminalViewPtr, My_TerminalViewPtr);
-	CGRect				sectionBounds;
-	Rect				intBounds;
+	CGRect		sectionBounds;
+	Rect		intBounds;
 	
 	
 	// set up context foreground and background colors appropriately
 	// for the specified terminal attributes; this takes into account
 	// things like bold and highlighted text, etc.
-	useTerminalTextColors(viewPtr, viewPtr->screen.currentRenderContext, inAttributes, false/* is cursor */, 1.0/* alpha */);
+	useTerminalTextColors(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, inAttributes, false/* is cursor */, 1.0/* alpha */);
 	
 	// erase and redraw the current rendering line, but only the
 	// specified range (starting column and character count)
-	eraseSection(viewPtr, viewPtr->screen.currentRenderContext,
+	eraseSection(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext,
 					inZeroBasedStartColumnNumber, inZeroBasedStartColumnNumber + inLineTextBufferLength,
 					sectionBounds);
 	
@@ -5898,11 +5997,12 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// bitmap has been defined
 		Terminal_Result				terminalResult = kTerminal_ResultOK;
 		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
-		NSImage*					imageObject = nil;
+		NSImage*					tileImage = nil;
+		NSImage*					completeImage = nil;
 		
 		
-		terminalResult = Terminal_BitmapGetFromID(viewPtr->screen.ref, bitmapID, imageObject);
-		if ((kTerminal_ResultOK != terminalResult) || (nil == imageObject))
+		terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref, bitmapID, tileImage, completeImage);
+		if ((kTerminal_ResultOK != terminalResult) || (nil == tileImage))
 		{
 			// do not log image errors because there could potentially be
 			// many of them (such as, one per cell of the image); instead,
@@ -5910,7 +6010,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 			CFStringRef		errorString = CFSTR("!");
 			
 			
-			drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
+			drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds, intBounds,
 								CFStringGetLength(errorString), errorString, kTextAttributes_StyleInverse);
 		}
 		else
@@ -5919,7 +6019,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 															sectionBounds.size.width, sectionBounds.size.height);
 			NSDictionary*		hintDict = @{}; // from NSString* to id
 			NSGraphicsContext*	graphicsContext = [NSGraphicsContext
-													graphicsContextWithGraphicsPort:viewPtr->screen.currentRenderContext
+													graphicsContextWithGraphicsPort:inTerminalViewPtr->screen.currentRenderContext
 																					flipped:YES];
 			auto				oldInterpolation = [graphicsContext imageInterpolation];
 			
@@ -5927,14 +6027,14 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 			[NSGraphicsContext saveGraphicsState];
 			[NSGraphicsContext setCurrentContext:graphicsContext];
 			[graphicsContext setImageInterpolation:NSImageInterpolationNone]; // TEMPORARY; may want this to be an option
-			CGContextSetAllowsAntialiasing(viewPtr->screen.currentRenderContext, false);
-			[imageObject drawInRect:targetNSRect fromRect:NSZeroRect/* empty = whole image */
+			CGContextSetAllowsAntialiasing(inTerminalViewPtr->screen.currentRenderContext, false);
+			[tileImage drawInRect:targetNSRect fromRect:NSZeroRect/* empty = whole image */
 									operation:(inAttributes.hasSelection()
 												? NSCompositePlusDarker
 												: NSCompositeSourceOver)
 									fraction:1.0
 									respectFlipped:YES hints:hintDict];
-			CGContextSetAllowsAntialiasing(viewPtr->screen.currentRenderContext, true);
+			CGContextSetAllowsAntialiasing(inTerminalViewPtr->screen.currentRenderContext, true);
 			[graphicsContext setImageInterpolation:oldInterpolation];
 			[NSGraphicsContext restoreGraphicsState];
 		}
@@ -5946,7 +6046,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// with QuickDraw backgrounds without them (NOTE: adjusting
 		// width is not reasonable because it refers to the whole range,
 		// which might encompass several characters)
-		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
+		drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds, intBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
 		// since blinking forces frequent redraws, do not do it more
@@ -5955,9 +6055,9 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// timer when it is not needed
 		if (inAttributes.hasBlink())
 		{
-			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(viewPtr->animation.rendering.region, &sectionBounds);
+			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(inTerminalViewPtr->animation.rendering.region, &sectionBounds);
 			
-			viewPtr->screen.currentRenderBlinking = true;
+			inTerminalViewPtr->screen.currentRenderBlinking = true;
 		}
 	}
 	
@@ -5976,7 +6076,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	{
 		char x[255];
 		Str255 pstr;
-		(int)std::snprintf(x, sizeof(x), "%d", viewPtr->screen.currentRenderedLine);
+		(int)std::snprintf(x, sizeof(x), "%d", inTerminalViewPtr->screen.currentRenderedLine);
 		StringUtilities_CToP(x, pstr);
 		DrawString(pstr);
 	}
@@ -7553,6 +7653,71 @@ getBlinkAnimationColor	(My_TerminalViewPtr		inTerminalViewPtr,
 {
 	*outColorPtr = inTerminalViewPtr->blinkColors[inAnimationStage];
 }// getBlinkAnimationColor
+
+
+/*!
+Scans the text attributes of lines in the given range and
+adds “complete” images to the given array for any cells
+that render bitmaps.  Each image is added at most once, in
+the order it is first visited when iterating over a sorted
+range, and the entire image is added no matter how much of
+the image’s rendering is in the given terminal cell region.
+
+NOTE:	Currently only range rows are considered; a bitmap
+		anywhere on the row is considered significant.
+
+(2017.12)
+*/
+void
+getImagesInVirtualRange		(My_TerminalViewPtr				inTerminalViewPtr,
+							 TerminalView_CellRange const&	inRange,
+							 NSMutableArray*				outNSImageArray)
+{
+	TerminalView_CellRange		orderedRange = inRange;
+	Terminal_LineStackStorage	lineIteratorData;
+	Terminal_LineRef			lineIterator = nullptr;
+	NSMutableSet*				uniqueImages = [[[NSMutableSet alloc] init] autorelease];
+	
+	
+	// require beginning point to be “earlier” than the end point; swap points if not
+	sortAnchors(orderedRange.first, orderedRange.second, inTerminalViewPtr->text.selection.isRectangular);
+	
+	for (TerminalView_RowIndex i = orderedRange.first.second; i < orderedRange.second.second; ++i)
+	{
+		lineIterator = findRowIterator(inTerminalViewPtr, i, &lineIteratorData);
+		Terminal_ForEachLikeAttributeRun(inTerminalViewPtr->screen.ref, lineIterator/* starting row */,
+											^(UInt16					UNUSED_ARGUMENT(inLineTextBufferLength),
+											  CFStringRef				UNUSED_ARGUMENT(inLineTextBufferAsCFStringOrNull),
+											  Terminal_LineRef			UNUSED_ARGUMENT(inRow),
+											  UInt16					UNUSED_ARGUMENT(inZeroBasedStartColumnNumber),
+											  TextAttributes_Object		inAttributes)
+											{
+												if (inAttributes.hasBitmap())
+												{
+													TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
+													NSImage*					tileImage = nil;
+													NSImage*					completeImage = nil;
+													Terminal_Result				terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref,
+																															bitmapID,
+																															tileImage,
+																															completeImage);
+													
+													
+													// the tile image is used for rendering; only the complete image
+													// is returned here (regardless of how many tiles refer to it)
+													if ((kTerminal_ResultOK == terminalResult) && (nil != completeImage))
+													{
+														if (NO == [uniqueImages containsObject:completeImage])
+														{
+															[uniqueImages addObject:completeImage];
+															[outNSImageArray addObject:completeImage];
+														}
+													}
+												}
+											});
+		releaseRowIterator(inTerminalViewPtr, &lineIterator);
+	}
+}// getImagesInVirtualRange
 
 
 /*!

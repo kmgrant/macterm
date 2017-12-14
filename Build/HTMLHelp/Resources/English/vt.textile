@@ -74,7 +74,10 @@ You can use the Window menu to access key palettes for a number
 h2(#vt320). VT320
 
 The VT320 is a superset of the VT220.  MacTerm does not support
- this terminal type (yet).
+ this terminal type (yet), with the significant exception of
+ the Sixel bitmap image format.  If Sixel graphics sequences
+ from the VT340 series are sent to MacTerm, they will be
+ converted into images and displayed directly in the terminal.
 
 h2(#vt420). VT420
 
@@ -96,6 +99,14 @@ The XTerm is a superset of the VT100 series that is notable for
 * tab stop sequences ("CHT", "CBT")
 * line scrolling ("SU", "SD")
 * insert and erase ("ICH", "ECH")
+
+h2(#iterm). iTerm2
+
+MacTerm supports some custom sequences that iTerm2 defines.  So
+ far, only image-related sequences are recognized: the "File="
+ sequence, set as "inline=1" with image data, will cause images
+ to appear directly in the terminal.  Most image parameters are
+ also handled, such as a suggested number of cells.
 
 h2(#linux). Linux
 

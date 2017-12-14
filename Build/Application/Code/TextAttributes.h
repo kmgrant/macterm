@@ -329,6 +329,9 @@ struct TextAttributes_Object
 	hasAttributes	(TextAttributes_Object) const;
 	
 	inline bool
+	hasBitmap () const;
+	
+	inline bool
 	hasBlink () const;
 	
 	inline bool
@@ -943,16 +946,17 @@ const
 
 
 /*!
-Returns true if the "kTextAttributes_StyleBold" attribute is set.
+Returns true if the "kTextAttributes_ColorIndexIsBitmapID" attribute
+is set.
 
-(4.1)
+(2017.12)
 */
 bool
-TextAttributes_Object::hasBold ()
+TextAttributes_Object::hasBitmap ()
 const
 {
-	return this->hasAttributes(kTextAttributes_StyleBold);
-}// hasBold
+	return this->hasAttributes(kTextAttributes_ColorIndexIsBitmapID);
+}// hasBitmap
 
 
 /*!
@@ -966,6 +970,19 @@ const
 {
 	return this->hasAttributes(kTextAttributes_StyleBlinking);
 }// hasBlink
+
+
+/*!
+Returns true if the "kTextAttributes_StyleBold" attribute is set.
+
+(4.1)
+*/
+bool
+TextAttributes_Object::hasBold ()
+const
+{
+	return this->hasAttributes(kTextAttributes_StyleBold);
+}// hasBold
 
 
 /*!

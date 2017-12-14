@@ -258,49 +258,28 @@ typedef Terminal_XTermColorDescription const*	Terminal_XTermColorDescriptionCons
 #pragma mark Callbacks
 
 /*!
-Screen Run Routine
+Screen Run Block
 
-This defines a function that can be used as an iterator
-over all contiguous blocks of text in a virtual screen
-that share *exactly* the same attributes.  The specified
-text buffer (which is read-only) includes the contents of
-the current chunk of text, whose starting column is also
-given - assuming a renderer needs to know this.  The
-specified text attributes apply to every character in the
-chunk, and *include* any attributes that are actually
-applied to the entire line (double-sized text, for
-instance).
-
-This callback acts on text chunks that are not necessarily
-entire lines, and is guaranteed to be called with a series
-of characters whose attributes all match.  The expectation
-is that you are using this for rendering purposes.
+This can be used to visit all contiguous blocks of text in
+a virtual screen that share *exactly* the same attributes.
+The specified text buffer (which is read-only) includes
+the contents of the current chunk of text, whose starting
+column is also given - assuming a renderer needs to know
+this.  The specified text attributes apply to every
+character in the chunk, and *include* any attributes that
+are actually applied to the entire line (double-sized text,
+for instance).
 
 IMPORTANT:  The line text buffer may be nullptr, and if it
 			is, you should still pay attention to the
 			length value; it implies a blank area of that
 			many characters in length.
 */
-typedef void (*Terminal_ScreenRunProcPtr)	(TerminalScreenRef			inScreen,
-											 UInt16						inLineTextBufferOrWhitespaceLength,
-											 CFStringRef				inLineTextBufferAsCFStringOrNull,
-											 Terminal_LineRef			inRow,
-											 UInt16						inZeroBasedStartColumnNumber,
-											 TextAttributes_Object		inAttributes,
-											 void*						inContextPtr);
-inline void
-Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
-								 TerminalScreenRef				inScreen,
-								 UInt16							inLineTextBufferOrWhitespaceLength,
-								 CFStringRef					inLineTextBufferAsCFStringOrNull,
-								 Terminal_LineRef				inRow,
-								 UInt16							inZeroBasedStartColumnNumber,
-								 TextAttributes_Object			inAttributes,
-								 void*							inContextPtr)
-{
-	(*inUserRoutine)(inScreen, inLineTextBufferOrWhitespaceLength, inLineTextBufferAsCFStringOrNull,
-						inRow, inZeroBasedStartColumnNumber, inAttributes, inContextPtr);
-}
+typedef void (^Terminal_ScreenRunBlock)	(UInt16						inLineTextBufferOrWhitespaceLength,
+										 CFStringRef				inLineTextBufferAsCFStringOrNull,
+										 Terminal_LineRef			inRow,
+										 UInt16						inZeroBasedStartColumnNumber,
+										 TextAttributes_Object		inAttributes);
 
 
 
@@ -378,10 +357,9 @@ Terminal_Result
 //@{
 
 Terminal_Result
-	Terminal_ForEachLikeAttributeRunDo		(TerminalScreenRef			inScreen,
+	Terminal_ForEachLikeAttributeRun		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
-											 Terminal_ScreenRunProcPtr	inDoWhat,
-											 void*						inContextPtr);
+											 Terminal_ScreenRunBlock	inDoWhat);
 
 Terminal_Result
 	Terminal_LineIteratorAdvance			(TerminalScreenRef			inScreen,
@@ -589,7 +567,8 @@ Boolean
 Terminal_Result
 	Terminal_BitmapGetFromID				(TerminalScreenRef			inScreen,
 											 TextAttributes_BitmapID	inID,
-											 NSImage*&					outImageObject);
+											 NSImage*&					outTileImage,
+											 NSImage*&					outCompleteImage);
 
 //@}
 

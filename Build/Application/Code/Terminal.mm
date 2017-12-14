@@ -2272,13 +2272,15 @@ if the specified terminal was not configured for bitmaps
 Terminal_Result
 Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
 							 TextAttributes_BitmapID	inID,
-							 NSImage*&					outImageObject)
+							 NSImage*&					outTileImage,
+							 NSImage*&					outCompleteImage)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
-	outImageObject = nil; // initially...
+	outTileImage = nil; // initially...
+	outCompleteImage = nil; // initially...
 	
 	if (nullptr == dataPtr)
 	{
@@ -2293,7 +2295,17 @@ Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
 		}
 		else
 		{
-			outImageObject = [dataPtr->emulator.bitmapSegmentTable objectAtIndex:inID];
+			outTileImage = [dataPtr->emulator.bitmapSegmentTable objectAtIndex:inID];
+		}
+		
+		if ((nil == dataPtr->emulator.bitmapImageTable) ||
+			(inID >= dataPtr->emulator.bitmapImageTable.count))
+		{
+			result = kTerminal_ResultParameterError;
+		}
+		else
+		{
+			outCompleteImage = [dataPtr->emulator.bitmapImageTable objectAtIndex:inID];
 		}
 	}
 	
@@ -2720,11 +2732,11 @@ Terminal_CursorIsVisible	(TerminalScreenRef		inRef)
 Provides all the text attributes of the position currently
 occupied by the cursor.
 
-NOTE:	Admittedly this is a bit of a weird exception, since
-		all other style information is returned as part of the
-		Terminal_ForEachLikeAttributeRunDo() loop.  However,
-		the cursor is rendered at unusual times, and has a
-		special appearance, that make this necessary.
+NOTE:	Admittedly this is a bit of a weird exception (since
+		all other style information is returned as part of a
+		Terminal_ForEachLikeAttributeRun() loop) but the
+		cursor is rendered at unusual times and has a special
+		appearance.
 
 (4.0)
 */
@@ -3666,11 +3678,11 @@ Terminal_FileCaptureInProgress	(TerminalScreenRef		inRef)
 
 
 /*!
-Iterates over the given row of the specified terminal screen,
-executing a function on each chunk of text for which the
-associated attributes are all IDENTICAL.  The context is
-defined by you, and is passed directly to the specified
-function each time it is invoked.
+Iterates over the specified row of the given terminal screen,
+invoking a block on each chunk of text for which the associated
+attributes are all IDENTICAL.  The upper bound on the number of
+iterations is the number of cells in the row (reached only if
+every single cell has different attributes than its neighbor).
 
 \retval kTerminal_ResultOK
 if no error occurred
@@ -3681,13 +3693,12 @@ if the screen run operation function is invalid
 \retval kTerminal_ResultNotEnoughMemory
 if any line buffers are unexpectedly empty
 
-(3.0)
+(2017.12)
 */
 Terminal_Result
-Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
+Terminal_ForEachLikeAttributeRun	(TerminalScreenRef			inRef,
 									 Terminal_LineRef			inStartRow,
-									 Terminal_ScreenRunProcPtr	inDoWhat,
-									 void*						inContextPtr)
+									 Terminal_ScreenRunBlock	inDoWhat)
 {
 	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		screenPtr = getVirtualScreenData(inRef);
@@ -3701,26 +3712,25 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	else
 	{
 		// need to search line for style chunks
-		My_ScreenBufferLine&								currentLine = iteratorPtr->currentLine();
-		TerminalLine_TextIterator							textIterator = nullptr;
-		TerminalLine_TextAttributesList const&				currentAttributeVector = currentLine.returnAttributeVector();
-		auto												attrIterator = currentAttributeVector.begin();
-		TextAttributes_Object								previousAttributes;
-		TextAttributes_Object								currentAttributes;
-		SInt16												runStartCharacterIndex = 0;
-		SInt16												characterIndex = 0;
-		size_t												styleRunLength = 0;
+		My_ScreenBufferLine&						currentLine = iteratorPtr->currentLine();
+		TerminalLine_TextIterator					textIterator = nullptr;
+		TerminalLine_TextAttributesList const&		currentAttributeVector = currentLine.returnAttributeVector();
+		auto										attrIterator = currentAttributeVector.begin();
+		TextAttributes_Object						previousAttributes;
+		TextAttributes_Object						currentAttributes;
+		SInt16										runStartCharacterIndex = 0;
+		SInt16										characterIndex = 0;
+		size_t										styleRunLength = 0;
 		
 		
 	#if 0
 		// DEBUGGING ONLY: if you suspect a bug in the incremental loop below,
 		// try asking the entire line to be drawn without formatting, first
-		InvokeScreenRunOperationProc(inDoWhat, inRef,
-										currentLine.textVectorBegin/* starting point */,
-										currentLine.textVectorSize/* length */,
-										currentLine.textCFString.returnCFStringRef(),
-										inStartRow, 0/* zero-based start column */,
-										currentLine.returnGlobalAttributes(), inContextPtr);
+		inDoWhat(currentLine.textVectorSize/* length */,
+					currentLine.textCFString.returnCFStringRef(),
+					inStartRow,
+					0/* zero-based start column */,
+					currentLine.returnGlobalAttributes());
 	#endif
 		
 		// TEMPORARY - HIGHLY inefficient to search here, need to change this into a cache
@@ -3751,11 +3761,11 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					
 					
 					rangeAttributes.addAttributes(currentLine.returnGlobalAttributes());
-					Terminal_InvokeScreenRunProc(inDoWhat, inRef, STATIC_CAST(styleRunLength, UInt16)/* length */,
-													BRIDGE_CAST(styleRunSubstring, CFStringRef),
-													inStartRow,
-													runStartCharacterIndex/* zero-based start column */,
-													rangeAttributes, inContextPtr);
+					inDoWhat(STATIC_CAST(styleRunLength, UInt16)/* length */,
+								BRIDGE_CAST(styleRunSubstring, CFStringRef),
+								inStartRow,
+								runStartCharacterIndex/* zero-based start column */,
+								rangeAttributes);
 				}
 				
 				// reset for next run
@@ -3781,15 +3791,16 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					attributesForRemainder.addAttributes(kTextAttributes_Selected);
 				}
 				
-				Terminal_InvokeScreenRunProc(inDoWhat, inRef, STATIC_CAST(styleRunLength, UInt16)/* length */,
-												nullptr/* text buffer, for non-blank space */,
-												inStartRow, runStartCharacterIndex/* zero-based start column */,
-												attributesForRemainder, inContextPtr);
+				inDoWhat(STATIC_CAST(styleRunLength, UInt16)/* length */,
+							nullptr/* text buffer, for non-blank space */,
+							inStartRow,
+							runStartCharacterIndex/* zero-based start column */,
+							attributesForRemainder);
 			}
 		}
 	}
 	return result;
-}// ForEachLikeAttributeRunDo
+}// ForEachLikeAttributeRun
 
 
 /*!

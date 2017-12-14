@@ -11,13 +11,19 @@ notextile. <div class="content">
 
 notextile. <a id="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
-h2(#select). Text Selections
+h2(#select). Text and Image Selections
 
 Highlight terminal text by dragging over it with the mouse.  Keep
- it *rectangular* by holding down the Option key.
+ it *rectangular* by holding down the Option key.  Text selections
+ can often be initiated from the keyboard by holding down the Shift
+ key and pressing arrow keys.
 
-Text selections can often be initiated from the keyboard by
- holding down the Shift key and pressing arrow keys.
+If in-terminal images are present (such as those produced by Sixel
+ data or iTerm2 custom sequences), the text highlighting acts as
+ an image selector too; any portion of an image may be highlighted
+ in order to refer to the entire original image.  For example, you
+ can use File >> Save Selection... to create an image file after
+ highlighting just part of an image that you see in the terminal.
 
 h3(#selectdrag). Drag and Drop
 

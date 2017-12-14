@@ -270,6 +270,7 @@ enum UIStrings_FileOrFolderCFString
 {
 	kUIStrings_FileDefaultCaptureFile					= 'DefC',
 	kUIStrings_FileDefaultExportPreferences				= 'DefP',
+	kUIStrings_FileDefaultImageFile						= 'DefI',
 	kUIStrings_FileDefaultMacroSet						= 'DefM',
 	kUIStrings_FileDefaultSession						= 'DefS',
 	kUIStrings_FileNameDockTileAttentionPicture			= '!Pic',
@@ -364,11 +365,13 @@ Strings used with open and save dialogs, color pickers, etc.
 */
 enum UIStrings_SystemDialogCFString
 {
-	kUIStrings_SystemDialogPromptCaptureToFile	= 'PmCF',
-	kUIStrings_SystemDialogPromptOpenPrefs		= 'PmOP',
-	kUIStrings_SystemDialogPromptOpenSession	= 'PmOS',
-	kUIStrings_SystemDialogPromptSavePrefs		= 'PmSP',
-	kUIStrings_SystemDialogPromptSaveSession	= 'PmSS'
+	kUIStrings_SystemDialogPromptCaptureToFile		= 'PmCF',
+	kUIStrings_SystemDialogPromptOpenPrefs			= 'PmOP',
+	kUIStrings_SystemDialogPromptOpenSession		= 'PmOS',
+	kUIStrings_SystemDialogPromptSavePrefs			= 'PmSP',
+	kUIStrings_SystemDialogPromptSaveSelectedImage	= 'PmSI',
+	kUIStrings_SystemDialogPromptSaveSelectedText	= 'PmST',
+	kUIStrings_SystemDialogPromptSaveSession		= 'PmSS'
 };
 
 /*!

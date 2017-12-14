@@ -120,7 +120,7 @@ NOTE:	Traditionally NCSA Telnet has used bits to
 		The first part of this is implemented, in the
 		sense that Terminal Views only see terminal data
 		in terms of style runs (see the new routine
-		Terminal_ForEachLikeAttributeRunDo()).
+		Terminal_ForEachLikeAttributeRun()).
 */
 struct TerminalLine_Object
 {
