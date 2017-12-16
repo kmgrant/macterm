@@ -201,7 +201,10 @@ Clipboard_Done ()
 
 /*!
 Publishes the specified data to the specified pasteboard
-(or nullptr to use the primary pasteboard).
+(or nullptr to use the primary pasteboard).  If the
+"inClearFirst" is true, the pasteboard is cleared before
+new data is added; otherwise, the new string is added to
+any existing data on the pasteboard.
 
 The string is converted into an external representation
 of Unicode, "kUTTypeUTF16ExternalPlainText".
@@ -219,7 +222,8 @@ if access to the pasteboard could not be secured
 */
 OSStatus
 Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
-									 PasteboardRef		inPasteboardOrNullForMainClipboard)
+									 PasteboardRef		inPasteboardOrNullForMainClipboard,
+									 Boolean			inClearFirst)
 {
 	OSStatus		result = noErr;
 	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
@@ -227,7 +231,11 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 								: inPasteboardOrNullForMainClipboard;
 	
 	
-	result = PasteboardClear(target);
+	if (inClearFirst)
+	{
+		result = PasteboardClear(target);
+	}
+	
 	if (noErr == result)
 	{
 		// primary Unicode storage; this should be lossless, and should
@@ -310,8 +318,64 @@ Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
 			}
 		}
 	}
+	
+	Clipboard_SetPasteboardModified(target);
+	
 	return result;
 }// AddCFStringToPasteboard
+
+
+/*!
+Publishes the specified data to the specified pasteboard
+(or nullptr to use the primary pasteboard).  If the
+"inClearFirst" is true, the pasteboard is cleared before
+new data is added; otherwise, the new image is added to
+any existing data on the pasteboard.
+
+The image is converted into "kUTTypeTIFF".
+
+\retval noErr
+if the image was added successfully
+
+\retval (other)
+if access to the pasteboard could not be secured
+
+(2017.12)
+*/
+OSStatus
+Clipboard_AddNSImageToPasteboard	(NSImage*			inImageToCopy,
+									 PasteboardRef		inPasteboardOrNullForMainClipboard,
+									 Boolean			inClearFirst)
+{
+	OSStatus		result = noErr;
+	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
+								? Clipboard_ReturnPrimaryPasteboard()
+								: inPasteboardOrNullForMainClipboard;
+	
+	
+	if (inClearFirst)
+	{
+		result = PasteboardClear(target);
+	}
+	
+	if (noErr == result)
+	{
+		// primary image storage; this should be lossless, and should
+		// succeed in order for the Copy to be considered successful
+		{
+			NSData*		tiffData = [inImageToCopy TIFFRepresentation];
+			
+			
+			result = PasteboardPutItemFlavor(target, (PasteboardItemID)inImageToCopy,
+												kUTTypeTIFF,
+												BRIDGE_CAST(tiffData, CFDataRef), kPasteboardFlavorNoFlags);
+		}
+	}
+	
+	Clipboard_SetPasteboardModified(target);
+	
+	return result;
+}// AddNSImageToPasteboard
 
 
 /*!
@@ -1223,7 +1287,30 @@ updateClipboard		(PasteboardRef		inPasteboard)
 	CFStringRef						typeCFString = nullptr;
 	
 	
-	if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier, inPasteboard))
+	if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, inPasteboard))
+	{
+		// image
+		typeCFString = copyTypeDescription(typeIdentifier);
+		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
+		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
+		{
+			NSPasteboard*	generalPasteboard = [NSPasteboard generalPasteboard];
+			
+			
+			gCurrentRenderData.clear();
+			
+			[controller->clipboardImageContent setImage:[[[NSImage alloc] initWithPasteboard:generalPasteboard] autorelease]];
+			[controller setShowImage:YES];
+			[controller setShowText:NO];
+			[controller setKindField:(NSString*)typeCFString];
+			[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
+			[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
+			[controller setNeedsDisplay];
+		}
+		CFRelease(imageToRender), imageToRender = nullptr;
+		CFRelease(typeIdentifier), typeIdentifier = nullptr;
+	}
+	else if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier, inPasteboard))
 	{
 		// text
 		typeCFString = copyTypeDescription(typeIdentifier);
@@ -1253,29 +1340,6 @@ updateClipboard		(PasteboardRef		inPasteboard)
 			[controller setNeedsDisplay];
 		}
 		CFRelease(textToRender), textToRender = nullptr;
-		CFRelease(typeIdentifier), typeIdentifier = nullptr;
-	}
-	else if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, inPasteboard))
-	{
-		// image
-		typeCFString = copyTypeDescription(typeIdentifier);
-		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
-		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
-		{
-			NSPasteboard*	generalPasteboard = [NSPasteboard generalPasteboard];
-			
-			
-			gCurrentRenderData.clear();
-			
-			[controller->clipboardImageContent setImage:[[[NSImage alloc] initWithPasteboard:generalPasteboard] autorelease]];
-			[controller setShowImage:YES];
-			[controller setShowText:NO];
-			[controller setKindField:(NSString*)typeCFString];
-			[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
-			[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
-			[controller setNeedsDisplay];
-		}
-		CFRelease(imageToRender), imageToRender = nullptr;
 		CFRelease(typeIdentifier), typeIdentifier = nullptr;
 	}
 	else

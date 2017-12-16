@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171215',
     '20171213',
     '20171211',
     '20171210',
@@ -587,6 +588,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171215': [
+        'Fixed case where Clipboard window did not update itself after a Copy was performed.',
+        'The Copy command now works for terminal view selections that contain an image: the entire image is put on the Clipboard in its original form (regardless of how much of the displayed image is highlighted), similar to "Save Selection" behavior.',
+        'Contextual menus now filter their commands if a terminal selection contains an image.',
+    ],
     '20171213': [
         'The "Save Selection" command in the File menu (and corresponding contextual menu command) now automatically prompts to save an image format instead of text if the highlighted range contains any bitmap images.  The entire original image is used, regardless of how much of the image is selected; also, the saved image will have the detail and dimensions of its original data format, without any distortions that may have been introduced by the in-terminal rendering.',
         'Help has been updated slightly to describe recent image-related extensions.',

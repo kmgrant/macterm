@@ -40,6 +40,9 @@
 #include <Carbon/Carbon.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
+@class NSImage;
+#else
+class NSImage;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -181,7 +184,13 @@ void
 
 OSStatus
 	Clipboard_AddCFStringToPasteboard		(CFStringRef				inStringToCopy,
-											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr);
+											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr,
+											 Boolean					inClearFirst = true);
+
+OSStatus
+	Clipboard_AddNSImageToPasteboard		(NSImage*					inImageToCopy,
+											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr,
+											 Boolean					inClearFirst = true);
 
 Boolean
 	Clipboard_Contains						(CFStringRef				inUTI,

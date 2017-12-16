@@ -783,7 +783,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (isSession) Session_DisplaySaveDialog(frontSession);
 			break;
 		
-		case kCommandSaveText:
+		case kCommandSaveSelection:
 			TerminalView_DisplaySaveSelectionUI(activeView);
 			break;
 		
@@ -948,9 +948,41 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				{
 					if (nullptr != activeView)
 					{
-						Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
-															? kClipboard_CopyMethodTable
-															: kClipboard_CopyMethodStandard);
+						CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy(activeView),
+																	CFRetainRelease::kAlreadyRetained); 
+						NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
+						
+						
+						if (selectedNSImageArray.exists() && (asArray.count > 0))
+						{
+							Boolean		haveCleared = false;
+							
+							
+							for (NSImage* asImage in asArray)
+							{
+								assert([asImage isKindOfClass:NSImage.class]);
+								OSStatus	copyStatus = noErr;
+								
+								
+								copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
+																				(false == haveCleared)/* clear flag */);
+								if (noErr != copyStatus)
+								{
+									Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
+								}
+								else
+								{
+									// if more than one image is selected, add them all
+									haveCleared = true;
+								}
+							}
+						}
+						else
+						{
+							Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
+																? kClipboard_CopyMethodTable
+																: kClipboard_CopyMethodStandard);
+						}
 					}
 				}
 			}
@@ -4237,7 +4269,7 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 performSaveSelection:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSaveText, nullptr/* target */);
+	Commands_ExecuteByIDUsingEvent(kCommandSaveSelection, nullptr/* target */);
 }
 - (id)
 canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7965,7 +7997,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		}
 		break;
 	
-	case kCommandSaveText:
+	case kCommandSaveSelection:
 		theSelector = @selector(performSaveSelection:);
 		if (onlyIfEnabled)
 		{

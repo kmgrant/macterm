@@ -9221,12 +9221,13 @@ offsetTopVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
 Adds menu items to the specified menu based on the
 current state of the given terminal view.
 
-To keep menus short, this routine builds two types of
-menus: one for text selections, and one if nothing is
-selected.  If text is selected, this routine assumes
-that the user will most likely not want any of the
-more-general items.  Otherwise, the general items are
-made available whenever they are applicable.
+To keep menus short, this routine builds three types of
+menus: one for text selections, one for image selections,
+and one if nothing is selected.  If text is selected,
+this routine assumes that the user will most likely not
+want any of the more-general items.  Image selections
+offer a subset of the text selection set.  Otherwise,
+general items are available whenever they are applicable.
 
 (4.1)
 */
@@ -9243,6 +9244,13 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	if (TerminalView_TextSelectionExists(inTerminalViewPtr->selfRef))
 	{
+		NSMutableArray*		selectedImages = [[[NSMutableArray alloc] init] autorelease];
+		Boolean				isImageSelection = false;
+		
+		
+		getImagesInVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range, selectedImages);
+		isImageSelection = (selectedImages.count > 0);
+		
 		// URL commands
 		ContextSensitiveMenu_NewItemGroup();
 		
@@ -9258,7 +9266,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		// clipboard-related text selection commands
+		// clipboard-related text and image selection commands
 		ContextSensitiveMenu_NewItemGroup();
 		
 		targetCommandID = kCommandCopy;
@@ -9273,19 +9281,22 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandCopyTable;
-		if (UIStrings_Copy(kUIStrings_ContextualMenuCopyUsingTabsForSpaces, commandText).ok())
+		if (false == isImageSelection)
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
-			if (nil != newItem)
+			targetCommandID = kCommandCopyTable;
+			if (UIStrings_Copy(kUIStrings_ContextualMenuCopyUsingTabsForSpaces, commandText).ok())
 			{
-				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
+				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
 			}
-			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandSaveText;
+		targetCommandID = kCommandSaveSelection;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuSaveSelectedText, commandText).ok())
 		{
 			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
@@ -9297,46 +9308,58 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandShowCompletions;
-		if (UIStrings_Copy(kUIStrings_ContextualMenuShowCompletions, commandText).ok())
+		if (false == isImageSelection)
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
-			if (nil != newItem)
+			targetCommandID = kCommandShowCompletions;
+			if (UIStrings_Copy(kUIStrings_ContextualMenuShowCompletions, commandText).ok())
 			{
-				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
+				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
 			}
-			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		// user macros
-		MacroManager_AddContextualMenuGroup(inoutMenu, nullptr/* current macro set */, true/* search defaults */); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
+		if (false == isImageSelection)
+		{
+			// user macros
+			MacroManager_AddContextualMenuGroup(inoutMenu, nullptr/* current macro set */, true/* search defaults */); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
+		}
 		
 		// other text-selection-related commands
 		ContextSensitiveMenu_NewItemGroup();
 		
-		targetCommandID = kCommandPrint;
-		if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, commandText).ok())
+		if (false == isImageSelection)
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
-			if (nil != newItem)
+			targetCommandID = kCommandPrint;
+			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, commandText).ok())
 			{
-				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
+				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
 			}
-			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandSpeakSelectedText;
-		if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, commandText).ok())
+		if (false == isImageSelection)
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
-			if (nil != newItem)
+			targetCommandID = kCommandSpeakSelectedText;
+			if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, commandText).ok())
 			{
-				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
+				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
 			}
-			CFRelease(commandText), commandText = nullptr;
 		}
 		
 		targetCommandID = kCommandStopSpeaking;
