@@ -451,7 +451,7 @@ NSCursor*			customCursorCrosshairs				();
 NSCursor*			customCursorIBeam					(Boolean = false);
 NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
-OSStatus			dragTextSelection					(My_TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
+Boolean				dragTerminalSelection				(My_TerminalViewPtr, RgnHandle, EventRecord*);
 void				drawSingleColorImage				(CGContextRef, CGColorRef, CGRect, id);
 void				drawSingleColorPattern				(CGContextRef, CGColorRef, CGRect, id);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
@@ -1244,6 +1244,7 @@ TerminalView_DisplaySaveSelectionUI		(TerminalViewRef	inView)
 			if (1 == selectedImages.count)
 			{
 				NSImage*			imageObject = [selectedImages objectAtIndex:0];
+				assert([imageObject isKindOfClass:NSImage.class]);
 				CFRetainRelease		saveFileCFString(UIStrings_ReturnCopy(kUIStrings_FileDefaultImageFile),
 														CFRetainRelease::kAlreadyRetained);
 				CFRetainRelease		promptCFString(UIStrings_ReturnCopy(kUIStrings_SystemDialogPromptSaveSelectedImage),
@@ -5536,37 +5537,100 @@ delayMinimumTicks	(UInt16		inTickCount)
 
 
 /*!
-This method handles dragging of a text selection.
-If the text is dropped (i.e. not cancelled), then
-"true" is returned in "outDragWasDropped".
+This method handles dragging of text and image selections.
+Returns "true" only if the drag is dropped (i.e. not
+cancelled and no errors).
 
-(3.0)
+(2017.12)
 */
-OSStatus
-dragTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
-					 RgnHandle				inoutGlobalDragOutlineRegion,
-					 EventRecord*			inoutEventPtr,
-					 Boolean*				outDragWasDropped)
+Boolean
+dragTerminalSelection	(My_TerminalViewPtr		inTerminalViewPtr,
+						 RgnHandle				inoutGlobalDragOutlineRegion,
+						 EventRecord*			inoutEventPtr)
 {
-	OSStatus		result = noErr;
+	Boolean			result = false;
+	OSStatus		error = noErr;
 	PasteboardRef	dragPasteboard = nullptr;
 	DragRef			dragRef = nullptr;
+	RgnHandle		dragRegion = inoutGlobalDragOutlineRegion;
 	
 	
-	*outDragWasDropped = true;
-	
-	result = PasteboardCreate(kPasteboardUniqueName, &dragPasteboard);
-	if (noErr == result)
+	error = PasteboardCreate(kPasteboardUniqueName, &dragPasteboard);
+	if (noErr == error)
 	{
-		Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodStandard, dragPasteboard);
-		result = NewDragWithPasteboard(dragPasteboard, &dragRef);
-		if (noErr == result)
+		NSMutableArray*		selectedImages = [[[NSMutableArray alloc] init] autorelease];
+		
+		
+		getImagesInVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range, selectedImages);
+		if (selectedImages.count > 0)
 		{
+			// selection contains image(s)
+			Boolean		isFirstImage = true;
+			
+			
+			for (NSImage* imageObject in selectedImages)
+			{
+				assert([imageObject isKindOfClass:NSImage.class]);
+				Clipboard_AddNSImageToPasteboard(imageObject, dragPasteboard, isFirstImage/* clear first */);
+				isFirstImage = false;
+			}
+		}
+		else
+		{
+			// normal selection (text)
+			Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodStandard, dragPasteboard);
+		}
+		
+		error = NewDragWithPasteboard(dragPasteboard, &dragRef);
+		if (noErr != error)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteValue, "failed to create drag, error", error);
+		}
+		else
+		{
+			if (selectedImages.count > 0)
+			{
+				// selection contains image(s); use actual image instead of an outline
+				NSImage*				firstImage = [selectedImages objectAtIndex:0];
+				assert([firstImage isKindOfClass:NSImage.class]);
+				DragImageFlags const	kImageFlags = 0;
+				NSRect*					proposedDestinationRectPtr = nullptr;
+				NSGraphicsContext*		referenceContext = nil;
+				NSDictionary*			hintDict = @{};
+				CGImageRef				dragCGImage = [firstImage CGImageForProposedRect:proposedDestinationRectPtr
+																							context:referenceContext
+																							hints:hintDict];
+				
+				
+				error = SetDragImageWithCGImage(dragRef, dragCGImage, &CGPointZero, kImageFlags);
+				if (noErr == error)
+				{
+					// ignore text selection outline for images unless
+					// the image completely fails to be set for the drag
+					dragRegion = nullptr;
+				}
+			}
+			
 			NSCursor*	oldCursor = [NSCursor currentCursor];
-			
-			
 			[[NSCursor arrowCursor] set];
-			result = TrackDrag(dragRef, inoutEventPtr, inoutGlobalDragOutlineRegion);
+			error = TrackDrag(dragRef, inoutEventPtr, dragRegion);
+			if (noErr != error)
+			{
+				if (dragNotAcceptedErr == error)
+				{
+					Console_Warning(Console_WriteLine, "receiver did not accept the drag");
+				}
+				else if (userCanceledErr != error)
+				{
+					Sound_StandardAlert();
+					Console_Warning(Console_WriteValue, "failed to drag, error", error);
+				}
+			}
+			else
+			{
+				result = true;
+			}
 			[oldCursor set];
 		}
 	}
@@ -5575,7 +5639,7 @@ dragTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 	[[NSCursor arrowCursor] set];
 	
 	return result;
-}// dragTextSelection
+}// dragTerminalSelection
 
 
 /*!
@@ -11579,7 +11643,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										LocalToGlobal(&convertedOrigin);
 										OffsetRgn(dragRgn, convertedOrigin.h, convertedOrigin.v);
 										{
-											// convert the region into an outline 
+											// convert the region into an outline
 											RgnHandle	tempRgn = NewRgn();
 											
 											
@@ -11595,7 +11659,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										SetPortWindowPort(GetControlOwner(view));
 										LocalToGlobal(&event.where);
 										event.modifiers = STATIC_CAST(currentModifiers, EventModifiers);
-										UNUSED_RETURN(OSStatus)dragTextSelection(viewPtr, dragRgn, &event, &dragged);
+										dragged = dragTerminalSelection(viewPtr, dragRgn, &event);
 										trackingResult = kMouseTrackingMouseUp; // terminate loop
 										cannotBeDoubleClick = true;
 									}

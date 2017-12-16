@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20171216',
     '20171215',
     '20171213',
     '20171211',
@@ -588,6 +589,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20171216': [
+        'Terminal view selections containing images can now be dragged.',
+        'Clipboard window now accepts image drags as a short-cut for Copy.  (This is in addition to existing support for dragging text as an alias for Copy.)',
+    ],
     '20171215': [
         'Fixed case where Clipboard window did not update itself after a Copy was performed.',
         'The Copy command now works for terminal view selections that contain an image: the entire image is put on the Clipboard in its original form (regardless of how much of the displayed image is highlighted), similar to "Save Selection" behavior.',

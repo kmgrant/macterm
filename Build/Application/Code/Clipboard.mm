@@ -1404,13 +1404,15 @@ initWithFrame:(NSRect)		aFrame
 		self->showDragHighlight = NO;
 		
 		// the list of accepted drag text types should correspond with what
-		// Clipboard_CreateCFStringFromPasteboard() will actually support
+		// Clipboard_CreateCFStringFromPasteboard() will actually support;
+		// image types can be supported much more generally
 		[self registerForDraggedTypes:@[
-											(NSString*)kUTTypeUTF16ExternalPlainText,
-											(NSString*)kUTTypeUTF16PlainText,
-											(NSString*)kUTTypeUTF8PlainText,
-											(NSString*)kUTTypePlainText,
-											(NSString*)CFSTR("com.apple.traditional-mac-plain-text"),
+											BRIDGE_CAST(kUTTypeUTF16ExternalPlainText, NSString*),
+											BRIDGE_CAST(kUTTypeUTF16PlainText, NSString*),
+											BRIDGE_CAST(kUTTypeUTF8PlainText, NSString*),
+											BRIDGE_CAST(kUTTypePlainText, NSString*),
+											@"com.apple.traditional-mac-plain-text",
+											BRIDGE_CAST(kUTTypeImage, NSString*),
 										]];
 	}
 	return self;
@@ -1561,42 +1563,92 @@ area of the Clipboard window.
 - (BOOL)
 performDragOperation:(id <NSDraggingInfo>)		sender
 {
-	NSPasteboard*	dragPasteboard = [sender draggingPasteboard];
-	PasteboardRef	asPasteboardRef = nullptr;
-	OSStatus		error = PasteboardCreate((CFStringRef)[dragPasteboard name], &asPasteboardRef);
 	BOOL			result = NO;
+	NSPasteboard*	dragPasteboard = [sender draggingPasteboard];
+	NSString*		imageType = [dragPasteboard availableTypeFromArray:@[BRIDGE_CAST(kUTTypeImage, NSString*)]];
 	
 	
 	// handle the drop (by copying the data to the clipboard)
-	if (noErr == error)
+	if (nil != imageType)
 	{
-		CFStringRef		copiedTextCFString;
-		CFStringRef		copiedTextUTI;
-		Boolean			copyOK = Clipboard_CreateCFStringFromPasteboard
-									(copiedTextCFString, copiedTextUTI, asPasteboardRef);
+		// drag apparently contains one or more images
+		NSArray*		objectArray = nil;
+		NSDictionary*	readingOptions = @{};
 		
 		
-		if (false == copyOK)
+		objectArray = [dragPasteboard readObjectsForClasses:@[NSImage.class] options:readingOptions];
+		if (nil == objectArray)
 		{
-			Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
-			result = NO;
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to read any image from the drag");
 		}
 		else
 		{
-			// put the text on the clipboard
-			error = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
-			if (noErr == error)
+			Boolean		firstImage = true;
+			
+			
+			for (id anObject in objectArray)
 			{
-				// force a view update, as obviously it is now out of date
-				updateClipboard(Clipboard_ReturnPrimaryPasteboard());
-				
-				// success!
-				result = YES;
+				if ([anObject isKindOfClass:NSImage.class])
+				{
+					NSImage*	asImage = STATIC_CAST(anObject, NSImage*);
+					OSStatus	error = noErr;
+					
+					
+					// put the text on the clipboard
+					error = Clipboard_AddNSImageToPasteboard(asImage, Clipboard_ReturnPrimaryPasteboard(),
+																firstImage/* clear first */);
+					if (noErr == error)
+					{
+						// success!
+						result = YES;
+					}
+					
+					firstImage = false;
+				}
 			}
-			CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
-			CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
+			
+			// force a view update, as obviously it is now out of date
+			updateClipboard(Clipboard_ReturnPrimaryPasteboard());
 		}
-		CFRelease(asPasteboardRef), asPasteboardRef = nullptr;
+	}
+	else
+	{
+		// drag should contain text (as only text and image types
+		// were declared in earlier "registerForDraggedTypes" call)
+		PasteboardRef	asPasteboardRef = nullptr;
+		OSStatus		error = PasteboardCreate((CFStringRef)[dragPasteboard name], &asPasteboardRef);
+		
+		
+		if (noErr == error)
+		{
+			CFStringRef		copiedTextCFString;
+			CFStringRef		copiedTextUTI;
+			Boolean			copyOK = Clipboard_CreateCFStringFromPasteboard
+										(copiedTextCFString, copiedTextUTI, asPasteboardRef);
+			
+			
+			if (false == copyOK)
+			{
+				Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
+			}
+			else
+			{
+				// put the text on the clipboard
+				error = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
+				if (noErr == error)
+				{
+					// force a view update, as obviously it is now out of date
+					updateClipboard(Clipboard_ReturnPrimaryPasteboard());
+					
+					// success!
+					result = YES;
+				}
+				CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
+				CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
+			}
+			CFRelease(asPasteboardRef), asPasteboardRef = nullptr;
+		}
 	}
 	
 	return result;
