@@ -567,7 +567,7 @@ Boolean
 Terminal_Result
 	Terminal_BitmapGetFromID				(TerminalScreenRef			inScreen,
 											 TextAttributes_BitmapID	inID,
-											 NSImage*&					outTileImage,
+											 CGRect&					outImageSubRect,
 											 NSImage*&					outCompleteImage);
 
 //@}

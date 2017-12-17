@@ -6061,12 +6061,12 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 		// bitmap has been defined
 		Terminal_Result				terminalResult = kTerminal_ResultOK;
 		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
-		NSImage*					tileImage = nil;
+		CGRect						imageSubRect = CGRectZero;
 		NSImage*					completeImage = nil;
 		
 		
-		terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref, bitmapID, tileImage, completeImage);
-		if ((kTerminal_ResultOK != terminalResult) || (nil == tileImage))
+		terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref, bitmapID, imageSubRect, completeImage);
+		if ((kTerminal_ResultOK != terminalResult) || (nil == completeImage))
 		{
 			// do not log image errors because there could potentially be
 			// many of them (such as, one per cell of the image); instead,
@@ -6081,6 +6081,8 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 		{
 			NSRect				targetNSRect = NSMakeRect(sectionBounds.origin.x, sectionBounds.origin.y,
 															sectionBounds.size.width, sectionBounds.size.height);
+			NSRect				sourceNSRect = NSMakeRect(imageSubRect.origin.x, imageSubRect.origin.y,
+															imageSubRect.size.width, imageSubRect.size.height);
 			NSDictionary*		hintDict = @{}; // from NSString* to id
 			NSGraphicsContext*	graphicsContext = [NSGraphicsContext
 													graphicsContextWithGraphicsPort:inTerminalViewPtr->screen.currentRenderContext
@@ -6092,12 +6094,12 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 			[NSGraphicsContext setCurrentContext:graphicsContext];
 			[graphicsContext setImageInterpolation:NSImageInterpolationNone]; // TEMPORARY; may want this to be an option
 			CGContextSetAllowsAntialiasing(inTerminalViewPtr->screen.currentRenderContext, false);
-			[tileImage drawInRect:targetNSRect fromRect:NSZeroRect/* empty = whole image */
-									operation:(inAttributes.hasSelection()
-												? NSCompositePlusDarker
-												: NSCompositeSourceOver)
-									fraction:1.0
-									respectFlipped:YES hints:hintDict];
+			[completeImage drawInRect:targetNSRect fromRect:sourceNSRect
+										operation:(inAttributes.hasSelection()
+													? NSCompositePlusDarker
+													: NSCompositeSourceOver)
+										fraction:1.0
+										respectFlipped:YES hints:hintDict];
 			CGContextSetAllowsAntialiasing(inTerminalViewPtr->screen.currentRenderContext, true);
 			[graphicsContext setImageInterpolation:oldInterpolation];
 			[NSGraphicsContext restoreGraphicsState];
@@ -7759,11 +7761,11 @@ getImagesInVirtualRange		(My_TerminalViewPtr				inTerminalViewPtr,
 												if (inAttributes.hasBitmap())
 												{
 													TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
-													NSImage*					tileImage = nil;
+													CGRect						subRect = CGRectZero;
 													NSImage*					completeImage = nil;
 													Terminal_Result				terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref,
 																															bitmapID,
-																															tileImage,
+																															subRect,
 																															completeImage);
 													
 													

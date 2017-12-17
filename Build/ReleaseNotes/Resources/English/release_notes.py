@@ -590,6 +590,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20171216': [
+        'Terminal view image-rendering performance has been improved.',
         'Terminal view selections containing images can now be dragged.',
         'Clipboard window now accepts image drags as a short-cut for Copy.  (This is in addition to existing support for dragging text as an alias for Copy.)',
     ],

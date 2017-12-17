@@ -1069,7 +1069,7 @@ public:
 	TextAttributes_TrueColorID			trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
 	TextAttributes_BitmapID				bitmapTableNextID;		//!< basis for new IDs; current entry for storing new bitmaps in bitmap table
 	NSMutableArray*						bitmapImageTable;		//!< NSArray of NSImage*; shared (“whole image”) bitmap representations by index (ID)
-	NSMutableArray*						bitmapSegmentTable;		//!< NSArray of NSImage*; single-cell bitmap representations by index (ID)
+	NSMutableArray*						bitmapSegmentTable;		//!< NSArray of NSValue* (holding NSRect); single-cell bitmap sub-rectangles by index (ID)
 
 protected:
 	My_EmulatorEchoDataProcPtr
@@ -2251,6 +2251,16 @@ of the image itself.  It is considered read-only at this
 stage; anything that normally overwrites a terminal cell’s
 attributes may clear the cell’s bitmaps however.
 
+The returned image can be shared by many bitmap IDs but a
+particular sub-rectangle of the image is also given to
+specify the portion of the image that the ID represents.
+
+Note that since the entire image is available from any ID
+associated with any part of that image, user operations
+that depend on a whole image are easier to implement (for
+example, a contextual menu click or drag on a particular
+terminal cell).
+
 The TextAttributes_Object type can be used to extract the
 TextAttributes_BitmapID value for a section of text, and
 to determine what a bitmap is for.
@@ -2272,14 +2282,14 @@ if the specified terminal was not configured for bitmaps
 Terminal_Result
 Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
 							 TextAttributes_BitmapID	inID,
-							 NSImage*&					outTileImage,
+							 CGRect&					outImageSubRect,
 							 NSImage*&					outCompleteImage)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
-	outTileImage = nil; // initially...
+	outImageSubRect = CGRectZero; // initially...
 	outCompleteImage = nil; // initially...
 	
 	if (nullptr == dataPtr)
@@ -2295,7 +2305,13 @@ Terminal_BitmapGetFromID	(TerminalScreenRef			inRef,
 		}
 		else
 		{
-			outTileImage = [dataPtr->emulator.bitmapSegmentTable objectAtIndex:inID];
+			id			anObject = [dataPtr->emulator.bitmapSegmentTable objectAtIndex:inID];
+			assert([anObject isKindOfClass:NSValue.class]); 
+			NSValue*	rectValue = STATIC_CAST(anObject, NSValue*);
+			NSRect		aRect = [rectValue rectValue];
+			
+			
+			outImageSubRect = CGRectMake(aRect.origin.x, aRect.origin.y, NSWidth(aRect), NSHeight(aRect));
 		}
 		
 		if ((nil == dataPtr->emulator.bitmapImageTable) ||
@@ -16054,7 +16070,6 @@ defineBitmap	(My_ScreenBufferPtr			inDataPtr,
 				 TextAttributes_BitmapID&	outBitmapID)
 {
 	Boolean		result = false;
-	NSImage*	imageObject = [inSourceImage imageFromSubRect:inSubRect];
 	
 	
 	// define new ID within range of allowed IDs
@@ -16079,15 +16094,18 @@ defineBitmap	(My_ScreenBufferPtr			inDataPtr,
 	}
 	
 	// add objects to storage
-	if (nil != imageObject)
+	if (nil != inSourceImage)
 	{
+		NSValue*	rectValue = [NSValue valueWithRect:inSubRect];
+		
+		
 		result = true;
 		if (inDataPtr->emulator.bitmapTableNextID >= inDataPtr->emulator.bitmapSegmentTable.count)
 		{
 			[inDataPtr->emulator.bitmapImageTable
 				addObject:inSourceImage];
 			[inDataPtr->emulator.bitmapSegmentTable
-				addObject:imageObject];
+				addObject:rectValue];
 		}
 		else
 		{
@@ -16096,7 +16114,7 @@ defineBitmap	(My_ScreenBufferPtr			inDataPtr,
 										withObject:inSourceImage];
 			[inDataPtr->emulator.bitmapSegmentTable
 				replaceObjectAtIndex:inDataPtr->emulator.bitmapTableNextID
-										withObject:imageObject];
+										withObject:rectValue];
 		}
 	}
 	
