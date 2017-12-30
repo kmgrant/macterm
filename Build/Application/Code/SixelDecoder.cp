@@ -366,14 +366,11 @@ stateDeterminant	(UInt8		inNextByte,
 			
 			this->paramDecoderPendingState = this->parameterDecoder.stateDeterminant(inNextByte, byteNotUsed);
 			result = kStateRasterAttrsDecodeParams; // initially...
-			if (ParameterDecoder_StateMachine::kStateResetParameter == this->paramDecoderPendingState)
+			if (byteNotUsed)
 			{
-				if (byteNotUsed)
-				{
-					// end of parameters
-					result = kStateRasterAttrsApplyParams;
-					outByteNotUsed = true;
-				}
+				// end of parameters
+				result = kStateRasterAttrsApplyParams;
+				outByteNotUsed = true;
 			}
 		}
 		break;
@@ -387,14 +384,11 @@ stateDeterminant	(UInt8		inNextByte,
 			
 			this->paramDecoderPendingState = this->parameterDecoder.stateDeterminant(inNextByte, byteNotUsed);
 			result = kStateSetColorDecodeParams; // initially...
-			if (ParameterDecoder_StateMachine::kStateResetParameter == this->paramDecoderPendingState)
+			if (byteNotUsed)
 			{
-				if (byteNotUsed)
-				{
-					// end of parameters
-					result = kStateSetColorApplyParams;
-					outByteNotUsed = true;
-				}
+				// end of parameters
+				result = kStateSetColorApplyParams;
+				outByteNotUsed = true;
 			}
 		}
 		break;

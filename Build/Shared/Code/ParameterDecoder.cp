@@ -95,7 +95,6 @@ ParameterDecoder_StateMachine	(UInt8		inDelimiter)
 parameterValues(),
 delimiterCharacter(inDelimiter),
 byteRegister('\0'),
-integerAccumulator(0),
 currentState(kStateInitial)
 {
 	this->reset();
@@ -116,7 +115,6 @@ reset ()
 	//Console_WriteLine("terminal parameter parser RESET"); // debug
 	parameterValues.clear();
 	byteRegister = '\0';
-	integerAccumulator = 0;
 	currentState = kStateInitial;
 }// SixelDecoder_StateMachine::reset
 
@@ -148,6 +146,10 @@ stateDeterminant	(UInt8		inNextByte,
 	
 	switch (this->currentState)
 	{
+	case kStateTerminated:
+		outByteNotUsed = true;
+		break;
+	
 	case kStateInitial:
 	case kStateSeenDigit:
 	case kStateResetParameter:
@@ -178,9 +180,13 @@ stateDeterminant	(UInt8		inNextByte,
 		default:
 			// delimiters cause current parameter to be stored,
 			// non-delimiters cause the parser to terminate
-			result = kStateResetParameter;
-			if (inNextByte != this->delimiterCharacter)
+			if (inNextByte == this->delimiterCharacter)
 			{
+				result = kStateResetParameter;
+			}
+			else
+			{
+				result = kStateTerminated;
 				outByteNotUsed = true;
 			}
 			break;
@@ -216,22 +222,28 @@ stateTransition		(State		inNextState)
 	case kStateSeenDigit:
 		{
 			// update parameter value
-			if (kParameterDecoder_Undefined == this->integerAccumulator)
+			if (this->parameterValues.empty())
 			{
-				this->integerAccumulator = 0;
+				this->parameterValues.push_back(kParameterDecoder_Undefined);
 			}
-			this->integerAccumulator *= 10;
-			this->integerAccumulator += (this->byteRegister - '0');
+			if (kParameterDecoder_Undefined == this->parameterValues.back())
+			{
+				this->parameterValues.back() = 0;
+			}
+			this->parameterValues.back() *= 10;
+			this->parameterValues.back() += (this->byteRegister - '0');
 		}
 		break;
 	
 	case kStateResetParameter:
-		// the next character is either a delimiter or something else
-		// (such as a different terminator character defined by a
-		// terminal); either way, store the last parameter value
-		//Console_WriteValue("define parameter with value", this->integerAccumulator); // debug
-		parameterValues.push_back(this->integerAccumulator);
-		this->integerAccumulator = kParameterDecoder_Undefined;
+		// the next character is a delimiter; define a new parameter
+		//Console_WriteValue("define parameter with value", this->parameterValues.back()); // debug
+		parameterValues.push_back(kParameterDecoder_Undefined);
+		break;
+	
+	case kStateTerminated:
+		// the next character is not recognized as parameter syntax
+		//Console_WriteValue("define parameter with value", this->parameterValues.back()); // debug
 		break;
 	
 	default:
@@ -317,8 +329,8 @@ unitTest_StateMachine_001 ()
 	decoderObject.stateTransition(proposedState);
 	{
 		auto const		testValue = decoderObject.parameterValues.size();
-		Console_TestAssertUpdate(result, 0 == testValue,
-									Console_WriteValue, "single number test: '2': expected no parameters yet, actual count", testValue);
+		Console_TestAssertUpdate(result, 1 == testValue,
+									Console_WriteValue, "single number test: '2': expected one parameter, actual count", testValue);
 	}
 	
 	// transition to a finishing state using a byte that
@@ -399,13 +411,19 @@ unitTest_StateMachine_002 ()
 	}
 	{
 		auto const		testValue = decoderObject.parameterValues.size();
-		Console_TestAssertUpdate(result, 1 == testValue,
+		Console_TestAssertUpdate(result, 2 == testValue,
 									Console_WriteValue, "leading-zero test: actual parameter count", testValue);
 		if (result)
 		{
 			auto const		testValue2 = decoderObject.parameterValues[0];
 			Console_TestAssertUpdate(result, 3050 == testValue2,
-										Console_WriteValue, "leading-zero test: actual parameter value", testValue2);
+										Console_WriteValue, "leading-zero test: actual 1st parameter", testValue2);
+		}
+		if (result)
+		{
+			auto const		testValue3 = decoderObject.parameterValues[1];
+			Console_TestAssertUpdate(result, kParameterDecoder_Undefined == testValue3,
+										Console_WriteValue, "leading-zero test: actual 2nd parameter", testValue3);
 		}
 	}
 	
@@ -539,7 +557,7 @@ unitTest_StateMachine_004 ()
 	}
 	{
 		auto const		testValue = decoderObject.returnState();
-		Console_TestAssertUpdate(result, ParameterDecoder_StateMachine::kStateResetParameter == testValue,
+		Console_TestAssertUpdate(result, ParameterDecoder_StateMachine::kStateTerminated == testValue,
 									Console_WriteValueFourChars, "alternate delimiter test: '?': actual state", decoderObject.returnState());
 	}
 	{

@@ -34,6 +34,7 @@
 #import <UniversalDefines.h>
 
 // standard-C includes
+#import <algorithm>
 #import <cctype>
 #import <cstdio>
 #import <cstdlib>
@@ -348,7 +349,6 @@ enum
 	kMy_ParserStateSeenESCK						= 'ESCK',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCM						= 'ESCM',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCP						= 'ESCP',	//!< generic state used to define emulator-specific states, below
-	kMy_ParserStateSeenESCPParamsq				= 'EP;q',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCn						= 'ESCn',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCo						= 'ESCo',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCY						= 'ESCY',	//!< generic state used to define emulator-specific states, below
@@ -1043,7 +1043,7 @@ public:
 	UInt64								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
 	My_ParserState						stringAccumulatorState;	//!< state that was in effect when the "stringAccumulator" was recently cleared
-	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
+	std::basic_string< UInt8 >			stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
 	UTF8Decoder_StateMachine			multiByteDecoder;		//!< as individual bytes are processed, this tracks complete or invalid sequences
 	UInt8								recentCodePointByte;	//!< for 8-bit encodings, the most recent byte read; see also "multiByteDecoder"
 	Boolean								addedITerm;				//!< keep track of previous requests to install the same variant
@@ -1389,13 +1389,6 @@ class My_SixelCore
 public:
 	static UInt32	stateDeterminant	(My_EmulatorPtr, My_ParserStatePair&, Boolean&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, My_ParserStatePair const&, Boolean&);
-	
-	enum State
-	{
-		// Ideally these are "protected", but loop evasion code requires them.
-		kStateGraphicsBegin			= kMy_ParserStateSeenESCPParamsq,	//!< saw DCS and optional parameters with terminator 'q'
-		kStateGraphicsAcquireStr	= 'SAcS',							//!< continuously copy Sixel data string
-	};
 };
 
 /*!
@@ -1640,6 +1633,7 @@ public:
 		// Ideally these are "protected", but XTerm may require them.
 		kStateCSISecondaryDA	= kMy_ParserStateSeenESCLeftSqBracketGreaterThan,	//!< parameter list indicates secondary device attributes
 		kStateDCS				= kMy_ParserStateSeenESCP,				//!< device control string
+		kStateDCSAcquireStr		= 'VACS',								//!< state of reading bytes into string accumulator
 		kStateDECSCA			= 'VSCA',								//!< select character attributes
 		kStateDECSCL			= 'VSCL',								//!< compatibility level
 		kStateDECSTR			= kMy_ParserStateSeenESCLeftSqBracketExPointp,	//!< soft terminal reset
@@ -1855,6 +1849,10 @@ void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
 Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt32,
 																	 My_ScreenLineOperationProcPtr, void*);
 inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
+void						getParametersFromStringAccumulator		(My_ScreenBufferPtr, ParameterDecoder_StateMachine&,
+																	 std::basic_string< UInt8 >::const_iterator&);
+void						getParametersFromStringRange			(std::basic_string< UInt8 >::const_iterator, std::basic_string< UInt8 >::const_iterator,
+																	 ParameterDecoder_StateMachine&, std::basic_string< UInt8 >::const_iterator&);
 My_ScreenBufferPtr			getVirtualScreenData					(TerminalScreenRef);
 void						highlightLED							(My_ScreenBufferPtr, SInt16);
 void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
@@ -3175,7 +3173,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 									{
 										interrupt = (dataPtr->emulator.stateRepetitions > 255/* arbitrary */);
 									}
-									else if (states.second == My_SixelCore::kStateGraphicsAcquireStr)
+									else if (states.second == My_VT220::kStateDCSAcquireStr)
 									{
 										// arbitrarily allow massive image data sizes (TEMPORARY; make user-configurable?)
 										static UInt64 const		kMaxBytesPerImage = (20 * 1024 * 1024);
@@ -8742,10 +8740,6 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	switch (inNowOutNext.first)
 	{
-	case My_VT220::kStateDCS:
-		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
-		break;
-	
 	case kStateITermCustomBegin:
 		inNowOutNext.second = kStateITermAcquireStr;
 		result = 0; // do not absorb the unknown
@@ -8865,7 +8859,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				// this format is documented at: "http://www.iterm2.com/documentation-images.html"
 				// INCOMPLETE
-				NSString*			asNSString = [NSString stringWithUTF8String:inDataPtr->emulator.stringAccumulator.c_str()];
+				NSString*			asNSString = [[[NSString alloc] initWithBytes:inDataPtr->emulator.stringAccumulator.c_str()
+																					length:inDataPtr->emulator.stringAccumulator.size()
+																					encoding:NSUTF8StringEncoding] autorelease];
 				NSMutableArray*		equalsSeparated = [[asNSString componentsSeparatedByString:@"="] mutableCopy];
 				
 				
@@ -9189,12 +9185,12 @@ the given buffer.
 */
 UInt32
 My_SixelCore::
-stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
+stateDeterminant	(My_EmulatorPtr			UNUSED_ARGUMENT(inEmulatorPtr),
 					 My_ParserStatePair&	inNowOutNext,
 					 Boolean&				UNUSED_ARGUMENT(outInterrupt),
 					 Boolean&				outHandled)
 {
-	UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
+	//UInt32 const	kTriggerChar = inEmulatorPtr->recentCodePoint();
 	UInt32			result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
@@ -9204,30 +9200,6 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	switch (inNowOutNext.first)
 	{
-	case My_VT220::kStateDCS:
-		inNowOutNext.second = My_XTerm::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
-		break;
-	
-	case kStateGraphicsBegin:
-		inNowOutNext.second = kStateGraphicsAcquireStr;
-		result = 0; // do not absorb the unknown
-		break;
-	
-	case kStateGraphicsAcquireStr:
-		switch (kTriggerChar)
-		{
-		case '\033':
-			inNowOutNext.second = kMy_ParserStateSeenESC;
-			break;
-		
-		default:
-			// continue extending the string until a known terminator is found
-			inNowOutNext.second = kStateGraphicsAcquireStr;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
 	default:
 		// other states are not handled at all
 		outHandled = false;
@@ -9320,49 +9292,25 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
-	case kStateGraphicsBegin:
-		{
-			if (DebugInterface_LogsSixelDecoderState())
-			{
-				//Console_WriteLine("preparing to read Sixel data"); // debug
-			}
-			
-			inDataPtr->emulator.stringAccumulator.clear();
-			inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
-		}
-		break;
-	
-	case kStateGraphicsAcquireStr:
-		{
-			if (DebugInterface_LogsSixelDecoderState())
-			{
-				//Console_WriteLine("reading Sixel data"); // debug
-			}
-			
-			if (inDataPtr->emulator.isUTF8Encoding)
-			{
-				if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
-				{
-					std::copy(inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
-								inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
-								std::back_inserter(inDataPtr->emulator.stringAccumulator));
-					result = 1;
-				}
-			}
-			else
-			{
-				inDataPtr->emulator.stringAccumulator.push_back(STATIC_CAST(inDataPtr->emulator.recentCodePoint(), UInt8));
-				result = 1;
-			}
-		}
-		break;
-	
 	case My_VT220::kStateST:
 		// when a Sixel image is complete, process the contents of the buffer
-		switch (inDataPtr->emulator.stringAccumulatorState)
+		if (My_VT220::kStateDCS == inDataPtr->emulator.stringAccumulatorState)
 		{
-		case kStateGraphicsBegin:
+			// in order to represent a Sixel image, a device control string must
+			// contain the parameter terminator "q" (i.e. ESC P <params> q)
+			ParameterDecoder_StateMachine				paramDecoder;
+			std::basic_string< UInt8 >::const_iterator	pastEndParams = inDataPtr->emulator.stringAccumulator.end();
+			
+			
+			getParametersFromStringAccumulator(inDataPtr, paramDecoder, pastEndParams);
+			if ((inDataPtr->emulator.stringAccumulator.end() != pastEndParams) && ('q' == *pastEndParams))
 			{
+				typedef decltype(inDataPtr->emulator.stringAccumulator.size())	StringAccumulatorSize;
+				decltype(pastEndParams) const	kSixelDataBegin = (pastEndParams + 1/* skip terminating 'q' */);
+				decltype(pastEndParams) const	kPastEndSixelData = inDataPtr->emulator.stringAccumulator.end();
+				StringAccumulatorSize const		kSixelDataSize = std::distance(kSixelDataBegin, kPastEndSixelData);
+				
+				
 				if (DebugInterface_LogsSixelDecoderState())
 				{
 					//Console_WriteLine("stopped reading Sixel data"); // debug
@@ -9370,21 +9318,16 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				SixelDecoder_StateMachine			sixelDecoder;
 				SixelDecoder_StateMachine const&	decoderRef = sixelDecoder; // so copied blocks can refer to object without copying object
+				UInt16								aspectRatioParameter = (paramDecoder.parameterValues.empty()
+																			? 0
+																			: paramDecoder.parameterValues[0]);
 				UInt16								initialAspectRatioV = 2; // see below
 				UInt16								initialAspectRatioH = 1; // see below
 				Boolean								zeroValuePixelsKeepColor = false; // see below
 				
 				
-				if (zeroValuePixelsKeepColor)
-				{
-					if (DebugInterface_LogsSixelDecoderState())
-					{
-						Console_WriteLine("Sixel image is configured to not change the color of zero-value pixels"); // debug
-					}
-				}
-				
 				// the following according to the VT330/VT340 manual
-				switch (inDataPtr->emulator.argList[0])
+				switch (aspectRatioParameter)
 				{
 				case 2:
 					initialAspectRatioV = 5;
@@ -9420,11 +9363,20 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				}
 				
 				// determine if “off” bits use the current color or revert to the background color
-				zeroValuePixelsKeepColor = (1 == inDataPtr->emulator.argList[1]);
-				
-				if (inDataPtr->emulator.argList[2] >= 0)
+				zeroValuePixelsKeepColor = ((paramDecoder.parameterValues.size() > 0)
+											? (1 == paramDecoder.parameterValues[1])
+											: false);
+				if (zeroValuePixelsKeepColor)
 				{
-					Console_Warning(Console_WriteValue, "ignoring Sixel grid size parameter", inDataPtr->emulator.argList[2]);
+					if (DebugInterface_LogsSixelDecoderState())
+					{
+						Console_WriteLine("Sixel image is configured to not change the color of zero-value pixels"); // debug
+					}
+				}
+				
+				if (paramDecoder.parameterValues.size() > 2)
+				{
+					Console_Warning(Console_WriteValue, "ignoring Sixel grid size parameter", paramDecoder.parameterValues[2]);
 				}
 				
 				// process the Sixel data
@@ -9454,7 +9406,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					
 					if (DebugInterface_LogsSixelInput())
 					{
-						Console_WriteValueCString("accumulated string", inDataPtr->emulator.stringAccumulator.c_str());
+						std::basic_string< UInt8 >		dataString(kSixelDataBegin, kPastEndSixelData);
+						
+						
+						Console_WriteValueCString("accumulated string", REINTERPRET_CAST(dataString.c_str(), char const*));
 					}
 					
 					// the exact size of the image cannot be determined without parsing
@@ -9464,7 +9419,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					sixelDecoder.reset();
 					sixelDecoder.aspectRatioV = initialAspectRatioV; // default only; can change if raster attributes are parsed
 					sixelDecoder.aspectRatioH = initialAspectRatioH;
-					for (UInt8 aByte : inDataPtr->emulator.stringAccumulator)
+					for (auto toByte = kSixelDataBegin; toByte != kPastEndSixelData; ++toByte)
 					{
 						SixelDecoder_StateMachine::State const	kOriginalState = sixelDecoder.returnState();
 						SInt16									loopGuard = 0;
@@ -9473,7 +9428,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						
 						while (byteNotUsed)
 						{
-							sixelDecoder.goNextState(aByte, byteNotUsed);
+							sixelDecoder.goNextState(*toByte, byteNotUsed);
 							if ((byteNotUsed) && (kOriginalState == sixelDecoder.returnState()))
 							{
 								// no way to proceed
@@ -9673,7 +9628,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							}
 						}
 					});
-					for (UInt8 aByte : inDataPtr->emulator.stringAccumulator)
+					for (auto toByte = kSixelDataBegin; toByte != kPastEndSixelData; ++toByte)
 					{
 						SixelDecoder_StateMachine::State const	kOriginalState = sixelDecoder.returnState();
 						SInt16									loopGuard = 0;
@@ -9682,7 +9637,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						
 						while (byteNotUsed)
 						{
-							sixelDecoder.goNextState(aByte, byteNotUsed);
+							sixelDecoder.goNextState(*toByte, byteNotUsed);
 							if (DebugInterface_LogsSixelInput())
 							{
 								//Console_WriteValueFourChars("Sixel parser state", sixelDecoder.returnState());
@@ -9704,10 +9659,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						}
 						++processedBytes;
 					}
-					if (processedBytes < inDataPtr->emulator.stringAccumulator.size())
+					if (processedBytes < kSixelDataSize)
 					{
 						Console_Warning(Console_WriteValue, "Sixel decoder did not handle entire data string; bytes left",
-										inDataPtr->emulator.stringAccumulator.size() - processedBytes);
+										kSixelDataSize - processedBytes);
 					}
 					
 					if (DebugInterface_LogsSixelDecoderState())
@@ -9752,12 +9707,16 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				inDataPtr->emulator.stringAccumulator.clear();
 				inDataPtr->emulator.stringAccumulatorState = kMy_ParserStateInitial;
 			}
-			break;
-		
-		default:
+			else
+			{
+				// not apparently Sixel data
+				outHandled = false;
+			}
+		}
+		else
+		{
 			// ignore
 			outHandled = false;
-			break;
 		}
 		break;
 	
@@ -13099,10 +13058,6 @@ returnCSINextState		(My_ParserState			inPreviousState,
 		// terminals can be omitted, since they will be handled in the VT102 fallback
 		switch (inCodePoint)
 		{
-		case 'q':
-			result = kMy_ParserStateSeenESCPParamsq;
-			break;
-		
 		case 'X':
 			result = kMy_ParserStateSeenESCLeftSqBracketParamsX;
 			break;
@@ -13335,7 +13290,6 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIPrivate:
 	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
 	case kStateCSISecondaryDA:
-	case kStateDCS:
 		inNowOutNext.second = My_VT220::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 		break;
 	
@@ -13347,9 +13301,42 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	
 	if (false == outHandled)
 	{
+		outHandled = true; // initially...
+		
 		// use the current state and the available data to determine the next logical state
 		switch (inNowOutNext.first)
 		{
+		case kStateDCS:
+			inNowOutNext.second = kStateDCSAcquireStr;
+			result = 0; // do not absorb the unknown
+			break;
+		
+		case kStateDCSAcquireStr:
+			{
+				// handle device control strings (DCS) commonly regardless of
+				// what is in the string (a variety of different emulator
+				// sequences use them); then, once the string is parsed out
+				// of the primary state machine, perform a sub-parsing of the
+				// string at transition time to determine further actions
+				switch (kTriggerChar)
+				{
+				case '\007':
+					inNowOutNext.second = My_VT220::kStateST;
+					break;
+				
+				case '\033':
+					inNowOutNext.second = kMy_ParserStateSeenESC;
+					break;
+				
+				default:
+					// continue extending the string until a known terminator is found
+					inNowOutNext.second = kStateDCSAcquireStr;
+					result = 0; // do not absorb the unknown
+					break;
+				}
+			}
+			break;
+		
 		// currently, no special cases are needed (they are handled
 		// entirely by the default terminal transitioning between
 		// states based on character sequences alone)
@@ -13545,7 +13532,34 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		{
 			Console_WriteLine("device control string");
 		}
-		inDataPtr->emulator.clearEscapeSequenceParameters();
+		inDataPtr->emulator.clearEscapeSequenceParameters(); // should not be needed; just avoiding side effects
+		inDataPtr->emulator.stringAccumulator.clear();
+		inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
+		break;
+	
+	case kStateDCSAcquireStr:
+		{
+			if (DebugInterface_LogsTerminalState())
+			{
+				Console_WriteLine("reading DCS data"); // debug
+			}
+			
+			if (inDataPtr->emulator.isUTF8Encoding)
+			{
+				if (UTF8Decoder_StateMachine::kStateUTF8ValidSequence == inDataPtr->emulator.multiByteDecoder.returnState())
+				{
+					std::copy(inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.begin(),
+								inDataPtr->emulator.multiByteDecoder.multiByteAccumulator.end(),
+								std::back_inserter(inDataPtr->emulator.stringAccumulator));
+					result = 1;
+				}
+			}
+			else
+			{
+				inDataPtr->emulator.stringAccumulator.push_back(STATIC_CAST(inDataPtr->emulator.recentCodePoint(), UInt8));
+				result = 1;
+			}
+		}
 		break;
 	
 	case kStateDECSCA:
@@ -14592,9 +14606,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		case kStateSWT:
 			if (inDataPtr->emulator.supportsVariant(My_Emulator::kVariantFlagXTermAlterWindow))
 			{
-				CFRetainRelease		titleCFString(CFStringCreateWithCString(kCFAllocatorDefault,
+				CFRetainRelease		titleCFString(CFStringCreateWithBytes(kCFAllocatorDefault,
 																			inDataPtr->emulator.stringAccumulator.c_str(),
-																			inDataPtr->emulator.inputTextEncoding),
+																			inDataPtr->emulator.stringAccumulator.size(),
+																			inDataPtr->emulator.inputTextEncoding,
+																			false/* is external representation */),
 													CFRetainRelease::kAlreadyRetained);
 				
 				
@@ -14630,7 +14646,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				// the accumulated string up to this point actually needs to be parsed; currently,
 				// only strings of this form are allowed:
 				//		%d;rgb:%x/%x/%x - set color at index, to red, green, blue components in hex
-				char const*		stringPtr = inDataPtr->emulator.stringAccumulator.c_str();
+				char const*		stringPtr = REINTERPRET_CAST(inDataPtr->emulator.stringAccumulator.c_str(), char const*);
 				int				i = 0;
 				int				r = 0;
 				int				g = 0;
@@ -16574,6 +16590,83 @@ getLineIterator		(Terminal_LineRef	inIterator)
 {
 	return REINTERPRET_CAST(inIterator, My_LineIteratorPtr);
 }// getLineIterator
+
+
+/*!
+A convenience function that calls getParametersFromStringRange()
+on the "inDataPtr->emulator.stringAccumulator" string’s begin/end,
+which is often where parameter data comes from during parsing. 
+
+(2017.12)
+*/
+void
+getParametersFromStringAccumulator	(My_ScreenBufferPtr								inDataPtr,
+									 ParameterDecoder_StateMachine&					inoutParamDecoder,
+									 std::basic_string< UInt8 >::const_iterator&	outIterChar)
+{
+	getParametersFromStringRange(inDataPtr->emulator.stringAccumulator.begin(),
+									inDataPtr->emulator.stringAccumulator.end(),
+									inoutParamDecoder, outIterChar);
+}// getParametersFromStringAccumulator
+
+
+/*!
+Iterates over the first few characters of the given
+character range until a non-parameter character is found
+(typically this means capturing all numerical values
+delimited by semicolons and stopping at the first
+non-digit, non-semicolon).
+
+Upon return, the state machine object can be used to
+see what was found, such as numerical parameters.
+
+For convenience the iterator’s final value is returned,
+as this is usually vital for understanding what the
+parameters mean.  If this is equal to "inEnd", all the
+given bytes were processed without finding a terminator
+(otherwise, this can be dereferenced to see the start
+of the terminating sequence).
+
+See also getParametersFromStringAccumulator().
+
+(2017.12)
+*/
+void
+getParametersFromStringRange	(std::basic_string< UInt8 >::const_iterator		inBegin,
+								 std::basic_string< UInt8 >::const_iterator		inEnd,
+								 ParameterDecoder_StateMachine&					inoutParamDecoder,
+								 std::basic_string< UInt8 >::const_iterator&	outIterChar)
+{
+	for (outIterChar = inBegin; outIterChar != inEnd; /* incremented below */)
+	{
+		ParameterDecoder_StateMachine::State const	kOriginalState = inoutParamDecoder.returnState();
+		SInt16										loopGuard = 0;
+		Boolean										byteNotUsed = true;
+		
+		
+		while (byteNotUsed)
+		{
+			inoutParamDecoder.goNextState(*outIterChar, byteNotUsed);
+			if ((byteNotUsed) && (kOriginalState == inoutParamDecoder.returnState()))
+			{
+				// no way to proceed
+				break;
+			}
+			++loopGuard;
+			if (loopGuard > 100/* arbitrary */)
+			{
+				break;
+			}
+		}
+		
+		if (byteNotUsed)
+		{
+			break;
+		}
+		
+		++outIterChar;
+	}
+}// getParametersFromStringRange
 
 
 /*!

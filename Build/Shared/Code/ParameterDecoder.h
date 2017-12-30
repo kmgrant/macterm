@@ -71,12 +71,12 @@ struct ParameterDecoder_StateMachine
 		kStateInitial			= 'init',	//!< the very first state, no bytes have yet been seen
 		kStateSeenDigit			= 'xdgt',	//!< new digit defining an integer parameter
 		kStateResetParameter	= 'rprm',	//!< a non-digit has been seen
+		kStateTerminated		= 'term',	//!< a non-digit, non-delimiter has been seen
 	};
 	
 	ParameterDecoder_IntegerVector	parameterValues;		//!< ordered list of parameter values parsed
 	UInt8							delimiterCharacter;		//!< character that identifies a new parameter
 	UInt8							byteRegister;			//!< for temporarily holding byte needed between stateDeterminant() and stateTransition()
-	SInt16							integerAccumulator;		//!< reset to 0 but grows as digit characters are encountered
 	
 	//! Constructs state machine with optional override for parameter delimiter.
 	ParameterDecoder_StateMachine	(UInt8		inDelimiter = ';');
