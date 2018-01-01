@@ -485,10 +485,6 @@ Emulation_FullType
 CFStringRef
 	Terminal_EmulatorReturnName				(TerminalScreenRef			inScreen);
 
-Terminal_Result
-	Terminal_EmulatorSet					(TerminalScreenRef			inScreen,
-											 Emulation_FullType			inEmulator);
-
 Boolean
 	Terminal_IsInPasswordMode				(TerminalScreenRef			inScreen);
 

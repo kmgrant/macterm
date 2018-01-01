@@ -617,11 +617,7 @@ inline UInt32
 invokeEmulatorStateTransitionProc	(My_EmulatorStateTransitionProcPtr	inProc,
 									 My_ScreenBuffer*					inDataPtr,
 									 My_ParserStatePair const&			inOldNew,
-									 Boolean&							outHandled)
-{
-	outHandled = true; // initially...
-	return (*inProc)(inDataPtr, inOldNew, outHandled);
-}
+									 Boolean&							outHandled);
 
 /*!
 Screen Line Operation Routine
@@ -675,9 +671,13 @@ typedef std::map< UniChar, CFRetainRelease >	My_PrintableByUniChar;
 
 typedef std::vector< UInt8 >					My_RGBComponentList;
 
+typedef std::map< void const*, char const* >	My_StringByPointer;
+
 typedef std::vector< char >						My_TabStopList;
 
 typedef std::map< UInt32, TextAttributes_TrueColorID >		My_TrueColorIDByComponentKey;
+
+typedef std::list< void const* >				My_VoidPtrList;
 
 /*!
 All the information associated with either the G0 or G1
@@ -985,9 +985,6 @@ public:
 	
 	~My_Emulator ();
 	
-	Boolean
-	changeTo	(Emulation_FullType);
-	
 	void
 	clearEscapeSequenceParameters ();
 	
@@ -1176,6 +1173,8 @@ public:
 	My_ScreenBufferLineList				screenBuffer;				//!< all of the visible text for the terminal;
 																	//!  IMPORTANT: ONLY modify the screen buffer using screen...() routines!
 	My_ByteString						bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
+	My_VoidPtrList						debugStateHandlerSequence;	//!< used only when logging is enabled; cleared at each state transition, tracks
+																	//!  handlers that are invoked during the processing of the transition
 	
 	// Error Counts
 	//
@@ -1855,6 +1854,7 @@ void						getParametersFromStringRange			(std::basic_string< UInt8 >::const_iter
 																	 ParameterDecoder_StateMachine&, std::basic_string< UInt8 >::const_iterator&);
 My_ScreenBufferPtr			getVirtualScreenData					(TerminalScreenRef);
 void						highlightLED							(My_ScreenBufferPtr, SInt16);
+My_StringByPointer			initCallbackIDsByFuncPtr				();
 void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
 void						locateScrollingRegion					(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&,
 																	 My_ScreenBufferLineList::iterator&);
@@ -1904,6 +1904,7 @@ UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TextAttribute
 #pragma mark Variables
 namespace {
 
+My_StringByPointer&				gCallbackIDsByFuncPtr ()	{ static My_StringByPointer x = initCallbackIDsByFuncPtr(); return x; }
 My_PrintableByUniChar&			gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
 My_ScreenReferenceLocker&		gScreenRefLocks ()			{ static My_ScreenReferenceLocker x; return x; }
 My_RefTracker&					gTerminalScreenValidRefs ()	{ static My_RefTracker x; return x; }
@@ -3099,6 +3100,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				{
 					My_ParserStatePair	states = std::make_pair(dataPtr->emulator.currentState,
 																dataPtr->emulator.currentState);
+					void const*			handlingProcPtr = nullptr; // see below
 					Boolean				isHandled = false;
 					Boolean				isInterrupt = false;
 					
@@ -3106,7 +3108,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					// debugging only
 					if (DebugInterface_LogsTerminalInputChar())
 					{
-						Console_WriteValueUnicodePoint("terminal loop: recent code point", dataPtr->emulator.recentCodePoint());
+						Console_WriteValueUnicodePoint("input code point", dataPtr->emulator.recentCodePoint());
 					}
 					
 					// find a new state, which may or may not interrupt the state that is
@@ -3313,6 +3315,14 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					}
 					
 					// perform whatever action is appropriate to enter this state
+					Boolean const	kIsLogged = ((DebugInterface_LogsTerminalEcho() && (kMy_ParserStateAccumulateForEcho == states.second)) ||
+													(DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != states.second)));
+					if (kIsLogged)
+					{
+						// clear handler sequence (see logging of sequence a bit later, below);
+						// note that invokeEmulatorStateTransitionProc() will update the sequence
+						dataPtr->debugStateHandlerSequence.clear();
+					}
 					isHandled = false;
 					for (auto callbackInfo : dataPtr->emulator.preCallbackSet)
 					{
@@ -3320,6 +3330,9 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 									(callbackInfo.transitionHandler, dataPtr, states, isHandled);
 						if (isHandled)
 						{
+							// when debugging, capture the callback that deals with the new state
+							handlingProcPtr = REINTERPRET_CAST(callbackInfo.transitionHandler, void const*);
+							
 							break;
 						}
 					}
@@ -3328,6 +3341,11 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						countRead = invokeEmulatorStateTransitionProc
 									(dataPtr->emulator.currentCallbacks.transitionHandler,
 										dataPtr, states, isHandled);
+						if (isHandled)
+						{
+							// when debugging, capture the callback that deals with the new state
+							handlingProcPtr = REINTERPRET_CAST(dataPtr->emulator.currentCallbacks.transitionHandler, void const*);
+						}
 					}
 					unless (kIsUTF8)
 					{
@@ -3335,6 +3353,47 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						//Console_WriteValue("number of characters absorbed by transition handler", countRead); // debug
 						i -= countRead; // could be zero (no-op)
 						ptr += countRead; // could be zero (no-op)
+					}
+					
+					if ((isHandled) && (kIsLogged))
+					{
+						// show the handler that determined the new state
+						std::ostringstream	debugInfoSS;
+						std::string			debugStr;
+						CFRetainRelease		newStateDescCFString(UTCreateStringForOSType(states.second),
+																	CFRetainRelease::kAlreadyRetained);
+						char const*			newStateCStringOrNull = (newStateDescCFString.exists()
+																		? CFStringGetCStringPtr(newStateDescCFString.returnCFStringRef(),
+																								CFStringGetFastestEncoding
+																								(newStateDescCFString.returnCFStringRef()))
+																		: nullptr);
+						
+						
+						debugInfoSS << "new state '";
+						if (nullptr == newStateCStringOrNull)
+						{
+							debugInfoSS << "<" << states.second << ">"; // failed to convert; show integer value
+						}
+						else
+						{
+							debugInfoSS << newStateCStringOrNull;
+						}
+						if (false == dataPtr->debugStateHandlerSequence.empty())
+						{
+							debugInfoSS << "'; handler path:";
+							for (auto aProcPtr : dataPtr->debugStateHandlerSequence)
+							{
+								auto			procIter = gCallbackIDsByFuncPtr().find(aProcPtr);
+								char const*		procID = ((procIter == gCallbackIDsByFuncPtr().end())
+															? "?"
+															: procIter->second);
+								
+								
+								debugInfoSS << " -> " << procID;
+							}
+						}
+						debugStr = debugInfoSS.str();
+						Console_WriteLine(debugStr.c_str());
 					}
 					
 					if (false == isInterrupt)
@@ -3576,33 +3635,6 @@ Terminal_EmulatorReturnName		(TerminalScreenRef	inRef)
 	
 	return result;
 }// EmulatorReturnName
-
-
-/*!
-Changes the kind of terminal a virtual terminal
-will emulate.
-
-\retval kTerminal_ResultOK
-if the data was copied successfully
-
-\retval kTerminal_ResultInvalidID
-if the specified screen reference is invalid
-
-(3.0)
-*/
-Terminal_Result
-Terminal_EmulatorSet	(TerminalScreenRef		inRef,
-						 Emulation_FullType		inEmulationType)
-{
-	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
-	Terminal_Result			result = kTerminal_ResultOK;
-	
-	
-	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
-	else dataPtr->emulator.changeTo(inEmulationType);
-	
-	return result;
-}// EmulatorSet
 
 
 /*!
@@ -6023,36 +6055,6 @@ My_Emulator::~My_Emulator()
 
 
 /*!
-Changes the callbacks used to drive the emulator state machine,
-based on the desired emulation type.
-
-Returns true only if successful.
-
-(4.0)
-*/
-Boolean
-My_Emulator::
-changeTo	(Emulation_FullType		inPrimaryEmulation)
-{
-	My_EmulatorEchoDataProcPtr const			kNewDataWriter = returnDataWriter(inPrimaryEmulation);
-	My_EmulatorStateDeterminantProcPtr const	kNewDeterminant = returnStateDeterminant(inPrimaryEmulation);
-	My_EmulatorStateTransitionProcPtr const		kNewTransitionHandler = returnStateTransitionHandler(inPrimaryEmulation);
-	My_EmulatorResetProcPtr const				kNewResetHandler = returnResetHandler(inPrimaryEmulation);
-	Boolean										result = ((nullptr != kNewDataWriter) &&
-															(nullptr != kNewDeterminant) &&
-															(nullptr != kNewTransitionHandler) &&
-															(nullptr != kNewResetHandler));
-	
-	
-	if (result)
-	{
-		this->currentCallbacks = My_Emulator::Callbacks(kNewDataWriter, kNewDeterminant, kNewTransitionHandler, kNewResetHandler);
-	}
-	return result;
-}// changeTo
-
-
-/*!
 Responds to a CSI (control sequence inducer) by reinitializing
 all parameter values and resetting the current parameter index
 to 0.
@@ -6666,6 +6668,7 @@ scrollbackBufferCachedSize(0),
 scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
+debugStateHandlerSequence(),
 echoErrorCount(0),
 translationErrorCount(0),
 errorCountTotal(0),
@@ -8529,31 +8532,6 @@ stateTransition		(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
 	
-	// debug
-	//Console_WriteValueFourChars("    <<< standard handler transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() || DebugInterface_LogsTerminalEcho())
-	{
-		if (kMy_ParserStateAccumulateForEcho == inOldNew.second)
-		{
-			// echo logging is a special case because it is quite common
-			// and showing it may make it harder to notice other states
-			// (NOTE: since all emulators currently defer to the default
-			// emulator to echo, it is only logged here)
-			if (DebugInterface_LogsTerminalEcho())
-			{
-				Console_WriteLine(">>>     standard handler transition to ECHO state");
-			}
-		}
-		else
-		{
-			// any other state is logged normally
-			if (DebugInterface_LogsTerminalState())
-			{
-				Console_WriteValueFourChars(">>>     standard handler transition to state  ", inOldNew.second);
-			}
-		}
-	}
-	
 	// decide what to do based on the proposed transition
 	//Console_Warning(Console_WriteValueFourChars, "no known actions associated with new terminal state", inOldNew.second);
 	// the trigger character would also be skipped in this case
@@ -8700,13 +8678,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
 	
-	// debug
-	//Console_WriteValueFourChars("    <<< dumb terminal transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     dumb terminal transition to state  ", inOldNew.second);
-	}
-	
 	// decide what to do based on the proposed transition
 	result = invokeEmulatorStateTransitionProc
 				(My_DefaultEmulator::stateTransition, inDataPtr,
@@ -8797,13 +8768,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< iTerm handler transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     iTerm handler transition to state  ", inOldNew.second);
-	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -9233,13 +9197,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< Sixel handler transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     Sixel handler transition to state  ", inOldNew.second);
-	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -9781,13 +9738,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< UTF-8 handler transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     UTF-8 handler transition to state  ", inOldNew.second);
-	}
 	
 	// decide what to do based on the proposed transition; note that
 	// although certain UTF-8 state is maintained in the terminal as well,
@@ -10953,13 +10903,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
 	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT100 ANSI transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     VT100 ANSI transition to state  ", inOldNew.second);
-	}
-	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
 	switch (inOldNew.second)
@@ -12102,13 +12045,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
 	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT100 VT52 transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     VT100 VT52 transition to state  ", inOldNew.second);
-	}
-	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
 	switch (inOldNew.second)
@@ -12557,13 +12493,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT102 transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     VT102 transition to state  ", inOldNew.second);
-	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -13376,13 +13305,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT220 transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     VT220 transition to state  ", inOldNew.second);
-	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -14252,13 +14174,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
 	
-	// debug
-	//Console_WriteValueFourChars("    <<< XTerm transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     XTerm transition to state  ", inOldNew.second);
-	}
-	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
 	switch (inOldNew.second)
@@ -14547,13 +14462,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< XTerm transition from state", inOldNew.first);
-	if (DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second))
-	{
-		Console_WriteValueFourChars(">>>     XTerm (core) transition to state  ", inOldNew.second);
-	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -16731,6 +16639,83 @@ highlightLED	(My_ScreenBufferPtr		inDataPtr,
 	
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeNewLEDState, inDataPtr->selfRef/* context */);
 }// highlightLED
+
+
+/*!
+Returns a map initialized with keys equal to the function
+pointers used as callbacks, and values for constant strings
+describing those callbacks.  Used in debugging logs.  See
+the internal call gCallbackIDsByFuncPtr().
+
+(2017.12)
+*/
+My_StringByPointer
+initCallbackIDsByFuncPtr ()
+{
+	My_StringByPointer		result;
+	
+	
+	// insert descriptions of every available callback (for debugging);
+	// since the context for use already knows the purpose of the
+	// callback, the main important information is the emulator name
+	result[REINTERPRET_CAST(My_DefaultEmulator::stateDeterminant, void const*)] = "Default";
+	result[REINTERPRET_CAST(My_DefaultEmulator::stateTransition, void const*)] = "Default";
+	result[REINTERPRET_CAST(My_DumbTerminal::stateDeterminant, void const*)] = "Dumb";
+	result[REINTERPRET_CAST(My_DumbTerminal::stateTransition, void const*)] = "Dumb";
+	result[REINTERPRET_CAST(My_VT100::stateDeterminant, void const*)] = "VT100";
+	result[REINTERPRET_CAST(My_VT100::stateTransition, void const*)] = "VT100";
+	result[REINTERPRET_CAST(My_VT100::VT52::stateDeterminant, void const*)] = "VT100/VT52";
+	result[REINTERPRET_CAST(My_VT100::VT52::stateTransition, void const*)] = "VT100/VT52";
+	result[REINTERPRET_CAST(My_VT102::stateDeterminant, void const*)] = "VT102";
+	result[REINTERPRET_CAST(My_VT102::stateTransition, void const*)] = "VT102";
+	result[REINTERPRET_CAST(My_VT220::stateDeterminant, void const*)] = "VT220";
+	result[REINTERPRET_CAST(My_VT220::stateTransition, void const*)] = "VT220";
+	result[REINTERPRET_CAST(My_XTerm::stateDeterminant, void const*)] = "XTerm";
+	result[REINTERPRET_CAST(My_XTerm::stateTransition, void const*)] = "XTerm";
+	result[REINTERPRET_CAST(My_XTermCore::stateDeterminant, void const*)] = "XTermCore";
+	result[REINTERPRET_CAST(My_XTermCore::stateTransition, void const*)] = "XTermCore";
+	result[REINTERPRET_CAST(My_ITermCore::stateDeterminant, void const*)] = "ITermCore";
+	result[REINTERPRET_CAST(My_ITermCore::stateTransition, void const*)] = "ITermCore";
+	result[REINTERPRET_CAST(My_SixelCore::stateDeterminant, void const*)] = "SixelCore";
+	result[REINTERPRET_CAST(My_SixelCore::stateTransition, void const*)] = "SixelCore";
+	result[REINTERPRET_CAST(My_UTF8Core::stateDeterminant, void const*)] = "UTF8Core";
+	result[REINTERPRET_CAST(My_UTF8Core::stateTransition, void const*)] = "UTF8Core";
+	
+	return result;
+}// initCallbackIDsByFuncPtr
+
+
+/*!
+See the description for "My_EmulatorStateTransitionProcPtr".
+
+(4.0)
+*/
+inline UInt32
+invokeEmulatorStateTransitionProc	(My_EmulatorStateTransitionProcPtr	inProc,
+									 My_ScreenBuffer*					inDataPtr,
+									 My_ParserStatePair const&			inOldNew,
+									 Boolean&							outHandled)
+{
+	UInt32		result = 0;
+	
+	
+	outHandled = true; // initially...
+	result = (*inProc)(inDataPtr, inOldNew, outHandled);
+	
+	if (outHandled)
+	{
+		Boolean const	kIsLogged = ((DebugInterface_LogsTerminalEcho() && (kMy_ParserStateAccumulateForEcho == inOldNew.second)) ||
+										(DebugInterface_LogsTerminalState() && (kMy_ParserStateAccumulateForEcho != inOldNew.second)));
+		
+		
+		if (kIsLogged)
+		{
+			inDataPtr->debugStateHandlerSequence.push_front(REINTERPRET_CAST(inProc, void const*));
+		}
+	}
+	
+	return result;
+}// invokeEmulatorStateTransitionProc
 
 
 /*!
