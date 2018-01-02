@@ -462,6 +462,8 @@
 	<true/>
 	<key>terminal-emulator-xterm-enable-window-alteration-sequences</key>
 	<true/>
+	<key>terminal-emulator-xterm-reported-patch-level</key>
+	<integer>95</integer>
 	<key>terminal-fade-alpha</key>
 	<real>0.4</real>
 	<key>terminal-fade-in-background</key>

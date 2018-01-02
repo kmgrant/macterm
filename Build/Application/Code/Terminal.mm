@@ -1146,6 +1146,9 @@ public:
 	Boolean
 	returnXTermBackgroundColorErase		(Preferences_ContextRef);
 	
+	UInt16
+	returnXTermPatchLevel	(Preferences_ContextRef, Boolean = true);
+	
 	Boolean
 	returnXTermWindowAlteration		(Preferences_ContextRef);
 	
@@ -1203,7 +1206,6 @@ public:
 	FSRef								printingFile;				//!< used to delete the temporary printing file when finished
 	CFRetainRelease						printingFileURL;			//!< URL of the temporary printing file
 	UInt8								printingModes;				//!< MC private (VT102): true only if terminal-rendered lines are also sent to the printer
-	
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
 	Boolean								cursorVisible;				//!< if true, cursor state is visible (as opposed to invisible)
 	Boolean								reverseVideo;				//!< if true, foreground and background colors are swapped when rendering
@@ -1267,6 +1269,7 @@ public:
 	Boolean								modeOriginRedefined;		//!< DECOM mode: true only if the origin has been moved from its default place
 																	//!  (in which case, various subsequent terminal operations must be relative to
 																	//!  the origin instead of the home position)
+	UInt16								reportedPatchLevel;			//!< for XTerm; how to respond to Secondary Device Attributes
 	My_RowBoundary*						originRegionPtr;			//!< automatically set to the boundaries appropriate for the current origin mode;
 																	//!  this should always be preferred when restricting the cursor, and as an offset
 																	//!  when returning column or row numbers
@@ -1732,6 +1735,7 @@ public:
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
+	static void		secondaryDeviceAttributes		(My_ScreenBufferPtr);
 	static void		verticalPositionAbsolute		(My_ScreenBufferPtr);
 	
 	enum State
@@ -6702,6 +6706,7 @@ modeCursorKeysForApp(false),
 modeInsertNotReplace(false),
 modeNewLineOption(false),
 modeOriginRedefined(false),
+reportedPatchLevel(returnXTermPatchLevel(inTerminalConfig)),
 originRegionPtr(&visibleBoundary.rows),
 // speech elements - not initialized
 current(*this),
@@ -7365,6 +7370,32 @@ returnXTermBackgroundColorErase		(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnXTermBackgroundColorErase
+
+
+/*!
+Reads "kPreferences_TagXTermReportedPatchLevel" from a Preferences
+context, and returns either that value or the default value if
+none was found.
+
+(2018.01)
+*/
+UInt16
+My_ScreenBuffer::
+returnXTermPatchLevel	(Preferences_ContextRef		inTerminalConfig,
+						 Boolean					inFallBackToDefaults)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	UInt16					result = 95; // arbitrary default (minimum defined by XTerm)
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagXTermReportedPatchLevel,
+												sizeof(result), &result, inFallBackToDefaults);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_Warning(Console_WriteValue, "screen buffer failed to read XTerm patch level from preferences, error", prefsResult);
+	}
+	return result;
+}// returnXTermPatchLevel
 
 
 /*!
@@ -12964,7 +12995,7 @@ returnCSINextState		(My_ParserState			inPreviousState,
 	
 	if (kMy_ParserStateSeenESCLeftSqBracketParamsQuotes == inPreviousState)
 	{
-		// the weird double-terminator case ("p) is handled by using two states
+		// the weird double-terminator cases ("p, "q) are handled by using two states
 		switch (inCodePoint)
 		{
 		case 'p':
@@ -14082,6 +14113,48 @@ scrollUp	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Handles the VT220 'DA' sequence for secondary device attributes
+but with different values for XTerm.
+
+See the VT220 manual for complete details, and note that XTerm
+uses its XFree86 “patch level” for the middle value.
+
+(2018.01)
+*/
+inline void
+My_XTerm::
+secondaryDeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		std::ostringstream		reportBuffer;
+		
+		
+		// an emulated terminal has no firmware, so this is a bit made-up;
+		// it means VT220, no options supported; the middle value is hacked
+		// by XTerm to be the “XFree86 patch number”, which is unfortunate
+		// because MacTerm obviously does not have this and applications
+		// such as "vim" change behavior based on it; the best that can be
+		// done is to return a value that is at least the minimum patch
+		// defined (95), and provide a low-level override for anything that
+		// needs to hack in a different patch number
+		inDataPtr->emulator.sendEscape(session, "\033[>", 3/* string length */); // response header
+		reportBuffer
+		<< "1;" // identification code; 1 means VT220
+		<< inDataPtr->reportedPatchLevel << ";" // XTerm “firmware version” hacked to be “XFree86 patch level”
+		<< "0" // options value; always zero (0)
+		;
+		std::string		reportBufferString = reportBuffer.str();
+		inDataPtr->emulator.sendEscape(session, reportBufferString.c_str(), reportBufferString.size());
+		inDataPtr->emulator.sendEscape(session, "c", 1/* string length */); // response terminator
+	}
+}// My_XTerm::secondaryDeviceAttributes
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 XTerm-specific window states based on the characters of the
 given buffer.
@@ -14178,6 +14251,51 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	// INCOMPLETE
 	switch (inOldNew.second)
 	{
+	case My_VT100::kStateDA:
+		// device attributes (primary or secondary)
+		{
+			Boolean		isPrimary = false;
+			Boolean		isSecondary = false;
+			
+			
+			if (inDataPtr->emulator.argLastIndex >= 0)
+			{
+				switch (inDataPtr->emulator.argList[0])
+				{
+				case kMy_ParamSecondaryDA:
+					isSecondary = true;
+					break;
+				
+				case 0:
+					isPrimary = true;
+					break;
+				
+				default:
+					// ???
+					break;
+				}
+			}
+			else
+			{
+				// no parameters; defaults to “primary”
+				isPrimary = true;
+			}
+			
+			if (isSecondary)
+			{
+				My_XTerm::secondaryDeviceAttributes(inDataPtr);
+			}
+			else if (isPrimary)
+			{
+				My_VT220::primaryDeviceAttributes(inDataPtr);
+			}
+			else
+			{
+				// ??? - do nothing
+			}
+		}
+		break;
+	
 	case kStateCBT:
 		cursorBackwardTabulation(inDataPtr);
 		break;
@@ -14475,10 +14593,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		inDataPtr->emulator.stringAccumulatorState = inOldNew.second;
 		break;
 	
+	case kStateColorAcquireStr:
 	case kStateSWITAcquireStr:
 	case kStateSITAcquireStr:
 	case kStateSWTAcquireStr:
-	case kStateColorAcquireStr:
 		// upon first entry to the state, ignore the code point (semicolon)
 		// that caused the state to be selected; only accumulate code points
 		// that occurred while the previous state was also accumulating
@@ -14503,7 +14621,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case My_VT220::kStateST:
-		// a window and/or icon title can actually be terminated in multiple
+		// a string-based terminal sequence can be terminated in multiple
 		// ways; if a new-style XTerm string terminator is seen, then the
 		// action must be chosen based on the state that most recently used
 		// the string buffer
@@ -14622,7 +14740,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	return result;
 }// My_XTermCore::stateTransition
-
 
 
 /*!

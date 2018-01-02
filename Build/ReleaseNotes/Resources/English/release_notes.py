@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180101',
     '20171216',
     '20171215',
     '20171213',
@@ -589,6 +590,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180101': [
+        'XTerm terminals will now respond to VT220 Secondary Device Attributes queries by hijacking the 2nd return value for "XFree86 patch level", as XTerm does.  The default value is 95, the minimum defined by XTerm.  (Previously, the value 10 was returned, and terminals configured as only VT220 will continue to return 10.)  This can encourage applications that read this value, such as text editors, to have better behavior; though it will always be difficult to predict exactly how this number will be used by any given application.',
+        'New low-level terminal preference "terminal-emulator-xterm-reported-patch-level" can be used to customize the "XFree86 patch level" returned in Secondary Device Attributes queries by terminals that use the XTerm emulator type.  This is basically an XTerm hack but applications may depend on the specific value.  This should be considered highly experimental and used only to encourage applications to produce desired behavior; since MacTerm may not perfectly emulate an XTerm, changing the patch level to arbitrary values may not do the correct thing.',
+    ],
     '20171216': [
         'Terminal view image-rendering performance has been improved.',
         'Terminal view selections containing images can now be dragged.',

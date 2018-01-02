@@ -279,6 +279,8 @@ table(deftable).
 (defbottom). |\2(desc). Graphics characters are allowed (regardless of terminal type).|
 (deftop). |(key). @terminal-emulator-xterm-enable-window-alteration-sequences@|(types). _true or false_|
 (defbottom). |\2(desc). A session can request that windows be renamed or iconified, etc.|
+(deftop). |(key). @terminal-emulator-xterm-reported-patch-level@|(types). _integer_|
+(defbottom). |\2(desc). XTerm responds to query for Secondary Device Attributes with this custom XFree86 patch level in place of firmware version; note that XTerm defines 95 as the minimum.|
 (deftop). |(key). @terminal-line-wrap@|(types). _true or false_|
 (defbottom). |\2(desc). Text inserted while the cursor is at the right margin will move the cursor to home on the next line instead of truncating.|
 (deftop). |(key). @terminal-screen-dimensions-columns@|(types). _integer_|

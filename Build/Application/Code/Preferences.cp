@@ -1248,6 +1248,9 @@ Preferences_Init ()
 										CFSTR("terminal-emulator-xterm-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermWindowAlterationEnabled,
 										CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::create(kPreferences_TagXTermReportedPatchLevel,
+									CFSTR("terminal-emulator-xterm-reported-patch-level"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	
 	// to ensure that the rest of the application can depend on its
 	// known keys being defined, ALWAYS merge in default values for
@@ -8293,6 +8296,28 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagXTermReportedPatchLevel:
+					if (false == inContextPtr->exists(keyName))
+					{
+						result = kPreferences_ResultBadVersionDataNotAvailable;
+					}
+					else
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						SInt32			valueInteger = inContextPtr->returnInteger(keyName);
+						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
+						
+						
+						*data = STATIC_CAST(valueInteger, UInt16);
+						if (0 == *data)
+						{
+							// failed; make default
+							*data = 95; // arbitrary (minimum XFree86 patch level that XTerm uses)
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+					}
+					break;
+				
 				default:
 					// unrecognized tag
 					result = kPreferences_ResultUnknownTagOrClass;
@@ -10500,6 +10525,16 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
+				}
+				break;
+			
+			case kPreferences_TagXTermReportedPatchLevel:
+				{
+					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
