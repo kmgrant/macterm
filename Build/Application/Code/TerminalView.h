@@ -109,19 +109,6 @@ enum
 };
 
 /*!
-Determines the shape of the cursor, when rendered.
-*/
-enum TerminalView_CursorType
-{
-	kTerminalView_CursorTypeBlock					= 0,	//!< solid, filled rectangle
-	kTerminalView_CursorTypeUnderscore				= 1,	//!< 1-pixel-high underline
-	kTerminalView_CursorTypeVerticalLine			= 2,	//!< standard Mac insertion point appearance
-	kTerminalView_CursorTypeThickUnderscore			= 3,	//!< 2-pixel-high underscore, makes cursor easier to see
-	kTerminalView_CursorTypeThickVerticalLine		= 4,	//!< 2-pixel-wide vertical line, makes cursor easier to see
-	kTerminalView_CursorTypeCurrentPreferenceValue	= 200	//!< meta-value only used as a parameter in some routines
-};
-
-/*!
 Determines how the pixel area of the container control is filled
 with terminal content.  Normally, the font is a specific size, and
 the content either fits or doesn’t fit the pixel area.  However, in

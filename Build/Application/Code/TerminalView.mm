@@ -218,12 +218,12 @@ namespace {
 
 struct My_PreferenceProxies
 {
-	TerminalView_CursorType		cursorType;
-	Boolean						cursorBlinks;
-	Boolean						dontDimTerminals;
-	Boolean						invertSelections;
-	Boolean						notifyOfBeeps;
-	UInt16						renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
+	Terminal_CursorType		cursorType;
+	Boolean					cursorBlinks;
+	Boolean					dontDimTerminals;
+	Boolean					invertSelections;
+	Boolean					notifyOfBeeps;
+	UInt16					renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
 };
 
 typedef std::vector< CGDeviceColor >			My_CGColorList;
@@ -446,7 +446,7 @@ void				copySelectedTextIfUserPreference	(My_TerminalViewPtr);
 void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef);
 OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
-TerminalView_CursorType	cursorType						(My_TerminalViewPtr);
+Terminal_CursorType	cursorType							(My_TerminalViewPtr);
 NSCursor*			customCursorCrosshairs				();
 NSCursor*			customCursorIBeam					(Boolean = false);
 NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
@@ -530,7 +530,7 @@ void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CG
 void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
 														 Float32 = 1.0);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, CGRect*, HIMutableShapeRef,
-														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
+														 Terminal_CursorType = kTerminal_CursorTypeCurrentPreferenceValue);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 Boolean				startMonitoringDataSource			(My_TerminalViewPtr, TerminalScreenRef);
@@ -5400,7 +5400,7 @@ this routine takes a specific screen as a parameter.
 
 (4.0)
 */
-TerminalView_CursorType
+Terminal_CursorType
 cursorType		(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr))
 {
 	return gPreferenceProxies.cursorType;
@@ -9652,7 +9652,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(gPreferenceProxies.cursorType),
 									&gPreferenceProxies.cursorType))
 		{
-			gPreferenceProxies.cursorType = kTerminalView_CursorTypeBlock; // assume a value, if preference can’t be found
+			gPreferenceProxies.cursorType = kTerminal_CursorTypeBlock; // assume a value, if preference can’t be found
 		}
 		break;
 	
@@ -10766,7 +10766,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
 							
 							// draw the dot in the middle of the cell that the cursor occupies
-							if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
+							if (kTerminal_CursorTypeBlock == gPreferenceProxies.cursorType)
 							{
 								// since the disk will not be visible with a full block shape, first
 								// restore original attributes (that way the disk appears in the
@@ -12966,12 +12966,12 @@ shape for "inoutUpdatedShapeOrNull".
 (3.0)
 */
 void
-setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
-					 SInt16						inX,
-					 SInt16						inY,
-					 CGRect*					outBoundsPtr,
-					 HIMutableShapeRef			inoutUpdatedShapeOrNull,
-					 TerminalView_CursorType	inTerminalCursorType)
+setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
+					 SInt16					inX,
+					 SInt16					inY,
+					 CGRect*				outBoundsPtr,
+					 HIMutableShapeRef		inoutUpdatedShapeOrNull,
+					 Terminal_CursorType	inTerminalCursorType)
 {
 	enum
 	{
@@ -12984,15 +12984,15 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		kTerminalCursorThickVerticalLineWidth = 2
 	};
 	
-	Point						characterSizeInPixels; // based on font metrics
-	Rect						rowBounds;
-	UInt16						thickness = 0; // used for non-block-shaped cursors
-	TerminalView_CursorType		terminalCursorType = inTerminalCursorType;
+	Point					characterSizeInPixels; // based on font metrics
+	Rect					rowBounds;
+	UInt16					thickness = 0; // used for non-block-shaped cursors
+	Terminal_CursorType		terminalCursorType = inTerminalCursorType;
 	
 	
 	// if requested, use whatever cursor shape the user wants;
 	// otherwise, calculate the bounds for the given shape
-	if (inTerminalCursorType == kTerminalView_CursorTypeCurrentPreferenceValue)
+	if (inTerminalCursorType == kTerminal_CursorTypeCurrentPreferenceValue)
 	{
 		terminalCursorType = cursorType(inTerminalViewPtr);
 	}
@@ -13007,9 +13007,9 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	switch (terminalCursorType)
 	{
-	case kTerminalView_CursorTypeUnderscore:
-	case kTerminalView_CursorTypeThickUnderscore:
-		thickness = (terminalCursorType == kTerminalView_CursorTypeUnderscore)
+	case kTerminal_CursorTypeUnderscore:
+	case kTerminal_CursorTypeThickUnderscore:
+		thickness = (terminalCursorType == kTerminal_CursorTypeUnderscore)
 						? kTerminalCursorUnderscoreHeight
 						: kTerminalCursorThickUnderscoreHeight;
 		outBoundsPtr->origin.y += (characterSizeInPixels.v - thickness);
@@ -13017,16 +13017,16 @@ setUpCursorBounds	(My_TerminalViewPtr			inTerminalViewPtr,
 		outBoundsPtr->size.height = thickness;
 		break;
 	
-	case kTerminalView_CursorTypeVerticalLine:
-	case kTerminalView_CursorTypeThickVerticalLine:
-		thickness = (terminalCursorType == kTerminalView_CursorTypeVerticalLine)
+	case kTerminal_CursorTypeVerticalLine:
+	case kTerminal_CursorTypeThickVerticalLine:
+		thickness = (terminalCursorType == kTerminal_CursorTypeVerticalLine)
 						? kTerminalCursorVerticalLineWidth
 						: kTerminalCursorThickVerticalLineWidth;
 		outBoundsPtr->size.width = thickness;
 		outBoundsPtr->size.height = characterSizeInPixels.v;
 		break;
 	
-	case kTerminalView_CursorTypeBlock:
+	case kTerminal_CursorTypeBlock:
 	default:
 		outBoundsPtr->size.width = characterSizeInPixels.h;
 		outBoundsPtr->size.height = characterSizeInPixels.v;
@@ -14835,7 +14835,7 @@ drawRect:(NSRect)	aRect
 				RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
 				
 				// draw the dot in the middle of the cell that the cursor occupies
-				if (kTerminalView_CursorTypeBlock == gPreferenceProxies.cursorType)
+				if (kTerminal_CursorTypeBlock == gPreferenceProxies.cursorType)
 				{
 					// since the disk will not be visible with a full block shape, first
 					// restore original attributes (that way the disk appears in the

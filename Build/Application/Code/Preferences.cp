@@ -1156,7 +1156,7 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagTerminalCursorType,
 									CFSTR("terminal-cursor-shape"),
 									typeCFStringRef/* "block", "underline", "thick underline", "vertical bar", "thick vertical bar" */,
-									sizeof(TerminalView_CursorType), Quills::Prefs::GENERAL);
+									sizeof(Terminal_CursorType), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalEmulatorType,
 									CFSTR("terminal-emulator-type"), typeCFStringRef,
 									sizeof(Emulation_FullType), Quills::Prefs::TERMINAL);
@@ -6860,28 +6860,28 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							TerminalView_CursorType*	storedValuePtr = REINTERPRET_CAST(outDataPtr, TerminalView_CursorType*);
+							Terminal_CursorType*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Terminal_CursorType*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("block"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTerminalView_CursorTypeBlock;
+								*storedValuePtr = kTerminal_CursorTypeBlock;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("underline"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTerminalView_CursorTypeUnderscore;
+								*storedValuePtr = kTerminal_CursorTypeUnderscore;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("thick underline"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTerminalView_CursorTypeThickUnderscore;
+								*storedValuePtr = kTerminal_CursorTypeThickUnderscore;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("vertical bar"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTerminalView_CursorTypeVerticalLine;
+								*storedValuePtr = kTerminal_CursorTypeVerticalLine;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("thick vertical bar"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTerminalView_CursorTypeThickVerticalLine;
+								*storedValuePtr = kTerminal_CursorTypeThickVerticalLine;
 							}
 							else
 							{
@@ -9462,29 +9462,29 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagTerminalCursorType:
 				{
-					TerminalView_CursorType const	data = *(REINTERPRET_CAST(inDataPtr, TerminalView_CursorType const*));
+					Terminal_CursorType const	data = *(REINTERPRET_CAST(inDataPtr, Terminal_CursorType const*));
 					
 					
 					assert(typeCFStringRef == keyValueType);
 					switch (data)
 					{
-					case kTerminalView_CursorTypeUnderscore:
+					case kTerminal_CursorTypeUnderscore:
 						setApplicationPreference(keyName, CFSTR("underline"));
 						break;
 					
-					case kTerminalView_CursorTypeVerticalLine:
+					case kTerminal_CursorTypeVerticalLine:
 						setApplicationPreference(keyName, CFSTR("vertical bar"));
 						break;
 					
-					case kTerminalView_CursorTypeThickUnderscore:
+					case kTerminal_CursorTypeThickUnderscore:
 						setApplicationPreference(keyName, CFSTR("thick underline"));
 						break;
 					
-					case kTerminalView_CursorTypeThickVerticalLine:
+					case kTerminal_CursorTypeThickVerticalLine:
 						setApplicationPreference(keyName, CFSTR("thick vertical bar"));
 						break;
 					
-					case kTerminalView_CursorTypeBlock:
+					case kTerminal_CursorTypeBlock:
 					default:
 						setApplicationPreference(keyName, CFSTR("block"));
 						break;

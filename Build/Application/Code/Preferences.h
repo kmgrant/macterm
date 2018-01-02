@@ -208,7 +208,7 @@ enum
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
 	kPreferences_TagPureInverse							= 'pinv',	//!< data: "Boolean"
 	kPreferences_TagRandomTerminalFormats				= 'rfmt',	//!< data: "Boolean"
-	kPreferences_TagTerminalCursorType					= 'curs',	//!< data: "TerminalView_CursorType"
+	kPreferences_TagTerminalCursorType					= 'curs',	//!< data: "Terminal_CursorType"
 	kPreferences_TagTerminalResizeAffectsFontSize		= 'rszf',	//!< data: "Boolean"
 	kPreferences_TagTerminalShowMarginAtColumn			= 'smar',	//!< data: "UInt16"; 0 turns off, 1 is first column, etc.
 	kPreferences_TagVisualBell							= 'visb',	//!< data: "Boolean"

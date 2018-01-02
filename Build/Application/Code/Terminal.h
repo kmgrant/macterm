@@ -141,6 +141,19 @@ enum
 };
 
 /*!
+Determines the shape of the cursor, when rendered.
+*/
+enum Terminal_CursorType
+{
+	kTerminal_CursorTypeBlock					= 0,	//!< solid, filled rectangle
+	kTerminal_CursorTypeUnderscore				= 1,	//!< 1-pixel-high underline
+	kTerminal_CursorTypeVerticalLine			= 2,	//!< standard Mac insertion point appearance
+	kTerminal_CursorTypeThickUnderscore			= 3,	//!< 2-pixel-high underscore, makes cursor easier to see
+	kTerminal_CursorTypeThickVerticalLine		= 4,	//!< 2-pixel-wide vertical line, makes cursor easier to see
+	kTerminal_CursorTypeCurrentPreferenceValue	= 200	//!< meta-value only used as a parameter in some routines
+};
+
+/*!
 Controls Terminal_Reset().
 */
 typedef UInt32 Terminal_ResetFlags;

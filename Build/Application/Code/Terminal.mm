@@ -277,7 +277,9 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsZ	= 'E[;Z',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsAt	= 'E[;@',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsBackquote	= 'E[;`',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsDollarSign	= 'E[;$',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsQuotes		= 'E[;\"',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsSpace		= 'E[; ',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketQuestionMark	= 'ES[?',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketSemicolon	= 'ES[;',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
@@ -1207,6 +1209,8 @@ public:
 	CFRetainRelease						printingFileURL;			//!< URL of the temporary printing file
 	UInt8								printingModes;				//!< MC private (VT102): true only if terminal-rendered lines are also sent to the printer
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
+	Terminal_CursorType					cursorType;					//!< cursor shape (from viewpoint of program running in terminal)
+	Boolean								cursorBlinking;				//!< if true, cursor is set to blink (from viewpoint of program running in terminal)
 	Boolean								cursorVisible;				//!< if true, cursor state is visible (as opposed to invisible)
 	Boolean								reverseVideo;				//!< if true, foreground and background colors are swapped when rendering
 	Boolean								windowMinimized;			//!< if true, the window has been *flagged* as being iconified; since this is only
@@ -1623,8 +1627,10 @@ public:
 	static void		eraseCharacters						(My_ScreenBufferPtr);
 	static void		insertBlankCharacters				(My_ScreenBufferPtr);
 	static void		primaryDeviceAttributes				(My_ScreenBufferPtr);
+	static void		requestDECPrivateMode				(My_ScreenBufferPtr);
 	static void		secondaryDeviceAttributes			(My_ScreenBufferPtr);
 	static void		selectCharacterAttributes			(My_ScreenBufferPtr);
+	static void		selectCursorStyle					(My_ScreenBufferPtr);
 	static void		selectiveEraseInDisplay				(My_ScreenBufferPtr);
 	static void		selectiveEraseInLine				(My_ScreenBufferPtr);
 
@@ -1636,9 +1642,11 @@ public:
 		kStateCSISecondaryDA	= kMy_ParserStateSeenESCLeftSqBracketGreaterThan,	//!< parameter list indicates secondary device attributes
 		kStateDCS				= kMy_ParserStateSeenESCP,				//!< device control string
 		kStateDCSAcquireStr		= 'VACS',								//!< state of reading bytes into string accumulator
+		kStateDECRQM			= 'VRQM',								//!< request DEC private mode
 		kStateDECSCA			= 'VSCA',								//!< select character attributes
 		kStateDECSCL			= 'VSCL',								//!< compatibility level
 		kStateDECSTR			= kMy_ParserStateSeenESCLeftSqBracketExPointp,	//!< soft terminal reset
+		kStateDECSCUSR			= 'VSCU',								//!< select cursor style
 		kStateECH				= kMy_ParserStateSeenESCLeftSqBracketParamsX,	//!< erase characters without insertion
 		kStateICH				= kMy_ParserStateSeenESCLeftSqBracketParamsAt,	//!< insert blank characters
 		kStateLS1R				= kMy_ParserStateSeenESCTilde,			//!< lock shift G1, right side
@@ -1733,6 +1741,8 @@ public:
 	static void		cursorNextLine					(My_ScreenBufferPtr);
 	static void		cursorPreviousLine				(My_ScreenBufferPtr);
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
+	static void		reportCursorStyle				(My_ScreenBufferPtr);
+	static void		reportSelectionSettingNotUsed	(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
 	static void		secondaryDeviceAttributes		(My_ScreenBufferPtr);
@@ -6683,6 +6693,8 @@ printingFile(),
 printingFileURL(),
 printingModes(0),
 bellDisabled(false),
+cursorType(kTerminal_CursorTypeBlock),
+cursorBlinking(true),
 cursorVisible(true),
 reverseVideo(false),
 windowMinimized(false),
@@ -6778,19 +6790,6 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 			this->emulator.addedITerm = true;
 		}
 	}
-	if (returnSixelGraphics(inTerminalConfig))
-	{
-		this->emulator.supportedVariants |= My_Emulator::kVariantFlagSixelGraphics;
-		if (false == this->emulator.addedSixel)
-		{
-			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
-													My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
-																			My_SixelCore::stateDeterminant,
-																			My_SixelCore::stateTransition,
-																			nullptr/* reset - override is not allowed in a pre-callback */));
-			this->emulator.addedSixel = true;
-		}
-	}
 	if (returnXTerm256(inTerminalConfig))
 	{
 		this->emulator.supportedVariants |= My_Emulator::kVariantFlagXTerm256Color;
@@ -6822,6 +6821,19 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 																			My_XTermCore::stateTransition,
 																			nullptr/* reset - override is not allowed in a pre-callback */));
 			this->emulator.addedXTerm = true;
+		}
+	}
+	if (returnSixelGraphics(inTerminalConfig))
+	{
+		this->emulator.supportedVariants |= My_Emulator::kVariantFlagSixelGraphics;
+		if (false == this->emulator.addedSixel)
+		{
+			this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+													My_Emulator::Callbacks(nullptr/* echo - override is not allowed in a pre-callback */,
+																			My_SixelCore::stateDeterminant,
+																			My_SixelCore::stateTransition,
+																			nullptr/* reset - override is not allowed in a pre-callback */));
+			this->emulator.addedSixel = true;
 		}
 	}
 	this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
@@ -7890,6 +7902,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsBackquote;
 				break;
 			
+			case '$':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsDollarSign;
+				break;
+			
 			case '\"':
 				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
 				break;
@@ -7912,6 +7928,10 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			
 			case ';':
 				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketSemicolon;
+				break;
+			
+			case ' ':
+				inNowOutNext.second = kMy_ParserStateSeenESCLeftSqBracketParamsSpace;
 				break;
 			
 			default:
@@ -13011,6 +13031,34 @@ returnCSINextState		(My_ParserState			inPreviousState,
 			break;
 		}
 	}
+	else if (kMy_ParserStateSeenESCLeftSqBracketParamsDollarSign == inPreviousState)
+	{
+		// the weird double-terminator cases (like $p) are handled by using two states
+		switch (inCodePoint)
+		{
+		case 'p':
+			result = kStateDECRQM;
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+	}
+	else if (kMy_ParserStateSeenESCLeftSqBracketParamsSpace == inPreviousState)
+	{
+		// the weird double-terminator cases (like space-q) are handled by using two states
+		switch (inCodePoint)
+		{
+		case 'q':
+			result = kStateDECSCUSR;
+			break;
+		
+		default:
+			outHandled = false;
+			break;
+		}
+	}
 	else
 	{
 		// there should be an entry here for each parameter list terminator that is
@@ -13026,8 +13074,16 @@ returnCSINextState		(My_ParserState			inPreviousState,
 			result = kMy_ParserStateSeenESCLeftSqBracketParamsAt;
 			break;
 		
+		case '$':
+			result = kMy_ParserStateSeenESCLeftSqBracketParamsDollarSign;
+			break;
+		
 		case '\"':
 			result = kMy_ParserStateSeenESCLeftSqBracketParamsQuotes;
+			break;
+		
+		case ' ':
+			result = kMy_ParserStateSeenESCLeftSqBracketParamsSpace;
 			break;
 		
 		case '>':
@@ -13062,6 +13118,66 @@ returnCSINextState		(My_ParserState			inPreviousState,
 	
 	return result;
 }// My_VT220::returnCSINextState
+
+
+/*!
+Handles the VT300 'DECRQM' sequence for requests of DEC private
+modes.  See the XTerm manual for complete details.
+
+(2017.12)
+*/
+inline void
+My_VT220::
+requestDECPrivateMode	(My_ScreenBufferPtr		inDataPtr)
+{
+	SessionRef		session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		if (kMy_ParamPrivate != inDataPtr->emulator.argList[0])
+		{
+			// sequence apparently had no '?' in it (just CSI, params, '$', 'p')
+			// UNDEFINED
+		}
+		else if (inDataPtr->emulator.argLastIndex >= 1)
+		{
+			SInt16 const			kModeValueUnrecognized = 0; // see DECRPM in manuals for values
+			SInt16 const			kModeValueSet = 1; // see DECRPM in manuals for values
+			SInt16 const			kModeValueReset = 2; // see DECRPM in manuals for values
+			//SInt16 const			kModeValuePermanentlySet = 3; // see DECRPM in manuals for values
+			//SInt16 const			kModeValuePermanentlyReset = 4; // see DECRPM in manuals for values
+			SInt16					modeNumber = inDataPtr->emulator.argList[1];
+			SInt16					modeValue = kModeValueUnrecognized;
+			std::ostringstream		reportBuffer;
+			
+			
+			// see DECSET values in XTerm manual for details
+			switch (modeNumber)
+			{
+			case 12:
+				// start blinking cursor
+				modeValue = ((inDataPtr->cursorBlinking) ? kModeValueSet : kModeValueReset);
+				break;
+			
+			default:
+				// unknown or unsupported
+				modeValue = kModeValueUnrecognized;
+				break;
+			}
+			
+			reportBuffer
+			<< "\033[?" // start of CSI sequence for response
+			<< modeNumber
+			<< ";"
+			<< modeValue
+			<< "$y" // end of CSI sequence for response
+			;
+			std::string		reportBufferString = reportBuffer.str();
+			inDataPtr->emulator.sendEscape(session, reportBufferString.c_str(), reportBufferString.size());
+		}
+	}
+}// My_VT220::requestDECPrivateMode
 
 
 /*!
@@ -13125,6 +13241,72 @@ selectCharacterAttributes	(My_ScreenBufferPtr		inDataPtr)
 		}
 	}
 }// My_VT220::selectCharacterAttributes
+
+
+/*!
+Handles the VT220 'DECSCUSR' sequence.  See the VT220 manual for
+complete details.
+
+(2017.12)
+*/
+inline void
+My_VT220::
+selectCursorStyle	(My_ScreenBufferPtr		inDataPtr)
+{
+	if (inDataPtr->emulator.argLastIndex >= 0)
+	{
+		switch (inDataPtr->emulator.argList[0])
+		{
+		case kMy_ParamUndefined: // when nothing is given, the default value is 1
+		case 0:
+		case 1:
+			inDataPtr->cursorType = kTerminal_CursorTypeBlock;
+			inDataPtr->cursorBlinking = true;
+			break;
+		
+		case 2:
+			inDataPtr->cursorType = kTerminal_CursorTypeBlock;
+			inDataPtr->cursorBlinking = false;
+			break;
+		
+		case 3:
+			inDataPtr->cursorType = kTerminal_CursorTypeUnderscore;
+			inDataPtr->cursorBlinking = true;
+			break;
+		
+		case 4:
+			inDataPtr->cursorType = kTerminal_CursorTypeUnderscore;
+			inDataPtr->cursorBlinking = false;
+			break;
+		
+		case 5:
+			// technically XTerm-only
+			inDataPtr->cursorType = kTerminal_CursorTypeVerticalLine;
+			inDataPtr->cursorBlinking = true;
+			break;
+		
+		case 6:
+			// technically XTerm-only
+			inDataPtr->cursorType = kTerminal_CursorTypeVerticalLine;
+			inDataPtr->cursorBlinking = false;
+			break;
+		
+		default:
+			// ???
+			if (DebugInterface_LogsTerminalInputChar())
+			{
+				Console_Warning(Console_WriteValue, "VT220 select-cursor-style did not recognize parameter",
+								inDataPtr->emulator.argList[0]);
+			}
+			break;
+		}
+		
+		// UNIMPLEMENTED: notify listeners of change to cursor setting
+		// (currently, terminal views use a global preference and do
+		// not read the cursor that may have been set from a terminal;
+		// the terminal setting only affects later reporting)
+	}
+}// My_VT220::selectCursorStyle
 
 
 /*!
@@ -13248,7 +13430,9 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 	case My_VT100::kStateCSIParamDigitSub:
 	case My_VT100::kStateCSIParameterEnd:
 	case My_VT100::kStateCSIPrivate:
+	case kMy_ParserStateSeenESCLeftSqBracketParamsDollarSign:
 	case kMy_ParserStateSeenESCLeftSqBracketParamsQuotes:
+	case kMy_ParserStateSeenESCLeftSqBracketParamsSpace:
 	case kStateCSISecondaryDA:
 		inNowOutNext.second = My_VT220::returnCSINextState(inNowOutNext.first, kTriggerChar, outHandled);
 		break;
@@ -13515,6 +13699,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		}
 		break;
 	
+	case kStateDECRQM:
+		// request DEC private mode
+		My_VT220::requestDECPrivateMode(inDataPtr);
+		break;
+	
 	case kStateDECSCA:
 		// select character attributes (other than those set by SGR)
 		My_VT220::selectCharacterAttributes(inDataPtr);
@@ -13528,6 +13717,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateDECSTR:
 		// soft terminal reset; note that hard reset is handled by My_VT100::kStateRIS
 		resetTerminal(inDataPtr, true/* is soft reset */);
+		break;
+	
+	case kStateDECSCUSR:
+		// select cursor style
+		My_VT220::selectCursorStyle(inDataPtr);
 		break;
 	
 	case kStateECH:
@@ -13957,6 +14151,134 @@ horizontalPositionAbsolute	(My_ScreenBufferPtr		inDataPtr)
 	// automatically enforced by moveCursor...() routines
 	moveCursor(inDataPtr, newX, newY);
 }// My_XTerm::horizontalPositionAbsolute
+
+
+/*!
+Sends the XTerm 'DECRPSS' response for Set Cursor Style (SP q).
+See the XTerm manual for complete details.
+
+(2017.12)
+*/
+void
+My_XTerm::
+reportCursorStyle	(My_ScreenBufferPtr		inDataPtr)
+{
+	// send response
+	SessionRef	session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		std::ostringstream		reportBuffer;
+		Terminal_CursorType		cursorShape = kTerminal_CursorTypeBlock;
+		Boolean					cursorBlinks = true;
+		
+		
+	#if 0
+		// report cursor shape that is in use (currently corresponds
+		// to a global preference setting); the problem with this is
+		// that the reported setting will not agree with any previous
+		// attempt to change the setting from the terminal 
+		{
+			Preferences_Result		prefsResult = kPreferences_ResultOK;
+			
+			
+			prefsResult = Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(cursorShape), &cursorShape);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				// assume a default if preference can’t be found
+				cursorShape = kTerminal_CursorTypeBlock;
+			}
+			
+			prefsResult = Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(cursorBlinks), &cursorBlinks);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				// assume a default if preference can’t be found
+				cursorBlinks = true;
+			}
+		}
+	#else
+		// report only default setting and/or whatever might have
+		// been previously modified by a DECSCUSR sequence
+		cursorShape = inDataPtr->cursorType;
+		cursorBlinks = inDataPtr->cursorBlinking;
+	#endif
+		
+		// (see DECSCUSR documentation for possible return values here)
+		reportBuffer
+		<< "\033[" // start of CSI sequence for cursor setting
+		;
+		switch (cursorShape)
+		{
+		case kTerminal_CursorTypeUnderscore:
+		case kTerminal_CursorTypeThickUnderscore:
+			if (cursorBlinks)
+			{
+				reportBuffer << "3";
+			}
+			else
+			{
+				reportBuffer << "4";
+			}
+			break;
+		
+		case kTerminal_CursorTypeVerticalLine:
+		case kTerminal_CursorTypeThickVerticalLine:
+			if (cursorBlinks)
+			{
+				reportBuffer << "5";
+			}
+			else
+			{
+				reportBuffer << "6";
+			}
+			break;
+		
+		case kTerminal_CursorTypeBlock:
+		default:
+			if (cursorBlinks)
+			{
+				reportBuffer << "1";
+			}
+			else
+			{
+				reportBuffer << "2";
+			}
+			break;
+		}
+		reportBuffer
+		<< " q" // end of CSI sequence for cursor setting
+		;
+		inDataPtr->emulator.sendEscape(session, "\033P", 2/* string length */); // DCS (device control string)
+		inDataPtr->emulator.sendEscape(session, "1$r", 3/* string length */); // 1 = code for “valid” in XTerm
+		std::string		reportBufferString = reportBuffer.str();
+		inDataPtr->emulator.sendEscape(session, reportBufferString.c_str(), reportBufferString.size());
+		inDataPtr->emulator.sendEscape(session, "\033\\", 2/* string length */); // ST (string terminator)
+	}
+}// My_XTerm::reportCursorStyle
+
+
+/*!
+Sends the XTerm 'DECRPSS' response for any case that is not
+recognized.  See the XTerm manual for complete details.
+
+(2017.12)
+*/
+void
+My_XTerm::
+reportSelectionSettingNotUsed	(My_ScreenBufferPtr		inDataPtr)
+{
+	// send response
+	SessionRef	session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		inDataPtr->emulator.sendEscape(session, "\033P", 2/* string length */); // DCS (device control string)
+		inDataPtr->emulator.sendEscape(session, "0$r", 3/* string length */); // 0 = code for “invalid” in XTerm
+		inDataPtr->emulator.sendEscape(session, "\033\\", 2/* string length */); // ST (string terminator)
+	}
+}// My_XTerm::reportSelectionSettingNotUsed
 
 
 /*!
@@ -14627,6 +14949,60 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		// the string buffer
 		switch (inDataPtr->emulator.stringAccumulatorState)
 		{
+		case My_VT220::kStateDCS:
+			{
+				// scan the device control string for the expected terminators;
+				// otherwise, pass to a parent handler (e.g. might be Sixel data)
+				ParameterDecoder_StateMachine				paramDecoder;
+				std::basic_string< UInt8 >::const_iterator	pastEndParams = inDataPtr->emulator.stringAccumulator.end();
+				
+				
+				getParametersFromStringAccumulator(inDataPtr, paramDecoder, pastEndParams);
+				if ((inDataPtr->emulator.stringAccumulator.end() != pastEndParams) && ('$' == *pastEndParams) &&
+					(inDataPtr->emulator.stringAccumulator.end() != (1 + pastEndParams)) && ('q' == *(1 + pastEndParams)))
+				{
+					// “ESC P $ q” (DECRQSS)
+					typedef decltype(inDataPtr->emulator.stringAccumulator.size())	StringAccumulatorSize;
+					decltype(pastEndParams) const	kMainStringBegin = (pastEndParams + 2/* skip terminating '$q' */);
+					decltype(pastEndParams) const	kPastEndMainString = inDataPtr->emulator.stringAccumulator.end();
+					StringAccumulatorSize const		kStringDataSize = std::distance(kMainStringBegin, kPastEndMainString);
+					Boolean							requestHandled = true;
+					
+					
+					if (DebugInterface_LogsTerminalState())
+					{
+						std::basic_string< UInt8 >		requestString(kMainStringBegin, kPastEndMainString);
+						
+						
+						Console_WriteValueCString("received request for selection or setting, string", REINTERPRET_CAST(requestString.c_str(), char const*));
+					}
+					
+					if (2 == kStringDataSize)
+					{
+						if ((' '/* space */ == *kMainStringBegin) && ('q' == *(1 + kMainStringBegin)))
+						{
+							// report value for DECSCUSR from XTerm (or VT520)
+							My_XTerm::reportCursorStyle(inDataPtr);
+							requestHandled = true;
+						}
+						else
+						{
+							// INCOMPLETE; dozens of other XTerm sequences should be supported here
+						}
+					}
+					
+					if (false == requestHandled)
+					{
+						// most requests are not recognized right now; give a default response
+						My_XTerm::reportSelectionSettingNotUsed(inDataPtr);
+					}
+					
+					inDataPtr->emulator.stringAccumulator.clear();
+					inDataPtr->emulator.stringAccumulatorState = kMy_ParserStateInitial;
+				}
+			}
+			break;
+		
 		case kStateSWIT:
 		case kStateSIT:
 		case kStateSWT:

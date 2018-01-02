@@ -70,6 +70,7 @@
 #import "NetEvents.h"
 #import "Panel.h"
 #import "Preferences.h"
+#import "Terminal.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
 
@@ -164,14 +165,14 @@ The private class interface.
 	primaryDisplayBindingKeys;
 
 // preference setting accessors
-	- (TerminalView_CursorType)
-	readCursorTypeWithDefaultValue:(TerminalView_CursorType)_;
+	- (Terminal_CursorType)
+	readCursorTypeWithDefaultValue:(Terminal_CursorType)_;
 	- (UInt32)
 	readNewCommandShortcutEffectWithDefaultValue:(UInt32)_;
 	- (UInt16)
 	readSpacesPerTabWithDefaultValue:(UInt16)_;
 	- (BOOL)
-	writeCursorType:(TerminalView_CursorType)_;
+	writeCursorType:(Terminal_CursorType)_;
 	- (BOOL)
 	writeNewCommandShortcutEffect:(UInt32)_;
 	- (BOOL)
@@ -1804,7 +1805,7 @@ Accessor.
 - (BOOL)
 cursorShapeIsBlock
 {
-	return (kTerminalView_CursorTypeBlock == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
+	return (kTerminal_CursorTypeBlock == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfCursorShapeIsBlock
@@ -1818,7 +1819,7 @@ setCursorShapeIsBlock:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForCursorShape];
 		
-		BOOL	writeOK = [self writeCursorType:kTerminalView_CursorTypeBlock];
+		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeBlock];
 		
 		
 		if (NO == writeOK)
@@ -1839,7 +1840,7 @@ Accessor.
 - (BOOL)
 cursorShapeIsThickUnderline
 {
-	return (kTerminalView_CursorTypeThickUnderscore == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
+	return (kTerminal_CursorTypeThickUnderscore == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfCursorShapeIsThickUnderline
@@ -1853,7 +1854,7 @@ setCursorShapeIsThickUnderline:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForCursorShape];
 		
-		BOOL	writeOK = [self writeCursorType:kTerminalView_CursorTypeThickUnderscore];
+		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeThickUnderscore];
 		
 		
 		if (NO == writeOK)
@@ -1874,7 +1875,7 @@ Accessor.
 - (BOOL)
 cursorShapeIsThickVerticalBar
 {
-	return (kTerminalView_CursorTypeThickVerticalLine == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
+	return (kTerminal_CursorTypeThickVerticalLine == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfCursorShapeIsThickVerticalBar
@@ -1888,7 +1889,7 @@ setCursorShapeIsThickVerticalBar:(BOOL)		aFlag
 	{
 		[self notifyWillChangeValueForCursorShape];
 		
-		BOOL	writeOK = [self writeCursorType:kTerminalView_CursorTypeThickVerticalLine];
+		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeThickVerticalLine];
 		
 		
 		if (NO == writeOK)
@@ -1909,7 +1910,7 @@ Accessor.
 - (BOOL)
 cursorShapeIsUnderline
 {
-	return (kTerminalView_CursorTypeUnderscore == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
+	return (kTerminal_CursorTypeUnderscore == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfCursorShapeIsUnderline
@@ -1923,7 +1924,7 @@ setCursorShapeIsUnderline:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForCursorShape];
 		
-		BOOL	writeOK = [self writeCursorType:kTerminalView_CursorTypeUnderscore];
+		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeUnderscore];
 		
 		
 		if (NO == writeOK)
@@ -1944,7 +1945,7 @@ Accessor.
 - (BOOL)
 cursorShapeIsVerticalBar
 {
-	return (kTerminalView_CursorTypeVerticalLine == [self readCursorTypeWithDefaultValue:kTerminalView_CursorTypeBlock]);
+	return (kTerminal_CursorTypeVerticalLine == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfCursorShapeIsVerticalBar
@@ -1958,7 +1959,7 @@ setCursorShapeIsVerticalBar:(BOOL)		aFlag
 	{
 		[self notifyWillChangeValueForCursorShape];
 		
-		BOOL	writeOK = [self writeCursorType:kTerminalView_CursorTypeVerticalLine];
+		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeVerticalLine];
 		
 		
 		if (NO == writeOK)
@@ -2625,12 +2626,12 @@ or the specified default value if no preference exists.
 
 (4.1)
 */
-- (TerminalView_CursorType)
-readCursorTypeWithDefaultValue:(TerminalView_CursorType)	aDefaultValue
+- (Terminal_CursorType)
+readCursorTypeWithDefaultValue:(Terminal_CursorType)	aDefaultValue
 {
-	TerminalView_CursorType		result = aDefaultValue;
-	Preferences_Result			prefsResult = Preferences_GetData(kPreferences_TagTerminalCursorType,
-																	sizeof(result), &result);
+	Terminal_CursorType		result = aDefaultValue;
+	Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagTerminalCursorType,
+																sizeof(result), &result);
 	
 	
 	if (kPreferences_ResultOK != prefsResult)
@@ -2692,7 +2693,7 @@ returns YES only if this succeeds.
 (4.1)
 */
 - (BOOL)
-writeCursorType:(TerminalView_CursorType)	aValue
+writeCursorType:(Terminal_CursorType)	aValue
 {
 	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagTerminalCursorType,
 															sizeof(aValue), &aValue);

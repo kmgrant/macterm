@@ -591,6 +591,8 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20180101': [
+        'Terminals now support the DECRQSS sequence, though the response is initially "unrecognized value" for all inputs except DECSCUSR (cursor shape).  This helps to avoid glitchy terminal output at startup in recent versions of "vim".',
+        'Terminals now support the DECSCUSR (set cursor shape) sequence from VT520, although the value is currently just stored for report requests (DECRQSS) without allowing applications to change the terminal cursor display.  This helps to avoid glitchy terminal output at startup in recent versions of "vim".',
         'XTerm terminals will now respond to VT220 Secondary Device Attributes queries by hijacking the 2nd return value for "XFree86 patch level", as XTerm does.  The default value is 95, the minimum defined by XTerm.  (Previously, the value 10 was returned, and terminals configured as only VT220 will continue to return 10.)  This can encourage applications that read this value, such as text editors, to have better behavior; though it will always be difficult to predict exactly how this number will be used by any given application.',
         'New low-level terminal preference "terminal-emulator-xterm-reported-patch-level" can be used to customize the "XFree86 patch level" returned in Secondary Device Attributes queries by terminals that use the XTerm emulator type.  This is basically an XTerm hack but applications may depend on the specific value.  This should be considered highly experimental and used only to encourage applications to produce desired behavior; since MacTerm may not perfectly emulate an XTerm, changing the patch level to arbitrary values may not do the correct thing.',
     ],
