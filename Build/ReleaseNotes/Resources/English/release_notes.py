@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180105',
     '20180101',
     '20171216',
     '20171215',
@@ -590,6 +591,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180105': [
+        'Terminals now support the DECRQSS sequence for DECSTBM (set top/bottom margins).  This allows a program to determine the current scroll region.',
+    ],
     '20180101': [
         'Terminals now support the DECRQSS sequence, though the response is initially "unrecognized value" for all inputs except DECSCUSR (cursor shape).  This helps to avoid glitchy terminal output at startup in recent versions of "vim".',
         'Terminals now support the DECSCUSR (set cursor shape) sequence from VT520, although the value is currently just stored for report requests (DECRQSS) without allowing applications to change the terminal cursor display.  This helps to avoid glitchy terminal output at startup in recent versions of "vim".',

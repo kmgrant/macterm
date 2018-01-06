@@ -1743,6 +1743,7 @@ public:
 	static void		horizontalPositionAbsolute		(My_ScreenBufferPtr);
 	static void		reportCursorStyle				(My_ScreenBufferPtr);
 	static void		reportSelectionSettingNotUsed	(My_ScreenBufferPtr);
+	static void		reportTopBottomMargins			(My_ScreenBufferPtr);
 	static void		scrollDown						(My_ScreenBufferPtr);
 	static void		scrollUp						(My_ScreenBufferPtr);
 	static void		secondaryDeviceAttributes		(My_ScreenBufferPtr);
@@ -14282,6 +14283,44 @@ reportSelectionSettingNotUsed	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
+Sends the XTerm 'DECRPSS' response for Set Top/Bottom Margins (r).
+See the XTerm manual for complete details.
+
+(2018.01)
+*/
+void
+My_XTerm::
+reportTopBottomMargins	(My_ScreenBufferPtr		inDataPtr)
+{
+	// send response
+	SessionRef	session = returnListeningSession(inDataPtr);
+	
+	
+	if (nullptr != session)
+	{
+		std::ostringstream		reportBuffer;
+		Terminal_CursorType		cursorShape = kTerminal_CursorTypeBlock;
+		Boolean					cursorBlinks = true;
+		
+		
+		// (see DECSTBM documentation for possible return values here)
+		reportBuffer
+		<< "\033[" // start of CSI sequence for top/bottom margin setting
+		<< inDataPtr->customScrollingRegion.firstRow
+		<< ";"
+		<< inDataPtr->customScrollingRegion.lastRow
+		<< "r" // end of CSI sequence for top/bottom margin setting
+		;
+		inDataPtr->emulator.sendEscape(session, "\033P", 2/* string length */); // DCS (device control string)
+		inDataPtr->emulator.sendEscape(session, "1$r", 3/* string length */); // 1 = code for “valid” in XTerm
+		std::string		reportBufferString = reportBuffer.str();
+		inDataPtr->emulator.sendEscape(session, reportBufferString.c_str(), reportBufferString.size());
+		inDataPtr->emulator.sendEscape(session, "\033\\", 2/* string length */); // ST (string terminator)
+	}
+}// My_XTerm::reportTopBottomMargins
+
+
+/*!
 Returns the next logical state of CSI parameter processing,
 given the current state and the most recent code point.
 
@@ -14977,7 +15016,20 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						Console_WriteValueCString("received request for selection or setting, string", REINTERPRET_CAST(requestString.c_str(), char const*));
 					}
 					
-					if (2 == kStringDataSize)
+					if (1 == kStringDataSize)
+					{
+						if ('r' == *kMainStringBegin)
+						{
+							// report value for DECSTBM from XTerm (or VT100)
+							My_XTerm::reportTopBottomMargins(inDataPtr);
+							requestHandled = true;
+						}
+						else
+						{
+							// INCOMPLETE; dozens of other XTerm sequences should be supported here
+						}
+					}
+					else if (2 == kStringDataSize)
 					{
 						if ((' '/* space */ == *kMainStringBegin) && ('q' == *(1 + kMainStringBegin)))
 						{
