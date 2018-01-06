@@ -72,10 +72,9 @@ Possible return values from Session module routines.
 typedef ResultCode< UInt16 >	Session_Result;
 Session_Result const	kSession_ResultOK(0);						//!< no error
 Session_Result const	kSession_ResultInvalidReference(1);			//!< given SessionRef is not valid
-Session_Result const	kSession_ResultProtocolMismatch(2);			//!< attempt to, say, set an FTP option on a telnet session
-Session_Result const	kSession_ResultParameterError(3);			//!< invalid input (e.g. a null pointer)
-Session_Result const	kSession_ResultInsufficientBufferSpace(4);	//!< not enough memory space provided to copy data
-Session_Result const	kSession_ResultNotReady(5);					//!< session is not in a state that can accept this action right now
+Session_Result const	kSession_ResultParameterError(2);			//!< invalid input (e.g. a null pointer)
+Session_Result const	kSession_ResultInsufficientBufferSpace(3);	//!< not enough memory space provided to copy data
+Session_Result const	kSession_ResultNotReady(4);					//!< session is not in a state that can accept this action right now
 
 /*!
 Setting changes that MacTerm allows other modules to “listen” for,
@@ -238,14 +237,11 @@ enum
 /*!
 Protocols supported by a Session.
 */
-typedef UInt16 Session_Protocol;
-enum
+enum Session_Protocol
 {
-	kSession_ProtocolFTP = (1 << 0),	//!< file transfer protocol
-	kSession_ProtocolSFTP = (1 << 1),	//!< secure file transfer protocol
-	kSession_ProtocolSSH1 = (1 << 2),	//!< secure shell protocol, version 1
-	kSession_ProtocolSSH2 = (1 << 3),	//!< secure shell protocol, version 2
-	kSession_ProtocolTelnet = (1 << 4)	//!< telephone networking protocol
+	kSession_ProtocolSFTP			= 0,	//!< secure file transfer protocol
+	kSession_ProtocolSSH1			= 1,	//!< secure shell protocol, version 1
+	kSession_ProtocolSSH2			= 2,	//!< secure shell protocol, version 2
 };
 
 /*!

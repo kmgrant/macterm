@@ -201,7 +201,7 @@ table(deftable).
 (defbottom). |\2(desc). The machine where the desired remote server is located.|
 (deftop). |(key). @server-port@|(types). _integer_: TCP/IP port number|
 (defbottom). |\2(desc). The port on the host machine that the desired remote server is using; can derive default from protocol.|
-(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@|
+(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, or @sftp@|
 (defbottom). |\2(desc). The protocol used for a remote connection.|
 (deftop). |(key). @server-user-id@|(types). _string_: typically all-lowercase and one word, for log-in|
 (defbottom). |\2(desc). The ID used for logging in to the remote server.|

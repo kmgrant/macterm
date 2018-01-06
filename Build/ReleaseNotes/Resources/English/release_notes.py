@@ -593,6 +593,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20180105': [
         'Terminals now support the DECRQSS sequence for DECSTBM (set top/bottom margins).  This allows a program to determine the current scroll region.',
+        'The TELNET and regular FTP protocols are no longer supported in the graphical interface or in default URL handlers, since macOS High Sierra does not install the required tools.  Secure shell (SSH) and secure FTP (SFTP) are still available.  If you have a side installation of "telnet" or "ftp", you can use that by setting up a Session to run an appropriate command line.  Also, you can use the MacTerm Quills interface in Python to define new URL handlers that run your side installations.',
     ],
     '20180101': [
         'Terminals now support the DECRQSS sequence, though the response is initially "unrecognized value" for all inputs except DECSCUSR (cursor shape).  This helps to avoid glitchy terminal output at startup in recent versions of "vim".',

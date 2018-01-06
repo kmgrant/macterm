@@ -415,28 +415,11 @@ copyRemoteCommandLineString		(Session_Protocol	inProtocol,
 		result = true; // initially...
 		switch (inProtocol)
 		{
-		case kSession_ProtocolFTP:
-			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/ftp"));
-			if (nullptr != inHostName)
-			{
-				// ftp uses "user@host" format
-				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-				if (nullptr != inUserID)
-				{
-					CFStringAppend(newCommandLineCFString, inUserID);
-					CFStringAppend(newCommandLineCFString, CFSTR("@"));
-				}
-				CFStringAppend(newCommandLineCFString, inHostName);
-				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-			}
-			standardPortAppend = true; // ftp supports a standalone server port number argument
-			break;
-		
 		case kSession_ProtocolSFTP:
 			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/sftp"));
 			if (nullptr != inHostName)
 			{
-				// ftp uses "user@host" format
+				// sftp uses "user@host" format
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 				if (nullptr != inUserID)
 				{
@@ -478,15 +461,6 @@ copyRemoteCommandLineString		(Session_Protocol	inProtocol,
 			standardIPv6Append = true; // ssh supports a "-6" argument if the host is exactly in IP version 6 format
 			standardLoginOptionAppend = true; // ssh supports a "-l userid" option
 			standardHostNameAppend = true; // ssh supports a standalone server host argument
-			break;
-		
-		case kSession_ProtocolTelnet:
-			// -K: disable automatic login
-			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/telnet -K "));
-			standardIPv6Append = true; // telnet supports a "-6" argument if the host is exactly in IP version 6 format
-			standardLoginOptionAppend = true; // telnet supports a "-l userid" option
-			standardHostNameAppend = true; // telnet supports a standalone server host argument
-			standardPortAppend = true; // telnet supports a standalone server port number argument
 			break;
 		
 		default:

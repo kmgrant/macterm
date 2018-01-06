@@ -188,26 +188,6 @@
 			<key>CFBundleURLIconFile</key>
 			<string>IconForSession.icns</string>
 			<key>CFBundleURLName</key>
-			<string>file transfer URL</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>ftp</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLIconFile</key>
-			<string>IconForSession.icns</string>
-			<key>CFBundleURLName</key>
-			<string>login (telnet) URL</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>rlogin</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLIconFile</key>
-			<string>IconForSession.icns</string>
-			<key>CFBundleURLName</key>
 			<string>secure file transfer URL</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
@@ -222,16 +202,6 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>ssh</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleURLIconFile</key>
-			<string>IconForSession.icns</string>
-			<key>CFBundleURLName</key>
-			<string>telnet URL</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>telnet</string>
 			</array>
 		</dict>
 		<dict>

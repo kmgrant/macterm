@@ -7958,11 +7958,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
 							
 							
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("ftp"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kSession_ProtocolFTP;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("sftp"), kCFCompareCaseInsensitive))
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("sftp"), kCFCompareCaseInsensitive))
 							{
 								*storedValuePtr = kSession_ProtocolSFTP;
 							}
@@ -7974,10 +7970,6 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("ssh-2"), kCFCompareCaseInsensitive))
 							{
 								*storedValuePtr = kSession_ProtocolSSH2;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("telnet"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kSession_ProtocolTelnet;
 							}
 							else
 							{
@@ -10298,10 +10290,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeCFStringRef == keyValueType);
 					switch (*data)
 					{
-					case kSession_ProtocolFTP:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("ftp"));
-						break;
-					
 					case kSession_ProtocolSFTP:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("sftp"));
 						break;
@@ -10312,10 +10300,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					case kSession_ProtocolSSH2:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("ssh-2"));
-						break;
-					
-					case kSession_ProtocolTelnet:
-						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("telnet"));
 						break;
 					
 					default:

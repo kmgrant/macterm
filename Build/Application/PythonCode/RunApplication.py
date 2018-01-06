@@ -217,10 +217,8 @@ if __name__ == "__main__":
 
     # register MacTerm features that are actually implemented in Python!
     Session.on_urlopen_call(pymacterm.url_open.file, 'file')
-    Session.on_urlopen_call(pymacterm.url_open.ftp, 'ftp')
     Session.on_urlopen_call(pymacterm.url_open.sftp, 'sftp')
     Session.on_urlopen_call(pymacterm.url_open.ssh, 'ssh')
-    Session.on_urlopen_call(pymacterm.url_open.telnet, 'telnet')
     Session.on_urlopen_call(pymacterm.url_open.x_man_page, 'x-man-page')
     Session.on_fileopen_call(pymacterm.file_open.script, 'bash')
     Session.on_fileopen_call(pymacterm.file_open.script, 'command')

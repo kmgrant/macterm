@@ -1082,14 +1082,6 @@ dataObserver:(id< ServerBrowser_DataChangeObserver >)	aDataObserver
 									description:NSLocalizedStringFromTable(@"SSH Version 2", @"ServerBrowser"/* table */, @"ssh-2")
 									serviceType:@"_ssh._tcp."
 									defaultPort:22] autorelease],
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolTelnet
-									description:NSLocalizedStringFromTable(@"TELNET", @"ServerBrowser"/* table */, @"telnet")
-									serviceType:@"_telnet._tcp."
-									defaultPort:23] autorelease],
-								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolFTP
-									description:NSLocalizedStringFromTable(@"FTP", @"ServerBrowser"/* table */, @"ftp")
-									serviceType:@"_ftp._tcp."
-									defaultPort:21] autorelease],
 								[[[ServerBrowser_Protocol alloc] initWithID:kSession_ProtocolSFTP
 									description:NSLocalizedStringFromTable(@"SFTP", @"ServerBrowser"/* table */, @"sftp")
 									serviceType:@"_ssh._tcp."

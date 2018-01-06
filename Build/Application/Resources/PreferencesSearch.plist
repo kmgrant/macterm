@@ -206,7 +206,6 @@
 		<string>sftp</string>
 		<string>shell</string>
 		<string>ssh</string>
-		<string>telnet</string>
 		<string>terminal</string>
 		<string>translation</string>
 		<string>url</string>

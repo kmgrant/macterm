@@ -18,10 +18,8 @@ has a number of optional parts that may be omitted (e.g. user
 and port, man page section).
 
 file -- handle URLs of the form "file:///path/to/some/file"
-ftp -- handle URLs of the form "ftp://user@host:port"
 sftp -- handle URLs of the form "sftp://user@host:port"
 ssh -- handle URLs of the form "ssh://user@host:port"
-telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
@@ -147,45 +145,12 @@ def file(url):
     result = dict()
     allow_pound_notation = False
     (scheme, netloc, path, params, query, fragment) = \
-        urlparse.urlparse(url, 'ftp', allow_pound_notation)
+        urlparse.urlparse(url, 'file', allow_pound_notation)
     if 'file' != scheme:
         raise ValueError("not a file URL")
     if path == '':
         path = '/'
     result['path'] = path
-    return result
-
-def ftp(url):
-    """ftp(url) -> None
-
-    Return dictionary with 'host', 'user' and 'port' components of
-    the given "ftp://" URL (if defined).
-
-    (Below are REAL testcases run by doctest!)
-
-    >>> _sort_dict(ftp('ftp://yourserver.com'))
-    'host:yourserver.com port:None user:None'
-
-    >>> _sort_dict(ftp('ftp://userid@yourserver.com:12345'))
-    'host:yourserver.com port:12345 user:userid'
-
-    >>> try:
-    ...    ftp('telnet://userid@yourserver.com:12345')
-    ... except ValueError as e:
-    ...    print(e)
-    not an ftp URL
-
-    """
-    result = dict()
-    allow_pound_notation = False
-    (scheme, netloc, path, params, query, fragment) = \
-        urlparse.urlparse(url, 'ftp', allow_pound_notation)
-    if 'ftp' != scheme:
-        raise ValueError("not an ftp URL")
-    (user, host, port) = _user_host_port(netloc)
-    result['user'] = user
-    result['host'] = host
-    result['port'] = port
     return result
 
 def sftp(url):
@@ -262,39 +227,6 @@ def ssh(url):
     if not url.startswith('ssh://'):
         raise ValueError("not an ssh URL")
     netloc = _slash_free_path(url.replace('ssh:', '', 1))
-    (user, host, port) = _user_host_port(netloc)
-    result['user'] = user
-    result['host'] = host
-    result['port'] = port
-    return result
-
-def telnet(url):
-    """telnet(url) -> None
-
-    Return dictionary with 'host', 'user' and 'port' components of
-    the given "telnet://" URL (if defined).
-
-    (Below are REAL testcases run by doctest!)
-
-    >>> _sort_dict(telnet('telnet://yourserver.com'))
-    'host:yourserver.com port:None user:None'
-
-    >>> _sort_dict(telnet('telnet://userid@yourserver.com:12345'))
-    'host:yourserver.com port:12345 user:userid'
-
-    >>> try:
-    ...    telnet('ftp://userid@yourserver.com:12345')
-    ... except ValueError as e:
-    ...    print(e)
-    not a telnet URL
-
-    """
-    result = dict()
-    allow_pound_notation = False
-    (scheme, netloc, path, params, query, fragment) = \
-        urlparse.urlparse(url, 'telnet', allow_pound_notation)
-    if 'telnet' != scheme:
-        raise ValueError("not a telnet URL")
     (user, host, port) = _user_host_port(netloc)
     result['user'] = user
     result['host'] = host

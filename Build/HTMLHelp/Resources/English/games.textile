@@ -88,9 +88,7 @@ Note that some games assume that the screen size is 80 x 25.  If
 h3. Session
 
 Your game could be hosted anywhere, though it is typically on a
- remote server accessible via a simple telnet connection.  You
- probably have a "telnet://" URL, or information on a server host
- name and port number to use.
+ remote server with a certain host name and port number.
 
 If you will play this game often, you should create a new Session
  collection in Preferences.  Otherwise, you could enter the same
@@ -98,8 +96,8 @@ If you will play this game often, you should create a new Session
 
 When the Sessions pane (or sheet) is visible, you will see a
  command line field.  Either directly type in the command needed
- to reach the game (such as some telnet setup), or use the button
- "Remote Shell..." to help you compose a command.
+ to reach the game or use the button "Remote Shell..." to help you
+ compose a command.
 
 The pane also has pop-up menus that will let you choose the
  Terminal, Format and Translation that you created above.  This

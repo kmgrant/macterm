@@ -832,7 +832,7 @@ Session_CopyStateIconRef	(SessionRef		inRef,
 		if (nullptr == outCopiedIcon)
 		{
 			// return some non-success value...
-			result = kSession_ResultProtocolMismatch;
+			result = kSession_ResultParameterError;
 		}
 	}
 	
@@ -2827,11 +2827,6 @@ sent to the server.  For slow network connections,
 it may be too sluggish to type and wait for the
 server to echo back characters.
 
-If the specified session uses a protocol that cares
-about this option (such as TELNET), the appropriate
-sequences are automatically sent to the server based
-on the new local echo enabled state.
-
 (3.0)
 */
 void
@@ -3932,8 +3927,7 @@ Session_UserInputCFString	(SessionRef		inRef,
 Send input to the session to interrupt whatever
 process is running.  For local sessions, this means
 to send control-C (or whatever the interrupt control
-key is).  For remote sessions, this means to send a
-telnet "IP" sequence.
+key is).
 
 (3.1)
 */

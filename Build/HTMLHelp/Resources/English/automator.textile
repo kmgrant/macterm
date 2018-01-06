@@ -27,14 +27,11 @@ Automator will call on MacTerm if MacTerm is the default
  applications will handle the URL.  (3rd party software such as
  "Default Apps" can change the URL mappings on your system.)
 
-MacTerm can handle several kinds of URLs, including:
+MacTerm can handle certain kinds of URLs automatically:
 
 * file
-* ftp
-* rlogin
 * sftp (non-standard)
 * ssh (non-standard)
-* telnet
 * x-man-page (non-standard)
 
 It is also possible to add or change URL handlers, through the

@@ -8,11 +8,8 @@ has a number of optional parts that may be omitted (e.g. user
 and port, man page section).
 
 file -- handle URLs of the form "file:///path/to/some/file"
-ftp -- handle URLs of the form "ftp://user@host:port"
-rlogin -- handle URLs of the form "rlogin://user@host:port"
 sftp -- handle URLs of the form "sftp://user@host:port"
 ssh -- handle URLs of the form "ssh://user@host:port"
-telnet -- handle URLs of the form "telnet://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
@@ -28,10 +25,8 @@ __version__ = '4.0.0'
 import quills
 from .url_parse import \
     file as _parse_file, \
-    ftp as _parse_ftp, \
     sftp as _parse_sftp, \
     ssh as _parse_ssh, \
-    telnet as _parse_telnet, \
     x_man_page as _parse_x_man_page
 
 def file(url):
@@ -77,71 +72,6 @@ def file(url):
         ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of file URL")
-
-def ftp(url):
-    """ftp(url) -> None
-
-    Asynchronously open a session with the '/usr/bin/ftp'
-    command based on the given "ftp://" URL.
-
-    Raises an exception for some failures.  Note, however, that
-    as an asynchronous process spawn, other types of failures
-    could occur later that are not trapped at call time.
-
-    (Below are REAL testcases run by doctest!)
-
-    >>> ftp('ftp://yourserver.com')
-
-    >>> ftp('ftp://userid@yourserver.com:12345')
-
-    >>> try:
-    ...        ftp('not an ftp url!')
-    ... except ValueError as e:
-    ...        print(e)
-    unsupported form of ftp URL
-
-    """
-    url_info = _parse_ftp(url)
-    host = url_info.get('host', None)
-    user = url_info.get('user', None)
-    port = url_info.get('port', None)
-    if host is not None:
-        args = ['/usr/bin/ftp']
-        # ftp uses "user@host" form
-        if user is not None:
-            host = "%s@%s" % (user, host)
-        args.append(host)
-        if port is not None:
-            args.append(str(port)) # standalone port
-        ignored_session = quills.Session(args)
-    else:
-        raise ValueError("unsupported form of ftp URL")
-
-def rlogin(url):
-    """rlogin(url) -> None
-
-    Considered an alias for telnet(); converts an "rlogin://..."
-    URL into a "telnet://..." URL.
-
-    Raises an exception for some failures.  Note, however, that
-    as an asynchronous process spawn, other types of failures
-    could occur later that are not trapped at call time.
-
-    (Below are REAL testcases run by doctest!)
-
-    >>> rlogin('rlogin://yourserver.com')
-
-    >>> rlogin('rlogin://userid@yourserver.com:12345')
-
-    >>> try:
-    ...        rlogin('not an rlogin url!')
-    ... except ValueError as e:
-    ...        print(e)
-    unsupported form of telnet URL
-
-    """
-    url = url.replace('rlogin:', 'telnet:', 1)
-    return telnet(url)
 
 def sftp(url):
     """sftp(url) -> None
@@ -234,44 +164,6 @@ def ssh(url):
         ignored_session = quills.Session(args)
     else:
         raise ValueError("unsupported form of ssh URL")
-
-def telnet(url):
-    """telnet(url) -> None
-
-    Asynchronously open a session with the '/usr/bin/telnet'
-    command based on the given "telnet://" URL.
-
-    Raises an exception for some failures.  Note, however, that
-    as an asynchronous process spawn, other types of failures
-    could occur later that are not trapped at call time.
-
-    (Below are REAL testcases run by doctest!)
-
-    >>> telnet('telnet://yourserver.com')
-
-    >>> telnet('telnet://userid@yourserver.com:12345')
-
-    >>> try:
-    ...        telnet('not a telnet url!')
-    ... except ValueError as e:
-    ...        print(e)
-    unsupported form of telnet URL
-
-    """
-    url_info = _parse_telnet(url)
-    host = url_info.get('host', None)
-    user = url_info.get('user', None)
-    port = url_info.get('port', None)
-    if host is not None:
-        args = ['/usr/bin/telnet', '-K']
-        if user is not None:
-            args.extend(['-l', user])
-        args.append(host)
-        if port is not None:
-            args.append(str(port)) # standalone port
-        ignored_session = quills.Session(args)
-    else:
-        raise ValueError("unsupported form of telnet URL")
 
 def x_man_page(url):
     """x_man_page(url) -> None
