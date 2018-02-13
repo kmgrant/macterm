@@ -103,6 +103,29 @@ extern "C"
 
 
 
+#pragma mark Constants
+
+/*!
+Specifies whether the list of available windows is
+traversed forwards or backwards when deciding the
+next window to activate.
+*/
+enum My_WindowActivationDirection
+{
+	kMy_WindowActivationDirectionNext		= 0,
+	kMy_WindowActivationDirectionPrevious	= 1,
+};
+
+/*!
+Specifies zero or more actions to perform when the
+active window is changing.
+*/
+typedef UInt16 My_WindowSwitchingActions;
+enum
+{
+	kMy_WindowSwitchingActionHide	= (1 << 0),
+};
+
 #pragma mark Types
 
 /*!
@@ -203,11 +226,8 @@ typedef My_MenuItemInsertionInfo const*		My_MenuItemInsertionInfoConstPtr;
 namespace {
 
 /*!
-This is a functor that determines if the first screen is
-strictly less-than the second based on whether or not
-"inScreen1" is the screen containing the window with
-keyboard focus.  (If both are the main screen, the result
-is false.)
+This strictly orders screens so that the main screen is
+always in front of any other screen.
 
 Model of STL Binary Predicate.
 
@@ -222,15 +242,27 @@ public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 *
 				 NSScreen*	inScreen2)
 	const
 	{
-		bool	result = (inScreen1 < inScreen2);
+		bool	result = false;
 		
 		
-		if ([NSScreen mainScreen] == inScreen1)
+		// this must be a “strict weak ordering”, otherwise any container
+		// that uses it will have incorrect behavior (such as not being
+		// able to reach some of its elements properly)
+		if (inScreen1 == inScreen2)
 		{
-			if (inScreen2 != inScreen1)
-			{
-				result = true;
-			}
+			result = false;
+		}
+		else if ([NSScreen mainScreen] == inScreen1)
+		{
+			result = true;
+		}
+		else if ([NSScreen mainScreen] == inScreen2)
+		{
+			result = false;
+		}
+		else
+		{
+			result = (inScreen1 < inScreen2);
 		}
 		return result;
 	}
@@ -241,7 +273,7 @@ public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 *
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				activateAnotherWindow							(Boolean, Boolean);
+void				activateAnotherWindow							(My_WindowActivationDirection, My_WindowSwitchingActions = 0);
 BOOL				activeCarbonWindowHasSelectedText				();
 BOOL				addWindowMenuItemForSession						(SessionRef, NSMenu*, int, CFStringRef);
 NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
@@ -1418,24 +1450,24 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandNextWindow:
 			// activate the next window in the window list (terminal windows only)
-			activateAnotherWindow(false/* previous */, false/* hide current */);
+			activateAnotherWindow(kMy_WindowActivationDirectionNext);
 			break;
 		
 		case kCommandNextWindowHideCurrent:
 			// activate the next window in the window list (terminal windows only),
 			// but first obscure the frontmost terminal window
-			activateAnotherWindow(false/* previous */, true/* hide current */);
+			activateAnotherWindow(kMy_WindowActivationDirectionNext, (kMy_WindowSwitchingActionHide));
 			break;
 		
 		case kCommandPreviousWindow:
 			// activate the previous window in the window list (terminal windows only)
-			activateAnotherWindow(true/* previous */, false/* hide current */);
+			activateAnotherWindow(kMy_WindowActivationDirectionPrevious);
 			break;
 		
 		case kCommandPreviousWindowHideCurrent:
 			// activate the previous window in the window list (terminal windows only),
 			// but first obscure the frontmost terminal window
-			activateAnotherWindow(true/* previous */, true/* hide current */);
+			activateAnotherWindow(kMy_WindowActivationDirectionPrevious, (kMy_WindowSwitchingActionHide));
 			break;
 		
 		//case kCommandShowConnectionStatus:
@@ -2063,36 +2095,46 @@ Commands_StopHandlingExecution	(UInt32						inImplementedCommand,
 namespace {
 
 /*!
-Chooses another window in the window list that is adjacent
-to the frontmost window.  If "inPreviousInsteadOfNext" is
-true, then the previous window is activated instead of the
-next one in the list.  If "inHidePreviousWindow" is true
-and the frontmost window is a terminal, it is hidden (with
-the appropriate visual effects) before the next window is
-activated.
+Chooses another window in the window list that is adjacent to the
+frontmost window.
 
-This routine has been rewritten in version 4.1 to use a
-different algorithm for choosing a window and to be aware
-of new developments such as Spaces.
+If "inActivationDirection" is kMy_WindowActivationDirectionPrevious
+then the previous window is activated instead of the next one.
 
-(3.0)
+If "inSwitchingActions" contains kMy_WindowSwitchingActionHide and
+the frontmost window is a terminal, that window is hidden (with the
+appropriate visual effects) before the next window is activated.
+
+(2018.02)
 */
 void
-activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
-						 Boolean	inHidePreviousWindow)
+activateAnotherWindow	(My_WindowActivationDirection	inActivationDirection,
+						 My_WindowSwitchingActions		inSwitchingActions)
 {
 	typedef std::list< NSWindow* >										My_WindowList;
 	typedef std::map< NSScreen*, My_WindowList, lessThanIfMainScreen >	My_WindowsByScreen; // which windows are on which devices?
 	
+	Boolean const			kIsPrevious = (kMy_WindowActivationDirectionPrevious == inActivationDirection);
+	Boolean const			kHidePrevious = (kMy_WindowSwitchingActionHide == (inSwitchingActions & kMy_WindowSwitchingActionHide));
 	My_WindowsByScreen		windowsByScreen; // main screen should be visited first
 	NSArray*				allWindows = [NSApp windows];
 	NSWindow*				currentWindow = nil;
 	NSWindow*				nextWindow = nil;
 	NSWindow*				firstValidWindow = nil;
 	TerminalWindowRef		terminalWindow = nullptr;
+	TerminalWindowRef		autoHiddenTerminalWindow = nullptr;
 	BOOL					setNext = NO;
 	BOOL					doneSearch = NO;
 	
+	
+	if (kHidePrevious)
+	{
+		autoHiddenTerminalWindow = [[NSApp mainWindow] terminalWindowRef];
+		if (false == TerminalWindow_IsValid(autoHiddenTerminalWindow))
+		{
+			autoHiddenTerminalWindow = nullptr;
+		}
+	}
 	
 	// first determine which windows are on each screen so that
 	// all windows on one screen are visited before switching
@@ -2106,7 +2148,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 		My_WindowList&	windowsOnThisScreen = windowsByScreen[windowScreen];
 		
 		
-		if (inPreviousInsteadOfNext)
+		if (kIsPrevious)
 		{
 			windowsOnThisScreen.push_front(currentWindow);
 		}
@@ -2151,7 +2193,30 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 				// key equivalents that would give them focus
 				if ([*toWindow isOnActiveSpace] && [*toWindow canBecomeKeyWindow] && isWindowVisible(*toWindow))
 				{
-					currentWindow = *toWindow;
+					BOOL	canUse = YES; // initially...
+					
+					
+					if (isCarbonWindow(*toWindow))
+					{
+						HIWindowRef		asCarbonWindow = REINTERPRET_CAST([*toWindow windowRef], HIWindowRef);
+						WindowClass		windowClass = kDocumentWindowClass;
+						OSStatus		error = noErr;
+						
+						
+						// this is basically a short-term hack to prevent “tabs” from
+						// being highlighted during window rotation (eventually they
+						// will not even be implemented using Carbon)
+						error = GetWindowClass(asCarbonWindow, &windowClass);
+						if ((noErr != error) || (kDrawerWindowClass == windowClass))
+						{
+							canUse = NO;
+						}
+					}
+					
+					if (canUse)
+					{
+						currentWindow = *toWindow;
+					}
 				}
 			}
 			
@@ -2208,13 +2273,9 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 			[nextWindow makeKeyAndOrderFront:nil];
 		}
 		
-		if (inHidePreviousWindow)
+		if (nil != autoHiddenTerminalWindow)
 		{
-			terminalWindow = [[NSApp mainWindow] terminalWindowRef];
-			if (TerminalWindow_IsValid(terminalWindow))
-			{
-				TerminalWindow_SetObscured(terminalWindow, true);
-			}
+			TerminalWindow_SetObscured(autoHiddenTerminalWindow, true);
 		}
 	}
 }// activateAnotherWindow
