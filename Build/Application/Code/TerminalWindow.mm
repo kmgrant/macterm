@@ -185,31 +185,13 @@ struct My_TerminalWindow
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
 	
 	NSWindow*					window;						// the Cocoa window reference for the terminal window (wrapping Carbon)
-	CFRetainRelease				tab;						// the Mac OS window reference (if any) for the sister window acting as a tab
-	CarbonEventHandlerWrap*		tabContextualMenuHandlerPtr;// used to track contextual menu clicks in tabs
-	CarbonEventHandlerWrap*		tabDragHandlerPtr;			// used to track drags that enter tabs
-	WindowGroupRef				tabAndWindowGroup;			// WindowGroupRef; forces the window and its tab to move together
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
-	HIToolbarRef				toolbar;					// customizable toolbar of icons at the top
-	CFRetainRelease				toolbarItemBell;			// if present, enable/disable bell item
-	CFRetainRelease				toolbarItemKillRestart;		// if present, kill/restart item
-	CFRetainRelease				toolbarItemLED1;			// if present, LED #1 status item
-	CFRetainRelease				toolbarItemLED2;			// if present, LED #2 status item
-	CFRetainRelease				toolbarItemLED3;			// if present, LED #3 status item
-	CFRetainRelease				toolbarItemLED4;			// if present, LED #4 status item
-	CFRetainRelease				toolbarItemScrollLock;		// if present, scroll lock status item
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
 	CGDirectDisplayID			staggerDisplay;				// the display the window was on at the time "staggerIndex" was set;
 															//     if the user attempts to stack windows and the window is now on
 															//     a different display, "staggerIndex" is ignored and reset
 	UInt16						staggerIndex;				// index in list of staggered windows for "staggerDisplay"
-	
-	struct
-	{
-		HIViewRef		scrollBarH;				// scroll bar used to specify which range of columns is visible
-		HIViewRef		scrollBarV;				// scroll bar used to specify which range of rows is visible
-	} controls;
 	
 	struct
 	{
@@ -232,6 +214,33 @@ struct My_TerminalWindow
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
 	CFRetainRelease				preResizeTitleString;	// used to save the old title during resizes, where the title is overwritten
+	ListenerModel_ListenerWrap	sessionStateChangeEventListener;		// responds to changes in a session
+	ListenerModel_ListenerWrap	terminalStateChangeEventListener;		// responds to changes in a terminal
+	ListenerModel_ListenerWrap	terminalViewEventListener;				// responds to changes in a terminal view
+	ListenerModel_ListenerWrap	toolbarStateChangeEventListener;		// responds to changes in a toolbar
+	
+	My_ViewsByScreen				screensToViews;			// map of a screen buffer to one or more views
+	My_ScreenByTerminalView			viewsToScreens;			// map of views to screen buffers
+	My_TerminalScreenList			allScreens;				// all screen buffers represented in the two maps above
+	My_TerminalViewList				allViews;				// all views represented in the two maps above
+	
+	My_UndoableActionList			installedActions;		// undoable things installed on behalf of this window
+	
+	// Carbon-specific (will remove):
+	CFRetainRelease				tab;									// the Mac OS window reference (if any) for the sister window acting as a tab
+	CarbonEventHandlerWrap*		tabContextualMenuHandlerPtr;			// used to track contextual menu clicks in tabs
+	CarbonEventHandlerWrap*		tabDragHandlerPtr;						// used to track drags that enter tabs
+	WindowGroupRef				tabAndWindowGroup;						// WindowGroupRef; forces the window and its tab to move together
+	HIViewRef					scrollBarH;								// scroll bar used to specify which range of columns is visible
+	HIViewRef					scrollBarV;								// scroll bar used to specify which range of rows is visible
+	HIToolbarRef				toolbar;								// customizable toolbar of icons at the top
+	CFRetainRelease				toolbarItemBell;						// if present, enable/disable bell item
+	CFRetainRelease				toolbarItemKillRestart;					// if present, kill/restart item
+	CFRetainRelease				toolbarItemLED1;						// if present, LED #1 status item
+	CFRetainRelease				toolbarItemLED2;						// if present, LED #2 status item
+	CFRetainRelease				toolbarItemLED3;						// if present, LED #3 status item
+	CFRetainRelease				toolbarItemLED4;						// if present, LED #4 status item
+	CFRetainRelease				toolbarItemScrollLock;					// if present, scroll lock status item
 	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
 	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
 	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
@@ -253,17 +262,6 @@ struct My_TerminalWindow
 	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal window’s grow box is clicked
 	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
 	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
-	ListenerModel_ListenerWrap	sessionStateChangeEventListener;		// responds to changes in a session
-	ListenerModel_ListenerWrap	terminalStateChangeEventListener;		// responds to changes in a terminal
-	ListenerModel_ListenerWrap	terminalViewEventListener;				// responds to changes in a terminal view
-	ListenerModel_ListenerWrap	toolbarStateChangeEventListener;		// responds to changes in a toolbar
-	
-	My_ViewsByScreen				screensToViews;			// map of a screen buffer to one or more views
-	My_ScreenByTerminalView			viewsToScreens;			// map of views to screen buffers
-	My_TerminalScreenList			allScreens;				// all screen buffers represented in the two maps above
-	My_TerminalViewList				allViews;				// all views represented in the two maps above
-	
-	My_UndoableActionList			installedActions;		// undoable things installed on behalf of this window
 };
 typedef My_TerminalWindow*			My_TerminalWindowPtr;
 typedef My_TerminalWindow const*	My_TerminalWindowConstPtr;
@@ -2472,20 +2470,8 @@ selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
 window(createWindow()),
-tab(),
-tabContextualMenuHandlerPtr(nullptr),
-tabDragHandlerPtr(nullptr),
-tabAndWindowGroup(nullptr),
 tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
-toolbar(nullptr),
-toolbarItemBell(),
-toolbarItemKillRestart(),
-toolbarItemLED1(),
-toolbarItemLED2(),
-toolbarItemLED3(),
-toolbarItemLED4(),
-toolbarItemScrollLock(),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
 // controls initialized below
 // toolbar initialized below
@@ -2499,6 +2485,30 @@ recentSearchOptions(kFindDialog_OptionsDefault),
 recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
 					CFRetainRelease::kAlreadyRetained),
 baseTitleString(),
+sessionStateChangeEventListener(),
+terminalStateChangeEventListener(),
+terminalViewEventListener(),
+toolbarStateChangeEventListener(),
+screensToViews(),
+viewsToScreens(),
+allScreens(),
+allViews(),
+installedActions(),
+// Carbon-specific (will remove):
+tab(),
+tabContextualMenuHandlerPtr(nullptr),
+tabDragHandlerPtr(nullptr),
+tabAndWindowGroup(nullptr),
+scrollBarH(nullptr),
+scrollBarV(nullptr),
+toolbar(nullptr),
+toolbarItemBell(),
+toolbarItemKillRestart(),
+toolbarItemLED1(),
+toolbarItemLED2(),
+toolbarItemLED3(),
+toolbarItemLED4(),
+toolbarItemScrollLock(),
 scrollProcUPP(nullptr), // reset below
 windowResizeHandler(),
 tabDrawerWindowResizeHandler(),
@@ -2521,16 +2531,7 @@ windowResizeEmbellishHandler(nullptr),
 growBoxClickUPP(nullptr),
 growBoxClickHandler(nullptr),
 toolbarEventUPP(nullptr),
-toolbarEventHandler(nullptr),
-sessionStateChangeEventListener(),
-terminalStateChangeEventListener(),
-terminalViewEventListener(),
-toolbarStateChangeEventListener(),
-screensToViews(),
-viewsToScreens(),
-allScreens(),
-allViews(),
-installedActions()
+toolbarEventHandler(nullptr)
 {
 @autoreleasepool {
 	TerminalScreenRef		newScreen = nullptr;
@@ -3758,28 +3759,28 @@ createViews		(My_TerminalWindowPtr	inPtr)
 	// create a vertical scroll bar; the resize event handler initializes its size correctly
 	bzero(&rect, sizeof(rect));
 	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
+									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->scrollBarV);
 	assert_noerr(error);
-	error = SetControlProperty(inPtr->controls.scrollBarV, AppResources_ReturnCreatorCode(),
+	error = SetControlProperty(inPtr->scrollBarV, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
 								sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
 	assert_noerr(error);
-	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarV);
+	error = HIViewAddSubview(contentView, inPtr->scrollBarV);
 	assert_noerr(error);
 	
 	// create a horizontal scroll bar; the resize event handler initializes its size correctly
 	bzero(&rect, sizeof(rect));
 	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarH);
+									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->scrollBarH);
 	assert_noerr(error);
-	error = SetControlProperty(inPtr->controls.scrollBarH, AppResources_ReturnCreatorCode(),
+	error = SetControlProperty(inPtr->scrollBarH, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
 								sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
 	assert_noerr(error);
-	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarH);
+	error = HIViewAddSubview(contentView, inPtr->scrollBarH);
 	assert_noerr(error);
 	// horizontal scrolling is not supported for now...
-	UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarH, false);
+	UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->scrollBarH, false);
 }// createViews
 
 
@@ -3883,8 +3884,8 @@ getScrollBarKind	(My_TerminalWindowPtr	inPtr,
 	My_ScrollBarKind	result = kMy_InvalidScrollBarKind;
 	
 	
-	if (inScrollBarControl == inPtr->controls.scrollBarH) result = kMy_ScrollBarKindHorizontal;
-	if (inScrollBarControl == inPtr->controls.scrollBarV) result = kMy_ScrollBarKindVertical;
+	if (inScrollBarControl == inPtr->scrollBarH) result = kMy_ScrollBarKindHorizontal;
+	if (inScrollBarControl == inPtr->scrollBarV) result = kMy_ScrollBarKindVertical;
 	return result;
 }// getScrollBarKind
 
@@ -4067,7 +4068,7 @@ handleNewSize	(WindowRef	inWindow,
 		viewBounds.origin.y = -1; // frame thickness
 		viewBounds.size.width = returnScrollBarWidth(ptr);
 		viewBounds.size.height = contentBounds.size.height - returnGrowBoxHeight(ptr);
-		error = HIViewSetFrame(ptr->controls.scrollBarV, &viewBounds);
+		error = HIViewSetFrame(ptr->scrollBarV, &viewBounds);
 		assert_noerr(error);
 		
 		// glue the horizontal scroll bar to the new bottom edge of the window; it must
@@ -4077,7 +4078,7 @@ handleNewSize	(WindowRef	inWindow,
 		viewBounds.origin.y = contentBounds.size.height - returnScrollBarHeight(ptr);
 		viewBounds.size.width = contentBounds.size.width - returnGrowBoxWidth(ptr);
 		viewBounds.size.height = returnScrollBarHeight(ptr);
-		UNUSED_RETURN(OSStatus)HIViewSetFrame(ptr->controls.scrollBarH, &viewBounds); // ignore error since scroll bar is unused
+		UNUSED_RETURN(OSStatus)HIViewSetFrame(ptr->scrollBarH, &viewBounds); // ignore error since scroll bar is unused
 		
 		// change the screen sizes to match the user’s window size as well as possible,
 		// notifying listeners of the change (to trigger actions such as sending messages
@@ -4125,12 +4126,12 @@ handleNewSize	(WindowRef	inWindow,
 							
 							error = HIViewGetFrame(TerminalView_ReturnContainerHIView(viewArray[i]), &terminalScreenBounds);
 							assert_noerr(error);
-							error = HIViewGetFrame(ptr->controls.scrollBarV, &scrollBarBounds);
+							error = HIViewGetFrame(ptr->scrollBarV, &scrollBarBounds);
 							assert_noerr(error);
 							terminalScreenBounds.origin.x = -1/* frame thickness */;
 							terminalScreenBounds.origin.y = -1/* frame thickness */;
 							terminalScreenBounds.size.width = scrollBarBounds.origin.x - terminalScreenBounds.origin.x;
-							error = HIViewGetFrame(ptr->controls.scrollBarH, &scrollBarBounds);
+							error = HIViewGetFrame(ptr->scrollBarH, &scrollBarBounds);
 							assert_noerr(error);
 							terminalScreenBounds.size.height = scrollBarBounds.origin.y - terminalScreenBounds.origin.y;
 						}
@@ -4171,7 +4172,7 @@ installTickHandler	(My_TerminalWindowPtr	inPtr)
 {
 	inPtr->scrollTickHandler.remove();
 	assert(false == inPtr->scrollTickHandler.isInstalled());
-	inPtr->scrollTickHandler.install(HIViewGetEventTarget(inPtr->controls.scrollBarV), receiveScrollBarDraw,
+	inPtr->scrollTickHandler.install(HIViewGetEventTarget(inPtr->scrollBarV), receiveScrollBarDraw,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
 										inPtr->selfRef/* user data */);
 	assert(inPtr->scrollTickHandler.isInstalled());
@@ -5179,7 +5180,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (allowScrolling)
 						{
 							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							HIViewRef						scrollBar = ptr->controls.scrollBarV;
+							HIViewRef						scrollBar = ptr->scrollBarV;
 							HIViewPartCode					hitPart = (delta > 0)
 																		? (modifiers & optionKey)
 																			? kControlPageUpPart
@@ -6738,8 +6739,8 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			
 			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->controls.scrollBarV),
-																							GetControl32BitValue(ptr->controls.scrollBarH));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->scrollBarV),
+																							GetControl32BitValue(ptr->scrollBarH));
 				break;
 			
 			default:
@@ -6768,7 +6769,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			
 			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->controls.scrollBarV));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->scrollBarV));
 				break;
 			
 			default:
@@ -7513,7 +7514,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			
 			unless (showScrollBar)
 			{
-				UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarV, false);
+				UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->scrollBarV, false);
 			}
 			
 			// configure the view to allow a font size change instead of
@@ -7554,7 +7555,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			// just show it anyway; that way, if preferences were
 			// crossed or some other condition changed, the
 			// window cannot end up with a missing scroll bar
-			UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarV, true);
+			UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->scrollBarV, true);
 			
 			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
 			{
@@ -8267,8 +8268,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			updateScrollBars(ptr);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarH, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarV, true);
 		}
 		break;
 	
@@ -8288,8 +8289,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				ptr->scrollTickHandler.remove();
 				assert(false == ptr->scrollTickHandler.isInstalled());
 			}
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarH, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarV, true);
 		}
 		break;
 	
@@ -8330,12 +8331,12 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 		// update controls’ maximum and minimum values; the vertical scroll bar
 		// is special, in that its maximum value is zero (this ensures the main
 		// area is pinned in view even if new scrollback rows show up, etc.)
-		scrollBarView = inPtr->controls.scrollBarH;
+		scrollBarView = inPtr->scrollBarH;
 		SetControl32BitMinimum(scrollBarView, 0);
 		SetControl32BitMaximum(scrollBarView, 0);
 		SetControl32BitValue(scrollBarView, 0);
 		SetControlViewSize(scrollBarView, 0);
-		scrollBarView = inPtr->controls.scrollBarV;
+		scrollBarView = inPtr->scrollBarV;
 		SetControl32BitMinimum(scrollBarView, scrollVRangeMinimum);
 		SetControl32BitMaximum(scrollBarView, scrollVRangePastMaximum - (scrollVPastEndView - scrollVStartView)/* subtract last page */);
 		SetControl32BitValue(scrollBarView, scrollVStartView);
@@ -8363,8 +8364,8 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 			SetControlViewSize(scrollBarView, proposedViewSize);
 		}
 		
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarV, true);
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->controls.scrollBarH, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->scrollBarV, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->scrollBarH, true);
 	}
 }// updateScrollBars
 

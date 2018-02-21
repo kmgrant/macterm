@@ -244,6 +244,8 @@ struct My_TerminalView
 	void
 	initialize		(TerminalScreenRef, Preferences_ContextRef);
 	
+	TerminalViewRef		selfRef;				// redundant reference to self, for convenience
+	
 	Preferences_ContextWrap		encodingConfig;	// various settings from an external source; not kept up to date, see TerminalView_ReturnTranslationConfiguration()
 	Preferences_ContextWrap		formatConfig;	// various settings from an external source; not kept up to date, see TerminalView_ReturnFormatConfiguration()
 	std::set< Preferences_Tag >		configFilter;	// settings that this view ignores when they are changed globally by the user
@@ -254,21 +256,11 @@ struct My_TerminalView
 												// where this would be slow (e.g. drawing)
 	Boolean				isCocoa;				// true if using Cocoa view; this helps code to change without breaking the Carbon view in the meantime
 	
-	CFRetainRelease		accessibilityObject;	// AXUIElementRef; makes terminal views compatible with accessibility technologies
 	NSView*				encompassingNSView;		// contains all other HIViews but is otherwise invisible
-	HIViewRef			encompassingHIView;		// Carbon version; will go away when Cocoa transition is complete
 	TerminalView_BackgroundView*	backgroundNSView;	// view that renders the background of the terminal screen (border included)
-	HIViewRef			backgroundHIView;		// Carbon version; will go away when Cocoa transition is complete
 	NSView*				focusNSView;			// view whose current focus part determines the visibility and boundaries of the focus ring
-	HIViewRef			focusHIView;			// Carbon version; will go away when Cocoa transition is complete
 	TerminalView_BackgroundView*	paddingNSView;	// view that is outset by the padding amount from the content view, if constructed as a Cocoa view
-	HIViewRef			paddingHIView;			// Carbon version; will go away when Cocoa transition is complete
 	TerminalView_ContentView*	contentNSView;	// view that renders the text of the terminal screen, if constructed as a Cocoa view
-	HIViewRef			contentHIView;			// Carbon version; will go away when Cocoa transition is complete
-	
-	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
-	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
-	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
 	
 	struct
 	{
@@ -305,9 +297,6 @@ struct My_TerminalView
 		Boolean						focusRingEnabled;		// is the matte and content area focus ring displayed?
 		Boolean						isReverseVideo;			// are foreground and background colors temporarily swapped?
 		
-	#if 0
-		ListenerModel_ListenerWrap	backgroundDragHandler;	// listener for clicks in screens from inactive windows
-	#endif
 		ListenerModel_ListenerWrap	contentMonitor;			// listener for changes to the contents of the screen buffer
 		ListenerModel_ListenerWrap	cursorMonitor;			// listener for changes to the terminal cursor position or visible state
 		ListenerModel_ListenerWrap	preferenceMonitor;		// listener for changes to preferences that affect a particular view
@@ -399,7 +388,17 @@ TerminalView_PixelHeight	heightPerCell;	// number of pixels high each character 
 		TerminalView_CellRangeList::iterator	toCurrentSearchResult;	// most recently focused match; MUST change if "searchResults" changes
 	} text;
 	
-	TerminalViewRef		selfRef;				// redundant opaque reference that would resolve to point to this structure
+	// Carbon-specific (will remove):
+	CFRetainRelease		accessibilityObject;	// AXUIElementRef; makes terminal views compatible with accessibility technologies
+	HIViewRef			encompassingHIView;		// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			backgroundHIView;		// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			focusHIView;			// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			paddingHIView;			// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			contentHIView;			// Carbon version; will go away when Cocoa transition is complete
+	
+	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
+	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
+	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
 };
 typedef My_TerminalView*		My_TerminalViewPtr;
 typedef My_TerminalView const*	My_TerminalViewConstPtr;
@@ -4253,6 +4252,7 @@ My_TerminalView::
 My_TerminalView		(HIViewRef		inSuperclassViewInstance)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+selfRef(REINTERPRET_CAST(this, TerminalViewRef)),
 encodingConfig(), // set later
 formatConfig(), // set later
 configFilter(),
@@ -4260,22 +4260,22 @@ changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
 isCocoa(false),
+encompassingNSView(nil),
+backgroundNSView(nil),
+focusNSView(nil),
+paddingNSView(nil),
+contentNSView(nil),
+// Carbon-specific (will remove):
 accessibilityObject(AXUIElementCreateWithHIObjectAndIdentifier
 					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */), CFRetainRelease::kAlreadyRetained),
-encompassingNSView(nil),
 encompassingHIView(nullptr), // set later
-backgroundNSView(nil),
 backgroundHIView(nullptr), // set later
-focusNSView(nil),
 focusHIView(nullptr), // set later
-paddingNSView(nil),
 paddingHIView(nullptr), // set later
-contentNSView(nil),
 contentHIView(inSuperclassViewInstance),
 containerResizeHandler(), // set later
 contextualMenuHandler(),
-rawKeyDownHandler(),
-selfRef(REINTERPRET_CAST(this, TerminalViewRef))
+rawKeyDownHandler()
 {
 }// My_TerminalView 1-argument constructor (HIViewRef)
 
@@ -4301,6 +4301,7 @@ My_TerminalView		(TerminalView_ContentView*		inSuperclassViewInstance,
 					 TerminalView_BackgroundView*	inBackgroundView)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+selfRef(REINTERPRET_CAST(this, TerminalViewRef)),
 encodingConfig(), // set later
 formatConfig(), // set later
 configFilter(),
@@ -4308,21 +4309,21 @@ changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
 isCocoa(true),
-accessibilityObject(), // obsolete
 encompassingNSView(nil), // set later
-encompassingHIView(nullptr),
 backgroundNSView([inBackgroundView retain]),
-backgroundHIView(nullptr),
 focusNSView(nil), // set later
-focusHIView(nullptr),
 paddingNSView([inPaddingView retain]),
-paddingHIView(nullptr),
 contentNSView([inSuperclassViewInstance retain]),
+// Carbon-specific (will remove):
+accessibilityObject(), // obsolete
+encompassingHIView(nullptr),
+backgroundHIView(nullptr),
+focusHIView(nullptr),
+paddingHIView(nullptr),
 contentHIView(nullptr),
 containerResizeHandler(), // set later
 contextualMenuHandler(),
-rawKeyDownHandler(),
-selfRef(REINTERPRET_CAST(this, TerminalViewRef))
+rawKeyDownHandler()
 {
 }// My_TerminalView 1-argument constructor (NSView*)
 
