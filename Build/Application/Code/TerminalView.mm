@@ -232,6 +232,31 @@ typedef std::vector< EventTime >				My_TimeIntervalList;
 
 class My_XTerm256Table;
 
+/*!
+A structure of obsolete data that will be systematically removed;
+separating for now to make shared state easier during the move to
+Cocoa-based views.  Its lifetime must be less than that of the
+Terminal View that is using the data.
+*/
+struct My_TerminalViewCarbonState
+{
+	My_TerminalViewCarbonState	(HIViewRef);
+	~My_TerminalViewCarbonState	();
+	
+	void
+	initialize		(TerminalViewRef, TerminalScreenRef, Preferences_ContextRef, CGDeviceColor const&, CGDeviceColor const&);
+	
+	HIViewRef			encompassingHIView;		// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			backgroundHIView;		// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			focusHIView;			// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			paddingHIView;			// Carbon version; will go away when Cocoa transition is complete
+	HIViewRef			contentHIView;			// Carbon version; will go away when Cocoa transition is complete
+	
+	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
+	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
+	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
+};
+
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
 // be simplified and become more object-oriented in the future.
@@ -244,6 +269,9 @@ struct My_TerminalView
 	void
 	initialize		(TerminalScreenRef, Preferences_ContextRef);
 	
+	bool
+	isCocoa () const;
+	
 	TerminalViewRef		selfRef;				// redundant reference to self, for convenience
 	
 	Preferences_ContextWrap		encodingConfig;	// various settings from an external source; not kept up to date, see TerminalView_ReturnTranslationConfiguration()
@@ -254,7 +282,6 @@ struct My_TerminalView
 	Boolean				isActive;				// true if the HIView is in an active state, false otherwise; kept in sync
 												// using Carbon Events, stored here to avoid extra system calls in cases
 												// where this would be slow (e.g. drawing)
-	Boolean				isCocoa;				// true if using Cocoa view; this helps code to change without breaking the Carbon view in the meantime
 	
 	NSView*				encompassingNSView;		// contains all other HIViews but is otherwise invisible
 	TerminalView_BackgroundView*	backgroundNSView;	// view that renders the background of the terminal screen (border included)
@@ -389,16 +416,7 @@ TerminalView_PixelHeight	heightPerCell;	// number of pixels high each character 
 	} text;
 	
 	// Carbon-specific (will remove):
-	CFRetainRelease		accessibilityObject;	// AXUIElementRef; makes terminal views compatible with accessibility technologies
-	HIViewRef			encompassingHIView;		// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			backgroundHIView;		// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			focusHIView;			// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			paddingHIView;			// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			contentHIView;			// Carbon version; will go away when Cocoa transition is complete
-	
-	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
-	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
-	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
+	My_TerminalViewCarbonState*		carbonData;		// set to nullptr for Cocoa views
 };
 typedef My_TerminalView*		My_TerminalViewPtr;
 typedef My_TerminalView const*	My_TerminalViewConstPtr;
@@ -522,7 +540,6 @@ void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor con
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
 void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, UInt16, Float32 = 0, Boolean = true);
-SInt16				setPortScreenPort					(My_TerminalViewPtr);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
@@ -540,7 +557,7 @@ void				updateDisplayInShape				(My_TerminalViewPtr, HIShapeRef);
 void				updateDisplayTimer					(EventLoopTimerRef, void*);
 void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TextAttributes_Object);
 void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TextAttributes_Object, Boolean, Float32 = 1.0);
-void				visualBell							(TerminalViewRef);
+void				visualBell							(My_TerminalViewPtr);
 
 } // anonymous namespace
 
@@ -1165,16 +1182,17 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							}
 							
 							// specify that menu should pop up at cursor location
+							if (nullptr != viewPtr->carbonData)
 							{
 								Rect		screenRect;
 								HIRect		cursorHIRect;
 								
 								
-								RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->contentHIView), &screenRect);
+								RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->carbonData->contentHIView), &screenRect);
 								
 								cursorHIRect = viewPtr->screen.cursor.bounds;
 								
-								HIRectConvert(&cursorHIRect, kHICoordSpaceView, viewPtr->contentHIView,
+								HIRectConvert(&cursorHIRect, kHICoordSpaceView, viewPtr->carbonData->contentHIView,
 												kHICoordSpaceScreenPixel, nullptr/* target object */);
 								
 								// translate the selection area into Cocoa coordinates that are
@@ -1593,8 +1611,16 @@ TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
 	if (viewPtr != nullptr)
 	{
 		outGlobalBounds = viewPtr->screen.cursor.bounds;
-		UNUSED_RETURN(OSStatus)HIRectConvert(&outGlobalBounds, kHICoordSpaceView, viewPtr->contentHIView,
-												kHICoordSpaceScreenPixel, nullptr/* target object */);
+		if (nullptr != viewPtr->carbonData)
+		{
+			UNUSED_RETURN(OSStatus)HIRectConvert(&outGlobalBounds, kHICoordSpaceView, viewPtr->carbonData->contentHIView,
+													kHICoordSpaceScreenPixel, nullptr/* target object */);
+		}
+		else
+		{
+			// UNIMPLEMENTED; may need this calculation for Cocoa
+			Console_Warning(Console_WriteLine, "get-cursor-global-bounds not implemented for Cocoa");
+		}
 	}
 }// GetCursorGlobalBounds
 
@@ -2156,7 +2182,11 @@ TerminalView_ReturnContainerHIView		(TerminalViewRef	inView)
 	HIViewRef					result = nullptr;
 	
 	
-	result = viewPtr->encompassingHIView;
+	if (nullptr != viewPtr->carbonData)
+	{
+		result = viewPtr->carbonData->encompassingHIView;
+	}
+	
 	return result;
 }// ReturnContainerHIView
 
@@ -2279,7 +2309,11 @@ TerminalView_ReturnDragFocusHIView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view has drag handlers installed on it
-	result = viewPtr->contentHIView;
+	if (nullptr != viewPtr->carbonData)
+	{
+		result = viewPtr->carbonData->contentHIView;
+	}
+	
 	return result;
 }// ReturnDragFocusHIView
 
@@ -2540,7 +2574,11 @@ TerminalView_ReturnUserFocusHIView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view has the set-focus-part event handler installed on it
-	result = viewPtr->focusHIView;
+	if (nullptr != viewPtr->carbonData)
+	{
+		result = viewPtr->carbonData->focusHIView;
+	}
+	
 	return result;
 }// ReturnUserFocusHIView
 
@@ -2621,8 +2659,12 @@ TerminalView_ReturnWindow	(TerminalViewRef	inView)
 	WindowRef					result = nullptr;
 	
 	
-	result = HIViewGetWindow(viewPtr->contentHIView);
-	assert(IsValidWindowRef(result));
+	if (nullptr != viewPtr->carbonData)
+	{
+		result = HIViewGetWindow(viewPtr->carbonData->contentHIView);
+		assert(IsValidWindowRef(result));
+	}
+	
 	return result;
 }// ReturnWindow
 
@@ -3593,7 +3635,14 @@ TerminalView_SetDrawingEnabled	(TerminalViewRef	inView,
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	UNUSED_RETURN(OSStatus)HIViewSetDrawingEnabled(viewPtr->contentHIView, inIsDrawingEnabled);
+	if (nullptr != viewPtr->carbonData)
+	{
+		UNUSED_RETURN(OSStatus)HIViewSetDrawingEnabled(viewPtr->carbonData->contentHIView, inIsDrawingEnabled);
+	}
+	else
+	{
+		Console_Warning(Console_WriteLine, "set-drawing-enabled not implemented for Cocoa");
+	}
 }// SetDrawingEnabled
 
 
@@ -4026,33 +4075,40 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 	
 	if (viewPtr != nullptr)
 	{
-		HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-		HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
-		HIRect				windowContentBounds = CGRectZero;
-		CGRect				cursorCGRect = viewPtr->screen.cursor.bounds;
-		
-		
-		// since the region is currently defined in content-local coordinates,
-		// the “height” of the “view” containing the selection is actually
-		// going to be the entire content view and not just the screen part
-		UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
-		UNUSED_RETURN(OSStatus)HIViewConvertRect(&cursorCGRect, viewPtr->contentHIView, windowContentHIView);
-		
-		// translate the selection area into Cocoa coordinates that are
-		// relative to the content view of the window
-		cursorCGRect.origin.y = windowContentBounds.size.height - (cursorCGRect.origin.y + cursorCGRect.size.height);
-		cursorCGRect = CGRectInset(cursorCGRect, -50, -50); // arbitrary
-		
-		// animate!
-		if (nullptr != terminalWindow)
+		if (nullptr == viewPtr->carbonData)
 		{
-			NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+			Console_Warning(Console_WriteLine, "zoom-to-cursor not implemented for Cocoa");
+		}
+		else
+		{
+			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+			HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
+			HIRect				windowContentBounds = CGRectZero;
+			CGRect				cursorCGRect = viewPtr->screen.cursor.bounds;
 			
 			
-			// this is a bit of a hack, but the “search result” animation is a
-			// reasonable way to draw attention to the cursor’s rectangle
-			CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, cursorCGRect);
+			// since the region is currently defined in content-local coordinates,
+			// the “height” of the “view” containing the selection is actually
+			// going to be the entire content view and not just the screen part
+			UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
+			UNUSED_RETURN(OSStatus)HIViewConvertRect(&cursorCGRect, viewPtr->carbonData->contentHIView, windowContentHIView);
+			
+			// translate the selection area into Cocoa coordinates that are
+			// relative to the content view of the window
+			cursorCGRect.origin.y = windowContentBounds.size.height - (cursorCGRect.origin.y + cursorCGRect.size.height);
+			cursorCGRect = CGRectInset(cursorCGRect, -50, -50); // arbitrary
+			
+			// animate!
+			if (nullptr != terminalWindow)
+			{
+				NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+				
+				
+				// this is a bit of a hack, but the “search result” animation is a
+				// reasonable way to draw attention to the cursor’s rectangle
+				CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, cursorCGRect);
+			}
 		}
 	}
 }// ZoomToCursor
@@ -4076,43 +4132,50 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 		// try to scroll to the right part of the terminal view
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToCell(inView, viewPtr->text.toCurrentSearchResult->first);
 		
-		// the selection region is currently defined in the window’s local (content view) coordinates
-		HIShapeRef	selectionShape = getVirtualRangeAsNewHIShape(viewPtr, viewPtr->text.toCurrentSearchResult->first,
-																	viewPtr->text.toCurrentSearchResult->second,
-																	0/* insets */, false/* is rectangular */);
-		
-		
-		if (nullptr != selectionShape)
+		if (nullptr == viewPtr->carbonData)
 		{
-			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-			HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
-			HIRect				windowContentBounds = CGRectZero;
-			CGRect				selectionCGRect = CGRectZero;
+			Console_Warning(Console_WriteLine, "zoom-to-search-results not implemented for Cocoa");
+		}
+		else
+		{
+			// the selection region is currently defined in the window’s local (content view) coordinates
+			HIShapeRef	selectionShape = getVirtualRangeAsNewHIShape(viewPtr, viewPtr->text.toCurrentSearchResult->first,
+																		viewPtr->text.toCurrentSearchResult->second,
+																		0/* insets */, false/* is rectangular */);
 			
 			
-			UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
-			
-			// since the region is currently defined in content-local coordinates,
-			// the “height” of the “view” containing the selection is actually
-			// going to be the entire content view and not just the screen part
-			UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
-			UNUSED_RETURN(OSStatus)HIViewConvertRect(&selectionCGRect, viewPtr->contentHIView, windowContentHIView);
-			
-			// translate the selection area into Cocoa coordinates that are
-			// relative to the content view of the window
-			selectionCGRect.origin.y = windowContentBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
-			
-			// animate!
-			if (nullptr != terminalWindow)
+			if (nullptr != selectionShape)
 			{
-				NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+				HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
+				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+				HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
+				HIRect				windowContentBounds = CGRectZero;
+				CGRect				selectionCGRect = CGRectZero;
 				
 				
-				CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, selectionCGRect);
+				UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
+				
+				// since the region is currently defined in content-local coordinates,
+				// the “height” of the “view” containing the selection is actually
+				// going to be the entire content view and not just the screen part
+				UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
+				UNUSED_RETURN(OSStatus)HIViewConvertRect(&selectionCGRect, viewPtr->carbonData->contentHIView, windowContentHIView);
+				
+				// translate the selection area into Cocoa coordinates that are
+				// relative to the content view of the window
+				selectionCGRect.origin.y = windowContentBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
+				
+				// animate!
+				if (nullptr != terminalWindow)
+				{
+					NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+					
+					
+					CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, selectionCGRect);
+				}
+				
+				CFRelease(selectionShape), selectionShape = nullptr;
 			}
-			
-			CFRelease(selectionShape), selectionShape = nullptr;
 		}
 	}
 }// ZoomToSearchResults
@@ -4246,6 +4309,153 @@ WARNING:	This constructor leaves the class uninitialized!
 			doing anything with it.  This unsafe constructor
 			exists to support the HIObject model.
 
+(2018.02)
+*/
+My_TerminalViewCarbonState::
+My_TerminalViewCarbonState		(HIViewRef		inSuperclassViewInstance)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+encompassingHIView(nullptr), // set later
+backgroundHIView(nullptr), // set later
+focusHIView(nullptr), // set later
+paddingHIView(nullptr), // set later
+contentHIView(inSuperclassViewInstance),
+containerResizeHandler(), // set later
+contextualMenuHandler(),
+rawKeyDownHandler()
+{
+}// My_TerminalViewCarbonState constructor
+
+
+/*!
+Initializer.  See the My_TerminalViewCarbonState constructor
+as well as receiveTerminalHIObjectEvents().
+
+(2018.02)
+*/
+void
+My_TerminalViewCarbonState::
+initialize	(TerminalViewRef			inEventuallyValidViewRef,
+			 TerminalScreenRef			UNUSED_ARGUMENT(inScreenDataSource),
+			 Preferences_ContextRef		inFormat,
+			 CGDeviceColor const&		inInitialBackgroundColor,
+			 CGDeviceColor const&		inInitialMatteColor)
+{
+	// create views, set hierarchy and initialize background and matte colors
+	{
+		Preferences_Result	preferencesResult = kPreferences_ResultOK;
+		CFStringRef			imageURLCFString = nullptr;
+		OSStatus			error = noErr;
+		
+		
+		// read optional image URL
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalImageNormalBackground,
+														sizeof(imageURLCFString), &imageURLCFString, true/* search defaults too */);
+		if (kPreferences_ResultOK != preferencesResult)
+		{
+			imageURLCFString = nullptr;
+		}
+		
+		// see the HIObject callbacks, this will already exist
+		error = HIViewSetVisible(this->contentHIView, true);
+		assert_noerr(error);
+		
+		assert_noerr(TerminalBackground_CreateHIView(this->paddingHIView, false/* is matte */, imageURLCFString));
+		error = HIViewSetVisible(this->paddingHIView, true);
+		assert_noerr(error);
+		// IMPORTANT: Set a property with the TerminalViewRef, so that
+		// TerminalView_ReturnUserFocusHIView() works properly
+		error = SetControlProperty(this->paddingHIView,
+									AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
+									sizeof(inEventuallyValidViewRef),
+									&inEventuallyValidViewRef);
+		assert_noerr(error);
+		
+		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView, true/* is matte */));
+		error = HIViewSetVisible(this->backgroundHIView, true);
+		assert_noerr(error);
+		
+		// specify the view to use for focus and basic input
+		//this->focusHIView = this->paddingHIView;
+		this->focusHIView = this->backgroundHIView;
+		
+		// initialize colors
+		{
+			error = SetControlProperty(this->paddingHIView, AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+										sizeof(inInitialBackgroundColor), &inInitialBackgroundColor);
+			assert_noerr(error);
+		}
+		{
+			error = SetControlProperty(this->backgroundHIView, AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+										sizeof(inInitialMatteColor), &inInitialMatteColor);
+			assert_noerr(error);
+		}
+		
+		// since no extra rendering, etc. is required, make this a mere ALIAS
+		// for the background view; this is so that code intending to operate
+		// on the “entire” view can clearly indicate this by referring to the
+		// encompassing pane instead of some specific pane that might change
+		this->encompassingHIView = this->backgroundHIView;
+		
+		// set up embedding hierarchy
+		error = HIViewAddSubview(this->backgroundHIView, this->paddingHIView);
+		assert_noerr(error);
+		error = HIViewAddSubview(this->paddingHIView, this->contentHIView);
+		assert_noerr(error);
+	}
+	
+	// install a monitor on the container that finds out about
+	// resizes (for example, because HIViewSetFrame() was called
+	// on it) and updates subviews to match
+	this->containerResizeHandler.install(this->encompassingHIView, kCommonEventHandlers_ChangedBoundsAnyEdge,
+											handleNewViewContainerBounds,
+											inEventuallyValidViewRef/* context */);
+	assert(this->containerResizeHandler.isInstalled());
+	
+	// install a handler for contextual menu clicks
+	this->contextualMenuHandler.install(HIViewGetEventTarget(this->contentHIView),
+										receiveTerminalViewContextualMenuSelect,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
+																kEventControlContextualMenuClick),
+										inEventuallyValidViewRef/* user data */);
+	assert(this->contextualMenuHandler.isInstalled());
+	
+	// set up keyboard text selection on the focus view
+	this->rawKeyDownHandler.install(HIViewGetEventTarget(this->focusHIView),
+										receiveTerminalViewRawKeyDown,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard),
+																kEventRawKeyDown, kEventRawKeyRepeat),
+										inEventuallyValidViewRef/* user data */);
+	assert(this->rawKeyDownHandler.isInstalled());
+	
+	// show all HIViews
+	HIViewSetVisible(this->encompassingHIView, true/* visible */);
+}// My_TerminalViewCarbonState::initialize
+
+
+/*!
+Destructor.  See the handler for HIObject events
+that deals with setup and teardown.
+
+(2018.02)
+*/
+My_TerminalViewCarbonState::
+~My_TerminalViewCarbonState ()
+{
+}// My_TerminalViewCarbonState destructor
+
+
+/*!
+Constructor.  See receiveTerminalHIObjectEvents().
+
+WARNING:	This constructor leaves the class uninitialized!
+			You MUST invoke the initialize() method before
+			doing anything with it.  This unsafe constructor
+			exists to support the HIObject model.
+
 (3.1)
 */
 My_TerminalView::
@@ -4259,23 +4469,12 @@ configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
-isCocoa(false),
 encompassingNSView(nil),
 backgroundNSView(nil),
 focusNSView(nil),
 paddingNSView(nil),
 contentNSView(nil),
-// Carbon-specific (will remove):
-accessibilityObject(AXUIElementCreateWithHIObjectAndIdentifier
-					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */), CFRetainRelease::kAlreadyRetained),
-encompassingHIView(nullptr), // set later
-backgroundHIView(nullptr), // set later
-focusHIView(nullptr), // set later
-paddingHIView(nullptr), // set later
-contentHIView(inSuperclassViewInstance),
-containerResizeHandler(), // set later
-contextualMenuHandler(),
-rawKeyDownHandler()
+carbonData(new My_TerminalViewCarbonState(inSuperclassViewInstance))
 {
 }// My_TerminalView 1-argument constructor (HIViewRef)
 
@@ -4308,29 +4507,19 @@ configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
-isCocoa(true),
 encompassingNSView(nil), // set later
 backgroundNSView([inBackgroundView retain]),
 focusNSView(nil), // set later
 paddingNSView([inPaddingView retain]),
 contentNSView([inSuperclassViewInstance retain]),
-// Carbon-specific (will remove):
-accessibilityObject(), // obsolete
-encompassingHIView(nullptr),
-backgroundHIView(nullptr),
-focusHIView(nullptr),
-paddingHIView(nullptr),
-contentHIView(nullptr),
-containerResizeHandler(), // set later
-contextualMenuHandler(),
-rawKeyDownHandler()
+carbonData(nullptr)
 {
 }// My_TerminalView 1-argument constructor (NSView*)
 
 
 /*!
-Initializer.  See the constructor as well as
-receiveTerminalHIObjectEvents().
+Initializer.  See the My_TerminalViewCarbonState constructor
+as well as receiveTerminalHIObjectEvents().
 
 IMPORTANT:	Settings that are read from "inFormat" here
 			and cached in the class, need to also be updated
@@ -4466,7 +4655,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	}
 	
 	// create views
-	if (this->isCocoa)
+	if (this->isCocoa())
 	{
 		// read optional image URL
 		// UNIMPLEMENTED
@@ -4494,67 +4683,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		// encompassing pane instead of some specific pane that might change
 		this->encompassingNSView = this->backgroundNSView;
 	}
-	else if (nullptr != this->contentHIView)
-	{
-		Preferences_Result	preferencesResult = kPreferences_ResultOK;
-		CFStringRef			imageURLCFString = nullptr;
-		OSStatus			error = noErr;
-		
-		
-		// read optional image URL
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalImageNormalBackground,
-														sizeof(imageURLCFString), &imageURLCFString, true/* search defaults too */);
-		if (kPreferences_ResultOK != preferencesResult)
-		{
-			imageURLCFString = nullptr;
-		}
-		
-		// see the HIObject callbacks, this will already exist
-		error = HIViewSetVisible(this->contentHIView, true);
-		assert_noerr(error);
-		
-		assert_noerr(TerminalBackground_CreateHIView(this->paddingHIView, false/* is matte */, imageURLCFString));
-		error = HIViewSetVisible(this->paddingHIView, true);
-		assert_noerr(error);
-		// IMPORTANT: Set a property with the TerminalViewRef, so that
-		// TerminalView_ReturnUserFocusHIView() works properly
-		error = SetControlProperty(this->paddingHIView,
-									AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-									sizeof(this->selfRef), &this->selfRef);
-		assert_noerr(error);
-		
-		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView, true/* is matte */));
-		error = HIViewSetVisible(this->backgroundHIView, true);
-		assert_noerr(error);
-		
-		// specify the view to use for focus and basic input
-		//this->focusHIView = this->paddingHIView;
-		this->focusHIView = this->backgroundHIView;
-		
-		// initialize matte color
-		{
-			CGDeviceColor* const	kColorPtr = &this->text.colors[kMyBasicColorIndexMatteBackground];
-			
-			
-			error = SetControlProperty(this->backgroundHIView, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-										sizeof(*kColorPtr), kColorPtr);
-			assert_noerr(error);
-		}
-		
-		// since no extra rendering, etc. is required, make this a mere ALIAS
-		// for the background view; this is so that code intending to operate
-		// on the “entire” view can clearly indicate this by referring to the
-		// encompassing pane instead of some specific pane that might change
-		this->encompassingHIView = this->backgroundHIView;
-		
-		// set up embedding hierarchy
-		error = HIViewAddSubview(this->backgroundHIView, this->paddingHIView);
-		assert_noerr(error);
-		error = HIViewAddSubview(this->paddingHIView, this->contentHIView);
-		assert_noerr(error);
-	}
 	
 	// store the colors this view will be using
 	assert_noerr(createWindowColorPalette(this, inFormat));
@@ -4572,36 +4700,11 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->animation.cursor.blinkAlpha = 1.0;
 	}
 	
-	if (false == this->isCocoa)
+	if (nullptr != this->carbonData)
 	{
-		// install a monitor on the container that finds out about
-		// resizes (for example, because HIViewSetFrame() was called
-		// on it) and updates subviews to match
-		this->containerResizeHandler.install(this->encompassingHIView, kCommonEventHandlers_ChangedBoundsAnyEdge,
-												handleNewViewContainerBounds, this->selfRef/* context */);
-		assert(this->containerResizeHandler.isInstalled());
-		
-		// install a handler for contextual menu clicks
-		this->contextualMenuHandler.install(HIViewGetEventTarget(this->contentHIView),
-											receiveTerminalViewContextualMenuSelect,
-											CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
-																	kEventControlContextualMenuClick),
-											REINTERPRET_CAST(this, TerminalViewRef)/* user data */);
-		assert(this->contextualMenuHandler.isInstalled());
-		
-		// set up keyboard text selection on the focus view
-		this->rawKeyDownHandler.install(HIViewGetEventTarget(this->focusHIView),
-											receiveTerminalViewRawKeyDown,
-											CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard),
-																	kEventRawKeyDown, kEventRawKeyRepeat),
-											REINTERPRET_CAST(this, TerminalViewRef)/* user data */);
-		assert(this->rawKeyDownHandler.isInstalled());
-	}
-	
-	if (false == this->isCocoa)
-	{
-		// show all HIViews
-		HIViewSetVisible(this->encompassingHIView, true/* visible */);
+		this->carbonData->initialize(this->selfRef, inScreenDataSource, inFormat,
+										this->text.colors[kMyBasicColorIndexNormalBackground],
+										this->text.colors[kMyBasicColorIndexMatteBackground]);
 	}
 	
 	// set up a callback to receive preference change notifications
@@ -4666,8 +4769,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 
 
 /*!
-Destructor.  See the handler for HIObject events
-that deals with setup and teardown.
+Destructor.
 
 (3.0)
 */
@@ -4722,7 +4824,25 @@ My_TerminalView::
 	
 	// release strong references to data sources
 	assert(removeDataSource(this, nullptr/* specific screen or nullptr for all screens */));
+	
+	delete carbonData;
 }// My_TerminalView destructor
+
+
+/*!
+Returns true only if this structure was initialized as a
+modern (Cocoa and Core Graphics) user interface instead of
+a legacy (Carbon and QuickDraw) interface.
+
+(2018.02)
+*/
+bool
+My_TerminalView::
+isCocoa ()
+const
+{
+	return (nullptr == this->carbonData);
+}// My_TerminalView::isCocoa
 
 
 /*!
@@ -4853,9 +4973,13 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kTerminal_ChangeAudioEvent:
 		{
 			//TerminalScreenRef	inScreen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 			
 			
-			visualBell(inView);
+			if (nullptr != viewPtr)
+			{
+				visualBell(viewPtr);
+			}
 		}
 		break;
 	
@@ -4907,52 +5031,59 @@ calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
 						 SInt16&				outPointSize,
 						 SInt16&				outAscent)
 {
-	HIWindowRef		window = HIViewGetWindow(inTerminalViewPtr->contentHIView);
-	CGrafPtr		oldPort = nullptr;
-	CGrafPtr		windowPort = nullptr;
-	GDHandle		oldDevice = nullptr;
-	GDHandle		windowDevice = nullptr;
-	SInt16			preservedFontID = 0;
-	SInt16			preservedFontSize = 0;
-	Style			preservedFontStyle = 0;
-	FontInfo		info;
-	
-	
-	outPointSize = inTerminalViewPtr->text.font.normalMetrics.size;
-	outAscent = inTerminalViewPtr->text.font.normalMetrics.ascent;
-	
-	// preserve state
-	GetGWorld(&oldPort, &oldDevice);
-	SetPortWindowPort(window);
-	GetGWorld(&windowPort, &windowDevice);
-	preservedFontID = GetPortTextFont(windowPort);
-	preservedFontSize = GetPortTextSize(windowPort);
-	preservedFontStyle = GetPortTextFace(windowPort);
-	
-	// choose an appropriate font size to best fill 4 cells; favor maximum
-	// width over height, but reduce the font size if the characters overrun
-	// the bottom of the area
-	TextFontByName(inTerminalViewPtr->text.font.familyName);
-	TextSize(outPointSize);
-	while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCell) <
-			INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels()))
+	if (nullptr == inTerminalViewPtr->carbonData)
 	{
-		TextSize(++outPointSize);
+		//Console_Warning(Console_WriteLine, "calculate-double-size not implemented for Cocoa"); // debug for later
 	}
-	GetFontInfo(&info);
-	while (STATIC_CAST(info.ascent + info.descent + info.leading, unsigned int) >=
-			INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCell.integralPixels()))
+	else
 	{
-		TextSize(--outPointSize);
+		HIWindowRef		window = HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView);
+		CGrafPtr		oldPort = nullptr;
+		CGrafPtr		windowPort = nullptr;
+		GDHandle		oldDevice = nullptr;
+		GDHandle		windowDevice = nullptr;
+		SInt16			preservedFontID = 0;
+		SInt16			preservedFontSize = 0;
+		Style			preservedFontStyle = 0;
+		FontInfo		info;
+		
+		
+		outPointSize = inTerminalViewPtr->text.font.normalMetrics.size;
+		outAscent = inTerminalViewPtr->text.font.normalMetrics.ascent;
+		
+		// preserve state
+		GetGWorld(&oldPort, &oldDevice);
+		SetPortWindowPort(window);
+		GetGWorld(&windowPort, &windowDevice);
+		preservedFontID = GetPortTextFont(windowPort);
+		preservedFontSize = GetPortTextSize(windowPort);
+		preservedFontStyle = GetPortTextFace(windowPort);
+		
+		// choose an appropriate font size to best fill 4 cells; favor maximum
+		// width over height, but reduce the font size if the characters overrun
+		// the bottom of the area
+		TextFontByName(inTerminalViewPtr->text.font.familyName);
+		TextSize(outPointSize);
+		while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCell) <
+				INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels()))
+		{
+			TextSize(++outPointSize);
+		}
 		GetFontInfo(&info);
+		while (STATIC_CAST(info.ascent + info.descent + info.leading, unsigned int) >=
+				INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCell.integralPixels()))
+		{
+			TextSize(--outPointSize);
+			GetFontInfo(&info);
+		}
+		outAscent = info.ascent;
+		
+		// restore previous state
+		TextFont(preservedFontID);
+		TextSize(preservedFontSize);
+		TextFace(preservedFontStyle);
+		SetGWorld(oldPort, oldDevice);
 	}
-	outAscent = info.ascent;
-	
-	// restore previous state
-	TextFont(preservedFontID);
-	TextSize(preservedFontSize);
-	TextFace(preservedFontStyle);
-	SetGWorld(oldPort, oldDevice);
 }// calculateDoubleSize
 
 
@@ -5687,7 +5818,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		GDHandle			currentDevice = nullptr;
 		
 		
-		if (false == inTerminalViewPtr->isCocoa)
+		if (false == inTerminalViewPtr->isCocoa())
 		{
 			// for better performance on Mac OS X, lock the bits of a port
 			// before performing a series of QuickDraw operations in it,
@@ -5824,7 +5955,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		inTerminalViewPtr->screen.currentRenderedLine = -1;
 		inTerminalViewPtr->screen.currentRenderContext = nullptr;
 		
-		if (false == inTerminalViewPtr->isCocoa)
+		if (false == inTerminalViewPtr->isCocoa())
 		{
 			// undo the lock done earlier in this block
 			UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
@@ -6197,7 +6328,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					 CFStringRef				inTextBufferAsCFString,
 					 TextAttributes_Object		inAttributes)
 {
-	if (inTerminalViewPtr->isCocoa)
+	if (inTerminalViewPtr->isCocoa())
 	{
 		// store new text attributes, for anything that refers to them
 		inTerminalViewPtr->text.attributes = inAttributes;
@@ -7812,7 +7943,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	
 	// start with the interior bounds, as this defines two of the edges
-	if (inTerminalViewPtr->isCocoa)
+	if (nullptr == inTerminalViewPtr->carbonData)
 	{
 		NSRect		contentFrame = [inTerminalViewPtr->contentNSView frame];
 		
@@ -7823,7 +7954,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	else
 	{
 		HIRect		contentFrame;
-		OSStatus	error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &contentFrame);
+		OSStatus	error = HIViewGetBounds(inTerminalViewPtr->carbonData->contentHIView, &contentFrame);
 		
 		
 		assert_noerr(error);
@@ -8287,21 +8418,21 @@ getScreenOriginFloat	(My_TerminalViewPtr		inTerminalViewPtr,
 						 Float32&				outScreenPositionX,
 						 Float32&				outScreenPositionY)
 {
-	if (inTerminalViewPtr->isCocoa)
+	if (nullptr == inTerminalViewPtr->carbonData)
 	{
-		
+		Console_Warning(Console_WriteLine, "get-screen-origin-float not implemented for Cocoa");
 	}
 	else
 	{
-		HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView));
+		HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView));
 		HIRect		contentFrame;
 		OSStatus	error = noErr;
 		
 		
 		assert(windowContentView.exists());
-		error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
+		error = HIViewGetFrame(inTerminalViewPtr->carbonData->contentHIView, &contentFrame);
 		assert_noerr(error);
-		error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
+		error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->carbonData->contentHIView), windowContentView);
 		assert_noerr(error);
 		outScreenPositionX = contentFrame.origin.x;
 		outScreenPositionY = contentFrame.origin.y;
@@ -8381,12 +8512,21 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 	HIRect				screenBounds;
 	TerminalView_Cell	selectionStart;
 	TerminalView_Cell	selectionPastEnd;
-	OSStatus			error = noErr;
 	
 	
-	// find clipping region
-	error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &screenBounds);
-	assert_noerr(error);
+	if (nullptr != inTerminalViewPtr->carbonData)
+	{
+		OSStatus	error = noErr;
+		
+		
+		// find clipping region
+		error = HIViewGetBounds(inTerminalViewPtr->carbonData->contentHIView, &screenBounds);
+		assert_noerr(error);
+	}
+	else
+	{
+		screenBounds = NSRectToCGRect([inTerminalViewPtr->contentNSView bounds]);
+	}
 	
 	selectionStart = inSelectionStart;
 	selectionPastEnd = inSelectionPastEnd;
@@ -8633,6 +8773,8 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 Responds to terminal view size or position changes by
 updating sub-views.
 
+Carbon only.
+
 (3.0)
 */
 void
@@ -8648,7 +8790,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	
 	// get view’s boundaries, synchronize background picture with that size
 	HIViewGetFrame(inHIView, &terminalViewBounds);
-	HIViewSetFrame(viewPtr->backgroundHIView, &terminalViewBounds);
+	HIViewSetFrame(viewPtr->carbonData->backgroundHIView, &terminalViewBounds);
 	
 	// from here on, use this only for the bounds, not the origin
 	HIViewGetBounds(inHIView, &terminalViewBounds);
@@ -8674,7 +8816,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			
 			
 			GetGWorld(&oldPort, &oldDevice);
-			SetPortWindowPort(HIViewGetWindow(viewPtr->contentHIView));
+			SetPortWindowPort(HIViewGetWindow(viewPtr->carbonData->contentHIView));
 			Localization_PreservePortFontState(&fontState);
 			
 			TextFontByName(viewPtr->text.font.familyName);
@@ -8757,8 +8899,8 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		
 		// TEMPORARY: this should in fact respect margin values too
 		RegionUtilities_CenterHIRectIn(terminalFocusFrame, terminalViewBounds);
-		HIViewSetFrame(viewPtr->paddingHIView, &terminalFocusFrame);
-		HIViewSetFrame(viewPtr->contentHIView, &terminalInteriorFrame);
+		HIViewSetFrame(viewPtr->carbonData->paddingHIView, &terminalFocusFrame);
+		HIViewSetFrame(viewPtr->carbonData->contentHIView, &terminalInteriorFrame);
 	}
 	
 	// recalculate cursor boundaries for the specified view
@@ -9717,7 +9859,8 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		
 		case kPreferences_TagTerminalCursorType:
 			// recalculate cursor boundaries for the specified view
-			if (IsValidControlHandle(viewPtr->contentHIView))
+			if ((nil != viewPtr->contentNSView) ||
+				((nullptr != viewPtr->carbonData) && IsValidControlHandle(viewPtr->carbonData->contentHIView)))
 			{
 				Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
 				UInt16				cursorX = 0;
@@ -10403,7 +10546,7 @@ receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inH
 			My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), terminalView);
 			
 			
-			if (view == ptr->contentHIView)
+			if (view == ptr->carbonData->contentHIView)
 			{
 				// display a contextual menu
 				NSMenu*		contextualMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
@@ -11372,7 +11515,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				case kControlContentMetaPart:
 				case kTerminalView_ContentPartText:
 					{
-						error = HIViewGetBounds(viewPtr->contentHIView, &partBounds);
+						error = HIViewGetBounds(viewPtr->carbonData->contentHIView, &partBounds);
 						if (noErr == error)
 						{
 							result = noErr;
@@ -11398,7 +11541,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 					// Cocoa version (and the view is opaque in the meantime); see
 					// also the drawing handler for the background fill
 					{
-						error = HIViewGetBounds(viewPtr->contentHIView, &partBounds);
+						error = HIViewGetBounds(viewPtr->carbonData->contentHIView, &partBounds);
 						if (noErr == error)
 						{
 							result = noErr;
@@ -12161,7 +12304,6 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	switch (inTerminalChange)
 	{
 	case kTerminal_ChangeTextEdited:
-		if (IsValidWindowRef(HIViewGetWindow(viewPtr->contentHIView)))
 		{
 			Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
 																				Terminal_RangeDescriptionConstPtr);
@@ -12269,7 +12411,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// immediately without altering the update-region.
 		//
 		
-		if (viewPtr->isCocoa)
+		if (viewPtr->isCocoa())
 		{
 			CGRect		oldCursorRect = CGRectZero;
 			
@@ -12303,7 +12445,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.updatedShape);
 				//UNUSED_RETURN(OSStatus)HIShapeEnumerate(viewPtr->screen.cursor.updatedShape, kHIShapeParseFromTopLeft, Console_WriteShapeElement, nullptr/* ref. con. */); // debug
 				
-				if (viewPtr->isCocoa)
+				if (viewPtr->isCocoa())
 				{
 					[viewPtr->contentNSView displayRect:NSRectFromCGRect(viewPtr->screen.cursor.bounds)];
 				}
@@ -12425,7 +12567,10 @@ setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 		// cursor flashing is done within a thread; after a window closes,
 		// the flashing ought to stop, but to make sure of that the window
 		// must be valid (otherwise drawing occurs in the desktop!)
-		renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
+		if (nullptr != inTerminalViewPtr->carbonData)
+		{
+			renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView)));
+		}
 		
 		// change state
 		inTerminalViewPtr->screen.cursor.currentState = newCursorState;
@@ -12460,7 +12605,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 					 Float32				inCharacterWidthScalingOrZero,
 					 Boolean				inNotifyListeners)
 {
-	if (inTerminalViewPtr->isCocoa)
+	if (inTerminalViewPtr->isCocoa())
 	{
 		NSFontManager*		fontManager = [NSFontManager sharedFontManager];
 		
@@ -12529,6 +12674,11 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	}
 	
 	// set the font metrics (including double size)
+	if (nullptr == inTerminalViewPtr->carbonData)
+	{
+		setUpScreenFontMetrics(inTerminalViewPtr);
+	}
+	else
 	{
 		CGrafPtr			oldPort = nullptr;
 		GDHandle			oldDevice = nullptr;
@@ -12536,7 +12686,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		
 		GetGWorld(&oldPort, &oldDevice);
-		setPortScreenPort(inTerminalViewPtr);
+		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView));
 		Localization_PreservePortFontState(&fontState);
 		TextFontByName(inTerminalViewPtr->text.font.familyName);
 		TextSize(inTerminalViewPtr->text.font.normalMetrics.size);
@@ -12579,44 +12729,6 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Sets the current port to the port of the
-indicated terminal window.
-
-Obsolete.
-
-(2.6)
-*/
-SInt16
-setPortScreenPort	(My_TerminalViewPtr		inTerminalViewPtr)
-{
-	SInt16		result = 0;
-	
-	
-	if (nullptr == inTerminalViewPtr) result = -3;
-	else
-	{
-		static My_TerminalViewPtr	oldViewPtr = nullptr;
-		HIWindowRef					window = HIViewGetWindow(inTerminalViewPtr->contentHIView);
-		
-		
-		if (nullptr == window) result = -4;
-		else
-		{
-			if (oldViewPtr != inTerminalViewPtr) // is last-used window different?
-			{
-				oldViewPtr = inTerminalViewPtr;
-				inTerminalViewPtr->text.attributes = kTextAttributes_Invalid; // attributes will need setting
-				result = 1;
-			}
-			SetPortWindowPort(window);
-		}
-	}
-	
-	return result;
-}// setPortScreenPort
-
-
-/*!
 Changes a color the user perceives is in use; these are
 stored internally in the view data structure.  Also
 updates the palette automatically, so you don’t have to
@@ -12634,20 +12746,23 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	case kTerminalView_ColorIndexNormalBackground:
 		{
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
-			if (inTerminalViewPtr->isCocoa)
+			if (inTerminalViewPtr->isCocoa())
 			{
 				// the view reads its color from the associated data structure automatically, so just redraw
 				[inTerminalViewPtr->paddingNSView setNeedsDisplay:YES];
 			}
-			else if (nullptr != inTerminalViewPtr->paddingHIView)
+			else
 			{
-				OSStatus	error = noErr;
-				
-				
-				error = SetControlProperty(inTerminalViewPtr->paddingHIView, AppResources_ReturnCreatorCode(),
-											kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-											sizeof(*inColorPtr), inColorPtr);
-				assert_noerr(error);
+				if (nullptr != inTerminalViewPtr->carbonData->paddingHIView)
+				{
+					OSStatus	error = noErr;
+					
+					
+					error = SetControlProperty(inTerminalViewPtr->carbonData->paddingHIView, AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+												sizeof(*inColorPtr), inColorPtr);
+					assert_noerr(error);
+				}
 			}
 		}
 		break;
@@ -12671,20 +12786,23 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	case kTerminalView_ColorIndexMatteBackground:
 		{
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground] = *inColorPtr;
-			if (inTerminalViewPtr->isCocoa)
+			if (inTerminalViewPtr->isCocoa())
 			{
 				// the view reads its color from the associated data structure automatically, so just redraw
 				[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
 			}
-			else if (nullptr != inTerminalViewPtr->backgroundHIView)
+			else
 			{
-				OSStatus	error = noErr;
-				
-				
-				error = SetControlProperty(inTerminalViewPtr->backgroundHIView, AppResources_ReturnCreatorCode(),
-											kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-											sizeof(*inColorPtr), inColorPtr);
-				assert_noerr(error);
+				if (nullptr != inTerminalViewPtr->carbonData->backgroundHIView)
+				{
+					OSStatus	error = noErr;
+					
+					
+					error = SetControlProperty(inTerminalViewPtr->carbonData->backgroundHIView, AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+												sizeof(*inColorPtr), inColorPtr);
+					assert_noerr(error);
+				}
 			}
 		}
 		break;
@@ -13074,7 +13192,7 @@ is currently being drawn) and use the default font.
 void
 setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	if (inTerminalViewPtr->isCocoa)
+	if (inTerminalViewPtr->isCocoa())
 	{
 		NSFont* const	sourceFont = [inTerminalViewPtr->text.font.normalFont screenFont];
 		
@@ -13337,6 +13455,8 @@ Loops until the user releases the mouse button.  On
 output, the new mouse location and modifier key states
 are returned.
 
+Carbon only.
+
 (3.0)
 */
 void
@@ -13410,7 +13530,7 @@ trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
 			}
 		}
 		
-		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
+		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView));
 		
 		// continue tracking until the mouse is released
 		*outNewLocalMousePtr = inLocalMouse;
@@ -13578,7 +13698,7 @@ they must often be updated as a set.
 void
 updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	if (inTerminalViewPtr->isCocoa)
+	if (nullptr == inTerminalViewPtr->carbonData)
 	{
 		[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
 		[inTerminalViewPtr->paddingNSView setNeedsDisplay:YES];
@@ -13586,9 +13706,12 @@ updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 	}
 	else
 	{
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->paddingHIView, true);
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
+		if (IsValidControlHandle(inTerminalViewPtr->carbonData->contentHIView))
+		{
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->carbonData->backgroundHIView, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->carbonData->paddingHIView, true);
+			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->carbonData->contentHIView, true);
+		}
 	}
 	
 	UNUSED_RETURN(OSStatus)HIShapeSetEmpty(inTerminalViewPtr->screen.refreshRegion);
@@ -13638,7 +13761,7 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	
 	if (false == HIShapeIsEmpty(ptr->screen.refreshRegion))
 	{
-		if (ptr->isCocoa)
+		if (nullptr == ptr->carbonData)
 		{
 			CGRect	regionBounds;
 			NSRect	floatBounds;
@@ -13658,7 +13781,7 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		}
 		else
 		{
-			HIViewRef	currentView = ptr->contentHIView;
+			HIViewRef	currentView = ptr->carbonData->contentHIView;
 			
 			
 			if (IsValidControlHandle(currentView))
@@ -13704,7 +13827,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 						 Boolean					inIsCursor,
 						 Float32					inDesiredAlpha)
 {
-	if (inTerminalViewPtr->isCocoa)
+	if (inTerminalViewPtr->isCocoa())
 	{
 		// Cocoa and Quartz setup
 		CGDeviceColor	backgroundDeviceColor;
@@ -14130,7 +14253,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		inTerminalViewPtr->text.attributes = inAttributes;
 		
-		if (inTerminalViewPtr->isCocoa)
+		if (inTerminalViewPtr->isCocoa())
 		{
 			// Cocoa and Quartz setup; note that the font and size
 			// are retrieved from the stored NSFont object and not
@@ -14251,49 +14374,55 @@ post a notification event.
 (3.0)
 */
 void
-visualBell	(TerminalViewRef	inView)
+visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	HIWindowRef const			kViewWindow = HIViewGetWindow(viewPtr->contentHIView);
-	Boolean const				kWasReverseVideo = viewPtr->screen.isReverseVideo;
-	Boolean						visual = false;				// is visual used?
-	Boolean						visualPreference = false;	// is ONLY visual used?
-	
-	
-	// If the user turned off audible bells, always use a visual;
-	// otherwise, use a visual if the beep is in a background window.
-	unless (kPreferences_ResultOK ==
-			Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualPreference),
-								&visualPreference))
+	if (nullptr == inTerminalViewPtr->carbonData)
 	{
-		visualPreference = false; // assume audible bell, if preference can’t be found
+		Console_Warning(Console_WriteLine, "visual-bell not implemented for Cocoa");
 	}
-	visual = (visualPreference || (!IsWindowHilited(kViewWindow)));
-	
-	if (visual)
+	else
 	{
-		TerminalView_ReverseVideo(inView, !kWasReverseVideo); // also invalidates view
-		HIWindowFlush(kViewWindow);
-	}
-	
-	// Mac OS 8 asynchronous sounds mean that a sound generates
-	// very little delay, therefore a standard visual delay of 8
-	// ticks should be enforced even if a beep was emitted.
-	{
-		UInt32		dummy = 0L;
+		HIWindowRef const	kViewWindow = HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView);
+		Boolean const		kWasReverseVideo = inTerminalViewPtr->screen.isReverseVideo;
+		Boolean				visual = false;				// is visual used?
+		Boolean				visualPreference = false;	// is ONLY visual used?
 		
 		
-		Delay(8/* ticks */, &dummy);
+		// If the user turned off audible bells, always use a visual;
+		// otherwise, use a visual if the beep is in a background window.
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualPreference),
+									&visualPreference))
+		{
+			visualPreference = false; // assume audible bell, if preference can’t be found
+		}
+		visual = (visualPreference || (!IsWindowHilited(kViewWindow)));
+		
+		if (visual)
+		{
+			TerminalView_ReverseVideo(inTerminalViewPtr->selfRef, !kWasReverseVideo); // also invalidates view
+			HIWindowFlush(kViewWindow);
+		}
+		
+		// Mac OS 8 asynchronous sounds mean that a sound generates
+		// very little delay, therefore a standard visual delay of 8
+		// ticks should be enforced even if a beep was emitted.
+		{
+			UInt32		dummy = 0L;
+			
+			
+			Delay(8/* ticks */, &dummy);
+		}
+		
+		// if previously inverted, invert again to restore to normal
+		if (visual)
+		{
+			TerminalView_ReverseVideo(inTerminalViewPtr->selfRef, kWasReverseVideo); // also invalidates view
+			HIWindowFlush(kViewWindow);
+		}
+		
+		if (gPreferenceProxies.notifyOfBeeps) Alert_BackgroundNotification();
 	}
-	
-	// if previously inverted, invert again to restore to normal
-	if (visual)
-	{
-		TerminalView_ReverseVideo(inView, kWasReverseVideo); // also invalidates view
-		HIWindowFlush(kViewWindow);
-	}
-	
-	if (gPreferenceProxies.notifyOfBeeps) Alert_BackgroundNotification();
 }// visualBell
 
 } // anonymous namespace
