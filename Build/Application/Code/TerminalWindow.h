@@ -363,7 +363,7 @@ Boolean
 void
 	TerminalWindow_SetFullScreenIconsEnabled		(Boolean					inAllTerminalWindowsHaveFullScreenIcons);
 
-OSStatus
+TerminalWindow_Result
 	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,
 													 Boolean					inIsTab);
 

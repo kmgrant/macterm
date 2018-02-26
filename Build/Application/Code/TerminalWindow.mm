@@ -128,16 +128,6 @@ float const		kMy_ScrollBarThumbMinimumSize = kMy_ScrollBarThumbEndCapSize + 32.0
 float const		kMy_ScrollBarArrowHeight = 16.0; // pixels
 
 /*!
-Use with getScrollBarKind() for an unknown scroll bar.
-*/
-enum My_ScrollBarKind
-{
-	kMy_InvalidScrollBarKind	= 0,
-	kMy_ScrollBarKindVertical	= 1,
-	kMy_ScrollBarKindHorizontal = 2
-};
-
-/*!
 Specifies the type of sheet (if any) that is currently
 displayed.  This is used by the preferences context
 monitor, so that it knows what settings were changed.
@@ -174,10 +164,64 @@ typedef std::multimap< TerminalScreenRef, TerminalViewRef >		My_ViewsByScreen;
 typedef MemoryBlockReferenceTracker< TerminalWindowRef >	My_RefTracker;
 typedef Registrar< TerminalWindowRef, My_RefTracker >		My_RefRegistrar;
 
+/*!
+A structure of obsolete data that will be systematically removed;
+separating for now to make shared state easier during the move to
+Cocoa-based windows.  Its lifetime must be less than that of the
+Terminal Window that is using the data.
+*/
+struct My_TerminalWindowCarbonState
+{
+	My_TerminalWindowCarbonState	();
+	~My_TerminalWindowCarbonState	();
+	
+	void
+	initialize		(TerminalWindowRef, HIWindowRef);
+	
+	CFRetainRelease				tab;									// the Mac OS window reference (if any) for the sister window acting as a tab
+	CarbonEventHandlerWrap*		tabContextualMenuHandlerPtr;			// used to track contextual menu clicks in tabs
+	CarbonEventHandlerWrap*		tabDragHandlerPtr;						// used to track drags that enter tabs
+	WindowGroupRef				tabAndWindowGroup;						// WindowGroupRef; forces the window and its tab to move together
+	HIViewRef					scrollBarH;								// scroll bar used to specify which range of columns is visible
+	HIViewRef					scrollBarV;								// scroll bar used to specify which range of rows is visible
+	HIToolbarRef				toolbar;								// customizable toolbar of icons at the top
+	CFRetainRelease				toolbarItemBell;						// if present, enable/disable bell item
+	CFRetainRelease				toolbarItemKillRestart;					// if present, kill/restart item
+	CFRetainRelease				toolbarItemLED1;						// if present, LED #1 status item
+	CFRetainRelease				toolbarItemLED2;						// if present, LED #2 status item
+	CFRetainRelease				toolbarItemLED3;						// if present, LED #3 status item
+	CFRetainRelease				toolbarItemLED4;						// if present, LED #4 status item
+	CFRetainRelease				toolbarItemScrollLock;					// if present, scroll lock status item
+	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
+	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
+	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
+	CarbonEventHandlerWrap		mouseWheelHandler;						// responds to scroll wheel events
+	CarbonEventHandlerWrap		scrollTickHandler;						// responds to drawing events in the scroll bar
+	EventHandlerUPP				commandUPP;								// wrapper for command callback
+	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
+	EventHandlerUPP				windowClickActivationUPP;				// wrapper for window background clicks callback
+	EventHandlerRef				windowClickActivationHandler;			// invoked whenever a terminal window is hit while inactive
+	EventHandlerUPP				windowCursorChangeUPP;					// wrapper for window cursor change callback
+	EventHandlerRef				windowCursorChangeHandler;				// invoked whenever the mouse cursor might change in a terminal window
+	EventHandlerUPP				windowDragCompletedUPP;					// wrapper for window move completion callback
+	EventHandlerRef				windowDragCompletedHandler;				// invoked whenever a terminal window has finished being moved by the user
+	EventHandlerUPP				windowFullScreenUPP;					// wrapper for window full-screen callback
+	EventHandlerRef				windowFullScreenHandler;				// invoked whenever a full-screen window event occurs for a terminal window
+	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
+	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
+	EventHandlerUPP				growBoxClickUPP;						// wrapper for grow box click callback
+	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal window’s grow box is clicked
+	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
+	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
+};
+
 struct My_TerminalWindow
 {
 	My_TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef, Boolean);
 	~My_TerminalWindow ();
+	
+	bool
+	isCocoa () const;
 	
 	My_RefRegistrar				refValidator;				// ensures this reference is recognized as a valid one
 	TerminalWindowRef			selfRef;					// redundant reference to self, for convenience
@@ -227,41 +271,7 @@ struct My_TerminalWindow
 	My_UndoableActionList			installedActions;		// undoable things installed on behalf of this window
 	
 	// Carbon-specific (will remove):
-	CFRetainRelease				tab;									// the Mac OS window reference (if any) for the sister window acting as a tab
-	CarbonEventHandlerWrap*		tabContextualMenuHandlerPtr;			// used to track contextual menu clicks in tabs
-	CarbonEventHandlerWrap*		tabDragHandlerPtr;						// used to track drags that enter tabs
-	WindowGroupRef				tabAndWindowGroup;						// WindowGroupRef; forces the window and its tab to move together
-	HIViewRef					scrollBarH;								// scroll bar used to specify which range of columns is visible
-	HIViewRef					scrollBarV;								// scroll bar used to specify which range of rows is visible
-	HIToolbarRef				toolbar;								// customizable toolbar of icons at the top
-	CFRetainRelease				toolbarItemBell;						// if present, enable/disable bell item
-	CFRetainRelease				toolbarItemKillRestart;					// if present, kill/restart item
-	CFRetainRelease				toolbarItemLED1;						// if present, LED #1 status item
-	CFRetainRelease				toolbarItemLED2;						// if present, LED #2 status item
-	CFRetainRelease				toolbarItemLED3;						// if present, LED #3 status item
-	CFRetainRelease				toolbarItemLED4;						// if present, LED #4 status item
-	CFRetainRelease				toolbarItemScrollLock;					// if present, scroll lock status item
-	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
-	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
-	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
-	CarbonEventHandlerWrap		mouseWheelHandler;						// responds to scroll wheel events
-	CarbonEventHandlerWrap		scrollTickHandler;						// responds to drawing events in the scroll bar
-	EventHandlerUPP				commandUPP;								// wrapper for command callback
-	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
-	EventHandlerUPP				windowClickActivationUPP;				// wrapper for window background clicks callback
-	EventHandlerRef				windowClickActivationHandler;			// invoked whenever a terminal window is hit while inactive
-	EventHandlerUPP				windowCursorChangeUPP;					// wrapper for window cursor change callback
-	EventHandlerRef				windowCursorChangeHandler;				// invoked whenever the mouse cursor might change in a terminal window
-	EventHandlerUPP				windowDragCompletedUPP;					// wrapper for window move completion callback
-	EventHandlerRef				windowDragCompletedHandler;				// invoked whenever a terminal window has finished being moved by the user
-	EventHandlerUPP				windowFullScreenUPP;					// wrapper for window full-screen callback
-	EventHandlerRef				windowFullScreenHandler;				// invoked whenever a full-screen window event occurs for a terminal window
-	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
-	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
-	EventHandlerUPP				growBoxClickUPP;						// wrapper for grow box click callback
-	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal window’s grow box is clicked
-	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
-	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
+	My_TerminalWindowCarbonState*	carbonData;		// set to nullptr for Cocoa windows
 };
 typedef My_TerminalWindow*			My_TerminalWindowPtr;
 typedef My_TerminalWindow const*	My_TerminalWindowConstPtr;
@@ -315,19 +325,17 @@ IconRef					createLEDOffIcon				();
 IconRef					createLEDOnIcon					();
 IconRef					createPrintIcon					();
 IconRef					createRestartSessionIcon		();
-void					createViews						(My_TerminalWindowPtr);
 Boolean					createTabWindow					(My_TerminalWindowPtr);
 NSWindow*				createWindow					();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
-My_ScrollBarKind		getScrollBarKind				(My_TerminalWindowPtr, HIViewRef);
 TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
 void					getViewSizeFromWindowSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					handleFindDialogClose			(FindDialog_Ref);
 void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 void					handleNewSize					(WindowRef, Float32, Float32, void*);
-void					installTickHandler				(My_TerminalWindowPtr);
+void					installTickHandler				(My_TerminalWindowPtr, Boolean);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
 bool					lessThanIfGreaterArea			(HIWindowRef, HIWindowRef);
@@ -585,6 +593,8 @@ TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 /*!
 Determines if the specified mouse (or drag) event is hitting
 any part of the given terminal window.
+
+Carbon only.
 
 (3.1)
 */
@@ -854,6 +864,10 @@ TerminalWindow_GetTabWidthAvailable		(TerminalWindowRef	inRef,
 		result = kTerminalWindow_ResultInvalidReference;
 		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidthAvailable() with invalid reference", inRef);
 		outMaxWidthHeightInPixels = 500.0; // arbitrary!
+	}
+	else if (ptr->isCocoa())
+	{
+		Console_Warning(Console_WriteLine, "get-tab-width-available not implemented for Cocoa window");
 	}
 	else
 	{
@@ -1152,7 +1166,14 @@ TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		
 		
-		result = ptr->tab.exists();
+		if (ptr->isCocoa())
+		{
+			Console_Warning(Console_WriteLine, "“is tab” property not implemented for Cocoa windows");
+		}
+		else
+		{
+			result = ptr->carbonData->tab.exists();
+		}
 	}
 	else
 	{
@@ -1450,9 +1471,16 @@ TerminalWindow_ReturnTabWindow		(TerminalWindowRef	inRef)
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		
 		
-		if (ptr->tab.exists())
+		if (ptr->isCocoa())
 		{
-			result = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+			Console_Warning(Console_WriteLine, "“tab window” property not implemented for Cocoa windows");
+		}
+		else
+		{
+			if (ptr->carbonData->tab.exists())
+			{
+				result = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
+			}
 		}
 	}
 	else
@@ -1855,88 +1883,135 @@ that ensures only one is visible at a time.
 IMPORTANT:	You should only call this routine on visible
 			terminal windows, otherwise the tab may not be
 			displayed properly.  The result will only be
-			"noErr" if the tab is properly displayed.
+			successful if the tab is properly displayed.
 
 Note that since this affects only a single window, this is
 not the proper API for general tab manipulation; it is a
 low-level routine.  See the Workspace module.
 
+\retval kTerminalWindow_ResultOK
+if there are no errors
+
+\retval kTerminalWindow_ResultInvalidReference
+if the specified terminal window is unrecognized
+
+\retval kTerminalWindow_ResultGenericFailure
+if the tab cannot be set for any reason
+
 (3.1)
 */
-OSStatus
+TerminalWindow_Result
 TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
 									 Boolean				inIsTab)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	OSStatus						result = noErr;
+	TerminalWindow_Result			result = kTerminalWindow_ResultGenericFailure;
 	
 	
-	if (inIsTab)
+	if (false == TerminalWindow_IsValid(inRef))
 	{
-		HIWindowRef		tabWindow = nullptr;
-		Boolean			isNew = false;
-		
-		
-		// create a sister tab window and group it with the terminal window
-		if (false == ptr->tab.exists())
+		result = kTerminalWindow_ResultInvalidReference;
+	}
+	else if (ptr->isCocoa())
+	{
+		Console_Warning(Console_WriteLine, "“set tab appearance” not implemented for Cocoa windows");
+		result = kTerminalWindow_ResultGenericFailure;
+	}
+	else
+	{
+		if (inIsTab)
 		{
-			Boolean		createOK = createTabWindow(ptr);
+			HIWindowRef		tabWindow = nullptr;
+			Boolean			isNew = false;
 			
 			
-			assert(createOK);
-			assert(ptr->tab.exists());
-			isNew = true;
-		}
-		
-		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
-		
-		if (isNew)
-		{
-			// update the tab display to match the window title
-			TerminalWindow_SetWindowTitle(inRef, ptr->baseTitleString.returnCFStringRef());
-			
-			// attach the tab to the top edge of the window
-			result = SetDrawerParent(tabWindow, TerminalWindow_ReturnWindow(inRef));
-			if (noErr == result)
+			// create a sister tab window and group it with the terminal window
+			if (false == ptr->carbonData->tab.exists())
 			{
-				OptionBits				preferredEdge = kWindowEdgeTop;
-				Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
-																			sizeof(preferredEdge), &preferredEdge);
+				Boolean		createOK = createTabWindow(ptr);
 				
 				
-				if (kPreferences_ResultOK != prefsResult)
+				assert(createOK);
+				assert(ptr->carbonData->tab.exists());
+				isNew = true;
+			}
+			
+			tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
+			
+			if (isNew)
+			{
+				OSStatus	error = noErr;
+				
+				
+				// update the tab display to match the window title
+				TerminalWindow_SetWindowTitle(inRef, ptr->baseTitleString.returnCFStringRef());
+				
+				// attach the tab to the top edge of the window
+				error = SetDrawerParent(tabWindow, TerminalWindow_ReturnWindow(inRef));
+				if (noErr == error)
 				{
-					preferredEdge = kWindowEdgeTop;
+					OptionBits				preferredEdge = kWindowEdgeTop;
+					Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
+																				sizeof(preferredEdge), &preferredEdge);
+					
+					
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						preferredEdge = kWindowEdgeTop;
+					}
+					UNUSED_RETURN(OSStatus)SetDrawerPreferredEdge(tabWindow, preferredEdge);
+					
+					result = kTerminalWindow_ResultOK;
 				}
-				result = SetDrawerPreferredEdge(tabWindow, preferredEdge);
+			}
+			else
+			{
+				// note that the drawer is NOT opened when it is first created,
+				// above, because this would have the undesirable visual side effect
+				// of an oversized tab sliding out in the wrong position; instead,
+				// this function is called again, later; at that point, the tab is
+				// no longer new, and is opened here at the correct size
+				if (kWindowDrawerOpen != GetDrawerState(tabWindow))
+				{
+					// IMPORTANT: This will return paramErr if the window is invisible.
+					OSStatus	error = OpenDrawer(tabWindow, kWindowEdgeDefault, false/* asynchronously */);
+					
+					
+					if (noErr == error)
+					{
+						result = kTerminalWindow_ResultOK;
+					}
+				}
+				else
+				{
+					result = kTerminalWindow_ResultOK;
+				}
 			}
 		}
 		else
 		{
-			// note that the drawer is NOT opened when it is first created,
-			// above, because this would have the undesirable visual side effect
-			// of an oversized tab sliding out in the wrong position; instead,
-			// this function is called again, later; at that point, the tab is
-			// no longer new, and is opened here at the correct size
-			if (kWindowDrawerOpen != GetDrawerState(tabWindow))
+			// remove window from group and destroy tab
+			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
+			
+			
+			if (ptr->carbonData->tab.exists())
 			{
 				// IMPORTANT: This will return paramErr if the window is invisible.
-				result = OpenDrawer(tabWindow, kWindowEdgeDefault, false/* asynchronously */);
+				OSStatus	error = CloseDrawer(tabWindow, false/* asynchronously */);
+				
+				
+				if (noErr == error)
+				{
+					result = kTerminalWindow_ResultOK;
+				}
+			}
+			else
+			{
+				result = kTerminalWindow_ResultOK;
 			}
 		}
 	}
-	else
-	{
-		// remove window from group and destroy tab
-		HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
-		
-		
-		if (ptr->tab.exists())
-		{
-			// IMPORTANT: This will return paramErr if the window is invisible.
-			result = CloseDrawer(tabWindow, false/* asynchronously */);
-		}
-	}
+	
 	return result;
 }// SetTabAppearance
 
@@ -2045,98 +2120,105 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 	}
 	else
 	{
-		if (false == ptr->tab.exists())
+		if (ptr->isCocoa())
 		{
-			result = kTerminalWindow_ResultGenericFailure;
+			Console_Warning(Console_WriteLine, "“set tab width” not implemented for Cocoa windows");
 		}
 		else
 		{
-			// drawers are managed in terms of start and end offsets as opposed to
-			// a “width”, so some roundabout calculations are done to find offsets
-			HIWindowRef				tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
-			HIWindowRef				parentWindow = GetDrawerParent(tabWindow);
-			Rect					currentParentBounds;
-			OSStatus				error = noErr;
-			float					leadingOffset = kWindowOffsetUnchanged;
-			OptionBits				preferredEdge = kWindowEdgeTop;
-			Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
-																		sizeof(preferredEdge), &preferredEdge);
-			
-			
-			if (kPreferences_ResultOK != prefsResult)
+			if (false == ptr->carbonData->tab.exists())
 			{
-				preferredEdge = kWindowEdgeTop;
-			}
-			
-			// the tab width must refer to the structure region of the tab window,
-			// however the total space available to tabs is limited to the width
-			// of the parent window’s content region, not its structure region
-			error = GetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-			assert_noerr(error);
-			leadingOffset = STATIC_CAST(ptr->tabOffsetInPixels, float);
-			if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
-			{
-				// currently, vertically-stacked tabs are all the same size
-				ptr->tabSizeInPixels = gDefaultTabHeight;
+				result = kTerminalWindow_ResultGenericFailure;
 			}
 			else
 			{
-				ptr->tabSizeInPixels = inWidthInPixels;
-			}
-			
-			// ensure that the drawer stays at its assigned size; but note that the
-			// given tab width refers to the entire structure, whereas the constrained
-			// dimensions are only for the interior (content region)
-			{
-				Float32		width = 0.0;
-				Float32		height = 0.0;
-				Rect		borderWidths;
+				// drawers are managed in terms of start and end offsets as opposed to
+				// a “width”, so some roundabout calculations are done to find offsets
+				HIWindowRef				tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
+				HIWindowRef				parentWindow = GetDrawerParent(tabWindow);
+				Rect					currentParentBounds;
+				OSStatus				error = noErr;
+				float					leadingOffset = kWindowOffsetUnchanged;
+				OptionBits				preferredEdge = kWindowEdgeTop;
+				Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
+																			sizeof(preferredEdge), &preferredEdge);
 				
 				
-				error = GetWindowStructureWidths(tabWindow, &borderWidths);
-				assert_noerr(error);
-				error = ptr->tabDrawerWindowResizeHandler.getWindowMaximumSize(width, height);
-				assert_noerr(error);
-				if ((kWindowEdgeTop == preferredEdge) || (kWindowEdgeBottom == preferredEdge))
+				if (kPreferences_ResultOK != prefsResult)
 				{
-					ptr->tabDrawerWindowResizeHandler.setWindowMinimumSize
-														(ptr->tabSizeInPixels - borderWidths.right - borderWidths.left, height);
-					ptr->tabDrawerWindowResizeHandler.setWindowMaximumSize
-														(ptr->tabSizeInPixels - borderWidths.right - borderWidths.left, height);
+					preferredEdge = kWindowEdgeTop;
+				}
+				
+				// the tab width must refer to the structure region of the tab window,
+				// however the total space available to tabs is limited to the width
+				// of the parent window’s content region, not its structure region
+				error = GetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
+				assert_noerr(error);
+				leadingOffset = STATIC_CAST(ptr->tabOffsetInPixels, float);
+				if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
+				{
+					// currently, vertically-stacked tabs are all the same size
+					ptr->tabSizeInPixels = gDefaultTabHeight;
 				}
 				else
 				{
-					ptr->tabDrawerWindowResizeHandler.setWindowMinimumSize
-														(width, ptr->tabSizeInPixels - borderWidths.bottom - borderWidths.top);
-					ptr->tabDrawerWindowResizeHandler.setWindowMaximumSize
-														(width, ptr->tabSizeInPixels - borderWidths.bottom - borderWidths.top);
+					ptr->tabSizeInPixels = inWidthInPixels;
 				}
-			}
-			
-			// resize the drawer; setting the trailing offset would be
-			// counterproductive, because it would force the parent window
-			// to remain relatively wide (or high, for left/right tabs)
-			error = SetDrawerOffsets(tabWindow, leadingOffset, kWindowOffsetUnchanged);
-			if (noErr != error)
-			{
-				Console_Warning(Console_WriteValue, "failed to set drawer offsets for terminal window, error", error);
-			}
-			
-			// force a “resize” to cause the tab position to update immediately
-			// (TEMPORARY: is there a better way to do this?)
-			if ((kWindowEdgeTop == preferredEdge) || (kWindowEdgeBottom == preferredEdge))
-			{
-				++currentParentBounds.right;
-				SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-				--currentParentBounds.right;
-				SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-			}
-			else
-			{
-				++currentParentBounds.bottom;
-				SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-				--currentParentBounds.bottom;
-				SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
+				
+				// ensure that the drawer stays at its assigned size; but note that the
+				// given tab width refers to the entire structure, whereas the constrained
+				// dimensions are only for the interior (content region)
+				{
+					Float32		width = 0.0;
+					Float32		height = 0.0;
+					Rect		borderWidths;
+					
+					
+					error = GetWindowStructureWidths(tabWindow, &borderWidths);
+					assert_noerr(error);
+					error = ptr->carbonData->tabDrawerWindowResizeHandler.getWindowMaximumSize(width, height);
+					assert_noerr(error);
+					if ((kWindowEdgeTop == preferredEdge) || (kWindowEdgeBottom == preferredEdge))
+					{
+						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMinimumSize
+																		(ptr->tabSizeInPixels - borderWidths.right - borderWidths.left, height);
+						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMaximumSize
+																		(ptr->tabSizeInPixels - borderWidths.right - borderWidths.left, height);
+					}
+					else
+					{
+						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMinimumSize
+																		(width, ptr->tabSizeInPixels - borderWidths.bottom - borderWidths.top);
+						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMaximumSize
+																		(width, ptr->tabSizeInPixels - borderWidths.bottom - borderWidths.top);
+					}
+				}
+				
+				// resize the drawer; setting the trailing offset would be
+				// counterproductive, because it would force the parent window
+				// to remain relatively wide (or high, for left/right tabs)
+				error = SetDrawerOffsets(tabWindow, leadingOffset, kWindowOffsetUnchanged);
+				if (noErr != error)
+				{
+					Console_Warning(Console_WriteValue, "failed to set drawer offsets for terminal window, error", error);
+				}
+				
+				// force a “resize” to cause the tab position to update immediately
+				// (TEMPORARY: is there a better way to do this?)
+				if ((kWindowEdgeTop == preferredEdge) || (kWindowEdgeBottom == preferredEdge))
+				{
+					++currentParentBounds.right;
+					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
+					--currentParentBounds.right;
+					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
+				}
+				else
+				{
+					++currentParentBounds.bottom;
+					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
+					--currentParentBounds.bottom;
+					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
+				}
 			}
 		}
 	}
@@ -2456,6 +2538,342 @@ namespace {
 /*!
 Constructor.  See TerminalWindow_New().
 
+(2018.02)
+*/
+My_TerminalWindowCarbonState::
+My_TerminalWindowCarbonState ()
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+tab(),
+tabContextualMenuHandlerPtr(nullptr),
+tabDragHandlerPtr(nullptr),
+tabAndWindowGroup(nullptr),
+scrollBarH(nullptr),
+scrollBarV(nullptr),
+toolbar(nullptr),
+toolbarItemBell(),
+toolbarItemKillRestart(),
+toolbarItemLED1(),
+toolbarItemLED2(),
+toolbarItemLED3(),
+toolbarItemLED4(),
+toolbarItemScrollLock(),
+scrollProcUPP(nullptr), // reset below
+windowResizeHandler(),
+tabDrawerWindowResizeHandler(),
+mouseWheelHandler(GetApplicationEventTarget(), receiveMouseWheelEvent,
+					CarbonEventSetInClass(CarbonEventClass(kEventClassMouse), kEventMouseWheelMoved),
+					nullptr/* user data */),
+scrollTickHandler(),
+commandUPP(nullptr),
+commandHandler(nullptr),
+windowClickActivationUPP(nullptr),
+windowClickActivationHandler(nullptr),
+windowCursorChangeUPP(nullptr),
+windowCursorChangeHandler(nullptr),
+windowDragCompletedUPP(nullptr),
+windowDragCompletedHandler(nullptr),
+windowFullScreenUPP(nullptr),
+windowFullScreenHandler(nullptr),
+windowResizeEmbellishUPP(nullptr),
+windowResizeEmbellishHandler(nullptr),
+growBoxClickUPP(nullptr),
+growBoxClickHandler(nullptr),
+toolbarEventUPP(nullptr),
+toolbarEventHandler(nullptr)
+{
+}// My_TerminalWindowCarbonState constructor
+
+
+/*!
+Destructor.
+
+(2018.02)
+*/
+My_TerminalWindowCarbonState::
+~My_TerminalWindowCarbonState ()
+{
+	if (nullptr == this->tabAndWindowGroup)
+	{
+		ReleaseWindowGroup(this->tabAndWindowGroup), this->tabAndWindowGroup = nullptr;
+	}
+	
+	// remove any tab contextual menu handler
+	if (nullptr != tabContextualMenuHandlerPtr) delete tabContextualMenuHandlerPtr, tabContextualMenuHandlerPtr = nullptr;
+	
+	// remove any tab drag handler
+	if (nullptr != tabDragHandlerPtr) delete tabDragHandlerPtr, tabDragHandlerPtr = nullptr;
+	
+	// disable window command callback
+	RemoveEventHandler(this->commandHandler), this->commandHandler = nullptr;
+	DisposeEventHandlerUPP(this->commandUPP), this->commandUPP = nullptr;
+	
+	// disable window click activation callback
+	RemoveEventHandler(this->windowClickActivationHandler), this->windowClickActivationHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowClickActivationUPP), this->windowClickActivationUPP = nullptr;
+	
+	// disable window cursor change callback
+	RemoveEventHandler(this->windowCursorChangeHandler), this->windowCursorChangeHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowCursorChangeUPP), this->windowCursorChangeUPP = nullptr;
+	
+	// disable window move completion callback
+	RemoveEventHandler(this->windowDragCompletedHandler), this->windowDragCompletedHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowDragCompletedUPP), this->windowDragCompletedUPP = nullptr;
+	
+	// disable window full-screen callback
+	RemoveEventHandler(this->windowFullScreenHandler), this->windowFullScreenHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowFullScreenUPP), this->windowFullScreenUPP = nullptr;
+	
+	// disable window resize callback
+	RemoveEventHandler(this->windowResizeEmbellishHandler), this->windowResizeEmbellishHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowResizeEmbellishUPP), this->windowResizeEmbellishUPP = nullptr;
+	
+	// disable size box click callback
+	RemoveEventHandler(this->growBoxClickHandler), this->growBoxClickHandler = nullptr;
+	DisposeEventHandlerUPP(this->growBoxClickUPP), this->growBoxClickUPP = nullptr;
+	
+	// disable toolbar callback
+	RemoveEventHandler(this->toolbarEventHandler), this->toolbarEventHandler = nullptr;
+	DisposeEventHandlerUPP(this->toolbarEventUPP), this->toolbarEventUPP = nullptr;
+	
+	// disable scroll bar callback
+	DisposeControlActionUPP(this->scrollProcUPP), this->scrollProcUPP = nullptr;
+}// My_TerminalWindowCarbonState destructor
+
+
+/*!
+Constructor.  See TerminalWindow_New().
+
+(2018.02)
+*/
+void
+My_TerminalWindowCarbonState::
+initialize	(TerminalWindowRef		inEventuallyValidWindowRef,
+			 HIWindowRef			inWindow)
+{
+	// create controls
+	{
+		HIViewWrap	contentView(kHIViewWindowContentID, inWindow);
+		Rect		rect;
+		OSStatus	error = noErr;
+		
+		
+		assert(contentView.exists());
+		
+		// create routine to handle scroll activity
+		this->scrollProcUPP = NewControlActionUPP(scrollProc); // this is disposed via TerminalWindow_Dispose()
+		
+		// create a vertical scroll bar; the resize event handler initializes its size correctly
+		bzero(&rect, sizeof(rect));
+		error = CreateScrollBarControl(inWindow, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
+										true/* live tracking */, this->scrollProcUPP, &this->scrollBarV);
+		assert_noerr(error);
+		error = SetControlProperty(this->scrollBarV, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
+									sizeof(inEventuallyValidWindowRef), &inEventuallyValidWindowRef); // used in scrollProc
+		assert_noerr(error);
+		error = HIViewAddSubview(contentView, this->scrollBarV);
+		assert_noerr(error);
+		
+		// create a horizontal scroll bar; the resize event handler initializes its size correctly
+		bzero(&rect, sizeof(rect));
+		error = CreateScrollBarControl(inWindow, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
+										true/* live tracking */, this->scrollProcUPP, &this->scrollBarH);
+		assert_noerr(error);
+		error = SetControlProperty(this->scrollBarH, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
+									sizeof(inEventuallyValidWindowRef), &inEventuallyValidWindowRef); // used in scrollProc
+		assert_noerr(error);
+		error = HIViewAddSubview(contentView, this->scrollBarH);
+		assert_noerr(error);
+		// horizontal scrolling is not supported for now...
+		UNUSED_RETURN(OSStatus)HIViewSetVisible(this->scrollBarH, false);
+	}
+	
+	// install a callback that responds as a window is resized
+	this->windowResizeHandler.install(inWindow, handleNewSize, inEventuallyValidWindowRef/* user data */,
+										250/* arbitrary minimum width */,
+										200/* arbitrary minimum height */,
+										SHRT_MAX/* maximum width */,
+										SHRT_MAX/* maximum height */);
+	assert(this->windowResizeHandler.isInstalled());
+	
+	// install a callback that handles commands relevant to terminal windows
+	{
+		EventTypeSpec const		whenCommandExecuted[] =
+								{
+									{ kEventClassCommand, kEventCommandProcess }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->commandUPP = NewEventHandlerUPP(receiveHICommand);
+		error = InstallWindowEventHandler(inWindow, this->commandUPP, GetEventTypeCount(whenCommandExecuted),
+											whenCommandExecuted, inEventuallyValidWindowRef/* user data */,
+											&this->commandHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	// install a callback that attempts to fix tab locations after a window is moved far enough below the menu bar
+	{
+		EventTypeSpec const		whenWindowDragCompleted[] =
+								{
+									{ kEventClassWindow, kEventWindowDragCompleted }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->windowDragCompletedUPP = NewEventHandlerUPP(receiveWindowDragCompleted);
+		error = InstallWindowEventHandler(inWindow, this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
+											whenWindowDragCompleted, inEventuallyValidWindowRef/* user data */,
+											&this->windowDragCompletedHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	// install a callback that changes the mouse cursor appropriately
+	{
+		EventTypeSpec const		whenCursorChangeRequired[] =
+								{
+									{ kEventClassWindow, kEventWindowCursorChange },
+									{ kEventClassKeyboard, kEventRawKeyModifiersChanged }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->windowCursorChangeUPP = NewEventHandlerUPP(receiveWindowCursorChange);
+		error = InstallWindowEventHandler(inWindow, this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
+											whenCursorChangeRequired, inEventuallyValidWindowRef/* user data */,
+											&this->windowCursorChangeHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	// install a callback that responds to full-screen events for a terminal window
+	{
+		EventTypeSpec const		whenWindowFullScreenChanges[] =
+								{
+									{ kEventClassWindow, FUTURE_SYMBOL(241, kEventWindowFullScreenEnterStarted) },
+									{ kEventClassWindow, FUTURE_SYMBOL(242, kEventWindowFullScreenEnterCompleted) },
+									{ kEventClassWindow, FUTURE_SYMBOL(243, kEventWindowFullScreenExitStarted) },
+									{ kEventClassWindow, FUTURE_SYMBOL(244, kEventWindowFullScreenExitCompleted) }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->windowFullScreenUPP = NewEventHandlerUPP(receiveWindowFullScreenChange);
+		error = InstallWindowEventHandler(inWindow, this->windowFullScreenUPP, GetEventTypeCount(whenWindowFullScreenChanges),
+											whenWindowFullScreenChanges, inEventuallyValidWindowRef/* user data */,
+											&this->windowFullScreenHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	// install a callback that uses the title bar to display terminal dimensions during resize
+	{
+		EventTypeSpec const		whenWindowResizeStartsContinuesOrStops[] =
+								{
+									{ kEventClassWindow, kEventWindowResizeStarted },
+									{ kEventClassWindow, kEventWindowBoundsChanging },
+									{ kEventClassWindow, kEventWindowResizeCompleted }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->windowResizeEmbellishUPP = NewEventHandlerUPP(receiveWindowResize);
+		error = InstallWindowEventHandler(inWindow, this->windowResizeEmbellishUPP, GetEventTypeCount(whenWindowResizeStartsContinuesOrStops),
+											whenWindowResizeStartsContinuesOrStops, inEventuallyValidWindowRef/* user data */,
+											&this->windowResizeEmbellishHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	// create toolbar icons
+	if (noErr == HIToolbarCreate(kConstantsRegistry_HIToolbarIDTerminal,
+									kHIToolbarAutoSavesConfig | kHIToolbarIsConfigurable, &this->toolbar))
+	{
+		// IMPORTANT: Do not invoke toolbar manipulation APIs at this stage,
+		// until the event handlers below are installed.  A saved toolbar may
+		// contain references to items that only the handlers below can create;
+		// manipulation APIs often trigger creation of the entire toolbar, so
+		// that means some saved items would fail to be inserted properly.
+		
+		// install a callback that can create any items needed for this
+		// toolbar (used in the toolbar and in the customization sheet, etc.);
+		// and, a callback that specifies which items are in the toolbar by
+		// default, and which items are available in the customization sheet
+		{
+			EventTypeSpec const		whenToolbarEventOccurs[] =
+									{
+										{ kEventClassToolbar, kEventToolbarCreateItemWithIdentifier },
+										{ kEventClassToolbar, kEventToolbarGetAllowedIdentifiers },
+										{ kEventClassToolbar, kEventToolbarGetDefaultIdentifiers },
+										{ kEventClassToolbar, kEventToolbarItemRemoved }
+									};
+			OSStatus				error = noErr;
+			
+			
+			this->toolbarEventUPP = NewEventHandlerUPP(receiveToolbarEvent);
+			error = InstallEventHandler(HIObjectGetEventTarget(this->toolbar), this->toolbarEventUPP,
+										GetEventTypeCount(whenToolbarEventOccurs), whenToolbarEventOccurs,
+										inEventuallyValidWindowRef/* user data */,
+										&this->toolbarEventHandler/* event handler reference */);
+			assert_noerr(error);
+		}
+		
+		// Check preferences for a stored toolbar; if one exists, leave the
+		// toolbar display mode and size untouched, as the user will have
+		// specified one; otherwise, initialize it to the desired look.
+		//
+		// IMPORTANT: This is a bit of a hack, as it relies on the key name
+		// that Mac OS X happens to use for toolbar preferences as of 10.4.
+		// If that ever changes, this code will be pointless.
+		CFPropertyListRef	toolbarConfigPref = CFPreferencesCopyAppValue
+												(CFSTR("HIToolbar Config com.mactelnet.toolbar.terminal"),
+													kCFPreferencesCurrentApplication);
+		Boolean				usingSavedToolbar = false;
+		if (nullptr != toolbarConfigPref)
+		{
+			usingSavedToolbar = true;
+			CFRelease(toolbarConfigPref), toolbarConfigPref = nullptr;
+		}
+		unless (usingSavedToolbar)
+		{
+			UNUSED_RETURN(OSStatus)HIToolbarSetDisplayMode(this->toolbar, kHIToolbarDisplayModeIconAndLabel);
+			UNUSED_RETURN(OSStatus)HIToolbarSetDisplaySize(this->toolbar, kHIToolbarDisplaySizeSmall);
+		}
+		
+		// the toolbar is NOT used yet and NOT released yet, until it is installed (below)
+	}
+	
+	// put the toolbar in the window
+	{
+		OSStatus	error = noErr;
+		Boolean		headersCollapsed = false;
+		
+		
+		error = SetWindowToolbar(inWindow, this->toolbar);
+		assert_noerr(error);
+		
+		// also show the toolbar, unless the user preference to collapse is set
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
+									&headersCollapsed))
+		{
+			headersCollapsed = false; // assume headers aren’t collapsed, if preference can’t be found
+		}
+		unless (headersCollapsed)
+		{
+			error = ShowHideWindowToolbar(inWindow, true/* show */, false/* animate */);
+			assert_noerr(error);
+		}
+	}
+	CFRelease(this->toolbar); // once set in the window, the toolbar is retained, so release the creation lock
+	
+	// enable drag tracking so that certain default toolbar behaviors work
+	UNUSED_RETURN(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(inWindow, true/* enabled */);
+}// My_TerminalWindowCarbonState::initialize 
+
+
+/*!
+Constructor.  See TerminalWindow_New().
+
 (3.0)
 */
 My_TerminalWindow::
@@ -2495,43 +2913,7 @@ allScreens(),
 allViews(),
 installedActions(),
 // Carbon-specific (will remove):
-tab(),
-tabContextualMenuHandlerPtr(nullptr),
-tabDragHandlerPtr(nullptr),
-tabAndWindowGroup(nullptr),
-scrollBarH(nullptr),
-scrollBarV(nullptr),
-toolbar(nullptr),
-toolbarItemBell(),
-toolbarItemKillRestart(),
-toolbarItemLED1(),
-toolbarItemLED2(),
-toolbarItemLED3(),
-toolbarItemLED4(),
-toolbarItemScrollLock(),
-scrollProcUPP(nullptr), // reset below
-windowResizeHandler(),
-tabDrawerWindowResizeHandler(),
-mouseWheelHandler(GetApplicationEventTarget(), receiveMouseWheelEvent,
-					CarbonEventSetInClass(CarbonEventClass(kEventClassMouse), kEventMouseWheelMoved),
-					this->selfRef/* user data */),
-scrollTickHandler(), // see createViews()
-commandUPP(nullptr),
-commandHandler(nullptr),
-windowClickActivationUPP(nullptr),
-windowClickActivationHandler(nullptr),
-windowCursorChangeUPP(nullptr),
-windowCursorChangeHandler(nullptr),
-windowDragCompletedUPP(nullptr),
-windowDragCompletedHandler(nullptr),
-windowFullScreenUPP(nullptr),
-windowFullScreenHandler(nullptr),
-windowResizeEmbellishUPP(nullptr),
-windowResizeEmbellishHandler(nullptr),
-growBoxClickUPP(nullptr),
-growBoxClickHandler(nullptr),
-toolbarEventUPP(nullptr),
-toolbarEventHandler(nullptr)
+carbonData(new My_TerminalWindowCarbonState())
 {
 @autoreleasepool {
 	TerminalScreenRef		newScreen = nullptr;
@@ -2595,23 +2977,24 @@ toolbarEventHandler(nullptr)
 		}
 	}
 	
-	// set up Window Info; it is important to do this right away
-	// because this is relied upon by other code to find the
-	// terminal window data attached to the Mac OS window
-	assert(this->window != nil);
-	gCarbonTerminalWindowRefsByNSWindow()[this->window] = this->selfRef;
-	gTerminalWindowRefsByHIWindowRef()[returnCarbonWindow(this)] = this->selfRef;
-	
-	// set up the Help System
-	HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseTerminals);
-	
-	// install a callback that responds as a window is resized
-	this->windowResizeHandler.install(returnCarbonWindow(this), handleNewSize, this->selfRef/* user data */,
-										250/* arbitrary minimum width */,
-										200/* arbitrary minimum height */,
-										SHRT_MAX/* maximum width */,
-										SHRT_MAX/* maximum height */);
-	assert(this->windowResizeHandler.isInstalled());
+	// further Carbon-specific setup
+	if (nullptr != carbonData)
+	{
+		HIWindowRef		carbonWindow = returnCarbonWindow(this);
+		
+		
+		carbonData->initialize(this->selfRef, carbonWindow);
+		
+		// set up Window Info; it is important to do this right away
+		// because this is relied upon by other code to find the
+		// terminal window data attached to the Mac OS window
+		assert(this->window != nil);
+		gCarbonTerminalWindowRefsByNSWindow()[this->window] = this->selfRef;
+		gTerminalWindowRefsByHIWindowRef()[carbonWindow] = this->selfRef;
+		
+		// set up the Help System
+		HelpSystem_SetWindowKeyPhrase(carbonWindow, kHelpSystem_KeyPhraseTerminals);
+	}
 	
 	// create controls
 	{
@@ -2619,10 +3002,21 @@ toolbarEventHandler(nullptr)
 		
 		
 		terminalError = Terminal_NewScreen(inTerminalInfoOrNull, inTranslationInfoOrNull, &newScreen);
-		if (terminalError == kTerminal_ResultOK)
+		if (terminalError != kTerminal_ResultOK)
+		{
+			newScreen = nullptr;
+		}
+	}
+	if (nullptr != newScreen)
+	{
+		if (this->isCocoa())
+		{
+			Console_Warning(Console_WriteLine, "TerminalViewRef creation not implemented for Cocoa window");
+		}
+		else
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);
-			if (newView != nullptr)
+			if (nullptr != newView)
 			{
 				HIViewWrap		contentView(kHIViewWindowContentID, returnCarbonWindow(this));
 				HIViewRef		terminalHIView = TerminalView_ReturnContainerHIView(newView);
@@ -2635,86 +3029,26 @@ toolbarEventHandler(nullptr)
 				
 				error = HIViewSetVisible(terminalHIView, true);
 				assert_noerr(error);
-				
-				// remember the initial screen-to-view and view-to-screen mapping;
-				// later, additional views or screens may be added
-				this->screensToViews.insert(std::pair< TerminalScreenRef, TerminalViewRef >(newScreen, newView));
-				this->viewsToScreens.insert(std::pair< TerminalViewRef, TerminalScreenRef >(newView, newScreen));
-				this->allScreens.push_back(newScreen);
-				this->allViews.push_back(newView);
-				assert(this->screensToViews.find(newScreen) != this->screensToViews.end());
-				assert(this->viewsToScreens.find(newView) != this->viewsToScreens.end());
-				assert(!this->allScreens.empty());
-				assert(this->allScreens.back() == newScreen);
-				assert(!this->allViews.empty());
-				assert(this->allViews.back() == newView);
 			}
 		}
-	}
-	createViews(this);
-	
-	// create toolbar icons
-	if (noErr == HIToolbarCreate(kConstantsRegistry_HIToolbarIDTerminal,
-									kHIToolbarAutoSavesConfig | kHIToolbarIsConfigurable, &this->toolbar))
-	{
-		// IMPORTANT: Do not invoke toolbar manipulation APIs at this stage,
-		// until the event handlers below are installed.  A saved toolbar may
-		// contain references to items that only the handlers below can create;
-		// manipulation APIs often trigger creation of the entire toolbar, so
-		// that means some saved items would fail to be inserted properly.
 		
-		// install a callback that can create any items needed for this
-		// toolbar (used in the toolbar and in the customization sheet, etc.);
-		// and, a callback that specifies which items are in the toolbar by
-		// default, and which items are available in the customization sheet
-		{
-			EventTypeSpec const		whenToolbarEventOccurs[] =
-									{
-										{ kEventClassToolbar, kEventToolbarCreateItemWithIdentifier },
-										{ kEventClassToolbar, kEventToolbarGetAllowedIdentifiers },
-										{ kEventClassToolbar, kEventToolbarGetDefaultIdentifiers },
-										{ kEventClassToolbar, kEventToolbarItemRemoved }
-									};
-			OSStatus				error = noErr;
-			
-			
-			this->toolbarEventUPP = NewEventHandlerUPP(receiveToolbarEvent);
-			error = InstallEventHandler(HIObjectGetEventTarget(this->toolbar), this->toolbarEventUPP,
-										GetEventTypeCount(whenToolbarEventOccurs), whenToolbarEventOccurs,
-										this->selfRef/* user data */,
-										&this->toolbarEventHandler/* event handler reference */);
-			assert_noerr(error);
-		}
-		
-		// Check preferences for a stored toolbar; if one exists, leave the
-		// toolbar display mode and size untouched, as the user will have
-		// specified one; otherwise, initialize it to the desired look.
-		//
-		// IMPORTANT: This is a bit of a hack, as it relies on the key name
-		// that Mac OS X happens to use for toolbar preferences as of 10.4.
-		// If that ever changes, this code will be pointless.
-		CFPropertyListRef	toolbarConfigPref = CFPreferencesCopyAppValue
-												(CFSTR("HIToolbar Config com.mactelnet.toolbar.terminal"),
-													kCFPreferencesCurrentApplication);
-		Boolean				usingSavedToolbar = false;
-		if (nullptr != toolbarConfigPref)
-		{
-			usingSavedToolbar = true;
-			CFRelease(toolbarConfigPref), toolbarConfigPref = nullptr;
-		}
-		unless (usingSavedToolbar)
-		{
-			UNUSED_RETURN(OSStatus)HIToolbarSetDisplayMode(this->toolbar, kHIToolbarDisplayModeIconAndLabel);
-			UNUSED_RETURN(OSStatus)HIToolbarSetDisplaySize(this->toolbar, kHIToolbarDisplaySizeSmall);
-		}
-		
-		// the toolbar is NOT used yet and NOT released yet, until it is installed (below)
+		// remember the initial screen-to-view and view-to-screen mapping;
+		// later, additional views or screens may be added
+		this->screensToViews.insert(std::pair< TerminalScreenRef, TerminalViewRef >(newScreen, newView));
+		this->viewsToScreens.insert(std::pair< TerminalViewRef, TerminalScreenRef >(newView, newScreen));
+		this->allScreens.push_back(newScreen);
+		this->allViews.push_back(newView);
+		assert(this->screensToViews.find(newScreen) != this->screensToViews.end());
+		assert(this->viewsToScreens.find(newView) != this->viewsToScreens.end());
+		assert(!this->allScreens.empty());
+		assert(this->allScreens.back() == newScreen);
+		assert(!this->allViews.empty());
+		assert(this->allViews.back() == newView);
 	}
 	
 	// set the standard state to be large enough for the specified number of columns and rows;
 	// and, use the standard size, initially; then, perform a maximize/restore to correct the
 	// initial-zoom quirk that would otherwise occur
-	assert(nullptr != newScreen);
 	if (nullptr != newScreen)
 	{
 		TerminalView_PixelWidth		screenWidth;
@@ -2732,37 +3066,44 @@ toolbarEventHandler(nullptr)
 	// window location will be overridden by the workspace configuration)
 	unless (inNoStagger)
 	{
-		HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
-		HIRect			structureBounds;
-		UInt16			staggerListIndex = 0;
-		UInt16			localWindowIndex = 0;
-		OSStatus		error = noErr;
-		
-		
-		error = HIWindowGetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
-									&structureBounds);
-		assert_noerr(error);
-		calculateWindowPosition(this, &staggerListIndex, &localWindowIndex, &structureBounds);
-		
-		// if the frontmost window already occupies the location for
-		// the new window, offset it slightly
-		if (nullptr != frontWindow)
+		if (this->isCocoa())
 		{
-			HIRect		frontStructureBounds;
-			
-			
-			if ((noErr == HIWindowGetBounds(frontWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
-											&frontStructureBounds)) &&
-				CGPointEqualToPoint(frontStructureBounds.origin, structureBounds.origin))
-			{
-				structureBounds.origin.x += 20; // per Aqua Human Interface Guidelines
-				structureBounds.origin.y += 20; // per Aqua Human Interface Guidelines
-			}
+			Console_Warning(Console_WriteLine, "initial stacking not implemented for Cocoa window");
 		}
-		
-		error = HIWindowSetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
-									&structureBounds);
-		assert_noerr(error);
+		else
+		{
+			HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
+			HIRect			structureBounds;
+			UInt16			staggerListIndex = 0;
+			UInt16			localWindowIndex = 0;
+			OSStatus		error = noErr;
+			
+			
+			error = HIWindowGetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
+										&structureBounds);
+			assert_noerr(error);
+			calculateWindowPosition(this, &staggerListIndex, &localWindowIndex, &structureBounds);
+			
+			// if the frontmost window already occupies the location for
+			// the new window, offset it slightly
+			if (nullptr != frontWindow)
+			{
+				HIRect		frontStructureBounds;
+				
+				
+				if ((noErr == HIWindowGetBounds(frontWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
+												&frontStructureBounds)) &&
+					CGPointEqualToPoint(frontStructureBounds.origin, structureBounds.origin))
+				{
+					structureBounds.origin.x += 20; // per Aqua Human Interface Guidelines
+					structureBounds.origin.y += 20; // per Aqua Human Interface Guidelines
+				}
+			}
+			
+			error = HIWindowSetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
+										&structureBounds);
+			assert_noerr(error);
+		}
 	}
 	
 	// set up callbacks to receive various state change notifications
@@ -2786,119 +3127,6 @@ toolbarEventHandler(nullptr)
 													(terminalViewStateChanged, this->selfRef/* context */));
 	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener.returnRef());
 	TerminalView_StartMonitoring(newView, kTerminalView_EventSearchResultsExistence, this->terminalViewEventListener.returnRef());
-	
-	// install a callback that handles commands relevant to terminal windows
-	{
-		EventTypeSpec const		whenCommandExecuted[] =
-								{
-									{ kEventClassCommand, kEventCommandProcess }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->commandUPP = NewEventHandlerUPP(receiveHICommand);
-		error = InstallWindowEventHandler(returnCarbonWindow(this), this->commandUPP, GetEventTypeCount(whenCommandExecuted),
-											whenCommandExecuted, this->selfRef/* user data */,
-											&this->commandHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that attempts to fix tab locations after a window is moved far enough below the menu bar
-	{
-		EventTypeSpec const		whenWindowDragCompleted[] =
-								{
-									{ kEventClassWindow, kEventWindowDragCompleted }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowDragCompletedUPP = NewEventHandlerUPP(receiveWindowDragCompleted);
-		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
-											whenWindowDragCompleted, this->selfRef/* user data */,
-											&this->windowDragCompletedHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that changes the mouse cursor appropriately
-	{
-		EventTypeSpec const		whenCursorChangeRequired[] =
-								{
-									{ kEventClassWindow, kEventWindowCursorChange },
-									{ kEventClassKeyboard, kEventRawKeyModifiersChanged }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowCursorChangeUPP = NewEventHandlerUPP(receiveWindowCursorChange);
-		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
-											whenCursorChangeRequired, this->selfRef/* user data */,
-											&this->windowCursorChangeHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that responds to full-screen events for a terminal window
-	{
-		EventTypeSpec const		whenWindowFullScreenChanges[] =
-								{
-									{ kEventClassWindow, FUTURE_SYMBOL(241, kEventWindowFullScreenEnterStarted) },
-									{ kEventClassWindow, FUTURE_SYMBOL(242, kEventWindowFullScreenEnterCompleted) },
-									{ kEventClassWindow, FUTURE_SYMBOL(243, kEventWindowFullScreenExitStarted) },
-									{ kEventClassWindow, FUTURE_SYMBOL(244, kEventWindowFullScreenExitCompleted) }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowFullScreenUPP = NewEventHandlerUPP(receiveWindowFullScreenChange);
-		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowFullScreenUPP, GetEventTypeCount(whenWindowFullScreenChanges),
-											whenWindowFullScreenChanges, this->selfRef/* user data */,
-											&this->windowFullScreenHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that uses the title bar to display terminal dimensions during resize
-	{
-		EventTypeSpec const		whenWindowResizeStartsContinuesOrStops[] =
-								{
-									{ kEventClassWindow, kEventWindowResizeStarted },
-									{ kEventClassWindow, kEventWindowBoundsChanging },
-									{ kEventClassWindow, kEventWindowResizeCompleted }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowResizeEmbellishUPP = NewEventHandlerUPP(receiveWindowResize);
-		error = InstallWindowEventHandler(returnCarbonWindow(this), this->windowResizeEmbellishUPP, GetEventTypeCount(whenWindowResizeStartsContinuesOrStops),
-											whenWindowResizeStartsContinuesOrStops, this->selfRef/* user data */,
-											&this->windowResizeEmbellishHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// put the toolbar in the window
-	{
-		OSStatus	error = noErr;
-		Boolean		headersCollapsed = false;
-		
-		
-		error = SetWindowToolbar(returnCarbonWindow(this), this->toolbar);
-		assert_noerr(error);
-		
-		// also show the toolbar, unless the user preference to collapse is set
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
-									&headersCollapsed))
-		{
-			headersCollapsed = false; // assume headers aren’t collapsed, if preference can’t be found
-		}
-		unless (headersCollapsed)
-		{
-			error = ShowHideWindowToolbar(returnCarbonWindow(this), true/* show */, false/* animate */);
-			assert_noerr(error);
-		}
-	}
-	CFRelease(this->toolbar); // once set in the window, the toolbar is retained, so release the creation lock
-	
-	// enable drag tracking so that certain default toolbar behaviors work
-	UNUSED_RETURN(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(returnCarbonWindow(this), true/* enabled */);
 	
 	// finish by applying any desired attributes to the screen
 	{
@@ -2947,52 +3175,17 @@ My_TerminalWindow::
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
 	TerminalWindow_SetObscured(this->selfRef, false);
 	
-	// remove any tab contextual menu handler
-	if (nullptr != tabContextualMenuHandlerPtr) delete tabContextualMenuHandlerPtr, tabContextualMenuHandlerPtr = nullptr;
-	
-	// remove any tab drag handler
-	if (nullptr != tabDragHandlerPtr) delete tabDragHandlerPtr, tabDragHandlerPtr = nullptr;
-	
-	// disable window command callback
-	RemoveEventHandler(this->commandHandler), this->commandHandler = nullptr;
-	DisposeEventHandlerUPP(this->commandUPP), this->commandUPP = nullptr;
-	
-	// disable window click activation callback
-	RemoveEventHandler(this->windowClickActivationHandler), this->windowClickActivationHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowClickActivationUPP), this->windowClickActivationUPP = nullptr;
-	
-	// disable window cursor change callback
-	RemoveEventHandler(this->windowCursorChangeHandler), this->windowCursorChangeHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowCursorChangeUPP), this->windowCursorChangeUPP = nullptr;
-	
-	// disable window move completion callback
-	RemoveEventHandler(this->windowDragCompletedHandler), this->windowDragCompletedHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowDragCompletedUPP), this->windowDragCompletedUPP = nullptr;
-	
-	// disable window full-screen callback
-	RemoveEventHandler(this->windowFullScreenHandler), this->windowFullScreenHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowFullScreenUPP), this->windowFullScreenUPP = nullptr;
-	
-	// disable window resize callback
-	RemoveEventHandler(this->windowResizeEmbellishHandler), this->windowResizeEmbellishHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowResizeEmbellishUPP), this->windowResizeEmbellishUPP = nullptr;
-	
-	// disable size box click callback
-	RemoveEventHandler(this->growBoxClickHandler), this->growBoxClickHandler = nullptr;
-	DisposeEventHandlerUPP(this->growBoxClickUPP), this->growBoxClickUPP = nullptr;
-	
-	// disable toolbar callback
-	RemoveEventHandler(this->toolbarEventHandler), this->toolbarEventHandler = nullptr;
-	DisposeEventHandlerUPP(this->toolbarEventUPP), this->toolbarEventUPP = nullptr;
-	
 	// hide window
 	if (nil != this->window)
 	{
 		Boolean		noAnimations = false;
 		
 		
-		gTerminalWindowRefsByHIWindowRef().erase(returnCarbonWindow(this));
-		gCarbonTerminalWindowRefsByNSWindow().erase(this->window);
+		if (false == this->isCocoa())
+		{
+			gTerminalWindowRefsByHIWindowRef().erase(returnCarbonWindow(this));
+			gCarbonTerminalWindowRefsByNSWindow().erase(this->window);
+		}
 		
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
@@ -3017,11 +3210,11 @@ My_TerminalWindow::
 		}
 		
 		// kill controls to disable callbacks
-		KillControls(returnCarbonWindow(this));
+		if (false == this->isCocoa())
+		{
+			KillControls(returnCarbonWindow(this));
+		}
 	}
-	
-	// perform other clean-up
-	DisposeControlActionUPP(this->scrollProcUPP), this->scrollProcUPP = nullptr;
 	
 	// unregister session callbacks
 	SessionFactory_StopMonitoringSessions(kSession_ChangeSelected, this->sessionStateChangeEventListener.returnRef());
@@ -3059,13 +3252,12 @@ My_TerminalWindow::
 	// finally, dispose of the window
 	if (nil != this->window)
 	{
-		HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseDefault); // clean up
-		DisposeWindow(returnCarbonWindow(this));
+		if (false == this->isCocoa())
+		{
+			HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseDefault); // clean up
+			DisposeWindow(returnCarbonWindow(this));
+		}
 		[this->window close], this->window = nil;
-	}
-	if (nullptr == this->tabAndWindowGroup)
-	{
-		ReleaseWindowGroup(this->tabAndWindowGroup), this->tabAndWindowGroup = nullptr;
 	}
 	
 	// destroy all buffers (NOTE: perhaps this should be revisited, as
@@ -3076,8 +3268,26 @@ My_TerminalWindow::
 	{
 		Terminal_ReleaseScreen(&screenRef);
 	}
+	
+	delete carbonData;
 }// @autoreleasepool
 }// My_TerminalWindow destructor
+
+
+/*!
+Returns true only if this structure was initialized as a
+modern (Cocoa and Core Graphics) user interface instead of
+a legacy (Carbon and QuickDraw) interface.
+
+(2018.02)
+*/
+bool
+My_TerminalWindow::
+isCocoa ()
+const
+{
+	return (nullptr == this->carbonData);
+}// My_TerminalWindow::isCocoa
 
 
 /*!
@@ -3134,6 +3344,18 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 		stagger = CGPointMake(20, 20);
 		
 		// convert to floating-point rectangle
+		if (inPtr->isCocoa())
+		{
+			NSScreen*	windowScreen = [inPtr->window screen];
+			
+			
+			if (nil == windowScreen)
+			{
+				windowScreen = [NSScreen mainScreen];
+			}
+			screenRect = NSRectToCGRect([windowScreen visibleFrame]);
+		}
+		else
 		{
 			Rect	integerRect;
 			
@@ -3191,14 +3413,19 @@ calculateWindowPosition		(My_TerminalWindowPtr	inPtr,
 	HIRect const	kStructureRegionBounds = *inoutArrangement;
 	Float32 const	kStructureWidth = kStructureRegionBounds.size.width;
 	Float32 const	kStructureHeight = kStructureRegionBounds.size.height;
-	Rect			screenRect;
+	NSScreen*		windowScreen = [inPtr->window screen];
+	CGRect			screenRect;
 	HIPoint			structureTopLeftScrap = CGPointMake(0, 0);
 	Boolean			doneCalculation = false;
 	Boolean			tooFarRight = false;
 	Boolean			tooFarDown = false;
 	
 	
-	RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &screenRect);
+	if (nil == windowScreen)
+	{
+		windowScreen = [NSScreen mainScreen];
+	}
+	screenRect = NSRectToCGRect([windowScreen visibleFrame]);
 	
 	while ((false == doneCalculation) && (false == tooFarRight))
 	{
@@ -3211,8 +3438,8 @@ calculateWindowPosition		(My_TerminalWindowPtr	inPtr,
 		
 		// see if the window position would start to nudge it off
 		// the bottom or right edge of its display
-		tooFarRight = ((inoutArrangement->origin.x + inoutArrangement->size.width) > screenRect.right);
-		tooFarDown = ((inoutArrangement->origin.y + inoutArrangement->size.height) > screenRect.bottom);
+		tooFarRight = ((inoutArrangement->origin.x + inoutArrangement->size.width) > (screenRect.origin.x + screenRect.size.width));
+		tooFarDown = ((inoutArrangement->origin.y + inoutArrangement->size.height) > (screenRect.origin.y + screenRect.size.height));
 		
 		if (tooFarDown)
 		{
@@ -3644,6 +3871,8 @@ Also installs a resize handler to ensure the drawer is
 no bigger than its default size (otherwise, the Toolbox
 will make it as wide as the window).
 
+Carbon only.
+
 (3.1)
 */
 Boolean
@@ -3667,12 +3896,12 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 		// these are also only initial values, they are updated later if anything resizes
 		error = GetWindowBounds(tabWindow, kWindowContentRgn, &currentBounds);
 		assert_noerr(error);
-		inPtr->tabDrawerWindowResizeHandler.install(tabWindow, handleNewDrawerWindowSize, inPtr->selfRef/* user data */,
-													currentBounds.right - currentBounds.left/* minimum width */,
-													currentBounds.bottom - currentBounds.top/* minimum height */,
-													currentBounds.right - currentBounds.left/* maximum width */,
-													currentBounds.bottom - currentBounds.top/* maximum height */);
-		assert(inPtr->tabDrawerWindowResizeHandler.isInstalled());
+		inPtr->carbonData->tabDrawerWindowResizeHandler.install(tabWindow, handleNewDrawerWindowSize, inPtr->selfRef/* user data */,
+																currentBounds.right - currentBounds.left/* minimum width */,
+																currentBounds.bottom - currentBounds.top/* minimum height */,
+																currentBounds.right - currentBounds.left/* maximum width */,
+																currentBounds.bottom - currentBounds.top/* maximum height */);
+		assert(inPtr->carbonData->tabDrawerWindowResizeHandler.isInstalled());
 		
 		// if the global default width has not yet been initialized, set it;
 		// initialize this window’s tab size field to the global default
@@ -3715,73 +3944,24 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 			
 			error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
 			assert_noerr(error);
-			inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(HIViewGetEventTarget(contentPane),
-																	receiveTabDragDrop,
-																	CarbonEventSetInClass
-																	(CarbonEventClass(kEventClassControl),
-																		kEventControlDragEnter),
-																	inPtr->selfRef/* handler data */);
-			assert(nullptr != inPtr->tabDragHandlerPtr);
-			assert(inPtr->tabDragHandlerPtr->isInstalled());
+			inPtr->carbonData->tabDragHandlerPtr = new CarbonEventHandlerWrap(HIViewGetEventTarget(contentPane),
+																				receiveTabDragDrop,
+																				CarbonEventSetInClass
+																				(CarbonEventClass(kEventClassControl),
+																					kEventControlDragEnter),
+																				inPtr->selfRef/* handler data */);
+			assert(nullptr != inPtr->carbonData->tabDragHandlerPtr);
+			assert(inPtr->carbonData->tabDragHandlerPtr->isInstalled());
 			error = SetControlDragTrackingEnabled(contentPane, true/* is drag enabled */);
 			assert_noerr(error);
 		}
 	}
 	
-	inPtr->tab.setWithRetain(tabWindow);
+	inPtr->carbonData->tab.setWithRetain(tabWindow);
 	result = (nullptr != tabWindow);
 	
 	return result;
 }// createTabWindow
-
-
-/*!
-Creates the content controls (except the terminal screen
-itself) in the specified terminal window, for which a
-Mac OS window must already exist.  The controls include
-the scroll bars and the toolbar.
-
-(3.0)
-*/
-void
-createViews		(My_TerminalWindowPtr	inPtr)
-{
-	HIViewWrap	contentView(kHIViewWindowContentID, returnCarbonWindow(inPtr));
-	Rect		rect;
-	OSStatus	error = noErr;
-	
-	
-	assert(contentView.exists());
-	
-	// create routine to handle scroll activity
-	inPtr->scrollProcUPP = NewControlActionUPP(scrollProc); // this is disposed via TerminalWindow_Dispose()
-	
-	// create a vertical scroll bar; the resize event handler initializes its size correctly
-	bzero(&rect, sizeof(rect));
-	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->scrollBarV);
-	assert_noerr(error);
-	error = SetControlProperty(inPtr->scrollBarV, AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-								sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
-	assert_noerr(error);
-	error = HIViewAddSubview(contentView, inPtr->scrollBarV);
-	assert_noerr(error);
-	
-	// create a horizontal scroll bar; the resize event handler initializes its size correctly
-	bzero(&rect, sizeof(rect));
-	error = CreateScrollBarControl(returnCarbonWindow(inPtr), &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->scrollBarH);
-	assert_noerr(error);
-	error = SetControlProperty(inPtr->scrollBarH, AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-								sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
-	assert_noerr(error);
-	error = HIViewAddSubview(contentView, inPtr->scrollBarH);
-	assert_noerr(error);
-	// horizontal scrolling is not supported for now...
-	UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->scrollBarH, false);
-}// createViews
 
 
 /*!
@@ -3866,28 +4046,6 @@ getActiveView	(My_TerminalWindowPtr	inPtr)
 	assert(!inPtr->allViews.empty());
 	return inPtr->allViews.front(); // TEMPORARY; should instead use focus-change events from terminal views
 }// getActiveView
-
-
-/*!
-Returns a constant describing the type of scroll bar that is
-given.  If the specified control does not belong to the given
-terminal window, "kMy_InvalidScrollBarKind" is returned;
-otherwise, a constant is returned indicating whether the
-control is horizontal or vertical.
-
-(3.0)
-*/
-My_ScrollBarKind
-getScrollBarKind	(My_TerminalWindowPtr	inPtr,
-					 HIViewRef				inScrollBarControl)
-{
-	My_ScrollBarKind	result = kMy_InvalidScrollBarKind;
-	
-	
-	if (inScrollBarControl == inPtr->scrollBarH) result = kMy_ScrollBarKindHorizontal;
-	if (inScrollBarControl == inPtr->scrollBarV) result = kMy_ScrollBarKindVertical;
-	return result;
-}// getScrollBarKind
 
 
 /*!
@@ -4038,6 +4196,8 @@ handleNewDrawerWindowSize	(WindowRef		inWindowRef,
 This method moves and resizes the contents of a terminal
 window in response to a resize.
 
+Carbon only.
+
 (3.0)
 */
 void
@@ -4068,7 +4228,7 @@ handleNewSize	(WindowRef	inWindow,
 		viewBounds.origin.y = -1; // frame thickness
 		viewBounds.size.width = returnScrollBarWidth(ptr);
 		viewBounds.size.height = contentBounds.size.height - returnGrowBoxHeight(ptr);
-		error = HIViewSetFrame(ptr->scrollBarV, &viewBounds);
+		error = HIViewSetFrame(ptr->carbonData->scrollBarV, &viewBounds);
 		assert_noerr(error);
 		
 		// glue the horizontal scroll bar to the new bottom edge of the window; it must
@@ -4078,7 +4238,7 @@ handleNewSize	(WindowRef	inWindow,
 		viewBounds.origin.y = contentBounds.size.height - returnScrollBarHeight(ptr);
 		viewBounds.size.width = contentBounds.size.width - returnGrowBoxWidth(ptr);
 		viewBounds.size.height = returnScrollBarHeight(ptr);
-		UNUSED_RETURN(OSStatus)HIViewSetFrame(ptr->scrollBarH, &viewBounds); // ignore error since scroll bar is unused
+		UNUSED_RETURN(OSStatus)HIViewSetFrame(ptr->carbonData->scrollBarH, &viewBounds); // ignore error since scroll bar is unused
 		
 		// change the screen sizes to match the user’s window size as well as possible,
 		// notifying listeners of the change (to trigger actions such as sending messages
@@ -4126,12 +4286,12 @@ handleNewSize	(WindowRef	inWindow,
 							
 							error = HIViewGetFrame(TerminalView_ReturnContainerHIView(viewArray[i]), &terminalScreenBounds);
 							assert_noerr(error);
-							error = HIViewGetFrame(ptr->scrollBarV, &scrollBarBounds);
+							error = HIViewGetFrame(ptr->carbonData->scrollBarV, &scrollBarBounds);
 							assert_noerr(error);
 							terminalScreenBounds.origin.x = -1/* frame thickness */;
 							terminalScreenBounds.origin.y = -1/* frame thickness */;
 							terminalScreenBounds.size.width = scrollBarBounds.origin.x - terminalScreenBounds.origin.x;
-							error = HIViewGetFrame(ptr->scrollBarH, &scrollBarBounds);
+							error = HIViewGetFrame(ptr->carbonData->scrollBarH, &scrollBarBounds);
 							assert_noerr(error);
 							terminalScreenBounds.size.height = scrollBarBounds.origin.y - terminalScreenBounds.origin.y;
 						}
@@ -4154,8 +4314,8 @@ handleNewSize	(WindowRef	inWindow,
 
 
 /*!
-Installs a handler to draw tick marks on top of the
-standard scroll bar (for showing the location of search
+Installs or removes a handler to draw tick marks on top of
+the standard scroll bar (for showing the location of search
 results).
 
 This handler is not always installed because it is only
@@ -4163,19 +4323,30 @@ needed while there are search results defined, and there
 is a cost to allowing scroll bar draws to enter the
 application’s memory space.
 
-To remove, call inPtr->scrollTickHandler.remove().
-
 (4.0)
 */
 void
-installTickHandler	(My_TerminalWindowPtr	inPtr)
+installTickHandler	(My_TerminalWindowPtr	inPtr,
+					 Boolean				inInstall)
 {
-	inPtr->scrollTickHandler.remove();
-	assert(false == inPtr->scrollTickHandler.isInstalled());
-	inPtr->scrollTickHandler.install(HIViewGetEventTarget(inPtr->scrollBarV), receiveScrollBarDraw,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
-										inPtr->selfRef/* user data */);
-	assert(inPtr->scrollTickHandler.isInstalled());
+	if (inPtr->isCocoa())
+	{
+		Console_Warning(Console_WriteLine, "scroll bar tick handler not implemented for Cocoa");
+	}
+	else
+	{
+		inPtr->carbonData->scrollTickHandler.remove();
+		assert(false == inPtr->carbonData->scrollTickHandler.isInstalled());
+		if (inInstall)
+		{
+			inPtr->carbonData->scrollTickHandler.install(HIViewGetEventTarget(inPtr->carbonData->scrollBarV), receiveScrollBarDraw,
+															CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+															inPtr->selfRef/* user data */);
+			assert(inPtr->carbonData->scrollTickHandler.isInstalled());
+		}
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarH, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarV, true);
+	}
 }// installTickHandler
 
 
@@ -4435,22 +4606,30 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandZoomMaximumSize:
 					{
 						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Rect							maxBounds;
-						TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
 						
 						
-						// zoom the window to the largest possible size; this can be
-						// done by choosing the largest possible window frame and
-						// temporarily pretending that the view should zoom its text
-						RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(ptr), &maxBounds,
-																nullptr/* previous bounds */, true/* no insets */);
-						installUndoFontSizeChanges(ptr->selfRef, false/* undo font */, true/* undo font size */);
-						TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
-						setViewSizeIndependentFromWindow(ptr, true);
-						UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(ptr), kWindowContentRgn, &maxBounds);
-						setViewSizeIndependentFromWindow(ptr, false);
-						TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
-						
+						if (ptr->isCocoa())
+						{
+							Console_Warning(Console_WriteLine, "zoom-max-size not implemented for Cocoa window");
+						}
+						else
+						{
+							Rect							maxBounds;
+							TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
+							
+							
+							// zoom the window to the largest possible size; this can be
+							// done by choosing the largest possible window frame and
+							// temporarily pretending that the view should zoom its text
+							RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(ptr), &maxBounds,
+																	nullptr/* previous bounds */, true/* no insets */);
+							installUndoFontSizeChanges(ptr->selfRef, false/* undo font */, true/* undo font size */);
+							TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
+							setViewSizeIndependentFromWindow(ptr, true);
+							UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(ptr), kWindowContentRgn, &maxBounds);
+							setViewSizeIndependentFromWindow(ptr, false);
+							TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
+						}
 						result = noErr;
 					}
 					break;
@@ -5180,7 +5359,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (allowScrolling)
 						{
 							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							HIViewRef						scrollBar = ptr->scrollBarV;
+							HIViewRef						scrollBar = ptr->carbonData->scrollBarV;
 							HIViewPartCode					hitPart = (delta > 0)
 																		? (modifiers & optionKey)
 																			? kControlPageUpPart
@@ -5597,7 +5776,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 1 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED1.setWithRetain(itemRef);
+											ptr->carbonData->toolbarItemLED1.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED1, nameCFString).ok())
@@ -5620,7 +5799,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 2 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED2.setWithRetain(itemRef);
+											ptr->carbonData->toolbarItemLED2.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED2, nameCFString).ok())
@@ -5643,7 +5822,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 3 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED3.setWithRetain(itemRef);
+											ptr->carbonData->toolbarItemLED3.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED3, nameCFString).ok())
@@ -5666,7 +5845,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										// then this is the LED 4 item; remember it so it can be updated later
 										if (isPermanentItem)
 										{
-											ptr->toolbarItemLED4.setWithRetain(itemRef);
+											ptr->carbonData->toolbarItemLED4.setWithRetain(itemRef);
 										}
 										
 										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED4, nameCFString).ok())
@@ -5705,7 +5884,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// remember this item so its icon can be kept in sync with scroll lock state
 									if (isPermanentItem)
 									{
-										ptr->toolbarItemScrollLock.setWithRetain(itemRef);
+										ptr->carbonData->toolbarItemScrollLock.setWithRetain(itemRef);
 									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
@@ -5856,7 +6035,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// remember this item so its icon can be kept in sync with the session state
 									if (isPermanentItem)
 									{
-										ptr->toolbarItemKillRestart.setWithRetain(itemRef);
+										ptr->carbonData->toolbarItemKillRestart.setWithRetain(itemRef);
 									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
@@ -5891,7 +6070,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// then this is the bell item; remember it so it can be updated later
 									if (isPermanentItem)
 									{
-										ptr->toolbarItemBell.setWithRetain(itemRef);
+										ptr->carbonData->toolbarItemBell.setWithRetain(itemRef);
 									}
 									
 									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
@@ -5947,32 +6126,32 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDScrollLock,
 																		identifierCFString, kCFCompareBackwards))
 							{
-								ptr->toolbarItemScrollLock.clear();
+								ptr->carbonData->toolbarItemScrollLock.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalBell,
 																		identifierCFString, kCFCompareBackwards))
 							{
-								ptr->toolbarItemBell.clear();
+								ptr->carbonData->toolbarItemBell.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED1,
 																		identifierCFString, kCFCompareBackwards))
 							{
-								ptr->toolbarItemLED1.clear();
+								ptr->carbonData->toolbarItemLED1.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED2,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								ptr->toolbarItemLED2.clear();
+								ptr->carbonData->toolbarItemLED2.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED3,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								ptr->toolbarItemLED3.clear();
+								ptr->carbonData->toolbarItemLED3.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED4,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								ptr->toolbarItemLED4.clear();
+								ptr->carbonData->toolbarItemLED4.clear();
 							}
 							
 							CFRelease(identifierCFString), identifierCFString = nullptr;
@@ -6094,9 +6273,9 @@ receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 			
 			
 			// check the tab location and fix if necessary
-			if (ptr->tab.exists())
+			if (ptr->carbonData->tab.exists())
 			{
-				HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+				HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
 				
 				
 				if (GetDrawerPreferredEdge(tabWindow) != GetDrawerCurrentEdge(tabWindow))
@@ -6384,7 +6563,15 @@ returnCarbonWindow		(My_TerminalWindowPtr	inPtr)
 	HIWindowRef		result = nullptr;
 	
 	
-	result = (HIWindowRef)[inPtr->window windowRef];
+	if (inPtr->isCocoa())
+	{
+		Console_Warning(Console_WriteLine, "invalid request for Carbon reference to Cocoa-based terminal");
+	}
+	else
+	{
+		result = (HIWindowRef)[inPtr->window windowRef];
+	}
+	
 	return result;
 }// @autoreleasepool
 }// returnCarbonWindow
@@ -6403,42 +6590,52 @@ scroll bar may be present or when the size box is missing
 UInt16
 returnGrowBoxHeight		(My_TerminalWindowPtr	inPtr)
 {
-	UInt16				result = 0;
-	Boolean				hasSizeBox = false;
-	WindowAttributes	attributes = kWindowNoAttributes;
-	OSStatus			error = noErr;
+	UInt16		result = 0;
 	
 	
-	error = GetWindowAttributes(returnCarbonWindow(inPtr), &attributes);
-	if (noErr != error)
+	if (inPtr->isCocoa())
 	{
-		// not sure if the window has a size box; assume it does
-		hasSizeBox = true;
+		// grow box is obsolete appearance in Cocoa windows
 	}
 	else
 	{
-		if (attributes & kWindowResizableAttribute)
-		{
-			hasSizeBox = true;
-		}
-	}
-	
-	if (hasSizeBox)
-	{
-		SInt32		data = 0;
+		Boolean				hasSizeBox = false;
+		WindowAttributes	attributes = kWindowNoAttributes;
+		OSStatus			error = noErr;
 		
 		
-		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
+		error = GetWindowAttributes(returnCarbonWindow(inPtr), &attributes);
 		if (noErr != error)
 		{
-			Console_WriteValue("unexpected error using GetThemeMetric()", error);
-			result = 16; // arbitrary
+			// not sure if the window has a size box; assume it does
+			hasSizeBox = true;
 		}
 		else
 		{
-			result = STATIC_CAST(data, UInt16);
+			if (attributes & kWindowResizableAttribute)
+			{
+				hasSizeBox = true;
+			}
+		}
+		
+		if (hasSizeBox)
+		{
+			SInt32		data = 0;
+			
+			
+			error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
+			if (noErr != error)
+			{
+				Console_WriteValue("unexpected error using GetThemeMetric()", error);
+				result = 16; // arbitrary
+			}
+			else
+			{
+				result = STATIC_CAST(data, UInt16);
+			}
 		}
 	}
+	
 	return result;
 }// returnGrowBoxHeight
 
@@ -6712,13 +6909,11 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 	{
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 		TerminalViewRef					view = nullptr;
-		My_ScrollBarKind				kind = kMy_InvalidScrollBarKind;
 		
 		
 		view = getScrollBarView(ptr, inScrollBarClicked); // 3.0
-		kind = getScrollBarKind(ptr, inScrollBarClicked); // 3.0
 		
-		if (kMy_ScrollBarKindHorizontal == kind)
+		if (inScrollBarClicked == ptr->carbonData->scrollBarH)
 		{
 			switch (inPartCode)
 			{
@@ -6739,8 +6934,8 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			
 			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->scrollBarV),
-																							GetControl32BitValue(ptr->scrollBarH));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->carbonData->scrollBarV),
+																							GetControl32BitValue(ptr->carbonData->scrollBarH));
 				break;
 			
 			default:
@@ -6748,7 +6943,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			}
 		}
-		else if (kMy_ScrollBarKindVertical == kind)
+		else if (inScrollBarClicked == ptr->carbonData->scrollBarV)
 		{
 			switch (inPartCode)
 			{
@@ -6769,7 +6964,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 				break;
 			
 			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->scrollBarV));
+				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->carbonData->scrollBarV));
 				break;
 			
 			default:
@@ -6843,10 +7038,12 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					}
 					
 					// the restart toolbar item, if visible, should have its icon and command set
-					if (ptr->toolbarItemKillRestart.exists())
+					// (needed only for Carbon, since TerminalToolbar_ItemForceQuit does its own
+					// monitoring)
+					if ((false == ptr->isCocoa()) && ptr->carbonData->toolbarItemKillRestart.exists())
 					{
 						UInt32 const		kNewCommandID = kCommandKillProcessesKeepWindow;
-						HIToolbarItemRef	itemRef = ptr->toolbarItemKillRestart.returnHIObjectRef();
+						HIToolbarItemRef	itemRef = ptr->carbonData->toolbarItemKillRestart.returnHIObjectRef();
 						CFStringRef			nameCFString = nullptr;
 						OSStatus			error = noErr;
 						
@@ -6883,10 +7080,12 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					setWarningOnWindowClose(ptr, false);
 					
 					// the restart toolbar item, if visible, should have its icon and command changed
-					if (ptr->toolbarItemKillRestart.exists())
+					// (needed only for Carbon, since TerminalToolbar_ItemForceQuit does its own
+					// monitoring)
+					if ((false == ptr->isCocoa()) && ptr->carbonData->toolbarItemKillRestart.exists())
 					{
 						UInt32 const		kNewCommandID = kCommandRestartSession;
-						HIToolbarItemRef	itemRef = ptr->toolbarItemKillRestart.returnHIObjectRef();
+						HIToolbarItemRef	itemRef = ptr->carbonData->toolbarItemKillRestart.returnHIObjectRef();
 						CFStringRef			nameCFString = nullptr;
 						OSStatus			error = noErr;
 						
@@ -7192,12 +7391,19 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 	
 	
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
-	UNUSED_RETURN(OSStatus)inPtr->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
+	
+	if (inPtr->isCocoa())
+	{
+		Console_Warning(Console_WriteLine, "set-standard-state not implemented for Cocoa window");
+	}
+	else
 	{
 		Rect		structureBounds;
 		Rect		contentBounds;
 		OSStatus	error = noErr;
 		
+		
+		UNUSED_RETURN(OSStatus)inPtr->carbonData->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
 		
 		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowStructureRgn, &structureBounds);
 		assert_noerr(error);
@@ -7312,18 +7518,25 @@ setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
 				showWindowFrame = true; // assume a value if the preference cannot be found
 			}
 			
-			if (showWindowFrame)
+			if (inPtr->isCocoa())
 			{
-				RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(inPtr), &maxBounds,
-														nullptr/* previous bounds */, true/* no insets */);
+				Console_Warning(Console_WriteLine, "old-style Full Screen not implemented for Cocoa window");
 			}
 			else
 			{
-				// entire screen is available, so use it
-				RegionUtilities_GetWindowDeviceGrayRect(returnCarbonWindow(inPtr), &maxBounds);
+				if (showWindowFrame)
+				{
+					RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(inPtr), &maxBounds,
+															nullptr/* previous bounds */, true/* no insets */);
+				}
+				else
+				{
+					// entire screen is available, so use it
+					RegionUtilities_GetWindowDeviceGrayRect(returnCarbonWindow(inPtr), &maxBounds);
+				}
+				
+				UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &maxBounds);
 			}
-			
-			UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &maxBounds);
 			
 			// finish initiation of full-screen mode
 			setUpForFullScreenModal(inPtr, true, inSwapViewMode, kMy_FullScreenStateCompleted);
@@ -7347,7 +7560,14 @@ setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
 			setUpForFullScreenModal(inPtr, false, inSwapViewMode, kMy_FullScreenStateInProgress);
 			
 			// old-style Full Screen; restore window frame
-			UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
+			if (inPtr->isCocoa())
+			{
+				Console_Warning(Console_WriteLine, "restore-frame not implemented for Cocoa window");
+			}
+			else
+			{
+				UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
+			}
 			
 			// finish return to normal mode
 			setUpForFullScreenModal(inPtr, false, inSwapViewMode, kMy_FullScreenStateCompleted);
@@ -7467,10 +7687,13 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 		// everything here should be the opposite of the off-state code below
 		if (kMy_FullScreenStateCompleted == inState)
 		{
-			// hide or disable the close box, zoom box and size box
-			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr), 0/* attributes to set */,
-															kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-															kWindowResizableAttribute/* attributes to clear */);
+			if (false == inPtr->isCocoa())
+			{
+				// hide or disable the close box, zoom box and size box
+				UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr), 0/* attributes to set */,
+																kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+																kWindowResizableAttribute/* attributes to clear */);
+			}
 			
 			if (useCustomFullScreenMode)
 			{
@@ -7483,8 +7706,15 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			if (showOffSwitch)
 			{
 				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
-				SelectWindow(returnCarbonWindow(inPtr)); // return focus to the terminal window
-				CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
+				if (inPtr->isCocoa())
+				{
+					[inPtr->window makeKeyAndOrderFront:NSApp];
+				}
+				else
+				{
+					SelectWindow(returnCarbonWindow(inPtr)); // return focus to the terminal window
+					CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
+				}
 			}
 			
 			// set flags last because the window is not in a complete
@@ -7514,7 +7744,14 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			
 			unless (showScrollBar)
 			{
-				UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->scrollBarV, false);
+				if (inPtr->isCocoa())
+				{
+					Console_Warning(Console_WriteLine, "hide-scroll-bar not implemented for Cocoa window");
+				}
+				else
+				{
+					UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->carbonData->scrollBarV, false);
+				}
 			}
 			
 			// configure the view to allow a font size change instead of
@@ -7523,7 +7760,14 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			// changes the user’s preferred behavior for the window and
 			// it must be undone when Full Screen ends)
 			TerminalWindow_GetFontAndSize(inPtr->selfRef, nullptr/* font name */, &inPtr->fullScreen.oldFontSize);
-			UNUSED_RETURN(OSStatus)GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
+			if (inPtr->isCocoa())
+			{
+				Console_Warning(Console_WriteLine, "save-window-frame not implemented for Cocoa window");
+			}
+			else
+			{
+				UNUSED_RETURN(OSStatus)GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
+			}
 			inPtr->fullScreen.oldMode = kOldMode;
 			inPtr->fullScreen.newMode = (false == inSwapViewMode)
 										? kOldMode
@@ -7545,17 +7789,20 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 		// everything here should be the opposite of the code above
 		if (kMy_FullScreenStateCompleted == inState)
 		{
-			// restore the close box, zoom box and size box
-			UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr),
-															kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-															kWindowResizableAttribute/* attributes to set */,
-															0/* attributes to clear */);
-			
-			// the scroll bar may or may not have been hidden but
-			// just show it anyway; that way, if preferences were
-			// crossed or some other condition changed, the
-			// window cannot end up with a missing scroll bar
-			UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->scrollBarV, true);
+			if (false == inPtr->isCocoa())
+			{
+				// restore the close box, zoom box and size box
+				UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr),
+																kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
+																kWindowResizableAttribute/* attributes to set */,
+																0/* attributes to clear */);
+				
+				// the scroll bar may or may not have been hidden but
+				// just show it anyway; that way, if preferences were
+				// crossed or some other condition changed, the
+				// window cannot end up with a missing scroll bar
+				UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->carbonData->scrollBarV, true);
+			}
 			
 			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
 			{
@@ -7739,7 +7986,14 @@ setWarningOnWindowClose		(My_TerminalWindowPtr	inPtr,
 		// attach or remove an adornment in the window that shows
 		// that attempting to close it will display a warning;
 		// on Mac OS X, a dot appears in the middle of the close box
-		UNUSED_RETURN(OSStatus)SetWindowModified(returnCarbonWindow(inPtr), inCloseBoxHasDot);
+		if (inPtr->isCocoa())
+		{
+			inPtr->window.documentEdited = ((inCloseBoxHasDot) ? YES : NO);
+		}
+		else
+		{
+			UNUSED_RETURN(OSStatus)SetWindowModified(returnCarbonWindow(inPtr), inCloseBoxHasDot);
+		}
 	}
 }// setWarningOnWindowClose
 
@@ -7758,29 +8012,36 @@ setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
 {
 @autoreleasepool {
 	[inPtr->window setTitle:(NSString*)inNewTitle];
-	if (inPtr->tab.exists())
+	if (inPtr->isCocoa())
 	{
-		HIViewWrap			titleWrap(idMyLabelTabTitle,
-										REINTERPRET_CAST(inPtr->tab.returnHIObjectRef(), HIWindowRef));
-		HMHelpContentRec	helpTag;
-		
-		
-		// set text
-		SetControlTextWithCFString(titleWrap, inNewTitle);
-		
-		// set help tag, to show full title on hover
-		// in case it is too long to display
-		bzero(&helpTag, sizeof(helpTag));
-		helpTag.version = kMacHelpVersion;
-		helpTag.tagSide = kHMOutsideBottomCenterAligned;
-		helpTag.content[0].contentType = kHMCFStringContent;
-		helpTag.content[0].u.tagCFString = inNewTitle;
-		helpTag.content[1].contentType = kHMCFStringContent;
-		helpTag.content[1].u.tagCFString = CFSTR("");
-		OSStatus error = noErr;
-		//(OSStatus)HMSetControlHelpContent(titleWrap, &helpTag);
-		error = HMSetControlHelpContent(titleWrap, &helpTag);
-		assert_noerr(error);
+		Console_Warning(Console_WriteLine, "set-tab-title not implemented for Cocoa window");
+	}
+	else
+	{
+		if (inPtr->carbonData->tab.exists())
+		{
+			HIViewWrap			titleWrap(idMyLabelTabTitle,
+											REINTERPRET_CAST(inPtr->carbonData->tab.returnHIObjectRef(), HIWindowRef));
+			HMHelpContentRec	helpTag;
+			
+			
+			// set text
+			SetControlTextWithCFString(titleWrap, inNewTitle);
+			
+			// set help tag, to show full title on hover
+			// in case it is too long to display
+			bzero(&helpTag, sizeof(helpTag));
+			helpTag.version = kMacHelpVersion;
+			helpTag.tagSide = kHMOutsideBottomCenterAligned;
+			helpTag.content[0].contentType = kHMCFStringContent;
+			helpTag.content[0].u.tagCFString = inNewTitle;
+			helpTag.content[1].contentType = kHMCFStringContent;
+			helpTag.content[1].u.tagCFString = CFSTR("");
+			OSStatus error = noErr;
+			//(OSStatus)HMSetControlHelpContent(titleWrap, &helpTag);
+			error = HMSetControlHelpContent(titleWrap, &helpTag);
+			assert_noerr(error);
+		}
 	}
 }// @autoreleasepool
 }// setWindowAndTabTitle
@@ -8025,19 +8286,21 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 	case kTerminal_ChangeAudioState:
 		// update the bell toolbar item based on the bell being enabled or disabled
+		// (needed only for Carbon, as TerminalToolbar_ItemBell does its own
+		// monitoring)
 		{
-			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
-			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			TerminalScreenRef				screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			TerminalWindowRef				terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
-			if (nullptr != terminalWindow)
+			if ((nullptr != screen) && (nullptr != ptr) && (false == ptr->isCocoa()))
 			{
-				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				HIToolbarItemRef				bellItem = nullptr;
-				OSStatus						error = noErr;
+				HIToolbarItemRef	bellItem = nullptr;
+				OSStatus			error = noErr;
 				
 				
-				bellItem = REINTERPRET_CAST(ptr->toolbarItemBell.returnHIObjectRef(), HIToolbarItemRef);
+				bellItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemBell.returnHIObjectRef(), HIToolbarItemRef);
 				if (nullptr != bellItem)
 				{
 					error = HIToolbarItemSetIconRef(bellItem, (Terminal_BellIsEnabled(screen)) ? gBellOffIcon() : gBellOnIcon());
@@ -8081,23 +8344,24 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case kTerminal_ChangeNewLEDState:
-		// find the new LED state(s)
+		// find the new LED state(s); needed only for Carbon (since
+		// the TerminalToolbar_LEDItem does its own monitoring)
 		{
-			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
-			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			TerminalScreenRef				screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			TerminalWindowRef				terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
 			
 			
-			if ((nullptr != screen) && (nullptr != terminalWindow))
+			if ((nullptr != screen) && (nullptr != ptr) && (false == ptr->isCocoa()))
 			{
 				// find the 4 terminal LED states; update internal state, and the toolbar
-				My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-				HIToolbarItemRef				relevantItem = nullptr;
-				UInt16							i = 0;
-				OSStatus						error = noErr;
+				HIToolbarItemRef	relevantItem = nullptr;
+				UInt16				i = 0;
+				OSStatus			error = noErr;
 				
 				
 				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->toolbarItemLED1.returnHIObjectRef(), HIToolbarItemRef);
+				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED1.returnHIObjectRef(), HIToolbarItemRef);
 				if (nullptr != relevantItem)
 				{
 					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
@@ -8106,7 +8370,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				++i;
 				
 				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->toolbarItemLED2.returnHIObjectRef(), HIToolbarItemRef);
+				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED2.returnHIObjectRef(), HIToolbarItemRef);
 				if (nullptr != relevantItem)
 				{
 					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
@@ -8115,7 +8379,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				++i;
 				
 				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->toolbarItemLED3.returnHIObjectRef(), HIToolbarItemRef);
+				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED3.returnHIObjectRef(), HIToolbarItemRef);
 				if (nullptr != relevantItem)
 				{
 					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
@@ -8124,7 +8388,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				++i;
 				
 				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->toolbarItemLED4.returnHIObjectRef(), HIToolbarItemRef);
+				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED4.returnHIObjectRef(), HIToolbarItemRef);
 				if (nullptr != relevantItem)
 				{
 					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
@@ -8192,11 +8456,14 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Terminal_CopyTitleForIcon(screen, titleCFString);
 				if (nullptr != titleCFString)
 				{
-					// TEMPORARY - Cocoa wrapper window does not seem to recognize setMiniwindowTitle:,
-					// so the Carbon call is also used in the meantime
-					UNUSED_RETURN(OSStatus)SetWindowAlternateTitle(returnCarbonWindow(ptr), titleCFString);
+					if (false == ptr->isCocoa())
+					{
+						// TEMPORARY - Cocoa wrapper window does not seem to recognize setMiniwindowTitle:,
+						// so the Carbon call is also used in the meantime
+						UNUSED_RETURN(OSStatus)SetWindowAlternateTitle(returnCarbonWindow(ptr), titleCFString);
+					}
 					
-					[ptr->window setMiniwindowTitle:(NSString*)titleCFString];
+					[ptr->window setMiniwindowTitle:BRIDGE_CAST(titleCFString, NSString*)];
 					
 					CFRelease(titleCFString), titleCFString = nullptr;
 				}
@@ -8268,8 +8535,6 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			updateScrollBars(ptr);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarH, true);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarV, true);
 		}
 		break;
 	
@@ -8280,17 +8545,7 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
 			
 			
-			if (TerminalView_SearchResultsExist(view))
-			{
-				installTickHandler(ptr);
-			}
-			else
-			{
-				ptr->scrollTickHandler.remove();
-				assert(false == ptr->scrollTickHandler.isInstalled());
-			}
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarH, true);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(ptr->scrollBarV, true);
+			installTickHandler(ptr, TerminalView_SearchResultsExist(view));
 		}
 		break;
 	
@@ -8311,7 +8566,15 @@ screen area that is currently visible in the window.
 void
 updateScrollBars	(My_TerminalWindowPtr	inPtr)
 {
-	if (false == inPtr->allViews.empty())
+	if (inPtr->allViews.empty())
+	{
+		// nothing needed
+	}
+	else if (inPtr->isCocoa())
+	{
+		Console_Warning(Console_WriteLine, "update-scroll-bars not implemented for Cocoa window");
+	}
+	else
 	{
 		// update the scroll bars to reflect the contents of the selected view
 		TerminalViewRef			view = getActiveView(inPtr);
@@ -8331,12 +8594,12 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 		// update controls’ maximum and minimum values; the vertical scroll bar
 		// is special, in that its maximum value is zero (this ensures the main
 		// area is pinned in view even if new scrollback rows show up, etc.)
-		scrollBarView = inPtr->scrollBarH;
+		scrollBarView = inPtr->carbonData->scrollBarH;
 		SetControl32BitMinimum(scrollBarView, 0);
 		SetControl32BitMaximum(scrollBarView, 0);
 		SetControl32BitValue(scrollBarView, 0);
 		SetControlViewSize(scrollBarView, 0);
-		scrollBarView = inPtr->scrollBarV;
+		scrollBarView = inPtr->carbonData->scrollBarV;
 		SetControl32BitMinimum(scrollBarView, scrollVRangeMinimum);
 		SetControl32BitMaximum(scrollBarView, scrollVRangePastMaximum - (scrollVPastEndView - scrollVStartView)/* subtract last page */);
 		SetControl32BitValue(scrollBarView, scrollVStartView);
@@ -8364,8 +8627,8 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 			SetControlViewSize(scrollBarView, proposedViewSize);
 		}
 		
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->scrollBarV, true);
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->scrollBarH, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarV, true);
+		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarH, true);
 	}
 }// updateScrollBars
 
