@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17B1003" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17D102" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -247,6 +247,24 @@
                         </buttonCell>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.logsSixelDecoderState" id="YQa-Ry-mMk"/>
+                        </connections>
+                    </button>
+                    <button wantsLayer="YES" misplaced="YES" id="XeQ-4N-PG4">
+                        <rect key="frame" x="184" y="217" width="264" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <contentFilters>
+                            <ciFilter name="CIColorInvert">
+                                <configuration>
+                                    <null key="inputImage"/>
+                                </configuration>
+                            </ciFilter>
+                        </contentFilters>
+                        <buttonCell key="cell" type="check" title="Use Cocoa Windows for New Sessions" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="jpU-f1-0XA">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="self.useCocoaTerminalWindowsForNewSessions" id="8uh-Ze-Kbx"/>
                         </connections>
                     </button>
                 </subviews>

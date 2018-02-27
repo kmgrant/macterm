@@ -69,6 +69,7 @@ Boolean		gDebugInterface_LogsSixelDecoderState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalEcho = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
+Boolean		gDebugInterface_UseCocoaTerminalWindowsForNewSessions = false;
 
 
 
@@ -496,6 +497,35 @@ setLogsTerminalState:(BOOL)		aFlag
 		gDebugInterface_LogsTerminalState = aFlag;
 	}
 }// setLogsTerminalState:
+
+
+/*!
+Accessor.
+
+(2018.02)
+*/
+- (BOOL)
+useCocoaTerminalWindowsForNewSessions
+{
+	return gDebugInterface_UseCocoaTerminalWindowsForNewSessions;
+}
+- (void)
+setUseCocoaTerminalWindowsForNewSessions:(BOOL)		aFlag
+{
+	if (aFlag != gDebugInterface_UseCocoaTerminalWindowsForNewSessions)
+	{
+		if (aFlag)
+		{
+			Console_WriteLine("started using Cocoa implementation for new session terminal windows");
+		}
+		else
+		{
+			Console_WriteLine("stopped using Cocoa implementation for new session terminal windows");
+		}
+		
+		gDebugInterface_UseCocoaTerminalWindowsForNewSessions = aFlag;
+	}
+}// setUseCocoaTerminalWindowsForNewSessions:
 
 
 #pragma mark NSWindowController

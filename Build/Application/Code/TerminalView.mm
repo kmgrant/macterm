@@ -887,11 +887,11 @@ actual NSView* hierarchy.)
 (4.0)
 */
 TerminalViewRef
-TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
-								 TerminalView_BackgroundView*	inPaddingView,
-								 TerminalView_BackgroundView*	inBackgroundView,
-								 TerminalScreenRef				inScreenDataSource,
-								 Preferences_ContextRef			inFormatOrNull)
+TerminalView_NewNSViewBased		(TerminalScreenRef				inScreenDataSource,
+								 Preferences_ContextRef			inFormatOrNull,
+								 TerminalView_ContentView*		inBaseViewOrNil,
+								 TerminalView_BackgroundView*	inPaddingViewOrNil,
+								 TerminalView_BackgroundView*	inBackgroundViewOrNil)
 {
 	TerminalViewRef		result = nullptr;
 	
@@ -901,7 +901,18 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
 	
 	try
 	{
-		My_TerminalViewPtr	viewPtr = new My_TerminalView(inBaseView, inPaddingView, inBackgroundView);
+		// the views may be constructed automatically or exist already
+		// (e.g. useful when loading a NIB that already has them)
+		TerminalView_ContentView*		contentView = ((nil != inBaseViewOrNil)
+														? inBaseViewOrNil
+														: [[[TerminalView_ContentView alloc] initWithFrame:NSZeroRect] autorelease]);
+		TerminalView_BackgroundView*	paddingView = ((nil != inPaddingViewOrNil)
+														? inPaddingViewOrNil
+														: [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease]);
+		TerminalView_BackgroundView*	backgroundView = ((nil != inBackgroundViewOrNil)
+															? inBackgroundViewOrNil
+															: [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease]);
+		My_TerminalViewPtr				viewPtr = new My_TerminalView(contentView, paddingView, backgroundView);
 		
 		
 		assert(nullptr != viewPtr);
@@ -9334,7 +9345,7 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				   Boolean&				UNUSED_ARGUMENT(outStopFlag))
 				{
 					HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
-													? TerminalWindow_ReturnWindow(inTerminalWindow)
+													? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
 													: nullptr;
 					HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
 														? TerminalWindow_ReturnTabWindow(inTerminalWindow)
@@ -15220,8 +15231,9 @@ loadView
 			}
 			else
 			{
-				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(self.terminalContentView, self.terminalPaddingView,
-																			self.terminalBackgroundView, buffer, nullptr/* format */);
+				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(buffer, nullptr/* format */,
+																			self.terminalContentView, self.terminalPaddingView,
+																			self.terminalBackgroundView);
 				
 				
 				if (nullptr == viewRef)

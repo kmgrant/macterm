@@ -197,14 +197,14 @@ changes to an interface declared in a ".mm" file.
 
 // DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
 TerminalWindowRef
-	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
+	TerminalWindow_NewCarbonLegacy					(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
 													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
 													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
 													 Boolean					inNoStagger = false);
 
-// TEMPORARY; TRANSITIONAL
+// DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
 TerminalWindowRef
-	TerminalWindow_NewCocoaViewTest					(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
+	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
 													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
 													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
 													 Boolean					inNoStagger = false);
@@ -272,6 +272,10 @@ Boolean
 Boolean
 	TerminalWindow_IsFullScreenMode					();
 
+// TEMPORARY, FOR COCOA TRANSITION
+Boolean
+	TerminalWindow_IsLegacyCarbon					(TerminalWindowRef			inRef);
+
 Boolean
 	TerminalWindow_IsObscured						(TerminalWindowRef			inRef);
 
@@ -280,6 +284,10 @@ Boolean
 													 TerminalWindow_ViewGroup	inViewGroup,
 													 Preferences_ContextRef		inContext,
 													 Quills::Prefs::Class		inPrefsClass);
+
+// TEMPORARY, FOR COCOA TRANSITION
+HIWindowRef
+	TerminalWindow_ReturnLegacyCarbonWindow			(TerminalWindowRef			inRef);
 
 NSWindow*
 	TerminalWindow_ReturnNSWindow					(TerminalWindowRef			inRef);
@@ -304,9 +312,6 @@ UInt16
 
 TerminalViewRef
 	TerminalWindow_ReturnViewWithFocus				(TerminalWindowRef			inRef);
-
-HIWindowRef
-	TerminalWindow_ReturnWindow						(TerminalWindowRef			inRef);
 
 // TEMPORARY, FOR COCOA TRANSITION
 void

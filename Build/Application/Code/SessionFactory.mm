@@ -61,6 +61,7 @@
 #import <StringUtilities.h>
 
 // application includes
+#import "DebugInterface.h"
 #import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "GenericDialog.h"
@@ -1294,7 +1295,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 		{
 			if ((enterFullScreen) && (nullptr != terminalWindow))
 			{
-				HIWindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
+				HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
 				EventTargetRef		windowTarget = GetWindowEventTarget(window);
 				
 				
@@ -1465,7 +1466,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 			
 			// display the sheet
 			dataObject.disableObservers = YES; // temporarily disable to prevent visible shift in window appearance
-			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
 																		embeddedPanel, temporaryContext),
 										GenericDialog_Wrap::kAlreadyRetained);
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
@@ -1706,7 +1707,7 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 		case kSessionFactory_ListInTabStackOrder:
 			{
 				TerminalWindowRef	terminalWindow = Session_ReturnActiveTerminalWindow(inOfWhichSession);
-				HIWindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
+				HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
 				MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
 				Boolean				foundWindow = false;
 				
@@ -1772,7 +1773,7 @@ the window from its previous workspace.
 void
 SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalWindow)
 {
-	HIWindowRef			window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
 	Workspace_Ref		newWorkspace = createWorkspace();
 	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
 	
@@ -2434,10 +2435,19 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Boolean					inNoStagger)
 {
 	TerminalWindowRef		result = nullptr;
+	Boolean					inCocoaPreferred = DebugInterface_UseCocoaTerminalWindowsForNewSessions(); // TEMPORARY
 	
 	
 	// create a new terminal window to house the session
-	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
+	if (inCocoaPreferred)
+	{
+		Console_WriteLine("forcing new terminal window to use Cocoa test implementation");
+		result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
+	}
+	else
+	{
+		result = TerminalWindow_NewCarbonLegacy(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
+	}
 	
 	if (nullptr != result)
 	{
@@ -2486,11 +2496,17 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 						 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	Preferences_Index const		kWindowIndex = STATIC_CAST(inWindowIndexInWorkspaceOrZero, Preferences_Index);
-	WindowRef					window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	HIWindowRef					legacyCarbonWindow = (TerminalWindow_IsLegacyCarbon(inTerminalWindow)
+														? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
+														: nullptr); 
+	NSWindow*					cocoaWindow = TerminalWindow_ReturnNSWindow(inTerminalWindow);
 	Boolean						result = true;
 	
 	
-	if (nullptr == window) result = false;
+	if (nil == cocoaWindow)
+	{
+		result = false;
+	}
 	else
 	{
 		TerminalWindow_Result	terminalWindowResult = kTerminalWindow_ResultOK;
@@ -2516,7 +2532,14 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 				// if the current display size disagrees, adjust the window location somehow
 				
 				// IMPORTANT: the boundaries are not guaranteed to specify the width or height
-				MoveWindowStructure(window, STATIC_CAST(frameBounds.origin.x, SInt16), STATIC_CAST(frameBounds.origin.y, SInt16));
+				if (legacyCarbonWindow)
+				{
+					MoveWindowStructure(legacyCarbonWindow, STATIC_CAST(frameBounds.origin.x, SInt16), STATIC_CAST(frameBounds.origin.y, SInt16));
+				}
+				else
+				{
+					[cocoaWindow setFrameTopLeftPoint:NSMakePoint(frameBounds.origin.x, frameBounds.origin.y)];
+				}
 			}
 		}
 		
@@ -2629,7 +2652,14 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 			// it is visible, the window MUST be visible before you can give it a
 			// tabbed appearance.  This is due to the tab implementation being a
 			// drawer, which refuses to associate itself with an invisible window!
-			Workspace_AddWindow(targetWorkspace, window);
+			if (nullptr != legacyCarbonWindow)
+			{
+				Workspace_AddWindow(targetWorkspace, legacyCarbonWindow);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "tab workspaces not implemented for Cocoa window");
+			}
 			TerminalWindow_SetVisible(inTerminalWindow, true);
 			UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 			if (gAutoRearrangeTabs)
@@ -2773,7 +2803,7 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 			// selecting the window MUST be the Carbon API call SelectWindow()
 			// (otherwise system-handled commands such as Close and Minimize have no
 			// effect on the new window; it is not clear why this is an issue)
-			SelectWindow(TerminalWindow_ReturnWindow(dataObject.terminalWindow));
+			SelectWindow(TerminalWindow_ReturnLegacyCarbonWindow(dataObject.terminalWindow));
 		}
 	}
 	else
@@ -3531,7 +3561,7 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	// remove this window from any workspaces that contain it,
 	// and shuffle tab order across workspaces accordingly
 	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
-	HIWindowRef			window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
 	
 	
 	std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });

@@ -217,7 +217,7 @@ struct My_TerminalWindowCarbonState
 
 struct My_TerminalWindow
 {
-	My_TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef, Boolean);
+	My_TerminalWindow  (Boolean, Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef, Boolean);
 	~My_TerminalWindow ();
 	
 	bool
@@ -326,7 +326,7 @@ IconRef					createLEDOnIcon					();
 IconRef					createPrintIcon					();
 IconRef					createRestartSessionIcon		();
 Boolean					createTabWindow					(My_TerminalWindowPtr);
-NSWindow*				createWindow					();
+NSWindow*				createWindow					(Boolean);
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
@@ -431,17 +431,18 @@ IMPORTANT:	In general, you should NOT create terminal windows
 (3.0)
 */
 TerminalWindowRef
-TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
-					 Preferences_ContextRef		inFontInfoOrNull,
-					 Preferences_ContextRef		inTranslationOrNull,
-					 Boolean					inNoStagger)
+TerminalWindow_NewCarbonLegacy  (Preferences_ContextRef		inTerminalInfoOrNull,
+								 Preferences_ContextRef		inFontInfoOrNull,
+								 Preferences_ContextRef		inTranslationOrNull,
+								 Boolean					inNoStagger)
 {
 	TerminalWindowRef	result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
+		result = REINTERPRET_CAST(new My_TerminalWindow(true/* Carbon */,
+														inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
 														inNoStagger),
 									TerminalWindowRef);
 	}
@@ -450,7 +451,7 @@ TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
 		result = nullptr;
 	}
 	return result;
-}// New
+}// NewCarbonLegacy
 
 
 /*!
@@ -473,17 +474,18 @@ IMPORTANT:	In general, you should NOT create terminal windows
 (2016.03)
 */
 TerminalWindowRef
-TerminalWindow_NewCocoaViewTest		(Preferences_ContextRef		inTerminalInfoOrNull,
-									 Preferences_ContextRef		inFontInfoOrNull,
-									 Preferences_ContextRef		inTranslationOrNull,
-									 Boolean					inNoStagger)
+TerminalWindow_New		(Preferences_ContextRef		inTerminalInfoOrNull,
+						 Preferences_ContextRef		inFontInfoOrNull,
+						 Preferences_ContextRef		inTranslationOrNull,
+						 Boolean					inNoStagger)
 {
 	TerminalWindowRef	result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
+		result = REINTERPRET_CAST(new My_TerminalWindow(false/* Carbon */,
+														inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
 														inNoStagger),
 									TerminalWindowRef);
 	}
@@ -492,7 +494,7 @@ TerminalWindow_NewCocoaViewTest		(Preferences_ContextRef		inTerminalInfoOrNull,
 		result = nullptr;
 	}
 	return result;
-}// NewCocoaViewTest
+}// New
 
 
 /*!
@@ -652,8 +654,8 @@ See also TerminalWindow_IsFocused().
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
 Cocoa window directly.  All calls to the Carbon SelectWindow(),
-that had been using TerminalWindow_ReturnWindow(), should
-DEFINITELY change to call this routine, instead (which
+that had been using TerminalWindow_ReturnLegacyCarbonWindow()
+should DEFINITELY change to call this routine, instead (which
 manipulates the Cocoa window internally).
 
 (4.0)
@@ -1029,8 +1031,8 @@ See also TerminalWindow_Focus().
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
 Cocoa window directly.  Calls to the Carbon IsWindowFocused(),
-that had been using TerminalWindow_ReturnWindow(), should
-DEFINITELY change to call this routine, instead (which
+that had been using TerminalWindow_ReturnLegacyCarbonWindow()
+should DEFINITELY change to call this routine, instead (which
 manipulates the Cocoa window internally).
 
 (4.0)
@@ -1118,6 +1120,36 @@ TerminalWindow_IsFullScreenMode ()
 	
 	return result;
 }// IsFullScreenMode
+
+
+/*!
+Returns "true" only if the specified window was constructed
+using the legacy Carbon implementation.
+
+If a window uses the new Cocoa implementation, the function
+TerminalWindow_ReturnLegacyCarbonWindow() will return nullptr
+and log a warning and stack trace to the console instead of
+returning valid data.  Also, TerminalWindow_ReturnNSWindow()
+will return a pure Cocoa window (as opposed to a Cocoa window
+that defines a Carbon HIWindowRef).
+
+(2018.02)
+*/
+Boolean
+TerminalWindow_IsLegacyCarbon	(TerminalWindowRef	inRef)
+{
+	Boolean		result = false;
+	
+	
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = (false == ptr->isCocoa());
+	}
+	return result;
+}// IsLegacyCarbon
 
 
 /*!
@@ -1347,6 +1379,42 @@ TerminalWindow_ReturnFromWindow		(WindowRef	inWindow)
 	
 	return result;
 }// ReturnFromWindow
+
+
+/*!
+Returns the Mac OS Carbon window reference for the specified
+terminal window.
+
+DEPRECATED.  You should generally manipulate the Cocoa window,
+if anything (which can also be used to find the Carbon window).
+See TerminalWindow_ReturnNSWindow().
+
+IMPORTANT:	If an API exists to manipulate a terminal
+			window, use the Terminal Window API; only
+			use the Mac OS window reference when
+			absolutely necessary.
+
+(3.0)
+*/
+HIWindowRef
+TerminalWindow_ReturnLegacyCarbonWindow		(TerminalWindowRef	inRef)
+{
+	HIWindowRef		result = nullptr;
+	
+	
+	if (TerminalWindow_IsValid(inRef))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		
+		
+		result = returnCarbonWindow(ptr);
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to find Carbon window of invalid terminal window", inRef);
+	}
+	return result;
+}// ReturnLegacyCarbonWindow
 
 
 /*!
@@ -1612,42 +1680,6 @@ TerminalWindow_ReturnViewWithFocus		(TerminalWindowRef	inRef)
 
 
 /*!
-Returns the Mac OS window reference for the specified
-terminal window.
-
-DEPRECATED.  You should generally manipulate the Cocoa window,
-if anything (which can also be used to find the Carbon window).
-See TerminalWindow_ReturnNSWindow().
-
-IMPORTANT:	If an API exists to manipulate a terminal
-			window, use the Terminal Window API; only
-			use the Mac OS window reference when
-			absolutely necessary.
-
-(3.0)
-*/
-HIWindowRef
-TerminalWindow_ReturnWindow		(TerminalWindowRef	inRef)
-{
-	HIWindowRef		result = nullptr;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		result = returnCarbonWindow(ptr);
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to find Carbon window of invalid terminal window", inRef);
-	}
-	return result;
-}// ReturnWindow
-
-
-/*!
 Puts a terminal window in front of other windows.  For
 convenience, if "inFocus" is true, TerminalWindow_Focus() is
 also called (which is commonly required at the same time).
@@ -1657,8 +1689,8 @@ See also TerminalWindow_Focus() and TerminalWindow_IsFocused().
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
 Cocoa window directly.  All calls to the Carbon SelectWindow(),
-that had been using TerminalWindow_ReturnWindow(), should
-DEFINITELY change to call this routine, instead (which
+that had been using TerminalWindow_ReturnLegacyCarbonWindow()
+should DEFINITELY change to call this routine, instead (which
 manipulates the Cocoa window internally).
 
 (4.0)
@@ -1947,7 +1979,7 @@ TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
 				TerminalWindow_SetWindowTitle(inRef, ptr->baseTitleString.returnCFStringRef());
 				
 				// attach the tab to the top edge of the window
-				error = SetDrawerParent(tabWindow, TerminalWindow_ReturnWindow(inRef));
+				error = SetDrawerParent(tabWindow, TerminalWindow_ReturnLegacyCarbonWindow(inRef));
 				if (noErr == error)
 				{
 					OptionBits				preferredEdge = kWindowEdgeTop;
@@ -2232,7 +2264,7 @@ Set to "true" to show a terminal window, and "false" to hide it.
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
 Cocoa window directly.  All calls to the Carbon ShowWindow() or
-HideWindow(), that had been using TerminalWindow_ReturnWindow(),
+HideWindow(), via TerminalWindow_ReturnLegacyCarbonWindow(),
 should DEFINITELY change to call this routine, instead (which
 manipulates the Cocoa window internally).
 
@@ -2347,7 +2379,7 @@ TerminalWindow_StackWindows ()
 		
 		if (nil != terminalWindow)
 		{
-			HIWindowRef const			kWindow = TerminalWindow_ReturnWindow(terminalWindow);
+			HIWindowRef const			kWindow = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
 			CGDirectDisplayID const		kDisplayID = returnWindowDisplay(kWindow);
 			My_WindowList&				windowsOnThisDisplay = windowsByDisplay[kDisplayID];
 			
@@ -2877,7 +2909,8 @@ Constructor.  See TerminalWindow_New().
 (3.0)
 */
 My_TerminalWindow::
-My_TerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
+My_TerminalWindow	(Boolean					inCarbonLegacy,
+					 Preferences_ContextRef		inTerminalInfoOrNull,
 					 Preferences_ContextRef		inFontInfoOrNull,
 					 Preferences_ContextRef		inTranslationInfoOrNull,
 					 Boolean					inNoStagger)
@@ -2887,7 +2920,7 @@ refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs
 selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
-window(createWindow()),
+window(createWindow(inCarbonLegacy)),
 tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
@@ -2913,7 +2946,7 @@ allScreens(),
 allViews(),
 installedActions(),
 // Carbon-specific (will remove):
-carbonData(new My_TerminalWindowCarbonState())
+carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 {
 @autoreleasepool {
 	TerminalScreenRef		newScreen = nullptr;
@@ -3011,12 +3044,20 @@ carbonData(new My_TerminalWindowCarbonState())
 	{
 		if (this->isCocoa())
 		{
-			Console_Warning(Console_WriteLine, "TerminalViewRef creation not implemented for Cocoa window");
+			newView = TerminalView_NewNSViewBased(newScreen, inFontInfoOrNull);
+			if (nullptr == newView)
+			{
+				Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
+			}
 		}
 		else
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);
-			if (nullptr != newView)
+			if (nullptr == newView)
+			{
+				Console_Warning(Console_WriteLine, "failed to construct Carbon TerminalViewRef!");
+			}
+			else
 			{
 				HIViewWrap		contentView(kHIViewWindowContentID, returnCarbonWindow(this));
 				HIViewRef		terminalHIView = TerminalView_ReturnContainerHIView(newView);
@@ -3966,45 +4007,66 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 
 /*!
 Creates a Cocoa window for the specified terminal window,
-based on a Carbon window (for now), and constructs a root
-view for subsequent embedding.
+based on a Carbon window if requested, and constructs a
+root view for subsequent embedding.
 
 Returns nullptr if the window was not created successfully.
 
 (4.0)
 */
 NSWindow*
-createWindow ()
+createWindow	(Boolean	inCarbonLegacy)
 {
 @autoreleasepool {
 	NSWindow*		result = nil;
-	HIWindowRef		window = nullptr;
 	Boolean			useCustomFullScreenMode = false;
 	
 	
-	// load the NIB containing this window (automatically finds the right localization)
-	window = NIBWindow(AppResources_ReturnBundleForNIBs(),
-						CFSTR("TerminalWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
-	if (nullptr != window)
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
+							&useCustomFullScreenMode))
 	{
-		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(window);
+		useCustomFullScreenMode = false; // assume a default if preference can’t be found
+	}
+	
+	if (inCarbonLegacy)
+	{
+		// load the NIB containing this window (automatically finds the right localization)
+		HIWindowRef		window = nullptr;
+		
+		
+		window = NIBWindow(AppResources_ReturnBundleForNIBs(),
+							CFSTR("TerminalWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
+		if (nullptr != window)
+		{
+			result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(window);
+		}
 		
 		// override this default; technically terminal windows
 		// are immediately closeable for the first 15 seconds
 		UNUSED_RETURN(OSStatus)SetWindowModified(window, false);
-		
-		if (kPreferences_ResultOK !=
-			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode))
-		{
-			useCustomFullScreenMode = false; // assume a default if preference can’t be found
-		}
 		
 		if (false == useCustomFullScreenMode)
 		{
 			setCarbonWindowFullScreenIcon(window, true);
 		}
 	}
+	else
+	{
+		result = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:(NSTitledWindowMask | NSClosableWindowMask |
+																				NSMiniaturizableWindowMask | NSResizableWindowMask)
+														backing:NSBackingStoreBuffered defer:NO];
+		
+		// override this default; technically terminal windows
+		// are immediately closeable for the first 15 seconds
+		result.documentEdited = NO;
+		
+		if (false == useCustomFullScreenMode)
+		{
+			setCocoaWindowFullScreenIcon(result, true);
+		}
+	}
+	
 	return result;
 }// @autoreleasepool
 }// createWindow
@@ -4709,7 +4771,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							
 							// display the sheet
-							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
 																						embeddedPanel, temporaryContext),
 														GenericDialog_Wrap::kAlreadyRetained);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
@@ -4749,7 +4811,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandHideOtherWindows:
 					// hide all except the frontmost terminal window from view
-					if (TerminalWindow_ReturnWindow(terminalWindow) != GetUserFocusWindow())
+					if (TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow) != GetUserFocusWindow())
 					{
 						TerminalWindow_SetObscured(terminalWindow, true);
 						
@@ -4804,7 +4866,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// if the resulting window is close to a screen edge (less than
 						// the space of a terminal row or column), snap to the screen edge
 						{
-							HIWindowRef		windowRef = TerminalWindow_ReturnWindow(terminalWindow);
+							HIWindowRef		windowRef = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
 							HIRect			frameBounds;
 							HIRect			screenBounds;
 							
@@ -4910,7 +4972,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							
 							// display the sheet
-							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
 																						embeddedPanel, temporaryContext),
 														GenericDialog_Wrap::kAlreadyRetained);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
@@ -5102,7 +5164,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							
 							// display the sheet
-							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnWindow(terminalWindow),
+							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
 																						embeddedPanel, temporaryContext),
 														GenericDialog_Wrap::kAlreadyRetained);
 							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
@@ -5714,7 +5776,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						targetToolbar = nullptr;
 					}
 					isPermanentItem = (nullptr != targetToolbar);
-					if (noErr == GetWindowToolbar(TerminalWindow_ReturnWindow(terminalWindow), &terminalToolbar))
+					if (noErr == GetWindowToolbar(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow), &terminalToolbar))
 					{
 						isPermanentItem = ((isPermanentItem) && (terminalToolbar == targetToolbar));
 					}
@@ -6552,7 +6614,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Implementation of TerminalWindow_ReturnWindow().
+Implementation of TerminalWindow_ReturnLegacyCarbonWindow().
 
 (4.0)
 */
@@ -6566,6 +6628,7 @@ returnCarbonWindow		(My_TerminalWindowPtr	inPtr)
 	if (inPtr->isCocoa())
 	{
 		Console_Warning(Console_WriteLine, "invalid request for Carbon reference to Cocoa-based terminal");
+		Console_WriteStackTrace(10/* arbitrary */);
 	}
 	else
 	{
@@ -7394,7 +7457,14 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 	
 	if (inPtr->isCocoa())
 	{
-		Console_Warning(Console_WriteLine, "set-standard-state not implemented for Cocoa window");
+		NSRect		newContentRect = [inPtr->window contentRectForFrameRect:inPtr->window.frame];
+		NSRect		newFrameRect;
+		
+		
+		newContentRect.size.width = windowWidth;
+		newContentRect.size.height = windowHeight;
+		newFrameRect = [inPtr->window frameRectForContentRect:newContentRect];
+		[inPtr->window setFrame:newFrameRect display:YES animate:inAnimatedResize];
 	}
 	else
 	{

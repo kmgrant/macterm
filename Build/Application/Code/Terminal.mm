@@ -6993,7 +6993,7 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 				if (nullptr != printJob)
 				{
 					UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-														(printJob, TerminalWindow_ReturnWindow(terminalWindow));
+														(printJob, TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow));
 					PrintTerminal_ReleaseJob(&printJob);
 				}
 			}
@@ -14299,8 +14299,6 @@ reportTopBottomMargins	(My_ScreenBufferPtr		inDataPtr)
 	if (nullptr != session)
 	{
 		std::ostringstream		reportBuffer;
-		Terminal_CursorType		cursorShape = kTerminal_CursorTypeBlock;
-		Boolean					cursorBlinks = true;
 		
 		
 		// (see DECSTBM documentation for possible return values here)

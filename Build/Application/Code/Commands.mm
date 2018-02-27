@@ -915,7 +915,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					if (nullptr != printJob)
 					{
 						UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-															(printJob, TerminalWindow_ReturnWindow(frontTerminalWindow));
+															(printJob, TerminalWindow_ReturnLegacyCarbonWindow(frontTerminalWindow));
 						PrintTerminal_ReleaseJob(&printJob);
 					}
 				}
@@ -2121,7 +2121,6 @@ activateAnotherWindow	(My_WindowActivationDirection	inActivationDirection,
 	NSWindow*				currentWindow = nil;
 	NSWindow*				nextWindow = nil;
 	NSWindow*				firstValidWindow = nil;
-	TerminalWindowRef		terminalWindow = nullptr;
 	TerminalWindowRef		autoHiddenTerminalWindow = nullptr;
 	BOOL					setNext = NO;
 	BOOL					doneSearch = NO;

@@ -82,6 +82,8 @@ changes to an interface declared in a ".mm" file.
 	logsTerminalEcho; //binding
 	@property (assign) BOOL
 	logsTerminalState; //binding
+	@property (assign) BOOL
+	useCocoaTerminalWindowsForNewSessions; //binding
 
 @end //}
 
@@ -95,6 +97,7 @@ extern Boolean		gDebugInterface_LogsSixelDecoderState;
 extern Boolean		gDebugInterface_LogsTerminalInputChar;
 extern Boolean		gDebugInterface_LogsTerminalEcho;
 extern Boolean		gDebugInterface_LogsTerminalState;
+extern Boolean		gDebugInterface_UseCocoaTerminalWindowsForNewSessions;
 
 
 
@@ -158,6 +161,16 @@ inline Boolean
 	{
 	#ifndef NDEBUG
 		return gDebugInterface_LogsTerminalState;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
+	DebugInterface_UseCocoaTerminalWindowsForNewSessions		()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_UseCocoaTerminalWindowsForNewSessions;
 	#else
 		return false;
 	#endif

@@ -8209,7 +8209,7 @@ returnActiveWindow	(My_SessionPtr		inPtr)
 	{
 		if (nullptr != inPtr->terminalWindow)
 		{
-			result = TerminalWindow_ReturnWindow(inPtr->terminalWindow);
+			result = TerminalWindow_ReturnLegacyCarbonWindow(inPtr->terminalWindow);
 		}
 	}
 	return result;
@@ -9089,9 +9089,11 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			Boolean					isCarbon = TerminalWindow_IsLegacyCarbon(ptr->terminalWindow);
 			
 			
 			// install a callback that disposes of the window properly when it should be closed
+			if (isCarbon)
 			{
 				EventTypeSpec const		whenWindowClosing[] =
 										{
@@ -9101,14 +9103,19 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				ptr->windowClosingUPP = NewEventHandlerUPP(receiveWindowClosing);
-				error = InstallWindowEventHandler(TerminalWindow_ReturnWindow(ptr->terminalWindow),
+				error = InstallWindowEventHandler(TerminalWindow_ReturnLegacyCarbonWindow(ptr->terminalWindow),
 													ptr->windowClosingUPP, GetEventTypeCount(whenWindowClosing),
 													whenWindowClosing, session/* user data */,
 													&ptr->windowClosingHandler/* event handler reference */);
 				assert(error == noErr);
 			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "session window close-handler not implemented for Cocoa");
+			}
 			
 			// install a callback that clears notifications when the window is activated
+			if (isCarbon)
 			{
 				EventTypeSpec const		whenWindowFocusChanged[] =
 										{
@@ -9118,11 +9125,15 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				ptr->windowFocusChangeUPP = NewEventHandlerUPP(receiveWindowFocusChange);
-				error = InstallWindowEventHandler(TerminalWindow_ReturnWindow(ptr->terminalWindow),
+				error = InstallWindowEventHandler(TerminalWindow_ReturnLegacyCarbonWindow(ptr->terminalWindow),
 													ptr->windowFocusChangeUPP, GetEventTypeCount(whenWindowFocusChanged),
 													whenWindowFocusChanged, session/* user data */,
 													&ptr->windowFocusChangeHandler/* event handler reference */);
 				assert(error == noErr);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "session window focus-handler not implemented for Cocoa");
 			}
 			
 			ptr->terminalWindowListener.setWithNoRetain(ListenerModel_NewStandardListener
@@ -9162,6 +9173,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						
 						// install a callback that responds to drag-and-drop in views,
 						// and a callback that responds to key presses in views
+						if (isCarbon)
 						{
 							EventTypeSpec const		whenTerminalViewTextInput[] =
 													{
@@ -9211,11 +9223,19 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							error = SetControlDragTrackingEnabled(dragFocusView, true/* is drag enabled */);
 							assert_noerr(error);
 						}
+						else
+						{
+							Console_Warning(Console_WriteLine, "session window drag-handler and key-handler not implemented for Cocoa");
+						}
 						
 						// enable drag tracking for the window, if it is not enabled already
-						error = SetAutomaticControlDragTrackingEnabledForWindow
-								(GetControlOwner(dragFocusView), true/* is drag enabled */);
-						assert_noerr(error);
+						// (not necessary for Cocoa)
+						if (isCarbon)
+						{
+							error = SetAutomaticControlDragTrackingEnabledForWindow
+									(GetControlOwner(dragFocusView), true/* is drag enabled */);
+							assert_noerr(error);
+						}
 					}
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}

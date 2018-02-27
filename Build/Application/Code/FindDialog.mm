@@ -775,10 +775,24 @@ didLoadManagedView:(NSView*)	aManagedView
 																		attachedToPoint:NSZeroPoint/* see delegate */
 																		inWindow:parentWindow];
 		[self->containerWindow setReleasedWhenClosed:NO];
-		self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-												self/* delegate */, kPopoverManager_AnimationTypeNone,
-												kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside
-												TerminalWindow_ReturnWindow([self terminalWindow]));
+		if (TerminalWindow_IsLegacyCarbon([self terminalWindow]))
+		{
+			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
+													self/* delegate */, kPopoverManager_AnimationTypeNone,
+													kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside
+													TerminalWindow_ReturnLegacyCarbonWindow([self terminalWindow]));
+		}
+		else
+		{
+			NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow([self terminalWindow]);
+			NSView*		parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
+			
+			
+			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
+													self/* delegate */, kPopoverManager_AnimationTypeNone,
+													kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside
+													parentView);
+		}
 		PopoverManager_DisplayPopover(self->popoverMgr);
 	}
 }// findDialog:didLoadManagedView:
