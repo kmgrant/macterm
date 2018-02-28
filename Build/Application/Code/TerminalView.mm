@@ -9344,21 +9344,34 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				(^(TerminalWindowRef	inTerminalWindow,
 				   Boolean&				UNUSED_ARGUMENT(outStopFlag))
 				{
-					HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
-													? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
-													: nullptr;
-					HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
-														? TerminalWindow_ReturnTabWindow(inTerminalWindow)
+					if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
+					{
+						HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
+														? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
 														: nullptr;
-					
-					
-					if (nullptr != kTabWindow)
-					{
-						UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, alpha);
+						HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
+															? TerminalWindow_ReturnTabWindow(inTerminalWindow)
+															: nullptr;
+						
+						
+						if (nullptr != kTabWindow)
+						{
+							UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, alpha);
+						}
+						if (nullptr != kWindow)
+						{
+							UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, alpha);
+						}
 					}
-					if (nullptr != kWindow)
+					else
 					{
-						UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, alpha);
+						NSWindow* const		kWindow  = (nullptr != inTerminalWindow)
+														? TerminalWindow_ReturnNSWindow(inTerminalWindow)
+														: nil;
+						
+						
+						Console_Warning(Console_WriteLine, "set-alpha not implemented for Cocoa window tab");
+						kWindow.alphaValue = alpha;
 					}
 				});
 			}

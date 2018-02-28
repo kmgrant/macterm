@@ -1466,9 +1466,21 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 			
 			// display the sheet
 			dataObject.disableObservers = YES; // temporarily disable to prevent visible shift in window appearance
-			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
-																		embeddedPanel, temporaryContext),
-										GenericDialog_Wrap::kAlreadyRetained);
+			if (TerminalWindow_IsLegacyCarbon(terminalWindow))
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
+																			embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			else
+			{
+				NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
+				NSView*		parentView = STATIC_CAST(window.contentView, NSView*);
+				
+				
+				dialog = GenericDialog_Wrap(GenericDialog_New(parentView, embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, startSessionString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -1593,7 +1605,7 @@ SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 					SessionRef		session = gSessionListSortedByCreationTime()[inZeroBasedSessionIndex];
 					
 					
-					*outWindowPtr = Session_ReturnActiveWindow(session);
+					*outWindowPtr = Session_ReturnActiveLegacyCarbonWindow(session);
 				}
 			}
 			break;
@@ -1632,7 +1644,7 @@ SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 						SessionRef		session = gSessionListSortedByCreationTime()[currentIndex];
 						
 						
-						*outWindowPtr = Session_ReturnActiveWindow(session);
+						*outWindowPtr = Session_ReturnActiveLegacyCarbonWindow(session);
 					}
 				}
 				
@@ -2798,12 +2810,15 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 			}
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
 			
-			// in this case the new window must be explicitly activated to prevent the
-			// window from staying in the background; and, notably, the mechanism for
-			// selecting the window MUST be the Carbon API call SelectWindow()
-			// (otherwise system-handled commands such as Close and Minimize have no
-			// effect on the new window; it is not clear why this is an issue)
-			SelectWindow(TerminalWindow_ReturnLegacyCarbonWindow(dataObject.terminalWindow));
+			if (TerminalWindow_IsLegacyCarbon(dataObject.terminalWindow))
+			{
+				// in this case the new window must be explicitly activated to prevent the
+				// window from staying in the background; and, notably, the mechanism for
+				// selecting the window MUST be the Carbon API call SelectWindow()
+				// (otherwise system-handled commands such as Close and Minimize have no
+				// effect on the new window; it is not clear why this is an issue)
+				SelectWindow(TerminalWindow_ReturnLegacyCarbonWindow(dataObject.terminalWindow));
+			}
 		}
 	}
 	else
@@ -3219,7 +3234,7 @@ returnActiveWorkspace ()
 		
 		if (nullptr != activeSession)
 		{
-			HIWindowRef const	kActiveWindow = Session_ReturnActiveWindow(activeSession);
+			HIWindowRef const	kActiveWindow = Session_ReturnActiveLegacyCarbonWindow(activeSession);
 			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
 			auto				toWorkspace = std::find_if(targetList.begin(), targetList.end(),
 															workspaceContainsWindow(kActiveWindow));
@@ -3561,10 +3576,25 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	// remove this window from any workspaces that contain it,
 	// and shuffle tab order across workspaces accordingly
 	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
-	HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
 	
 	
-	std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
+	if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
+	{
+		HIWindowRef		window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
+		
+		
+		std::for_each(workspaceList.begin(), workspaceList.end(),
+						[=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
+	}
+	else
+	{
+		//NSWindow*		window = TerminalWindow_ReturnNSWindow(inTerminalWindow);
+		
+		
+		Console_Warning(Console_WriteLine, "removal from workspace not implemented for Cocoa windows");
+		//std::for_each(workspaceList.begin(), workspaceList.end(),
+		//				[=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
+	}
 	
 	if (gAutoRearrangeTabs)
 	{

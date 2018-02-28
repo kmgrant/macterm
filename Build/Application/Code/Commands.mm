@@ -2446,10 +2446,11 @@ handleQuitReview ()
 						{
 							unless (gCurrentQuitCancelled)
 							{
-								HIWindowRef		window = Session_ReturnActiveWindow(inSession);
+								HIWindowRef		carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inSession);
+								NSWindow*		window = Session_ReturnActiveNSWindow(inSession);
 								
 								
-								if (nullptr != window)
+								if ((nullptr != carbonWindow) || (nil != window))
 								{
 									Session_TerminationDialogOptions	dialogOptions = kSession_TerminationDialogOptionModal;
 									
@@ -2464,16 +2465,30 @@ handleQuitReview ()
 									}
 									
 									// if the window was obscured, show it first
-									if (false == IsWindowVisible(window))
+									if ((nullptr != carbonWindow) && (false == IsWindowVisible(carbonWindow)))
 									{
-										TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+										TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(carbonWindow);
+										
+										
+										TerminalWindow_SetObscured(terminalWindow, false);
+									}
+									else if ((nil != window) && (false == window.isVisible))
+									{
+										TerminalWindowRef	terminalWindow = [window terminalWindowRef];
 										
 										
 										TerminalWindow_SetObscured(terminalWindow, false);
 									}
 									
 									// all windows became translucent; make sure the alert one is opaque
-									UNUSED_RETURN(OSStatus)SetWindowAlpha(window, 1.0);
+									if (nullptr != carbonWindow)
+									{
+										UNUSED_RETURN(OSStatus)SetWindowAlpha(carbonWindow, 1.0);
+									}
+									else
+									{
+										window.alphaValue = 1.0;
+									}
 									
 									// enforce a tiny delay between messages, otherwise it may be hard
 									// for the user to realize that a new message has appeared for a
@@ -7453,7 +7468,7 @@ orderFrontSpecificWindow:(id)		sender
 			
 			
 			// first make the window visible if it was obscured
-			window = Session_ReturnActiveWindow(session);
+			window = Session_ReturnActiveLegacyCarbonWindow(session);
 			terminalWindow = Session_ReturnActiveTerminalWindow(session);
 			if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
 			
@@ -7484,10 +7499,23 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		if (nullptr != itemSession)
 		{
-			HIWindowRef const	kSessionActiveWindow = Session_ReturnActiveWindow(itemSession);
+			HIWindowRef const	kSessionActiveCarbonWindow = Session_ReturnActiveLegacyCarbonWindow(itemSession);
+			Boolean				isHighlighted = false;
 			
 			
-			if (IsWindowHilited(kSessionActiveWindow))
+			if (nullptr != kSessionActiveCarbonWindow)
+			{
+				isHighlighted = IsWindowHilited(kSessionActiveCarbonWindow);
+			}
+			else
+			{
+				NSWindow* const		kSessionActiveWindow = Session_ReturnActiveNSWindow(itemSession);
+				
+				
+				isHighlighted = kSessionActiveWindow.isKeyWindow;
+			}
+			
+			if (isHighlighted)
 			{
 				// check the active window in the menu
 				setItemCheckMark(asMenuItem, YES);

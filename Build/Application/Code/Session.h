@@ -602,7 +602,7 @@ TerminalWindowRef
 
 // DEPRECATED (USE Session_ReturnActiveNSWindow())
 HIWindowRef
-	Session_ReturnActiveWindow				(SessionRef							inRef);
+	Session_ReturnActiveLegacyCarbonWindow	(SessionRef							inRef);
 
 CFStringRef
 	Session_ReturnCachedWorkingDirectory	(SessionRef							inRef);

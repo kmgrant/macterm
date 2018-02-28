@@ -382,8 +382,8 @@ OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*
 OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 void						respawnSession						(EventLoopTimerRef, void*);
+HIWindowRef					returnActiveLegacyCarbonWindow		(My_SessionPtr);
 NSWindow*					returnActiveNSWindow				(My_SessionPtr);
-HIWindowRef					returnActiveWindow					(My_SessionPtr);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
 void						setIconFromState					(My_SessionPtr);
@@ -988,7 +988,7 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 															CFRetainRelease::kAlreadyRetained);
 		
 		
-		dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(Session_ReturnActiveWindow(inRef), embeddedPanel,
+		dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(Session_ReturnActiveLegacyCarbonWindow(inRef), embeddedPanel,
 																	temporaryContext),
 									GenericDialog_Wrap::kAlreadyRetained);
 		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
@@ -1073,10 +1073,12 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 	{
 		AlertMessages_BoxWrap	box;
 		TerminalWindowRef		terminalWindow = nullptr;
-		HIWindowRef				window = Session_ReturnActiveWindow(inRef);
+		HIWindowRef				carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inRef);
+		NSWindow*				window = ((nullptr == carbonWindow) ? Session_ReturnActiveNSWindow(inRef) : nil);
 		Rect					originalStructureBounds;
 		Rect					centeredStructureBounds;
-		OSStatus				error = noErr;
+		NSRect					originalFrame;
+		NSRect					centeredFrame;
 		__block Boolean			wasCancelled = false;
 		
 		
@@ -1084,15 +1086,34 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 		{
 			box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), AlertMessages_BoxWrap::kAlreadyRetained);
 		}
+		else if (nullptr != carbonWindow)
+		{
+			box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(carbonWindow/* parent */),
+										AlertMessages_BoxWrap::kAlreadyRetained);
+		}
 		else
 		{
-			box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(window/* parent */),
+			box = AlertMessages_BoxWrap(Alert_NewWindowModal(window/* parent */),
 										AlertMessages_BoxWrap::kAlreadyRetained);
 		}
 		
+		if (nullptr != carbonWindow)
+		{
+			OSStatus	error = noErr;
+			
+			
+			error = GetWindowBounds(carbonWindow, kWindowStructureRgn, &originalStructureBounds);
+			if (noErr != error)
+			{
+				RegionUtilities_SetRect(&originalStructureBounds, 0, 0, 0, 0);
+			}
+		}
+		else
+		{
+			originalFrame = window.frame;
+		}
+		
 		// TEMPORARY - this should really take into account whether the quit event is interactive
-		error = GetWindowBounds(window, kWindowStructureRgn, &originalStructureBounds);
-		if (noErr == error)
 		{
 			// for modal dialogs, first move the window to the center of the
 			// screen (so the user can see which window is being referred to);
@@ -1106,29 +1127,57 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 			{
 				SInt16 const	kOffsetFromCenterV = -130; // in pixels; arbitrary
 				SInt16 const	kAbsoluteMinimumV = 30; // in pixels; arbitrary
-				Rect			availablePositioningBounds;
 				
 				
 				// center the window on the screen, but slightly offset toward the top half;
 				// do not allow the window to go off of the screen, however
-				RegionUtilities_GetPositioningBounds(window, &availablePositioningBounds);
-				centeredStructureBounds = originalStructureBounds;
-				RegionUtilities_CenterRectIn(&centeredStructureBounds, &availablePositioningBounds);
-				centeredStructureBounds.top += kOffsetFromCenterV;
-				centeredStructureBounds.bottom += kOffsetFromCenterV;
-				if (centeredStructureBounds.top < kAbsoluteMinimumV)
+				if (nullptr != carbonWindow)
 				{
-					SInt16 const	kWindowHeight = centeredStructureBounds.bottom - centeredStructureBounds.top;
+					Rect		availablePositioningBounds;
+					OSStatus	error = noErr;
 					
 					
-					centeredStructureBounds.top = kAbsoluteMinimumV;
-					centeredStructureBounds.bottom = centeredStructureBounds.top + kWindowHeight;
+					RegionUtilities_GetPositioningBounds(carbonWindow, &availablePositioningBounds);
+					centeredStructureBounds = originalStructureBounds;
+					RegionUtilities_CenterRectIn(&centeredStructureBounds, &availablePositioningBounds);
+					centeredStructureBounds.top += kOffsetFromCenterV;
+					centeredStructureBounds.bottom += kOffsetFromCenterV;
+					if (centeredStructureBounds.top < kAbsoluteMinimumV)
+					{
+						SInt16 const	kWindowHeight = centeredStructureBounds.bottom - centeredStructureBounds.top;
+						
+						
+						centeredStructureBounds.top = kAbsoluteMinimumV;
+						centeredStructureBounds.bottom = centeredStructureBounds.top + kWindowHeight;
+					}
+					error = TransitionWindow(carbonWindow, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
+												&centeredStructureBounds);
+					if (noErr != error)
+					{
+						Console_Warning(Console_WriteValue, "failed to transition window for termination warning, error", error);
+					}
 				}
-				error = TransitionWindow(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-											&centeredStructureBounds);
-				if (noErr != error)
+				else
 				{
-					Console_Warning(Console_WriteValue, "failed to transition window for termination warning, error", error);
+					NSScreen*	windowScreen = ((nil != window.screen)
+												? window.screen
+												: [NSScreen mainScreen]);
+					CGRect		availableCGRect = NSRectToCGRect(windowScreen.frame);
+					
+					
+					{
+						CGRect		centeredCGRect = NSRectToCGRect(window.frame);
+						
+						
+						RegionUtilities_CenterHIRectIn(centeredCGRect, availableCGRect);
+						centeredFrame = NSRectFromCGRect(centeredCGRect);
+						centeredFrame.origin.y -= kOffsetFromCenterV;
+					}
+					if ((centeredFrame.origin.y + NSHeight(centeredFrame)) > (availableCGRect.origin.y + availableCGRect.size.height - kAbsoluteMinimumV))
+					{
+						centeredFrame.origin.y = (availableCGRect.origin.y + availableCGRect.size.height - kAbsoluteMinimumV - NSHeight(centeredFrame));
+					}
+					[window setFrame:centeredFrame display:YES animate:YES];
 				}
 			}
 		}
@@ -1286,22 +1335,29 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				// was transitioned to the screen center, “un-transition”
 				// the most recent window back to its original location -
 				// unless of course the user has since moved the window
-				Rect	currentStructureBounds;
-				
-				
-				UNUSED_RETURN(OSStatus)GetWindowBounds(window, kWindowStructureRgn, &currentStructureBounds);
-				if (RegionUtilities_EqualRects(&currentStructureBounds, &centeredStructureBounds))
+				if (nullptr != carbonWindow)
 				{
-					HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
-																			originalStructureBounds.right - originalStructureBounds.left,
-																			originalStructureBounds.bottom - originalStructureBounds.top);
-					TransitionWindowOptions		transitionOptions;
+					Rect	currentStructureBounds;
 					
 					
-					bzero(&transitionOptions, sizeof(transitionOptions));
-					transitionOptions.version = 0;
-					UNUSED_RETURN(OSStatus)TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-																		&floatBounds, true/* asynchronous */, &transitionOptions);
+					UNUSED_RETURN(OSStatus)GetWindowBounds(carbonWindow, kWindowStructureRgn, &currentStructureBounds);
+					if (RegionUtilities_EqualRects(&currentStructureBounds, &centeredStructureBounds))
+					{
+						HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
+																				originalStructureBounds.right - originalStructureBounds.left,
+																				originalStructureBounds.bottom - originalStructureBounds.top);
+						TransitionWindowOptions		transitionOptions;
+						
+						
+						bzero(&transitionOptions, sizeof(transitionOptions));
+						transitionOptions.version = 0;
+						UNUSED_RETURN(OSStatus)TransitionWindowWithOptions(carbonWindow, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
+																			&floatBounds, true/* asynchronous */, &transitionOptions);
+					}
+				}
+				else
+				{
+					Console_Warning(Console_WriteLine, "window back-transition not implemented for Cocoa");
 				}
 			}
 		}
@@ -1328,7 +1384,36 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 	
 	if (nullptr == ptr->renameDialog)
 	{
-		Boolean		noAnimations = false;
+		// create the rename interface, specify how to initialize it
+		// and specify how to update the title when finished
+		auto			initBlock = ^()
+									{
+										// initialize with existing title
+										CFStringRef		result = nullptr; // note: need to return a copy
+										
+										
+										if (kSession_ResultOK != Session_GetWindowUserDefinedTitle(inRef, result))
+										{
+											// failed; return copy of empty string
+											result = BRIDGE_CAST([@"" retain], CFStringRef);
+										}
+										
+										return result; // return-from-block
+									};
+		auto			finalBlock = ^(CFStringRef	inNewTitle)
+										{
+											// if non-nullptr, set new title
+											if (nullptr == inNewTitle)
+											{
+												// user cancelled; ignore
+											}
+											else
+											{
+												Session_SetWindowUserDefinedTitle(inRef, inNewTitle);
+											}
+										};
+		HIWindowRef		carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inRef);
+		Boolean			noAnimations = false;
 		
 		
 		// determine if animation should occur
@@ -1339,36 +1424,17 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 			noAnimations = false; // assume a value, if preference can’t be found
 		}
 		
-		// create the rename interface, specify how to initialize it
-		// and specify how to update the title when finished
-		ptr->renameDialog = WindowTitleDialog_NewWindowModalParentCarbon
-							(Session_ReturnActiveWindow(inRef), (false == noAnimations),
-								^()
-								{
-									// initialize with existing title
-									CFStringRef		result = nullptr; // note: need to return a copy
-									
-									
-									if (kSession_ResultOK != Session_GetWindowUserDefinedTitle(inRef, result))
-									{
-										// failed; return copy of empty string
-										result = BRIDGE_CAST([@"" retain], CFStringRef);
-									}
-									
-									return result; // return-from-block
-								},
-								^(CFStringRef	inNewTitle)
-								{
-									// if non-nullptr, set new title
-									if (nullptr == inNewTitle)
-									{
-										// user cancelled; ignore
-									}
-									else
-									{
-										Session_SetWindowUserDefinedTitle(inRef, inNewTitle);
-									}
-								});
+		if (nullptr != carbonWindow)
+		{
+			ptr->renameDialog = WindowTitleDialog_NewWindowModalParentCarbon
+								(carbonWindow, (false == noAnimations), initBlock, finalBlock);
+		}
+		else
+		{
+			ptr->renameDialog = WindowTitleDialog_NewWindowModal
+								(Session_ReturnActiveNSWindow(inRef), (false == noAnimations),
+									initBlock, finalBlock);
+		}
 	}
 	WindowTitleDialog_Display(ptr->renameDialog);
 }// DisplayWindowRenameUI
@@ -1418,14 +1484,14 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 			
 			// write all information into memory
 			{
-				CFStringRef		stringValue = nullptr;
-				CGDeviceColor	colorValue;
-				OSStatus		error = noErr;
+				CFStringRef			stringValue = nullptr;
+				CGDeviceColor		colorValue;
+				Session_Result		sessionResult = kSession_ResultOK;
 				
 				
 				// window title
-				error = CopyWindowTitleAsCFString(Session_ReturnActiveWindow(inRef), &stringValue);
-				if (error == noErr)
+				sessionResult = Session_GetWindowUserDefinedTitle(inRef, stringValue);
+				if (sessionResult.ok())
 				{
 					saveError = SessionDescription_SetStringData
 								(saveFileMemoryModel, kSessionDescription_StringTypeWindowName, stringValue);
@@ -2151,21 +2217,22 @@ Session_ReturnActiveTerminalWindow	(SessionRef		inRef)
 /*!
 Returns the most recently active window associated
 with the specified session, or nullptr if it cannot
-be found.
+be found.  Also returns nullptr if the session was
+constructed using a modern Cocoa window.
 
 DEPRECATED; use Session_ReturnActiveNSWindow().
 
 (3.0)
 */
 HIWindowRef
-Session_ReturnActiveWindow	(SessionRef		inRef)
+Session_ReturnActiveLegacyCarbonWindow		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	HIWindowRef				result = returnActiveWindow(ptr);
+	HIWindowRef				result = returnActiveLegacyCarbonWindow(ptr);
 	
 	
 	return result;
-}// ReturnActiveWindow
+}// ReturnActiveLegacyCarbonWindow
 
 
 /*!
@@ -5355,7 +5422,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 			else
 			{
 				// configure and display the confirmation alert
-				box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(Session_ReturnActiveWindow(inRef)),
+				box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(Session_ReturnActiveLegacyCarbonWindow(inRef)),
 											AlertMessages_BoxWrap::kAlreadyRetained);
 				
 				// set basics
@@ -8171,6 +8238,32 @@ respawnSession	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 
 
 /*!
+Returns the Carbon window most recently used by this
+session or nullptr if the session was constructed
+using a modern Cocoa window.
+
+DEPRECATED.  Migrate to returnActiveNSWindow().
+
+(4.0)
+*/
+HIWindowRef
+returnActiveLegacyCarbonWindow	(My_SessionPtr		inPtr)
+{
+	HIWindowRef		result = nullptr;
+	
+	
+	if ((nullptr != inPtr) && Session_IsValid(inPtr->selfRef))
+	{
+		if ((nullptr != inPtr->terminalWindow) && TerminalWindow_IsLegacyCarbon(inPtr->terminalWindow))
+		{
+			result = TerminalWindow_ReturnLegacyCarbonWindow(inPtr->terminalWindow);
+		}
+	}
+	return result;
+}// returnActiveLegacyCarbonWindow
+
+
+/*!
 Returns the window most recently used by this session.
 
 (4.1)
@@ -8190,30 +8283,6 @@ returnActiveNSWindow	(My_SessionPtr		inPtr)
 	}
 	return result;
 }// returnActiveNSWindow
-
-
-/*!
-Returns the window most recently used by this session.
-
-DEPRECATED.  Migrate to returnActiveNSWindow().
-
-(4.0)
-*/
-HIWindowRef
-returnActiveWindow	(My_SessionPtr		inPtr)
-{
-	HIWindowRef		result = nullptr;
-	
-	
-	if ((nullptr != inPtr) && Session_IsValid(inPtr->selfRef))
-	{
-		if (nullptr != inPtr->terminalWindow)
-		{
-			result = TerminalWindow_ReturnLegacyCarbonWindow(inPtr->terminalWindow);
-		}
-	}
-	return result;
-}// returnActiveWindow
 
 
 /*!
@@ -8651,8 +8720,18 @@ terminationWarningClose		(SessionRef&	inoutSessionRef,
 				// implicitly update the toolbar visibility preference based
 				// on the toolbar visibility of this closing window
 				{
-					Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
+					HIWindowRef		carbonWindow = returnActiveLegacyCarbonWindow(sessionPtr);
+					Boolean			toolbarHidden = false;
 					
+					
+					if (nullptr != carbonWindow)
+					{
+						toolbarHidden = (false == IsWindowToolbarVisible(carbonWindow));
+					}
+					else
+					{
+						toolbarHidden = (false == [[returnActiveNSWindow(sessionPtr) toolbar] isVisible]);
+					}
 					
 					UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
 																			sizeof(toolbarHidden), &toolbarHidden);
@@ -8743,7 +8822,7 @@ vectorGraphicsCreateTarget		(My_SessionPtr	inPtr)
 			CFStringRef		windowTitleCFString = nullptr;
 			
 			
-			if (noErr == CopyWindowTitleAsCFString(returnActiveWindow(inPtr), &windowTitleCFString))
+			if (noErr == CopyWindowTitleAsCFString(returnActiveLegacyCarbonWindow(inPtr), &windowTitleCFString))
 			{
 				VectorWindow_SetTitle(newWindow, windowTitleCFString);
 				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
