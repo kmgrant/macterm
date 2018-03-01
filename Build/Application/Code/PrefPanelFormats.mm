@@ -836,10 +836,11 @@ didLoadContainerView:(NSView*)			aContainerView
 		}
 		else
 		{
-			self->sampleScreenView = TerminalView_NewNSViewBased(self->sampleScreenBuffer, nullptr/* format */,
-																	self->terminalSampleContentView,
+			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
 																	self->terminalSamplePaddingView,
-																	self->terminalSampleBackgroundView);
+																	self->terminalSampleBackgroundView,
+																	self->sampleScreenBuffer,
+																	nullptr/* format */);
 			if (nullptr == self->sampleScreenView)
 			{
 				Console_WriteLine("failed to create sample terminal view");
@@ -1697,10 +1698,11 @@ didLoadContainerView:(NSView*)			aContainerView
 		}
 		else
 		{
-			self->sampleScreenView = TerminalView_NewNSViewBased(self->sampleScreenBuffer, nullptr/* format */,
-																	self->terminalSampleContentView,
+			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
 																	self->terminalSamplePaddingView,
-																	self->terminalSampleBackgroundView);
+																	self->terminalSampleBackgroundView,
+																	self->sampleScreenBuffer,
+																	nullptr/* format */);
 			if (nullptr == self->sampleScreenView)
 			{
 				Console_WriteLine("failed to create sample terminal view");

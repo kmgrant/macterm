@@ -160,9 +160,10 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalWindow_Controller : NSWindowController //{
+@interface TerminalWindow_Controller : NSWindowController < NSWindowDelegate > //{
 {
 @private
+	NSMutableArray*				_terminalViewControllers;
 	TerminalWindowRef			_terminalWindowRef;
 	TerminalToolbar_Delegate*	_toolbarDelegate;
 }
@@ -174,6 +175,10 @@ changes to an interface declared in a ".mm" file.
 // accessors
 	@property (assign) TerminalWindowRef
 	terminalWindowRef;
+
+// new methods
+	- (NSEnumerator*)
+	enumerateTerminalViewControllers;
 
 @end //}
 

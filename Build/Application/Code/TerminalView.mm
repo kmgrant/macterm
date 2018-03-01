@@ -887,11 +887,11 @@ actual NSView* hierarchy.)
 (4.0)
 */
 TerminalViewRef
-TerminalView_NewNSViewBased		(TerminalScreenRef				inScreenDataSource,
-								 Preferences_ContextRef			inFormatOrNull,
-								 TerminalView_ContentView*		inBaseViewOrNil,
-								 TerminalView_BackgroundView*	inPaddingViewOrNil,
-								 TerminalView_BackgroundView*	inBackgroundViewOrNil)
+TerminalView_NewNSViewBased		(TerminalView_ContentView*		inContentView,
+								 TerminalView_BackgroundView*	inPaddingView,
+								 TerminalView_BackgroundView*	inBackgroundView,
+								 TerminalScreenRef				inScreenDataSource,
+								 Preferences_ContextRef			inFormatOrNull)
 {
 	TerminalViewRef		result = nullptr;
 	
@@ -901,18 +901,7 @@ TerminalView_NewNSViewBased		(TerminalScreenRef				inScreenDataSource,
 	
 	try
 	{
-		// the views may be constructed automatically or exist already
-		// (e.g. useful when loading a NIB that already has them)
-		TerminalView_ContentView*		contentView = ((nil != inBaseViewOrNil)
-														? inBaseViewOrNil
-														: [[[TerminalView_ContentView alloc] initWithFrame:NSZeroRect] autorelease]);
-		TerminalView_BackgroundView*	paddingView = ((nil != inPaddingViewOrNil)
-														? inPaddingViewOrNil
-														: [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease]);
-		TerminalView_BackgroundView*	backgroundView = ((nil != inBackgroundViewOrNil)
-															? inBackgroundViewOrNil
-															: [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease]);
-		My_TerminalViewPtr				viewPtr = new My_TerminalView(contentView, paddingView, backgroundView);
+		My_TerminalViewPtr		viewPtr = new My_TerminalView(inContentView, inPaddingView, inBackgroundView);
 		
 		
 		assert(nullptr != viewPtr);
@@ -4525,7 +4514,7 @@ paddingNSView([inPaddingView retain]),
 contentNSView([inSuperclassViewInstance retain]),
 carbonData(nullptr)
 {
-}// My_TerminalView 1-argument constructor (NSView*)
+}// My_TerminalView 3-argument constructor (NSView*)
 
 
 /*!
@@ -15089,6 +15078,33 @@ isOpaque
 
 
 /*!
+Returns a contextual menu for the terminal view.
+
+(2018.02)
+*/
+- (NSMenu*)
+menuForEvent:(NSEvent*)		anEvent
+{
+#pragma unused(anEvent)
+	NSMenu*					result = nil;
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		// display a contextual menu
+		result = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		
+		// set up the contextual menu
+		//[result setAllowsContextMenuPlugIns:NO];
+		populateContextualMenu(viewPtr, result);
+	}
+	
+	return result;
+}// menuForEvent:
+
+
+/*!
 Invoked by NSView whenever it’s necessary to define the regions
 that change the mouse pointer’s shape.
 
@@ -15244,9 +15260,11 @@ loadView
 			}
 			else
 			{
-				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(buffer, nullptr/* format */,
-																			self.terminalContentView, self.terminalPaddingView,
-																			self.terminalBackgroundView);
+				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(self.terminalContentView,
+																			self.terminalPaddingView,
+																			self.terminalBackgroundView,
+																			buffer,
+																			nullptr/* format */);
 				
 				
 				if (nullptr == viewRef)

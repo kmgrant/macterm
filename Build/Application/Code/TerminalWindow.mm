@@ -151,6 +151,15 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 } // anonymous namespace
 
 #pragma mark Types
+
+@interface TerminalWindow_Controller () //{
+
+// accessors
+	@property (strong) NSMutableArray*
+	terminalViewControllers;
+
+@end //}
+
 namespace {
 
 typedef std::map< TerminalViewRef, TerminalScreenRef >			My_ScreenByTerminalView;
@@ -228,7 +237,9 @@ struct My_TerminalWindow
 	
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
 	
+	TerminalWindow_Controller*	windowController;			// controller for the main NSWindow (responds to events, etc.)
 	NSWindow*					window;						// the Cocoa window reference for the terminal window (wrapping Carbon)
+	TerminalToolbar_Delegate*	toolbarDelegate;			// used to drive the toolbar in the Cocoa window
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
@@ -326,7 +337,7 @@ IconRef					createLEDOnIcon					();
 IconRef					createPrintIcon					();
 IconRef					createRestartSessionIcon		();
 Boolean					createTabWindow					(My_TerminalWindowPtr);
-NSWindow*				createWindow					(Boolean);
+NSWindow*				createWindowCarbonCocoa			();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
@@ -2920,7 +2931,9 @@ refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs
 selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
-window(createWindow(inCarbonLegacy)),
+windowController([[TerminalWindow_Controller alloc] initWithTerminalVC:[[[TerminalView_Controller alloc] init] autorelease]]),
+window((inCarbonLegacy) ? createWindowCarbonCocoa() : windowController.window),
+toolbarDelegate(nil), // may be set later
 tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
@@ -3044,7 +3057,11 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 	{
 		if (this->isCocoa())
 		{
-			newView = TerminalView_NewNSViewBased(newScreen, inFontInfoOrNull);
+			// already set up by window controller
+			TerminalView_Controller*	viewController = [[this->windowController enumerateTerminalViewControllers] nextObject];
+			
+			
+			newView = [viewController.terminalContentView terminalViewRef];
 			if (nullptr == newView)
 			{
 				Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
@@ -3291,6 +3308,7 @@ My_TerminalWindow::
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
 	// finally, dispose of the window
+	[this->toolbarDelegate release];
 	if (nil != this->window)
 	{
 		if (false == this->isCocoa())
@@ -4015,7 +4033,7 @@ Returns nullptr if the window was not created successfully.
 (4.0)
 */
 NSWindow*
-createWindow	(Boolean	inCarbonLegacy)
+createWindowCarbonCocoa ()
 {
 @autoreleasepool {
 	NSWindow*		result = nil;
@@ -4029,7 +4047,6 @@ createWindow	(Boolean	inCarbonLegacy)
 		useCustomFullScreenMode = false; // assume a default if preference can’t be found
 	}
 	
-	if (inCarbonLegacy)
 	{
 		// load the NIB containing this window (automatically finds the right localization)
 		HIWindowRef		window = nullptr;
@@ -4051,25 +4068,10 @@ createWindow	(Boolean	inCarbonLegacy)
 			setCarbonWindowFullScreenIcon(window, true);
 		}
 	}
-	else
-	{
-		result = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:(NSTitledWindowMask | NSClosableWindowMask |
-																				NSMiniaturizableWindowMask | NSResizableWindowMask)
-														backing:NSBackingStoreBuffered defer:NO];
-		
-		// override this default; technically terminal windows
-		// are immediately closeable for the first 15 seconds
-		result.documentEdited = NO;
-		
-		if (false == useCustomFullScreenMode)
-		{
-			setCocoaWindowFullScreenIcon(result, true);
-		}
-	}
 	
 	return result;
 }// @autoreleasepool
-}// createWindow
+}// createWindowCarbonCocoa
 
 
 /*!
@@ -8709,6 +8711,10 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 @implementation TerminalWindow_Controller //{
 
 
+// internally-declared
+@synthesize terminalViewControllers = _terminalViewControllers;
+
+// externally-declared
 @synthesize terminalWindowRef = _terminalWindowRef;
 
 
@@ -8729,16 +8735,15 @@ initWithTerminalVC:(TerminalView_Controller*)	aViewController
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
 	if (nil != self)
 	{
-		self->_terminalWindowRef = nil;
+		self.window.delegate = self;
 		
-		// TEMPORARY; view controller is ignored for now, using
-		// only the view itself
+		_terminalViewControllers = [[NSMutableArray alloc] init];
+		[self.terminalViewControllers addObject:aViewController];
+		_terminalWindowRef = nil;
+		
 		[REINTERPRET_CAST(self.window.contentView, NSView*) addSubview:aViewController.view];
 		
-		// create toolbar; has to be done programmatically, because
-		// IB only supports them in 10.5; which makes sense, you know,
-		// since toolbars have only been in the OS since 10.0, and
-		// hardly any applications would have found THOSE useful...
+		// create toolbar
 		{
 			NSString*		toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
 			NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
@@ -8768,9 +8773,47 @@ Destructor.
 - (void)
 dealloc
 {
-	[self->_toolbarDelegate release];
+	[_terminalViewControllers release];
+	[_toolbarDelegate release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Returns an object that can be used to determine all the
+view controllers used for terminals in this window.
+Works with Objective-C "for ... in ..." syntax.
+
+(2018.02)
+*/
+- (NSEnumerator*)
+enumerateTerminalViewControllers
+{
+	return [_terminalViewControllers objectEnumerator];
+}// enumerateTerminalViewControllers
+
+
+#pragma mark NSWindowDelegate
+
+
+/*!
+Responds when the user asks to close the window.
+
+(2018.02)
+*/
+- (BOOL)
+windowShouldClose:(id)	sender
+{
+	BOOL	result = YES;
+	
+	
+	// UNIMPLEMENTED
+	
+	return result;
+}// windowShouldClose:
 
 
 @end //} TerminalWindow_Controller

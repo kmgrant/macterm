@@ -317,11 +317,11 @@ void
 //@{
 
 TerminalViewRef
-	TerminalView_NewNSViewBased		(TerminalScreenRef				inScreenDataSource,
-									 Preferences_ContextRef			inFormatOrNull = nullptr,
-									 TerminalView_ContentView*		inBaseView = nullptr,
-									 TerminalView_BackgroundView*	inPaddingView = nullptr,
-									 TerminalView_BackgroundView*	inBackgroundView = nullptr);
+	TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
+									 TerminalView_BackgroundView*	inPaddingView,
+									 TerminalView_BackgroundView*	inBackgroundView,
+									 TerminalScreenRef				inScreenDataSource,
+									 Preferences_ContextRef			inFormatOrNull = nullptr);
 
 // AUTOMATICALLY DESTROYED WHEN THE VIEW FROM TerminalView_ReturnContainerHIView() GOES AWAY
 TerminalViewRef
