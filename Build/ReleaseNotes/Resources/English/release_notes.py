@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180301',
     '20180212',
     '20180105',
     '20180101',
@@ -592,6 +593,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180301': [
+        'Fixed window stacking to match top-left corner specified in Preferences instead of being slightly offset from it.',
+    ],
     '20180212': [
         'Fixed commands such as "Bring Next to Front", which could sometimes do nothing instead of selecting another window.',
     ],

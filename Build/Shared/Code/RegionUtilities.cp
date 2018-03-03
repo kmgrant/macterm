@@ -264,63 +264,6 @@ RegionUtilities_GetWindowDeviceGrayRect		(WindowRef	inWindow,
 
 
 /*!
-Determines the display that contains the largest
-portion of the specified window.  Returns true
-only if such a display is found.
-
-(4.0)
-*/
-Boolean
-RegionUtilities_GetWindowDirectDisplayID	(WindowRef				inWindow,
-											 CGDirectDisplayID&		outLargestAreaDeviceID)
-{
-	Rect		contentBounds;
-	OSStatus	error = GetWindowBounds(inWindow, kWindowContentRgn, &contentBounds);
-	Boolean		result = false;
-	
-	
-	outLargestAreaDeviceID = CGMainDisplayID(); // initially...
-	if (noErr == error)
-	{
-		CGDisplayCount const	kDisplayMaxCount = 3; // arbitrary
-		CGRect					floatBounds;
-		CGDisplayErr			displayError = kCGErrorSuccess;
-		CGDirectDisplayID*		displayIDs = new CGDirectDisplayID[kDisplayMaxCount];
-		CGDisplayCount			actualCount = 0;
-		
-		
-		floatBounds = CGRectMake(contentBounds.left, contentBounds.top,
-									contentBounds.right - contentBounds.left,
-									contentBounds.bottom - contentBounds.top);
-		
-		displayError = CGGetDisplaysWithRect(floatBounds, kDisplayMaxCount, displayIDs, &actualCount);
-		if ((kCGErrorSuccess == displayError) && (actualCount > 0))
-		{
-			Float32		maxArea = 0;
-			
-			
-			outLargestAreaDeviceID = displayIDs[0]; // initially...
-			for (CGDisplayCount i = 0; i < actualCount; ++i)
-			{
-				CGRect		displayBounds = CGDisplayBounds(displayIDs[i]);
-				CGRect		intersection = CGRectIntersection(floatBounds, displayBounds);
-				
-				
-				if ((intersection.size.width * intersection.size.height) > maxArea)
-				{
-					maxArea = (intersection.size.width * intersection.size.height);
-					outLargestAreaDeviceID = displayIDs[i];
-				}
-			}
-			result = true;
-		}
-		delete [] displayIDs, displayIDs = nullptr;
-	}
-	return result;
-}// GetWindowDirectDisplayID
-
-
-/*!
 Determines the available window positioning
 bounds for the device that contains the largest
 part of the specified window’s structure region,

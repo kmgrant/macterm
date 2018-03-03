@@ -243,10 +243,6 @@ struct My_TerminalWindow
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
-	CGDirectDisplayID			staggerDisplay;				// the display the window was on at the time "staggerIndex" was set;
-															//     if the user attempts to stack windows and the window is now on
-															//     a different display, "staggerIndex" is ignored and reset
-	UInt16						staggerIndex;				// index in list of staggered windows for "staggerDisplay"
 	
 	struct
 	{
@@ -322,7 +318,8 @@ typedef LockAcquireRelease< TerminalWindowRef, My_TerminalWindow >		My_TerminalW
 namespace {
 
 void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, UInt16, UInt16, HIPoint*);
-void					calculateWindowPosition			(My_TerminalWindowPtr, UInt16*, UInt16*, HIRect*);
+void					calculateWindowFrameCocoa		(My_TerminalWindowPtr, UInt16*, UInt16*, NSRect*);
+void					calculateWindowRectCarbon		(My_TerminalWindowPtr, UInt16*, UInt16*, HIRect*);
 void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
 IconRef					createBellOffIcon				();
 IconRef					createBellOnIcon				();
@@ -349,7 +346,8 @@ void					handleNewSize					(WindowRef, Float32, Float32, void*);
 void					installTickHandler				(My_TerminalWindowPtr, Boolean);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
-bool					lessThanIfGreaterArea			(HIWindowRef, HIWindowRef);
+bool					lessThanIfGreaterAreaCarbon		(HIWindowRef, HIWindowRef);
+bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
@@ -366,7 +364,6 @@ UInt16					returnScrollBarHeight			(My_TerminalWindowPtr);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
 UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
-CGDirectDisplayID		returnWindowDisplay				(HIWindowRef);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					scrollProc						(HIViewRef, HIViewPartCode);
@@ -2372,12 +2369,15 @@ separately on each display.
 void
 TerminalWindow_StackWindows ()
 {
-	typedef std::vector< HIWindowRef >						My_WindowList;
-	typedef std::map< CGDirectDisplayID, My_WindowList >	My_WindowsByDisplay; // which windows are on which devices?
+	typedef std::vector< HIWindowRef >					My_CarbonWindowList;
+	typedef std::vector< NSWindow* >					My_CocoaWindowList;
+	typedef std::map< NSScreen*, My_CarbonWindowList >	My_CarbonWindowsByDisplay;
+	typedef std::map< NSScreen*, My_CocoaWindowList >	My_CocoaWindowsByDisplay; // which windows are on which devices?
 	
-	NSArray*				currentSpaceWindowNumbers = [NSWindow windowNumbersWithOptions:0];
-	NSWindow*				activeWindow = [NSApp mainWindow];
-	My_WindowsByDisplay		windowsByDisplay;
+	NSArray*					currentSpaceWindowNumbers = [NSWindow windowNumbersWithOptions:0];
+	NSWindow*					activeWindow = [NSApp mainWindow];
+	My_CarbonWindowsByDisplay	carbonWindowsByDisplay;
+	My_CocoaWindowsByDisplay	cocoaWindowsByDisplay;
 	
 	
 	// first determine which windows are on each display
@@ -2388,11 +2388,25 @@ TerminalWindow_StackWindows ()
 		TerminalWindowRef	terminalWindow = [window terminalWindowRef];
 		
 		
-		if (nil != terminalWindow)
+		if ((nil != terminalWindow) && TerminalWindow_IsLegacyCarbon(terminalWindow))
 		{
-			HIWindowRef const			kWindow = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
-			CGDirectDisplayID const		kDisplayID = returnWindowDisplay(kWindow);
-			My_WindowList&				windowsOnThisDisplay = windowsByDisplay[kDisplayID];
+			HIWindowRef const		kWindow = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
+			My_CarbonWindowList&	windowsOnThisDisplay = carbonWindowsByDisplay[window.screen];
+			
+			
+			if (windowsOnThisDisplay.empty())
+			{
+				// the first time a display’s window list is seen, allocate
+				// an approximately-correct vector size up front (this value
+				// will only be exactly right on single-display systems)
+				windowsOnThisDisplay.reserve([currentSpaceWindowNumbers count]);
+			}
+			windowsOnThisDisplay.push_back(kWindow);
+		}
+		else if ((nil != terminalWindow) && (false == TerminalWindow_IsLegacyCarbon(terminalWindow)))
+		{
+			NSWindow* const			kWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+			My_CocoaWindowList&		windowsOnThisDisplay = cocoaWindowsByDisplay[window.screen];
 			
 			
 			if (windowsOnThisDisplay.empty())
@@ -2413,23 +2427,30 @@ TerminalWindow_StackWindows ()
 	// sort windows by largest area arbitrarily to minimize the chance
 	// that a window will be completely hidden by the stacking of other
 	// windows on its display
-	for (auto& displayWindowPair : windowsByDisplay)
+	for (auto& displayWindowPair : carbonWindowsByDisplay)
 	{
-		My_WindowList&	windowsOnThisDisplay = displayWindowPair.second;
+		My_CarbonWindowList&	windowsOnThisDisplay = displayWindowPair.second;
 		
 		
-		std::sort(windowsOnThisDisplay.begin(), windowsOnThisDisplay.end(), lessThanIfGreaterArea);
+		std::sort(windowsOnThisDisplay.begin(), windowsOnThisDisplay.end(), lessThanIfGreaterAreaCarbon);
+	}
+	for (auto& displayWindowPair : cocoaWindowsByDisplay)
+	{
+		My_CocoaWindowList&		windowsOnThisDisplay = displayWindowPair.second;
+		
+		
+		std::sort(windowsOnThisDisplay.begin(), windowsOnThisDisplay.end(), lessThanIfGreaterAreaCocoa);
 	}
 	
 	// for each display, stack windows separately
-	for (auto displayWindowPair : windowsByDisplay)
+	for (auto displayWindowPair : carbonWindowsByDisplay)
 	{
-		My_WindowList const&	windowsOnThisDisplay = displayWindowPair.second;
-		auto					toWindow = windowsOnThisDisplay.begin();
-		auto					endWindows = windowsOnThisDisplay.end();
-		UInt16					staggerListIndexHint = 0;
-		UInt16					localWindowIndexHint = 0;
-		UInt16					transitioningWindowCount = 0;
+		My_CarbonWindowList const&		windowsOnThisDisplay = displayWindowPair.second;
+		auto							toWindow = windowsOnThisDisplay.begin();
+		auto							endWindows = windowsOnThisDisplay.end();
+		UInt16							staggerListIndexHint = 0;
+		UInt16							localWindowIndexHint = 0;
+		UInt16							transitioningWindowCount = 0;
 		
 		
 		for (; toWindow != endWindows; ++toWindow, ++localWindowIndexHint)
@@ -2457,7 +2478,7 @@ TerminalWindow_StackWindows ()
 			originalStructureBounds = structureBounds;
 			
 			// NOTE: on return, "structureBounds" is updated again
-			calculateWindowPosition(ptr, &staggerListIndexHint, &localWindowIndexHint, &structureBounds);
+			calculateWindowRectCarbon(ptr, &staggerListIndexHint, &localWindowIndexHint, &structureBounds);
 			
 			// if a window’s current position places it entirely on-screen
 			// and its “stacked” location would put it partially off-screen,
@@ -2494,6 +2515,57 @@ TerminalWindow_StackWindows ()
 													&structureBounds);
 						assert_noerr(error);
 					}
+				}
+			}
+		}
+	}
+	for (auto displayWindowPair : cocoaWindowsByDisplay)
+	{
+		My_CocoaWindowList const&		windowsOnThisDisplay = displayWindowPair.second;
+		auto							toWindow = windowsOnThisDisplay.begin();
+		auto							endWindows = windowsOnThisDisplay.end();
+		UInt16							staggerListIndexHint = 0;
+		UInt16							localWindowIndexHint = 0;
+		UInt16							transitioningWindowCount = 0;
+		
+		
+		for (; toWindow != endWindows; ++toWindow, ++localWindowIndexHint)
+		{
+			// arbitrary limit: only animate a few windows (asynchronously)
+			// per display, moving the rest into position immediately
+			NSWindow* const					kNSWindow = *toWindow;
+			TerminalWindowRef const			kTerminalWindow = [kNSWindow terminalWindowRef];
+			Boolean const					kTooManyWindows = (transitioningWindowCount > 3/* arbitrary */);
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), kTerminalWindow);
+			NSRect							originalFrame = kNSWindow.frame;
+			NSRect							windowFrame = kNSWindow.frame;
+			NSRect							screenFrame = kNSWindow.screen.frame;
+			
+			
+			++transitioningWindowCount;
+			
+			// NOTE: on return, "windowFrame" is updated again
+			calculateWindowFrameCocoa(ptr, &staggerListIndexHint, &localWindowIndexHint, &windowFrame);
+			
+			// if a window’s current position places it entirely on-screen
+			// and its “stacked” location would put it partially off-screen,
+			// do not relocate the window (presumably it was better before!)
+			if ((false == CGRectContainsRect(NSRectToCGRect(screenFrame), NSRectToCGRect(originalFrame))) ||
+				CGRectContainsRect(NSRectToCGRect(screenFrame), NSRectToCGRect(windowFrame)))
+			{
+				// select each window as it is stacked so that keyboard cycling
+				// will be in sync with the new order of windows
+				[kNSWindow orderFront:nil];
+				
+				if (kTooManyWindows)
+				{
+					// move the window immediately without animation
+					[kNSWindow setFrame:windowFrame display:NO];
+				}
+				else
+				{
+					// do a cool slide animation to move the window into place
+					[kNSWindow setFrame:windowFrame display:NO animate:YES];
 				}
 			}
 		}
@@ -3041,6 +3113,7 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 		// set up the Help System
 		HelpSystem_SetWindowKeyPhrase(carbonWindow, kHelpSystem_KeyPhraseTerminals);
 	}
+	gTerminalWindowRefsByNSWindow()[this->window] = this->selfRef;
 	
 	// create controls
 	{
@@ -3126,7 +3199,26 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 	{
 		if (this->isCocoa())
 		{
-			Console_Warning(Console_WriteLine, "initial stacking not implemented for Cocoa window");
+			NSWindow*	frontWindow = [NSApp mainWindow];
+			NSRect		thisFrame = this->window.frame;
+			UInt16		staggerListIndex = 0;
+			UInt16		localWindowIndex = 0;
+			
+			
+			calculateWindowFrameCocoa(this, &staggerListIndex, &localWindowIndex, &thisFrame);
+			
+			// if the frontmost window already occupies the location for
+			// the new window, offset it slightly
+			if (nil != frontWindow)
+			{
+				if (NSEqualPoints(frontWindow.frame.origin, thisFrame.origin))
+				{
+					thisFrame.origin.x += 20; // per Aqua Human Interface Guidelines
+					thisFrame.origin.y -= 20; // per Aqua Human Interface Guidelines
+				}
+			}
+			
+			[this->window setFrameOrigin:thisFrame.origin];
 		}
 		else
 		{
@@ -3140,7 +3232,7 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 			error = HIWindowGetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
 										&structureBounds);
 			assert_noerr(error);
-			calculateWindowPosition(this, &staggerListIndex, &localWindowIndex, &structureBounds);
+			calculateWindowRectCarbon(this, &staggerListIndex, &localWindowIndex, &structureBounds);
 			
 			// if the frontmost window already occupies the location for
 			// the new window, offset it slightly
@@ -3428,8 +3520,8 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 		if (CGRectContainsPoint(screenRect, stackingOrigin))
 		{
 			// window is on the display where the user set an origin preference
-			outPositionPtr->x = stackingOrigin.x + stagger.x * (1 + inLocalWindowIndex);
-			outPositionPtr->y = stackingOrigin.y + stagger.y * (1 + inLocalWindowIndex);
+			outPositionPtr->x = stackingOrigin.x + (stagger.x * inLocalWindowIndex);
+			outPositionPtr->y = stackingOrigin.y + (stagger.y * inLocalWindowIndex);
 		}
 		else
 		{
@@ -3438,15 +3530,94 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 			// (TEMPORARY; ideally the preference itself is per-display)
 			stackingOrigin.x += screenRect.origin.x;
 			stackingOrigin.y += screenRect.origin.y;
-			outPositionPtr->x = stackingOrigin.x + stagger.x * (1 + inLocalWindowIndex);
-			outPositionPtr->y = stackingOrigin.y + stagger.y * (1 + inLocalWindowIndex);
+			outPositionPtr->x = stackingOrigin.x + (stagger.x * inLocalWindowIndex);
+			outPositionPtr->y = stackingOrigin.y + (stagger.y * inLocalWindowIndex);
 		}
 	}
 }// calculateIndexedWindowPosition
 
 
 /*!
-Calculates the stagger position of windows.
+Calculates the stagger position of Cocoa windows.
+
+The index hints can be used to strongly suggest where
+a window should end up on the screen.  (Use this if
+the given window is part of an iteration over several
+windows, where its order in the list is important.)
+If no hints are provided, a window position is
+determined in some other way.
+
+On input, the rectangle must be the structure/frame
+of the window in its NSScreen coordinates.
+
+On output, a new frame rectangle is provided in its
+NSScreen coordinates (lower-left origin).
+
+(2018.03)
+*/
+void
+calculateWindowFrameCocoa	(My_TerminalWindowPtr	inPtr,
+							 UInt16*				inoutStaggerListIndexHintPtr,
+							 UInt16*				inoutLocalWindowIndexHintPtr,
+							 NSRect*				inoutArrangement)
+{
+	NSRect const	kStructureRegionBounds = *inoutArrangement;
+	Float32 const	kStructureWidth = kStructureRegionBounds.size.width;
+	Float32 const	kStructureHeight = kStructureRegionBounds.size.height;
+	NSScreen*		windowScreen = [inPtr->window screen];
+	NSRect			screenRect;
+	CGPoint			structureTopLeftScrap = CGPointMake(0, 0);
+	Boolean			doneCalculation = false;
+	Boolean			tooFarRight = false;
+	Boolean			tooFarDown = false;
+	
+	
+	if (nil == windowScreen)
+	{
+		windowScreen = [NSScreen mainScreen];
+	}
+	screenRect = [windowScreen visibleFrame];
+	
+	while ((false == doneCalculation) && (false == tooFarRight))
+	{
+		calculateIndexedWindowPosition(inPtr, *inoutStaggerListIndexHintPtr, *inoutLocalWindowIndexHintPtr,
+										&structureTopLeftScrap);
+		inoutArrangement->origin.x = structureTopLeftScrap.x;
+		inoutArrangement->origin.y = (windowScreen.frame.origin.y + NSHeight(windowScreen.frame) - structureTopLeftScrap.y - kStructureHeight);
+		inoutArrangement->size.width = kStructureWidth;
+		inoutArrangement->size.height = kStructureHeight;
+		
+		// see if the window position would start to nudge it off
+		// the bottom or right edge of its display
+		tooFarRight = ((inoutArrangement->origin.x + inoutArrangement->size.width) > (screenRect.origin.x + screenRect.size.width));
+		tooFarDown = (inoutArrangement->origin.y < screenRect.origin.y);
+		
+		if (tooFarDown)
+		{
+			if (0 == *inoutLocalWindowIndexHintPtr)
+			{
+				// the window is already offscreen despite being at the
+				// stacking origin so there is nowhere else to go
+				doneCalculation = true;
+			}
+			else
+			{
+				// try shifting the top-left-corner origin over to see
+				// if there is still room for a new window stack
+				++(*inoutStaggerListIndexHintPtr);
+				*inoutLocalWindowIndexHintPtr = 0;
+			}
+		}
+		else
+		{
+			doneCalculation = true;
+		}
+	}
+}// calculateWindowFrameCocoa
+
+
+/*!
+Calculates the stagger position of Carbon windows.
 
 The index hints can be used to strongly suggest where
 a window should end up on the screen.  (Use this if
@@ -3464,7 +3635,7 @@ screen-pixel coordinates.
 (4.1)
 */
 void
-calculateWindowPosition		(My_TerminalWindowPtr	inPtr,
+calculateWindowRectCarbon	(My_TerminalWindowPtr	inPtr,
 							 UInt16*				inoutStaggerListIndexHintPtr,
 							 UInt16*				inoutLocalWindowIndexHintPtr,
 							 HIRect*				inoutArrangement)
@@ -3521,7 +3692,7 @@ calculateWindowPosition		(My_TerminalWindowPtr	inPtr,
 			doneCalculation = true;
 		}
 	}
-}// calculateWindowPosition
+}// calculateWindowRectCarbon
 
 
 /*!
@@ -4523,8 +4694,8 @@ strictly larger pixel area.
 (4.1)
 */
 bool
-lessThanIfGreaterArea	(HIWindowRef	inWindow1,
-						 HIWindowRef	inWindow2)
+lessThanIfGreaterAreaCarbon		(HIWindowRef	inWindow1,
+								 HIWindowRef	inWindow2)
 {
 	bool	result = false;
 	Rect	structureBounds1;
@@ -4541,10 +4712,45 @@ lessThanIfGreaterArea	(HIWindowRef	inWindow1,
 		
 		
 		result = (kArea1 > kArea2);
+		if (kArea1 == kArea2)
+		{
+			// enforce strict weak ordering to make ties consistent
+			result = (inWindow1 < inWindow2);
+		}
 	}
 	
 	return result;
-}// lessThanIfGreaterArea
+}// lessThanIfGreaterAreaCarbon
+
+
+/*!
+A comparison routine that is compatible with std::sort();
+returns true if the first window is strictly less-than
+the second based on whether or not "inWindow1" covers a
+strictly larger pixel area.
+
+(2018.03)
+*/
+bool
+lessThanIfGreaterAreaCocoa		(NSWindow*		inWindow1,
+								 NSWindow*		inWindow2)
+{
+	bool			result = false;
+	NSRect			frame1 = inWindow1.frame;
+	NSRect			frame2 = inWindow2.frame;
+	CGFloat const	kArea1 = (NSWidth(frame1) * NSHeight(frame1));
+	CGFloat const	kArea2 = (NSWidth(frame2) * NSHeight(frame2));
+	
+	
+	result = (kArea1 > kArea2);
+	if (kArea1 == kArea2)
+	{
+		// enforce strict weak ordering to make ties consistent
+		result = (inWindow1 < inWindow2);
+	}
+	
+	return result;
+}// lessThanIfGreaterAreaCocoa
 
 
 /*!
@@ -6816,23 +7022,6 @@ returnToolbarHeight		(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 
 
 /*!
-Returns a display ID for the specified window.
-
-(4.1)
-*/
-CGDirectDisplayID
-returnWindowDisplay		(HIWindowRef	inWindow)
-{
-	CGDirectDisplayID	result = kCGNullDirectDisplay;
-	
-	
-	UNUSED_RETURN(Boolean)RegionUtilities_GetWindowDirectDisplayID(inWindow, result);
-	
-	return result;
-}// returnWindowDisplay
-
-
-/*!
 This routine, of standard UndoActionProcPtr form,
 can undo or redo changes to the font and/or font
 size of a terminal screen.
@@ -8807,6 +8996,7 @@ Responds when the user asks to close the window.
 - (BOOL)
 windowShouldClose:(id)	sender
 {
+#pragma unused(sender)
 	BOOL	result = YES;
 	
 	

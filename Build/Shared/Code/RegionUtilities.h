@@ -67,10 +67,6 @@ void
 	RegionUtilities_GetWindowDeviceGrayRect		(WindowRef			inWindow,
 												 Rect*				outRectPtr);
 
-Boolean
-	RegionUtilities_GetWindowDirectDisplayID	(WindowRef			inWindow,
-												 CGDirectDisplayID&	outLargestAreaDeviceID);
-
 void
 	RegionUtilities_GetWindowMaximumBounds		(WindowRef			inWindow,
 												 Rect*				outNewBoundsPtr,
