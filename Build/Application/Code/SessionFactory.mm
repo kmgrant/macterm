@@ -1295,11 +1295,18 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 		{
 			if ((enterFullScreen) && (nullptr != terminalWindow))
 			{
-				HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
-				EventTargetRef		windowTarget = GetWindowEventTarget(window);
-				
-				
-				Commands_ExecuteByIDUsingEventAfterDelay(kCommandFullScreenToggle, windowTarget, 0.5/* delay */);
+				if (TerminalWindow_IsLegacyCarbon(terminalWindow))
+				{
+					HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
+					EventTargetRef		windowTarget = GetWindowEventTarget(window);
+					
+					
+					Commands_ExecuteByIDUsingEventAfterDelay(kCommandFullScreenToggle, windowTarget, (i + 1) * 0.5/* delay */);
+				}
+				else
+				{
+					CocoaExtensions_RunLater((i + 1) * 0.5/* delay */, ^{ [TerminalWindow_ReturnNSWindow(terminalWindow) toggleFullScreen:NSApp]; });
+				}
 			}
 		}
 	}
@@ -2550,7 +2557,21 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 				}
 				else
 				{
-					[cocoaWindow setFrameTopLeftPoint:NSMakePoint(frameBounds.origin.x, frameBounds.origin.y)];
+					NSScreen*	windowScreen = cocoaWindow.screen;
+					
+					
+					if (nil == windowScreen)
+					{
+						windowScreen = [NSScreen mainScreen];
+					}
+					
+					frameBounds.size.width = NSWidth(cocoaWindow.frame);
+					frameBounds.size.height = NSWidth(cocoaWindow.frame);
+					
+					// flip coordinates
+					frameBounds.origin.y = (windowScreen.frame.origin.y + NSHeight(windowScreen.frame) - frameBounds.origin.y - frameBounds.size.height);
+					
+					[cocoaWindow setFrame:NSRectFromCGRect(frameBounds) display:NO];
 				}
 			}
 		}

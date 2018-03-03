@@ -986,11 +986,19 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 																CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
 															CFRetainRelease::kAlreadyRetained);
+		HIWindowRef								carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inRef);
 		
 		
-		dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(Session_ReturnActiveLegacyCarbonWindow(inRef), embeddedPanel,
-																	temporaryContext),
-									GenericDialog_Wrap::kAlreadyRetained);
+		if (nullptr != carbonWindow)
+		{
+			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(carbonWindow, embeddedPanel, temporaryContext),
+										GenericDialog_Wrap::kAlreadyRetained);
+		}
+		else
+		{
+			dialog = GenericDialog_Wrap(GenericDialog_New(Session_ReturnActiveNSWindow(inRef).contentView, embeddedPanel, temporaryContext),
+										GenericDialog_Wrap::kAlreadyRetained);
+		}
 		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 		GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 		GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,

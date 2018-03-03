@@ -5911,7 +5911,19 @@ performTranslationSwitchByFavoriteName:(id)		sender
 performTranslationSwitchCustom:(id)		sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSetTranslationTable, nullptr/* target */);
+	SEL		thisSelector = @selector(performTranslationSwitchCustom:);
+	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
+	
+	
+	if (self != target)
+	{
+		[NSApp sendAction:thisSelector to:target from:sender];
+	}
+	else
+	{
+		// legacy Carbon
+		Commands_ExecuteByIDUsingEvent(kCommandSetTranslationTable, nullptr/* target */);
+	}
 }
 
 
@@ -6107,7 +6119,19 @@ canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 performScreenResizeCustom:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
+	SEL		thisSelector = @selector(performScreenResizeCustom:);
+	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
+	
+	
+	if (self != target)
+	{
+		[NSApp sendAction:thisSelector to:target from:sender];
+	}
+	else
+	{
+		// legacy Carbon
+		Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
+	}
 }
 
 
@@ -6254,7 +6278,19 @@ performFormatByFavoriteName:(id)	sender
 performFormatCustom:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFormat, nullptr/* target */);
+	SEL		thisSelector = @selector(performFormatCustom:);
+	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
+	
+	
+	if (self != target)
+	{
+		[NSApp sendAction:thisSelector to:target from:sender];
+	}
+	else
+	{
+		// legacy Carbon
+		Commands_ExecuteByIDUsingEvent(kCommandFormat, nullptr/* target */);
+	}
 }
 
 

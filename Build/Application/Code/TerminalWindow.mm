@@ -568,6 +568,240 @@ TerminalWindow_CopyWindowTitle	(TerminalWindowRef	inRef,
 
 
 /*!
+Displays an interface for the user to customize formatting,
+such as the font and color settings.
+
+This is called by event handlers (in response to menu
+commands, etc.) and should not need to be called directly.
+
+(2018.03)
+*/
+void
+TerminalWindow_DisplayCustomFormatUI	(TerminalWindowRef		inRef)
+{
+	if (TerminalWindow_IsValid(inRef))
+	{
+		// display a format customization dialog
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::FORMAT,
+																				kMy_SheetTypeFormat);
+		
+		
+		if (nullptr == temporaryContext)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+		}
+		else
+		{
+			GenericDialog_Wrap				dialog;
+			PrefPanelFormats_ViewManager*	embeddedPanel = [[PrefPanelFormats_ViewManager alloc] init];
+			CFRetainRelease					addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
+																CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease					cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+															CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease					okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+														CFRetainRelease::kAlreadyRetained);
+			
+			
+			// display the sheet
+			if (TerminalWindow_IsLegacyCarbon(inRef))
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(inRef),
+																			embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			else
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
+																embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+												^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+												^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
+												^{
+													Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
+													
+													
+													PrefsWindow_AddCollection(temporaryContext, tagSet,
+																				kCommandDisplayPrefPanelFormats);
+													Preferences_ReleaseTagSet(&tagSet);
+												});
+			GenericDialog_SetImplementation(dialog.returnRef(), inRef);
+			// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
+			// to be implemented and called here; for now, assume that the
+			// terminal window will remain valid as long as the dialog exists
+			// (that ought to be the case)
+			GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to display custom format UI on invalid terminal window", inRef);
+	}
+}// DisplayCustomFormatUI
+
+
+/*!
+Displays an interface for the user to customize the terminal
+screen dimensions and scrollback settings.
+
+This is called by event handlers (in response to menu
+commands, etc.) and should not need to be called directly.
+
+(2018.03)
+*/
+void
+TerminalWindow_DisplayCustomScreenSizeUI		(TerminalWindowRef		inRef)
+{
+	if (TerminalWindow_IsValid(inRef))
+	{
+		// display a screen size customization dialog
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TERMINAL,
+																				kMy_SheetTypeScreenSize);
+		
+		
+		if (nullptr == temporaryContext)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+		}
+		else
+		{
+			GenericDialog_Wrap						dialog;
+			PrefPanelTerminals_ScreenViewManager*	embeddedPanel = [[PrefPanelTerminals_ScreenViewManager alloc] init];
+			CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+																	CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+																CFRetainRelease::kAlreadyRetained);
+			
+			
+			// display the sheet
+			if (TerminalWindow_IsLegacyCarbon(inRef))
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(inRef),
+																			embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			else
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
+																embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+												^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+												^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+			GenericDialog_SetImplementation(dialog.returnRef(), inRef);
+			// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
+			// to be implemented and called here; for now, assume that the
+			// terminal window will remain valid as long as the dialog exists
+			// (that ought to be the case)
+			GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to display custom screen size UI on invalid terminal window", inRef);
+	}
+}// DisplayCustomScreenSizeUI
+
+
+/*!
+Displays an interface for the user to customize the text
+encoding.
+
+This is called by event handlers (in response to menu
+commands, etc.) and should not need to be called directly.
+
+(2018.03)
+*/
+void
+TerminalWindow_DisplayCustomTranslationUI	(TerminalWindowRef		inRef)
+{
+	if (TerminalWindow_IsValid(inRef))
+	{
+		// display a translation customization dialog
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TRANSLATION,
+																				kMy_SheetTypeTranslation);
+		
+		
+		if (nullptr == temporaryContext)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
+		}
+		else
+		{
+			GenericDialog_Wrap					dialog;
+			PrefPanelTranslations_ViewManager*	embeddedPanel = [[PrefPanelTranslations_ViewManager alloc] init];
+			CFRetainRelease						addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
+																	CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease						cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+																CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease						okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+															CFRetainRelease::kAlreadyRetained);
+			
+			
+			// display the sheet
+			if (TerminalWindow_IsLegacyCarbon(inRef))
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(inRef),
+																			embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			else
+			{
+				dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
+																embeddedPanel, temporaryContext),
+											GenericDialog_Wrap::kAlreadyRetained);
+			}
+			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
+												^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
+												^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
+			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
+			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
+												^{
+													Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
+													
+													
+													PrefsWindow_AddCollection(temporaryContext, tagSet,
+																				kCommandDisplayPrefPanelTranslations);
+													Preferences_ReleaseTagSet(&tagSet);
+												});
+			GenericDialog_SetImplementation(dialog.returnRef(), inRef);
+			// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
+			// to be implemented and called here; for now, assume that the
+			// terminal window will remain valid as long as the dialog exists
+			// (that ought to be the case)
+			GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
+		}
+	}
+	else
+	{
+		Console_Warning(Console_WriteValueAddress, "attempt to display custom translation UI on invalid terminal window", inRef);
+	}
+}// DisplayCustomTranslationUI
+
+
+/*!
 Displays the Find dialog for the given terminal window,
 handling searches automatically.  On Mac OS X, the dialog
 is a sheet, so this routine may return immediately without
@@ -4956,57 +5190,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormat:
 					{
 						// display a format customization dialog
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::FORMAT,
-																								kMy_SheetTypeFormat);
-						
-						
-						if (nullptr == temporaryContext)
-						{
-							Sound_StandardAlert();
-							Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
-						}
-						else
-						{
-							GenericDialog_Wrap				dialog;
-							PrefPanelFormats_ViewManager*	embeddedPanel = [[PrefPanelFormats_ViewManager alloc] init];
-							CFRetainRelease					addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
-																				CFRetainRelease::kAlreadyRetained);
-							CFRetainRelease					cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																			CFRetainRelease::kAlreadyRetained);
-							CFRetainRelease					okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																		CFRetainRelease::kAlreadyRetained);
-							
-							
-							// display the sheet
-							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
-																						embeddedPanel, temporaryContext),
-														GenericDialog_Wrap::kAlreadyRetained);
-							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
-																^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
-																^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
-																^{
-																	Preferences_TagSetRef	tagSet = PrefPanelFormats_NewTagSet();
-																	
-																	
-																	PrefsWindow_AddCollection(temporaryContext, tagSet,
-																								kCommandDisplayPrefPanelFormats);
-																	Preferences_ReleaseTagSet(&tagSet);
-																});
-							GenericDialog_SetImplementation(dialog.returnRef(), terminalWindow);
-							// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
-							// to be implemented and called here; for now, assume that the
-							// terminal window will remain valid as long as the dialog exists
-							// (that ought to be the case)
-							GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
-						}
-						
+						TerminalWindow_DisplayCustomFormatUI(terminalWindow);
 						result = noErr;
 					}
 					break;
@@ -5019,7 +5203,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandHideOtherWindows:
 					// hide all except the frontmost terminal window from view
-					if (TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow) != GetUserFocusWindow())
+					if ((TerminalWindow_IsLegacyCarbon(terminalWindow) &&
+							(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow) != GetUserFocusWindow())) ||
+						((false == TerminalWindow_IsLegacyCarbon(terminalWindow)) &&
+							(TerminalWindow_ReturnNSWindow(terminalWindow) != [NSApp keyWindow])))
 					{
 						TerminalWindow_SetObscured(terminalWindow, true);
 						
@@ -5159,45 +5346,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandSetScreenSize:
 					{
 						// display a screen size customization dialog
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TERMINAL,
-																								kMy_SheetTypeScreenSize);
-						
-						
-						if (nullptr == temporaryContext)
-						{
-							Sound_StandardAlert();
-							Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
-						}
-						else
-						{
-							GenericDialog_Wrap						dialog;
-							PrefPanelTerminals_ScreenViewManager*	embeddedPanel = [[PrefPanelTerminals_ScreenViewManager alloc] init];
-							CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																					CFRetainRelease::kAlreadyRetained);
-							CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																				CFRetainRelease::kAlreadyRetained);
-							
-							
-							// display the sheet
-							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
-																						embeddedPanel, temporaryContext),
-														GenericDialog_Wrap::kAlreadyRetained);
-							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
-																^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
-																^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
-							GenericDialog_SetImplementation(dialog.returnRef(), terminalWindow);
-							// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
-							// to be implemented and called here; for now, assume that the
-							// terminal window will remain valid as long as the dialog exists
-							// (that ought to be the case)
-							GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
-						}
-						
+						TerminalWindow_DisplayCustomScreenSizeUI(terminalWindow);
 						result = noErr;
 					}
 					break;
@@ -5349,57 +5498,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandSetTranslationTable:
 					{
 						// display a translation customization dialog
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef			temporaryContext = sheetContextBegin(ptr, Quills::Prefs::TRANSLATION,
-																								kMy_SheetTypeTranslation);
-						
-						
-						if (nullptr == temporaryContext)
-						{
-							Sound_StandardAlert();
-							Console_Warning(Console_WriteLine, "failed to construct temporary sheet context");
-						}
-						else
-						{
-							GenericDialog_Wrap					dialog;
-							PrefPanelTranslations_ViewManager*	embeddedPanel = [[PrefPanelTranslations_ViewManager alloc] init];
-							CFRetainRelease						addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
-																					CFRetainRelease::kAlreadyRetained);
-							CFRetainRelease						cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																				CFRetainRelease::kAlreadyRetained);
-							CFRetainRelease						okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																			CFRetainRelease::kAlreadyRetained);
-							
-							
-							// display the sheet
-							dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
-																						embeddedPanel, temporaryContext),
-														GenericDialog_Wrap::kAlreadyRetained);
-							[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
-																^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton2, cancelString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton2,
-																^{ sheetClosed(dialog.returnRef(), false/* is OK */); });
-							GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton3, addToPrefsString.returnCFStringRef());
-							GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton3,
-																^{
-																	Preferences_TagSetRef	tagSet = PrefPanelTranslations_NewTagSet();
-																	
-																	
-																	PrefsWindow_AddCollection(temporaryContext, tagSet,
-																								kCommandDisplayPrefPanelTranslations);
-																	Preferences_ReleaseTagSet(&tagSet);
-																});
-							GenericDialog_SetImplementation(dialog.returnRef(), terminalWindow);
-							// TEMPORARY; maybe TerminalWindow_Retain/Release concept needs
-							// to be implemented and called here; for now, assume that the
-							// terminal window will remain valid as long as the dialog exists
-							// (that ought to be the case)
-							GenericDialog_Display(dialog.returnRef(), true/* animated */, ^{}); // retains dialog until it is dismissed
-						}
-						
+						TerminalWindow_DisplayCustomTranslationUI(terminalWindow);
 						result = noErr;
 					}
 					break;
@@ -8949,6 +9048,9 @@ initWithTerminalVC:(TerminalView_Controller*)	aViewController
 		// "canDrawConcurrently" is YES for terminal background views
 		// so enable concurrent view drawing at the window level
 		[self.window setAllowsConcurrentViewDrawing:YES];
+		
+		// terminal items in the Window menu are managed separately
+		self.window.excludedFromWindowsMenu = YES;
 	}
 	return self;
 }// initWithTerminalVC:
@@ -8966,6 +9068,65 @@ dealloc
 	[_toolbarDelegate release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Actions
+
+
+/*!
+Displays the Find dialog for the given terminal window,
+handling searches automatically.
+
+(2018.03)
+*/
+- (IBAction)
+performFind:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayTextSearchDialog([self.window terminalWindowRef]);
+}// performFind:
+
+
+/*!
+Displays an interface for the user to customize formatting,
+such as the font and color settings.
+
+(2018.03)
+*/
+- (IBAction)
+performFormatCustom:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomFormatUI([self.window terminalWindowRef]);
+}// performFormatCustom:
+
+
+/*!
+Displays an interface for the user to customize the terminal
+screen dimensions and scrollback settings.
+
+(2018.03)
+*/
+- (IBAction)
+performScreenResizeCustom:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomScreenSizeUI([self.window terminalWindowRef]);
+}// performScreenResizeCustom:
+
+
+/*!
+Displays an interface for the user to customize the text
+encoding.
+
+(2018.03)
+*/
+- (IBAction)
+performTranslationSwitchCustom:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomTranslationUI([self.window terminalWindowRef]);
+}// performTranslationSwitchCustom:
 
 
 #pragma mark New Methods

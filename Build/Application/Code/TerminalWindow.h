@@ -357,6 +357,15 @@ void
 //@{
 
 void
+	TerminalWindow_DisplayCustomFormatUI			(TerminalWindowRef			inRef);
+
+void
+	TerminalWindow_DisplayCustomScreenSizeUI		(TerminalWindowRef			inRef);
+
+void
+	TerminalWindow_DisplayCustomTranslationUI		(TerminalWindowRef			inRef);
+
+void
 	TerminalWindow_DisplayTextSearchDialog			(TerminalWindowRef			inRef);
 
 TerminalWindow_Result
