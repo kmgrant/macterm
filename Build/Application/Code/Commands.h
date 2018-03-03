@@ -501,6 +501,29 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSpeakSelectedText				'SpkS'
 #define kCommandStopSpeaking					'SpkE'
 
+/*!
+These MUST agree with "MainMenuCocoa.xib".  In the Carbon days,
+these were menu IDs.  For Cocoa, they are the "tag" values on
+each of the menus in the main menu.  So you could ask NSApp for
+"mainMenu", and then use "itemWithTag" with an ID below to find
+an NSMenuItem for the title, whose "submenu" is the NSMenu
+containing all of the items.
+*/
+enum
+{
+	kCommands_MenuIDApplication = 512,
+	kCommands_MenuIDFile = 513,
+	kCommands_MenuIDEdit = 514,
+	kCommands_MenuIDView = 515,
+	kCommands_MenuIDTerminal = 516,
+	kCommands_MenuIDKeys = 517,
+	kCommands_MenuIDMacros = 518,
+	kCommands_MenuIDWindow = 519,
+		kCommands_MenuItemIDPrecedingWindowList = 123,
+	kCommands_MenuIDHelp = 520,
+	kCommands_MenuIDDebug = 521
+};
+
 #pragma mark Types
 
 struct Commands_ExecutionEventContext

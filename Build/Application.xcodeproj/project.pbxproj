@@ -54,7 +54,6 @@
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
 		0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.mm */; };
 		0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */; };
-		0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFB055432A400ACDF3A /* MenuBar.cp */; };
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.mm */; };
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */; };
@@ -309,7 +308,6 @@
 		0A4603F70554376100ACDF3A /* Keypads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Keypads.h; path = Application/Code/Keypads.h; sourceTree = "<group>"; };
 		0A4603FD0554376100ACDF3A /* Local.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Local.h; path = Application/Code/Local.h; sourceTree = "<group>"; };
 		0A4603FE0554376100ACDF3A /* Localization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Localization.h; path = Application/Code/Localization.h; sourceTree = "<group>"; };
-		0A4604080554376100ACDF3A /* MenuBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MenuBar.h; path = Application/Code/MenuBar.h; sourceTree = "<group>"; };
 		0A46040B0554376100ACDF3A /* NetEvents.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = "<group>"; };
 		0A46040F0554376100ACDF3A /* Panel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Panel.h; path = Application/Code/Panel.h; sourceTree = "<group>"; };
 		0A4604120554376100ACDF3A /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Preferences.h; path = Application/Code/Preferences.h; sourceTree = "<group>"; };
@@ -367,7 +365,6 @@
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = "<group>"; };
 		0A46FDF4055432A400ACDF3A /* Localization.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Localization.mm; path = Application/Code/Localization.mm; sourceTree = "<group>"; };
 		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
-		0A46FDFB055432A400ACDF3A /* MenuBar.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MenuBar.cp; path = Application/Code/MenuBar.cp; sourceTree = "<group>"; };
 		0A46FDFE055432A400ACDF3A /* NetEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetEvents.cp; path = Application/Code/NetEvents.cp; sourceTree = "<group>"; };
 		0A46FE01055432A400ACDF3A /* Panel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Panel.mm; path = Application/Code/Panel.mm; sourceTree = "<group>"; };
 		0A46FE03055432A400ACDF3A /* Preferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Preferences.cp; path = Application/Code/Preferences.cp; sourceTree = "<group>"; };
@@ -747,7 +744,6 @@
 				0A46FDF3055432A400ACDF3A /* Local.cp */,
 				0A46FDF4055432A400ACDF3A /* Localization.mm */,
 				0A03DBC7063F6BA400C38B78 /* MacroManager.mm */,
-				0A46FDFB055432A400ACDF3A /* MenuBar.cp */,
 				0A46FDFE055432A400ACDF3A /* NetEvents.cp */,
 				0A30289C1DB2BE2500C1C557 /* Network.mm */,
 				0A03A1EA1D9A297000411248 /* OtherApps.mm */,
@@ -807,7 +803,6 @@
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
 				0A03DBC9063F6BCC00C38B78 /* MacroManager.h */,
-				0A4604080554376100ACDF3A /* MenuBar.h */,
 				0A46040B0554376100ACDF3A /* NetEvents.h */,
 				0A30289B1DB2BE1800C1C557 /* NetEvents.h */,
 				0A03A1EC1D9A298A00411248 /* OtherApps.h */,
@@ -1355,7 +1350,6 @@
 				0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */,
 				0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */,
 				0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */,
-				0AC6BAE30A8C0BA000AFF37A /* MenuBar.cp in Sources */,
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */,
 				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */,

@@ -63,7 +63,6 @@
 // application includes
 #import "ConstantsRegistry.h"
 #import "FindDialog.h"
-#import "MenuBar.h"
 #import "Network.h"
 #import "Preferences.h"
 #import "QuillsPrefs.h"
@@ -893,7 +892,7 @@ returnMacrosMenu ()
 	assert(nil != NSApp);
 	NSMenu*			mainMenu = [NSApp mainMenu];
 	assert(nil != mainMenu);
-	NSMenuItem*		macrosMenuItem = [mainMenu itemWithTag:kMenuBar_MenuIDMacros];
+	NSMenuItem*		macrosMenuItem = [mainMenu itemWithTag:kCommands_MenuIDMacros];
 	assert(nil != macrosMenuItem);
 	NSMenu*			result = [macrosMenuItem submenu];
 	assert(nil != result);

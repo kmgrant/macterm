@@ -69,7 +69,6 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
-#import "MenuBar.h"
 #import "QuillsSession.h"
 #import "Session.h"
 
@@ -888,14 +887,21 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					else
 					{
-						// items without command IDs must be parsed individually
-						if (MenuBar_HandleMenuCommand(received.menu.menuRef, received.menu.menuItemIndex))
+						UInt32		commandID = 0L;
+						OSStatus	error = noErr;
+						
+						
+						result = eventNotHandledErr; // initially...
+						
+						error = GetMenuItemCommandID(received.menu.menuRef, received.menu.menuItemIndex, &commandID);
+						if (noErr == error)
 						{
-							result = noErr;
-						}
-						else
-						{
-							result = eventNotHandledErr;
+							// if a menu item wasn’t handled, make this an obvious bug by leaving the menu title highlighted
+							if (Commands_ExecuteByID(commandID))
+							{
+								HiliteMenu(0);
+								result = noErr;
+							}
 						}
 					}
 				}

@@ -84,7 +84,6 @@ extern "C"
 #import "HelpSystem.h"
 #import "Keypads.h"
 #import "MacroManager.h"
-#import "MenuBar.h"
 #import "PrefPanelTranslations.h"
 #import "PrefsWindow.h"
 #import "PrintTerminal.h"
@@ -2869,7 +2868,7 @@ Window menu and the would-be first window item.
 int
 returnFirstWindowItemAnchor		(NSMenu*	inWindowMenu)
 {
-	int		result = [inWindowMenu indexOfItemWithTag:kMenuBar_MenuItemIDPrecedingWindowList];
+	int		result = [inWindowMenu indexOfItemWithTag:kCommands_MenuItemIDPrecedingWindowList];
 	assert(result >= 0); // make sure the tag is set correctly in the NIB
 	
 	
@@ -2882,7 +2881,7 @@ returnFirstWindowItemAnchor		(NSMenu*	inWindowMenu)
 
 /*!
 Returns the menu from the menu bar that corresponds to
-the given "kMenuBar_MenuID..." constant.
+the given "kCommands_MenuID..." constant.
 
 (4.0)
 */
@@ -2968,7 +2967,7 @@ specified session’s window.
 NSMenuItem*
 returnWindowMenuItemForSession		(SessionRef		inSession)
 {
-	NSMenu*			windowMenu = returnMenu(kMenuBar_MenuIDWindow);
+	NSMenu*			windowMenu = returnMenu(kCommands_MenuIDWindow);
 	int const		kItemCount = [windowMenu numberOfItems];
 	int const		kStartItem = returnFirstWindowItemAnchor(windowMenu);
 	int const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
@@ -3045,7 +3044,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			case kSession_StateActiveUnstable:
 			case kSession_StateImminentDisposal:
 				// a session is appearing or disappearing; rebuild the session items in the Window menu
-				setUpWindowMenu(returnMenu(kMenuBar_MenuIDWindow));
+				setUpWindowMenu(returnMenu(kCommands_MenuIDWindow));
 				break;
 			
 			case kSession_StateBrandNew:
@@ -3191,7 +3190,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 {
 	CFStringRef		charCFString = nullptr;
 	NSString*		charNSString = nil;
-	NSMenu*			targetMenu = returnMenu(kMenuBar_MenuIDFile);
+	NSMenu*			targetMenu = returnMenu(kCommands_MenuIDFile);
 	NSArray*		items = [targetMenu itemArray];
 	NSMenuItem*		defaultItem = nil;
 	NSMenuItem*		logInShellItem = nil;
@@ -3373,12 +3372,12 @@ this routine instead of directly calling any of those.
 void
 setUpDynamicMenus ()
 {
-	setUpSessionFavoritesMenu(returnMenu(kMenuBar_MenuIDFile));
-	setUpWorkspaceFavoritesMenu(returnMenu(kMenuBar_MenuIDFile));
-	setUpFormatFavoritesMenu(returnMenu(kMenuBar_MenuIDView));
-	setUpMacroSetsMenu(returnMenu(kMenuBar_MenuIDMacros));
-	setUpTranslationTablesMenu(returnMenu(kMenuBar_MenuIDKeys));
-	setUpWindowMenu(returnMenu(kMenuBar_MenuIDWindow));
+	setUpSessionFavoritesMenu(returnMenu(kCommands_MenuIDFile));
+	setUpWorkspaceFavoritesMenu(returnMenu(kCommands_MenuIDFile));
+	setUpFormatFavoritesMenu(returnMenu(kCommands_MenuIDView));
+	setUpMacroSetsMenu(returnMenu(kCommands_MenuIDMacros));
+	setUpTranslationTablesMenu(returnMenu(kCommands_MenuIDKeys));
+	setUpWindowMenu(returnMenu(kCommands_MenuIDWindow));
 }// setUpDynamicMenus
 
 
