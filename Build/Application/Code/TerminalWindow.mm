@@ -155,6 +155,8 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 @interface TerminalWindow_Controller () //{
 
 // accessors
+	@property (assign) NSRect
+	preFullScreenFrame;
 	@property (strong) NSMutableArray*
 	terminalViewControllers;
 
@@ -9000,6 +9002,7 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 
 
 // internally-declared
+@synthesize preFullScreenFrame = _preFullScreenFrame;
 @synthesize terminalViewControllers = _terminalViewControllers;
 
 // externally-declared
@@ -9147,6 +9150,96 @@ enumerateTerminalViewControllers
 
 
 #pragma mark NSWindowDelegate
+
+
+/*!
+Part of custom Full Screen animation (see other
+delegate methods).
+
+(2018.03)
+*/
+- (NSArray*)
+customWindowsToEnterFullScreenForWindow:(NSWindow*)		aWindow
+{
+	NSArray*	result = ((nil != aWindow)
+							? @[aWindow]
+							: @[]);
+	
+	
+	return result;
+}// customWindowsToEnterFullScreenForWindow:
+
+
+/*!
+Part of custom Full Screen animation (see other
+delegate methods).
+
+(2018.03)
+*/
+- (NSArray*)
+customWindowsToExitFullScreenForWindow:(NSWindow*)		aWindow
+{
+	NSArray*	result = ((nil != aWindow)
+							? @[aWindow]
+							: @[]);
+	
+	
+	return result;
+}// customWindowsToExitFullScreenForWindow:
+
+
+/*!
+This is a hack to force the system animation to be
+far, FAR faster (i.e. this completely ignores
+whatever duration is suggested and picks a smaller
+duration; the effect is that Full Screen animation
+is quicker overall).
+
+Part of custom Full Screen animation (see other
+delegate methods).
+
+(2018.03)
+*/
+- (void)
+window:(NSWindow*)													aWindow
+startCustomAnimationToEnterFullScreenWithDuration:(NSTimeInterval)	aDuration
+{
+	NSAnimationContext*		animationContext = [NSAnimationContext currentContext];
+	
+	
+	self.preFullScreenFrame = aWindow.frame;
+	
+	[NSAnimationContext beginGrouping];
+	animationContext.duration = 0.01; // restore sanity
+	[aWindow.animator setFrame:aWindow.screen.frame display:NO];
+	[NSAnimationContext endGrouping];
+}// window:startCustomAnimationToEnterFullScreenWithDuration:
+
+
+/*!
+This is a hack to force the system animation to be
+far, FAR faster (i.e. this completely ignores
+whatever duration is suggested and picks a smaller
+duration; the effect is that Full Screen animation
+is quicker overall).
+
+Part of custom Full Screen animation (see other
+delegate methods).
+
+(2018.03)
+*/
+- (void)
+window:(NSWindow*)													aWindow
+startCustomAnimationToExitFullScreenWithDuration:(NSTimeInterval)	aDuration
+{
+	NSAnimationContext*		animationContext = [NSAnimationContext currentContext];
+	
+	
+	[NSAnimationContext beginGrouping];
+	animationContext.duration = 0.01; // restore sanity
+	[aWindow.animator setFrame:self.preFullScreenFrame display:NO];
+	[NSAnimationContext endGrouping];
+}// window:startCustomAnimationToExitFullScreenWithDuration:
 
 
 /*!

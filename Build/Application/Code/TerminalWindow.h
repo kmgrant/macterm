@@ -163,6 +163,7 @@ changes to an interface declared in a ".mm" file.
 @interface TerminalWindow_Controller : NSWindowController < NSWindowDelegate > //{
 {
 @private
+	NSRect						_preFullScreenFrame;
 	NSMutableArray*				_terminalViewControllers;
 	TerminalWindowRef			_terminalWindowRef;
 	TerminalToolbar_Delegate*	_toolbarDelegate;
