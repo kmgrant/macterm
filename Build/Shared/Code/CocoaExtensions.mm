@@ -716,7 +716,18 @@ context of the specification and this object as the observer.
 - (void)
 removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)		aSpec
 {
-	[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:aSpec.context];
+	@try
+	{
+		[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:aSpec.context];
+	}
+	@catch (NSException*	inException)
+	{
+		NSLog(@"failed to remove specified observer, exception: %@", [inException name]);
+		if (nil != inException.callStackSymbols)
+		{
+			NSLog(@"%@", [inException.callStackSymbols componentsJoinedByString:@"\n"]);
+		}
+	}
 }// removeObserverSpecifiedWith:
 
 
