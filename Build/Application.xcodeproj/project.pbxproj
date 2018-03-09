@@ -401,12 +401,8 @@
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
 		0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterDecoder.cp; path = Shared/Code/ParameterDecoder.cp; sourceTree = "<group>"; };
 		0A56CB211FB6BF6100750D35 /* ParameterDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ParameterDecoder.h; path = Shared/Code/ParameterDecoder.h; sourceTree = "<group>"; };
-		0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForItemAddMenuSegment@2x.icns"; path = "Application/Resources/IconForItemAddMenuSegment@2x.icns"; sourceTree = "<group>"; };
-		0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenuSegment.icns; path = Application/Resources/IconForContextMenuSegment.icns; sourceTree = "<group>"; };
-		0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAddMenuSegment.icns; path = Application/Resources/IconForItemAddMenuSegment.icns; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
-		0A65F2C315882AD100B9E338 /* IconForContextMenuSegment@2x.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = "IconForContextMenuSegment@2x.icns"; path = "Application/Resources/IconForContextMenuSegment@2x.icns"; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
@@ -423,8 +419,6 @@
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SixelDecoder.cp; path = Application/Code/SixelDecoder.cp; sourceTree = "<group>"; };
 		0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SixelDecoder.h; path = Application/Code/SixelDecoder.h; sourceTree = "<group>"; };
-		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
-		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
@@ -551,6 +545,9 @@
 		0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
 		0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefs.icns; path = Application/Resources/IconForPrefs.icns; sourceTree = "<group>"; };
+		0AF90B0F204CC51A00146B38 /* IconForWindowTitleCenter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForWindowTitleCenter.png; path = Application/Resources/IconForWindowTitleCenter.png; sourceTree = "<group>"; };
+		0AF90B10204CC51A00146B38 /* IconForWindowTitleLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForWindowTitleLeft.png; path = Application/Resources/IconForWindowTitleLeft.png; sourceTree = "<group>"; };
+		0AF90B11204CC51A00146B38 /* IconForWindowTitleRight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForWindowTitleRight.png; path = Application/Resources/IconForWindowTitleRight.png; sourceTree = "<group>"; };
 		0AF931851592E0E6008A41C6 /* QuillsSWIG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSWIG.h; path = Application/Code/QuillsSWIG.h; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
@@ -1014,16 +1011,10 @@
 				0AAB323314B2BC59002C6F33 /* IconForCaution.icns */,
 				0AC810AE1221ECA500687DB2 /* IconForCommand.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
-				0A5CE9261582DF1D008CD243 /* IconForContextMenuSegment.icns */,
-				0A65F2C315882AD100B9E338 /* IconForContextMenuSegment@2x.icns */,
 				0AD7483013073E56003E368B /* IconForCustomize.icns */,
 				0AD7481C13072342003E368B /* IconForFullScreen.icns */,
 				0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */,
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
-				0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */,
-				0A5CE9411582ED7C008CD243 /* IconForItemAddMenuSegment.icns */,
-				0A5C09C1158828C30097B598 /* IconForItemAddMenuSegment@2x.icns */,
-				0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */,
 				0ACBF0101449232F00D17678 /* IconForKillSession.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
 				0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */,
@@ -1052,6 +1043,9 @@
 				0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */,
 				0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */,
 				0A54E40F0560B62F005B4592 /* IconForTerminal.icns */,
+				0AF90B0F204CC51A00146B38 /* IconForWindowTitleCenter.png */,
+				0AF90B10204CC51A00146B38 /* IconForWindowTitleLeft.png */,
+				0AF90B11204CC51A00146B38 /* IconForWindowTitleRight.png */,
 			);
 			name = Icons;
 			sourceTree = "<group>";

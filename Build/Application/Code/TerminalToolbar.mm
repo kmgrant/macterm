@@ -40,6 +40,7 @@
 // library includes
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CGContextSaveRestore.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
@@ -71,6 +72,9 @@ NSString*	kMy_ToolbarItemIDLED4						= @"net.macterm.MacTerm.toolbaritem.led4";
 NSString*	kMy_ToolbarItemIDPrint						= @"net.macterm.MacTerm.toolbaritem.print";
 NSString*	kMy_ToolbarItemIDSuspend					= @"net.macterm.MacTerm.toolbaritem.suspend";
 NSString*	kMy_ToolbarItemIDTabs						= @"net.macterm.MacTerm.toolbaritem.tabs";
+NSString*	kMy_ToolbarItemIDWindowTitle				= @"net.macterm.MacTerm.toolbaritem.windowtitle";
+NSString*	kMy_ToolbarItemIDWindowTitleLeft			= @"net.macterm.MacTerm.toolbaritem.windowtitleleft";
+NSString*	kMy_ToolbarItemIDWindowTitleRight			= @"net.macterm.MacTerm.toolbaritem.windowtitleright";
 
 } // anonymous namespace
 
@@ -92,12 +96,23 @@ NSString*	kTerminalToolbar_ObjectDidChangeSizeModeNotification		=
 NSString*	kTerminalToolbar_ObjectDidChangeVisibilityNotification		=
 				@"kTerminalToolbar_ObjectDidChangeVisibilityNotification";
 
-#pragma mark Internal Method Prototypes
-namespace {
+#pragma mark Types
 
-OSStatus	receiveNewSystemUIMode		(EventHandlerCallRef, EventRef, void*);
+/*!
+This protocol exists only to suppress compiler warnings
+from conditionally invoking selectors in this file.
+*/
+@protocol TerminalToolbar_SierraMethods //{
 
-} // anonymous namespace
+// various methods from newer SDKs
+	- (void)
+	setAllowsDefaultTighteningForTruncation:(BOOL)_;
+	- (void)
+	setLineBreakMode:(NSLineBreakMode)_;
+	- (void)
+	setMaximumNumberOfLines:(NSInteger)_;
+
+@end //}
 
 /*!
 The private class interface.
@@ -168,6 +183,84 @@ The private class interface.
 @end //}
 
 /*!
+Private properties.
+*/
+@interface TerminalToolbar_TextLabel () //{
+
+// accessors
+	@property (assign) BOOL
+	disableFrameMonitor;
+	@property (assign) BOOL
+	gradientFadeEnabled;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_TextLabel (TerminalToolbar_TextLabelInternal) //{
+
+// new methods
+	- (CGSize)
+	idealFrameSizeForString:(NSString*)_;
+	- (void)
+	layOutLabelText;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_WindowTitleLabel () //{
+
+// accessors
+	@property (strong) CocoaExtensions_ObserverSpec*
+	windowTitleObserver;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_ItemWindowTitle () //{
+
+// accessors
+	@property (assign) BOOL
+	disableFrameMonitor;
+	@property (strong) TerminalToolbar_WindowTitleLabel*
+	textView;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemWindowTitle (TerminalToolbar_ItemWindowTitleInternal) //{
+
+// new methods
+	- (void)
+	resetMinMaxSizesForHeight:(CGFloat)_;
+	- (void)
+	setStateFromWindow:(NSWindow*)_;
+	- (NSWindow*)
+	windowFromView;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal) //{
+
+// new methods
+	- (void)
+	installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
+	- (void)
+	removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
+
+@end //}
+
+/*!
 The private class interface.
 */
 @interface TerminalToolbar_Window (TerminalToolbar_WindowInternal) //{
@@ -207,6 +300,13 @@ The private class interface.
 	windowDidEndSheet:(NSNotification*)_;
 
 @end //}
+
+#pragma mark Internal Method Prototypes
+namespace {
+
+OSStatus	receiveNewSystemUIMode		(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
 namespace {
@@ -274,7 +374,10 @@ receiveNewSystemUIMode	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 #pragma mark -
-@implementation NSToolbar (TerminalToolbar_NSToolbarExtensions)
+@implementation NSToolbar (TerminalToolbar_NSToolbarExtensions) //{
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -317,11 +420,14 @@ terminalToolbarSession
 }// terminalToolbarSession
 
 
-@end // NSToolbar (TerminalToolbar_NSToolbarExtensions)
+@end //} NSToolbar (TerminalToolbar_NSToolbarExtensions)
 
 
 #pragma mark -
-@implementation TerminalToolbar_Delegate
+@implementation TerminalToolbar_Delegate //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -333,12 +439,16 @@ Designated initializer.
 initForToolbar:(NSToolbar*)		aToolbar
 experimentalItems:(BOOL)		experimentalFlag
 {
-#pragma unused(aToolbar)
 	self = [super init];
 	if (nil != self)
 	{
 		self->associatedSession = nullptr;
 		self->allowExperimentalItems = experimentalFlag;
+		
+		[self whenObject:aToolbar postsNote:kTerminalToolbar_ObjectDidChangeDisplayModeNotification
+							performSelector:@selector(toolbarDidChangeDisplayMode:)];
+		[self whenObject:aToolbar postsNote:kTerminalToolbar_ObjectDidChangeSizeModeNotification
+							performSelector:@selector(toolbarDidChangeSizeMode:)];
 	}
 	return self;
 }// initForToolbar:
@@ -352,6 +462,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[self ignoreWhenObjectsPostNotes];
 	[super dealloc];
 }// dealloc
 
@@ -384,6 +495,73 @@ setSession:(SessionRef)		aSession
 }// setSession
 
 
+#pragma mark Notifications
+
+
+/*!
+Keeps track of changes to the mode (such as “text only”)
+so that the window layout can adapt if necessary.
+
+(2018.03)
+*/
+- (void)
+toolbarDidChangeDisplayMode:(NSNotification*)		aNotification
+{
+	if (NO == [aNotification.object isKindOfClass:NSToolbar.class])
+	{
+		Console_Warning(Console_WriteLine, "toolbar display-change notification expected an NSToolbar object!");
+	}
+	else
+	{
+		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
+		
+		
+		for (NSToolbarItem* anItem in asToolbar.items)
+		{
+			if ([anItem conformsToProtocol:@protocol(TerminalToolbar_DisplayModeSensitive)])
+			{
+				id< TerminalToolbar_DisplayModeSensitive >		asImplementer = STATIC_CAST(anItem, id< TerminalToolbar_DisplayModeSensitive >);
+				
+				
+				[asImplementer didChangeDisplayModeForToolbar:asToolbar];
+			}
+		}
+	}
+}// toolbarDidChangeDisplayMode:
+
+
+/*!
+Keeps track of changes to the icon and label size
+so that the window layout can adapt if necessary.
+
+(2018.03)
+*/
+- (void)
+toolbarDidChangeSizeMode:(NSNotification*)		aNotification
+{
+	if (NO == [aNotification.object isKindOfClass:NSToolbar.class])
+	{
+		Console_Warning(Console_WriteLine, "toolbar size-change notification expected an NSToolbar object!");
+	}
+	else
+	{
+		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
+		
+		
+		for (NSToolbarItem* anItem in asToolbar.items)
+		{
+			if ([anItem conformsToProtocol:@protocol(TerminalToolbar_SizeSensitive)])
+			{
+				id< TerminalToolbar_SizeSensitive >		asImplementer = STATIC_CAST(anItem, id< TerminalToolbar_SizeSensitive >);
+				
+				
+				[asImplementer didChangeSizeForToolbar:asToolbar];
+			}
+		}
+	}
+}// toolbarDidChangeSizeMode:
+
+
 #pragma mark NSToolbarDelegate
 
 
@@ -396,9 +574,9 @@ constructed for the given toolbar.
 - (NSToolbarItem*)
 toolbar:(NSToolbar*)				toolbar
 itemForItemIdentifier:(NSString*)	itemIdentifier
-willBeInsertedIntoToolbar:(BOOL)	flag
+willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 {
-#pragma unused(toolbar, flag)
+#pragma unused(toolbar)
 	NSToolbarItem*		result = nil;
 	
 	
@@ -467,6 +645,50 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	{
 		result = [[[TerminalToolbar_ItemTabs alloc] init] autorelease];
 	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitle])
+	{
+		result = [[[TerminalToolbar_ItemWindowTitle alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleLeft])
+	{
+		result = [[[TerminalToolbar_ItemWindowTitleLeft alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleRight])
+	{
+		result = [[[TerminalToolbar_ItemWindowTitleRight alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+	}
+	
+	// initialize session information if available (this isn’t really
+	// necessary for new toolbars full of items; it is only important
+	// when the user customizes the toolbar, to ensure that new items
+	// immediately display appropriate data from the target session)
+	if ((willBeInToolbar) && [result isKindOfClass:TerminalToolbar_SessionDependentItem.class])
+	{
+		TerminalToolbar_SessionDependentItem*	asSessionItem = STATIC_CAST(result, TerminalToolbar_SessionDependentItem*);
+		
+		
+		[asSessionItem setSessionHint:self.session];
+	}
+	
+	// if this item is being constructed for use in a customization sheet
+	// and the original has a special palette appearance, replace it with
+	// that proxy item
+	if ((NO == willBeInToolbar) && [result conformsToProtocol:@protocol(TerminalToolbar_ItemHasPaletteProxy)])
+	{
+		id< TerminalToolbar_ItemHasPaletteProxy >	asImplementer = STATIC_CAST(result, id< TerminalToolbar_ItemHasPaletteProxy >);
+		NSToolbarItem*								proxyItem = [asImplementer paletteProxyToolbarItemWithIdentifier:itemIdentifier];
+		
+		
+		if (nil == proxyItem)
+		{
+			Console_Warning(Console_WriteValueCFString, "failed to create palette proxy for toolbar item, identifier", BRIDGE_CAST(itemIdentifier, CFStringRef));
+		}
+		else
+		{
+			result = proxyItem;
+		}
+	}
+	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
 
@@ -486,7 +708,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 	
 	if (self->allowExperimentalItems)
 	{
-		[result addObject:kMy_ToolbarItemIDTabs];
+		//[result addObject:kMy_ToolbarItemIDTabs];
 	}
 	
 	[result addObjectsFromArray:@[
@@ -497,6 +719,9 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kTerminalToolbar_ItemIDStackWindows,
 									NSToolbarSpaceItemIdentifier,
 									NSToolbarFlexibleSpaceItemIdentifier,
+									kMy_ToolbarItemIDWindowTitleLeft,
+									kMy_ToolbarItemIDWindowTitle,
+									kMy_ToolbarItemIDWindowTitleRight,
 									kTerminalToolbar_ItemIDCustomize,
 									kMy_ToolbarItemIDFullScreen,
 									kMy_ToolbarItemIDLED1,
@@ -533,10 +758,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 				kMy_ToolbarItemIDForceQuit,
 				kMy_ToolbarItemIDSuspend,
 				NSToolbarFlexibleSpaceItemIdentifier,
-				kMy_ToolbarItemIDLED1,
-				kMy_ToolbarItemIDLED2,
-				kMy_ToolbarItemIDLED3,
-				kMy_ToolbarItemIDLED4,
+				kMy_ToolbarItemIDWindowTitle,
 				NSToolbarFlexibleSpaceItemIdentifier,
 				kMy_ToolbarItemIDBell,
 				kMy_ToolbarItemIDPrint,
@@ -548,11 +770,108 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 }// toolbarDefaultItemIdentifiers
 
 
-@end // TerminalToolbar_Delegate
+/*!
+Called when an item has been removed from a toolbar.
+
+(2018.03)
+*/
+- (void)
+toolbarDidRemoveItem:(NSNotification*)		aNotification
+{
+	if (NO == [aNotification.object isKindOfClass:NSToolbar.class])
+	{
+		Console_Warning(Console_WriteLine, "toolbar delegate did-remove-item notification expected an NSToolbar object!");
+	}
+	else
+	{
+		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
+		id				itemValue = [aNotification.userInfo objectForKey:@"item"];
+		
+		
+		if (nil == itemValue)
+		{
+			Console_Warning(Console_WriteLine, "toolbar delegate did-remove-item notification expected an 'item' dictionary key");
+		}
+		else if (NO == [itemValue isKindOfClass:NSToolbarItem.class])
+		{
+			Console_Warning(Console_WriteLine, "toolbar delegate did-remove-item notification expected an NSToolbarItem 'item' value!");
+		}
+		else
+		{
+			NSToolbarItem*		asToolbarItem = STATIC_CAST(itemValue, NSToolbarItem*);
+			
+			
+			if ([asToolbarItem conformsToProtocol:@protocol(TerminalToolbar_ItemAddRemoveSensitive)])
+			{
+				id< TerminalToolbar_ItemAddRemoveSensitive >	asImplementer = STATIC_CAST(asToolbarItem, id< TerminalToolbar_ItemAddRemoveSensitive >);
+				
+				
+				[asImplementer item:asToolbarItem didExitToolbar:asToolbar];
+			}
+			else
+			{
+				//Console_Warning(Console_WriteValueAddress, "removed item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'", asToolbarItem); // debug
+			}
+		}
+	}
+}// toolbarDidRemoveItem:
+
+
+/*!
+Called when an item is about to be added to a toolbar.
+
+(2018.03)
+*/
+- (void)
+toolbarWillAddItem:(NSNotification*)	aNotification
+{
+	if (NO == [aNotification.object isKindOfClass:NSToolbar.class])
+	{
+		Console_Warning(Console_WriteLine, "toolbar delegate will-add-item notification expected an NSToolbar object!");
+	}
+	else
+	{
+		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
+		id				itemValue = [aNotification.userInfo objectForKey:@"item"];
+		
+		
+		if (nil == itemValue)
+		{
+			Console_Warning(Console_WriteLine, "toolbar delegate will-add-item notification expected an 'item' dictionary key");
+		}
+		else if (NO == [itemValue isKindOfClass:NSToolbarItem.class])
+		{
+			Console_Warning(Console_WriteLine, "toolbar delegate will-add-item notification expected an NSToolbarItem 'item' value!");
+		}
+		else
+		{
+			NSToolbarItem*		asToolbarItem = STATIC_CAST(itemValue, NSToolbarItem*);
+			
+			
+			if ([asToolbarItem conformsToProtocol:@protocol(TerminalToolbar_ItemAddRemoveSensitive)])
+			{
+				id< TerminalToolbar_ItemAddRemoveSensitive >	asImplementer = STATIC_CAST(asToolbarItem, id< TerminalToolbar_ItemAddRemoveSensitive >);
+				
+				
+				[asImplementer item:asToolbarItem willEnterToolbar:asToolbar];
+			}
+			else
+			{
+				//Console_Warning(Console_WriteValueAddress, "added item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'", asToolbarItem); // debug
+			}
+		}
+	}
+}// toolbarWillAddItem:
+
+
+@end //} TerminalToolbar_Delegate
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemBell
+@implementation TerminalToolbar_ItemBell //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -589,9 +908,13 @@ Destructor.
 - (void)
 dealloc
 {
+	[self willChangeSession]; // automatically stop monitoring the screen
 	[screenChangeListener release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Actions
 
 
 /*!
@@ -605,6 +928,30 @@ performToolbarItemAction:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandBellEnabled);
 }// performToolbarItemAction:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id							result = [super copyWithZone:zone];
+	TerminalToolbar_ItemBell*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemBell.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemBell*);
+	asSelf->screenChangeListener = [self->screenChangeListener copy];
+	[asSelf->screenChangeListener setTarget:asSelf];
+	
+	return result;
+}// copyWithZone:
 
 
 #pragma mark TerminalToolbar_SessionDependentItem
@@ -659,11 +1006,14 @@ didChangeSession
 }// didChangeSession
 
 
-@end // TerminalToolbar_ItemBell
+@end //} TerminalToolbar_ItemBell
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
+@implementation TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal) //{
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
 
 
 /*!
@@ -698,6 +1048,9 @@ context:(void*)							aContext
 }// model:screenChange:context:
 
 
+#pragma mark New Methods
+
+
 /*!
 Updates the toolbar icon based on the current bell state
 of the given screen buffer.  If "nullptr" is given then
@@ -724,11 +1077,14 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 }// setStateFromScreen:
 
 
-@end // TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
+@end //} TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal)
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemCustomize
+@implementation TerminalToolbar_ItemCustomize //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -765,6 +1121,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -779,11 +1138,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemCustomize
+@end //} TerminalToolbar_ItemCustomize
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemForceQuit
+@implementation TerminalToolbar_ItemForceQuit //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -818,8 +1180,13 @@ Destructor.
 - (void)
 dealloc
 {
+	[self willChangeSession]; // automatically stop monitoring the screen
+	[sessionChangeListener release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Actions
 
 
 /*!
@@ -845,6 +1212,30 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id								result = [super copyWithZone:zone];
+	TerminalToolbar_ItemForceQuit*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemForceQuit.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemForceQuit*);
+	asSelf->sessionChangeListener = [self->sessionChangeListener copy];
+	[asSelf->sessionChangeListener setTarget:asSelf];
+	
+	return result;
+}// copyWithZone:
+
+
 #pragma mark TerminalToolbar_SessionDependentItem
 
 
@@ -867,8 +1258,8 @@ willChangeSession
 	if (Session_IsValid(session))
 	{
 		Session_StopMonitoring(session, kSession_ChangeState, [self->sessionChangeListener listenerRef]);
-		[self setStateFromSession:nullptr];
 	}
+	[self setStateFromSession:nullptr];
 }// willChangeSession
 
 
@@ -888,19 +1279,22 @@ didChangeSession
 	SessionRef	session = [self session];
 	
 	
+	[self setStateFromSession:session];
 	if (Session_IsValid(session))
 	{
-		[self setStateFromSession:session];
 		Session_StartMonitoring(session, kSession_ChangeState, [self->sessionChangeListener listenerRef]);
 	}
 }// didChangeSession
 
 
-@end // TerminalToolbar_ItemForceQuit
+@end //} TerminalToolbar_ItemForceQuit
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
+@implementation TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal) //{
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
 
 
 /*!
@@ -935,6 +1329,9 @@ context:(void*)							aContext
 }// model:sessionChange:context:
 
 
+#pragma mark New Methods
+
+
 /*!
 Updates the toolbar icon based on the current state of the
 given session.  If "nullptr" is given then the icon is reset.
@@ -959,11 +1356,14 @@ setStateFromSession:(SessionRef)	aSession
 }// setStateFromSession:
 
 
-@end // TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
+@end //} TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal)
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemFullScreen
+@implementation TerminalToolbar_ItemFullScreen //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1000,6 +1400,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1034,11 +1437,14 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 }// validateToolbarItem:
 
 
-@end // TerminalToolbar_ItemFullScreen
+@end //} TerminalToolbar_ItemFullScreen
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemHide
+@implementation TerminalToolbar_ItemHide //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1075,6 +1481,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1088,11 +1497,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemHide
+@end //} TerminalToolbar_ItemHide
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemLED1
+@implementation TerminalToolbar_ItemLED1 //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1128,6 +1540,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1141,11 +1556,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemLED1
+@end //} TerminalToolbar_ItemLED1
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemLED2
+@implementation TerminalToolbar_ItemLED2 //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1181,6 +1599,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1194,11 +1615,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemLED2
+@end //} TerminalToolbar_ItemLED2
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemLED3
+@implementation TerminalToolbar_ItemLED3 //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1234,6 +1658,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1247,11 +1674,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemLED3
+@end //} TerminalToolbar_ItemLED3
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemLED4
+@implementation TerminalToolbar_ItemLED4 //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1287,6 +1717,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1300,11 +1733,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemLED4
+@end //} TerminalToolbar_ItemLED4
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemNewSessionDefaultFavorite
+@implementation TerminalToolbar_ItemNewSessionDefaultFavorite //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1341,6 +1777,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1354,11 +1793,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemNewSessionDefaultFavorite
+@end //} TerminalToolbar_ItemNewSessionDefaultFavorite
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemNewSessionLogInShell
+@implementation TerminalToolbar_ItemNewSessionLogInShell //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1395,6 +1837,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1408,11 +1853,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemNewSessionLogInShell
+@end //} TerminalToolbar_ItemNewSessionLogInShell
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemNewSessionShell
+@implementation TerminalToolbar_ItemNewSessionShell //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1449,6 +1897,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1462,11 +1913,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemNewSessionShell
+@end //} TerminalToolbar_ItemNewSessionShell
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemPrint
+@implementation TerminalToolbar_ItemPrint //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1503,6 +1957,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1516,11 +1973,14 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-@end // TerminalToolbar_ItemPrint
+@end //} TerminalToolbar_ItemPrint
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemStackWindows
+@implementation TerminalToolbar_ItemStackWindows //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1557,6 +2017,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds when the toolbar item is used.
 
@@ -1590,11 +2053,14 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 }// validateToolbarItem:
 
 
-@end // TerminalToolbar_ItemStackWindows
+@end //} TerminalToolbar_ItemStackWindows
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemSuspend
+@implementation TerminalToolbar_ItemSuspend //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1631,9 +2097,13 @@ Destructor.
 - (void)
 dealloc
 {
+	[self willChangeSession]; // automatically stop monitoring the session
 	[sessionChangeListener release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Actions
 
 
 /*!
@@ -1647,6 +2117,30 @@ performToolbarItemAction:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandSuspendNetwork);
 }// performToolbarItemAction:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id								result = [super copyWithZone:zone];
+	TerminalToolbar_ItemSuspend*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemSuspend.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemSuspend*);
+	asSelf->sessionChangeListener = [self->sessionChangeListener copy];
+	[asSelf->sessionChangeListener setTarget:asSelf];
+	
+	return result;
+}// copyWithZone:
 
 
 #pragma mark TerminalToolbar_SessionDependentItem
@@ -1671,8 +2165,8 @@ willChangeSession
 	if (Session_IsValid(session))
 	{
 		Session_StopMonitoring(session, kSession_ChangeStateAttributes, [self->sessionChangeListener listenerRef]);
-		[self setStateFromSession:nullptr];
 	}
+	[self setStateFromSession:nullptr];
 }// willChangeSession
 
 
@@ -1692,19 +2186,22 @@ didChangeSession
 	SessionRef	session = [self session];
 	
 	
+	[self setStateFromSession:session];
 	if (Session_IsValid(session))
 	{
-		[self setStateFromSession:session];
 		Session_StartMonitoring(session, kSession_ChangeStateAttributes, [self->sessionChangeListener listenerRef]);
 	}
 }// didChangeSession
 
 
-@end // TerminalToolbar_ItemSuspend
+@end //} TerminalToolbar_ItemSuspend
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
+@implementation TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal) //{
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
 
 
 /*!
@@ -1739,6 +2236,9 @@ context:(void*)							aContext
 }// model:sessionChange:context:
 
 
+#pragma mark New Methods
+
+
 /*!
 Updates the toolbar icon based on the current suspend state
 of the given session.  If "nullptr" is given then the icon
@@ -1763,11 +2263,14 @@ setStateFromSession:(SessionRef)	aSession
 }// setStateFromSession:
 
 
-@end // TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
+@end //} TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal)
 
 
 #pragma mark -
-@implementation TerminalToolbar_LEDItem
+@implementation TerminalToolbar_LEDItem //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1801,9 +2304,35 @@ Destructor.
 - (void)
 dealloc
 {
+	[self willChangeSession]; // automatically stop monitoring the screen
 	[screenChangeListener release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id							result = [super copyWithZone:zone];
+	TerminalToolbar_LEDItem*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_LEDItem.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_LEDItem*);
+	asSelf->indexOfLED = self->indexOfLED;
+	asSelf->screenChangeListener = [self->screenChangeListener copy];
+	[asSelf->screenChangeListener setTarget:asSelf];
+	
+	return result;
+}// copyWithZone:
 
 
 #pragma mark TerminalToolbar_SessionDependentItem
@@ -1858,11 +2387,14 @@ didChangeSession
 }// didChangeSession
 
 
-@end // TerminalToolbar_LEDItem
+@end //} TerminalToolbar_LEDItem
 
 
 #pragma mark -
-@implementation TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
+@implementation TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal) //{
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
 
 
 /*!
@@ -1897,6 +2429,9 @@ context:(void*)							aContext
 }// model:screenChange:context:
 
 
+#pragma mark New Methods
+
+
 /*!
 Updates the toolbar icon based on the current state of
 the LED in the given screen buffer with the appropriate
@@ -1923,11 +2458,14 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 }// setStateFromScreen:
 
 
-@end // TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
+@end //} TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal)
 
 
 #pragma mark -
-@implementation TerminalToolbar_TabSource
+@implementation TerminalToolbar_TabSource //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1960,6 +2498,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Accessors
+
+
 /*!
 The attributed string describing the title of the tab; this
 is used in the segmented control as well as any overflow menu.
@@ -1971,6 +2512,22 @@ attributedDescription
 {
 	return description;
 }// attributedDescription
+
+
+/*!
+The tooltip that is displayed when the mouse points to the
+tab’s segment in the toolbar.
+
+(4.0)
+*/
+- (NSString*)
+toolTip
+{
+	return @"";
+}// toolTip
+
+
+#pragma mark Actions
 
 
 /*!
@@ -1987,24 +2544,14 @@ performAction:(id) sender
 }// performAction:
 
 
-/*!
-The tooltip that is displayed when the mouse points to the
-tab’s segment in the toolbar.
-
-(4.0)
-*/
-- (NSString*)
-toolTip
-{
-	return @"";
-}// toolTip
-
-
-@end // TerminalToolbar_TabSource
+@end //} TerminalToolbar_TabSource
 
 
 #pragma mark -
-@implementation TerminalToolbar_ItemTabs
+@implementation TerminalToolbar_ItemTabs //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -2064,6 +2611,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
 /*!
 Responds to an action in the menu of a toolbar item by finding
 the corresponding object in the target array and making it
@@ -2118,6 +2668,9 @@ performSegmentedControlAction:(id)		sender
 		}
 	}
 }// performSegmentedControlAction:
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -2189,11 +2742,1119 @@ andAction:(SEL)				aSelector
 }// setTabTargets:andAction:
 
 
-@end // TerminalToolbar_ItemTabs
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id							result = [super copyWithZone:zone];
+	TerminalToolbar_ItemTabs*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemTabs.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemTabs*);
+	asSelf->segmentedControl = [self->segmentedControl copy];
+	asSelf->targets = [self->targets copy];
+	asSelf->action = self->action;
+	
+	return result;
+}// copyWithZone:
+
+
+@end //} TerminalToolbar_ItemTabs
 
 
 #pragma mark -
-@implementation TerminalToolbar_Object
+@implementation TerminalToolbar_TextLabel //{
+
+
+#pragma mark Internally-Declared Properties
+
+/*!
+This temporarily prevents any response to a change in the
+frame of the view, which is important to prevent recursion.
+*/
+@synthesize disableFrameMonitor = _disableFrameMonitor;
+
+/*!
+This should only be set in direct response to measuring the
+required space and determining that there is not enough
+room for all the text using the current font.  It tells the
+"drawRect:" implementation to use a fade-out effect as the
+text is truncated.
+*/
+@synthesize gradientFadeEnabled = _gradientFadeEnabled;
+
+
+#pragma mark Externally-Declared Properties
+
+/*!
+A weaker form of frame observer that is only told about
+changes to the “ideal” layout (helps toolbar items to
+match it).
+*/
+@synthesize idealSizeMonitor = _idealSizeMonitor;
+
+
+/*!
+If this property is set to YES then the user can drag the
+window even if the initial click is on this view.  This
+overrides the base NSView class.
+*/
+@synthesize mouseDownCanMoveWindow = _mouseDownCanMoveWindow;
+
+
+/*!
+Set this to YES to make the font size slightly smaller by
+default.  Note that, in addition, the font size adjusts
+automatically based on available space.
+*/
+@synthesize smallSize = _smallSize;
+
+
+#pragma mark Class Methods
+
+
+/*!
+Allocates a new image that renders a gradient fade.
+
+(2018.03)
+*/
++ (CGImageRef)
+newFadeMaskImageWithSize:(NSSize)				aSize
+labelLayout:(TerminalToolbar_TextLabelLayout)	aDirection
+{
+	CGImageRef			result = nullptr;
+	CGColorSpaceRef		grayColorSpace = [[NSColorSpace genericGrayColorSpace] CGColorSpace];
+	CGContextRef		maskContext = CGBitmapContextCreate(nullptr/* source data or nullptr for auto-allocate */,
+															aSize.width, aSize.height,
+															8/* bits per component*/, 0/* bytes per row or 0 for auto */,
+															grayColorSpace, kCGImageAlphaNone);
+	NSGraphicsContext*	asContextObj = [NSGraphicsContext graphicsContextWithGraphicsPort:maskContext flipped:NO];
+	
+	
+	[NSGraphicsContext saveGraphicsState];
+	[NSGraphicsContext setCurrentContext:asContextObj];
+	// INCOMPLETE: no center fading is implemented
+	if (kTerminalToolbar_TextLabelLayoutRightJustified == aDirection)
+	{
+		NSGradient*		grayGradient = [[[NSGradient alloc] initWithColors:@[[NSColor blackColor], [NSColor whiteColor], [NSColor whiteColor], [NSColor whiteColor], [NSColor whiteColor]]]
+										autorelease];
+		
+		
+		[grayGradient drawFromPoint:NSZeroPoint toPoint:NSMakePoint(CGBitmapContextGetWidth(maskContext), 0) options:0];
+	}
+	else if (kTerminalToolbar_TextLabelLayoutCenterJustified == aDirection)
+	{
+		NSGradient*		grayGradient = [[[NSGradient alloc] initWithColors:@[[NSColor whiteColor], [NSColor whiteColor], [NSColor blackColor], [NSColor whiteColor], [NSColor whiteColor]]]
+										autorelease];
+		
+		
+		[grayGradient drawFromPoint:NSZeroPoint toPoint:NSMakePoint(CGBitmapContextGetWidth(maskContext), 0) options:0];
+	}
+	else
+	{
+		NSGradient*		grayGradient = [[[NSGradient alloc] initWithColors:@[[NSColor whiteColor], [NSColor whiteColor], [NSColor whiteColor], [NSColor whiteColor], [NSColor blackColor]]]
+										autorelease];
+		
+		
+		[grayGradient drawFromPoint:NSZeroPoint toPoint:NSMakePoint(CGBitmapContextGetWidth(maskContext), 0) options:0];
+	}
+	[NSGraphicsContext restoreGraphicsState];
+	
+	result = CGBitmapContextCreateImage(maskContext);
+	CFRelease(maskContext);
+	
+    return result;
+}// newFadeMaskImageWithSize:direction:
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithFrame:(NSRect)	aRect
+{
+	self = [super initWithFrame:aRect];
+	if (nil != self)
+	{
+		_disableFrameMonitor = NO;
+		_gradientFadeEnabled = NO;
+		_idealSizeMonitor = nil;
+		_mouseDownCanMoveWindow = NO;
+		_smallSize = NO;
+		self.postsFrameChangedNotifications = YES;
+		[self whenObject:self postsNote:NSViewFrameDidChangeNotification
+							performSelector:@selector(textViewFrameDidChange:)];
+		
+		// NOTE: runtime OS is expected to support this feature but
+		// while compilation requires legacy SDK (for old Carbon code)
+		// it is not possible to just call it
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setAllowsDefaultTighteningForTruncation:), self,
+						YES))
+		{
+			Console_Warning(Console_WriteLine, "failed to set window title bar text-tightening");
+		}
+		
+		// initialize various label properties
+		self.labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified;
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(2018.03)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Determines how the text should handle alignment, wrapping and
+truncation.
+
+(2018.03)
+*/
+- (TerminalToolbar_TextLabelLayout)
+labelLayout
+{
+	return _labelLayout;
+}
+- (void)
+setLabelLayout:(TerminalToolbar_TextLabelLayout)	aLayoutValue
+{
+	if (_labelLayout != aLayoutValue)
+	{
+		_labelLayout = aLayoutValue;
+		
+		[self layOutLabelText];
+	}
+}// setLabelLayout:
+
+
+#pragma mark Notifications
+
+
+/*!
+Responds when the window title toolbar item frame is changed
+by a system API such as a direct modification of the frame
+property on that view.
+
+This item attempts to choose a better font size when it does
+not have enough space for the whole string.
+
+(2018.03)
+*/
+- (void)
+textViewFrameDidChange:(NSNotification*)	aNotification
+{
+	if (NO == self.disableFrameMonitor)
+	{
+		if (NO == [aNotification.object isKindOfClass:TerminalToolbar_TextLabel.class])
+		{
+			Console_Warning(Console_WriteLine, "text label frame-change notification expected an TerminalToolbar_TextLabel object!");
+		}
+		else
+		{
+			TerminalToolbar_TextLabel*		asTextView = STATIC_CAST(aNotification.object, TerminalToolbar_TextLabel*);
+			assert(self == asTextView);
+			
+			
+			[asTextView layOutLabelText];
+		}
+	}
+}// textViewFrameDidChange:
+
+
+#pragma mark NSView
+
+
+/*!
+Draws the text label, possibly with a text fade-out effect
+for truncation.
+
+(2018.03)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+	CGContextRef			graphicsContext = REINTERPRET_CAST([[NSGraphicsContext currentContext] graphicsPort], CGContextRef);
+	CGContextSaveRestore	_(graphicsContext);
+	
+	
+	if (self.gradientFadeEnabled)
+	{
+		CGImageRef		maskImage = [self.class newFadeMaskImageWithSize:self.bounds.size
+																			labelLayout:self.labelLayout];
+		
+		
+		CGContextClipToMask(graphicsContext, NSRectToCGRect(self.bounds), maskImage);
+		CFRelease(maskImage); maskImage = nullptr;
+	}
+	
+	//[self.stringValue drawAtPoint:self.bounds.origin withAttributes:nil];
+	[super drawRect:aRect];
+}// drawRect:
+
+
+@end //} TerminalToolbar_TextLabel
+
+
+#pragma mark -
+@implementation TerminalToolbar_TextLabel (TerminalToolbar_TextLabelInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Uses the text view’s own "sizeToFit" temporarily to
+calculate the size that the given string would
+require with the current font.
+
+(2018.03)
+*/
+- (CGSize)
+idealFrameSizeForString:(NSString*)		aString
+{
+	CGSize		result = CGSizeZero;
+	
+	
+	if (nil != aString)
+	{
+		BOOL		originalDisableFlag = self.disableFrameMonitor;
+		NSString*	originalValue = self.stringValue;
+		NSRect		originalFrame = self.frame;
+		
+		
+		// during measurement-related frame changes, ignore notifications
+		self.disableFrameMonitor = YES;
+		
+		self.stringValue = aString;
+		[self sizeToFit];
+		result = CGSizeMake(NSWidth(self.frame), NSHeight(self.frame));
+		self.frame = originalFrame;
+		self.stringValue = originalValue; // remove sizing string
+		
+		self.disableFrameMonitor = originalDisableFlag;
+	}
+	
+	return result;
+}// idealFrameSizeForString:
+
+
+/*!
+Examines the current text and updates properties to make
+the ideal layout: possibly new font, etc.
+
+Invoke this method whenever the text needs to be reset
+(frame change, string value change, initialization, etc.).
+
+(2018.03)
+*/
+- (void)
+layOutLabelText
+{
+	BOOL const		isSmallSize = self.smallSize;
+	CGFloat			originalWidth = NSWidth(self.frame);
+	CGSize			requiredSize = CGSizeMake(1 + originalWidth, NSHeight(self.frame));
+	NSString*		layoutString = (((nil == self.stringValue) || (0 == self.stringValue.length))
+									? @"Âgp" // arbitrary; lay out with text, not a blank space
+									: self.stringValue);
+	
+	
+	// set initial truncation from layout (may be overridden below
+	// if the text must wrap to two lines)
+	switch (self.labelLayout)
+	{
+	case kTerminalToolbar_TextLabelLayoutLeftJustified:
+		self.alignment = NSLeftTextAlignment; // NSControl setting
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setLineBreakMode:), self,
+						NSLineBreakByTruncatingTail))
+		{
+			Console_Warning(Console_WriteLine, "failed to set text label line break mode");
+		}
+		break;
+	
+	case kTerminalToolbar_TextLabelLayoutRightJustified:
+		self.alignment = NSRightTextAlignment; // NSControl setting
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setLineBreakMode:), self,
+						NSLineBreakByTruncatingHead))
+		{
+			Console_Warning(Console_WriteLine, "failed to set text label line break mode");
+		}
+		break;
+	
+	case kTerminalToolbar_TextLabelLayoutCenterJustified:
+	default:
+		self.alignment = NSCenterTextAlignment; // NSControl setting
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setLineBreakMode:), self,
+						NSLineBreakByTruncatingMiddle))
+		{
+			Console_Warning(Console_WriteLine, "failed to set text label line break mode");
+		}
+		break;
+	}
+	
+	// initialize line count (may be overridden below)
+	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+				(@selector(setUsesSingleLineMode:), self,
+					YES))
+	{
+		Console_Warning(Console_WriteLine, "failed to set text label single line mode");
+	}
+	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+				(@selector(setMaximumNumberOfLines:), self, 1))
+	{
+		Console_Warning(Console_WriteLine, "failed to set text label maximum number of lines");
+	}
+	
+	// test a variety of font sizes to find the most reasonable one;
+	// if text ends up too long anyway then view will squish/truncate
+	// (TEMPORARY...should any of this be a user preference?)
+	if (requiredSize.width > originalWidth)
+	{
+		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 14 : 16)];
+		requiredSize = [self idealFrameSizeForString:layoutString];
+	}
+	if (requiredSize.width > originalWidth)
+	{
+		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 13 : 14)];
+		requiredSize = [self idealFrameSizeForString:layoutString];
+	}
+	if (requiredSize.width > originalWidth)
+	{
+		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 12 : 13)];
+		requiredSize = [self idealFrameSizeForString:layoutString];
+	}
+	if (requiredSize.width > originalWidth)
+	{
+		// at this point, switch to multiple lines as well
+		// (experimental, not working yet)
+	#if 0
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setUsesSingleLineMode:), self,
+						NO))
+		{
+			Console_Warning(Console_WriteLine, "failed to set text label single line mode");
+		}
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setMaximumNumberOfLines:), self, 2))
+		{
+			Console_Warning(Console_WriteLine, "failed to set text label maximum number of lines");
+		}
+	#endif
+		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 10 : 12)];
+		requiredSize = [self idealFrameSizeForString:layoutString];
+	}
+	if (requiredSize.width > originalWidth)
+	{
+		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 9 : 10)];
+		requiredSize = [self idealFrameSizeForString:layoutString];
+	}
+	
+	// if there is still not enough room, fade out the text
+	self.gradientFadeEnabled = (requiredSize.width > originalWidth);
+	
+	// NOTE: this currently is buggy in a dynamic resize scenario, since
+	// the font is updated one iteration ahead of the next toolbar layout;
+	// if the user were to stop resizing as soon as the font changes, the
+	// text is clipped instead of actually using the new minimum size
+	// (TEMPORARY; find a fix for this somehow; no forced layout seems to
+	// work...)
+	[self setNeedsDisplay:YES];
+	
+	// notify any observer
+	[self.idealSizeMonitor view:self didSetIdealFrameHeight:requiredSize.height];
+}// layOutLabelText
+
+
+@end //} TerminalToolbar_TextLabel (TerminalToolbar_TextLabelInternal)
+
+
+#pragma mark -
+@implementation TerminalToolbar_WindowTitleLabel //{
+
+
+#pragma mark Internally-Declared Properties
+
+/*!
+Stores information on window "title" property observer.
+*/
+@synthesize windowTitleObserver = _windowTitleObserver;
+
+
+#pragma mark Externally-Declared Properties
+
+/*!
+Specify a window to take precedence over view’s own window.
+*/
+@synthesize overrideWindow = _overrideWindow;
+
+/*!
+External object to notify when the window changes.
+*/
+@synthesize windowMonitor = _windowMonitor;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithFrame:(NSRect)	aRect
+{
+	self = [super initWithFrame:aRect];
+	if (nil != self)
+	{
+		self->_overrideWindow = nil;
+		self->_windowMonitor = nil;
+		self->_windowTitleObserver = nil; // initially...
+		
+		self.labelLayout = kTerminalToolbar_TextLabelLayoutCenterJustified;
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(2018.03)
+*/
+- (void)
+dealloc
+{
+	[self removeObserverSpecifiedWith:self.windowTitleObserver];
+	[_windowTitleObserver release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+- (NSWindow*)
+overrideWindow
+{
+	return [[_overrideWindow retain] autorelease];
+}
+- (void)
+setOverrideWindow:(NSWindow*)	aWindow
+{
+	if (_overrideWindow != aWindow)
+	{
+		[_overrideWindow autorelease];
+		_overrideWindow = [aWindow retain];
+		[self removeObserverSpecifiedWith:self.windowTitleObserver];
+		_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:aWindow
+																options:(NSKeyValueChangeSetting) context:nullptr];
+	}
+}// setOverrideWindow
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to key values by updating dependent
+states such as the display.
+
+(2018.03)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+#pragma unused(anObject, aContext)
+	//if (NO == self.disableObservers)
+	{
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(title)))
+			{
+				id		newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
+				
+				
+				//NSLog(@"title changed: %@", aChangeDictionary); // debug	
+				if (nil != newValue)
+				{
+					assert([newValue isKindOfClass:NSString.class]);
+					NSString*	asString = STATIC_CAST(newValue, NSString*);
+					
+					
+					self.stringValue = asString;
+					[self layOutLabelText];
+				}
+			}
+		}
+	}
+}// observeValueForKeyPath:ofObject:change:context:
+
+
+#pragma mark NSView
+
+
+/*!
+Invoked when the view’s "window" property changes to its
+current value (including a nil value).
+
+(2018.03)
+*/
+- (void)
+viewDidMoveToWindow
+{
+	// add an observer to the current "self.window" object
+	if ((nil != self.window) && (nil == self.overrideWindow))
+	{
+		[self removeObserverSpecifiedWith:self.windowTitleObserver];
+		_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:self.window
+																options:(NSKeyValueChangeSetting) context:nullptr];
+		
+		// is this necessary, or is the observer called automatically from the above?
+		self.stringValue = self.window.title;
+		[self layOutLabelText];
+		
+		// notify any observer
+		[self.windowMonitor view:self didEnterWindow:self.window];
+	}
+}// viewDidMoveToWindow
+
+
+/*!
+Invoked when the view’s "window" property is about to
+change to the specified value (or nil).
+
+(2018.03)
+*/
+- (void)
+viewWillMoveToWindow:(NSWindow*)	aWindow
+{
+#pragma unused(aWindow)
+	// remove any observer of the current "self.window" object
+	if ((nil == self.overrideWindow) && (aWindow != self.window))
+	{
+		[self removeObserverSpecifiedWith:self.windowTitleObserver];
+		self.windowTitleObserver = nil;
+	}
+}// viewWillMoveToWindow:
+
+
+@end //} TerminalToolbar_WindowTitleLabel
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowTitle //{
+
+
+#pragma mark Internally-Declared Properties
+
+/*!
+This temporarily prevents any response to a change in the
+frame of the item’s view, which is important to prevent
+recursion.
+*/
+@synthesize disableFrameMonitor = _disableFrameMonitor;
+
+/*!
+The view that displays the window title text.
+*/
+@synthesize textView = _textView;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self->_disableFrameMonitor = NO;
+		self->_textView = [[TerminalToolbar_WindowTitleLabel alloc] initWithFrame:NSZeroRect];
+		self.textView.idealSizeMonitor = self;
+		self.textView.windowMonitor = self;
+		self.textView.mouseDownCanMoveWindow = YES;
+		self.textView.bezeled = NO;
+		self.textView.bordered = NO;
+		self.textView.drawsBackground = NO;
+		self.textView.editable = NO;
+		//self.textView.font = [NSFont titleBarFontOfSize:9]; // set in TerminalToolbar_WindowTitleLabel
+		//self.textView.selectable = YES;
+		self.textView.selectable = NO;
+		
+		[self setAction:@selector(performToolbarItemAction:)];
+		[self setTarget:self];
+		[self setEnabled:YES];
+		[self setView:self.textView];
+		[self setLabel:NSLocalizedString(@"Window Title", @"toolbar item name; for window title")];
+		[self setPaletteLabel:NSLocalizedString(@"Window Title", @"toolbar item name; for window title")];
+		[self setStateFromWindow:nullptr];
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+/*!
+Destructor.
+
+(2018.03)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+	[_textView release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Actions
+
+
+/*!
+Responds when the toolbar item is used.
+
+(2018.03)
+*/
+- (void)
+performToolbarItemAction:(id)	sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle);
+}// performToolbarItemAction:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id									result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowTitle*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowTitle.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowTitle*);
+	asSelf->_disableFrameMonitor = self->_disableFrameMonitor;
+	
+	// views do not support NSCopying; archive instead
+	//asSelf->_textView = [self->_textView copy];
+	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_textView];
+	asSelf->_textView = [NSKeyedUnarchiver unarchiveObjectWithData:archivedView];
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark TerminalToolbar_DisplayModeSensitive
+
+
+/*!
+Keeps track of changes to the mode (such as “text only”)
+so that the window layout can adapt if necessary.
+
+(2018.03)
+*/
+- (void)
+didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
+{
+#pragma unused(aToolbar)
+	[self setStateFromWindow:[self windowFromView]]; // do not use "self.session", as it may not be defined
+}// didChangeDisplayModeForToolbar:
+
+
+#pragma mark TerminalToolbar_ItemAddRemoveSensitive
+
+
+/*!
+Called when the specified item has been added to the
+specified toolbar.
+
+(2018.03)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+willEnterToolbar:(NSToolbar*)	aToolbar
+{
+#pragma unused(aToolbar)
+	assert(self == anItem);
+	[self setStateFromWindow:[self windowFromView]];
+}// item:willEnterToolbar:
+
+
+/*!
+Called when the specified item has been removed from
+the specified toolbar.
+
+(2018.03)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+didExitToolbar:(NSToolbar*)		aToolbar
+{
+#pragma unused(aToolbar)
+	assert(self == anItem);
+	[self setStateFromWindow:nullptr];
+}// item:didExitToolbar:
+
+
+#pragma mark TerminalToolbar_ItemHasPaletteProxy
+
+
+/*!
+Returns the item that represents this item in a customization palette.
+
+(2018.03)
+*/
+- (NSToolbarItem*)
+paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
+{
+	NSToolbarItem*		result = [[NSToolbarItem alloc] initWithItemIdentifier:anIdentifier];
+	
+	
+	result.paletteLabel = self.paletteLabel;
+	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleCenterIconFilenameNoExtension(), NSString*)]];
+	
+	return [result autorelease];
+}// paletteProxyToolbarItemWithIdentifier:
+
+
+#pragma mark TerminalToolbar_SizeSensitive
+
+
+/*!
+Keeps track of changes to the icon and label size
+so that the window layout can adapt if necessary.
+
+(2018.03)
+*/
+- (void)
+didChangeSizeForToolbar:(NSToolbar*)	aToolbar
+{
+	self.textView.smallSize = ((nil != aToolbar) &&
+								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
+	[self setStateFromWindow:[self windowFromView]];
+}// didChangeSizeForToolbar:
+
+
+#pragma mark TerminalToolbar_ViewFrameSensitive
+
+
+/*!
+Updates the minimum and maximum sizes to match.
+
+(2018.03)
+*/
+- (void)
+view:(NSView*)						aView
+didSetIdealFrameHeight:(CGFloat)	aPixelHeight
+{
+	if (aView != self.textView)
+	{
+		Console_Warning(Console_WriteLine, "window title toolbar item is being notified of a different view’s ideal-frame changes");
+	}
+	else
+	{
+		//[self setStateFromWindow:[self windowFromView]];
+		[self resetMinMaxSizesForHeight:aPixelHeight];
+	}
+}// view:didSetIdealFrameHeight:
+
+
+#pragma mark TerminalToolbar_ViewWindowSensitive
+
+
+/*!
+Updates the minimum and maximum sizes to match after
+the window title view enters the toolbar and presumably
+adopts that window’s title value.
+
+(2018.03)
+*/
+- (void)
+view:(NSView*)					aView
+didEnterWindow:(NSWindow*)		aWindow
+{
+	if (aView != self.textView)
+	{
+		Console_Warning(Console_WriteLine, "window title toolbar item is being notified of a different view’s window changes");
+	}
+	else
+	{
+		[self setStateFromWindow:aWindow];
+	}
+}// view:didEnterWindow:
+
+
+@end //} TerminalToolbar_ItemWindowTitle
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowTitle (TerminalToolbar_ItemWindowTitleInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Uses a sizing string to attempt to make the text view
+automatically return its ideal height.
+
+(2018.03)
+*/
+- (void)
+resetMinMaxSizesForHeight:(CGFloat)		aHeight
+{
+	[self setMinSize:NSMakeSize(60, aHeight)];
+	[self setMaxSize:NSMakeSize(2048, aHeight)];
+}// resetMinMaxSizesForHeight:
+
+
+/*!
+Updates the displayed window title string based on the specified
+window’s title.  If "nil" is given then the label is reset.
+
+(2018.03)
+*/
+- (void)
+setStateFromWindow:(NSWindow*)	aWindow
+{
+	//BOOL const		isSmallSize = ((nil != self.toolbar) &&
+	//								(NSToolbarSizeModeSmall == self.toolbar.sizeMode));
+	BOOL const		isTextOnly = ((nil != self.toolbar) &&
+									(NSToolbarDisplayModeLabelOnly == self.toolbar.displayMode));
+	
+	
+	self.textView.stringValue = ((nil != aWindow.title) ? aWindow.title : @"");
+	self.textView.toolTip = self.textView.stringValue;
+	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)]; // see also "view:didSetIdealFrameHeight:"
+	
+	[self.textView setNeedsDisplay:YES];
+	
+	// this allows text-only toolbars to still display the window title string
+	self.label = ((isTextOnly)
+					? [NSString stringWithFormat:@"  %@  ", ((nil != self.textView.stringValue) ? self.textView.stringValue : @"")]
+					: @"");
+	
+	self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:self.textView.stringValue action:nil keyEquivalent:@""] autorelease];
+	self.menuFormRepresentation.enabled = NO;
+}// setStateFromSession:
+
+
+/*!
+Returns the window that the item should retrieve its title
+from.  If the text view is in a window, that window is
+returned; otherwise, nil.
+
+(2018.03)
+*/
+- (NSWindow*)
+windowFromView
+{
+	NSWindow*	result = self.textView.window;
+	
+	
+	return result;
+}// windowFromView
+
+
+@end //} TerminalToolbar_ItemWindowTitle (TerminalToolbar_ItemWindowTitleInternal)
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowTitleLeft //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self.textView.labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified;
+		[self setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleLeftIconFilenameNoExtension(), NSString*)]]; // TEMPORARY
+		[self setPaletteLabel:NSLocalizedString(@"Left-Aligned Title", @"toolbar item name; for left-aligned window title")];
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id										result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowTitleLeft*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowTitleLeft.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowTitleLeft*);
+	// (nothing needed)
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark TerminalToolbar_ItemHasPaletteProxy
+
+
+/*!
+Returns the item that represents this item in a customization palette.
+
+(2018.03)
+*/
+- (NSToolbarItem*)
+paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
+{
+	NSToolbarItem*		result = [[NSToolbarItem alloc] initWithItemIdentifier:anIdentifier];
+	
+	
+	result.paletteLabel = self.paletteLabel;
+	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleLeftIconFilenameNoExtension(), NSString*)]];
+	
+	return [result autorelease];
+}// paletteProxyToolbarItemWithIdentifier:
+
+
+@end //} TerminalToolbar_ItemWindowTitleLeft
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowTitleRight //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self.textView.labelLayout = kTerminalToolbar_TextLabelLayoutRightJustified;
+		[self setPaletteLabel:NSLocalizedString(@"Right-Aligned Title", @"toolbar item name; for right-aligned window title")];
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id										result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowTitleRight*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowTitleRight.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowTitleRight*);
+	// (nothing needed)
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark TerminalToolbar_ItemHasPaletteProxy
+
+
+/*!
+Returns the item that represents this item in a customization palette.
+
+(2018.03)
+*/
+- (NSToolbarItem*)
+paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
+{
+	NSToolbarItem*		result = [[NSToolbarItem alloc] initWithItemIdentifier:anIdentifier];
+	
+	
+	result.paletteLabel = self.paletteLabel;
+	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleRightIconFilenameNoExtension(), NSString*)]];
+	
+	return [result autorelease];
+}// paletteProxyToolbarItemWithIdentifier:
+
+
+@end //} TerminalToolbar_ItemWindowTitleRight
+
+
+#pragma mark -
+@implementation TerminalToolbar_Object //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -2281,11 +3942,14 @@ setVisible:(BOOL)	isVisible
 }// setVisible:
 
 
-@end // TerminalToolbar_Object
+@end //} TerminalToolbar_Object
 
 
 #pragma mark -
-@implementation TerminalToolbar_SessionDependentItem
+@implementation TerminalToolbar_SessionDependentItem //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -2299,10 +3963,7 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	self = [super initWithItemIdentifier:anIdentifier];
 	if (nil != self)
 	{
-		[self whenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification
-							performSelector:@selector(sessionWillChange:)];
-		[self whenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification
-							performSelector:@selector(sessionDidChange:)];
+		_sessionHint = nullptr;
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -2316,23 +3977,57 @@ Destructor.
 - (void)
 dealloc
 {
-	[self willChangeSession]; // allows subclasses to automatically stop monitoring the current session
-	[self ignoreWhenObjectsPostNotes];
+	[self removeSessionDependentItemNotificationHandlersForToolbar:self.toolbar];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
 
 
 /*!
 Convenience method for finding the session currently associated
 with the toolbar that contains this item (may be "nullptr").
 
+If the item has no toolbar yet, "setSessionHint:" can be used
+to influence this return value.
+
 (4.0)
 */
 - (SessionRef)
 session
 {
-	return [[self toolbar] terminalToolbarSession];
+	SessionRef		result = [self.toolbar terminalToolbarSession];
+	
+	
+	if (nullptr == result)
+	{
+		result = _sessionHint;
+	}
+	else
+	{
+		self->_sessionHint = nullptr;
+	}
+	
+	return result;
 }// session
+
+
+/*!
+If this item has no toolbar yet (such as, construction during
+toolbar customization), "setSessionHint:" can be used to improve
+the default setup of the item to match the target toolbar.  This
+value is NOT used by the "session" method unless the item has no
+toolbar assigned.  In addition, this value is cleared by future
+calls to "session" if a toolbar exists.
+
+(2018.03)
+*/
+- (void)
+setSessionHint:(SessionRef)		aSession
+{
+	self->_sessionHint = aSession;
+}// setSessionHint
 
 
 /*!
@@ -2464,6 +4159,29 @@ sessionWillChange:(NSNotification*)		aNotification
 }// sessionWillChange:
 
 
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id										result = [super copyWithZone:zone];
+	TerminalToolbar_SessionDependentItem*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_SessionDependentItem.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_SessionDependentItem*);
+	asSelf->_sessionHint = self->_sessionHint;
+	
+	return result;
+}// copyWithZone:
+
+
 #pragma mark NSToolbarItem
 
 
@@ -2485,11 +4203,87 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 }// validateToolbarItem:
 
 
-@end // TerminalToolbar_SessionDependentItem
+#pragma mark TerminalToolbar_ItemAddRemoveSensitive
+
+
+/*!
+Called when the specified item has been added to the
+specified toolbar.
+
+(2018.03)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+willEnterToolbar:(NSToolbar*)	aToolbar
+{
+	assert(self == anItem);
+	[self installSessionDependentItemNotificationHandlersForToolbar:aToolbar];
+}// item:willEnterToolbar:
+
+
+/*!
+Called when the specified item has been removed from
+the specified toolbar.
+
+(2018.03)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+didExitToolbar:(NSToolbar*)		aToolbar
+{
+	assert(self == anItem);
+	[self removeSessionDependentItemNotificationHandlersForToolbar:aToolbar];
+}// item:didExitToolbar:
+
+
+@end //} TerminalToolbar_SessionDependentItem
 
 
 #pragma mark -
-@implementation TerminalToolbar_Window
+@implementation TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+This only needs to be called by initializers
+and "copyWithZone:".
+
+(2018.03)
+*/
+- (void)
+installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)		aToolbar
+{
+	[self whenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification
+						performSelector:@selector(sessionWillChange:)];
+	[self whenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification
+						performSelector:@selector(sessionDidChange:)];
+}// installSessionDependentItemNotificationHandlersForToolbar:
+
+
+/*!
+This only needs to be called by initializers
+and "copyWithZone:".
+
+(2018.03)
+*/
+- (void)
+removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)		aToolbar
+{
+	[self ignoreWhenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification];
+	[self ignoreWhenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification];
+}// removeSessionDependentItemNotificationHandlersForToolbar:
+
+
+@end //} TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal)
+
+
+#pragma mark -
+@implementation TerminalToolbar_Window //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -2499,11 +4293,15 @@ Designated initializer.
 */
 - (instancetype)
 initWithContentRect:(NSRect)	aRect
-screen:(NSScreen*)				aScreen
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
+styleMask:(NSUInteger)			aStyleMask
+#else
+styleMask:(NSWindowStyleMask)	aStyleMask
+#endif
+backing:(NSBackingStoreType)	aBufferingType
+defer:(BOOL)					aDeferFlag
 {
-	self = [super initWithContentRect:aRect styleMask:(NSTitledWindowMask | NSUtilityWindowMask | NSClosableWindowMask |
-														NSMiniaturizableWindowMask)
-										backing:NSBackingStoreBuffered defer:YES screen:aScreen];
+	self = [super initWithContentRect:aRect styleMask:aStyleMask backing:aBufferingType defer:aDeferFlag];
 	if (nil != self)
 	{
 		self->isDisplayingSheet = NO;
@@ -2709,11 +4507,37 @@ animate:(BOOL)		animateFlag
 }// setFrame:display:animate:
 
 
-@end // TerminalToolbar_Window
+@end //} TerminalToolbar_Window
 
 
 #pragma mark -
-@implementation TerminalToolbar_Window (TerminalToolbar_WindowInternal)
+@implementation TerminalToolbar_Window (TerminalToolbar_WindowInternal) //{
+
+
+#pragma mark Class Methods
+
+
+/*!
+Requests that all terminal toolbar windows check their frames
+and see if they need to move (to a screen edge).
+
+Currently, this will only notify the first toolbar window
+that was ever created.
+
+NOTE:	Most frame changes are triggered per-instance by
+		notifications.  This routine is only used in rare
+		cases where normal notifications would not work.
+
+(4.0)
+*/
++ (void)
+refreshWindows
+{
+	[gSharedTerminalToolbar setFrameWithPossibleAnimation];
+}// refreshWindows
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
 
 
 /*!
@@ -2765,24 +4589,7 @@ context:(void*)								aContext
 }// model:sessionFactoryChange:context:
 
 
-/*!
-Requests that all terminal toolbar windows check their frames
-and see if they need to move (to a screen edge).
-
-Currently, this will only notify the first toolbar window
-that was ever created.
-
-NOTE:	Most frame changes are triggered per-instance by
-		notifications.  This routine is only used in rare
-		cases where normal notifications would not work.
-
-(4.0)
-*/
-+ (void)
-refreshWindows
-{
-	[gSharedTerminalToolbar setFrameWithPossibleAnimation];
-}// refreshWindows
+#pragma mark New Methods
 
 
 /*!
@@ -2975,6 +4782,6 @@ toolbarDidChangeVisibility:(NSNotification*)	aNotification
 }// toolbarDidChangeVisibility:
 
 
-@end // TerminalToolbar_Window (TerminalToolbar_WindowInternal)
+@end //} TerminalToolbar_Window (TerminalToolbar_WindowInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

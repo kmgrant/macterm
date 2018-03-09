@@ -427,6 +427,27 @@ inline CFStringRef
 	return CFSTR("IconForStackWindows");
 }
 
+inline CFStringRef
+	AppResources_ReturnWindowTitleCenterIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForWindowTitleCenter");
+}
+
+inline CFStringRef
+	AppResources_ReturnWindowTitleLeftIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForWindowTitleLeft");
+}
+
+inline CFStringRef
+	AppResources_ReturnWindowTitleRightIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForWindowTitleRight");
+}
+
 //@}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -237,6 +237,9 @@ IconForSessionStatusActive.icns \
 IconForSessionStatusDead.icns \
 IconForStackWindows.icns \
 IconForTerminal.icns \
+IconForWindowTitleCenter.icns \
+IconForWindowTitleLeft.icns \
+IconForWindowTitleRight.icns \
 PreferencesSearch.plist \
 English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \

@@ -150,6 +150,23 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Custom window class for terminals; mostly unchanged
+from the base.
+*/
+@interface TerminalWindow_Object : NSWindow //{
+{
+@private
+	BOOL	_constrainingToScreenSuspended;
+}
+
+// accessors
+	@property (assign) BOOL
+	constrainingToScreenSuspended;
+
+@end //}
+
+
+/*!
 Implements a window controller for a window that holds
 at least one terminal view as a parent.  See
 "TerminalWindowCocoa.xib".
@@ -180,6 +197,8 @@ changes to an interface declared in a ".mm" file.
 // new methods
 	- (NSEnumerator*)
 	enumerateTerminalViewControllers;
+	- (void)
+	setTitleVisibility:(NSInteger)_;
 
 @end //}
 

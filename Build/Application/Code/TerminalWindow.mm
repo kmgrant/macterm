@@ -159,6 +159,17 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 	preFullScreenFrame;
 	@property (strong) NSMutableArray*
 	terminalViewControllers;
+	@property (assign) TerminalToolbar_Delegate*
+	toolbarDelegate;
+
+@end //}
+
+
+@interface TerminalWindow_Controller (TerminalWindow_ControllerInternal) //{
+
+// notifications
+	- (void)
+	toolbarDidChangeVisibility:(NSNotification*)_;
 
 @end //}
 
@@ -241,7 +252,6 @@ struct My_TerminalWindow
 	
 	TerminalWindow_Controller*	windowController;			// controller for the main NSWindow (responds to events, etc.)
 	NSWindow*					window;						// the Cocoa window reference for the terminal window (wrapping Carbon)
-	TerminalToolbar_Delegate*	toolbarDelegate;			// used to drive the toolbar in the Cocoa window
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
@@ -3241,7 +3251,6 @@ changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
 windowController([[TerminalWindow_Controller alloc] initWithTerminalVC:[[[TerminalView_Controller alloc] init] autorelease]]),
 window((inCarbonLegacy) ? createWindowCarbonCocoa() : windowController.window),
-toolbarDelegate(nil), // may be set later
 tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
@@ -3567,6 +3576,8 @@ My_TerminalWindow::
 		Boolean		noAnimations = false;
 		
 		
+		// remove from tracking maps
+		gTerminalWindowRefsByNSWindow().erase(this->window);
 		if (false == this->isCocoa())
 		{
 			gTerminalWindowRefsByHIWindowRef().erase(returnCarbonWindow(this));
@@ -3636,7 +3647,6 @@ My_TerminalWindow::
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
 	// finally, dispose of the window
-	[this->toolbarDelegate release];
 	if (nil != this->window)
 	{
 		if (false == this->isCocoa())
@@ -7392,6 +7402,12 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						TerminalWindow_SetWindowTitle(terminalWindow, titleCFString);
 					}
 					
+					// set the session used to determine the state of toolbar items
+					if (ptr->isCocoa())
+					{
+						ptr->windowController.toolbarDelegate.session = session;
+					}
+					
 					// the restart toolbar item, if visible, should have its icon and command set
 					// (needed only for Carbon, since TerminalToolbar_ItemForceQuit does its own
 					// monitoring)
@@ -9004,6 +9020,7 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 // internally-declared
 @synthesize preFullScreenFrame = _preFullScreenFrame;
 @synthesize terminalViewControllers = _terminalViewControllers;
+@synthesize toolbarDelegate = _toolbarDelegate;
 
 // externally-declared
 @synthesize terminalWindowRef = _terminalWindowRef;
@@ -9036,16 +9053,19 @@ initWithTerminalVC:(TerminalView_Controller*)	aViewController
 		
 		// create toolbar
 		{
-			NSString*		toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
-			NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
+			NSString*					toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
+			TerminalToolbar_Object*		windowToolbar = [[[TerminalToolbar_Object alloc] initWithIdentifier:toolbarID] autorelease];
 			
 			
 			self->_toolbarDelegate = [[TerminalToolbar_Delegate alloc] initForToolbar:windowToolbar
 																						experimentalItems:YES];
 			[windowToolbar setAllowsUserCustomization:YES];
 			[windowToolbar setAutosavesConfiguration:YES];
-			[windowToolbar setDelegate:self->_toolbarDelegate];
+			[windowToolbar setDelegate:self.toolbarDelegate];
 			[self.window setToolbar:windowToolbar];
+			
+			[self whenObject:windowToolbar postsNote:kTerminalToolbar_ObjectDidChangeVisibilityNotification
+								performSelector:@selector(toolbarDidChangeVisibility:)];
 		}
 		
 		// "canDrawConcurrently" is YES for terminal background views
@@ -9054,6 +9074,8 @@ initWithTerminalVC:(TerminalView_Controller*)	aViewController
 		
 		// terminal items in the Window menu are managed separately
 		self.window.excludedFromWindowsMenu = YES;
+		
+		[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
 	}
 	return self;
 }// initWithTerminalVC:
@@ -9149,6 +9171,57 @@ enumerateTerminalViewControllers
 }// enumerateTerminalViewControllers
 
 
+/*!
+Specify a value of FUTURE_SYMBOL(1, NSWindowTitleHidden) to
+indicate that the window title should be hidden.  This will
+be supported by the runtime OS but not the current SDK; in
+the future, this method can be refactored or removed.
+
+Also, the existence of this method with this exact name
+suppresses a compiler warning that might otherwise occur
+with older SDKs (as the system may not declare it).
+
+(2018.03)
+*/
+- (void)
+setTitleVisibility:(NSInteger)		aVisibilityEnum
+{
+	// NOTE: runtime OS is expected to support this feature but
+	// while compilation requires legacy SDK (for old Carbon code)
+	// it is not possible to just call it
+	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+				(@selector(setTitleVisibility:), self.window,
+					aVisibilityEnum))
+	{
+		Console_Warning(Console_WriteLine, "failed to set window title bar visibility");
+	}
+}// setTitleVisibility:
+
+
+#pragma mark Notifications
+
+
+/*!
+Responds when the toolbar visibility changes, by altering
+the “title visible” property of the window.
+
+(2018.03)
+*/
+- (void)
+toolbarDidChangeVisibility:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	if (self.window.toolbar.isVisible)
+	{
+		[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
+	}
+	else
+	{
+		[self setTitleVisibility:FUTURE_SYMBOL(0, NSWindowTitleVisible)];
+	}
+}// toolbarDidChangeVisibility
+
+
 #pragma mark NSWindowDelegate
 
 
@@ -9159,7 +9232,7 @@ delegate methods).
 (2018.03)
 */
 - (NSArray*)
-customWindowsToEnterFullScreenForWindow:(NSWindow*)		aWindow
+DISABLED_customWindowsToEnterFullScreenForWindow:(NSWindow*)		aWindow
 {
 	NSArray*	result = ((nil != aWindow)
 							? @[aWindow]
@@ -9177,7 +9250,7 @@ delegate methods).
 (2018.03)
 */
 - (NSArray*)
-customWindowsToExitFullScreenForWindow:(NSWindow*)		aWindow
+DISABLED_customWindowsToExitFullScreenForWindow:(NSWindow*)		aWindow
 {
 	NSArray*	result = ((nil != aWindow)
 							? @[aWindow]
@@ -9198,20 +9271,32 @@ is quicker overall).
 Part of custom Full Screen animation (see other
 delegate methods).
 
+NOTE:	It appears that in “title bar invisible”
+		mode (unified toolbar), ANY implementation
+		of these animation methods causes the
+		Full Screen version of the window to end
+		up with a blank toolbar.  Sigh.  Therefore,
+		for now, this is being DISABLED; the final
+		window only appears correctly if there is
+		no custom animation.
+
 (2018.03)
 */
 - (void)
-window:(NSWindow*)													aWindow
+DISABLED_window:(NSWindow*)											aWindow
 startCustomAnimationToEnterFullScreenWithDuration:(NSTimeInterval)	aDuration
 {
-	NSAnimationContext*		animationContext = [NSAnimationContext currentContext];
+#pragma unused(aDuration)
+	//assert([aWindow isKindOfClass:TerminalWindow_Object.class]);
+	//TerminalWindow_Object*		asTerminalWindow = STATIC_CAST(aWindow, TerminalWindow_Object*);
+	NSAnimationContext*			animationContext = [NSAnimationContext currentContext];
 	
 	
 	self.preFullScreenFrame = aWindow.frame;
 	
 	[NSAnimationContext beginGrouping];
 	animationContext.duration = 0.01; // restore sanity
-	[aWindow.animator setFrame:aWindow.screen.frame display:NO];
+	[aWindow.animator setFrame:aWindow.screen.frame display:YES];
 	[NSAnimationContext endGrouping];
 }// window:startCustomAnimationToEnterFullScreenWithDuration:
 
@@ -9229,17 +9314,57 @@ delegate methods).
 (2018.03)
 */
 - (void)
-window:(NSWindow*)													aWindow
+DISABLED_window:(NSWindow*)											aWindow
 startCustomAnimationToExitFullScreenWithDuration:(NSTimeInterval)	aDuration
 {
-	NSAnimationContext*		animationContext = [NSAnimationContext currentContext];
+#pragma unused(aDuration)
+	assert([aWindow isKindOfClass:TerminalWindow_Object.class]);
+	TerminalWindow_Object*				asTerminalWindow = STATIC_CAST(aWindow, TerminalWindow_Object*);
+	//__weak TerminalWindow_Object*		weakTerminalWindow = asTerminalWindow;
+	TerminalWindow_Object*				weakTerminalWindow = asTerminalWindow; // TEMPORARY (later compiler/SDK required for __weak)
+	NSAnimationContext*					animationContext = [NSAnimationContext currentContext];
 	
+	
+	// as suggested by Apple sample code, normal constraints could be
+	// suspended during exit animation; this does not seem to have a
+	// logical effect though (as windows can end up below the menu bar
+	// or otherwise incorrectly positioned by doing this)
+	//asTerminalWindow.constrainingToScreenSuspended = YES;
 	
 	[NSAnimationContext beginGrouping];
 	animationContext.duration = 0.01; // restore sanity
-	[aWindow.animator setFrame:self.preFullScreenFrame display:NO];
+	[aWindow.animator setFrame:self.preFullScreenFrame display:YES];
 	[NSAnimationContext endGrouping];
+	
+	// TEMPORARY; in later SDK, animation API directly supports cleanup blocks
+	CocoaExtensions_RunLater(aDuration + 0.5/* arbitrary */, ^{ weakTerminalWindow.constrainingToScreenSuspended = NO; });
 }// window:startCustomAnimationToExitFullScreenWithDuration:
+
+
+/*!
+Returns information on how auxiliary OS features such as
+the menu bar and Dock should be handled in Full Screen mode.
+
+(2018.03)
+*/
+- (NSApplicationPresentationOptions)
+window:(NSWindow*)															window
+willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)		proposedOptions
+{
+#pragma unused(window)
+	NSApplicationPresentationOptions	result = proposedOptions;
+	
+	
+	// INCOMPLETE; read user preferences for things like disabling Force Quit
+	// and apply them here
+	
+	// if desired, hide the toolbar as well (this seems to hide tab bars too,
+	// along with anything that can show the window title; for now, don’t do
+	// this but maybe later it can become a new user option)
+	//result |= FUTURE_SYMBOL(1 << 11, NSApplicationPresentationAutoHideToolbar);
+	
+	return result;
+}// window:willUseFullScreenPresentationOptions:
 
 
 /*!
@@ -9264,13 +9389,54 @@ windowShouldClose:(id)	sender
 
 
 #pragma mark -
-@implementation TerminalWindow_ResizeInfoController
+@implementation TerminalWindow_Object //{
+
+
+// externally-declared
+@synthesize constrainingToScreenSuspended = _constrainingToScreenSuspended;
+
+
+#pragma mark NSWindow
+
+
+/*!
+Constrains the window’s layout based on the dimensions of
+the given screen and the "constrainingToScreenSuspended"
+property.
+
+(2018.03)
+*/
+- (NSRect)
+constrainFrameRect:(NSRect)		frameRect
+toScreen:(NSScreen*)			screen
+{
+	NSRect		result = frameRect;
+	
+	
+	if (NO == self.constrainingToScreenSuspended)
+	{
+		result = [super constrainFrameRect:frameRect toScreen:screen];
+	}
+	
+	return result;
+}// constrainFrameRect:toScreen:
+
+
+@end //} TerminalWindow_Object
+
+
+#pragma mark -
+@implementation TerminalWindow_ResizeInfoController //{
 
 
 static TerminalWindow_ResizeInfoController*		gTerminalWindow_ResizeInfoController = nil;
 
 
+// externally-declared
 @synthesize resizeInfoText = _resizeInfoText;
+
+
+#pragma mark Class Methods
 
 
 /*!
@@ -9289,6 +9455,9 @@ sharedTerminalWindowResizeInfoController
 }// sharedTerminalWindowResizeInfoController
 
 
+#pragma mark Initializers
+
+
 /*!
 Designated initializer.
 
@@ -9302,11 +9471,14 @@ init
 }// init
 
 
-@end // TerminalWindow_ResizeInfoController
+@end //} TerminalWindow_ResizeInfoController
 
 
 #pragma mark -
-@implementation NSWindow (TerminalWindow_NSWindowExtensions)
+@implementation NSWindow (TerminalWindow_NSWindowExtensions) //{
+
+
+#pragma mark Accessors
 
 
 /*!
@@ -9338,6 +9510,6 @@ terminalWindowRef
 }// terminalWindowRef
 
 
-@end // NSWindow (TerminalWindow_NSWindowExtensions)
+@end //} NSWindow (TerminalWindow_NSWindowExtensions)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

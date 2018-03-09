@@ -37,6 +37,7 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+@class CocoaExtensions_ObserverSpec;
 @class ListenerModel_StandardListener;
 
 // application includes
@@ -60,7 +61,130 @@ extern NSString*	kTerminalToolbar_ObjectDidChangeDisplayModeNotification; // no 
 extern NSString*	kTerminalToolbar_ObjectDidChangeSizeModeNotification; // no userInfo is defined for this notification
 extern NSString*	kTerminalToolbar_ObjectDidChangeVisibilityNotification; // no userInfo is defined for this notification
 
+enum TerminalToolbar_TextLabelLayout
+{
+	kTerminalToolbar_TextLabelLayoutCenterJustified		= 0,
+	kTerminalToolbar_TextLabelLayoutLeftJustified		= 1,
+	kTerminalToolbar_TextLabelLayoutRightJustified		= 2,
+};
+
 #pragma mark Types
+
+/*!
+Although NSToolbar itself does not provide a way to detect a
+change in the display, TerminalToolbar_Object does provide a
+mechanism.  Implement this protocol in an NSToolbarItem to
+indicate that the item should be notified of display changes.
+*/
+@protocol TerminalToolbar_DisplayModeSensitive < NSObject > //{
+
+@required
+
+	// respond to change in NSToolbarDisplayMode value for a TerminalToolbar_Object
+	- (void)
+	didChangeDisplayModeForToolbar:(NSToolbar*)_;
+
+@end //}
+
+
+/*!
+Although NSToolbar itself does not provide a way for an item
+to detect when it is added or removed from a toolbar, this is
+possible using TerminalToolbar_Object.  Implement this protocol
+in an NSToolbarItem to determine when that particular item is
+added to a toolbar or removed from a toolbar.
+*/
+@protocol TerminalToolbar_ItemAddRemoveSensitive < NSObject > //{
+
+@required
+
+	// respond to item being added to valid toolbar (non-nil)
+	- (void)
+	item:(NSToolbarItem*)_
+	willEnterToolbar:(NSToolbar*)_;
+
+	// respond to item being removed from valid toolbar (non-nil)
+	- (void)
+	item:(NSToolbarItem*)_
+	didExitToolbar:(NSToolbar*)_;
+
+@end //}
+
+
+/*!
+This protocol is an explicit mechanism for deciding how an item
+will look in a customization sheet.  The only mechanism Cocoa
+has is "toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:"
+(from the toolbar delegate), which indicates whether or not a
+requested item is destined for the customization sheet.  With
+this protocol, which is checked by TerminalToolbar_Delegate, an
+item can simply return a proxy item that is directly returned for
+the customization palette case.
+*/
+@protocol TerminalToolbar_ItemHasPaletteProxy < NSObject > //{
+
+@required
+
+	// return item for use in a customization sheet (be sure to set a "paletteLabel")
+	- (NSToolbarItem*)
+	paletteProxyToolbarItemWithIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
+Although NSToolbar itself does not provide a way to detect a
+change in the size, TerminalToolbar_Object does provide a
+mechanism.  Implement this protocol in an NSToolbarItem to
+indicate that the item should be notified of size changes.
+*/
+@protocol TerminalToolbar_SizeSensitive < NSObject > //{
+
+@required
+
+	// respond to change in NSToolbarSizeMode value for a TerminalToolbar_Object
+	- (void)
+	didChangeSizeForToolbar:(NSToolbar*)_;
+
+@end //}
+
+
+/*!
+This protocol allows a toolbar item to monitor its view for
+changes in IDEAL size, which is simpler than navigating the
+mess of potential recursion with observers and other conflicts.
+This reduces the number of situations where the view frame
+changes to one: when its ideal layout is known.
+*/
+@protocol TerminalToolbar_ViewFrameSensitive < NSObject > //{
+
+@required
+
+	// respond to change in IDEAL view height
+	- (void)
+	view:(NSView*)_
+	didSetIdealFrameHeight:(CGFloat)_;
+
+@end //}
+
+
+/*!
+This protocol allows a toolbar item to monitor its view for
+changes in the window.  (Oddly, it is incredibly difficult
+for a toolbar item or even a toolbar to figure out what
+window it’s in.)
+*/
+@protocol TerminalToolbar_ViewWindowSensitive < NSObject > //{
+
+@required
+
+	// respond to change in current view window
+	- (void)
+	view:(NSView*)_
+	didEnterWindow:(NSWindow*)_;
+
+@end //}
+
 
 /*!
 An instance of this object should be created in order to handle
@@ -111,7 +235,11 @@ of the toolbar is of class TerminalToolbar_Delegate.
 Base class for items that need to monitor the session that is
 associated with their toolbar’s delegate.
 */
-@interface TerminalToolbar_SessionDependentItem : NSToolbarItem //{
+@interface TerminalToolbar_SessionDependentItem : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive > //{
+{
+@private
+	SessionRef		_sessionHint;
+}
 
 // initializers
 	- (instancetype)
@@ -120,6 +248,8 @@ associated with their toolbar’s delegate.
 // accessors
 	- (SessionRef)
 	session;
+	- (void)
+	setSessionHint:(SessionRef)_;
 	- (TerminalScreenRef)
 	terminalScreen;
 	- (TerminalViewRef)
@@ -306,6 +436,114 @@ the object array of a TerminalToolbar_ItemTabs instance.
 
 
 /*!
+A subclass of NSTextField that allows the user to drag
+the window when it is clicked.  Also automatically
+adjusts font to fit better, and uses fading as part of
+eventual truncation.
+*/
+@interface TerminalToolbar_TextLabel : NSTextField //{
+{
+	BOOL										_disableFrameMonitor : 1;
+	BOOL										_gradientFadeEnabled : 1;
+	BOOL										_mouseDownCanMoveWindow : 1;
+	BOOL										_smallSize : 1;
+	TerminalToolbar_TextLabelLayout				_labelLayout;
+	id< TerminalToolbar_ViewFrameSensitive >	_idealSizeMonitor;
+}
+
+// class methods
+	+ (CGImageRef)
+	newFadeMaskImageWithSize:(NSSize)_
+	labelLayout:(TerminalToolbar_TextLabelLayout)_;
+
+// accessors
+	@property (assign) id< TerminalToolbar_ViewFrameSensitive >
+	idealSizeMonitor;
+	@property (assign) BOOL
+	mouseDownCanMoveWindow;
+	@property (assign) TerminalToolbar_TextLabelLayout
+	labelLayout;
+	@property (assign) BOOL
+	smallSize;
+
+@end //}
+
+
+/*!
+A view that automatically binds its value to the title
+of a window.  By default, this window matches any window
+that the view is moved into (even if it moves multiple
+times) but you can set "overrideWindow" to force the
+title to come only from that window.
+*/
+@interface TerminalToolbar_WindowTitleLabel : TerminalToolbar_TextLabel //{
+{
+	NSWindow*									_overrideWindow;
+	CocoaExtensions_ObserverSpec*				_windowTitleObserver;
+	id< TerminalToolbar_ViewWindowSensitive >	_windowMonitor;
+}
+
+// initializers
+	- (instancetype)
+	initWithFrame:(NSRect)_;
+
+// accessors
+	@property (strong) NSWindow*
+	overrideWindow;
+	@property (assign) id< TerminalToolbar_ViewWindowSensitive >
+	windowMonitor;
+
+@end //}
+
+
+/*!
+Toolbar item “Window Title”.
+*/
+@interface TerminalToolbar_ItemWindowTitle : NSToolbarItem < TerminalToolbar_DisplayModeSensitive,
+																TerminalToolbar_ItemAddRemoveSensitive,
+																TerminalToolbar_ItemHasPaletteProxy,
+																TerminalToolbar_SizeSensitive,
+																TerminalToolbar_ViewFrameSensitive,
+																TerminalToolbar_ViewWindowSensitive >
+{
+@private
+	BOOL								_disableFrameMonitor;
+	TerminalToolbar_WindowTitleLabel*	_textView;
+	ListenerModel_StandardListener*		sessionChangeListener;
+}
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
+Toolbar item “Left-Aligned Title”.
+*/
+@interface TerminalToolbar_ItemWindowTitleLeft : TerminalToolbar_ItemWindowTitle < TerminalToolbar_ItemHasPaletteProxy > //{
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
+Toolbar item “Right-Aligned Title”.
+*/
+@interface TerminalToolbar_ItemWindowTitleRight : TerminalToolbar_ItemWindowTitle < TerminalToolbar_ItemHasPaletteProxy > //{
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
 Use this subclass to create a terminal toolbar instead
 of using NSToolbar directly in order to gain some useful
 insights into the toolbar’s state changes.
@@ -355,13 +593,19 @@ methods on this toolbar).
 @private
 	ListenerModel_StandardListener*		sessionFactoryChangeListener;
 	TerminalToolbar_Delegate*			toolbarDelegate;
-	BOOL								isDisplayingSheet : 1;
+	BOOL								isDisplayingSheet;
 }
 
 // initializers
 	- (instancetype)
 	initWithContentRect:(NSRect)_
-	screen:(NSScreen*)_;
+	#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
+	styleMask:(NSUInteger)_
+	#else
+	styleMask:(NSWindowStyleMask)_
+	#endif
+	backing:(NSBackingStoreType)_
+	defer:(BOOL)_;
 
 @end //}
 

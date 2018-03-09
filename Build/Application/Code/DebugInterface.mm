@@ -321,11 +321,14 @@ showTestTerminalToolbar:(id)	sender
 	if (nil == gDebugInterface_ToolbarWindow)
 	{
 		NSRect		newRect = NSMakeRect(0, 0, [[NSScreen mainScreen] visibleFrame].size.width, 0);
-		NSScreen*	targetScreen = [NSScreen mainScreen];
 		
 		
-		gDebugInterface_ToolbarWindow = [[TerminalToolbar_Window alloc] initWithContentRect:newRect
-																							screen:targetScreen];
+		gDebugInterface_ToolbarWindow = [[TerminalToolbar_Window alloc]
+											initWithContentRect:newRect
+																styleMask:(NSTitledWindowMask | NSUtilityWindowMask | NSClosableWindowMask |
+																			NSMiniaturizableWindowMask)
+																backing:NSBackingStoreBuffered
+																defer:YES];
 	}
 	if (nil == gDebugInterface_ToolbarWindowController)
 	{

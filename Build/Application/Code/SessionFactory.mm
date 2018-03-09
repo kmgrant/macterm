@@ -131,6 +131,15 @@ target terminal window.
 
 @end //}
 
+
+/*!
+This object exists only to have a way to receive
+window notifications and track the active session.
+*/
+@interface SessionFactory_SessionWindowWatcher : NSObject //{
+
+@end //}
+
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -193,6 +202,7 @@ CarbonEventHandlerWrap			gSessionFactoryWindowDeactivateHandler(GetApplicationEv
 																				kEventWindowDeactivated),
 																		nullptr/* user data */);
 Console_Assertion				_3(gSessionFactoryWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
+SessionFactory_SessionWindowWatcher*	gSessionWindowWatcher = nil;
 SessionRef						gSessionFactoryRecentlyActiveSession = nullptr;
 EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
 EventHandlerUPP					gCarbonEventSessionSetStateUPP = nullptr;
@@ -370,6 +380,7 @@ SessionFactory_Init ()
 										(kListenerModel_StyleStandard,
 											kConstantsRegistry_ListenerModelDescriptorSessionFactoryAnySessionChanges);
 	gSessionChangeListenerRef = ListenerModel_NewStandardListener(sessionChanged);
+	gSessionWindowWatcher = [[SessionFactory_SessionWindowWatcher alloc] init];
 	
 	// watch for changes to session states - in particular, when they die, update the internal lists
 	gSessionStateChangeListener = ListenerModel_NewStandardListener(sessionStateChanged);
@@ -424,6 +435,8 @@ the Session Factory.
 void
 SessionFactory_Done ()
 {
+	[gSessionWindowWatcher release]; gSessionWindowWatcher = nil;
+	
 	ListenerModel_ReleaseListener(&gSessionStateChangeListener);
 	ListenerModel_ReleaseListener(&gSessionChangeListenerRef);
 	ListenerModel_Dispose(&gSessionStateChangeListenerModel);
@@ -3637,7 +3650,7 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 
 
 #pragma mark -
-@implementation SessionFactory_NewSessionDataObject
+@implementation SessionFactory_NewSessionDataObject //{
 
 
 @synthesize disableObservers = _disableObservers;
@@ -3732,6 +3745,124 @@ context:(void*)						aContext
 }// observeValueForKeyPath:ofObject:change:context:
 
 
-@end // SessionFactory_NewSessionDataObject
+@end //} SessionFactory_NewSessionDataObject
+
+
+@implementation SessionFactory_SessionWindowWatcher //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+init
+{
+	self = [super init];
+	if (nil != self)
+	{
+		[self whenObject:nil postsNote:NSWindowDidBecomeMainNotification
+							performSelector:@selector(windowDidBecomeMain:)];
+		[self whenObject:nil postsNote:NSWindowDidResignMainNotification
+							performSelector:@selector(windowDidResignMain:)];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2018.03)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Notifications
+
+
+/*!
+When a window becomes “main”, this responds by updating the
+local active-session information.
+
+(2018.03)
+*/
+- (void)
+windowDidBecomeMain:(NSNotification*)	aNotification
+{
+	if (NO == [aNotification.object isKindOfClass:NSWindow.class])
+	{
+		Console_Warning(Console_WriteLine, "expected notification object to be an NSWindow!");
+	}
+	else
+	{
+		NSWindow*			asWindow = STATIC_CAST(aNotification.object, NSWindow*);
+		TerminalWindowRef	terminalWindow = [asWindow terminalWindowRef];
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			SessionRef		newSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+			
+			
+			if (newSession != gSessionFactoryRecentlyActiveSession)
+			{
+				// overwrite the value; assume that if there was a session
+				// active, it would have fired a deactivation event prior
+				// to being cleared
+				gSessionFactoryRecentlyActiveSession = newSession;
+				changeNotifyGlobal(kSessionFactory_ChangeActivatingSession, newSession);
+			}
+		}
+	} 
+}// windowDidBecomeMain:
+
+
+/*!
+When a window resigns “main”, this responds by updating the
+local active-session information.
+
+(2018.03)
+*/
+- (void)
+windowDidResignMain:(NSNotification*)		aNotification
+{
+	if (NO == [aNotification.object isKindOfClass:NSWindow.class])
+	{
+		Console_Warning(Console_WriteLine, "expected notification object to be an NSWindow!");
+	}
+	else
+	{
+		NSWindow*			asWindow = STATIC_CAST(aNotification.object, NSWindow*);
+		TerminalWindowRef	terminalWindow = [asWindow terminalWindowRef];
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			SessionRef		oldSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+			
+			
+			if (nullptr != oldSession)
+			{
+				// clear the current session completely; assume that it may be
+				// quickly restored by an activation event in another window
+				changeNotifyGlobal(kSessionFactory_ChangeDeactivatingSession, oldSession);
+				gSessionFactoryRecentlyActiveSession = nullptr;
+			}
+		}
+	} 
+}// windowDidResignMain:
+
+
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
