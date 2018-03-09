@@ -126,7 +126,7 @@ NOTE:	The underlying listener that is created uses an
 		context information, just make sure that your
 		target object can access the data that it needs.
 */
-@interface ListenerModel_StandardListener : NSObject //{
+@interface ListenerModel_StandardListener : NSObject < NSCopying > //{
 {
 	ListenerModel_ListenerRef	listenerRef;
 	NSInvocation*				methodInvoker;
@@ -146,6 +146,10 @@ NOTE:	The underlying listener that is created uses an
 // accessors
 	- (ListenerModel_ListenerRef)
 	listenerRef; // for compatibility with older APIs
+	- (void)
+	setEventFiredSelector:(SEL)_; // change selector given at initialization time
+	- (void)
+	setTarget:(id)_; // change target given at initialization time
 
 @end //}
 

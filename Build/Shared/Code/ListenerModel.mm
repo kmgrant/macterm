@@ -1137,7 +1137,10 @@ unitTest000_Callback1	(ListenerModel_Ref		inModel,
 
 
 #pragma mark -
-@implementation ListenerModel_StandardListener
+@implementation ListenerModel_StandardListener //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1186,6 +1189,35 @@ dealloc
 }// dealloc
 
 
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+NOTE:	While this creates a unique internal listener, the
+		original target object reference remains the same.
+		You may wish to subsequently reassign that target
+		to a duplicate of the original target, for instance,
+		using the "setTarget:" method.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id		result = [[self.class allocWithZone:zone]
+						initWithTarget:self->methodInvoker.target
+										eventFiredSelector:self->methodInvoker.selector];
+	
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark New Methods
+
+
 /*!
 Invokes the selector on the target object.  The meaning
 of the context varies according to the type of event
@@ -1205,6 +1237,9 @@ context:(void*)						aContext
 }// listenerModel:firedEvent:context:
 
 
+#pragma mark Accessors
+
+
 /*!
 Returns a reference to a listener, which is needed when
 installing this callback via an API that expects such a
@@ -1218,6 +1253,38 @@ listenerRef
 	return self->listenerRef;
 }// listenerRef
 
-@end // ListenerModel_StandardListener
+
+/*!
+Changes the selector used by future invocations of this
+listener, overriding the selector given at initialization
+time.  The selector should be a method on the "target"
+object.
+
+This may be important to do after using the "copy" method.
+
+(2018.03)
+*/
+- (void)
+setEventFiredSelector:(SEL)		aSelector
+{
+	self->methodInvoker.selector = aSelector;
+}// setEventFiredSelector:
+
+
+/*!
+Changes the target of future invocations of this listener,
+overriding the target given at initialization time.
+
+This may be important to do after using the "copy" method.
+
+(2018.03)
+*/
+- (void)
+setTarget:(id)		anObject
+{
+	self->methodInvoker.target = anObject;
+}// setTarget:
+
+@end //} ListenerModel_StandardListener
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
