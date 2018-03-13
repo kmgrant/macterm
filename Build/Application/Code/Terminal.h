@@ -476,11 +476,6 @@ Boolean
 TextAttributes_Object
 	Terminal_CursorReturnAttributes			(TerminalScreenRef			inScreen);
 
-Terminal_Result
-	Terminal_EmulatorDeriveFromCString		(TerminalScreenRef			inScreen,
-											 char const*				inCString,
-											 Emulation_FullType&		outApparentEmulator);
-
 // DEPRECATED
 Boolean
 	Terminal_EmulatorIsVT100				(TerminalScreenRef			inScreen);

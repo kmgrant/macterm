@@ -866,8 +866,6 @@ Actions that affect a window’s properties, placement and size.
 	performRename:(id)_;
 	- (IBAction)
 	performShowHiddenWindows:(id)_;
-	- (IBAction)
-	toggleTabOverview:(id)_; // match OS name of selector (available only in later OS versions)
 
 @end //}
 
@@ -924,13 +922,15 @@ Actions that display specific windows.
 @end //}
 
 /*!
-Actions to enter or exit Full Screen.
+Actions to enter or exit Full Screen or tab Exposé.
 */
 @interface Commands_Executor (Commands_SwitchingModes) //{
 
 // actions
 	- (IBAction)
 	toggleFullScreen:(id)_;
+	- (IBAction)
+	toggleTabOverview:(id)_; // match OS name of selector (available only in later OS versions)
 
 @end //}
 

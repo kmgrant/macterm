@@ -421,7 +421,6 @@ IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return 
 IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
 IconRef&					gPrintIcon ()					{ static IconRef x = createPrintIcon(); return x; }
 IconRef&					gRestartSessionIcon ()			{ static IconRef x = createRestartSessionIcon(); return x; }
-IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
 IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
 Float32						gDefaultTabWidth = 0.0;		// set later
 Float32						gDefaultTabHeight = 0.0;	// set later

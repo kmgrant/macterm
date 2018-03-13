@@ -86,8 +86,7 @@ typedef struct TextDataFile_OpaqueStructure**		TextDataFile_Ref;
 
 // THE SPECIFIED FILE MAY ALREADY EXIST - IF SO, ALL OF ITS DATA IS READ INTO MEMORY
 TextDataFile_Ref
-	TextDataFile_New						(SInt16							inFileReferenceNumber,
-											 TextDataFile_LineEndingStyle	inLineEndings = kTextDataFile_LineEndingStyleMacintosh);
+	TextDataFile_New						(SInt16							inFileReferenceNumber);
 
 void
 	TextDataFile_Dispose					(TextDataFile_Ref*				inoutRefPtr);

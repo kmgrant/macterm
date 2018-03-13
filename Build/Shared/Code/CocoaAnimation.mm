@@ -592,7 +592,6 @@ createImageWindowFromImage	(NSWindow*	inWindow,
 	// assigned to a layer in a view is not rendered at all)
 	@autoreleasepool
 	{
-		NSView*			contentView = STATIC_CAST(result.contentView, NSView*);
 		NSRect			zeroOriginBounds = NSMakeRect(0, 0, NSWidth(newFrame), NSHeight(newFrame));
 		NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
 		
@@ -633,7 +632,6 @@ createImageWindowFromWindowRect		(NSWindow*		inWindow,
 	// capture the image of the original window
 	@autoreleasepool
 	{
-		NSView*				contentView = STATIC_CAST(result.contentView, NSView*);
 		NSBitmapImageRep*	imageRep = nil;
 		NSImage*			windowImage = [[[NSImage alloc] init] autorelease];
 		

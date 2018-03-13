@@ -2874,44 +2874,6 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 
 
 /*!
-Scans the given data for telltale signs that it may be
-“expecting” a certain type of terminal emulator, setting
-"outApparentEmulator" to the emulator that seems most
-appropriate.
-
-Use this to help avoid getting the emulator into unknown
-states (the parser can recover, but gobbletygook doesn’t
-help the user much).
-
-\retval kTerminal_ResultOK
-if the text is processed without errors
-
-\retval kTerminal_ResultInvalidID
-if the given terminal screen reference is invalid
-
-(3.1)
-*/
-Terminal_Result
-Terminal_EmulatorDeriveFromCString	(TerminalScreenRef		inRef,
-									 char const*			inCString,
-									 Emulation_FullType&	outApparentEmulator)
-{
-	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
-	Terminal_Result			result = kTerminal_ResultOK;
-	
-	
-	outApparentEmulator = kEmulation_FullTypeVT100;
-	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
-	else
-	{
-		// INCOMPLETE; besides, this is essentially a heuristic
-	}
-	
-	return result;
-}// EmulatorDeriveFromCString
-
-
-/*!
 Returns whether the terminal emulator for the given
 terminal is exactly VT100 (and NOT a compatible terminal
 such as VT102).
@@ -8578,7 +8540,7 @@ arguments.
 UInt32
 My_DefaultEmulator::
 stateTransition		(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
-					 My_ParserStatePair const&	inOldNew,
+					 My_ParserStatePair const&	UNUSED_ARGUMENT(inOldNew),
 					 Boolean&					UNUSED_ARGUMENT(outHandled))
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage

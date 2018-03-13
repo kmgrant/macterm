@@ -91,22 +91,13 @@ SInt32							readLine				(SInt16, char*, SInt32, TextDataFile_LineEndingStyle);
 Creates a new Text Data File object that accesses
 the specified file opened for read and write access.
 
-Optionally you can specify what line endings to use.
-This is definitely used for writing, however it only
-defines the *default* value when reading - a Text
-Data File is smart enough to scan for the apparent
-line ending scheme when reading a new file, and will
-only use the specified style if it cannot determine
-what style the file really uses.
-
 If any problems occur, nullptr is returned; otherwise,
 a reference to the new object is returned.
 
 (1.0)
 */
 TextDataFile_Ref
-TextDataFile_New	(SInt16							inFileReferenceNumber,
-					 TextDataFile_LineEndingStyle	inLineEndings)
+TextDataFile_New	(SInt16		inFileReferenceNumber)
 {
 	TextDataFile_Ref	result = nullptr;
 	
