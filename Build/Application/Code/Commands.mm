@@ -6733,6 +6733,75 @@ withAnimation:(BOOL)		isAnimated
 
 
 - (IBAction)
+mergeAllWindows:(id)	sender
+{
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
+	{
+		// assume that Cocoa window can handle this directly
+		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(mergeAllWindows:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Console_Warning(Console_WriteLine, "merging tabs is not implemented for legacy Carbon windows");
+	}
+}
+- (id)
+canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	
+	
+	if ((nullptr != terminalWindow) &&
+		(false == TerminalWindow_IsLegacyCarbon(terminalWindow)) &&
+		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
+		TerminalWindow_IsTab(terminalWindow))
+	{
+		return @(YES);
+	}
+	return @(NO);
+}
+
+
+- (IBAction)
+moveTabToNewWindow:(id)		sender
+{
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
+	{
+		// assume that Cocoa window can handle this directly
+		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(moveTabToNewWindow:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTerminalNewWorkspace, nullptr/* target */);
+	}
+}
+- (id)
+canMoveTabToNewWindow:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	
+	
+	if ((nullptr != terminalWindow) &&
+		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
+		TerminalWindow_IsTab(terminalWindow))
+	{
+		return @(YES);
+	}
+	return @(NO);
+}
+
+
+- (IBAction)
 performArrangeInFront:(id)	sender
 {
 #pragma unused(sender)
@@ -6800,29 +6869,6 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 		}
 	}
 	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMoveToNewWorkspace:(id)	sender
-{
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTerminalNewWorkspace, nullptr/* target */);
-}
-- (id)
-canPerformMoveToNewWorkspace:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if ((nullptr != terminalWindow) &&
-		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
-		TerminalWindow_IsTab(terminalWindow))
-	{
-		return @(YES);
-	}
-	return @(NO);
 }
 
 
@@ -6944,6 +6990,115 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 		}
 	});
 	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+toggleTabBar:(id)	sender
+{
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
+	{
+		// assume that Cocoa window can handle this directly
+		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(toggleTabBar:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Console_Warning(Console_WriteLine, "tab bar is not implemented for legacy Carbon windows");
+	}
+}
+- (id)
+canToggleTabBar:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL				result = NO;
+	
+	
+	if ((nullptr != terminalWindow) &&
+		(false == TerminalWindow_IsLegacyCarbon(terminalWindow)) &&
+		TerminalWindow_IsTab(terminalWindow))
+	{
+		NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+		
+		
+		if ([cocoaWindow respondsToSelector:@selector(tabbedWindows)])
+		{
+			id		tabArray = [cocoaWindow performSelector:@selector(tabbedWindows)];
+			
+			
+			if (nil == tabArray)
+			{
+				result = YES;
+			}
+			else if ([tabArray isKindOfClass:NSArray.class])
+			{
+				NSArray*	asArray = STATIC_CAST(tabArray, NSArray*);
+				
+				
+				if (asArray.count <= 1)
+				{
+					result = YES;
+				}
+			}
+		}
+	}
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+toggleTabOverview:(id)	sender
+{
+	BOOL	implementedByCocoa = NO;
+	
+	
+	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
+	{
+		// assume that Cocoa window can handle this directly
+		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(toggleTabOverview:) with:sender];
+	}
+	
+	if (NO == implementedByCocoa)
+	{
+		Console_Warning(Console_WriteLine, "tab overview is not implemented for legacy Carbon windows");
+	}
+}
+- (id)
+canToggleTabOverview:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	BOOL				result = NO;
+	
+	
+	if ((nullptr != terminalWindow) &&
+		TerminalWindow_IsTab(terminalWindow))
+	{
+		NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+		
+		
+		if ([cocoaWindow respondsToSelector:@selector(tabbedWindows)])
+		{
+			id		tabArray = [cocoaWindow performSelector:@selector(tabbedWindows)];
+			
+			
+			if ((nil != tabArray) && [tabArray isKindOfClass:NSArray.class])
+			{
+				NSArray*	asArray = STATIC_CAST(tabArray, NSArray*);
+				
+				
+				if (asArray.count > 1)
+				{
+					result = YES;
+				}
+			}
+		}
+	}
 	return ((result) ? @(YES) : @(NO));
 }
 
@@ -8205,7 +8360,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		break;
 	
 	case kCommandTerminalNewWorkspace:
-		theSelector = @selector(performMoveToNewWorkspace:);
+		theSelector = @selector(moveTabToNewWindow:);
 		if (onlyIfEnabled)
 		{
 			isEnabled = [self validateAction:theSelector sender:NSApp];

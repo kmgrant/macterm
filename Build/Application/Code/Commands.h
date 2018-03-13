@@ -843,6 +843,10 @@ Actions that affect a window’s properties, placement and size.
 
 // actions
 	- (IBAction)
+	mergeAllWindows:(id)_; // match OS name of selector (available only in later OS versions)
+	- (IBAction)
+	moveTabToNewWindow:(id)_; // match OS name of selector (available only in later OS versions)
+	- (IBAction)
 	performArrangeInFront:(id)_;
 	- (IBAction)
 	performHideWindow:(id)_;
@@ -850,8 +854,6 @@ Actions that affect a window’s properties, placement and size.
 	performHideOtherWindows:(id)_;
 	- (IBAction)
 	performMaximize:(id)_;
-	- (IBAction)
-	performMoveToNewWorkspace:(id)_;
 	- (IBAction)
 	performMoveWindowRight:(id)_;
 	- (IBAction)
@@ -864,6 +866,8 @@ Actions that affect a window’s properties, placement and size.
 	performRename:(id)_;
 	- (IBAction)
 	performShowHiddenWindows:(id)_;
+	- (IBAction)
+	toggleTabOverview:(id)_; // match OS name of selector (available only in later OS versions)
 
 @end //}
 
@@ -944,6 +948,8 @@ Actions to cycle through windows.
 	orderFrontPreviousWindow:(id)_;
 	- (IBAction)
 	orderFrontSpecificWindow:(id)_;
+	- (IBAction)
+	toggleTabBar:(id)_; // match OS name of selector (available only in later OS versions)
 
 @end //}
 

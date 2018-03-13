@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17D102" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12120"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="EventLoop_AppObject">
@@ -453,6 +453,17 @@ Gw
                                     <action selector="runToolbarCustomizationPaletteSetup:" target="945" id="1104"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Show/Hide Tab Bar" keyEquivalent="T" id="nSI-06-Ycc">
+                                <connections>
+                                    <action selector="toggleTabBar:" target="945" id="slE-o4-DnR"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Enter Tab Overview" keyEquivalent="e" id="uLu-MM-42g">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                <connections>
+                                    <action selector="toggleTabOverview:" target="945" id="JVI-Bn-7Ng"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="qEn-qd-UhT"/>
                             <menuItem title="-" keyEquivalent="f" id="f3l-9k-DmN">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
@@ -799,10 +810,10 @@ Gw
                                     <action selector="performMaximize:" target="945" id="962"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Move to New Workspace" id="856">
+                            <menuItem title="Move to New Workspace" id="0Qi-uV-Ea6">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="performMoveToNewWorkspace:" target="945" id="963"/>
+                                    <action selector="moveTabToNewWindow:" target="945" id="BcX-0G-W3K"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Rename…" id="857">
@@ -830,13 +841,19 @@ Gw
                                     <action selector="performShowHiddenWindows:" target="945" id="967"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="92"/>
-                            <menuItem title="Arrange All Windows in Front" id="866">
+                            <menuItem title="Arrange All in Front" id="866">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="performArrangeInFront:" target="945" id="968"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Arrange All in One Workspace" id="afb-ZO-1nQ">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="mergeAllWindows:" target="945" id="Vh5-9k-ZPg"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="92"/>
                             <menuItem title="Bring Next to Front" keyEquivalent="`" id="862">
                                 <connections>
                                     <action selector="orderFrontNextWindow:" target="945" id="971"/>
@@ -853,6 +870,19 @@ Gw
                                     <action selector="orderFrontPreviousWindow:" target="945" id="974"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Select Next Tab" hidden="YES" enabled="NO" id="Y8D-Xr-CiK">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="selectNextTab:" target="-1" id="vuj-ft-ezE"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Select Previous Tab" hidden="YES" enabled="NO" id="hLg-iA-bbM">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="selectPreviousTab:" target="-1" id="csa-nQ-alN"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="9Cj-Ew-NxU"/>
                             <menuItem title="Nudge Window to the Right" keyEquivalent="" id="1161">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" option="YES"/>
                                 <connections>

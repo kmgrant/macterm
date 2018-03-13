@@ -1805,50 +1805,58 @@ the window from its previous workspace.
 void
 SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalWindow)
 {
-	HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
-	Workspace_Ref		newWorkspace = createWorkspace();
-	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
-	
-	
-	// IMPORTANT: Hiding the tab prior to window group manipulation
-	// seems to be key to avoiding graphical glitches.  As long as
-	// the tab drawer is hidden when the window changes groups, and
-	// redisplayed afterwards, drawers remain in the proper position.
-	UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
-	
-	assert(nullptr != newWorkspace);
-	assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
-	
-	// ensure the window is not a member of any other workspace
-	std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
-	if (gAutoRearrangeTabs)
+	if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
 	{
-		// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
-		// and call "fixTerminalWindowTabPositionsInWorkspace()(oldWorkspace)"
-		// (should this kind of thing be handled automatically through callbacks, when
-		// windows are removed from a workspace for any reason?)
-		(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
-																fixTerminalWindowTabPositionsInWorkspace());
-	}
-	
-	// offset the window slightly to emphasize its detachment
-	{
-		Rect		structureBounds;
-		OSStatus	error = noErr;
+		HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
+		Workspace_Ref		newWorkspace = createWorkspace();
+		MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
 		
 		
-		error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
-		if (noErr == error)
+		// IMPORTANT: Hiding the tab prior to window group manipulation
+		// seems to be key to avoiding graphical glitches.  As long as
+		// the tab drawer is hidden when the window changes groups, and
+		// redisplayed afterwards, drawers remain in the proper position.
+		UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
+		
+		assert(nullptr != newWorkspace);
+		assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
+		
+		// ensure the window is not a member of any other workspace
+		std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
+		if (gAutoRearrangeTabs)
 		{
-			RegionUtilities_OffsetRect(&structureBounds, 32/* arbitrary */, 32/* arbitrary */);
-			SetWindowBounds(window, kWindowStructureRgn, &structureBounds);
+			// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
+			// and call "fixTerminalWindowTabPositionsInWorkspace()(oldWorkspace)"
+			// (should this kind of thing be handled automatically through callbacks, when
+			// windows are removed from a workspace for any reason?)
+			(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
+																	fixTerminalWindowTabPositionsInWorkspace());
 		}
+		
+		// offset the window slightly to emphasize its detachment
+		{
+			Rect		structureBounds;
+			OSStatus	error = noErr;
+			
+			
+			error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
+			if (noErr == error)
+			{
+				RegionUtilities_OffsetRect(&structureBounds, 32/* arbitrary */, 32/* arbitrary */);
+				SetWindowBounds(window, kWindowStructureRgn, &structureBounds);
+			}
+		}
+		
+		// now add it to the new workspace
+		Workspace_AddWindow(newWorkspace, window);
+		UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
+		fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
 	}
-	
-	// now add it to the new workspace
-	Workspace_AddWindow(newWorkspace, window);
-	UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
-	fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
+	else
+	{
+		// Cocoa windows support this only on certain later OS versions
+		[[Commands_Executor sharedExecutor] moveTabToNewWindow:NSApp];
+	}
 }// MoveTerminalWindowToNewWorkspace
 
 

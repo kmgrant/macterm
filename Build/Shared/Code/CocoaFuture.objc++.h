@@ -219,7 +219,12 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 
 // new methods
 	- (void)
+	addTabbedWindow:(NSWindow*)_
+	ordered:(NSWindowOrderingMode)_;
+	- (void)
 	setAllowsAutomaticWindowTabbing:(BOOL)_;
+	- (NSArray*/* of NSWindow* */)
+	tabbedWindows;
 
 @end //}
 

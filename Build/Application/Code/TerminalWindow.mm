@@ -1454,7 +1454,10 @@ TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 		
 		if (ptr->isCocoa())
 		{
-			Console_Warning(Console_WriteLine, "“is tab” property not implemented for Cocoa windows");
+			if ([ptr->window respondsToSelector:@selector(addTabbedWindow:ordered:)])
+			{
+				result = true;
+			}
 		}
 		else
 		{
