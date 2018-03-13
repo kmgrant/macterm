@@ -178,10 +178,14 @@ window it’s in.)
 
 @required
 
-	// respond to change in current view window
+	// respond to actual change in current view window
 	- (void)
 	view:(NSView*)_
 	didEnterWindow:(NSWindow*)_;
+
+	// respond to proposed change in current view window
+	- (void)
+	willChangeWindowForView:(NSView*)_;
 
 @end //}
 
@@ -195,7 +199,7 @@ user unless "setSession:" has been called.  (This session can
 be changed as often as needed, e.g. to implement a floating
 toolbar.)
 */
-@interface TerminalToolbar_Delegate : NSObject< NSToolbarDelegate > //{
+@interface TerminalToolbar_Delegate : NSObject < NSToolbarDelegate > //{
 {
 @private
 	SessionRef		associatedSession;
@@ -444,6 +448,7 @@ eventual truncation.
 @interface TerminalToolbar_TextLabel : NSTextField //{
 {
 	BOOL										_disableFrameMonitor : 1;
+	BOOL										_frameDisplayEnabled : 1;
 	BOOL										_gradientFadeEnabled : 1;
 	BOOL										_mouseDownCanMoveWindow : 1;
 	BOOL										_smallSize : 1;

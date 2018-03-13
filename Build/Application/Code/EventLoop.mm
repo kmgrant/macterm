@@ -352,11 +352,19 @@ multiple ways for a terminal window to become full-screen
 Boolean
 EventLoop_IsWindowFullScreen	(NSWindow*		inWindow)
 {
-	TerminalWindowRef	terminalWindow = [inWindow terminalWindowRef];
-	Boolean				result = (nullptr != terminalWindow)
-									? TerminalWindow_IsFullScreen(terminalWindow)
-									: (0 != ([inWindow styleMask] & FUTURE_SYMBOL(1 << 14, NSFullScreenWindowMask)));
+	Boolean		result = (0 != ([inWindow styleMask] & FUTURE_SYMBOL(1 << 14, NSFullScreenWindowMask)));
 	
+	
+	if (NO == result)
+	{
+		TerminalWindowRef	terminalWindow = [inWindow terminalWindowRef];
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			result = TerminalWindow_IsFullScreen(terminalWindow);
+		}
+	}
 	
 	return result;
 }// IsWindowFullScreen

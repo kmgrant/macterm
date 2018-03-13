@@ -974,6 +974,8 @@ the responder chain in the usual way.
 	performZoomSetup:(id)_;
 	- (IBAction)
 	runToolbarCustomizationPaletteSetup:(id)_;
+	- (id)
+	canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)_;
 	- (IBAction)
 	toggleToolbarShownSetup:(id)_;
 

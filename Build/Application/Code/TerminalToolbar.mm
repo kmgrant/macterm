@@ -117,6 +117,19 @@ from conditionally invoking selectors in this file.
 /*!
 The private class interface.
 */
+@interface TerminalToolbar_Delegate (TerminalToolbar_DelegateInternal) //{
+
+// new methods
+	- (void)
+	updateItemsForNewDisplayModeInToolbar:(NSToolbar*)_;
+	- (void)
+	updateItemsForNewSizeInToolbar:(NSToolbar*)_;
+
+@end //}
+
+/*!
+The private class interface.
+*/
 @interface TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal) //{
 
 // methods of the form required by ListenerModel_StandardListener
@@ -191,6 +204,8 @@ Private properties.
 	@property (assign) BOOL
 	disableFrameMonitor;
 	@property (assign) BOOL
+	frameDisplayEnabled;
+	@property (assign) BOOL
 	gradientFadeEnabled;
 
 @end //}
@@ -241,9 +256,7 @@ The private class interface.
 	- (void)
 	resetMinMaxSizesForHeight:(CGFloat)_;
 	- (void)
-	setStateFromWindow:(NSWindow*)_;
-	- (NSWindow*)
-	windowFromView;
+	setStateForToolbar:(NSToolbar*)_;
 
 @end //}
 
@@ -257,6 +270,13 @@ The private class interface.
 	installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
 	- (void)
 	removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_Object () //{
 
 @end //}
 
@@ -449,6 +469,9 @@ experimentalItems:(BOOL)		experimentalFlag
 							performSelector:@selector(toolbarDidChangeDisplayMode:)];
 		[self whenObject:aToolbar postsNote:kTerminalToolbar_ObjectDidChangeSizeModeNotification
 							performSelector:@selector(toolbarDidChangeSizeMode:)];
+		
+		[self updateItemsForNewDisplayModeInToolbar:aToolbar];
+		[self updateItemsForNewSizeInToolbar:aToolbar];
 	}
 	return self;
 }// initForToolbar:
@@ -516,16 +539,7 @@ toolbarDidChangeDisplayMode:(NSNotification*)		aNotification
 		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
 		
 		
-		for (NSToolbarItem* anItem in asToolbar.items)
-		{
-			if ([anItem conformsToProtocol:@protocol(TerminalToolbar_DisplayModeSensitive)])
-			{
-				id< TerminalToolbar_DisplayModeSensitive >		asImplementer = STATIC_CAST(anItem, id< TerminalToolbar_DisplayModeSensitive >);
-				
-				
-				[asImplementer didChangeDisplayModeForToolbar:asToolbar];
-			}
-		}
+		[self updateItemsForNewDisplayModeInToolbar:asToolbar];
 	}
 }// toolbarDidChangeDisplayMode:
 
@@ -548,16 +562,7 @@ toolbarDidChangeSizeMode:(NSNotification*)		aNotification
 		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
 		
 		
-		for (NSToolbarItem* anItem in asToolbar.items)
-		{
-			if ([anItem conformsToProtocol:@protocol(TerminalToolbar_SizeSensitive)])
-			{
-				id< TerminalToolbar_SizeSensitive >		asImplementer = STATIC_CAST(anItem, id< TerminalToolbar_SizeSensitive >);
-				
-				
-				[asImplementer didChangeSizeForToolbar:asToolbar];
-			}
-		}
+		[self updateItemsForNewSizeInToolbar:asToolbar];
 	}
 }// toolbarDidChangeSizeMode:
 
@@ -719,20 +724,20 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kTerminalToolbar_ItemIDStackWindows,
 									NSToolbarSpaceItemIdentifier,
 									NSToolbarFlexibleSpaceItemIdentifier,
+									kTerminalToolbar_ItemIDCustomize,
+									kMy_ToolbarItemIDFullScreen,
 									kMy_ToolbarItemIDWindowTitleLeft,
 									kMy_ToolbarItemIDWindowTitle,
 									kMy_ToolbarItemIDWindowTitleRight,
-									kTerminalToolbar_ItemIDCustomize,
-									kMy_ToolbarItemIDFullScreen,
-									kMy_ToolbarItemIDLED1,
-									kMy_ToolbarItemIDLED2,
-									kMy_ToolbarItemIDLED3,
-									kMy_ToolbarItemIDLED4,
 									kMy_ToolbarItemIDPrint,
 									kMy_ToolbarItemIDHide,
 									kMy_ToolbarItemIDForceQuit,
 									kMy_ToolbarItemIDSuspend,
 									kMy_ToolbarItemIDBell,
+									kMy_ToolbarItemIDLED1,
+									kMy_ToolbarItemIDLED2,
+									kMy_ToolbarItemIDLED3,
+									kMy_ToolbarItemIDLED4,
 								]];
 	
 	return result;
@@ -751,21 +756,18 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 #pragma unused(toolbar)
 	// this list should not contain any “experimental” items
 	return @[
-				NSToolbarSpaceItemIdentifier,
-				NSToolbarSpaceItemIdentifier,
-				NSToolbarSpaceItemIdentifier,
+				NSToolbarFlexibleSpaceItemIdentifier,
 				kMy_ToolbarItemIDHide,
 				kMy_ToolbarItemIDForceQuit,
 				kMy_ToolbarItemIDSuspend,
-				NSToolbarFlexibleSpaceItemIdentifier,
 				kMy_ToolbarItemIDWindowTitle,
-				NSToolbarFlexibleSpaceItemIdentifier,
 				kMy_ToolbarItemIDBell,
 				kMy_ToolbarItemIDPrint,
 				kMy_ToolbarItemIDFullScreen,
 				NSToolbarSpaceItemIdentifier,
 				NSToolbarSpaceItemIdentifier,
 				kTerminalToolbar_ItemIDCustomize,
+				NSToolbarSpaceItemIdentifier,
 			];
 }// toolbarDefaultItemIdentifiers
 
@@ -865,6 +867,65 @@ toolbarWillAddItem:(NSNotification*)	aNotification
 
 
 @end //} TerminalToolbar_Delegate
+
+
+#pragma mark -
+@implementation TerminalToolbar_Delegate (TerminalToolbar_DelegateInternal) //{
+
+
+#pragma mark Internal Methods
+
+/*!
+Asks all toolbar items to update themselves based on the
+display mode setting of the toolbar (such as “icon only”).
+
+This only affects items that implement the protocol
+"TerminalToolbar_DisplayModeSensitive".
+
+(2018.03)
+*/
+- (void)
+updateItemsForNewDisplayModeInToolbar:(NSToolbar*)		aToolbar
+{
+	for (NSToolbarItem* anItem in aToolbar.items)
+	{
+		if ([anItem conformsToProtocol:@protocol(TerminalToolbar_DisplayModeSensitive)])
+		{
+			id< TerminalToolbar_DisplayModeSensitive >		asImplementer = STATIC_CAST(anItem, id< TerminalToolbar_DisplayModeSensitive >);
+			
+			
+			[asImplementer didChangeDisplayModeForToolbar:aToolbar];
+		}
+	}
+}// updateItemsForNewDisplayModeInToolbar:
+
+
+/*!
+Asks all toolbar items to update themselves based on the
+size setting of the toolbar (such as “small”).
+
+This only affects items that implement the protocol
+"TerminalToolbar_SizeSensitive".
+
+(2018.03)
+*/
+- (void)
+updateItemsForNewSizeInToolbar:(NSToolbar*)		aToolbar
+{
+	for (NSToolbarItem* anItem in aToolbar.items)
+	{
+		if ([anItem conformsToProtocol:@protocol(TerminalToolbar_SizeSensitive)])
+		{
+			id< TerminalToolbar_SizeSensitive >		asImplementer = STATIC_CAST(anItem, id< TerminalToolbar_SizeSensitive >);
+			
+			
+			[asImplementer didChangeSizeForToolbar:aToolbar];
+		}
+	}
+}// updateItemsForNewSizeInToolbar:
+
+
+@end //} TerminalToolbar_Delegate (TerminalToolbar_DelegateInternal)
 
 
 #pragma mark -
@@ -1136,6 +1197,28 @@ performToolbarItemAction:(id)	sender
 	// TEMPORARY; only doing it this way during Carbon/Cocoa transition
 	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
 }// performToolbarItemAction:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+Since Apple’s fancy Full Screen toolbar mechanism breaks
+some fundamental assumptions about toolbars (including
+that a view in an item continues to belong to its original
+window instead of some special class of window), the
+“Customize” action is disabled entirely while in Full Screen.
+
+(2018.03)
+*/
+- (void)
+validate
+{
+	NSNumber*	boolNumber = [[Commands_Executor sharedExecutor] canRunToolbarCustomizationPaletteSetup:self];
+	
+	
+	self.enabled = [boolNumber boolValue];
+}// validate
 
 
 @end //} TerminalToolbar_ItemCustomize
@@ -2574,8 +2657,8 @@ init
 		//[self setTarget:self];
 		[self setEnabled:YES];
 		[self setView:self->segmentedControl];
-		[self setMinSize:NSMakeSize(120, 25)]; // arbitrary
-		[self setMaxSize:NSMakeSize(1024, 25)]; // arbitrary
+		[self setMinSize:NSMakeSize(120, 25)]; // arbitrary (height changes dynamically)
+		[self setMaxSize:NSMakeSize(1024, 25)]; // arbitrary (height changes dynamically)
 		[self setLabel:@""];
 		[self setPaletteLabel:NSLocalizedString(@"Tabs", @"toolbar item name; for tabs")];
 		
@@ -2783,6 +2866,14 @@ frame of the view, which is important to prevent recursion.
 @synthesize disableFrameMonitor = _disableFrameMonitor;
 
 /*!
+If set, the frame is rendered along with the text.  (This
+is currently useful only in toolbar items, and may move to
+a different view to enable a frame rectangle that is far
+different from the text rectangle.)
+*/
+@synthesize frameDisplayEnabled = _frameDisplayEnabled;
+
+/*!
 This should only be set in direct response to measuring the
 required space and determining that there is not enough
 room for all the text using the current font.  It tells the
@@ -2890,6 +2981,7 @@ initWithFrame:(NSRect)	aRect
 	if (nil != self)
 	{
 		_disableFrameMonitor = NO;
+		_frameDisplayEnabled = NO;
 		_gradientFadeEnabled = NO;
 		_idealSizeMonitor = nil;
 		_mouseDownCanMoveWindow = NO;
@@ -3004,6 +3096,31 @@ drawRect:(NSRect)	aRect
 	CGContextSaveRestore	_(graphicsContext);
 	
 	
+	if (self.frameDisplayEnabled)
+	{
+		// presumably in toolbar customization mode; show a light boundary rectangle
+		NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+		CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		
+		
+		CGContextSetRGBStrokeColor(drawingContext, 0.75, 0.75, 0.75, 1.0/* alpha */); // color attempts to match “space item” style
+		CGContextSetLineWidth(drawingContext, 1.0);
+		[NSBezierPath strokeRect:NSInsetRect(self.bounds, 1.0, 1.0)];
+	}
+#if 0
+	else
+	{
+		// for debugging; display a red rectangle to show the area occupied by the view
+		NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+		CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		
+		
+		CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+		CGContextSetLineWidth(drawingContext, 2.0);
+		[NSBezierPath strokeRect:NSInsetRect(self.bounds, 1.0, 1.0)];
+	}
+#endif
+	
 	if (self.gradientFadeEnabled)
 	{
 		CGImageRef		maskImage = [self.class newFadeMaskImageWithSize:self.bounds.size
@@ -3067,7 +3184,8 @@ idealFrameSizeForString:(NSString*)		aString
 
 /*!
 Examines the current text and updates properties to make
-the ideal layout: possibly new font, etc.
+the ideal layout: possibly new font, etc.  This also
+informs the "idealSizeMonitor" object, if any.
 
 Invoke this method whenever the text needs to be reset
 (frame change, string value change, initialization, etc.).
@@ -3189,6 +3307,17 @@ layOutLabelText
 	// work...)
 	[self setNeedsDisplay:YES];
 	
+	// update frame without triggering notifications (as a frame update
+	// may have caused this layout function to be invoked originally)
+	{
+		BOOL const	wasPostingNotifications = self.postsFrameChangedNotifications;
+		
+		
+		self.postsFrameChangedNotifications = NO;
+		self.frame = NSMakeRect(self.frame.origin.x, self.frame.origin.y, NSWidth(self.frame), requiredSize.height);
+		self.postsFrameChangedNotifications = wasPostingNotifications; // may trigger immediate posting of notification
+	}
+	
 	// notify any observer
 	[self.idealSizeMonitor view:self didSetIdealFrameHeight:requiredSize.height];
 }// layOutLabelText
@@ -3254,6 +3383,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[self ignoreWhenObjectsPostNotes];
 	[self removeObserverSpecifiedWith:self.windowTitleObserver];
 	[_windowTitleObserver release];
 	[super dealloc];
@@ -3335,20 +3465,10 @@ current value (including a nil value).
 - (void)
 viewDidMoveToWindow
 {
-	// add an observer to the current "self.window" object
-	if ((nil != self.window) && (nil == self.overrideWindow))
-	{
-		[self removeObserverSpecifiedWith:self.windowTitleObserver];
-		_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:self.window
-																options:(NSKeyValueChangeSetting) context:nullptr];
-		
-		// is this necessary, or is the observer called automatically from the above?
-		self.stringValue = self.window.title;
-		[self layOutLabelText];
-		
-		// notify any observer
-		[self.windowMonitor view:self didEnterWindow:self.window];
-	}
+	[super viewDidMoveToWindow];
+	
+	// notify any monitor
+	[self.windowMonitor view:self didEnterWindow:self.window];
 }// viewDidMoveToWindow
 
 
@@ -3361,12 +3481,47 @@ change to the specified value (or nil).
 - (void)
 viewWillMoveToWindow:(NSWindow*)	aWindow
 {
-#pragma unused(aWindow)
-	// remove any observer of the current "self.window" object
-	if ((nil == self.overrideWindow) && (aWindow != self.window))
+	[super viewWillMoveToWindow:aWindow];
+	
+	// notify any monitor
+	[self.windowMonitor willChangeWindowForView:self];
+	
+	if (nil == aWindow)
 	{
-		[self removeObserverSpecifiedWith:self.windowTitleObserver];
-		self.windowTitleObserver = nil;
+		// it appears that the view can transition to a nil window just
+		// before moving to a Full Screen window, which is not helpful
+		// so it is explicitly ignored (namely, any observer for the
+		// most recent valid window will remain in effect)
+	}
+	else
+	{
+		// remove any observer of the current "self.window" object; note,
+		// a bizarre thing in Full Screen windows is that a view can be
+		// automatically relocated to an entirely different window (which
+		// is an unusually big problem when this view is trying to observe
+		// its ORIGINAL window) so a special check is made to avoid that
+		if ((nil == self.overrideWindow) && (aWindow != self.window) &&
+			(self.windowTitleObserver.observedObject != aWindow))
+		{
+			Class	customFullScreenWindowClass = NSClassFromString(@"NSToolbarFullScreenWindow");
+			
+			
+			if (nil == customFullScreenWindowClass)
+			{
+				Console_Warning(Console_WriteLine, "runtime did not find full-screen window class; may need code update");
+			}
+			
+			if ((nil == customFullScreenWindowClass) || (NO == [aWindow isKindOfClass:customFullScreenWindowClass]))
+			{
+				[self removeObserverSpecifiedWith:self.windowTitleObserver];
+				_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:aWindow
+																		options:(NSKeyValueChangeSetting) context:nullptr];
+				
+				// is this necessary, or is the observer called automatically from the above?
+				self.stringValue = ((nil != aWindow.title) ? aWindow.title : @"");
+				[self layOutLabelText];
+			}
+		}
 	}
 }// viewWillMoveToWindow:
 
@@ -3426,7 +3581,7 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 		[self setView:self.textView];
 		[self setLabel:NSLocalizedString(@"Window Title", @"toolbar item name; for window title")];
 		[self setPaletteLabel:NSLocalizedString(@"Window Title", @"toolbar item name; for window title")];
-		[self setStateFromWindow:nullptr];
+		[self setStateForToolbar:nullptr];
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -3460,6 +3615,43 @@ performToolbarItemAction:(id)	sender
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle);
 }// performToolbarItemAction:
+
+
+#pragma mark Notifications
+
+
+/*!
+Keeps track of sheets being displayed so that the “is
+customization sheet running” flag can be checked and
+the display of a boundary can be toggled.
+
+NOTE:	It is also possible for the system to enable
+		customization by command-dragging toolbar items,
+		and it isn’t clear yet how to detect this mode.
+
+(2018.03)
+*/
+- (void)
+windowWillBeginSheet:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	[self setStateForToolbar:self.toolbar]; // shows frame rectangle
+}// windowWillBeginSheet:
+
+
+/*!
+Keeps track of sheets being displayed so that the “is
+customization sheet running” flag can be checked and
+the display of a boundary can be toggled.
+
+(2018.03)
+*/
+- (void)
+windowDidEndSheet:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	[self setStateForToolbar:self.toolbar]; // hides frame rectangle
+}// windowDidEndSheet:
 
 
 #pragma mark NSCopying
@@ -3503,7 +3695,8 @@ so that the window layout can adapt if necessary.
 didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 {
 #pragma unused(aToolbar)
-	[self setStateFromWindow:[self windowFromView]]; // do not use "self.session", as it may not be defined
+	[self.textView layOutLabelText];
+	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)];
 }// didChangeDisplayModeForToolbar:
 
 
@@ -3520,9 +3713,10 @@ specified toolbar.
 item:(NSToolbarItem*)			anItem
 willEnterToolbar:(NSToolbar*)	aToolbar
 {
-#pragma unused(aToolbar)
 	assert(self == anItem);
-	[self setStateFromWindow:[self windowFromView]];
+	self.textView.smallSize = ((nil != aToolbar) &&
+								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
+	[self setStateForToolbar:aToolbar];
 }// item:willEnterToolbar:
 
 
@@ -3538,7 +3732,6 @@ didExitToolbar:(NSToolbar*)		aToolbar
 {
 #pragma unused(aToolbar)
 	assert(self == anItem);
-	[self setStateFromWindow:nullptr];
 }// item:didExitToolbar:
 
 
@@ -3577,7 +3770,8 @@ didChangeSizeForToolbar:(NSToolbar*)	aToolbar
 {
 	self.textView.smallSize = ((nil != aToolbar) &&
 								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
-	[self setStateFromWindow:[self windowFromView]];
+	[self.textView layOutLabelText];
+	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)];
 }// didChangeSizeForToolbar:
 
 
@@ -3599,7 +3793,6 @@ didSetIdealFrameHeight:(CGFloat)	aPixelHeight
 	}
 	else
 	{
-		//[self setStateFromWindow:[self windowFromView]];
 		[self resetMinMaxSizesForHeight:aPixelHeight];
 	}
 }// view:didSetIdealFrameHeight:
@@ -3611,7 +3804,9 @@ didSetIdealFrameHeight:(CGFloat)	aPixelHeight
 /*!
 Updates the minimum and maximum sizes to match after
 the window title view enters the toolbar and presumably
-adopts that window’s title value.
+adopts that window’s title value.  Also keeps track of
+any toolbar customization sheets on the window so that
+the boundary can be displayed in the item.
 
 (2018.03)
 */
@@ -3625,9 +3820,47 @@ didEnterWindow:(NSWindow*)		aWindow
 	}
 	else
 	{
-		[self setStateFromWindow:aWindow];
+		// start monitoring the toolbar customization sheet (NOTE: this
+		// does not seem to be sent for Full Screen windows; for now,
+		// the Customize item is disabled in Full Screen)
+		if (nil != aWindow)
+		{
+			[self whenObject:aWindow postsNote:NSWindowWillBeginSheetNotification
+								performSelector:@selector(windowWillBeginSheet:)];
+			[self whenObject:aWindow postsNote:NSWindowDidEndSheetNotification
+								performSelector:@selector(windowDidEndSheet:)];
+		}
+		
+		// set initial state of item for new window’s toolbar
+		[self setStateForToolbar:aWindow.toolbar];
 	}
 }// view:didEnterWindow:
+
+
+/*!
+Stops tracking the toolbar customization sheet of the
+view’s current window (since that window is about to
+change).
+
+(2018.03)
+*/
+- (void)
+willChangeWindowForView:(NSView*)	aView
+{
+	if (aView != self.textView)
+	{
+		Console_Warning(Console_WriteLine, "window title toolbar item is being notified of a different view’s window changes");
+	}
+	else
+	{
+		// stop monitoring the toolbar customization sheet
+		if (nil != self.textView.window)
+		{
+			[self ignoreWhenObject:self.textView.window postsNote:NSWindowWillBeginSheetNotification];
+			[self ignoreWhenObject:self.textView.window postsNote:NSWindowDidEndSheetNotification];
+		}
+	}
+}// willChangeWindowForView:
 
 
 @end //} TerminalToolbar_ItemWindowTitle
@@ -3655,25 +3888,25 @@ resetMinMaxSizesForHeight:(CGFloat)		aHeight
 
 
 /*!
-Updates the displayed window title string based on the specified
-window’s title.  If "nil" is given then the label is reset.
+Synchronizes other properties of the toolbar item with
+the properties of its embedded text view, preparing for
+display in the given toolbar (which may or may not be
+the item’s current toolbar).
 
 (2018.03)
 */
 - (void)
-setStateFromWindow:(NSWindow*)	aWindow
+setStateForToolbar:(NSToolbar*)		aToolbar
 {
-	//BOOL const		isSmallSize = ((nil != self.toolbar) &&
-	//								(NSToolbarSizeModeSmall == self.toolbar.sizeMode));
-	BOOL const		isTextOnly = ((nil != self.toolbar) &&
-									(NSToolbarDisplayModeLabelOnly == self.toolbar.displayMode));
+	//BOOL const		isSmallSize = ((nil != aToolbar) &&
+	//								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
+	BOOL const		isTextOnly = ((nil != aToolbar) &&
+									(NSToolbarDisplayModeLabelOnly == aToolbar.displayMode));
 	
 	
-	self.textView.stringValue = ((nil != aWindow.title) ? aWindow.title : @"");
+	self.textView.frameDisplayEnabled = (aToolbar.customizationPaletteIsRunning);
 	self.textView.toolTip = self.textView.stringValue;
 	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)]; // see also "view:didSetIdealFrameHeight:"
-	
-	[self.textView setNeedsDisplay:YES];
 	
 	// this allows text-only toolbars to still display the window title string
 	self.label = ((isTextOnly)
@@ -3682,24 +3915,7 @@ setStateFromWindow:(NSWindow*)	aWindow
 	
 	self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:self.textView.stringValue action:nil keyEquivalent:@""] autorelease];
 	self.menuFormRepresentation.enabled = NO;
-}// setStateFromSession:
-
-
-/*!
-Returns the window that the item should retrieve its title
-from.  If the text view is in a window, that window is
-returned; otherwise, nil.
-
-(2018.03)
-*/
-- (NSWindow*)
-windowFromView
-{
-	NSWindow*	result = self.textView.window;
-	
-	
-	return result;
-}// windowFromView
+}// setStateForToolbar:
 
 
 @end //} TerminalToolbar_ItemWindowTitle (TerminalToolbar_ItemWindowTitleInternal)
