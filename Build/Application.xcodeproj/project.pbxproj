@@ -32,6 +32,7 @@
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
 		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
+		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
 		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
@@ -95,7 +96,6 @@
 		0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE2D055432A400ACDF3A /* TextTranslation.cp */; };
 		0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE7055432A400ACDF3A /* InfoWindow.mm */; };
 		0AC6BB340A8C0BA000AFF37A /* StringUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCFC07FAC06200248DDF /* StringUtilities.mm */; };
-		0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3D055432A400ACDF3A /* Workspace.cp */; };
 		0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AFD12B5087A147D00439BEA /* NIBLoader.cp */; };
 		0AC6BB3A0A8C0BA100AFF37A /* Initialize.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE8055432A400ACDF3A /* Initialize.mm */; };
 		0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD6055432A400ACDF3A /* FileUtilities.cp */; };
@@ -386,7 +386,6 @@
 		0A46FE2D055432A400ACDF3A /* TextTranslation.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextTranslation.cp; path = Application/Code/TextTranslation.cp; sourceTree = "<group>"; };
 		0A46FE36055432A400ACDF3A /* Undoables.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Undoables.cp; path = Shared/Code/Undoables.cp; sourceTree = "<group>"; };
 		0A46FE38055432A400ACDF3A /* URL.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = URL.cp; path = Application/Code/URL.cp; sourceTree = "<group>"; };
-		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = "<group>"; };
 		0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalToolbar.mm; path = Application/Code/TerminalToolbar.mm; sourceTree = "<group>"; };
 		0A47A0AC14B3EBE000E39136 /* TerminalToolbar.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "TerminalToolbar.objc++.h"; path = "Application/Code/TerminalToolbar.objc++.h"; sourceTree = "<group>"; };
 		0A47E880155CD40400608A0A /* VectorWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindowRef.typedef.h; path = Application/Code/VectorWindowRef.typedef.h; sourceTree = "<group>"; };
@@ -401,6 +400,7 @@
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
 		0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterDecoder.cp; path = Shared/Code/ParameterDecoder.cp; sourceTree = "<group>"; };
 		0A56CB211FB6BF6100750D35 /* ParameterDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ParameterDecoder.h; path = Shared/Code/ParameterDecoder.h; sourceTree = "<group>"; };
+		0A613E4F20592085007C0829 /* Workspace.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Workspace.mm; path = Application/Code/Workspace.mm; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
@@ -769,7 +769,7 @@
 				0A46FE21055432A400ACDF3A /* VectorCanvas.mm */,
 				0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */,
 				0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */,
-				0A46FE3D055432A400ACDF3A /* Workspace.cp */,
+				0A613E4F20592085007C0829 /* Workspace.mm */,
 				0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */,
 				0A4603F40554376100ACDF3A /* AlertMessages.h */,
 				0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */,
@@ -1391,7 +1391,6 @@
 				0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */,
 				0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */,
 				0AC6BB340A8C0BA000AFF37A /* StringUtilities.mm in Sources */,
-				0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */,
 				0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */,
 				0AC6BB3A0A8C0BA100AFF37A /* Initialize.mm in Sources */,
 				0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */,
@@ -1436,6 +1435,7 @@
 				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */,
 				0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
+				0A613E5020592085007C0829 /* Workspace.mm in Sources */,
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
 				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,
 				0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */,

@@ -226,6 +226,10 @@ and updates its tab placement to match its position in the
 workspace.  This has the effect of “nudging over” tabs
 when windows disappear or are inserted.
 
+This only applies to legacy Carbon tabs; Cocoa windows use
+system window tabs that resize and position themselves
+automatically.
+
 IMPORTANT: Consult "gAutoRearrangeTabs" before using this.
 
 Model of STL Unary Function.
@@ -244,76 +248,76 @@ public:
 	void
 	operator()	(Workspace_Ref	inWorkspace)
 	{
-		UInt16 const			kMaxWindows = Workspace_ReturnWindowCount(inWorkspace);
-		TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
+		Float32 const		kAverageTabWidth = 320.0; // arbitrary!
+		__block UInt16		windowCount = 0; // counts Carbon windows only
+		__block Float32		currentOffset = 0.0; // while processing, each tab size is added here to define the next offset
+		__block Float32		smallestMaxWidth = FLT_MAX;
 		
 		
-		if ((kWorkspace_WindowIndexInfinity != kMaxWindows) && (kMaxWindows > 0))
+		// determine how wide each tab should be; use the smallest window
+		// for this, since Mac OS X will otherwise force a window resize
+		Workspace_ForEachTerminalWindow(inWorkspace,
+		^(TerminalWindowRef		inTerminalWindow,
+		  Boolean&				UNUSED_ARGUMENT(outStopFlag))
 		{
-			Float32 const	kAverageTabWidth = 320.0; // arbitrary!
-			Float32			currentOffset = 0.0; // while processing, each tab size is added here to define the next offset
-			Float32			smallestMaxWidth = FLT_MAX;
-			Float32			idealTabWidth = kAverageTabWidth;
-			
-			
-			// determine how wide each tab should be; use the smallest window
-			// for this, since Mac OS X will otherwise force a window resize
-			for (UInt16 i = 0; i < kMaxWindows; ++i)
+			// there is no way to implement this for Cocoa windows so only
+			// the legacy Carbon window tabs are counted here (and eventually
+			// this whole function will go away)
+			if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
 			{
-				HIWindowRef			window = Workspace_ReturnWindowWithZeroBasedIndex(inWorkspace, i);
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+				TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
+				Float32					availableSpace = FLT_MAX;
 				
 				
-				if (nullptr != terminalWindow)
+				++windowCount;
+				
+				terminalResult = TerminalWindow_GetTabWidthAvailable(inTerminalWindow, availableSpace);
+				if (kTerminalWindow_ResultOK == terminalResult)
 				{
-					Float32		availableSpace = FLT_MAX;
-					
-					
-					terminalResult = TerminalWindow_GetTabWidthAvailable(terminalWindow, availableSpace);
-					if (kTerminalWindow_ResultOK == terminalResult)
+					if (availableSpace < smallestMaxWidth)
 					{
-						if (availableSpace < smallestMaxWidth)
-						{
-							smallestMaxWidth = availableSpace;
-						}
+						smallestMaxWidth = availableSpace;
 					}
 				}
 			}
-			idealTabWidth = smallestMaxWidth / kMaxWindows;
+		});
+		if (windowCount > 0)
+		{
+			Float32		idealTabWidth = smallestMaxWidth / windowCount;
+			
+			
 			if (idealTabWidth > kAverageTabWidth)
 			{
 				idealTabWidth = kAverageTabWidth;
 			}
 			
 			// reposition and resize each window’s tab appropriately
-			for (UInt16 i = 0; i < kMaxWindows; ++i)
+			Workspace_ForEachTerminalWindow(inWorkspace,
+			^(TerminalWindowRef		inTerminalWindow,
+			  Boolean&				UNUSED_ARGUMENT(outStopFlag))
 			{
-				HIWindowRef			window = Workspace_ReturnWindowWithZeroBasedIndex(inWorkspace, i);
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+				TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
 				
 				
-				if (nullptr != terminalWindow)
+				terminalResult = TerminalWindow_SetTabPosition(inTerminalWindow, currentOffset, idealTabWidth);
+				if (kTerminalWindow_ResultOK == terminalResult)
 				{
-					terminalResult = TerminalWindow_SetTabPosition(terminalWindow, currentOffset, idealTabWidth);
+					Float32		tabWidth = 0.0;
+					
+					
+					terminalResult = TerminalWindow_GetTabWidth(inTerminalWindow, tabWidth);
+					//assert(kTerminalWindow_ResultOK == terminalResult);
 					if (kTerminalWindow_ResultOK == terminalResult)
 					{
-						Float32		tabWidth = 0.0;
+						currentOffset += tabWidth;
 						
-						
-						terminalResult = TerminalWindow_GetTabWidth(terminalWindow, tabWidth);
-						//assert(kTerminalWindow_ResultOK == terminalResult);
-						if (kTerminalWindow_ResultOK == terminalResult)
-						{
-							currentOffset += tabWidth;
-							
-							// reset the tab flag; this has the effect of opening the drawer
-							// if it is not already open (TEMPORARY - should this be done in
-							// a more direct way?)
-							UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(terminalWindow, true);
-						}
+						// reset the tab flag; this has the effect of opening the drawer
+						// if it is not already open (TEMPORARY - should this be done in
+						// a more direct way?)
+						UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 					}
 				}
-			}
+			});
 		}
 	}
 
@@ -335,8 +339,8 @@ class workspaceContainsWindow:
 public std::unary_function< Workspace_Ref/* argument */, bool/* return */ >
 {
 public:
-	workspaceContainsWindow	(HIWindowRef	inWindow)
-	: _window(inWindow, CFRetainRelease::kNotYetRetained)
+	workspaceContainsWindow	(TerminalWindowRef		inWindow)
+	: _window(inWindow)
 	{
 	}
 	
@@ -344,17 +348,27 @@ public:
 	operator()	(Workspace_Ref	inWorkspace)
 	const
 	{
-		HIWindowRef const	kWindow = REINTERPRET_CAST(_window.returnHIObjectRef(), HIWindowRef);
-		UInt16 const		kIndexOfWindow = Workspace_ReturnZeroBasedIndexOfWindow(inWorkspace, kWindow);
+		__block bool	result = false;
 		
 		
-		return (kWorkspace_WindowIndexInfinity != kIndexOfWindow);
+		Workspace_ForEachTerminalWindow(inWorkspace,
+		^(TerminalWindowRef		inTerminalWindow,
+		  Boolean&				outStopFlag)
+		{
+			if (inTerminalWindow == _window)
+			{
+				result = true;
+				outStopFlag = true;
+			}
+		});
+		
+		return result;
 	}
 
 protected:
 
 private:
-	CFRetainRelease		_window;
+	TerminalWindowRef	_window;
 };
 
 } // anonymous namespace
@@ -1583,219 +1597,6 @@ SessionFactory_ForEachTerminalWindow	(SessionFactory_TerminalWindowBlock		inBloc
 
 
 /*!
-Returns the window whose order in the specified list
-(each list is sorted by a different criteria) is the
-index given.
-
-\retval kSessionFactory_ResultOK
-if there are no errors
-
-\retval kSessionFactory_ResultParameterError
-if the specified index, list type or window pointer
-is invalid
-
-(3.0)
-*/
-SessionFactory_Result
-SessionFactory_GetWindowWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
-												 SessionFactory_List	inFromWhichList,
-												 HIWindowRef*			outWindowPtr)
-{
-	SessionFactory_Result	result = kSessionFactory_ResultOK;
-	
-	
-	if (nullptr == outWindowPtr) result = kSessionFactory_ResultParameterError;
-	else
-	{
-		switch (inFromWhichList)
-		{
-		case kSessionFactory_ListInCreationOrder:
-			// return the order in which the specified session was created,
-			// relative to all other sessions currently in existence
-			{
-				// look for the given session in the list
-				if (inZeroBasedSessionIndex >= gSessionListSortedByCreationTime().size())
-				{
-					// index is invalid
-					result = kSessionFactory_ResultParameterError;
-				}
-				else
-				{
-					// index is valid; return the appropriate session reference
-					SessionRef		session = gSessionListSortedByCreationTime()[inZeroBasedSessionIndex];
-					
-					
-					*outWindowPtr = Session_ReturnActiveLegacyCarbonWindow(session);
-				}
-			}
-			break;
-		
-		case kSessionFactory_ListInTabStackOrder:
-			{
-				MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
-				UInt16				currentIndex = inZeroBasedSessionIndex;
-				
-				
-				// the index basically acts as if all workspaces were laid
-				// end-to-end, and the indices in each workspace were renumbered
-				// according to their placement in that super-list; if there is
-				// no match among tabbed windows, there could still be windows
-				// that are not tabbed that match
-				*outWindowPtr = nullptr;
-				for (auto workspaceRef : workspaceList)
-				{
-					UInt16 const	kWindowCount = Workspace_ReturnWindowCount(workspaceRef);
-					
-					
-					if (currentIndex >= kWindowCount)
-					{
-						currentIndex -= kWindowCount;
-					}
-					else
-					{
-						*outWindowPtr = Workspace_ReturnWindowWithZeroBasedIndex(workspaceRef, currentIndex);
-						break;
-					}
-				}
-				if (nullptr == *outWindowPtr)
-				{
-					if (currentIndex < gSessionListSortedByCreationTime().size())
-					{
-						SessionRef		session = gSessionListSortedByCreationTime()[currentIndex];
-						
-						
-						*outWindowPtr = Session_ReturnActiveLegacyCarbonWindow(session);
-					}
-				}
-				
-				if (nullptr == *outWindowPtr)
-				{
-					result = kSessionFactory_ResultParameterError;
-				}
-			}
-			break;
-		
-		default:
-			// ???
-			result = kSessionFactory_ResultParameterError;
-			break;
-		}
-	}
-	
-	return result;
-}// GetSessionWithZeroBasedIndex
-
-
-/*!
-Returns the order in which the given session
-appears in the specified list (each list is
-sorted by a different criteria).
-
-\retval kSessionFactory_ResultOK
-if there are no errors
-
-\retval kSessionFactory_ResultParameterError
-if the specified session, list type or index
-pointer is invalid
-
-(3.0)
-*/
-SessionFactory_Result
-SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
-											 SessionFactory_List	inFromWhichList,
-											 UInt16*				outIndexPtr)
-{
-	SessionFactory_Result	result = kSessionFactory_ResultOK;
-	
-	
-	if (nullptr == inOfWhichSession) result = kSessionFactory_ResultParameterError;
-	else
-	{
-		switch (inFromWhichList)
-		{
-		case kSessionFactory_ListInCreationOrder:
-			// return the order in which the specified session was created,
-			// relative to all other sessions currently in existence
-			{
-				// look for the given session in the list
-				*outIndexPtr = 0;
-				for (auto sessionRef : gSessionListSortedByCreationTime())
-				{
-					if (sessionRef == inOfWhichSession)
-					{
-						break;
-					}
-					++(*outIndexPtr);
-				}
-				
-				if (*outIndexPtr >= gSessionListSortedByCreationTime().size())
-				{
-					// session was not in the list; return an error
-					result = kSessionFactory_ResultParameterError;
-				}
-			}
-			break;
-		
-		case kSessionFactory_ListInTabStackOrder:
-			{
-				TerminalWindowRef	terminalWindow = Session_ReturnActiveTerminalWindow(inOfWhichSession);
-				HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
-				MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
-				Boolean				foundWindow = false;
-				
-				
-				// look for the given session in available workspaces;
-				// it is also possible that the window will not be tabbed
-				*outIndexPtr = 0;
-				for (auto workspaceRef : workspaceList)
-				{
-					UInt16		windowIndex = Workspace_ReturnZeroBasedIndexOfWindow(workspaceRef, window);
-					
-					
-					if (kWorkspace_WindowIndexInfinity != windowIndex)
-					{
-						foundWindow = true;
-						(*outIndexPtr) += windowIndex;
-						break;
-					}
-					else
-					{
-						(*outIndexPtr) += Workspace_ReturnWindowCount(workspaceRef);
-					}
-				}
-				if (false == foundWindow)
-				{
-					// look for the given session in the list
-					for (auto sessionRef : gSessionListSortedByCreationTime())
-					{
-						if (sessionRef == inOfWhichSession)
-						{
-							foundWindow = true;
-							break;
-						}
-						++(*outIndexPtr);
-					}
-				}
-				
-				if (false == foundWindow)
-				{
-					result = kSessionFactory_ResultParameterError;
-				}
-			}
-			break;
-		
-		default:
-			// ???
-			result = kSessionFactory_ResultParameterError;
-			break;
-		}
-	}
-	
-	return result;
-}// GetZeroBasedIndexOfSession
-
-
-/*!
 Creates a brand new workspace (window group or tab group)
 and moves the specified terminal window into it, removing
 the window from its previous workspace.
@@ -1807,7 +1608,6 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 {
 	if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
 	{
-		HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
 		Workspace_Ref		newWorkspace = createWorkspace();
 		MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
 		
@@ -1822,7 +1622,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 		assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
 		
 		// ensure the window is not a member of any other workspace
-		std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
+		std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveTerminalWindow(wsp, inTerminalWindow); });
 		if (gAutoRearrangeTabs)
 		{
 			// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
@@ -1833,10 +1633,12 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 																	fixTerminalWindowTabPositionsInWorkspace());
 		}
 		
-		// offset the window slightly to emphasize its detachment
+		// offset the window slightly to emphasize its detachment (Carbon only)
+		if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
 		{
-			Rect		structureBounds;
-			OSStatus	error = noErr;
+			HIWindowRef		window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
+			Rect			structureBounds;
+			OSStatus		error = noErr;
 			
 			
 			error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
@@ -1848,7 +1650,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 		}
 		
 		// now add it to the new workspace
-		Workspace_AddWindow(newWorkspace, window);
+		Workspace_AddTerminalWindow(newWorkspace, inTerminalWindow);
 		UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 		fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
 	}
@@ -2706,20 +2508,19 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 			// it is visible, the window MUST be visible before you can give it a
 			// tabbed appearance.  This is due to the tab implementation being a
 			// drawer, which refuses to associate itself with an invisible window!
-			if (nullptr != legacyCarbonWindow)
-			{
-				Workspace_AddWindow(targetWorkspace, legacyCarbonWindow);
-			}
-			else
-			{
-				Console_Warning(Console_WriteLine, "tab workspaces not implemented for Cocoa window");
-			}
+			Workspace_AddTerminalWindow(targetWorkspace, inTerminalWindow);
 			TerminalWindow_SetVisible(inTerminalWindow, true);
-			UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
-			if (gAutoRearrangeTabs)
+			
+			// tab appearance and ordering are implied when using the new Cocoa
+			// window tab mechanism; only Carbon windows need additional steps
+			if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
 			{
-				(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
-																		fixTerminalWindowTabPositionsInWorkspace());
+				UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
+				if (gAutoRearrangeTabs)
+				{
+					(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
+																			fixTerminalWindowTabPositionsInWorkspace());
+				}
 			}
 		}
 		else
@@ -3276,10 +3077,10 @@ returnActiveWorkspace ()
 		
 		if (nullptr != activeSession)
 		{
-			HIWindowRef const	kActiveWindow = Session_ReturnActiveLegacyCarbonWindow(activeSession);
-			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
-			auto				toWorkspace = std::find_if(targetList.begin(), targetList.end(),
-															workspaceContainsWindow(kActiveWindow));
+			TerminalWindowRef const		kActiveWindow = Session_ReturnActiveTerminalWindow(activeSession);
+			MyWorkspaceList&			targetList = gWorkspaceListSortedByCreationTime();
+			auto						toWorkspace = std::find_if(targetList.begin(), targetList.end(),
+																	workspaceContainsWindow(kActiveWindow));
 			
 			
 			if (targetList.end() != toWorkspace)
@@ -3620,23 +3421,8 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
 	
 	
-	if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-	{
-		HIWindowRef		window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
-		
-		
-		std::for_each(workspaceList.begin(), workspaceList.end(),
-						[=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
-	}
-	else
-	{
-		//NSWindow*		window = TerminalWindow_ReturnNSWindow(inTerminalWindow);
-		
-		
-		Console_Warning(Console_WriteLine, "removal from workspace not implemented for Cocoa windows");
-		//std::for_each(workspaceList.begin(), workspaceList.end(),
-		//				[=](Workspace_Ref wsp) { Workspace_RemoveWindow(wsp, window); });
-	}
+	std::for_each(workspaceList.begin(), workspaceList.end(),
+					[=](Workspace_Ref wsp) { Workspace_RemoveTerminalWindow(wsp, inTerminalWindow); });
 	
 	if (gAutoRearrangeTabs)
 	{

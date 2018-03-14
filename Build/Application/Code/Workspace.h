@@ -37,8 +37,8 @@
 
 #pragma once
 
-// Mac includes
-#include <Carbon/Carbon.h>
+// application includes
+#include "TerminalWindow.h"
 
 
 
@@ -47,17 +47,23 @@
 enum Workspace_Result
 {
 	kWorkspace_ResultOK					= 0,	//!< no error occurred
-	kWorkspace_ResultGenericFailure		= 1		//!< unspecified problem
-};
-
-enum
-{
-	kWorkspace_WindowIndexInfinity			= 0xFF	//!< window does not exist
+	kWorkspace_ResultGenericFailure		= 1,	//!< unspecified problem
+	kWorkspace_ResultInvalidReference	= 2		//!< the given "Workspace_Ref" is unrecognized
 };
 
 #pragma mark Types
 
 typedef struct Workspace_OpaqueStructure*	Workspace_Ref;
+
+#pragma mark Callbacks
+
+/*!
+Terminal Window Block
+
+This is used in Workspace_ForEachTerminalWindow().  If the stop
+flag is set by the block, iteration will end early.
+*/
+typedef void (^Workspace_TerminalWindowBlock)	(TerminalWindowRef, Boolean&);
 
 
 
@@ -67,51 +73,32 @@ typedef struct Workspace_OpaqueStructure*	Workspace_Ref;
 //@{
 
 Workspace_Ref
-	Workspace_New								();
+	Workspace_New						();
 
 void
-	Workspace_Dispose							(Workspace_Ref*				inoutRefPtr);
-
-//@}
-
-//!\name Altering Workspaces
-//@{
-
-Boolean
-	Workspace_IsObscured						(Workspace_Ref				inWorkspace);
-
-void
-	Workspace_SetObscured						(Workspace_Ref				inWorkspace,
-												 Boolean					inIsHidden);
+	Workspace_Dispose					(Workspace_Ref*					inoutRefPtr);
 
 //@}
 
 //!\name Changing Workspace Contents
 //@{
 
-void
-	Workspace_AddWindow							(Workspace_Ref				inWorkspace,
-												 HIWindowRef				inWindowToAdd);
+Workspace_Result
+	Workspace_AddTerminalWindow			(Workspace_Ref					inWorkspace,
+										 TerminalWindowRef				inWindowToAdd);
 
-void
-	Workspace_RemoveWindow						(Workspace_Ref				inWorkspace,
-												 HIWindowRef				inWindowToRemove);
+Workspace_Result
+	Workspace_RemoveTerminalWindow		(Workspace_Ref					inWorkspace,
+										 TerminalWindowRef				inWindowToRemove);
 
 //@}
 
-//!\name General Information
+//!\name Iterating Over Workspace Windows
 //@{
 
-UInt16
-	Workspace_ReturnWindowCount					(Workspace_Ref				inWorkspace);
-
-HIWindowRef
-	Workspace_ReturnWindowWithZeroBasedIndex	(Workspace_Ref				inWorkspace,
-												 UInt16						inIndex);
-
-UInt16
-	Workspace_ReturnZeroBasedIndexOfWindow		(Workspace_Ref				inWorkspace,
-												 HIWindowRef				inWindow);
+Workspace_Result
+	Workspace_ForEachTerminalWindow		(Workspace_Ref					inWorkspace,
+										 Workspace_TerminalWindowBlock	inBlock);
 
 //@}
 

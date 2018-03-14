@@ -2369,6 +2369,12 @@ Specifies the size of the tab (if any) for this window,
 including any frame it has.  This is a visual adornment
 only; see also TerminalWindow_SetTabPosition().
 
+Note that this is a legacy API that only has effect for
+the drawer-based tabs of Carbon windows; Cocoa windows
+use system window tabs that resize automatically.  This
+API may be called on Cocoa windows but it will have no
+effect.
+
 Currently, for tabs attached to the left or right edges of
 a window, the specified width may be ignored (not even
 used as a height); these tabs tend to have uniform size.
@@ -2410,7 +2416,8 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 	{
 		if (ptr->isCocoa())
 		{
-			Console_Warning(Console_WriteLine, "“set tab width” not implemented for Cocoa windows");
+			// there is no way to implement this for system window tabs (they implicitly resize)
+			//Console_Warning(Console_WriteLine, "“set tab width” not implemented for Cocoa windows");
 		}
 		else
 		{
@@ -8394,7 +8401,11 @@ setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
 	[inPtr->window setTitle:(NSString*)inNewTitle];
 	if (inPtr->isCocoa())
 	{
-		Console_Warning(Console_WriteLine, "set-tab-title not implemented for Cocoa window");
+		// technically the default behavior for Cocoa windows with tabs is
+		// to keep the titles of both in sync, though new APIs were added
+		// in 10.13 (NSWindow "tab" property, NSWindowTab class) that will
+		// allow the two strings to diverge in the future if this is
+		// desired... 
 	}
 	else
 	{

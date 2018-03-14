@@ -229,21 +229,6 @@ void
 
 //@}
 
-//!\name Indexing Sessions
-//@{
-
-SessionFactory_Result
-	SessionFactory_GetWindowWithZeroBasedIndex		(UInt16							inZeroBasedSessionIndex,
-													 SessionFactory_List			inFromWhichList,
-													 HIWindowRef*					outWindowPtr);
-
-SessionFactory_Result
-	SessionFactory_GetZeroBasedIndexOfSession		(SessionRef						inOfWhichSession,
-													 SessionFactory_List			inFromWhichList,
-													 UInt16*						outIndexPtr);
-
-//@}
-
 //!\name Counting Sessions Created
 //@{
 
