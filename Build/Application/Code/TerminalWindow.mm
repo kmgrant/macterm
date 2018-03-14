@@ -3258,7 +3258,9 @@ refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs
 selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
-windowController([[TerminalWindow_Controller alloc] initWithTerminalVC:[[[TerminalView_Controller alloc] init] autorelease]]),
+windowController([[TerminalWindow_Controller alloc]
+					initWithTerminalVC:[[[TerminalView_Controller alloc] init] autorelease]
+										owner:REINTERPRET_CAST(this, TerminalWindowRef)]),
 window((inCarbonLegacy) ? createWindowCarbonCocoa() : windowController.window),
 tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
@@ -9052,6 +9054,7 @@ Eventually, this will be the basis for the default interface.
 */
 - (instancetype)
 initWithTerminalVC:(TerminalView_Controller*)	aViewController
+owner:(TerminalWindowRef)						aTerminalWindowRef
 {
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
 	if (nil != self)
@@ -9060,7 +9063,7 @@ initWithTerminalVC:(TerminalView_Controller*)	aViewController
 		
 		_terminalViewControllers = [[NSMutableArray alloc] init];
 		[self.terminalViewControllers addObject:aViewController];
-		_terminalWindowRef = nil;
+		_terminalWindowRef = aTerminalWindowRef;
 		
 		[REINTERPRET_CAST(self.window.contentView, NSView*) addSubview:aViewController.view];
 		
@@ -9389,10 +9392,15 @@ Responds when the user asks to close the window.
 windowShouldClose:(id)	sender
 {
 #pragma unused(sender)
-	BOOL	result = YES;
+	BOOL			result = YES;
+	SessionRef		session = SessionFactory_ReturnTerminalWindowSession(self.terminalWindowRef);
 	
 	
-	// UNIMPLEMENTED
+	if (nullptr != session)
+	{
+		Session_DisplayTerminationWarning(session);
+		result = NO; // deferred close
+	}
 	
 	return result;
 }// windowShouldClose:

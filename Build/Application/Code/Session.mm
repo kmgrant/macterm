@@ -9198,7 +9198,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			}
 			else
 			{
-				Console_Warning(Console_WriteLine, "session window close-handler not implemented for Cocoa");
+				// NOTE: for Cocoa, this is implemented in TerminalWindow_Controller ("windowShouldClose:")
 			}
 			
 			// install a callback that clears notifications when the window is activated

@@ -58,7 +58,8 @@ TerminalView_Controller*&		gDebugInterface_TestTerminalVC()	{ static TerminalVie
 TerminalWindow_Controller*&		gDebugInterface_TestTerminalWindowController()
 								{
 									static TerminalWindow_Controller*	_ = [[TerminalWindow_Controller alloc]
-																				initWithTerminalVC:gDebugInterface_TestTerminalVC()];
+																				initWithTerminalVC:gDebugInterface_TestTerminalVC()
+																									owner:nullptr];
 									return _;
 								}
 

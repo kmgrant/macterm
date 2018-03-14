@@ -188,7 +188,8 @@ changes to an interface declared in a ".mm" file.
 
 // initializers
 	- (instancetype)
-	initWithTerminalVC:(TerminalView_Controller*)_;
+	initWithTerminalVC:(TerminalView_Controller*)_
+	owner:(TerminalWindowRef)_;
 
 // accessors
 	@property (assign) TerminalWindowRef
