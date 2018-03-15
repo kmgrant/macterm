@@ -348,6 +348,19 @@ windowDidLoad
 		Console_Warning(Console_WriteLine, "address dialog failed to start monitoring did-rebuild-address-list; UI may not be updated");
 	}
 	
+	// customize toolbar/title area
+	{
+		// NOTE: runtime OS is expected to support this feature but
+		// while compilation requires legacy SDK (for old Carbon code)
+		// it is not possible to just call it
+		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+					(@selector(setTitleVisibility:), self.window,
+						FUTURE_SYMBOL(1, NSWindowTitleHidden)))
+		{
+			Console_Warning(Console_WriteLine, "failed to set network address window’s title bar visibility");
+		}
+	}
+	
 	// force interface to initialize (via callbacks)
 	[self performIPAddressListRefresh:NSApp];
 }// windowDidLoad
