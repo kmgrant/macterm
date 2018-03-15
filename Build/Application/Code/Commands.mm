@@ -132,11 +132,20 @@ Internal routines.
 */
 @interface Commands_Executor (Commands_ExecutorInternal) //{
 
-// new methods
+// class methods
 	+ (NSString*)
 	selectorNameForValidateActionName:(NSString*)_;
 	+ (SEL)
 	selectorToValidateAction:(SEL)_;
+
+// new methods
+	- (BOOL)
+	viaFirstResponderTryToPerformSelector:(SEL)_
+	withObject:(id)_;
+	- (BOOL)
+	viaFirstResponderTryToPerformSelector:(SEL)_
+	withObject:(id)_
+	preferCarbonMain:(BOOL)_;
 
 @end //}
 
@@ -188,7 +197,7 @@ class should match those published under NSServices (using the
 	userData:(NSString*)_
 	error:(NSString**)_;
 
-@end // Commands_ServiceProviders
+@end //}
 
 
 /*!
@@ -3760,7 +3769,7 @@ textSelectionExists ()
 
 
 #pragma mark -
-@implementation Commands_DelayedCommand
+@implementation Commands_DelayedCommand //{
 
 
 /*!
@@ -3823,11 +3832,11 @@ executeWithoutDelay
 }// executeWithoutDelay
 
 
-@end // Commands_DelayedCommand
+@end //} Commands_DelayedCommand
 
 
 #pragma mark -
-@implementation Commands_Executor
+@implementation Commands_Executor //{
 
 
 Commands_Executor*		gCommands_Executor = nil;
@@ -4028,11 +4037,11 @@ validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 // while performing a transition from Carbon to Cocoa.
 
 
-@end // Commands_Executor
+@end //} Commands_Executor
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ApplicationCoreEvents)
+@implementation Commands_Executor (Commands_ApplicationCoreEvents) //{
 
 
 #pragma mark NSApplicationDelegate
@@ -4240,26 +4249,30 @@ applicationWillTerminate:(NSNotification*)		aNotification
 }// applicationWillTerminate:
 
 
-@end // Commands_Executor (Commands_ApplicationCoreEvents)
+@end //} Commands_Executor (Commands_ApplicationCoreEvents)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_Capturing)
+@implementation Commands_Executor (Commands_Capturing) //{
 
 
 - (IBAction)
 performCaptureBegin:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandCaptureToFile, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandCaptureToFile, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performCaptureEnd:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandEndCaptureToFile, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandEndCaptureToFile, nullptr/* target */);
+	}
 }
 - (id)
 canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -4284,17 +4297,7 @@ canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPrintScreen:(id)		sender
 {
-#pragma unused(sender)
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performPrintScreen:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandPrintScreen, nullptr/* target */);
 	}
@@ -4313,17 +4316,7 @@ canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPrintSelection:(id)	sender
 {
-#pragma unused(sender)
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performPrintSelection:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandPrint, nullptr/* target */);
 	}
@@ -4342,8 +4335,10 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSaveSelection:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSaveSelection, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSaveSelection, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4356,30 +4351,18 @@ canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-@end // Commands_Executor (Commands_Capturing)
+@end //} Commands_Executor (Commands_Capturing)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_Editing)
+@implementation Commands_Executor (Commands_Editing) //{
 
 
 - (IBAction)
 performCopy:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performCopy:) with:sender];
-		if (NO == implementedByCocoa)
-		{
-			implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(copy:) with:sender];
-		}
-	}
-	
-	if (NO == implementedByCocoa)
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(copy:) withObject:sender preferCarbonMain:YES]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4434,8 +4417,10 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCopyAndPaste:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandCopyAndPaste, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandCopyAndPaste, nullptr/* target */);
+	}
 }
 - (id)
 canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4451,8 +4436,10 @@ canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCopyWithTabSubstitution:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandCopyTable, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandCopyTable, nullptr/* target */);
+	}
 }
 - (id)
 canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4468,16 +4455,8 @@ canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCut:(id)		sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(cut:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(cut:) withObject:sender preferCarbonMain:YES]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4519,20 +4498,9 @@ canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDelete:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(delete:) with:sender];
-		if (NO == implementedByCocoa)
-		{
-			implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(clear:) with:sender];
-		}
-	}
-	
-	if (NO == implementedByCocoa)
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(delete:) withObject:sender preferCarbonMain:YES]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(clear:) withObject:sender preferCarbonMain:YES]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4574,16 +4542,8 @@ canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPaste:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(paste:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(paste:) withObject:sender preferCarbonMain:YES]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4617,8 +4577,10 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRedo:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandRedo, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandRedo, nullptr/* target */);
+	}
 }
 - (id)
 canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4666,16 +4628,8 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSelectAll:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(selectAll:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(selectAll:) withObject:sender preferCarbonMain:YES]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4700,24 +4654,30 @@ canPerformSelectAll:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSelectEntireScrollbackBuffer:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSelectAllWithScrollback, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSelectAllWithScrollback, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performSelectNothing:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSelectNothing, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSelectNothing, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performUndo:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandUndo, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandUndo, nullptr/* target */);
+	}
 }
 - (id)
 canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4762,59 +4722,64 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-@end // Commands_Executor (Commands_Editing)
+@end //} Commands_Executor (Commands_Editing)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_OpeningSessions)
+@implementation Commands_Executor (Commands_OpeningSessions) //{
 
 
 - (IBAction)
 performDuplicate:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewDuplicateSession, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNewDuplicateSession, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performNewByFavoriteName:(id)	sender
 {
-	BOOL	isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		BOOL	isError = YES;
 		
 		
-		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::SESSION, collectionName))
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::SESSION, collectionName),
-														Preferences_ContextWrap::kAlreadyRetained);
+			// use the specified preferences
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 			
 			
-			if (namedSettings.exists())
+			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::SESSION, collectionName))
 			{
-				TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
-				Preferences_ContextRef	workspaceContext = nullptr;
-				SessionRef				newSession = SessionFactory_NewSessionUserFavorite
-														(terminalWindow, namedSettings.returnRef(), workspaceContext,
-															0/* window index */);
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::SESSION, collectionName),
+															Preferences_ContextWrap::kAlreadyRetained);
 				
 				
-				isError = (nullptr == newSession);
+				if (namedSettings.exists())
+				{
+					TerminalWindowRef		terminalWindow = SessionFactory_NewTerminalWindowUserFavorite();
+					Preferences_ContextRef	workspaceContext = nullptr;
+					SessionRef				newSession = SessionFactory_NewSessionUserFavorite
+															(terminalWindow, namedSettings.returnRef(), workspaceContext,
+																0/* window index */);
+					
+					
+					isError = (nullptr == newSession);
+				}
 			}
 		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -4832,8 +4797,10 @@ canPerformNewByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performNewCustom:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionDialog, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNewSessionDialog, nullptr/* target */);
+	}
 }
 - (id)
 canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4850,8 +4817,10 @@ canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performNewDefault:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite, nullptr/* target */);
+	}
 }
 - (id)
 canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -4868,8 +4837,10 @@ canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performNewLogInShell:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell, nullptr/* target */);
+	}
 }
 - (id)
 canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4886,8 +4857,10 @@ canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performNewShell:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell, nullptr/* target */);
+	}
 }
 - (id)
 canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4904,8 +4877,10 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performKill:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandKillProcessesKeepWindow, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandKillProcessesKeepWindow, nullptr/* target */);
+	}
 }
 - (id)
 canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4926,8 +4901,10 @@ canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRestart:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandRestartSession, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandRestartSession, nullptr/* target */);
+	}
 }
 - (id)
 canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4946,8 +4923,10 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRestoreWorkspaceDefault:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite, nullptr/* target */);
+	}
 }
 - (id)
 canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -4964,37 +4943,40 @@ canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performRestoreWorkspaceByFavoriteName:(id)	sender
 {
-	BOOL	isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		BOOL	isError = YES;
 		
 		
-		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::WORKSPACE, collectionName))
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::WORKSPACE, collectionName),
-														Preferences_ContextWrap::kAlreadyRetained);
+			// use the specified preferences
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 			
 			
-			if (namedSettings.exists())
+			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::WORKSPACE, collectionName))
 			{
-				Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(namedSettings.returnRef());
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::WORKSPACE, collectionName),
+															Preferences_ContextWrap::kAlreadyRetained);
 				
 				
-				if (launchedOK) isError = NO;
+				if (namedSettings.exists())
+				{
+					Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(namedSettings.returnRef());
+					
+					
+					if (launchedOK) isError = NO;
+				}
 			}
 		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -5012,8 +4994,10 @@ canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		an
 - (IBAction)
 performOpen:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandOpenSession, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandOpenSession, nullptr/* target */);
+	}
 }
 - (id)
 canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -5030,8 +5014,10 @@ canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSaveAs:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSaveSession, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSaveSession, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSaveAs:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5090,18 +5076,20 @@ replyEvent:(NSAppleEventDescriptor*)			replyEvent
 }
 
 
-@end // Commands_Executor (Commands_OpeningSessions)
+@end //} Commands_Executor (Commands_OpeningSessions)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_OpeningVectorGraphics)
+@implementation Commands_Executor (Commands_OpeningVectorGraphics) //{
 
 
 - (IBAction)
 performNewTEKPage:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTEKPageCommand, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTEKPageCommand, nullptr/* target */);
+	}
 }
 - (id)
 canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5118,8 +5106,10 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPageClearToggle:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTEKPageClearsScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTEKPageClearsScreen, nullptr/* target */);
+	}
 }
 - (id)
 canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5140,18 +5130,20 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-@end // Commands_Executor (Commands_OpeningVectorGraphics)
+@end //} Commands_Executor (Commands_OpeningVectorGraphics)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_OpeningWebPages)
+@implementation Commands_Executor (Commands_OpeningWebPages) //{
 
 
 - (IBAction)
 performCheckForUpdates:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandCheckForUpdates, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandCheckForUpdates, nullptr/* target */);
+	}
 }
 - (id)
 canPerformCheckForUpdates:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5164,8 +5156,10 @@ canPerformCheckForUpdates:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performGoToMainWebSite:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandURLHomePage, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandURLHomePage, nullptr/* target */);
+	}
 }
 - (id)
 canPerformGoToMainWebSite:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5178,8 +5172,10 @@ canPerformGoToMainWebSite:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performOpenURL:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandHandleURL, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandHandleURL, nullptr/* target */);
+	}
 }
 - (id)
 canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5221,8 +5217,10 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performProvideFeedback:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandURLAuthorMail, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandURLAuthorMail, nullptr/* target */);
+	}
 }
 - (id)
 canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5232,21 +5230,24 @@ canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-@end // Commands_Executor (Commands_OpeningWebPages)
+@end //} Commands_Executor (Commands_OpeningWebPages)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ManagingMacros)
+@implementation Commands_Executor (Commands_ManagingMacros) //{
 
 
 - (IBAction)
 performActionForMacro:(id)		sender
 {
-	NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-	UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
-	
-	
-	MacroManager_UserInputMacro(oneBasedMacroNumber - 1/* zero-based macro number */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
+		
+		
+		MacroManager_UserInputMacro(oneBasedMacroNumber - 1/* zero-based macro number */);
+	}
 }
 - (id)
 canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5305,38 +5306,41 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchByFavoriteName:(id)	sender
 {
-	BOOL	isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		BOOL	isError = YES;
 		
 		
-		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::MACRO_SET, collectionName),
-														Preferences_ContextWrap::kAlreadyRetained);
+			// use the specified preferences
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 			
 			
-			if (namedSettings.exists())
+			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
 			{
-				MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::MACRO_SET, collectionName),
+															Preferences_ContextWrap::kAlreadyRetained);
 				
 				
-				macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
-				isError = (false == macrosResult.ok());
+				if (namedSettings.exists())
+				{
+					MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+					
+					
+					macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
+					isError = (false == macrosResult.ok());
+				}
 			}
 		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -5374,14 +5378,16 @@ canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMacroSwitchDefault:(id)	sender
 {
-#pragma unused(sender)
-	MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-	
-	
-	macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
-	if (false == macrosResult.ok())
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		Sound_StandardAlert();
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		
+		
+		macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+		if (false == macrosResult.ok())
+		{
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -5400,14 +5406,16 @@ canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchNone:(id)		sender
 {
-#pragma unused(sender)
-	MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-	
-	
-	macrosResult = MacroManager_SetCurrentMacros(nullptr);
-	if (false == macrosResult.ok())
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		Sound_StandardAlert();
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		
+		
+		macrosResult = MacroManager_SetCurrentMacros(nullptr);
+		if (false == macrosResult.ok())
+		{
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -5426,35 +5434,37 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchNext:(id)		sender
 {
-#pragma unused(sender)
-	std::vector< Preferences_ContextRef >	macroSets;
-	Boolean									switchOK = false;
-	
-	
-	// NOTE: this list includes “Default”
-	if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
-		(false == macroSets.empty()))
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
-		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		std::vector< Preferences_ContextRef >	macroSets;
+		Boolean									switchOK = false;
 		
 		
-		if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
+		// NOTE: this list includes “Default”
+		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+			(false == macroSets.empty()))
 		{
-			gCurrentMacroSetIndex = 0;
-		}
-		else
-		{
-			++gCurrentMacroSetIndex;
+			// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
+			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+			
+			
+			if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
+			{
+				gCurrentMacroSetIndex = 0;
+			}
+			else
+			{
+				++gCurrentMacroSetIndex;
+			}
+			
+			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+			switchOK = macrosResult.ok();
 		}
 		
-		macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
-		switchOK = macrosResult.ok();
-	}
-	
-	if (false == switchOK)
-	{
-		Sound_StandardAlert();
+		if (false == switchOK)
+		{
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -5471,35 +5481,37 @@ canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchPrevious:(id)		sender
 {
-#pragma unused(sender)
-	std::vector< Preferences_ContextRef >	macroSets;
-	Boolean									switchOK = false;
-	
-	
-	// NOTE: this list includes “Default”
-	if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
-		(false == macroSets.empty()))
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		// NOTE: this should be quite similar to "performMacroSwitchNext:"
-		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		std::vector< Preferences_ContextRef >	macroSets;
+		Boolean									switchOK = false;
 		
 		
-		if (gCurrentMacroSetIndex < 1)
+		// NOTE: this list includes “Default”
+		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+			(false == macroSets.empty()))
 		{
-			gCurrentMacroSetIndex = (macroSets.size() - 1);
-		}
-		else
-		{
-			--gCurrentMacroSetIndex;
+			// NOTE: this should be quite similar to "performMacroSwitchNext:"
+			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+			
+			
+			if (gCurrentMacroSetIndex < 1)
+			{
+				gCurrentMacroSetIndex = (macroSets.size() - 1);
+			}
+			else
+			{
+				--gCurrentMacroSetIndex;
+			}
+			
+			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+			switchOK = macrosResult.ok();
 		}
 		
-		macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
-		switchOK = macrosResult.ok();
-	}
-	
-	if (false == switchOK)
-	{
-		Sound_StandardAlert();
+		if (false == switchOK)
+		{
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -5513,18 +5525,20 @@ canPerformMacroSwitchPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-@end // Commands_Executor (Commands_ManagingMacros)
+@end //} Commands_Executor (Commands_ManagingMacros)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ManagingTerminalEvents)
+@implementation Commands_Executor (Commands_ManagingTerminalEvents) //{
 
 
 - (IBAction)
 performBellToggle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandBellEnabled, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandBellEnabled, nullptr/* target */);
+	}
 }
 - (id)
 canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5551,8 +5565,10 @@ canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetActivityHandlerNone:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandWatchNothing, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandWatchNothing, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5577,8 +5593,10 @@ canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetActivityHandlerNotifyOnIdle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandWatchForInactivity, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandWatchForInactivity, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5603,8 +5621,10 @@ canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anI
 - (IBAction)
 performSetActivityHandlerNotifyOnNext:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandWatchForActivity, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandWatchForActivity, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5629,8 +5649,10 @@ canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anI
 - (IBAction)
 performSetActivityHandlerSendKeepAliveOnIdle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTransmitOnInactivity, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTransmitOnInactivity, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -5652,18 +5674,20 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 }
 
 
-@end // Commands_Executor (Commands_ManagingTerminalEvents)
+@end //} Commands_Executor (Commands_ManagingTerminalEvents)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ManagingTerminalKeyMappings)
+@implementation Commands_Executor (Commands_ManagingTerminalKeyMappings) //{
 
 
 - (IBAction)
 performDeleteMapToBackspace:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsBackspace, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsBackspace, nullptr/* target */);
+	}
 }
 - (id)
 canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -5691,8 +5715,10 @@ canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDeleteMapToDelete:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsDelete, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsDelete, nullptr/* target */);
+	}
 }
 - (id)
 canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -5720,8 +5746,10 @@ canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performEmacsCursorModeToggle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandEmacsArrowMapping, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandEmacsArrowMapping, nullptr/* target */);
+	}
 }
 - (id)
 canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -5749,8 +5777,10 @@ canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performLocalPageKeysToggle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandLocalPageUpDown, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandLocalPageUpDown, nullptr/* target */);
+	}
 }
 - (id)
 canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -5778,15 +5808,20 @@ canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMappingCustom:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSetKeys, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSetKeys, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performSetFunctionKeyLayoutRxvt:(id)	sender
 {
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
+	}
 }
 - (id)
 canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5804,7 +5839,10 @@ canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetFunctionKeyLayoutVT220:(id)	sender
 {
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
+	}
 }
 - (id)
 canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5822,7 +5860,10 @@ canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetFunctionKeyLayoutXTermX11:(id)	sender
 {
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
+	}
 }
 - (id)
 canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5840,7 +5881,10 @@ canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anIte
 - (IBAction)
 performSetFunctionKeyLayoutXTermXFree86:(id)	sender
 {
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
+	}
 }
 - (id)
 canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5858,51 +5902,54 @@ canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	a
 - (IBAction)
 performTranslationSwitchByFavoriteName:(id)		sender
 {
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+		BOOL				isError = YES;
 		
 		
-		if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::TRANSLATION, collectionName),
-														Preferences_ContextWrap::kAlreadyRetained);
-			Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
+			// use the specified preferences
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 			
 			
-			if (namedSettings.exists() && (nullptr != sessionSettings))
+			if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
 			{
-				Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::TRANSLATION, collectionName),
+															Preferences_ContextWrap::kAlreadyRetained);
+				Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
 				
 				
-				if (nullptr != translationTags)
+				if (namedSettings.exists() && (nullptr != sessionSettings))
 				{
-					// change character set of frontmost window according to the specified preferences
-					Preferences_Result		prefsResult = Preferences_ContextCopy
-															(namedSettings.returnRef(), sessionSettings, translationTags);
+					Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
 					
 					
-					isError = (kPreferences_ResultOK != prefsResult);
-					
-					Preferences_ReleaseTagSet(&translationTags);
+					if (nullptr != translationTags)
+					{
+						// change character set of frontmost window according to the specified preferences
+						Preferences_Result		prefsResult = Preferences_ContextCopy
+																(namedSettings.returnRef(), sessionSettings, translationTags);
+						
+						
+						isError = (kPreferences_ResultOK != prefsResult);
+						
+						Preferences_ReleaseTagSet(&translationTags);
+					}
 				}
 			}
 		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
-		Sound_StandardAlert();
+		
+		if (isError)
+		{
+			// failed...
+			Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
+			Sound_StandardAlert();
+		}
 	}
 }
 
@@ -5910,16 +5957,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 - (IBAction)
 performTranslationSwitchCustom:(id)		sender
 {
-#pragma unused(sender)
-	SEL		thisSelector = @selector(performTranslationSwitchCustom:);
-	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
-	
-	
-	if (self != target)
-	{
-		[NSApp sendAction:thisSelector to:target from:sender];
-	}
-	else
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
 		// legacy Carbon
 		Commands_ExecuteByIDUsingEvent(kCommandSetTranslationTable, nullptr/* target */);
@@ -5930,39 +5968,47 @@ performTranslationSwitchCustom:(id)		sender
 - (IBAction)
 performTranslationSwitchDefault:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTranslationTableDefault, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTranslationTableDefault, nullptr/* target */);
+	}
 }
 
 
-@end // Commands_Executor (Commands_ManagingTerminalKeyMappings)
+@end //} Commands_Executor (Commands_ManagingTerminalKeyMappings)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ManagingTerminalSettings)
+@implementation Commands_Executor (Commands_ManagingTerminalSettings) //{
 
 
 - (IBAction)
 performInterruptProcess:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSendInterruptProcess, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSendInterruptProcess, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performJumpScrolling:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandJumpScrolling, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandJumpScrolling, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performLineWrapToggle:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandWrapMode, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandWrapMode, nullptr/* target */);
+	}
 }
 - (id)
 canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -5989,8 +6035,10 @@ canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performLocalEchoToggle:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandEcho, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandEcho, nullptr/* target */);
+	}
 }
 - (id)
 canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6015,16 +6063,20 @@ canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performReset:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandResetTerminal, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandResetTerminal, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performSaveOnClearToggle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandClearScreenSavesLines, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandClearScreenSavesLines, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6051,16 +6103,20 @@ canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performScrollbackClear:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandClearEntireScrollback, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandClearEntireScrollback, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performSpeechToggle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSpeechEnabled, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSpeechEnabled, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6085,8 +6141,10 @@ canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSuspendToggle:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSuspendNetwork, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSuspendNetwork, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6108,26 +6166,17 @@ canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-@end // Commands_Executor (Commands_ManagingTerminalSettings)
+@end //} Commands_Executor (Commands_ManagingTerminalSettings)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ModifyingTerminalDimensions)
+@implementation Commands_Executor (Commands_ModifyingTerminalDimensions) //{
 
 
 - (IBAction)
 performScreenResizeCustom:(id)	sender
 {
-#pragma unused(sender)
-	SEL		thisSelector = @selector(performScreenResizeCustom:);
-	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
-	
-	
-	if (self != target)
-	{
-		[NSApp sendAction:thisSelector to:target from:sender];
-	}
-	else
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
 		// legacy Carbon
 		Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
@@ -6138,64 +6187,78 @@ performScreenResizeCustom:(id)	sender
 - (IBAction)
 performScreenResizeNarrower:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNarrowerScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNarrowerScreen, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performScreenResizeShorter:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShorterScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShorterScreen, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performScreenResizeStandard:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSmallScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSmallScreen, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performScreenResizeTall:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTallScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTallScreen, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performScreenResizeTaller:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandTallerScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandTallerScreen, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performScreenResizeWide:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandLargeScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandLargeScreen, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performScreenResizeWider:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
+	}
 }
 
 
-@end // Commands_Executor (Commands_ModifyingTerminalDimensions)
+@end //} Commands_Executor (Commands_ModifyingTerminalDimensions)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ModifyingTerminalText)
+@implementation Commands_Executor (Commands_ModifyingTerminalText) //{
 
 
 - (IBAction)
@@ -6224,15 +6287,7 @@ performFormatByFavoriteName:(id)	sender
 	//			below may become simpler, until of course Commands_Executor is
 	//			removed completely and the Cocoa runtime and responder chain finally
 	//			are used the way they are traditionally used.
-	SEL		thisSelector = @selector(performFormatDefault:);
-	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
-	
-	
-	if (self != target)
-	{
-		[NSApp sendAction:thisSelector to:target from:sender];
-	}
-	else
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		BOOL				isError = YES;
@@ -6277,16 +6332,7 @@ performFormatByFavoriteName:(id)	sender
 - (IBAction)
 performFormatCustom:(id)	sender
 {
-#pragma unused(sender)
-	SEL		thisSelector = @selector(performFormatCustom:);
-	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
-	
-	
-	if (self != target)
-	{
-		[NSApp sendAction:thisSelector to:target from:sender];
-	}
-	else
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		// legacy Carbon
 		Commands_ExecuteByIDUsingEvent(kCommandFormat, nullptr/* target */);
@@ -6297,7 +6343,6 @@ performFormatCustom:(id)	sender
 - (IBAction)
 performFormatDefault:(id)	sender
 {
-#pragma unused(sender)
 	// IMPORTANT:	TRANSITIONAL METHOD
 	//			NOW ALSO IN: TerminalView_ContentView
 	//
@@ -6321,15 +6366,7 @@ performFormatDefault:(id)	sender
 	//			below may become simpler, until of course Commands_Executor is
 	//			removed completely and the Cocoa runtime and responder chain finally
 	//			are used the way they are traditionally used.
-	SEL		thisSelector = @selector(performFormatDefault:);
-	id		target = [NSApp targetForAction:thisSelector to:nil from:sender];
-	
-	
-	if (self != target)
-	{
-		[NSApp sendAction:thisSelector to:target from:sender];
-	}
-	else
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandFormatDefault, nullptr/* target */);
 	}
@@ -6339,32 +6376,40 @@ performFormatDefault:(id)	sender
 - (IBAction)
 performFormatTextBigger:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandBiggerText, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		// legacy Carbon
+		Commands_ExecuteByIDUsingEvent(kCommandBiggerText, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performFormatTextMaximum:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandZoomMaximumSize, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandZoomMaximumSize, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performFormatTextSmaller:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSmallerText, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		// legacy Carbon
+		Commands_ExecuteByIDUsingEvent(kCommandSmallerText, nullptr/* target */);
+	}
 }
 
 
-@end // Commands_Executor (Commands_ModifyingTerminalText)
+@end //} Commands_Executor (Commands_ModifyingTerminalText)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ModifyingWindows)
+@implementation Commands_Executor (Commands_ModifyingWindows) //{
 
 /*!
 A helper method for the various commands that change the
@@ -6735,16 +6780,8 @@ withAnimation:(BOOL)		isAnimated
 - (IBAction)
 mergeAllWindows:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
-	{
-		// assume that Cocoa window can handle this directly
-		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(mergeAllWindows:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMergeAllWindows:) withObject:sender preferCarbonMain:YES]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
 	{
 		Console_Warning(Console_WriteLine, "merging tabs is not implemented for legacy Carbon windows");
 	}
@@ -6770,16 +6807,8 @@ canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 moveTabToNewWindow:(id)		sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
-	{
-		// assume that Cocoa window can handle this directly
-		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(moveTabToNewWindow:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMoveTabToNewWindow:) withObject:sender preferCarbonMain:YES]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTerminalNewWorkspace, nullptr/* target */);
 	}
@@ -6804,24 +6833,30 @@ canMoveTabToNewWindow:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performArrangeInFront:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandStackWindows, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandStackWindows, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performHideOtherWindows:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandHideOtherWindows, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandHideOtherWindows, nullptr/* target */);
+	}
 }
 
 
 - (IBAction)
 performHideWindow:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
+	}
 }
 
 
@@ -6830,8 +6865,10 @@ performHideWindow:(id)	sender
 - (IBAction)
 performMaximize:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandMaximizeWindow, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandMaximizeWindow, nullptr/* target */);
+	}
 }
 - (id)
 canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6875,15 +6912,17 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMoveWindowRight:(id)		sender
 {
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if (nullptr != terminalWindow)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
-							distance:8/* arbitrary; should match performMoveWindowLeft: */
-							awayFromEdge:NSMaxXEdge withAnimation:NO];
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+								distance:8/* arbitrary; should match performMoveWindowLeft: */
+								awayFromEdge:NSMaxXEdge withAnimation:NO];
+		}
 	}
 }
 
@@ -6891,15 +6930,17 @@ performMoveWindowRight:(id)		sender
 - (IBAction)
 performMoveWindowLeft:(id)		sender
 {
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if (nullptr != terminalWindow)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
-							distance:8/* arbitrary; should match performMoveWindowRight: */
-							awayFromEdge:NSMinXEdge withAnimation:NO];
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+								distance:8/* arbitrary; should match performMoveWindowRight: */
+								awayFromEdge:NSMinXEdge withAnimation:NO];
+		}
 	}
 }
 
@@ -6907,15 +6948,17 @@ performMoveWindowLeft:(id)		sender
 - (IBAction)
 performMoveWindowDown:(id)		sender
 {
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if (nullptr != terminalWindow)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
-							distance:8/* arbitrary; should match performMoveWindowUp: */
-							awayFromEdge:NSMinYEdge withAnimation:NO];
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+								distance:8/* arbitrary; should match performMoveWindowUp: */
+								awayFromEdge:NSMinYEdge withAnimation:NO];
+		}
 	}
 }
 
@@ -6923,15 +6966,17 @@ performMoveWindowDown:(id)		sender
 - (IBAction)
 performMoveWindowUp:(id)		sender
 {
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if (nullptr != terminalWindow)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
-							distance:8/* arbitrary; should match performMoveWindowDown: */
-							awayFromEdge:NSMaxYEdge withAnimation:NO];
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		
+		
+		if (nullptr != terminalWindow)
+		{
+			[self moveWindow:TerminalWindow_ReturnNSWindow(terminalWindow)
+								distance:8/* arbitrary; should match performMoveWindowDown: */
+								awayFromEdge:NSMaxYEdge withAnimation:NO];
+		}
 	}
 }
 
@@ -6939,17 +6984,7 @@ performMoveWindowUp:(id)		sender
 - (IBAction)
 performRename:(id)	sender
 {
-#pragma unused(sender)
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(performRename:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle, nullptr/* target */);
 	}
@@ -6969,8 +7004,10 @@ canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performShowHiddenWindows:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowAllHiddenWindows, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowAllHiddenWindows, nullptr/* target */);
+	}
 }
 - (id)
 canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6994,26 +7031,17 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-@end // Commands_Executor (Commands_ModifyingWindows)
+@end //} Commands_Executor (Commands_ModifyingWindows)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_Searching)
+@implementation Commands_Executor (Commands_Searching) //{
 
 
 - (IBAction)
 performFind:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
-	{
-		// assume that Cocoa window can handle this directly
-		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(performFind:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandFind, nullptr/* target */);
 	}
@@ -7039,8 +7067,10 @@ canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performFindCursor:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFindCursor, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandFindCursor, nullptr/* target */);
+	}
 }
 - (id)
 canPerformFindCursor:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7057,8 +7087,10 @@ canPerformFindCursor:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performFindNext:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFindAgain, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandFindAgain, nullptr/* target */);
+	}
 }
 - (id)
 canPerformFindNext:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7074,8 +7106,10 @@ canPerformFindNext:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performFindPrevious:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFindPrevious, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandFindPrevious, nullptr/* target */);
+	}
 }
 - (id)
 canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7091,13 +7125,15 @@ canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performShowCompletions:(id)		sender
 {
-#pragma unused(sender)
-	NSWindow*			target = [NSApp keyWindow];
-	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-	TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-	
-	
-	TerminalView_DisplayCompletionsUI(view);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		NSWindow*			target = [NSApp keyWindow];
+		TerminalWindowRef	terminalWindow = [target terminalWindowRef];
+		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+		
+		
+		TerminalView_DisplayCompletionsUI(view);
+	}
 }
 - (id)
 canPerformShowCompletions:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7115,62 +7151,65 @@ canPerformShowCompletions:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSendMenuItemText:(id)	sender
 {
-	if ([[sender class] isSubclassOfClass:NSMenuItem.class])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		SessionRef			focusSession = SessionFactory_ReturnUserFocusSession();
-		TerminalWindowRef	terminalWindow = (nullptr != focusSession)
-												? Session_ReturnActiveTerminalWindow(focusSession)
-												: nullptr;
-		TerminalViewRef		view = (nullptr != terminalWindow)
-									? TerminalWindow_ReturnViewWithFocus(terminalWindow)
-									: nullptr;
-		
-		
-		if (nullptr == view)
+		if ([[sender class] isSubclassOfClass:NSMenuItem.class])
 		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteLine, "unable to send menu item text because a user focus session or view was not found");
+			SessionRef			focusSession = SessionFactory_ReturnUserFocusSession();
+			TerminalWindowRef	terminalWindow = (nullptr != focusSession)
+													? Session_ReturnActiveTerminalWindow(focusSession)
+													: nullptr;
+			TerminalViewRef		view = (nullptr != terminalWindow)
+										? TerminalWindow_ReturnViewWithFocus(terminalWindow)
+										: nullptr;
+			
+			
+			if (nullptr == view)
+			{
+				Sound_StandardAlert();
+				Console_Warning(Console_WriteLine, "unable to send menu item text because a user focus session or view was not found");
+			}
+			else
+			{
+				NSMenuItem*			asMenuItem = (NSMenuItem*)sender;
+				CFStringRef			asCFString = BRIDGE_CAST([asMenuItem title], CFStringRef);
+				CFStringRef			completionCFString = asCFString;
+				CFRetainRelease		cursorCFString(TerminalView_ReturnCursorWordCopyAsUnicode(view),
+													CFRetainRelease::kAlreadyRetained);
+				CFRetainRelease		substringCFString;
+				
+				
+				// since this is meant to be a “completion”, the text
+				// currently at the cursor position matters; characters
+				// may be pruned from the beginning of the proposed
+				// completion string if the cursor text already contains
+				// some part of it (case-insensitive)
+				if (cursorCFString.exists() && (CFStringGetLength(cursorCFString.returnCFStringRef()) > 0))
+				{
+					CFIndex const	kOriginalCompletionLength = CFStringGetLength(asCFString);
+					CFRange			matchRange = CFStringFind(asCFString, cursorCFString.returnCFStringRef(),
+																kCFCompareCaseInsensitive | kCFCompareAnchored);
+					
+					
+					if (matchRange.length > 0)
+					{
+						substringCFString = CFRetainRelease(CFStringCreateWithSubstring(kCFAllocatorDefault, asCFString,
+																						CFRangeMake(matchRange.location + matchRange.length,
+																									kOriginalCompletionLength - matchRange.length)),
+															CFRetainRelease::kAlreadyRetained);
+						completionCFString = substringCFString.returnCFStringRef();
+					}
+				}
+				
+				// send appropriate text to the session
+				Session_UserInputCFString(focusSession, completionCFString);
+			}
 		}
 		else
 		{
-			NSMenuItem*			asMenuItem = (NSMenuItem*)sender;
-			CFStringRef			asCFString = BRIDGE_CAST([asMenuItem title], CFStringRef);
-			CFStringRef			completionCFString = asCFString;
-			CFRetainRelease		cursorCFString(TerminalView_ReturnCursorWordCopyAsUnicode(view),
-												CFRetainRelease::kAlreadyRetained);
-			CFRetainRelease		substringCFString;
-			
-			
-			// since this is meant to be a “completion”, the text
-			// currently at the cursor position matters; characters
-			// may be pruned from the beginning of the proposed
-			// completion string if the cursor text already contains
-			// some part of it (case-insensitive)
-			if (cursorCFString.exists() && (CFStringGetLength(cursorCFString.returnCFStringRef()) > 0))
-			{
-				CFIndex const	kOriginalCompletionLength = CFStringGetLength(asCFString);
-				CFRange			matchRange = CFStringFind(asCFString, cursorCFString.returnCFStringRef(),
-															kCFCompareCaseInsensitive | kCFCompareAnchored);
-				
-				
-				if (matchRange.length > 0)
-				{
-					substringCFString = CFRetainRelease(CFStringCreateWithSubstring(kCFAllocatorDefault, asCFString,
-																					CFRangeMake(matchRange.location + matchRange.length,
-																								kOriginalCompletionLength - matchRange.length)),
-														CFRetainRelease::kAlreadyRetained);
-					completionCFString = substringCFString.returnCFStringRef();
-				}
-			}
-			
-			// send appropriate text to the session
-			Session_UserInputCFString(focusSession, completionCFString);
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "unable to send menu item text because given object is not apparently a menu item");
 		}
-	}
-	else
-	{
-		Sound_StandardAlert();
-		Console_Warning(Console_WriteLine, "unable to send menu item text because given object is not apparently a menu item");
 	}
 }
 - (id)
@@ -7186,18 +7225,20 @@ canPerformSendMenuItemText:(id <NSValidatedUserInterfaceItem>)	anItem
 	return ((result) ? @(YES) : @(NO));
 }
 
-@end // Commands_Executor (Commands_Searching)
+@end //} Commands_Executor (Commands_Searching)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ShowingPanels)
+@implementation Commands_Executor (Commands_ShowingPanels) //{
 
 
 - (IBAction)
 orderFrontAbout:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandAboutThisApplication, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandAboutThisApplication, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontAbout:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7210,8 +7251,10 @@ canOrderFrontAbout:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontClipboard:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowClipboard, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowClipboard, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7224,8 +7267,10 @@ canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontCommandLine:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowCommandLine, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowCommandLine, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontCommandLine:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7238,8 +7283,10 @@ canOrderFrontCommandLine:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontContextualHelp:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandContextSensitiveHelp, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandContextSensitiveHelp, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7272,8 +7319,10 @@ canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontControlKeys:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowControlKeys, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowControlKeys, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7286,8 +7335,10 @@ canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontDebuggingOptions:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandDebuggingOptions, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandDebuggingOptions, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7300,8 +7351,10 @@ canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontIPAddresses:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowNetworkNumbers, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowNetworkNumbers, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontIPAddresses:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7314,8 +7367,10 @@ canOrderFrontIPAddresses:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreferences:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kHICommandPreferences, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kHICommandPreferences, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7334,8 +7389,10 @@ canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontSessionInfo:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowConnectionStatus, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowConnectionStatus, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7352,8 +7409,10 @@ canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontVT220FunctionKeys:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowFunction, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowFunction, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7366,8 +7425,10 @@ canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontVT220Keypad:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandShowKeypad, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandShowKeypad, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7377,27 +7438,18 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-@end // Commands_ExecutionDelegate (Commands_ShowingPanels)
+@end //} Commands_ExecutionDelegate (Commands_ShowingPanels)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_SwitchingModes)
+@implementation Commands_Executor (Commands_SwitchingModes) //{
 
 
 - (IBAction)
 toggleFullScreen:(id)	sender
 {
-#pragma unused(sender)
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
-	{
-		// assume that abnormal Cocoa windows should handle this directly
-		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(toggleFullScreen:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleFullScreen:) withObject:sender preferCarbonMain:YES]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -7463,16 +7515,8 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 toggleTabOverview:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
-	{
-		// assume that Cocoa window can handle this directly
-		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(toggleTabOverview:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabOverview:) withObject:sender preferCarbonMain:YES]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
 	{
 		Console_Warning(Console_WriteLine, "tab overview is not implemented for legacy Carbon windows");
 	}
@@ -7512,18 +7556,20 @@ canToggleTabOverview:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-@end // Commands_Executor (Commands_SwitchingModes)
+@end //} Commands_Executor (Commands_SwitchingModes)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_SwitchingWindows)
+@implementation Commands_Executor (Commands_SwitchingWindows) //{
 
 
 - (IBAction)
 orderFrontNextWindow:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNextWindow, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNextWindow, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7543,8 +7589,10 @@ canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontNextWindowHidingPrevious:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNextWindowHideCurrent, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandNextWindowHideCurrent, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -7564,8 +7612,10 @@ canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreviousWindow:(id)		sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandPreviousWindow, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandPreviousWindow, nullptr/* target */);
+	}
 }
 - (id)
 canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7585,37 +7635,40 @@ canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontSpecificWindow:(id)		sender
 {
-	BOOL	isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
 	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		SessionRef		session = returnMenuItemSession(asMenuItem);
+		BOOL	isError = YES;
 		
 		
-		if (nil != session)
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 		{
-			TerminalWindowRef	terminalWindow = nullptr;
-			HIWindowRef			window = nullptr;
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			SessionRef		session = returnMenuItemSession(asMenuItem);
 			
 			
-			// first make the window visible if it was obscured
-			window = Session_ReturnActiveLegacyCarbonWindow(session);
-			terminalWindow = Session_ReturnActiveTerminalWindow(session);
-			if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
-			
-			// now select the window
-			EventLoop_SelectOverRealFrontWindow(window);
-			
-			isError = (nullptr == window);
+			if (nil != session)
+			{
+				TerminalWindowRef	terminalWindow = nullptr;
+				HIWindowRef			window = nullptr;
+				
+				
+				// first make the window visible if it was obscured
+				window = Session_ReturnActiveLegacyCarbonWindow(session);
+				terminalWindow = Session_ReturnActiveTerminalWindow(session);
+				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
+				
+				// now select the window
+				EventLoop_SelectOverRealFrontWindow(window);
+				
+				isError = (nullptr == window);
+			}
 		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -7673,16 +7726,8 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 toggleTabBar:(id)	sender
 {
-	BOOL	implementedByCocoa = NO;
-	
-	
-	if (isCocoaWindowMoreImportantThanCarbon([NSApp mainWindow]))
-	{
-		// assume that Cocoa window can handle this directly
-		implementedByCocoa = [[[NSApp mainWindow] firstResponder] tryToPerform:@selector(toggleTabBar:) with:sender];
-	}
-	
-	if (NO == implementedByCocoa)
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabBar:) withObject:sender preferCarbonMain:YES]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
 	{
 		Console_Warning(Console_WriteLine, "tab bar is not implemented for legacy Carbon windows");
 	}
@@ -7727,11 +7772,11 @@ canToggleTabBar:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-@end // Commands_Executor (Commands_SwitchingWindows)
+@end //} Commands_Executor (Commands_SwitchingWindows)
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_TransitionFromCarbon)
+@implementation Commands_Executor (Commands_TransitionFromCarbon) //{
 
 
 // These are obviously Carbon-specific, and will disappear
@@ -7798,7 +7843,6 @@ canPerformCloseSetup:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMinimizeSetup:(id)	sender
 {
-#pragma unused(sender)
 	id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 	
 	
@@ -7857,8 +7901,10 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSpeakSelectedText:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSpeakSelectedText, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandSpeakSelectedText, nullptr/* target */);
+	}
 }
 - (id)
 canPerformSpeakSelectedText:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7874,8 +7920,10 @@ canPerformSpeakSelectedText:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performStopSpeaking:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandStopSpeaking, nullptr/* target */);
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	{
+		Commands_ExecuteByIDUsingEvent(kCommandStopSpeaking, nullptr/* target */);
+	}
 }
 - (id)
 canPerformStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -7893,7 +7941,6 @@ canPerformStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performZoomSetup:(id)	sender
 {
-#pragma unused(sender)
 	id		target = [NSApp targetForAction:@selector(performZoom:)];
 	
 	
@@ -7954,29 +8001,9 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 runToolbarCustomizationPaletteSetup:(id)	sender
 {
-#pragma unused(sender)
-	if (isCarbonWindow([NSApp mainWindow]))
+	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(runToolbarCustomizationPalette:) withObject:sender preferCarbonMain:YES])
 	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
-		
-		
-		if (nullptr != userFocusWindow)
-		{
-			Commands_ExecuteByIDUsingEvent(kHICommandCustomizeToolbar, nullptr/* target */);
-		}
-	}
-	else
-	{
-		id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
-		
-		
-		if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
-		{
-			NSWindow*	window = (NSWindow*)target;
-			
-			
-			[window runToolbarCustomizationPalette:sender];
-		}
+		Commands_ExecuteByIDUsingEvent(kHICommandCustomizeToolbar, nullptr/* target */);
 	}
 }
 - (id)
@@ -8035,13 +8062,16 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 toggleToolbarShownSetup:(id)	sender
 {
 #pragma unused(sender)
-	if (IsWindowToolbarVisible(GetUserFocusWindow()))
+	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(toggleToolbarShown:) withObject:sender preferCarbonMain:YES])
 	{
-		Commands_ExecuteByIDUsingEvent(kHICommandHideToolbar, nullptr/* target */);
-	}
-	else
-	{
-		Commands_ExecuteByIDUsingEvent(kHICommandShowToolbar, nullptr/* target */);
+		if (IsWindowToolbarVisible(GetUserFocusWindow()))
+		{
+			Commands_ExecuteByIDUsingEvent(kHICommandHideToolbar, nullptr/* target */);
+		}
+		else
+		{
+			Commands_ExecuteByIDUsingEvent(kHICommandShowToolbar, nullptr/* target */);
+		}
 	}
 }
 - (id)
@@ -8053,26 +8083,33 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	if (false == EventLoop_IsMainWindowFullScreen())
 	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
-		
-		
-		if (nullptr != userFocusWindow)
+		if (isCarbonWindow([NSApp mainWindow]))
 		{
-			HIToolbarRef	toolbar = nullptr;
-			//BOOL			useShowText = YES;
+			HIWindowRef		userFocusWindow = GetUserFocusWindow();
 			
 			
-			if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
+			if (nullptr != userFocusWindow)
 			{
-				result = YES;
-				if (IsWindowToolbarVisible(userFocusWindow))
+				HIToolbarRef	toolbar = nullptr;
+				//BOOL			useShowText = YES;
+				
+				
+				if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
 				{
-					//useShowText = NO;
+					result = YES;
+					if (IsWindowToolbarVisible(userFocusWindow))
+					{
+						//useShowText = NO;
+					}
 				}
+				
+				// update item to use the appropriate show/hide command text
+				// UNIMPLEMENTED
 			}
-			
-			// update item to use the appropriate show/hide command text
-			// UNIMPLEMENTED
+		}
+		else
+		{
+			result = (nil != [NSApp mainWindow].toolbar);
 		}
 	}
 	return ((result) ? @(YES) : @(NO));
@@ -8381,11 +8418,11 @@ ifEnabled:(BOOL)				onlyIfEnabled
 }// newMenuItemForCommand:itemTitle:ifEnabled:
 
 
-@end // Commands_Executor (Commands_TransitionFromCarbon)
+@end //} Commands_Executor (Commands_TransitionFromCarbon)
 
 
 #pragma mark -
-@implementation Commands_ServiceProviders
+@implementation Commands_ServiceProviders //{
 
 
 /*!
@@ -8735,11 +8772,11 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 }// openURL:userData:error:
 
 
-@end // Commands_ServiceProviders
+@end //} Commands_ServiceProviders
 
 
 #pragma mark -
-@implementation Commands_SessionWrap
+@implementation Commands_SessionWrap //{
 
 
 /*!
@@ -8786,14 +8823,14 @@ dealloc
 }// dealloc
 
 
-@end // Commands_SessionWrap
+@end //} Commands_SessionWrap
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_ExecutorInternal)
+@implementation Commands_Executor (Commands_ExecutorInternal) //{
 
 
-#pragma mark New Methods
+#pragma mark Class Methods
 
 
 /*!
@@ -8856,6 +8893,77 @@ selectorToValidateAction:(SEL)	anAction
 }// selectorToValidateAction:
 
 
-@end // Commands_Executor (Commands_ExecutorInternal)
+#pragma mark New Methods
+
+
+/*!
+Traverses the responder chain to find a suitable target
+object that supports the given selector (other than
+this object), and if found invokes the selector on that
+object with the given sender as a parameter.
+
+Returns YES only if an action could be performed.
+
+(2018.03)
+*/
+- (BOOL)
+viaFirstResponderTryToPerformSelector:(SEL)		aSelector
+withObject:(id)									aSenderOrNil
+{
+	BOOL	result = [self viaFirstResponderTryToPerformSelector:aSelector
+																	withObject:aSenderOrNil
+																	preferCarbonMain:NO];
+	
+	
+	return result;
+}// viaFirstResponderTryToPerformSelector:withObject:
+
+
+/*!
+Traverses the responder chain to find a suitable target
+object that supports the given selector (other than
+this object), and if found invokes the selector on that
+object with the given sender as a parameter.
+
+If "aCarbonFlag" is YES, this will only try to find a
+target object if the main window is a non-Carbon window.
+Otherwise, it will assume that there is a Carbon-specific
+non-Objective-C way to handle the action and do nothing.
+(Since Apple has an NSCarbonWindow private wrapper that
+implements certain methods, it is possible for a normal
+selector/target search to accidentally match that proxy
+and cause wrong behavior.)
+
+Returns YES only if an action could be performed.
+
+(2018.03)
+*/
+- (BOOL)
+viaFirstResponderTryToPerformSelector:(SEL)		aSelector
+withObject:(id)									aSenderOrNil
+preferCarbonMain:(BOOL)							aCarbonFlag
+{
+	BOOL	searchForSelector = ((aCarbonFlag)
+									? isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow])
+									: YES);
+	BOOL	result = NO;
+	
+	
+	if (searchForSelector)
+	{
+		id		target = [NSApp targetForAction:aSelector to:nil from:aSenderOrNil];
+		
+		
+		if (self != target)
+		{
+			result = [NSApp sendAction:aSelector to:target from:aSenderOrNil];
+		}
+	}
+	
+	return result;
+}// viaFirstResponderTryToPerformSelector:withObject:preferCarbonMain:
+
+
+@end //} Commands_Executor (Commands_ExecutorInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
