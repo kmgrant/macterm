@@ -339,7 +339,6 @@ IconRef					createCustomizeToolbarIcon		();
 IconRef					createFullScreenIcon			();
 IconRef					createHideWindowIcon			();
 IconRef					createKillSessionIcon			();
-IconRef					createScrollLockOffIcon			();
 IconRef					createScrollLockOnIcon			();
 IconRef					createLEDOffIcon				();
 IconRef					createLEDOnIcon					();
@@ -350,7 +349,6 @@ NSWindow*				createWindowCarbonCocoa			();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
-void					getViewSizeFromWindowSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					handleFindDialogClose			(FindDialog_Ref);
 void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
@@ -4291,36 +4289,6 @@ createRestartSessionIcon ()
 
 
 /*!
-Registers the “scroll lock off” icon reference with the
-system, and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createScrollLockOffIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnScrollLockOffIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemScrollLockOff,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createScrollLockOffIcon
-
-
-/*!
 Registers the “scroll lock on” icon reference with the
 system, and returns a reference to the new icon.
 
@@ -4556,52 +4524,9 @@ getScrollBarView	(My_TerminalWindowPtr	inPtr,
 
 
 /*!
-Returns the width and height of the screen interior
-(i.e. not including insets) of a terminal window
-whose content region has the specified dimensions.
-The resultant dimensions subtract out the size of any
-window header (unless it’s collapsed), the scroll
-bars, and the terminal screen insets (padding).
-
-See also getWindowSizeFromViewSize(), which does the
-reverse.
-
-IMPORTANT:	Any changes to this routine should be
-			reflected inversely in the code for
-			getWindowSizeFromViewSize().
-
-(3.0)
-*/
-void
-getViewSizeFromWindowSize	(My_TerminalWindowPtr	inPtr,
-							 SInt16					inWindowContentWidthInPixels,
-							 SInt16					inWindowContentHeightInPixels,
-							 SInt16*				outScreenInteriorWidthInPixels,
-							 SInt16*				outScreenInteriorHeightInPixels)
-{
-	if (nullptr != outScreenInteriorWidthInPixels)
-	{
-		*outScreenInteriorWidthInPixels = inWindowContentWidthInPixels - returnScrollBarWidth(inPtr);
-	}
-	if (nullptr != outScreenInteriorHeightInPixels)
-	{
-		*outScreenInteriorHeightInPixels = inWindowContentHeightInPixels - returnStatusBarHeight(inPtr) -
-											returnToolbarHeight(inPtr) - returnScrollBarHeight(inPtr);
-	}
-}// getViewSizeFromWindowSize
-
-
-/*!
 Returns the width and height of the content region
 of a terminal window whose screen interior has the
 specified dimensions.
-
-See also getViewSizeFromWindowSize(), which does
-the reverse.
-
-IMPORTANT:	Any changes to this routine should be
-			reflected inversely in the code for
-			getViewSizeFromWindowSize().
 
 (3.0)
 */
@@ -4767,9 +4692,6 @@ handleNewSize	(WindowRef	inWindow,
 					{
 						// figure out how big the screen is becoming;
 						// TEMPORARY: sets each view size to the whole area, since there is only one right now
-						//getViewSizeFromWindowSize(ptr, contentBounds.right - contentBounds.left,
-						//							contentBounds.bottom - contentBounds.top,
-						//							&terminalScreenWidth, &terminalScreenHeight);
 						
 						// make the view stick to the scroll bars, effectively adding perhaps a few pixels of padding
 						{
