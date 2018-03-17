@@ -237,8 +237,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 		}
 		
 		[self->_registeredObservers addObject:[[self newObserverFromKeyPath:@"terminated" ofObject:self.parentRunningApp
-																			options:(NSKeyValueChangeSetting)
-																			context:nil] autorelease]];
+																			options:(NSKeyValueChangeSetting)] autorelease]];
 	}
 	
 	// key configuration data MUST be passed through the environment;
@@ -377,9 +376,13 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
-	//if (NO == self.disableObservers)
+	BOOL	handled = NO;
+	
+	
+	if ([self observerArray:_registeredObservers containsContext:aContext])
 	{
+		handled = YES;
+		
 		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 		{
 			if ([aKeyPath isEqualToString:@"terminated"])
@@ -401,8 +404,18 @@ context:(void*)						aContext
 					NSLog(@"detected parent exit and Print Preview window now closed; terminating");
 					[NSApp terminate:nil];
 				}
+				handled = YES;
+			}
+			else
+			{
+				NSLog(@"valid observer context is not handling key path = %@", aKeyPath);
 			}
 		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 

@@ -175,7 +175,7 @@ frame appearance.
 @interface Popover_Window : NSWindow < CocoaAnimation_WindowImageProvider > //{
 {
 @private
-	NSMutableArray*			registeredObservers;
+	NSMutableArray*			_registeredObservers;
 	NSWindow*				popoverParentWindow;
 	NSView*					embeddedView;
 	NSImage*				_animationContentImage;

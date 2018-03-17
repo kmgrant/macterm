@@ -145,7 +145,7 @@ changes to an interface declared in a ".mm" file.
 	IBOutlet AlertMessages_WindowDraggingIcon*	mainIconUI;
 
 @private
-	NSMutableArray*		registeredObservers;
+	NSMutableArray*		_registeredObservers;
 	NSSize				idealFrameSize;
 	NSSize				idealIconSize;
 	NSString*			_titleText;

@@ -518,6 +518,9 @@ Destructor.
 dealloc
 {
 	// unregister observers that were used to update the sample area
+	// (WARNING: no context is specified, this is assuming that the
+	// key paths are sufficiently unique and will not affect any
+	// superclass)
 	for (NSString* keyName in [self sampleDisplayBindingKeyPaths])
 	{
 		[self removeObserver:self forKeyPath:keyName];
@@ -753,14 +756,38 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(aKeyPath, anObject, aContext)
-	if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+	BOOL	handled = NO;
+	
+	
+	// WARNING: this is relying on the “probably unique” nature of the
+	// key paths being observed, and ignoring the possibility that the
+	// superclass may be observing the same thing in a different context
+	// (a strictly-correct approach is for the original registration call
+	// to set a unique context that would then be checked here)
+	//if ([self observerArray:self.registeredObservers containsContext:aContext])
 	{
-		// TEMPORARY; refresh the terminal view for any change, without restrictions
-		// (should fix to send only relevant preference tags, based on the key path)
-		[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
-		[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]
-											restrictedTag1:'----' restrictedTag2:'----'];
+		handled = YES;
+		
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			if ([[self sampleDisplayBindingKeyPaths] containsObject:aKeyPath])
+			{
+				// TEMPORARY; refresh the terminal view for any change, without restrictions
+				// (should fix to send only relevant preference tags, based on the key path)
+				[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
+				[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]
+													restrictedTag1:'----' restrictedTag2:'----'];
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
+		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 
@@ -1615,14 +1642,38 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(aKeyPath, anObject, aContext)
-	if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+	BOOL	handled = NO;
+	
+
+	// WARNING: this is relying on the “probably unique” nature of the
+	// key paths being observed, and ignoring the possibility that the
+	// superclass may be observing the same thing in a different context
+	// (a strictly-correct approach is for the original registration call
+	// to set a unique context that would then be checked here)
+	//if ([self observerArray:self.registeredObservers containsContext:aContext])
 	{
-		// TEMPORARY; refresh the terminal view for any change, without restrictions
-		// (should fix to send only relevant preference tags, based on the key path)
-		[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
-		[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]
-											restrictedTag1:'----' restrictedTag2:'----'];
+		handled = YES;
+		
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			if ([[self sampleDisplayBindingKeyPaths] containsObject:aKeyPath])
+			{
+				// TEMPORARY; refresh the terminal view for any change, without restrictions
+				// (should fix to send only relevant preference tags, based on the key path)
+				[self setSampleAreaFromDefaultPreferences]; // since a context may not have everything, make sure the rest uses Default values
+				[self setSampleAreaFromPreferences:[self->prefsMgr currentContext]
+													restrictedTag1:'----' restrictedTag2:'----'];
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
+		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 

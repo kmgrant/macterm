@@ -3407,7 +3407,7 @@ setOverrideWindow:(NSWindow*)	aWindow
 		_overrideWindow = [aWindow retain];
 		[self removeObserverSpecifiedWith:self.windowTitleObserver];
 		_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:aWindow
-																options:(NSKeyValueChangeSetting) context:nullptr];
+																options:(NSKeyValueChangeSetting)];
 	}
 }// setOverrideWindow
 
@@ -3427,9 +3427,13 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
-	//if (NO == self.disableObservers)
+	BOOL	handled = NO;
+	
+	
+	if (aContext == self.windowTitleObserver)
 	{
+		handled = YES;
+		
 		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 		{
 			if (KEY_PATH_IS_SEL(aKeyPath, @selector(title)))
@@ -3448,7 +3452,16 @@ context:(void*)						aContext
 					[self layOutLabelText];
 				}
 			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
 		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 
@@ -3515,7 +3528,7 @@ viewWillMoveToWindow:(NSWindow*)	aWindow
 			{
 				[self removeObserverSpecifiedWith:self.windowTitleObserver];
 				_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:aWindow
-																		options:(NSKeyValueChangeSetting) context:nullptr];
+																		options:(NSKeyValueChangeSetting)];
 				
 				// is this necessary, or is the observer called automatically from the above?
 				self.stringValue = ((nil != aWindow.title) ? aWindow.title : @"");

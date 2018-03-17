@@ -637,7 +637,6 @@ later (see "removeObserverSpecifiedWith:").
 newObserverFromKeyPath:(NSString*)		aKeyPath
 ofObject:(id)							anObject
 options:(NSKeyValueObservingOptions)	anOptionSet
-context:(void*)							aContext
 {
 	CocoaExtensions_ObserverSpec*	result = [[CocoaExtensions_ObserverSpec alloc] init];
 	
@@ -646,19 +645,18 @@ context:(void*)							aContext
 	// remove this observer at a later time
 	result.observedObject = anObject;
 	result.keyPath = aKeyPath;
-	result.context = aContext;
 	
 	// install the observer
-	[anObject addObserver:self forKeyPath:aKeyPath options:anOptionSet context:aContext];
+	[anObject addObserver:self forKeyPath:aKeyPath options:anOptionSet context:result];
 	
 	return result;
-}// newObserverFromKeyPath:fromSelector:options:context:
+}// newObserverFromKeyPath:fromSelector:options:
 
 
 /*!
 Simplified version that assumes the target and observer are
 both the current object, with no special options or context.
-Calls "newObserverOfObject:fromSelector:options:context:".
+Calls "newObserverOfObject:fromSelector:options:".
 
 (2016.04)
 */
@@ -670,16 +668,15 @@ newObserverFromSelector:(SEL)		aSelectorForKeyPath
 	
 	result = [self newObserverFromSelector:aSelectorForKeyPath
 											ofObject:self
-											options:0
-											context:nullptr];
+											options:0];
 	return result;
 }// newObserverFromSelector:
 
 
 /*!
-Calls "newObserverFromKeyPath:fromSelector:options:context:"
-with the constraint that the target key path MUST be expressed
-as a real selector (the property method).
+Calls "newObserverFromKeyPath:fromSelector:options:" with the
+constraint that the target key path MUST be expressed as a real
+selector (the property method).
 
 It is highly recommended that key paths be expressed in terms of
 valid selectors wherever possible, to gain compile-time
@@ -693,17 +690,54 @@ catch a lot of common mistakes.
 newObserverFromSelector:(SEL)			aSelectorForKeyPath
 ofObject:(id)							anObject
 options:(NSKeyValueObservingOptions)	anOptionSet
-context:(void*)							aContext
 {
 	CocoaExtensions_ObserverSpec*	result = nil;
 	
 	
 	result = [self newObserverFromKeyPath:NSStringFromSelector(aSelectorForKeyPath)
 											ofObject:anObject
-											options:anOptionSet
-											context:aContext];
+											options:anOptionSet];
 	return result;
-}// newObserverFromSelector:ofObject:options:context:
+}// newObserverFromSelector:ofObject:options:
+
+
+/*!
+Determines if the specified pointer value is present
+by pointer value in the given array.
+
+This is useful when implementing observers, to ensure
+that a given context matches one of the original
+observers kept in the array.  (A common pattern is to
+store several "CocoaExtensions_ObserverSpec*" values
+in an array as observers are registered, and methods
+that create these objects will automatically set the
+observer “context” to the same pointer.)
+
+(2018.03)
+*/
+- (BOOL)
+observerArray:(NSArray*)	aSpecArray
+containsContext:(void*)		aContextPtr
+{
+	BOOL	result = NO;
+	
+	
+	// NOTE: NSArray’s "containsObject:" is probably unsafe to
+	// call here because it assumes the target is an Objective-C
+	// object, which is not really guaranteed (and superclasses
+	// could have context values that are anything); instead, do
+	// a simple check against pointer values manually
+	for (id object in aSpecArray)
+	{
+		if (object == aContextPtr)
+		{
+			result = YES;
+			break;
+		}
+	}
+	
+	return result;
+}// observerArray:containsContext:
 
 
 /*!
@@ -718,7 +752,7 @@ removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)		aSpec
 {
 	@try
 	{
-		[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:aSpec.context];
+		[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:aSpec];
 	}
 	@catch (NSException*	inException)
 	{
@@ -920,7 +954,6 @@ localToGlobalRelativeToTopForPoint:(NSPoint)	aLocalPoint
 @implementation CocoaExtensions_ObserverSpec //{
 
 
-@synthesize context = _context;
 @synthesize keyPath = _keyPath;
 @synthesize observedObject = _observedObject;
 

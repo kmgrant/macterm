@@ -111,7 +111,13 @@ this object is used to capture state precisely.
 When one of the helper methods below is used to
 register an observer, an object of this type is
 allocated and returned to capture the parameters
-that were used.
+that were used.  This object is also set as the
+“context”, which can be used in observer code to
+verify the target of the invocation.  (It follows
+that it’s a good idea for callers to create a
+property or array for storing this value, as it
+is needed both to control the lifetime of the
+observer and to determine the context.) 
 
 Then, "removeObserverSpecifiedWith:" can be used
 to precisely remove the observer later.
@@ -120,13 +126,10 @@ to precisely remove the observer later.
 {
 @private
 	id			_observedObject;
-	void*		_context;
 	NSString*	_keyPath;
 }
 
 // accessors
-	@property (assign) void*
-	context;
 	@property (strong) NSString*
 	keyPath;
 	@property (weak) id
@@ -161,15 +164,16 @@ to precisely remove the observer later.
 	- (CocoaExtensions_ObserverSpec*)
 	newObserverFromKeyPath:(NSString*)_
 	ofObject:(id)_
-	options:(NSKeyValueObservingOptions)_
-	context:(void*)_;
+	options:(NSKeyValueObservingOptions)_;
 	- (CocoaExtensions_ObserverSpec*)
 	newObserverFromSelector:(SEL)_;
 	- (CocoaExtensions_ObserverSpec*)
 	newObserverFromSelector:(SEL)_
 	ofObject:(id)_
-	options:(NSKeyValueObservingOptions)_
-	context:(void*)_;
+	options:(NSKeyValueObservingOptions)_;
+	- (BOOL)
+	observerArray:(NSArray*)_
+	containsContext:(void*)_;
 	- (void)
 	removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)_;
 	- (void)

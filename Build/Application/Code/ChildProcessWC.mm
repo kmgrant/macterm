@@ -67,6 +67,8 @@ The private class interface.
 	(^atExitBlock)();
 	@property (retain) NSRunningApplication*
 	childApplication;
+	@property (strong) NSMutableArray*
+	registeredObservers;
 
 @end //}
 
@@ -87,6 +89,7 @@ NSMutableArray*&	gChildProcessWindowProxies()		{ static NSMutableArray* _ = [[NS
 
 @synthesize atExitBlock = _atExitBlock;
 @synthesize childApplication = _childApplication;
+@synthesize registeredObservers = _registeredObservers;
 
 
 #pragma mark Class Methods
@@ -164,9 +167,9 @@ atExit:(ChildProcessWC_AtExitBlockType)		anExitBlock
 	{
 		_childApplication = [aRunningApp retain];
 		_registeredObservers = [[NSMutableArray alloc] init];
-		[_registeredObservers addObject:[[self newObserverFromKeyPath:@"terminated" ofObject:aRunningApp
-																		options:(NSKeyValueChangeSetting)
-																		context:nil] autorelease]];
+		[self.registeredObservers addObject:[[self newObserverFromKeyPath:@"terminated" ofObject:aRunningApp
+																			options:(NSKeyValueChangeSetting)]
+											autorelease]];
 		if (nullptr != anExitBlock)
 		{
 			_atExitBlock = Block_copy(anExitBlock);
@@ -220,7 +223,7 @@ dealloc
 		Block_release(self->_atExitBlock);
 	}
 	[self ignoreWhenObjectsPostNotes];
-	[self removeObserversSpecifiedInArray:_registeredObservers];
+	[self removeObserversSpecifiedInArray:self.registeredObservers];
 	[_childApplication release];
 	[_registeredObservers release];
 	[super dealloc];
@@ -257,9 +260,13 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
-	//if (NO == self.disableObservers)
+	BOOL	handled = NO;
+	
+	
+	if ([self observerArray:self.registeredObservers containsContext:aContext])
 	{
+		handled = YES;
+		
 		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 		{
 			if ([aKeyPath isEqualToString:@"terminated"])
@@ -278,7 +285,16 @@ context:(void*)						aContext
 					[self close];
 				}
 			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
 		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 

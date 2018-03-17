@@ -170,6 +170,8 @@ The private class interface.
 	isBeingResizedByUser;
 	@property (assign) BOOL
 	layoutInProgress;
+	@property (strong) NSMutableArray*
+	registeredObservers;
 	@property (strong) NSTrackingArea*
 	trackBottomEdge;
 	@property (strong) NSTrackingArea*
@@ -202,6 +204,9 @@ The private class interface.
 
 #pragma mark -
 @implementation Popover_Window //{
+
+
+#pragma mark Properties
 
 
 /*!
@@ -306,6 +311,11 @@ to contain the entire rendering of the popover window frame
 @synthesize popoverBackgroundColor = _popoverBackgroundColor;
 
 /*!
+Stores information on key-value observers.
+*/
+@synthesize registeredObservers = _registeredObservers;
+
+/*!
 If set, this object can be queried to guide resize behavior
 (such as to decide that only one axis allows resizing).
 */
@@ -361,7 +371,6 @@ This is the basis for the "arrowPlacement" and "windowPlacement"
 convenience methods.
 */
 @synthesize windowPropertyFlags = _windowPropertyFlags;
-
 
 
 #pragma mark Initializers
@@ -504,7 +513,7 @@ vibrancy:(BOOL)							aVisualEffectFlag
 			[self setOpaque:NO];
 			[self setHasShadow:YES];
 			
-			self->registeredObservers = [[NSMutableArray alloc] init];
+			self->_registeredObservers = [[NSMutableArray alloc] init];
 			self->popoverParentWindow = aWindow;
 			self->embeddedView = aView;
 			
@@ -543,27 +552,25 @@ vibrancy:(BOOL)							aVisualEffectFlag
 			[[self contentViewAsNSView] addSubview:self->embeddedView];
 			
 			// ensure that the display is updated after certain changes
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderOuterColor)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(borderPrimaryColor)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(resizeDelegate)] autorelease]];
-			[registeredObservers addObject:[[self newObserverFromSelector:@selector(windowPropertyFlags)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(borderOuterColor)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(borderPrimaryColor)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(resizeDelegate)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(windowPropertyFlags)] autorelease]];
 			
 			// ensure that frame-dependent property changes will cause the
 			// frame to be synchronized with the new values (note that the
 			// "setBorderWidth:" method already requires the border to fit
 			// within the margin so that value is not monitored here)
-			[registeredObservers addObject:[self newObserverFromSelector:@selector(arrowHeight)
-																			ofObject:self
-																			options:(NSKeyValueObservingOptionNew |
-																						NSKeyValueObservingOptionOld)
-																			context:nullptr]];
-			[registeredObservers addObject:[self newObserverFromSelector:@selector(viewMargin)
-																			ofObject:self
-																			options:(NSKeyValueObservingOptionNew |
-																						NSKeyValueObservingOptionOld)
-																			context:nullptr]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(arrowHeight)
+																				ofObject:self
+																				options:(NSKeyValueObservingOptionNew |
+																							NSKeyValueObservingOptionOld)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(viewMargin)
+																				ofObject:self
+																				options:(NSKeyValueObservingOptionNew |
+																							NSKeyValueObservingOptionOld)]];
 			
 			// subscribe to notifications
 			[self whenObject:self postsNote:NSWindowDidBecomeKeyNotification
@@ -684,8 +691,8 @@ dealloc
 	[_trackBottomEdge release];
 	
 	// remove observers registered by initializer
-	[self removeObserversSpecifiedInArray:registeredObservers];
-	[registeredObservers release];
+	[self removeObserversSpecifiedInArray:self.registeredObservers];
+	[_registeredObservers release];
 	
 	[super dealloc];
 }// dealloc
@@ -1198,9 +1205,13 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
-	//if (NO == self.disableObservers)
+	BOOL	handled = NO;
+	
+	
+	if ([self observerArray:self.registeredObservers containsContext:aContext])
 	{
+		handled = YES;
+		
 		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 		{
 			NSRect		newFrame = self.frame;
@@ -1305,7 +1316,16 @@ context:(void*)						aContext
 				// fix layout and update background
 				[self redisplay];
 			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
 		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 

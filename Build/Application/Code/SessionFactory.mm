@@ -3519,22 +3519,43 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
-	if (NO == self.disableObservers)
+	BOOL	handled = NO;
+	
+	
+	// WARNING: this is relying on the “probably unique” nature of the
+	// key paths being observed, and ignoring the possibility that the
+	// superclass may be observing the same thing in a different context
+	// (a strictly-correct approach is for the original registration call
+	// to set a unique context that would then be checked here)
+	//if ([self observerArray:self.registeredObservers containsContext:aContext])
 	{
-		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		handled = YES;
+		
+		if (NO == self.disableObservers)
 		{
-			if ([aKeyPath isEqualToString:@"formatFavorite.currentValueDescriptor"])
+			if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 			{
-				UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
-																			Quills::Prefs::FORMAT);
-			}
-			else if ([aKeyPath isEqualToString:@"terminalFavorite.currentValueDescriptor"])
-			{
-				UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
-																			Quills::Prefs::TERMINAL);
+				if ([aKeyPath isEqualToString:@"formatFavorite.currentValueDescriptor"])
+				{
+					UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
+																				Quills::Prefs::FORMAT);
+				}
+				else if ([aKeyPath isEqualToString:@"terminalFavorite.currentValueDescriptor"])
+				{
+					UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
+																				Quills::Prefs::TERMINAL);
+				}
+				else
+				{
+					Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+				}
 			}
 		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }// observeValueForKeyPath:ofObject:change:context:
 

@@ -141,6 +141,18 @@ the drawing routine has the option to add information.
 
 @end //}
 
+
+/*!
+Private properties.
+*/
+@interface AlertMessages_VC () //{
+
+// accessors
+	@property (strong) NSMutableArray*
+	registeredObservers;
+
+@end //}
+
 #pragma mark Variables
 namespace {
 
@@ -1302,6 +1314,17 @@ drawRect:(NSRect)	aRect
 @implementation AlertMessages_VC //{
 
 
+#pragma mark Internally-Declared Properties
+
+/*!
+Stores information on key-value observers.
+*/
+@synthesize registeredObservers = _registeredObservers;
+
+
+#pragma mark Externally-Declared Properties
+
+
 /*!
 The primary message of the window, displayed in normal-sized print.
 */
@@ -1318,6 +1341,9 @@ A succinct description of the type of message, displayed in the
 largest print by the window.
 */
 @synthesize titleText = _titleText;
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1358,8 +1384,8 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[self removeObserversSpecifiedInArray:registeredObservers];
-	[registeredObservers release];
+	[self removeObserversSpecifiedInArray:self.registeredObservers];
+	[_registeredObservers release];
 	
 	[_titleText release];
 	[_dialogText release];
@@ -1517,9 +1543,13 @@ ofObject:(id)						anObject
 change:(NSDictionary*)				aChangeDictionary
 context:(void*)						aContext
 {
-#pragma unused(anObject, aContext)
-	//if (NO == self.disableObservers)
+	BOOL	handled = NO;
+	
+	
+	if ([self observerArray:self.registeredObservers containsContext:aContext])
 	{
+		handled = YES;
+		
 		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 		{
 			// the "titleTextUI" view can support direct bindings
@@ -1532,7 +1562,16 @@ context:(void*)						aContext
 			{
 				helpTextUI.string = self.helpText;
 			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
 		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
 	}
 }
 
@@ -1581,7 +1620,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 initializeWithContext:(void*)			aContext
 {
 #pragma unused(aViewManager, aContext)
-	self->registeredObservers = [[NSMutableArray alloc] init];
+	self->_registeredObservers = [[NSMutableArray alloc] init];
 	self->_titleText = [[NSString alloc] initWithString:@""];
 	self->_dialogText = [[NSString alloc] initWithString:@""];
 	self->_helpText = [[NSString alloc] initWithString:@""];
@@ -1592,8 +1631,8 @@ initializeWithContext:(void*)			aContext
 	self.panelHasContextualHelp = NO;
 	
 	// ensure that the display is updated after certain changes
-	[registeredObservers addObject:[[self newObserverFromSelector:@selector(dialogText)] autorelease]];
-	[registeredObservers addObject:[[self newObserverFromSelector:@selector(helpText)] autorelease]];
+	[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(dialogText)] autorelease]];
+	[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(helpText)] autorelease]];
 }// panelViewManager:initializeWithContext:
 
 
