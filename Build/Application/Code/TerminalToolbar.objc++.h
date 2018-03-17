@@ -440,6 +440,59 @@ the object array of a TerminalToolbar_ItemTabs instance.
 
 
 /*!
+Base toolbar item for close/minimize/zoom buttons.
+*/
+@interface TerminalToolbar_ItemWindowButton : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive >
+{
+@private
+	CocoaExtensions_ObserverSpec*	_viewWindowObserver;
+	NSButton*						_button;
+}
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
+Toolbar item “Close”.
+*/
+@interface TerminalToolbar_ItemWindowButtonClose : TerminalToolbar_ItemWindowButton //{
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
+Toolbar item “Minimize”.
+*/
+@interface TerminalToolbar_ItemWindowButtonMinimize : TerminalToolbar_ItemWindowButton //{
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
+Toolbar item “Zoom”.
+*/
+@interface TerminalToolbar_ItemWindowButtonZoom : TerminalToolbar_ItemWindowButton //{
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSString*)_;
+
+@end //}
+
+
+/*!
 A subclass of NSTextField that allows the user to drag
 the window when it is clicked.  Also automatically
 adjusts font to fit better, and uses fading as part of
@@ -514,7 +567,6 @@ Toolbar item “Window Title”.
 @private
 	BOOL								_disableFrameMonitor;
 	TerminalToolbar_WindowTitleLabel*	_textView;
-	ListenerModel_StandardListener*		sessionChangeListener;
 }
 
 // initializers

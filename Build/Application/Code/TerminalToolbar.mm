@@ -50,6 +50,7 @@
 #import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
+#import "EventLoop.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
@@ -72,6 +73,9 @@ NSString*	kMy_ToolbarItemIDLED4						= @"net.macterm.MacTerm.toolbaritem.led4";
 NSString*	kMy_ToolbarItemIDPrint						= @"net.macterm.MacTerm.toolbaritem.print";
 NSString*	kMy_ToolbarItemIDSuspend					= @"net.macterm.MacTerm.toolbaritem.suspend";
 NSString*	kMy_ToolbarItemIDTabs						= @"net.macterm.MacTerm.toolbaritem.tabs";
+NSString*	kMy_ToolbarItemIDWindowButtonClose			= @"net.macterm.MacTerm.toolbaritem.windowbuttonclose";
+NSString*	kMy_ToolbarItemIDWindowButtonMinimize		= @"net.macterm.MacTerm.toolbaritem.windowbuttonminimize";
+NSString*	kMy_ToolbarItemIDWindowButtonZoom			= @"net.macterm.MacTerm.toolbaritem.windowbuttonzoom";
 NSString*	kMy_ToolbarItemIDWindowTitle				= @"net.macterm.MacTerm.toolbaritem.windowtitle";
 NSString*	kMy_ToolbarItemIDWindowTitleLeft			= @"net.macterm.MacTerm.toolbaritem.windowtitleleft";
 NSString*	kMy_ToolbarItemIDWindowTitleRight			= @"net.macterm.MacTerm.toolbaritem.windowtitleright";
@@ -192,6 +196,26 @@ The private class interface.
 // new methods
 	- (void)
 	setStateFromSession:(SessionRef)_;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_ItemWindowButton () //{
+
+// accessors
+	@property (strong) NSButton*
+	button;
+	@property (strong) CocoaExtensions_ObserverSpec*
+	viewWindowObserver;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemWindowButton (TerminalToolbar_ItemWindowButtonInternal) //{
 
 @end //}
 
@@ -598,10 +622,13 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	{
 		result = [[[TerminalToolbar_ItemForceQuit alloc] init] autorelease];
 	}
+#if 0
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDFullScreen])
 	{
+		// this is now redundant with the abilities of "TerminalToolbar_ItemWindowButtonZoom"
 		result = [[[TerminalToolbar_ItemFullScreen alloc] init] autorelease];
 	}
+#endif
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDHide])
 	{
 		result = [[[TerminalToolbar_ItemHide alloc] init] autorelease];
@@ -649,6 +676,18 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDTabs])
 	{
 		result = [[[TerminalToolbar_ItemTabs alloc] init] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonClose])
+	{
+		result = [[[TerminalToolbar_ItemWindowButtonClose alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonMinimize])
+	{
+		result = [[[TerminalToolbar_ItemWindowButtonMinimize alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonZoom])
+	{
+		result = [[[TerminalToolbar_ItemWindowButtonZoom alloc] initWithItemIdentifier:itemIdentifier] autorelease];
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitle])
 	{
@@ -721,11 +760,16 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kTerminalToolbar_ItemIDNewSessionDefaultFavorite,
 									kTerminalToolbar_ItemIDNewSessionLogInShell,
 									kTerminalToolbar_ItemIDNewSessionShell,
-									kTerminalToolbar_ItemIDStackWindows,
 									NSToolbarSpaceItemIdentifier,
 									NSToolbarFlexibleSpaceItemIdentifier,
-									kTerminalToolbar_ItemIDCustomize,
-									kMy_ToolbarItemIDFullScreen,
+									kMy_ToolbarItemIDWindowButtonClose,
+									kMy_ToolbarItemIDWindowButtonMinimize,
+									kMy_ToolbarItemIDWindowButtonZoom,
+									kMy_ToolbarItemIDLED1,
+									kMy_ToolbarItemIDLED2,
+									kMy_ToolbarItemIDLED3,
+									kMy_ToolbarItemIDLED4,
+									//kMy_ToolbarItemIDFullScreen, // now redundant with "kMy_ToolbarItemIDWindowButtonZoom"
 									kMy_ToolbarItemIDWindowTitleLeft,
 									kMy_ToolbarItemIDWindowTitle,
 									kMy_ToolbarItemIDWindowTitleRight,
@@ -734,10 +778,8 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kMy_ToolbarItemIDForceQuit,
 									kMy_ToolbarItemIDSuspend,
 									kMy_ToolbarItemIDBell,
-									kMy_ToolbarItemIDLED1,
-									kMy_ToolbarItemIDLED2,
-									kMy_ToolbarItemIDLED3,
-									kMy_ToolbarItemIDLED4,
+									kTerminalToolbar_ItemIDStackWindows,
+									kTerminalToolbar_ItemIDCustomize,
 								]];
 	
 	return result;
@@ -756,14 +798,18 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 #pragma unused(toolbar)
 	// this list should not contain any “experimental” items
 	return @[
-				NSToolbarFlexibleSpaceItemIdentifier,
+				kMy_ToolbarItemIDWindowButtonClose,
+				kMy_ToolbarItemIDWindowButtonMinimize,
+				kMy_ToolbarItemIDWindowButtonZoom,
+				NSToolbarSpaceItemIdentifier,
 				kMy_ToolbarItemIDHide,
 				kMy_ToolbarItemIDForceQuit,
 				kMy_ToolbarItemIDSuspend,
 				kMy_ToolbarItemIDWindowTitle,
 				kMy_ToolbarItemIDBell,
 				kMy_ToolbarItemIDPrint,
-				kMy_ToolbarItemIDFullScreen,
+				//kMy_ToolbarItemIDFullScreen, // now redundant with "kMy_ToolbarItemIDWindowButtonZoom"
+				NSToolbarSpaceItemIdentifier,
 				NSToolbarSpaceItemIdentifier,
 				NSToolbarSpaceItemIdentifier,
 				kTerminalToolbar_ItemIDCustomize,
@@ -2851,6 +2897,440 @@ copyWithZone:(NSZone*)	zone
 
 
 @end //} TerminalToolbar_ItemTabs
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowButton //{
+
+
+#pragma mark Internally-Declared Properties
+
+/*!
+Stores information on view "window" property observer.
+*/
+@synthesize viewWindowObserver = _viewWindowObserver;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self->_button = nil; // set later
+		self->_viewWindowObserver = nil; // initially...
+		
+		self.action = nil;
+		self.target = nil;
+		self.enabled = YES;
+		self.view = nil; // set in "setButton:"
+		self.label = @"";
+		self.paletteLabel = @""; // set in subclasses
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+/*!
+Destructor.
+
+(2018.03)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+	[self removeObserverSpecifiedWith:self.viewWindowObserver];
+	[_viewWindowObserver release];
+	[_button release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+The view that displays the window button.
+*/
+- (NSButton*)
+button
+{
+	return _button;
+}
+- (void)
+setButton:(NSButton*)	aWindowButton
+{
+	if (self.button != aWindowButton)
+	{
+		[_button autorelease];
+		_button = [aWindowButton retain];
+		self.view = self.button;
+		
+		[self removeObserverSpecifiedWith:self.viewWindowObserver];
+		_viewWindowObserver = [self newObserverFromSelector:@selector(window) ofObject:aWindowButton
+															options:(NSKeyValueChangeSetting)];
+	}
+}// setButton:
+
+
+#pragma mark Notifications
+
+
+/*!
+Fixes an apparent bug when activating windows by forcing
+the window button to redraw itself.
+
+(2018.03)
+*/
+- (void)
+windowDidBecomeMain:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	[self.view setNeedsDisplay:YES];
+}// windowDidBecomeMain:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id									result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowButton*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowButton.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowButton*);
+	
+	// views do not support NSCopying; archive instead
+	//asSelf->_button = [self->_button copy];
+	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_button];
+	asSelf->_button = [NSKeyedUnarchiver unarchiveObjectWithData:archivedView];
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to key values by updating dependent
+states such as the display.
+
+(2018.03)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+	BOOL	handled = NO;
+	
+	
+	if (aContext == self.viewWindowObserver)
+	{
+		handled = YES;
+		
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(window)))
+			{
+				id		oldValue = [aChangeDictionary objectForKey:NSKeyValueChangeOldKey];
+				id		newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
+				
+				
+				// remove any previous monitor
+				if (nil != oldValue)
+				{
+					assert([oldValue isKindOfClass:NSWindow.class]);
+					NSWindow*	asWindow = STATIC_CAST(oldValue, NSWindow*);
+					
+					
+					[self ignoreWhenObject:asWindow postsNote:NSWindowDidBecomeMainNotification];
+				}
+				
+				//NSLog(@"window changed: %@", aChangeDictionary); // debug	
+				if ((nil != newValue) && ([NSNull null] != newValue))
+				{
+					assert([newValue isKindOfClass:NSWindow.class]);
+					NSWindow*	asWindow = STATIC_CAST(newValue, NSWindow*);
+					Class		customFullScreenWindowClass = NSClassFromString(@"NSToolbarFullScreenWindow");
+					
+					
+					// only change the target of the button if it is moving
+					// into a window that is not the magic Full Screen window
+					// (WARNING: this is fragile, as it depends entirely on
+					// how Apple happens to implement this right now)
+					if (nil == customFullScreenWindowClass)
+					{
+						Console_Warning(Console_WriteLine, "runtime did not find full-screen window class; may need code update");
+					}
+					
+					if ((nil == customFullScreenWindowClass) || (NO == [asWindow isKindOfClass:customFullScreenWindowClass]))
+					{
+						self.button.target = asWindow;
+						
+						// start monitoring the window for activation; there is an apparent
+						// bug where switching to a window can sometimes not refresh the
+						// grayed-out appearance of the window buttons in toolbar items
+						if (nil != asWindow)
+						{
+							[self whenObject:asWindow postsNote:NSWindowDidBecomeMainNotification
+												performSelector:@selector(windowDidBecomeMain:)];
+						}
+					}
+				}
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
+		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
+	}
+}// observeValueForKeyPath:ofObject:change:context:
+
+
+#pragma mark TerminalToolbar_ItemAddRemoveSensitive
+
+
+/*!
+Called when the specified item has been added to the
+specified toolbar.
+
+(2018.03)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+willEnterToolbar:(NSToolbar*)	aToolbar
+{
+#pragma unused(aToolbar)
+	assert(self == anItem);
+	// nothing yet
+}// item:willEnterToolbar:
+
+
+/*!
+Called when the specified item has been removed from
+the specified toolbar.
+
+(2018.03)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+didExitToolbar:(NSToolbar*)		aToolbar
+{
+#pragma unused(aToolbar)
+	assert(self == anItem);
+	// nothing yet
+}// item:didExitToolbar:
+
+
+@end //} TerminalToolbar_ItemWindowButton
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowButton (TerminalToolbar_ItemWindowButtonInternal) //{
+
+
+@end //} TerminalToolbar_ItemWindowButton (TerminalToolbar_ItemWindowButtonInternal)
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowButtonClose //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self.button = [NSWindow standardWindowButton:NSWindowCloseButton
+														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
+																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
+		self.paletteLabel = NSLocalizedString(@"Close", @"toolbar item name; for closing the window");
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id										result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowButtonClose*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowButtonClose.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowButtonClose*);
+	// (nothing needed)
+	
+	return result;
+}// copyWithZone:
+
+
+@end //} TerminalToolbar_ItemWindowButtonClose
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowButtonMinimize //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self.button = [NSWindow standardWindowButton:NSWindowMiniaturizeButton
+														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
+																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
+		self.paletteLabel = NSLocalizedString(@"Minimize", @"toolbar item name; for minimizing the window");
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id											result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowButtonMinimize*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowButtonMinimize.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowButtonMinimize*);
+	// (nothing needed)
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+Validates the button (in this case, by disabling the button
+if the target window cannot be minimized right now).
+
+(2018.03)
+*/
+- (void)
+validate
+{
+	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performMinimizeSetup:) sender:NSApp];
+}// validate
+
+
+@end //} TerminalToolbar_ItemWindowButtonMinimize
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemWindowButtonZoom //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		self.button = [NSWindow standardWindowButton:NSWindowZoomButton
+														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
+																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
+		self.paletteLabel = NSLocalizedString(@"Zoom", @"toolbar item name; for zooming the window or controlling Full Screen");
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2018.03)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id										result = [super copyWithZone:zone];
+	TerminalToolbar_ItemWindowButtonZoom*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemWindowButtonZoom.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowButtonZoom*);
+	// (nothing needed)
+	
+	return result;
+}// copyWithZone:
+
+
+@end //} TerminalToolbar_ItemWindowButtonZoom
 
 
 #pragma mark -

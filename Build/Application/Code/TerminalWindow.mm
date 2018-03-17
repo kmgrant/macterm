@@ -9006,6 +9006,10 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 								performSelector:@selector(toolbarDidChangeVisibility:)];
 		}
 		
+		// since the toolbar provides more power over window buttons,
+		// remove the standard buttons from the window
+		[self setWindowButtonsHidden:YES];
+		
 		// "canDrawConcurrently" is YES for terminal background views
 		// so enable concurrent view drawing at the window level
 		[self.window setAllowsConcurrentViewDrawing:YES];
@@ -9136,6 +9140,30 @@ setTitleVisibility:(NSInteger)		aVisibilityEnum
 }// setTitleVisibility:
 
 
+/*!
+Hides the normal window buttons for close/minimize/zoom,
+expecting the buttons to be in the toolbar or unavailable
+(due to user customization of the toolbar).
+
+(2018.03)
+*/
+- (void)
+setWindowButtonsHidden:(BOOL)	aHiddenFlag
+{
+	// removing the buttons entirely with "removeFromSuperview" seemed to work
+	// initially but there are situations that will bring the buttons back (such
+	// as opening a toolbar customization sheet, oddly enough); therefore,
+	// instead, the original buttons are simply marked as hidden
+	[self.window standardWindowButton:NSWindowCloseButton].hidden = aHiddenFlag;
+	[self.window standardWindowButton:NSWindowMiniaturizeButton].hidden = aHiddenFlag;
+	[self.window standardWindowButton:NSWindowZoomButton].hidden = aHiddenFlag;
+	
+	// the toolbar seems to reserve space for the window buttons even if they
+	// are not present; attempt to remove this space
+	// UNIMPLEMENTED
+}// setWindowButtonsHidden:
+
+
 #pragma mark Notifications
 
 
@@ -9152,9 +9180,11 @@ toolbarDidChangeVisibility:(NSNotification*)	aNotification
 	if (self.window.toolbar.isVisible)
 	{
 		[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
+		[self setWindowButtonsHidden:YES];
 	}
 	else
 	{
+		[self setWindowButtonsHidden:NO];
 		[self setTitleVisibility:FUTURE_SYMBOL(0, NSWindowTitleVisible)];
 	}
 }// toolbarDidChangeVisibility

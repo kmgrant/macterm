@@ -200,6 +200,8 @@ changes to an interface declared in a ".mm" file.
 	enumerateTerminalViewControllers;
 	- (void)
 	setTitleVisibility:(NSInteger)_;
+	- (void)
+	setWindowButtonsHidden:(BOOL)_;
 
 @end //}
 
