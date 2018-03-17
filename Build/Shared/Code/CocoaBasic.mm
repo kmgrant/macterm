@@ -49,14 +49,6 @@
 
 typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-NSString*	findFolder			(short, OSType);
-NSString*	returnPathForFSRef	(FSRef const&);
-
-} // anonymous namespace
-
 #pragma mark Variables
 namespace {
 
@@ -108,7 +100,7 @@ CocoaBasic_CreateFileAndDirectoriesWithData		(CFURLRef		inDirectoryURL,
 {
 	NSURL*				asNSURL = BRIDGE_CAST(inDirectoryURL, NSURL*);
 	assert([asNSURL isFileURL]);
-	NSString*			dirctoryPath = [asNSURL path];
+	NSString*			directoryPath = [asNSURL path];
 	NSURL*				fullURL = [asNSURL URLByAppendingPathComponent:BRIDGE_CAST(inFileName, NSString*)];
 	assert([fullURL isFileURL]);
 	NSString*			absoluteFilePath = [fullURL path];
@@ -118,7 +110,7 @@ CocoaBasic_CreateFileAndDirectoriesWithData		(CFURLRef		inDirectoryURL,
 	
 	
 	// create all parent directories
-	result = [fileManager createDirectoryAtPath:dirctoryPath withIntermediateDirectories:YES
+	result = [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:YES
 												attributes:nil error:&error];
 	if (NO == result)
 	{
@@ -512,10 +504,13 @@ CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding	inEncoding)
 
 
 /*!
-Returns an unsorted list of names (without extensions) that are
+Returns a sorted list of names (without extensions) that are
 valid sounds to pass to CocoaBasic_PlaySoundByName().  This is
 useful for displaying a set of choices, such as a menu, to the
 user.
+
+Names are sorted within each section, e.g. sounds found in the
+user’s Home directory or sounds found system-wide.
 
 The list may also contain strings consisting of single dashes
 ("-"), which should not be treated as sound names; they can be
@@ -526,51 +521,60 @@ used to place dividing lines.
 CFArrayRef
 CocoaBasic_ReturnUserSoundNames ()
 {
-	NSArray* const			kSearchPaths = @[
-												findFolder(kUserDomain, kSystemSoundsFolderType),
-												findFolder(kLocalDomain, kSystemSoundsFolderType),
-												findFolder(kSystemDomain, kSystemSoundsFolderType),
-											];
 	NSFileManager* const	kFileManager = [NSFileManager defaultManager];
-	BOOL					isDirectory = NO;
+	NSArray* const			libraryURLArray = [kFileManager
+												URLsForDirectory:NSLibraryDirectory
+																	inDomains:(NSUserDomainMask |
+																				NSLocalDomainMask |
+																				NSSystemDomainMask)];
 	NSMutableArray*			result = [NSMutableArray array];
 	
 	
-	for (NSString* soundDirectory in kSearchPaths)
+	for (NSURL* libraryDirectoryURL in libraryURLArray)
 	{
-		if ([kFileManager fileExistsAtPath:soundDirectory isDirectory:&isDirectory])
+		NSError*	error = nil;
+		NSString*	soundsName = NSLocalizedStringFromTable(@"Sounds", @"FileSystem", @"the name of the directory for sound files in ~/Library, /Library or /System/Library");
+		NSURL*		soundDirectoryURL = [libraryDirectoryURL URLByAppendingPathComponent:soundsName];
+		NSArray*	soundFileURLs = [kFileManager
+										contentsOfDirectoryAtURL:soundDirectoryURL
+																	includingPropertiesForKeys:@[NSURLNameKey]
+																	options:(NSDirectoryEnumerationSkipsHiddenFiles)
+																	error:&error];
+		
+		
+		if ((nil == soundFileURLs) && (nil != error))
 		{
-			if (isDirectory)
+			// enable logs for debugging; basically not all directories
+			// will exist (e.g. /Library/Sounds may not) so these are
+			// not necessarily errors
+		#if 0
+			Console_Warning(Console_WriteValueCFString, "failed to iterate over sounds, directory",
+							BRIDGE_CAST(soundDirectoryURL.path, CFStringRef));
+			Console_Warning(Console_WriteValueCFString, "directory listing error",
+							BRIDGE_CAST([error localizedDescription], CFStringRef));
+		#endif
+		}
+		else if (soundFileURLs.count > 0)
+		{
+			NSSortDescriptor*	sortByPath = [NSSortDescriptor sortDescriptorWithKey:@"path" ascending:YES];
+			NSArray*			descriptorArray = ((nil != sortByPath)
+													? @[sortByPath]
+													: @[]);
+			
+			
+			if (result.count > 0)
 			{
-				NSError*	error = nil;
-				NSArray*	soundFiles = [kFileManager contentsOfDirectoryAtPath:soundDirectory
-																					error:&error];
+				[result addObject:@"-"]; // suggest a separator in between sound source directories
+			}
+			
+			for (NSURL* soundURL in [soundFileURLs sortedArrayUsingDescriptors:descriptorArray])
+			{
+				NSString*	soundName = [soundURL.path lastPathComponent];
 				
 				
-				if ((nil == soundFiles) && (nil != error))
+				if (nil != [NSSound soundNamed:soundName])
 				{
-					Console_Warning(Console_WriteValueCFString, "failed to iterate over sounds, directory",
-									BRIDGE_CAST(soundDirectory, CFStringRef));
-					Console_Warning(Console_WriteValueCFString, "directory listing error",
-									BRIDGE_CAST([error localizedDescription], CFStringRef));
-				}
-				else if (soundFiles.count > 0)
-				{
-					if (result.count > 0)
-					{
-						[result addObject:@"-"]; // suggest a separator in between sound source directories
-					}
-					
-					for (NSString* soundFile in soundFiles)
-					{
-						NSString*	soundName = [soundFile stringByDeletingPathExtension];
-						
-						
-						if (nil != [NSSound soundNamed:soundName])
-						{
-							[result addObject:soundName];
-						}
-					}
+					[result addObject:[soundName stringByDeletingPathExtension]];
 				}
 			}
 		}
@@ -673,66 +677,5 @@ CocoaBasic_StopSpeaking ()
 	[gDefaultSynth stopSpeaking];
 }// @autoreleasepool
 }// StopSpeaking
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-Returns the path of the specified folder.  The domain is
-one that is valid for FSFindFolder, e.g. kUserDomain or
-kSystemDomain or a volume.
-
-The result is always defined, which is convenient for
-such things as initializing arrays.  Though it may be an
-empty string (if there was a problem) or a path to a
-folder that does not exist yet.
-
-(1.0)
-*/
-NSString*
-findFolder	(short		inDomain,
-			 OSType		inType)
-{
-	OSStatus	error = noErr;
-	FSRef		fileOrFolder;
-	NSString*	result = nil;
-	
-	
-	error = FSFindFolder(inDomain, inType, kDontCreateFolder, &fileOrFolder);
-	if (noErr == error)
-	{
-		result = returnPathForFSRef(fileOrFolder);
-	}
-	if (nil == result) result = [NSString string];
-	return result;
-}// findFolder
-
-
-/*!
-Converts a Carbon-style FSRef for an existing file or folder
-into a path as required by Cocoa routines.
-
-(1.0)
-*/
-NSString*
-returnPathForFSRef	(FSRef const&	inFileOrFolder)
-{
-	NSString*			result = nil;
-	CFRetainRelease		urlRef(CFURLCreateFromFSRef(kCFAllocatorDefault, &inFileOrFolder),
-								CFRetainRelease::kAlreadyRetained);
-	
-	
-	if (urlRef.exists())
-	{
-		NSURL*		urlObject = BRIDGE_CAST(urlRef.returnCFTypeRef(), NSURL*);
-		
-		
-		result = [urlObject path];
-	}
-	return result;
-}// returnPathForFSRef
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

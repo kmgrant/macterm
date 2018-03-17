@@ -50,23 +50,7 @@
 typedef UInt16 Folder_Ref;
 enum
 {
-	// folders defined by the application
-	kFolder_RefApplicationSupport = 1,			// the application’s folder in the Application Support folder
-	
-	kFolder_RefPreferences = 3,					// legacy folder for auxiliary files in the preferences
-												//   folder of the user currently logged in
-	
-	kFolder_RefScriptsMenuItems = 4,			// legacy “Scripts Menu Items” folder
-	
-	kFolder_RefUserLogs = 6,					// where the debugging log goes, or any other log
-	
 	// folders defined by Mac OS X
-	kFolder_RefMacApplicationSupport = 9,		// the Application Support folder
-	
-	kFolder_RefMacLibrary = 13,					// the Library folder for the user currently logged in
-	
-	kFolder_RefMacPreferences = 14,				// the Preferences folder for the user currently logged in
-	
 	kFolder_RefMacTemporaryItems = 15,			// the (invisible) Temporary Items folder
 };
 

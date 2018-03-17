@@ -797,24 +797,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			SessionDescription_Load();
 			break;
 		
-		case kCommandOpenScriptMenuItemsFolder:
-			{
-				FSRef		folderRef;
-				OSStatus	error = noErr;
-				
-				
-				error = Folder_GetFSRef(kFolder_RefScriptsMenuItems, folderRef);
-				if (noErr == error)
-				{
-					error = LSOpenFSRef(&folderRef, nullptr/* launched item */);
-				}
-				if (noErr != error)
-				{
-					Sound_StandardAlert();
-				}
-			}
-			break;
-		
 		case kCommandCloseConnection:
 			// automatically handled by the OS
 			break;

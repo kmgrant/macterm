@@ -40,9 +40,6 @@
 // library includes
 #include <Localization.h>
 
-// application includes
-#include "UIStrings.h"
-
 
 
 #pragma mark Public Methods
@@ -75,92 +72,6 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 	
 	switch (inFolderType)
 	{
-	case kFolder_RefApplicationSupport: // the “MacTerm” folder inside the Application Support folder
-		result = Folder_GetFSRef(kFolder_RefMacApplicationSupport, parentFolderRef);
-		if (noErr == result)
-		{
-			CFStringRef		supportFolderNameCFString = nullptr;
-			
-			
-			Localization_GetCurrentApplicationNameAsCFString(&supportFolderNameCFString);
-			if (nullptr != supportFolderNameCFString)
-			{
-				UniCharCount const	kBufferSize = CFStringGetLength(supportFolderNameCFString);
-				UniChar*			buffer = new UniChar[kBufferSize];
-				UInt32				unusedDirID = 0L;
-				
-				
-				CFStringGetCharacters(supportFolderNameCFString, CFRangeMake(0, kBufferSize), buffer);
-				
-				// if no MacTerm folder exists in the Application Support folder, create it
-				result = FSMakeFSRefUnicode(&parentFolderRef, kBufferSize, buffer,
-											CFStringGetSmallestEncoding(supportFolderNameCFString),
-											&outFolderFSRef);
-				if (noErr != result)
-				{
-					result = FSCreateDirectoryUnicode(&parentFolderRef, kBufferSize, buffer,
-														kFSCatInfoNone, nullptr/* info to set */,
-														&outFolderFSRef, nullptr/* old-style specification record */,
-														&unusedDirID);
-				}
-				
-				delete [] buffer, buffer = nullptr;
-				CFRelease(supportFolderNameCFString), supportFolderNameCFString = nullptr;
-			}
-		}
-		break;
-	
-	case kFolder_RefPreferences: // the legacy application preferences folder inside the system “Preferences” folder
-		result = Folder_GetFSRef(kFolder_RefMacPreferences, parentFolderRef);
-		if (noErr == result)
-		{
-			UInt32		unusedDirID = 0L;
-			
-			
-			// if no folder exists in the current user’s Preferences folder, create it
-			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameApplicationPreferences,
-														outFolderFSRef, &unusedDirID);
-		}
-		break;
-	
-	case kFolder_RefScriptsMenuItems: // the legacy “Scripts Menu Items” folder, in the application’s preferences folder
-		result = Folder_GetFSRef(kFolder_RefPreferences, parentFolderRef);
-		if (noErr == result)
-		{
-			UInt32		unusedDirID = 0L;
-			
-			
-			// if no Scripts Menu Items folder exists in the current user’s Preferences folder, create it
-			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameApplicationScriptsMenuItems,
-														outFolderFSRef, &unusedDirID);
-		}
-		break;
-	
-	case kFolder_RefUserLogs: // the “Logs” folder inside the user’s home directory
-		result = Folder_GetFSRef(kFolder_RefMacLibrary, parentFolderRef);
-		if (noErr == result)
-		{
-			UInt32		unusedDirID = 0L;
-			
-			
-			// if no Logs folder exists in the Library folder, create it
-			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameHomeLibraryLogs,
-														outFolderFSRef, &unusedDirID);
-		}
-		break;
-	
-	case kFolder_RefMacApplicationSupport: // the Mac OS “Application Support” folder for the current user
-		result = FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &outFolderFSRef);
-		break;
-	
-	case kFolder_RefMacLibrary: // the Mac OS “Library” folder for the current user
-		result = FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &outFolderFSRef);
-		break;
-	
-	case kFolder_RefMacPreferences: // the Mac OS “Preferences” folder for the current user
-		result = FSFindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder, &outFolderFSRef);
-		break;
-	
 	case kFolder_RefMacTemporaryItems: // the invisible Mac OS “Temporary Items” folder
 		result = FSFindFolder(kUserDomain, kTemporaryFolderType, kCreateFolder, &outFolderFSRef);
 		break;

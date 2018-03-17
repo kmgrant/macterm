@@ -480,7 +480,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetScrollbackUnitsKilobytes		'SbUK'		// multiple interfaces
 #define kCommandRetrySearch						'RFnd'		// “Find” dialog
 #define kCommandResetANSIColors					'ANSD'		// “Preferences” window
-#define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window
 #define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
 #define kCommandEditResumeKey					'SRKy'		// multiple interfaces
 #define kCommandEditSuspendKey					'SSKy'		// multiple interfaces

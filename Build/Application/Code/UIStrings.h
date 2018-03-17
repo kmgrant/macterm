@@ -500,21 +500,6 @@ UIStrings_Result
 	UIStrings_Copy						(UIStrings_UndoCFString							inWhichString,
 										 CFStringRef&									outString);
 
-// CALLS FSCreateFileUnicode() or FSCreateDirectoryUnicode()
-OSStatus
-	UIStrings_CreateFileOrDirectory		(FSRef const&									inParentRef,
-										 UIStrings_FileOrFolderCFString					inWhichString,
-										 FSRef&											outFSRef,
-										 UInt32*										outNewDirIDOrNullForFile = nullptr,
-										 FSCatalogInfoBitmap							inWhichInfo = kFSCatInfoNone,
-										 FSCatalogInfo const*							inInfoOrNull = nullptr);
-
-// CALLS FSMakeFSRefUnicode()
-OSStatus
-	UIStrings_MakeFSRef					(FSRef const&									inParentRef,
-										 UIStrings_FileOrFolderCFString					inWhichString,
-										 FSRef&											outFSRef);
-
 /*!
 Invokes any UIStrings_Copy() method above but returns nullptr
 for any error (otherwise returning a new string).
