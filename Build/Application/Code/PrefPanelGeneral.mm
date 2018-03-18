@@ -799,12 +799,16 @@ setSoundNameIndexes:(NSIndexSet*)	indexes
 		[soundNameIndexes release];
 		soundNameIndexes = [indexes retain];
 		
-		// save the new preference
+		// once the UI is loaded, start auto-saving the new preference
+		// (do not do this earlier, as binding setup should not overwrite
+		// previous saves with arbitrary initial values)
+		if ((self.isPanelUserInterfaceLoaded) && ([indexes count] > 0))
 		{
 			BOOL		writeOK = NO;
 			NSString*	savedName = [info preferenceString];
 			
 			
+			//Console_Warning(Console_WriteValueCFString, "write bell-sound preference", BRIDGE_CAST(savedName, CFStringRef)); // debug
 			if (nil != savedName)
 			{
 				writeOK = [self writeBellSoundName:savedName];
@@ -816,7 +820,7 @@ setSoundNameIndexes:(NSIndexSet*)	indexes
 			
 			if (NO == writeOK)
 			{
-				Console_Warning(Console_WriteLine, "failed to save bell-sound preference");
+				Console_Warning(Console_WriteValueCFString, "failed to save bell-sound preference", BRIDGE_CAST(savedName, CFStringRef));
 			}
 		}
 		
@@ -847,52 +851,16 @@ initializeWithContext:(void*)			aContext
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	// set up the array of bell sounds
-	{
-		NSArray*		soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
-		NSString*		savedName = [self readBellSoundNameWithDefaultValue:@""];
-		unsigned int	currentIndex = 0;
-		unsigned int	initialIndex = 0;
-		
-		
-		[self willChangeValueForKey:@"soundNames"];
-		self->soundNames = [[NSMutableArray alloc] initWithCapacity:[soundNamesOnly count]];
-		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
-		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
-		{
-			initialIndex = currentIndex;
-		}
-		++currentIndex;
-		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsDefault] autorelease]];
-		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
-		{
-			initialIndex = currentIndex;
-		}
-		++currentIndex;
-		if (soundNamesOnly.count > 0)
-		{
-			// the dash "-" is translated into a separator by the menu delegate
-			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
-												initWithDescription:@"-"]
-											autorelease]];
-		}
-		for (NSString* soundName in soundNamesOnly)
-		{
-			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
-												initWithDescription:soundName]
-											autorelease]];
-			if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
-			{
-				initialIndex = currentIndex;
-			}
-			++currentIndex;
-		}
-		[self didChangeValueForKey:@"soundNames"];
-		
-		[self willChangeValueForKey:@"soundNameIndexes"];
-		self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:initialIndex] retain];
-		[self didChangeValueForKey:@"soundNameIndexes"];
-	}
+	// set up the array of bell sounds with a dummy list
+	// so that default bindings work (these are corrected
+	// after the load completes)
+	[self willChangeValueForKey:@"soundNames"];
+	[self willChangeValueForKey:@"soundNameIndexes"];
+	self->soundNames = [[NSMutableArray alloc] init];
+	[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
+	self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:0] retain];
+	[self didChangeValueForKey:@"soundNameIndexes"];
+	[self didChangeValueForKey:@"soundNames"];
 }// panelViewManager:initializeWithContext:
 
 
@@ -921,6 +889,58 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
+	// once the view is loaded (post-auto-bindings), the index
+	// values can be set from preferences; if this is done any
+	// sooner, values read from preferences can be overwritten
+	// by whatever arbitrary index is set by Cocoa bindings
+	{
+		NSArray*		soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
+		NSString*		savedName = [self readBellSoundNameWithDefaultValue:@""];
+		unsigned int	currentIndex = 0;
+		unsigned int	initialIndex = 0;
+		
+		
+		[self willChangeValueForKey:@"soundNames"];
+		[self->soundNames removeAllObjects]; // erase dummy initial values
+		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
+		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
+		{
+			initialIndex = currentIndex;
+		}
+		++currentIndex;
+		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsDefault] autorelease]];
+		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
+		{
+			initialIndex = currentIndex;
+		}
+		++currentIndex;
+		if (soundNamesOnly.count > 0)
+		{
+			// the dash "-" is translated into a separator by the menu delegate
+			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
+												initWithDescription:@"-"]
+											autorelease]];
+			++currentIndex;
+		}
+		for (NSString* soundName in soundNamesOnly)
+		{
+			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
+												initWithDescription:soundName]
+											autorelease]];
+			if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
+			{
+				initialIndex = currentIndex;
+			}
+			++currentIndex;
+		}
+		[self willChangeValueForKey:@"soundNameIndexes"];
+		self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:initialIndex] retain];
+		[self didChangeValueForKey:@"soundNameIndexes"];
+		// note: the system appears to observe "soundNames" (refreshing the
+		// array controller with a dependency on "soundNameIndexes") so this
+		// call must come last, after the desired index value is in place
+		[self didChangeValueForKey:@"soundNames"];
+	}
 }// panelViewManager:didLoadContainerView:
 
 

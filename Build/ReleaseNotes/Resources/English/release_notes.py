@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180317',
     '20180301',
     '20180212',
     '20180105',
@@ -593,6 +594,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180317': [
+        'Fixed Preferences window General pane Notifications tab to correctly display the last saved bell setting instead of accidentally overwriting it with a default value.',
+    ],
     '20180301': [
         'Fixed window stacking to match top-left corner specified in Preferences instead of being slightly offset from it.',
     ],
