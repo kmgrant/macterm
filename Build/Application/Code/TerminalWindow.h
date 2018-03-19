@@ -351,6 +351,12 @@ void
 													 CFStringRef				inFontFamilyNameOrNull,
 													 Float32					inFontSizeOrZero);
 
+Boolean
+	TerminalWindow_SetFontRelativeSize				(TerminalWindowRef			inRef,
+													 Float32					inDeltaFontSize,
+													 Float32					inAbsoluteLimitOrZero = 0,
+													 Boolean					inAllowUndo = true);
+
 void
 	TerminalWindow_SetObscured						(TerminalWindowRef			inRef,
 													 Boolean					inIsHidden);

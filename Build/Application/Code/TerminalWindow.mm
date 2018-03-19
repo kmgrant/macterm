@@ -2025,6 +2025,66 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 
 
 /*!
+Makes the text slightly bigger or smaller than it is
+currently.  Note that in this initial implementation,
+floating-point values are converted to integers (later
+they will be able to offer more fine-grained control).
+
+If "inAbsoluteLimit" is nonzero, it is used to prevent
+the given adjustment if it goes too far.  Use a small
+number when "inDeltaFontSize" is negative and a larger
+number when "inDeltaFontSize" is positive.
+
+Returns true only if the change occurred.  If the
+change occurs and "inAllowUndo" is true, an action is
+added so that the user can Undo the size change later.
+
+(2018.03)
+*/
+Boolean
+TerminalWindow_SetFontRelativeSize	(TerminalWindowRef		inRef,
+									 Float32				inDeltaFontSize,
+									 Float32				inAbsoluteLimitOrZero,
+									 Boolean				inAllowUndo)
+{
+	Float32		proposedSize = 0;
+	UInt16		fontSize = 0; // NOTE: for Carbon legacy; convert to floating-point later
+	Boolean		preventChange = false;
+	Boolean		result = false;
+	
+	
+	TerminalWindow_GetFontAndSize(inRef, nullptr/* font */, &fontSize);
+	proposedSize = (fontSize + inDeltaFontSize);
+	if (0 != inAbsoluteLimitOrZero)
+	{
+		if (inDeltaFontSize > 0)
+		{
+			preventChange = (fontSize >= inAbsoluteLimitOrZero);
+		}
+		else
+		{
+			preventChange = (fontSize <= inAbsoluteLimitOrZero);
+		}
+	}
+	
+	if (false == preventChange)
+	{
+		result = true;
+		
+		if (inAllowUndo)
+		{
+			installUndoFontSizeChanges(inRef, false/* undo font */, true/* undo font size */);
+		}
+		
+		// set the window size to fit the new font size optimally
+		TerminalWindow_SetFontAndSize(inRef, nullptr/* font */, STATIC_CAST(proposedSize, UInt16));
+	}
+	
+	return result;
+}// SetFontRelativeSize
+
+
+/*!
 Temporary, controlled by the Session in response to changes
 in user preferences.  Updates all Carbon and Cocoa windows
 appropriately to let the user enter or exit Full Screen with
@@ -5014,20 +5074,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandBiggerText:
 				case kCommandSmallerText:
 					{
-						UInt16		fontSize = 0;
-						
-						
-						// determine the new font size
-						TerminalWindow_GetFontAndSize(terminalWindow, nullptr/* font */, &fontSize);
-						if (kCommandBiggerText == received.commandID) ++fontSize;
-						else if (kCommandSmallerText == received.commandID)
+						if (kCommandBiggerText == received.commandID)
 						{
-							if (fontSize > 4/* arbitrary */) --fontSize;
+							UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(terminalWindow, +1, 0/* absolute limit */, true/* allow Undo */);
 						}
-						
-						// set the window size to fit the new font size optimally
-						installUndoFontSizeChanges(terminalWindow, false/* undo font */, true/* undo font size */);
-						TerminalWindow_SetFontAndSize(terminalWindow, nullptr/* font */, fontSize);
+						else
+						{
+							UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(terminalWindow, -1, 4/* absolute limit */, true/* allow Undo */);
+						}
 						
 						result = noErr;
 					}
@@ -9050,7 +9104,7 @@ handling searches automatically.
 performFind:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindow_DisplayTextSearchDialog([self.window terminalWindowRef]);
+	TerminalWindow_DisplayTextSearchDialog(self.terminalWindowRef);
 }// performFind:
 
 
@@ -9064,8 +9118,34 @@ such as the font and color settings.
 performFormatCustom:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindow_DisplayCustomFormatUI([self.window terminalWindowRef]);
+	TerminalWindow_DisplayCustomFormatUI(self.terminalWindowRef);
 }// performFormatCustom:
+
+
+/*!
+Increases the font size of the terminal views in the main window.
+
+(2018.03)
+*/
+- (IBAction)
+performFormatTextBigger:(id)	sender
+{
+#pragma unused(sender)
+	UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(self.terminalWindowRef, +1, 0/* absolute limit */, true/* allow Undo */);
+}// performFormatTextBigger:
+
+
+/*!
+Decreases the font size of the terminal views in the main window.
+
+(2018.03)
+*/
+- (IBAction)
+performFormatTextSmaller:(id)	sender
+{
+#pragma unused(sender)
+	UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(self.terminalWindowRef, -1, 4/* absolute limit */, true/* allow Undo */);
+}// performFormatTextSmaller:
 
 
 /*!
@@ -9078,7 +9158,7 @@ screen dimensions and scrollback settings.
 performScreenResizeCustom:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindow_DisplayCustomScreenSizeUI([self.window terminalWindowRef]);
+	TerminalWindow_DisplayCustomScreenSizeUI(self.terminalWindowRef);
 }// performScreenResizeCustom:
 
 
@@ -9092,7 +9172,7 @@ encoding.
 performTranslationSwitchCustom:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindow_DisplayCustomTranslationUI([self.window terminalWindowRef]);
+	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
 }// performTranslationSwitchCustom:
 
 

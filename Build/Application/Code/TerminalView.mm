@@ -9359,7 +9359,7 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 														: nil;
 						
 						
-						Console_Warning(Console_WriteLine, "set-alpha not implemented for Cocoa window tab");
+						// NOTE: tab state is implicit for Cocoa windows
 						kWindow.alphaValue = alpha;
 					}
 				});
@@ -12621,7 +12621,12 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	if (inTerminalViewPtr->isCocoa())
 	{
 		NSFontManager*		fontManager = [NSFontManager sharedFontManager];
+		NSString*			sourceFontName = ((nullptr == inFontFamilyNameOrNull)
+												? inTerminalViewPtr->text.font.normalFont.fontName
+												: BRIDGE_CAST(inFontFamilyNameOrNull, NSString*));
 		
+		
+		[[sourceFontName retain] autorelease];
 		
 		// release any previous fonts
 		if (nil != inTerminalViewPtr->text.font.normalFont)
@@ -12634,8 +12639,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		}
 		
 		// find a font for most text
-		inTerminalViewPtr->text.font.normalFont =
-			[NSFont fontWithName:BRIDGE_CAST(inFontFamilyNameOrNull, NSString*) size:inFontSizeOrZero];
+		inTerminalViewPtr->text.font.normalFont = [NSFont fontWithName:sourceFontName size:inFontSizeOrZero];
 		[inTerminalViewPtr->text.font.normalFont retain];
 		
 		// find a font for boldface text
