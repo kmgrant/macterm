@@ -47,23 +47,23 @@
 
 #pragma mark Constants
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1060 /* MAC_OS_X_VERSION_10_6 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1060 /* MAC_OS_X_VERSION_10_6 */
 #	define NSAppKitVersionNumber10_6 1038
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1070 /* MAC_OS_X_VERSION_10_7 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1070 /* MAC_OS_X_VERSION_10_7 */
 #	define NSAppKitVersionNumber10_7 1138
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1080 /* MAC_OS_X_VERSION_10_8 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1080 /* MAC_OS_X_VERSION_10_8 */
 #	define NSAppKitVersionNumber10_8 1187
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 1090 /* MAC_OS_X_VERSION_10_9 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090 /* MAC_OS_X_VERSION_10_9 */
 #	define NSAppKitVersionNumber10_9 1265
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 101000 /* MAC_OS_X_VERSION_10_10 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 101000 /* MAC_OS_X_VERSION_10_10 */
 #	define NSAppKitVersionNumber10_10 1343
 #	ifndef NS_DESIGNATED_INITIALIZER
 //		NS_DESIGNATED_INITIALIZER was only added in the 10.10 SDK
@@ -78,11 +78,11 @@
 // does this, it should define some new designated initializer
 #define DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 101100 /* MAC_OS_X_VERSION_10_11 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 101100 /* MAC_OS_X_VERSION_10_11 */
 #	define NSAppKitVersionNumber10_11 1404
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= 101200 /* MAC_OS_X_VERSION_10_12 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 101200 /* MAC_OS_X_VERSION_10_12 */
 #	define NSAppKitVersionNumber10_12 1504
 #endif
 
@@ -90,7 +90,7 @@
 
 #pragma mark Types
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070 /* MAC_OS_X_VERSION_10_7 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070 /* MAC_OS_X_VERSION_10_7 */
 
 // Things that are implemented ONLY on OS 10.7 and beyond.
 // These declarations should match the latest SDK.
@@ -158,7 +158,7 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 #endif // MAC_OS_X_VERSION_10_7
 
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080 /* MAC_OS_X_VERSION_10_8 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080 /* MAC_OS_X_VERSION_10_8 */
 
 // Things that are implemented ONLY on OS 10.8 and beyond.
 // These declarations should match the latest SDK.
@@ -201,7 +201,40 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 #endif
 
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101200 /* MAC_OS_X_VERSION_10_12 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000 /* MAC_OS_X_VERSION_10_10 */
+
+enum
+{
+	NSWindowTitleVisible	= 0,
+	NSWindowTitleHidden		= 1
+};
+typedef int/*NSInteger*/	NSWindowTitleVisibility;
+
+// Things that are implemented ONLY on OS 10.10 and beyond.
+// These declarations should match the latest SDK.
+//
+// WARNING:	You MUST use "respondsToSelector:" or an equivalent
+//			mechanism to guard against use of these methods on
+//			older OSes.  The advantage of importing this file
+//			is that you can directly invoke the target method
+//			(in an if-statement, say) without seeing compiler
+//			warnings.  Note that "performSelector:" is also an
+//			option, but that is much more cumbersome for APIs
+//			that take or return non-objects.
+
+@interface NSWindow (NSWindowExtensionsFromYosemite) //{
+
+// new methods
+	- (void)
+	setTitleVisibility:(NSWindowTitleVisibility)_;
+
+@end //}
+
+
+#endif // MAC_OS_X_VERSION_10_10
+
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200 /* MAC_OS_X_VERSION_10_12 */
 
 // Things that are implemented ONLY on OS 10.12 and beyond.
 // These declarations should match the latest SDK.
@@ -232,7 +265,7 @@ typedef int/*NSInteger*/	NSScrollerStyle;
 #endif // MAC_OS_X_VERSION_10_12
 
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101201 /* MAC_OS_X_VERSION_10_12_1 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101201 /* MAC_OS_X_VERSION_10_12_1 */
 
 // Things that are implemented ONLY on OS 10.12.1 and beyond.
 // These declarations should match the latest SDK.

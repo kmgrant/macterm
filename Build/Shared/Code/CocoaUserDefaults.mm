@@ -74,47 +74,6 @@ CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 {
 @autoreleasepool {
 	[[NSUserDefaults standardUserDefaults] removePersistentDomainForName:(NSString*)inName];
-	
-	// it seems that later versions of Mac OS X no longer like the idea
-	// of deleting arbitrary domains, so try to delete the requested
-	// domain’s property list file (and lockfile, if any) manually
-	{
-		FSRef		preferencesFolder;
-		OSStatus	error = FSFindFolder(kUserDomain, kPreferencesFolderType, kDontCreateFolder, &preferencesFolder);
-		
-		
-		if (noErr == error)
-		{
-			UInt8		folderPath[PATH_MAX];
-			
-			
-			// note that this call returns a null-terminated string; but out
-			// of paranoia, the array is terminated at its end anyway
-			error = FSRefMakePath(&preferencesFolder, folderPath, sizeof(folderPath));
-			folderPath[sizeof(folderPath) - 1] = '\0';
-			if (noErr == error)
-			{
-				CFRetainRelease		folderCFString(CFStringCreateWithCString(kCFAllocatorDefault,
-																				REINTERPRET_CAST(folderPath, char const*),
-																				kCFStringEncodingUTF8),
-													CFRetainRelease::kAlreadyRetained);
-				NSString*			filePath = [[(NSString*)folderCFString.returnCFStringRef()
-													stringByAppendingPathComponent:(NSString*)inName]
-												stringByAppendingPathExtension:@"plist"];
-				
-				
-				if ((nil != filePath) && [[NSFileManager defaultManager] fileExistsAtPath:filePath])
-				{
-					[[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
-				}
-				filePath = [filePath stringByAppendingPathExtension:@"lockfile"];
-				if ((nil != filePath) && [[NSFileManager defaultManager] fileExistsAtPath:filePath])
-				{
-					[[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
-				}
-			}
-		}
-	}
 }// @autoreleasepool
 }// DeleteDomain
 

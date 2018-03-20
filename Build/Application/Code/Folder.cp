@@ -67,7 +67,6 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 					 FSRef&			outFolderFSRef)
 {
 	OSStatus	result = noErr;
-	FSRef		parentFolderRef;
 	
 	
 	switch (inFolderType)
