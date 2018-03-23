@@ -62,6 +62,7 @@
 	PopoverManager_BehaviorType		behaviorType;			// specifies how the popover window responds to other events
 	BOOL							isAutoPositionQueued;	// used to ensure at most one response to an auto-position request
 	BOOL							isHeldOpenBySheet;		// used to prevent some popovers from disappearing while sheets are open
+	BOOL							isNoActivationMonitor;	// used to temporarily disable a monitor to prevent recursion
 	NSWindow*						dummySheet;				// for convenience in event-handling for dialogs, a dummy sheet
 	NSView*							parentView;				// the view the popover is relative to, if Cocoa (and modal to, if dialog behavior)
 #if POPOVER_MANAGER_SUPPORTS_CARBON
@@ -355,7 +356,7 @@ receiveWindowActivationChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 	assert(kEventClass == kEventClassWindow);
 	assert((kEventKind == kEventWindowActivated) || (kEventKind == kEventWindowDeactivated));
 	
-	if ([windowController isVisible])
+	if ([windowController isVisible] && (NO == windowController->isNoActivationMonitor))
 	{
 		if (kEventKind == kEventWindowDeactivated)
 		{
@@ -380,7 +381,6 @@ receiveWindowActivationChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 			else if (kPopoverManager_BehaviorTypeFloating == windowController->behaviorType)
 			{
 				[windowController orderFrontIfVisible];
-				HiliteWindow(windowController->parentCarbonWindow, false);
 			}
 		}
 	}
@@ -558,7 +558,10 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 #pragma mark -
-@implementation PopoverManager_WC
+@implementation PopoverManager_WC //{
+
+
+#pragma mark Class Methods
 
 
 /*!
@@ -571,6 +574,9 @@ popoverWindowControllerFromRef:(PopoverManager_Ref)		aRef
 {
 	return (PopoverManager_WC*)aRef;
 }// popoverWindowControllerFromRef
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -625,6 +631,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		self->behaviorType = behaviorSpec;
 		self->isAutoPositionQueued = NO;
 		self->isHeldOpenBySheet = NO;
+		self->isNoActivationMonitor = NO;
 		self->dummySheet = nil; // created as needed
 		self->parentView = aCocoaViewOrNil;
 	#if POPOVER_MANAGER_SUPPORTS_CARBON
@@ -725,6 +732,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark New Methods
+
+
 /*!
 Shows the popover view with appropriate animation if it is
 invisible, puts it in front and gives it keyboard focus.
@@ -800,7 +810,15 @@ display
 		break;
 	}
 	[[self parentCocoaWindow] addChildWindow:self->containerWindow ordered:NSWindowAbove];
-	[self makeKeyAndOrderFront];
+	
+	if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+	{
+		[self popOverMakeKey:NO forceVisible:YES];
+	}
+	else
+	{
+		[self makeKeyAndOrderFront];
+	}
 }// display
 
 
@@ -1026,7 +1044,16 @@ forceVisible:(BOOL)		aForceVisibleFlag
 		// where popovers do not dim their parent windows at any time)
 		if (nil != self->parentCarbonWindow)
 		{
-			UNUSED_RETURN(OSStatus)ActivateWindow(self->parentCarbonWindow, false/* activate */);
+			self->isNoActivationMonitor = YES; // prevent recursion
+			if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+			{
+				UNUSED_RETURN(OSStatus)ActivateWindow(self->parentCarbonWindow, true/* activate */);
+			}
+			else
+			{
+				UNUSED_RETURN(OSStatus)ActivateWindow(self->parentCarbonWindow, false/* activate */);
+			}
+			self->isNoActivationMonitor = NO;
 		}
 	#endif
 		
@@ -1360,8 +1387,7 @@ parentWindowDidBecomeKey:(NSNotification*)		aNotification
 		else if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
 		{
 			// allow other normal windows to sit above background popovers
-			[self makeKeyAndOrderFrontIfVisible];
-			// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
+			[self orderFrontIfVisible];
 		}
 	}
 }// parentWindowDidBecomeKey:
@@ -1540,6 +1566,6 @@ windowWillBeginSheet:(NSNotification*)		aNotification
 }// windowWillBeginSheet:
 
 
-@end // PopoverManager_WC
+@end //} PopoverManager_WC
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

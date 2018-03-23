@@ -553,9 +553,9 @@ TerminalView_Result
 //!\name Cursor Management
 //@{
 
-void
+TerminalView_Result
 	TerminalView_GetCursorGlobalBounds			(TerminalViewRef			inView,
-												 HIRect&					outGlobalBounds);
+												 CGRect&					outGlobalBounds);
 
 void
 	TerminalView_MoveCursorWithArrowKeys		(TerminalViewRef			inView,

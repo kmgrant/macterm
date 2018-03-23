@@ -230,7 +230,6 @@
 		0A0E9F961DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelWorkspaceOptionsCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F981DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F9A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
-		0A0E9F9C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ResizeInfoCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F9E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
 		0A0E9FA01DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalViewCocoa.xib; sourceTree = "<group>"; };
 		0A0E9FA21DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
@@ -963,7 +962,6 @@
 				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
 				0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */,
 				0A0C26F31DC99571000C1D56 /* PrefsWindowTouchBarCocoa.xib */,
-				0A0E9F9B1DB18127006A8BF5 /* ResizeInfoCocoa.xib */,
 				0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */,
 				0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */,
 				0A0E9F531DB18095006A8BF5 /* TerminalWindow.nib */,
@@ -1766,14 +1764,6 @@
 				0A0E9F9A1DB18127006A8BF5 /* English */,
 			);
 			name = PrefsWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F9B1DB18127006A8BF5 /* ResizeInfoCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A0E9F9C1DB18127006A8BF5 /* English */,
-			);
-			name = ResizeInfoCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */ = {

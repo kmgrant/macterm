@@ -57,13 +57,16 @@ class TerminalView_Controller;
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include "ListenerModel.h"
+#include <ListenerModel.h>
+#ifdef __OBJC__
+#	include <PopoverManager.objc++.h>
+#endif
 
 // application includes
 #include "Preferences.h"
 #include "TerminalScreenRef.typedef.h"
 #ifdef __OBJC__
-#include "TerminalToolbar.objc++.h"
+#	include "TerminalToolbar.objc++.h"
 #endif
 #include "TerminalViewRef.typedef.h"
 
@@ -125,26 +128,47 @@ Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWind
 
 
 /*!
-Implements the floating window that appears during
-window resizes.  See "ResizeInfoCocoa.xib".
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+An object that can display a floating information bubble
+on a terminal window or elsewhere on the screen.  This is
+used during live resize and in response to certain other
+events (such as an interrupted process).  It is also used
+in Local Echo mode to show “invisible” characters.
 */
-@interface TerminalWindow_ResizeInfoController : NSWindowController //{
+@interface TerminalWindow_InfoBubble : NSObject < PopoverManager_Delegate > //{
 {
 @private
-	NSString*	_resizeInfoText;
+	NSTextField*		_textView;
+	NSView*				_paddingView;
+	Popover_Window*		_infoWindow;
+	PopoverManager_Ref	_popoverMgr;
+	NSPoint				_idealWindowRelativeAnchorPoint;
+	CGFloat				_delayBeforeRemoval;
+	BOOL				_releaseOnClose;
 }
 
 // class methods
-	+ (TerminalWindow_ResizeInfoController*)
-	sharedTerminalWindowResizeInfoController;
+	+ (instancetype)
+	sharedInfoBubble;
+
+// initializers
+	- (instancetype)
+	initWithStringValue:(NSString*)_;
 
 // accessors
+	@property (assign) CGFloat
+	delayBeforeRemoval;
+	@property (assign) BOOL
+	releaseOnClose;
 	@property (strong) NSString*
-	resizeInfoText; // binding
+	stringValue;
+
+// new methods
+	- (void)
+	display;
+	- (void)
+	moveBelowCursorInTerminalWindow:(TerminalWindowRef)_;
+	- (void)
+	moveToCenterScreen:(NSScreen*)_;
 
 @end //}
 

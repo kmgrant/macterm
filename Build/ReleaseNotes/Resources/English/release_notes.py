@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180322',
     '20180317',
     '20180301',
     '20180212',
@@ -594,6 +595,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180322': [
+        'Terminal view information tags are now implemented as blue pop-overs with white text, instead of using "tooltips".  (These appear during window resize.  They also appear after an interrupt, suspend, vector graphics page, image file dump, or local echo of a control character.)',
+    ],
     '20180317': [
         'Fixed Preferences window General pane Notifications tab to correctly display the last saved bell setting instead of accidentally overwriting it with a default value.',
     ],

@@ -152,6 +152,9 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 
 #pragma mark Types
 
+/*!
+Private properties.
+*/
 @interface TerminalWindow_Controller () //{
 
 // accessors
@@ -165,11 +168,42 @@ HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 @end //}
 
 
+/*!
+The private class interface.
+*/
 @interface TerminalWindow_Controller (TerminalWindow_ControllerInternal) //{
 
 // notifications
 	- (void)
 	toolbarDidChangeVisibility:(NSNotification*)_;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalWindow_InfoBubble () //{
+
+// accessors
+	@property (assign) NSPoint
+	idealWindowRelativeAnchorPoint;
+	@property (strong) Popover_Window*
+	infoWindow;
+	@property (strong) NSView*
+	paddingView;
+	@property (assign) PopoverManager_Ref
+	popoverMgr;
+	@property (strong) NSTextField*
+	textView;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface TerminalWindow_InfoBubble (TerminalWindow_InfoBubbleInternal) //{
 
 @end //}
 
@@ -6812,8 +6846,9 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				
 				// display resize info in a floating window
-				[[[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController] window] center];
-				[[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController] showWindow:NSApp];
+				[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"";
+				[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:ptr->window.screen]; 
+				[[TerminalWindow_InfoBubble sharedInfoBubble] display];
 				
 				// remember the old window title
 				{
@@ -6867,7 +6902,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						TerminalWindow_GetScreenDimensions(terminalWindow, &columns, &rows);
 						newTitle = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-															CFSTR("%dx%d")/* LOCALIZE THIS */, columns, rows);
+															CFSTR("%d×%d")/* LOCALIZE THIS */, columns, rows);
 					}
 					
 					if (nullptr != newTitle)
@@ -6882,7 +6917,8 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						
 						// update the floater
-						[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController].resizeInfoText = BRIDGE_CAST(newTitle, NSString*);
+						[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(newTitle, NSString*);
+						[[TerminalWindow_InfoBubble sharedInfoBubble] display];
 						
 						CFRelease(newTitle), newTitle = nullptr;
 					}
@@ -6902,7 +6938,8 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				
 				// dispose of the floater
-				[[TerminalWindow_ResizeInfoController sharedTerminalWindowResizeInfoController] close];
+				// (implied by fade-out delay in TerminalWindow_InfoBubble)
+				//[[TerminalWindow_InfoBubble sharedInfoBubble] ...];
 				
 				// restore the window title
 				if (ptr->preResizeTitleString.exists())
@@ -9442,6 +9479,417 @@ windowShouldClose:(id)	sender
 
 
 #pragma mark -
+@implementation TerminalWindow_InfoBubble //{
+
+
+TerminalWindow_InfoBubble*		gTerminalWindow_SharedInfoBubble = nil;
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+Determines the behavior of the delegate implementation;
+specifies a window-relative position for the window.
+Note that the window is centered and below this point.
+*/
+@synthesize idealWindowRelativeAnchorPoint = _idealWindowRelativeAnchorPoint;
+
+
+/*!
+The window in which the views are displayed, meant to be
+floating (not becoming key or main).  This is managed by
+the "popoverMgr".
+*/
+@synthesize infoWindow = _infoWindow;
+
+
+/*!
+A view that helps to simplify layout of the text; this
+maintains the padding around the text.
+*/
+@synthesize paddingView = _paddingView;
+
+
+/*!
+An object that manages various display and behavior
+characteristics of the popover window, including its
+color, frame appearance and animations.
+*/
+@synthesize popoverMgr = _popoverMgr;
+
+
+/*!
+The view that renders the string of text.
+*/
+@synthesize textView = _textView;
+
+
+#pragma mark Externally-Declared Properties
+
+
+/*!
+The number of seconds to wait before automatically
+removing the info bubble in the "display" call.  The
+default delay is short, similar to that of a tooltip.
+*/
+@synthesize delayBeforeRemoval = _delayBeforeRemoval;
+
+
+/*!
+If set to NO, using "display" to show the info bubble
+will not automatically release this object (allowing
+reuse).  The default is YES.
+*/
+@synthesize releaseOnClose = _releaseOnClose;
+
+
+#pragma mark Class Methods
+
+
+/*!
+Returns an object representing the centered, shared
+information display.  Used for window resize.
+
+(2018.03)
+*/
++ (instancetype)
+sharedInfoBubble
+{
+	if (nil == gTerminalWindow_SharedInfoBubble)
+	{
+		gTerminalWindow_SharedInfoBubble = [[self.class allocWithZone:NULL] initWithStringValue:@"Âgggggggp"]; // initial string for layout only
+		assert(nil != gTerminalWindow_SharedInfoBubble);
+		gTerminalWindow_SharedInfoBubble.stringValue = @"";
+	}
+	return gTerminalWindow_SharedInfoBubble;
+}// sharedInfoBubble
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.03)
+*/
+- (instancetype)
+initWithStringValue:(NSString*)		aStringValue
+{
+	self = [super init];
+	if (nil != self)
+	{
+		_delayBeforeRemoval = 0.8; // arbitrary
+		_releaseOnClose = YES;
+		_idealWindowRelativeAnchorPoint = NSZeroPoint; // initially...
+		_popoverMgr = nullptr; // see the methods that set the location of the window
+		
+		// create a view in which to display the string
+		{
+			_textView = [[NSTextField alloc] initWithFrame:NSZeroRect];
+			self.textView.alignment = NSCenterTextAlignment; // NSControl setting
+			self.textView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
+												NSViewMinYMargin /*| NSViewHeightSizable*/ | NSViewMaxYMargin);
+			self.textView.bezeled = NO;
+			self.textView.bordered = NO;
+			self.textView.drawsBackground = NO;
+			self.textView.editable = NO;
+			self.textView.font = [NSFont boldSystemFontOfSize:14];
+			self.textView.selectable = NO;
+			self.textView.textColor = [NSColor whiteColor]; // TEMPORARY; may want a way for Popover_Window to suggest a color here
+			self.textView.backgroundColor = [NSColor clearColor]; // defer to Popover_Window background
+			self.textView.stringValue = aStringValue;
+			[self.textView sizeToFit];
+			self.textView.frame = NSInsetRect(self.textView.frame, -3, 0); // make a bit more room to discourage wrapping
+		}
+		
+		// create a view for layout purposes (centering the string)
+		{
+			CGFloat const	kPaddingH = 16; // arbitrary
+			CGFloat const	kPaddingV = 12; // arbitrary (though smaller values seem to cause the NSTextField to shift)
+			
+			
+			_paddingView = [[NSView alloc] initWithFrame:NSZeroRect];
+			self.paddingView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
+													NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin);
+			self.paddingView.frame = NSMakeRect(0, 0, NSWidth(self.textView.frame) + kPaddingH, NSHeight(self.textView.frame) + kPaddingV);
+			[self.paddingView addSubview:self.textView];
+			
+			// set text position within the layout view
+			[self.textView setFrameOrigin:NSMakePoint((NSWidth(self.paddingView.frame) - NSWidth(self.textView.frame)) / 2.0,
+														(NSHeight(self.paddingView.frame) - NSHeight(self.textView.frame)) / 2.0)];
+		}
+		
+		// create a popover window to display the text
+		_infoWindow = [[Popover_Window alloc]
+						initWithView:self.paddingView
+										windowStyle:kPopover_WindowStyleHelp
+										arrowStyle:kPopover_ArrowStyleNone
+										attachedToPoint:NSMakePoint(0, 0)
+										inWindow:nil
+										vibrancy:NO];
+		// although the window should be removed automatically,
+		// set this property to ensure it can be easily relocated
+		// in the event of a problem
+		[self.infoWindow setMovableByWindowBackground:YES];
+	}
+	return self;
+}// initWithStringValue:
+
+
+/*!
+Destructor.
+
+(2018.03)
+*/
+- (void)
+dealloc
+{
+	[_textView release];
+	[_paddingView release];
+	if (nil != _popoverMgr)
+	{
+		PopoverManager_Dispose(&_popoverMgr);
+	}
+	[_infoWindow release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Specifies the text that appears in the info bubble.  This
+should fit on a single line.
+
+IMPORTANT:	Currently this window does not resize itself to
+			accommodate different strings; it only sets an
+			appropriate size for the string given to the
+			initializer.  If this object is reused, its
+			initial string value must be something that will
+			produce the desired maximum frame size.
+
+(2018.03)
+*/
+- (NSString*)
+stringValue
+{
+	return self.textView.stringValue;
+}
+- (void)
+setStringValue:(NSString*)		aStringValue
+{
+	self.textView.stringValue = aStringValue;
+}// setStringValue:
+
+
+#pragma mark New Methods
+
+
+/*!
+Displays the info bubble for a short period of time.
+
+Currently, the display time and animation style cannot
+be customized.
+
+(2018.03)
+*/
+- (void)
+display
+{
+	//__weak typeof(self)		weakSelf = self; // future
+	TerminalWindow_InfoBubble*	strongSelf = self;
+	
+	
+	if (nullptr == self.popoverMgr)
+	{
+		// a popover manager is only created when the layout is specified
+		Console_Warning(Console_WriteLine, "assertion failure; should call a method such as 'moveToCenterScreen:' on TerminalWindow_InfoBubble prior to using 'display'");
+	}
+	else
+	{
+		PopoverManager_DisplayPopover(self.popoverMgr);
+		// hide the window eventually
+		CocoaExtensions_RunLater(self.delayBeforeRemoval,
+									^{
+										PopoverManager_RemovePopover(strongSelf.popoverMgr, true/* “confirming” animation style */);
+										if (strongSelf.releaseOnClose)
+										{
+											//[strongSelf release]; // TEMPORARY (convert to "weakSelf" in future)
+										}
+									});
+	}
+}// display
+
+
+/*!
+Specifies that the information display should appear near
+the current cursor location of the specified terminal
+window (not covering the text on that line).  This does
+not continue to monitor cursor movements; you must call
+this method again for the same terminal window to update
+the position.
+
+(2018.03)
+*/
+- (void)
+moveBelowCursorInTerminalWindow:(TerminalWindowRef)		aTerminalWindow
+{
+	NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(aTerminalWindow);
+	CGRect		globalCursorBounds;
+	
+	
+	TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus(aTerminalWindow), globalCursorBounds);
+	self.idealWindowRelativeAnchorPoint = NSMakePoint(globalCursorBounds.origin.x - cocoaWindow.frame.origin.x,
+														globalCursorBounds.origin.y - cocoaWindow.frame.origin.y);
+	
+	// arrange to display the label over this window
+	if (nullptr != self.popoverMgr)
+	{
+		PopoverManager_Dispose(&_popoverMgr);
+	}
+	if (TerminalWindow_IsLegacyCarbon(aTerminalWindow))
+	{
+		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), aTerminalWindow);
+		HIWindowRef						carbonWindow = returnCarbonWindow(ptr);
+		
+		
+		self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
+												self/* delegate */, kPopoverManager_AnimationTypeStandard,
+												kPopoverManager_BehaviorTypeFloating,
+												carbonWindow);
+	}
+	else
+	{
+		NSView*		parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
+		
+		
+		self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
+												self/* delegate */, kPopoverManager_AnimationTypeStandard,
+												kPopoverManager_BehaviorTypeFloating,
+												parentView);
+	}
+}// moveBelowCursorInTerminalWindow:
+
+
+/*!
+Specifies that the information display should appear in
+the center of the given screen (or the main screen, if
+"aScreen" is set to nil).
+
+(2018.03)
+*/
+- (void)
+moveToCenterScreen:(NSScreen*)		aScreen
+{
+	NSScreen*	windowScreen = aScreen;
+	
+	
+	if (nil == windowScreen)
+	{
+		windowScreen = [NSScreen mainScreen];
+	}
+	
+	self.idealWindowRelativeAnchorPoint = NSMakePoint(windowScreen.frame.origin.x + (NSWidth(windowScreen.frame) / 2.0),
+														windowScreen.frame.origin.y + (NSHeight(windowScreen.frame) / 2.0));
+	
+	if (nullptr != self.popoverMgr)
+	{
+		PopoverManager_Dispose(&_popoverMgr);
+	}
+	self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
+											self/* delegate */, kPopoverManager_AnimationTypeStandard,
+											kPopoverManager_BehaviorTypeFloating,
+											STATIC_CAST(nil, NSView*));
+}// moveToCenterScreen:
+
+
+#pragma mark Popover_Delegate
+
+
+/*!
+Assists the dynamic resize of a popover window by indicating
+whether or not there are per-axis constraints on resizing.
+
+(2018.03)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getHorizontalResizeAllowed:(BOOL*)		outHorizontalFlagPtr
+getVerticalResizeAllowed:(BOOL*)		outVerticalFlagPtr
+{
+#pragma unused(aPopoverManager)
+	*outHorizontalFlagPtr = NO;
+	*outVerticalFlagPtr = NO;
+}// popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:
+
+
+/*!
+Returns the initial view size for the popover.
+
+(2018.03)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getIdealSize:(NSSize*)					outSizePtr
+{
+#pragma unused(aPopoverManager)
+	*outSizePtr = self.paddingView.frame.size;
+}// popoverManager:getIdealSize:
+
+
+/*!
+Returns the location (relative to the window) where the
+popover’s arrow tip should appear.  The location of the
+popover itself depends on the arrow placement chosen by
+"idealArrowPositionForFrame:parentWindow:".
+
+(2018.03)
+*/
+- (NSPoint)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealAnchorPointForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
+{
+#pragma unused(aPopoverManager, parentWindow)
+	NSPoint		result = NSMakePoint(parentFrame.origin.x + self.idealWindowRelativeAnchorPoint.x,
+										parentFrame.origin.y + self.idealWindowRelativeAnchorPoint.y);
+	
+	
+	return result;
+}// popoverManager:idealAnchorPointForFrame:parentWindow:
+
+
+/*!
+Returns arrow placement information for the popover.
+
+(2018.03)
+*/
+- (Popover_Properties)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
+{
+#pragma unused(aPopoverManager, parentFrame, parentWindow)
+	Popover_Properties	result = (kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow);
+	
+	
+	return result;
+}// idealArrowPositionForFrame:parentWindow:
+
+
+@end //} TerminalWindow_InfoBubble
+
+
+@implementation TerminalWindow_InfoBubble (TerminalWindow_InfoBubbleInternal) //{
+
+
+@end //} TerminalWindow_InfoBubble (TerminalWindow_InfoBubbleInternal)
+
+
+#pragma mark -
 @implementation TerminalWindow_Object //{
 
 
@@ -9476,55 +9924,6 @@ toScreen:(NSScreen*)			screen
 
 
 @end //} TerminalWindow_Object
-
-
-#pragma mark -
-@implementation TerminalWindow_ResizeInfoController //{
-
-
-static TerminalWindow_ResizeInfoController*		gTerminalWindow_ResizeInfoController = nil;
-
-
-// externally-declared
-@synthesize resizeInfoText = _resizeInfoText;
-
-
-#pragma mark Class Methods
-
-
-/*!
-Returns the singleton.
-
-(4.1)
-*/
-+ (TerminalWindow_ResizeInfoController*)
-sharedTerminalWindowResizeInfoController
-{
-	if (nil == gTerminalWindow_ResizeInfoController)
-	{
-		gTerminalWindow_ResizeInfoController = [[self.class allocWithZone:NULL] init];
-	}
-	return gTerminalWindow_ResizeInfoController;
-}// sharedTerminalWindowResizeInfoController
-
-
-#pragma mark Initializers
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-init
-{
-	self = [super initWithWindowNibName:@"ResizeInfoCocoa"];
-	return self;
-}// init
-
-
-@end //} TerminalWindow_ResizeInfoController
 
 
 #pragma mark -

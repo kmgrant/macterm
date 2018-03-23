@@ -285,7 +285,6 @@ English.lproj/PrefPanelWorkspaceOptionsCocoa \
 English.lproj/PrefPanelWorkspaceWindowsCocoa \
 English.lproj/PrefsWindowCocoa \
 English.lproj/PrefsWindowTouchBarCocoa \
-English.lproj/ResizeInfoCocoa \
 English.lproj/ServerBrowserCocoa \
 English.lproj/TerminalViewCocoa \
 English.lproj/TerminalWindowCocoa \

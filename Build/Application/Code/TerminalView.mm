@@ -1588,33 +1588,53 @@ TerminalView_GetColor	(TerminalViewRef			inView,
 
 
 /*!
-Returns the current terminal cursor rectangle in
-coordinates global to the display containing most
-of the view.
+Provides the current terminal cursor rectangle in
+coordinates that are compatible with an NSRect
+for the "frame" property of NSWindow.
 
 Note that the cursor can have different shapes...
 for instance, the returned rectangle may be very
 flat (for an underline), narrow (for an insertion
 point), or block shaped.
 
-(3.1)
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(2018.03)
 */
-void
+TerminalView_Result
 TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
-									 HIRect&			outGlobalBounds)
+									 CGRect&			outGlobalBounds)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	outGlobalBounds.origin = CGPointMake(0, 0);
-	outGlobalBounds.size = CGSizeMake(0, 0);
-	if (viewPtr != nullptr)
+	outGlobalBounds = CGRectZero;
+	
+	if (nullptr == viewPtr)
 	{
-		outGlobalBounds = viewPtr->screen.cursor.bounds;
+		result = kTerminalView_ResultInvalidID;
+	}
+	else
+	{
+		outGlobalBounds = viewPtr->screen.cursor.bounds; // initially...
 		if (nullptr != viewPtr->carbonData)
 		{
-			UNUSED_RETURN(OSStatus)HIRectConvert(&outGlobalBounds, kHICoordSpaceView, viewPtr->carbonData->contentHIView,
-													kHICoordSpaceScreenPixel, nullptr/* target object */);
+			Rect		screenRect;
+			
+			
+			RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->carbonData->contentHIView), &screenRect);
+			HIRectConvert(&outGlobalBounds, kHICoordSpaceView, viewPtr->carbonData->contentHIView,
+							kHICoordSpaceScreenPixel, nullptr/* target object */);
+			
+			// translate the selection area into Cocoa coordinates that are
+			// relative to the content view of the window
+			outGlobalBounds.origin = CGPointMake(outGlobalBounds.origin.x,
+													screenRect.bottom - screenRect.top - outGlobalBounds.origin.y);
 		}
 		else
 		{
@@ -1622,6 +1642,8 @@ TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
 			Console_Warning(Console_WriteLine, "get-cursor-global-bounds not implemented for Cocoa");
 		}
 	}
+	
+	return result;
 }// GetCursorGlobalBounds
 
 

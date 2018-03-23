@@ -359,10 +359,6 @@ void						closeTerminalWindow					(My_SessionPtr);
 UInt16						copyAutoCapturePreferences			(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
-My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
-My_HMHelpContentRecWrap&	createHelpTagForLocalEcho			();
-My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
-My_HMHelpContentRecWrap&	createHelpTagForVectorGraphics		();
 IconRef						createSessionStateActiveIcon		();
 IconRef						createSessionStateDeadIcon			();
 void						detectLongLife						(EventLoopTimerRef, void*);
@@ -903,18 +899,13 @@ void
 Session_DisplayFileDownloadNameUI	(SessionRef		inRef,
 									 CFStringRef	inFileName)
 {
-	My_HMHelpContentRecWrap&	tagData = createHelpTagForLocalEcho(); // reuse the “local echo” tag
-	HIRect						globalCursorBounds;
+	My_SessionAutoLocker			ptr(gSessionPtrLocks(), inRef);
+	TerminalWindow_InfoBubble*		infoBubble = [[TerminalWindow_InfoBubble alloc]
+													initWithStringValue:BRIDGE_CAST(inFileName, NSString*)];
 	
 	
-	tagData.rename(inFileName, nullptr/* alternate text */);
-	TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-										(Session_ReturnActiveTerminalWindow(inRef)),
-										globalCursorBounds);
-	tagData.setFrame(globalCursorBounds);
-	UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-	// this call does not immediately hide the tag, but rather after a short delay
-	UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+	[infoBubble moveBelowCursorInTerminalWindow:ptr->terminalWindow];
+	[infoBubble display]; // takes ownership
 }// DisplayFileDownloadNameUI
 
 
@@ -2970,17 +2961,14 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		// display a help tag over the cursor in an unobtrusive location
 		// that confirms for the user that a suspend has in fact occurred
 		{
-			My_HMHelpContentRecWrap&	tagData = createHelpTagForSuspend();
-			HIRect						globalCursorBounds;
+			CFRetainRelease				tagCFString(UIStrings_ReturnCopy(kUIStrings_TerminalSuspendOutput),
+													CFRetainRelease::kAlreadyRetained);
+			TerminalWindow_InfoBubble*	infoBubble = [[TerminalWindow_InfoBubble alloc]
+														initWithStringValue:BRIDGE_CAST(tagCFString.returnCFStringRef(), NSString*)];
 			
 			
-			TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-												(Session_ReturnActiveTerminalWindow(inRef)),
-												globalCursorBounds);
-			tagData.setFrame(globalCursorBounds);
-			UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-			// this call does not immediately hide the tag, but rather after a short delay
-			UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+			[infoBubble moveBelowCursorInTerminalWindow:ptr->terminalWindow];
+			[infoBubble display]; // takes ownership
 		}
 		
 		// suspend
@@ -4013,26 +4001,23 @@ Session_UserInputInterruptProcess	(SessionRef		inRef)
 	// since the process already considers the pipe reopened
 	Session_SetNetworkSuspended(inRef, false);
 	
-	// display a help tag over the cursor in an unobtrusive location
-	// that confirms for the user that an interrupt has in fact occurred
-	{
-		My_HMHelpContentRecWrap&	tagData = createHelpTagForInterrupt();
-		HIRect						globalCursorBounds;
-		
-		
-		TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-											(Session_ReturnActiveTerminalWindow(inRef)),
-											globalCursorBounds);
-		tagData.setFrame(globalCursorBounds);
-		UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-		// this call does not immediately hide the tag, but rather after a short delay
-		UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
-	}
-	
 	// send character to Unix process
 	{
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
+		
+		// display a help tag over the cursor in an unobtrusive location
+		// that confirms for the user that an interrupt has in fact occurred
+		{
+			CFRetainRelease				tagCFString(UIStrings_ReturnCopy(kUIStrings_TerminalInterruptProcess),
+													CFRetainRelease::kAlreadyRetained);
+			TerminalWindow_InfoBubble*	infoBubble = [[TerminalWindow_InfoBubble alloc]
+														initWithStringValue:BRIDGE_CAST(tagCFString.returnCFStringRef(), NSString*)];
+			
+			
+			[infoBubble moveBelowCursorInTerminalWindow:ptr->terminalWindow];
+			[infoBubble display]; // takes ownership
+		}
 		
 		if (nullptr != ptr->mainProcess)
 		{
@@ -6298,138 +6283,6 @@ copyVectorGraphicsPreferences	(My_SessionPtr				inPtr,
 
 
 /*!
-Returns (creating if necessary) the global help tag record
-for a help tag that confirms for the user that the process
-running in the active terminal screen has been interrupted.
-
-If the title of the tag has not been set already, it is
-initialized.
-
-Normally, this tag should be displayed at the terminal
-cursor location, so prior to using the result you should
-call its setFrame() method.
-
-(3.1)
-*/
-My_HMHelpContentRecWrap&
-createHelpTagForInterrupt ()
-{
-	static My_HMHelpContentRecWrap		gTag;
-	
-	
-	if (nullptr == gTag.mainName())
-	{
-		CFStringRef		tagCFString = nullptr;
-		
-		
-		if (UIStrings_Copy(kUIStrings_TerminalInterruptProcess, tagCFString).ok())
-		{
-			gTag.rename(tagCFString, nullptr/* alternate name */);
-			// you CANNOT release this string because you do not know when the system is done with the tag
-		}
-	}
-	
-	return gTag;
-}// createHelpTagForInterrupt
-
-
-/*!
-Returns (creating if necessary) the global help tag record
-for a help tag that displays what is currently being routed
-to Local Echo in the session.
-
-You must call the rename() method on the returned tag to
-show the appropriate echo text.
-
-Normally, this tag should be displayed at the terminal
-cursor location, so prior to using the result you should
-call its setFrame() method.
-
-(4.0)
-*/
-My_HMHelpContentRecWrap&
-createHelpTagForLocalEcho ()
-{
-	static My_HMHelpContentRecWrap		gTag;
-	
-	
-	return gTag;
-}// createHelpTagForLocalEcho
-
-
-/*!
-Returns (creating if necessary) the global help tag record
-for a help tag that confirms for the user that output for
-the active terminal screen has been stopped.
-
-If the title of the tag has not been set already, it is
-initialized.
-
-Normally, this tag should be displayed at the terminal
-cursor location, so prior to using the result you should
-call its setFrame() method.
-
-(3.1)
-*/
-My_HMHelpContentRecWrap&
-createHelpTagForSuspend ()
-{
-	static My_HMHelpContentRecWrap		gTag;
-	
-	
-	if (nullptr == gTag.mainName())
-	{
-		CFStringRef		tagCFString = nullptr;
-		
-		
-		if (UIStrings_Copy(kUIStrings_TerminalSuspendOutput, tagCFString).ok())
-		{
-			gTag.rename(tagCFString, nullptr/* alternate name */);
-			// you CANNOT release this string because you do not know when the system is done with the tag
-		}
-	}
-	
-	return gTag;
-}// createHelpTagForSuspend
-
-
-/*!
-Returns (creating if necessary) the global help tag record
-for a help tag that tells the user that input is now being
-redirected to a vector graphics window.
-
-If the title of the tag has not been set already, it is
-initialized.
-
-Normally, this tag should be displayed at the terminal
-cursor location, so prior to using the result you should
-call its setFrame() method.
-
-(4.0)
-*/
-My_HMHelpContentRecWrap&
-createHelpTagForVectorGraphics ()
-{
-	static My_HMHelpContentRecWrap		gTag;
-	
-	
-	if (nullptr == gTag.mainName())
-	{
-		CFStringRef		tagCFString = nullptr;
-		
-		
-		if (UIStrings_Copy(kUIStrings_TerminalVectorGraphicsRedirect, tagCFString).ok())
-		{
-			gTag.rename(tagCFString, nullptr/* alternate name */);
-			// you CANNOT release this string because you do not know when the system is done with the tag
-		}
-	}
-	
-	return gTag;
-}// createHelpTagForVectorGraphics
-
-
-/*!
 Registers the “active session” icon reference with the system,
 and returns a reference to the new icon.
 
@@ -8541,9 +8394,6 @@ sheetContextEnd		(My_SessionPtr		inPtr)
 
 /*!
 Displays the specified text temporarily in a floating window.
-(For now, it is just a help tag, which serves the purpose but
-is smaller and uglier than is desired...TEMPORARY.)
-
 The given byte sequence MUST use UTF-8 encoding.
 
 (4.0)
@@ -8553,21 +8403,15 @@ terminalHoverLocalEchoString	(My_SessionPtr		inPtr,
 								 UInt8 const*		inBytes,
 								 size_t				inCount)
 {
-	// update the help tag and display it
-	My_HMHelpContentRecWrap&	tagData = createHelpTagForLocalEcho();
-	HIRect						globalCursorBounds;
 	CFRetainRelease				stringObject(CFStringCreateWithBytes(kCFAllocatorDefault, inBytes, inCount,
-																		kCFStringEncodingUTF8, false/* is external */), CFRetainRelease::kAlreadyRetained);
+																		kCFStringEncodingUTF8, false/* is external */),
+												CFRetainRelease::kAlreadyRetained);
+	TerminalWindow_InfoBubble*	infoBubble = [[TerminalWindow_InfoBubble alloc]
+												initWithStringValue:BRIDGE_CAST(stringObject.returnCFStringRef(), NSString*)];
 	
 	
-	tagData.rename(stringObject.returnCFStringRef(), nullptr/* alternate text */);
-	TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-										(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
-										globalCursorBounds);
-	tagData.setFrame(globalCursorBounds);
-	UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-	// this call does not immediately hide the tag, but rather after a short delay
-	UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+	[infoBubble moveBelowCursorInTerminalWindow:inPtr->terminalWindow];
+	[infoBubble display]; // takes ownership
 }// terminalHoverLocalEchoString
 
 
@@ -8845,17 +8689,14 @@ vectorGraphicsCreateTarget		(My_SessionPtr	inPtr)
 		// display a help tag over the cursor in an unobtrusive location
 		// that confirms for the user that a suspend has in fact occurred
 		{
-			My_HMHelpContentRecWrap&	tagData = createHelpTagForVectorGraphics();
-			HIRect						globalCursorBounds;
+			CFRetainRelease				tagCFString(UIStrings_ReturnCopy(kUIStrings_TerminalVectorGraphicsRedirect),
+													CFRetainRelease::kAlreadyRetained);
+			TerminalWindow_InfoBubble*	infoBubble = [[TerminalWindow_InfoBubble alloc]
+														initWithStringValue:BRIDGE_CAST(tagCFString.returnCFStringRef(), NSString*)];
 			
 			
-			TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
-												(Session_ReturnActiveTerminalWindow(inPtr->selfRef)),
-												globalCursorBounds);
-			tagData.setFrame(globalCursorBounds);
-			UNUSED_RETURN(OSStatus)HMDisplayTag(tagData.ptr());
-			// this call does not immediately hide the tag, but rather after a short delay
-			UNUSED_RETURN(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+			[infoBubble moveBelowCursorInTerminalWindow:inPtr->terminalWindow];
+			[infoBubble display]; // takes ownership
 		}
 		
 		result = true;
