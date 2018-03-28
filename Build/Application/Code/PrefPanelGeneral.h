@@ -219,6 +219,7 @@ changes to an interface declared in a ".mm" file.
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSIndexSet*						soundNameIndexes;
+	BOOL							_didLoadView;
 }
 
 // accessors

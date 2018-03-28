@@ -114,6 +114,18 @@ Mac OS X versions, raw strings do not bind properly.)
 
 
 /*!
+Private properties.
+*/
+@interface PrefPanelGeneral_NotificationsViewManager () //{
+
+// accessors
+	@property (assign) BOOL
+	didLoadView;
+
+@end //}
+
+
+/*!
 The private class interface.
 */
 @interface PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal) //{
@@ -533,6 +545,23 @@ preferenceString
 @implementation PrefPanelGeneral_NotificationsViewManager
 
 
+#pragma mark Internally-Declared Properties
+
+
+/*!
+Set to YES when "panelViewManager:didLoadContainerView:"
+is completed.
+
+NOTE: In later SDKs, it may be possible to replace this
+property with the "viewLoaded" property from the parent
+NSViewController class.
+*/
+@synthesize didLoadView = _didLoadView;
+
+
+#pragma mark Initializers
+
+
 /*!
 Designated initializer.
 
@@ -814,7 +843,11 @@ setSoundNameIndexes:(NSIndexSet*)	indexes
 				writeOK = [self writeBellSoundName:savedName];
 				if (writeOK)
 				{
-					[info playSound];
+					// do not play sounds during initialization; only afterward
+					if (self.didLoadView)
+					{
+						[info playSound];
+					}
 				}
 			}
 			
@@ -859,6 +892,7 @@ initializeWithContext:(void*)			aContext
 	self->soundNames = [[NSMutableArray alloc] init];
 	[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
 	self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:0] retain];
+	self->_didLoadView = NO;
 	[self didChangeValueForKey:@"soundNameIndexes"];
 	[self didChangeValueForKey:@"soundNames"];
 }// panelViewManager:initializeWithContext:
@@ -940,6 +974,8 @@ didLoadContainerView:(NSView*)			aContainerView
 		// array controller with a dependency on "soundNameIndexes") so this
 		// call must come last, after the desired index value is in place
 		[self didChangeValueForKey:@"soundNames"];
+		
+		self.didLoadView = YES;
 	}
 }// panelViewManager:didLoadContainerView:
 
