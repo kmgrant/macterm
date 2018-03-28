@@ -154,6 +154,12 @@ changes to an interface declared in a ".mm" file.
 	sharedPrefsWindowController;
 
 // accessors
+	@property (readonly) BOOL
+	canCopySettingsToDefault;
+	@property (readonly) BOOL
+	canDeleteSettings;
+	@property (readonly) BOOL
+	canRenameSettings;
 	@property (strong) NSIndexSet*
 	currentPreferenceCollectionIndexes; // binding
 	- (NSArray*)

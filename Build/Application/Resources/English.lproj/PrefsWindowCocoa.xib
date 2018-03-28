@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17D102" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -78,7 +78,7 @@
                                                     <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                     <tableColumns>
-                                                        <tableColumn width="197" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
+                                                        <tableColumn identifier="" width="197" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                                 <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -138,12 +138,14 @@
                                                         <modifierMask key="keyEquivalentModifierMask"/>
                                                         <connections>
                                                             <action selector="performCopyPreferenceCollectionToDefault:" target="-2" id="OzD-4q-DGi"/>
+                                                            <binding destination="-2" name="enabled" keyPath="self.canCopySettingsToDefault" id="jdf-9Z-b8h"/>
                                                         </connections>
                                                     </menuItem>
                                                     <menuItem title="Rename Collection" id="MFn-fi-pNo">
                                                         <modifierMask key="keyEquivalentModifierMask"/>
                                                         <connections>
                                                             <action selector="performRenamePreferenceCollection:" target="-2" id="XCh-yt-uLF"/>
+                                                            <binding destination="-2" name="enabled" keyPath="self.canRenameSettings" id="83i-bX-Xxk"/>
                                                         </connections>
                                                     </menuItem>
                                                     <menuItem title="Duplicate Collection" id="eIq-hQ-jBi">
@@ -171,6 +173,7 @@
                                         </buttonCell>
                                         <connections>
                                             <action selector="performRemovePreferenceCollection:" target="-2" id="Aql-VQ-aOQ"/>
+                                            <binding destination="-2" name="enabled" keyPath="self.canDeleteSettings" id="bXS-eB-MPa"/>
                                         </connections>
                                     </button>
                                     <popUpButton misplaced="YES" id="Ep5-r3-AVL" userLabel="Add Menu">

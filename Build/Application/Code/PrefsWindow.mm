@@ -923,6 +923,72 @@ dealloc
 
 
 /*!
+Returns YES only if there is an item selected in the
+source list and it is not the Default item.
+
+(2018.03)
+*/
+- (BOOL)
+canCopySettingsToDefault
+{
+	Preferences_ContextRef		currentContext = [self currentPreferencesContext];
+	BOOL						result = (nullptr != currentContext);
+	
+	
+	if (result)
+	{
+		result = (false == Preferences_ContextIsDefault(currentContext, [self currentPreferencesClass]));
+	}
+	
+	return result;
+}// canCopySettingsToDefault
+
+
+/*!
+Returns YES only if there is an item selected in the
+source list and it is an item that can be deleted.
+
+(2018.03)
+*/
+- (BOOL)
+canDeleteSettings
+{
+	Preferences_ContextRef		currentContext = [self currentPreferencesContext];
+	BOOL						result = (nullptr != currentContext);
+	
+	
+	if (result)
+	{
+		result = (false == Preferences_ContextIsDefault(currentContext, [self currentPreferencesClass]));
+	}
+	
+	return result;
+}// canDeleteSettings
+
+
+/*!
+Returns YES only if there is an item selected in the
+source list and it is not the Default item.
+
+(2018.03)
+*/
+- (BOOL)
+canRenameSettings
+{
+	Preferences_ContextRef		currentContext = [self currentPreferencesContext];
+	BOOL						result = (nullptr != currentContext);
+	
+	
+	if (result)
+	{
+		result = (false == Preferences_ContextIsDefault(currentContext, [self currentPreferencesClass]));
+	}
+	
+	return result;
+}// canRenameSettings
+
+
+/*!
 Accessor.
 
 (4.1)
@@ -1885,7 +1951,9 @@ must be used as a backup.
 tableViewSelectionDidChange:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
+	[self willChangeValueForKey:NSStringFromSelector(@selector(canDeleteSettings))];
 	[self setCurrentPreferenceCollectionIndexes:[self->sourceListTableView selectedRowIndexes]];
+	[self didChangeValueForKey:NSStringFromSelector(@selector(canDeleteSettings))];
 }// tableViewSelectionDidChange:
 
 
