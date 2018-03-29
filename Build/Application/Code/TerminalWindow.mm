@@ -9646,6 +9646,7 @@ Destructor.
 - (void)
 dealloc
 {
+	Memory_EraseWeakReferences(self);
 	[_textView release];
 	[_paddingView release];
 	if (nil != _popoverMgr)

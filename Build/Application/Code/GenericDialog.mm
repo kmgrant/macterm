@@ -862,6 +862,8 @@ Destructor.
 - (void)
 dealloc
 {
+	Memory_EraseWeakReferences(self);
+	
 	[self ignoreWhenObjectsPostNotes];
 	
 	[_primaryButtonName release];

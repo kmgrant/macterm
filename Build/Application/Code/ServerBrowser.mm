@@ -52,6 +52,7 @@ extern "C"
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
+#import <MemoryBlocks.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
 #import <SoundSystem.h>
@@ -491,6 +492,7 @@ Destructor.
 - (void)
 dealloc
 {
+	Memory_EraseWeakReferences(self);
 	[_managedView release];
 	[_viewMgr release];
 	[_initialHostName release];

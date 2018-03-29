@@ -52,6 +52,7 @@
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
+#import <MemoryBlocks.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
 
@@ -550,6 +551,7 @@ Destructor.
 - (void)
 dealloc
 {
+	Memory_EraseWeakReferences(self);
 	[_historyArray release];
 	[containerWindow release];
 	[viewMgr release];
