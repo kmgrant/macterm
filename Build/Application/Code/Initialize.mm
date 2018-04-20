@@ -237,9 +237,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		}
 	}
 	
-	// now set a flag indicating that initialization succeeded
-	FlagManager_Set(kFlagInitializationComplete, true);
-	
 	// if requested, automatically show the experimental new terminal window
 	{
 		char const*		varValue = getenv("MACTERM_AUTO_SHOW_COCOA_TERM");
@@ -381,9 +378,6 @@ initApplicationCore ()
 #if RUN_MODULE_TESTS
 	Preferences_RunTests();
 #endif
-	
-	// initialize some other flags
-	FlagManager_Set(kFlagSuspended, false); // initially, the application is active
 }// initApplicationCore
 
 

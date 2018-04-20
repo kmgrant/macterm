@@ -44,7 +44,6 @@
 #ifdef __OBJC__
 #	include <CocoaFuture.objc++.h>
 #endif
-#include <FlagManager.h>
 #include <ListenerModel.h>
 
 
@@ -275,27 +274,6 @@ enum
 	kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges				= 'TWin',
 	kConstantsRegistry_ListenerModelDescriptorToolbarChanges					= 'TBar',
 	kConstantsRegistry_ListenerModelDescriptorToolbarItemChanges				= 'Tool'
-};
-
-//@}
-
-//!\name Special Global Flags
-//@{
-
-/*!
-Pass one of these to FlagManager_Test() (they are generally
-initialized at startup time).
-*/
-enum
-{
-	// All of these must be unique.  Note that, thanks to the excellent design
-	// of the Flag Manager, there is no real limit as to the number of flags
-	// you can define here.  There is also no efficiency concern - it is not
-	// necessary to use multiples of 16 or 32 flags, for example.
-	kFlagAppleScriptRecording		= (kFlagManager_FirstValidFlag + 0),	//!< is the user recording events into a script?
-	kFlagInitializationComplete		= (kFlagManager_FirstValidFlag + 1),	//!< has the application completely finished launching?
-	kFlagSuspended					= (kFlagManager_FirstValidFlag + 13),	//!< is this application’s process in the background?
-	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 14)	//!< skip auto-new-window on application launch?
 };
 
 //@}

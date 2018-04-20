@@ -512,7 +512,6 @@ void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt
 Boolean				isMonospacedFont					(FMFontFamily);
 Boolean				isSmallIBeam						(My_TerminalViewPtr);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
-Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
 void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt32);
 void				populateContextualMenu				(My_TerminalViewPtr, NSMenu*);
@@ -614,10 +613,8 @@ namespace {
 
 HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
 EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
-ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
 ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
 struct My_PreferenceProxies	gPreferenceProxies;
-Boolean						gApplicationIsSuspended = false;
 Boolean						gTerminalViewInitialized = false;
 My_TerminalViewPtrLocker&	gTerminalViewPtrLocks ()				{ static My_TerminalViewPtrLocker x; return x; }
 HIMutableShapeRef			gInvalidationScratchRegion ()			{ static HIMutableShapeRef x = HIShapeCreateMutable(); assert(nullptr != x); return x; }
@@ -670,11 +667,6 @@ TerminalView_Init ()
 											nullptr/* constructor data */, &gTerminalTextViewHIObjectClassRef);
 		assert_noerr(error);
 	}
-	
-	// set up a callback to receive interesting events
-	gMainEventLoopEventListener = ListenerModel_NewBooleanListener(mainEventLoopEvent);
-	EventLoop_StartMonitoring(kEventLoop_GlobalEventSuspendResume, gMainEventLoopEventListener);
-	gApplicationIsSuspended = FlagManager_Test(kFlagSuspended); // set initial value (above callback updates the value later on)
 	
 	// set up a callback to receive preference change notifications
 	gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
@@ -747,8 +739,6 @@ TerminalView_Done ()
 	HIObjectUnregisterClass(gTerminalTextViewHIObjectClassRef), gTerminalTextViewHIObjectClassRef = nullptr;
 	DisposeEventHandlerUPP(gMyTextViewConstructorUPP), gMyTextViewConstructorUPP = nullptr;
 	
-	EventLoop_StopMonitoring(kEventLoop_GlobalEventSuspendResume, gMainEventLoopEventListener);
-	ListenerModel_ReleaseListener(&gMainEventLoopEventListener);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
@@ -9293,111 +9283,6 @@ localToScreen	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Invoked whenever a monitored event from the main event loop
-occurs (see TerminalView_Init() to see which events are
-monitored).  This routine responds appropriately to each
-event (e.g. updating internal variables).
-
-The result is "true" only if the event is to be absorbed
-(preventing anything else from seeing it).
-
-(3.0)
-*/
-Boolean
-mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-					 ListenerModel_Event	inEventThatOccurred,
-					 void*					UNUSED_ARGUMENT(inEventContextPtr),
-					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
-{
-	Boolean		result = false;
-	
-	
-	switch (inEventThatOccurred)
-	{
-	case kEventLoop_GlobalEventSuspendResume:
-		{
-			Boolean		fadeWindows = false;
-			Float32		alpha = 1.0;
-			
-			
-			// update the internal variable to reflect the current suspended state of the application
-			gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
-			
-			unless (kPreferences_ResultOK ==
-					Preferences_GetData(kPreferences_TagFadeBackgroundWindows,
-					sizeof(fadeWindows), &fadeWindows))
-			{
-				fadeWindows = false; // assume a value, if preference can’t be found
-			}
-			
-			// modify windows
-			if (fadeWindows)
-			{
-				Float32		fadeAlpha = 1.0;
-				
-				
-				// update the internal variable to reflect the current suspended state of the application
-				gApplicationIsSuspended = FlagManager_Test(kFlagSuspended);
-				
-				unless (kPreferences_ResultOK ==
-						Preferences_GetData(kPreferences_TagFadeAlpha,
-						sizeof(fadeAlpha), &fadeAlpha))
-				{
-					fadeAlpha = 1.0; // assume a value, if preference can’t be found
-				}
-				
-				if (gApplicationIsSuspended)
-				{
-					alpha = fadeAlpha;
-				}
-				
-				SessionFactory_ForEachTerminalWindow
-				(^(TerminalWindowRef	inTerminalWindow,
-				   Boolean&				UNUSED_ARGUMENT(outStopFlag))
-				{
-					if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-					{
-						HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
-														? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
-														: nullptr;
-						HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
-															? TerminalWindow_ReturnTabWindow(inTerminalWindow)
-															: nullptr;
-						
-						
-						if (nullptr != kTabWindow)
-						{
-							UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, alpha);
-						}
-						if (nullptr != kWindow)
-						{
-							UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, alpha);
-						}
-					}
-					else
-					{
-						NSWindow* const		kWindow  = (nullptr != inTerminalWindow)
-														? TerminalWindow_ReturnNSWindow(inTerminalWindow)
-														: nil;
-						
-						
-						// NOTE: tab state is implicit for Cocoa windows
-						kWindow.alphaValue = alpha;
-					}
-				});
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// mainEventLoopEvent
-
-
-/*!
 Changes the left visible edge of the terminal view by the
 specified number of columns; if positive, the display would
 move left, otherwise it would move right.  No redrawing is
@@ -13932,7 +13817,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// not selected is FURTHER dimmed so as to emphasize the selection and show
 			// that the selection is in fact a click-through region
 			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && !gApplicationIsSuspended))
+					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && [NSApp isActive]))
 			{
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				
@@ -14097,7 +13982,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// not selected is FURTHER dimmed so as to emphasize the selection and show
 			// that the selection is in fact a click-through region
 			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && !gApplicationIsSuspended))
+					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && [NSApp isActive]))
 			{
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				

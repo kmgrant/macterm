@@ -7682,7 +7682,7 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 		}
 		
 		// ignore this event if the application is not frontmost
-		if (FlagManager_Test(kFlagSuspended))
+		if (NO == [NSApp isActive])
 		{
 			focusFollowsMouse = false;
 		}
@@ -8806,7 +8806,7 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 	Boolean					canTrigger = (kSession_WatchForKeepAlive == inWhatTriggered)
 											? true
 											: ((SessionFactory_ReturnUserRecentSession() != inPtr->selfRef) ||
-												FlagManager_Test(kFlagSuspended));
+												(NO == [NSApp isActive]));
 	
 	
 	// automatically ignore triggers that occur too close together

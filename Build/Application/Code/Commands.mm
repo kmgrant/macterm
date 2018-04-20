@@ -317,6 +317,7 @@ void				setUpWindowMenu									(NSMenu*);
 void				setUpWorkspaceFavoritesMenu						(NSMenu*);
 void				setWindowMenuItemMarkForSession					(SessionRef, NSMenuItem* = nil);
 BOOL				textSelectionExists								();
+void				updateFadeAllTerminalWindows					(Boolean);
 
 } // anonymous namespace
 
@@ -1388,7 +1389,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandZoomWindow:
 		case kCommandMaximizeWindow:
 			// do not zoom windows this way, pass events to specific windows
-			// (for example, EventLoop_HandleZoomEvent())
 			result = false;
 			break;
 		
@@ -2255,7 +2255,11 @@ activateAnotherWindow	(My_WindowActivationDirection	inActivationDirection,
 		// (TEMPORARY)
 		if (isCarbonWindow(nextWindow))
 		{
-			EventLoop_SelectBehindDialogWindows(REINTERPRET_CAST([nextWindow windowRef], HIWindowRef));
+			HIWindowRef		carbonWindow = REINTERPRET_CAST([nextWindow windowRef], HIWindowRef);
+			
+			
+			SelectWindow(carbonWindow);
+			CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
 		}
 		else
 		{
@@ -3747,6 +3751,85 @@ textSelectionExists ()
 	return result;
 }// textSelectionExists
 
+
+/*!
+Iterates over all terminal windows and applies or removes
+a fade effect (based on whether or not this is the active
+application, and if the user has set this preference).
+
+This should be invoked upon supsend/resume.
+
+(2018.04)
+*/
+void
+updateFadeAllTerminalWindows	(Boolean	inInactiveState)
+{
+	Boolean		fadeWindows = false;
+	Float32		alpha = 1.0;
+	
+	
+	unless (kPreferences_ResultOK ==
+			Preferences_GetData(kPreferences_TagFadeBackgroundWindows,
+			sizeof(fadeWindows), &fadeWindows))
+	{
+		fadeWindows = false; // assume a value, if preference can’t be found
+	}
+	
+	// modify windows
+	if (fadeWindows)
+	{
+		Float32		fadeAlpha = 1.0;
+		
+		
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagFadeAlpha,
+				sizeof(fadeAlpha), &fadeAlpha))
+		{
+			fadeAlpha = 1.0; // assume a value, if preference can’t be found
+		}
+		
+		if (inInactiveState)
+		{
+			alpha = fadeAlpha;
+		}
+		
+		SessionFactory_ForEachTerminalWindow
+		(^(TerminalWindowRef	inTerminalWindow,
+		   Boolean&				UNUSED_ARGUMENT(outStopFlag))
+		{
+			if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
+			{
+				HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
+												? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
+												: nullptr;
+				HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
+													? TerminalWindow_ReturnTabWindow(inTerminalWindow)
+													: nullptr;
+				
+				
+				if (nullptr != kTabWindow)
+				{
+					UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, alpha);
+				}
+				if (nullptr != kWindow)
+				{
+					UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, alpha);
+				}
+			}
+			else
+			{
+				NSWindow* const		kWindow  = (nullptr != inTerminalWindow)
+												? TerminalWindow_ReturnNSWindow(inTerminalWindow)
+												: nil;
+				
+				
+				// NOTE: tab state is implicit for Cocoa windows
+				kWindow.alphaValue = alpha;
+			}
+		});
+	}
+}// updateFadeAllTerminalWindows
+
 } // anonymous namespace
 
 
@@ -4180,13 +4263,32 @@ applicationShouldTerminate:(NSApplication*)		sender
 
 
 /*!
+Performs various actions when this application comes
+to the front.
+
+(2018.04)
+*/
+- (void)
+applicationDidBecomeActive:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	//NSApplication*			application = (NSApplication*)[aNotification object];
+	
+	
+	Alert_SetIsBackgrounded(false); // automatically removes any posted notifications from alerts
+	Alert_ServiceNotification();
+	updateFadeAllTerminalWindows(false);
+}// applicationDidBecomeActive:
+
+
+/*!
 Installs the handlers for Services.  The Info.plist of the main
 bundle must also advertise the methods of each Service.
 
 (4.0)
 */
 - (void)
-applicationDidFinishLaunching:(NSNotification*)	aNotification
+applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
 	NSApplication*				application = STATIC_CAST([aNotification object], NSApplication*);
 	Commands_ServiceProviders*	providers = [[[Commands_ServiceProviders alloc] init] autorelease];
@@ -4216,6 +4318,24 @@ applicationWillFinishLaunching:(NSNotification*)	aNotification
 													forEventClass:kInternetEventClass
 													andEventID:kAEGetURL];
 }// applicationWillFinishLaunching:
+
+
+/*!
+Performs various actions when another application will
+come to the front.
+
+(2018.04)
+*/
+- (void)
+applicationWillResignActive:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	//NSApplication*			application = (NSApplication*)[aNotification object];
+	
+	
+	Alert_SetIsBackgrounded(true); // automatically removes any posted notifications from alerts
+	updateFadeAllTerminalWindows(true);
+}// applicationWillResignActive:
 
 
 /*!
@@ -7640,7 +7760,8 @@ orderFrontSpecificWindow:(id)		sender
 				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
 				
 				// now select the window
-				EventLoop_SelectOverRealFrontWindow(window);
+				SelectWindow(window);
+				CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
 				
 				isError = (nullptr == window);
 			}

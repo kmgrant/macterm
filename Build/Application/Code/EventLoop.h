@@ -71,17 +71,12 @@ enum
 														//!  ListenerModel_ListenerRef for a callback
 };
 
-/*!
-Events that MacTerm allows other modules to “listen” for, via EventLoop_StartMonitoring().
-*/
-typedef FourCharCode EventLoop_GlobalEvent;
-enum
-{
-	kEventLoop_GlobalEventSuspendResume					= 'Swch'	//!< the current process is either about to become the active
-																	//!  process, or about to become inactive (context: nullptr)
-};
-
 #pragma mark Types
+
+/*!
+Simple response block for arbitrary actions.
+*/
+typedef void (^EventLoop_ResponderBlock)();
 
 #ifdef __OBJC__
 
@@ -132,38 +127,6 @@ void
 
 //@}
 
-//!\name Manual Handling of Events
-//@{
-
-// DEPRECATED
-EventLoop_Result
-	EventLoop_StartMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
-												 ListenerModel_ListenerRef			inListener);
-
-// DEPRECATED
-EventLoop_Result
-	EventLoop_StopMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
-												 ListenerModel_ListenerRef			inListener);
-
-//@}
-
-//!\name Announcing Event Occurrences from External Sources
-//@{
-
-// DEPRECATED
-void
-	EventLoop_HandleZoomEvent					(WindowRef							inWindow);
-
-// DEPRECATED
-void
-	EventLoop_SelectBehindDialogWindows			(WindowRef							inWindowToSelect);
-
-// DEPRECATED
-void
-	EventLoop_SelectOverRealFrontWindow			(WindowRef							inWindowToSelect);
-
-//@}
-
 //!\name Scanning the Queue for Still-Unhandled Events
 //@{
 
@@ -191,12 +154,6 @@ Boolean
 
 Boolean
 	EventLoop_IsShiftKeyDown					();
-
-Boolean
-	EventLoop_KeyIsActivatingCancelButton		(EventRef	inEvent);
-
-Boolean
-	EventLoop_KeyIsActivatingDefaultButton		(EventRef	inEvent);
 
 // FAVOR EVENT-SPECIFIC KEY STATE INFORMATION IF IT IS AVAILABLE
 EventModifiers

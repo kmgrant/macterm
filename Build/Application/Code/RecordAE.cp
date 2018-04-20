@@ -276,7 +276,6 @@ startRecording ()
 	// Hmmm...is it possible for multiple recordings to be taking place at once?
 	// Assume that it is, and keep track of the number of recordings in progress.
 	++gRecordingCount;
-	FlagManager_Set(kFlagAppleScriptRecording, true);
 	
 	return result;
 }// startRecording
@@ -299,7 +298,6 @@ stopRecording ()
 	// Assume that it is, and keep track of recordings; clear the flag only when
 	// all recordings have been terminated.
 	--gRecordingCount;
-	if (gRecordingCount <= 0) FlagManager_Set(kFlagAppleScriptRecording, false);
 	
 	return result;
 }// stopRecording

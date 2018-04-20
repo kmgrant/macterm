@@ -54,50 +54,19 @@
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <GrowlSupport.h>
-#import <HIViewWrap.h>
-#import <ListenerModel.h>
-#import <Localization.h>
 #import <MacHelpUtilities.h>
-#import <MemoryBlockHandleLocker.template.h>
-#import <MemoryBlockPtrLocker.template.h>
-#import <MemoryBlocks.h>
-#import <RegionUtilities.h>
-#import <StringUtilities.h>
 #import <TouchBar.objc++.h>
 
 // application includes
 #import "Commands.h"
-#import "ConstantsRegistry.h"
 #import "DialogUtilities.h"
-#import "QuillsSession.h"
-#import "Session.h"
+#import "TerminalWindow.h"
 
 
-
-#pragma mark Types
-namespace {
-
-struct My_GlobalEventTarget
-{
-	ListenerModel_Ref	listenerModel;
-};
-typedef My_GlobalEventTarget*				My_GlobalEventTargetPtr;
-typedef My_GlobalEventTarget const*			My_GlobalEventTargetConstPtr;
-typedef My_GlobalEventTarget**				My_GlobalEventTargetHandle;
-typedef struct OpaqueMy_GlobalEventTarget**	My_GlobalEventTargetRef;
-
-typedef MemoryBlockHandleLocker< My_GlobalEventTargetRef, My_GlobalEventTarget >	My_GlobalEventTargetHandleLocker;
-typedef LockAcquireRelease< My_GlobalEventTargetRef, My_GlobalEventTarget >			My_GlobalEventTargetAutoLocker;
-
-} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-void					disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
-void					eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
-My_GlobalEventTargetRef	newGlobalEventTarget			();
-OSStatus				receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
@@ -109,11 +78,6 @@ OSStatus				updateModifiers					(EventHandlerCallRef, EventRef, void*);
 namespace {
 
 NSAutoreleasePool*					gGlobalPool = nil;
-My_GlobalEventTargetRef				gGlobalEventTarget = nullptr;
-SInt16								gHaveInstalledNotification = 0;
-UInt32								gTicksWaitNextEvent = 0L;
-NMRec*								gBeepNotificationPtr = nullptr;
-My_GlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static My_GlobalEventTargetHandleLocker x; return x; }
 CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
 																	receiveHICommand,
 																	CarbonEventSetInClass
@@ -131,13 +95,6 @@ CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget
 																			kEventRawKeyUp),
 																	nullptr/* user data */);
 Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
-CarbonEventHandlerWrap				gCarbonEventSwitchHandler(GetApplicationEventTarget(),
-																receiveApplicationSwitch,
-																CarbonEventSetInClass
-																	(CarbonEventClass(kEventClassApplication),
-																		kEventAppActivated, kEventAppDeactivated),
-																nullptr/* user data */);
-Console_Assertion					_3(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
 CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventTarget(),
 																		receiveWindowActivated,
 																		CarbonEventSetInClass
@@ -200,9 +157,6 @@ EventLoop_Init ()
 	// support Growl notifications if possible
 	GrowlSupport_Init();
 	
-	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
-	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time
-	
 	// install a callback that detects toolbar sheets
 	{
 		EventTypeSpec const		whenToolbarSheetOpens[] =
@@ -224,9 +178,6 @@ EventLoop_Init ()
 		}
 	}
 	
-	// create listener models to handle event notifications
-	gGlobalEventTarget = newGlobalEventTarget();
-	
 	return result;
 }// Init
 
@@ -244,35 +195,8 @@ EventLoop_Done ()
 	RemoveEventHandler(gCarbonEventSheetOpeningHandler), gCarbonEventSheetOpeningHandler = nullptr;
 	DisposeEventHandlerUPP(gCarbonEventSheetOpeningUPP), gCarbonEventSheetOpeningUPP = nullptr;
 	
-	// destroy global event target
-	disposeGlobalEventTarget(&gGlobalEventTarget);
-	
 	//[gGlobalPool release];
 }// Done
-
-
-/*!
-Performs whatever action is appropriate in response
-to a user request to zoom the specified window.  The
-window zooms based on whatever state it is currently
-in (ideal state, user state).
-
-(3.0)
-*/
-void
-EventLoop_HandleZoomEvent	(HIWindowRef	inWindow)
-{
-	OSStatus	error = noErr;
-	EventRef	zoomEvent = nullptr;
-	
-	
-	error = CreateEvent(kCFAllocatorDefault, kEventClassWindow, kEventWindowZoom,
-						GetCurrentEventTime(), kEventAttributeNone, &zoomEvent);
-	assert_noerr(error);
-	error = SetEventParameter(zoomEvent, kEventParamDirectObject, typeWindowRef, sizeof(inWindow), &inWindow);
-	assert_noerr(error);
-	SendEventToWindow(zoomEvent, inWindow);
-}// HandleZoomEvent
 
 
 /*!
@@ -469,107 +393,6 @@ EventLoop_IsShiftKeyDown ()
 
 
 /*!
-Determines if the specified "kEventTextInputUnicodeForKeyEvent" event
-of class "kEventClassTextInput" is an Escape key or command-period key
-press, or if it would otherwise activate the Cancel button of a window
-when the button does not have direct keyboard focus.
-
-Returns false for any other kind of event.
-
-(4.0)
-*/
-Boolean
-EventLoop_KeyIsActivatingCancelButton	(EventRef	inEvent)
-{
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	Boolean			result = false;
-	
-	
-	// NOTE: the IsUserCancelEventRef() API was tried, but it does not
-	// seem to have the right effect for the kind of event handled below
-	if ((kEventClassTextInput == kEventClass) &&
-		(kEventTextInputUnicodeForKeyEvent == kEventKind))
-	{
-		EventRef	originalKeyPressEvent = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
-														typeEventRef, originalKeyPressEvent);
-		if (noErr == error)
-		{
-			UInt32		modifiers = 0;
-			UInt32		keyCode = '\0';
-			
-			
-			UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
-																			typeUInt32, modifiers);
-			error = CarbonEventUtilities_GetEventParameter
-					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
-			if (noErr == error)
-			{
-				// WARNING: technically, while the Escape key code is universal, the
-				// key code for “period“ is dependent on the keyboard layout; TEMPORARY
-				result = (((kVK_Escape == keyCode) && (0 == modifiers)) ||
-							((kVK_ANSI_Period == keyCode) && (cmdKey == modifiers)));
-			}
-		}
-	}
-	return result;
-}// KeyIsActivatingCancelButton
-
-
-/*!
-Determines if the specified "kEventTextInputUnicodeForKeyEvent" event
-of class "kEventClassTextInput" is a Return key or Enter key press,
-or if it would otherwise activate the default button of a window when
-the button does not have direct keyboard focus.
-
-Returns false for any other kind of event.
-
-(4.0)
-*/
-Boolean
-EventLoop_KeyIsActivatingDefaultButton	(EventRef	inEvent)
-{
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	Boolean			result = false;
-	
-	
-	if ((kEventClassTextInput == kEventClass) &&
-		(kEventTextInputUnicodeForKeyEvent == kEventKind))
-	{
-		EventRef	originalKeyPressEvent = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
-														typeEventRef, originalKeyPressEvent);
-		if (noErr == error)
-		{
-			UInt32		modifiers = 0;
-			UInt32		keyCode = '\0';
-			
-			
-			UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers,
-																			typeUInt32, modifiers);
-			error = CarbonEventUtilities_GetEventParameter
-					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
-			if ((noErr == error) && (0 == modifiers))
-			{
-				// WARNING: technically, while the Return key code is universal, the
-				// key code for Enter is dependent on the keyboard layout; TEMPORARY
-				result = ((kVK_Return == keyCode) || (kVK_ANSI_KeypadEnter == keyCode));
-			}
-		}
-	}
-	return result;
-}// KeyIsActivatingDefaultButton
-
-
-/*!
 Determines the absolutely current state of the
 modifier keys and the mouse button.  The
 modifiers are somewhat incomplete (for example,
@@ -620,228 +443,8 @@ EventLoop_Run ()
 }// Run
 
 
-/*!
-Use instead of SelectWindow() to bring a window
-in front, unless the frontmost window is a modal
-dialog box.
-
-(3.0)
-*/
-void
-EventLoop_SelectBehindDialogWindows		(HIWindowRef	inWindow)
-{
-	SelectWindow(inWindow);
-	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
-}// SelectBehindDialogWindows
-
-
-/*!
-Use instead of SelectWindow() to bring a window
-in front of all windows, even modal or floating
-windows.  Note that this is only appropriate for
-a window that you will be turning into a modal
-window.
-
-(3.0)
-*/
-void
-EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
-{
-	SelectWindow(inWindow);
-	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
-}// SelectOverRealFrontWindow
-
-
-/*!
-Arranges for a callback to be invoked whenever a global
-event occurs (such as an application switch).
-
-Use EventLoop_StopMonitoring() to remove the listener in
-the future.  You MUST do this prior to disposing of your
-"ListenerModel_ListenerRef", otherwise the application will
-crash when it tries to invoke the disposed listener.
-
-IMPORTANT:	The context passed to the listener callback
-			is reserved for passing information relevant
-			to an event.  See "EventLoop.h" for comments
-			on what the context means for each type of
-			global event.
-
-(3.0)
-*/
-EventLoop_Result
-EventLoop_StartMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
-							 ListenerModel_ListenerRef	inListener)
-{
-	EventLoop_Result				result = noErr;
-	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
-	
-	
-	// add a listener to the specified target’s listener model for the given event
-	result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-	if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
-	
-	return result;
-}// StartMonitoring
-
-
-/*!
-Arranges for a callback to no longer be invoked whenever a
-global event occurs (such as an application switch).
-
-\retval noErr
-always; no errors are currently defined
-
-(3.0)
-*/
-EventLoop_Result
-EventLoop_StopMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
-							 ListenerModel_ListenerRef	inListener)
-{
-	EventLoop_Result				result = noErr;
-	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
-	
-	
-	// remove a listener from the specified target’s listener model for the given event
-	ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-	
-	return result;
-}// StopMonitoring
-
-
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Destroys an event target reference created with the
-newGlobalEventTarget() routine.
-
-(3.0)
-*/
-void
-disposeGlobalEventTarget	(My_GlobalEventTargetRef*	inoutRefPtr)
-{
-	if (inoutRefPtr != nullptr)
-	{
-		{
-			My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), *inoutRefPtr);
-			
-			
-			if (ptr != nullptr)
-			{
-				// dispose of data members
-				ListenerModel_Dispose(&ptr->listenerModel);
-			}
-		}
-		Memory_DisposeHandle(REINTERPRET_CAST(inoutRefPtr, Handle*));
-	}
-}// disposeGlobalEventTarget
-
-
-/*!
-Notifies all listeners for the specified global
-event, in an appropriate order, passing the given
-context to the listener.
-
-IMPORTANT:	The context must make sense for the
-			type of event; see "EventLoop.h" for
-			the type of context associated with
-			each event type.
-
-(3.0)
-*/
-void
-eventNotifyGlobal	(EventLoop_GlobalEvent	inEventThatOccurred,
-					 void*					inContextPtr)
-{
-	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
-	
-	
-	// invoke listener callback routines appropriately
-	ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inContextPtr);
-}// eventNotifyGlobal
-
-
-/*!
-Creates the global event target, used for all events
-that do not have a more specific target.  Dispose of
-this with disposeGlobalEventTarget().
-
-(3.0)
-*/
-My_GlobalEventTargetRef
-newGlobalEventTarget ()
-{
-	My_GlobalEventTargetRef		result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_GlobalEventTarget)),
-															My_GlobalEventTargetRef);
-	
-	
-	if (result != nullptr)
-	{
-		My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), result);
-		
-		
-		ptr->listenerModel = ListenerModel_New(kListenerModel_StyleLogicalOR,
-												kConstantsRegistry_ListenerModelDescriptorEventTargetGlobal);
-	}
-	return result;
-}// newGlobalEventTarget
-
-
-/*!
-Handles "kEventAppActivated" and "kEventAppDeactivated"
-of "kEventClassApplication".
-
-Invoked by Mac OS X whenever this application becomes
-frontmost (resumed/activated) or another application
-becomes frontmost when this application was formerly
-frontmost (suspended/deactivated).
-
-(3.0)
-*/
-OSStatus
-receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent),
-					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassApplication);
-	assert((kEventKind == kEventAppActivated) || (kEventKind == kEventAppDeactivated));
-	{
-		Boolean		resuming = (kEventKind == kEventAppActivated);
-		
-		
-		// scrap conversion is not tied to application switching
-		// under Carbon; instead, use the new “promise” mechanism
-		// provided by the Carbon Scrap Manager
-		
-		// set this global flag, which is consulted in various other files
-		FlagManager_Set(kFlagSuspended, !resuming);
-		
-		Alert_SetIsBackgrounded(!resuming); // automatically removes any posted notifications from alerts
-		if ((resuming) && (gHaveInstalledNotification))
-		{
-			// this removes any flashing icons, etc. from the process menu, if a notification was posted
-			NMRemove(gBeepNotificationPtr);
-			Memory_DisposeHandle(&(gBeepNotificationPtr->nmIcon));
-			gHaveInstalledNotification = false;
-		}
-		
-		// 3.0 - service a pending alert
-		if (resuming) Alert_ServiceNotification();
-		
-		// 3.0 - notify all listeners of switch events that a switch has occurred
-		eventNotifyGlobal(kEventLoop_GlobalEventSuspendResume, nullptr/* context */);
-		
-		result = noErr; // event is completely handled
-	}
-	return result;
-}// receiveApplicationSwitch
-
 
 /*!
 Handles "kEventCommandProcess" of "kEventClassCommand".
@@ -1130,7 +733,7 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the modifier key information was found, proceed
 		if (noErr == result)
 		{
-			if (FlagManager_Test(kFlagSuspended)) result = eventNotHandledErr;
+			if (NO == [NSApp isActive]) result = eventNotHandledErr;
 		}
 		else
 		{

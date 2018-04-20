@@ -58,7 +58,6 @@
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.mm */; };
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */; };
-		0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0007FAC07A00248DDF /* FlagManager.cp */; };
 		0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE36055432A400ACDF3A /* Undoables.cp */; };
 		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */; };
 		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */; };
@@ -264,7 +263,6 @@
 		0A33CCF607FAC04200248DDF /* ListenerModel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ListenerModel.mm; path = Shared/Code/ListenerModel.mm; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StringUtilities.mm; path = Shared/Code/StringUtilities.mm; sourceTree = "<group>"; };
-		0A33CD0007FAC07A00248DDF /* FlagManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FlagManager.cp; path = Shared/Code/FlagManager.cp; sourceTree = "<group>"; };
 		0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
 		0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
 		0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextDataFile.cp; path = Shared/Code/TextDataFile.cp; sourceTree = "<group>"; };
@@ -443,7 +441,6 @@
 		0A9B31840D538E4D00C1616D /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
 		0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFDictionaryManager.h; path = Shared/Code/CFDictionaryManager.h; sourceTree = "<group>"; };
 		0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFKeyValueInterface.h; path = Shared/Code/CFKeyValueInterface.h; sourceTree = "<group>"; };
-		0A9B318C0D538E8600C1616D /* FlagManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FlagManager.h; path = Shared/Code/FlagManager.h; sourceTree = "<group>"; };
 		0A9B318E0D538EAB00C1616D /* ListenerModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListenerModel.h; path = Shared/Code/ListenerModel.h; sourceTree = "<group>"; };
 		0A9B31920D538EE400C1616D /* MemoryBlocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlocks.h; path = Shared/Code/MemoryBlocks.h; sourceTree = "<group>"; };
 		0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockHandleLocker.template.h; path = Shared/Code/MemoryBlockHandleLocker.template.h; sourceTree = "<group>"; };
@@ -618,7 +615,6 @@
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
 				0A90C79A1DBC557B005EABE0 /* CoreUI.mm */,
-				0A33CD0007FAC07A00248DDF /* FlagManager.cp */,
 				0A68811112F537A1005F418A /* GrowlSupport.mm */,
 				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.mm */,
@@ -654,7 +650,6 @@
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */,
-				0A9B318C0D538E8600C1616D /* FlagManager.h */,
 				0A68811012F5378C005F418A /* GrowlSupport.h */,
 				0A66CA450887464200FD616C /* HIViewWrap.h */,
 				0A66CA950887505200FD616C /* HIViewWrap.fwd.h */,
@@ -1345,7 +1340,6 @@
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */,
 				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */,
-				0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */,
 				0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */,
 				0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */,
 				0A03A1EB1D9A297000411248 /* OtherApps.mm in Sources */,
