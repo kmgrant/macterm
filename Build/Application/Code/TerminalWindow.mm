@@ -3487,6 +3487,22 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 			{
 				Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
 			}
+			else
+			{
+				TerminalView_Result		viewResult = kTerminalView_ResultOK;
+				
+				
+				viewResult = TerminalView_RemoveDataSource(newView, nullptr/* specific screen or "nullptr" for all screens */);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
+				}
+				viewResult = TerminalView_AddDataSource(newView, newScreen);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
+				}
+			}
 		}
 		else
 		{
