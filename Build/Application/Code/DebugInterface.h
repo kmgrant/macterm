@@ -65,11 +65,7 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	launchNewCallPythonClient:(id)_;
 	- (IBAction)
-	setTestTerminalToActiveSessionData:(id)_;
-	- (IBAction)
 	showTestTerminalToolbar:(id)_;
-	- (IBAction)
-	showTestTerminalWindow:(id)_;
 
 // accessors
 	@property (assign) BOOL
@@ -105,9 +101,6 @@ extern Boolean		gDebugInterface_UseCocoaTerminalWindowsForNewSessions;
 
 void
 	DebugInterface_Display					();
-
-void
-	DebugInterface_DisplayTestTerminal		();
 
 inline Boolean
 	DebugInterface_LogsSixelDecoderState	()

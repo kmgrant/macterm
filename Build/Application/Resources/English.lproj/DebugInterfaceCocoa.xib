@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17D102" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17E199" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -151,30 +151,12 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <buttonCell key="cell" type="push" title="Show Cocoa Terminal" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="74">
+                        <buttonCell key="cell" type="push" title="Show Cocoa Toolbar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="74">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="showTestTerminalWindow:" target="-2" id="77"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="129" customClass="CoreUI_Button">
-                        <rect key="frame" x="180" y="46" width="182" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="push" title="Launch XPC Service" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="130">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="launchNewCallPythonClient:" target="-2" id="133"/>
+                            <action selector="showTestTerminalToolbar:" target="-2" id="XQj-Pf-fl1"/>
                         </connections>
                     </button>
                     <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="117" customClass="CoreUI_Button">
@@ -187,30 +169,12 @@
                                 </configuration>
                             </ciFilter>
                         </contentFilters>
-                        <buttonCell key="cell" type="push" title="Show Cocoa Toolbar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="118">
+                        <buttonCell key="cell" type="push" title="Launch XPC Service" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="118">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="showTestTerminalToolbar:" target="-2" id="120"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="134" customClass="CoreUI_Button">
-                        <rect key="frame" x="180" y="13" width="182" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="push" title="Cocoa Term Session" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="135">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="setTestTerminalToActiveSessionData:" target="-2" id="137"/>
+                            <action selector="launchNewCallPythonClient:" target="-2" id="sPz-yD-uuw"/>
                         </connections>
                     </button>
                     <button wantsLayer="YES" misplaced="YES" id="yBK-8Y-YCX">

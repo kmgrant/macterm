@@ -157,6 +157,18 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	ListenerModel_RunTests();
 #endif
 	
+	// if requested, automatically use experimental new terminal windows for sessions
+	{
+		DebugInterface_PanelController*		panelController = [DebugInterface_PanelController sharedDebugInterfacePanelController];
+		char const*							varValue = getenv("MACTERM_USE_COCOA_TERM");
+		
+		
+		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
+		{
+			panelController.useCocoaTerminalWindowsForNewSessions = YES;
+		}
+	}
+	
 	// do everything else
 	{
 		SessionFactory_Init();
@@ -234,17 +246,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			{
 				Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite);
 			}
-		}
-	}
-	
-	// if requested, automatically show the experimental new terminal window
-	{
-		char const*		varValue = getenv("MACTERM_AUTO_SHOW_COCOA_TERM");
-		
-		
-		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
-		{
-			DebugInterface_DisplayTestTerminal();
 		}
 	}
 	

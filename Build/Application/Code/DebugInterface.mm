@@ -45,25 +45,10 @@
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
-#import "TerminalToolbar.objc++.h"
-#import "TerminalView.h"
-#import "TerminalWindow.h"
 
 
 
 #pragma mark Variables
-namespace {
-
-TerminalView_Controller*&		gDebugInterface_TestTerminalVC()	{ static TerminalView_Controller* _ = [[TerminalView_Controller alloc] init]; return _; };
-TerminalWindow_Controller*&		gDebugInterface_TestTerminalWindowController()
-								{
-									static TerminalWindow_Controller*	_ = [[TerminalWindow_Controller alloc]
-																				initWithTerminalVC:gDebugInterface_TestTerminalVC()
-																									owner:nullptr];
-									return _;
-								}
-
-} // anonymous namespace
 
 Boolean		gDebugInterface_LogsDeviceState = false;
 Boolean		gDebugInterface_LogsSixelDecoderState = false;
@@ -92,18 +77,6 @@ DebugInterface_Display ()
 	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// @autoreleasepool
 }// Display
-
-
-/*!
-Shows the experimental new terminal window (Cocoa based).
-
-(4.0)
-*/
-void
-DebugInterface_DisplayTestTerminal ()
-{
-	[gDebugInterface_TestTerminalWindowController().window makeKeyAndOrderFront:nil];
-}// DisplayTestTerminal
 
 
 #pragma mark Internal Methods
@@ -273,45 +246,6 @@ launchNewCallPythonClient:(id)	sender
 
 
 /*!
-Changes the data source of the test Cocoa terminal window so
-that it displays the same terminal screen as the active
-session.
-
-(4.1)
-*/
-- (IBAction)
-setTestTerminalToActiveSessionData:(id)		sender
-{
-#pragma unused(sender)
-	SessionRef					activeSession = SessionFactory_ReturnUserRecentSession();
-	TerminalWindowRef			activeTerminalWindow = Session_ReturnActiveTerminalWindow(activeSession);
-	TerminalScreenRef			activeScreen = TerminalWindow_ReturnScreenWithFocus(activeTerminalWindow);
-	TerminalView_Controller*	terminalVC = gDebugInterface_TestTerminalVC();
-	TerminalViewRef				testView = [terminalVC.terminalContentView terminalViewRef];
-	TerminalView_Result			viewResult = kTerminalView_ResultOK;
-	
-	
-	if ((nullptr == activeScreen) || (nullptr == testView))
-	{
-		Console_Warning(Console_WriteLine, "test view and/or active screen could not be found");
-	}
-	else
-	{
-		viewResult = TerminalView_RemoveDataSource(testView, nullptr/* specific screen or "nullptr" for all screens */);
-		if (kTerminalView_ResultOK != viewResult)
-		{
-			Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
-		}
-		viewResult = TerminalView_AddDataSource(testView, activeScreen);
-		if (kTerminalView_ResultOK != viewResult)
-		{
-			Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
-		}
-	}
-}// setTestTerminalToActiveSessionData:
-
-
-/*!
 Displays a Cocoa-based terminal toolbar window.
 
 (4.0)
@@ -337,22 +271,6 @@ showTestTerminalToolbar:(id)	sender
 	}
 	[gDebugInterface_ToolbarWindow makeKeyAndOrderFront:sender];
 }// showTestTerminalToolbar:
-
-
-/*!
-Displays the Cocoa-based terminal window that is constructed
-secretly at startup time.  It is incomplete, so it is only
-used for testing incremental additions to the Cocoa-based
-terminal view.
-
-(4.0)
-*/
-- (IBAction)
-showTestTerminalWindow:(id)		sender
-{
-#pragma unused(sender)
-	DebugInterface_DisplayTestTerminal();
-}// showTestTerminalWindow:
 
 
 #pragma mark Accessors
