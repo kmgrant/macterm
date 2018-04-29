@@ -96,13 +96,12 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelFormats_GeneralViewManager : Panel_ViewManager< Panel_Delegate,
 																	PrefsWindow_PanelInterface > //{
 {
-	IBOutlet TerminalView_ContentView*		terminalSampleContentView;
-	IBOutlet TerminalView_BackgroundView*	terminalSamplePaddingView;
-	IBOutlet TerminalView_BackgroundView*	terminalSampleBackgroundView;
+	IBOutlet NSView*				sampleViewContainer;
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSRect							idealFrame;
 	NSMutableDictionary*			byKey;
+	TerminalView_Controller*		sampleTerminalVC;
 	TerminalScreenRef				sampleScreenBuffer;
 	TerminalViewRef					sampleScreenView;
 }
@@ -150,13 +149,12 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelFormats_StandardColorsViewManager : Panel_ViewManager< Panel_Delegate,
 																			PrefsWindow_PanelInterface > //{
 {
-	IBOutlet TerminalView_ContentView*		terminalSampleContentView;
-	IBOutlet TerminalView_BackgroundView*	terminalSamplePaddingView;
-	IBOutlet TerminalView_BackgroundView*	terminalSampleBackgroundView;
+	IBOutlet NSView*				sampleViewContainer;
 @private
 	PrefsContextManager_Object*		prefsMgr;
 	NSRect							idealFrame;
 	NSMutableDictionary*			byKey;
+	TerminalView_Controller*		sampleTerminalVC;
 	TerminalScreenRef				sampleScreenBuffer;
 	TerminalViewRef					sampleScreenView;
 }

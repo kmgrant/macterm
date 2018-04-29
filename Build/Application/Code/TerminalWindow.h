@@ -49,14 +49,19 @@
 @class NSWindow;
 @class TerminalToolbar_Delegate;
 @class TerminalView_Controller;
+@class TerminalView_ScrollableRootVC;
 #else
 class NSWindow;
 class TerminalToolbar_Delegate;
 class TerminalView_Controller;
+class TerminalView_ScrollableRootVC;
 #endif
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#ifdef __OBJC__
+#	include <CoreUI.objc++.h>
+#endif
 #include <ListenerModel.h>
 #ifdef __OBJC__
 #	include <PopoverManager.objc++.h>
@@ -68,7 +73,7 @@ class TerminalView_Controller;
 #ifdef __OBJC__
 #	include "TerminalToolbar.objc++.h"
 #endif
-#include "TerminalViewRef.typedef.h"
+#include "TerminalView.h"
 
 
 
@@ -122,10 +127,6 @@ Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWind
 #include "TerminalWindowRef.typedef.h"
 
 #ifdef __OBJC__
-
-@class TerminalView_BackgroundView;
-@class TerminalView_ContentView;
-
 
 /*!
 An object that can display a floating information bubble
@@ -191,6 +192,58 @@ from the base.
 
 
 /*!
+The type of view managed by "TerminalWindow_RootVC".
+Currently used to handle layout (until a later SDK can
+be adopted, where the view controller might directly
+perform more view tasks).
+*/
+@interface TerminalWindow_RootView : CoreUI_LayoutView //{
+{
+@private
+	NSMutableArray*		_scrollableTerminalRootViews;
+}
+
+// new methods
+	- (void)
+	addScrollableRootView:(TerminalView_ScrollableRootView*)_;
+	- (NSEnumerator*)
+	enumerateScrollableRootViews;
+	- (void)
+	removeScrollableRootView:(TerminalView_ScrollableRootView*)_;
+
+@end //}
+
+
+/*!
+Custom root view controller that holds a scroll bar and
+one or more terminal view controllers.  This is also
+responsible for the layout of window views such as the
+terminal scroll controllers and any displayed “bars”.
+*/
+@interface TerminalWindow_RootVC : NSViewController < CoreUI_ViewLayoutDelegate > //{
+{
+@private
+	NSMutableArray*		_terminalScrollControllers;
+}
+
+// accessors
+	- (TerminalWindow_RootView*)
+	rootView;
+
+// new methods
+	- (void)
+	addScrollControllerBeyondEdge:(NSRectEdge)_;
+	- (NSEnumerator*)
+	enumerateScrollControllers;
+	- (void)
+	enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)_;
+	- (void)
+	removeScrollController:(TerminalView_ScrollableRootVC*)_;
+
+@end //}
+
+
+/*!
 Implements a window controller for a window that holds
 at least one terminal view as a parent.  See
 "TerminalWindowCocoa.xib".
@@ -205,9 +258,9 @@ changes to an interface declared in a ".mm" file.
 {
 @private
 	NSRect						_preFullScreenFrame;
-	NSMutableArray*				_terminalViewControllers;
 	TerminalWindowRef			_terminalWindowRef;
 	TerminalToolbar_Delegate*	_toolbarDelegate;
+	TerminalWindow_RootVC*		_rootVC;
 }
 
 // initializers
@@ -216,12 +269,14 @@ changes to an interface declared in a ".mm" file.
 	owner:(TerminalWindowRef)_;
 
 // accessors
+	- (TerminalWindow_RootVC*)
+	rootViewController;
 	@property (assign) TerminalWindowRef
 	terminalWindowRef;
 
 // new methods
-	- (NSEnumerator*)
-	enumerateTerminalViewControllers;
+	- (void)
+	enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)_;
 	- (void)
 	setTitleVisibility:(NSInteger)_;
 	- (void)

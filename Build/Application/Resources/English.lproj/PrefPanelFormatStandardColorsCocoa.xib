@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17E199" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -10,9 +10,7 @@
             <connections>
                 <outlet property="logicalFirstResponder" destination="1993" id="2060"/>
                 <outlet property="logicalLastResponder" destination="2154" id="2SQ-AM-3cM"/>
-                <outlet property="terminalSampleBackgroundView" destination="g9w-0f-qgL" id="u0y-k7-GlB"/>
-                <outlet property="terminalSampleContentView" destination="SKC-hB-iDV" id="Hoh-GM-IJ3"/>
-                <outlet property="terminalSamplePaddingView" destination="J1g-Tj-4Jd" id="hNX-ok-Frt"/>
+                <outlet property="sampleViewContainer" destination="g9w-0f-qgL" id="FJ2-iC-GXd"/>
                 <outlet property="view" destination="1835" id="byO-Bb-YTl"/>
             </connections>
         </customObject>
@@ -25,7 +23,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="520" height="490"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" id="1913">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="1913">
                         <rect key="frame" x="72" y="327" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Black:" id="1914">
@@ -54,7 +52,7 @@
                             <outlet property="nextKeyView" destination="1998" id="2063"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="1997">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="1997">
                         <rect key="frame" x="72" y="296" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Red:" id="2000">
@@ -83,7 +81,7 @@
                             <outlet property="nextKeyView" destination="2002" id="2065"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="2001">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2001">
                         <rect key="frame" x="72" y="265" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Green:" id="2004">
@@ -112,7 +110,7 @@
                             <outlet property="nextKeyView" destination="2006" id="2067"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="1995">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="1995">
                         <rect key="frame" x="219" y="66" width="284" height="34"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Choose Normal and Emphasized versions of each color." id="1996">
@@ -121,7 +119,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="2005">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2005">
                         <rect key="frame" x="72" y="234" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Yellow:" id="2008">
@@ -150,7 +148,7 @@
                             <outlet property="nextKeyView" destination="2010" id="2069"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="2009">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2009">
                         <rect key="frame" x="72" y="203" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Blue:" id="2012">
@@ -179,7 +177,7 @@
                             <outlet property="nextKeyView" destination="2014" id="2071"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="2013">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2013">
                         <rect key="frame" x="72" y="172" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Magenta:" id="2016">
@@ -208,7 +206,7 @@
                             <outlet property="nextKeyView" destination="2018" id="2073"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="2017">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2017">
                         <rect key="frame" x="72" y="141" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Cyan:" id="2020">
@@ -237,7 +235,7 @@
                             <outlet property="nextKeyView" destination="2053" id="2075"/>
                         </connections>
                     </colorWell>
-                    <textField verticalHuggingPriority="750" id="2052">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2052">
                         <rect key="frame" x="72" y="110" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="White:" id="2055">
@@ -275,10 +273,9 @@
                         </buttonCell>
                         <connections>
                             <action selector="performResetStandardColors:" target="-2" id="2023"/>
-                            <outlet property="nextKeyView" destination="SKC-hB-iDV" id="3d9-uf-w7e"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="2078">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2078">
                         <rect key="frame" x="17" y="345" width="128" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2079">
@@ -511,7 +508,7 @@
                             <outlet property="nextKeyView" destination="1993" id="u1p-0K-Uen"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="b22-1q-Aq2">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="b22-1q-Aq2">
                         <rect key="frame" x="18" y="380" width="484" height="14"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Sample" id="Onz-Dj-xun">
@@ -520,24 +517,9 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <customView id="g9w-0f-qgL" customClass="TerminalView_BackgroundView">
+                    <customView id="g9w-0f-qgL">
                         <rect key="frame" x="20" y="402" width="480" height="68"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <subviews>
-                            <customView id="J1g-Tj-4Jd" customClass="TerminalView_BackgroundView">
-                                <rect key="frame" x="8" y="8" width="464" height="52"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                <subviews>
-                                    <customView id="SKC-hB-iDV" customClass="TerminalView_ContentView">
-                                        <rect key="frame" x="5" y="5" width="454" height="42"/>
-                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                        <connections>
-                                            <outlet property="nextKeyView" destination="2080" id="jv5-r3-BYW"/>
-                                        </connections>
-                                    </customView>
-                                </subviews>
-                            </customView>
-                        </subviews>
                     </customView>
                     <box verticalHuggingPriority="750" boxType="separator" id="xdb-Fp-nlx">
                         <rect key="frame" x="20" y="367" width="480" height="5"/>

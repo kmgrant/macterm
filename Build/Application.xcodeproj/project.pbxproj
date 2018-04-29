@@ -477,6 +477,11 @@
 		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AC4185A208BB7A10068A309 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalScrollableRootViewCocoa.xib; sourceTree = "<group>"; };
+		0AC4185C208D35800068A309 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalRootCocoa.xib; sourceTree = "<group>"; };
+		0AC4185D208D35AE0068A309 /* IconForWindowTitleCenter.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForWindowTitleCenter.icns; path = Application/Resources/IconForWindowTitleCenter.icns; sourceTree = "<group>"; };
+		0AC4185E208D35AE0068A309 /* IconForWindowTitleLeft.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForWindowTitleLeft.icns; path = Application/Resources/IconForWindowTitleLeft.icns; sourceTree = "<group>"; };
+		0AC4185F208D35AE0068A309 /* IconForWindowTitleRight.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForWindowTitleRight.icns; path = Application/Resources/IconForWindowTitleRight.icns; sourceTree = "<group>"; };
 		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
@@ -541,9 +546,6 @@
 		0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
 		0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefs.icns; path = Application/Resources/IconForPrefs.icns; sourceTree = "<group>"; };
-		0AF90B0F204CC51A00146B38 /* IconForWindowTitleCenter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForWindowTitleCenter.png; path = Application/Resources/IconForWindowTitleCenter.png; sourceTree = "<group>"; };
-		0AF90B10204CC51A00146B38 /* IconForWindowTitleLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForWindowTitleLeft.png; path = Application/Resources/IconForWindowTitleLeft.png; sourceTree = "<group>"; };
-		0AF90B11204CC51A00146B38 /* IconForWindowTitleRight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForWindowTitleRight.png; path = Application/Resources/IconForWindowTitleRight.png; sourceTree = "<group>"; };
 		0AF931851592E0E6008A41C6 /* QuillsSWIG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSWIG.h; path = Application/Code/QuillsSWIG.h; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
@@ -958,6 +960,8 @@
 				0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */,
 				0A0C26F31DC99571000C1D56 /* PrefsWindowTouchBarCocoa.xib */,
 				0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */,
+				0AC4185B208D35800068A309 /* TerminalRootCocoa.xib */,
+				0AC41859208BB7A10068A309 /* TerminalScrollableRootViewCocoa.xib */,
 				0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */,
 				0A0E9F531DB18095006A8BF5 /* TerminalWindow.nib */,
 				0A0E9FA11DB18127006A8BF5 /* TerminalWindowCocoa.xib */,
@@ -1036,9 +1040,9 @@
 				0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */,
 				0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */,
 				0A54E40F0560B62F005B4592 /* IconForTerminal.icns */,
-				0AF90B0F204CC51A00146B38 /* IconForWindowTitleCenter.png */,
-				0AF90B10204CC51A00146B38 /* IconForWindowTitleLeft.png */,
-				0AF90B11204CC51A00146B38 /* IconForWindowTitleRight.png */,
+				0AC4185D208D35AE0068A309 /* IconForWindowTitleCenter.icns */,
+				0AC4185E208D35AE0068A309 /* IconForWindowTitleLeft.icns */,
+				0AC4185F208D35AE0068A309 /* IconForWindowTitleRight.icns */,
 			);
 			name = Icons;
 			sourceTree = "<group>";
@@ -1806,6 +1810,23 @@
 				0A94C91D1DCD570800938B6A /* English */,
 			);
 			name = VectorWindowTouchBarCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0AC41859208BB7A10068A309 /* TerminalScrollableRootViewCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AC4185A208BB7A10068A309 /* English */,
+			);
+			name = TerminalScrollableRootViewCocoa.xib;
+			sourceTree = "<group>";
+		};
+		0AC4185B208D35800068A309 /* TerminalRootCocoa.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AC4185C208D35800068A309 /* English */,
+			);
+			name = TerminalRootCocoa.xib;
+			path = ../..;
 			sourceTree = "<group>";
 		};
 		0AC5687412CFC73800BAA7F0 /* Credits.html */ = {

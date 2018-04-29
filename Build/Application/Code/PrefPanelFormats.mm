@@ -526,6 +526,7 @@ dealloc
 		[self removeObserver:self forKeyPath:keyName];
 	}
 	
+	[sampleTerminalVC release];
 	[prefsMgr release];
 	[byKey release];
 	if (nullptr != sampleScreenBuffer)
@@ -809,6 +810,7 @@ initializeWithContext:(void*)			aContext
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
 	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:16/* arbitrary; number of colors */];
+	self->sampleTerminalVC = [[TerminalView_Controller alloc] init];
 }// panelViewManager:initializeWithContext:
 
 
@@ -839,9 +841,8 @@ didLoadContainerView:(NSView*)			aContainerView
 #pragma unused(aViewManager, aContainerView)
 	assert(nil != byKey);
 	assert(nil != prefsMgr);
-	assert(nil != terminalSampleBackgroundView);
-	assert(nil != terminalSamplePaddingView);
-	assert(nil != terminalSampleContentView);
+	assert(nil != sampleTerminalVC);
+	assert(nil != sampleViewContainer);
 	
 	
 	// remember frame from XIB (it might be changed later)
@@ -863,17 +864,31 @@ didLoadContainerView:(NSView*)			aContainerView
 		}
 		else
 		{
-			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
-																	self->terminalSamplePaddingView,
-																	self->terminalSampleBackgroundView,
-																	self->sampleScreenBuffer,
-																	nullptr/* format */);
+			self->sampleTerminalVC.view.frame = NSMakeRect(0, 0, NSWidth(self->sampleViewContainer.frame),
+															NSHeight(self->sampleViewContainer.frame));
+			[self->sampleViewContainer addSubview:self->sampleTerminalVC.view];
+			self->sampleScreenView = self->sampleTerminalVC.terminalView.terminalContentView.terminalViewRef;
 			if (nullptr == self->sampleScreenView)
 			{
 				Console_WriteLine("failed to create sample terminal view");
 			}
 			else
 			{
+				TerminalView_Result		viewResult = kTerminalView_ResultOK;
+				
+				
+				viewResult = TerminalView_RemoveDataSource(self->sampleScreenView, nullptr/* remove any current source */);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to remove previous data source from terminal screen buffer, error", viewResult);
+				}
+				
+				viewResult = TerminalView_AddDataSource(self->sampleScreenView, self->sampleScreenBuffer);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to add data source to terminal screen buffer, error", viewResult);
+				}
+				
 				// force the view into normal display mode, because zooming will
 				// mess up the font size
 				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(self->sampleScreenView, kTerminalView_DisplayModeNormal);
@@ -1360,6 +1375,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[sampleTerminalVC release];
 	[prefsMgr release];
 	[byKey release];
 	[super dealloc];
@@ -1695,6 +1711,7 @@ initializeWithContext:(void*)			aContext
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
 	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:16/* arbitrary; number of colors */];
+	self->sampleTerminalVC = [[TerminalView_Controller alloc] init];
 }// panelViewManager:initializeWithContext:
 
 
@@ -1725,9 +1742,8 @@ didLoadContainerView:(NSView*)			aContainerView
 #pragma unused(aViewManager, aContainerView)
 	assert(nil != byKey);
 	assert(nil != prefsMgr);
-	assert(nil != terminalSampleBackgroundView);
-	assert(nil != terminalSamplePaddingView);
-	assert(nil != terminalSampleContentView);
+	assert(nil != sampleTerminalVC);
+	assert(nil != sampleViewContainer);
 	
 	
 	// remember frame from XIB (it might be changed later)
@@ -1749,17 +1765,31 @@ didLoadContainerView:(NSView*)			aContainerView
 		}
 		else
 		{
-			self->sampleScreenView = TerminalView_NewNSViewBased(self->terminalSampleContentView,
-																	self->terminalSamplePaddingView,
-																	self->terminalSampleBackgroundView,
-																	self->sampleScreenBuffer,
-																	nullptr/* format */);
+			self->sampleTerminalVC.view.frame = NSMakeRect(0, 0, NSWidth(self->sampleViewContainer.frame),
+															NSHeight(self->sampleViewContainer.frame));
+			[self->sampleViewContainer addSubview:self->sampleTerminalVC.view];
+			self->sampleScreenView = self->sampleTerminalVC.terminalView.terminalContentView.terminalViewRef;
 			if (nullptr == self->sampleScreenView)
 			{
 				Console_WriteLine("failed to create sample terminal view");
 			}
 			else
 			{
+				TerminalView_Result		viewResult = kTerminalView_ResultOK;
+				
+				
+				viewResult = TerminalView_RemoveDataSource(self->sampleScreenView, nullptr/* remove any current source */);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to remove previous data source from terminal screen buffer, error", viewResult);
+				}
+				
+				viewResult = TerminalView_AddDataSource(self->sampleScreenView, self->sampleScreenBuffer);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to add data source to terminal screen buffer, error", viewResult);
+				}
+				
 				// force the view into normal display mode, because zooming will
 				// mess up the font size
 				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(self->sampleScreenView, kTerminalView_DisplayModeNormal);

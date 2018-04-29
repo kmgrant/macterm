@@ -160,8 +160,6 @@ Private properties.
 // accessors
 	@property (assign) NSRect
 	preFullScreenFrame;
-	@property (strong) NSMutableArray*
-	terminalViewControllers;
 	@property (assign) TerminalToolbar_Delegate*
 	toolbarDelegate;
 
@@ -206,6 +204,39 @@ The private class interface.
 @interface TerminalWindow_InfoBubble (TerminalWindow_InfoBubbleInternal) //{
 
 @end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalWindow_RootView () //{
+
+// accessors
+	@property (strong) NSMutableArray*
+	scrollableTerminalRootViews;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalWindow_RootVC () //{
+
+// accessors
+	@property (strong) NSMutableArray*
+	terminalScrollControllers;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface TerminalWindow_RootVC (TerminalWindow_RootVCInternal) //{
+
+@end //}
+
 
 namespace {
 
@@ -3382,9 +3413,9 @@ installedActions(),
 carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 {
 @autoreleasepool {
-	TerminalScreenRef		newScreen = nullptr;
-	TerminalViewRef			newView = nullptr;
-	Preferences_Result		preferencesResult = kPreferences_ResultOK;
+	TerminalScreenRef			newScreen = nullptr;
+	__block TerminalViewRef		newView = nullptr;
+	Preferences_Result			preferencesResult = kPreferences_ResultOK;
 	
 	
 	// for completeness, zero-out this structure (though it is set up
@@ -3479,30 +3510,31 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 		if (this->isCocoa())
 		{
 			// already set up by window controller
-			TerminalView_Controller*	viewController = [[this->windowController enumerateTerminalViewControllers] nextObject];
-			
-			
-			newView = [viewController.terminalContentView terminalViewRef];
-			if (nullptr == newView)
+			[this->windowController enumerateTerminalViewControllersUsingBlock:
+			^(TerminalView_Controller* aVC, BOOL* UNUSED_ARGUMENT(outStopFlagPtr))
 			{
-				Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
-			}
-			else
-			{
-				TerminalView_Result		viewResult = kTerminalView_ResultOK;
-				
-				
-				viewResult = TerminalView_RemoveDataSource(newView, nullptr/* specific screen or "nullptr" for all screens */);
-				if (kTerminalView_ResultOK != viewResult)
+				newView = [aVC.terminalView.terminalContentView terminalViewRef];
+				if (nullptr == newView)
 				{
-					Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
+					Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
 				}
-				viewResult = TerminalView_AddDataSource(newView, newScreen);
-				if (kTerminalView_ResultOK != viewResult)
+				else
 				{
-					Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
+					TerminalView_Result		viewResult = kTerminalView_ResultOK;
+					
+					
+					viewResult = TerminalView_RemoveDataSource(newView, nullptr/* specific screen or "nullptr" for all screens */);
+					if (kTerminalView_ResultOK != viewResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
+					}
+					viewResult = TerminalView_AddDataSource(newView, newScreen);
+					if (kTerminalView_ResultOK != viewResult)
+					{
+						Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
+					}
 				}
-			}
+			}];
 		}
 		else
 		{
@@ -9061,12 +9093,27 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 @implementation TerminalWindow_Controller //{
 
 
-// internally-declared
+#pragma mark Internally-Declared Properties
+
+/*!
+The value of the window "frame" property just prior to
+entering Full Screen mode.  (Used to restore the original
+window frame when Full Screen exits.)
+*/
 @synthesize preFullScreenFrame = _preFullScreenFrame;
-@synthesize terminalViewControllers = _terminalViewControllers;
+
+/*!
+An object that specifies the majority of the behavior for
+the terminal toolbar.
+*/
 @synthesize toolbarDelegate = _toolbarDelegate;
 
-// externally-declared
+
+#pragma mark Externally-Declared Properties
+
+/*!
+The Terminal Window object that owns this window controller.
+*/
 @synthesize terminalWindowRef = _terminalWindowRef;
 
 
@@ -9088,13 +9135,35 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
 	if (nil != self)
 	{
+		NSView*		contentView = REINTERPRET_CAST(self.window.contentView, NSView*);
+		
+		
 		self.window.delegate = self;
 		
-		_terminalViewControllers = [[NSMutableArray alloc] init];
-		[self.terminalViewControllers addObject:aViewController];
+		_rootVC = [[TerminalWindow_RootVC alloc] init];
+		[self.rootViewController addScrollControllerBeyondEdge:NSMinYEdge];
+		{
+			id		defaultScrollVC = [[self.rootViewController enumerateScrollControllers] nextObject];
+			
+			
+			if (NO == [defaultScrollVC isKindOfClass:TerminalView_ScrollableRootVC.class])
+			{
+				Console_Warning(Console_WriteLine, "assertion failure: root view controller has unexpected scroll controller");
+			}
+			else
+			{
+				TerminalView_ScrollableRootVC*		asScrollVC = STATIC_CAST(defaultScrollVC, TerminalView_ScrollableRootVC*);
+				
+				
+				[asScrollVC addTerminalViewController:aViewController];
+			}
+		}
+		
 		_terminalWindowRef = aTerminalWindowRef;
 		
-		[REINTERPRET_CAST(self.window.contentView, NSView*) addSubview:aViewController.view];
+		// add root view controller’s view
+		self.rootViewController.view.frame = NSMakeRect(0, 0, NSWidth(contentView.frame), NSHeight(contentView.frame));
+		[contentView addSubview:self.rootViewController.view];
 		
 		// create toolbar
 		{
@@ -9138,10 +9207,25 @@ Destructor.
 - (void)
 dealloc
 {
-	[_terminalViewControllers release];
+	[_rootVC release];
 	[_toolbarDelegate release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(2018.04)
+*/
+- (TerminalWindow_RootVC*)
+rootViewController
+{
+	return _rootVC;
+}// rootViewController
 
 
 #pragma mark Actions
@@ -9233,17 +9317,16 @@ performTranslationSwitchCustom:(id)	sender
 
 
 /*!
-Returns an object that can be used to determine all the
-view controllers used for terminals in this window.
-Works with Objective-C "for ... in ..." syntax.
+Performs an action on each terminal view controller.
+The block argument includes a flag for stopping early.
 
-(2018.02)
+(2018.04)
 */
-- (NSEnumerator*)
-enumerateTerminalViewControllers
+- (void)
+enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)	aBlock
 {
-	return [_terminalViewControllers objectEnumerator];
-}// enumerateTerminalViewControllers
+	[self.rootViewController enumerateTerminalViewControllersUsingBlock:aBlock];
+}// enumerateTerminalViewControllersUsingBlock:
 
 
 /*!
@@ -9900,6 +9983,7 @@ parentWindow:(NSWindow*)				parentWindow
 @end //} TerminalWindow_InfoBubble
 
 
+#pragma mark -
 @implementation TerminalWindow_InfoBubble (TerminalWindow_InfoBubbleInternal) //{
 
 
@@ -9941,6 +10025,367 @@ toScreen:(NSScreen*)			screen
 
 
 @end //} TerminalWindow_Object
+
+
+#pragma mark -
+@implementation TerminalWindow_RootView //{
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+An array of an arbitrary number of scrollable containers that
+appear in this root view. 
+*/
+@synthesize scrollableTerminalRootViews = _scrollableTerminalRootViews;
+
+
+#pragma mark Initializers
+
+
+/*!
+Initializer for object constructed from a NIB.
+
+(2018.04)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+	self = [super initWithCoder:aCoder];
+	if (nil != self)
+	{
+		_scrollableTerminalRootViews = [[NSMutableArray alloc] init];
+	}
+	return self;
+}// initWithCoder:
+
+
+/*!
+Designated initializer.
+
+(2018.04)
+*/
+- (instancetype)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		_scrollableTerminalRootViews = [[NSMutableArray alloc] init];
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(2018.04)
+*/
+- (void)
+dealloc
+{
+	[_scrollableTerminalRootViews release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Adds another terminal to the root view.  The exact layout of the
+view is up to the delegate.
+
+See also "enumerateScrollableRootViews" and
+"removeScrollableRootView:".
+
+(2018.04)
+*/
+- (void)
+addScrollableRootView:(TerminalView_ScrollableRootView*)	aView
+{
+	[self.scrollableTerminalRootViews addObject:aView];
+	[self addSubview:aView];
+	[self forceResize];
+}// addScrollableRootViewBeyondEdge:
+
+
+/*!
+Returns an object that can be used to determine all the
+scrollable root views that this view is using.  Works
+with Objective-C "for ... in ..." syntax.
+
+(2018.04)
+*/
+- (NSEnumerator*)
+enumerateScrollableRootViews
+{
+	return [self.scrollableTerminalRootViews objectEnumerator];
+}// enumerateScrollableRootViews
+
+
+/*!
+Stops managing the specified scrollable root view (the reverse
+of "addScrollableRootViewBeyondEdge:").
+
+(2018.04)
+*/
+- (void)
+removeScrollableRootView:(TerminalView_ScrollableRootView*)		aView
+{
+	[aView removeFromSuperview];
+	[self.scrollableTerminalRootViews removeObject:aView];
+	[self forceResize];
+}// removeScrollableRootView:
+
+
+#pragma mark NSView
+
+
+#if 0
+/*!
+For debug only; show the boundaries.
+
+(2018.04)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+#pragma unused(aRect)
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	
+	
+	// TEMPORARY: draw background
+	CGContextSetRGBStrokeColor(drawingContext, 0.0, 1.0, 1.0, 1.0/* alpha */);
+	CGContextStrokeRect(drawingContext, CGRectMake(0, 0, NSWidth(self.bounds), NSHeight(self.bounds)));
+}// drawRect:
+#endif
+
+
+@end //}
+
+
+#pragma mark -
+@implementation TerminalWindow_RootVC //{
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+The scroll view controllers that indirectly determine which
+terminal view controllers are shown in this root view.  A
+default window has one scroll controller containing one view.
+For example, a vertical split-view could be implemented as
+additional scroll controllers holding more terminal views.
+*/
+@synthesize terminalScrollControllers = _terminalScrollControllers;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.04)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithNibName:@"TerminalRootCocoa" bundle:nil];
+	if (nil != self)
+	{
+		_terminalScrollControllers = [[NSMutableArray alloc] init];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2018.04)
+*/
+- (void)
+dealloc
+{
+	[_terminalScrollControllers release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Returns the view of this controller, as the more
+specific type "TerminalWindow_RootView".
+
+(2018.04)
+*/
+- (TerminalWindow_RootView*)
+rootView
+{
+	TerminalWindow_RootView*	result = nil;
+	
+	
+	if (NO == [self.view isKindOfClass:TerminalWindow_RootView.class])
+	{
+		Console_Warning(Console_WriteLine, "TerminalWindow_RootVC 'rootView' failed; view is not of the expected class!");
+	}
+	else
+	{
+		result = STATIC_CAST(self.view, TerminalWindow_RootView*);
+	}
+	
+	return result;
+}// rootView
+
+
+#pragma mark New Methods
+
+
+/*!
+Constructs a new scroll controller that is arranged
+beyond the specified edge (for example, “top edge”
+means the new view is at the top of the window).
+
+Currently the edge is not used and arbitrary edges
+are not expected; use "NSMinYEdge".
+
+The new scroll controller has no terminal views; use
+"TerminalView_ScrollableRootVC" methods as needed.
+
+See also "enumerateScrollControllers" and
+"removeScrollController:".
+
+(2018.04)
+*/
+- (void)
+addScrollControllerBeyondEdge:(NSRectEdge)	anEdge
+{
+	TerminalView_ScrollableRootVC*		newScrollVC = [[[TerminalView_ScrollableRootVC alloc] init]
+														autorelease];
+	
+	
+	if (NSMinYEdge != anEdge)
+	{
+		Console_Warning(Console_WriteValue, "'addScrollControllerBeyondEdge:' does not support edge constant with value", (int)anEdge);
+	}
+	
+	[self.terminalScrollControllers addObject:newScrollVC];
+	[self.rootView addScrollableRootView:newScrollVC.scrollableRootView];
+}// addScrollControllerBeyondEdge:
+
+
+/*!
+Returns an object that can be used to determine all the
+scroll controllers that this root view is using.  Works
+with Objective-C "for ... in ..." syntax.
+
+(2018.04)
+*/
+- (NSEnumerator*)
+enumerateScrollControllers
+{
+	return [self.terminalScrollControllers objectEnumerator];
+}// enumerateScrollControllers
+
+
+/*!
+Performs an action on each terminal view controller (found
+indirectly through each scroll controller).  The block
+argument includes a flag for stopping early.
+
+(2018.04)
+*/
+- (void)
+enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)	aBlock
+{
+	// TEMPORARY; this should determine whether or not any
+	// of the iterations had to stop early
+	for (TerminalView_ScrollableRootVC* aScrollVC in self.terminalScrollControllers)
+	{
+		[aScrollVC enumerateTerminalViewControllersUsingBlock:aBlock];
+	}
+}// enumerateTerminalViewControllersUsingBlock:
+
+
+/*!
+Stops managing the specified scroll controller’s root
+view (the reverse of "addScrollControllerBeyondEdge:").
+
+(2018.04)
+*/
+- (void)
+removeScrollController:(TerminalView_ScrollableRootVC*)		aVC
+{
+	[aVC.view removeFromSuperview];
+	[self.terminalScrollControllers removeObject:aVC];
+}// removeScrollController:
+
+
+#pragma mark CoreUI_ViewLayoutDelegate
+
+
+/*!
+This is responsible for the layout of subviews.
+
+(2018.04)
+*/
+- (void)
+layoutDelegateForView:(NSView*)		aView
+resizeSubviewsWithOldSize:(NSSize)	anOldSize
+{
+#pragma unused(aView, anOldSize)
+	for (id object in [self enumerateScrollControllers])
+	{
+		assert([object isKindOfClass:TerminalView_ScrollableRootVC.class]);
+		TerminalView_ScrollableRootVC*		asVC = STATIC_CAST(object, TerminalView_ScrollableRootVC*);
+		
+		
+		asVC.view.frame = NSMakeRect(0, 0, NSWidth(self.view.frame), NSHeight(self.view.frame));
+	}
+}// layoutDelegateForView:resizeSubviewsWithOldSize:
+
+
+#pragma mark NSViewController
+
+
+/*!
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
+
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
+
+(2016.03)
+*/
+- (void)
+loadView
+{
+	[super loadView];
+	assert(nil != self.rootView);
+	self.rootView.layoutDelegate = self;
+}// loadView
+
+
+@end //} TerminalWindow_RootVC
+
+
+#pragma mark -
+@implementation TerminalWindow_RootVC (TerminalWindow_RootVCInternal) //{
+
+
+@end //} TerminalWindow_RootVC (TerminalWindow_RootVCInternal)
 
 
 #pragma mark -

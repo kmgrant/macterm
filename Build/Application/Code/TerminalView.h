@@ -65,7 +65,10 @@ class NSWindow;
 #include <Carbon/Carbon.h>
 
 // library includes
-#include "ListenerModel.h"
+#ifdef __OBJC__
+#	include <CoreUI.objc++.h>
+#endif
+#include <ListenerModel.h>
 
 // application includes
 #include "Preferences.h"
@@ -140,6 +143,9 @@ enum TerminalView_Event
 															//!  results simply changes (context: TerminalViewRef)
 };
 
+/*!
+Options for TerminalView_ReturnSelectedTextCopyAsUnicode().
+*/
 typedef UInt16 TerminalView_TextFlags;
 enum
 {
@@ -223,6 +229,15 @@ typedef std::vector< TerminalView_CellRange >				TerminalView_CellRangeList;
 
 #ifdef __OBJC__
 
+@class TerminalView_Controller;
+
+
+/*!
+Block used for iteration over terminal view controllers.
+*/
+typedef void (^TerminalView_ControllerBlock)(TerminalView_Controller*, BOOL*);
+
+
 /*!
 Implements the background rendering part of the
 Terminal View.
@@ -238,6 +253,7 @@ changes to an interface declared in a ".mm" file.
 	void*	_internalViewPtr;
 }
 @end //}
+
 
 /*!
 Implements the main rendering part of the Terminal View.
@@ -262,6 +278,56 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+The type of view managed by "TerminalView_Controller".
+Currently used to handle layout (until a later SDK can
+be adopted, where the view controller might directly
+perform more view tasks).
+*/
+@interface TerminalView_Object : CoreUI_LayoutView //{
+{
+@private
+	void*								_internalViewPtr;
+	TerminalView_ContentView*			_terminalContentView;
+	TerminalView_BackgroundView*		_terminalMarginViewBottom;
+	TerminalView_BackgroundView*		_terminalMarginViewLeft;
+	TerminalView_BackgroundView*		_terminalMarginViewRight;
+	TerminalView_BackgroundView*		_terminalMarginViewTop;
+	TerminalView_BackgroundView*		_terminalPaddingViewBottom;
+	TerminalView_BackgroundView*		_terminalPaddingViewLeft;
+	TerminalView_BackgroundView*		_terminalPaddingViewRight;
+	TerminalView_BackgroundView*		_terminalPaddingViewTop;
+}
+
+// initializers
+	- (instancetype)
+	initWithCoder:(NSCoder*)_;
+	- (instancetype)
+	initWithFrame:(NSRect)_;
+
+// accessors
+	@property (strong) TerminalView_ContentView*
+	terminalContentView;
+	@property (strong) TerminalView_BackgroundView*
+	terminalMarginViewBottom;
+	@property (strong) TerminalView_BackgroundView*
+	terminalMarginViewLeft;
+	@property (strong) TerminalView_BackgroundView*
+	terminalMarginViewRight;
+	@property (strong) TerminalView_BackgroundView*
+	terminalMarginViewTop;
+	@property (strong) TerminalView_BackgroundView*
+	terminalPaddingViewBottom;
+	@property (strong) TerminalView_BackgroundView*
+	terminalPaddingViewLeft;
+	@property (strong) TerminalView_BackgroundView*
+	terminalPaddingViewRight;
+	@property (strong) TerminalView_BackgroundView*
+	terminalPaddingViewTop;
+
+@end //}
+
+
+/*!
 Implements a view controller for the Cocoa version of
 the terminal view.  See "TerminalWindowCocoa.xib".
 
@@ -274,27 +340,93 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_Controller : NSViewController //{
+@interface TerminalView_Controller : NSViewController < CoreUI_ViewLayoutDelegate > //{
 {
-	IBOutlet TerminalView_ContentView*		_terminalContentView;
-	IBOutlet TerminalView_BackgroundView*	_terminalPaddingView; // should embed the content view
-	IBOutlet TerminalView_BackgroundView*	_terminalBackgroundView; // should embed the padding view
 }
 
+// initializers
+	- (instancetype)
+	init;
+
 // accessors
-	@property (strong) TerminalView_BackgroundView*
-	terminalBackgroundView;
-	@property (strong) TerminalView_BackgroundView*
-	terminalPaddingView;
-	@property (strong) TerminalView_ContentView*
-	terminalContentView;
+	- (TerminalView_Object*)
+	terminalView;
+
+@end //}
+
+
+/*!
+Tweaks a standard scroll bar to provide extra features
+such as tick marks to show search results.
+*/
+@interface TerminalView_ScrollBar : NSScroller //{
+{
+@private
+	void*	_internalViewPtr;
+}
+
+@end //}
+
+
+/*!
+The type of view managed by "TerminalView_ScrollableRootVC".
+Currently used to handle layout (until a later SDK can be
+adopted, where the view controller might directly perform
+more view tasks).
+*/
+@interface TerminalView_ScrollableRootView : CoreUI_LayoutView //@{
+{
+@private
+	void*						_internalViewPtr;
+	TerminalView_ScrollBar*		_scrollBarV;
+}
+
+// initializers
+	- (instancetype)
+	initWithCoder:(NSCoder*)_;
+	- (instancetype)
+	initWithFrame:(NSRect)_;
+
+// accessors
+	@property (strong) TerminalView_ScrollBar*
+	scrollBarV;
+
+@end //}
+
+
+/*!
+Custom root view controller that holds a scroll bar and
+zero or more terminal view controllers.  This is also
+responsible for arranging a scroll bar next to its view.
+*/
+@interface TerminalView_ScrollableRootVC : NSViewController < CoreUI_ViewLayoutDelegate > //{
+{
+@private
+	TerminalView_ScrollBar*		_scrollBarV;
+	NSMutableArray*				_terminalViewControllers;
+}
+
+// initializers
+	- (instancetype)
+	init;
+
+// accessors
+	- (TerminalView_ScrollableRootView*)
+	scrollableRootView;
+
+// new methods
+	- (void)
+	addTerminalViewController:(TerminalView_Controller*)_;
+	- (void)
+	enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)_;
+	- (void)
+	removeTerminalViewController:(TerminalView_Controller*)_;
 
 @end //}
 
 #else
 
-class TerminalView_BackgroundView;
-class TerminalView_ContentView;
+class TerminalView_Object;
 
 #endif // __OBJC__
 
@@ -317,9 +449,7 @@ void
 //@{
 
 TerminalViewRef
-	TerminalView_NewNSViewBased		(TerminalView_ContentView*		inBaseView,
-									 TerminalView_BackgroundView*	inPaddingView,
-									 TerminalView_BackgroundView*	inBackgroundView,
+	TerminalView_NewNSViewBased		(TerminalView_Object*			inRootView,
 									 TerminalScreenRef				inScreenDataSource,
 									 Preferences_ContextRef			inFormatOrNull = nullptr);
 

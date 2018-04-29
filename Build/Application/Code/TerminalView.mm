@@ -263,7 +263,7 @@ struct My_TerminalViewCarbonState
 struct My_TerminalView
 {
 	My_TerminalView		(HIViewRef);
-	My_TerminalView		(TerminalView_ContentView*, TerminalView_BackgroundView*, TerminalView_BackgroundView*);
+	My_TerminalView		(TerminalView_Object*);
 	~My_TerminalView	();
 	
 	void
@@ -283,11 +283,7 @@ struct My_TerminalView
 												// using Carbon Events, stored here to avoid extra system calls in cases
 												// where this would be slow (e.g. drawing)
 	
-	NSView*				encompassingNSView;		// contains all other HIViews but is otherwise invisible
-	TerminalView_BackgroundView*	backgroundNSView;	// view that renders the background of the terminal screen (border included)
-	NSView*				focusNSView;			// view whose current focus part determines the visibility and boundaries of the focus ring
-	TerminalView_BackgroundView*	paddingNSView;	// view that is outset by the padding amount from the content view, if constructed as a Cocoa view
-	TerminalView_ContentView*	contentNSView;	// view that renders the text of the terminal screen, if constructed as a Cocoa view
+	TerminalView_Object*	encompassingNSView;		// contains the terminal view hierarchy
 	
 	struct
 	{
@@ -573,14 +569,14 @@ Private properties.
 
 @end //}
 
+
 /*!
 The private class interface.
 */
 @interface TerminalView_BackgroundView (TerminalView_BackgroundViewInternal) //{
 
-// (contains NSView overrides)
-
 @end //}
+
 
 /*!
 Private properties.
@@ -597,14 +593,99 @@ Private properties.
 
 @end //}
 
+
 /*!
 The private class interface.
 */
 @interface TerminalView_ContentView (TerminalView_ContentViewInternal) //{
 
-// (contains NSControl overrides)
+@end //}
 
-// (contains NSView overrides)
+
+/*!
+Private properties.
+*/
+@interface TerminalView_Object () //{
+
+// accessors
+	@property (assign) My_TerminalViewPtr
+	internalViewPtr; // weak
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface TerminalView_Object (TerminalView_ObjectInternal) //{
+
+// new methods
+	- (void)
+	createSubviews;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalView_ScrollBar () //{
+
+// accessors
+	@property (assign) My_TerminalViewPtr
+	internalViewPtr; // weak
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface TerminalView_ScrollBar (TerminalView_ScrollBarInternal) //{
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalView_ScrollableRootView () //{
+
+// accessors
+	@property (assign) My_TerminalViewPtr
+	internalViewPtr; // weak
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface TerminalView_ScrollableRootView (TerminalView_ScrollableRootViewInternal) //{
+
+// new methods
+	- (void)
+	createSubviews;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalView_ScrollableRootVC () //{
+
+// accessors
+	@property (strong) NSMutableArray*
+	terminalViewControllers;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface TerminalView_ScrollableRootVC (TerminalView_ScrollableRootVCInternal) //{
 
 @end //}
 
@@ -877,11 +958,9 @@ actual NSView* hierarchy.)
 (4.0)
 */
 TerminalViewRef
-TerminalView_NewNSViewBased		(TerminalView_ContentView*		inContentView,
-								 TerminalView_BackgroundView*	inPaddingView,
-								 TerminalView_BackgroundView*	inBackgroundView,
-								 TerminalScreenRef				inScreenDataSource,
-								 Preferences_ContextRef			inFormatOrNull)
+TerminalView_NewNSViewBased		(TerminalView_Object*		inRootView,
+								 TerminalScreenRef			inScreenDataSource,
+								 Preferences_ContextRef		inFormatOrNull)
 {
 	TerminalViewRef		result = nullptr;
 	
@@ -891,7 +970,7 @@ TerminalView_NewNSViewBased		(TerminalView_ContentView*		inContentView,
 	
 	try
 	{
-		My_TerminalViewPtr		viewPtr = new My_TerminalView(inContentView, inPaddingView, inBackgroundView);
+		My_TerminalViewPtr		viewPtr = new My_TerminalView(inRootView);
 		
 		
 		assert(nullptr != viewPtr);
@@ -2348,7 +2427,7 @@ TerminalView_ReturnDragFocusNSView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view has drag handlers
-	result = viewPtr->contentNSView;
+	result = viewPtr->encompassingNSView.terminalContentView;
 	return result;
 }// ReturnDragFocusNSView
 
@@ -2435,7 +2514,7 @@ TerminalView_ReturnNSWindow		(TerminalViewRef	inView)
 	NSWindow*					result = nil;
 	
 	
-	result = [viewPtr->contentNSView window];
+	result = [viewPtr->encompassingNSView window];
 	return result;
 }// ReturnNSWindow
 
@@ -2611,7 +2690,7 @@ TerminalView_ReturnUserFocusNSView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view renders a focus ring
-	result = viewPtr->focusNSView;
+	result = viewPtr->encompassingNSView;
 	return result;
 }// ReturnUserFocusNSView
 
@@ -4482,10 +4561,6 @@ changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
 encompassingNSView(nil),
-backgroundNSView(nil),
-focusNSView(nil),
-paddingNSView(nil),
-contentNSView(nil),
 carbonData(new My_TerminalViewCarbonState(inSuperclassViewInstance))
 {
 }// My_TerminalView 1-argument constructor (HIViewRef)
@@ -4507,9 +4582,7 @@ allow some other changes.
 (4.0)
 */
 My_TerminalView::
-My_TerminalView		(TerminalView_ContentView*		inSuperclassViewInstance,
-					 TerminalView_BackgroundView*	inPaddingView,
-					 TerminalView_BackgroundView*	inBackgroundView)
+My_TerminalView		(TerminalView_Object*	inRootView)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef(REINTERPRET_CAST(this, TerminalViewRef)),
@@ -4519,11 +4592,7 @@ configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
-encompassingNSView(nil), // set later
-backgroundNSView([inBackgroundView retain]),
-focusNSView(nil), // set later
-paddingNSView([inPaddingView retain]),
-contentNSView([inSuperclassViewInstance retain]),
+encompassingNSView([inRootView retain]),
 carbonData(nullptr)
 {
 }// My_TerminalView 3-argument constructor (NSView*)
@@ -4675,25 +4744,29 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		// NOTE: in the Cocoa implementation, all views are passed in to the routine that
 		// constructs the Terminal View, so views do not need to be created here; but,
 		// it is necessary to associate the Terminal View object with them
-		this->contentNSView.internalViewPtr = this;
-		this->paddingNSView.internalViewPtr = this;
-		this->backgroundNSView.internalViewPtr = this;
+		this->encompassingNSView.internalViewPtr = this;
+		this->encompassingNSView.terminalContentView.internalViewPtr = this;
+		this->encompassingNSView.terminalMarginViewBottom.internalViewPtr = this;
+		this->encompassingNSView.terminalMarginViewLeft.internalViewPtr = this;
+		this->encompassingNSView.terminalMarginViewRight.internalViewPtr = this;
+		this->encompassingNSView.terminalMarginViewTop.internalViewPtr = this;
+		this->encompassingNSView.terminalPaddingViewBottom.internalViewPtr = this;
+		this->encompassingNSView.terminalPaddingViewLeft.internalViewPtr = this;
+		this->encompassingNSView.terminalPaddingViewRight.internalViewPtr = this;
+		this->encompassingNSView.terminalPaddingViewTop.internalViewPtr = this;
 		
 		// NOTE: initializing the padding and background view colors is not really necessary
 		// (by the time the views are displayed, they will have been updated in the same way
 		// that they are whenever the user changes preferences later); however, it is
 		// important to tell the views which color index to use
-		this->paddingNSView.colorIndex = kMyBasicColorIndexNormalBackground;
-		this->backgroundNSView.colorIndex = kMyBasicColorIndexMatteBackground;
-		
-		// specify the view to use for focus and basic input
-		this->focusNSView = this->backgroundNSView;
-		
-		// since no extra rendering, etc. is required, make this a mere ALIAS
-		// for the background view; this is so that code intending to operate
-		// on the “entire” view can clearly indicate this by referring to the
-		// encompassing pane instead of some specific pane that might change
-		this->encompassingNSView = this->backgroundNSView;
+		this->encompassingNSView.terminalMarginViewBottom.colorIndex = kMyBasicColorIndexMatteBackground;
+		this->encompassingNSView.terminalMarginViewLeft.colorIndex = kMyBasicColorIndexMatteBackground;
+		this->encompassingNSView.terminalMarginViewRight.colorIndex = kMyBasicColorIndexMatteBackground;
+		this->encompassingNSView.terminalMarginViewTop.colorIndex = kMyBasicColorIndexMatteBackground;
+		this->encompassingNSView.terminalPaddingViewBottom.colorIndex = kMyBasicColorIndexNormalBackground;
+		this->encompassingNSView.terminalPaddingViewLeft.colorIndex = kMyBasicColorIndexNormalBackground;
+		this->encompassingNSView.terminalPaddingViewRight.colorIndex = kMyBasicColorIndexNormalBackground;
+		this->encompassingNSView.terminalPaddingViewTop.colorIndex = kMyBasicColorIndexNormalBackground;
 	}
 	
 	// store the colors this view will be using
@@ -4788,10 +4861,7 @@ Destructor.
 My_TerminalView::
 ~My_TerminalView ()
 {
-	// NOTE: encompassingNSView and focusNSView are aliases only, and are never retained
-	[this->contentNSView release];
-	[this->paddingNSView release];
-	[this->backgroundNSView release];
+	[this->encompassingNSView release];
 	[this->text.attributeDict release];
 	if (nil != this->text.font.normalFont)
 	{
@@ -6372,13 +6442,13 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			// vertical space the text would otherwise require
 			lineWidth = CTLineGetTypographicBounds(asLineRef, &ascentMeasurement, &descentMeasurement, &leadingMeasurement);
 			drawingLocation = NSMakePoint(inBoundaries.origin.x,
-											NSHeight([inTerminalViewPtr->contentNSView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0f));
+											NSHeight([inTerminalViewPtr->encompassingNSView.terminalContentView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0f));
 			
 			{
 				CGContextSaveRestore	_(inDrawingContext);
 				
 				
-				CGContextTranslateCTM(inDrawingContext, 0, NSHeight([inTerminalViewPtr->contentNSView frame]));
+				CGContextTranslateCTM(inDrawingContext, 0, NSHeight([inTerminalViewPtr->encompassingNSView.terminalContentView frame]));
 				CGContextScaleCTM(inDrawingContext, 1.0, -1.0);
 				
 				CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
@@ -7957,7 +8027,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	// start with the interior bounds, as this defines two of the edges
 	if (nullptr == inTerminalViewPtr->carbonData)
 	{
-		NSRect		contentFrame = [inTerminalViewPtr->contentNSView frame];
+		NSRect		contentFrame = [inTerminalViewPtr->encompassingNSView.terminalContentView frame];
 		
 		
 		outBoundsPtr->right = STATIC_CAST(contentFrame.size.width, SInt16);
@@ -8537,7 +8607,7 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 	}
 	else
 	{
-		screenBounds = NSRectToCGRect([inTerminalViewPtr->contentNSView bounds]);
+		screenBounds = NSRectToCGRect([inTerminalViewPtr->encompassingNSView.terminalContentView bounds]);
 	}
 	
 	selectionStart = inSelectionStart;
@@ -9779,7 +9849,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		
 		case kPreferences_TagTerminalCursorType:
 			// recalculate cursor boundaries for the specified view
-			if ((nil != viewPtr->contentNSView) ||
+			if ((nil != viewPtr->encompassingNSView.terminalContentView) ||
 				((nullptr != viewPtr->carbonData) && IsValidControlHandle(viewPtr->carbonData->contentHIView)))
 			{
 				Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
@@ -12337,7 +12407,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			UNUSED_RETURN(CGRect*)HIShapeGetBounds(viewPtr->screen.cursor.updatedShape, &oldCursorRect);
-			[viewPtr->contentNSView displayRect:NSRectFromCGRect(oldCursorRect)];
+			//[viewPtr->encompassingNSView.terminalContentView displayRect:NSRectFromCGRect(oldCursorRect)];
 		}
 		else
 		{
@@ -12367,7 +12437,7 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (viewPtr->isCocoa())
 				{
-					[viewPtr->contentNSView displayRect:NSRectFromCGRect(viewPtr->screen.cursor.bounds)];
+					//[viewPtr->encompassingNSView.terminalContentView displayRect:NSRectFromCGRect(viewPtr->screen.cursor.bounds)];
 				}
 				else
 				{
@@ -12673,7 +12743,10 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (inTerminalViewPtr->isCocoa())
 			{
 				// the view reads its color from the associated data structure automatically, so just redraw
-				[inTerminalViewPtr->paddingNSView setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewBottom setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewLeft setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewRight setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewTop setNeedsDisplay:YES];
 			}
 			else
 			{
@@ -12713,7 +12786,10 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 			if (inTerminalViewPtr->isCocoa())
 			{
 				// the view reads its color from the associated data structure automatically, so just redraw
-				[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalMarginViewBottom setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalMarginViewLeft setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalMarginViewRight setNeedsDisplay:YES];
+				[inTerminalViewPtr->encompassingNSView.terminalMarginViewTop setNeedsDisplay:YES];
 			}
 			else
 			{
@@ -13624,9 +13700,7 @@ updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 {
 	if (nullptr == inTerminalViewPtr->carbonData)
 	{
-		[inTerminalViewPtr->backgroundNSView setNeedsDisplay:YES];
-		[inTerminalViewPtr->paddingNSView setNeedsDisplay:YES];
-		[inTerminalViewPtr->contentNSView setNeedsDisplay:YES];
+		[inTerminalViewPtr->encompassingNSView.terminalContentView setNeedsDisplay:YES];
 	}
 	else
 	{
@@ -13691,17 +13765,9 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			NSRect	floatBounds;
 			
 			
-			// invalidate the same screen region in all views
-			// (requires translation into each view’s space)
 			UNUSED_RETURN(CGRect*)HIShapeGetBounds(ptr->screen.refreshRegion, &regionBounds);
 			floatBounds = NSRectFromCGRect(regionBounds);
-			[ptr->contentNSView setNeedsDisplayInRect:floatBounds];
-			
-			floatBounds = [ptr->paddingNSView convertRect:floatBounds fromView:ptr->contentNSView];
-			[ptr->paddingNSView setNeedsDisplayInRect:floatBounds];
-			
-			floatBounds = [ptr->backgroundNSView convertRect:floatBounds fromView:ptr->paddingNSView];
-			[ptr->backgroundNSView setNeedsDisplayInRect:floatBounds];
+			[ptr->encompassingNSView.terminalContentView setNeedsDisplayInRect:floatBounds];
 		}
 		else
 		{
@@ -14353,10 +14419,21 @@ visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 
 
 #pragma mark -
-@implementation TerminalView_BackgroundView
+@implementation TerminalView_BackgroundView //{
 
 
+#pragma mark Internally-Declared Properties
+
+
+/*!
+Zero-based index into the "text.colors" array of a
+Terminal View structure, specifying the matte color
+to use for rendering.
+*/
 @synthesize colorIndex = _colorIndex;
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -14411,14 +14488,8 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 }// setInternalViewPtr:
 
 
-@end // TerminalView_BackgroundView
-
-
-#pragma mark -
-@implementation TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
-
-
 #pragma mark NSView
+
 
 /*!
 Returns YES to allow background views to render virtually
@@ -14485,15 +14556,39 @@ isOpaque
 }// isOpaque
 
 
-@end // TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
+@end //} TerminalView_BackgroundView
 
 
 #pragma mark -
-@implementation TerminalView_ContentView
+@implementation TerminalView_BackgroundView (TerminalView_BackgroundViewInternal) //{
 
 
+@end //} TerminalView_BackgroundView (TerminalView_BackgroundViewInternal)
+
+
+#pragma mark -
+@implementation TerminalView_ContentView //{
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+Current state of modifier keys, used to set an appropriate
+cursor (that should be consistent with whatever action
+would be performed by clicking or dragging with the same
+modifier keys pressed).
+*/
 @synthesize modifierFlagsForCursor = _modifierFlagsForCursor;
+
+/*!
+If set to YES, the background and text rendering is changed
+to show that a drag-drop is pending.
+*/
 @synthesize showDragHighlight = _showDragHighlight;
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -14687,13 +14782,6 @@ flagsChanged:(NSEvent*)		anEvent
 }// flagsChanged:
 
 
-@end // TerminalView_ContentView
-
-
-#pragma mark -
-@implementation TerminalView_ContentView (TerminalView_ContentViewInternal)
-
-
 #pragma mark NSView
 
 
@@ -14741,17 +14829,19 @@ drawRect:(NSRect)	aRect
 		
 		// INCOMPLETE!
 		
+		// draw default background
+		useTerminalTextColors(viewPtr, drawingContext, viewPtr->text.attributes,
+								false/* is cursor */, 1.0/* alpha */);
+		//CGContextSetAllowsAntialiasing(drawingContext, false);
+		CGContextFillRect(drawingContext, clipBounds);
+		//CGContextSetAllowsAntialiasing(drawingContext, true);
+		
 		// perform any necessary rendering for drags
 		{
 			if (self.showDragHighlight)
 			{
 				DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
 				// frame is drawn at the end, after any content
-			}
-			else
-			{
-				// hide is not necessary because the NSView model ensures the
-				// backdrop behind this view is painted as needed
 			}
 			
 			// tell text routines to draw in black if there is a drag highlight
@@ -15069,32 +15159,21 @@ resetCursorRects
 }// resetCursorRects
 
 
-@end // TerminalView_ContentView (TerminalView_ContentViewInternal)
+@end //} TerminalView_ContentView
+
+
+#pragma mark -
+@implementation TerminalView_ContentView (TerminalView_ContentViewInternal) //{
+
+
+@end //} TerminalView_ContentView (TerminalView_ContentViewInternal)
 
 
 #pragma mark -
 @implementation TerminalView_Controller //{
 
 
-/*!
-The background view sits behind everything else in the terminal
-and renders the matte color.  (In the future, this might also
-render patterns or other visual effects.)
-*/
-@synthesize terminalBackgroundView = _terminalBackgroundView;
-
-/*!
-The content view sits in front of everything else in the terminal
-and renders text and graphics.
-*/
-@synthesize terminalContentView = _terminalContentView;
-
-/*!
-The padding view sits between the content view and the background
-and renders the background color.  (In the future, this might also
-render pictures or other visual effects.)
-*/
-@synthesize terminalPaddingView = _terminalPaddingView;
+#pragma mark Initializers
 
 
 /*!
@@ -15125,6 +15204,125 @@ dealloc
 }// dealloc
 
 
+#pragma mark Accessors
+
+
+/*!
+Returns the terminal view managed by this controller.
+This is a convenience method for interpreting the
+controller’s "view" property as a more precise class.
+
+(2018.04)
+*/
+- (TerminalView_Object*)
+terminalView
+{
+	TerminalView_Object*	result = nil;
+	
+	
+	if (NO == [self.view isKindOfClass:TerminalView_Object.class])
+	{
+		Console_Warning(Console_WriteLine, "TerminalView_Controller: 'terminalView': 'self.view' is not of the expected class!");
+	}
+	else
+	{
+		result = STATIC_CAST(self.view, TerminalView_Object*);
+	}
+	
+	return result;
+}// terminalView
+
+
+#pragma mark CoreUI_ViewLayoutDelegate
+
+
+/*!
+This is responsible for the layout of subviews.
+
+(2018.04)
+*/
+- (void)
+layoutDelegateForView:(NSView*)		aView
+resizeSubviewsWithOldSize:(NSSize)	anOldSize
+{
+#pragma unused(aView, anOldSize)
+	// TEMPORARY; use constant margins for now (these actually will
+	// vary based on the ideal size for the text)
+	TerminalView_Object*			rootView = self.terminalView;
+	TerminalView_BackgroundView*	marginViewB = rootView.terminalMarginViewBottom;
+	TerminalView_BackgroundView*	marginViewL = rootView.terminalMarginViewLeft;
+	TerminalView_BackgroundView*	marginViewR = rootView.terminalMarginViewRight;
+	TerminalView_BackgroundView*	marginViewT = rootView.terminalMarginViewTop;
+	TerminalView_BackgroundView*	padViewB = rootView.terminalPaddingViewBottom;
+	TerminalView_BackgroundView*	padViewL = rootView.terminalPaddingViewLeft;
+	TerminalView_BackgroundView*	padViewR = rootView.terminalPaddingViewRight;
+	TerminalView_BackgroundView*	padViewT = rootView.terminalPaddingViewTop;
+	CGFloat							marginH = 7.0;
+	CGFloat							marginV = 6.0;
+	CGFloat							paddingH = 4.0;
+	CGFloat							paddingV = 3.0;
+	
+	
+	// INCOMPLETE; use "self.internalViewPtr" to find appropriate
+	// text measurements and calculate the space that text requires;
+	// then distribute remaining space to margin/padding
+	
+	//
+	// The goal here is to avoid overlapping views by default and only
+	// pay potential performance penalties when certain features are
+	// enabled.  Also, separation of views makes it straightforward to
+	// produce alternate layouts, e.g. hiding margins on one side so
+	// that adjacent views can appear right next to one another.  The
+	// top and bottom versions of a border extend horizontally so that
+	// the layout looks like this:
+	//         ._____________________________.
+	//         |_____________________________|
+	//         | |_________________________| |  
+	//         | | |                     | | |
+	//         | | |                     | | |
+	//         | |_|_____________________|_| |
+	//         |_|_________________________|_|
+	//         |_____________________________|
+	//
+	
+	// WARNING: these assignments are in order, depending on previous values
+	marginViewB.frame = NSMakeRect(0, 0, NSWidth(rootView.frame), marginV);
+	marginViewT.frame = NSMakeRect(0, NSHeight(rootView.frame) - NSHeight(marginViewB.frame),
+									NSWidth(marginViewB.frame), NSHeight(marginViewB.frame));
+	marginViewL.frame = NSMakeRect(0, NSHeight(marginViewB.frame),
+									marginH,
+									NSHeight(rootView.frame) - NSHeight(marginViewB.frame) - NSHeight(marginViewT.frame));
+	marginViewR.frame = NSMakeRect(NSWidth(rootView.frame) - NSWidth(marginViewL.frame), marginViewL.frame.origin.y,
+									NSWidth(marginViewL.frame), NSHeight(marginViewL.frame));
+	padViewB.frame = NSMakeRect(marginViewL.frame.origin.x + NSWidth(marginViewL.frame),
+								marginViewB.frame.origin.y + NSHeight(marginViewB.frame),
+								NSWidth(marginViewB.frame) - (2.0 * NSWidth(marginViewL.frame)),
+								paddingV);
+	padViewT.frame = NSMakeRect(padViewB.frame.origin.x,
+								NSHeight(rootView.frame) - NSHeight(marginViewT.frame) - NSHeight(padViewB.frame),
+								NSWidth(padViewB.frame), NSHeight(padViewB.frame));
+	padViewL.frame = NSMakeRect(padViewB.frame.origin.x, padViewB.frame.origin.y + NSHeight(padViewB.frame),
+								paddingH,
+								NSHeight(marginViewL.frame) - NSHeight(padViewB.frame) - NSHeight(padViewT.frame));
+	padViewR.frame = NSMakeRect(marginViewR.frame.origin.x - NSWidth(padViewL.frame), padViewL.frame.origin.y,
+								NSWidth(padViewL.frame), NSHeight(padViewL.frame));
+	rootView.terminalContentView.frame = NSMakeRect(padViewL.frame.origin.x +
+														NSWidth(padViewL.frame),
+													padViewB.frame.origin.y +
+														NSHeight(padViewB.frame),
+													NSWidth(rootView.frame) -
+														NSWidth(marginViewR.frame) -
+														NSWidth(padViewR.frame) -
+														NSWidth(padViewL.frame) -
+														NSWidth(marginViewL.frame),
+													NSHeight(rootView.frame) -
+														NSHeight(marginViewB.frame) -
+														NSHeight(padViewB.frame) -
+														NSHeight(padViewT.frame) -
+														NSHeight(marginViewT.frame));
+}// layoutDelegateForView:resizeSubviewsWithOldSize:
+
+
 #pragma mark NSViewController
 
 
@@ -15145,15 +15343,15 @@ NOTE:	As future SDKs are adopted, it makes more sense to only
 loadView
 {
 	[super loadView];
-	assert(nil != self.terminalContentView);
-	assert(nil != self.terminalPaddingView);
-	assert(nil != self.terminalBackgroundView);
+	assert(nil != self.terminalView);
 	
 	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL),
 												Preferences_ContextWrap::kAlreadyRetained);
 	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION),
 													Preferences_ContextWrap::kAlreadyRetained);
 	
+	
+	self.terminalView.layoutDelegate = self;
 	
 	@try
 	{
@@ -15171,11 +15369,7 @@ loadView
 			}
 			else
 			{
-				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(self.terminalContentView,
-																			self.terminalPaddingView,
-																			self.terminalBackgroundView,
-																			buffer,
-																			nullptr/* format */);
+				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(self.terminalView, buffer, nullptr/* format */);
 				
 				
 				if (nullptr == viewRef)
@@ -15208,5 +15402,677 @@ loadView
 
 
 @end //} TerminalView_Controller
+
+
+#pragma mark -
+@implementation TerminalView_Object //{
+
+
+#pragma mark Externally-Declared Properties
+
+
+/*!
+The view that renders text flush to its boundaries.  (Any
+extra space around the terminal is provided by other views.)
+*/
+@synthesize terminalContentView = _terminalContentView;
+
+
+/*!
+A primarily-horizontal padding along the bottom terminal edge.
+
+Padding views create space between the terminal text and the
+margin regions.  Padding can be hidden to allow text to be
+closer to adjacent views (useful in splits, for example).
+The ends of the top and bottom pads extend horizontally to
+cover the same horizontal space as any vertical padding areas. 
+Padding has the same background color as normal terminal text.
+*/
+@synthesize terminalPaddingViewBottom = _terminalPaddingViewBottom;
+
+
+/*!
+A primarily-vertical padding along the left terminal edge.
+(For more comments on padding views, see the comments for
+"terminalPaddingViewBottom".)
+*/
+@synthesize terminalPaddingViewLeft = _terminalPaddingViewLeft;
+
+
+/*!
+A primarily-vertical padding along the right terminal edge.
+(For more comments on padding views, see the comments for
+"terminalPaddingViewBottom".)
+*/
+@synthesize terminalPaddingViewRight = _terminalPaddingViewRight;
+
+
+/*!
+A primarily-horizontal padding along the top terminal edge.
+(For more comments on padding views, see the comments for
+"terminalPaddingViewBottom".)
+*/
+@synthesize terminalPaddingViewTop = _terminalPaddingViewTop;
+
+
+/*!
+A primarily-horizontal margin along the bottom terminal edge.
+
+Margin views create space between terminal views and any
+adjacent views.  Margins can be hidden to allow text to be
+closer to adjacent views (useful in splits, for example).
+The ends of the top and bottom margins extend horizontally to
+cover the same horizontal space as any vertical margin areas.
+If two terminal views are adjacent with no other views in
+between (such as a split bar), their margin regions overlap
+instead of creating extra space.  Padding spaces are not
+shared.   Margins are rendered with the “matte” color.
+*/
+@synthesize terminalMarginViewBottom = _terminalMarginViewBottom;
+
+
+/*!
+A primarily-vertical margin along the left terminal edge.
+(For more comments on margin views, see the comments for
+"terminalMarginViewBottom".)
+*/
+@synthesize terminalMarginViewLeft = _terminalMarginViewLeft;
+
+
+/*!
+A primarily-vertical margin along the right terminal edge.
+(For more comments on margin views, see the comments for
+"terminalMarginViewBottom".)
+*/
+@synthesize terminalMarginViewRight = _terminalMarginViewRight;
+
+
+/*!
+A primarily-horizontal margin along the top terminal edge.
+(For more comments on margin views, see the comments for
+"terminalMarginViewBottom".)
+*/
+@synthesize terminalMarginViewTop = _terminalMarginViewTop;
+
+
+#pragma mark Initializers
+
+
+/*!
+Initializer for object constructed from a NIB.
+
+(2018.04)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+	self = [super initWithCoder:aCoder];
+	if (nil != self)
+	{
+		[self createSubviews];
+		_internalViewPtr = nullptr; // set later
+	}
+	return self;
+}// initWithCoder:
+
+
+/*!
+Designated initializer.
+
+(2018.04)
+*/
+- (instancetype)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		[self createSubviews];
+		_internalViewPtr = nullptr; // set later
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(2018.04)
+*/
+- (void)
+dealloc
+{
+	[_terminalContentView release];
+	[_terminalPaddingViewTop release];
+	[_terminalPaddingViewRight release];
+	[_terminalPaddingViewLeft release];
+	[_terminalPaddingViewBottom release];
+	[_terminalMarginViewTop release];
+	[_terminalMarginViewRight release];
+	[_terminalMarginViewLeft release];
+	[_terminalMarginViewBottom release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(2018.04)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	_internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+@end //} TerminalView_Object
+
+
+#pragma mark -
+@implementation TerminalView_Object (TerminalView_ObjectInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Constructs all subviews such as the content region and
+views that render padding and margin areas.
+
+(2018.04)
+*/
+- (void)
+createSubviews
+{
+	//
+	// note that layout methods will adjust all views so their
+	// initial frames are all empty
+	//
+	
+	_terminalMarginViewBottom = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalMarginViewBottom];
+	
+	_terminalMarginViewLeft = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalMarginViewLeft];
+	
+	_terminalMarginViewRight = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalMarginViewRight];
+	
+	_terminalMarginViewTop = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalMarginViewTop];
+	
+	_terminalPaddingViewBottom = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalPaddingViewBottom];
+	
+	_terminalPaddingViewLeft = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalPaddingViewLeft];
+	
+	_terminalPaddingViewRight = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalPaddingViewRight];
+	
+	_terminalPaddingViewTop = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalPaddingViewTop];
+	
+	_terminalContentView = [[[TerminalView_ContentView alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_terminalContentView];
+}// createSubviews
+
+
+@end //} TerminalView_Object (TerminalView_ObjectInternal)
+
+
+#pragma mark -
+@implementation TerminalView_ScrollBar //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.04)
+*/
+- (instancetype)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		_internalViewPtr = nullptr;
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!q
+Destructor.
+
+(2018.04)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(2018.04)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	_internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+#pragma mark NSView
+
+
+/*!
+Render the scroll bar, and any adornments on top of it (such
+as the locations of terminal search results in the buffer).
+
+(2018.04)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+	[super drawRect:aRect];
+	
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	
+	
+#if 0
+	// TEMPORARY: draw background
+	{
+		CGRect		clipBounds = CGContextGetClipBoundingBox(drawingContext);
+		
+		
+		CGContextSetRGBFillColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+		CGContextFillRect(drawingContext, clipBounds);
+	}
+#endif
+	
+	// UNIMPLEMENTED: render red tick-marks for search results
+}// drawRect:
+
+
+@end //} TerminalView_ScrollBar
+
+
+#pragma mark -
+@implementation TerminalView_ScrollBar (TerminalView_ScrollBarInternal) //{
+
+
+@end //} TerminalView_ScrollBar (TerminalView_ScrollBarInternal)
+
+
+#pragma mark -
+@implementation TerminalView_ScrollableRootView //{
+
+
+#pragma mark Externally-Declared Properties
+
+
+/*!
+The vertical scroll bar.
+*/
+@synthesize scrollBarV = _scrollBarV;
+
+
+#pragma mark Initializers
+
+
+/*!
+Initializer for object constructed from a NIB.
+
+(2018.04)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+	self = [super initWithCoder:aCoder];
+	if (nil != self)
+	{
+		[self createSubviews];
+		_internalViewPtr = nullptr; // set later
+	}
+	return self;
+}// initWithCoder:
+
+
+/*!
+Designated initializer.
+
+(2018.04)
+*/
+- (instancetype)
+initWithFrame:(NSRect)		aFrame
+{
+	self = [super initWithFrame:aFrame];
+	if (nil != self)
+	{
+		[self createSubviews];
+		self->_internalViewPtr = nullptr; // set later
+	}
+	return self;
+}// initWithFrame:
+
+
+/*!
+Destructor.
+
+(2018.04)
+*/
+- (void)
+dealloc
+{
+	[_scrollBarV release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(2018.04)
+*/
+- (My_TerminalViewPtr)
+internalViewPtr
+{
+	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
+}
+- (void)
+setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
+{
+	_internalViewPtr = aViewPtr;
+}// setInternalViewPtr:
+
+
+#pragma mark NSView
+
+
+#if 0
+/*!
+For debug only; show the boundaries.
+
+(2018.04)
+*/
+- (void)
+drawRect:(NSRect)	aRect
+{
+#pragma unused(aRect)
+	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	
+	
+	// TEMPORARY: draw background
+	CGContextSetRGBStrokeColor(drawingContext, 0.0, 0.0, 0.0, 1.0/* alpha */);
+	CGContextStrokeRect(drawingContext, CGRectMake(0, 0, NSWidth(self.bounds), NSHeight(self.bounds)));
+}// drawRect:
+#endif
+
+
+@end //} TerminalView_ScrollableRootView
+
+
+@implementation TerminalView_ScrollableRootView (TerminalView_ScrollableRootViewInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Constructs all subviews such as the content region and
+views that render padding and margin areas.
+
+(2018.04)
+*/
+- (void)
+createSubviews
+{
+	//
+	// note that layout methods will adjust all views so their
+	// initial frames are all empty
+	//
+	
+	_scrollBarV = [[[TerminalView_ScrollBar alloc] initWithFrame:NSZeroRect] autorelease];
+	[self addSubview:_scrollBarV];
+}// createSubviews
+
+
+@end //} TerminalView_ScrollableRootView (TerminalView_ScrollableRootViewInternal)
+
+
+#pragma mark -
+@implementation TerminalView_ScrollableRootVC //{
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+The terminal views that are operated by this view controller’s
+scroll views.  Also determines the source of annotations in
+scroll bars (for example, tick bars during a text search).
+*/
+@synthesize terminalViewControllers = _terminalViewControllers;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2018.04)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithNibName:@"TerminalScrollableRootViewCocoa" bundle:nil];
+	if (nil != self)
+	{
+		_terminalViewControllers = [[NSMutableArray alloc] init];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2018.04)
+*/
+- (void)
+dealloc
+{
+	[_terminalViewControllers release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Returns the scrollable view managed by this controller.
+This is a convenience method for interpreting the
+controller’s "view" property as a more precise class.
+
+(2018.04)
+*/
+- (TerminalView_ScrollableRootView*)
+scrollableRootView
+{
+	TerminalView_ScrollableRootView*	result = nil;
+	
+	
+	if (NO == [self.view isKindOfClass:TerminalView_ScrollableRootView.class])
+	{
+		Console_Warning(Console_WriteLine, "TerminalView_ScrollableRootVC: 'scrollableRootView': 'self.view' is not of the expected class!");
+	}
+	else
+	{
+		result = STATIC_CAST(self.view, TerminalView_ScrollableRootView*);
+	}
+	
+	return result;
+}// scrollableRootView
+
+
+#pragma mark New Methods
+
+
+/*!
+Starts managing the specified controller’s terminal view.
+Currently, this means that user scroll activity can cause
+the visible lines of the terminal view to change, and
+search activity can cause tick marks to appear.
+
+See also "enumerateTerminalViewControllersUsingBlock:" and
+"removeTerminalViewController:".
+
+(2018.04)
+*/
+- (void)
+addTerminalViewController:(TerminalView_Controller*)	aVC
+{
+	[self.terminalViewControllers addObject:aVC];
+	[self.view addSubview:aVC.view];
+	[self.view forceResize];
+}// addTerminalViewController:
+
+
+/*!
+Invokes the specified block on every terminal view controller
+or stops when the block says to stop.
+
+(2018.04)
+*/
+- (void)
+enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)	aBlock
+{
+	__block BOOL	stopFlag = NO;
+	
+	
+	for (TerminalView_Controller* aVC in self.terminalViewControllers)
+	{
+		aBlock(aVC, &stopFlag);
+		if (stopFlag)
+		{
+			break;
+		}
+	}
+}// enumerateTerminalViewControllersUsingBlock:
+
+
+/*!
+Stops managing the specified controller’s terminal view
+(the reverse of "addTerminalViewController:").
+
+(2018.04)
+*/
+- (void)
+removeTerminalViewController:(TerminalView_Controller*)		aVC
+{
+	[aVC.view removeFromSuperview];
+	[self.terminalViewControllers removeObject:aVC];
+	[self.view forceResize];
+}// removeTerminalViewController:
+
+
+#pragma mark CoreUI_ViewLayoutDelegate
+
+
+/*!
+This is responsible for the layout of subviews.
+
+(2018.04)
+*/
+- (void)
+layoutDelegateForView:(NSView*)		aView
+resizeSubviewsWithOldSize:(NSSize)	anOldSize
+{
+#pragma unused(aView, anOldSize)
+	CGFloat		scrollBarWidth = 16;
+	
+	
+	// if view is ridiculously narrow, give up on the scroll bar
+	if (NSWidth(self.view.frame) < scrollBarWidth)
+	{
+		scrollBarWidth = 0;
+	}
+	
+	[self enumerateTerminalViewControllersUsingBlock:
+	^(TerminalView_Controller* aVC, BOOL* UNUSED_ARGUMENT(outStopFlagPtr))
+	{
+		aVC.view.frame = NSMakeRect(0, 0, NSWidth(self.view.frame) - scrollBarWidth,
+									NSHeight(self.view.frame));
+	}];
+	self.scrollableRootView.scrollBarV.frame = NSMakeRect(NSWidth(self.view.frame) - scrollBarWidth,
+															0, scrollBarWidth, NSHeight(self.view.frame));
+}// layoutDelegateForView:resizeSubviewsWithOldSize:
+
+
+#pragma mark NSViewController
+
+
+/*!
+Invoked by NSViewController once the "self.view" property is set,
+after the NIB file is loaded.  This essentially guarantees that
+all file-defined user interface elements are now instantiated and
+other settings that depend on valid UI objects can now be made.
+
+NOTE:	As future SDKs are adopted, it makes more sense to only
+		implement "viewDidLoad" (which was only recently added
+		to NSViewController and is not otherwise available).
+		This implementation can essentially move to "viewDidLoad".
+
+(2016.03)
+*/
+- (void)
+loadView
+{
+	[super loadView];
+	assert(nil != self.scrollableRootView);
+	self.scrollableRootView.layoutDelegate = self;
+}// loadView
+
+
+@end //} TerminalView_ScrollableRootVC
+
+
+#pragma mark -
+@implementation TerminalView_ScrollableRootVC (TerminalView_ScrollableRootVCInternal) //{
+
+
+@end //} TerminalView_ScrollableRootVC (TerminalView_ScrollableRootVCInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
