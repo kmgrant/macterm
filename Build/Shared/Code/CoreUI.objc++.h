@@ -42,6 +42,36 @@
 #pragma mark Types
 
 /*!
+This protocol helps to work around some basic view layout
+tasks that seem like they should be easier to do when
+using an NSViewController in pre-auto-layout arrangements.
+
+If an NSViewController subclass implements this protocol
+and the corresponding NSView subclass stores the reference
+to the view controller only in terms of the delegate, the
+NSView method "resizeSubviewsWithOldSize:" can simply call
+the delegate (i.e. the view controller).  The controller
+already has to keep track of child controllers anyway and
+it may want to further delegate layout responsibilities.
+
+The convenience view class "CoreUI_LayoutView" contains a
+"layoutDelegate" property and a default implementation of
+"resizeSubviewsWithOldSize:" to call the delegate.
+*/
+@protocol CoreUI_ViewLayoutDelegate < NSObject > //{
+
+@required
+
+	// typically an NSView implements "resizeSubviewsWithOldSize:"
+	// by invoking this method on a stored delegate object
+	- (void)
+	layoutDelegateForView:(NSView*)_
+	resizeSubviewsWithOldSize:(NSSize)_;
+
+@end //}
+
+
+/*!
 Custom subclass for action buttons in order to provide
 a way to customize behavior when needed.
 
@@ -115,6 +145,37 @@ changes to an interface declared in a ".mm" file.
 	drawRect:(NSRect)_;
 	- (NSRect)
 	focusRingMaskBounds;
+
+@end //}
+
+
+/*!
+This implements view layout in terms of a delegate.
+
+If an NSViewController subclass primarily exists to
+manage other view controllers as children, it can
+set CoreUI_LayoutView as its view’s class and then
+act as the delegate for the layout of subviews.
+Since it already knows the child view controllers,
+it makes more sense for the controller to be told
+when to do layout instead of expecting the view to
+redundantly keep track of these things, especially
+if the layout may rely on state that could only be
+known to the controller.
+
+In later SDKs with auto-layout, it may be possible
+to use the view controller for constraints.  Until
+then, this is a viable alternative.
+*/
+@interface CoreUI_LayoutView : NSView //{
+{
+@private
+	id < CoreUI_ViewLayoutDelegate >	_layoutDelegate;
+}
+
+// accessors
+	@property (assign) id < CoreUI_ViewLayoutDelegate >
+	layoutDelegate;
 
 @end //}
 

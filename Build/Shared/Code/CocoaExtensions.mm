@@ -854,6 +854,27 @@ valueWithCGSize:(CGSize)	aSize
 
 
 /*!
+Forces a view to call its layout code.  Currently this
+is achieved by shifting the frame twice in a row, as
+there is no apparent way in NSView to trigger a call
+such as "resizeSubviewsWithOldSize:" otherwise.
+
+(2018.04)
+*/
+- (void)
+forceResize
+{
+	NSRect const	oldFrame = self.frame;
+	
+	
+	NSDisableScreenUpdates();
+	self.frame = NSMakeRect(oldFrame.origin.x, oldFrame.origin.y, NSWidth(oldFrame) - 1, NSHeight(oldFrame));
+	self.frame = oldFrame;
+	NSEnableScreenUpdates();
+}// forceResize
+
+
+/*!
 Returns true if the current keyboard focus is any of
 the views in the subtree of the current view, including
 the view itself.

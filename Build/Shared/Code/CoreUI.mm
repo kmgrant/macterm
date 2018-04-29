@@ -38,6 +38,7 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
+#import <Console.h>
 
 
 
@@ -332,6 +333,47 @@ focusRingMaskBounds
 
 
 @end //}
+
+
+#pragma mark -
+@implementation CoreUI_LayoutView //{
+
+
+#pragma mark Externally-Declared Properties
+
+
+/*!
+This should be set to the view controller (implementing
+the protocol), allowing NSView layout to delegate to the
+view controller.
+*/
+@synthesize layoutDelegate = _layoutDelegate;
+
+
+#pragma mark NSView
+
+
+/*!
+Lays out subviews in response to a size change.
+
+(2018.04)
+*/
+- (void)
+resizeSubviewsWithOldSize:(NSSize)		oldSize
+{
+	if (nil == self.layoutDelegate)
+	{
+		Console_Warning(Console_WriteLine, "CoreUI_LayoutView layout requested when no delegate is set");
+	}
+	else
+	{
+		[self.layoutDelegate layoutDelegateForView:self
+													resizeSubviewsWithOldSize:oldSize];
+	}
+}// resizeSubviewsWithOldSize:
+
+
+@end //} CoreUI_LayoutView
 
 
 #pragma mark -

@@ -198,6 +198,8 @@ to precisely remove the observer later.
 @interface NSView (CocoaExtensions_NSView) //{
 
 // new methods
+	- (void)
+	forceResize;
 	- (BOOL)
 	isKeyboardFocusInSubtree;
 	- (BOOL)
