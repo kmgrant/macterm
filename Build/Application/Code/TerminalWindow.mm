@@ -9182,10 +9182,6 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 								performSelector:@selector(toolbarDidChangeVisibility:)];
 		}
 		
-		// since the toolbar provides more power over window buttons,
-		// remove the standard buttons from the window
-		[self setWindowButtonsHidden:YES];
-		
 		// "canDrawConcurrently" is YES for terminal background views
 		// so enable concurrent view drawing at the window level
 		[self.window setAllowsConcurrentViewDrawing:YES];
@@ -9193,7 +9189,21 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		// terminal items in the Window menu are managed separately
 		self.window.excludedFromWindowsMenu = YES;
 		
-		[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
+		// when constructed, the toolbar may restore a previous state of
+		// being invisible; therefore, this initialization is conditional
+		// (and should be consistent with explicit show/hide behavior at
+		// other times)
+		if (self.window.toolbar.isVisible)
+		{
+			// since the toolbar provides more power over window buttons,
+			// remove the standard buttons from the window (this creates
+			// an ugly toolbar gap on the left side though, which is
+			// removed by overriding "_toolbarLeadingSpace" in the window
+			// subclass)
+			[self setWindowButtonsHidden:YES];
+			
+			[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
+		}
 	}
 	return self;
 }// initWithTerminalVC:
@@ -9360,6 +9370,11 @@ setTitleVisibility:(NSInteger)		aVisibilityEnum
 Hides the normal window buttons for close/minimize/zoom,
 expecting the buttons to be in the toolbar or unavailable
 (due to user customization of the toolbar).
+
+Note that this creates an ugly gap on the left side of
+the toolbar by default.  This is removed in the custom
+subclass of the terminal window by implementing the
+private method "_toolbarLeadingSpace".
 
 (2018.03)
 */
@@ -10022,6 +10037,42 @@ toScreen:(NSScreen*)			screen
 	
 	return result;
 }// constrainFrameRect:toScreen:
+
+
+/*!
+Override of PRIVATE method in NSWindow that forces the
+toolbar to NOT make room for standard window buttons.
+
+Somehow, even when the NSWindowButton instances are
+hidden, the toolbar leaves a wide gap between the left
+edge of the window and the first toolbar item.  This
+method override removes that gap so that the toolbar
+can be completely customized (and so that window button
+toolbar items can be flushed completely left if the
+user so desires).
+
+See the Terminal Toolbar module for further dependencies
+on toolbar layout.
+
+(2018.04)
+*/
+- (CGFloat)
+_toolbarLeadingSpace
+{
+	CGFloat		result = 5; // arbitrary
+	
+	
+	// it isn’t clear if the base class would even call this
+	// method when the toolbar is invisible but the value
+	// might as well reflect the behavior (which is, normal
+	// window buttons reappear when the toolbar goes away)
+	if (NO == self.toolbar.isVisible)
+	{
+		result = 80; // arbitrary; leave enough space for a normal button triplet
+	}
+	
+	return result;
+}// _toolbarLeadingSpace
 
 
 @end //} TerminalWindow_Object

@@ -813,7 +813,6 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 				NSToolbarSpaceItemIdentifier,
 				NSToolbarSpaceItemIdentifier,
 				kTerminalToolbar_ItemIDCustomize,
-				NSToolbarSpaceItemIdentifier,
 			];
 }// toolbarDefaultItemIdentifiers
 
