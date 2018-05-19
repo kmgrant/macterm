@@ -53,12 +53,6 @@
 #ifdef __OBJC__
 #	import "Panel.h"
 #	import "PrefsContextManager.objc++.h"
-@class PrefPanelFormats_ViewManager;
-@class PrefPanelFullScreen_ViewManager;
-@class PrefPanelGeneral_ViewManager;
-@class PrefPanelSessions_ViewManager;
-@class PrefPanelTerminals_ViewManager;
-@class PrefPanelTranslations_ViewManager;
 #endif
 
 

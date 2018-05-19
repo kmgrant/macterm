@@ -62,6 +62,101 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Loads a NIB file that defines this panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelGeneral_FullScreenViewManager : Panel_ViewManager< Panel_Delegate,
+																		PrefsWindow_PanelInterface > //{
+{
+@private
+	PrefsContextManager_Object*		prefsMgr;
+}
+
+// accessors
+	- (BOOL)
+	isForceQuitEnabled;
+	- (void)
+	setForceQuitEnabled:(BOOL)_; // binding
+	- (BOOL)
+	isMenuBarShownOnDemand;
+	- (void)
+	setMenuBarShownOnDemand:(BOOL)_; // binding
+	- (BOOL)
+	nonSystemMechanismEnabled;
+	- (void)
+	setNonSystemMechanismEnabled:(BOOL)_; // binding
+	- (BOOL)
+	offSwitchWindowEnabled;
+	- (void)
+	setOffSwitchWindowEnabled:(BOOL)_; // binding
+	- (BOOL)
+	isScrollBarVisible;
+	- (void)
+	setScrollBarVisible:(BOOL)_; // binding
+	- (BOOL)
+	isWindowFrameVisible;
+	- (void)
+	setWindowFrameVisible:(BOOL)_; // binding
+
+@end //}
+
+
+/*!
+Loads a NIB file that defines the Notifications pane.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface PrefPanelGeneral_NotificationsViewManager : Panel_ViewManager< Panel_Delegate,
+																			PrefsWindow_PanelInterface > //{
+{
+	NSMutableArray*		soundNames;
+@private
+	PrefsContextManager_Object*		prefsMgr;
+	NSIndexSet*						soundNameIndexes;
+	BOOL							_didLoadView;
+}
+
+// accessors
+	- (BOOL)
+	alwaysUseVisualBell;
+	- (void)
+	setAlwaysUseVisualBell:(BOOL)_; // binding
+	- (BOOL)
+	backgroundBellsSendNotifications;
+	- (void)
+	setBackgroundBellsSendNotifications:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationNone;
+	- (void)
+	setBackgroundNotificationNone:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationChangeDockIcon;
+	- (void)
+	setBackgroundNotificationChangeDockIcon:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationAnimateIcon;
+	- (void)
+	setBackgroundNotificationAnimateIcon:(BOOL)_; // binding
+	- (BOOL)
+	isBackgroundNotificationDisplayMessage;
+	- (void)
+	setBackgroundNotificationDisplayMessage:(BOOL)_; // binding
+	- (NSArray*)
+	soundNames;
+	- (NSIndexSet*)
+	soundNameIndexes;
+	- (void)
+	setSoundNameIndexes:(NSIndexSet*)_; // binding
+
+@end //}
+
+
+/*!
 Loads a NIB file that defines the Options pane.
 
 Note that this is only in the header for the sake of
@@ -204,63 +299,14 @@ changes to an interface declared in a ".mm" file.
 
 @end //}
 
-
-/*!
-Loads a NIB file that defines the Notifications pane.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface PrefPanelGeneral_NotificationsViewManager : Panel_ViewManager< Panel_Delegate,
-																			PrefsWindow_PanelInterface > //{
-{
-	NSMutableArray*		soundNames;
-@private
-	PrefsContextManager_Object*		prefsMgr;
-	NSIndexSet*						soundNameIndexes;
-	BOOL							_didLoadView;
-}
-
-// accessors
-	- (BOOL)
-	alwaysUseVisualBell;
-	- (void)
-	setAlwaysUseVisualBell:(BOOL)_; // binding
-	- (BOOL)
-	backgroundBellsSendNotifications;
-	- (void)
-	setBackgroundBellsSendNotifications:(BOOL)_; // binding
-	- (BOOL)
-	isBackgroundNotificationNone;
-	- (void)
-	setBackgroundNotificationNone:(BOOL)_; // binding
-	- (BOOL)
-	isBackgroundNotificationChangeDockIcon;
-	- (void)
-	setBackgroundNotificationChangeDockIcon:(BOOL)_; // binding
-	- (BOOL)
-	isBackgroundNotificationAnimateIcon;
-	- (void)
-	setBackgroundNotificationAnimateIcon:(BOOL)_; // binding
-	- (BOOL)
-	isBackgroundNotificationDisplayMessage;
-	- (void)
-	setBackgroundNotificationDisplayMessage:(BOOL)_; // binding
-	- (NSArray*)
-	soundNames;
-	- (NSIndexSet*)
-	soundNameIndexes;
-	- (void)
-	setSoundNameIndexes:(NSIndexSet*)_; // binding
-
-@end //}
-
 #endif // __OBJC__
 
 
 
 #pragma mark Public Methods
+
+Preferences_TagSetRef
+	PrefPanelGeneral_NewFullScreenTagSet	();
 
 Preferences_TagSetRef
 	PrefPanelGeneral_NewNotificationsTagSet	();

@@ -103,23 +103,11 @@ unique value.
 Note that these strings are also used as HIObject IDs for
 toolbar items.
 */
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("net.macterm.prefpanels.general");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("net.macterm.prefpanels.sessions");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionDataFlow		= CFSTR("net.macterm.prefpanels.sessions.dataflow");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionKeyboard		= CFSTR("net.macterm.prefpanels.sessions.keyboard");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionGraphics		= CFSTR("net.macterm.prefpanels.sessions.graphics");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionResource		= CFSTR("net.macterm.prefpanels.sessions.resource");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("net.macterm.prefpanels.macros");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("net.macterm.prefpanels.terminals");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation	= CFSTR("net.macterm.prefpanels.terminals.emulation");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsHacks		= CFSTR("net.macterm.prefpanels.terminals.hacks");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsOptions	= CFSTR("net.macterm.prefpanels.terminals.options");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsScreen		= CFSTR("net.macterm.prefpanels.terminals.screen");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormats				= CFSTR("net.macterm.prefpanels.formats");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsANSI			= CFSTR("net.macterm.prefpanels.formats.ansicolors");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsNormal		= CFSTR("net.macterm.prefpanels.formats.normal");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorKiosk				= CFSTR("net.macterm.prefpanels.kiosk");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorScripts				= CFSTR("net.macterm.prefpanels.scripts");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("net.macterm.prefpanels.general");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("net.macterm.prefpanels.macros");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("net.macterm.prefpanels.sessions");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("net.macterm.prefpanels.terminals");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations		= CFSTR("net.macterm.prefpanels.translations");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorWorkspaces			= CFSTR("net.macterm.prefpanels.workspaces");
 

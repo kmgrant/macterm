@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180519',
     '20180322',
     '20180317',
     '20180301',
@@ -595,6 +596,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180519': [
+        'Preferences window Full Screen pane has moved to Preferences window General pane Full Screen tab.',
+    ],
     '20180322': [
         'Terminal view information tags are now implemented as blue pop-overs with white text, instead of using "tooltips".  (These appear during window resize.  They also appear after an interrupt, suspend, vector graphics page, image file dump, or local echo of a control character.)',
     ],

@@ -218,7 +218,6 @@ IconForNewSessionLogInShell.icns \
 IconForNewSessionShell.icns \
 IconForPrefPanelFormats.icns \
 IconForPrefPanelGeneral.icns \
-IconForPrefPanelKiosk.icns \
 IconForPrefPanelMacros.icns \
 IconForPrefPanelSessions.icns \
 IconForPrefPanelTerminals.icns \
@@ -268,7 +267,7 @@ English.lproj/KeypadVT220KeysCocoa \
 English.lproj/MainMenuCocoa \
 English.lproj/PrefPanelFormatGeneralCocoa \
 English.lproj/PrefPanelFormatStandardColorsCocoa \
-English.lproj/PrefPanelFullScreenCocoa \
+English.lproj/PrefPanelGeneralFullScreenCocoa \
 English.lproj/PrefPanelGeneralNotificationsCocoa \
 English.lproj/PrefPanelGeneralOptionsCocoa \
 English.lproj/PrefPanelGeneralSpecialCocoa \

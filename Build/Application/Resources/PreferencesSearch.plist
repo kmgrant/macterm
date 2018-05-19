@@ -69,7 +69,7 @@
 		<string>white</string>
 		<string>yellow</string>
 	</array>
-	<key>net.macterm.prefpanels.FullScreen</key>
+	<key>net.macterm.prefpanels.General.FullScreen</key>
 	<array>
 		<string>display</string>
 		<string>force quit</string>
@@ -81,6 +81,18 @@
 		<string>space</string>
 		<string>whole</string>
 		<string>window</string>
+	</array>
+	<key>net.macterm.prefpanels.General.Notifications</key>
+	<array>
+		<string>alert</string>
+		<string>background</string>
+		<string>bell</string>
+		<string>dock</string>
+		<string>general</string>
+		<string>growl</string>
+		<string>notification</string>
+		<string>sound</string>
+		<string>visual</string>
 	</array>
 	<key>net.macterm.prefpanels.General.Options</key>
 	<array>
@@ -121,18 +133,6 @@
 		<string>tab</string>
 		<string>text</string>
 		<string>window</string>
-	</array>
-	<key>net.macterm.prefpanels.General.Notifications</key>
-	<array>
-		<string>alert</string>
-		<string>background</string>
-		<string>bell</string>
-		<string>dock</string>
-		<string>general</string>
-		<string>growl</string>
-		<string>notification</string>
-		<string>sound</string>
-		<string>visual</string>
 	</array>
 	<key>net.macterm.prefpanels.Macros</key>
 	<array>

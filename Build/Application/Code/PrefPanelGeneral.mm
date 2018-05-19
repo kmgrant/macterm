@@ -128,6 +128,12 @@ Private properties.
 /*!
 The private class interface.
 */
+@interface PrefPanelGeneral_FullScreenViewManager (PrefPanelGeneral_FullScreenViewManagerInternal) @end
+
+
+/*!
+The private class interface.
+*/
 @interface PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal) //{
 
 // new methods
@@ -201,7 +207,40 @@ Creates a tag set that can be used with Preferences APIs to
 filter settings (e.g. via Preferences_ContextCopy()).
 
 The resulting set contains every tag that is possible to change
-using this user interface.
+using the Full Screen user interface.
+
+Call Preferences_ReleaseTagSet() when finished with the set.
+
+(2018.05)
+*/
+Preferences_TagSetRef
+PrefPanelGeneral_NewFullScreenTagSet ()
+{
+	Preferences_TagSetRef			result = nullptr;
+	std::vector< Preferences_Tag >	tagList;
+	
+	
+	// IMPORTANT: this list should be in sync with everything in this file
+	// that reads preferences from the context of a data set
+	tagList.push_back(kPreferences_TagKioskShowsMenuBar);
+	tagList.push_back(kPreferences_TagKioskShowsScrollBar);
+	tagList.push_back(kPreferences_TagKioskShowsWindowFrame);
+	tagList.push_back(kPreferences_TagKioskAllowsForceQuit);
+	tagList.push_back(kPreferences_TagKioskNoSystemFullScreenMode);
+	tagList.push_back(kPreferences_TagKioskShowsOffSwitch);
+	
+	result = Preferences_NewTagSet(tagList);
+	
+	return result;
+}// NewFullScreenTagSet
+
+
+/*!
+Creates a tag set that can be used with Preferences APIs to
+filter settings (e.g. via Preferences_ContextCopy()).
+
+The resulting set contains every tag that is possible to change
+using the Notifications user interface.
 
 Call Preferences_ReleaseTagSet() when finished with the set.
 
@@ -232,7 +271,7 @@ Creates a tag set that can be used with Preferences APIs to
 filter settings (e.g. via Preferences_ContextCopy()).
 
 The resulting set contains every tag that is possible to change
-using this user interface.
+using the Options user interface.
 
 Call Preferences_ReleaseTagSet() when finished with the set.
 
@@ -269,7 +308,7 @@ Creates a tag set that can be used with Preferences APIs to
 filter settings (e.g. via Preferences_ContextCopy()).
 
 The resulting set contains every tag that is possible to change
-using this user interface.
+using the Special user interface.
 
 Call Preferences_ReleaseTagSet() when finished with the set.
 
@@ -314,6 +353,7 @@ PrefPanelGeneral_NewTagSet ()
 	Preferences_TagSetRef	result = Preferences_NewTagSet(40); // arbitrary initial capacity
 	Preferences_TagSetRef	optionTags = PrefPanelGeneral_NewOptionsTagSet();
 	Preferences_TagSetRef	specialTags = PrefPanelGeneral_NewSpecialTagSet();
+	Preferences_TagSetRef	fullScreenTags = PrefPanelGeneral_NewFullScreenTagSet();
 	Preferences_TagSetRef	notificationTags = PrefPanelGeneral_NewNotificationsTagSet();
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
@@ -322,11 +362,14 @@ PrefPanelGeneral_NewTagSet ()
 	assert(kPreferences_ResultOK == prefsResult);
 	prefsResult = Preferences_TagSetMerge(result, specialTags);
 	assert(kPreferences_ResultOK == prefsResult);
+	prefsResult = Preferences_TagSetMerge(result, fullScreenTags);
+	assert(kPreferences_ResultOK == prefsResult);
 	prefsResult = Preferences_TagSetMerge(result, notificationTags);
 	assert(kPreferences_ResultOK == prefsResult);
 	
 	Preferences_ReleaseTagSet(&optionTags);
 	Preferences_ReleaseTagSet(&specialTags);
+	Preferences_ReleaseTagSet(&fullScreenTags);
 	Preferences_ReleaseTagSet(&notificationTags);
 	
 	return result;
@@ -336,7 +379,10 @@ PrefPanelGeneral_NewTagSet ()
 #pragma mark Internal Methods
 
 #pragma mark -
-@implementation PrefPanelGeneral_ViewManager
+@implementation PrefPanelGeneral_ViewManager //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -350,6 +396,7 @@ init
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelGeneral_OptionsViewManager alloc] init] autorelease],
 										[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_FullScreenViewManager alloc] init] autorelease],
 										[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
 									];
 	
@@ -378,11 +425,14 @@ dealloc
 }// dealloc
 
 
-@end // PrefPanelGeneral_ViewManager
+@end //} PrefPanelGeneral_ViewManager
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_SoundInfo
+@implementation PrefPanelGeneral_SoundInfo //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -493,6 +543,9 @@ dealloc
 }// dealloc
 
 
+#pragma mark New Methods
+
+
 /*!
 Plays the sound (if any) that is represented by this object.
 
@@ -538,11 +591,424 @@ preferenceString
 }// preferenceString
 
 
-@end // PrefPanelGeneral_SoundInfo
+@end //} PrefPanelGeneral_SoundInfo
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_NotificationsViewManager
+@implementation PrefPanelGeneral_FullScreenViewManager //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.1)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithNibNamed:@"PrefPanelGeneralFullScreenCocoa" delegate:self context:nullptr];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(4.1)
+*/
+- (void)
+dealloc
+{
+	[prefsMgr release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isForceQuitEnabled
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskAllowsForceQuit defaultValue:NO];
+}
+- (void)
+setForceQuitEnabled:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskAllowsForceQuit];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save Force-Quit-in-full-screen preference");
+	}
+}// setForceQuitEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isMenuBarShownOnDemand
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsMenuBar defaultValue:NO];
+}
+- (void)
+setMenuBarShownOnDemand:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsMenuBar];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save menu-bar-on-demand preference");
+	}
+}// setMenuBarShownOnDemand:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+nonSystemMechanismEnabled
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskNoSystemFullScreenMode defaultValue:NO];
+}
+- (void)
+setNonSystemMechanismEnabled:(BOOL)		aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskNoSystemFullScreenMode];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save full-screen mode preference");
+	}
+}// setNonSystemMechanismEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+offSwitchWindowEnabled
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
+}
+- (void)
+setOffSwitchWindowEnabled:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save off-switch-window preference");
+	}
+}// setOffSwitchWindowEnabled:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isScrollBarVisible
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsScrollBar defaultValue:NO];
+}
+- (void)
+setScrollBarVisible:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsScrollBar];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save scroll-bar-in-full-screen preference");
+	}
+}// setScrollBarVisible:
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (BOOL)
+isWindowFrameVisible
+{
+	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsWindowFrame defaultValue:NO];
+}
+- (void)
+setWindowFrameVisible:(BOOL)	aFlag
+{
+	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsWindowFrame];
+	
+	
+	if (NO == writeOK)
+	{
+		Console_Warning(Console_WriteLine, "failed to save window-frame-in-full-screen preference");
+	}
+}// setWindowFrameVisible:
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, before any NIB loads; initialize the
+subclass, at least enough so that NIB object construction and
+bindings succeed.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext
+{
+#pragma unused(aViewManager, aContext)
+	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeNormal;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = [[self managedView] frame].size;
+}// panelViewManager:requestingIdealSize:
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+Not applicable to this panel because it only sets global
+(Default) preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet, newDataSet)
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(4.1)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(4.1)
+*/
+- (NSImage*)
+panelIcon
+{
+	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(4.1)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.General.FullScreen";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(4.1)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Full Screen", @"PrefPanelGeneral", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(4.1)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(4.1)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::GENERAL;
+}// preferencesClass
+
+
+@end //} PrefPanelGeneral_FullScreenViewManager
+
+
+#pragma mark -
+@implementation PrefPanelGeneral_FullScreenViewManager (PrefPanelGeneral_FullScreenViewManagerInternal) //{
+
+
+@end //} PrefPanelGeneral_FullScreenViewManager (PrefPanelGeneral_FullScreenViewManagerInternal)
+
+
+#pragma mark -
+@implementation PrefPanelGeneral_NotificationsViewManager //{
 
 
 #pragma mark Internally-Declared Properties
@@ -1158,11 +1624,14 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelGeneral_NotificationsViewManager
+@end //} PrefPanelGeneral_NotificationsViewManager
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+@implementation PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal) //{
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -1287,11 +1756,14 @@ writeBellSoundName:(NSString*)	aValue
 }// writeBellSoundName:
 
 
-@end // PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+@end //} PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_OptionsViewManager
+@implementation PrefPanelGeneral_OptionsViewManager //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1782,18 +2254,21 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelGeneral_OptionsViewManager
+@end //} PrefPanelGeneral_OptionsViewManager
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+@implementation PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal) //{
 
 
-@end // PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+@end //} PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_SpecialViewManager
+@implementation PrefPanelGeneral_SpecialViewManager //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -2580,11 +3055,14 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelGeneral_SpecialViewManager
+@end //} PrefPanelGeneral_SpecialViewManager
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
+@implementation PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal) //{
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -2793,6 +3271,6 @@ writeSpacesPerTab:(UInt16)	aValue
 }// writeSpacesPerTab:
 
 
-@end // PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
+@end //} PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

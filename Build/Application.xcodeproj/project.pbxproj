@@ -101,7 +101,6 @@
 		0AC6BB3C0A8C0BA100AFF37A /* TerminalView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE28055432A400ACDF3A /* TerminalView.mm */; };
 		0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC6055432A400ACDF3A /* Console.cp */; };
 		0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */; };
-		0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */; };
 		0AC6BB440A8C0BA100AFF37A /* URL.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE38055432A400ACDF3A /* URL.cp */; };
 		0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBC055432A400ACDF3A /* Clipboard.mm */; };
 		0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.mm */; };
@@ -213,7 +212,7 @@
 		0A0E9F761DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F781DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F7A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
-		0A0E9F7C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelFullScreenCocoa.xib; sourceTree = "<group>"; };
+		0A0E9F7C1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralFullScreenCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F7E1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralNotificationsCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F801DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralOptionsCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F821DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
@@ -535,8 +534,6 @@
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Shared/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
 		0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Shared/Code/UTF8Decoder.h; sourceTree = "<group>"; };
-		0AF4B5450A1D61C700D187A3 /* PrefPanelFullScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFullScreen.h; path = Application/Code/PrefPanelFullScreen.h; sourceTree = "<group>"; };
-		0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFullScreen.mm; path = Application/Code/PrefPanelFullScreen.mm; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
 		0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
 		0AF5022F0F872CC30068CB19 /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
@@ -942,7 +939,7 @@
 				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
 				0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */,
 				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
-				0A0E9F7B1DB18127006A8BF5 /* PrefPanelFullScreenCocoa.xib */,
+				0A0E9F7B1DB18127006A8BF5 /* PrefPanelGeneralFullScreenCocoa.xib */,
 				0A0E9F7D1DB18127006A8BF5 /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0A0E9F7F1DB18127006A8BF5 /* PrefPanelGeneralOptionsCocoa.xib */,
 				0A0E9F811DB18127006A8BF5 /* PrefPanelGeneralSpecialCocoa.xib */,
@@ -1053,7 +1050,6 @@
 				0A46FE03055432A400ACDF3A /* Preferences.cp */,
 				0A46C56C15D864B700843BBC /* PreferenceValue.mm */,
 				0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */,
-				0AF4B5460A1D61E400D187A3 /* PrefPanelFullScreen.mm */,
 				0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */,
 				0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */,
 				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */,
@@ -1073,7 +1069,6 @@
 				0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */,
 				0A46C56B15D864A500843BBC /* PreferenceValue.objc++.h */,
 				0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */,
-				0AF4B5450A1D61C700D187A3 /* PrefPanelFullScreen.h */,
 				0A4604160554376100ACDF3A /* PrefPanelGeneral.h */,
 				0A4604170554376100ACDF3A /* PrefPanelMacros.h */,
 				0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */,
@@ -1396,7 +1391,6 @@
 				0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */,
 				0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */,
 				0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */,
-				0AC6BB410A8C0BA100AFF37A /* PrefPanelFullScreen.mm in Sources */,
 				0AC6BB440A8C0BA100AFF37A /* URL.cp in Sources */,
 				0A0777411DCBC815004C9F78 /* TouchBar.mm in Sources */,
 				0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */,
@@ -1636,12 +1630,12 @@
 			name = PrefPanelFormatStandardColorsCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A0E9F7B1DB18127006A8BF5 /* PrefPanelFullScreenCocoa.xib */ = {
+		0A0E9F7B1DB18127006A8BF5 /* PrefPanelGeneralFullScreenCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				0A0E9F7C1DB18127006A8BF5 /* English */,
 			);
-			name = PrefPanelFullScreenCocoa.xib;
+			name = PrefPanelGeneralFullScreenCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F7D1DB18127006A8BF5 /* PrefPanelGeneralNotificationsCocoa.xib */ = {

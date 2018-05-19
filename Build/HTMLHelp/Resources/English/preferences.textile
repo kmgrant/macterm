@@ -26,7 +26,6 @@ p(#abstract). This page is arranged in the same categories as those in
 * "Terminals":#terminals
 * "Formats":#formats
 * "Translations":#translations
-* "Full Screen":#fullscreen
 
 h2(#collections). About Grouped Preferences
 
@@ -374,7 +373,85 @@ Note that this previously would also determine the window that
  opens automatically at startup.  But, the startup window(s) now
  come from the Default Workspace collection.
 
-h3(#generalnotification). Notification
+h3(#generalfullscreen). Full Screen
+
+h4. Access Control
+
+h5. Show scroll bar
+
+If your goal is to run an application in the terminal window for
+ visitors of a kiosk, it may be appropriate to hide the scroll bar
+ so that none of the "junk" normally cached in the scrollback is
+ accessible.
+
+h5. Show menu bar on demand
+
+The menu bar is hidden in Full Screen mode but it can normally
+ be displayed simply by moving the mouse to the top of the screen
+ and pausing a moment.
+
+If you want the menu bar to be completely unusable, disable this
+ option.  Note that when "Use fast (non-system) mode" is unset,
+ the system always makes the menu bar available.
+
+h5. Show window frame
+
+If unset, the content region of a terminal window fills its whole
+ display, leaving no room for the window title or toolbar (though
+ the colored matte space is still present, and there is space for
+ a scroll bar).  Note that when "Use fast (non-system) mode" is
+ unset, the system will keep the toolbar in Full Screen if it was
+ visible outside of Full Screen, and the window title is hidden.
+
+h5. Allow "Force Quit" command
+
+To make kiosks harder to mess with, you can prevent the user from
+ accessing the system Force Quit function (along with some other
+ key Apple menu items chosen by the system).
+
+Note, this offers "pretty good" security but it does not guard
+ against all possible ways that MacTerm could be interrupted.
+ For example, a background application could pop up, MacTerm
+ could crash, or the user may be able to command-Tab to some other
+ program.
+
+This option is only available when "Use fast (non-system) mode"
+ is set, because MacTerm cannot customize the system's standard
+ Full Screen mechanism.
+
+h4. Method
+
+h5. Use fast (non-system) mode
+
+Suppresses the normal Full Screen mechanism of macOS and uses
+ a custom MacTerm scheme instead.
+
+The macOS mode has advantages and disadvantages; it is generally
+ better than the custom scheme for small single screens such as
+ laptops, and generally worse on desktops with multiple displays.
+ The macOS method is more integrated with the system, allowing
+ gestures and the ability to create more Full Screen windows than
+ you have displays.  On the other hand, it adds slow animations
+ and most of the Access Control preferences are not available
+ because the system behavior cannot be changed by MacTerm.
+
+Note that the system will automatically put a standard button in
+ your terminal windows when the system mode is in effect.  Using
+ View >> Customize Toolbar... you can remove the MacTerm toolbar
+ item for Full Screen if you wish (its effect is the same).
+
+h4. Deactivation
+
+h5. Display an "off switch" window
+
+If you do not want your kiosk disturbed, you may wish to remove
+ the floating button that appears by default.  (Full Screen can
+ always be disabled but without this button it is less likely
+ that visitors will determine how.)
+
+
+
+h3(#generalnotification). Notifications
 
 h4. Terminal Bell
 
@@ -1416,95 +1493,5 @@ Unfortunately, not all fonts are the same: some of them cannot
  because those fonts look nicer in general) but use the backup
  to handle special characters.  A Unicode font is recommended as
  a backup font.
-
-h2(#fullscreen). Full Screen
-
-Settings that control "kiosk mode", the Enter Full Screen command
- in the View menu.  You can use these preferences to create a
- more complete kiosk (by hiding the menu bar, for example).
-
-A Full Screen terminal window will implicitly obey your setting
- for "Window Resize Effect" (in General); that is, it will either
- cause the screen dimensions to stay the same and increase the
- font size, or it will keep the font size the same and increase
- the number of columns and/or rows of the terminal screen.  You
- can temporarily invert this setting by holding down the Option
- key while entering Full Screen mode.
-
-h3. Options
-
-h4. Access Control
-
-h5. Show scroll bar
-
-If your goal is to run an application in the terminal window for
- visitors of a kiosk, it may be appropriate to hide the scroll bar
- so that none of the "junk" normally cached in the scrollback is
- accessible.
-
-h5. Show menu bar on demand
-
-The menu bar is hidden in Full Screen mode but it can normally
- be displayed simply by moving the mouse to the top of the screen
- and pausing a moment.
-
-If you want the menu bar to be completely unusable, disable this
- option.  Note that when "Use fast (non-system) mode" is unset,
- the system always makes the menu bar available.
-
-h5. Show window frame
-
-If unset, the content region of a terminal window fills its whole
- display, leaving no room for the window title or toolbar (though
- the colored matte space is still present, and there is space for
- a scroll bar).  Note that when "Use fast (non-system) mode" is
- unset, the system will keep the toolbar in Full Screen if it was
- visible outside of Full Screen, and the window title is hidden.
-
-h5. Allow "Force Quit" command
-
-To make kiosks harder to mess with, you can prevent the user from
- accessing the system Force Quit function (along with some other
- key Apple menu items chosen by the system).
-
-Note, this offers "pretty good" security but it does not guard
- against all possible ways that MacTerm could be interrupted.
- For example, a background application could pop up, MacTerm
- could crash, or the user may be able to command-Tab to some other
- program.
-
-This option is only available when "Use fast (non-system) mode"
- is set, because MacTerm cannot customize the system's standard
- Full Screen mechanism.
-
-h4. Method
-
-h5. Use fast (non-system) mode
-
-Suppresses the normal Full Screen mechanism of macOS and uses
- a custom MacTerm scheme instead.
-
-The macOS mode has advantages and disadvantages; it is generally
- better than the custom scheme for small single screens such as
- laptops, and generally worse on desktops with multiple displays.
- The macOS method is more integrated with the system, allowing
- gestures and the ability to create more Full Screen windows than
- you have displays.  On the other hand, it adds slow animations
- and most of the Access Control preferences are not available
- because the system behavior cannot be changed by MacTerm.
-
-Note that the system will automatically put a standard button in
- your terminal windows when the system mode is in effect.  Using
- View >> Customize Toolbar... you can remove the MacTerm toolbar
- item for Full Screen if you wish (its effect is the same).
-
-h4. Deactivation
-
-h5. Display an "off switch" window
-
-If you do not want your kiosk disturbed, you may wish to remove
- the floating button that appears by default.  (Full Screen can
- always be disabled but without this button it is less likely
- that visitors will determine how.)
 
 notextile. </div>

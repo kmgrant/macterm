@@ -68,7 +68,6 @@
 #import "Panel.h"
 #import "Preferences.h"
 #import "PrefPanelFormats.h"
-#import "PrefPanelFullScreen.h"
 #import "PrefPanelGeneral.h"
 #import "PrefPanelMacros.h"
 #import "PrefPanelSessions.h"
@@ -468,13 +467,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandDisplayPrefPanelGeneral:
 					[[PrefsWindow_Controller sharedPrefsWindowController]
 						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorGeneral, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelKiosk:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorKiosk, NSString*)
 														withAnimation:NO];
 					result = noErr;
 					break;
@@ -2254,8 +2246,7 @@ windowDidLoad
 					[PrefPanelSessions_ViewManager class],
 					[PrefPanelTerminals_ViewManager class],
 					[PrefPanelFormats_ViewManager class],
-					[PrefPanelTranslations_ViewManager class],
-					[PrefPanelFullScreen_ViewManager class]
+					[PrefPanelTranslations_ViewManager class]
 				])
 		{
 			newViewMgr = [[viewMgrClass alloc] init];

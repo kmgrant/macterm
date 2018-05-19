@@ -330,24 +330,10 @@ inline CFStringRef
 }
 
 inline CFStringRef
-	AppResources_ReturnPrefPanelKioskIconFilenameNoExtension			()
-{
-	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
-	return CFSTR("IconForPrefPanelKiosk");
-}
-
-inline CFStringRef
 	AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension			()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
 	return CFSTR("IconForPrefPanelMacros");
-}
-
-inline CFStringRef
-	AppResources_ReturnPrefPanelScriptsIconFilenameNoExtension			()
-{
-	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
-	return CFSTR("IconForPrefPanelScripts");
 }
 
 inline CFStringRef

@@ -371,7 +371,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces
 #define kCommandDisplayPrefPanelFormatsNormal	'SPFN'		// multiple interfaces
 #define kCommandDisplayPrefPanelGeneral			'SPrG'		// “Preferences“ window
-#define kCommandDisplayPrefPanelKiosk			'SPrK'		// “Preferences“ window
 #define kCommandDisplayPrefPanelMacros			'SPrM'		// “Preferences“ window
 #define kCommandDisplayPrefPanelSessions		'SPrS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelSessionsDataFlow	'SPSD'	// “Preferences“ window
