@@ -566,10 +566,6 @@ void
 //@{
 
 Session_Result
-	Session_CopyStateIconRef				(SessionRef							inRef,
-											 IconRef&							outCopiedIcon);
-
-Session_Result
 	Session_FillInSessionDescription		(SessionRef							inRef,
 											 SessionDescription_Ref*			outNewSaveFileMemoryModelPtr);
 

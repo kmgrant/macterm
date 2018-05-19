@@ -359,8 +359,6 @@ void						closeTerminalWindow					(My_SessionPtr);
 UInt16						copyAutoCapturePreferences			(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
-IconRef						createSessionStateActiveIcon		();
-IconRef						createSessionStateDeadIcon			();
 void						detectLongLife						(EventLoopTimerRef, void*);
 void						handleSaveFromPanel				(My_SessionPtr, NSSavePanel*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
@@ -409,8 +407,6 @@ void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 namespace {
 
 My_SessionPtrLocker&	gSessionPtrLocks ()	{ static My_SessionPtrLocker x; return x; }
-IconRef					gSessionActiveIcon () { static IconRef x = createSessionStateActiveIcon(); return x; }
-IconRef					gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(); return x; }
 My_SessionRefTracker&	gInvalidSessions () { static My_SessionRefTracker x; return x; }
 
 } // anonymous namespace
@@ -753,87 +749,6 @@ Session_AppendDataForProcessing		(SessionRef		inRef,
 	}
 	return result;
 }// AppendDataForProcessing
-
-
-/*!
-Returns an icon that describes the session status (for
-example, running or not running).  This can be displayed
-in user interface elements.
-
-If any problems occur, nullptr is returned.  Otherwise,
-the icon is acquired, so use ReleaseIconRef() when
-finished with it.
-
-Any applied attributes (see Session_StateAttribute) *may*
-influence the icon that is returned.  For example, a
-badge may be added.
-
-DEPRECATED.  Use Session_GetStateIconName(), instead.
-
-(3.1)
-*/
-Session_Result
-Session_CopyStateIconRef	(SessionRef		inRef,
-							 IconRef&		outCopiedIcon)
-{
-	Session_Result		result = kSession_ResultOK;
-	
-	
-	outCopiedIcon = nullptr;
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
-	else
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		switch (ptr->status)
-		{
-		// for now, these all use the same icon
-		case kSession_StateBrandNew:
-		case kSession_StateInitialized:
-		case kSession_StateActiveUnstable:
-		case kSession_StateActiveStable:
-			outCopiedIcon = gSessionActiveIcon();
-			assert_noerr(AcquireIconRef(outCopiedIcon));
-			break;
-		
-		case kSession_StateDead:
-		case kSession_StateImminentDisposal:
-			outCopiedIcon = gSessionDeadIcon();
-			assert_noerr(AcquireIconRef(outCopiedIcon));
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-		
-		switch (ptr->statusAttributes)
-		{
-		case kSession_StateAttributeNotification:
-			// TEMPORARY: a notification-specific icon (a bell?) may be better here
-			UNUSED_RETURN(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
-												kAlertCautionIcon, &outCopiedIcon);
-			break;
-		
-		case kSession_StateAttributeOpenDialog:
-			UNUSED_RETURN(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
-												kAlertCautionIcon, &outCopiedIcon);
-			break;
-		
-		default:
-			break;
-		}
-		
-		if (nullptr == outCopiedIcon)
-		{
-			// return some non-success value...
-			result = kSession_ResultParameterError;
-		}
-	}
-	
-	return result;
-}// CopyStateIconRef
 
 
 /*!
@@ -6280,66 +6195,6 @@ copyVectorGraphicsPreferences	(My_SessionPtr				inPtr,
 	
 	return result;
 }// copyVectorGraphicsPreferences
-
-
-/*!
-Registers the “active session” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createSessionStateActiveIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconSessionStatusActive,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createSessionStateActiveIcon
-
-
-/*!
-Registers the “dead session” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createSessionStateDeadIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconSessionStatusDead,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createSessionStateDeadIcon
 
 
 /*!

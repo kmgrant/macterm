@@ -121,21 +121,13 @@ CFStringRef const kConstantsRegistry_HIObjectClassIDTerminalTextView		= CFSTR("n
 // these cannot migrate to a new domain name until the associated preferences can be
 // properly converted.  Of course, a transition to Cocoa-based toolbars has the same
 // issue, so maybe it is unavoidable.
-CFStringRef const kConstantsRegistry_HIToolbarIDPreferences					= CFSTR("com.mactelnet.toolbar.preferences");
-CFStringRef const kConstantsRegistry_HIToolbarIDSessionInfo					= CFSTR("com.mactelnet.toolbar.sessioninfo");
 CFStringRef const kConstantsRegistry_HIToolbarIDTerminal					= CFSTR("com.mactelnet.toolbar.terminal");
-CFStringRef const kConstantsRegistry_HIToolbarIDTerminalFloater				= CFSTR("com.mactelnet.toolbar.terminalfloater");
-CFStringRef const kConstantsRegistry_HIToolbarItemIDCollections				= CFSTR("com.mactelnet.toolbaritem.collections");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDCustomize				= CFSTR("com.mactelnet.toolbaritem.customize");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDFullScreen				= CFSTR("com.mactelnet.toolbaritem.fullscreen");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDHideWindow				= CFSTR("com.mactelnet.toolbaritem.hidewindow");
-CFStringRef const kConstantsRegistry_HIToolbarItemIDNewDefaultSession		= CFSTR("com.mactelnet.toolbaritem.newsession");
-CFStringRef const kConstantsRegistry_HIToolbarItemIDNewLoginSession			= CFSTR("com.mactelnet.toolbaritem.newloginsession");
-CFStringRef const kConstantsRegistry_HIToolbarItemIDNewShellSession			= CFSTR("com.mactelnet.toolbaritem.newshellsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDPrint					= CFSTR("com.mactelnet.toolbaritem.print");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDRestartSession			= CFSTR("com.mactelnet.toolbaritem.restartsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDScrollLock				= CFSTR("com.mactelnet.toolbaritem.scrolllock");
-CFStringRef const kConstantsRegistry_HIToolbarItemIDStackWindows			= CFSTR("com.mactelnet.toolbaritem.stackwindows");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalBell			= CFSTR("com.mactelnet.toolbaritem.terminalbell");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED1			= CFSTR("com.mactelnet.toolbaritem.terminalled1");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED2			= CFSTR("com.mactelnet.toolbaritem.terminalled2");
@@ -150,35 +142,6 @@ These must all be unique within the application.
 enum
 {
 	// use AppResources_ReturnCreatorCode() to set the creator of these icons
-	kConstantsRegistry_IconServicesIconApplication				= 'AppI',
-	kConstantsRegistry_IconServicesIconContextMenu				= 'CtxM',
-	kConstantsRegistry_IconServicesIconFileTypeMacroSet			= 'PMcS',
-	kConstantsRegistry_IconServicesIconItemAdd					= 'AddI',
-	kConstantsRegistry_IconServicesIconItemRemove				= 'DelI',
-	kConstantsRegistry_IconServicesIconKeypadArrowDown			= 'KPAD',
-	kConstantsRegistry_IconServicesIconKeypadArrowLeft			= 'KPAL',
-	kConstantsRegistry_IconServicesIconKeypadArrowRight			= 'KPAR',
-	kConstantsRegistry_IconServicesIconKeypadArrowUp			= 'KPAU',
-	kConstantsRegistry_IconServicesIconKeypadDelete				= 'KPDl',
-	kConstantsRegistry_IconServicesIconKeypadEnter				= 'KPEn',
-	kConstantsRegistry_IconServicesIconKeypadFind				= 'KPFn',
-	kConstantsRegistry_IconServicesIconKeypadInsert				= 'KPIn',
-	kConstantsRegistry_IconServicesIconKeypadPageDown			= 'KPPD',
-	kConstantsRegistry_IconServicesIconKeypadPageUp				= 'KPPU',
-	kConstantsRegistry_IconServicesIconKeypadSelect				= 'KPSl',
-	kConstantsRegistry_IconServicesIconMenuTitleScripts			= 'ScpM',
-	kConstantsRegistry_IconServicesIconPreferenceCollection		= 'PrfC',
-	kConstantsRegistry_IconServicesIconPrefPanelFormats			= 'PFmt',
-	kConstantsRegistry_IconServicesIconPrefPanelFullScreen		= 'PKio',
-	kConstantsRegistry_IconServicesIconPrefPanelGeneral			= 'PGen',
-	kConstantsRegistry_IconServicesIconPrefPanelMacros			= 'PMcr',
-	kConstantsRegistry_IconServicesIconPrefPanelScripts			= 'PScr',
-	kConstantsRegistry_IconServicesIconPrefPanelSessions		= 'PSsn',
-	kConstantsRegistry_IconServicesIconPrefPanelTerminals		= 'PTrm',
-	kConstantsRegistry_IconServicesIconPrefPanelTranslations	= 'PXlt',
-	kConstantsRegistry_IconServicesIconPrefPanelWorkspaces		= 'PWsp',
-	kConstantsRegistry_IconServicesIconSessionStatusActive		= 'Actv',
-	kConstantsRegistry_IconServicesIconSessionStatusDead		= 'Dead',
 	kConstantsRegistry_IconServicesIconToolbarItemBellOff		= 'BelO',
 	kConstantsRegistry_IconServicesIconToolbarItemBellOn		= 'BelI',
 	kConstantsRegistry_IconServicesIconToolbarItemCustomize		= 'CTlb',
@@ -190,8 +153,7 @@ enum
 	kConstantsRegistry_IconServicesIconToolbarItemPrint			= 'Prnt',
 	kConstantsRegistry_IconServicesIconToolbarItemRestartSession= 'RSsn',
 	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOff	= 'XON ',
-	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn	= 'XOFF',
-	kConstantsRegistry_IconServicesIconToolbarItemStackWindows	= 'StkW'
+	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn	= 'XOFF'
 };
 
 //@}

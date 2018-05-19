@@ -1036,16 +1036,6 @@ Boolean
 
 //@}
 
-//!\name Standard Carbon Event Handlers
-//@{
-
-OSStatus
-	Commands_HandleCreateToolbarItem		(EventHandlerCallRef		inHandlerCallRef,
-											 EventRef					inEvent,
-											 void*						inNullContextPtr);
-
-//@}
-
 //!\name Cocoa Menu Utilities
 //@{
 
