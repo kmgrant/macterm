@@ -233,10 +233,13 @@ Returns the singleton.
 + (id)
 sharedAddressPanelController
 {
-	if (nil == gAddressDialog_PanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gAddressDialog_PanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gAddressDialog_PanelController;
 }
 

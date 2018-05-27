@@ -429,10 +429,13 @@ Returns the singleton.
 + (id)
 sharedCommandLinePanelController
 {
-	if (nil == gCommandLine_PanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gCommandLine_PanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gCommandLine_PanelController;
 }// sharedCommandLinePanelController
 

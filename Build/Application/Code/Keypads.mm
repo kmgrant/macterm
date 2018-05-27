@@ -617,10 +617,13 @@ Returns the singleton.
 + (id)
 sharedArrangeWindowPanelController
 {
-	if (nil == gKeypads_ArrangeWindowPanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gKeypads_ArrangeWindowPanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gKeypads_ArrangeWindowPanelController;
 }// sharedArrangeWindowPanelController
 
@@ -969,10 +972,13 @@ Returns the singleton.
 + (id)
 sharedControlKeysPanelController
 {
-	if (nil == gKeypads_ControlKeysPanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gKeypads_ControlKeysPanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gKeypads_ControlKeysPanelController;
 }// sharedControlKeysPanelController
 
@@ -1516,10 +1522,13 @@ Returns the singleton.
 + (id)
 sharedFullScreenPanelController
 {
-	if (nil == gKeypads_FullScreenPanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gKeypads_FullScreenPanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gKeypads_FullScreenPanelController;
 }// sharedFullScreenPanelController
 
@@ -1587,14 +1596,17 @@ Returns the singleton.
 + (id)
 sharedFunctionKeysPanelController
 {
-	if (nil == gKeypads_FunctionKeysPanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gKeypads_FunctionKeysPanelController = [[self.class allocWithZone:NULL] init];
 		
 		// force the window to load because its settings are needed
 		// elsewhere in the user interface (e.g. menu items)
 		UNUSED_RETURN(NSWindow*)[gKeypads_FunctionKeysPanelController window];
-	}
+	});
 	return gKeypads_FunctionKeysPanelController;
 }// sharedFunctionKeysPanelController
 
@@ -3006,10 +3018,13 @@ Returns the singleton.
 + (id)
 sharedVT220KeysPanelController
 {
-	if (nil == gKeypads_VT220KeysPanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gKeypads_VT220KeysPanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gKeypads_VT220KeysPanelController;
 }// sharedVT220KeysPanelController
 

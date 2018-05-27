@@ -1711,10 +1711,13 @@ Returns the singleton.
 + (id)
 sharedClipboardWindowController
 {
-	if (nil == gClipboard_WindowController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gClipboard_WindowController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gClipboard_WindowController;
 }// sharedClipboardWindowController
 

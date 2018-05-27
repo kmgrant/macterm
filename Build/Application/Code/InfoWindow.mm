@@ -810,10 +810,13 @@ Returns the singleton.
 + (instancetype)
 sharedInfoWindowController
 {
-	if (nil == gInfoWindow_Controller)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gInfoWindow_Controller = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gInfoWindow_Controller;
 }// sharedInfoWindowController
 

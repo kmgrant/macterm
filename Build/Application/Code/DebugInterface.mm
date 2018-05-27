@@ -98,10 +98,13 @@ Returns the singleton.
 + (id)
 sharedDebugInterfacePanelController
 {
-	if (nil == gDebugInterface_PanelController)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gDebugInterface_PanelController = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gDebugInterface_PanelController;
 }// sharedDebugInterfacePanelController
 

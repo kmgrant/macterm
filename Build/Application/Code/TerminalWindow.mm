@@ -9670,12 +9670,15 @@ information display.  Used for window resize.
 + (instancetype)
 sharedInfoBubble
 {
-	if (nil == gTerminalWindow_SharedInfoBubble)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gTerminalWindow_SharedInfoBubble = [[self.class allocWithZone:NULL] initWithStringValue:@"Âgggggggp"]; // initial string for layout only
 		assert(nil != gTerminalWindow_SharedInfoBubble);
 		gTerminalWindow_SharedInfoBubble.stringValue = @"";
-	}
+	});
 	return gTerminalWindow_SharedInfoBubble;
 }// sharedInfoBubble
 

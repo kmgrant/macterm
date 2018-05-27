@@ -831,10 +831,13 @@ Returns the singleton.
 + (instancetype)
 sharedPrefsWindowController
 {
-	if (nil == gPrefsWindow_Controller)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gPrefsWindow_Controller = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gPrefsWindow_Controller;
 }// sharedPrefsWindowController
 

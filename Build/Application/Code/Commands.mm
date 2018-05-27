@@ -3647,11 +3647,14 @@ Returns the singleton.
 + (instancetype)
 sharedExecutor
 {
-	if (nil == gCommands_Executor)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		[[self.class allocWithZone:NULL] init];
 		assert(nil != gCommands_Executor);
-	}
+	});
 	return gCommands_Executor;
 }
 

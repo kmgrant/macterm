@@ -368,10 +368,13 @@ Returns the singleton.
 + (id)
 sharedGrowlDelegate
 {
-	if (nil == gGrowlSupport_Delegate)
-	{
+	static dispatch_once_t		onceToken;
+	
+	
+	dispatch_once(&onceToken,
+	^{
 		gGrowlSupport_Delegate = [[self.class allocWithZone:NULL] init];
-	}
+	});
 	return gGrowlSupport_Delegate;
 }// sharedGrowlDelegate
 
