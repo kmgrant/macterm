@@ -256,23 +256,54 @@ changes to an interface declared in a ".mm" file.
 
 
 /*!
+Declares a series of text-input methods that make sense
+for interacting with a terminal view.  No other ordinary
+text input methods are expected (namely, this is not a
+sub-protocol of NSTextInputClient).
+*/
+@protocol TerminalView_TextInputClient //{
+
+@required
+
+	// process the given string as user input (send to a session)
+	- (void)
+	receivedString:(NSString*)_
+	terminalView:(TerminalViewRef)_;
+
+	// user input delete key (send appropriate sequence to a session)
+	- (void)
+	receivedDeleteBackwardInTerminalView:(TerminalViewRef)_;
+
+	// user input newline (send appropriate sequence to a session)
+	- (void)
+	receivedNewlineInTerminalView:(TerminalViewRef)_;
+
+@end //}
+
+
+/*!
 Implements the main rendering part of the Terminal View.
 
 Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_ContentView : NSControl //{
+@interface TerminalView_ContentView : NSControl < NSTextInputClient > //{
 {
 @private
-	BOOL		_showDragHighlight;
-	NSUInteger	_modifierFlagsForCursor;
-	void*		_internalViewPtr;
+	BOOL								_showDragHighlight;
+	NSUInteger							_modifierFlagsForCursor;
+	void*								_internalViewPtr;
+	id< TerminalView_TextInputClient >	_textInputDelegate;
 }
 
 // new methods
 	- (TerminalViewRef)
 	terminalViewRef;
+
+// accessors
+	@property (assign) id< TerminalView_TextInputClient >
+	textInputDelegate;
 
 @end //}
 
@@ -729,7 +760,7 @@ HIViewRef
 HIViewID
 	TerminalView_ReturnContainerHIViewID		();
 
-NSView*
+TerminalView_Object*
 	TerminalView_ReturnContainerNSView			(TerminalViewRef			inView);
 
 HIViewRef

@@ -556,6 +556,7 @@ void				visualBell							(My_TerminalViewPtr);
 
 } // anonymous namespace
 
+
 /*!
 Private properties.
 */
@@ -2309,11 +2310,11 @@ To resize a screen’s view area, use the view "frame" property.
 
 (4.0)
 */
-NSView*
+TerminalView_Object*
 TerminalView_ReturnContainerNSView		(TerminalViewRef	inView)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	NSView*						result = nil;
+	TerminalView_Object*		result = nil;
 	
 	
 	result = viewPtr->encompassingNSView;
@@ -2690,7 +2691,7 @@ TerminalView_ReturnUserFocusNSView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view renders a focus ring
-	result = viewPtr->encompassingNSView;
+	result = viewPtr->encompassingNSView.terminalContentView;
 	return result;
 }// ReturnUserFocusNSView
 
@@ -14588,6 +14589,19 @@ to show that a drag-drop is pending.
 @synthesize showDragHighlight = _showDragHighlight;
 
 
+#pragma mark Externally-Declared Properties
+
+
+/*!
+An object that is used to handle NSTextInputClient requests
+indirectly, through a simplified API that is targeted at
+sessions.  Any keystrokes or other user inputs received by
+the terminal view itself will be interpreted and forwarded
+to this delegate through an appropriate method call.
+*/
+@synthesize textInputDelegate = _textInputDelegate;
+
+
 #pragma mark Initializers
 
 
@@ -14606,6 +14620,7 @@ initWithFrame:(NSRect)		aFrame
 		self->_modifierFlagsForCursor = 0;
 		self->_internalViewPtr = nullptr;
 		
+		self.refusesFirstResponder = NO;
 		self.wantsLayer = YES;
 	}
 	return self;
@@ -14768,6 +14783,19 @@ canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 /*!
+It is necessary for terminal views to accept “first responder”
+in order to ever receive actions such as menu commands!
+
+(4.0)
+*/
+- (BOOL)
+acceptsFirstResponder
+{
+	return YES;
+}// acceptsFirstResponder
+
+
+/*!
 Keeps track of the state of modifier keys so that an internal
 cache can be updated (used to change the cursor shape).
 
@@ -14782,20 +14810,306 @@ flagsChanged:(NSEvent*)		anEvent
 }// flagsChanged:
 
 
-#pragma mark NSView
+/*!
+For any unrecognized keystrokes, translates the event into
+an appropriate text command that may invoke another method
+on this object from the NSTextInputClient protocol.
+
+(2018.05)
+*/
+- (void)
+keyDown:(NSEvent*)		anEvent
+{
+	if (nil != anEvent)
+	{
+		// INCOMPLETE; may need to interpret certain keys directly here
+		// (also, need to use Session module to handle keys)
+		[self interpretKeyEvents:@[anEvent]]; // translate for NSTextInputClient
+	}
+}// keyDown:
+
+
+#pragma mark NSTextInputClient
 
 
 /*!
-It is necessary for terminal views to accept “first responder”
-in order to ever receive actions such as menu commands!
+Sends the given text to the attached terminal session, if any.
 
-(4.0)
+(2018.05)
+*/
+- (void)
+insertText:(id)					aString
+replacementRange:(NSRange)		replacementRange
+{
+#pragma unused(replacementRange)
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	
+	
+	// INCOMPLETE; it is not clear how to handle a random range request
+	// from the caller (could attempt to determine the target location
+	// relative to the terminal cursor and issue appropriate cursor move
+	// commands beforehand but realistically a request for a random range
+	// makes no sense in the terminal text entry model)
+	
+	//NSLog(@"term view %p / %@", viewPtr, NSStringFromSelector(_cmd)); // debug
+	if (nullptr != viewPtr)
+	{
+		[self.textInputDelegate receivedString:aString terminalView:viewPtr->selfRef];
+	}
+	else
+	{
+		Sound_StandardAlert();
+	}
+}// insertText:replacementRange:
+
+
+/*!
+Performs the specified text-related action.  For example, this is
+how newlines are detected as separate events from ordinary strings
+(where the latter would be sent to "insertText:replacementRange:"
+instead).
+
+Bare Tab key presses are sent as text because they are used by
+terminal applications such as shells.  Keyboard focus can still be
+changed, going backward, by using Shift-Tab.
+
+(2018.05)
+*/
+- (void)
+doCommandBySelector:(SEL)	aSelector
+{
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	
+	
+	//NSLog(@"term view %@: asked to: %@", NSStringFromSelector(_cmd), NSStringFromSelector(aSelector)); // debug
+	if (@selector(deleteBackward:) == aSelector)
+	{
+		// send appropriate delete sequence to session (varies)
+		if (nullptr != viewPtr)
+		{
+			[self.textInputDelegate receivedDeleteBackwardInTerminalView:viewPtr->selfRef];
+		}
+		else
+		{
+			Sound_StandardAlert();
+		}
+	}
+	else if (@selector(insertNewline:) == aSelector)
+	{
+		// send appropriate newline sequence to session (varies)
+		if (nullptr != viewPtr)
+		{
+			[self.textInputDelegate receivedNewlineInTerminalView:viewPtr->selfRef];
+		}
+		else
+		{
+			Sound_StandardAlert();
+		}
+	}
+	else if (@selector(insertTab:) == aSelector)
+	{
+		// send tab to session
+		if (nil != self.textInputDelegate)
+		{
+			if (nullptr != viewPtr)
+			{
+				[self.textInputDelegate receivedString:@"\t" terminalView:viewPtr->selfRef];
+			}
+			else
+			{
+				Sound_StandardAlert();
+			}
+		}
+		else
+		{
+			// treat as a keyboard focus change
+			if ([self.window.firstResponder isKindOfClass:NSView.class])
+			{
+				NSView*		keyView = STATIC_CAST(self.window.firstResponder, NSView*);
+				
+				
+				[self.window selectKeyViewFollowingView:keyView];
+			}
+		}
+	}
+	else if (@selector(insertBacktab:) == aSelector)
+	{
+		// treat as a keyboard focus change
+		if ([self.window.firstResponder isKindOfClass:NSView.class])
+		{
+			NSView*		keyView = STATIC_CAST(self.window.firstResponder, NSView*);
+			
+			
+			[self.window selectKeyViewPrecedingView:keyView];
+		}
+	}
+	else
+	{
+		[super doCommandBySelector:aSelector]; // defer to NSResponder (which defers to the window, application, delegates, etc.)
+	}
+}// doCommandBySelector
+
+
+/*!
+NOTE: Marking is not currently implemented.
+
+(2018.05)
+*/
+- (void)
+setMarkedText:(id)			aString
+selectedRange:(NSRange)		selectedRange
+replacementRange:(NSRange)	replacementRange
+{
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+}// setMarkedText:selectedRange:replacementRange:
+
+
+/*!
+NOTE: Marking is not currently implemented.
+
+(2018.05)
+*/
+- (void)
+unmarkText
+{
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+}// unmarkText
+
+
+/*!
+NOTE: This method of determining the selected range is not
+implemented.  Legacy code handles text selections through
+different functions.
+
+(2018.05)
+*/
+- (NSRange)
+selectedRange
+{
+	NSRange		result = NSMakeRange(NSNotFound, 0);
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// selectedRange
+
+
+/*!
+NOTE: Marking is not currently implemented.
+
+(2018.05)
+*/
+- (NSRange)
+markedRange
+{
+	NSRange		result = NSMakeRange(NSNotFound, 0);
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// markedRange
+
+
+/*!
+NOTE: Marking is not currently implemented so this always
+returns NO.
+
+(2018.05)
 */
 - (BOOL)
-acceptsFirstResponder
+hasMarkedText
 {
-	return YES;
-}// acceptsFirstResponder
+	BOOL	result = NO;
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// hasMarkedText
+
+
+/*!
+NOTE: Not implemented.
+
+(2018.05)
+*/
+- (NSAttributedString*)
+attributedSubstringForProposedRange:(NSRange)	aRange
+actualRange:(NSRangePointer)					actualRange
+{
+	NSAttributedString*		result = nil;
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// attributedSubstringForProposedRange:actualRange:
+
+
+/*!
+NOTE: Marking is not currently implemented.
+
+(2018.05)
+*/
+- (NSArray*)
+validAttributesForMarkedText
+{
+	NSArray*	result = nil;
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// validAttributesForMarkedText
+
+
+/*!
+NOTE: Rectangle computation is not supported through this
+interface.
+
+(2018.05)
+*/
+- (NSRect)
+firstRectForCharacterRange:(NSRange)	aRange
+actualRange:(NSRangePointer)			actualRange
+{
+	NSRect		result = NSZeroRect;
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// firstRectForCharacterRange:actualRange:
+
+
+/*!
+NOTE: Character indexing is not supported through this
+interface.
+
+(2018.05)
+*/
+- (NSUInteger)
+characterIndexForPoint:(NSPoint)	aPoint
+{
+	NSUInteger		result = 0;
+	
+	
+	// UNIMPLEMENTED
+	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
+	
+	return result;
+}// characterIndexForPoint:
+
+
+#pragma mark NSView
 
 
 /*!
@@ -15103,6 +15417,21 @@ menuForEvent:(NSEvent*)		anEvent
 	
 	return result;
 }// menuForEvent:
+
+
+/*!
+In addition to "acceptsFirstResponder" returning YES (a method
+from NSResponder), this method (from NSView) requires that the
+owning window be the key window before keyboard input is
+accepted.
+
+(2018.05)
+*/
+- (BOOL)
+needsPanelToBecomeKey
+{
+	return YES;
+}// needsPanelToBecomeKey
 
 
 /*!

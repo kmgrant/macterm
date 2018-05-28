@@ -125,7 +125,29 @@ enum My_SessionSheetType
 
 } // anonymous namespace
 
+
 #pragma mark Types
+
+/*!
+An object that serves as a delegate for input events
+on a terminal view.
+*/
+@interface Session_TextInput : NSObject < TerminalView_TextInputClient > //{
+{
+	SessionRef		_sessionRef;
+}
+
+// initializers
+	- (instancetype)
+	initWithSession:(SessionRef)_;
+
+// accessors
+	@property (assign) SessionRef
+	sessionRef;
+
+@end //}
+
+
 namespace {
 
 /*!
@@ -281,6 +303,7 @@ struct My_Session
 	My_DragDropHandlerByView	terminalViewEnteredHandlers;// invoked whenever the mouse moves into a terminal view
 	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
 	My_TextInputHandlerByView	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
+	Session_TextInput*			textInputDelegate;			// for Cocoa; given text input to a view, send appropriate action or text to session
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerWrap	windowValidationListener;	// responds after a window is created, and just before it dies
 	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
@@ -5521,6 +5544,7 @@ terminalViewEnteredUPP(nullptr), // set at window validation time
 terminalViewEnteredHandlers(), // set at window validation time
 terminalViewTextInputUPP(nullptr), // set at window validation time
 terminalViewTextInputHandlers(), // set at window validation time
+textInputDelegate(nil), // set at window validation time
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
 windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged),
@@ -5748,6 +5772,11 @@ My_Session::
 		delete [] this->readBufferPtr, this->readBufferPtr = nullptr;
 	}
 	ListenerModel_Dispose(&this->changeListenerModel);
+	
+	if (nil != textInputDelegate)
+	{
+		[textInputDelegate release]; textInputDelegate = nil;
+	}
 }// My_Session destructor
 
 
@@ -8934,30 +8963,33 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																	TerminalViewRef*);
 				
 				
-				if (viewArray != nullptr)
+				if (nullptr != viewArray)
 				{
-					HIViewRef		userFocusView = nullptr;
-					HIViewRef		dragFocusView = nullptr;
-					SInt16			i = 0;
-					OSStatus		error = noErr;
+					SInt16		i = 0;
 					
 					
-					ptr->terminalViewDragDropUPP = NewEventHandlerUPP(receiveTerminalViewDragDrop);
-					assert(nullptr != ptr->terminalViewDragDropUPP);
-					ptr->terminalViewEnteredUPP = NewEventHandlerUPP(receiveTerminalViewEntered);
-					assert(nullptr != ptr->terminalViewEnteredUPP);
-					ptr->terminalViewTextInputUPP = NewEventHandlerUPP(receiveTerminalViewTextInput);
-					assert(nullptr != ptr->terminalViewTextInputUPP);
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
-					for (i = 0; i < viewCount; ++i)
+					if (isCarbon)
 					{
-						userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
-						dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
+						// legacy key handling
+						HIViewRef		userFocusView = nullptr;
+						HIViewRef		dragFocusView = nullptr;
+						OSStatus		error = noErr;
 						
-						// install a callback that responds to drag-and-drop in views,
-						// and a callback that responds to key presses in views
-						if (isCarbon)
+						
+						ptr->terminalViewDragDropUPP = NewEventHandlerUPP(receiveTerminalViewDragDrop);
+						assert(nullptr != ptr->terminalViewDragDropUPP);
+						ptr->terminalViewEnteredUPP = NewEventHandlerUPP(receiveTerminalViewEntered);
+						assert(nullptr != ptr->terminalViewEnteredUPP);
+						ptr->terminalViewTextInputUPP = NewEventHandlerUPP(receiveTerminalViewTextInput);
+						assert(nullptr != ptr->terminalViewTextInputUPP);
+						for (i = 0; i < viewCount; ++i)
 						{
+							userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
+							dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
+							
+							// install a callback that responds to drag-and-drop in views,
+							// and a callback that responds to key presses in views
 							EventTypeSpec const		whenTerminalViewTextInput[] =
 													{
 														{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent }
@@ -9006,10 +9038,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							error = SetControlDragTrackingEnabled(dragFocusView, true/* is drag enabled */);
 							assert_noerr(error);
 						}
-						else
-						{
-							Console_Warning(Console_WriteLine, "session window drag-handler and key-handler not implemented for Cocoa");
-						}
 						
 						// enable drag tracking for the window, if it is not enabled already
 						// (not necessary for Cocoa)
@@ -9018,6 +9046,34 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							error = SetAutomaticControlDragTrackingEnabledForWindow
 									(GetControlOwner(dragFocusView), true/* is drag enabled */);
 							assert_noerr(error);
+						}
+					}
+					else
+					{
+						// set local delegate for each view; this is what allows keyboard
+						// events, etc. to be translated into session input and ultimately
+						// make the terminal work when the user starts typing!
+						ptr->textInputDelegate = [[Session_TextInput alloc] initWithSession:session];
+						for (i = 0; i < viewCount; ++i)
+						{
+							TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(viewArray[i]);
+							TerminalView_ContentView*	contentView = viewObject.terminalContentView;
+							
+							
+							if (nil == viewObject)
+							{
+								Console_Warning(Console_WriteLine, "failed to set up text input for terminal view: no container view!");
+								Sound_StandardAlert();
+							}
+							else if (nil == contentView)
+							{
+								Console_Warning(Console_WriteLine, "failed to set up text input for terminal view: no content view!");
+								Sound_StandardAlert();
+							}
+							else
+							{
+								contentView.textInputDelegate = ptr->textInputDelegate;
+							}
 						}
 					}
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
@@ -9045,42 +9101,64 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			Boolean					isCarbon = TerminalWindow_IsLegacyCarbon(ptr->terminalWindow);
 			
 			
-			RemoveEventHandler(ptr->windowClosingHandler), ptr->windowClosingHandler = nullptr;
-			DisposeEventHandlerUPP(ptr->windowClosingUPP), ptr->windowClosingUPP = nullptr;
-			RemoveEventHandler(ptr->windowFocusChangeHandler), ptr->windowFocusChangeHandler = nullptr;
-			DisposeEventHandlerUPP(ptr->windowFocusChangeUPP), ptr->windowFocusChangeUPP = nullptr;
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
 											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
 											ptr->terminalWindowListener.returnRef());
+			
+			if (isCarbon)
 			{
-				// remove listener from each view where one was installed
+				RemoveEventHandler(ptr->windowClosingHandler), ptr->windowClosingHandler = nullptr;
+				DisposeEventHandlerUPP(ptr->windowClosingUPP), ptr->windowClosingUPP = nullptr;
+				RemoveEventHandler(ptr->windowFocusChangeHandler), ptr->windowFocusChangeHandler = nullptr;
+				DisposeEventHandlerUPP(ptr->windowFocusChangeUPP), ptr->windowFocusChangeUPP = nullptr;
+			}
+			
+			// undo view-specific tracking (inverse of "kSession_ChangeWindowValid" case above)
+			{
 				UInt16				viewCount = TerminalWindow_ReturnViewCount(ptr->terminalWindow);
 				TerminalViewRef*	viewArray = REINTERPRET_CAST(Memory_NewPtr(viewCount * sizeof(TerminalViewRef)),
 																	TerminalViewRef*);
 				
 				
-				if (viewArray != nullptr)
+				if (nullptr != viewArray)
 				{
-					HIViewRef		userFocusView = nullptr;
-					HIViewRef		dragFocusView = nullptr;
-					SInt16			i = 0;
+					SInt16		i = 0;
 					
 					
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
-					for (i = 0; i < viewCount; ++i)
+					if (isCarbon)
 					{
-						userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
-						dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
-						RemoveEventHandler(ptr->terminalViewTextInputHandlers[userFocusView]);
-						RemoveEventHandler(ptr->terminalViewDragDropHandlers[dragFocusView]);
-						RemoveEventHandler(ptr->terminalViewEnteredHandlers[dragFocusView]);
+						HIViewRef		userFocusView = nullptr;
+						HIViewRef		dragFocusView = nullptr;
+						
+						
+						for (i = 0; i < viewCount; ++i)
+						{
+							userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
+							dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
+							RemoveEventHandler(ptr->terminalViewTextInputHandlers[userFocusView]);
+							RemoveEventHandler(ptr->terminalViewDragDropHandlers[dragFocusView]);
+							RemoveEventHandler(ptr->terminalViewEnteredHandlers[dragFocusView]);
+						}
+						DisposeEventHandlerUPP(ptr->terminalViewDragDropUPP), ptr->terminalViewDragDropUPP = nullptr;
+						DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;
+						DisposeEventHandlerUPP(ptr->terminalViewTextInputUPP), ptr->terminalViewTextInputUPP = nullptr;
 					}
-					DisposeEventHandlerUPP(ptr->terminalViewDragDropUPP), ptr->terminalViewDragDropUPP = nullptr;
-					DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;
-					DisposeEventHandlerUPP(ptr->terminalViewTextInputUPP), ptr->terminalViewTextInputUPP = nullptr;
+					else
+					{
+						for (i = 0; i < viewCount; ++i)
+						{
+							TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(viewArray[i]);
+							TerminalView_ContentView*	contentView = viewObject.terminalContentView;
+							
+							
+							contentView.textInputDelegate = nil;
+						}
+					}
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}
 			}
@@ -9094,5 +9172,104 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 }// windowValidationStateChanged
 
 } // anonymous namespace
+
+
+#pragma mark -
+@implementation Session_TextInput //{
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+The session that receives text input strings and commands.
+*/
+@synthesize sessionRef = _sessionRef;
+
+
+#pragma mark Initializers
+
+
+/*!
+Constructs a text input delegate object to be used by a
+terminal view to handle any input events.
+
+Since it is tied vitally to the validity of the session
+reference, this object should only be created by the
+Session itself (probably stored internally and freed as
+part of Session_Dispose() activities).
+
+(2018.05)
+*/
+- (instancetype)
+initWithSession:(SessionRef)	aSession
+{
+	self = [super init];
+	if (nil != self)
+	{
+		_sessionRef = aSession;
+	}
+	return self;
+}// initWithSession:
+
+
+#pragma mark TerminalView_TextInputClient
+
+
+/*!
+Sends the given text to any attached session.
+
+(2018.05)
+*/
+- (void)
+receivedString:(NSString*)		aString
+terminalView:(TerminalViewRef)	aTerminalViewRef
+{
+#pragma unused(aTerminalViewRef)
+	//NSLog(@"session text input: term view %p / %@: %@", aTerminalViewRef, NSStringFromSelector(_cmd), aString); // debug
+	if (Session_IsValid(self.sessionRef))
+	{
+		Session_SendDataCFString(self.sessionRef, BRIDGE_CAST(aString, CFStringRef));
+	}
+}// receivedString:terminalView:
+
+
+/*!
+Sends an appropriate delete sequence to any attached
+session.
+
+(2018.05)
+*/
+- (void)
+receivedDeleteBackwardInTerminalView:(TerminalViewRef)		aTerminalViewRef
+{
+#pragma unused(aTerminalViewRef)
+	//NSLog(@"session text input: term view %p / %@", aTerminalViewRef, NSStringFromSelector(_cmd)); // debug
+	if (Session_IsValid(self.sessionRef))
+	{
+		Session_SendDeleteBackward(self.sessionRef);
+	}
+}// receivedDeleteBackwardInTerminalView:
+
+
+/*!
+Sends an appropriate newline sequence to any attached
+session.
+
+(2018.05)
+*/
+- (void)
+receivedNewlineInTerminalView:(TerminalViewRef)		aTerminalViewRef
+{
+#pragma unused(aTerminalViewRef)
+	//NSLog(@"session text input: term view %p / %@", aTerminalViewRef, NSStringFromSelector(_cmd)); // debug
+	if (Session_IsValid(self.sessionRef))
+	{
+		Session_SendNewline(self.sessionRef, kSession_EchoCurrentSessionValue);
+	}
+}// receivedNewlineInTerminalView:
+
+
+@end //}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
