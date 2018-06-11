@@ -801,7 +801,7 @@ drawRect:(NSRect)	aRect
 	
 	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
 	CGContextSetLineWidth(drawingContext, 2.0);
-	[NSBezierPath strokeRect:NSInsetRect(self.bounds, 1.0, 1.0)];
+	CGContextStrokeRect(drawingContext, NSRectToCGRect(NSInsetRect(self.bounds, 1.0, 1.0)));
 #endif
 }// drawRect:
 
