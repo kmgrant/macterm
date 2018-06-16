@@ -204,6 +204,8 @@ to precisely remove the observer later.
 	isKeyboardFocusInSubtree;
 	- (BOOL)
 	isKeyboardFocusOnSelf;
+	- (NSView*)
+	superviewWithClass:(Class)_;
 
 @end //}
 

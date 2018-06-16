@@ -927,6 +927,31 @@ isKeyboardFocusOnSelf
 }// isKeyboardFocusOnSelf
 
 
+/*!
+Iterates over the superviews of this view until a view
+of the specified class is encountered; or, returns nil.
+
+(2018.06)
+*/
+- (NSView*)
+superviewWithClass:(Class)		aClass
+{
+	NSView*		result = [self superview];
+	
+	
+	while (nil != result)
+	{
+		if ([result isKindOfClass:aClass])
+		{
+			break;
+		}
+		result = [result superview];
+	}
+	
+	return result;
+}// superviewWithClass:
+
+
 @end //} NSView (CocoaExtensions_NSView)
 
 
