@@ -155,40 +155,6 @@ ColorUtilities_QuickDrawColorMake	(CGDeviceColor const&	inDeviceColor)
 
 
 /*!
-Calls PenPat() with an all-black pattern.
-
-DEPRECATED.  (Don’t use QuickDraw.)
-
-(1.0)
-*/
-void
-ColorUtilities_SetBlackPenPattern ()
-{
-	Pattern		blackPat = { { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF } };
-	
-	
-	PenPat(&blackPat);
-}// SetBlackPenPattern
-
-
-/*!
-Calls PenPat() with a checkerboard pattern.
-
-DEPRECATED.  (Don’t use QuickDraw.)
-
-(1.0)
-*/
-void
-ColorUtilities_SetGrayPenPattern ()
-{
-	Pattern		grayPat = { { 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA } };
-	
-	
-	PenPat(&grayPat);
-}// SetGrayPenPattern
-
-
-/*!
 Uses GetLighterColors() to determine the “dimmed”
 versions of the current foreground and background
 colors of the current graphics port, and makes the

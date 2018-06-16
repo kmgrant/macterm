@@ -14434,6 +14434,23 @@ to use for rendering.
 @synthesize colorIndex = _colorIndex;
 
 
+#pragma mark Externally-Declared Properties
+
+
+/*!
+Optional object to notify when a mouse event occurs
+on this background.
+*/
+@synthesize clickDelegate = _clickDelegate;
+
+
+/*!
+Optional override color, which takes precedence over
+any other color mapping such as "colorIndex".
+*/
+@synthesize exactColor = _exactColor;
+
+
 #pragma mark Initializers
 
 
@@ -14448,7 +14465,9 @@ initWithFrame:(NSRect)		aFrame
 	self = [super initWithFrame:aFrame];
 	if (nil != self)
 	{
+		self->_clickDelegate = nil;
 		self->_colorIndex = kMyBasicColorIndexNormalBackground;
+		self->_exactColor = nil;
 		self->_internalViewPtr = nullptr;
 		
 		self.wantsLayer = YES;
@@ -14465,6 +14484,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[_exactColor release];
 	[super dealloc];
 }// dealloc
 
@@ -14487,6 +14507,51 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 {
 	_internalViewPtr = aViewPtr;
 }// setInternalViewPtr:
+
+
+#pragma mark NSResponder
+
+
+/*!
+Used to notify the delegate of this event.
+
+(2018.06)
+*/
+- (void)
+mouseDown:(NSEvent*)	anEvent
+{
+	[self.clickDelegate didReceiveMouseDownEvent:anEvent forView:self];
+}// mouseDown:
+
+
+/*!
+Used to notify the delegate of this event.
+
+(2018.06)
+*/
+- (void)
+mouseDragged:(NSEvent*)	anEvent
+{
+	if ([self.clickDelegate respondsToSelector:@selector(didReceiveMouseDraggedEvent:forView:)])
+	{
+		[self.clickDelegate didReceiveMouseDraggedEvent:anEvent forView:self];
+	}
+}// mouseDragged:
+
+
+/*!
+Used to notify the delegate of this event.
+
+(2018.06)
+*/
+- (void)
+mouseUp:(NSEvent*)	anEvent
+{
+	if ([self.clickDelegate respondsToSelector:@selector(didReceiveMouseUpEvent:forView:)])
+	{
+		[self.clickDelegate didReceiveMouseUpEvent:anEvent forView:self];
+	}
+}// mouseUp:
 
 
 #pragma mark NSView
@@ -14524,23 +14589,35 @@ drawRect:(NSRect)	aRect
 	CGRect					clipBounds = CGContextGetClipBoundingBox(drawingContext);
 	
 	
-	// NOTE: For porting purposes the colored background is simply drawn.
-	// Another option would be to update the layer’s background color
-	// directly whenever the view color changes.
-	if (nullptr != viewPtr)
+	if (nil != self.exactColor)
 	{
-		CGDeviceColor const&	asFloats = viewPtr->text.colors[self.colorIndex];
+		NSColor*	asRGB = [self.exactColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
 		
 		
 		// draw background
-		CGContextSetRGBFillColor(drawingContext, asFloats.red, asFloats.green, asFloats.blue, 1.0/* alpha */);
+		CGContextSetRGBFillColor(drawingContext, asRGB.redComponent, asRGB.greenComponent, asRGB.blueComponent, 1.0/* alpha */);
 		CGContextFillRect(drawingContext, clipBounds);
 	}
 	else
 	{
-		// no associated view yet; draw a dummy background
-		CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
-		CGContextFillRect(drawingContext, clipBounds);
+		// NOTE: For porting purposes the colored background is simply drawn.
+		// Another option would be to update the layer’s background color
+		// directly whenever the view color changes.
+		if (nullptr != viewPtr)
+		{
+			CGDeviceColor const&	asFloats = viewPtr->text.colors[self.colorIndex];
+			
+			
+			// draw background
+			CGContextSetRGBFillColor(drawingContext, asFloats.red, asFloats.green, asFloats.blue, 1.0/* alpha */);
+			CGContextFillRect(drawingContext, clipBounds);
+		}
+		else
+		{
+			// no associated view yet; draw a dummy background
+			CGContextSetRGBFillColor(drawingContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
+			CGContextFillRect(drawingContext, clipBounds);
+		}
 	}
 }// drawRect:
 

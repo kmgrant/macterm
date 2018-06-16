@@ -380,6 +380,9 @@ VectorWindow_StopMonitoring		(VectorWindow_Ref			inWindow,
 @implementation VectorWindow_Controller
 
 
+#pragma mark Initializers
+
+
 /*!
 Designated initializer.
 
@@ -528,6 +531,81 @@ setCanvasView:(VectorCanvas_View*)	aView
 }// setCanvasView:
 
 
+#pragma mark TerminalView_ClickDelegate
+
+
+/*!
+Invoked when a mouse-down event occurs in a background
+view (such as the matte).  This responds by translating
+the coordinates and then pretending that the event
+occurred at the translated location in the canvas view.
+
+This is crucial for usability, as it allows the user to
+be “sloppy” when clicking near the edges of the canvas
+while still having those clicks take effect.
+
+(2018.06)
+*/
+- (void)
+didReceiveMouseDownEvent:(NSEvent*)		anEvent
+forView:(NSView*)						aView
+{
+#pragma unused(aView)
+	// WARNING: the target view must directly handle this event and
+	// not forward it to the first responder, otherwise the system
+	// would probably enter a recursive loop
+	[self.canvasView mouseDown:anEvent];
+}// didReceiveMouseDownEvent:forView:
+
+
+/*!
+Invoked when a mouse-dragged event occurs in a background
+view (such as the matte).  This responds by translating
+the coordinates and then pretending that the event
+occurred at the translated location in the canvas view.
+
+This is crucial for usability, as it allows the user to
+be “sloppy” when clicking near the edges of the canvas
+while still having those clicks take effect.
+
+(2018.06)
+*/
+- (void)
+didReceiveMouseDraggedEvent:(NSEvent*)	anEvent
+forView:(NSView*)						aView
+{
+#pragma unused(aView)
+	// WARNING: the target view must directly handle this event and
+	// not forward it to the first responder, otherwise the system
+	// would probably enter a recursive loop
+	[self.canvasView mouseDragged:anEvent];
+}// didReceiveMouseDraggedEvent:forView:
+
+
+/*!
+Invoked when a mouse-up event occurs in a background
+view (such as the matte).  This responds by translating
+the coordinates and then pretending that the event
+occurred at the translated location in the canvas view.
+
+This is crucial for usability, as it allows the user to
+be “sloppy” when clicking near the edges of the canvas
+while still having those clicks take effect.
+
+(2018.06)
+*/
+- (void)
+didReceiveMouseUpEvent:(NSEvent*)	anEvent
+forView:(NSView*)					aView
+{
+#pragma unused(aView)
+	// WARNING: the target view must directly handle this event and
+	// not forward it to the first responder, otherwise the system
+	// would probably enter a recursive loop
+	[self.canvasView mouseUp:anEvent];
+}// didReceiveMouseUpEvent:forView:
+
+
 #pragma mark NSResponder
 
 
@@ -587,6 +665,9 @@ windowDidLoad
 {
 	[super windowDidLoad];
 	assert(nil != canvasView);
+	assert(nil != matteView);
+	
+	matteView.clickDelegate = self;
 	
 	[canvasView setInterpreterRef:[self interpreterRef]];
 	

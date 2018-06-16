@@ -51,6 +51,7 @@ class NSWindow;
 
 // application includes
 #include "SessionRef.typedef.h"
+#include "TerminalView.h"
 #ifdef __OBJC__
 @class VectorCanvas_View;
 #endif
@@ -92,9 +93,10 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface VectorWindow_Controller : NSWindowController //{
+@interface VectorWindow_Controller : NSWindowController < TerminalView_ClickDelegate > //{
 {
-	IBOutlet VectorCanvas_View*		canvasView;
+	IBOutlet TerminalView_BackgroundView*	matteView;
+	IBOutlet VectorCanvas_View*				canvasView;
 @private
 	VectorWindow_Ref		selfRef;
 	ListenerModel_Ref		changeListenerModel;

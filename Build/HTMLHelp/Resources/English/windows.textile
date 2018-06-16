@@ -19,21 +19,30 @@ There are so many things you can do with terminal windows that
 
 h2(#tek). Tektronix Vector Graphics
 
-If a session has a TEK graphics command set enabled, it will
- automatically spawn Tektronix vector graphics drawings whenever
- properly-formatted data is received from the session.  You may
- also create pages using View >> New TEK Page.
+MacTerm can render TEK-formatted data as vector graphics.  Before
+ attempting this, make sure your session has a TEK graphics command
+ set enabled (see Preferences >> Sessions >> Graphics), and use the
+ View >> New TEK Page command just before sending TEK-formatted data
+ from your session.  Depending on preferences, requesting a new page
+ might erase any existing window instead of opening a new one.
 
-**Note:** Once a graphics window is opened, its terminal is tied
- to the canvas and any typing in the terminal will be rendered in
- the graphics window only.  To restore normal terminal behavior,
- close the graphics window.
+**Important:** While a graphics window is open, keyboard input to the
+ original terminal is tied to the canvas: you must have the terminal
+ window active in order to type even though the text will be rendered
+ in the graphics window only!  To restore normal terminal behavior,
+ close the graphics window.  Note that if you use View >> New TEK Page
+ to open windows more than once, only the most recent one is tied to
+ the terminal and the others can then stay open indefinitely.
 
 What you can do with a graphics window:
 
-* Edit >> Copy to copy a bitmap of the graphic to the clipboard.
-* Magnify or shrink the image by resizing the window.
-* Focus on one part by dragging a rectangle with the mouse.  You can undo this focus by double-clicking the image.
+* File >> Print… to print or make a PDF from the graphic at its current zoom level.
+* Edit >> Copy to put the graphic at its current zoom level on the clipboard.
+* View menu commands to change the Format (colors).  Also, your Default Format is used for graphics when they first appear.
+* View >> Enter Full Screen or the corresponding window button (and on later OS versions, you can tile the graphic window side-by-side with something else).
+* Window >> Rename… to change the title.
+* Resize the window to adjust the image view.
+* Focus on one part of the image by dragging a rectangle with the mouse or pinching with a trackpad.  **You can restore the view to 100% zoom by double-clicking the image.**  (Press Escape during a rectangle-drag to cancel the drag.)
 
 h2(#serverbrowser). Server Browser
 

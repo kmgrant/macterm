@@ -90,14 +90,14 @@ changes to an interface declared in a ".mm" file.
 @interface VectorCanvas_View : NSControl //{
 {
 @private
-	VectorInterpreter_Ref	interpreterRef;
+	VectorInterpreter_Ref	_interpreterRef;
+	NSRect					_dragRectangle;
+	NSPoint					_dragStart;
 }
 
 // accessors
-	- (VectorInterpreter_Ref)
+	@property (assign) VectorInterpreter_Ref
 	interpreterRef;
-	- (void)
-	setInterpreterRef:(VectorInterpreter_Ref)_;
 
 // actions
 	- (id)

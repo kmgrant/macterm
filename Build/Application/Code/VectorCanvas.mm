@@ -44,6 +44,8 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <CocoaAnimation.h>
+#import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <ColorUtilities.h>
 #import <MemoryBlockPtrLocker.template.h>
@@ -56,6 +58,7 @@
 #import "ConstantsRegistry.h"
 #import "Preferences.h"
 #import "Session.h"
+#import "TerminalView.h"
 #import "VectorInterpreter.h"
 
 
@@ -63,8 +66,6 @@
 #pragma mark Constants
 namespace {
 
-UInt16 const	kMy_MaximumX = 4095;
-UInt16 const	kMy_MaximumY = 3139;	// TEMPORARY - figure out where the hell this value comes from
 Float32 const	kMy_DefaultStrokeWidth = 0.5;
 Float32 const	kMy_DefaultTextStrokeWidth = 0.25;
 
@@ -119,7 +120,33 @@ array of elements of this type.
 
 // new methods
 	- (VectorCanvas_Path*)
-	copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)_;
+	copyWithEmptyPathForPurpose:(VectorCanvas_PathPurpose)_;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface VectorCanvas_View () //{
+
+// accessors
+	@property (assign) NSRect
+	dragRectangle;
+	@property (assign) NSPoint
+	dragStart;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface VectorCanvas_View (VectorCanvas_ViewInternal) //{
+
+// new methods
+	- (void)
+	renderDrawingInCurrentFocusWithRect:(NSRect)_;
 
 @end //}
 
@@ -138,13 +165,14 @@ struct My_VectorCanvas
 	VectorInterpreter_Ref	interpreter;
 	SessionRef				session;
 	My_CGColorList			deviceColors;
-	SInt16					xorigin;
-	SInt16					yorigin;
-	SInt16					xscale;
-	SInt16					yscale;
+	CGDeviceColor			outsideColor;
 	SInt16					ingin;
-	SInt16					width;
-	SInt16					height;
+	SInt16					canvasWidth;
+	SInt16					canvasHeight;
+	CGFloat					viewScaleX;
+	CGFloat					viewScaleY;
+	CGFloat					unscaledZoomOriginX;
+	CGFloat					unscaledZoomOriginY;
 	VectorCanvas_View*		canvasView;
 	NSMutableArray*			drawingPathElements;
 	NSBezierPath*			scrapPath;
@@ -163,30 +191,16 @@ namespace {
 
 UInt16				copyColorPreferences	(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
 void				getPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
-void				handleMouseDown			(My_VectorCanvasPtr, Point);
-Boolean				inSplash				(Point, Point);
 VectorCanvas_Path*	pathElementWithPurpose	(My_VectorCanvasPtr, VectorCanvas_PathPurpose, Boolean = false);
 void				setPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor const&);
 
 } // anonymous namespace
-
-/*!
-The private class interface.
-*/
-@interface VectorCanvas_View (VectorCanvas_ViewInternal) //{
-
-	- (void)
-	renderDrawingInCurrentFocusWithRect:(NSRect)_;
-
-@end //}
 
 #pragma mark Variables
 namespace {
 
 My_VectorCanvasPtrLocker&			gVectorCanvasPtrLocks ()	{ static My_VectorCanvasPtrLocker x; return x; }
 My_VectorCanvasReferenceLocker&		gVectorCanvasRefLocks ()	{ static My_VectorCanvasReferenceLocker x; return x; }
-
-UInt32		gVectorCanvasLastClickTime = 0L;
 
 } // anonymous namespace
 
@@ -224,25 +238,19 @@ VectorCanvas_New	(VectorInterpreter_Ref	inData)
 	
 	ptr->interpreter = inData;
 	ptr->session = nullptr;
-	ptr->xorigin = 0;
-	ptr->yorigin = 0;
-	ptr->xscale = kMy_MaximumX;
-	ptr->yscale = kMy_MaximumY;
-	ptr->width = 400;
-	ptr->height = 300;
+	ptr->canvasWidth = 400;
+	ptr->canvasHeight = 300;
+	ptr->viewScaleX = 1.0;
+	ptr->viewScaleY = 1.0;
+	ptr->unscaledZoomOriginX = 0;
+	ptr->unscaledZoomOriginY = 0;
 	ptr->ingin = 0;
 	
-	// create a color palette for this window
+	// create a color palette for this window (colors are set when a view is attached)
 	ptr->deviceColors.resize(kMy_MaxColors);
-	{
-		Preferences_ContextRef		defaultFormat = nullptr;
-		Preferences_Result			prefsResult = kPreferences_ResultOK;
-		
-		
-		prefsResult = Preferences_GetDefaultContext(&defaultFormat, Quills::Prefs::FORMAT);
-		assert(kPreferences_ResultOK == prefsResult);
-		copyColorPreferences(ptr, defaultFormat);
-	}
+	ptr->outsideColor.red = 0.8; // arbitrary (changed by preferences)
+	ptr->outsideColor.green = 0.8; // arbitrary (changed by preferences)
+	ptr->outsideColor.blue = 0.8; // arbitrary (changed by preferences)
 	
 	return result;
 }// New
@@ -363,12 +371,12 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref			inRef,
 	
 	if (nullptr != ptr)
 	{
-		Float32		x0 = (STATIC_CAST(inStartX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
-		Float32		y0 = STATIC_CAST(ptr->height, SInt32) -
-							((STATIC_CAST(inStartY, SInt32) * ptr->height) / kVectorInterpreter_MaxY);
-		Float32		x1 = (STATIC_CAST(inEndX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
-		Float32		y1 = STATIC_CAST(ptr->height, SInt32) -
-							((STATIC_CAST(inEndY, SInt32) * ptr->height) / kVectorInterpreter_MaxY);
+		Float32		x0 = (STATIC_CAST(inStartX, SInt32) * ptr->canvasWidth) / kVectorInterpreter_MaxX;
+		Float32		y0 = STATIC_CAST(ptr->canvasHeight, SInt32) -
+							((STATIC_CAST(inStartY, SInt32) * ptr->canvasHeight) / kVectorInterpreter_MaxY);
+		Float32		x1 = (STATIC_CAST(inEndX, SInt32) * ptr->canvasWidth) / kVectorInterpreter_MaxX;
+		Float32		y1 = STATIC_CAST(ptr->canvasHeight, SInt32) -
+							((STATIC_CAST(inEndY, SInt32) * ptr->canvasHeight) / kVectorInterpreter_MaxY);
 		Boolean		isSinglePoint = ((x0 == x1) && (y0 == y1));
 		
 		
@@ -617,6 +625,19 @@ VectorCanvas_SetCanvasNSView	(VectorCanvas_Ref		inRef,
 	else if (nullptr != ptr)
 	{
 		ptr->canvasView = inNSViewBasedRenderer;
+		
+		// set the color palette; this is done only when a view is set so that
+		// dependent views (the matte) will also exist
+		{
+			Preferences_ContextRef		defaultFormat = nullptr;
+			Preferences_Result			prefsResult = kPreferences_ResultOK;
+			
+			
+			prefsResult = Preferences_GetDefaultContext(&defaultFormat, Quills::Prefs::FORMAT);
+			assert(kPreferences_ResultOK == prefsResult);
+			copyColorPreferences(ptr, defaultFormat);
+		}
+		
 		result = kVectorCanvas_ResultOK;
 	}
 	
@@ -708,6 +729,9 @@ Attempts to read all supported color tags from the given
 preference context, and any colors that exist will be
 used to update the specified canvas.
 
+In addition, if a matte color is found, it is used to
+change the color of any superview “background view”.
+
 Returns the number of colors that were changed.
 
 (3.1)
@@ -717,10 +741,12 @@ copyColorPreferences	(My_VectorCanvasPtr			inPtr,
 						 Preferences_ContextRef		inSource,
 						 Boolean					inSearchForDefaults)
 {
-	SInt16				currentIndex = 0;
-	Preferences_Tag		currentPrefsTag = '----';
-	CGDeviceColor		colorValue;
-	UInt16				result = 0;
+	SInt16							currentIndex = 0;
+	Preferences_Tag					currentPrefsTag = '----';
+	CGDeviceColor					colorValue;
+	TerminalView_BackgroundView*	backgroundViewOrNil = STATIC_CAST([inPtr->canvasView superviewWithClass:TerminalView_BackgroundView.class],
+																		TerminalView_BackgroundView*);
+	UInt16							result = 0;
 	
 	
 	currentIndex = kMy_ColorIndexBackground;
@@ -795,6 +821,35 @@ copyColorPreferences	(My_VectorCanvasPtr			inPtr,
 		++result;
 	}
 	
+	// the matte is displayed by a different view but for all practical
+	// purposes it is updated whenever the canvas color changes
+	if (nil == backgroundViewOrNil)
+	{
+		// there will be no view when this is called at initialization time
+		//Console_Warning(Console_WriteLine, "unable to find matte view");
+	}
+	else
+	{
+		// the "outsideColor" is only used by the canvas itself in special
+		// circumstances, such as when the user has zoomed the image out so
+		// far that the image no longer fills the view; this color is also
+		// used by an entirely different view (the matte) to render the
+		// border at all times 
+		currentPrefsTag = kPreferences_TagTerminalColorMatteBackground;
+		if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+																sizeof(inPtr->outsideColor), &inPtr->outsideColor,
+																inSearchForDefaults))
+		{
+			// the same color is used for the matte region, which is actually
+			// rendered by an entirely different control that is always visible
+			backgroundViewOrNil.exactColor = [NSColor colorWithCalibratedRed:inPtr->outsideColor.red
+																				green:inPtr->outsideColor.green
+																				blue:inPtr->outsideColor.blue
+																				alpha:1.0];
+			[backgroundViewOrNil setNeedsDisplay];
+		}
+	}
+	
 	return result;
 }// copyColorPreferences
 
@@ -812,183 +867,6 @@ getPaletteColor		(My_VectorCanvasPtr		inPtr,
 {
 	outColor = inPtr->deviceColors[inZeroBasedIndex];
 }// getPaletteColor
-
-
-/*!
-Responds to a click/drag in a TEK window.  The current QuickDraw
-port will be drawn into.
-
-NOTE: This old routine will be needed to add mouse support to a
-new HIView-based canvas that is planned.
-
-(2.6)
-*/
-void
-handleMouseDown		(My_VectorCanvasPtr		inPtr,
-					 Point					inViewLocalMouse)
-{
-	if (inPtr->ingin)
-	{
-		// report the location of the cursor
-		{
-			SInt32		lx = 0L;
-			SInt32		ly = 0L;
-			char		cursorReport[6];
-			
-			
-			lx = ((SInt32)inPtr->xscale * (SInt32)inViewLocalMouse.h) / (SInt32)inPtr->width;
-			ly = (SInt32)inPtr->yscale -
-					((SInt32)inPtr->yscale * (SInt32)inViewLocalMouse.v) / (SInt32)inPtr->height;
-			
-			// the report is exactly 5 characters long
-			if (0 == VectorInterpreter_FillInPositionReport(inPtr->interpreter, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
-															' ', cursorReport))
-			{
-				Session_SendData(inPtr->session, cursorReport, 5);
-				Session_SendData(inPtr->session, " \r\n", 3);
-			}
-		}
-		
-		//inPtr->ingin = 0;
-		gVectorCanvasLastClickTime = TickCount();
-	}
-	else
-	{
-		Point					anchor = inViewLocalMouse;
-		Point					current = inViewLocalMouse;
-		Point					last = inViewLocalMouse;
-		SInt16					x0 = 0;
-		SInt16					y0 = 0;
-		SInt16					x1 = 0;
-		SInt16					y1 = 0;
-		Rect					rect;
-		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
-		
-		
-		last = inViewLocalMouse;
-		current = inViewLocalMouse;
-		anchor = inViewLocalMouse;
-		
-		ColorUtilities_SetGrayPenPattern();
-		PenMode(patXor);
-		
-		bzero(&rect, sizeof(rect));
-		do
-		{
-			unless (inSplash(current, anchor))
-			{
-				FrameRect(&rect);
-		
-				if (anchor.v < current.v)
-				{
-					rect.top = anchor.v;
-					rect.bottom = current.v;
-				}
-				else
-				{
-					rect.top = current.v;
-					rect.bottom = anchor.v;
-				}
-		
-				if (anchor.h < current.h)
-				{
-					rect.left = anchor.h;
-					rect.right = current.h;
-				}
-				else
-				{
-					rect.right = anchor.h;
-					rect.left = current.h;
-				}
-		
-				FrameRect(&rect);
-				last = current;
-			}
-			
-			// find next mouse location
-			{
-				OSStatus	error = noErr;
-				
-				
-				error = TrackMouseLocation(nullptr/* port, or nullptr for current port */, &current,
-											&trackingResult);
-				if (error != noErr) break;
-			}
-		}
-		while (kMouseTrackingMouseUp != trackingResult);
-		
-		FrameRect(&rect);
-		
-		ColorUtilities_SetBlackPenPattern();
-		PenMode(patCopy);
-		
-		if (inSplash(anchor, current))
-		{
-			if (gVectorCanvasLastClickTime && ((gVectorCanvasLastClickTime + GetDblTime()) > TickCount()))
-			{
-				inPtr->xscale = kMy_MaximumX;
-				inPtr->yscale = kMy_MaximumY;
-				inPtr->xorigin = 0;
-				inPtr->yorigin = 0;
-				
-				VectorInterpreter_Zoom(inPtr->interpreter, 0, 0, kMy_MaximumX - 1, kMy_MaximumY - 1);
-				//VectorInterpreter_PageCommand(inPtr->interpreter);
-				gVectorCanvasLastClickTime = 0L;
-			}
-			else
-			{
-				gVectorCanvasLastClickTime = TickCount();
-			}
-		}
-		else
-		{
-			x0 = (short)((long)rect.left * inPtr->xscale / inPtr->width);
-			y0 = (short)(inPtr->yscale - (long)rect.top * inPtr->yscale / inPtr->height);
-			x1 = (short)((long)rect.right * inPtr->xscale / inPtr->width);
-			y1 = (short)(inPtr->yscale - (long)rect.bottom * inPtr->yscale / inPtr->height);
-			x1 = (x1 < (x0 + 2)) ? x0 + 4 : x1;
-			y0 = (y0 < (y1 + 2)) ? y1 + 4 : y0;
-			
-			VectorInterpreter_Zoom(inPtr->interpreter, x0 + inPtr->xorigin, y1 + inPtr->yorigin,
-									x1 + inPtr->xorigin, y0 + inPtr->yorigin);
-			//VectorInterpreter_PageCommand(inPtr->interpreter);
-			
-			inPtr->xscale = x1 - x0;
-			inPtr->yscale = y0 - y1;
-			inPtr->xorigin = x0 + inPtr->xorigin;
-			inPtr->yorigin = y1 + inPtr->yorigin;
-			
-			gVectorCanvasLastClickTime = 0L;
-		}
-	}
-}// handleMouseDown
-
-
-/*!
-Determines if two points are fairly close.
-
-(2.6)
-*/
-Boolean
-inSplash	(Point		inPoint1,
-			 Point		inPoint2)
-{
-	Boolean		result = true;
-	
-	
-	if (((inPoint1.h - inPoint2.h) > 3/* arbitrary */) ||
-		((inPoint2.h - inPoint1.h) > 3/* arbitrary */))
-	{
-		result = false;
-	}
-	else if (((inPoint1.v - inPoint2.v) > 3/* arbitrary */) ||
-				((inPoint2.v - inPoint1.v) > 3/* arbitrary */))
-	{
-		result = false;
-	}
-	
-	return result;
-}// inSplash
 
 
 /*!
@@ -1028,7 +906,7 @@ pathElementWithPurpose	(My_VectorCanvasPtr			inPtr,
 		{
 			// drawing was empty or it was currently creating something
 			// different; make a new path with the requested purpose
-			[inPtr->drawingPathElements addObject:[[activePath copyWithEmptyPathAndPurpose:inPurpose] autorelease]];
+			[inPtr->drawingPathElements addObject:[[activePath copyWithEmptyPathForPurpose:inPurpose] autorelease]];
 		}
 	}
 	result = [inPtr->drawingPathElements lastObject];
@@ -1138,7 +1016,7 @@ Copies this object.
 (4.1)
 */
 - (VectorCanvas_Path*)
-copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)	aPurpose
+copyWithEmptyPathForPurpose:(VectorCanvas_PathPurpose)	aPurpose
 {
 	VectorCanvas_Path*	result = [[self.class alloc] init];
 	
@@ -1154,7 +1032,7 @@ copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)	aPurpose
 		[result setPurpose:aPurpose];
 	}
 	return result;
-}// copyWithEmptyPathAndPurpose:
+}// copyWithEmptyPathForPurpose:
 
 
 @end // VectorCanvas_Path
@@ -1162,6 +1040,26 @@ copyWithEmptyPathAndPurpose:(VectorCanvas_PathPurpose)	aPurpose
 
 #pragma mark -
 @implementation VectorCanvas_View
+
+
+#pragma mark Internally-Declared Properties
+
+
+/*!
+If a non-empty rectangle, the rendering of the view
+displays this as a drag rectangle.  Used for mouse
+events.
+*/
+@synthesize dragRectangle = _dragRectangle;
+
+/*!
+The location of the initial mouse-down when handling
+drag rectangles.  Not meaningful otherwise.
+*/
+@synthesize dragStart = _dragStart;
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -1175,7 +1073,9 @@ initWithFrame:(NSRect)		aFrame
 	self = [super initWithFrame:aFrame];
 	if (nil != self)
 	{
-		self->interpreterRef = nullptr;
+		_interpreterRef = nullptr;
+		_dragRectangle = NSZeroRect;
+		_dragStart = NSZeroPoint;
 	}
 	return self;
 }// initWithFrame:
@@ -1189,7 +1089,7 @@ Destructor.
 - (void)
 dealloc
 {
-	VectorInterpreter_Release(&interpreterRef);
+	VectorInterpreter_Release(&_interpreterRef);
 	[super dealloc];
 }// dealloc
 
@@ -1205,16 +1105,16 @@ Accessor.
 - (VectorInterpreter_Ref)
 interpreterRef
 {
-	return interpreterRef;
+	return _interpreterRef;
 }
 - (void)
 setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 {
-	if (interpreterRef != anInterpreter)
+	if (_interpreterRef != anInterpreter)
 	{
-		if (nullptr != interpreterRef)
+		if (nullptr != _interpreterRef)
 		{
-			VectorInterpreter_Release(&interpreterRef);
+			VectorInterpreter_Release(&_interpreterRef);
 		}
 		if (nullptr != anInterpreter)
 		{
@@ -1224,7 +1124,7 @@ setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 			(VectorCanvas_Result)VectorCanvas_SetCanvasNSView(canvas, self);
 			VectorInterpreter_Retain(anInterpreter);
 		}
-		interpreterRef = anInterpreter;
+		_interpreterRef = anInterpreter;
 	}
 }// setInterpreterRef
 
@@ -1243,7 +1143,7 @@ Edit menu.)
 performCopy:(id)	sender
 {
 #pragma unused(sender)
-	NSRect			imageBounds = [self bounds];
+	NSRect			imageBounds = self.frame;
 	NSImage*		copiedImage = [[NSImage alloc] initWithSize:imageBounds.size];
 	NSArray*		dataTypeArray = @[NSPDFPboardType, NSTIFFPboardType];
 	NSPasteboard*	targetPasteboard = [NSPasteboard generalPasteboard];
@@ -1281,9 +1181,9 @@ color information.
 - (IBAction)
 performFormatByFavoriteName:(id)	sender
 {
-	VectorCanvas_Ref	canvasRef = VectorInterpreter_ReturnCanvas([self interpreterRef]);
-	My_VectorCanvasPtr	canvasPtr = gVectorCanvasPtrLocks().acquireLock(canvasRef);
-	BOOL				isError = YES;
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	BOOL						isError = YES;
 	
 	
 	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
@@ -1338,10 +1238,10 @@ Copies new font and color information from the Default set.
 performFormatDefault:(id)	sender
 {
 #pragma unused(sender)
-	VectorCanvas_Ref		canvasRef = VectorInterpreter_ReturnCanvas([self interpreterRef]);
-	My_VectorCanvasPtr		canvasPtr = gVectorCanvasPtrLocks().acquireLock(canvasRef);
-	Preferences_ContextRef	defaultSettings = nullptr;
-	BOOL					isError = YES;
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	Preferences_ContextRef		defaultSettings = nullptr;
+	BOOL						isError = YES;
 	
 	
 	// reformat frontmost window using the Default preferences
@@ -1438,25 +1338,7 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-#pragma mark NSControl
-
-
-/*!
-Responds to mouse-down events by interacting with the vector
-graphics terminal: drags define zoom regions, double-clicks
-restore the default zoom level.
-
-(4.1)
-*/
-- (void)
-mouseDown:(NSEvent*)	anEvent
-{
-	[super mouseDown:anEvent];
-	// UNIMPLEMENTED
-}// mouseDown:
-
-
-#pragma mark NSView
+#pragma mark NSResponder
 
 
 /*!
@@ -1473,20 +1355,338 @@ acceptsFirstResponder
 
 
 /*!
-Render the specified part of a vector graphics canvas.
+Responds to magnification events (such as pinching on a
+touch pad) by scaling the vector graphic.
 
-INCOMPLETE.  This is going to be the test bed for transitioning
-away from Carbon.  And given that the Carbon view is heavily
-dependent on older technologies, it will be awhile before the
-Cocoa version is exposed to users.
+(2018.06)
+*/
+- (void)
+magnifyWithEvent:(NSEvent*)		anEvent
+{
+	//NSSet*					touchSet = [anEvent touchesMatchingPhase:(NSTouchPhaseMoved) inView:self];
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	
+	
+	// the "magnification" property is defined as a (typically tiny) amount
+	// to be ADDED to a scaling factor, not multiplied
+	if (0 != anEvent.magnification)
+	{
+		CGFloat const		kOldUnscaledSizeH = (NSWidth(self.frame) / canvasPtr->viewScaleX);
+		
+		
+		// first update the scaling factors (multiple zooms, if appropriate)
+		canvasPtr->viewScaleX += anEvent.magnification;
+		//canvasPtr->viewScaleY += (anEvent.magnification * (NSWidth(self.frame) / NSHeight(self.frame))); // keep aspect ratio
+		canvasPtr->viewScaleY += anEvent.magnification;
+		
+		// constrain values (IMPORTANT: should match other event handlers...)
+		canvasPtr->viewScaleX = std::max< CGFloat >(0.25/* arbitrary */, canvasPtr->viewScaleX);
+		canvasPtr->viewScaleY = std::max< CGFloat >(0.25/* arbitrary */, canvasPtr->viewScaleY);
+		canvasPtr->viewScaleX = std::min< CGFloat >(8/* arbitrary */, canvasPtr->viewScaleX);
+		canvasPtr->viewScaleY = std::min< CGFloat >(8/* arbitrary */, canvasPtr->viewScaleY);
+		
+		// scale the offset by a centered amount if possible
+		{
+			CGFloat const		kNewUnscaledSizeH = (NSWidth(self.frame) / canvasPtr->viewScaleX);
+			
+			
+			canvasPtr->unscaledZoomOriginX += ((kOldUnscaledSizeH - kNewUnscaledSizeH) * 0.5);
+			canvasPtr->unscaledZoomOriginY += ((kOldUnscaledSizeH - kNewUnscaledSizeH) * 0.5);
+		}
+		
+		// display new zoom level to user (see also "mouseDown:")
+		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = [NSString stringWithFormat:@"%d%%", (int)(canvasPtr->viewScaleX * 100.0), nil];
+		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
+		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+		
+		[self setNeedsDisplay];
+	}
+}// magnifyWithEvent:
+
+
+/*!
+Responds to mouse-down events by interacting with the vector
+graphics terminal: drags define zoom regions, double-clicks
+restore the default zoom level.
+
+(2018.06)
+*/
+- (void)
+mouseDown:(NSEvent*)	anEvent
+{
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	NSPoint						windowLocation = [anEvent locationInWindow];
+	NSPoint						viewLocation = [self convertPoint:windowLocation fromView:nil];
+	
+	
+	// constrain point to view (in case it was initiated from
+	// a border view)
+	if (viewLocation.x < 0)
+	{
+		viewLocation.x = 0;
+	}
+	if (viewLocation.y < 0)
+	{
+		viewLocation.y = 0;
+	}
+	if (viewLocation.x >= NSWidth(self.frame))
+	{
+		viewLocation.x = (NSWidth(self.frame) - 1);
+	}
+	if (viewLocation.y >= NSHeight(self.frame))
+	{
+		viewLocation.y = (NSHeight(self.frame) - 1);
+	}
+	
+	if (anEvent.clickCount > 2)
+	{
+		// no action on triple-click, etc.
+	}
+	else if (2 == anEvent.clickCount)
+	{
+		// reset zoom on double-click
+		canvasPtr->viewScaleX = 1.0;
+		canvasPtr->viewScaleY = 1.0;
+		canvasPtr->unscaledZoomOriginX = 0;
+		canvasPtr->unscaledZoomOriginY = 0;
+		
+		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"100%";
+		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
+		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+		
+		[self setNeedsDisplay];
+	}
+	else if (canvasPtr->ingin)
+	{
+		// report the location of the cursor
+	#if 0
+		{
+			SInt32		lx = 0L;
+			SInt32		ly = 0L;
+			char		cursorReport[6];
+			
+			
+			lx = ((SInt32)canvasPtr->xscale * (SInt32)viewLocation.x) / (SInt32)canvasPtr->width;
+			ly = (SInt32)canvasPtr->yscale -
+					((SInt32)canvasPtr->yscale * (SInt32)(self.frame.size.height - viewLocation.y)) / (SInt32)canvasPtr->height;
+			
+			// the report is exactly 5 characters long
+			if (0 == VectorInterpreter_FillInPositionReport(canvasPtr->interpreter, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
+															' ', cursorReport))
+			{
+				NSLog(@"report: %d, %d (%d, %d)", (int)lx, (int)ly, canvasPtr->xscale * (int)canvasPtr->width, canvasPtr->yscale * (int)canvasPtr->height);
+				//Session_SendData(canvasPtr->session, cursorReport, 5);
+				//Session_SendData(canvasPtr->session, " \r\n", 3);
+			}
+		}
+	#endif
+	}
+	else
+	{
+		// zoom to area specified by rectangle
+		BOOL	dragEnded = NO;
+		BOOL	flagCancellation = NO;
+		
+		
+		self.dragStart = NSMakePoint(viewLocation.x, viewLocation.y);
+		self.dragRectangle = NSZeroRect;
+		[self setNeedsDisplay];
+		
+		while (NO == dragEnded)
+		{
+			// TEMPORARY; in 10.10 SDK can probably switch to the NSWindow
+			// method "trackEventsMatchingMask:timeout:mode:handler:"
+			NSEvent*	eventObject = [NSApp nextEventMatchingMask:(NSLeftMouseDraggedMask |
+																		NSLeftMouseUpMask |
+																		NSFlagsChangedMask |
+																		NSKeyDownMask |
+																		NSKeyUpMask)
+																	untilDate:nil
+																	inMode:NSEventTrackingRunLoopMode
+																	dequeue:YES];
+			
+			
+			if (nil != eventObject)
+			{
+				switch (eventObject.type)
+				{
+				case NSLeftMouseDragged:
+					// update rectangle
+					if (NO == flagCancellation)
+					{
+						NSPoint		newWindowLocation = [eventObject locationInWindow];
+						NSPoint		newViewLocation = [self convertPoint:newWindowLocation fromView:nil];
+						CGRect		asCGRect = NSRectToCGRect(self.dragRectangle);
+						
+						
+						asCGRect.origin.x = self.dragStart.x;
+						asCGRect.origin.y = self.dragStart.y;
+						asCGRect.size.width = (newViewLocation.x - asCGRect.origin.x);
+						asCGRect.size.height = (newViewLocation.y - asCGRect.origin.y);
+						asCGRect = CGRectStandardize(asCGRect);
+						[self setNeedsDisplayInRect:NSUnionRect(self.dragRectangle, NSRectFromCGRect(asCGRect))];
+						self.dragRectangle = NSRectFromCGRect(asCGRect);
+						
+						// INCOMPLETE: report mouse location to session
+					}
+					break;
+				
+				case NSFlagsChanged:
+					// modifier keys changed
+					if (NO == flagCancellation)
+					{
+						// (currently not used for anything)
+					}
+					break;
+				
+				case NSLeftMouseUp:
+					dragEnded = YES;
+					break;
+				
+				case NSKeyDown:
+					// if the Escape key is pressed, cancel the drag; do not
+					// actually break the loop here, as it is crucial to still
+					// wait until the matching mouse-up event can be dequeued
+					// (though the rectangle is still hidden immediately and
+					// previous drags will have no effect)
+					if (kVK_Escape == eventObject.keyCode)
+					{
+						flagCancellation = YES;
+						self.dragRectangle = NSZeroRect;
+						[self setNeedsDisplay];
+					}
+					break;
+				
+				case NSKeyUp:
+					// do nothing
+					break;
+				
+				default:
+					// ???
+					Console_Warning(Console_WriteValue, "unexpected event received; terminating loop", eventObject.type);
+					dragEnded = YES;
+					break;
+				}
+			}
+		}
+		
+		// respond to mouse-up by zooming to selected area
+		if ((NO == NSIsEmptyRect(self.dragRectangle)) && (NO == flagCancellation))
+		{
+			// capture previous zoom to allow further zooming
+			CGFloat const		kDragPixelWidth = NSWidth(self.dragRectangle);
+			CGFloat const		kDragPixelHeight = NSHeight(self.dragRectangle);
+			CGFloat const		kBaseDimension = ((kDragPixelWidth > kDragPixelHeight) ? kDragPixelWidth : kDragPixelHeight);
+			CGFloat const		kPreviousScaleX = ((canvasPtr->viewScaleX > 0) ? canvasPtr->viewScaleX : 1.0);
+			CGFloat const		kPreviousScaleY = ((canvasPtr->viewScaleY > 0) ? canvasPtr->viewScaleY : 1.0);
+			
+			
+			// first update the scaling factors (multiple zooms, if appropriate);
+			// use the same dimension for both to avoid further image distortion
+			// beyond that caused by the size of the window
+			canvasPtr->viewScaleX = kPreviousScaleX * (NSWidth(self.frame) / kBaseDimension);
+			canvasPtr->viewScaleY = kPreviousScaleY * (NSHeight(self.frame) / kBaseDimension);
+			
+			// constrain values (IMPORTANT: should match other event handlers...)
+			canvasPtr->viewScaleX = std::min< CGFloat >(8/* arbitrary */, canvasPtr->viewScaleX);
+			canvasPtr->viewScaleY = std::min< CGFloat >(8/* arbitrary */, canvasPtr->viewScaleY);
+			
+			// use the new rectangle position to determine a suitable drawing offset
+			canvasPtr->unscaledZoomOriginX += (self.dragRectangle.origin.x / kPreviousScaleX);
+			canvasPtr->unscaledZoomOriginY += (self.dragRectangle.origin.y / kPreviousScaleY);
+			
+			// display new zoom level to user (see also "magnifyWithEvent:")
+			[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = [NSString stringWithFormat:@"%d%%", (int)(canvasPtr->viewScaleX * 100.0), nil];
+			[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
+			[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+			
+			[self setNeedsDisplay];
+		}
+		
+		// hide zoom rectangle
+		self.dragStart = NSZeroPoint;
+		self.dragRectangle = NSZeroRect;
+		[self setNeedsDisplay];
+	}
+}// mouseDown:
+
+
+/*!
+Responds to mouse-up events by discarding them.  This is
+important to balance the locally-handled mouse-down
+handler and prevent events from being otherwise forwarded
+to the next responder.
+
+(2018.06)
+*/
+- (void)
+mouseUp:(NSEvent*)		anEvent
+{
+#pragma unused(anEvent)
+	// do nothing
+}// mouseUp:
+
+
+#pragma mark NSView
+
+
+/*!
+Render the specified part of a vector graphics canvas.
 
 (4.1)
 */
 - (void)
 drawRect:(NSRect)	rect
 {
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	
+	
 	[super drawRect:rect];
-	[self renderDrawingInCurrentFocusWithRect:[self bounds]];
+	
+	if (nullptr != canvasPtr)
+	{
+		NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
+		CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		
+		
+		// draw the background (unless this is for printing)
+		if (nil == [NSPrintOperation currentOperation])
+		{
+			CGContextSetRGBFillColor(drawingContext, canvasPtr->outsideColor.red, canvasPtr->outsideColor.green,
+										canvasPtr->outsideColor.blue, 1.0/* alpha */);
+			CGContextSetAllowsAntialiasing(drawingContext, false); // avoid artifacts
+			CGContextFillRect(drawingContext, NSRectToCGRect(rect));
+			CGContextSetAllowsAntialiasing(drawingContext, true);
+		}
+		
+		// draw the vector graphics
+		[NSGraphicsContext saveGraphicsState];
+		[self renderDrawingInCurrentFocusWithRect:self.frame];
+		[NSGraphicsContext restoreGraphicsState]; // needed because the rendering would otherwise scale all subsequent drawing
+		
+		// draw any zoom rectangle (only appears during mouse tracking) 
+		if (NO == NSIsEmptyRect(self.dragRectangle))
+		{
+			CGFloat		dashElements[] = { 4.0, 2.0 };
+			
+			
+			// TEMPORARY; may want the selection color to be user-customizable
+			// (or read it from the Format collection)
+			CGContextSetAllowsAntialiasing(drawingContext, false); // avoid artifacts
+			CGContextSetRGBFillColor(drawingContext, 1.0, 1.0, 1.0, 0.3/* alpha */);
+			CGContextFillRect(drawingContext, NSRectToCGRect(NSInsetRect(self.dragRectangle, 1.0, 1.0)));
+			CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+			CGContextSetLineWidth(drawingContext, 1.0);
+			CGContextSetLineDash(drawingContext, 0/* phase */, dashElements, sizeof(dashElements) / sizeof(*dashElements));
+			// note: cannot use shadow without creating artifacts in partial-view-refresh scenario
+			//CGContextSetShadow(drawingContext, CGSizeMake(1.2f, -1.2f)/* offset; arbitrary */, 3.0f/* blur; arbitrary */);
+			CGContextStrokeRect(drawingContext, NSRectToCGRect(NSInsetRect(self.dragRectangle, 1.5, 1.5)));
+			CGContextSetAllowsAntialiasing(drawingContext, true);
+		}
+	}
 }// drawRect:
 
 
@@ -1554,50 +1754,63 @@ IMPORTANT:	This should only be called within the call tree
 - (void)
 renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 {
-	VectorCanvas_Ref	canvasRef = VectorInterpreter_ReturnCanvas([self interpreterRef]);
-	My_VectorCanvasPtr	canvasPtr = gVectorCanvasPtrLocks().acquireLock(canvasRef);
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
 	
 	
 	if (nullptr != canvasPtr)
 	{
 		NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
-		NSPrintOperation*	printOp = [NSPrintOperation currentOperation];
 		CGContextRef		drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-		CGRect				contentBounds = CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
-		BOOL				isPrinting = (nil != printOp);
+		CGRect				contentBounds = NSRectToCGRect(aRect);
+		BOOL				isPrinting = (nil != [NSPrintOperation currentOperation]);
 		
-		
-		// draw the background (unless this is for printing)
-		unless (isPrinting)
-		{
-			SInt16			backgroundColorIndex = VectorInterpreter_ReturnBackgroundColor(canvasPtr->interpreter);
-			CGDeviceColor	backgroundColor;
-			
-			
-			assert((backgroundColorIndex >= 0) && (backgroundColorIndex < kMy_MaxColors));
-			getPaletteColor(canvasPtr, backgroundColorIndex, backgroundColor);
-			CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green,
-										backgroundColor.blue, 1.0/* alpha */);
-			CGContextFillRect(drawingContext, contentBounds);
-		}
 		
 		// draw the vector graphics; this is achieved by iterating over
 		// stored drawing commands and replicating them
 		if (nil != canvasPtr->drawingPathElements)
 		{
-			CGDeviceColor	scratchColor;
-			SInt16			currentFillColorIndex = 0;
-			SInt16			currentStrokeColorIndex = 0;
+			CGFloat const		viewScaledPixelWidth = (canvasPtr->viewScaleX * contentBounds.size.width);
+			CGFloat const		viewScaledPixelHeight = (canvasPtr->viewScaleY * contentBounds.size.height);
+			CGFloat const		canvasDisplayWidth = STATIC_CAST(canvasPtr->canvasWidth, CGFloat);
+			CGFloat const		canvasDisplayHeight = STATIC_CAST(canvasPtr->canvasHeight, CGFloat);
+			CGDeviceColor		scratchColor;
+			SInt16				currentFillColorIndex = 0;
+			SInt16				currentStrokeColorIndex = 0;
 			
 			
-			// scale the entire drawing to fill the view
-			if ((canvasPtr->width > 0) && (canvasPtr->height > 0))
+			// scale (a possibly zoomed part of) the drawing to fill the view
+			// and then shift if the zoomed region starts from somewhere else
+			if ((canvasDisplayWidth > 0) && (canvasDisplayHeight > 0))
 			{
-				CGContextScaleCTM(drawingContext, contentBounds.size.width / canvasPtr->width,
-									contentBounds.size.height / canvasPtr->height);
+				CGContextTranslateCTM(drawingContext, -(canvasPtr->viewScaleX * canvasPtr->unscaledZoomOriginX),
+										-(canvasPtr->viewScaleY * canvasPtr->unscaledZoomOriginY));
+				CGContextScaleCTM(drawingContext, viewScaledPixelWidth / canvasDisplayWidth,
+									viewScaledPixelHeight / canvasDisplayHeight);
 			}
 			
-			// initialize state
+			// make the shadow apply to the entire drawing instead of
+			// risking shadow overlap for nearby lines (also, this
+			// ought to render a bit faster)
+			CGContextBeginTransparencyLayerWithRect(drawingContext, contentBounds, nullptr/* extra info dictionary */);
+			
+			// draw background of graphic itself
+			unless (isPrinting)
+			{
+				SInt16			backgroundColorIndex = VectorInterpreter_ReturnBackgroundColor(canvasPtr->interpreter);
+				CGDeviceColor	backgroundColor;
+				
+				
+				assert((backgroundColorIndex >= 0) && (backgroundColorIndex < kMy_MaxColors));
+				getPaletteColor(canvasPtr, backgroundColorIndex, backgroundColor);
+				CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green,
+											backgroundColor.blue, 1.0/* alpha */);
+				CGContextSetAllowsAntialiasing(drawingContext, false); // avoid artifacts
+				CGContextFillRect(drawingContext, CGRectMake(0, 0, canvasDisplayWidth, canvasDisplayHeight)); // see CTM changes above
+				CGContextSetAllowsAntialiasing(drawingContext, true);
+			}
+			
+			// initialize context state
 			unless (isPrinting)
 			{
 				CGContextSetShadow(drawingContext, CGSizeMake(2.2f, -2.2f)/* offset; arbitrary */, 6.0f/* blur; arbitrary */);
@@ -1611,7 +1824,7 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 				if (pathElement->fillColorIndex != currentFillColorIndex)
 				{
 					assert((pathElement->fillColorIndex >= 0) && (pathElement->fillColorIndex < kMy_MaxColors));
-					if ((nil != printOp) && (kMy_ColorIndexBackground == pathElement->fillColorIndex))
+					if ((isPrinting) && (kMy_ColorIndexBackground == pathElement->fillColorIndex))
 					{
 						// when printing, do not allow the background color to print
 						// (because it might be reformatted, e.g. white-on-black);
@@ -1629,7 +1842,7 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 				if (pathElement->strokeColorIndex != currentStrokeColorIndex)
 				{
 					assert((pathElement->strokeColorIndex >= 0) && (pathElement->strokeColorIndex < kMy_MaxColors));
-					if ((nil != printOp) && (kMy_ColorIndexForeground == pathElement->strokeColorIndex))
+					if ((isPrinting) && (kMy_ColorIndexForeground == pathElement->strokeColorIndex))
 					{
 						// when printing, do not allow the foreground color to print
 						// (because it might be reformatted, e.g. white-on-black);
@@ -1646,7 +1859,7 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 				}
 				
 				// make lines thicker when the drawing is bigger, up to a certain maximum thickness
-				[pathElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasPtr->width) * pathElement->normalLineWidth,
+				[pathElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasDisplayWidth) * pathElement->normalLineWidth,
 																		pathElement->normalLineWidth * 2/* arbitrary maximum */),
 																pathElement->normalLineWidth / 3 * 2/* arbitrary minimum */)];
 				
@@ -1663,9 +1876,11 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 					break;
 				}
 			}
+			
+			// end call to CGContextBeginTransparencyLayerWithRect() above
+			CGContextEndTransparencyLayer(drawingContext);
 		}
 	}
-	gVectorCanvasPtrLocks().releaseLock(canvasRef, &canvasPtr);
 }// renderDrawingInCurrentFocusWithRect:
 
 

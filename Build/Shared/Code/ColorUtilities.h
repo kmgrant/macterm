@@ -35,8 +35,6 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
 
 
 
@@ -70,19 +68,6 @@ void
 // DEPRECATED
 void
 	UseLighterColors							();
-
-//@}
-
-//!\name Changing the Pen or Background to a Standard Pattern
-//@{
-
-// DEPRECATED
-void
-	ColorUtilities_SetBlackPenPattern			();
-
-// DEPRECATED
-void
-	ColorUtilities_SetGrayPenPattern			();
 
 //@}
 

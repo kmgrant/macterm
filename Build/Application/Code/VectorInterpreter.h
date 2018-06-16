@@ -93,10 +93,6 @@ void
 //@{
 
 void
-	VectorInterpreter_CopyZoom				(VectorInterpreter_Ref		inDestinationGraphicID,
-											 VectorInterpreter_Ref		inSourceGraphicID);
-
-void
 	VectorInterpreter_PageCommand			(VectorInterpreter_Ref		inGraphicID);
 
 size_t
@@ -117,13 +113,6 @@ VectorCanvas_Ref
 void
 	VectorInterpreter_SetPageClears			(VectorInterpreter_Ref		inGraphicID,
 											 Boolean					inTrueClearsFalseNewWindow);
-
-void
-	VectorInterpreter_Zoom					(VectorInterpreter_Ref		inGraphicID,
-											 SInt16						inX0,
-											 SInt16						inY0,
-											 SInt16						inX1,
-											 SInt16						inY1);
 
 //@}
 

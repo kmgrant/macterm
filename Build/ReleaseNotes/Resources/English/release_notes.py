@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20180615',
     '20180519',
     '20180322',
     '20180317',
@@ -596,6 +597,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20180615': [
+        'Vector graphics windows once again support dragging a rectangle to zoom into a certain area (double-click to restore default zoom, and hit Escape to cancel a drag).',
+        'Vector graphics windows now support touch-based zooming, gradually zooming in or out as you use a track pad.',
+        'Vector graphics windows now use their zoomed size for Copy and Print (processing only a portion of the total image).',
+        'Vector graphics windows now have a margin area, similar to a terminal window; and, when a Format is applied, they use the Format’s matte background color.  In addition, if the graphic is zoomed out very far, the matte color fills in the region outside the graphic.',
+        'Help has been updated to accurately describe all of the features of vector graphics windows.',
+    ],
     '20180519': [
         'Preferences window Full Screen pane has moved to Preferences window General pane Full Screen tab.',
     ],

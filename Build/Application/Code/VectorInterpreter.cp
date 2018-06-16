@@ -550,11 +550,14 @@ VectorInterpreter_New	(VectorInterpreter_Mode		inCommandSet)
 		storexy(ptr, 0, 3071);
 		
 		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
-	#if 1
-		VectorInterpreter_Zoom(result, 0, 0, 4095, 3119); // important!
-	#else
-		VectorInterpreter_Zoom(result, 0, 0, kVectorInterpreter_MaxX - 1, kVectorInterpreter_MaxY - 1);
-	#endif
+		
+		// legacy values; probably specified by TEK but not verified
+		ptr->winbot = 0;
+		ptr->winleft = 0;
+		ptr->wintop = 3119;
+		ptr->winright = 4095;
+		ptr->wintall = 3120;
+		ptr->winwide = 4096;
 	}
 	
 	return result;
@@ -604,24 +607,6 @@ VectorInterpreter_Release	(VectorInterpreter_Ref*		inoutRefPtr)
 	}
 	*inoutRefPtr = nullptr;
 }// Release
-
-
-/*!
-Sets zoom/pan borders for the destination to match the source.
-The destination should be redrawn.
-
-(3.1)
-*/
-void
-VectorInterpreter_CopyZoom	(VectorInterpreter_Ref	inDestinationGraphicID,
-							 VectorInterpreter_Ref	inSourceGraphicID)
-{
-	My_VectorInterpreterAutoLocker	srcPtr(gVectorInterpreterPtrLocks(), inSourceGraphicID);
-	
-	
-	VectorInterpreter_Zoom(inDestinationGraphicID, srcPtr->winleft, srcPtr->winbot,
-							srcPtr->winright, srcPtr->wintop);
-}// CopyZoom
 
 
 /*!
@@ -823,32 +808,6 @@ VectorInterpreter_SetPageClears		(VectorInterpreter_Ref	inRef,
 	
 	ptr->pageClears = inTrueClearsFalseNewWindow;
 }// SetPageClears
-
-
-/*	Set new borders for zoom/pan region.
- *	x0,y0 is lower left; x1,y1 is upper right.
- *	User should redraw after calling this.
- */
-void
-VectorInterpreter_Zoom	(VectorInterpreter_Ref	inRef,
-						 SInt16					inX0,
-						 SInt16					inY0,
-						 SInt16					inX1,
-						 SInt16					inY1)
-{
-	if (isValidID(inRef))
-	{
-		My_VectorInterpreterAutoLocker	ptr(gVectorInterpreterPtrLocks(), inRef);
-		
-		
-		ptr->winbot = inY0;
-		ptr->winleft = inX0;
-		ptr->wintop = inY1;
-		ptr->winright = inX1;
-		ptr->wintall = inY1 - inY0 + 1;
-		ptr->winwide = inX1 - inX0 + 1;
-	}
-}// Zoom
 
 
 #pragma mark Internal Methods

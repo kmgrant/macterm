@@ -239,6 +239,38 @@ typedef void (^TerminalView_ControllerBlock)(TerminalView_Controller*, BOOL*);
 
 
 /*!
+Used to notify another view when a click occurs in a background
+view (e.g. when a click in the matte region should be mapped
+to a click in the nearby terminal itself).
+
+Any view that implements this should probably also implement
+mouse-over cursors to be consistent with its behavior.
+*/
+@protocol TerminalView_ClickDelegate < NSObject > //{
+
+@required
+
+	// notification about a mouse-down event in the specified view
+	- (void)
+	didReceiveMouseDownEvent:(NSEvent*)_
+	forView:(NSView*)_;
+
+@optional
+
+	// notification about a mouse-dragged event in the specified view
+	- (void)
+	didReceiveMouseDraggedEvent:(NSEvent*)_
+	forView:(NSView*)_;
+
+	// notification about a mouse-up event in the specified view
+	- (void)
+	didReceiveMouseUpEvent:(NSEvent*)_
+	forView:(NSView*)_;
+
+@end //}
+
+
+/*!
 Implements the background rendering part of the
 Terminal View.
 
@@ -246,12 +278,21 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_BackgroundView : NSView //{
+@interface TerminalView_BackgroundView : NSControl //{
 {
 @private
-	size_t	_colorIndex;
-	void*	_internalViewPtr;
+	id< TerminalView_ClickDelegate >	_clickDelegate;
+	size_t								_colorIndex;
+	NSColor*							_exactColor;
+	void*								_internalViewPtr;
 }
+
+// accessors
+	@property (assign) id< TerminalView_ClickDelegate >
+	clickDelegate;
+	@property (strong) NSColor*
+	exactColor;
+
 @end //}
 
 

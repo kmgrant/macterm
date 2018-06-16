@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17F77" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VectorWindow_Controller">
             <connections>
                 <outlet property="canvasView" destination="9" id="15"/>
+                <outlet property="matteView" destination="Auu-P0-egg" id="U51-k7-4Rg"/>
                 <outlet property="window" destination="3" id="14"/>
             </connections>
         </customObject>
@@ -23,10 +24,16 @@
                 <rect key="frame" x="0.0" y="0.0" width="384" height="384"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <customView id="9" userLabel="Canvas View" customClass="VectorCanvas_View">
+                    <customView misplaced="YES" id="Auu-P0-egg" customClass="TerminalView_BackgroundView">
                         <rect key="frame" x="0.0" y="0.0" width="384" height="384"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <accessibility description="Vector Graphics"/>
+                        <subviews>
+                            <customView misplaced="YES" id="9" userLabel="Canvas View" customClass="VectorCanvas_View">
+                                <rect key="frame" x="5" y="4" width="374" height="375"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <accessibility description="Vector Graphics"/>
+                            </customView>
+                        </subviews>
                     </customView>
                 </subviews>
             </view>
