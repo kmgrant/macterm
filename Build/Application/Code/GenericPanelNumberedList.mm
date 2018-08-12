@@ -183,12 +183,19 @@ Destructor.
 dealloc
 {
 	self.detailViewManager.panelParent = nil;
+	[_detailContainer release];
+	[_detailView release];
 	[identifier release];
+	[_itemArrayController release];
+	[_itemBindingSortDescriptors release];
 	[localizedName release];
 	[localizedIcon release];
 	[_listItemBindingIndexes release];
 	[_listItemBindings release];
-	[_itemBindingSortDescriptors release];
+	[_masterContainer release];
+	[_masterDriver release];
+	[_masterView release];
+	[_splitView release];
 	[super dealloc];
 }// dealloc
 
@@ -416,7 +423,7 @@ initializeWithContext:(void*)			aContext
 	self->_listItemBindingIndexes = [[NSIndexSet alloc] initWithIndex:0];
 	self->_listItemBindings = [[NSArray alloc] init];
 	self.masterDriver = givenDriver;
-	self.detailViewManager = [givenDetailViewManager retain];
+	_detailViewManager = [givenDetailViewManager retain];
 	self.detailViewManager.panelParent = self;
 	
 	assert(nil != self.detailViewManager);

@@ -62,7 +62,7 @@ OtherApps_Result const	kOtherApps_ResultGenericFailure(1);		//!< unspecified err
 //@{
 
 CFPropertyListRef
-	OtherApps_NewPropertyListFromFile		(CFURLRef		inFile,
+	OtherApps_CreatePropertyListFromFile	(CFURLRef		inFile,
 											 CFErrorRef*		outErrorOrNull = nullptr);
 
 //@}

@@ -2601,11 +2601,25 @@ stringForJoiningElements:(NSString*)			aJoiningCharacter
 	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
 	if (nil != self)
 	{
-		self.characterSetForSplitting = aCharacterSet;
-		self.stringForJoiningElements = aJoiningCharacter;
+		self.characterSetForSplitting = [aCharacterSet retain];
+		self.stringForJoiningElements = [aJoiningCharacter retain];
 	}
 	return self;
 }// initWithPreferencesTag:contextManager:
+
+
+/*!
+Destructor.
+
+(2018.08)
+*/
+- (void)
+dealloc
+{
+	[_characterSetForSplitting release];
+	[_stringForJoiningElements release];
+	[super dealloc];
+}// dealloc
 
 
 #pragma mark New Methods

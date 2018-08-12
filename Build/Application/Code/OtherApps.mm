@@ -63,7 +63,7 @@ the user’s set of saved collections, with a unique
 name.  If "inNameHintOrNull" is not nullptr, the
 collection with this name will be created or updated.
 
-See OtherApps_NewPropertyListFromFile().
+See OtherApps_CreatePropertyListFromFile().
 
 \retval kOtherApps_ResultOK
 if at least one key can be used (log may show warnings)
@@ -284,7 +284,7 @@ and then released.
 (2016.09)
 */
 CFPropertyListRef
-OtherApps_NewPropertyListFromFile		(CFURLRef		inFile,
+OtherApps_CreatePropertyListFromFile	(CFURLRef		inFile,
 										 CFErrorRef*		outErrorOrNull)
 {
 	CFPropertyListRef   	result = nullptr;
@@ -328,7 +328,7 @@ OtherApps_NewPropertyListFromFile		(CFURLRef		inFile,
 	}
 	
 	return result;
-}// NewPropertyListFromFile
+}// CreatePropertyListFromFile
 
 
 #pragma mark Internal Methods

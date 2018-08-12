@@ -6650,11 +6650,25 @@ owningLayer:(TerminalGlyphDrawing_Layer*)	anOwningLayer
 	self = [super init];
 	if (nil != self)
 	{
-		owningLayer_ = anOwningLayer;
-		targetLayer_ = aTargetLayer;
+		owningLayer_ = [anOwningLayer retain];
+		targetLayer_ = [aTargetLayer retain];
 	}
 	return self;
 }// initWithTargetLayer:owningLayer:
+
+
+/*!
+Destructor.
+
+(2018.08)
+*/
+- (void)
+dealloc
+{
+	[owningLayer_ release];
+	[targetLayer_ release];
+	[super dealloc];
+}// dealloc
 
 
 #pragma mark New Methods

@@ -3692,6 +3692,18 @@ init
 }// init
 
 
+/*!
+Destructor.
+
+(2018.08)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
 #pragma mark New Methods: General
 
 

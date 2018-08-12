@@ -295,7 +295,7 @@ Session::handle_file	(std::string	inPathname)
 				CFRetainRelease		fileURL(CFURLCreateFromFileSystemRepresentation
 											(kCFAllocatorDefault, REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), inPathname.size(), false/* is directory */),
 											CFRetainRelease::kAlreadyRetained);
-				CFRetainRelease		fileData(OtherApps_NewPropertyListFromFile(fileURL.returnCFURLRef()),
+				CFRetainRelease		fileData(OtherApps_CreatePropertyListFromFile(fileURL.returnCFURLRef()),
 												CFRetainRelease::kAlreadyRetained);
 				
 				

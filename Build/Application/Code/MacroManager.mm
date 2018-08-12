@@ -1238,7 +1238,10 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 							}
 						}
 						
-						CFRelease(localIPAddresses), localIPAddresses = nullptr;
+						if (nullptr != localIPAddresses)
+						{
+							CFRelease(localIPAddresses), localIPAddresses = nullptr;
+						}
 					}
 					++i; // skip special sequence character
 					break;

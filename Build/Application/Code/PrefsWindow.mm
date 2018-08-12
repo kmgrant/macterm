@@ -1968,7 +1968,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 {
 #pragma unused(toolbar, flag)
 	// NOTE: no need to handle standard items here
-	NSToolbarItem*			result = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+	NSToolbarItem*		result = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
 	
 	
 	if ([itemIdentifier isEqualToString:kMy_PrefsWindowToolbarItemIDSearch])
@@ -2001,10 +2001,10 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	result.image = [itemPanel panelIcon];
 	result.action = itemPanel.panelDisplayAction;
 	result.target = itemPanel.panelDisplayTarget;
-	result.menuFormRepresentation = [[NSMenuItem alloc]
+	result.menuFormRepresentation = [[[NSMenuItem alloc]
 										initWithTitle:@""
 														action:nil
-														keyEquivalent:@""];
+														keyEquivalent:@""] autorelease];
 	// note: it is not clear why but setting the MENU icon size
 	// affects the icon displayed in the button itself; make
 	// sure that the menu icon size approximates a normal toolbar
@@ -2025,8 +2025,8 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		NSPopUpButton*		menuButton = [[NSPopUpButton alloc]
 											initWithFrame:NSMakeRect(0, 0, 54, 42)/* arbitrary frame */
 															pullsDown:YES];
-		NSMenu*				newMenu = [[NSMenu alloc] initWithTitle:@""];
-		NSMenu*				subMenu = [[NSMenu alloc] initWithTitle:@""]; // for overflow only; excludes title item
+		NSMenu*				newMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		NSMenu*				subMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease]; // for overflow only; excludes title item
 		
 		
 		// pull-down buttons determine their appearance by using
@@ -2053,10 +2053,10 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		for (Panel_ViewManager* childPanel in
 				[asParent panelParentEnumerateChildViewManagers])
 		{
-			NSMenuItem*		newItem = [[NSMenuItem alloc]
+			NSMenuItem*		newItem = [[[NSMenuItem alloc]
 										initWithTitle:[childPanel panelName]
 														action:childPanel.panelDisplayAction
-														keyEquivalent:@""];
+														keyEquivalent:@""] autorelease];
 			
 			
 			newItem.target = childPanel.panelDisplayTarget;
@@ -2065,7 +2065,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 			//newItem.image = [itemPanel panelIcon];
 			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
 			[newMenu addItem:newItem];
-			[subMenu addItem:[newItem copy]];
+			[subMenu addItem:[[newItem copy] autorelease]];
 		}
 		
 		// configure the rest of the menu button; note that the arrow

@@ -340,15 +340,17 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self.macroEditorViewManager = [[[PrefPanelMacros_MacroEditorViewManager alloc] init] autorelease];
+	PrefPanelMacros_MacroEditorViewManager*		newViewManager = [[PrefPanelMacros_MacroEditorViewManager alloc] init];
+	
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Macros"
 										localizedName:NSLocalizedStringFromTable(@"Macros", @"PrefPanelMacros",
 																					@"the name of this panel")
 										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelMacros"]
-										master:self detailViewManager:self.macroEditorViewManager];
+										master:self detailViewManager:newViewManager];
 	if (nil != self)
 	{
+		_macroEditorViewManager = newViewManager;
 	}
 	return self;
 }// init
@@ -362,6 +364,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[_macroEditorViewManager release];
 	[super dealloc];
 }// dealloc
 

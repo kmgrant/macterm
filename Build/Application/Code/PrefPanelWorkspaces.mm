@@ -597,6 +597,18 @@ init
 }// init
 
 
+/*!
+Destructor.
+
+(2018.08)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
 #pragma mark Accessors
 
 
@@ -864,15 +876,17 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self.windowEditorViewManager = [[[PrefPanelWorkspaces_WindowEditorViewManager alloc] init] autorelease];
+	PrefPanelWorkspaces_WindowEditorViewManager*	newViewManager = [[PrefPanelWorkspaces_WindowEditorViewManager alloc] init];
+	
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Workspaces.Windows"
 										localizedName:NSLocalizedStringFromTable(@"Windows", @"PrefPanelWorkspaces",
 																					@"the name of this panel")
 										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelWorkspaces"]
-										master:self detailViewManager:self.windowEditorViewManager];
+										master:self detailViewManager:newViewManager];
 	if (nil != self)
 	{
+		_windowEditorViewManager = newViewManager;
 	}
 	return self;
 }// init
@@ -886,6 +900,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[_windowEditorViewManager release];
 	[super dealloc];
 }// dealloc
 
@@ -1516,7 +1531,7 @@ rebuildSessionList
 	
 	// add an item that means “no session in this window slot”
 	// (should be the first item)
-	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
 	newDesc.commandType = [NSNumber numberWithInteger:0];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
@@ -1524,26 +1539,26 @@ rebuildSessionList
 	// add items for each user Session Favorite (including Default)
 	for (PreferenceValue_StringDescriptor* sessionDesc in [self->sessionObject valueDescriptorArray])
 	{
-		newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+		newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
 		newDesc.commandType = nil;
 		newDesc.sessionFavoriteName = [sessionDesc describedStringValue];
 		[_descriptorArray addObject:newDesc];
 	}
 	
 	// add an item that means “open the Log-In Shell session in the window”
-	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
 	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionLoginShell];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 	
 	// add an item that means “open the (non-log-in) Shell session in the window”
-	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
 	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionShell];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 	
-	// add an item that means “open the Custom New Session sheet when the window opens“
-	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	// add an item that means “open the Custom New Session sheet when the window opens”
+	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
 	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionDialog];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
@@ -1644,7 +1659,7 @@ performSetSessionToNone:(id)	sender
 	// the value "0" is assumed throughout (and in the
 	// Preferences module when processing the value)
 	// as a way to indicate an unused window slot
-	noneDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
+	noneDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
 	noneDesc.commandType = [NSNumber numberWithInteger:0];
 	noneDesc.sessionFavoriteName = nil;
 	self.windowSession.currentValueDescriptor = noneDesc;

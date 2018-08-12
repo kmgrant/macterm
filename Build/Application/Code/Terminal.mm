@@ -8840,7 +8840,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				NSString*			asNSString = [[[NSString alloc] initWithBytes:inDataPtr->emulator.stringAccumulator.c_str()
 																					length:inDataPtr->emulator.stringAccumulator.size()
 																					encoding:NSUTF8StringEncoding] autorelease];
-				NSMutableArray*		equalsSeparated = [[asNSString componentsSeparatedByString:@"="] mutableCopy];
+				NSMutableArray*		equalsSeparated = [[[asNSString componentsSeparatedByString:@"="] mutableCopy] autorelease];
 				
 				
 				if (equalsSeparated.count < 2)
@@ -8892,7 +8892,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							{
 								assert([argObject isKindOfClass:NSString.class]);
 								NSString*			argString = STATIC_CAST(argObject, NSString*);
-								NSMutableArray*		argKeyValue = [[argString componentsSeparatedByString:@"="] mutableCopy];
+								NSMutableArray*		argKeyValue = [[[argString componentsSeparatedByString:@"="] mutableCopy] autorelease];
 								
 								
 								if (argKeyValue.count < 2)

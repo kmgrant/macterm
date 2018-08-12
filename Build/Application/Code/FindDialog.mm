@@ -870,7 +870,7 @@ finalOptions:(FindDialog_Options)		options
 	{
 		[recentSearchesArray removeObject:searchText]; // remove any older copy of this search phrase
 		[recentSearchesArray insertObject:searchText atIndex:0];
-		[[aViewMgr searchField] setRecentSearches:[recentSearchesArray copy]];
+		[[aViewMgr searchField] setRecentSearches:[[recentSearchesArray copy] autorelease]];
 	}
 	
 	// hide the popover
