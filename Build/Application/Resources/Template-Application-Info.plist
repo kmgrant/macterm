@@ -169,7 +169,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
+	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_BUILD_NUMBER%</string>
 	<key>CFBundleSignature</key>
 	<string>KevG</string>
 	<key>CFBundleURLTypes</key>
@@ -216,7 +216,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.%MY_ALPHA_BETA%.%MY_BUILD_NUMBER%</string>
+	<string>%MY_BUILD_NUMBER%</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
@@ -239,7 +239,7 @@
 	<key>MyHomePageURL</key>
 	<string>https://www.macterm.net/</string>
 	<key>MyUpdatesURL</key>
-	<string>https://www.macterm.net/updates/daily.html</string>
+	<string>https://www.macterm.net/updates/4.1.0.html</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
