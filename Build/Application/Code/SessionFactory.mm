@@ -2277,17 +2277,17 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Boolean					inNoStagger)
 {
 	TerminalWindowRef		result = nullptr;
-	Boolean					inCocoaPreferred = DebugInterface_UseCocoaTerminalWindowsForNewSessions(); // TEMPORARY
+	Boolean					inCocoaPreferred = (NO == DebugInterface_UseCarbonTerminalWindowsForNewSessions()); // TEMPORARY
 	
 	
 	// create a new terminal window to house the session
 	if (inCocoaPreferred)
 	{
-		Console_WriteLine("forcing new terminal window to use Cocoa test implementation");
 		result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
 	}
 	else
 	{
+		Console_WriteLine("forcing new terminal window to use Carbon legacy implementation");
 		result = TerminalWindow_NewCarbonLegacy(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
 	}
 	

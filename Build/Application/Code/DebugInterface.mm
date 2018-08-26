@@ -55,7 +55,7 @@ Boolean		gDebugInterface_LogsSixelDecoderState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalEcho = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
-Boolean		gDebugInterface_UseCocoaTerminalWindowsForNewSessions = false;
+Boolean		gDebugInterface_UseCarbonTerminalWindowsForNewSessions = false;
 
 
 
@@ -427,30 +427,30 @@ setLogsTerminalState:(BOOL)		aFlag
 /*!
 Accessor.
 
-(2018.02)
+(2018.08)
 */
 - (BOOL)
-useCocoaTerminalWindowsForNewSessions
+useCarbonTerminalWindowsForNewSessions
 {
-	return gDebugInterface_UseCocoaTerminalWindowsForNewSessions;
+	return gDebugInterface_UseCarbonTerminalWindowsForNewSessions;
 }
 - (void)
-setUseCocoaTerminalWindowsForNewSessions:(BOOL)		aFlag
+setUseCarbonTerminalWindowsForNewSessions:(BOOL)		aFlag
 {
-	if (aFlag != gDebugInterface_UseCocoaTerminalWindowsForNewSessions)
+	if (aFlag != gDebugInterface_UseCarbonTerminalWindowsForNewSessions)
 	{
 		if (aFlag)
 		{
-			Console_WriteLine("started using Cocoa implementation for new session terminal windows");
+			Console_WriteLine("started using legacy Carbon implementation for new session terminal windows");
 		}
 		else
 		{
-			Console_WriteLine("stopped using Cocoa implementation for new session terminal windows");
+			Console_WriteLine("stopped using legacy Carbon implementation for new session terminal windows");
 		}
 		
-		gDebugInterface_UseCocoaTerminalWindowsForNewSessions = aFlag;
+		gDebugInterface_UseCarbonTerminalWindowsForNewSessions = aFlag;
 	}
-}// setUseCocoaTerminalWindowsForNewSessions:
+}// setUseCarbonTerminalWindowsForNewSessions:
 
 
 #pragma mark NSWindowController
