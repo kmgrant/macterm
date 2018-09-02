@@ -464,7 +464,6 @@ NSCursor*			customCursorCrosshairs				();
 NSCursor*			customCursorIBeam					(Boolean = false);
 NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
-Boolean				dragTerminalSelection				(My_TerminalViewPtr, RgnHandle, EventRecord*);
 void				drawSingleColorImage				(CGContextRef, CGColorRef, CGRect, id);
 void				drawSingleColorPattern				(CGContextRef, CGColorRef, CGRect, id);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
@@ -5749,112 +5748,6 @@ delayMinimumTicks	(UInt16		inTickCount)
 	
 	Delay(inTickCount, &dummy);
 }// delayMinimumTicks
-
-
-/*!
-This method handles dragging of text and image selections.
-Returns "true" only if the drag is dropped (i.e. not
-cancelled and no errors).
-
-(2017.12)
-*/
-Boolean
-dragTerminalSelection	(My_TerminalViewPtr		inTerminalViewPtr,
-						 RgnHandle				inoutGlobalDragOutlineRegion,
-						 EventRecord*			inoutEventPtr)
-{
-	Boolean			result = false;
-	OSStatus		error = noErr;
-	PasteboardRef	dragPasteboard = nullptr;
-	DragRef			dragRef = nullptr;
-	RgnHandle		dragRegion = inoutGlobalDragOutlineRegion;
-	
-	
-	error = PasteboardCreate(kPasteboardUniqueName, &dragPasteboard);
-	if (noErr == error)
-	{
-		NSMutableArray*		selectedImages = [[[NSMutableArray alloc] init] autorelease];
-		
-		
-		getImagesInVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range, selectedImages);
-		if (selectedImages.count > 0)
-		{
-			// selection contains image(s)
-			Boolean		isFirstImage = true;
-			
-			
-			for (NSImage* imageObject in selectedImages)
-			{
-				assert([imageObject isKindOfClass:NSImage.class]);
-				Clipboard_AddNSImageToPasteboard(imageObject, dragPasteboard, isFirstImage/* clear first */);
-				isFirstImage = false;
-			}
-		}
-		else
-		{
-			// normal selection (text)
-			Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodStandard, dragPasteboard);
-		}
-		
-		error = NewDragWithPasteboard(dragPasteboard, &dragRef);
-		if (noErr != error)
-		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteValue, "failed to create drag, error", error);
-		}
-		else
-		{
-			if (selectedImages.count > 0)
-			{
-				// selection contains image(s); use actual image instead of an outline
-				NSImage*				firstImage = [selectedImages objectAtIndex:0];
-				assert([firstImage isKindOfClass:NSImage.class]);
-				DragImageFlags const	kImageFlags = 0;
-				NSRect*					proposedDestinationRectPtr = nullptr;
-				NSGraphicsContext*		referenceContext = nil;
-				NSDictionary*			hintDict = @{};
-				CGImageRef				dragCGImage = [firstImage CGImageForProposedRect:proposedDestinationRectPtr
-																							context:referenceContext
-																							hints:hintDict];
-				
-				
-				error = SetDragImageWithCGImage(dragRef, dragCGImage, &CGPointZero, kImageFlags);
-				if (noErr == error)
-				{
-					// ignore text selection outline for images unless
-					// the image completely fails to be set for the drag
-					dragRegion = nullptr;
-				}
-			}
-			
-			NSCursor*	oldCursor = [NSCursor currentCursor];
-			[[NSCursor arrowCursor] set];
-			error = TrackDrag(dragRef, inoutEventPtr, dragRegion);
-			if (noErr != error)
-			{
-				if (dragNotAcceptedErr == error)
-				{
-					Console_Warning(Console_WriteLine, "receiver did not accept the drag");
-				}
-				else if (userCanceledErr != error)
-				{
-					Sound_StandardAlert();
-					Console_Warning(Console_WriteValue, "failed to drag, error", error);
-				}
-			}
-			else
-			{
-				result = true;
-			}
-			[oldCursor set];
-		}
-	}
-	DisposeDrag(dragRef), dragRef = nullptr;
-	
-	[[NSCursor arrowCursor] set];
-	
-	return result;
-}// dragTerminalSelection
 
 
 /*!
@@ -11796,7 +11689,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										SetPortWindowPort(GetControlOwner(view));
 										LocalToGlobal(&event.where);
 										event.modifiers = STATIC_CAST(currentModifiers, EventModifiers);
-										dragged = dragTerminalSelection(viewPtr, dragRgn, &event);
+										//dragged = dragTerminalSelection(viewPtr, dragRgn, &event);
 										trackingResult = kMouseTrackingMouseUp; // terminate loop
 										cannotBeDoubleClick = true;
 									}
@@ -14697,6 +14590,19 @@ initWithFrame:(NSRect)		aFrame
 		self->_modifierFlagsForCursor = 0;
 		self->_internalViewPtr = nullptr;
 		
+		[self registerForDraggedTypes:@[
+											// in order of preference; the list of accepted drag text types should
+											// agree with what Clipboard_CreateCFStringFromPasteboard() supports
+											BRIDGE_CAST(kUTTypeUTF16ExternalPlainText, NSString*),
+											BRIDGE_CAST(kUTTypeUTF16PlainText, NSString*),
+											BRIDGE_CAST(kUTTypeUTF8PlainText, NSString*),
+											BRIDGE_CAST(kUTTypePlainText, NSString*),
+											@"com.apple.traditional-mac-plain-text",
+											BRIDGE_CAST(kUTTypeFileURL, NSString*),
+											BRIDGE_CAST(kUTTypeDirectory, NSString*), // includes packages
+											//BRIDGE_CAST(kUTTypeFolder, NSString*), // also a directory
+										]];
+		
 		self.refusesFirstResponder = NO;
 		self.wantsLayer = YES;
 	}
@@ -14854,6 +14760,135 @@ canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 #pragma unused(anItem)
 	return @(YES);
 }
+
+
+#pragma mark NSDraggingDestination
+
+
+/*!
+Invoked when the user has dragged data into the content
+area of the terminal window.
+
+(2018.08)
+*/
+- (NSDragOperation)
+draggingEntered:(id <NSDraggingInfo>)	sender
+{
+	NSDragOperation		result = NSDragOperationNone;
+	
+	
+	if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
+	{
+		TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
+		
+		
+		result = NSDragOperationCopy;
+		
+		// show a highlight area by setting the appropriate view property
+		// and requesting a redraw
+		self.showDragHighlight = YES;
+		[self setNeedsDisplay];
+		
+		// if window is inactive, start a timer to auto-activate the window
+		// after a short delay
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(),
+						^{ TerminalWindow_Select(terminalWindow); });
+	}
+	return result;
+}// draggingEntered:
+
+
+/*!
+Invoked when the user has dragged data out of the content
+area of the terminal window.
+
+(2018.08)
+*/
+- (void)
+draggingExited:(id <NSDraggingInfo>)	sender
+{
+#pragma unused(sender)
+	// show a highlight area by setting the appropriate view property
+	// and requesting a redraw
+	self.showDragHighlight = NO;
+	[self setNeedsDisplay];
+}// draggingExited:
+
+
+/*!
+Invoked when the user has dropped data into the content
+area of the terminal window.
+
+(2018.08)
+*/
+- (BOOL)
+performDragOperation:(id <NSDraggingInfo>)		sender
+{
+	BOOL				result = NO;
+	NSPasteboard*		dragPasteboard = [sender draggingPasteboard];
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	SessionRef			listeningSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	Session_Result		sessionResult = kSession_ResultOK;
+	//NSPoint				pointInView = [self convertPointFromBase:sender.draggingLocation];
+	//Point				legacyPixelLocation = { 0, 0 }; // TEMPORARY (UNIMPLEMENTED); update APIs to use Cocoa coordinates
+	Boolean				cursorMovesPriorToDrops = false;
+	
+	
+	//
+	// the types sent to "registerForDraggedTypes" at initialization time
+	// should all be checked here (in order of most specific, otherwise
+	// the less-specific ones will match first)
+	//
+	
+	// determine if terminal cursor first moves to drop location
+	unless (kPreferences_ResultOK ==
+			Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
+								sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops))
+	{
+		cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
+	}
+	
+	// if the user preference is set, first move the cursor to the drop location
+	if (cursorMovesPriorToDrops)
+	{
+		// move cursor based on the local point
+		// UNIMPLEMENTED (for Cocoa)
+		//TerminalView_MoveCursorWithArrowKeys([self terminalViewRef], legacyPixelLocation);
+	}
+	
+	// “type” the text; this could trigger the “multi-line paste” alert
+	sessionResult = Session_UserInputPaste(listeningSession, dragPasteboard);
+	if (false == sessionResult.ok())
+	{
+		Console_Warning(Console_WriteValue, "failed to drop pasteboard item, error", sessionResult.code());
+	}
+	
+	return result;
+}// performDragOperation:
+
+
+/*!
+Invoked when the user is about to drop data into the content
+area of the terminal window; returns YES only if the data is
+acceptable.
+
+(2018.08)
+*/
+- (BOOL)
+prepareForDragOperation:(id <NSDraggingInfo>)	sender
+{
+#pragma unused(sender)
+	BOOL	result = NO;
+	
+	
+	self.showDragHighlight = NO;
+	[self setNeedsDisplay];
+	
+	// always accept the drag
+	result = YES;
+	
+	return result;
+}// prepareForDragOperation:
 
 
 #pragma mark NSResponder

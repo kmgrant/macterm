@@ -41,8 +41,10 @@
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
 @class NSImage;
+@class NSPasteboard;
 #else
 class NSImage;
+class NSPasteboard;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -182,59 +184,29 @@ void
 //!\name Accessing Clipboard Data
 //@{
 
-OSStatus
+Boolean
 	Clipboard_AddCFStringToPasteboard		(CFStringRef				inStringToCopy,
-											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr,
+											 NSPasteboard*				inPasteboardOrNullForMainClipboard = nullptr,
 											 Boolean					inClearFirst = true);
 
-OSStatus
+Boolean
 	Clipboard_AddNSImageToPasteboard		(NSImage*					inImageToCopy,
-											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr,
+											 NSPasteboard*				inPasteboardOrNullForMainClipboard = nullptr,
 											 Boolean					inClearFirst = true);
 
 Boolean
-	Clipboard_Contains						(CFStringRef				inUTI,
-											 UInt16						inDesiredItemOrZeroForAll,
-											 CFStringRef&				outConformingItemActualType,
-											 PasteboardItemID&			outConformingItemID,
-											 PasteboardRef				inDataSourceOrNull = nullptr);
-
-Boolean
-	Clipboard_ContainsGraphics				(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
-
-Boolean
-	Clipboard_ContainsText					(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
-
-Boolean
-	Clipboard_CreateCFStringFromPasteboard	(CFStringRef&				outCFString,
-											 CFStringRef&				outUTI,
-											 PasteboardRef				inPasteboardOrNull = nullptr);
+	Clipboard_CreateCFStringArrayFromPasteboard		(CFArrayRef&		outCFStringCFArray,
+											 NSPasteboard*				inPasteboardOrNull = nullptr);
 
 Boolean
 	Clipboard_CreateCGImageFromPasteboard	(CGImageRef&				outImage,
 											 CFStringRef&				outUTI,
-											 PasteboardRef				inPasteboardOrNull = nullptr);
-
-OSStatus
-	Clipboard_CreateContentsAEDesc			(AEDesc*					outDescPtr);
-
-Boolean
-	Clipboard_GetData						(Clipboard_DataConstraint	inConstraint,
-											 CFDataRef&					outData,
-											 CFStringRef&				outConformingItemActualType,
-											 PasteboardItemID&			outConformingItemID,
-											 PasteboardRef				inDataSourceOrNull = nullptr);
-
-PasteboardRef
-	Clipboard_ReturnPrimaryPasteboard		();
-
-void
-	Clipboard_SetPasteboardModified			(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
+											 NSPasteboard*				inPasteboardOrNull = nullptr);
 
 void
 	Clipboard_TextToScrap					(TerminalViewRef			inView,
 											 Clipboard_CopyMethod		inHowToCopy,
-											 PasteboardRef				inDataTargetOrNull = nullptr);
+											 NSPasteboard*				inDataTargetOrNull = nullptr);
 
 //@}
 

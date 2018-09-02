@@ -77,21 +77,6 @@ namespace {
 Float32 const	kSeparatorWidth = 1.0; // vertical line rendered at edge of Clipboard window content
 Float32 const	kSeparatorPerceivedWidth = 2.0;
 
-enum My_Type
-{
-	kMy_TypeUnknown		= 0,	//!< clipboard data is not in a supported form
-	kMy_TypeText		= 1,	//!< clipboard contains some supported form of text
-	kMy_TypeGraphics	= 2,	//!< clipboard contains some supported form of image data
-};
-
-} // anonymous namespace
-
-#pragma mark Types
-namespace {
-
-typedef std::map< PasteboardRef, Boolean >		My_FlagByPasteboard;
-typedef std::map< PasteboardRef, My_Type >		My_TypeByPasteboard;
-
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
@@ -99,21 +84,18 @@ namespace {
 
 void			clipboardUpdatesTimer		(EventLoopTimerRef, void*);
 CFStringRef		copyTypeDescription			(CFStringRef);
-CGImageRef		createCGImageFromData		(CFDataRef);
 Boolean			isImageType					(CFStringRef);
 Boolean			isTextType					(CFStringRef);
-void			updateClipboard				(PasteboardRef);
+void			updateClipboard				();
 
 } // anonymous namespace
 
 #pragma mark Variables
 namespace {
 
-My_TypeByPasteboard&		gClipboardDataGeneralTypes ()	{ static My_TypeByPasteboard x; return x; }
-My_FlagByPasteboard&		gClipboardLocalChanges ()	{ static My_FlagByPasteboard x; return x; }
-CFRetainRelease				gCurrentRenderData;
-EventLoopTimerUPP			gClipboardUpdatesTimerUPP = nullptr;
-EventLoopTimerRef			gClipboardUpdatesTimer = nullptr;
+CFRetainRelease			gCurrentRenderData;
+EventLoopTimerUPP		gClipboardUpdatesTimerUPP = nullptr;
+EventLoopTimerRef		gClipboardUpdatesTimer = nullptr;
 
 } // anonymous namespace
 
@@ -168,9 +150,6 @@ Clipboard_Init ()
 			Clipboard_SetWindowVisible(true);
 		}
 	}
-	
-	// trigger an initial rendering of whatever was on the clipboard at application launch
-	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
 }// Init
 
 
@@ -205,120 +184,30 @@ Publishes the specified data to the specified pasteboard
 new data is added; otherwise, the new string is added to
 any existing data on the pasteboard.
 
-The string is converted into an external representation
-of Unicode, "kUTTypeUTF16ExternalPlainText".
+Returns true only if the text was added successfully.
 
-\retval noErr
-if the string was added successfully
-
-\retval unicodePartConvertErr
-if there was an error creating an external representation
-
-\retval (other)
-if access to the pasteboard could not be secured
-
-(3.1)
+(2018.08)
 */
-OSStatus
+Boolean
 Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
-									 PasteboardRef		inPasteboardOrNullForMainClipboard,
+									 NSPasteboard*		inPasteboardOrNullForMainClipboard,
 									 Boolean			inClearFirst)
 {
-	OSStatus		result = noErr;
-	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
-								? Clipboard_ReturnPrimaryPasteboard()
+	Boolean			result = false;
+	NSPasteboard*	target = (nullptr == inPasteboardOrNullForMainClipboard)
+								? [NSPasteboard generalPasteboard]
 								: inPasteboardOrNullForMainClipboard;
 	
 	
 	if (inClearFirst)
 	{
-		result = PasteboardClear(target);
+		[target clearContents];
 	}
 	
-	if (noErr == result)
+	if (nullptr != inStringToCopy)
 	{
-		// primary Unicode storage; this should be lossless, and should
-		// succeed in order for the Copy to be considered successful
-		{
-			CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
-													(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUnicode,
-														'?'/* loss byte */);
-			
-			
-			if (nullptr == externalRepresentation)
-			{
-				result = unicodePartConvertErr;
-			}
-			else
-			{
-				result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-													kUTTypeUTF16ExternalPlainText,
-													externalRepresentation, kPasteboardFlavorNoFlags);
-				CFRelease(externalRepresentation), externalRepresentation = nullptr;
-			}
-		}
-		
-		// if the copy is reasonably small, add extra versions of it, using
-		// other text formats; this helps older applications to properly
-		// Paste the selection; any errors here are not critical, and the
-		// conversions may be lossy, so "result" is not updated from now on
-		if (CFStringGetLength(inStringToCopy) < 16384/* completely arbitrary; avoid replicating “very large” selections */)
-		{
-			// UTF-8
-			{
-				CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
-														(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUTF8,
-														'?'/* loss byte */);
-				
-				
-				if (nullptr == externalRepresentation)
-				{
-					//Console_Warning(Console_WriteLine, "unable to create UTF-8 for copied text; some apps may not be able to Paste");
-				}
-				else
-				{
-					OSStatus	error = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-																kUTTypeUTF8PlainText,
-																externalRepresentation, kPasteboardFlavorNoFlags);
-					
-					
-					if (noErr != error)
-					{
-						//Console_Warning(Console_WriteValue, "unable to copy UTF-8 text flavor, error", error);
-					}
-					CFRelease(externalRepresentation), externalRepresentation = nullptr;
-				}
-			}
-			
-			// Mac Roman
-			{
-				CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
-														(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingMacRoman,
-														'?'/* loss byte */);
-				
-				
-				if (nullptr == externalRepresentation)
-				{
-					//Console_Warning(Console_WriteLine, "unable to create Mac Roman for copied text; some apps may not be able to Paste");
-				}
-				else
-				{
-					OSStatus	error = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-																kUTTypePlainText,
-																externalRepresentation, kPasteboardFlavorNoFlags);
-					
-					
-					if (noErr != error)
-					{
-						//Console_Warning(Console_WriteValue, "unable to copy Mac Roman text flavor, error", error);
-					}
-					CFRelease(externalRepresentation), externalRepresentation = nullptr;
-				}
-			}
-		}
+		result = (YES == [target writeObjects:@[BRIDGE_CAST(inStringToCopy, NSString*)]]);
 	}
-	
-	Clipboard_SetPasteboardModified(target);
 	
 	return result;
 }// AddCFStringToPasteboard
@@ -331,223 +220,33 @@ Publishes the specified data to the specified pasteboard
 new data is added; otherwise, the new image is added to
 any existing data on the pasteboard.
 
-The image is converted into "kUTTypeTIFF".
-
-\retval noErr
-if the image was added successfully
-
-\retval (other)
-if access to the pasteboard could not be secured
+Returns true only if the image was added successfully.
 
 (2017.12)
 */
-OSStatus
+Boolean
 Clipboard_AddNSImageToPasteboard	(NSImage*			inImageToCopy,
-									 PasteboardRef		inPasteboardOrNullForMainClipboard,
+									 NSPasteboard*		inPasteboardOrNullForMainClipboard,
 									 Boolean			inClearFirst)
 {
-	OSStatus		result = noErr;
-	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
-								? Clipboard_ReturnPrimaryPasteboard()
+	Boolean			result = false;
+	NSPasteboard*	target = (nullptr == inPasteboardOrNullForMainClipboard)
+								? [NSPasteboard generalPasteboard]
 								: inPasteboardOrNullForMainClipboard;
 	
 	
 	if (inClearFirst)
 	{
-		result = PasteboardClear(target);
+		[target clearContents];
 	}
 	
-	if (noErr == result)
+	if (nil != inImageToCopy)
 	{
-		// primary image storage; this should be lossless, and should
-		// succeed in order for the Copy to be considered successful
-		{
-			NSData*		tiffData = [inImageToCopy TIFFRepresentation];
-			
-			
-			result = PasteboardPutItemFlavor(target, (PasteboardItemID)inImageToCopy,
-												kUTTypeTIFF,
-												BRIDGE_CAST(tiffData, CFDataRef), kPasteboardFlavorNoFlags);
-		}
+		result = (YES == [target writeObjects:@[inImageToCopy]]);
 	}
-	
-	Clipboard_SetPasteboardModified(target);
 	
 	return result;
 }// AddNSImageToPasteboard
-
-
-/*!
-Returns true only if the specified type of data (or something
-similar enough to be compatible) is available from the given data
-source.
-
-If true is returned, the actual type name and Pasteboard item ID
-of the first (or specified) conforming item is provided, so that
-you can easily retrieve its data if desired.  You must
-CFRelease() the type name string.
-
-Specify 0 for "inDesiredItemOrZeroForAll", unless you know how
-many items are on the pasteboard and want to test a specific
-item.  Either way, the number of total items found is returned in
-"outNumberOfItems".
-
-The source is first synchronized before checking its contents.
-
-You typically pass kUTTypePlainText to see if text is available.
-
-For convenience, if you specify nullptr for the source, then
-Clipboard_ReturnPrimaryPasteboard() is used.
-
-(3.1)
-*/
-Boolean
-Clipboard_Contains	(CFStringRef			inUTI,
-					 UInt16					inDesiredItemOrZeroForAll,
-					 CFStringRef&			outConformingItemActualType,
-					 PasteboardItemID&		outConformingItemID,
-					 PasteboardRef			inDataSourceOrNull)
-{
-	Boolean		result = false;
-	OSStatus	error = noErr;
-	ItemCount	totalItems = 0;
-	ItemCount	firstItem = 1;
-	ItemCount	lastItem = 1;
-	ItemCount	itemIndex = 0;
-	
-	
-	if (nullptr == inDataSourceOrNull)
-	{
-		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
-	}
-	assert(nullptr != inDataSourceOrNull);
-	
-	// the data could be out of date if another application changed it...resync
-	UNUSED_RETURN(PasteboardSyncFlags)PasteboardSynchronize(inDataSourceOrNull);
-	
-	error = PasteboardGetItemCount(inDataSourceOrNull, &totalItems);
-	assert_noerr(error);
-	
-	if (0 == inDesiredItemOrZeroForAll)
-	{
-		firstItem = 1;
-		lastItem = totalItems;
-	}
-	else
-	{
-		firstItem = inDesiredItemOrZeroForAll;
-		lastItem = inDesiredItemOrZeroForAll;
-	}
-	
-	for (itemIndex = firstItem; itemIndex <= lastItem; ++itemIndex)
-	{
-		PasteboardItemID	itemID = 0;
-		CFArrayRef			flavorArray = nullptr;
-		CFIndex				numberOfFlavors = 0;
-		
-		
-		error = PasteboardGetItemIdentifier(inDataSourceOrNull, itemIndex, &itemID);
-		assert_noerr(error);
-		
-		error = PasteboardCopyItemFlavors(inDataSourceOrNull, itemID, &flavorArray);
-		assert_noerr(error);
-		
-		numberOfFlavors = CFArrayGetCount(flavorArray);
-		
-		for (CFIndex flavorIndex = 0; flavorIndex < numberOfFlavors; ++flavorIndex)
-		{
-			CFStringRef		flavorType = nullptr;
-			Boolean			typeConforms = false;
-			
-			
-			flavorType = CFUtilities_StringCast(CFArrayGetValueAtIndex(flavorArray, flavorIndex));
-			typeConforms = UTTypeConformsTo(flavorType, inUTI);
-			if (typeConforms)
-			{
-				result = true;
-				outConformingItemActualType = flavorType;
-				CFRetain(outConformingItemActualType);
-				outConformingItemID = itemID;
-				break;
-			}
-		}
-		
-		CFRelease(flavorArray), flavorArray = nullptr;
-	}
-	return result;
-}// Contains
-
-
-/*!
-Returns true only if the specified pasteboard contains some
-supported type of image data.
-
-If the given pasteboard has changed, or has never been used
-with this module before, you must first invoke the routine
-Clipboard_SetPasteboardModified(), which will register and
-cache the pasteboard’s properties.  However, this is not
-necessary for the primary pasteboard, as changes to it are
-automatically detected.
-
-For convenience, if you specify nullptr for the source, then
-Clipboard_ReturnPrimaryPasteboard() is used.
-
-(3.1)
-*/
-Boolean
-Clipboard_ContainsGraphics	(PasteboardRef		inDataSourceOrNull)
-{
-	Boolean		result = false;
-	
-	
-	if (nullptr == inDataSourceOrNull)
-	{
-		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
-	}
-	assert(nullptr != inDataSourceOrNull);
-	
-	if (gClipboardDataGeneralTypes().end() != gClipboardDataGeneralTypes().find(inDataSourceOrNull))
-	{
-		result = (kMy_TypeGraphics == gClipboardDataGeneralTypes()[inDataSourceOrNull]);
-	}
-	return result;
-}// ContainsGraphics
-
-
-/*!
-Returns true only if the specified pasteboard contains a
-string of text.
-
-If the given pasteboard has changed, or has never been used
-with this module before, you must first invoke the routine
-Clipboard_SetPasteboardModified(), which will register and
-cache the pasteboard’s properties.  However, this is not
-necessary for the primary pasteboard, as changes to it are
-automatically detected.
-
-For convenience, if you specify nullptr for the source, then
-Clipboard_ReturnPrimaryPasteboard() is used.
-
-(3.1)
-*/
-Boolean
-Clipboard_ContainsText	(PasteboardRef		inDataSourceOrNull)
-{
-	Boolean		result = false;
-	
-	
-	if (nullptr == inDataSourceOrNull)
-	{
-		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
-	}
-	assert(nullptr != inDataSourceOrNull);
-	
-	if (gClipboardDataGeneralTypes().end() != gClipboardDataGeneralTypes().find(inDataSourceOrNull))
-	{
-		result = (kMy_TypeText == gClipboardDataGeneralTypes()[inDataSourceOrNull]);
-	}
-	return result;
-}// ContainsText
 
 
 /*!
@@ -556,239 +255,137 @@ that was successfully converted.  This includes any data that
 might be converted into text, such as converting a file or
 directory into an escaped file system path.
 
-When there is more than one item on the pasteboard, all text
-from all items is combined.  For file URL items, each is
-joined by spaces; for other forms of text, items are joined
-with new-lines.
+When there is more than one item on the pasteboard, all the
+items are returned as separate strings.
 
-When successful (returning true), the "outCFString" and
-"outUTI" will both be defined and you must call CFRelease()
-on them when finished.  Otherwise, neither will be defined.
+When successful (returning true), the "outCFStringCFArray"
+will be defined and you must call CFRelease() on it when
+finished. Otherwise, it will be set to nullptr.
 
-This routine is aware of several Unicode variants and other
-common return types, and as a last resort calls upon
-Translation Services.  However, even translation will fail
-if the system does not have a way to handle the required
-conversion (which is to Unicode, from whatever is given).
-
-(3.1)
+(2018.08)
 */
 Boolean
-Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
-										 CFStringRef&		outUTI,
-										 PasteboardRef		inPasteboardOrNull)
+Clipboard_CreateCFStringArrayFromPasteboard		(CFArrayRef&		outCFStringCFArray,
+												 NSPasteboard*		inPasteboardOrNull)
 {
-	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
-											? Clipboard_ReturnPrimaryPasteboard()
-											: inPasteboardOrNull;
-	ItemCount				totalItems = 0;
-	OSStatus				error = noErr;
-	Boolean					result = false;
+	NSPasteboard*		kPasteboard = (nullptr == inPasteboardOrNull)
+										? [NSPasteboard generalPasteboard]
+										: inPasteboardOrNull;
+	NSArray*			objectArray = nil;
+	NSMutableArray*		newStringArray = [[[NSMutableArray alloc] init] autorelease];
+	NSDictionary*		fileReadingOptions = @{ NSPasteboardURLReadingFileURLsOnlyKey: @(YES) };
+	Boolean				result = false;
 	
 	
-	outCFString = nullptr; // initially...
-	outUTI = nullptr; // initially...
+	outCFStringCFArray = nullptr; // initially...
 	
-	// the data could be out of date if another application changed it...resync
-	UNUSED_RETURN(PasteboardSyncFlags)PasteboardSynchronize(kPasteboard);
-	
-	error = PasteboardGetItemCount(inPasteboardOrNull, &totalItems);
-	if (noErr != error)
+	// first look for file objects
+	objectArray = [kPasteboard readObjectsForClasses:@[NSURL.class] options:fileReadingOptions];
+	if ((nil != objectArray) && (objectArray.count > 0))
 	{
-		totalItems = 0;
-	}
-	if (totalItems > 0)
-	{
-		// assemble the text representations of all items into one string
-		CFMutableStringRef		allItems = CFStringCreateMutable(kCFAllocatorDefault, 0/* length limit */);
-		
-		
-		assert(nullptr != allItems);
-		for (UInt16 i = 1; i <= STATIC_CAST(totalItems, UInt16); ++i)
+		// read URLs; in this case, copy all of them in a row
+		// (separated by new lines)
+		for (id anObject in objectArray)
 		{
-			PasteboardItemID	itemID = 0;
-			CFStringRef			thisCFString = nullptr; // contract is to always release this at the end, if defined
-			CFStringRef			thisDelimiter = nullptr; // contract is to never release this string
-			
-			
-			if (Clipboard_Contains(kUTTypePlainText, i/* which item */, outUTI, itemID, kPasteboard))
+			if ([anObject isKindOfClass:NSURL.class])
 			{
-				CFDataRef	textData = nullptr;
+				NSURL*		asURL = STATIC_CAST(anObject, NSURL*);
+				NSString*	stringValue = [asURL absoluteURL].path;
 				
 				
-				// text buffers are separated by nothing
-				thisDelimiter = CFSTR("");
-				
-				error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
-				if (noErr == error)
+				if (nil != stringValue)
 				{
-					Boolean		translationOK = false;
-					
-					
-					// try anything that works, as long as previous translations fail
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypeUTF16ExternalPlainText))
-					{
-						thisCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
-																				kCFStringEncodingUnicode);
-						translationOK = (nullptr != thisCFString);
-					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypeUTF16PlainText))
-					{
-						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-																CFDataGetLength(textData), kCFStringEncodingUnicode,
-																false/* is external */);
-						translationOK = (nullptr != thisCFString);
-					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypeUTF8PlainText))
-					{
-						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-																CFDataGetLength(textData), kCFStringEncodingUTF8,
-																false/* is external */);
-						translationOK = (nullptr != thisCFString);
-					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
-					{
-						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-																CFDataGetLength(textData), kCFStringEncodingUTF8,
-																false/* is external */);
-						translationOK = (nullptr != thisCFString);
-					}
-					if ((false == translationOK) && UTTypeConformsTo(outUTI, kUTTypePlainText))
-					{
-						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-																CFDataGetLength(textData), kCFStringEncodingUTF8,
-																false/* is external */);
-						translationOK = (nullptr != thisCFString);
-					}
-					if (false == translationOK)
-					{
-						TranslationRef		translationInfo = nullptr;
-						
-						
-						// don’t give up just yet...attempt to translate this data into something presentable
-						thisCFString = nullptr;
-						error = TranslationCreate(outUTI, kUTTypeUTF16PlainText,
-													kTranslationDataTranslation, &translationInfo);
-						if (noErr == error)
-						{
-							CFDataRef	translatedData = nullptr;
-							
-							
-							error = TranslationPerformForData(translationInfo, textData, &translatedData);
-							if (noErr == error)
-							{
-								thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(translatedData),
-																		CFDataGetLength(translatedData), kCFStringEncodingUnicode,
-																		false/* is external */);
-								CFRelease(translatedData), translatedData = nullptr;
-							}
-							CFRelease(translationInfo), translationInfo = nullptr;
-						}
-						
-						if (nullptr == thisCFString)
-						{
-							// WARNING: in this case, the encoding cannot be known, so choose to show nothing
-							Console_Warning(Console_WriteValueCFString, "unknown text encoding and unable to translate", outUTI);
-							thisCFString = CFSTR("?");
-							CFRetain(thisCFString);	
-						}
-					}
-					CFRelease(textData), textData = nullptr;
+					[newStringArray addObject:stringValue];
+				}
+				else
+				{
+					Console_Warning(Console_WriteLine, "unable to resolve NSURL object on pasteboard");
 				}
 			}
-			else if (Clipboard_Contains(kUTTypeFileURL, i/* which item */, outUTI, itemID, kPasteboard))
+			else
 			{
-				CFDataRef	textData = nullptr;
-				
-				
-				// file paths are separated by whitespace
-				thisDelimiter = CFSTR("  ");
-				
-				error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
-				if (noErr == error)
-				{
-					CFRetainRelease		urlString(CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-																			CFDataGetLength(textData), kCFStringEncodingUTF8,
-																			false/* is external */),
-													CFRetainRelease::kAlreadyRetained);
-					
-					
-					if (urlString.exists())
-					{
-						CFRetainRelease		urlObject(CFURLCreateWithString(kCFAllocatorDefault, urlString.returnCFStringRef(),
-																			nullptr/* base URL */),
-														CFRetainRelease::kAlreadyRetained);
-						
-						
-						if (urlObject.exists())
-						{
-							CFURLRef const		kURL = CFUtilities_URLCast(urlObject.returnCFTypeRef());
-							UInt8				pathBuffer[MAXPATHLEN];
-							
-							
-							// the API does not specify, but the implication is that the returned
-							// buffer must always be null-terminated; also, the similar API
-							// CFStringGetFileSystemRepresentation() *does* specify null-termination
-							if (CFURLGetFileSystemRepresentation(kURL, true/* resolve against base */, pathBuffer, sizeof(pathBuffer)))
-							{
-								CFRetainRelease		pathCFString(CFStringCreateWithCString(kCFAllocatorDefault,
-																							REINTERPRET_CAST(pathBuffer, char const*),
-																							kCFStringEncodingUTF8),
-																	CFRetainRelease::kAlreadyRetained);
-								
-								
-								if (pathCFString.exists())
-								{
-									CFRetainRelease		workArea(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */,
-																							pathCFString.returnCFStringRef()),
-																	CFRetainRelease::kNotYetRetained/* add a retain anyway; used to set return value released by caller */);
-									
-									
-									if (workArea.exists())
-									{
-										CFMutableStringRef const	kMutableCFString = workArea.returnCFMutableStringRef();
-										
-										
-										// escape any characters that will screw up a typical Unix shell;
-										// TEMPORARY, INCOMPLETE - only escapes spaces, there might be
-										// other characters that are important to handle here
-										UNUSED_RETURN(CFIndex)CFStringFindAndReplace(kMutableCFString, CFSTR(" "), CFSTR("\\ "),
-																						CFRangeMake(0, CFStringGetLength(kMutableCFString)),
-																						0/* comparison flags */);
-										thisCFString = kMutableCFString;
-									}
-								}
-							}
-						}
-					}
-					CFRelease(textData), textData = nullptr;
-				}
-			}
-			
-			if (nullptr != thisCFString)
-			{
-				result = true;
-				CFStringAppend(allItems, thisCFString);
-				if (nullptr != thisDelimiter)
-				{
-					CFStringAppend(allItems, thisDelimiter);
-				}
-				CFRelease(thisCFString), thisCFString = nullptr;
+				// ???
+				Console_Warning(Console_WriteLine, "non-NSURL object in pasteboard");
 			}
 		}
+	}
+	else
+	{
+		// read other types of items
+		NSDictionary*	readingOptions = @{};
 		
-		if (result)
+		
+		objectArray = [kPasteboard readObjectsForClasses:@[NSPasteboardItem.class] options:readingOptions];
+		if ((nil == objectArray) || (0 == objectArray.count))
 		{
-			// ownership transfers to caller
-			outCFString = allItems;
+			Console_Warning(Console_WriteLine, "failed to read any text from pasteboard");
 		}
 		else
 		{
-			CFRelease(allItems), allItems = nullptr;
+			for (id anObject in objectArray)
+			{
+				if ([anObject isKindOfClass:NSPasteboardItem.class])
+				{
+					// read text
+					NSPasteboardItem*	asPasteboardItem = STATIC_CAST(anObject, NSPasteboardItem*);
+					NSArray*			textUTIs = @[
+														// in order of preference, and most specific first (otherwise the
+														// more generic types will match)
+														BRIDGE_CAST(kUTTypeUTF16ExternalPlainText, NSString*),
+														BRIDGE_CAST(kUTTypeUTF16PlainText, NSString*),
+														BRIDGE_CAST(kUTTypeUTF8PlainText, NSString*),
+														BRIDGE_CAST(kUTTypePlainText, NSString*),
+														@"com.apple.traditional-mac-plain-text",
+													];
+					
+					
+					for (NSString* aUTI in textUTIs)
+					{
+						NSString*	stringValue = [asPasteboardItem stringForType:aUTI];
+						
+						
+						if (nil != stringValue)
+						{
+							CFRetainRelease		lineArray(StringUtilities_CFNewStringsWithLines(BRIDGE_CAST(stringValue, CFStringRef)),
+															CFRetainRelease::kAlreadyRetained);
+							
+							
+							for (id stringObject in BRIDGE_CAST(lineArray.returnCFArrayRef(), NSArray*))
+							{
+								if (NO == [stringObject isKindOfClass:NSString.class])
+								{
+									Console_Warning(Console_WriteLine, "assertion failure; received non-string object in array that expected strings");
+								}
+								else
+								{
+									NSString*	asString = STATIC_CAST(stringObject, NSString*);
+									
+									
+									[newStringArray addObject:asString];
+								}
+							}
+							break;
+						}
+					}
+				}
+				else
+				{
+					// ???
+					Console_Warning(Console_WriteLine, "non-NSPasteboardItem object in pasteboard");
+				}
+			}
 		}
 	}
+	
+	if (newStringArray.count > 0)
+	{
+		outCFStringCFArray = BRIDGE_CAST(newStringArray, CFArrayRef);
+		CFRetain(outCFStringCFArray);
+		result = true;
+	}
+	
 	return result;
-}// CreateCFStringFromPasteboard
+}// CreateCFStringArrayFromPasteboard
 
 
 /*!
@@ -797,229 +394,50 @@ is an image.
 
 You must CFRelease() the UTI string.
 
-This routine is aware of several image types, and relies on
-QuickTime to handle as many kinds of images as possible.
-
-(3.1)
+(2018.08)
 */
 Boolean
 Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
 										 CFStringRef&		outUTI,
-										 PasteboardRef		inPasteboardOrNull)
-{
-	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
-											? Clipboard_ReturnPrimaryPasteboard()
-											: inPasteboardOrNull;
-	PasteboardItemID		itemID = 0;
-	OSStatus				error = noErr;
-	Boolean					result = false;
-	
-	
-	if (Clipboard_Contains(kUTTypeImage, 0/* which item, or zero to check them all */, outUTI, itemID, kPasteboard))
-	{
-		CFDataRef	imageData = nullptr;
-		
-		
-		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &imageData);
-		if (noErr == error)
-		{
-			outImage = createCGImageFromData(imageData);
-			result = (nullptr != outImage);
-			CFRelease(imageData), imageData = nullptr;
-		}
-	}
-	return result;
-}// CreateCGImageFromPasteboard
-
-
-/*!
-Creates an appropriate Apple Event descriptor
-containing the data currently on the clipboard
-(if any).
-
-(3.0)
-*/
-OSStatus
-Clipboard_CreateContentsAEDesc		(AEDesc*	outDescPtr)
-{
-	OSStatus	result = noErr;
-	
-	
-	if (outDescPtr != nullptr)
-	{
-		CFStringRef		clipboardTextCFString = nullptr;
-		CFStringRef		actualUTI = nullptr;
-		
-		
-		outDescPtr->descriptorType = typeNull;
-		outDescPtr->dataHandle = nullptr;
-		if (Clipboard_CreateCFStringFromPasteboard(clipboardTextCFString, actualUTI))
-		{
-			CFIndex const	kStringLength = CFStringGetLength(clipboardTextCFString);
-			UniChar*		buffer = new UniChar[kStringLength];
-			
-			
-			CFStringGetCharacters(clipboardTextCFString, CFRangeMake(0, kStringLength), buffer);
-			result = AECreateDesc(typeUnicodeText, buffer, kStringLength * sizeof(UniChar), outDescPtr);
-			delete [] buffer, buffer = nullptr;
-			CFRelease(clipboardTextCFString), clipboardTextCFString = nullptr;
-			CFRelease(actualUTI), actualUTI = nullptr;
-		}
-	}
-	else result = memPCErr;
-	
-	return result;
-}// CreateContentsAEDesc
-
-
-/*!
-Returns true only if the data from the specified source (or the
-primary pasteboard, if nullptr is given) meets the given filter
-criteria.
-
-If true is returned, the copied data is returned, along with
-information about its actual type and where it came from.  You
-must CFRelease() the data and the type name string.
-
-The source is first synchronized before checking its contents.
-
-For convenience, if you specify nullptr for the source, then
-Clipboard_ReturnPrimaryPasteboard() is used.
-
-(3.1)
-*/
-Boolean
-Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
-					 CFDataRef&					outData,
-					 CFStringRef&				outConformingItemActualType,
-					 PasteboardItemID&			outConformingItemID,
-					 PasteboardRef				inDataSourceOrNull)
+										 NSPasteboard*		inPasteboardOrNull)
 {
 	Boolean			result = false;
-	Boolean			isText = false;
-	CFStringRef		actualTypeName = nullptr;
+	NSPasteboard*	kPasteboard = (nullptr == inPasteboardOrNull)
+									? [NSPasteboard generalPasteboard]
+									: inPasteboardOrNull;
+	NSArray*		objectArray = nil;
+	NSDictionary*	readingOptions = @{};
 	
 	
-	if (nullptr == inDataSourceOrNull)
+	objectArray = [kPasteboard readObjectsForClasses:@[NSImage.class] options:readingOptions];
+	if ((nil == objectArray) || (0 == objectArray.count))
 	{
-		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
+		Console_Warning(Console_WriteLine, "failed to read any image from the given pasteboard");
 	}
-	assert(nullptr != inDataSourceOrNull);
-	
-	// NOTE: This returns only the first text format available.
-	isText = Clipboard_Contains(kUTTypePlainText, 0/* which item, or zero to check them all */,
-								actualTypeName, outConformingItemID, inDataSourceOrNull);
-	if (isText)
+	else
 	{
-		Boolean		copyData = false;
-		
-		
-		// not all data will have a recognizable format; handle whatever is reasonable
-		//Console_WriteValueCFString("clipboard actually contains", actualTypeName);
-		if ((false == copyData) && (inConstraint & kClipboard_DataConstraintText8Bit))
+		for (id anObject in objectArray)
 		{
-			if ((kCFCompareEqualTo == CFStringCompare(actualTypeName, kUTTypePlainText, 0/* flags */)) ||
-				(kCFCompareEqualTo == CFStringCompare(actualTypeName, kUTTypeUTF8PlainText, 0/* flags */)) ||
-				(kCFCompareEqualTo == CFStringCompare(actualTypeName,
-														CFSTR("com.apple.traditional-mac-plain-text"),
-														0/* flags */)))
+			if ([anObject isKindOfClass:NSImage.class])
 			{
-				// text that can be iterated over by byte (8-bit)
-				copyData = true;
-			}
-		}
-		if ((false == copyData) && (inConstraint & kClipboard_DataConstraintText16BitNative))
-		{
-			if (kCFCompareEqualTo == CFStringCompare(actualTypeName, kUTTypeUTF16PlainText, 0/* flags */))
-			{
-				// text that can be iterated over by word (16-bit) in native byte order
-				copyData = true;
-			}
-		}
-		
-		// copy the data if it meets the criteria
-		if (copyData)
-		{
-			OSStatus	error = noErr;
-			
-			
-			error = PasteboardCopyItemFlavorData(inDataSourceOrNull, outConformingItemID, actualTypeName, &outData);
-			if (noErr == error)
-			{
-				result = true;
+				NSImage*	asImage = STATIC_CAST(anObject, NSImage*);
 				
-				// only expect the caller to release the type name once everything else succeeds!
-				outConformingItemActualType = actualTypeName;
-				CFRetain(outConformingItemActualType);
+				
+				outImage = [asImage CGImageForProposedRect:nullptr context:nil hints:@{}];
+				if (nullptr != outImage)
+				{
+					CGImageRetain(outImage);
+					outUTI = kUTTypeImage; // INCOMPLETE; CGImageGetUTType() can be used in 10.11+
+					CFRetain(outUTI);
+					result = true;
+					break;
+				}
 			}
 		}
-		
-		CFRelease(actualTypeName), actualTypeName = nullptr;
-	}
+	}			
 	
 	return result;
-}// GetData
-
-
-/*!
-Returns a reference to the global pasteboard, creating that
-reference if necessary.
-
-IMPORTANT:	If you use this reference to change the clipboard
-			contents manually, you have to notify this module of
-			your change with Clipboard_SetPasteboardModified().
-			(Changes made by other applications are detected
-			automatically.)
-
-(3.1)
-*/
-PasteboardRef
-Clipboard_ReturnPrimaryPasteboard ()
-{
-	static PasteboardRef	result = nullptr;
-	
-	
-	if (nullptr == result)
-	{
-		OSStatus	error = noErr;
-		
-		
-		error = PasteboardCreate(kPasteboardClipboard, &result);
-		assert_noerr(error);
-		assert(nullptr != result);
-	}
-	return result;
-}// ReturnPrimaryPasteboard
-
-
-/*!
-Reads and caches information about the specified pasteboard,
-and if the pasteboard is actually the Clipboard, triggers an
-update of the Clipboard window.
-
-IMPORTANT:	For efficiency, this routine is not automatically
-			called for queries such as Clipboard_ContainsText().
-			You must call this routine yourself at least once
-			per pasteboard you use, and also whenever those
-			pasteboards change, for query results to be correct.
-
-NOTE:	Changes made to the primary pasteboard by other
-		applications are (eventually) found automatically.
-		But changes made by this application are only found
-		when this routine is called.
-
-(3.1)
-*/
-void
-Clipboard_SetPasteboardModified		(PasteboardRef		inWhatChangedOrNullForPrimaryPasteboard)
-{
-	PasteboardRef const		kPasteboard = (nullptr == inWhatChangedOrNullForPrimaryPasteboard)
-											? Clipboard_ReturnPrimaryPasteboard()
-											: inWhatChangedOrNullForPrimaryPasteboard;
-	
-	
-	updateClipboard(kPasteboard);
-}// SetPasteboardModified
+}// CreateCGImageFromPasteboard
 
 
 /*!
@@ -1061,7 +479,7 @@ together to form a single line.
 void
 Clipboard_TextToScrap	(TerminalViewRef		inView,
 						 Clipboard_CopyMethod	inHowToCopy,
-						 PasteboardRef			inDataTargetOrNull)
+						 NSPasteboard*			inDataTargetOrNull)
 {
 	CFStringRef		textToCopy = nullptr;	// where to store the characters
 	short			tableThreshold = 0;		// zero for normal, nonzero for copy table mode
@@ -1069,7 +487,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	
 	if (nullptr == inDataTargetOrNull)
 	{
-		inDataTargetOrNull = Clipboard_ReturnPrimaryPasteboard();
+		inDataTargetOrNull = [NSPasteboard generalPasteboard];
 	}
 	
 	if (inHowToCopy & kClipboard_CopyMethodTable)
@@ -1099,8 +517,6 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 		}
 		CFRelease(textToCopy), textToCopy = nullptr;
 	}
-	
-	gClipboardLocalChanges()[inDataTargetOrNull] = true;
 }// TextToScrap
 
 
@@ -1135,19 +551,7 @@ void
 clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 						 void*				UNUSED_ARGUMENT(inUnusedData))
 {
-	PasteboardRef const		kPasteboard = Clipboard_ReturnPrimaryPasteboard();
-	PasteboardSyncFlags		flags = PasteboardSynchronize(kPasteboard);
-	
-	
-	// The modification flag ONLY refers to changes made by OTHER applications.
-	// Changes to the local pasteboard by MacTerm are therefore tracked in a
-	// separate map.
-	if ((flags & kPasteboardModified) ||
-		(gClipboardLocalChanges().end() != gClipboardLocalChanges().find(kPasteboard)))
-	{
-		updateClipboard(kPasteboard);
-		gClipboardLocalChanges().erase(kPasteboard);
-	}
+	updateClipboard();
 }// clipboardUpdatesTimer
 
 
@@ -1188,29 +592,6 @@ copyTypeDescription		(CFStringRef	inUTI)
 
 
 /*!
-Uses Cocoa to import image data that was presumably
-supplied by a pasteboard.
-
-(4.1)
-*/
-CGImageRef
-createCGImageFromData	(CFDataRef		inData)
-{
-	NSBitmapImageRep*	imageRep = [NSBitmapImageRep imageRepWithData:BRIDGE_CAST(inData, NSData*)];
-	CGImageRef			result = nullptr;
-	
-	
-	if (nil != imageRep)
-	{
-		result = [imageRep CGImage];
-		CFRetain(result);
-	}
-	
-	return result;
-}// createCGImageFromData
-
-
-/*!
 Returns true only if the specified UTI appears to be
 referring to some kind of image.
 
@@ -1241,8 +622,8 @@ Returns true only if the specified UTI appears to be
 referring to some kind of text.
 
 This uses a heuristic, and is meant for efficiency; a
-slower and more accurate method may be to construct a
-string, using Clipboard_CreateCFStringFromPasteboard().
+slower and more accurate method may be
+Clipboard_CreateCFStringArrayFromPasteboard().
 
 (4.0)
 */
@@ -1276,105 +657,80 @@ IMPORTANT:	This API should be called whenever the
 (3.1)
 */
 void
-updateClipboard		(PasteboardRef		inPasteboard)
+updateClipboard ()
 {
 	Clipboard_WindowController*		controller = (Clipboard_WindowController*)
 													[Clipboard_WindowController sharedClipboardWindowController];
+	NSPasteboard*					generalPasteboard = [NSPasteboard generalPasteboard];
 	CGImageRef						imageToRender = nullptr;
-	CFStringRef						textToRender = nullptr;
+	CFArrayRef						stringsToRender = nullptr;
 	CFStringRef						typeIdentifier = nullptr;
 	CFStringRef						typeCFString = nullptr;
 	
 	
-	if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, inPasteboard))
+	if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, generalPasteboard))
 	{
 		// image
 		typeCFString = copyTypeDescription(typeIdentifier);
-		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
-		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
-		{
-			NSPasteboard*	generalPasteboard = [NSPasteboard generalPasteboard];
-			
-			
-			gCurrentRenderData.clear();
-			
-			[controller->clipboardImageContent setImage:[[[NSImage alloc] initWithPasteboard:generalPasteboard] autorelease]];
-			[controller setShowImage:YES];
-			[controller setShowText:NO];
-			[controller setKindField:(NSString*)typeCFString];
-			[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
-			[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
-			[controller setNeedsDisplay];
-		}
+		gCurrentRenderData.clear();
+		[controller->clipboardImageContent setImage:[[[NSImage alloc] initWithPasteboard:generalPasteboard] autorelease]];
+		[controller setShowImage:YES];
+		[controller setShowText:NO];
+		[controller setKindField:(NSString*)typeCFString];
+		[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
+		[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
+		[controller setNeedsDisplay];
 		CFRelease(imageToRender), imageToRender = nullptr;
 		CFRelease(typeIdentifier), typeIdentifier = nullptr;
 	}
-	else if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier, inPasteboard))
+	else if (Clipboard_CreateCFStringArrayFromPasteboard(stringsToRender, generalPasteboard))
 	{
 		// text
-		typeCFString = copyTypeDescription(typeIdentifier);
-		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeText;
-		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
+		NSString*	textToRender = [BRIDGE_CAST(stringsToRender, NSArray*) componentsJoinedByString:@"\n"];
+		
+		
+		typeCFString = copyTypeDescription(kUTTypeText);
+		gCurrentRenderData.setWithRetain(BRIDGE_CAST(textToRender, CFStringRef));
+		[controller->clipboardTextContent setEditable:YES];
+		[controller->clipboardTextContent setString:@""];
 		{
-			gCurrentRenderData.setWithRetain(textToRender);
-			
-			[controller->clipboardTextContent setEditable:YES];
-			[controller->clipboardTextContent setString:@""];
-			{
-				// since the previous content may have been styled text, try
-				// to reset as much as possible (font, color, etc.)
-				[controller->clipboardTextContent setFont:
-													[Clipboard_WindowController
-														returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
-				[controller->clipboardTextContent setTextColor:[NSColor textColor]];
-			}
-			[controller->clipboardTextContent paste:NSApp];
-			[controller->clipboardTextContent setEditable:NO];
-			[controller setShowImage:NO];
-			[controller setShowText:YES];
-			[controller setKindField:(NSString*)typeCFString];
-			[controller setDataSize:(CFStringGetLength(textToRender) * sizeof(UniChar))]; // TEMPORARY; this is probably not always right
-			[controller setLabel1:nil andValue:nil];
-			[controller setLabel2:nil andValue:nil];
-			[controller setNeedsDisplay];
+			// since the previous content may have been styled text, try
+			// to reset as much as possible (font, color, etc.)
+			[controller->clipboardTextContent setFont:
+												[Clipboard_WindowController
+													returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
+			[controller->clipboardTextContent setTextColor:[NSColor textColor]];
 		}
-		CFRelease(textToRender), textToRender = nullptr;
-		CFRelease(typeIdentifier), typeIdentifier = nullptr;
+		[controller->clipboardTextContent paste:NSApp];
+		[controller->clipboardTextContent setEditable:NO];
+		[controller setShowImage:NO];
+		[controller setShowText:YES];
+		[controller setKindField:(NSString*)typeCFString];
+		[controller setDataSize:(textToRender.length * sizeof(UniChar))]; // TEMPORARY; this is probably not always right
+		[controller setLabel1:nil andValue:nil];
+		[controller setLabel2:nil andValue:nil];
+		[controller setNeedsDisplay];
 	}
 	else
 	{
 		// unknown, or empty
+		CFRetainRelease		unknownCFString(UIStrings_ReturnCopy(kUIStrings_ClipboardWindowValueUnknown),
+											CFRetainRelease::kAlreadyRetained);
+		
+		
 		typeCFString = copyTypeDescription(typeIdentifier);
-		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeUnknown;
-		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
+		gCurrentRenderData.clear();
+		[controller setShowImage:NO];
+		[controller setShowText:NO];
+		[controller setKindField:(NSString*)typeCFString];
+		[controller setSizeField:BRIDGE_CAST(unknownCFString.returnCFStringRef(), NSString*)];
+		if ((nullptr == typeCFString) || (0 == CFStringGetLength(typeCFString)))
 		{
-			CFStringRef		unknownCFString = nullptr;
-			
-			
-			gCurrentRenderData.clear();
-			
-			[controller setShowImage:NO];
-			[controller setShowText:NO];
-			[controller setKindField:(NSString*)typeCFString];
-			if (UIStrings_Copy(kUIStrings_ClipboardWindowValueUnknown, unknownCFString).ok())
-			{
-				[controller setSizeField:(NSString*)unknownCFString];
-				
-				if ((nullptr == typeCFString) || (0 == CFStringGetLength(typeCFString)))
-				{
-					[controller setKindField:(NSString*)unknownCFString];
-				}
-				
-				CFRelease(unknownCFString), unknownCFString = nullptr;
-			}
-			else
-			{
-				[controller setDataSize:0];
-			}
-			[controller setLabel1:nil andValue:nil];
-			[controller setLabel2:nil andValue:nil];
-			[controller setNeedsDisplay];
+			[controller setKindField:BRIDGE_CAST(unknownCFString.returnCFStringRef(), NSString*)];
 		}
+		[controller setLabel1:nil andValue:nil];
+		[controller setLabel2:nil andValue:nil];
+		[controller setNeedsDisplay];
 	}
 	if (nullptr != typeCFString)
 	{
@@ -1403,7 +759,7 @@ initWithFrame:(NSRect)		aFrame
 		self->showDragHighlight = NO;
 		
 		// the list of accepted drag text types should correspond with what
-		// Clipboard_CreateCFStringFromPasteboard() will actually support;
+		// Clipboard_CreateCFStringArrayFromPasteboard() actually supports;
 		// image types can be supported much more generally
 		[self registerForDraggedTypes:@[
 											BRIDGE_CAST(kUTTypeUTF16ExternalPlainText, NSString*),
@@ -1576,7 +932,7 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 		
 		
 		objectArray = [dragPasteboard readObjectsForClasses:@[NSImage.class] options:readingOptions];
-		if (nil == objectArray)
+		if ((nil == objectArray) || (0 == objectArray.count))
 		{
 			Sound_StandardAlert();
 			Console_Warning(Console_WriteLine, "failed to read any image from the drag");
@@ -1595,7 +951,7 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 					
 					
 					// put the text on the clipboard
-					error = Clipboard_AddNSImageToPasteboard(asImage, Clipboard_ReturnPrimaryPasteboard(),
+					error = Clipboard_AddNSImageToPasteboard(asImage, [NSPasteboard generalPasteboard],
 																firstImage/* clear first */);
 					if (noErr == error)
 					{
@@ -1608,45 +964,36 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 			}
 			
 			// force a view update, as obviously it is now out of date
-			updateClipboard(Clipboard_ReturnPrimaryPasteboard());
+			updateClipboard();
 		}
 	}
 	else
 	{
 		// drag should contain text (as only text and image types
 		// were declared in earlier "registerForDraggedTypes" call)
-		PasteboardRef	asPasteboardRef = nullptr;
-		OSStatus		error = PasteboardCreate((CFStringRef)[dragPasteboard name], &asPasteboardRef);
+		CFArrayRef		copiedTextCFStringCFArray;
+		Boolean			copyOK = Clipboard_CreateCFStringArrayFromPasteboard(copiedTextCFStringCFArray, dragPasteboard);
 		
 		
-		if (noErr == error)
+		if (false == copyOK)
 		{
-			CFStringRef		copiedTextCFString;
-			CFStringRef		copiedTextUTI;
-			Boolean			copyOK = Clipboard_CreateCFStringFromPasteboard
-										(copiedTextCFString, copiedTextUTI, asPasteboardRef);
+			Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
+		}
+		else
+		{
+			// put the text on the clipboard
+			NSString*	joinedString = [BRIDGE_CAST(copiedTextCFStringCFArray, NSArray*) componentsJoinedByString:@"\n"];
 			
 			
-			if (false == copyOK)
+			if (Clipboard_AddCFStringToPasteboard(BRIDGE_CAST(joinedString, CFStringRef)))
 			{
-				Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
+				// force a view update, as obviously it is now out of date
+				updateClipboard();
+				
+				// success!
+				result = YES;
 			}
-			else
-			{
-				// put the text on the clipboard
-				error = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
-				if (noErr == error)
-				{
-					// force a view update, as obviously it is now out of date
-					updateClipboard(Clipboard_ReturnPrimaryPasteboard());
-					
-					// success!
-					result = YES;
-				}
-				CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
-				CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
-			}
-			CFRelease(asPasteboardRef), asPasteboardRef = nullptr;
+			CFRelease(copiedTextCFStringCFArray), copiedTextCFStringCFArray = nullptr;
 		}
 	}
 	

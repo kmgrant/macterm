@@ -46,8 +46,10 @@
 
 // Mac includes
 #ifdef __OBJC__
+@class NSPasteboard;
 @class NSWindow;
 #else
+class NSPasteboard;
 class NSWindow;
 #endif
 #include <CoreServices/CoreServices.h>
@@ -435,7 +437,7 @@ Session_Result
 
 Session_Result
 	Session_UserInputPaste					(SessionRef							inRef,
-											 PasteboardRef						inSourceOrNull = nullptr);
+											 NSPasteboard*						inSourceOrNull = nullptr);
 
 //@}
 

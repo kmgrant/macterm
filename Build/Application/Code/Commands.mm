@@ -1026,23 +1026,63 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (isSession)
 			{
 				// type if there is a window to type into
-				CFStringRef		clipboardString = nullptr;
-				CFStringRef		actualTypeName = nullptr;
+				CFArrayRef		clipboardStringArray = nullptr;
 				
 				
 				Clipboard_TextToScrap(activeView, kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
 				
-				if (Clipboard_CreateCFStringFromPasteboard(clipboardString, actualTypeName, Clipboard_ReturnPrimaryPasteboard()))
+				if (Clipboard_CreateCFStringArrayFromPasteboard(clipboardStringArray))
 				{
-					Session_UserInputCFString(frontSession, clipboardString);
-					CFRelease(clipboardString), clipboardString = nullptr;
+					NSArray*		asNSArray = BRIDGE_CAST(clipboardStringArray, NSArray*);
+					NSUInteger		lineCount = 0;
+					
+					
+					// NOTE: due to “inline” Copy above, there should not be more than
+					// one line retrieved from the Clipboard but this is an iteration
+					// for completeness
+					for (id anObject in asNSArray)
+					{
+						if (NO == [anObject isKindOfClass:NSString.class])
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteLine, "unexpected non-string value read from clipboard");
+							break;
+						}
+						else
+						{
+							NSString*	asString = STATIC_CAST(anObject, NSString*);
+							
+							
+							Session_UserInputCFString(frontSession, BRIDGE_CAST(asString, CFStringRef));
+							++lineCount;
+							if (lineCount < asNSArray.count)
+							{
+								Session_SendNewline(frontSession, kSession_EchoCurrentSessionValue);
+							}
+						}
+					}
+					CFRelease(clipboardStringArray); clipboardStringArray = nullptr;
 				}
 			}
 			break;
 		
-		case kCommandPaste:	
-			if (isSession) Session_UserInputPaste(frontSession); // paste if there is a window to paste into
-			else if (isDialog) DialogPaste(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
+		case kCommandPaste:
+			if (isSession)
+			{
+				Session_Result		sessionResult = Session_UserInputPaste(frontSession); // paste if there is a window to paste into
+				
+				
+				if (false == sessionResult.ok())
+				{
+					Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
+				}
+			}
+			else
+			{
+				// this should not happen with Cocoa if the responder chain is
+				// able to forward Paste actions to the active element
+				Console_Warning(Console_WriteLine, "failed to paste (not a session window)");
+			}
 			break;
 		
 		//case kCommandFind:
@@ -4412,9 +4452,18 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	else
 	{
-		result = Clipboard_ContainsText() &&
+		CFArrayRef		dummyCFStringArray = nullptr;
+		Boolean			clipboardContainsText = false;
+		
+		
+		if (Clipboard_CreateCFStringArrayFromPasteboard(dummyCFStringArray))
+		{
+			clipboardContainsText = true;
+			CFRelease(dummyCFStringArray); dummyCFStringArray = nullptr; 
+		}
+		result = ((clipboardContainsText) &&
 					((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
-						(nullptr != returnActiveCarbonWindowFocusedField()));
+						(nullptr != returnActiveCarbonWindowFocusedField())));
 	}
 	return ((result) ? @(YES) : @(NO));
 }

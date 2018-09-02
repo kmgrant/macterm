@@ -144,9 +144,6 @@ public:
 	explicit inline
 	CFRetainRelease (HIObjectRef, ReferenceState);
 	
-	explicit inline
-	CFRetainRelease (PasteboardRef, ReferenceState);
-	
 	virtual inline
 	~CFRetainRelease ();
 	
@@ -220,9 +217,6 @@ public:
 	
 	inline HIObjectRef
 	returnHIObjectRef () const;
-	
-	inline PasteboardRef
-	returnPasteboardRef () const;
 	
 	static inline void
 	safeRelease	(CFTypeRef);
@@ -710,30 +704,6 @@ _mutability(kReferenceConstant)
 
 
 /*!
-Creates a new reference using the value of an
-existing one that is a Pasteboard type.
-
-CFRetain() is conditionally called on the reference
-based on "inIsAlreadyRetained"; for details, see
-comments for main constructor.
-
-(2.1)
-*/
-CFRetainRelease::
-CFRetainRelease		(PasteboardRef	inType,
-					 ReferenceState	inIsAlreadyRetained)
-:
-_reference(inType),
-_mutability(kReferenceMutable)
-{
-	if (kNotYetRetained == inIsAlreadyRetained)
-	{
-		safeRetain(_reference);
-	}
-}// pasteboard type constructor
-
-
-/*!
 Calls CFRelease() on the reference kept by this
 class instance, if any.
 
@@ -1162,24 +1132,6 @@ const
 	//return returnRefCheckCFTypeID< HIObjectRef >(_reference, HIObjectGetTypeID()); // does not appear to be an ID for these
 	return REINTERPRET_CAST(_reference, HIObjectRef);
 }// returnHIObjectRef
-
-
-/*!
-Returns the PasteboardRef that this class instance is
-storing (and has retained), or nullptr if the internal
-reference is empty.
-
-(2.1)
-*/
-PasteboardRef
-CFRetainRelease::
-returnPasteboardRef ()
-const
-{
-	assert(this->isMutable());
-	assert((nullptr == _reference) || (CFGetTypeID(_reference) == PasteboardGetTypeID()));
-	return REINTERPRET_CAST(_reference, PasteboardRef);
-}// returnPasteboardRef
 
 
 /*!

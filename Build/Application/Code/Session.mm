@@ -288,8 +288,6 @@ struct My_Session
 	CFRetainRelease				commandLineArguments;		// CFArrayRef of CFStringRef; typically agrees with "resourceLocationString"
 	CFRetainRelease				originalDirectoryString;	// pathname of the directory that was current when the session was executed
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
-	CFRetainRelease				pendingPasteLines;			// CFArrayRef of CFStringRef; lines that have not yet been pasted
-	CFIndex						pendingPasteCurrentLine;	// index into "pendingPasteLines" of current line to be pasted
 	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
 	CFAbsoluteTime				watchTriggerAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the last watch of any kind went off
@@ -309,8 +307,6 @@ struct My_Session
 	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
 	ListenerModel_ListenerWrap	vectorWindowListener;		// responds when vector graphics window states change
 	ListenerModel_ListenerWrap	preferencesListener;		// responds when certain preference values are initialized or changed
-	EventLoopTimerUPP			autoActivateDragTimerUPP;	// procedure that is called when a drag hovers over an inactive window
-	EventLoopTimerRef			autoActivateDragTimer;		// short timer
 	EventLoopTimerUPP			longLifeTimerUPP;			// procedure that is called when a session has been open 15 seconds
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
 	EventLoopTimerUPP			respawnSessionTimerUPP;		// procedure that is called when a session should be respawned
@@ -339,8 +335,6 @@ struct My_Session
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
 	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
 	EventLoopTimerRef			inactivityWatchTimer;		// short timer
-	EventLoopTimerUPP			pendingPasteTimerUPP;		// procedure that is called periodically when pasting lines
-	EventLoopTimerRef			pendingPasteTimer;			// paste timer, reset only when a Paste or an equivalent (like a drag) occurs
 	Preferences_ContextWrap		recentSheetContext;			// defined temporarily while a Preferences-dependent sheet (such as key sequences) is up
 	My_SessionSheetType			sheetType;					// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
@@ -372,7 +366,6 @@ typedef MemoryBlockReferenceTracker< SessionRef >		My_SessionRefTracker;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void						autoActivateWindow					(EventLoopTimerRef, void*);
 Boolean						autoCaptureSessionToFile			(My_SessionPtr);
 Boolean						captureToFile						(My_SessionPtr, CFURLRef, CFStringRef);
 void						changeNotifyForSession				(My_SessionPtr, Session_Change, void*);
@@ -389,11 +382,9 @@ Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 Boolean						isReadOnly							(My_SessionPtr);
 void						localEchoKey						(My_SessionPtr, UInt8);
 void						localEchoString						(My_SessionPtr, CFStringRef);
-void						pasteLineFromTimer					(EventLoopTimerRef, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 size_t						processMoreData						(My_SessionPtr);
-OSStatus					receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
 OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
@@ -401,8 +392,6 @@ OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 void						respawnSession						(EventLoopTimerRef, void*);
 HIWindowRef					returnActiveLegacyCarbonWindow		(My_SessionPtr);
 NSWindow*					returnActiveNSWindow				(My_SessionPtr);
-OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
-																 HIViewRef, DragRef);
 void						setIconFromState					(My_SessionPtr);
 void						sheetClosed							(GenericDialog_Ref, Boolean);
 Preferences_ContextRef		sheetContextBegin					(My_SessionPtr, Quills::Prefs::Class,
@@ -5235,34 +5224,44 @@ text is multi-line, the user is warned and given options on how
 to perform the Paste.  This also means that this function could
 return before the Paste actually occurs.
 
-\retval kSession_ResultOK
-always; no other return codes currently defined
+IMPORTANT:	This returns a result immediately based on the
+			viability of the pasteboard data but the actual
+			Paste could happen at any time (for example, it
+			may be that a user alert is displayed first).
 
-(3.1)
+\retval kSession_ResultOK
+pasteboard contained data that was possible to paste
+
+\retval kSession_ResultParameterError
+pasteboard did not contain usable data
+
+(2018.08)
 */
 Session_Result
-Session_UserInputPaste	(SessionRef			inRef,
-						 PasteboardRef		inSourceOrNull)
+Session_UserInputPaste	(SessionRef		inRef,
+						 NSPasteboard*	inSourceOrNull)
 {
-	PasteboardRef const		kPasteboard = (nullptr == inSourceOrNull)
-											? Clipboard_ReturnPrimaryPasteboard()
+	NSPasteboard*			kPasteboard = (nullptr == inSourceOrNull)
+											? [NSPasteboard generalPasteboard]
 											: inSourceOrNull;
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFStringRef				pastedCFString = nullptr;
-	CFStringRef				pastedDataUTI = nullptr;
-	Session_Result			result = kSession_ResultOK;
+	CFArrayRef				pendingLines = nullptr;
+	Session_Result			result = kSession_ResultParameterError;
 	
 	
-	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI, kPasteboard))
+	if (Clipboard_CreateCFStringArrayFromPasteboard(pendingLines, kPasteboard))
 	{
-		CFRetainRelease		pendingLines(StringUtilities_CFNewStringsWithLines(pastedCFString),
-										CFRetainRelease::kAlreadyRetained);
-		Boolean				isOneLine = false;
-		Boolean				noWarning = false;
+		// convert to Objective-C object reference for better implicit behavior in blocks
+		NSArray*	blockPendingLines = BRIDGE_CAST(pendingLines, NSArray*);
+		Boolean		isOneLine = false;
+		Boolean		noWarning = false;
 		
+		
+		// success...
+		result = kSession_ResultOK;
 		
 		// examine the Clipboard; if the data contains new-lines, warn the user
-		isOneLine = (CFArrayGetCount(pendingLines.returnCFArrayRef()) < 2);
+		isOneLine = (blockPendingLines.count < 2);
 		
 		// determine if the user should be warned
 		unless (kPreferences_ResultOK ==
@@ -5279,63 +5278,60 @@ Session_UserInputPaste	(SessionRef			inRef,
 									^{
 										// first join the text into one line (replace new-line sequences
 										// with single spaces), then Paste
-										CFRetainRelease		pastedLines(pendingLines.returnCFArrayRef(),
-																		CFRetainRelease::kNotYetRetained);
-										CFRetainRelease		joinedCFString(CFStringCreateByCombiningStrings(kCFAllocatorDefault,
-																											pastedLines.returnCFArrayRef(),
-																											CFSTR("")/* separator */),
-																			CFRetainRelease::kAlreadyRetained);
+										NSString*	joinedString = [blockPendingLines componentsJoinedByString:@""];
 										
 										
-										Session_UserInputCFString(inRef, joinedCFString.returnCFStringRef());
+										Session_UserInputCFString(inRef, BRIDGE_CAST(joinedString, CFStringRef));
 									};
 			auto					normalPasteResponder =
 									^{
-										My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), inRef);
-										CFRetainRelease			pastedLines(pendingLines.returnCFArrayRef(),
-																			CFRetainRelease::kNotYetRetained);
+										CFIndex					lineCount = blockPendingLines.count;
+										CFIndex					dispatchIndex = 0;
+										__block CFIndex			lineIndex = 0;
+										Preferences_Result		prefsResult = kPreferences_ResultOK;
+										EventTime				delayValue = 0;
+										dispatch_queue_t		targetQueue = dispatch_get_main_queue();
 										
 										
-										// regular Paste; periodically (but fairly rapidly) insert
-										// each line into the session, using a timer for delays
-										if (nullptr == sessionPtr->pendingPasteTimer)
+										// determine how long the delay between lines should be
+										prefsResult = Preferences_GetData(kPreferences_TagPasteNewLineDelay, sizeof(delayValue),
+																			&delayValue);
+										if (kPreferences_ResultOK != prefsResult)
 										{
-											// first time; create the timer
-											OSStatus			error = noErr;
-											Preferences_Result	prefsResult = kPreferences_ResultOK;
-											EventTime			delayValue = 0;
-											
-											
-											// determine how long the delay between lines should be
-											prefsResult = Preferences_GetData(kPreferences_TagPasteNewLineDelay, sizeof(delayValue),
-																				&delayValue);
-											if (kPreferences_ResultOK != prefsResult)
-											{
-												// set an arbitrary default value
-												delayValue = 50 * kEventDurationMillisecond;
-											}
-											
-											// due to timer limitations the delay cannot be exactly zero
-											if (delayValue < 0.001)
-											{
-												delayValue = 0.001; // arbitrary
-											}
-											
-											sessionPtr->pendingPasteTimerUPP = NewEventLoopTimerUPP(pasteLineFromTimer);
-											error = InstallEventLoopTimer(GetCurrentEventLoop(),
-																			kEventDurationNoWait + 0.01/* start time; must be nonzero for Mac OS X 10.3 */,
-																			delayValue/* time between fires */,
-																			sessionPtr->pendingPasteTimerUPP, sessionPtr->selfRef/* user data */,
-																			&sessionPtr->pendingPasteTimer);
-											assert_noerr(error);
+											// set an arbitrary default value
+											delayValue = 50 * kEventDurationMillisecond;
 										}
 										
-										// NOTE: this assignment will replace any previous set of lines
-										// that might still exist; although very unlikely, this could
-										// happen if the user decided to invoke Paste again while a
-										// large and time-consuming Paste was already in progress
-										sessionPtr->pendingPasteLines.setWithRetain(pastedLines.returnCFArrayRef());
-										sessionPtr->pendingPasteCurrentLine = 0;
+										// regular Paste; periodically insert each line into the session,
+										// dispatching each line-send at a multiple of the user-preferred
+										// delay time in the same queue; also, in the event of very large
+										// pastes, force an even greater delay at a longer period
+										for (NSString* aString in blockPendingLines)
+										{
+											EventTime		localDelay = 0;
+											
+											
+											++dispatchIndex;
+											localDelay = (dispatchIndex * STATIC_CAST(delayValue / kEventDurationNanosecond, int64_t));
+											// TEMPORARY; create low-level preferences for these additional delay intervals
+											if (0 == (dispatchIndex % 40/* arbitrary */))
+											{
+												// for very large pastes, insert an additional delay after every
+												// so many lines (based on if-statement above), in addition to
+												// any user-prescribed per-line delay
+												localDelay += (10 * kEventDurationMillisecond); // arbitrary
+											}
+											dispatch_after(dispatch_time(DISPATCH_TIME_NOW, localDelay),
+															targetQueue,
+															^{
+																Session_UserInputCFString(inRef, BRIDGE_CAST(aString, CFStringRef));
+																++lineIndex;
+																if (lineCount != lineIndex)
+																{
+																	Session_SendNewline(inRef, kSession_EchoCurrentSessionValue);
+																}
+															});
+										}
 									};
 			
 			
@@ -5353,7 +5349,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 			else
 			{
 				// configure and display the confirmation alert
-				box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(Session_ReturnActiveLegacyCarbonWindow(inRef)),
+				box = AlertMessages_BoxWrap(Alert_NewWindowModal(Session_ReturnActiveNSWindow(inRef)),
 											AlertMessages_BoxWrap::kAlreadyRetained);
 				
 				// set basics
@@ -5411,8 +5407,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 				Alert_Display(box.returnRef()); // retains alert until it is dismissed
 			}
 		}
-		CFRelease(pastedCFString), pastedCFString = nullptr;
-		CFRelease(pastedDataUTI), pastedDataUTI = nullptr;
+		CFRelease(pendingLines), pendingLines = nullptr;
 	}
 	
 	return result;
@@ -5529,8 +5524,6 @@ resourceLocationString(),
 commandLineArguments(),
 originalDirectoryString(),
 deviceNameString(),
-pendingPasteLines(),
-pendingPasteCurrentLine(0),
 activationAbsoluteTime(CFAbsoluteTimeGetCurrent()),
 terminationAbsoluteTime(0),
 watchTriggerAbsoluteTime(CFAbsoluteTimeGetCurrent()),
@@ -5554,8 +5547,6 @@ vectorWindowListener(ListenerModel_NewStandardListener(vectorGraphicsWindowChang
 						ListenerModel_ListenerWrap::kAlreadyRetained),
 preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */),
 					ListenerModel_ListenerWrap::kAlreadyRetained),
-autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
-autoActivateDragTimer(nullptr), // installed only as needed
 longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
 longLifeTimer(nullptr), // set later
 respawnSessionTimerUPP(NewEventLoopTimerUPP(respawnSession)),
@@ -5582,8 +5573,6 @@ writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
 inactivityWatchTimerUPP(nullptr),
 inactivityWatchTimer(nullptr),
-pendingPasteTimerUPP(nullptr),
-pendingPasteTimer(nullptr),
 recentSheetContext(),
 sheetType(kMy_SessionSheetTypeNone),
 renameDialog(nullptr),
@@ -5737,21 +5726,11 @@ My_Session::
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener.returnRef());
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener.returnRef());
 	
-	if (nullptr != this->autoActivateDragTimer)
-	{
-		RemoveEventLoopTimer(this->autoActivateDragTimer), this->autoActivateDragTimer = nullptr;
-	}
-	DisposeEventLoopTimerUPP(this->autoActivateDragTimerUPP), this->autoActivateDragTimerUPP = nullptr;
 	if (nullptr != this->longLifeTimer)
 	{
 		RemoveEventLoopTimer(this->longLifeTimer), this->longLifeTimer = nullptr;
 	}
 	DisposeEventLoopTimerUPP(this->longLifeTimerUPP), this->longLifeTimerUPP = nullptr;
-	if (nullptr != this->pendingPasteTimer)
-	{
-		RemoveEventLoopTimer(this->pendingPasteTimer), this->pendingPasteTimer = nullptr;
-	}
-	DisposeEventLoopTimerUPP(this->pendingPasteTimerUPP), this->pendingPasteTimerUPP = nullptr;
 	if (nullptr != this->respawnSessionTimer)
 	{
 		RemoveEventLoopTimer(this->respawnSessionTimer), this->respawnSessionTimer = nullptr;
@@ -5778,28 +5757,6 @@ My_Session::
 		[textInputDelegate release]; textInputDelegate = nil;
 	}
 }// My_Session destructor
-
-
-/*!
-Brings the session window to the front.  This is installed when
-a drag enters a background window, and is cancelled only if the
-drag leaves before the delay is up.  So the effect is that the
-window comes to the front after a short hover delay.
-
-Timers that draw must save and restore the current graphics port.
-
-(3.1)
-*/
-void
-autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
-					 void*					inSessionRef)
-{
-	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	
-	
-	if (nullptr != ptr->terminalWindow) TerminalWindow_Select(ptr->terminalWindow);
-}// autoActivateWindow
 
 
 /*!
@@ -7194,51 +7151,6 @@ localEchoString		(My_SessionPtr		inPtr,
 
 
 /*!
-This is invoked after a user-defined delay, and it pastes the
-next pending line of text (if any).  Once all lines are pasted,
-the timer is destroyed and will not trigger again until the
-user tries to Paste something else.
-
-Timers that draw must save and restore the current graphics port.
-
-(4.0)
-*/
-void
-pasteLineFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
-					 void*					inSessionRef)
-{
-	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	
-	
-	if (ptr->pendingPasteLines.exists())
-	{
-		CFArrayRef		asCFArray = ptr->pendingPasteLines.returnCFArrayRef();
-		CFIndex			arrayLength = CFArrayGetCount(asCFArray);
-		
-		
-		if ((ptr->pendingPasteCurrentLine >= arrayLength) || (0 == arrayLength))
-		{
-			// all lines have been pasted; the array is no longer needed
-			ptr->pendingPasteLines.clear();
-			RemoveEventLoopTimer(ptr->pendingPasteTimer), ptr->pendingPasteTimer = nullptr;
-			DisposeEventLoopTimerUPP(ptr->pendingPasteTimerUPP), ptr->pendingPasteTimerUPP = nullptr;
-		}
-		else
-		{
-			Session_UserInputCFString(ref, CFUtilities_StringCast(CFArrayGetValueAtIndex
-																	(asCFArray, ptr->pendingPasteCurrentLine)));
-			if (ptr->pendingPasteCurrentLine < (arrayLength - 1))
-			{
-				Session_SendNewline(ref, kSession_EchoCurrentSessionValue);
-			}
-			++(ptr->pendingPasteCurrentLine);
-		}
-	}
-}// pasteLineFromTimer
-
-
-/*!
 Invoked whenever a monitored preference value is changed
 (see Session_New() to see which preferences are monitored).
 This routine responds by ensuring that internal variables
@@ -7381,153 +7293,6 @@ processMoreData		(My_SessionPtr	inPtr)
 	inPtr->readBufferSizeInUse = 0;
 	return result;
 }// processMoreData
-
-
-/*!
-Invoked whenever a monitored drag-drop event from the main
-event loop occurs (see Session_New() to see how this routine
-is registered).
-
-Responds by retrieving the dropped text or file and inserting
-it into the appropriate session window as if the user typed
-it.  (Files are translated into Unix pathnames first.)
-
-The result is "noErr" only if the event is to be absorbed
-(preventing anything else from seeing it).
-
-(3.1)
-*/
-OSStatus
-receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
-								 EventRef				inEvent,
-								 void*					inSessionRef)
-{
-	OSStatus				result = eventNotHandledErr;
-	SessionRef				session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-	UInt32 const			kEventClass = GetEventClass(inEvent);
-	UInt32 const			kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert((kEventKind == kEventControlDragEnter) ||
-			(kEventKind == kEventControlDragWithin) ||
-			(kEventKind == kEventControlDragLeave) ||
-			(kEventKind == kEventControlDragReceive));
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// determine the view where drag activity has occurred
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		if (noErr == result)
-		{
-			DragRef		dragRef = nullptr;
-			
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDragRef, typeDragRef, dragRef);
-			if (noErr == result)
-			{
-				switch (kEventKind)
-				{
-				case kEventControlDragEnter:
-					// entry point for a new drag in this view
-					{
-						PasteboardRef	dragPasteboard = nullptr;
-						Boolean			acceptDrag = false;
-						
-						
-						result = GetDragPasteboard(dragRef, &dragPasteboard);
-						if (noErr == result)
-						{
-							Boolean		haveSingleFile = false;
-							Boolean		haveText = false;
-							UInt16		numberOfItems = 0;
-							
-							
-							// read and cache information about this pasteboard
-							Clipboard_SetPasteboardModified(dragPasteboard);
-							
-							// figure out if this drag can be accepted
-							if (noErr == CountDragItems(dragRef, &numberOfItems))
-							{
-								// check to see if exactly one file is being dragged
-								if (1 == numberOfItems)
-								{
-									FlavorFlags		flavorFlags = 0L;
-									ItemReference	dragItem = 0;
-									
-									
-									GetDragItemReferenceNumber(dragRef, 1/* index */, &dragItem);
-									if (noErr == GetFlavorFlags(dragRef, dragItem, kDragFlavorTypeHFS, &flavorFlags))
-									{
-										haveSingleFile = true;
-									}
-								}
-							}
-							
-							// check to see if all of the drag items contain TEXT (a drag
-							// is only accepted if all of the items in the drag can be
-							// accepted)
-							unless (haveSingleFile)
-							{
-								haveText = Clipboard_ContainsText(dragPasteboard);
-							}
-							
-							// determine rules for accepting the drag
-							acceptDrag = ((haveText) || (haveSingleFile));
-						}
-						
-						// if the window is inactive, start a hover timer to auto-activate the window
-						if ((acceptDrag) && (false == TerminalWindow_IsFocused(ptr->terminalWindow)))
-						{
-							UNUSED_RETURN(OSStatus)InstallEventLoopTimer
-													(GetCurrentEventLoop(),
-														kEventDurationSecond/* arbitrary */,
-														kEventDurationForever/* time between fires - this timer does not repeat */,
-														ptr->autoActivateDragTimerUPP, ptr->selfRef/* user data */,
-														&ptr->autoActivateDragTimer);
-						}
-						
-						// finally, update the event!
-						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
-													typeBoolean, sizeof(acceptDrag), &acceptDrag);
-					}
-					break;
-				
-				case kEventControlDragWithin:
-					TerminalView_SetDragHighlight(view, dragRef, true/* is highlighted */);
-					result = noErr;
-					break;
-				
-				case kEventControlDragLeave:
-					TerminalView_SetDragHighlight(view, dragRef, false/* is highlighted */);
-					if (nullptr != ptr->autoActivateDragTimer)
-					{
-						UNUSED_RETURN(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
-					}
-					result = noErr;
-					break;
-				
-				case kEventControlDragReceive:
-					// something was actually dropped
-					result = sessionDragDrop(inHandlerCallRef, inEvent, session, view, dragRef);
-					if (nullptr != ptr->autoActivateDragTimer)
-					{
-						UNUSED_RETURN(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
-					}
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-			}
-		}
-	}
-	
-	return result;
-}// receiveTerminalViewDragDrop
 
 
 /*!
@@ -8028,87 +7793,6 @@ returnActiveNSWindow	(My_SessionPtr		inPtr)
 	}
 	return result;
 }// returnActiveNSWindow
-
-
-/*!
-Responds to "kEventControlDragReceive" of "kEventClassControl"
-for a terminal view that is associated with a session.
-
-See receiveTerminalViewDragDrop().
-
-(3.1)
-*/
-OSStatus
-sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 SessionRef				inRef,
-					 HIViewRef				inHIView,
-					 DragRef				inDrag)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(GetControlOwner(inHIView));
-	Point				mouseLocation;
-	Point				globalPinnedMouseLocation;
-	
-	
-	// see if the drop occurred within the terminal window area
-	// (otherwise the drop may have been destined for, say, the toolbar)
-	if (GetDragMouse(inDrag, &mouseLocation, &globalPinnedMouseLocation) == noErr)
-	{
-		// translate mouse coordinates to be local to the drop window
-		{
-			CGrafPtr	oldPort = nullptr;
-			GDHandle	oldDevice = nullptr;
-			
-			
-			GetGWorld(&oldPort, &oldDevice);
-			SetPortWindowPort(GetControlOwner(inHIView));
-			GlobalToLocal(&mouseLocation);
-			SetGWorld(oldPort, oldDevice);
-		}
-		
-		// is the drop in the terminal area?
-		if (TerminalWindow_EventInside(terminalWindow, inEvent))
-		{
-			PasteboardRef	dragPasteboard = nullptr;
-			
-			
-			result = GetDragPasteboard(inDrag, &dragPasteboard);
-			if (noErr == result)
-			{
-				Session_Result		pasteResult = kSession_ResultOK;
-				Boolean				cursorMovesPriorToDrops = false;
-				
-				
-				// if the user preference is set, first move the cursor to the drop location
-				unless (kPreferences_ResultOK ==
-						Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
-											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops))
-				{
-					cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
-				}
-				if (cursorMovesPriorToDrops)
-				{
-					// move cursor based on the local point
-					TerminalView_MoveCursorWithArrowKeys(TerminalWindow_ReturnViewWithFocus(terminalWindow),
-															mouseLocation);
-				}
-				
-				// “type” the text; this could trigger the “multi-line paste” alert
-				pasteResult = Session_UserInputPaste(inRef, dragPasteboard);
-				if (false == pasteResult.ok())
-				{
-					Console_Warning(Console_WriteLine, "unable to complete paste from drag");
-					Sound_StandardAlert();
-				}
-				
-				// success!
-				result = noErr;
-			}
-		}
-	}
-	return result;
-}// sessionDragDrop
 
 
 /*!
@@ -8977,8 +8661,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						OSStatus		error = noErr;
 						
 						
-						ptr->terminalViewDragDropUPP = NewEventHandlerUPP(receiveTerminalViewDragDrop);
-						assert(nullptr != ptr->terminalViewDragDropUPP);
 						ptr->terminalViewEnteredUPP = NewEventHandlerUPP(receiveTerminalViewEntered);
 						assert(nullptr != ptr->terminalViewEnteredUPP);
 						ptr->terminalViewTextInputUPP = NewEventHandlerUPP(receiveTerminalViewTextInput);
