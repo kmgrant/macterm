@@ -278,7 +278,6 @@ Initialize_ApplicationShutDownIsolatedComponents ()
 	InfoWindow_Done();
 	UNUSED_RETURN(Preferences_Result)Preferences_Save();
 	Preferences_Done();
-	EventLoop_Done();
 }// ApplicationShutDownIsolatedComponents
 
 

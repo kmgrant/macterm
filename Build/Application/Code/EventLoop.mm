@@ -68,8 +68,6 @@
 namespace {
 
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
 OSStatus				updateModifiers					(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -95,15 +93,6 @@ CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget
 																			kEventRawKeyUp),
 																	nullptr/* user data */);
 Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
-CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventTarget(),
-																		receiveWindowActivated,
-																		CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassWindow),
-																				kEventWindowActivated, kEventWindowDeactivated),
-																		nullptr/* user data */);
-Console_Assertion					_4(gCarbonEventWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
-EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
-EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
 
 } // anonymous namespace
 
@@ -157,27 +146,6 @@ EventLoop_Init ()
 	// support Growl notifications if possible
 	GrowlSupport_Init();
 	
-	// install a callback that detects toolbar sheets
-	{
-		EventTypeSpec const		whenToolbarSheetOpens[] =
-								{
-									{ kEventClassWindow, kEventWindowSheetOpening }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gCarbonEventSheetOpeningUPP = NewEventHandlerUPP(receiveSheetOpening);
-		error = InstallApplicationEventHandler(gCarbonEventSheetOpeningUPP,
-												GetEventTypeCount(whenToolbarSheetOpens),
-												whenToolbarSheetOpens, nullptr/* user data */,
-												&gCarbonEventSheetOpeningHandler/* event handler reference */);
-		if (noErr != error)
-		{
-			// it’s not critical if this handler is installed
-			Console_Warning(Console_WriteValue, "failed to install event loop sheet-opening handler, error", error);
-		}
-	}
-	
 	return result;
 }// Init
 
@@ -192,9 +160,6 @@ no longer necessary to track events.
 void
 EventLoop_Done ()
 {
-	RemoveEventHandler(gCarbonEventSheetOpeningHandler), gCarbonEventSheetOpeningHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventSheetOpeningUPP), gCarbonEventSheetOpeningUPP = nullptr;
-	
 	//[gGlobalPool release];
 }// Done
 
@@ -527,180 +492,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveHICommand
-
-
-/*!
-Handles "kEventWindowSheetOpening" of "kEventClassWindow".
-
-Invoked by Mac OS X whenever a sheet is about to open.
-This handler could prevent the opening by returning
-"userCanceledErr".
-
-(3.1)
-*/
-OSStatus
-receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowSheetOpening);
-	
-	{
-		HIWindowRef		sheetWindow = nullptr;
-		
-		
-		// determine the window that is opening
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, sheetWindow);
-		
-		// if the window was found, proceed
-		if (noErr == result)
-		{
-			CFStringRef		sheetTitleCFString = nullptr;
-			
-			
-			// use special knowledge of how the Customize Toolbar sheet is set up
-			// (/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/
-			//	HIToolbox.framework/Versions/A/Resources/English.lproj/Toolbar.nib)
-			// to hack in a more Cocoa-like look-and-feel; this is obviously
-			// completely cosmetic, so any errors are ignored, etc.
-			if (noErr == CopyWindowTitleAsCFString(sheetWindow, &sheetTitleCFString))
-			{
-				// attempt to identify the customization sheet using its title
-				if (kCFCompareEqualTo == CFStringCompare(sheetTitleCFString, CFSTR("Configure Toolbar")/* from NIB */,
-															0/* options */))
-				{
-					HIViewRef	contentView = nullptr;
-					
-					
-					if (noErr == HIViewFindByID(HIViewGetRoot(sheetWindow), kHIViewWindowContentID,
-												&contentView))
-					{
-						//HIViewID const		kPrompt2ID = { 'tcfg', 7 }; // from NIB
-						HIViewID const		kShowLabelID = { 'tcfg', 5 }; // from NIB
-						HIViewRef			possibleTextView = HIViewGetFirstSubview(contentView);
-						
-						
-						// attempt to find the static text views that are not bold
-						while (nullptr != possibleTextView)
-						{
-							ControlKind		kindInfo;
-							HIViewID		viewID;
-							
-							
-							// ensure this is some kind of text view
-							if ((noErr == GetControlKind(possibleTextView, &kindInfo)) &&
-								(kControlKindSignatureApple == kindInfo.signature) &&
-								(kControlKindStaticText == kindInfo.kind))
-							{
-								// since the text was sized assuming regular font, it needs to
-								// become slightly wider to accommodate bold font
-								HIRect		textBounds;
-								if (noErr == HIViewGetFrame(possibleTextView, &textBounds))
-								{
-									// the size problem only applies to the main prompt, not the others;
-									// this prompt is arbitrarily identified by having a width bigger
-									// than any of the other text areas (because it does not have a
-									// proper ControlID like all the other customization sheet views)
-									if (textBounds.size.width > 260/* arbitrary; uniquely identify the main prompt! */)
-									{
-										textBounds.size.width += 20; // arbitrary
-										HIViewSetFrame(possibleTextView, &textBounds);
-									}
-								}
-								
-								// make the text bold!
-								{
-									ControlFontStyleRec		styleRec;
-									
-									
-									if (noErr == GetControlData(possibleTextView, kControlEntireControl, kControlFontStyleTag,
-																sizeof(styleRec), &styleRec, nullptr/* actual size */))
-									{
-										styleRec.style = bold;
-										styleRec.flags |= kControlUseFaceMask;
-										UNUSED_RETURN(OSStatus)SetControlFontStyle(possibleTextView, &styleRec);
-									}
-								}
-								
-								if ((noErr == GetControlID(possibleTextView, &viewID)) &&
-									(kShowLabelID.signature == viewID.signature) &&
-									(kShowLabelID.id == viewID.id))
-								{
-									// while there is a hack in place anyway, might as well
-									// correct the annoying one pixel vertical misalignment
-									// of the "Show" label for the pop-up menu in the corner
-									HIViewMoveBy(possibleTextView, 0/* delta X */, 1.0/* delta Y */);
-									
-									// while there is a hack in place anyway, add a colon to
-									// the label for consistency with every other dialog in
-									// the OS!
-									SetControlTextWithCFString(possibleTextView, CFSTR("Show:"));
-									
-									// resize the label a smidgen to make room for the colon
-									if (noErr == HIViewGetFrame(possibleTextView, &textBounds))
-									{
-										textBounds.size.width += 2; // arbitrary
-										HIViewSetFrame(possibleTextView, &textBounds);
-									}
-								}
-							}
-							possibleTextView = HIViewGetNextView(possibleTextView);
-						}
-					}
-				}
-				CFRelease(sheetTitleCFString), sheetTitleCFString = nullptr;
-			}
-		}
-	}
-	
-	// IMPORTANT: Do not interfere with this event.
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveSheetOpening
-
-
-/*!
-Embellishes "kEventWindowActivated" and "kEventWindowActivated"
-of "kEventClassWindow" by resetting the mouse cursor and
-updating the Touch Bar.
-
-(3.1)
-*/
-OSStatus
-receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert((kEventKind == kEventWindowActivated) || (kEventKind == kEventWindowDeactivated));
-	
-	if (kEventKind == kEventWindowActivated)
-	{
-		[[NSCursor arrowCursor] set];
-	}
-	
-	// invalidate the application-level Touch Bar so that the
-	// terminal window Touch Bar can always be activated
-	// (TEMPORARY; only needed until Carbon transition is done)
-	CocoaExtensions_PerformSelectorOnTargetWithValue(@selector(setTouchBar:), NSApp, nil);
-	
-	// IMPORTANT: Do not interfere with this event.
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveWindowActivated
 
 
 /*!

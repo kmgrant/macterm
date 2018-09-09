@@ -266,8 +266,6 @@ struct My_TerminalWindowCarbonState
 	initialize		(TerminalWindowRef, HIWindowRef);
 	
 	CFRetainRelease				tab;									// the Mac OS window reference (if any) for the sister window acting as a tab
-	CarbonEventHandlerWrap*		tabContextualMenuHandlerPtr;			// used to track contextual menu clicks in tabs
-	CarbonEventHandlerWrap*		tabDragHandlerPtr;						// used to track drags that enter tabs
 	WindowGroupRef				tabAndWindowGroup;						// WindowGroupRef; forces the window and its tab to move together
 	HIViewRef					scrollBarH;								// scroll bar used to specify which range of columns is visible
 	HIViewRef					scrollBarV;								// scroll bar used to specify which range of rows is visible
@@ -286,18 +284,10 @@ struct My_TerminalWindowCarbonState
 	CarbonEventHandlerWrap		scrollTickHandler;						// responds to drawing events in the scroll bar
 	EventHandlerUPP				commandUPP;								// wrapper for command callback
 	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
-	EventHandlerUPP				windowClickActivationUPP;				// wrapper for window background clicks callback
-	EventHandlerRef				windowClickActivationHandler;			// invoked whenever a terminal window is hit while inactive
-	EventHandlerUPP				windowCursorChangeUPP;					// wrapper for window cursor change callback
-	EventHandlerRef				windowCursorChangeHandler;				// invoked whenever the mouse cursor might change in a terminal window
-	EventHandlerUPP				windowDragCompletedUPP;					// wrapper for window move completion callback
-	EventHandlerRef				windowDragCompletedHandler;				// invoked whenever a terminal window has finished being moved by the user
 	EventHandlerUPP				windowFullScreenUPP;					// wrapper for window full-screen callback
 	EventHandlerRef				windowFullScreenHandler;				// invoked whenever a full-screen window event occurs for a terminal window
 	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
 	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
-	EventHandlerUPP				growBoxClickUPP;						// wrapper for grow box click callback
-	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal window’s grow box is clicked
 	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
 	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
 };
@@ -426,10 +416,7 @@ bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
 OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowFullScreenChange	(EventHandlerCallRef, EventRef, void*);
 OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 HIWindowRef				returnCarbonWindow				(My_TerminalWindowPtr);
@@ -445,7 +432,6 @@ void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					setCarbonWindowFullScreenIcon	(HIWindowRef, Boolean);
 void					setCocoaWindowFullScreenIcon	(NSWindow*, Boolean);
-OSStatus				setCursorInWindow				(HIWindowRef, Point, UInt32);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
 void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean, Boolean = false);
 void					setTerminalWindowFullScreen		(My_TerminalWindowPtr, Boolean, Boolean);
@@ -3038,8 +3024,6 @@ My_TerminalWindowCarbonState ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 tab(),
-tabContextualMenuHandlerPtr(nullptr),
-tabDragHandlerPtr(nullptr),
 tabAndWindowGroup(nullptr),
 scrollBarH(nullptr),
 scrollBarV(nullptr),
@@ -3060,18 +3044,10 @@ mouseWheelHandler(GetApplicationEventTarget(), receiveMouseWheelEvent,
 scrollTickHandler(),
 commandUPP(nullptr),
 commandHandler(nullptr),
-windowClickActivationUPP(nullptr),
-windowClickActivationHandler(nullptr),
-windowCursorChangeUPP(nullptr),
-windowCursorChangeHandler(nullptr),
-windowDragCompletedUPP(nullptr),
-windowDragCompletedHandler(nullptr),
 windowFullScreenUPP(nullptr),
 windowFullScreenHandler(nullptr),
 windowResizeEmbellishUPP(nullptr),
 windowResizeEmbellishHandler(nullptr),
-growBoxClickUPP(nullptr),
-growBoxClickHandler(nullptr),
 toolbarEventUPP(nullptr),
 toolbarEventHandler(nullptr)
 {
@@ -3091,27 +3067,9 @@ My_TerminalWindowCarbonState::
 		ReleaseWindowGroup(this->tabAndWindowGroup), this->tabAndWindowGroup = nullptr;
 	}
 	
-	// remove any tab contextual menu handler
-	if (nullptr != tabContextualMenuHandlerPtr) delete tabContextualMenuHandlerPtr, tabContextualMenuHandlerPtr = nullptr;
-	
-	// remove any tab drag handler
-	if (nullptr != tabDragHandlerPtr) delete tabDragHandlerPtr, tabDragHandlerPtr = nullptr;
-	
 	// disable window command callback
 	RemoveEventHandler(this->commandHandler), this->commandHandler = nullptr;
 	DisposeEventHandlerUPP(this->commandUPP), this->commandUPP = nullptr;
-	
-	// disable window click activation callback
-	RemoveEventHandler(this->windowClickActivationHandler), this->windowClickActivationHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowClickActivationUPP), this->windowClickActivationUPP = nullptr;
-	
-	// disable window cursor change callback
-	RemoveEventHandler(this->windowCursorChangeHandler), this->windowCursorChangeHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowCursorChangeUPP), this->windowCursorChangeUPP = nullptr;
-	
-	// disable window move completion callback
-	RemoveEventHandler(this->windowDragCompletedHandler), this->windowDragCompletedHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowDragCompletedUPP), this->windowDragCompletedUPP = nullptr;
 	
 	// disable window full-screen callback
 	RemoveEventHandler(this->windowFullScreenHandler), this->windowFullScreenHandler = nullptr;
@@ -3120,10 +3078,6 @@ My_TerminalWindowCarbonState::
 	// disable window resize callback
 	RemoveEventHandler(this->windowResizeEmbellishHandler), this->windowResizeEmbellishHandler = nullptr;
 	DisposeEventHandlerUPP(this->windowResizeEmbellishUPP), this->windowResizeEmbellishUPP = nullptr;
-	
-	// disable size box click callback
-	RemoveEventHandler(this->growBoxClickHandler), this->growBoxClickHandler = nullptr;
-	DisposeEventHandlerUPP(this->growBoxClickUPP), this->growBoxClickUPP = nullptr;
 	
 	// disable toolbar callback
 	RemoveEventHandler(this->toolbarEventHandler), this->toolbarEventHandler = nullptr;
@@ -3204,39 +3158,6 @@ initialize	(TerminalWindowRef		inEventuallyValidWindowRef,
 		error = InstallWindowEventHandler(inWindow, this->commandUPP, GetEventTypeCount(whenCommandExecuted),
 											whenCommandExecuted, inEventuallyValidWindowRef/* user data */,
 											&this->commandHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that attempts to fix tab locations after a window is moved far enough below the menu bar
-	{
-		EventTypeSpec const		whenWindowDragCompleted[] =
-								{
-									{ kEventClassWindow, kEventWindowDragCompleted }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowDragCompletedUPP = NewEventHandlerUPP(receiveWindowDragCompleted);
-		error = InstallWindowEventHandler(inWindow, this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
-											whenWindowDragCompleted, inEventuallyValidWindowRef/* user data */,
-											&this->windowDragCompletedHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that changes the mouse cursor appropriately
-	{
-		EventTypeSpec const		whenCursorChangeRequired[] =
-								{
-									{ kEventClassWindow, kEventWindowCursorChange },
-									{ kEventClassKeyboard, kEventRawKeyModifiersChanged }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowCursorChangeUPP = NewEventHandlerUPP(receiveWindowCursorChange);
-		error = InstallWindowEventHandler(inWindow, this->windowCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
-											whenCursorChangeRequired, inEventuallyValidWindowRef/* user data */,
-											&this->windowCursorChangeHandler/* event handler reference */);
 		assert_noerr(error);
 	}
 	
@@ -4527,30 +4448,6 @@ createTabWindow		(My_TerminalWindowPtr	inPtr)
 			{
 				inPtr->tabSizeInPixels = gDefaultTabWidth;
 			}
-		}
-		
-		// enable drag tracking so that tabs can auto-activate during drags
-		error = SetAutomaticControlDragTrackingEnabledForWindow(tabWindow, true/* enabled */);
-		assert_noerr(error);
-		
-		// install a drag handler so that tabs switch automatically as
-		// items hover over them
-		{
-			HIViewRef	contentPane = nullptr;
-			
-			
-			error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
-			assert_noerr(error);
-			inPtr->carbonData->tabDragHandlerPtr = new CarbonEventHandlerWrap(HIViewGetEventTarget(contentPane),
-																				receiveTabDragDrop,
-																				CarbonEventSetInClass
-																				(CarbonEventClass(kEventClassControl),
-																					kEventControlDragEnter),
-																				inPtr->selfRef/* handler data */);
-			assert(nullptr != inPtr->carbonData->tabDragHandlerPtr);
-			assert(inPtr->carbonData->tabDragHandlerPtr->isInstalled());
-			error = SetControlDragTrackingEnabled(contentPane, true/* is drag enabled */);
-			assert_noerr(error);
 		}
 	}
 	
@@ -5989,73 +5886,6 @@ receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
-Handles "kEventControlDragEnter" for a terminal window tab.
-
-Invoked by Mac OS X whenever the tab is involved in a
-drag-and-drop operation.
-
-(3.1)
-*/
-OSStatus
-receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inTerminalWindowRef)
-{
-@autoreleasepool {
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	OSStatus			result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlDragEnter);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target control
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the control was found, continue
-		if (noErr == result)
-		{
-			DragRef		dragRef = nullptr;
-			
-			
-			// determine the drag taking place
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDragRef, typeDragRef, dragRef);
-			if (noErr == result)
-			{
-				switch (kEventKind)
-				{
-				case kEventControlDragEnter:
-					// indicate whether or not this drag is interesting
-					{
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Boolean							acceptDrag = true;
-						
-						
-						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
-													typeBoolean, sizeof(acceptDrag), &acceptDrag);
-						[ptr->window orderFront:nil];
-					}
-					break;
-				
-				default:
-					// ???
-					result = eventNotHandledErr;
-					break;
-				}
-			}
-		}
-	}
-	return result;
-}// @autoreleasepool
-}// receiveTabDragDrop
-
-
-/*!
 Handles "kEventToolbarGetAllowedIdentifiers" and
 "kEventToolbarGetDefaultIdentifiers" from "kEventClassToolbar"
 for the floating general terminal toolbar.  Responds by
@@ -6619,138 +6449,6 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveToolbarEvent
-
-
-/*!
-Handles "kEventWindowCursorChange" of "kEventClassWindow",
-or "kEventRawKeyModifiersChanged" of "kEventClassKeyboard",
-for a terminal window.
-
-(3.1)
-*/
-OSStatus
-receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					UNUSED_ARGUMENT(inTerminalWindowRef))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(((kEventClass == kEventClassWindow) && (kEventKind == kEventWindowCursorChange)) ||
-			((kEventClass == kEventClassKeyboard) && (kEventKind == kEventRawKeyModifiersChanged)));
-	
-	// do not change the cursor if this window is not active
-	if (kEventClass == kEventClassWindow)
-	{
-		HIWindowRef		window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		if (noErr == result)
-		{
-			Point	globalMouse;
-			
-			
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, globalMouse);
-			if (noErr == result)
-			{
-				UInt32		modifiers = 0;
-				
-				
-				// try to vary the cursor according to key modifiers, but it’s no
-				// catastrophe if this information isn’t available
-				if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers))
-				{
-					modifiers = EventLoop_ReturnCurrentModifiers();
-				}
-				
-				// finally, set the cursor
-				result = setCursorInWindow(window, globalMouse, modifiers);
-			}
-		}
-	}
-	else
-	{
-		// when the key modifiers change, it is still nice to have the
-		// cursor automatically change when necessary; however, there
-		// is no mouse information available, so it must be determined
-		UInt32		modifiers = 0;
-		Point		globalMouse;
-		
-		
-		UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-		GetMouse(&globalMouse);
-		result = setCursorInWindow(GetUserFocusWindow(), globalMouse, modifiers);
-	}
-	
-	return result;
-}// receiveWindowCursorChange
-
-
-/*!
-Handles "kEventWindowDragCompleted" of "kEventClassWindow"
-for a terminal window.
-
-(3.1)
-*/
-OSStatus
-receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					inTerminalWindowRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowDragCompleted);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			
-			
-			// check the tab location and fix if necessary
-			if (ptr->carbonData->tab.exists())
-			{
-				HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
-				
-				
-				if (GetDrawerPreferredEdge(tabWindow) != GetDrawerCurrentEdge(tabWindow))
-				{
-					OSStatus	error = noErr;
-					
-					
-					// toggle twice; the first should close the drawer at its
-					// “wrong” location, the 2nd should open it on the right edge
-					error = CloseDrawer(tabWindow, false/* asynchronously */);
-					if (noErr == error)
-					{
-						error = OpenDrawer(tabWindow, kWindowEdgeDefault, true/* asynchronously */);
-						if (noErr != error)
-						{
-							Console_Warning(Console_WriteValue, "failed to open drawer during drag to terminal window, error", error);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	return result;
-}// receiveWindowDragCompleted
 
 
 /*!
@@ -7677,81 +7375,6 @@ setCocoaWindowFullScreenIcon	(NSWindow*	inWindow,
 		[inWindow setCollectionBehavior:([inWindow collectionBehavior] & ~(FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary)))];
 	}
 }// setCocoaWindowFullScreenIcon
-
-
-/*!
-Based on the specified global mouse location and
-event modifiers, sets the cursor appropriately
-for the given window.
-
-(3.1)
-*/
-OSStatus
-setCursorInWindow	(HIWindowRef	inWindow,
-					 Point			inGlobalMouse,
-					 UInt32			inModifiers)
-{
-	OSStatus	result = noErr;
-	HIViewRef	contentView = nullptr;
-	
-	
-	// find content view (needed to translate coordinates)
-	result = HIViewFindByID(HIViewGetRoot(inWindow), kHIViewWindowContentID, &contentView);
-	if (noErr == result)
-	{
-		CGrafPtr	oldPort = nullptr;
-		GDHandle	oldDevice = nullptr;
-		Point		localMouse;
-		HIPoint		localMouseHIPoint;
-		HIViewRef	viewUnderMouse = nullptr;
-		
-		
-		GetGWorld(&oldPort, &oldDevice);
-		SetPortWindowPort(inWindow);
-		localMouse = inGlobalMouse;
-		GlobalToLocal(&localMouse);
-		localMouseHIPoint = CGPointMake(localMouse.h, localMouse.v);
-		
-		// figure out what view is under the specified point
-		result = HIViewGetSubviewHit(contentView, &localMouseHIPoint, true/* deepest */, &viewUnderMouse);
-		if ((noErr != result) || (nullptr == viewUnderMouse))
-		{
-			// nothing underneath the mouse, or some problem; restore the arrow and claim all is well
-			[[NSCursor arrowCursor] set];
-			result = noErr;
-		}
-		else
-		{
-			ControlKind		controlKind;
-			Boolean			wasSet = false;
-			
-			
-			result = GetControlKind(viewUnderMouse, &controlKind);
-			if ((noErr == result) &&
-				(AppResources_ReturnCreatorCode() == controlKind.signature) &&
-				(kConstantsRegistry_ControlKindTerminalView == controlKind.kind))
-			{
-				// set the cursor appropriately in whatever control is under the mouse
-				result = HandleControlSetCursor(viewUnderMouse, localMouse, STATIC_CAST(inModifiers, EventModifiers), &wasSet);
-				if (noErr != result)
-				{
-					// some problem; restore the arrow and claim all is well
-					[[NSCursor arrowCursor] set];
-					result = noErr;
-				}						
-			}
-			else
-			{
-				// unknown control type - restore arrow
-				[[NSCursor arrowCursor] set];
-				result = noErr;
-			}
-		}
-		SetGWorld(oldPort, oldDevice);
-	}
-	
-	return result;
-}// setCursorInWindow
 
 
 /*!

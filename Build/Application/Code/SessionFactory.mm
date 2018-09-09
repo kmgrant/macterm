@@ -206,10 +206,8 @@ SessionFactory_SessionWindowWatcher*	gSessionWindowWatcher = nil;
 SessionRef						gSessionFactoryRecentlyActiveSession = nullptr;
 EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
 EventHandlerUPP					gCarbonEventSessionSetStateUPP = nullptr;
-EventHandlerUPP					gCarbonEventWindowFocusUPP = nullptr;
 EventHandlerRef					gCarbonEventSessionProcessDataHandler = nullptr;
 EventHandlerRef					gCarbonEventSessionSetStateHandler = nullptr;
-EventHandlerRef					gCarbonEventWindowFocusHandler = nullptr;
 SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
 TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
 MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
@@ -458,10 +456,8 @@ SessionFactory_Done ()
 	
 	RemoveEventHandler(gCarbonEventSessionProcessDataHandler), gCarbonEventSessionProcessDataHandler = nullptr;
 	RemoveEventHandler(gCarbonEventSessionSetStateHandler), gCarbonEventSessionSetStateHandler = nullptr;
-	RemoveEventHandler(gCarbonEventWindowFocusHandler), gCarbonEventWindowFocusHandler = nullptr;
 	DisposeEventHandlerUPP(gCarbonEventSessionProcessDataUPP), gCarbonEventSessionProcessDataUPP = nullptr;
 	DisposeEventHandlerUPP(gCarbonEventSessionSetStateUPP), gCarbonEventSessionSetStateUPP = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventWindowFocusUPP), gCarbonEventWindowFocusUPP = nullptr;
 }// Done
 
 

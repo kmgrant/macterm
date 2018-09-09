@@ -295,8 +295,6 @@ struct My_Session
 	EventHandlerRef				windowClosingHandler;		// invoked whenever a session terminal window should close
 	EventHandlerUPP				windowFocusChangeUPP;		// wrapper for window focus-change callback
 	EventHandlerRef				windowFocusChangeHandler;	// invoked whenever a session terminal window is chosen for keyboard input
-	EventHandlerUPP				terminalViewDragDropUPP;	// wrapper for drag-and-drop callback
-	My_DragDropHandlerByView	terminalViewDragDropHandlers;// invoked whenever a terminal view is the target of drag-and-drop
 	EventHandlerUPP				terminalViewEnteredUPP;		// wrapper for mouse tracking (focus-follows-mouse) callback
 	My_DragDropHandlerByView	terminalViewEnteredHandlers;// invoked whenever the mouse moves into a terminal view
 	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
@@ -5531,8 +5529,6 @@ windowClosingUPP(nullptr), // set at window validation time
 windowClosingHandler(nullptr), // set at window validation time
 windowFocusChangeUPP(nullptr), // set at window validation time
 windowFocusChangeHandler(nullptr), // set at window validation time
-terminalViewDragDropUPP(nullptr), // set at window validation time
-terminalViewDragDropHandlers(), // set at window validation time
 terminalViewEnteredUPP(nullptr), // set at window validation time
 terminalViewEnteredHandlers(), // set at window validation time
 terminalViewTextInputUPP(nullptr), // set at window validation time
@@ -8680,13 +8676,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 													{
 														{ kEventClassControl, kEventControlTrackingAreaEntered }
 													};
-							EventTypeSpec const		whenTerminalViewDragDrop[] =
-													{
-														{ kEventClassControl, kEventControlDragEnter },
-														{ kEventClassControl, kEventControlDragWithin },
-														{ kEventClassControl, kEventControlDragLeave },
-														{ kEventClassControl, kEventControlDragReceive }
-													};
 							
 							
 							// ensure keyboard input to this view is seen
@@ -8710,24 +8699,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																&ignoredRef);
 								assert_noerr(error);
 							}
-							
-							// ensure drags to this view are seen
-							error = HIViewInstallEventHandler(dragFocusView, ptr->terminalViewDragDropUPP,
-																GetEventTypeCount(whenTerminalViewDragDrop),
-																whenTerminalViewDragDrop, session/* user data */,
-																&ptr->terminalViewDragDropHandlers[dragFocusView]);
-							assert_noerr(error);
-							error = SetControlDragTrackingEnabled(dragFocusView, true/* is drag enabled */);
-							assert_noerr(error);
-						}
-						
-						// enable drag tracking for the window, if it is not enabled already
-						// (not necessary for Cocoa)
-						if (isCarbon)
-						{
-							error = SetAutomaticControlDragTrackingEnabledForWindow
-									(GetControlOwner(dragFocusView), true/* is drag enabled */);
-							assert_noerr(error);
 						}
 					}
 					else
@@ -8823,10 +8794,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
 							dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
 							RemoveEventHandler(ptr->terminalViewTextInputHandlers[userFocusView]);
-							RemoveEventHandler(ptr->terminalViewDragDropHandlers[dragFocusView]);
 							RemoveEventHandler(ptr->terminalViewEnteredHandlers[dragFocusView]);
 						}
-						DisposeEventHandlerUPP(ptr->terminalViewDragDropUPP), ptr->terminalViewDragDropUPP = nullptr;
 						DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;
 						DisposeEventHandlerUPP(ptr->terminalViewTextInputUPP), ptr->terminalViewTextInputUPP = nullptr;
 					}

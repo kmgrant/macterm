@@ -50,21 +50,8 @@
 #pragma mark Variables
 namespace {
 
-AEEventHandlerUPP		gRecordingBeginUPP = nullptr;		//!< wrapper for callback that hears about new recordings
-AEEventHandlerUPP		gRecordingEndUPP = nullptr;			//!< wrapper for callback that hears about halted recordings
 AEAddressDesc			gSelfAddress;						//!< allows application to be recordable
 ProcessSerialNumber		gSelfProcessID;						//!< identifies application in terms of an OS process
-SInt32					gRecordingCount = 0L;				//!< number of recordings taking place
-
-} // anonymous namespace
-
-#pragma mark Internal Method Prototypes
-namespace {
-
-OSErr		handleRecordingBegunEvent			(AppleEvent const*, AppleEvent*, SInt32);
-OSErr		handleRecordingTerminatedEvent		(AppleEvent const*, AppleEvent*, SInt32);
-OSStatus	startRecording						();
-OSStatus	stopRecording						();
 
 } // anonymous namespace
 
@@ -101,40 +88,6 @@ RecordAE_Init ()
 	gSelfProcessID.highLongOfPSN = 0;
 	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
 	error = AECreateDesc(typeProcessSerialNumber, &gSelfProcessID, sizeof(gSelfProcessID), &gSelfAddress);
-	if (error == noErr)
-	{
-		// recording notification event handlers
-		gRecordingBeginUPP = NewAEEventHandlerUPP(handleRecordingBegunEvent);
-		error = AEInstallEventHandler(kCoreEventClass, kAENotifyStartRecording, gRecordingBeginUPP,
-										0L/* context */, false/* is system handler */);
-		if (error == noErr)
-		{
-			gRecordingEndUPP = NewAEEventHandlerUPP(handleRecordingTerminatedEvent);
-			error = AEInstallEventHandler(kCoreEventClass, kAENotifyStopRecording, gRecordingEndUPP,
-											0L/* context */, false/* is system handler */);
-			if (error == noErr)
-			{
-				// okay!
-				result = kRecordAE_ResultOK;
-			}
-		}
-	}
-	
-	// Also, since these events are only sent if a recording begins while
-	// the program is running, the proper setup still won’t occur if the
-	// user happens to be recording something already when the program
-	// starts up.  To detect this case, ask the Apple Event Manager.
-	{
-		SInt32		countOfRecordingProcesses = 0;
-		
-		
-		error = AEManagerInfo(keyAERecorderCount, &countOfRecordingProcesses);
-		if ((error == noErr) && (countOfRecordingProcesses > 0))
-		{
-			// send a fake recording-begun event
-			UNUSED_RETURN(OSStatus)startRecording();
-		}
-	}
 	
 	return result;
 }// Init
@@ -149,17 +102,6 @@ handlers, etc.
 void
 RecordAE_Done ()
 {
-	AERemoveEventHandler(kCoreEventClass, kAENotifyStartRecording, gRecordingBeginUPP, false/* is system handler */);
-	DisposeAEEventHandlerUPP(gRecordingBeginUPP), gRecordingBeginUPP = nullptr;
-	AERemoveEventHandler(kCoreEventClass, kAENotifyStopRecording, gRecordingEndUPP, false/* is system handler */);
-	DisposeAEEventHandlerUPP(gRecordingEndUPP), gRecordingEndUPP = nullptr;
-	
-	if (gRecordingCount)
-	{
-		// somehow the recording stuff is still active; explicitly force it to quit
-		UNUSED_RETURN(OSStatus)stopRecording();
-	}
-	
 	AEDisposeDesc(&gSelfAddress);
 }// Done
 
@@ -198,110 +140,5 @@ RecordAE_ReturnSelfAddress ()
 {
 	return &gSelfAddress;
 }// ReturnSelfAddress
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-Handles event "kAENotifyStartRecording" of "kCoreEventClass".
-
-(3.0)
-*/
-OSErr
-handleRecordingBegunEvent	(AppleEvent const*	inAppleEventPtr,
-							 AppleEvent*		UNUSED_ARGUMENT(outReplyAppleEventPtr),
-							 SInt32				UNUSED_ARGUMENT(inData))
-{
-	OSErr	result = noErr;
-	
-	
-	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “recording begun” event");
-	
-	result = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
-	
-	if (result == noErr)
-	{
-		result = STATIC_CAST(startRecording(), OSErr);
-	}
-	
-	Console_WriteValue("result", result);
-	Console_EndFunction();
-	return result;
-}// handleRecordingBegunEvent
-
-
-/*!
-Handles event "kAENotifyStopRecording" of "kCoreEventClass".
-
-(3.0)
-*/
-OSErr
-handleRecordingTerminatedEvent	(AppleEvent const*	inAppleEventPtr,
-								 AppleEvent*		UNUSED_ARGUMENT(outReplyAppleEventPtr),
-								 SInt32				UNUSED_ARGUMENT(inData))
-{
-	OSErr	result = noErr;
-	
-	
-	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “recording terminated” event");
-	
-	result = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
-	
-	if (result == noErr)
-	{
-		result = STATIC_CAST(stopRecording(), OSErr);
-	}
-	
-	Console_WriteValue("result", result);
-	Console_EndFunction();
-	return result;
-}// handleRecordingTerminatedEvent
-
-
-/*!
-Worker routine for recording-begun handler; exists primarily
-so that it can be called without faking an Apple Event.
-
-(3.0)
-*/
-OSStatus
-startRecording ()
-{
-	OSStatus	result = noErr;
-	
-	
-	// Hmmm...is it possible for multiple recordings to be taking place at once?
-	// Assume that it is, and keep track of the number of recordings in progress.
-	++gRecordingCount;
-	
-	return result;
-}// startRecording
-
-
-/*!
-Worker routine for recording-terminated handler; exists
-primarily so that it can be called without faking an
-Apple Event.
-
-(3.0)
-*/
-OSStatus
-stopRecording ()
-{
-	OSStatus	result = noErr;
-	
-	
-	// Hmmm...is it possible for multiple recordings to be taking place at once?
-	// Assume that it is, and keep track of recordings; clear the flag only when
-	// all recordings have been terminated.
-	--gRecordingCount;
-	
-	return result;
-}// stopRecording
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
