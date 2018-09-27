@@ -1,35 +1,13 @@
 
-                      How to Build MacTerm             2009-09-03
+                      How to Build MacTerm             2018-09-26
 
 PREREQUISITES
-  Build with the latest macOS but Xcode 8.x.  MacTerm does not
-  yet work with Xcode 9 (the LLVM compiler tries to emulate GCC
-  but has changed to the point where it cannot build using the
-  older SDK below).
+  Build with the latest macOS and Xcode 10.x.
   
-  Xcode 8.x can be installed if you have another Xcode but it
-  must be under a different name like "/Applications/Xcode8.app".
-  In addition, you must switch the command-line tool set, as in
-  "sudo xcode-select /Applications/Xcode8.app/Contents/Developer"
-  (assuming the /Applications/Xcode8.app installation above).
-  Build scripts in MacTerm will use "make" to run "xcodebuild"
-  from the command line.
-  
-  Currently, MacTerm requires the 10.6 SDK, which is not included
-  with Xcode anymore.  Download the SDK separately from Apple's
-  developer site, and put the "MacOSX10.6.sdk" directory in the
-  following location (alongside other SDKs):
-      /Applications/Xcode8.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
-  (This process must be repeated if Xcode is updated!  Keeping a
-  side copy of the 10.6 SDK is advisable.)
-  
-  Work is being done to adopt more recent SDKs; the primary issue
-  is that the 10.7 SDK abandons all Carbon APIs.  Many parts of
-  MacTerm have switched to Cocoa, and MacTerm can even *call*
-  APIs from later SDKs (see "Build/Shared/Code/CocoaFuture.*").
-  Unfortunately the most important view is the terminal itself,
-  and until its many Carbon and QuickDraw dependencies can be
-  replaced there is no feasible way to upgrade the default SDK.
+  Scripts in MacTerm will use "make" to run "xcodebuild" from the
+  command line.  If you have used "xcode-select" to customize
+  these tools, ensure that they are set to an appropriate version
+  of Xcode.
   
   By default MacTerm compiles in support for Growl notifications
   (http://www.growl.info/) so a default build requires the SDK
