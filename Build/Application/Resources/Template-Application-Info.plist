@@ -239,7 +239,7 @@
 	<key>MyHomePageURL</key>
 	<string>https://www.macterm.net/</string>
 	<key>MyUpdatesURL</key>
-	<string>https://www.macterm.net/updates/4.1.0.html</string>
+	<string>https://www.macterm.net/updates/daily.html</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
