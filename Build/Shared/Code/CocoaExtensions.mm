@@ -32,9 +32,6 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
-// library includes
-#import <CocoaFuture.objc++.h>
-
 
 
 #pragma mark Types

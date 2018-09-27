@@ -46,7 +46,6 @@
 // library includes
 #import <CocoaAnimation.h>
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>

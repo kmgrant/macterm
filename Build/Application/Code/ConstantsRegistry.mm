@@ -36,9 +36,6 @@
 // Mac includes
 #import <CoreServices/CoreServices.h>
 
-// library includes
-#import <CocoaFuture.objc++.h>
-
 
 
 #pragma mark Constants

@@ -47,9 +47,6 @@ class NSWindow;
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#ifdef __OBJC__
-#	import <CocoaFuture.objc++.h>
-#endif
 #include <RetainRelease.template.h>
 
 // application includes

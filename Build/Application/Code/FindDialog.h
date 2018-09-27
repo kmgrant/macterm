@@ -43,9 +43,6 @@
 #include <CoreServices/CoreServices.h>
 
 // application includes
-#ifdef __OBJC__
-#	include <CocoaFuture.objc++.h>
-#endif
 #include "TerminalWindowRef.typedef.h"
 
 

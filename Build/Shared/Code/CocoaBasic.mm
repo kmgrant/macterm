@@ -37,7 +37,6 @@
 
 // library includes
 #import <CFRetainRelease.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Popover.objc++.h>
 #import <SoundSystem.h>

@@ -42,7 +42,6 @@
 
 // library includes
 #ifdef __OBJC__
-#import <CocoaFuture.objc++.h>
 @class NSWindow;
 #else
 class NSWindow;

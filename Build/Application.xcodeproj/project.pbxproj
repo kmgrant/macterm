@@ -48,7 +48,6 @@
 		0A998CB51E5F62D30002C083 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA91E5F62570002C083 /* utilities.py */; };
 		0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
-		0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
@@ -434,8 +433,6 @@
 		0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = WindowTitleDialog.mm; path = Shared/Code/WindowTitleDialog.mm; sourceTree = "<group>"; };
 		0AB19DA91D87556600D80A2D /* WindowTitleDialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WindowTitleDialog.h; path = Shared/Code/WindowTitleDialog.h; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/__init__.py; sourceTree = "<group>"; };
-		0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaFuture.mm; path = Shared/Code/CocoaFuture.mm; sourceTree = "<group>"; };
-		0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaFuture.objc++.h"; path = "Shared/Code/CocoaFuture.objc++.h"; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
@@ -574,7 +571,6 @@
 				0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
 				0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */,
-				0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */,
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
@@ -605,7 +601,6 @@
 				0A3C2C1A140C73E000739966 /* CocoaAnimation.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
 				0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */,
-				0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */,
 				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
@@ -1359,7 +1354,6 @@
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A613E5020592085007C0829 /* Workspace.mm in Sources */,
 				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
-				0ABAA71B13491D06006B1EF6 /* CocoaFuture.mm in Sources */,
 				0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */,
 				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
 				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,

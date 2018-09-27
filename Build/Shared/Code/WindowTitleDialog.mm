@@ -44,7 +44,6 @@
 // library includes
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <MemoryBlocks.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>

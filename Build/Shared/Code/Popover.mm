@@ -32,7 +32,6 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 
 
@@ -609,11 +608,11 @@ vibrancy:(BOOL)							aVisualEffectFlag
 			{
 				@try
 				{
-					NSView*		parentView = [[self->embeddedView subviews] objectAtIndex:0];
-					NSRect		visualFrame = NSMakeRect(0, 0, NSWidth(parentView.frame),
-																NSHeight(parentView.frame));
-					id			visualEffectObject = CocoaFuture_AllocInitVisualEffectViewWithFrame
-														(NSRectToCGRect(visualFrame));
+					NSView*					parentView = [[self->embeddedView subviews] objectAtIndex:0];
+					NSRect					visualFrame = NSMakeRect(0, 0, NSWidth(parentView.frame),
+																		NSHeight(parentView.frame));
+					NSVisualEffectView*		visualEffectObject = [[NSVisualEffectView alloc]
+																	initWithFrame:NSRectToCGRect(visualFrame)];
 					
 					
 					if (nil != visualEffectObject)

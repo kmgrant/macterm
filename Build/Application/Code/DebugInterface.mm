@@ -36,7 +36,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
 #import <XPCCallPythonClient.objc++.h>
@@ -215,20 +214,20 @@ external Python callbacks.
 launchNewCallPythonClient:(id)	sender
 {
 #pragma unused(sender)
-	id					connectionObject = CocoaFuture_AllocInitXPCConnectionWithServiceName(@"net.macterm.helpers.CallPythonClient");
-	NSXPCInterface*		interfaceObject = CocoaFuture_XPCInterfaceWithProtocol(@protocol(XPCCallPythonClient_RemoteObjectInterface));
+	NSXPCConnection*	connectionObject = [[NSXPCConnection alloc] initWithServiceName:@"net.macterm.helpers.CallPythonClient"];
+	NSXPCInterface*		interfaceObject = [NSXPCInterface interfaceWithProtocol:@protocol(XPCCallPythonClient_RemoteObjectInterface)];
 	
 	
-	CocoaFuture_XPCConnectionSetInterruptionHandler(connectionObject, ^{ NSLog(@"call-Python client connection interrupted"); });
-	CocoaFuture_XPCConnectionSetInvalidationHandler(connectionObject, ^{ NSLog(@"call-Python client connection invalidated"); });
-	CocoaFuture_XPCConnectionSetRemoteObjectInterface(connectionObject, interfaceObject);
-	CocoaFuture_XPCConnectionResume(connectionObject);
+	connectionObject.interruptionHandler = ^{ NSLog(@"call-Python client connection interrupted"); };
+	connectionObject.invalidationHandler = ^{ NSLog(@"call-Python client connection invalidated"); };
+	connectionObject.remoteObjectInterface = interfaceObject;
+	[connectionObject resume];
 	
 	NSLog(@"created call-Python client object: %@", connectionObject);
 	
-	id		remoteProxy = CocoaFuture_XPCConnectionRemoteObjectProxy(connectionObject, ^(NSError* error){
-																			NSLog(@"remote object proxy error: %@", [error localizedDescription]);
-																		});
+	id		remoteProxy = [connectionObject remoteObjectProxyWithErrorHandler:^(NSError* error){
+												NSLog(@"remote object proxy error: %@", [error localizedDescription]);
+											}];
 	
 	
 	if (nil != remoteProxy)

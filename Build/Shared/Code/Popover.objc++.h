@@ -30,7 +30,6 @@
 
 // library includes
 #import <CocoaAnimation.h>
-#import <CocoaFuture.objc++.h>
 
 
 #pragma mark Constants

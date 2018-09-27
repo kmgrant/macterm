@@ -41,11 +41,6 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
-// library includes
-#ifdef __OBJC__
-#	import <CocoaFuture.objc++.h>
-#endif
-
 
 
 #pragma mark Types

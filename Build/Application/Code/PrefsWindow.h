@@ -42,7 +42,6 @@
 // library includes
 #ifdef __OBJC__
 #	import <CocoaExtensions.objc++.h>
-#	import <CocoaFuture.objc++.h>
 #	import <TouchBar.objc++.h>
 @class ListenerModel_StandardListener;
 #endif

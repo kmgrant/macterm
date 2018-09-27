@@ -43,7 +43,6 @@
 #import <AlertMessages.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <TouchBar.objc++.h>
 

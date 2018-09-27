@@ -34,9 +34,6 @@
 #import <Cocoa/Cocoa.h>
 #import <ApplicationServices/ApplicationServices.h>
 
-// library includes
-#import <CocoaFuture.objc++.h>
-
 // application includes
 #import "TerminalViewRef.typedef.h"
 

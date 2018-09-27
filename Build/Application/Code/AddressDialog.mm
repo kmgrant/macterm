@@ -41,7 +41,6 @@
 #import <CFRetainRelease.h>
 #import <Console.h>
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <ListenerModel.h>
 
 // application includes

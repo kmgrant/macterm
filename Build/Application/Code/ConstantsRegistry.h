@@ -41,9 +41,6 @@
 #pragma once
 
 // library includes
-#ifdef __OBJC__
-#	include <CocoaFuture.objc++.h>
-#endif
 #include <ListenerModel.h>
 
 

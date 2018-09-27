@@ -33,7 +33,6 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <Growl/Growl.h>
 
@@ -128,7 +127,7 @@ GrowlSupport_Init ()
 	// Notification Center.  This requires a bit of trickery because the
 	// current code base is compiled to support older OS versions (and yet
 	// is able to detect and use newer OS features).
-	gMountainLionUserNotificationCenter = CocoaFuture_DefaultUserNotificationCenter();
+	gMountainLionUserNotificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
 	if (nil != gMountainLionUserNotificationCenter)
 	{
 		if ([gMountainLionUserNotificationCenter respondsToSelector:@selector(setDelegate:)])
@@ -236,7 +235,7 @@ GrowlSupport_Notify		(GrowlSupport_NoteDisplay	inDisplay,
 	if ((nil != gMountainLionUserNotificationCenter) &&
 		(kGrowlSupport_NoteDisplayAlways == inDisplay))
 	{
-		id		newNote = CocoaFuture_AllocInitUserNotification();
+		NSUserNotification*		newNote = [[NSUserNotification alloc] init];
 		
 		
 		if (nil != newNote)

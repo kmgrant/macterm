@@ -42,7 +42,6 @@
 #include <ApplicationServices/ApplicationServices.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
-#	import <CocoaFuture.objc++.h>
 #else
 class NSString;
 #endif

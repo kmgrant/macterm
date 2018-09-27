@@ -33,7 +33,6 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 
 

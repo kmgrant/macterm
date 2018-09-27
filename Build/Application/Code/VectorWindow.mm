@@ -45,7 +45,6 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <ListenerModel.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>

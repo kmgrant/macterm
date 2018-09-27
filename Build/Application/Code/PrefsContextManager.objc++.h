@@ -34,9 +34,6 @@
 
 #pragma once
 
-// library includes
-#import <CocoaFuture.objc++.h>
-
 // application includes
 #import "Preferences.h"
 

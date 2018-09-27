@@ -34,7 +34,6 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 
 
@@ -121,13 +120,11 @@ loadView
 	
 	assert(nil != _touchBar);
 	
-#if 0
-	// TEMPORARY: customization appears to be broken when tricking
-	// the system into using it via the 10.6 SDK; try again after
-	// the project has migrated to a later SDK
-	CocoaFuture_TouchBarSetCustomizationIdentifier(_touchBar, self.customizationIdentifier);
-	CocoaFuture_TouchBarSetCustomizationAllowedItemIdentifiers(_touchBar, self.customizationAllowedItemIdentifiers);
-#endif
+	if (@available(macOS 12.1, *))
+	{
+		_touchBar.customizationIdentifier = self.customizationIdentifier;
+		_touchBar.customizationAllowedItemIdentifiers = self.customizationAllowedItemIdentifiers;
+	}
 }// loadView
 
 

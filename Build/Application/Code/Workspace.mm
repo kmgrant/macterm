@@ -41,7 +41,6 @@
 #import <Carbon/Carbon.h>
 
 // library includes
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>

@@ -64,7 +64,6 @@ extern "C"
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <ContextSensitiveMenu.h>
 #import <Localization.h>

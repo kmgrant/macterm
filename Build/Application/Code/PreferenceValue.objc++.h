@@ -44,7 +44,6 @@
 
 // library includes
 #import <BoundName.objc++.h>
-#import <CocoaFuture.objc++.h>
 @class ListenerModel_StandardListener;
 
 

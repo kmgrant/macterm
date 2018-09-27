@@ -136,6 +136,11 @@ struct CGFloatRGBColor
 //! to replace instances of this macro with “real” constant references when they are available
 #define FUTURE_SYMBOL(v,n)	(v)
 
+//! this should be used in the same place that you might otherwise find NS_DESIGNATED_INITIALIZER,
+//! to show initializers that are NOT supported by the subclass (e.g. runtime error); if a class
+//! does this, it should define some new designated initializer
+#define DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER
+
 //! useful integer routines, for efficiency; optimized for the PowerPC platform
 #ifdef __cplusplus
 inline long				INTEGER_ABSOLUTE	(long a)			{ return ((a >= 0) ? a : -a); }	//!< take absolute value of an integer

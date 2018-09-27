@@ -49,7 +49,6 @@
 // library includes
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
-#import <CocoaFuture.objc++.h>
 #import <Console.h>
 #import <ListenerModel.h>
 #import <Localization.h>
