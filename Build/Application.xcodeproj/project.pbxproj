@@ -1766,7 +1766,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
@@ -1875,7 +1875,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
@@ -1893,7 +1893,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
@@ -2040,7 +2040,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
