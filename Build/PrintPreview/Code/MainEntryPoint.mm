@@ -452,11 +452,11 @@ landscape:(BOOL)			landscapeMode
 		// for printing terminal text
 		if (landscapeMode)
 		{
-			[pageSetup setOrientation:NSLandscapeOrientation];
+			[pageSetup setOrientation:NSPaperOrientationLandscape];
 		}
 		else
 		{
-			[pageSetup setOrientation:NSPortraitOrientation];
+			[pageSetup setOrientation:NSPaperOrientationPortrait];
 		}
 		[pageSetup setHorizontalPagination:NSFitPagination];
 		[pageSetup setHorizontallyCentered:NO];

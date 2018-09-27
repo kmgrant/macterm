@@ -473,7 +473,7 @@ actionVersion8 ()
 		}
 	}
 	
-	[allSessionDomains release], allSessionDomains = nil;
+	[allSessionDomains release]; allSessionDomains = nil;
 	
 	return result;
 }// actionVersion8
@@ -666,7 +666,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 				// domain must match what is in MacTelnet’s Info.plist file.
 				CFPreferencesSetAppValue(CFSTR("prefs-version"), numberRef, kMacTermApplicationID);
 				UNUSED_RETURN(Boolean)CFPreferencesAppSynchronize(kMacTermApplicationID);
-				CFRelease(numberRef), numberRef = nullptr;
+				CFRelease(numberRef); numberRef = nullptr;
 			}
 		}
 	#endif

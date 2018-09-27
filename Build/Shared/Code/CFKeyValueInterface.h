@@ -37,7 +37,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 
 // Data Access library includes
@@ -766,7 +765,7 @@ const
 	
 	CFDictionaryGetKeysAndValues(_dataDictionary.returnCFDictionaryRef(), keyList, nullptr/* values */);
 	CFArrayRef		result = CFArrayCreate(kCFAllocatorDefault, keyList, kDictSize, &kCFTypeArrayCallBacks);
-	delete [] keyList, keyList = nullptr;
+	delete [] keyList; keyList = nullptr;
 	return result;
 }// returnKeyListCopy
 
@@ -1022,7 +1021,7 @@ const
 	if (nullptr != number)
 	{
 		UNUSED_RETURN(Boolean)CFNumberGetValue(number, kCFNumberFloat32Type, &result);
-		CFRelease(number), number = nullptr;
+		CFRelease(number); number = nullptr;
 	}
 	
 	return result;

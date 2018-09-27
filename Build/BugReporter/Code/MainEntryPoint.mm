@@ -306,7 +306,7 @@ applicationDidFinishLaunching:(NSNotification*)		aNotification
 					}
 				}
 				
-				[modifiedURLString release], modifiedURLString = nil;
+				[modifiedURLString release]; modifiedURLString = nil;
 			}
 		}
 		

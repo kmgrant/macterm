@@ -83,7 +83,7 @@ addFloat	(CFStringRef	inKey,
 	if (nullptr != valueCFNumber)
 	{
 		CFPreferencesSetAppValue(inKey, valueCFNumber, _targetApplication.returnCFStringRef());
-		CFRelease(valueCFNumber), valueCFNumber = nullptr;
+		CFRelease(valueCFNumber); valueCFNumber = nullptr;
 	}
 }// addFloat
 
@@ -105,7 +105,7 @@ addInteger	(CFStringRef	inKey,
 	if (nullptr != valueCFNumber)
 	{
 		CFPreferencesSetAppValue(inKey, valueCFNumber, _targetApplication.returnCFStringRef());
-		CFRelease(valueCFNumber), valueCFNumber = nullptr;
+		CFRelease(valueCFNumber); valueCFNumber = nullptr;
 	}
 }// addInteger
 
@@ -127,7 +127,7 @@ addLong		(CFStringRef	inKey,
 	if (nullptr != valueCFNumber)
 	{
 		CFPreferencesSetAppValue(inKey, valueCFNumber, _targetApplication.returnCFStringRef());
-		CFRelease(valueCFNumber), valueCFNumber = nullptr;
+		CFRelease(valueCFNumber); valueCFNumber = nullptr;
 	}
 }// addLong
 
