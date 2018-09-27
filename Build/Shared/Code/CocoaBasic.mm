@@ -32,7 +32,6 @@
 #import <map>
 
 // Mac includes
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
 
@@ -45,16 +44,9 @@
 
 
 
-#pragma mark Types
-
-typedef std::map< HIWindowRef, NSWindow* >		HIWindowRefToNSWindowMap;
-
 #pragma mark Variables
 namespace {
 
-#if COCOA_BASIC_SUPPORTS_CARBON
-HIWindowRefToNSWindowMap&			gCocoaCarbonWindows()	{ static HIWindowRefToNSWindowMap x; return x; }
-#endif
 NSSpeechSynthesizer*				gDefaultSynth = nil;
 
 } // anonymous namespace
@@ -158,9 +150,9 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 									 void			(^inOpenURLHandler)(CFURLRef))
 {
 @autoreleasepool {
-	NSOpenPanel*	thePanel = [NSOpenPanel openPanel];
-	int				buttonHit = NSFileHandlingPanelCancelButton;
-	Boolean			result = false;
+	NSOpenPanel*		thePanel = [NSOpenPanel openPanel];
+	NSModalResponse		buttonHit = NSFileHandlingPanelCancelButton;
+	Boolean				result = false;
 	
 	
 	// NOTE: newer versions of the dialog display the message but they
@@ -197,15 +189,15 @@ See also the two-color version.
 
 (1.2)
 */
-CGDeviceColor
-CocoaBasic_GetGray	(CGDeviceColor const&	inColor,
-					 Float32				inFraction)
+CGFloatRGBColor
+CocoaBasic_GetGray	(CGFloatRGBColor const&		inColor,
+					 Float32					inFraction)
 {
 @autoreleasepool {
-	CGDeviceColor	result = inColor;
-	NSColor*		c1 = [NSColor colorWithCalibratedRed:inColor.red green:inColor.green blue:inColor.blue alpha:1.0];
-	NSColor*		c2 = [NSColor whiteColor];
-	NSColor*		blended = [c1 blendedColorWithFraction:inFraction ofColor:c2];
+	CGFloatRGBColor		result = inColor;
+	NSColor*			c1 = [NSColor colorWithCalibratedRed:inColor.red green:inColor.green blue:inColor.blue alpha:1.0];
+	NSColor*			c2 = [NSColor whiteColor];
+	NSColor*			blended = [c1 blendedColorWithFraction:inFraction ofColor:c2];
 	
 	
 	if (blended)
@@ -227,16 +219,16 @@ See also the one-color version, which implicitly uses white.
 
 (1.2)
 */
-CGDeviceColor
-CocoaBasic_GetGray	(CGDeviceColor const&	inColor1,
-					 CGDeviceColor const&	inColor2,
-					 Float32				inFraction)
+CGFloatRGBColor
+CocoaBasic_GetGray	(CGFloatRGBColor const&		inColor1,
+					 CGFloatRGBColor const&		inColor2,
+					 Float32					inFraction)
 {
 @autoreleasepool {
-	CGDeviceColor	result = inColor1;
-	NSColor*		c1 = [NSColor colorWithCalibratedRed:inColor1.red green:inColor1.green blue:inColor1.blue alpha:1.0];
-	NSColor*		c2 = [NSColor colorWithCalibratedRed:inColor2.red green:inColor2.green blue:inColor2.blue alpha:1.0];
-	NSColor*		blended = [c1 blendedColorWithFraction:inFraction ofColor:c2];
+	CGFloatRGBColor		result = inColor1;
+	NSColor*			c1 = [NSColor colorWithCalibratedRed:inColor1.red green:inColor1.green blue:inColor1.blue alpha:1.0];
+	NSColor*			c2 = [NSColor colorWithCalibratedRed:inColor2.red green:inColor2.green blue:inColor2.blue alpha:1.0];
+	NSColor*			blended = [c1 blendedColorWithFraction:inFraction ofColor:c2];
 	
 	
 	if (blended)
@@ -294,83 +286,6 @@ CocoaBasic_InvalidateRestorableState	(NSResponder*	inResponder)
 }// InvalidateRestorableState
 
 
-#if COCOA_BASIC_SUPPORTS_CARBON
-/*!
-Forces the Cocoa runtime to consider the Carbon user focus
-window (as returned by GetUserFocusWindow()) to be the
-frontmost, key window.
-
-This can be important any time a window is selected using
-Carbon APIs instead of user input; the Cocoa runtime may
-correctly highlight the new window but not order it in
-front.  So call SelectWindow(), and then this routine.
-
-See also CocoaBasic_MakeKeyWindowCarbonUserFocusWindow().
-
-(1.1)
-*/
-void
-CocoaBasic_MakeFrontWindowCarbonUserFocusWindow ()
-{
-@autoreleasepool {
-	HIWindowRef		carbonWindow = GetUserFocusWindow();
-	
-	
-	if (nullptr != carbonWindow)
-	{
-		NSWindow*		window = [[NSWindow alloc] initWithWindowRef:carbonWindow];
-		
-		
-		// as recommended in the documentation, retain the given window
-		// manually, because initWithWindowRef: does not retain it (but
-		// does release it)
-		RetainWindow(carbonWindow);
-		
-		[window makeKeyAndOrderFront:nil];
-	}
-}// @autoreleasepool
-}// MakeFrontWindowCarbonUserFocusWindow
-#endif
-
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-/*!
-Forces the Cocoa runtime to consider the Carbon user focus
-window (as returned by GetUserFocusWindow()) to be key.
-
-This is mostly important for Carbon sheets that spawn from
-Carbon windows that are running in a Cocoa runtime; the
-sheets do not acquire focus automatically.  So call
-ShowSheetWindow(), and then this routine.
-
-See also CocoaBasic_MakeFrontWindowCarbonUserFocusWindow().
-
-(1.1)
-*/
-void
-CocoaBasic_MakeKeyWindowCarbonUserFocusWindow ()
-{
-@autoreleasepool {
-	HIWindowRef		carbonWindow = GetUserFocusWindow();
-	
-	
-	if (nullptr != carbonWindow)
-	{
-		NSWindow*		window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(carbonWindow);
-		
-		
-		// as recommended in the documentation, retain the given window
-		// manually, because initWithWindowRef: does not retain it (but
-		// does release it)
-		RetainWindow(carbonWindow);
-		
-		[window makeKeyWindow];
-	}
-}// @autoreleasepool
-}// MakeKeyWindowCarbonUserFocusWindow
-#endif
-
-
 /*!
 Plays the sound with the given name (no extension), if it
 is found anywhere in the standard search paths like
@@ -402,83 +317,6 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 	[[[[NSSound alloc] initWithContentsOfURL:(NSURL*)inFile byReference:NO] autorelease] play];
 }// @autoreleasepool
 }// PlaySoundFile
-
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-/*!
-For an existing window suspected to be a Carbon window (e.g. as
-obtained from [NSApp keyWindow]), registers its Carbon window
-reference for later use, so that another will not be allocated.
-Returns true only if successfully registered.
-
-(1.5)
-*/
-Boolean
-CocoaBasic_RegisterCocoaCarbonWindow	(NSWindow*		inCocoaWindow)
-{
-@autoreleasepool {
-	Boolean		result = false;
-	
-	
-	if (nullptr != [inCocoaWindow windowRef])
-	{
-		gCocoaCarbonWindows().insert(std::make_pair(REINTERPRET_CAST([inCocoaWindow windowRef], HIWindowRef), inCocoaWindow));
-		result = true;
-	}
-	return result;
-}// @autoreleasepool
-}// RegisterCocoaCarbonWindow
-#endif
-
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-/*!
-Using the registry maintained by this module, returns the only
-known NSWindow* for the given Carbon window reference.  If none
-existed, "initWithWindowRef:" is used to make one.  This should
-always be used instead of calling "initWithWindowRef:" yourself!
-
-This calls CocoaBasic_RegisterCocoaCarbonWindow() automatically
-when a new window is created.
-
-(1.5)
-*/
-NSWindow*
-CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow		(HIWindowRef	inCarbonWindow)
-{
-@autoreleasepool {
-	NSWindow*	result = nil;
-	
-	
-	if (nullptr != inCarbonWindow)
-	{
-		auto	toPair = gCocoaCarbonWindows().find(inCarbonWindow);
-		
-		
-		if (toPair != gCocoaCarbonWindows().end())
-		{
-			result = toPair->second;
-		}
-		
-		if (nil == result)
-		{
-			result = [[NSWindow alloc] initWithWindowRef:inCarbonWindow];
-			
-			// as recommended in the documentation, retain the given window
-			// manually, because initWithWindowRef: does not retain it (but
-			// does release it)
-			RetainWindow(inCarbonWindow);
-			
-			if (nil != [result windowRef])
-			{
-				UNUSED_RETURN(Boolean)CocoaBasic_RegisterCocoaCarbonWindow(result);
-			}
-		}
-	}
-	return result;
-}// @autoreleasepool
-}// ReturnNewOrExistingCocoaCarbonWindow
-#endif
 
 
 /*!

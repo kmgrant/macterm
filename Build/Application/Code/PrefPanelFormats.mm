@@ -53,7 +53,6 @@
 #import <AlertMessages.h>
 #import <CFRetainRelease.h>
 #import <CocoaExtensions.objc++.h>
-#import <ColorUtilities.h>
 #import <Console.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
@@ -256,7 +255,7 @@ namespace {
 Copies a preference tag for a color from the specified
 source context to the given destination.  All color
 data has the same size, which is currently that of a
-"CGDeviceColor".
+"CGFloatRGBColor".
 
 (4.0)
 */
@@ -268,7 +267,7 @@ copyColor	(Preferences_Tag			inSourceTag,
 			 Boolean*					outIsDefaultOrNull)
 {
 	Preferences_Result	result = kPreferences_ResultOK;
-	CGDeviceColor		colorValue;
+	CGFloatRGBColor		colorValue;
 	
 	
 	result = Preferences_ContextGetData(inSource, inSourceTag, sizeof(colorValue), &colorValue,

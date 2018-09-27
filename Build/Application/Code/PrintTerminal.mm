@@ -207,18 +207,12 @@ PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef	inView,
 										Terminal_ReturnRowCount(inViewBuffer));
 	TerminalView_SelectVirtualRange(inView, startEnd);
 	{
-		HIViewRef	focusView = TerminalView_ReturnUserFocusHIView(inView);
+		NSView*		focusView = TerminalView_ReturnUserFocusNSView(inView);
 		
 		
-		if (nullptr != focusView)
+		if (nil != focusView)
 		{
-			HIRect		bounds;
-			
-			
-			if (noErr == HIViewGetBounds(focusView, &bounds))
-			{
-				isLandscape = (bounds.size.width > bounds.size.height);
-			}
+			isLandscape = (NSWidth(focusView.frame) > NSHeight(focusView.frame));
 		}
 	}
 	result = PrintTerminal_NewJobFromSelectedText(inView, inJobName, isLandscape);
@@ -276,7 +270,7 @@ if "inRef" is not recognized
 */
 PrintTerminal_Result
 PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
-								 HIWindowRef			UNUSED_ARGUMENT(inParentWindowOrNull))
+								 NSWindow*				UNUSED_ARGUMENT(inParentWindowOrNil))
 {
 @autoreleasepool {
 	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:inRef];
@@ -289,7 +283,6 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 	}
 	else
 	{
-		//NSWindow*				window = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNull);
 		NSPasteboard*			textToPrintPasteboard = [NSPasteboard pasteboardWithUniqueName];
 	#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
 		NSString*				pasteboardName = [textToPrintPasteboard name]; // non-property version does not seem to retain

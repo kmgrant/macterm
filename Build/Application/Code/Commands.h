@@ -208,8 +208,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // Window menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandMinimizeWindow					kHICommandMinimizeWindow
-#define kCommandZoomWindow						kHICommandZoomWindow
 #define kCommandMaximizeWindow					'Maxm'
 #define kCommandChangeWindowTitle				'WinT'
 #define kCommandHideFrontWindow					'HdFW'
@@ -235,8 +233,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 // Help menu
 #define kCommandMainHelp						kHICommandAppHelp
 #define kCommandContextSensitiveHelp			'?Ctx'
-#define kCommandShowHelpTags					'STag'
-#define kCommandHideHelpTags					'HTag'
 
 // color box
 #define kCommandColorCursorBackground			'Curs'
@@ -1018,21 +1014,6 @@ Boolean
 Boolean
 	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
 											 EventTargetRef				inTarget = nullptr);
-
-void
-	Commands_ExecuteByIDUsingEventAfterDelay(UInt32						inCommandID,
-											 EventTargetRef				inTarget,
-											 Float32					inDelayInSeconds);
-
-//@}
-
-//!\name Retrieving Command Information
-//@{
-
-Boolean
-	Commands_CopyCommandName				(UInt32						inCommandID,
-											 Commands_NameType			inNameType,
-											 CFStringRef&				outName);
 
 //@}
 

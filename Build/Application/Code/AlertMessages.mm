@@ -54,7 +54,6 @@
 // application includes
 #import "AppResources.h"
 #import "Commands.h"
-#import "DialogUtilities.h"
 #import "GenericDialog.h"
 #import "HelpSystem.h"
 #import "UIStrings.h"
@@ -88,7 +87,6 @@ public:
 	AlertMessages_VC*		viewController;		//!< panel for icon and text content of alert message; owned by "genericDialog"
 	GenericDialog_Wrap		genericDialog;		//!< wraps alert panel in a window, with buttons, and displays it
 	Alert_IconID			iconID;
-	WindowRef				parentWindow;
 	NSWindow*				parentNSWindow;
 };
 typedef My_AlertMessage*	My_AlertMessagePtr;
@@ -287,52 +285,6 @@ Alert_NewWindowModal	(NSWindow*		inParentWindow)
 	}
 	return result;
 }// NewWindowModal
-
-
-/*!
-DEPRECATED.  For displaying alerts over Carbon windows only.
-See also Alert_NewWindowModal(), which accepts "NSWindow*".
-
-(2016.03)
-*/
-AlertMessages_BoxRef
-Alert_NewWindowModalParentCarbon	(HIWindowRef	inParentWindow)
-{
-	AlertMessages_BoxRef	result = nullptr;
-	
-	
-	try
-	{
-		My_AlertMessagePtr		alertPtr = new My_AlertMessage();
-		
-		
-		if (nullptr != alertPtr)
-		{
-			alertPtr->parentWindow = inParentWindow;
-			
-			alertPtr->viewController = [[AlertMessages_VC alloc] init];
-			assert(nil != alertPtr->viewController);
-			alertPtr->genericDialog.setWithNoRetain(GenericDialog_NewParentCarbon
-													(inParentWindow, alertPtr->viewController/* transfer ownership */,
-														nullptr/* data set */, true/* is alert style */));
-			assert(alertPtr->genericDialog.exists());
-			[alertPtr->viewController release]; // ownership transfers to "genericDialog"
-			
-			// set a default help button action
-			Alert_SetButtonResponseBlock(alertPtr->selfRef, kAlert_ItemHelpButton, ^{ HelpSystem_DisplayHelpWithoutContext(); });
-			
-			result = alertPtr->selfRef;
-			assert(nullptr != result);
-			
-			Alert_Retain(result);
-		}
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// NewWindowModalParentCarbon
 
 
 /*!
@@ -1095,7 +1047,6 @@ selfRef(REINTERPRET_CAST(this, AlertMessages_BoxRef)),
 viewController(nil),
 genericDialog(),
 iconID(kAlert_IconIDDefault),
-parentWindow(nullptr),
 parentNSWindow(nil)
 {
 }// My_AlertMessage default constructor

@@ -53,7 +53,6 @@
 // library includes
 #import <AlertMessages.h>
 #import <CocoaBasic.h>
-#import <ColorUtilities.h>
 #import <Console.h>
 #import <Localization.h>
 #import <MacHelpUtilities.h>
@@ -68,15 +67,12 @@
 #import "CommandLine.h"
 #import "Commands.h"
 #import "DebugInterface.h"
-#import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "InfoWindow.h"
-#import "InternetPrefs.h"
 #import "Preferences.h"
 #import "PrefsWindow.h"
 #import "RecordAE.h"
 #import "SessionFactory.h"
-#import "TerminalBackground.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
 
@@ -185,11 +181,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		ParameterDecoder_RunTests();
 	#endif
 		
-		TerminalBackground_Init();
-	#if RUN_MODULE_TESTS
-		//TerminalBackground_RunTests();
-	#endif
-		
 		TerminalView_Init();
 	#if RUN_MODULE_TESTS
 		//TerminalView_RunTests();
@@ -208,11 +199,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		InfoWindow_Init(); // installs command handler to enable this window to be displayed and hidden
 	#if RUN_MODULE_TESTS
 		//InfooWindow_RunTests();
-	#endif
-		
-		InternetPrefs_Init();
-	#if RUN_MODULE_TESTS
-		//InternetPrefs_RunTests();
 	#endif
 		
 	#ifndef NDEBUG
@@ -298,7 +284,6 @@ Initialize_ApplicationShutDownRemainingComponents ()
 {
 	Console_Done();
 	TerminalView_Done();
-	TerminalBackground_Done();
 	Commands_Done();
 	SessionFactory_Done();
 	Undoables_Done();

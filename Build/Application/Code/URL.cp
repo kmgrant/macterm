@@ -56,7 +56,6 @@
 
 // application includes
 #include "AppResources.h"
-#include "DialogUtilities.h"
 #include "QuillsSession.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalView.h"

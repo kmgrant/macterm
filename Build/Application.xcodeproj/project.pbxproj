@@ -54,14 +54,12 @@
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
 		0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.mm */; };
-		0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */; };
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.mm */; };
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */; };
 		0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE36055432A400ACDF3A /* Undoables.cp */; };
 		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.mm */; };
 		0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */; };
-		0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A984182083452E6002E1BCE /* TerminalBackground.cp */; };
 		0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD5055432A400ACDF3A /* EventLoop.mm */; };
 		0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */; };
 		0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */; };
@@ -72,10 +70,8 @@
 		0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A03DBC7063F6BA400C38B78 /* MacroManager.mm */; };
 		0AC6BB040A8C0BA000AFF37A /* SoundSystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE19055432A400ACDF3A /* SoundSystem.mm */; };
 		0AC6BB060A8C0BA000AFF37A /* Session.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE14055432A400ACDF3A /* Session.mm */; };
-		0AC6BB070A8C0BA000AFF37A /* HIViewWrap.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A66CA4B0887467000FD616C /* HIViewWrap.cp */; };
 		0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE29055432A400ACDF3A /* TerminalWindow.mm */; };
 		0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE01055432A400ACDF3A /* Panel.mm */; };
-		0AC6BB0A0A8C0BA000AFF37A /* SessionDescription.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE15055432A400ACDF3A /* SessionDescription.cp */; };
 		0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE12055432A400ACDF3A /* AppResources.mm */; };
 		0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDA055432A400ACDF3A /* Folder.cp */; };
 		0AC6BB0D0A8C0BA000AFF37A /* RecordAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0F055432A400ACDF3A /* RecordAE.cp */; };
@@ -84,18 +80,15 @@
 		0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF3055432A400ACDF3A /* Local.cp */; };
 		0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD1055432A400ACDF3A /* DNR.cp */; };
 		0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */; };
-		0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */; };
 		0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */; };
 		0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE21055432A400ACDF3A /* VectorCanvas.mm */; };
 		0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */; };
 		0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE3055432A400ACDF3A /* UIStrings.cp */; };
 		0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD7055432A400ACDF3A /* FindDialog.mm */; };
-		0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */; };
 		0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC3055432A400ACDF3A /* Commands.mm */; };
 		0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE2D055432A400ACDF3A /* TextTranslation.cp */; };
 		0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE7055432A400ACDF3A /* InfoWindow.mm */; };
 		0AC6BB340A8C0BA000AFF37A /* StringUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCFC07FAC06200248DDF /* StringUtilities.mm */; };
-		0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AFD12B5087A147D00439BEA /* NIBLoader.cp */; };
 		0AC6BB3A0A8C0BA100AFF37A /* Initialize.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE8055432A400ACDF3A /* Initialize.mm */; };
 		0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD6055432A400ACDF3A /* FileUtilities.cp */; };
 		0AC6BB3C0A8C0BA100AFF37A /* TerminalView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE28055432A400ACDF3A /* TerminalView.mm */; };
@@ -107,12 +100,9 @@
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.mm */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
-		0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */; };
-		0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */; };
 		0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059405543D7C00ACDF3A /* Carbon.framework */; };
 		0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46079705543DE400ACDF3A /* CoreFoundation.framework */; };
 		0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059505543D7C00ACDF3A /* CoreServices.framework */; };
-		0AC6BD970A8C0BB100AFF37A /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059605543D7C00ACDF3A /* QuickTime.framework */; };
 		0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059705543D7C00ACDF3A /* System.framework */; };
 		0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059305543D7C00ACDF3A /* ApplicationServices.framework */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */; };
@@ -193,7 +183,6 @@
 		0A0D372B19B4338C005500DE /* CursorCrosshairs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorCrosshairs.png; path = Application/Resources/CursorCrosshairs.png; sourceTree = "<group>"; };
 		0A0D372C19B4338C005500DE /* CursorCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorCrosshairs@2x.png"; path = "Application/Resources/CursorCrosshairs@2x.png"; sourceTree = "<group>"; };
 		0A0E9F521DB17FF3006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
-		0A0E9F541DB18095006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
 		0A0E9F561DB180F2006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F581DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
 		0A0E9F5A1DB18127006A8BF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AlertMessagesCocoa.xib; sourceTree = "<group>"; };
@@ -264,15 +253,12 @@
 		0A33CCFC07FAC06200248DDF /* StringUtilities.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StringUtilities.mm; path = Shared/Code/StringUtilities.mm; sourceTree = "<group>"; };
 		0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
 		0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
-		0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TextDataFile.cp; path = Shared/Code/TextDataFile.cp; sourceTree = "<group>"; };
 		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
 		0A3A2A21161D151500D489F6 /* IconForSearch.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearch.icns; path = Application/Resources/IconForSearch.icns; sourceTree = "<group>"; };
 		0A3A2A24161D168900D489F6 /* IconForSearchKey.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearchKey.icns; path = Application/Resources/IconForSearchKey.icns; sourceTree = "<group>"; };
 		0A3C2C1A140C73E000739966 /* CocoaAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaAnimation.h; path = Shared/Code/CocoaAnimation.h; sourceTree = "<group>"; };
 		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
-		0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommonEventHandlers.cp; path = Application/Code/CommonEventHandlers.cp; sourceTree = "<group>"; };
-		0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommonEventHandlers.h; path = Application/Code/CommonEventHandlers.h; sourceTree = "<group>"; };
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTranslations.mm; path = Application/Code/PrefPanelTranslations.mm; sourceTree = "<group>"; };
 		0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTranslations.h; path = Application/Code/PrefPanelTranslations.h; sourceTree = "<group>"; };
 		0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTranslations.icns; path = Application/Resources/IconForPrefPanelTranslations.icns; sourceTree = "<group>"; };
@@ -282,13 +268,11 @@
 		0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppleEventUtilities.h; path = Application/Code/AppleEventUtilities.h; sourceTree = "<group>"; };
 		0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventUtilities.template.h; path = Shared/Code/CarbonEventUtilities.template.h; sourceTree = "<group>"; };
 		0A4603C00554376100ACDF3A /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Clipboard.h; path = Application/Code/Clipboard.h; sourceTree = "<group>"; };
-		0A4603C50554376100ACDF3A /* ColorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ColorUtilities.h; path = Shared/Code/ColorUtilities.h; sourceTree = "<group>"; };
 		0A4603C60554376100ACDF3A /* CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandLine.h; path = Application/Code/CommandLine.h; sourceTree = "<group>"; };
 		0A4603C70554376100ACDF3A /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = Application/Code/Commands.h; sourceTree = "<group>"; };
 		0A4603CB0554376100ACDF3A /* Console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Shared/Code/Console.h; sourceTree = "<group>"; };
 		0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConstantsRegistry.h; path = Application/Code/ConstantsRegistry.h; sourceTree = "<group>"; };
 		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Shared/Code/ContextSensitiveMenu.h; sourceTree = "<group>"; };
-		0A4603D80554376100ACDF3A /* DialogUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DialogUtilities.h; path = Application/Code/DialogUtilities.h; sourceTree = "<group>"; };
 		0A4603D90554376100ACDF3A /* DNR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DNR.h; path = Application/Code/DNR.h; sourceTree = "<group>"; };
 		0A4603DA0554376100ACDF3A /* DragAndDrop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DragAndDrop.h; path = Application/Code/DragAndDrop.h; sourceTree = "<group>"; };
 		0A4603E00554376100ACDF3A /* EventLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventLoop.h; path = Application/Code/EventLoop.h; sourceTree = "<group>"; };
@@ -300,7 +284,6 @@
 		0A4603F10554376100ACDF3A /* InfoWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InfoWindow.h; path = Application/Code/InfoWindow.h; sourceTree = "<group>"; };
 		0A4603F20554376100ACDF3A /* Initialize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Initialize.h; path = Application/Code/Initialize.h; sourceTree = "<group>"; };
 		0A4603F40554376100ACDF3A /* AlertMessages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlertMessages.h; path = Application/Code/AlertMessages.h; sourceTree = "<group>"; };
-		0A4603F50554376100ACDF3A /* InternetPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InternetPrefs.h; path = Application/Code/InternetPrefs.h; sourceTree = "<group>"; };
 		0A4603F70554376100ACDF3A /* Keypads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Keypads.h; path = Application/Code/Keypads.h; sourceTree = "<group>"; };
 		0A4603FD0554376100ACDF3A /* Local.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Local.h; path = Application/Code/Local.h; sourceTree = "<group>"; };
 		0A4603FE0554376100ACDF3A /* Localization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Localization.h; path = Application/Code/Localization.h; sourceTree = "<group>"; };
@@ -313,7 +296,6 @@
 		0A4604200554376100ACDF3A /* RecordAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecordAE.h; path = Application/Code/RecordAE.h; sourceTree = "<group>"; };
 		0A4604230554376100ACDF3A /* AppResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppResources.h; path = Application/Code/AppResources.h; sourceTree = "<group>"; };
 		0A4604250554376100ACDF3A /* Session.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Session.h; path = Application/Code/Session.h; sourceTree = "<group>"; };
-		0A4604260554376100ACDF3A /* SessionDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SessionDescription.h; path = Application/Code/SessionDescription.h; sourceTree = "<group>"; };
 		0A4604280554376100ACDF3A /* SessionFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SessionFactory.h; path = Application/Code/SessionFactory.h; sourceTree = "<group>"; };
 		0A4604290554376100ACDF3A /* SessionRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SessionRef.typedef.h; path = Application/Code/SessionRef.typedef.h; sourceTree = "<group>"; };
 		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
@@ -342,11 +324,9 @@
 		0A46FDB8055432A400ACDF3A /* AlertMessages.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AlertMessages.mm; path = Application/Code/AlertMessages.mm; sourceTree = "<group>"; };
 		0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AppleEventUtilities.cp; path = Application/Code/AppleEventUtilities.cp; sourceTree = "<group>"; };
 		0A46FDBC055432A400ACDF3A /* Clipboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Clipboard.mm; path = Application/Code/Clipboard.mm; sourceTree = "<group>"; };
-		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Commands.mm; path = Application/Code/Commands.mm; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
 		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ContextSensitiveMenu.mm; path = Shared/Code/ContextSensitiveMenu.mm; sourceTree = "<group>"; };
-		0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DialogUtilities.cp; path = Application/Code/DialogUtilities.cp; sourceTree = "<group>"; };
 		0A46FDD1055432A400ACDF3A /* DNR.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DNR.cp; path = Application/Code/DNR.cp; sourceTree = "<group>"; };
 		0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DragAndDrop.cp; path = Application/Code/DragAndDrop.cp; sourceTree = "<group>"; };
 		0A46FDD5055432A400ACDF3A /* EventLoop.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = EventLoop.mm; path = Application/Code/EventLoop.mm; sourceTree = "<group>"; };
@@ -357,7 +337,6 @@
 		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = "<group>"; };
 		0A46FDE7055432A400ACDF3A /* InfoWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = InfoWindow.mm; path = Application/Code/InfoWindow.mm; sourceTree = "<group>"; };
 		0A46FDE8055432A400ACDF3A /* Initialize.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Initialize.mm; path = Application/Code/Initialize.mm; sourceTree = "<group>"; };
-		0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InternetPrefs.cp; path = Application/Code/InternetPrefs.cp; sourceTree = "<group>"; };
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = "<group>"; };
 		0A46FDF4055432A400ACDF3A /* Localization.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Localization.mm; path = Application/Code/Localization.mm; sourceTree = "<group>"; };
 		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
@@ -370,7 +349,6 @@
 		0A46FE0F055432A400ACDF3A /* RecordAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecordAE.cp; path = Application/Code/RecordAE.cp; sourceTree = "<group>"; };
 		0A46FE12055432A400ACDF3A /* AppResources.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppResources.mm; path = Application/Code/AppResources.mm; sourceTree = "<group>"; };
 		0A46FE14055432A400ACDF3A /* Session.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Session.mm; path = Application/Code/Session.mm; sourceTree = "<group>"; };
-		0A46FE15055432A400ACDF3A /* SessionDescription.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SessionDescription.cp; path = Application/Code/SessionDescription.cp; sourceTree = "<group>"; };
 		0A46FE17055432A400ACDF3A /* SessionFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SessionFactory.mm; path = Application/Code/SessionFactory.mm; sourceTree = "<group>"; };
 		0A46FE19055432A400ACDF3A /* SoundSystem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SoundSystem.mm; path = Shared/Code/SoundSystem.mm; sourceTree = "<group>"; };
 		0A46FE21055432A400ACDF3A /* VectorCanvas.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorCanvas.mm; path = Application/Code/VectorCanvas.mm; sourceTree = "<group>"; };
@@ -399,12 +377,8 @@
 		0A613E4F20592085007C0829 /* Workspace.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Workspace.mm; path = Application/Code/Workspace.mm; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
-		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
-		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
-		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
 		0A68811012F5378C005F418A /* GrowlSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrowlSupport.h; path = Shared/Code/GrowlSupport.h; sourceTree = "<group>"; };
 		0A68811112F537A1005F418A /* GrowlSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlSupport.mm; path = Shared/Code/GrowlSupport.mm; sourceTree = "<group>"; };
-		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
 		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
@@ -422,11 +396,8 @@
 		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A90C79A1DBC557B005EABE0 /* CoreUI.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CoreUI.mm; path = Shared/Code/CoreUI.mm; sourceTree = "<group>"; };
 		0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CoreUI.objc++.h"; path = "Shared/Code/CoreUI.objc++.h"; sourceTree = "<group>"; };
-		0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RandomWrap.h; path = Shared/Code/RandomWrap.h; sourceTree = "<group>"; };
 		0A94C91D1DCD570800938B6A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/VectorWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = PreferencesSearch.plist; path = Application/Resources/PreferencesSearch.plist; sourceTree = "<group>"; };
-		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
-		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
 		0A998CA31E5F62400002C083 /* file_kvp.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = file_kvp.py; path = Application/PythonCode/pymacterm/file_kvp.py; sourceTree = "<group>"; };
 		0A998CA41E5F62400002C083 /* file_open.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = file_open.py; path = Application/PythonCode/pymacterm/file_open.py; sourceTree = "<group>"; };
 		0A998CA51E5F62400002C083 /* term_text.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = term_text.py; path = Application/PythonCode/pymacterm/term_text.py; sourceTree = "<group>"; };
@@ -434,7 +405,6 @@
 		0A998CA71E5F62400002C083 /* url_parse.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = url_parse.py; path = Application/PythonCode/pymacterm/url_parse.py; sourceTree = "<group>"; };
 		0A998CA91E5F62570002C083 /* utilities.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = utilities.py; path = Application/PythonCode/pymacterm/utilities.py; sourceTree = "<group>"; };
 		0A9AF64E0AF5A50500E7DF18 /* PyMacTerm.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTerm.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		0A9B317E0D538E2800C1616D /* TextDataFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextDataFile.h; path = Shared/Code/TextDataFile.h; sourceTree = "<group>"; };
 		0A9B31800D538E3C00C1616D /* StringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StringUtilities.h; path = Shared/Code/StringUtilities.h; sourceTree = "<group>"; };
 		0A9B31820D538E4400C1616D /* SoundSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoundSystem.h; path = Shared/Code/SoundSystem.h; sourceTree = "<group>"; };
 		0A9B31840D538E4D00C1616D /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
@@ -534,7 +504,6 @@
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Shared/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
 		0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Shared/Code/UTF8Decoder.h; sourceTree = "<group>"; };
-		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
 		0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
 		0AF5022F0F872CC30068CB19 /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
 		0AF502300F872D150068CB19 /* CGContextSaveRestore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CGContextSaveRestore.h; path = Shared/Code/CGContextSaveRestore.h; sourceTree = "<group>"; };
@@ -549,8 +518,6 @@
 		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
 		0AF995F30CC3C849000A11DC /* IconForBellOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOn.icns; path = Application/Resources/IconForBellOn.icns; sourceTree = "<group>"; };
 		0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventHandlerWrap.template.h; path = Shared/Code/CarbonEventHandlerWrap.template.h; sourceTree = "<group>"; };
-		0AFD12B5087A147D00439BEA /* NIBLoader.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NIBLoader.cp; path = Shared/Code/NIBLoader.cp; sourceTree = "<group>"; };
-		0AFD12B7087A148B00439BEA /* NIBLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NIBLoader.h; path = Shared/Code/NIBLoader.h; sourceTree = "<group>"; };
 		0AFF11220AF41FEE006CCA34 /* RunApplication.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = RunApplication.py; path = Application/PythonCode/RunApplication.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -578,7 +545,6 @@
 				0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */,
 				0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */,
 				0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */,
-				0AC6BD970A8C0BB100AFF37A /* QuickTime.framework in Frameworks */,
 				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
 				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
 				0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */,
@@ -610,24 +576,20 @@
 				0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */,
 				0ABAA71913491CD5006B1EF6 /* CocoaFuture.mm */,
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
-				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
 				0A90C79A1DBC557B005EABE0 /* CoreUI.mm */,
 				0A68811112F537A1005F418A /* GrowlSupport.mm */,
-				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.mm */,
 				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */,
-				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
 				0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */,
 				0A4FAF941525694700B8142A /* Popover.mm */,
 				0AF94E481477857900099BF2 /* PopoverManager.mm */,
 				0A043B031D8F5A7200511F30 /* RegionUtilities.cp */,
 				0A46FE19055432A400ACDF3A /* SoundSystem.mm */,
 				0A33CCFC07FAC06200248DDF /* StringUtilities.mm */,
-				0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */,
 				0A0777401DCBC815004C9F78 /* TouchBar.mm */,
 				0A46FE36055432A400ACDF3A /* Undoables.cp */,
 				0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */,
@@ -645,14 +607,10 @@
 				0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */,
 				0ABAA71A13491CFB006B1EF6 /* CocoaFuture.objc++.h */,
 				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
-				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */,
 				0A68811012F5378C005F418A /* GrowlSupport.h */,
-				0A66CA450887464200FD616C /* HIViewWrap.h */,
-				0A66CA950887505200FD616C /* HIViewWrap.fwd.h */,
-				0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */,
 				0A9B318E0D538EAB00C1616D /* ListenerModel.h */,
 				0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */,
 				0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */,
@@ -662,18 +620,15 @@
 				0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */,
 				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
 				0A30289E1DB5D45200C1C557 /* MenuUtilities.objc++.h */,
-				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
 				0A56CB211FB6BF6100750D35 /* ParameterDecoder.h */,
 				0A4FAF961525695400B8142A /* Popover.objc++.h */,
 				0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */,
-				0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */,
 				0A043B051D8F5A7C00511F30 /* RegionUtilities.h */,
 				0AB0EF76110E99570099E055 /* Registrar.template.h */,
 				0AF5023B0F872DF80068CB19 /* ResultCode.template.h */,
 				0AD638F91350172E00035D4E /* RetainRelease.template.h */,
 				0A9B31820D538E4400C1616D /* SoundSystem.h */,
 				0A9B31800D538E3C00C1616D /* StringUtilities.h */,
-				0A9B317E0D538E2800C1616D /* TextDataFile.h */,
 				0A0777421DCBC824004C9F78 /* TouchBar.objc++.h */,
 				0A9B31840D538E4D00C1616D /* Undoables.h */,
 				0A4604520554376100ACDF3A /* UniversalDefines.h */,
@@ -712,10 +667,8 @@
 				0A46FDBC055432A400ACDF3A /* Clipboard.mm */,
 				0A35F5130DEDD9E300F16B03 /* CommandLine.mm */,
 				0A46FDC3055432A400ACDF3A /* Commands.mm */,
-				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
 				0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */,
 				0ABD01CF1068000A00BBB87A /* DebugInterface.mm */,
-				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
 				0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */,
 				0ACF35C517EBCC1500178DE2 /* Emulation.cp */,
@@ -729,7 +682,6 @@
 				0A46FDE1055432A400ACDF3A /* HelpSystem.cp */,
 				0A46FDE7055432A400ACDF3A /* InfoWindow.mm */,
 				0A46FDE8055432A400ACDF3A /* Initialize.mm */,
-				0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */,
 				0A36176A0DD286240081A445 /* Keypads.mm */,
 				0A46FDF3055432A400ACDF3A /* Local.cp */,
 				0A46FDF4055432A400ACDF3A /* Localization.mm */,
@@ -742,12 +694,10 @@
 				0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */,
 				0AE103B00F71D018003127C7 /* ServerBrowser.mm */,
 				0A46FE14055432A400ACDF3A /* Session.mm */,
-				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.mm */,
 				0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */,
 				0A64C5EA1059E423005B8A48 /* StreamCapture.mm */,
 				0A46FE25055432A400ACDF3A /* Terminal.mm */,
-				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
 				0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */,
 				0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */,
 				0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */,
@@ -771,10 +721,8 @@
 				0A4603C00554376100ACDF3A /* Clipboard.h */,
 				0A4603C60554376100ACDF3A /* CommandLine.h */,
 				0A4603C70554376100ACDF3A /* Commands.h */,
-				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
 				0ABD01D11068002C00BBB87A /* DebugInterface.h */,
-				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
 				0A4603DA0554376100ACDF3A /* DragAndDrop.h */,
 				0ACF35C717EBCC1C00178DE2 /* Emulation.h */,
@@ -788,7 +736,6 @@
 				0A4603ED0554376100ACDF3A /* HelpSystem.h */,
 				0A4603F10554376100ACDF3A /* InfoWindow.h */,
 				0A4603F20554376100ACDF3A /* Initialize.h */,
-				0A4603F50554376100ACDF3A /* InternetPrefs.h */,
 				0A4603F70554376100ACDF3A /* Keypads.h */,
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
@@ -801,13 +748,11 @@
 				0A1A06860ABA6236002C95D7 /* PrintTerminal.h */,
 				0AE103AE0F71D003003127C7 /* ServerBrowser.h */,
 				0A4604250554376100ACDF3A /* Session.h */,
-				0A4604260554376100ACDF3A /* SessionDescription.h */,
 				0A4604280554376100ACDF3A /* SessionFactory.h */,
 				0A4604290554376100ACDF3A /* SessionRef.typedef.h */,
 				0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */,
 				0A64C5EC1059E432005B8A48 /* StreamCapture.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
-				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
 				0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */,
 				0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */,
 				0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */,
@@ -960,7 +905,6 @@
 				0AC4185B208D35800068A309 /* TerminalRootCocoa.xib */,
 				0AC41859208BB7A10068A309 /* TerminalScrollableRootViewCocoa.xib */,
 				0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */,
-				0A0E9F531DB18095006A8BF5 /* TerminalWindow.nib */,
 				0A0E9FA11DB18127006A8BF5 /* TerminalWindowCocoa.xib */,
 				0A0777371DCB9D00004C9F78 /* TerminalWindowTouchBarCocoa.xib */,
 				0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */,
@@ -1018,7 +962,6 @@
 				0AC810AC1221EC6100687DB2 /* IconForNewSessionShell.icns */,
 				0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */,
 				0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */,
-				0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */,
 				0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */,
 				0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */,
 				0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */,
@@ -1188,7 +1131,7 @@
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0800;
+				LastUpgradeCheck = 1000;
 				TargetAttributes = {
 					0A70B8A21079C1EB0013E76F = {
 						DevelopmentTeam = 8BA57X86ZM;
@@ -1283,17 +1226,15 @@
 			files = (
 			);
 			inputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/_Quills_debug.so",
 				"$(DERIVED_SOURCES_DIR)/Quills.py",
 			);
 			name = "Copy to Expected Names";
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/_Quills.so",
 				"$(BUILT_PRODUCTS_DIR)/Quills.py",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\n#if [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n#    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\n#fi\n\n# although the .so is automatically placed in the output directory, Xcode\n# does not normally consider the generated .py file to be important; so\n# this must be manually copied from the derived sources area\n\ncp \"${DERIVED_SOURCES_DIR}/Quills.py\" \"${BUILT_PRODUCTS_DIR}/\"";
+			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\n#if [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n#    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\n#fi\n\n# although the .so is automatically placed in the output directory, Xcode\n# does not normally consider the generated .py file to be important; so\n# this must be manually copied from the derived sources area\n\ncp \"${DERIVED_SOURCES_DIR}/Quills.py\" \"${BUILT_PRODUCTS_DIR}/\"\n";
 		};
 		0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1335,7 +1276,6 @@
 				0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */,
 				0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */,
 				0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */,
-				0AC6BAE20A8C0BA000AFF37A /* InternetPrefs.cp in Sources */,
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */,
 				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.mm in Sources */,
@@ -1344,7 +1284,6 @@
 				0A03A1EB1D9A297000411248 /* OtherApps.mm in Sources */,
 				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.mm in Sources */,
 				0AC6BAF40A8C0BA000AFF37A /* PrefPanelFormats.mm in Sources */,
-				0AC6BAF60A8C0BA000AFF37A /* TerminalBackground.cp in Sources */,
 				0AC6BAF70A8C0BA000AFF37A /* EventLoop.mm in Sources */,
 				0A30289D1DB2BE2500C1C557 /* Network.mm in Sources */,
 				0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */,
@@ -1358,10 +1297,8 @@
 				0AC6BB040A8C0BA000AFF37A /* SoundSystem.mm in Sources */,
 				0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */,
 				0AC6BB060A8C0BA000AFF37A /* Session.mm in Sources */,
-				0AC6BB070A8C0BA000AFF37A /* HIViewWrap.cp in Sources */,
 				0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */,
 				0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */,
-				0AC6BB0A0A8C0BA000AFF37A /* SessionDescription.cp in Sources */,
 				0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */,
 				0A3028A01DB5D46100C1C557 /* MenuUtilities.mm in Sources */,
 				0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */,
@@ -1371,18 +1308,15 @@
 				0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */,
 				0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */,
 				0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */,
-				0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */,
 				0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */,
 				0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */,
 				0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */,
 				0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */,
 				0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */,
-				0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */,
 				0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */,
 				0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */,
 				0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */,
 				0AC6BB340A8C0BA000AFF37A /* StringUtilities.mm in Sources */,
-				0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */,
 				0AC6BB3A0A8C0BA100AFF37A /* Initialize.mm in Sources */,
 				0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */,
 				0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */,
@@ -1398,9 +1332,7 @@
 				0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,
-				0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */,
 				0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */,
-				0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */,
 				0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */,
 				0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */,
 				0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */,
@@ -1476,14 +1408,6 @@
 				0A0E9F521DB17FF3006A8BF5 /* English */,
 			);
 			name = MainMenuCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F531DB18095006A8BF5 /* TerminalWindow.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A0E9F541DB18095006A8BF5 /* English */,
-			);
-			name = TerminalWindow.nib;
 			sourceTree = "<group>";
 		};
 		0A0E9F551DB180F2006A8BF5 /* WindowTitleDialogCocoa.xib */ = {
@@ -1846,10 +1770,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
@@ -1864,6 +1787,7 @@
 				);
 				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
 				PRODUCT_NAME = PythonInvoker;
+				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForDebugging;
 		};
@@ -1871,15 +1795,22 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -1888,12 +1819,6 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"COCOA_BASIC_SUPPORTS_CARBON=1",
-					"COCOA_EXTENSIONS_SUPPORT_QUICKDRAW=1",
-					"POPOVER_MANAGER_SUPPORTS_CARBON=1",
-					"WINDOW_TITLE_DIALOG_SUPPORTS_CARBON=1",
-				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -1913,11 +1838,10 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
-					"-fpascal-strings",
 					"-v",
 					"-IApplication/Code",
 					"-IShared/Code",
@@ -1926,9 +1850,6 @@
 					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
-				PREBINDING = NO;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.6.sdk";
-				VALID_ARCHS = i386;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -1960,6 +1881,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
@@ -1967,6 +1889,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.frameworks.Quills;
 				PRODUCT_NAME = MacTermQuills;
+				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForRelease;
 		};
@@ -1974,10 +1897,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_CFLAGS = (
 					"-g",
 					"-fpascal-strings",
@@ -1992,6 +1914,7 @@
 				);
 				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
 				PRODUCT_NAME = PythonInvoker;
+				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForRelease;
 		};
@@ -2008,16 +1931,21 @@
 					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
 				);
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
-				OTHER_CFLAGS = "$(PYTHON_INCLUDES)";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_CFLAGS = (
+					"-IApplication/Code",
+					"-IShared/Code",
+					"$(PYTHON_INCLUDES)",
+				);
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
 					"-framework",
 					MacTermQuills,
 				);
 				PRODUCT_NAME = Quills;
+				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = ForRelease;
@@ -2038,15 +1966,22 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -2056,12 +1991,6 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"COCOA_BASIC_SUPPORTS_CARBON=1",
-					"COCOA_EXTENSIONS_SUPPORT_QUICKDRAW=1",
-					"POPOVER_MANAGER_SUPPORTS_CARBON=1",
-					"WINDOW_TITLE_DIALOG_SUPPORTS_CARBON=1",
-				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -2081,11 +2010,10 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
-					"-fpascal-strings",
 					"-v",
 					"-IApplication/Code",
 					"-IShared/Code",
@@ -2094,9 +2022,6 @@
 					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
-				PREBINDING = NO;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.6.sdk";
-				VALID_ARCHS = i386;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -2121,6 +2046,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
@@ -2128,6 +2054,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.frameworks.Quills;
 				PRODUCT_NAME = MacTermQuills;
+				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForDebugging;
 		};
@@ -2144,16 +2071,21 @@
 					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
 				);
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
-				OTHER_CFLAGS = "$(PYTHON_INCLUDES)";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_CFLAGS = (
+					"-IApplication/Code",
+					"-IShared/Code",
+					"$(PYTHON_INCLUDES)",
+				);
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
 					"-framework",
 					MacTermQuills,
 				);
 				PRODUCT_NAME = Quills;
+				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = ForDebugging;

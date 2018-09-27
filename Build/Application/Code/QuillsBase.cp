@@ -132,7 +132,7 @@ Base::all_done ()
 	Initialize_ApplicationShutDownIsolatedComponents();
 #if 0
 	// Argh...well, this is a problem!  The final ExitToShell() *might* trigger
-	// final releases of things like HIViews for TerminalViews, which in turn
+	// final releases of things like NSViews of TerminalViews, which in turn
 	// triggers object destructor calls that *could* still rely on certain
 	// modules being initialized.  In the old days this was no big deal because
 	// it was always possible to know the order of teardown.  But as long as

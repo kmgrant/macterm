@@ -61,7 +61,6 @@ class NSWindow;
 // application includes
 #include "ConstantsRegistry.h"
 #include "Local.h"
-#include "SessionDescription.h"
 #include "TerminalWindow.h"
 
 
@@ -568,10 +567,6 @@ void
 //@{
 
 Session_Result
-	Session_FillInSessionDescription		(SessionRef							inRef,
-											 SessionDescription_Ref*			outNewSaveFileMemoryModelPtr);
-
-Session_Result
 	Session_GetStateIconName				(SessionRef							inRef,
 											 CFStringRef&						outUncopiedString);
 
@@ -597,10 +592,6 @@ NSWindow*
 
 TerminalWindowRef
 	Session_ReturnActiveTerminalWindow		(SessionRef							inRef);
-
-// DEPRECATED (USE Session_ReturnActiveNSWindow())
-HIWindowRef
-	Session_ReturnActiveLegacyCarbonWindow	(SessionRef							inRef);
 
 CFStringRef
 	Session_ReturnCachedWorkingDirectory	(SessionRef							inRef);

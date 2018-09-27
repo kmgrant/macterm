@@ -63,11 +63,8 @@ Manages the rename-window user interface.
 	Popover_Window*								_containerWindow;		// holds the Rename dialog view
 	NSView*										_managedView;			// the view that implements the majority of the interface
 	NSWindow*									_targetCocoaWindow;		// the window to be renamed, if Cocoa
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-	HIWindowRef									_targetCarbonWindow;		// the window to be renamed, if Carbon
-	NSSize										_idealSize;				// minimum size of the managed view
-#endif
 	BOOL										_animated;				// YES if there should be animation when opening/closing
+	NSSize										_idealSize;				// minimum size of the managed view
 	PopoverManager_Ref							_popoverMgr;				// manages common aspects of popover window behavior
 	WindowTitleDialog_ReturnTitleCopyBlock		_initBlock;				// block to invoke when initializing dialog title
 	WindowTitleDialog_CloseNotifyBlock			_closeNotifyBlock;		// block to invoke when the dialog is dismissed
@@ -80,22 +77,9 @@ Manages the rename-window user interface.
 // initializers
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
-	orCarbonWindow:(HIWindowRef)_
 	animated:(BOOL)_
 	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
 	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_ NS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initForCocoaWindow:(NSWindow*)_
-	animated:(BOOL)_
-	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
-	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_;
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-	- (instancetype)
-	initForCarbonWindow:(HIWindowRef)_
-	animated:(BOOL)_
-	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
-	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_;
-#endif
 
 // new methods
 	- (void)
@@ -143,36 +127,6 @@ WindowTitleDialog_NewWindowModal		(NSWindow*								inCocoaParentWindow,
 															whenClosing:inFinalBlock];
 	return result;
 }// NewWindowModal
-
-
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-/*!
-Returns a new window-modal version of the rename dialog
-that initializes its string field using the given
-initialization block.  The close-notify block is called
-when the dialog closes; if the user accepts, a new
-string is provided (otherwise, the string is nullptr).
-
-DEPRECATED.  Use the NSWindow* version above.
-
-(2016.09)
-*/
-WindowTitleDialog_Ref
-WindowTitleDialog_NewWindowModalParentCarbon		(HIWindowRef								inCarbonParentWindow,
-												 Boolean									inIsAnimated,
-												 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
-												 WindowTitleDialog_CloseNotifyBlock		inFinalBlock)
-{
-	WindowTitleDialog_Ref	result = nullptr;
-	
-	
-	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCarbonWindow:inCarbonParentWindow animated:inIsAnimated
-															whenInitializing:inInitBlock
-															whenClosing:inFinalBlock];
-	return result;
-}// NewWindowModalParentCarbon
-#endif
 
 
 /*!
@@ -253,30 +207,21 @@ it is defined only to satisfy the compiler.
 init
 {
 	assert(false && "invalid way to initialize derived class");
-	return [self initForCocoaWindow:nil orCarbonWindow:nullptr animated:YES whenInitializing:nil whenClosing:nil];
+	return [self initForCocoaWindow:nil animated:YES whenInitializing:nil whenClosing:nil];
 }// init
 
 
 /*!
 Designated initializer.
 
-TEMPORARY; this accepts both types of window arguments (Carbon
-and Cocoa) but only one is required.  Eventually the Cocoa-only
-window version will become the designated initializer, when
-there is no reason to support Carbon windows anymore.
-
 (4.0)
 */
 - (instancetype)
 initForCocoaWindow:(NSWindow*)								aCocoaWindow
-orCarbonWindow:(HIWindowRef)									aCarbonWindow
 animated:(BOOL)												anAnimationFlag
 whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
-whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
+whenClosing:(WindowTitleDialog_CloseNotifyBlock)			aFinalBlock
 {
-#if ! WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-#pragma unused(aCarbonWindow)
-#endif
 	self = [super init];
 	if (nil != self)
 	{
@@ -285,60 +230,11 @@ whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
 		_containerWindow = nil;
 		_managedView = nil;
 		_targetCocoaWindow = aCocoaWindow;
-	#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-		_targetCarbonWindow = aCarbonWindow;
-	#endif
 		_popoverMgr = nullptr;
 		_idealSize = NSZeroSize; // set later
 		_animated = anAnimationFlag;
 		_initBlock = Block_copy(anInitBlock);
 		_closeNotifyBlock = Block_copy(aFinalBlock);
-	}
-	return self;
-}// initForCocoaWindow:orCarbonWindow:animated:whenInitializing:whenClosing:
-
-
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-/*!
-Initializer for parent windows that use Carbon.
-
-DEPRECATED.  Use the NSWindow* version.
-
-(2016.09)
-*/
-- (instancetype)
-initForCarbonWindow:(HIWindowRef)							aWindow
-animated:(BOOL)												anAnimationFlag
-whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
-whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
-{
-	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow animated:anAnimationFlag
-									whenInitializing:anInitBlock whenClosing:aFinalBlock];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initForCarbonWindow:animated:whenInitializing:whenClosing:
-#endif
-
-
-/*!
-Initializer for parent windows that use Cocoa windows.  This will
-eventually be the designated initializer, when it is no longer
-necessary to support Carbon windows.
-
-(2016.09)
-*/
-- (instancetype)
-initForCocoaWindow:(NSWindow*)								aWindow
-animated:(BOOL)												anAnimationFlag
-whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
-whenClosing:(WindowTitleDialog_CloseNotifyBlock)				aFinalBlock
-{
-	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr animated:anAnimationFlag
-									whenInitializing:anInitBlock whenClosing:aFinalBlock];
-	if (nil != self)
-	{
 	}
 	return self;
 }// initForCocoaWindow:animated:whenInitializing:whenClosing:
@@ -381,18 +277,8 @@ display
 	{
 		// no focus is done the first time because this is
 		// eventually done in "titleDialog:didLoadManagedView:"
-	#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-		if (nullptr != _targetCarbonWindow)
-		{
-			_viewMgr = [[WindowTitleDialog_VC alloc]
-						initForCarbonWindow:_targetCarbonWindow responder:self];
-		}
-		else
-	#endif
-		{
-			_viewMgr = [[WindowTitleDialog_VC alloc]
-						initForCocoaWindow:_targetCocoaWindow responder:self];
-		}
+		_viewMgr = [[WindowTitleDialog_VC alloc]
+					initForCocoaWindow:_targetCocoaWindow responder:self];
 	}
 	else
 	{
@@ -419,8 +305,7 @@ removeWithAcceptance:(BOOL)		isAccepted
 
 
 /*!
-Returns the Cocoa window that represents the renamed
-window, even if that is a Carbon window.
+Returns the Cocoa window that represents the renamed window.
 
 (4.0)
 */
@@ -429,13 +314,6 @@ renamedCocoaWindow
 {
 	NSWindow*	result = _targetCocoaWindow;
 	
-	
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-	if ((nil == result) && (nullptr != _targetCarbonWindow))
-	{
-		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(_targetCarbonWindow);
-	}
-#endif
 	
 	return result;
 }// renamedCocoaWindow
@@ -562,20 +440,9 @@ didLoadManagedView:(NSView*)			aManagedView
 																inWindow:asNSWindow];
 		_idealSize = [_managedView frame].size;
 		[_containerWindow setReleasedWhenClosed:NO];
-	#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-		if (nullptr != _targetCarbonWindow)
-		{
-			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
-												self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
-												_targetCarbonWindow);
-		}
-		else
-	#endif
-		{
-			_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
-												self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
-												_targetCocoaWindow.contentView);
-		}
+		_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
+											self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
+											_targetCocoaWindow.contentView);
 		PopoverManager_DisplayPopover(_popoverMgr);
 	}
 }// titleDialog:didLoadManagedView:
@@ -655,7 +522,7 @@ initWithCoder:(NSCoder*)	aCoder
 {
 #pragma unused(aCoder)
 	assert(false && "invalid way to initialize derived class");
-	return [self initForCocoaWindow:nil orCarbonWindow:nil responder:nil];
+	return [self initForCocoaWindow:nil responder:nil];
 }// initWithCoder:
 
 
@@ -671,7 +538,7 @@ bundle:(NSBundle*)				aBundle
 {
 #pragma unused(aNibName, aBundle)
 	assert(false && "invalid way to initialize derived class");
-	return [self initForCocoaWindow:nil orCarbonWindow:nil responder:nil];
+	return [self initForCocoaWindow:nil responder:nil];
 }// initWithNibName:bundle:
 
 
@@ -682,59 +549,18 @@ Designated initializer of derived class.
 */
 - (instancetype)
 initForCocoaWindow:(NSWindow*)					aCocoaWindow
-orCarbonWindow:(HIWindowRef)					aCarbonWindow
 responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
 {
 	self = [super initWithNibName:@"WindowTitleDialogCocoa" bundle:nil];
 	if (nil != self)
 	{
 		_responder = aResponder;
-	#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-		_parentCarbonWindow = aCarbonWindow;
-	#else
-	#pragma unused(aCarbonWindow)
-	#endif
 		_parentCocoaWindow = aCocoaWindow;
 		_titleText = [@"" retain];
 		
 		// NSViewController implicitly loads the NIB when the "view"
 		// property is accessed; force that here
 		[self view];
-	}
-	return self;
-}// initForCocoaWindow:orCarbonWindow:responder:
-
-
-/*!
-Initializer for Carbon-based windows.
-
-(4.0)
-*/
-- (instancetype)
-initForCarbonWindow:(HIWindowRef)				aWindow
-responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
-{
-	self = [self initForCocoaWindow:nil orCarbonWindow:aWindow responder:aResponder];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initForCarbonWindow:responder:
-
-
-/*!
-Initializer for Cocoa-based windows; this will eventually
-be the designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initForCocoaWindow:(NSWindow*)					aWindow
-responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
-{
-	self = [self initForCocoaWindow:aWindow orCarbonWindow:nullptr responder:aResponder];
-	if (nil != self)
-	{
 	}
 	return self;
 }// initForCocoaWindow:responder:

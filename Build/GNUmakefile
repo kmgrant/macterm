@@ -242,8 +242,7 @@ IconForWindowTitleRight.icns \
 PreferencesSearch.plist \
 English.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
-MacTerm.help \
-English.lproj/TerminalWindow.nib
+MacTerm.help
 # set to a list of "English.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 APP_XIB_PREFIXES := \

@@ -282,11 +282,11 @@ Localization_PreservePortFontState	(GrafPortFontState*		outState)
 		GrafPtr		port = nullptr;
 		
 		
-		GetPort(&port);
-		outState->fontID = GetPortTextFont(port);
-		outState->fontSize = GetPortTextSize(port);
-		outState->fontStyle = GetPortTextFace(port);
-		outState->textMode = GetPortTextMode(port);
+		//CARBON//GetPort(&port);
+		//CARBON//outState->fontID = GetPortTextFont(port);
+		//CARBON//outState->fontSize = GetPortTextSize(port);
+		//CARBON//outState->fontStyle = GetPortTextFace(port);
+		//CARBON//outState->textMode = GetPortTextMode(port);
 	}
 }// PreservePortFontState
 
@@ -302,10 +302,10 @@ Localization_RestorePortFontState	(GrafPortFontState const*	inState)
 {
 	if (inState != nullptr)
 	{
-		TextFont(inState->fontID);
-		TextSize(inState->fontSize);
-		TextFace(inState->fontStyle);
-		TextMode(inState->textMode);
+		//CARBON//TextFont(inState->fontID);
+		//CARBON//TextSize(inState->fontSize);
+		//CARBON//TextFace(inState->fontStyle);
+		//CARBON//TextMode(inState->textMode);
 	}
 }// RestorePortFontState
 

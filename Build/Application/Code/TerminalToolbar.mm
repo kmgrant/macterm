@@ -5317,14 +5317,14 @@ used (e.g. to set the window height).
 - (void)
 setFrameBasedOnRect:(NSRect)	aRect
 {
-	BOOL	animateFlag = NO;
-	float	oldBase = [self frame].origin.y;
+	BOOL		animateFlag = NO;
+	CGFloat		oldBase = [self frame].origin.y;
 	
 	
 	aRect = [self constrainFrameRect:aRect toScreen:[self screen]];
 	
 	// animation depends on how far the new frame is from the old one
-	if (fabsf(oldBase - aRect.origin.y) > 88/* arbitrary */)
+	if (fabs(oldBase - aRect.origin.y) > 88/* arbitrary */)
 	{
 		animateFlag = YES;
 	}

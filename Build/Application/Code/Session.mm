@@ -80,8 +80,6 @@
 #import "AppResources.h"
 #import "Clipboard.h"
 #import "Commands.h"
-#import "DialogUtilities.h"
-#import "FileUtilities.h"
 #import "GenericDialog.h"
 #import "Local.h"
 #import "MacroManager.h"
@@ -89,7 +87,6 @@
 #import "Preferences.h"
 #import "PrefPanelSessions.h"
 #import "QuillsSession.h"
-#import "SessionDescription.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalView.h"
@@ -168,100 +165,11 @@ typedef My_KeyPress*	My_KeyPressPtr;
 
 typedef std::vector< TerminalScreenRef >	My_CaptureFileList;
 
-typedef std::map< HIViewRef, EventHandlerRef >		My_DragDropHandlerByView;
-
-/*!
-A “safe” wrapper around the help tag structure.
-Useful for constructing it in one shot while
-initializing everything.  Pass nullptr for a tag
-string if you do not intend to use it.
-
-The input location is for flexibility...currently
-it is converted to an integer.
-
-None of the input strings is retained, so do
-that beforehand.  Note that help tags must
-generally be global because it is rarely safe
-to delete them (one never knows when the system
-will be finished using a tag).
-*/
-struct My_HMHelpContentRecWrap
-{
-public:
-	My_HMHelpContentRecWrap		(HMTagDisplaySide	inDisplaySide = kHMOutsideBottomCenterAligned)
-	{
-		_rec.version = kMacHelpVersion;
-		_rec.tagSide = inDisplaySide;
-		setFrame(CGRectMake(0, 0, 0, 0));
-		rename(nullptr, nullptr);
-	}
-	
-	inline CFStringRef
-	altName () const
-	{
-		return _altName;
-	}
-	
-	inline CFStringRef
-	mainName () const
-	{
-		return _mainName;
-	}
-	
-	inline HMHelpContentRec const*
-	ptr () const { return &_rec; }
-	
-	inline void
-	rename	(CFStringRef	inMain,
-			 CFStringRef	inAlt)
-	{
-		// the system does not allow a name to be undefined,
-		// so an internal reference is kept to make it easier
-		// to detect never-defined tags
-		_mainName = inMain;
-		_rec.content[0].contentType = kHMCFStringContent;
-		_rec.content[0].u.tagCFString = _mainName;
-		if (nullptr == _mainName)
-		{
-			_rec.content[0].u.tagCFString = CFSTR("");
-		}
-		
-		// the system does not allow a name to be undefined,
-		// so an internal reference is kept to make it easier
-		// to detect never-defined tags
-		_altName = inAlt;
-		_rec.content[1].contentType = kHMCFStringContent;
-		_rec.content[1].u.tagCFString = _altName;
-		if (nullptr == inAlt)
-		{
-			_rec.content[1].u.tagCFString = CFSTR("");
-		}
-	}
-	
-	inline void
-	setFrame	(HIRect const&		inNewFrame)
-	{
-		// the tag is forced to render at a point, so the rectangle is squished
-		RegionUtilities_SetRect(&_rec.absHotRect, STATIC_CAST(inNewFrame.origin.x, short), STATIC_CAST(inNewFrame.origin.y, short),
-								0, 0);
-		RegionUtilities_SetRect(&_rec.absHotRect, _rec.absHotRect.left, _rec.absHotRect.top,
-								_rec.absHotRect.left + STATIC_CAST(inNewFrame.size.width, short),
-								_rec.absHotRect.top + STATIC_CAST(inNewFrame.size.height, short));
-	}
-
-private:
-	HMHelpContentRec	_rec;
-	CFStringRef			_mainName;	// unlike the record name, this can be nullptr
-	CFStringRef			_altName;	// unlike the record name, this can be nullptr
-};
-
 typedef std::vector< TerminalScreenRef >		My_PrintJobList;
 
 typedef std::vector< VectorInterpreter_Ref >	My_TEKGraphicList;
 
 typedef std::vector< TerminalScreenRef >		My_TerminalScreenList;
-
-typedef std::map< HIViewRef, EventHandlerRef >	My_TextInputHandlerByView;
 
 typedef std::set< VectorWindow_Ref >			My_VectorWindowSet;
 
@@ -291,14 +199,6 @@ struct My_Session
 	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
 	CFAbsoluteTime				watchTriggerAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the last watch of any kind went off
-	EventHandlerUPP				windowClosingUPP;			// wrapper for window closing callback
-	EventHandlerRef				windowClosingHandler;		// invoked whenever a session terminal window should close
-	EventHandlerUPP				windowFocusChangeUPP;		// wrapper for window focus-change callback
-	EventHandlerRef				windowFocusChangeHandler;	// invoked whenever a session terminal window is chosen for keyboard input
-	EventHandlerUPP				terminalViewEnteredUPP;		// wrapper for mouse tracking (focus-follows-mouse) callback
-	My_DragDropHandlerByView	terminalViewEnteredHandlers;// invoked whenever the mouse moves into a terminal view
-	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
-	My_TextInputHandlerByView	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
 	Session_TextInput*			textInputDelegate;			// for Cocoa; given text input to a view, send appropriate action or text to session
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerWrap	windowValidationListener;	// responds after a window is created, and just before it dies
@@ -383,12 +283,7 @@ void						localEchoString						(My_SessionPtr, CFStringRef);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 size_t						processMoreData						(My_SessionPtr);
-OSStatus					receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
-OSStatus					receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
-OSStatus					receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
-OSStatus					receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 void						respawnSession						(EventLoopTimerRef, void*);
-HIWindowRef					returnActiveLegacyCarbonWindow		(My_SessionPtr);
 NSWindow*					returnActiveNSWindow				(My_SessionPtr);
 void						setIconFromState					(My_SessionPtr);
 void						sheetClosed							(GenericDialog_Ref, Boolean);
@@ -902,19 +797,10 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 																CFRetainRelease::kAlreadyRetained);
 		CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
 															CFRetainRelease::kAlreadyRetained);
-		HIWindowRef								carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inRef);
 		
 		
-		if (nullptr != carbonWindow)
-		{
-			dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(carbonWindow, embeddedPanel, temporaryContext),
-										GenericDialog_Wrap::kAlreadyRetained);
-		}
-		else
-		{
-			dialog = GenericDialog_Wrap(GenericDialog_New(Session_ReturnActiveNSWindow(inRef).contentView, embeddedPanel, temporaryContext),
-										GenericDialog_Wrap::kAlreadyRetained);
-		}
+		dialog = GenericDialog_Wrap(GenericDialog_New(Session_ReturnActiveNSWindow(inRef).contentView, embeddedPanel, temporaryContext),
+									GenericDialog_Wrap::kAlreadyRetained);
 		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 		GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 		GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -997,10 +883,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 	{
 		AlertMessages_BoxWrap	box;
 		TerminalWindowRef		terminalWindow = nullptr;
-		HIWindowRef				carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inRef);
-		NSWindow*				window = ((nullptr == carbonWindow) ? Session_ReturnActiveNSWindow(inRef) : nil);
-		Rect					originalStructureBounds;
-		Rect					centeredStructureBounds;
+		NSWindow*				window = Session_ReturnActiveNSWindow(inRef);
 		NSRect					originalFrame;
 		NSRect					centeredFrame;
 		__block Boolean			wasCancelled = false;
@@ -1010,32 +893,13 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 		{
 			box = AlertMessages_BoxWrap(Alert_NewApplicationModal(), AlertMessages_BoxWrap::kAlreadyRetained);
 		}
-		else if (nullptr != carbonWindow)
-		{
-			box = AlertMessages_BoxWrap(Alert_NewWindowModalParentCarbon(carbonWindow/* parent */),
-										AlertMessages_BoxWrap::kAlreadyRetained);
-		}
 		else
 		{
 			box = AlertMessages_BoxWrap(Alert_NewWindowModal(window/* parent */),
 										AlertMessages_BoxWrap::kAlreadyRetained);
 		}
 		
-		if (nullptr != carbonWindow)
-		{
-			OSStatus	error = noErr;
-			
-			
-			error = GetWindowBounds(carbonWindow, kWindowStructureRgn, &originalStructureBounds);
-			if (noErr != error)
-			{
-				RegionUtilities_SetRect(&originalStructureBounds, 0, 0, 0, 0);
-			}
-		}
-		else
-		{
-			originalFrame = window.frame;
-		}
+		originalFrame = window.frame;
 		
 		// TEMPORARY - this should really take into account whether the quit event is interactive
 		{
@@ -1055,33 +919,6 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				
 				// center the window on the screen, but slightly offset toward the top half;
 				// do not allow the window to go off of the screen, however
-				if (nullptr != carbonWindow)
-				{
-					Rect		availablePositioningBounds;
-					OSStatus	error = noErr;
-					
-					
-					RegionUtilities_GetPositioningBounds(carbonWindow, &availablePositioningBounds);
-					centeredStructureBounds = originalStructureBounds;
-					RegionUtilities_CenterRectIn(&centeredStructureBounds, &availablePositioningBounds);
-					centeredStructureBounds.top += kOffsetFromCenterV;
-					centeredStructureBounds.bottom += kOffsetFromCenterV;
-					if (centeredStructureBounds.top < kAbsoluteMinimumV)
-					{
-						SInt16 const	kWindowHeight = centeredStructureBounds.bottom - centeredStructureBounds.top;
-						
-						
-						centeredStructureBounds.top = kAbsoluteMinimumV;
-						centeredStructureBounds.bottom = centeredStructureBounds.top + kWindowHeight;
-					}
-					error = TransitionWindow(carbonWindow, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-												&centeredStructureBounds);
-					if (noErr != error)
-					{
-						Console_Warning(Console_WriteValue, "failed to transition window for termination warning, error", error);
-					}
-				}
-				else
 				{
 					NSScreen*	windowScreen = ((nil != window.screen)
 												? window.screen
@@ -1259,30 +1096,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 				// was transitioned to the screen center, “un-transition”
 				// the most recent window back to its original location -
 				// unless of course the user has since moved the window
-				if (nullptr != carbonWindow)
-				{
-					Rect	currentStructureBounds;
-					
-					
-					UNUSED_RETURN(OSStatus)GetWindowBounds(carbonWindow, kWindowStructureRgn, &currentStructureBounds);
-					if (RegionUtilities_EqualRects(&currentStructureBounds, &centeredStructureBounds))
-					{
-						HIRect						floatBounds = CGRectMake(originalStructureBounds.left, originalStructureBounds.top,
-																				originalStructureBounds.right - originalStructureBounds.left,
-																				originalStructureBounds.bottom - originalStructureBounds.top);
-						TransitionWindowOptions		transitionOptions;
-						
-						
-						bzero(&transitionOptions, sizeof(transitionOptions));
-						transitionOptions.version = 0;
-						UNUSED_RETURN(OSStatus)TransitionWindowWithOptions(carbonWindow, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-																			&floatBounds, true/* asynchronous */, &transitionOptions);
-					}
-				}
-				else
-				{
-					Console_Warning(Console_WriteLine, "window back-transition not implemented for Cocoa");
-				}
+				Console_Warning(Console_WriteLine, "window back-transition not implemented for Cocoa");
 			}
 		}
 		else
@@ -1336,7 +1150,6 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 												Session_SetWindowUserDefinedTitle(inRef, inNewTitle);
 											}
 										};
-		HIWindowRef		carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inRef);
 		Boolean			noAnimations = false;
 		
 		
@@ -1348,297 +1161,12 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 			noAnimations = false; // assume a value, if preference can’t be found
 		}
 		
-		if (nullptr != carbonWindow)
-		{
-			ptr->renameDialog = WindowTitleDialog_NewWindowModalParentCarbon
-								(carbonWindow, (false == noAnimations), initBlock, finalBlock);
-		}
-		else
-		{
-			ptr->renameDialog = WindowTitleDialog_NewWindowModal
-								(Session_ReturnActiveNSWindow(inRef), (false == noAnimations),
-									initBlock, finalBlock);
-		}
+		ptr->renameDialog = WindowTitleDialog_NewWindowModal
+							(Session_ReturnActiveNSWindow(inRef), (false == noAnimations),
+								initBlock, finalBlock);
 	}
 	WindowTitleDialog_Display(ptr->renameDialog);
 }// DisplayWindowRenameUI
-
-
-/*!
-Copies as much configuration information as possible
-from the specified session, and returns a new
-Session Description containing all the data.  You
-can use this to save a session to a file.
-
-\retval kSession_ResultOK
-if there are no errors
-
-\retval kSession_ResultInvalidReference
-if the specified session is unrecognized
-
-\retval kSession_ResultParameterError
-if "outNewSaveFileMemoryModelPtr" is nullptr
-
-(3.0)
-*/
-Session_Result
-Session_FillInSessionDescription	(SessionRef					inRef,
-									 SessionDescription_Ref*	outNewSaveFileMemoryModelPtr)
-{
-	Session_Result		result = kSession_ResultOK;
-	
-	
-	if (outNewSaveFileMemoryModelPtr == nullptr) result = kSession_ResultParameterError;
-	else
-	{
-		// now write to the file, using an in-memory model first
-		SessionDescription_Result	saveError = kSessionDescription_ResultOK;
-		SessionDescription_Ref		saveFileMemoryModel = SessionDescription_New
-															(kSessionDescription_ContentTypeCommand);
-		
-		
-		*outNewSaveFileMemoryModelPtr = saveFileMemoryModel;
-		if (saveFileMemoryModel != nullptr)
-		{
-			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-			Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
-			TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
-			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-			
-			
-			// write all information into memory
-			{
-				CFStringRef			stringValue = nullptr;
-				CGDeviceColor		colorValue;
-				Session_Result		sessionResult = kSession_ResultOK;
-				
-				
-				// window title
-				sessionResult = Session_GetWindowUserDefinedTitle(inRef, stringValue);
-				if (sessionResult.ok())
-				{
-					saveError = SessionDescription_SetStringData
-								(saveFileMemoryModel, kSessionDescription_StringTypeWindowName, stringValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save window title, error", saveError);
-					}
-					CFRelease(stringValue), stringValue = nullptr;
-				}
-				
-				// command info
-				stringValue = CFStringCreateByCombiningStrings(kCFAllocatorDefault,
-																ptr->commandLineArguments.returnCFArrayRef(), CFSTR(" "));
-				if (nullptr != stringValue)
-				{
-					saveError = SessionDescription_SetStringData
-									(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine, stringValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save command line, error", saveError);
-					}
-					CFRelease(stringValue), stringValue = nullptr;
-				}
-				
-				// macro info
-				if (nullptr != currentMacros)
-				{
-					Preferences_Result		prefsResult = Preferences_ContextGetName(currentMacros, stringValue);
-					
-					
-					// note: string is not allocated so it must not be released
-					if ((kPreferences_ResultOK == prefsResult) && (nullptr != stringValue))
-					{
-						saveError = SessionDescription_SetStringData
-										(saveFileMemoryModel, kSessionDescription_StringTypeMacroSet, stringValue);
-						if (kSessionDescription_ResultOK != saveError)
-						{
-							Console_Warning(Console_WriteValue, "failed to save macro set name, error", saveError);
-						}
-					}
-				}
-				
-				// font info
-				{
-					UInt16		fontSize = 0;
-					
-					
-					TerminalView_GetFontAndSize(view, &stringValue, &fontSize);
-					if (stringValue != nullptr)
-					{
-						saveError = SessionDescription_SetStringData
-									(saveFileMemoryModel, kSessionDescription_StringTypeTerminalFont, stringValue);
-						if (kSessionDescription_ResultOK != saveError)
-						{
-							Console_Warning(Console_WriteValue, "failed to save font name, error", saveError);
-						}
-					}
-					saveError = SessionDescription_SetIntegerData
-								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalFontSize, fontSize);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save font size, error", saveError);
-					}
-				}
-				
-				// color info
-				{
-					TerminalView_GetColor(view, kTerminalView_ColorIndexNormalText, &colorValue);
-					saveError = SessionDescription_SetRGBColorData
-								(saveFileMemoryModel, kSessionDescription_RGBColorTypeTextNormal, colorValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save normal text color, error", saveError);
-					}
-					
-					TerminalView_GetColor(view, kTerminalView_ColorIndexNormalBackground, &colorValue);
-					saveError = SessionDescription_SetRGBColorData
-								(saveFileMemoryModel, kSessionDescription_RGBColorTypeBackgroundNormal, colorValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save normal background color, error", saveError);
-					}
-					
-					TerminalView_GetColor(view, kTerminalView_ColorIndexBoldText, &colorValue);
-					saveError = SessionDescription_SetRGBColorData
-								(saveFileMemoryModel, kSessionDescription_RGBColorTypeTextBold, colorValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save bold text color, error", saveError);
-					}
-					
-					TerminalView_GetColor(view, kTerminalView_ColorIndexBoldBackground, &colorValue);
-					saveError = SessionDescription_SetRGBColorData
-								(saveFileMemoryModel, kSessionDescription_RGBColorTypeBackgroundBold, colorValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save bold background color, error", saveError);
-					}
-					
-					TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingText, &colorValue);
-					saveError = SessionDescription_SetRGBColorData
-								(saveFileMemoryModel, kSessionDescription_RGBColorTypeTextBlinking, colorValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save blinking text color, error", saveError);
-					}
-					
-					TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingBackground, &colorValue);
-					saveError = SessionDescription_SetRGBColorData
-								(saveFileMemoryModel, kSessionDescription_RGBColorTypeBackgroundBlinking, colorValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save blinking background color, error", saveError);
-					}
-				}
-				
-				// terminal screen metrics
-				if (false == ptr->targetTerminals.empty())
-				{
-					// TEMPORARY - limitations of this format do not really allow for the
-					// concept of multiple screens per window!
-					TerminalScreenRef	screen = ptr->targetTerminals.front();
-					UInt16				columns = Terminal_ReturnColumnCount(screen);
-					UInt16				rows = Terminal_ReturnRowCount(screen);
-					UInt32				scrollback = Terminal_ReturnInvisibleRowCount(screen);
-					
-					
-					saveError = SessionDescription_SetIntegerData
-								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalVisibleColumnCount, columns);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save column count, error", saveError);
-					}
-					saveError = SessionDescription_SetIntegerData
-								(saveFileMemoryModel, kSessionDescription_IntegerTypeTerminalVisibleLineCount, rows);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save row count, error", saveError);
-					}
-					saveError = SessionDescription_SetIntegerData
-								(saveFileMemoryModel, kSessionDescription_IntegerTypeScrollbackBufferLineCount, scrollback);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save scrollback row count, error", saveError);
-					}
-				}
-				
-				// terminal type
-				{
-					Session_TerminalCopyAnswerBackMessage(inRef, stringValue);
-					saveError = SessionDescription_SetStringData
-								(saveFileMemoryModel, kSessionDescription_StringTypeAnswerBack, stringValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save terminal type, error", saveError);
-					}
-					if (nullptr != stringValue)
-					{
-						CFRelease(stringValue), stringValue = nullptr;
-					}
-				}
-				
-				// keyboard mapping info
-				{
-					Boolean		flag = false;
-					
-					
-					flag = (kSession_NewlineModeMapCRNull == ptr->eventKeys.newline);
-					saveError = SessionDescription_SetBooleanData
-								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapCR, flag);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save new-line mapping, error", saveError);
-					}
-					flag = !ptr->eventKeys.pageKeysLocalControl;
-					saveError = SessionDescription_SetBooleanData
-								(saveFileMemoryModel, kSessionDescription_BooleanTypePageKeysDoNotControlTerminal, flag);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save page key setting, error", saveError);
-					}
-					flag = false; // TEMPORARY
-					saveError = SessionDescription_SetBooleanData
-								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapKeypadTopRow, flag);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save keypad top row setting, error", saveError);
-					}
-				}
-				
-				// TEK info
-				{
-					Boolean const	kFlag = (false == Session_TEKPageCommandOpensNewWindow(inRef));
-					
-					
-					saveError = SessionDescription_SetBooleanData
-								(saveFileMemoryModel, kSessionDescription_BooleanTypeTEKPageClears, kFlag);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save TEK page clear setting, error", saveError);
-					}
-				}
-				
-				// Kerberos info: no longer supported
-				
-				// toolbar info
-				{
-					// TEMPORARY; should respect all possible toolbar view options (see "SessionDescription.h")
-					//stringValue = TerminalWindow_ToolbarIsVisible(ptr->terminalWindow) ? CFSTR("icon+text") : CFSTR("hidden");
-					stringValue = CFSTR("icon+text");
-					saveError = SessionDescription_SetStringData
-								(saveFileMemoryModel, kSessionDescription_StringTypeToolbarInfo, stringValue);
-					if (kSessionDescription_ResultOK != saveError)
-					{
-						Console_Warning(Console_WriteValue, "failed to save toolbar state, error", saveError);
-					}
-				}
-			}
-		}
-	}
-	
-	return result;
-}// FillInSessionDescription
 
 
 /*!
@@ -2136,27 +1664,6 @@ Session_ReturnActiveTerminalWindow	(SessionRef		inRef)
 	}
 	return result;
 }// ReturnActiveTerminalWindow
-
-
-/*!
-Returns the most recently active window associated
-with the specified session, or nullptr if it cannot
-be found.  Also returns nullptr if the session was
-constructed using a modern Cocoa window.
-
-DEPRECATED; use Session_ReturnActiveNSWindow().
-
-(3.0)
-*/
-HIWindowRef
-Session_ReturnActiveLegacyCarbonWindow		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	HIWindowRef				result = returnActiveLegacyCarbonWindow(ptr);
-	
-	
-	return result;
-}// ReturnActiveLegacyCarbonWindow
 
 
 /*!
@@ -2916,9 +2423,6 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 	}
 	else
 	{
-		// hide the help tag displayed by the Suspend
-		UNUSED_RETURN(OSStatus)HMHideTag();
-		
 		// resume
 		if (nullptr != ptr->mainProcess)
 		{
@@ -3139,15 +2643,11 @@ Session_SetState	(SessionRef			inRef,
 			}
 			else if (kSession_StateActiveUnstable == ptr->status)
 			{
-				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessNewborn,
-													statusString);
-				ptr->statusString.setWithRetain(statusString);
+				ptr->statusString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_SessionInfoWindowStatusProcessNewborn));
 			}
 			else if (kSession_StateActiveStable == ptr->status)
 			{
-				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessRunning,
-													statusString);
-				ptr->statusString.setWithRetain(statusString);
+				ptr->statusString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_SessionInfoWindowStatusProcessRunning));
 			}
 			else
 			{
@@ -5525,14 +5025,6 @@ deviceNameString(),
 activationAbsoluteTime(CFAbsoluteTimeGetCurrent()),
 terminationAbsoluteTime(0),
 watchTriggerAbsoluteTime(CFAbsoluteTimeGetCurrent()),
-windowClosingUPP(nullptr), // set at window validation time
-windowClosingHandler(nullptr), // set at window validation time
-windowFocusChangeUPP(nullptr), // set at window validation time
-windowFocusChangeHandler(nullptr), // set at window validation time
-terminalViewEnteredUPP(nullptr), // set at window validation time
-terminalViewEnteredHandlers(), // set at window validation time
-terminalViewTextInputUPP(nullptr), // set at window validation time
-terminalViewTextInputHandlers(), // set at window validation time
 textInputDelegate(nil), // set at window validation time
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
@@ -6269,83 +5761,8 @@ handleSaveFromPanel		(My_SessionPtr		inPtr,
 	
 	if (noErr == error)
 	{
-		// write to file, using in-memory model first
-		Session_Result			sessionError = kSession_ResultOK;
-		SessionDescription_Ref  saveFileMemoryModel = nullptr;
-		
-		
-		sessionError = Session_FillInSessionDescription(inPtr->selfRef, &saveFileMemoryModel);
-		if (sessionError != kSession_ResultOK)
-		{
-			Console_Warning(Console_WriteValue, "failed to generate session description, error", sessionError.code());
-			Alert_ReportOSStatus(resNotFound/* arbitrary */);
-		}
-		else
-		{
-			// now save to disk
-			SInt16		fileRefNum = -1;
-			FSRef		temporaryFile;
-			
-			
-			// open temporary file for overwrite (later, this will
-			// be swapped with the target file)
-			fileRefNum = FileUtilities_OpenTemporaryFile(temporaryFile);
-			if (fileRefNum <= 0)
-			{
-				Console_Warning(Console_WriteLine, "failed to open temporary file");
-				Alert_ReportOSStatus(writErr/* arbitrary */);
-			}
-			else
-			{
-				SessionDescription_Result	saveError = kSessionDescription_ResultOK;
-				
-				
-				UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
-				saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
-				UNUSED_RETURN(OSStatus)FSCloseFork(fileRefNum), fileRefNum = -1;
-				if (saveError != kSessionDescription_ResultOK)
-				{
-					Alert_ReportOSStatus(writErr/* arbitrary */);
-				}
-				else
-				{
-					error = FSExchangeObjects(&temporaryFile, &saveFile);
-					if (noErr != error)
-					{
-						// if a “safe” save fails, the volume may not support object exchange;
-						// so, fall back to overwriting the original file in that case
-						error = FSOpenFork(&saveFile, 0/* fork name length */, nullptr/* fork name */,
-											fsWrPerm, &fileRefNum);
-						if (noErr != error)
-						{
-							Console_Warning(Console_WriteValue, "failed to open target (data is still in temporary file), error", error);
-							Alert_ReportOSStatus(error);
-						}
-						else
-						{
-							// swap with temporary file failed; attempt save again,
-							// this time directly to the target location
-							UNUSED_RETURN(OSStatus)FSSetForkSize(fileRefNum, fsFromStart, 0);
-							saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
-							if (kSessionDescription_ResultOK != saveError)
-							{
-								Console_Warning(Console_WriteValue, "failed to save session, error", saveError);
-							}
-							UNUSED_RETURN(OSStatus)FSCloseFork(fileRefNum), fileRefNum = -1;
-						}
-					}
-				}
-				
-				// delete the temporary; it will either contain a partial save file
-				// that did not successfully write, or it will contain whatever the
-				// user’s original file had (and the new file will be successfully
-				// in the user’s selected location, instead of temporary space)
-				UNUSED_RETURN(OSStatus)FSDeleteObject(&temporaryFile);
-			}
-			
-			// clean up
-			SessionDescription_Release(&saveFileMemoryModel);
-		}
+		// INCOMPLETE; reimplement writer in Python
+		Console_Warning(Console_WriteLine, "failed to generate '.session' (not implemented)");
 	}
 }// handleSaveFromPanel
 
@@ -7285,436 +6702,10 @@ processMoreData		(My_SessionPtr	inPtr)
 	// thread using the blocking read() system call, so in that
 	// case data is expected to have been placed in the read buffer
 	// already by that thread
-	(Session_Result)Session_ReceiveData(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
+	UNUSED_RETURN(Session_Result)Session_ReceiveData(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
 	inPtr->readBufferSizeInUse = 0;
 	return result;
 }// processMoreData
-
-
-/*!
-Handles "kEventControlTrackingAreaEntered" of "kEventClassControl"
-for a terminal view.
-
-(3.1)
-*/
-OSStatus
-receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					UNUSED_ARGUMENT(inSessionRef))
-{
-	OSStatus		result = eventNotHandledErr;
-	//SessionRef		session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlTrackingAreaEntered);
-	{
-		Boolean		focusFollowsMouse = false;
-		
-		
-		// do not change focus unless the preference is set;
-		// TEMPORARY: possibly inefficient to always check this here,
-		// the alternative would be to update preferenceChanged() to
-		// monitor changes to the preference and add/remove the
-		// tracking handler as appropriate
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(focusFollowsMouse),
-									&focusFollowsMouse))
-		{
-			focusFollowsMouse = false; // assume a value, if preference can’t be found
-		}
-		
-		// ignore this event if the application is not frontmost
-		if (NO == [NSApp isActive])
-		{
-			focusFollowsMouse = false;
-		}
-		
-		if (focusFollowsMouse)
-		{
-			HIViewRef	view = nullptr;
-			
-			
-			// determine the view that is now under the mouse
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-			if (noErr == result)
-			{
-				HIWindowRef		originalWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* must be showing */);
-				HIWindowRef		oldWindow = GetUserFocusWindow();
-				HIWindowRef		newWindow = HIViewGetWindow(view);
-				
-				
-				if (newWindow != oldWindow)
-				{
-					OSStatus		error = noErr;
-					WindowModality	oldWindowModality = kWindowModalityNone;
-					HIWindowRef		oldParentWindow = nullptr;
-					
-					
-					error = GetWindowModality(oldWindow, &oldWindowModality, &oldParentWindow);
-					if (noErr != error)
-					{
-						// odd...ignore error and move forward
-						oldWindowModality = kWindowModalityNone;
-					}
-					if (newWindow != oldParentWindow)
-					{
-						// only allow focus switching if the active window is a terminal
-						// or a sheet on top of a terminal
-						if (((nullptr != oldWindow) && TerminalWindow_ExistsFor(oldWindow)) ||
-							((nullptr != oldParentWindow) && TerminalWindow_ExistsFor(oldParentWindow)))
-						{
-							HIWindowRef		newBlockingWindow = nullptr;
-							
-							
-							if (HIWindowIsDocumentModalTarget(newWindow, &newBlockingWindow))
-							{
-								// the target has a sheet; the OS does not allow a background
-								// sheet to become focused separately, so avoid switching unless
-								// the request came from a window that had no sheet to begin
-								// with (indicating a return to an already-frontmost sheet)
-								if ((nullptr == oldParentWindow) &&
-									(newWindow == originalWindow))
-								{
-									// the target has a sheet and the source did not, so it should be
-									// possible to focus the sheet instead of the target frame
-									HiliteWindow(newWindow, true); // but fix the parent frame anyway
-									newWindow = newBlockingWindow;
-								}
-								else
-								{
-									focusFollowsMouse = false;
-								}
-							}
-						}
-						else
-						{
-							focusFollowsMouse = false;
-						}
-						
-						if (focusFollowsMouse)
-						{
-							// highlight and focus, but do not bring to front, the view and its window
-							if (nullptr != oldWindow) HiliteWindow(oldWindow, false);
-							if (nullptr != oldParentWindow) HiliteWindow(oldParentWindow, false);
-							HiliteWindow(newWindow, true);
-							SetUserFocusWindow(newWindow);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	return result;
-}// receiveTerminalViewEntered
-
-
-/*!
-Handles "kEventTextInputUnicodeForKeyEvent" of
-"kEventClassTextInput" for a session’s terminal views.
-
-(3.0)
-*/
-OSStatus
-receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					inSessionRef)
-{
-	OSStatus		result = eventNotHandledErr;
-	SessionRef		session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassTextInput);
-	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
-	{
-		EventRef		originalKeyPressEvent = nullptr;
-		My_KeyPress		controlKeyPressInfo;
-		OSStatus		error = noErr;
-		
-		
-		error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent, typeEventRef,
-														originalKeyPressEvent);
-		assert(error == noErr);
-		
-		// TEMPORARY - just fill in the old structure and invoke the original
-		// callback, until eventually this handler does all the work itself
-		bzero(&controlKeyPressInfo, sizeof(controlKeyPressInfo));
-		
-		{
-			// determine the control in question
-			//???error = CarbonEventUtilities_GetEventParameter
-			//???		(originalKeyPressEvent, kEventParamDirectObject, typeControlRef, controlKeyPressInfo.control);
-			controlKeyPressInfo.control = TerminalView_ReturnUserFocusHIView
-											(TerminalWindow_ReturnViewWithFocus
-												(Session_ReturnActiveTerminalWindow(session)));
-			assert(controlKeyPressInfo.control != nullptr);
-		}
-		
-		{
-			UInt32		modifiers = 0;
-			
-			
-			// determine the modifier key states question
-			error = CarbonEventUtilities_GetEventParameter(originalKeyPressEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-			if (error == noErr)
-			{
-				controlKeyPressInfo.commandDown = ((modifiers & cmdKey) != 0);
-				controlKeyPressInfo.controlDown = ((modifiers & controlKey) != 0);
-				controlKeyPressInfo.optionDown = ((modifiers & optionKey) != 0);
-				controlKeyPressInfo.shiftDown = ((modifiers & shiftKey) != 0);
-			}
-		}
-		
-		{
-			// determine the character codes
-			UInt32		numberOfCharacters = 0;
-			UInt8		characterCodes[2] = { '\0', '\0' };
-			
-			
-			error = CarbonEventUtilities_GetEventParameterVariableSize
-					(originalKeyPressEvent, kEventParamKeyMacCharCodes, typeChar, characterCodes, numberOfCharacters);
-			if ((error == noErr) && (numberOfCharacters > 0))
-			{
-				controlKeyPressInfo.characterCode = characterCodes[0];
-				controlKeyPressInfo.characterCode2 = characterCodes[1];
-				
-				// filter out tab key presses, they have significance to terminals
-				if (characterCodes[0] == 0x09)
-				{
-					result = noErr; // event is completely handled
-				}
-				
-				// filter out Escape key presses, they are likely to matter more to terminals
-				// (in particular, ignore this as a way to Exit Full Screen)
-				if (characterCodes[0] == 0x1B)
-				{
-					result = noErr; // event is completely handled
-				}
-			}
-		}
-		
-		{
-			// determine the virtual key code
-			UInt32		keyCode = '\0';
-			
-			
-			error = CarbonEventUtilities_GetEventParameter
-					(originalKeyPressEvent, kEventParamKeyCode, typeUInt32, keyCode);
-			if (error == noErr)
-			{
-				controlKeyPressInfo.virtualKeyCode = keyCode;
-			}
-		}
-		
-		// perform character-based key or character mappings
-		switch (controlKeyPressInfo.characterCode)
-		{
-		case 3:
-			// corrects known bug in system key mapping
-			// NOTE: This is based on old NCSA Telnet code.  Does this even *matter* anymore?
-			if ((controlKeyPressInfo.virtualKeyCode == 0x34) ||
-				(controlKeyPressInfo.virtualKeyCode == kVK_ANSI_KeypadEnter/* 0x4C */))
-			{
-				// fix for PowerBook 540’s bad KCHR; map control-C to Return
-				controlKeyPressInfo.characterCode = 13;
-			}
-			break;
-		
-		case '2':
-			// corrects known bug in system key mapping
-			// NOTE: This is based on old NCSA Telnet code.  Does this even *matter* anymore?
-			if ((controlKeyPressInfo.controlDown) && (controlKeyPressInfo.shiftDown))
-			{
-				// fix bad KCHR control-@
-				controlKeyPressInfo.characterCode = 0;
-			}
-			break;
-		
-		case '6':
-			// corrects known bug in system key mapping
-			// NOTE: This is based on old NCSA Telnet code.  Does this even *matter* anymore?
-			if ((controlKeyPressInfo.controlDown) && (controlKeyPressInfo.shiftDown))
-			{
-				// fix bad KCHR control-^
-				controlKeyPressInfo.characterCode = 0x1E;
-			}
-			break;
-		
-		case '`':
-			// user-defined key mapping
-			{
-				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-				
-				
-				if ((false == controlKeyPressInfo.commandDown) &&
-					(ptr->preferencesCache.remapBackquoteToEscape))
-				{
-					controlKeyPressInfo.characterCode = 0x1B/* escape */;
-				}
-			}
-			break;
-		
-		case '@':
-		case 32:
-			// this, along with the fixed KCHR that maps a ^-@ to
-			// a @, takes care of Apple not posting null key values
-			// NOTE: This is based on old NCSA Telnet code.  Does this even *matter* anymore?
-			if (controlKeyPressInfo.controlDown)
-			{
-				controlKeyPressInfo.characterCode = '\0';
-			}
-			break;
-		
-		default:
-			// all others are fine
-			break;
-		}
-		
-		// perform key-based key or character mappings
-		switch (controlKeyPressInfo.virtualKeyCode)
-		{
-		case kVK_Delete: // 0x33
-			// handle mapping BS to DEL, flipping on option-delete or command-delete
-			{
-				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-				Boolean					sendBackspace = ptr->eventKeys.deleteSendsBackspace;
-				
-				
-				if ((controlKeyPressInfo.optionDown) || (controlKeyPressInfo.commandDown))
-				{
-					sendBackspace = !sendBackspace;
-					
-					// clear these modifier keys, because they were only used
-					// to alter the effective character and should not have
-					// any other special significance
-					controlKeyPressInfo.optionDown = false;
-					controlKeyPressInfo.commandDown = false;
-				}
-				
-				if (sendBackspace)
-				{
-					controlKeyPressInfo.characterCode = 0x08; // backspace
-				}
-				else
-				{
-					controlKeyPressInfo.characterCode = 0x7F; // delete
-				}
-			}
-			break;
-		
-		default:
-			// all others are fine
-			break;
-		}
-		
-		// hide the cursor until the mouse moves
-		[NSCursor setHiddenUntilMouseMoves:YES];
-		
-		// note that a key equivalent for a menu item might be invoked
-		// when the corresponding item is disabled; Cocoa seems to forward
-		// such events to the next window instead of absorbing them, and
-		// this should not cause a command key letter to be typed into a
-		// terminal; an explicit command key check avoids the problem
-		if (false == controlKeyPressInfo.commandDown)
-		{
-			handleSessionKeyDown(nullptr/* unused listener model */, 0/* unused event code */,
-									&controlKeyPressInfo/* event context */, session/* listener context */);
-		}
-	}
-	
-	return result;
-}// receiveTerminalViewTextInput
-
-
-/*!
-Handles "kEventWindowClose" of "kEventClassWindow"
-for a session’s terminal window.
-
-(3.0)
-*/
-OSStatus
-receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					inSessionRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	SessionRef			session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowClose);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			// arrange to close the window; this might happen immediately
-			// if the session is already dead or it has not been open
-			// for long, otherwise it will present a warning to the user
-			// and the window will be killed asynchronously (if at all)
-			Session_DisplayTerminationWarning(session);
-			
-			result = noErr; // event is completely handled
-		}
-	}
-	
-	return result;
-}// receiveWindowClosing
-
-
-/*!
-Embellishes "kEventWindowFocusAcquired" of "kEventClassWindow"
-for a session’s terminal window, by clearing any notifications
-set on the session.
-
-(3.1)
-*/
-OSStatus
-receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					inSessionRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	SessionRef			session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowFocusAcquired);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-			
-			
-			watchClearForSession(ptr);
-			
-			result = eventNotHandledErr; // pass event to parent handler
-		}
-	}
-	
-	return result;
-}// receiveWindowFocusChange
 
 
 /*!
@@ -7741,32 +6732,6 @@ respawnSession	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		Console_Warning(Console_WriteLine, "failed to restart session");
 	}
 }// respawnSession
-
-
-/*!
-Returns the Carbon window most recently used by this
-session or nullptr if the session was constructed
-using a modern Cocoa window.
-
-DEPRECATED.  Migrate to returnActiveNSWindow().
-
-(4.0)
-*/
-HIWindowRef
-returnActiveLegacyCarbonWindow	(My_SessionPtr		inPtr)
-{
-	HIWindowRef		result = nullptr;
-	
-	
-	if ((nullptr != inPtr) && Session_IsValid(inPtr->selfRef))
-	{
-		if ((nullptr != inPtr->terminalWindow) && TerminalWindow_IsLegacyCarbon(inPtr->terminalWindow))
-		{
-			result = TerminalWindow_ReturnLegacyCarbonWindow(inPtr->terminalWindow);
-		}
-	}
-	return result;
-}// returnActiveLegacyCarbonWindow
 
 
 /*!
@@ -8136,18 +7101,8 @@ terminationWarningClose		(SessionRef&	inoutSessionRef,
 				// implicitly update the toolbar visibility preference based
 				// on the toolbar visibility of this closing window
 				{
-					HIWindowRef		carbonWindow = returnActiveLegacyCarbonWindow(sessionPtr);
-					Boolean			toolbarHidden = false;
+					Boolean		toolbarHidden = (NO == [[returnActiveNSWindow(sessionPtr) toolbar] isVisible]);
 					
-					
-					if (nullptr != carbonWindow)
-					{
-						toolbarHidden = (false == IsWindowToolbarVisible(carbonWindow));
-					}
-					else
-					{
-						toolbarHidden = (false == [[returnActiveNSWindow(sessionPtr) toolbar] isVisible]);
-					}
 					
 					UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
 																			sizeof(toolbarHidden), &toolbarHidden);
@@ -8234,16 +7189,7 @@ vectorGraphicsCreateTarget		(My_SessionPtr	inPtr)
 										false == inPtr->vectorGraphicsPageOpensNewWindow);
 		VectorCanvas_SetListeningSession(VectorInterpreter_ReturnCanvas(inPtr->vectorGraphicsInterpreter),
 											inPtr->selfRef);
-		{
-			CFStringRef		windowTitleCFString = nullptr;
-			
-			
-			if (noErr == CopyWindowTitleAsCFString(returnActiveLegacyCarbonWindow(inPtr), &windowTitleCFString))
-			{
-				VectorWindow_SetTitle(newWindow, windowTitleCFString);
-				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
-			}
-		}
+		VectorWindow_SetTitle(newWindow, BRIDGE_CAST(returnActiveNSWindow(inPtr).title, CFStringRef));
 		Session_AddDataTarget(inPtr->selfRef, kSession_DataTargetTektronixGraphicsCanvas,
 								inPtr->vectorGraphicsInterpreter);
 		
@@ -8581,52 +7527,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-			Boolean					isCarbon = TerminalWindow_IsLegacyCarbon(ptr->terminalWindow);
 			
-			
-			// install a callback that disposes of the window properly when it should be closed
-			if (isCarbon)
-			{
-				EventTypeSpec const		whenWindowClosing[] =
-										{
-											{ kEventClassWindow, kEventWindowClose }
-										};
-				OSStatus				error = noErr;
-				
-				
-				ptr->windowClosingUPP = NewEventHandlerUPP(receiveWindowClosing);
-				error = InstallWindowEventHandler(TerminalWindow_ReturnLegacyCarbonWindow(ptr->terminalWindow),
-													ptr->windowClosingUPP, GetEventTypeCount(whenWindowClosing),
-													whenWindowClosing, session/* user data */,
-													&ptr->windowClosingHandler/* event handler reference */);
-				assert(error == noErr);
-			}
-			else
-			{
-				// NOTE: for Cocoa, this is implemented in TerminalWindow_Controller ("windowShouldClose:")
-			}
-			
-			// install a callback that clears notifications when the window is activated
-			if (isCarbon)
-			{
-				EventTypeSpec const		whenWindowFocusChanged[] =
-										{
-											{ kEventClassWindow, kEventWindowFocusAcquired }
-										};
-				OSStatus				error = noErr;
-				
-				
-				ptr->windowFocusChangeUPP = NewEventHandlerUPP(receiveWindowFocusChange);
-				error = InstallWindowEventHandler(TerminalWindow_ReturnLegacyCarbonWindow(ptr->terminalWindow),
-													ptr->windowFocusChangeUPP, GetEventTypeCount(whenWindowFocusChanged),
-													whenWindowFocusChanged, session/* user data */,
-													&ptr->windowFocusChangeHandler/* event handler reference */);
-				assert(error == noErr);
-			}
-			else
-			{
-				Console_Warning(Console_WriteLine, "session window focus-handler not implemented for Cocoa");
-			}
 			
 			ptr->terminalWindowListener.setWithNoRetain(ListenerModel_NewStandardListener
 														(terminalWindowChanged, session/* context */));
@@ -8649,59 +7550,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
-					if (isCarbon)
-					{
-						// legacy key handling
-						HIViewRef		userFocusView = nullptr;
-						HIViewRef		dragFocusView = nullptr;
-						OSStatus		error = noErr;
-						
-						
-						ptr->terminalViewEnteredUPP = NewEventHandlerUPP(receiveTerminalViewEntered);
-						assert(nullptr != ptr->terminalViewEnteredUPP);
-						ptr->terminalViewTextInputUPP = NewEventHandlerUPP(receiveTerminalViewTextInput);
-						assert(nullptr != ptr->terminalViewTextInputUPP);
-						for (i = 0; i < viewCount; ++i)
-						{
-							userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
-							dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
-							
-							// install a callback that responds to drag-and-drop in views,
-							// and a callback that responds to key presses in views
-							EventTypeSpec const		whenTerminalViewTextInput[] =
-													{
-														{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent }
-													};
-							EventTypeSpec const		whenTerminalViewEntered[] =
-													{
-														{ kEventClassControl, kEventControlTrackingAreaEntered }
-													};
-							
-							
-							// ensure keyboard input to this view is seen
-							error = HIViewInstallEventHandler(userFocusView, ptr->terminalViewTextInputUPP,
-																GetEventTypeCount(whenTerminalViewTextInput),
-																whenTerminalViewTextInput, session/* user data */,
-																&ptr->terminalViewTextInputHandlers[userFocusView]);
-							assert_noerr(error);
-							
-							// if possible, allow focus-follows-mouse
-							error = HIViewInstallEventHandler(dragFocusView, ptr->terminalViewEnteredUPP,
-																GetEventTypeCount(whenTerminalViewEntered),
-																whenTerminalViewEntered, session/* user data */,
-																&ptr->terminalViewEnteredHandlers[dragFocusView]);
-							assert_noerr(error);
-							{
-								HIViewTrackingAreaRef	ignoredRef = nullptr;
-								
-								
-								error = HIViewNewTrackingArea(dragFocusView, nullptr/* shape */, 0/* ID */,
-																&ignoredRef);
-								assert_noerr(error);
-							}
-						}
-					}
-					else
+					
 					{
 						// set local delegate for each view; this is what allows keyboard
 						// events, etc. to be translated into session input and ultimately
@@ -8729,6 +7578,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							}
 						}
 					}
+					
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}
 			}
@@ -8754,21 +7604,12 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-			Boolean					isCarbon = TerminalWindow_IsLegacyCarbon(ptr->terminalWindow);
 			
 			
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
 											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
 											ptr->terminalWindowListener.returnRef());
-			
-			if (isCarbon)
-			{
-				RemoveEventHandler(ptr->windowClosingHandler), ptr->windowClosingHandler = nullptr;
-				DisposeEventHandlerUPP(ptr->windowClosingUPP), ptr->windowClosingUPP = nullptr;
-				RemoveEventHandler(ptr->windowFocusChangeHandler), ptr->windowFocusChangeHandler = nullptr;
-				DisposeEventHandlerUPP(ptr->windowFocusChangeUPP), ptr->windowFocusChangeUPP = nullptr;
-			}
 			
 			// undo view-specific tracking (inverse of "kSession_ChangeWindowValid" case above)
 			{
@@ -8783,23 +7624,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
-					if (isCarbon)
-					{
-						HIViewRef		userFocusView = nullptr;
-						HIViewRef		dragFocusView = nullptr;
-						
-						
-						for (i = 0; i < viewCount; ++i)
-						{
-							userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
-							dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
-							RemoveEventHandler(ptr->terminalViewTextInputHandlers[userFocusView]);
-							RemoveEventHandler(ptr->terminalViewEnteredHandlers[dragFocusView]);
-						}
-						DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;
-						DisposeEventHandlerUPP(ptr->terminalViewTextInputUPP), ptr->terminalViewTextInputUPP = nullptr;
-					}
-					else
+					
 					{
 						for (i = 0; i < viewCount; ++i)
 						{
@@ -8810,6 +7635,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							contentView.textInputDelegate = nil;
 						}
 					}
+					
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}
 			}

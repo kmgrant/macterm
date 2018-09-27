@@ -64,10 +64,10 @@ CarbonEventUtilities_GetEventParameter	(EventRef			inEvent,
 										 EventParamType		inParameterType,
 										 parameter_ctype&	inoutParameterValue)
 {
-	OSStatus		result = noErr;
-	UInt32 const	kExpectedSize = sizeof(inoutParameterValue);
-	UInt32			actualSize = 0L;
-	EventParamType	actualType = typeNull;
+	OSStatus			result = noErr;
+	ByteCount const		kExpectedSize = sizeof(inoutParameterValue);
+	ByteCount			actualSize = 0L;
+	EventParamType		actualType = typeNull;
 	
 	
 	result = GetEventParameter(inEvent, inParameterName, inParameterType, &actualType,
@@ -97,9 +97,9 @@ CarbonEventUtilities_GetEventParameterVariableSize	(EventRef			inEvent,
 													 parameter_carray&	inoutParameterValue,
 													 UInt32&			outActualSize)
 {
-	OSStatus		result = noErr;
-	UInt32 const	kExpectedSize = sizeof(inoutParameterValue);
-	EventParamType	actualType = typeNull;
+	OSStatus			result = noErr;
+	ByteCount const		kExpectedSize = sizeof(inoutParameterValue);
+	EventParamType		actualType = typeNull;
 	
 	
 	result = GetEventParameter(inEvent, inParameterName, inParameterType, &actualType,

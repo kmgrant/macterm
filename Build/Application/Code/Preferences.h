@@ -143,30 +143,30 @@ enum
 	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
 	kPreferences_TagFontCharacterWidthMultiplier		= 'cwid',	//!< data: "Float32"
 	// NOTE: These match menu command IDs for convenience in color boxes.
-	kPreferences_TagTerminalColorCursorBackground		= kCommandColorCursorBackground,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorMatteBackground		= kCommandColorMatteBackground,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorBlinkingForeground		= kCommandColorBlinkingForeground,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorBlinkingBackground		= kCommandColorBlinkingBackground,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorBoldForeground			= kCommandColorBoldForeground,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorBoldBackground			= kCommandColorBoldBackground,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorNormalForeground		= kCommandColorNormalForeground,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorNormalBackground		= kCommandColorNormalBackground,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIBlack				= kCommandColorBlack,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIRed				= kCommandColorRed,					//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIGreen				= kCommandColorGreen,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIYellow				= kCommandColorYellow,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIBlue				= kCommandColorBlue,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIMagenta			= kCommandColorMagenta,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSICyan				= kCommandColorCyan,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIWhite				= kCommandColorWhite,				//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIBlackBold			= kCommandColorBlackEmphasized,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIRedBold			= kCommandColorRedEmphasized,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIGreenBold			= kCommandColorGreenEmphasized,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIYellowBold			= kCommandColorYellowEmphasized,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIBlueBold			= kCommandColorBlueEmphasized,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIMagentaBold		= kCommandColorMagentaEmphasized,	//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSICyanBold			= kCommandColorCyanEmphasized,		//!< data: "CGDeviceColor"
-	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized,		//!< data: "CGDeviceColor"
+	kPreferences_TagTerminalColorCursorBackground		= kCommandColorCursorBackground,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorMatteBackground		= kCommandColorMatteBackground,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorBlinkingForeground		= kCommandColorBlinkingForeground,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorBlinkingBackground		= kCommandColorBlinkingBackground,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorBoldForeground			= kCommandColorBoldForeground,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorBoldBackground			= kCommandColorBoldBackground,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorNormalForeground		= kCommandColorNormalForeground,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorNormalBackground		= kCommandColorNormalBackground,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIBlack				= kCommandColorBlack,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIRed				= kCommandColorRed,					//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIGreen				= kCommandColorGreen,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIYellow				= kCommandColorYellow,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIBlue				= kCommandColorBlue,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIMagenta			= kCommandColorMagenta,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSICyan				= kCommandColorCyan,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIWhite				= kCommandColorWhite,				//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIBlackBold			= kCommandColorBlackEmphasized,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIRedBold			= kCommandColorRedEmphasized,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIGreenBold			= kCommandColorGreenEmphasized,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIYellowBold			= kCommandColorYellowEmphasized,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIBlueBold			= kCommandColorBlueEmphasized,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIMagentaBold		= kCommandColorMagentaEmphasized,	//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSICyanBold			= kCommandColorCyanEmphasized,		//!< data: "CGFloatRGBColor"
+	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized,		//!< data: "CGFloatRGBColor"
 	kPreferences_TagTerminalImageNormalBackground		= 'imnb',	//!< data: "CFStringRef", an image file URL
 	kPreferences_TagTerminalMarginLeft					= 'mgnl',	//!< data: "Float32", multiplies against font “m” width (even for vertical margins)
 	kPreferences_TagTerminalMarginRight					= 'mgnr',	//!< data: "Float32"
@@ -553,14 +553,6 @@ Preferences_Result
 Boolean
 	Preferences_GetContextsInClass					(Quills::Prefs::Class				inClass,
 													 std::vector< Preferences_ContextRef >&);
-
-Preferences_Result
-	Preferences_InsertContextNamesInMenu			(Quills::Prefs::Class				inClass,
-													 MenuRef							inoutMenuRef,
-													 MenuItemIndex						inAfterItemIndex,
-													 UInt32								inInitialIndent,
-													 UInt32								inCommandID,
-													 MenuItemIndex&						outHowManyItemsAdded);
 
 Boolean
 	Preferences_IsContextNameInUse					(Quills::Prefs::Class				inClass,

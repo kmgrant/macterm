@@ -47,7 +47,6 @@
 #import <CocoaAnimation.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#import <ColorUtilities.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
@@ -153,7 +152,7 @@ The private class interface.
 
 namespace {
 
-typedef std::vector< CGDeviceColor >	My_CGColorList;
+typedef std::vector< CGFloatRGBColor >	My_CGColorList;
 
 /*!
 Internal representation of a VectorCanvas_Ref.
@@ -165,7 +164,7 @@ struct My_VectorCanvas
 	VectorInterpreter_Ref	interpreter;
 	SessionRef				session;
 	My_CGColorList			deviceColors;
-	CGDeviceColor			outsideColor;
+	CGFloatRGBColor			outsideColor;
 	SInt16					ingin;
 	SInt16					canvasWidth;
 	SInt16					canvasHeight;
@@ -190,9 +189,9 @@ typedef MemoryBlockReferenceLocker< VectorCanvas_Ref, My_VectorCanvas >		My_Vect
 namespace {
 
 UInt16				copyColorPreferences	(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
-void				getPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
+void				getPaletteColor			(My_VectorCanvasPtr, SInt16, CGFloatRGBColor&);
 VectorCanvas_Path*	pathElementWithPurpose	(My_VectorCanvasPtr, VectorCanvas_PathPurpose, Boolean = false);
-void				setPaletteColor			(My_VectorCanvasPtr, SInt16, CGDeviceColor const&);
+void				setPaletteColor			(My_VectorCanvasPtr, SInt16, CGFloatRGBColor const&);
 
 } // anonymous namespace
 
@@ -743,7 +742,7 @@ copyColorPreferences	(My_VectorCanvasPtr			inPtr,
 {
 	SInt16							currentIndex = 0;
 	Preferences_Tag					currentPrefsTag = '----';
-	CGDeviceColor					colorValue;
+	CGFloatRGBColor					colorValue;
 	TerminalView_BackgroundView*	backgroundViewOrNil = STATIC_CAST([inPtr->canvasView superviewWithClass:TerminalView_BackgroundView.class],
 																		TerminalView_BackgroundView*);
 	UInt16							result = 0;
@@ -863,7 +862,7 @@ TEK color index.
 void
 getPaletteColor		(My_VectorCanvasPtr		inPtr,
 					 SInt16					inZeroBasedIndex,
-					 CGDeviceColor&			outColor)
+					 CGFloatRGBColor&		outColor)
 {
 	outColor = inPtr->deviceColors[inZeroBasedIndex];
 }// getPaletteColor
@@ -922,9 +921,9 @@ Changes the RGB color for the specified TEK color index.
 (2016.09)
 */
 void
-setPaletteColor		(My_VectorCanvasPtr		inPtr,
-					 SInt16					inZeroBasedIndex,
-					 CGDeviceColor const&	inColor)
+setPaletteColor		(My_VectorCanvasPtr			inPtr,
+					 SInt16						inZeroBasedIndex,
+					 CGFloatRGBColor const&		inColor)
 {
 	inPtr->deviceColors[inZeroBasedIndex] = inColor;
 }// setPaletteColor
@@ -1121,7 +1120,7 @@ setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 			VectorCanvas_Ref	canvas = VectorInterpreter_ReturnCanvas(anInterpreter);
 			
 			
-			(VectorCanvas_Result)VectorCanvas_SetCanvasNSView(canvas, self);
+			UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetCanvasNSView(canvas, self);
 			VectorInterpreter_Retain(anInterpreter);
 		}
 		_interpreterRef = anInterpreter;
@@ -1396,7 +1395,7 @@ magnifyWithEvent:(NSEvent*)		anEvent
 		}
 		
 		// display new zoom level to user (see also "mouseDown:")
-		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = [NSString stringWithFormat:@"%d%%", (int)(canvasPtr->viewScaleX * 100.0), nil];
+		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = [NSString stringWithFormat:@"%d%%", (int)(canvasPtr->viewScaleX * 100.0)];
 		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
 		
@@ -1774,7 +1773,7 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 			CGFloat const		viewScaledPixelHeight = (canvasPtr->viewScaleY * contentBounds.size.height);
 			CGFloat const		canvasDisplayWidth = STATIC_CAST(canvasPtr->canvasWidth, CGFloat);
 			CGFloat const		canvasDisplayHeight = STATIC_CAST(canvasPtr->canvasHeight, CGFloat);
-			CGDeviceColor		scratchColor;
+			CGFloatRGBColor		scratchColor;
 			SInt16				currentFillColorIndex = 0;
 			SInt16				currentStrokeColorIndex = 0;
 			
@@ -1797,8 +1796,8 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 			// draw background of graphic itself
 			unless (isPrinting)
 			{
-				SInt16			backgroundColorIndex = VectorInterpreter_ReturnBackgroundColor(canvasPtr->interpreter);
-				CGDeviceColor	backgroundColor;
+				SInt16				backgroundColorIndex = VectorInterpreter_ReturnBackgroundColor(canvasPtr->interpreter);
+				CGFloatRGBColor		backgroundColor;
 				
 				
 				assert((backgroundColorIndex >= 0) && (backgroundColorIndex < kMy_MaxColors));
@@ -1859,8 +1858,8 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 				}
 				
 				// make lines thicker when the drawing is bigger, up to a certain maximum thickness
-				[pathElement->bezierPath setLineWidth:std::max(std::min((contentBounds.size.width / canvasDisplayWidth) * pathElement->normalLineWidth,
-																		pathElement->normalLineWidth * 2/* arbitrary maximum */),
+				[pathElement->bezierPath setLineWidth:std::max< CGFloat >(std::min< CGFloat >((contentBounds.size.width / canvasDisplayWidth) * pathElement->normalLineWidth,
+																								pathElement->normalLineWidth * 2/* arbitrary maximum */),
 																pathElement->normalLineWidth / 3 * 2/* arbitrary minimum */)];
 				
 				// add the new sub-path

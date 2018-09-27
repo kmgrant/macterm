@@ -80,9 +80,7 @@ extern "C"
 // application includes
 #import "Commands.h"
 #import "DebugInterface.h"
-#import "DialogUtilities.h"
 #import "Emulation.h"
-#import "FileUtilities.h"
 #import "Preferences.h"
 #import "PrintTerminal.h"
 #import "QuillsTerminal.h"
@@ -1205,7 +1203,6 @@ public:
 	
 	StreamCapture_Ref					captureStream;				//!< used to stream data to a file chosen by the user
 	StreamCapture_Ref					printingStream;				//!< used to stream data to a temporary file for later printing
-	FSRef								printingFile;				//!< used to delete the temporary printing file when finished
 	CFRetainRelease						printingFileURL;			//!< URL of the temporary printing file
 	UInt8								printingModes;				//!< MC private (VT102): true only if terminal-rendered lines are also sent to the printer
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
@@ -5175,9 +5172,9 @@ if the specified terminal was not configured for true-color values
 Terminal_Result
 Terminal_TrueColorGetFromID		(TerminalScreenRef				inRef,
 								 TextAttributes_TrueColorID		inIndex,
-								 Float32&						outRedComponentFraction,
-								 Float32&						outGreenComponentFraction,
-								 Float32&						outBlueComponentFraction)
+								 CGFloat&						outRedComponentFraction,
+								 CGFloat&						outGreenComponentFraction,
+								 CGFloat&						outBlueComponentFraction)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
@@ -6652,7 +6649,6 @@ errorCountTotal(0),
 tabSettings(),
 captureStream(StreamCapture_New(returnLineEndings())),
 printingStream(nullptr),
-printingFile(),
 printingFileURL(),
 printingModes(0),
 bellDisabled(false),
@@ -6955,13 +6951,26 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 				if (nullptr != printJob)
 				{
 					UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-														(printJob, TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow));
+														(printJob, TerminalWindow_ReturnNSWindow(terminalWindow));
 					PrintTerminal_ReleaseJob(&printJob);
 				}
 			}
 		}
 		
-		UNUSED_RETURN(OSStatus)FSDeleteObject(&this->printingFile);
+		// delete temporary file
+		{
+			NSError* /*__autoreleasing*/	error = nil;
+			
+			
+			if (NO == [[NSFileManager defaultManager] removeItemAtURL:BRIDGE_CAST(this->printingFileURL.returnCFURLRef(), NSURL*) error:&error])
+			{
+				if (nil != error)
+				{
+					Console_Warning(Console_WriteValueCFString, "failed to delete temporary printing file, error", BRIDGE_CAST([error localizedDescription], CFStringRef));
+				}
+			}
+		}
+		
 		this->printingFileURL.clear();
 	}
 }// printingEnd
@@ -6985,32 +6994,21 @@ printingReset ()
 {
 	if (0 == this->printingModes)
 	{
-		SInt16		openedFile = 0;
+		NSString*	temporaryFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
 		
 		
 		// create a new, empty file that is open for write
-		openedFile = FileUtilities_OpenTemporaryFile(this->printingFile);
-		if (openedFile <= 0)
+		this->printingFileURL.setWithRetain(BRIDGE_CAST([NSURL fileURLWithPath:temporaryFilePath isDirectory:NO], CFURLRef));
+		if (false == this->printingFileURL.exists())
 		{
-			Console_Warning(Console_WriteLine, "failed to open temporary file for printing");
-			bzero(&this->printingFile, sizeof(this->printingFile));
-			this->printingFileURL.clear();
+			Console_Warning(Console_WriteLine, "failed to find URL for temporary file for printing");
 		}
 		else
 		{
-			this->printingFileURL = CFRetainRelease(CFURLCreateFromFSRef(kCFAllocatorDefault, &this->printingFile),
-													CFRetainRelease::kAlreadyRetained);
-			if (false == this->printingFileURL.exists())
+			this->printingStream = StreamCapture_New(kSession_LineEndingLF);
+			if (false == StreamCapture_Begin(this->printingStream, this->printingFileURL.returnCFURLRef()))
 			{
-				Console_Warning(Console_WriteLine, "failed to find URL for temporary file for printing");
-			}
-			else
-			{
-				this->printingStream = StreamCapture_New(kSession_LineEndingLF);
-				if (false == StreamCapture_Begin(this->printingStream, this->printingFileURL.returnCFURLRef()))
-				{
-					Console_Warning(Console_WriteLine, "failed to initiate capture to temporary file for printing");
-				}
+				Console_Warning(Console_WriteLine, "failed to initiate capture to temporary file for printing");
 			}
 		}
 	}

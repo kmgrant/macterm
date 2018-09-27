@@ -49,7 +49,6 @@
 // library includes
 #import <BoundName.objc++.h>
 #import <CocoaExtensions.objc++.h>
-#import <ColorUtilities.h>
 #import <Console.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>

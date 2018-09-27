@@ -582,9 +582,9 @@ Terminal_Result
 Terminal_Result
 	Terminal_TrueColorGetFromID				(TerminalScreenRef			inScreen,
 											 TextAttributes_TrueColorID	inID,
-											 Float32&					outRedComponentFraction,
-											 Float32&					outGreenComponentFraction,
-											 Float32&					outBlueComponentFraction);
+											 CGFloat&					outRedComponentFraction,
+											 CGFloat&					outGreenComponentFraction,
+											 CGFloat&					outBlueComponentFraction);
 
 //@}
 

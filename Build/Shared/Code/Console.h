@@ -46,7 +46,6 @@
 
 // Mac includes
 #include <AvailabilityMacros.h>
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 // compile-time options
@@ -186,6 +185,8 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 }
 #define assert_noerr(e)  \
     ((void) ((e == ::noErr) ? 0 : __Console_AssertNoErrHelper(e, #e, __FILE__, __LINE__)))
+#else
+#define assert_noerr(e) /*nothing*/ // TEMPORARY (remove all calls)
 #endif
 
 // usage: e.g. static_assert_named(x_is_3, x == 3); fails AT COMPILE TIME with a negative-array-size
@@ -242,7 +243,7 @@ void
 
 void
 	Console_WriteValue				(char const*		inLabel,
-									 SInt32				inValue);
+									 SInt64				inValue);
 
 void
 	Console_WriteValueAddress		(char const*		inLabel,

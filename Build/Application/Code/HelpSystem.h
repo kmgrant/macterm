@@ -43,7 +43,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 
@@ -76,31 +75,6 @@ enum
 	kHelpSystem_KeyPhraseScreenSize		= 'ScSz',
 	kHelpSystem_KeyPhraseSpecialKeys	= 'Keys',
 	kHelpSystem_KeyPhraseTerminals		= 'Term'
-};
-
-#pragma mark Types
-
-/*!
-Convenient object that automatically sets the current
-key phrase as specified at construction, and restores
-to the default at destruction.  Useful in objects.
-*/
-class HelpSystem_WindowKeyPhraseSetter
-{
-public:
-	inline HelpSystem_WindowKeyPhraseSetter		(WindowRef				inWindow,
-												 HelpSystem_KeyPhrase	inKeyPhrase);
-	
-	inline ~HelpSystem_WindowKeyPhraseSetter	();
-	
-	//! returns true only if the phrase was set successfully
-	inline bool
-	isInstalled		() const;
-
-protected:
-private:
-	HelpSystem_Result	_resultCode;
-	WindowRef			_window;
 };
 
 
@@ -140,40 +114,6 @@ HelpSystem_Result
 HelpSystem_KeyPhrase
 	HelpSystem_ReturnCurrentContextKeyPhrase	();
 
-// AFFECTS BEHAVIOR OF HelpSystem_ReturnCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext()
-HelpSystem_Result
-	HelpSystem_SetWindowKeyPhrase				(WindowRef					inWindow,
-												 HelpSystem_KeyPhrase		inKeyPhrase);
-
 //@}
-
-
-
-#pragma mark Inline Methods
-
-HelpSystem_WindowKeyPhraseSetter::
-HelpSystem_WindowKeyPhraseSetter	(WindowRef				inWindow,
-									 HelpSystem_KeyPhrase	inKeyPhrase)
-:
-_resultCode(HelpSystem_SetWindowKeyPhrase(inWindow, inKeyPhrase)),
-_window(inWindow)
-{
-}
-
-
-HelpSystem_WindowKeyPhraseSetter::
-~HelpSystem_WindowKeyPhraseSetter ()
-{
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_SetWindowKeyPhrase(_window, kHelpSystem_KeyPhraseDefault);
-}
-
-
-bool
-HelpSystem_WindowKeyPhraseSetter::
-isInstalled ()
-const
-{
-	return (kHelpSystem_ResultOK == _resultCode);
-}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

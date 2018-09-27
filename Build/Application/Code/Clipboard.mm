@@ -44,17 +44,16 @@
 #import <Carbon/Carbon.h>
 #import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
-#import <QuickTime/QuickTime.h>
+//CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
+#import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaFuture.objc++.h>
-#import <ColorUtilities.h>
 #import <Console.h>
 #import <ListenerModel.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
-#import <NIBLoader.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
 
@@ -62,7 +61,6 @@
 #import "Clipboard.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "DialogUtilities.h"
 #import "DragAndDrop.h"
 #import "Preferences.h"
 #import "Session.h"
@@ -318,7 +316,8 @@ Clipboard_CreateCFStringArrayFromPasteboard		(CFArrayRef&		outCFStringCFArray,
 		objectArray = [kPasteboard readObjectsForClasses:@[NSPasteboardItem.class] options:readingOptions];
 		if ((nil == objectArray) || (0 == objectArray.count))
 		{
-			Console_Warning(Console_WriteLine, "failed to read any text from pasteboard");
+			// not text content
+			//Console_Warning(Console_WriteLine, "failed to read any text from pasteboard");
 		}
 		else
 		{
@@ -412,7 +411,8 @@ Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
 	objectArray = [kPasteboard readObjectsForClasses:@[NSImage.class] options:readingOptions];
 	if ((nil == objectArray) || (0 == objectArray.count))
 	{
-		Console_Warning(Console_WriteLine, "failed to read any image from the given pasteboard");
+		// not an image
+		//Console_Warning(Console_WriteLine, "failed to read any image from the given pasteboard");
 	}
 	else
 	{
@@ -574,11 +574,11 @@ copyTypeDescription		(CFStringRef	inUTI)
 		{
 			if (isTextType(inUTI))
 			{
-				(UIStrings_Result)UIStrings_Copy(kUIStrings_ClipboardWindowGenericKindText, result);
+				result = UIStrings_ReturnCopy(kUIStrings_ClipboardWindowGenericKindText);
 			}
 			else if (isImageType(inUTI))
 			{
-				(UIStrings_Result)UIStrings_Copy(kUIStrings_ClipboardWindowGenericKindImage, result);
+				result = UIStrings_ReturnCopy(kUIStrings_ClipboardWindowGenericKindImage);
 			}
 		}
 		if (nullptr == result)

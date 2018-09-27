@@ -46,11 +46,6 @@
 #	import <CocoaFuture.objc++.h>
 #endif
 
-// compile-time options
-#ifndef WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-#define WINDOW_TITLE_DIALOG_SUPPORTS_CARBON 0
-#endif
-
 
 
 #pragma mark Types
@@ -116,25 +111,13 @@ changes to an interface declared in a ".mm" file.
 @private
 	id< WindowTitleDialog_VCDelegate >	_responder;
 	NSWindow*							_parentCocoaWindow;
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-	HIWindowRef							_parentCarbonWindow;
-#endif
 	NSString*							_titleText;
 }
 
 // initializers
 	- (instancetype)
 	initForCocoaWindow:(NSWindow*)_
-	orCarbonWindow:(HIWindowRef)_
 	responder:(id< WindowTitleDialog_VCDelegate >)_ NS_DESIGNATED_INITIALIZER;
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-	- (instancetype)
-	initForCarbonWindow:(HIWindowRef)_
-	responder:(id< WindowTitleDialog_VCDelegate >)_;
-#endif
-	- (instancetype)
-	initForCocoaWindow:(NSWindow*)_
-	responder:(id< WindowTitleDialog_VCDelegate >)_;
 
 // new methods
 	- (NSView*)
@@ -163,15 +146,6 @@ WindowTitleDialog_Ref
 													 Boolean									inIsAnimated,
 													 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
 													 WindowTitleDialog_CloseNotifyBlock		inFinalBlock);
-
-#if WINDOW_TITLE_DIALOG_SUPPORTS_CARBON
-// DEPRECATED
-WindowTitleDialog_Ref
-	WindowTitleDialog_NewWindowModalParentCarbon		(HIWindowRef								inCarbonParentWindow,
-													 Boolean									inIsAnimated,
-													 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
-													 WindowTitleDialog_CloseNotifyBlock		inFinalBlock);
-#endif 
 
 void
 	WindowTitleDialog_Dispose						(WindowTitleDialog_Ref*					inoutDialogPtr);

@@ -54,8 +54,6 @@
 #pragma mark Types
 namespace {
 
-typedef std::vector< HIWindowRef >			My_WorkspaceCarbonWindowList;
-typedef std::vector< HIWindowRef >			My_WorkspaceCocoaWindowList;
 typedef std::vector< TerminalWindowRef >	My_WorkspaceTerminalWindowList;
 
 struct My_Workspace
@@ -64,9 +62,7 @@ public:
 	My_Workspace();
 	~My_Workspace();
 	
-	WindowGroupRef					windowGroup;		//!< legacy Carbon; Mac OS window group used to constrain window activation, etc.
 	My_WorkspaceTerminalWindowList	terminalWindows;	//!< the list of terminal windows in this workspace
-	My_WorkspaceCarbonWindowList	carbonWindows;		//!< legacy Carbon; the list of windows in this workspace
 	Workspace_Ref					selfRef;			//!< redundant reference to self, for convenience
 };
 typedef My_Workspace*			My_WorkspacePtr;
@@ -178,70 +174,31 @@ Workspace_AddTerminalWindow		(Workspace_Ref			inWorkspace,
 		TerminalWindowRef const		lastTerminalWindow = ((ptr->terminalWindows.empty())
 															? nullptr
 															: ptr->terminalWindows.back());
+		NSWindow*					cocoaWindow = TerminalWindow_ReturnNSWindow(inWindowToAdd);
 		
 		
 		ptr->terminalWindows.push_back(inWindowToAdd);
 		
-		if (TerminalWindow_IsLegacyCarbon(inWindowToAdd))
+		// it is only possible to add a tab to an existing window, and the
+		// first tab in a workspace implicitly supports tabs (a later SDK
+		// may provide a way to explicitly show the tab bar for a window
+		// that had no tabs but otherwise there is nothing to be done for
+		// the first window of a Cocoa window workspace)
+		if (nullptr != lastTerminalWindow)
 		{
-			HIWindowRef		carbonWindow = TerminalWindow_ReturnLegacyCarbonWindow(inWindowToAdd);
+			NSWindow*	lastCocoaWindow = TerminalWindow_ReturnNSWindow(lastTerminalWindow);
 			
 			
-			if (false == IsWindowContainedInGroup(carbonWindow, ptr->windowGroup))
+			if ([lastCocoaWindow respondsToSelector:@selector(addTabbedWindow:ordered:)])
 			{
-				OSStatus	error = noErr;
+				id		asID = STATIC_CAST(lastCocoaWindow, id);
 				
 				
-				// if there are windows in this workspace, relocate the new window
-				// to match the others in its group (for tab behavior)
-				if (false == ptr->carbonWindows.empty())
-				{
-					HIWindowRef		similarWindow = ptr->carbonWindows.front();
-					Rect			similarWindowBounds;
-					
-					
-					error = GetWindowBounds(similarWindow, kWindowStructureRgn, &similarWindowBounds);
-					assert_noerr(error);
-					error = SetWindowBounds(carbonWindow, kWindowStructureRgn, &similarWindowBounds);
-					assert_noerr(error);
-				}
-				
-				// put the window into a special group for this workspace
-				error = SetWindowGroup(carbonWindow, ptr->windowGroup);
-				assert_noerr(error);
-				
-				ptr->carbonWindows.push_back(carbonWindow);
+				[asID addTabbedWindow:cocoaWindow ordered:NSWindowAbove];
 			}
-		}
-		else
-		{
-			NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(inWindowToAdd);
-			
-			
-			// it is only possible to add a tab to an existing window, and the
-			// first tab in a workspace implicitly supports tabs (a later SDK
-			// may provide a way to explicitly show the tab bar for a window
-			// that had no tabs but otherwise there is nothing to be done for
-			// the first window of a Cocoa window workspace)
-			if (nullptr != lastTerminalWindow)
+			else
 			{
-				if (false == TerminalWindow_IsLegacyCarbon(lastTerminalWindow))
-				{
-					NSWindow*	lastCocoaWindow = TerminalWindow_ReturnNSWindow(lastTerminalWindow);
-					
-					
-					if ([lastCocoaWindow respondsToSelector:@selector(addTabbedWindow:ordered:)])
-					{
-						id		asID = STATIC_CAST(lastCocoaWindow, id);
-						
-						
-						[asID addTabbedWindow:cocoaWindow ordered:NSWindowAbove];
-					}
-					else
-					{
-						Console_Warning(Console_WriteLine, "runtime OS does not support adding tab to Cocoa terminal window");
-					}
-				}
+				Console_Warning(Console_WriteLine, "runtime OS does not support adding tab to Cocoa terminal window");
 			}
 		}
 	}
@@ -325,40 +282,20 @@ Workspace_RemoveTerminalWindow	(Workspace_Ref			inWorkspace,
 	}
 	else
 	{
-		if (TerminalWindow_IsLegacyCarbon(inWindowToRemove))
-		{
-			HIWindowRef		carbonWindow = TerminalWindow_ReturnLegacyCarbonWindow(inWindowToRemove);
-			
-			
-			// put the window back into the normal group of document windows
-			UNUSED_RETURN(OSStatus)SetWindowGroup(carbonWindow, GetWindowGroupOfClass(kDocumentWindowClass));
-			
-			ptr->carbonWindows.erase(std::remove(ptr->carbonWindows.begin(), ptr->carbonWindows.end(), carbonWindow),
-										ptr->carbonWindows.end());
-			assert(ptr->carbonWindows.end() == std::find(ptr->carbonWindows.begin(), ptr->carbonWindows.end(),
-													carbonWindow));
-		}
-		else
-		{
-			// move each tab to a new window
-			std::for_each(ptr->terminalWindows.begin(), ptr->terminalWindows.end(),
-							[=](TerminalWindowRef	terminalWindow)
+		// move each tab to a new window
+		std::for_each(ptr->terminalWindows.begin(), ptr->terminalWindows.end(),
+						[=](TerminalWindowRef	terminalWindow)
+						{
+							NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
+							BOOL		invokeOK = NO;
+							
+							
+							invokeOK = [cocoaWindow tryToPerform:@selector(moveTabToNewWindow:) with:NSApp];
+							if (NO == invokeOK)
 							{
-								if (false == TerminalWindow_IsLegacyCarbon(terminalWindow))
-								{
-									NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-									BOOL		invokeOK = NO;
-									
-									
-									invokeOK = [cocoaWindow tryToPerform:@selector(moveTabToNewWindow:) with:NSApp];
-									if (NO == invokeOK)
-									{
-										Console_Warning(Console_WriteLine, "failed to move a workspace terminal tab to a new window");
-									}
-								}
-							});
-		}
-		
+								Console_Warning(Console_WriteLine, "failed to move a workspace terminal tab to a new window");
+							}
+						});
 		ptr->terminalWindows.erase(std::remove(ptr->terminalWindows.begin(), ptr->terminalWindows.end(), inWindowToRemove),
 									ptr->terminalWindows.end());
 		assert(ptr->terminalWindows.end() == std::find(ptr->terminalWindows.begin(), ptr->terminalWindows.end(),
@@ -381,26 +318,9 @@ My_Workspace::
 My_Workspace()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-windowGroup(nullptr),
 terminalWindows(),
-carbonWindows(),
 selfRef(REINTERPRET_CAST(this, Workspace_Ref))
 {
-	OSStatus	error = noErr;
-	
-	
-	error = CreateWindowGroup(kWindowGroupAttrSelectAsLayer |
-								kWindowGroupAttrMoveTogether |
-								kWindowGroupAttrHideOnCollapse,
-								&this->windowGroup);
-	assert_noerr(error);
-	
-	// fix the window level so they are below menus, alerts, etc.
-	error = SetWindowGroupParent(this->windowGroup,
-									GetWindowGroupOfClass(kDocumentWindowClass));
-	assert_noerr(error);
-	error = RetainWindowGroup(this->windowGroup);
-	assert_noerr(error);
 }// My_Workspace default constructor
 
 
@@ -412,10 +332,6 @@ Constructor.  See Workspace_New().
 My_Workspace::
 ~My_Workspace()
 {
-	if (nullptr != windowGroup)
-	{
-		UNUSED_RETURN(OSStatus)ReleaseWindowGroup(this->windowGroup), this->windowGroup = nullptr;
-	}
 }// My_Workspace default constructor
 
 } // anonymous namespace

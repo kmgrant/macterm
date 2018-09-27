@@ -505,9 +505,6 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 					 Boolean				inIsVisible)
 {
 @autoreleasepool {
-	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
-	
-	
 	switch (inKeypad)
 	{
 	case kKeypads_WindowTypeArrangeWindow:
@@ -572,11 +569,6 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	default:
 		// ???
 		break;
-	}
-	
-	if (oldActiveWindow != GetUserFocusWindow())
-	{
-		UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 	}
 }// @autoreleasepool
 }// SetVisible

@@ -40,7 +40,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #ifdef __OBJC__
 @class NSWindow;
 #else
@@ -63,7 +62,7 @@ class NSWindow;
 /*!
 Possible return values from Event Loop module routines.
 */
-typedef OSStatus EventLoop_Result;
+typedef SInt32 EventLoop_Result;
 enum
 {
 	kEventLoop_ResultOK							= 0,	//!< no error
@@ -96,10 +95,6 @@ typedef void (^EventLoop_ResponderBlock)();
 	didPresentSelector:(SEL)_
 	contextInfo:(void*)_;
 
-// actions
-	- (IBAction)
-	toggleFullScreen:(id)_;
-
 @end //}
 
 #endif
@@ -127,37 +122,11 @@ void
 
 //@}
 
-//!\name Scanning the Queue for Still-Unhandled Events
-//@{
-
-// DEPRECATED
-Boolean
-	EventLoop_IsNextDoubleClick					(HIWindowRef						inEventWindow,
-												 Point&								outGlobalMouseLocation);
-
-//@}
-
 //!\name Keyboard State Information
 //@{
 
 Boolean
-	EventLoop_IsCapsLockKeyDown					();
-
-Boolean
-	EventLoop_IsCommandKeyDown					();
-
-Boolean
-	EventLoop_IsControlKeyDown					();
-
-Boolean
 	EventLoop_IsOptionKeyDown					();
-
-Boolean
-	EventLoop_IsShiftKeyDown					();
-
-// FAVOR EVENT-SPECIFIC KEY STATE INFORMATION IF IT IS AVAILABLE
-EventModifiers
-	EventLoop_ReturnCurrentModifiers			();
 
 //@}
 
@@ -168,11 +137,7 @@ Boolean
 	EventLoop_IsMainWindowFullScreen			();
 
 Boolean
-	EventLoop_IsWindowFullScreen				(NSWindow*	inWindow);
-
-// DEPRECATED
-WindowRef
-	EventLoop_ReturnRealFrontWindow				();
+	EventLoop_IsWindowFullScreen				(NSWindow*);
 
 //@}
 

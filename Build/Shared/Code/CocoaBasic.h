@@ -31,7 +31,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
@@ -40,11 +39,6 @@
 #else
 class NSResponder;
 class NSWindow;
-#endif
-
-// compile-time options
-#ifndef COCOA_BASIC_SUPPORTS_CARBON
-#define COCOA_BASIC_SUPPORTS_CARBON 0
 #endif
 
 
@@ -59,13 +53,13 @@ Boolean
 													 CFStringRef,
 													 CFDataRef = nullptr);
 
-CGDeviceColor
-	CocoaBasic_GetGray								(CGDeviceColor const&,
+CGFloatRGBColor
+	CocoaBasic_GetGray								(CGFloatRGBColor const&,
 													 Float32 = 0.5);
 
-CGDeviceColor
-	CocoaBasic_GetGray								(CGDeviceColor const&,
-													 CGDeviceColor const&,
+CGFloatRGBColor
+	CocoaBasic_GetGray								(CGFloatRGBColor const&,
+													 CGFloatRGBColor const&,
 													 Float32 = 0.5);
 
 void
@@ -118,26 +112,6 @@ void
 // WORKS WITH NSApp AND ANY NSWindow, FOR EXAMPLE
 void
 	CocoaBasic_InvalidateRestorableState			(NSResponder*);
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-void
-	CocoaBasic_MakeFrontWindowCarbonUserFocusWindow	();
-#endif
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-void
-	CocoaBasic_MakeKeyWindowCarbonUserFocusWindow	();
-#endif
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-Boolean
-	CocoaBasic_RegisterCocoaCarbonWindow			(NSWindow*);
-#endif
-
-#if COCOA_BASIC_SUPPORTS_CARBON
-NSWindow*
-	CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow	(HIWindowRef);
-#endif
 
 //@}
 

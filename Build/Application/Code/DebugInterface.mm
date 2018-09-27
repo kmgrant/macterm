@@ -70,11 +70,7 @@ void
 DebugInterface_Display ()
 {
 @autoreleasepool {
-	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
-	
-	
 	[[DebugInterface_PanelController sharedDebugInterfacePanelController] showWindow:NSApp];
-	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// @autoreleasepool
 }// Display
 

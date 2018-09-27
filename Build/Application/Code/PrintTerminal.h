@@ -37,7 +37,9 @@
 
 // Mac includes
 #ifdef __OBJC__
-#	import <Cocoa/Cocoa.h>
+@class NSWindow;
+#else
+class NSWindow;
 #endif
 #include <CoreServices/CoreServices.h>
 
@@ -96,7 +98,7 @@ void
 
 PrintTerminal_Result
 	PrintTerminal_JobSendToPrinter			(PrintTerminal_JobRef		inJob,
-											 HIWindowRef				inParentWindowOrNull);
+											 NSWindow*					inParentWindowOrNil);
 
 //@}
 

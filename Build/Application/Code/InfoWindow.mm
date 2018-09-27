@@ -51,12 +51,10 @@
 #import <CFUtilities.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#import <CommonEventHandlers.h>
 #import <Console.h>
 #import <ListenerModel.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
-#import <NIBLoader.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
 #import <TouchBar.objc++.h>
@@ -64,7 +62,6 @@
 // application includes
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "DialogUtilities.h"
 #import "InfoWindow.h"
 #import "Session.h"
 #import "SessionFactory.h"

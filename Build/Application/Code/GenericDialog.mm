@@ -50,7 +50,6 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
-@class NSCarbonWindow; // WARNING: not for general use, see actual usage below
 
 // library includes
 #import <AlertMessages.h>
@@ -80,7 +79,7 @@ typedef std::map< GenericDialog_ItemID, GenericDialog_DialogEffect >	My_DialogEf
 
 struct My_GenericDialog
 {
-	My_GenericDialog	(NSView*, HIWindowRef, Panel_ViewManager*, void*, Boolean = false);
+	My_GenericDialog	(NSView*, Panel_ViewManager*, void*, Boolean = false);
 	
 	~My_GenericDialog	();
 	
@@ -90,7 +89,6 @@ struct My_GenericDialog
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
 	GenericDialog_Ref				selfRef;				//!< identical to address of structure, but typed as ref
 	NSView*							modalToView;			//!< if not nil, a view whose hierarchy is unusable while the dialog is open
-	HIWindowRef						parentCarbonWindow;		//!< legacy; if parent is a Carbon window, specify it here
 	Boolean							isAlert;				//!< this may affect the window appearance or behavior
 	Boolean							delayedKeyEquivalents;	//!< key equivalents such as the default button are only set a short time after the dialog is displayed
 	GenericDialog_ViewManager*		containerViewManager;	//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
@@ -189,7 +187,7 @@ GenericDialog_New	(NSView*				inModalToViewOrNullForAppModalDialog,
 	try
 	{
 		result = REINTERPRET_CAST(new My_GenericDialog
-									(inModalToViewOrNullForAppModalDialog, nullptr/* parent Carbon window */,
+									(inModalToViewOrNullForAppModalDialog,
 										inHostedViewManager, inDataSetPtr, inIsAlert),
 									GenericDialog_Ref);
 		GenericDialog_Retain(result);
@@ -200,39 +198,6 @@ GenericDialog_New	(NSView*				inModalToViewOrNullForAppModalDialog,
 	}
 	return result;
 }// New
-
-
-/*!
-Legacy version; creates the window over a parent
-that is a Carbon window.
-
-(4.1)
-*/
-GenericDialog_Ref
-GenericDialog_NewParentCarbon	(HIWindowRef			inParentWindowOrNullForModalDialog,
-								 Panel_ViewManager*		inHostedViewManager,
-								 void*					inDataSetPtr,
-								 Boolean				inIsAlert)
-{
-	GenericDialog_Ref	result = nullptr;
-	
-	
-	assert(nil != inHostedViewManager);
-	
-	try
-	{
-		result = REINTERPRET_CAST(new My_GenericDialog
-									(CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inParentWindowOrNullForModalDialog).contentView,
-										inParentWindowOrNullForModalDialog, inHostedViewManager, inDataSetPtr, inIsAlert),
-									GenericDialog_Ref);
-		GenericDialog_Retain(result);
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// NewParentCarbon
 
 
 /*!
@@ -335,7 +300,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 		{
 			if (nil != ptr->hostedViewManager)
 			{
-				shouldRunModal = ((nil == ptr->modalToView) && (nullptr == ptr->parentCarbonWindow));
+				shouldRunModal = (nil == ptr->modalToView);
 				
 				ptr->loadViewManager();
 				assert(nil != ptr->containerViewManager);
@@ -365,30 +330,14 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 				
 				if (nil == ptr->popoverManager)
 				{
-					if (nullptr != ptr->parentCarbonWindow)
-					{
-						// legacy; parent window uses Carbon
-						ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
-																	[ptr->containerViewManager logicalFirstResponder],
-																	ptr->containerViewManager/* delegate */,
-																	(noAnimation)
-																	? kPopoverManager_AnimationTypeNone
-																	: kPopoverManager_AnimationTypeStandard,
-																	kPopoverManager_BehaviorTypeDialog,
-																	ptr->parentCarbonWindow);
-					}
-					else
-					{
-						// contemporary case; parent window uses Cocoa
-						ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
-																	[ptr->containerViewManager logicalFirstResponder],
-																	ptr->containerViewManager/* delegate */,
-																	(noAnimation)
-																	? kPopoverManager_AnimationTypeNone
-																	: kPopoverManager_AnimationTypeStandard,
-																	kPopoverManager_BehaviorTypeDialog,
-																	ptr->modalToView);
-					}
+					ptr->popoverManager = PopoverManager_New(ptr->popoverWindow,
+																[ptr->containerViewManager logicalFirstResponder],
+																ptr->containerViewManager/* delegate */,
+																(noAnimation)
+																? kPopoverManager_AnimationTypeNone
+																: kPopoverManager_AnimationTypeStandard,
+																kPopoverManager_BehaviorTypeDialog,
+																ptr->modalToView);
 				}
 				
 				ptr->containerViewManager.cleanupBlock = inImplementationReleaseBlock;
@@ -702,7 +651,6 @@ forces good object design.
 */
 My_GenericDialog::
 My_GenericDialog	(NSView*				inModalToNSViewOrNull,
-					 HIWindowRef			inParentCarbonWindowOrNull,
 					 Panel_ViewManager*		inHostedViewManagerOrNull,
 					 void*					inDataSetPtr,
 					 Boolean				inIsAlert)
@@ -710,7 +658,6 @@ My_GenericDialog	(NSView*				inModalToNSViewOrNull,
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
 modalToView						(inModalToNSViewOrNull),
-parentCarbonWindow				(inParentCarbonWindowOrNull),
 isAlert							(inIsAlert),
 delayedKeyEquivalents			(false),
 containerViewManager			(nil), // set later if necessary
@@ -1510,31 +1457,8 @@ parentWindow:(NSWindow*)				parentWindow
 		result.x = CGFLOAT_DIV_2(NSWidth(parentFrame));
 		result.y = ((parentFrame.origin.y - contentFrame.origin.y) + NSHeight(contentFrame));
 		
-		// a real window will account for title/toolbar when
-		// queried for the content-for-frame rectangle above;
-		// only legacy Carbon windows require manual offsets
-		if ([[parentWindow class] isSubclassOfClass:[NSCarbonWindow class]])
-		{
-			result.y -= 20; // arbitrary; move below typical title bar to make it easier to drag the parent window
-			
-			// determine if the window has a toolbar showing
-			if (nullptr != self->dialogRef)
-			{
-				My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
-				
-				
-				// the Carbon window reference should match the given parent window
-				if ((nullptr != ptr->parentCarbonWindow) && IsWindowToolbarVisible(ptr->parentCarbonWindow))
-				{
-					result.y -= 30; // arbitrary additional offest; move below any toolbar and/or Full Screen view
-				}
-			}
-		}
-		else
-		{
-			// minor adjustment for aesthetics
-			result.y += 2;
-		}
+		// minor adjustment for aesthetics
+		result.y += 2;
 	}
 	else
 	{
@@ -1777,7 +1701,7 @@ forButton:(GenericDialog_ItemID)	aButton
 				}
 				
 				// if a modal session is in progress, end it
-				if ((nil == ptr->modalToView) && (nullptr == ptr->parentCarbonWindow))
+				if (nil == ptr->modalToView)
 				{
 					// TEMPORARY; might want to use NSModalSession objects
 					// so that this cannot end just any open dialog

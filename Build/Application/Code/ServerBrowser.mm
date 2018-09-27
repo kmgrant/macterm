@@ -47,8 +47,6 @@ extern "C"
 
 // library includes
 #import <BoundName.objc++.h>
-#import <CarbonEventHandlerWrap.template.h>
-#import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
@@ -80,10 +78,8 @@ Manages the Server Browser user interface.
 	Popover_Window*				_containerWindow;			// holds the main view
 	NSView*						_managedView;				// the view that implements the majority of the interface
 	NSWindow*					_parentWindow;				// the Cocoa window that the point is relative to
-	HIWindowRef					_parentCarbonWindow;		// temporary; the Carbon window that the point is relative to
 	CGPoint						_parentRelativeArrowTip;	// the point relative to the parent window where the popover arrow appears
 	id< ServerBrowser_DataChangeObserver >	_dataObserver;	// object that is notified about key property changes
-	EventTargetRef				_eventTarget;				// temporary; allows external Carbon interfaces to respond to events
 	Session_Protocol			_initialProtocol;			// used to initialize the view when it loads
 	NSString*					_initialHostName;			// used to initialize the view when it loads
 	unsigned int				_initialPortNumber;			// used to initialize the view when it loads
@@ -102,10 +98,6 @@ Manages the Server Browser user interface.
 	initWithPosition:(CGPoint)_
 	relativeToParentWindow:(NSWindow*)_
 	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithPosition:(CGPoint)_
-	relativeToParentWindow:(HIWindowRef)_
-	eventTarget:(EventTargetRef)_;
 
 // new methods
 	- (void)
@@ -119,8 +111,6 @@ Manages the Server Browser user interface.
 	remove;
 
 // accessors
-	@property (assign, readonly) HIWindowRef
-	parentCarbonWindow;
 	@property (assign, readonly) NSWindow*
 	parentCocoaWindow;
 
@@ -197,12 +187,6 @@ protocol.
 
 @end //}
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-void		notifyOfClosedPopover		(EventTargetRef);
-
-} // anonymous namespace
 
 /*!
 The private class interface.
@@ -249,28 +233,6 @@ ServerBrowser_New	(NSWindow*									inParentWindow,
 	result = (ServerBrowser_Ref)[[ServerBrowser_Handler alloc] initWithPosition:inParentRelativePoint
 																				relativeToParentWindow:inParentWindow
 																				dataObserver:inDataObserver];
-	
-	return result;
-}// New
-
-
-/*!
-Legacy version for Carbon windows; will be removed.
-
-(4.0)
-*/
-ServerBrowser_Ref
-ServerBrowser_New	(HIWindowRef		inParentWindow,
-					 CGPoint			inParentRelativePoint,
-					 EventTargetRef		inResponder)
-{
-	ServerBrowser_Ref	result = nullptr;
-	
-	
-	// WARNING: this interpretation should match "viewHandlerFromRef:"
-	result = (ServerBrowser_Ref)[[ServerBrowser_Handler alloc] initWithPosition:inParentRelativePoint
-																				relativeToParentWindow:inParentWindow
-																				eventTarget:inResponder];
 	
 	return result;
 }// New
@@ -355,55 +317,8 @@ ServerBrowser_Remove	(ServerBrowser_Ref		inDialog)
 }// Remove
 
 
-#pragma mark Internal Methods
-namespace {
-
-/*!
-For Carbon compatibility, sends an event to the previous
-Carbon event target of the panel, notifying it that a
-new target is taking over.
-
-(4.0)
-*/
-void
-notifyOfClosedPopover	(EventTargetRef		inOldTarget)
-{
-	EventRef	panelClosedEvent = nullptr;
-	OSStatus	error = noErr;
-	
-	
-	// create a Carbon Event
-	error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_ServerBrowser,
-						kEventNetEvents_ServerBrowserClosed, GetCurrentEventTime(),
-						kEventAttributeNone, &panelClosedEvent);
-	if (noErr != error)
-	{
-		panelClosedEvent = nullptr;
-	}
-	else
-	{
-		error = SendEventToEventTargetWithOptions(panelClosedEvent, inOldTarget, kEventTargetDontPropagate);
-		if (noErr != error)
-		{
-			Console_Warning(Console_WriteValue, "failed to send server-browser-closed event to target, error", error);
-		}
-	}
-	
-	// dispose of event
-	if (nullptr != panelClosedEvent)
-	{
-		ReleaseEvent(panelClosedEvent), panelClosedEvent = nullptr;
-	}
-}// notifyOfClosedPopover
-
-} // anonymous namespace
-
-
 #pragma mark -
 @implementation ServerBrowser_Handler
-
-
-@synthesize parentCarbonWindow = _parentCarbonWindow;
 
 
 /*!
@@ -450,10 +365,8 @@ dataObserver:(id< ServerBrowser_DataChangeObserver >)	anObserver
 		_containerWindow = nil;
 		_managedView = nil;
 		_parentWindow = aWindow;
-		_parentCarbonWindow = nullptr;
 		_parentRelativeArrowTip = aPoint;
 		_dataObserver = anObserver;
-		_eventTarget = nullptr;
 		_initialProtocol = kSession_ProtocolSSH1;
 		_initialHostName = [@"" retain];
 		_initialPortNumber = 22;
@@ -462,26 +375,6 @@ dataObserver:(id< ServerBrowser_DataChangeObserver >)	anObserver
 	}
 	return self;
 }// initWithPosition:relativeToParentWindow:dataObserver:
-
-
-/*!
-Legacy initializer.
-
-(4.0)
-*/
-- (instancetype)
-initWithPosition:(CGPoint)				aPoint
-relativeToParentWindow:(HIWindowRef)	aWindow
-eventTarget:(EventTargetRef)			aTarget
-{
-	self = [self initWithPosition:aPoint relativeToParentWindow:nil dataObserver:nil];
-	if (nil != self)
-	{
-		_eventTarget = aTarget;
-		_parentCarbonWindow = aWindow;
-	}
-	return self;
-}// initWithPosition:relativeToParentWindow:eventTarget:
 
 
 /*!
@@ -537,15 +430,7 @@ display
 	{
 		// no focus is done the first time because this is
 		// eventually done in "serverBrowser:didLoadManagedView:"
-		if (nil != _eventTarget)
-		{
-			// legacy (will be removed)
-			_viewMgr = [[ServerBrowser_VC alloc] initWithResponder:self eventTarget:_eventTarget];
-		}
-		else
-		{
-			_viewMgr = [[ServerBrowser_VC alloc] initWithResponder:self dataObserver:_dataObserver];
-		}
+		_viewMgr = [[ServerBrowser_VC alloc] initWithResponder:self dataObserver:_dataObserver];
 	}
 	else
 	{
@@ -578,7 +463,7 @@ remove
 
 /*!
 Returns the Cocoa window that represents the parent
-of the target view, even if that is a Carbon window.
+of the target view.
 
 (4.0)
 */
@@ -587,12 +472,6 @@ parentCocoaWindow
 {
 	NSWindow*	result = self->_parentWindow;
 	
-	
-	if (nil == result)
-	{
-		// legacy (will be removed)
-		result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(self.parentCarbonWindow);
-	}
 	
 	return result;
 }// parentCocoaWindow
@@ -742,21 +621,10 @@ didLoadManagedView:(NSView*)		aManagedView
 																inWindow:[self parentCocoaWindow]];
 		[_containerWindow setDelegate:self];
 		[_containerWindow setReleasedWhenClosed:NO];
-		if (nullptr != self.parentCarbonWindow)
-		{
-			// legacy (will be removed)
-			_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
-												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
-												kPopoverManager_BehaviorTypeStandard,
-												self.parentCarbonWindow);
-		}
-		else
-		{
-			_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
-												self/* delegate */, kPopoverManager_AnimationTypeMinimal,
-												kPopoverManager_BehaviorTypeStandard,
-												self.parentCocoaWindow.contentView);
-		}
+		_popoverMgr = PopoverManager_New(_containerWindow, [aBrowser logicalFirstResponder],
+											self/* delegate */, kPopoverManager_AnimationTypeMinimal,
+											kPopoverManager_BehaviorTypeStandard,
+											self.parentCocoaWindow.contentView);
 		PopoverManager_DisplayPopover(_popoverMgr);
 	}
 }// serverBrowser:didLoadManagedView:
@@ -774,14 +642,7 @@ serverBrowser:(ServerBrowser_VC*)		aBrowser
 didFinishUsingManagedView:(NSView*)		aManagedView
 {
 #pragma unused(aBrowser, aManagedView)
-	if (nil != _eventTarget)
-	{
-		notifyOfClosedPopover(_eventTarget);
-	}
-	else
-	{
-		[_dataObserver serverBrowserDidClose:aBrowser];
-	}
+	[_dataObserver serverBrowserDidClose:aBrowser];
 }// serverBrowser:didFinishUsingManagedView:
 
 
@@ -1067,7 +928,6 @@ dataObserver:(id< ServerBrowser_DataChangeObserver >)	aDataObserver
 		
 		_responder = aResponder;
 		_dataObserver = aDataObserver;
-		_eventTarget = nil;
 		_browser = [[NSNetServiceBrowser alloc] init];
 		[_browser setDelegate:self];
 		_discoveredHostIndexes = [[NSIndexSet alloc] init];
@@ -1105,24 +965,6 @@ dataObserver:(id< ServerBrowser_DataChangeObserver >)	aDataObserver
 	}
 	return self;
 }// initWithResponder:dataObserver:
-
-
-/*!
-Legacy initializer; for Carbon only, will be removed soon.
-
-(4.0)
-*/
-- (instancetype)
-initWithResponder:(id< ServerBrowser_VCDelegate >)	aResponder
-eventTarget:(EventTargetRef)						aTarget
-{
-	self = [self initWithResponder:aResponder dataObserver:nil];
-	if (nil != self)
-	{
-		self->_eventTarget = aTarget;
-	}
-	return self;
-}// initWithResponder:eventTarget:
 
 
 /*!
@@ -1195,7 +1037,6 @@ lookUpHostName:(id)		sender
 			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
 			
 			
-			// the global handler installed as gBrowserLookupResponder() will receive a Carbon Event from this eventually
 			lookupAttemptResult = DNR_New(hostNameBuffer, false/* use IP version 4 addresses (defaults to IPv6) */,
 			^(struct hostent* inLookupDataPtr)
 			{
@@ -1956,9 +1797,6 @@ discoveredHost
 If an observer object has been specified by ServerBrowser_New(),
 sends a message to the observer to notify it of panel changes.
 
-A deprecated mode is to instead use the Carbon Event version of
-ServerBrowser_New().  (This will be removed soon.)
-
 Call this whenever the user makes a change to a core setting in
 the panel.
 
@@ -2001,87 +1839,6 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 		else
 		{
 			Console_Warning(Console_WriteLine, "invalid selector passed to notifyOfChangeInValueReturnedBy:");
-		}
-	}
-	else if (nullptr != _eventTarget)
-	{
-		EventRef	panelChangedEvent = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		// create a Carbon Event
-		error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_ServerBrowser,
-							kEventNetEvents_ServerBrowserNewData, GetCurrentEventTime(),
-							kEventAttributeNone, &panelChangedEvent);
-		
-		// attach required parameters to event, then dispatch it
-		if (noErr != error)
-		{
-			panelChangedEvent = nullptr;
-		}
-		else
-		{
-			Boolean		doPost = true;
-			
-			
-			if (valueGetter == @selector(protocolIndexes))
-			{
-				Session_Protocol	protocolForEvent = [self currentProtocolID];
-				
-				
-				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_Protocol,
-											typeNetEvents_SessionProtocol, sizeof(protocolForEvent), &protocolForEvent);
-				assert_noerr(error);
-			}
-			else if (valueGetter == @selector(hostName))
-			{
-				CFStringRef		hostNameForEvent = BRIDGE_CAST(self.hostName, CFStringRef);
-				
-				
-				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_HostName,
-											typeCFStringRef, sizeof(hostNameForEvent), &hostNameForEvent);
-				assert_noerr(error);
-			}
-			else if (valueGetter == @selector(portNumber))
-			{
-				NSString*		portNumberString = self.portNumber;
-				UInt32			portNumberForEvent = STATIC_CAST([portNumberString intValue], UInt32);
-				
-				
-				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_PortNumber,
-											typeUInt32, sizeof(portNumberForEvent), &portNumberForEvent);
-				assert_noerr(error);
-			}
-			else if (valueGetter == @selector(userID))
-			{
-				CFStringRef		userIDForEvent = BRIDGE_CAST(self.userID, CFStringRef);
-				
-				
-				error = SetEventParameter(panelChangedEvent, kEventParamNetEvents_UserID,
-											typeCFStringRef, sizeof(userIDForEvent), &userIDForEvent);
-				assert_noerr(error);
-			}
-			else
-			{
-				Console_Warning(Console_WriteLine, "invalid selector passed to notifyOfChangeInValueReturnedBy:");
-				doPost = false;
-			}
-			
-			if (doPost)
-			{
-				// finally, send the message to the target
-				error = SendEventToEventTargetWithOptions(panelChangedEvent, _eventTarget, kEventTargetDontPropagate);
-				if (noErr != error)
-				{
-					Console_Warning(Console_WriteValue, "failed to send Server Browser setting-change event to Carbon target, error", error);
-				}
-			}
-		}
-		
-		// dispose of event
-		if (nullptr != panelChangedEvent)
-		{
-			ReleaseEvent(panelChangedEvent), panelChangedEvent = nullptr;
 		}
 	}
 }// notifyOfChangeInValueReturnedBy:

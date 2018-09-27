@@ -549,7 +549,7 @@ VectorInterpreter_New	(VectorInterpreter_Mode		inCommandSet)
 		fontnum(ptr, 0);
 		storexy(ptr, 0, 3071);
 		
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
+		UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
 		
 		// legacy values; probably specified by TEK but not verified
 		ptr->winbot = 0;
@@ -675,7 +675,7 @@ VectorInterpreter_PageCommand	(VectorInterpreter_Ref	inRef)
 	if (nullptr != ptr->canvas)
 	{
 		VectorCanvas_ClearCaches(ptr->canvas);
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
+		UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetPenColor(ptr->canvas, 1, kVectorCanvas_PathPurposeGraphics);
 	}
 }// PageCommand
 
@@ -1012,10 +1012,10 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 		if (c > 126)
 		{
 			height = 1;
-			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor, kVectorCanvas_PathPurposeText);
+			UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->pencolor, kVectorCanvas_PathPurposeText);
 		}
 		else
-			(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->TEKIndex, kVectorCanvas_PathPurposeText);
+			UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas,inPtr->TEKIndex, kVectorCanvas_PathPurposeText);
 		hmag = (height*8);
 		vmag = (height*8);
 		
@@ -1096,7 +1096,7 @@ drawc		(My_VectorInterpreterPtr	inPtr,
 
 	if (kVectorInterpreter_ModeTEK4105 == inPtr->commandSet)
 	{
-		(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas, inPtr->pencolor, kVectorCanvas_PathPurposeText);
+		UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetPenColor(inPtr->canvas, inPtr->pencolor, kVectorCanvas_PathPurposeText);
 	}
 
 	inPtr->cury = savey;
@@ -1685,7 +1685,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 						vp->savy = vp->cury = vp->current->y;
 						vp->current = vp->current->next;
 						delete temppoint;
-						(VectorCanvas_Result)VectorCanvas_ScrapPathReset(vp->canvas);
+						UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_ScrapPathReset(vp->canvas);
 						while (vp->current)
 						{
 							vp->drawLine(vp->curx, vp->cury, vp->current->x, vp->current->y,
@@ -1821,7 +1821,7 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 			break;
 		case COLORINT:				/* set line index; have integer */
 			vp->pencolor = vp->intin;
-			(VectorCanvas_Result)VectorCanvas_SetPenColor(vp->canvas, vp->intin, kVectorCanvas_PathPurposeGraphics);
+			UNUSED_RETURN(VectorCanvas_Result)VectorCanvas_SetPenColor(vp->canvas, vp->intin, kVectorCanvas_PathPurposeGraphics);
 			vp->state = CANCEL;
 			goagain = true;			/* we ignored current char; now process it */
 			break;

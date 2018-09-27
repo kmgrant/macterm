@@ -120,8 +120,6 @@ enum TerminalWindow_ViewGroup
 	kTerminalWindow_ViewGroupActive			= 'Frnt',	//!< contains all views in the visible tab
 };
 
-Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWindow_SetTabWidth() to restore a standard width
-
 #pragma mark Types
 
 #include "TerminalWindowRef.typedef.h"
@@ -304,13 +302,6 @@ changes to an interface declared in a ".mm" file.
 
 // DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
 TerminalWindowRef
-	TerminalWindow_NewCarbonLegacy					(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
-													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
-													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
-													 Boolean					inNoStagger = false);
-
-// DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
-TerminalWindowRef
 	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
 													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
 													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr,
@@ -330,10 +321,6 @@ Boolean
 void
 	TerminalWindow_CopyWindowTitle					(TerminalWindowRef			inRef,
 													 CFStringRef&				outName);
-
-Boolean
-	TerminalWindow_EventInside						(TerminalWindowRef			inRef,
-													 EventRef					inMouseEvent);
 
 // TEMPORARY, FOR COCOA TRANSITION
 void
@@ -379,10 +366,6 @@ Boolean
 Boolean
 	TerminalWindow_IsFullScreenMode					();
 
-// TEMPORARY, FOR COCOA TRANSITION
-Boolean
-	TerminalWindow_IsLegacyCarbon					(TerminalWindowRef			inRef);
-
 Boolean
 	TerminalWindow_IsObscured						(TerminalWindowRef			inRef);
 
@@ -392,10 +375,6 @@ Boolean
 													 Preferences_ContextRef		inContext,
 													 Quills::Prefs::Class		inPrefsClass);
 
-// TEMPORARY, FOR COCOA TRANSITION
-HIWindowRef
-	TerminalWindow_ReturnLegacyCarbonWindow			(TerminalWindowRef			inRef);
-
 NSWindow*
 	TerminalWindow_ReturnNSWindow					(TerminalWindowRef			inRef);
 
@@ -404,10 +383,6 @@ UInt16
 
 TerminalScreenRef
 	TerminalWindow_ReturnScreenWithFocus			(TerminalWindowRef			inRef);
-
-// NOT FOR GENERAL USE; POSSIBLY A TEMPORARY ACCESSOR
-HIWindowRef
-	TerminalWindow_ReturnTabWindow					(TerminalWindowRef			inRef);
 
 // EQUIVALENT TO TerminalWindow_ReturnViewCountInGroup(inRef, kTerminalWindow_ViewGroupEverything)
 UInt16
@@ -476,14 +451,6 @@ void
 void
 	TerminalWindow_DisplayTextSearchDialog			(TerminalWindowRef			inRef);
 
-TerminalWindow_Result
-	TerminalWindow_GetTabWidth						(TerminalWindowRef			inRef,
-													 Float32&					outWidthHeightInPixels);
-
-TerminalWindow_Result
-	TerminalWindow_GetTabWidthAvailable				(TerminalWindowRef			inRef,
-													 Float32&					outMaxWidthHeightInPixels);
-
 Boolean
 	TerminalWindow_IsTab							(TerminalWindowRef			inRef);
 
@@ -498,10 +465,6 @@ TerminalWindow_Result
 	TerminalWindow_SetTabPosition					(TerminalWindowRef			inRef,
 													 Float32					inOffsetFromStartingPointInPixels,
 													 Float32					inWidthInPixelsOrFltMax = FLT_MAX);
-
-TerminalWindow_Result
-	TerminalWindow_SetTabWidth						(TerminalWindowRef			inRef,
-													 Float32					inWidthInPixels);
 
 // API UNDER EVALUATION
 void
@@ -522,18 +485,11 @@ void
 //!\name Getting Information From Mac OS Windows
 //@{
 
-// IMPORTANT - USE THIS FUNCTION TO GUARANTEE A WINDOW IS A TERMINAL, BEFORE MUCKING WITH IT
-Boolean
-	TerminalWindow_ExistsFor						(WindowRef					inWindow);
-
 TerminalWindowRef
 	TerminalWindow_ReturnFromMainWindow				();
 
 TerminalWindowRef
 	TerminalWindow_ReturnFromKeyWindow				();
-
-TerminalWindowRef
-	TerminalWindow_ReturnFromWindow					(WindowRef					inWindow);
 
 //@}
 

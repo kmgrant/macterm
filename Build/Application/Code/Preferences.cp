@@ -693,9 +693,9 @@ void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullpt
 																 Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*);
-Boolean					convertCFArrayToCGDeviceColor		(CFArrayRef, CGDeviceColor*);
+Boolean					convertCFArrayToCGFloatRGBColor		(CFArrayRef, CGFloatRGBColor*);
 Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
-Boolean					convertCGDeviceColorToCFArray		(CGDeviceColor const*, CFArrayRef&);
+Boolean					convertCGFloatRGBColorToCFArray		(CGFloatRGBColor const*, CFArrayRef&);
 Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
 CFDictionaryRef			copyDefaultPrefDictionary				();
@@ -2587,9 +2587,9 @@ contexts, handlers that would care about the size of the
 list probably also care when it has been rearranged.
 
 This call invalidates results you may have previously had
-through calls like Preferences_InsertContextNamesInMenu()
-and Preferences_CreateContextNameArray(); you may wish to
-use those routines again to achieve the correct ordering.
+through calls like Preferences_CreateContextNameArray();
+you may wish to use those routines again to achieve the
+correct ordering.
 
 \retval kPreferences_ResultOK
 if the context is successfully moved
@@ -3557,73 +3557,6 @@ Preferences_GetFactoryDefaultsContext	(Preferences_ContextRef*	outContextPtr)
 	}
 	return result;
 }// GetFactoryDefaultsContext
-
-
-/*!
-Adds to the specified menu a list of the names of valid
-contexts in the specified preferences class.
-
-If there is a problem adding anything to the menu, a
-non-success code may be returned, although the menu may
-still be partially changed.  The "outHowManyItemsAdded"
-value is always valid and indicates how many items were
-added regardless of errors.
-
-\retval kPreferences_ResultOK
-if all context names were found and added successfully
-
-\retval kPreferences_ResultUnknownTagOrClass
-if "inClass" is not valid
-
-\retval kPreferences_ResultOneOrMoreNamesNotAvailable
-if at least one of the context names could not be retrieved
-
-(3.1)
-*/
-Preferences_Result
-Preferences_InsertContextNamesInMenu	(Quills::Prefs::Class	inClass,
-										 MenuRef				inoutMenuRef,
-										 MenuItemIndex			inAfterItemIndex,
-										 UInt32					inInitialIndent,
-										 UInt32					inCommandID,
-										 MenuItemIndex&			outHowManyItemsAdded)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	CFArrayRef				nameCFStringCFArray = nullptr;
-	
-	
-	result = Preferences_CreateContextNameArray(inClass, nameCFStringCFArray);
-	if (result == kPreferences_ResultOK)
-	{
-		// now re-populate the menu using resource information
-		MenuItemIndex const		kMenuItemCount = STATIC_CAST(CFArrayGetCount(nameCFStringCFArray), MenuItemIndex);
-		MenuItemIndex			i = 0;
-		CFStringRef				nameCFString = nullptr;
-		OSStatus				error = noErr;
-		
-		
-		outHowManyItemsAdded = 0; // initially...
-		for (i = 0; i < kMenuItemCount; ++i)
-		{
-			nameCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(nameCFStringCFArray, i));
-			if (nullptr != nameCFString)
-			{
-				error = InsertMenuItemTextWithCFString(inoutMenuRef, nameCFString, inAfterItemIndex + outHowManyItemsAdded,
-														kMenuItemAttrIgnoreMeta /* attributes */,
-														inCommandID/* command ID */);
-				if (noErr == error)
-				{
-					++outHowManyItemsAdded;
-					UNUSED_RETURN(OSStatus)SetMenuItemIndent(inoutMenuRef, inAfterItemIndex + outHowManyItemsAdded, inInitialIndent);
-				}
-			}
-		}
-		
-		CFRelease(nameCFStringCFArray), nameCFStringCFArray = nullptr;
-	}
-	
-	return result;
-}// InsertContextNamesInMenu
 
 
 /*!
@@ -5193,7 +5126,7 @@ createIndexed	(Preferences_Tag		inTag,
 /*!
 A convenience routine that calls create() with the typical
 key value type (typeCFArrayRef) and non-dictionary value size
-(sizeof(CGDeviceColor)) for RGB colors.  This simplifies the
+(sizeof(CGFloatRGBColor)) for RGB colors.  This simplifies the
 construction of many preferences, as this type is very common.
 
 The array is expected to contain 3 CFNumberRefs that have
@@ -5209,7 +5142,7 @@ createRGBColor	(Preferences_Tag			inTag,
 				 Quills::Prefs::Class		inClass,
 				 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
-	create(inTag, inKeyName, typeCFArrayRef, sizeof(CGDeviceColor), inClass, outResultPtrPtrOrNull);
+	create(inTag, inKeyName, typeCFArrayRef, sizeof(CGFloatRGBColor), inClass, outResultPtrPtrOrNull);
 }// My_PreferenceDefinition::createRGBColor
 
 
@@ -5576,15 +5509,15 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 
 /*!
 Reads an array of 3 CFNumber elements and puts their
-values into a CGDeviceColor structure.
+values into a CGFloatRGBColor structure.
 
 Returns "true" only if successful.
 
 (2016.09)
 */
 Boolean
-convertCFArrayToCGDeviceColor	(CFArrayRef		inArray,
-								 CGDeviceColor*		outColorPtr)
+convertCFArrayToCGFloatRGBColor		(CFArrayRef			inArray,
+									 CGFloatRGBColor*	outColorPtr)
 {
 	Boolean		result = false;
 	
@@ -5619,7 +5552,7 @@ convertCFArrayToCGDeviceColor	(CFArrayRef		inArray,
 		// unexpected number of elements
 	}
 	return result;
-}// convertCFArrayToCGDeviceColor
+}// convertCFArrayToCGFloatRGBColor
 
 
 /*!
@@ -5675,7 +5608,7 @@ convertCFArrayToHIRect	(CFArrayRef		inArray,
 
 
 /*!
-Reads a CGDeviceColor structure and puts the values
+Reads a CGFloatRGBColor structure and puts the values
 into an array of 3 CFNumber elements.
 
 Returns "true" only if successful.
@@ -5683,8 +5616,8 @@ Returns "true" only if successful.
 (2016.09)
 */
 Boolean
-convertCGDeviceColorToCFArray	(CGDeviceColor const*	inColorPtr,
-								 CFArrayRef&			outNewCFArray)
+convertCGFloatRGBColorToCFArray		(CGFloatRGBColor const*		inColorPtr,
+									 CFArrayRef&				outNewCFArray)
 {
 	Boolean		result = false;
 	
@@ -5741,7 +5674,7 @@ convertCGDeviceColorToCFArray	(CGDeviceColor const*	inColorPtr,
 		// unexpected input
 	}
 	return result;
-}// convertCGDeviceColorToCFArray
+}// convertCGFloatRGBColorToCFArray
 
 
 /*!
@@ -6455,10 +6388,10 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							CGDeviceColor* const		data = REINTERPRET_CAST(outDataPtr, CGDeviceColor*);
+							CGFloatRGBColor* const		data = REINTERPRET_CAST(outDataPtr, CGFloatRGBColor*);
 							
 							
-							if (false == convertCFArrayToCGDeviceColor(valueCFArray, data))
+							if (false == convertCFArrayToCGFloatRGBColor(valueCFArray, data))
 							{
 								// failed; make black
 								data->red = data->green = data->blue = 0;
@@ -9099,11 +9032,11 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagTerminalColorANSICyanBold:
 			case kPreferences_TagTerminalColorANSIWhiteBold:
 				{
-					CGDeviceColor const* const	data = REINTERPRET_CAST(inDataPtr, CGDeviceColor const*);
-					CFArrayRef					colorCFArray = nullptr;
+					CGFloatRGBColor const* const	data = REINTERPRET_CAST(inDataPtr, CGFloatRGBColor const*);
+					CFArrayRef						colorCFArray = nullptr;
 					
 					
-					if (convertCGDeviceColorToCFArray(data, colorCFArray))
+					if (convertCGFloatRGBColorToCFArray(data, colorCFArray))
 					{
 						assert(typeCFArrayRef == keyValueType);
 						inContextPtr->addArray(inDataPreferenceTag, keyName, colorCFArray);

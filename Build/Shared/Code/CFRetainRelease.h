@@ -37,7 +37,6 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 
 
@@ -141,9 +140,6 @@ public:
 	explicit inline
 	CFRetainRelease (CFWriteStreamRef, ReferenceState);
 	
-	explicit inline
-	CFRetainRelease (HIObjectRef, ReferenceState);
-	
 	virtual inline
 	~CFRetainRelease ();
 	
@@ -214,9 +210,6 @@ public:
 	
 	inline CFWriteStreamRef
 	returnCFWriteStreamRef () const;
-	
-	inline HIObjectRef
-	returnHIObjectRef () const;
 	
 	static inline void
 	safeRelease	(CFTypeRef);
@@ -679,31 +672,6 @@ _mutability(kReferenceMutable)
 
 
 /*!
-Creates a new reference using the value of an
-existing one that is a Human Interface Object
-type.
-
-CFRetain() is conditionally called on the reference
-based on "inIsAlreadyRetained"; for details, see
-comments for main constructor.
-
-(2.0)
-*/
-CFRetainRelease::
-CFRetainRelease		(HIObjectRef	inType,
-					 ReferenceState	inIsAlreadyRetained)
-:
-_reference(inType),
-_mutability(kReferenceConstant)
-{
-	if (kNotYetRetained == inIsAlreadyRetained)
-	{
-		safeRetain(_reference);
-	}
-}// human interface object type constructor
-
-
-/*!
 Calls CFRelease() on the reference kept by this
 class instance, if any.
 
@@ -1109,29 +1077,6 @@ const
 	assert((nullptr == _reference) || (CFGetTypeID(_reference) == CFWriteStreamGetTypeID()));
 	return REINTERPRET_CAST(_reference, CFWriteStreamRef);
 }// returnCFWriteStreamRef
-
-
-/*!
-Returns the HIObjectRef that this class instance is
-storing (and has retained), or nullptr if the internal
-reference is empty.
-
-WARNING:	This is a pure cast with no type checking.
-			Be sure that the CFRetainRelease was
-			initialized with some HIObjectRef value.
-
-DEPRECATED.  Do not use Carbon reference types.
-
-(1.1)
-*/
-HIObjectRef
-CFRetainRelease::
-returnHIObjectRef ()
-const
-{
-	//return returnRefCheckCFTypeID< HIObjectRef >(_reference, HIObjectGetTypeID()); // does not appear to be an ID for these
-	return REINTERPRET_CAST(_reference, HIObjectRef);
-}// returnHIObjectRef
 
 
 /*!

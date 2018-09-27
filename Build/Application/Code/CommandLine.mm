@@ -821,7 +821,7 @@ windowDidLoad
 	
 	// set colors
 	{
-		CGDeviceColor	colorInfo;
+		CGFloatRGBColor		colorInfo;
 		
 		
 		prefsResult = Preferences_GetData(kPreferences_TagTerminalColorNormalBackground, sizeof(colorInfo), &colorInfo);

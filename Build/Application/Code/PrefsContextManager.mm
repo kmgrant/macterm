@@ -214,7 +214,7 @@ isDefault:(BOOL*)								outIsDefault
 	
 	if (Preferences_ContextIsValid(self->currentContext))
 	{
-		CGDeviceColor		colorDataFloat;
+		CGFloatRGBColor		colorDataFloat;
 		Boolean				isDefault = false;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(self->currentContext, aTag,
 																		sizeof(colorDataFloat), &colorDataFloat,
@@ -278,7 +278,7 @@ defaultValue:(BOOL)							aDefault
 Writes a new user preference for the specified color to the current
 preferences context and returns true only if this succeeds.
 
-IMPORTANT:	Only tags with values of type CGDeviceColor should be given!
+IMPORTANT:	Only tags with values of type CGFloatRGBColor should be given!
 			The given NSColor is automatically converted internally.
 
 (4.1)
@@ -300,8 +300,8 @@ forPreferenceTag:(Preferences_Tag)	aTag
 	}
 	else
 	{
-		CGDeviceColor	newColorFloat;
-		float			ignoredAlpha = 0;
+		CGFloatRGBColor		newColorFloat;
+		CGFloat				ignoredAlpha = 0;
 		
 		
 		[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue alpha:&ignoredAlpha];

@@ -161,13 +161,6 @@ GenericDialog_Ref
 												 Panel_ViewManager*					inHostedPanel,
 												 void*								inDataSetPtr,
 												 Boolean							inIsAlert = false);
-
-// NOTE: SPECIFIED VIEW MANAGER IS RETAINED BY THIS CALL
-GenericDialog_Ref
-	GenericDialog_NewParentCarbon				(HIWindowRef						inParentWindowOrNullForModalDialog,
-												 Panel_ViewManager*					inHostedPanel,
-												 void*								inDataSetPtr,
-												 Boolean							inIsAlert = false);
 #endif
 
 void

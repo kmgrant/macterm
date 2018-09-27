@@ -50,9 +50,6 @@ OSStatus
 OSStatus
 	FileUtilities_OpenDocuments				(AEDescList const&		inList);
 
-SInt16
-	FileUtilities_OpenTemporaryFile			(FSRef&					outTemporaryFile);
-
 //@}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

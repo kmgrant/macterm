@@ -48,10 +48,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <RandomWrap.h>
-
-// resource includes
-#include "CFRetainRelease.h"
+#include <CFRetainRelease.h>
 
 
 
@@ -1519,11 +1516,6 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	case kUIStrings_TerminalAccessibilityDescription:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal screen"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalAccessibilityDescription; must be all-lowercase without punctuation"));
-		break;
-	
-	case kUIStrings_TerminalBackgroundAccessibilityDescription:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal background"), CFSTR("Terminal"),
-													CFSTR("kUIStrings_TerminalBackgroundAccessibilityDescription; must be all-lowercase without punctuation"));
 		break;
 	
 	case kUIStrings_TerminalInterruptProcess:

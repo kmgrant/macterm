@@ -59,7 +59,6 @@
 // application includes
 #include "Preferences.h"
 #include "Session.h"
-#include "SessionDescription.h"
 
 
 
@@ -164,12 +163,6 @@ SessionRef
 													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 
 SessionRef
-	SessionFactory_NewSessionFromDescription		(TerminalWindowRef				inTerminalWindow,
-													 SessionDescription_Ref			inSessionDescription,
-													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
-													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
-
-SessionRef
 	SessionFactory_NewSessionLoginShell				(TerminalWindowRef				inTerminalWindow,
 													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
 													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
@@ -246,9 +239,6 @@ UInt16
 
 //!\name Utilities
 //@{
-
-SessionFactory_Result
-	SessionFactory_SetAutoRearrangeTabsEnabled		(Boolean						inIsEnabled);
 
 SessionFactory_Result
 	SessionFactory_StartMonitoring					(SessionFactory_Change			inForWhatChange,

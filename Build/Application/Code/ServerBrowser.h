@@ -42,11 +42,9 @@
 
 // library includes
 #ifdef __OBJC__
-class CarbonEventHandlerWrap;
 #import <CocoaFuture.objc++.h>
 @class NSWindow;
 #else
-class CarbonEventHandlerWrap;
 class NSWindow;
 #endif
 
@@ -157,7 +155,6 @@ changes to an interface declared in a ".mm" file.
 @private
 	id< ServerBrowser_VCDelegate >			_responder;
 	id< ServerBrowser_DataChangeObserver >	_dataObserver;
-	EventTargetRef							_eventTarget;
 	NSNetServiceBrowser*					_browser;
 	NSIndexSet*								_discoveredHostIndexes;
 	NSIndexSet*								_protocolIndexes;
@@ -185,9 +182,6 @@ changes to an interface declared in a ".mm" file.
 	- (instancetype)
 	initWithResponder:(id< ServerBrowser_VCDelegate >)_
 	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithResponder:(id< ServerBrowser_VCDelegate >)_
-	eventTarget:(EventTargetRef)_;
 
 // new methods
 	- (NSView*)
@@ -269,11 +263,6 @@ ServerBrowser_Ref
 								 CGPoint				inParentRelativePoint,
 								 id< ServerBrowser_DataChangeObserver >		inDataObserver);
 #endif
-
-ServerBrowser_Ref
-	ServerBrowser_New			(HIWindowRef			inParentWindow,
-								 CGPoint				inParentRelativePoint,
-								 EventTargetRef			inResponder);
 
 void
 	ServerBrowser_Dispose		(ServerBrowser_Ref*		inoutDialogPtr);

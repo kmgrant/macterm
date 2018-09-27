@@ -60,10 +60,6 @@ void
 //!\name Utilities
 //@{
 
-void
-	TextTranslation_AppendCharacterSetsToMenu	(MenuRef				inToWhichMenu,
-												 UInt16					inIndentationLevel);
-
 CFStringEncoding
 	TextTranslation_ContextReturnEncoding		(Preferences_ContextRef	inContext,
 												 CFStringEncoding		inEncodingDefault = kCFStringEncodingInvalidId);

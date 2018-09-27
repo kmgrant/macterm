@@ -33,66 +33,32 @@
 #import "EventLoop.h"
 #import <UniversalDefines.h>
 
-// standard-C++ includes
-#import <algorithm>
-#import <map>
-#import <vector>
-
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
-#import <QuickTime/QuickTime.h>
+//CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventHandlerWrap.template.h>
-#import <CarbonEventUtilities.template.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
 #import <Console.h>
-#import <GrowlSupport.h>
-#import <MacHelpUtilities.h>
 #import <TouchBar.objc++.h>
 
 // application includes
 #import "Commands.h"
-#import "DialogUtilities.h"
+#import "GrowlSupport.h"
+#import "MacHelpUtilities.h"
 #import "TerminalWindow.h"
 
 
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-OSStatus				updateModifiers					(EventHandlerCallRef, EventRef, void*);
-
-} // anonymous namespace
-
 #pragma mark Variables
 namespace {
 
-NSAutoreleasePool*					gGlobalPool = nil;
-CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
-																	receiveHICommand,
-																	CarbonEventSetInClass
-																		(CarbonEventClass(kEventClassCommand),
-																			kEventCommandProcess,
-																			kEventCommandUpdateStatus),
-																	nullptr/* user data */);
-Console_Assertion					_1(gCarbonEventHICommandHandler.isInstalled(), __FILE__, __LINE__);
-UInt32								gCarbonEventModifiers = 0L; // current modifier key states; updated by the callback
-CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget(),
-																	updateModifiers,
-																	CarbonEventSetInClass
-																		(CarbonEventClass(kEventClassKeyboard),
-																			kEventRawKeyModifiersChanged,
-																			kEventRawKeyUp),
-																	nullptr/* user data */);
-Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
+NSAutoreleasePool*		gGlobalPool = nil;
 
 } // anonymous namespace
 
@@ -106,7 +72,7 @@ before it is necessary to track events.  This
 method creates the global mouse region, among
 other things.
 
-\retval noErr
+\retval kEventLoop_ResultOK
 always; no errors are currently defined
 
 (3.0)
@@ -114,7 +80,7 @@ always; no errors are currently defined
 EventLoop_Result
 EventLoop_Init ()
 {
-	EventLoop_Result	result = noErr;
+	EventLoop_Result	result = kEventLoop_ResultOK;
 	
 	
 	// a pool must be constructed here, because NSApplicationMain()
@@ -165,54 +131,6 @@ EventLoop_Done ()
 
 
 /*!
-Determines the state of the Caps Lock key when you
-do not have access to an event record.  Returns
-"true" only if the key is down.
-
-(1.0)
-*/
-Boolean
-EventLoop_IsCapsLockKeyDown ()
-{
-	// under Carbon, a callback updates a variable whenever
-	// modifier keys change; therefore, just check that value!
-	return ((gCarbonEventModifiers & alphaLock) != 0);
-}// IsCapsLockKeyDown
-
-
-/*!
-Determines the state of the  key when you do not
-have access to an event record.  Returns "true"
-only if the key is down.
-
-(1.0)
-*/
-Boolean
-EventLoop_IsCommandKeyDown ()
-{
-	// under Carbon, a callback updates a variable whenever
-	// modifier keys change; therefore, just check that value!
-	return ((gCarbonEventModifiers & cmdKey) != 0);
-}// IsCommandKeyDown
-
-
-/*!
-Determines the state of the Control key when you
-do not have access to an event record.  Returns
-"true" only if the key is down.
-
-(4.0)
-*/
-Boolean
-EventLoop_IsControlKeyDown ()
-{
-	// under Carbon, a callback updates a variable whenever
-	// modifier keys change; therefore, just check that value!
-	return ((gCarbonEventModifiers & controlKey) != 0);
-}// IsControlKeyDown
-
-
-/*!
 Returns true if the main window is in Full Screen mode, by
 calling EventLoop_IsWindowFullScreen() on the main window.
 
@@ -260,137 +178,6 @@ EventLoop_IsWindowFullScreen	(NSWindow*		inWindow)
 
 
 /*!
-This routine blocks until a mouse-down event occurs
-or the “double time” has elapsed.  Returns "true"
-only if it is a “double-click” event.
-
-Only if "true" is returned, the resulting mouse
-location in global coordinates is returned.
-
-You normally invoke this immediately after you have
-received a *mouse-up* event to see if the user is
-actually intending to click twice.
-
-Despite its name, this routine can detect triple-
-clicks, etc. simply by being used repeatedly.  It
-can also detect “one and a half clicks” because it
-does not wait for a subsequent mouse-up.
-
-DEPRECATED.  This may be necessary to detect certain
-mouse behavior in raw event environments during
-Carbon porting but it would generally NOT be this
-difficult in a pure Cocoa event scheme.
-
-(3.0)
-*/
-Boolean
-EventLoop_IsNextDoubleClick		(HIWindowRef	inWindow,
-								 Point&			outGlobalMouseLocation)
-{
-	Boolean		result = false;
-	NSEvent*	nextClick = [NSApp nextEventMatchingMask:NSLeftMouseDownMask
-															untilDate:[NSDate dateWithTimeIntervalSinceNow:[NSEvent doubleClickInterval]]
-															inMode:NSEventTrackingRunLoopMode dequeue:YES];
-	
-	
-	// NOTE: this used to be accomplished with Carbon event-handling
-	// code but as of Mac OS X 10.9 the event loop seems unable to
-	// reliably return the next click event; thus, Cocoa is used
-	// (and this is a horrible coordinate-translation hack; it
-	// reproduces the required behavior for now but it also just
-	// underscores how critical it is that everything finally be
-	// moved natively to Cocoa)
-	if (nil != nextClick)
-	{
-		NSWindow*	eventWindow = [nextClick window];
-		
-		
-		if (eventWindow == CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(inWindow))
-		{
-			NSPoint		clickLocation = [nextClick locationInWindow];
-			
-			
-			clickLocation = [eventWindow convertBaseToScreen:clickLocation];
-			clickLocation.y = [[eventWindow screen] frame].size.height;
-			outGlobalMouseLocation.h = STATIC_CAST(clickLocation.x, SInt16);
-			outGlobalMouseLocation.v = STATIC_CAST(clickLocation.y, SInt16);
-			clickLocation = [eventWindow localToGlobalRelativeToTopForPoint:[nextClick locationInWindow]];
-			outGlobalMouseLocation.h = STATIC_CAST(clickLocation.x, SInt16);
-			outGlobalMouseLocation.v = STATIC_CAST(clickLocation.y, SInt16);
-			result = ([nextClick clickCount] > 1);
-		}
-	}
-	
-	return result;
-}// IsNextDoubleClick
-
-
-/*!
-Determines the state of the Option key when you
-do not have access to an event record.  Returns
-"true" only if the key is down.
-
-(3.0)
-*/
-Boolean
-EventLoop_IsOptionKeyDown ()
-{
-	// under Carbon, a callback updates a variable whenever
-	// modifier keys change; therefore, just check that value!
-	return ((gCarbonEventModifiers & optionKey) != 0);
-}// IsOptionKeyDown
-
-
-/*!
-Determines the state of the Shift key when
-you do not have access to an event record.
-Returns "true" only if the key is down.
-
-(3.0)
-*/
-Boolean
-EventLoop_IsShiftKeyDown ()
-{
-	// under Carbon, a callback updates a variable whenever
-	// modifier keys change; therefore, just check that value!
-	return ((gCarbonEventModifiers & shiftKey) != 0);
-}// IsShiftKeyDown
-
-
-/*!
-Determines the absolutely current state of the
-modifier keys and the mouse button.  The
-modifiers are somewhat incomplete (for example,
-no checking is done for the “right shift key”,
-etc.), but all the common modifiers (command,
-control, shift, option, caps lock, and the
-mouse button) are returned.
-
-(3.0)
-*/
-EventModifiers
-EventLoop_ReturnCurrentModifiers ()
-{
-	// under Carbon, a callback updates a global variable whenever
-	// the state of a modifier key changes; so, just return that value
-	return STATIC_CAST(gCarbonEventModifiers, EventModifiers);
-}// ReturnCurrentModifiers
-
-
-/*!
-Use instead of FrontWindow() to return the active
-non-floating window.
-
-(3.0)
-*/
-HIWindowRef
-EventLoop_ReturnRealFrontWindow ()
-{
-	return ActiveNonFloatingWindow();
-}// ReturnRealFrontWindow
-
-
-/*!
 Runs the main event loop, AND DOES NOT RETURN.  This routine
 can ONLY be invoked from the main application thread.
 
@@ -406,136 +193,6 @@ EventLoop_Run ()
 	[NSApp run];
 }// @autoreleasepool
 }// Run
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand".
-
-(3.0)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			switch (kEventKind)
-			{
-			case kEventCommandProcess:
-				// Execute a command selected from a menu.
-				//
-				// IMPORTANT: This could imply ANY form of menu selection, whether from
-				//            the menu bar, from a contextual menu, or from a pop-up menu!
-				{
-					if (received.commandID != 0)
-					{
-						Boolean		commandOK = false;
-						
-						
-						// execute the command
-						commandOK = Commands_ExecuteByID(received.commandID);
-						if (commandOK)
-						{
-							result = noErr;
-						}
-						else
-						{
-							result = eventNotHandledErr;
-						}
-					}
-					else
-					{
-						UInt32		commandID = 0L;
-						OSStatus	error = noErr;
-						
-						
-						result = eventNotHandledErr; // initially...
-						
-						error = GetMenuItemCommandID(received.menu.menuRef, received.menu.menuItemIndex, &commandID);
-						if (noErr == error)
-						{
-							// if a menu item wasn’t handled, make this an obvious bug by leaving the menu title highlighted
-							if (Commands_ExecuteByID(commandID))
-							{
-								HiliteMenu(0);
-								result = noErr;
-							}
-						}
-					}
-				}
-				break;
-			
-			default:
-				// ???
-				result = eventNotHandledErr;
-				break;
-			}
-		}
-	}
-	return result;
-}// receiveHICommand
-
-
-/*!
-Invoked by Mac OS X whenever a modifier key’s state changes
-(e.g. option, control, command, or shift).  This routine updates
-an internal variable that is used by other functions (such as
-EventLoop_IsCommandKeyDown()).
-
-(3.0)
-*/
-OSStatus
-updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = noErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassKeyboard);
-	assert((kEventKind == kEventRawKeyModifiersChanged) || (kEventKind == kEventRawKeyUp));
-	{
-		// extract modifier key bits from the given event; it is important to
-		// track both original key presses (kEventRawKeyModifiersChanged) and
-		// key releases (kEventRawKeyUp) to know for sure, and both events
-		// are documented as having a "kEventParamKeyModifiers" parameter
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, gCarbonEventModifiers);
-		
-		// if the modifier key information was found, proceed
-		if (noErr == result)
-		{
-			if (NO == [NSApp isActive]) result = eventNotHandledErr;
-		}
-		else
-		{
-			// no modifier data available; assume no modifiers are in use!
-			gCarbonEventModifiers = 0L;
-		}
-	}
-	return result;
-}// updateModifiers
-
-} // anonymous namespace
 
 
 #pragma mark -
@@ -573,29 +230,6 @@ dealloc
 	[_terminalWindowTouchBarController release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Actions
-
-
-/*!
-TEMPORARY.
-
-This implements an action that needs to be forwarded to
-a Carbon window by starting from an object known to
-Interface Builder.  In this case, the Commands_Executor
-forwarding class knows how to find the active Carbon
-window correctly (whereas “first responder” may not).
-
-To be removed when Carbon windows are retired.
-
-(2016.11)
-*/
-- (IBAction)
-toggleFullScreen:(id)	sender
-{
-	[[Commands_Executor sharedExecutor] toggleFullScreen:sender];
-}// toggleFullScreen:
 
 
 #pragma mark NSApplication

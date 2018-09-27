@@ -525,11 +525,6 @@ TerminalViewRef
 									 TerminalScreenRef				inScreenDataSource,
 									 Preferences_ContextRef			inFormatOrNull = nullptr);
 
-// AUTOMATICALLY DESTROYED WHEN THE VIEW FROM TerminalView_ReturnContainerHIView() GOES AWAY
-TerminalViewRef
-	TerminalView_NewHIViewBased		(TerminalScreenRef				inScreenDataSource,
-									 Preferences_ContextRef			inFormatOrNull = nullptr);
-
 //@}
 
 //!\name Modifying Terminal View Data
@@ -570,16 +565,6 @@ TerminalView_Result
 Boolean
 	TerminalView_PtInSelection		(TerminalViewRef	inView,
 									 Point				inLocalPoint);
-
-//@}
-
-//!\name Drag and Drop
-//@{
-
-void
-	TerminalView_SetDragHighlight	(HIViewRef		inView,
-									 DragRef		inDrag,
-									 Boolean		inIsHighlighted);
 
 //@}
 
@@ -674,9 +659,6 @@ Boolean
 
 NSWindow*
 	TerminalView_ReturnNSWindow					(TerminalViewRef			inView);
-
-HIWindowRef
-	TerminalView_ReturnWindow					(TerminalViewRef			inView);
 
 //@}
 
@@ -789,35 +771,20 @@ void
 
 //@}
 
-//!\name Cocoa NSView and Mac OS HIView Management
+//!\name Cocoa NSView Management
 //@{
 
 void
 	TerminalView_FocusForUser					(TerminalViewRef			inView);
 
-HIViewRef
-	TerminalView_ReturnContainerHIView			(TerminalViewRef			inView);
-
-HIViewID
-	TerminalView_ReturnContainerHIViewID		();
-
 TerminalView_Object*
 	TerminalView_ReturnContainerNSView			(TerminalViewRef			inView);
-
-HIViewRef
-	TerminalView_ReturnDragFocusHIView			(TerminalViewRef			inView);
 
 NSView*
 	TerminalView_ReturnDragFocusNSView			(TerminalViewRef			inView);
 
-HIViewRef
-	TerminalView_ReturnUserFocusHIView			(TerminalViewRef			inView);
-
 NSView*
 	TerminalView_ReturnUserFocusNSView			(TerminalViewRef			inView);
-
-TerminalViewRef
-	TerminalView_ReturnUserFocusTerminalView	();
 
 //@}
 
@@ -827,7 +794,7 @@ TerminalViewRef
 Boolean
 	TerminalView_GetColor						(TerminalViewRef			inView,
 												 TerminalView_ColorIndex	inColorEntryNumber,
-												 CGDeviceColor*				outColorPtr);
+												 CGFloatRGBColor*			outColorPtr);
 
 void
 	TerminalView_GetFontAndSize					(TerminalViewRef			inView,
@@ -847,7 +814,7 @@ void
 Boolean
 	TerminalView_SetColor						(TerminalViewRef			inView,
 												 TerminalView_ColorIndex	inColorEntryNumber,
-												 CGDeviceColor const*		inColorPtr);
+												 CGFloatRGBColor const*		inColorPtr);
 
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,

@@ -38,7 +38,6 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
 #else
@@ -226,9 +225,6 @@ AlertMessages_BoxRef
 
 AlertMessages_BoxRef
 	Alert_NewWindowModal				(NSWindow*							inParentWindow);
-
-AlertMessages_BoxRef
-	Alert_NewWindowModalParentCarbon	(HIWindowRef						inParentWindow);
 
 void
 	Alert_Retain						(AlertMessages_BoxRef				inAlert);

@@ -94,11 +94,7 @@ void
 AddressDialog_Display ()
 {
 @autoreleasepool {
-	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
-	
-	
 	[[AddressDialog_PanelController sharedAddressPanelController] showWindow:NSApp];
-	UNUSED_RETURN(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// @autoreleasepool
 }// Display
 

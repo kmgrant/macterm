@@ -53,7 +53,6 @@ extern "C"
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
-@class NSCarbonWindow; // WARNING: not for general use, see actual usage below
 #import <CoreServices/CoreServices.h>
 
 // library includes
@@ -78,7 +77,6 @@ extern "C"
 #import "Clipboard.h"
 #import "CommandLine.h"
 #import "DebugInterface.h"
-#import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "Folder.h"
 #import "HelpSystem.h"
@@ -90,7 +88,6 @@ extern "C"
 #import "QuillsEvents.h"
 #import "QuillsSession.h"
 #import "Session.h"
-#import "SessionDescription.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalView.h"
@@ -142,10 +139,6 @@ Internal routines.
 	- (BOOL)
 	viaFirstResponderTryToPerformSelector:(SEL)_
 	withObject:(id)_;
-	- (BOOL)
-	viaFirstResponderTryToPerformSelector:(SEL)_
-	withObject:(id)_
-	preferCarbonMain:(BOOL)_;
 
 @end //}
 
@@ -282,20 +275,17 @@ public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 *
 namespace {
 
 void				activateAnotherWindow							(My_WindowActivationDirection, My_WindowSwitchingActions = 0);
-BOOL				activeCarbonWindowHasSelectedText				();
 BOOL				addWindowMenuItemForSession						(SessionRef, NSMenu*, int, CFStringRef);
 NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
 void				changeNotifyForCommandExecution					(UInt32);
 BOOL				handleQuitReview								();
 int					indexOfItemWithAction							(NSMenu*, SEL);
 Boolean				isAnyListenerForCommandExecution				(UInt32);
-BOOL				isCarbonWindow									(id);
 BOOL				isCocoaWindowMoreImportantThanCarbon			(NSWindow*);
 BOOL				isWindowVisible									(NSWindow*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 BOOL				quellAutoNew									();
-HIViewRef			returnActiveCarbonWindowFocusedField			();
 int					returnFirstWindowItemAnchor						(NSMenu*);
 NSMenu*				returnMenu										(UInt32);
 SessionRef			returnMenuItemSession							(NSMenuItem*);
@@ -422,239 +412,6 @@ Commands_Done ()
 
 
 /*!
-Determines the most appropriate string to describe
-the specified command, given the name type constraint.
-Most commands are described by exactly one string,
-but occasionally you can get a different string that
-is more appropriate for the context you specify.  If
-no string specifically matching your context exists,
-a more general string is returned.
-
-Returns true as long as at least one string is found
-and copied successfully.  Note in particular that you
-will not see a false return value when there is no
-exact match for your requested string, as long as at
-least one other string for the command exists.
-
-DEPRECATED.  Command IDs are not going to be reliable
-mappings to strings in many cases, due to the Cocoa
-transition.
-
-(3.0)
-*/
-Boolean
-Commands_CopyCommandName	(UInt32				inCommandID,
-							 Commands_NameType  inNameType,
-							 CFStringRef&		outName)
-{
-	Boolean		result = false;
-	
-	
-	switch (inCommandID)
-	{
-	case kCommandFullScreenToggle:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemFullScreen, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandNewSessionDefaultFavorite:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionDefault, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandNewSessionLoginShell:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionLoginShell, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandNewSessionShell:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemNewSessionShell, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandPrint:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemPrint, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandKillProcessesKeepWindow:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemKillSession, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandRestartSession:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemRestartSession, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kHICommandCustomizeToolbar:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemCustomizeToolbar, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandSuspendNetwork:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemSuspendNetwork, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandBellEnabled:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemBell, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandHideFrontWindow:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemHideFrontWindow, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	case kCommandStackWindows:
-		switch (inNameType)
-		{
-		case kCommands_NameTypeShort:
-			if (UIStrings_Copy(kUIStrings_ToolbarItemArrangeAllInFront, outName).ok())
-			{
-				result = true;
-			}
-			break;
-		
-		case kCommands_NameTypeDefault:
-		default:
-			break;
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	// TEMPORARY - the fallback to copy from a menu no longer works
-	
-	return result;
-}// CopyCommandName
-
-
-/*!
 Attempts to handle a command at the application level,
 given its ID (all IDs are declared in "Commands.h").
 Returns true only if the event is handled successfully.
@@ -701,13 +458,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		TerminalViewRef		activeView = nullptr;
 		Boolean				isSession = false; // initially...
 		Boolean				isTerminal = false; // initially...
-		Boolean				isDialog = false;
 		
-		
-		if (EventLoop_ReturnRealFrontWindow() != nullptr)
-		{
-			isDialog = (kDialogWindowKind == GetWindowKind(EventLoop_ReturnRealFrontWindow()));
-		}
 		
 		// TEMPORARY: This is a TON of legacy context crap.  Most of this
 		// should be refocused or removed.  In addition, it is expensive
@@ -795,7 +546,9 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		case kCommandOpenSession:
-			SessionDescription_Load();
+			//SessionDescription_Load();
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "UNIMPLEMENTED; need to rewrite '.session' parser in Python");
 			break;
 		
 		case kCommandCloseConnection:
@@ -906,7 +659,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					if (nullptr != printJob)
 					{
 						UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-															(printJob, TerminalWindow_ReturnLegacyCarbonWindow(frontTerminalWindow));
+															(printJob, nil/* window; INCOMPLETE */);
 						PrintTerminal_ReleaseJob(&printJob);
 					}
 				}
@@ -956,68 +709,48 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandCut:
 		case kCommandCopy:
 		case kCommandCopyTable:
-		case kCommandClear:
 			if ((inCommandID == kCommandCut) ||
 				(inCommandID == kCommandCopy) ||
 				(inCommandID == kCommandCopyTable))
 			{
 				// all of these operations involving copying to the clipboard
-				if (isDialog)
+				if (nullptr != activeView)
 				{
-					if (inCommandID == kCommandCut) DialogCut(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
-					else if (inCommandID == kCommandCopy) DialogCopy(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
-				}
-				else
-				{
-					if (nullptr != activeView)
+					CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy(activeView),
+																CFRetainRelease::kAlreadyRetained); 
+					NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
+					
+					
+					if (selectedNSImageArray.exists() && (asArray.count > 0))
 					{
-						CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy(activeView),
-																	CFRetainRelease::kAlreadyRetained); 
-						NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
+						Boolean		haveCleared = false;
 						
 						
-						if (selectedNSImageArray.exists() && (asArray.count > 0))
+						for (NSImage* asImage in asArray)
 						{
-							Boolean		haveCleared = false;
+							assert([asImage isKindOfClass:NSImage.class]);
+							OSStatus	copyStatus = noErr;
 							
 							
-							for (NSImage* asImage in asArray)
+							copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
+																			(false == haveCleared)/* clear flag */);
+							if (noErr != copyStatus)
 							{
-								assert([asImage isKindOfClass:NSImage.class]);
-								OSStatus	copyStatus = noErr;
-								
-								
-								copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
-																				(false == haveCleared)/* clear flag */);
-								if (noErr != copyStatus)
-								{
-									Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
-								}
-								else
-								{
-									// if more than one image is selected, add them all
-									haveCleared = true;
-								}
+								Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
+							}
+							else
+							{
+								// if more than one image is selected, add them all
+								haveCleared = true;
 							}
 						}
-						else
-						{
-							Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
-																? kClipboard_CopyMethodTable
-																: kClipboard_CopyMethodStandard);
-						}
 					}
-				}
-			}
-			if (inCommandID == kCommandClear)
-			{
-				// delete selection -- unimplemented, impossible to implement?
-				// at least, impossible until MacTerm supports “generic” terminal
-				// windows (i.e. windows that are not tied to read-only concepts
-				// like connections to remote servers)
-				if (isDialog)
-				{
-					DialogDelete(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
+					else
+					{
+						Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
+															? kClipboard_CopyMethodTable
+															: kClipboard_CopyMethodStandard);
+					}
 				}
 			}
 			break;
@@ -1098,13 +831,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandSelectAll: // text only
 		case kCommandSelectAllWithScrollback: // text only
 		case kCommandSelectNothing: // text only
-			if (isDialog)
-			{
-				// select the entire text in the focused field
-				// unimplemented
-				Sound_StandardAlert();
-			}
-			else if (isSession)
+			if (isSession)
 			{
 				if (inCommandID == kCommandSelectAllWithScrollback)
 				{
@@ -1402,36 +1129,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandMinimizeWindow:
-			// behave as if the user clicked the collapse box of the frontmost window
-			{
-				WindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
-				Boolean			collapsing = false;
-				
-				
-				if (nullptr != frontWindow)
-				{
-					WindowRef		sheetParentWindow = nullptr;
-					
-					
-					// is the frontmost window a sheet?
-					if (GetSheetWindowParent(frontWindow, &sheetParentWindow) == noErr)
-					{
-						// the front window is a sheet; minimize its parent window instead
-						frontWindow = sheetParentWindow;
-					}
-					collapsing = !IsWindowCollapsed(frontWindow);
-					CollapseWindow(frontWindow, collapsing);
-				}
-			}
-			break;
-		
-		case kCommandZoomWindow:
-		case kCommandMaximizeWindow:
-			// do not zoom windows this way, pass events to specific windows
-			result = false;
-			break;
-		
 		case kCommandChangeWindowTitle:
 			// let the user change the title of certain windows
 			{
@@ -1546,14 +1243,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			HelpSystem_DisplayHelpInCurrentContext();
 			break;
 		
-		case kCommandShowHelpTags:
-			HMSetHelpTagsDisplayed(true);
-			break;
-		
-		case kCommandHideHelpTags:
-			HMSetHelpTagsDisplayed(false);
-			break;
-		
 	#if 0
 		case kCommandToggleMacrosMenuVisibility:
 			{
@@ -1627,64 +1316,20 @@ Boolean
 Commands_ExecuteByIDUsingEvent	(UInt32				inCommandID,
 								 EventTargetRef		inTarget)
 {
-	EventRef	executeEvent = nullptr;
-	OSStatus	error = noErr;
 	Boolean		result = false;
 	
 	
-	error = CreateEvent(kCFAllocatorDefault, kEventClassCommand, kEventCommandProcess,
-						0/* time of event */, kEventAttributeNone, &executeEvent);
-	if (noErr == error)
-	{
-		HICommand		commandInfo;
-		EventTargetRef	whereToStart = inTarget;
-		
-		
-		if (nullptr == whereToStart) whereToStart = GetUserFocusEventTarget();
-		if (nullptr == whereToStart) whereToStart = GetWindowEventTarget(EventLoop_ReturnRealFrontWindow());
-		if (nullptr == whereToStart) whereToStart = GetApplicationEventTarget();
-		assert(nullptr != whereToStart);
-		
-		bzero(&commandInfo, sizeof(commandInfo));
-		commandInfo.commandID = inCommandID;
-		error = SetEventParameter(executeEvent, kEventParamDirectObject, typeHICommand,
-									sizeof(commandInfo), &commandInfo);
-		if (noErr == error)
-		{
-			error = SendEventToEventTarget(executeEvent, whereToStart);
-			if (noErr == error)
-			{
-				// success!
-				result = true;
-			}
-		}
-	}
+	// conceptually, this should probably be replaced by calls
+	// to NSResponder’s "tryToPerform:with:" or a similar method
+	// to go up the chain; no longer implemented, Carbon legacy;
+	// this will be a big source of problems at first but it is
+	// easier to just look for errors and implement appropriate
+	// actions at the right points in the responder chain
+	Console_Warning(Console_WriteValueFourChars, "Commands_ExecuteByIDUsingEvent() is no longer implemented; failed to process request, command ID", inCommandID);
+	result = Commands_ExecuteByID(inCommandID); // approximation
 	
 	return result;
 }// ExecuteByIDUsingEvent
-
-
-/*!
-Calls Commands_ExecuteByIDUsingEvent() after the specified
-period of time has elapsed.
-
-This is not recommended except in unusual situations.
-
-(4.0)
-*/
-void
-Commands_ExecuteByIDUsingEventAfterDelay	(UInt32				inCommandID,
-											 EventTargetRef		inTarget,
-											 Float32			inDelayInSeconds)
-{
-	Commands_DelayedCommand*	delayedExecution = [[[Commands_DelayedCommand alloc]
-														initWithCommand:inCommandID
-																		andEventTarget:inTarget
-																		andDelay:inDelayInSeconds] autorelease];
-	
-	
-	[delayedExecution execute];
-}// ExecuteByIDUsingEventAfterDelay
 
 
 /*!
@@ -1694,11 +1339,6 @@ contexts in the specified preferences class.
 If there is a problem adding anything to the menu, a
 non-success code may be returned, although the menu may
 still be partially changed.
-
-NOTE:	This is like Preferences_InsertContextNamesInMenu(),
-		but is Cocoa-specific.  It is only here, for now,
-		because this module is Objective-C, and the
-		Preferences module is not yet Objective-C.
 
 \retval kCommands_ResultOK
 if all context names were found and added successfully
@@ -1964,30 +1604,7 @@ activateAnotherWindow	(My_WindowActivationDirection	inActivationDirection,
 				// key equivalents that would give them focus
 				if ([*toWindow isOnActiveSpace] && [*toWindow canBecomeKeyWindow] && isWindowVisible(*toWindow))
 				{
-					BOOL	canUse = YES; // initially...
-					
-					
-					if (isCarbonWindow(*toWindow))
-					{
-						HIWindowRef		asCarbonWindow = REINTERPRET_CAST([*toWindow windowRef], HIWindowRef);
-						WindowClass		windowClass = kDocumentWindowClass;
-						OSStatus		error = noErr;
-						
-						
-						// this is basically a short-term hack to prevent “tabs” from
-						// being highlighted during window rotation (eventually they
-						// will not even be implemented using Carbon)
-						error = GetWindowClass(asCarbonWindow, &windowClass);
-						if ((noErr != error) || (kDrawerWindowClass == windowClass))
-						{
-							canUse = NO;
-						}
-					}
-					
-					if (canUse)
-					{
-						currentWindow = *toWindow;
-					}
+					currentWindow = *toWindow;
 				}
 			}
 			
@@ -2032,21 +1649,7 @@ activateAnotherWindow	(My_WindowActivationDirection	inActivationDirection,
 	}
 	else
 	{
-		// just in case Mac OS X does special gymnastics for Carbon
-		// windows, use only Carbon APIs to activate Carbon windows
-		// (TEMPORARY)
-		if (isCarbonWindow(nextWindow))
-		{
-			HIWindowRef		carbonWindow = REINTERPRET_CAST([nextWindow windowRef], HIWindowRef);
-			
-			
-			SelectWindow(carbonWindow);
-			CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
-		}
-		else
-		{
-			[nextWindow makeKeyAndOrderFront:nil];
-		}
+		[nextWindow makeKeyAndOrderFront:nil];
 		
 		if (nil != autoHiddenTerminalWindow)
 		{
@@ -2054,38 +1657,6 @@ activateAnotherWindow	(My_WindowActivationDirection	inActivationDirection,
 		}
 	}
 }// activateAnotherWindow
-
-
-/*!
-Returns true only if the currently-focused view in the
-currently-focused Carbon window has selected text.  This
-can be used to help validators enable editing commands.
-
-DEPRECATED.  Used only for Carbon transition.
-
-(4.0)
-*/
-BOOL
-activeCarbonWindowHasSelectedText ()
-{
-	BOOL			result = NO;
-	HIViewRef		focusedView = returnActiveCarbonWindowFocusedField();
-		
-		
-	if (nullptr != focusedView)
-	{
-		ControlEditTextSelectionRec		selection;
-		Size							actualSize = 0;
-		
-		
-		if (noErr == GetControlData(focusedView, kControlEntireControl, kControlEditTextSelectionTag,
-									sizeof(selection), &selection, &actualSize))
-		{
-			result = (selection.selStart != selection.selEnd);
-		}
-	}
-	return result;
-}// activeCarbonWindowHasSelectedText
 
 
 /*!
@@ -2210,9 +1781,6 @@ handleQuitReview ()
 						
 						result = YES;
 						
-						// prevent tabs from shifting during this process
-						UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
-						
 						// iterate over each session in a MODAL fashion, highlighting a window
 						// and either displaying an alert or discarding the window if it has only
 						// been open a short time
@@ -2222,11 +1790,10 @@ handleQuitReview ()
 						{
 							unless (gCurrentQuitCancelled)
 							{
-								HIWindowRef		carbonWindow = Session_ReturnActiveLegacyCarbonWindow(inSession);
 								NSWindow*		window = Session_ReturnActiveNSWindow(inSession);
 								
 								
-								if ((nullptr != carbonWindow) || (nil != window))
+								if (nil != window)
 								{
 									Session_TerminationDialogOptions	dialogOptions = kSession_TerminationDialogOptionModal;
 									
@@ -2241,14 +1808,7 @@ handleQuitReview ()
 									}
 									
 									// if the window was obscured, show it first
-									if ((nullptr != carbonWindow) && (false == IsWindowVisible(carbonWindow)))
-									{
-										TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(carbonWindow);
-										
-										
-										TerminalWindow_SetObscured(terminalWindow, false);
-									}
-									else if ((nil != window) && (false == window.isVisible))
+									if ((nil != window) && (false == window.isVisible))
 									{
 										TerminalWindowRef	terminalWindow = [window terminalWindowRef];
 										
@@ -2257,24 +1817,12 @@ handleQuitReview ()
 									}
 									
 									// all windows became translucent; make sure the alert one is opaque
-									if (nullptr != carbonWindow)
-									{
-										UNUSED_RETURN(OSStatus)SetWindowAlpha(carbonWindow, 1.0);
-									}
-									else
-									{
-										window.alphaValue = 1.0;
-									}
+									window.alphaValue = 1.0;
 									
 									// enforce a tiny delay between messages, otherwise it may be hard
 									// for the user to realize that a new message has appeared for a
 									// different window
-									{
-										UInt32		finalTick = 0L;
-										
-										
-										Delay(8, &finalTick);
-									}
+									// UNIMPLEMENTED
 									
 									Session_DisplayTerminationWarning(inSession, dialogOptions,
 																		^{
@@ -2289,9 +1837,6 @@ handleQuitReview ()
 								}
 							}
 						});
-						
-						// prevent tabs from shifting during this process
-						UNUSED_RETURN(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
 						
 						if (cancelQuit)
 						{
@@ -2435,40 +1980,6 @@ isAnyListenerForCommandExecution	(UInt32		inCommand)
 
 
 /*!
-Returns YES only if the specified object is apparently a
-Carbon window.
-
-This is a transitional routine only.  It relies on the
-existence of the undocumented internal NSCarbonWindow
-class, which just so happens to be used consistently on
-all versions of Mac OS X so far.
-
-This also calls CocoaBasic_RegisterCocoaCarbonWindow() so
-that the window is automatically made known to the registry;
-that way, any future attempts to “allocate” a Cocoa window
-for that Carbon window, will instead return the known window.
-
-(4.0)
-*/
-BOOL
-isCarbonWindow	(id		inObject)
-{
-	BOOL	result = NO;
-	
-	
-	if (nil != inObject)
-	{
-		result = [[inObject class] isSubclassOfClass:[NSCarbonWindow class]];
-		if (result && ([[inObject class] isSubclassOfClass:[NSWindow class]]))
-		{
-			UNUSED_RETURN(Boolean)CocoaBasic_RegisterCocoaCarbonWindow((NSWindow*)inObject);
-		}
-	}
-	return result;
-}// isCarbonWindow
-
-
-/*!
 Returns YES only if the specified window appears to be
 something that should override a main Carbon-based
 window.  This is important for Edit menu commands, for
@@ -2510,9 +2021,7 @@ instead of sending the "isVisible" message directly.
 BOOL
 isWindowVisible		(NSWindow*		inWindow)
 {
-	BOOL	result = (isCarbonWindow(inWindow))
-						? IsWindowVisible(REINTERPRET_CAST([inWindow windowRef], HIWindowRef))
-						: [inWindow isVisible];
+	BOOL	result = [inWindow isVisible];
 	
 	
 	return result;
@@ -2593,45 +2102,6 @@ quellAutoNew ()
 	
 	return result;
 }// quellAutoNew
-
-
-/*!
-Returns the currently-focused view in the active Carbon window
-if it supports text editing, otherwise "nullptr" is returned.
-
-DEPRECATED.  Used only for Carbon transition.
-
-(4.0)
-*/
-HIViewRef
-returnActiveCarbonWindowFocusedField ()
-{
-	HIViewRef		result = nullptr;
-	HIWindowRef		focusedWindow = GetUserFocusWindow();
-	
-	
-	if (nullptr != focusedWindow)
-	{
-		HIViewRef		focusedView = nullptr;
-		
-		
-		if (noErr == GetKeyboardFocus(focusedWindow, &focusedView))
-		{
-			ControlKind		viewKind;
-			
-			
-			if (noErr == GetControlKind(focusedView, &viewKind))
-			{
-				if ((kControlKindSignatureApple == viewKind.signature) &&
-					(kControlKindEditUnicodeText == viewKind.kind))
-				{
-					result = focusedView;
-				}
-			}
-		}
-	}
-	return result;
-}// returnActiveCarbonWindowFocusedField
 
 
 /*!
@@ -3566,35 +3036,13 @@ updateFadeAllTerminalWindows	(Boolean	inInactiveState)
 		(^(TerminalWindowRef	inTerminalWindow,
 		   Boolean&				UNUSED_ARGUMENT(outStopFlag))
 		{
-			if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-			{
-				HIWindowRef const	kWindow  = (nullptr != inTerminalWindow)
-												? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
-												: nullptr;
-				HIWindowRef const	kTabWindow  = (nullptr != inTerminalWindow)
-													? TerminalWindow_ReturnTabWindow(inTerminalWindow)
-													: nullptr;
-				
-				
-				if (nullptr != kTabWindow)
-				{
-					UNUSED_RETURN(OSStatus)SetWindowAlpha(kTabWindow, alpha);
-				}
-				if (nullptr != kWindow)
-				{
-					UNUSED_RETURN(OSStatus)SetWindowAlpha(kWindow, alpha);
-				}
-			}
-			else
-			{
-				NSWindow* const		kWindow  = (nullptr != inTerminalWindow)
-												? TerminalWindow_ReturnNSWindow(inTerminalWindow)
-												: nil;
-				
-				
-				// NOTE: tab state is implicit for Cocoa windows
-				kWindow.alphaValue = alpha;
-			}
+			NSWindow* const		kWindow  = (nullptr != inTerminalWindow)
+											? TerminalWindow_ReturnNSWindow(inTerminalWindow)
+											: nil;
+			
+			
+			// NOTE: tab state is implicit for Cocoa windows
+			kWindow.alphaValue = alpha;
 		});
 	}
 }// updateFadeAllTerminalWindows
@@ -4145,7 +3593,7 @@ applicationWillTerminate:(NSNotification*)		aNotification
 - (IBAction)
 performCaptureBegin:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandCaptureToFile, nullptr/* target */);
 	}
@@ -4155,7 +3603,7 @@ performCaptureBegin:(id)	sender
 - (IBAction)
 performCaptureEnd:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandEndCaptureToFile, nullptr/* target */);
 	}
@@ -4183,7 +3631,7 @@ canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPrintScreen:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandPrintScreen, nullptr/* target */);
 	}
@@ -4202,7 +3650,7 @@ canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPrintSelection:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandPrint, nullptr/* target */);
 	}
@@ -4221,7 +3669,7 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSaveSelection:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSaveSelection, nullptr/* target */);
 	}
@@ -4247,8 +3695,8 @@ canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCopy:(id)	sender
 {
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(copy:) withObject:sender preferCarbonMain:YES]))
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(copy:) withObject:sender]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4271,13 +3719,6 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		
 		result = TerminalView_TextSelectionExists(view);
-	}
-	else if (isCarbonWindow(target))
-	{
-		if (activeCarbonWindowHasSelectedText())
-		{
-			result = YES;
-		}
 	}
 	else if ([keyResponder respondsToSelector:@selector(canPerformCopy:)])
 	{
@@ -4303,7 +3744,7 @@ canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCopyAndPaste:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandCopyAndPaste, nullptr/* target */);
 	}
@@ -4322,7 +3763,7 @@ canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCopyWithTabSubstitution:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandCopyTable, nullptr/* target */);
 	}
@@ -4341,8 +3782,8 @@ canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performCut:(id)		sender
 {
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(cut:) withObject:sender preferCarbonMain:YES]))
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(cut:) withObject:sender]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4363,10 +3804,6 @@ canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		result = NO;
 	}
-	else if (isCarbonWindow(target))
-	{
-		result = activeCarbonWindowHasSelectedText();
-	}
 	else if ([keyResponder respondsToSelector:@selector(cut:)])
 	{
 		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
@@ -4384,9 +3821,9 @@ canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDelete:(id)	sender
 {
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(delete:) withObject:sender preferCarbonMain:YES]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(clear:) withObject:sender preferCarbonMain:YES]))
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(delete:) withObject:sender]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(clear:) withObject:sender]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4407,10 +3844,6 @@ canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		result = NO;
 	}
-	else if (isCarbonWindow(target))
-	{
-		result = activeCarbonWindowHasSelectedText();
-	}
 	else if ([keyResponder respondsToSelector:@selector(delete:)] || [keyResponder respondsToSelector:@selector(clear:)])
 	{
 		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
@@ -4428,8 +3861,8 @@ canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPaste:(id)	sender
 {
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(paste:) withObject:sender preferCarbonMain:YES]))
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(paste:) withObject:sender]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4462,8 +3895,7 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 			CFRelease(dummyCFStringArray); dummyCFStringArray = nullptr; 
 		}
 		result = ((clipboardContainsText) &&
-					((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
-						(nullptr != returnActiveCarbonWindowFocusedField())));
+					(nullptr != TerminalWindow_ReturnFromKeyWindow()));
 	}
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4472,7 +3904,7 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRedo:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandRedo, nullptr/* target */);
 	}
@@ -4523,8 +3955,8 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSelectAll:(id)	sender
 {
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(selectAll:) withObject:sender preferCarbonMain:YES]))
+	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
+		(NO == [self viaFirstResponderTryToPerformSelector:@selector(selectAll:) withObject:sender]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -4549,7 +3981,7 @@ canPerformSelectAll:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSelectEntireScrollbackBuffer:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSelectAllWithScrollback, nullptr/* target */);
 	}
@@ -4559,7 +3991,7 @@ performSelectEntireScrollbackBuffer:(id)	sender
 - (IBAction)
 performSelectNothing:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSelectNothing, nullptr/* target */);
 	}
@@ -4569,7 +4001,7 @@ performSelectNothing:(id)	sender
 - (IBAction)
 performUndo:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandUndo, nullptr/* target */);
 	}
@@ -4627,7 +4059,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDuplicate:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNewDuplicateSession, nullptr/* target */);
 	}
@@ -4637,7 +4069,7 @@ performDuplicate:(id)		sender
 - (IBAction)
 performNewByFavoriteName:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		BOOL	isError = YES;
 		
@@ -4692,7 +4124,7 @@ canPerformNewByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performNewCustom:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNewSessionDialog, nullptr/* target */);
 	}
@@ -4712,7 +4144,7 @@ canPerformNewCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performNewDefault:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite, nullptr/* target */);
 	}
@@ -4732,7 +4164,7 @@ canPerformNewDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performNewLogInShell:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell, nullptr/* target */);
 	}
@@ -4752,7 +4184,7 @@ canPerformNewLogInShell:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performNewShell:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell, nullptr/* target */);
 	}
@@ -4772,7 +4204,7 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performKill:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandKillProcessesKeepWindow, nullptr/* target */);
 	}
@@ -4796,7 +4228,7 @@ canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRestart:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandRestartSession, nullptr/* target */);
 	}
@@ -4818,7 +4250,7 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRestoreWorkspaceDefault:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite, nullptr/* target */);
 	}
@@ -4838,7 +4270,7 @@ canPerformRestoreWorkspaceDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performRestoreWorkspaceByFavoriteName:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		BOOL	isError = YES;
 		
@@ -4889,7 +4321,7 @@ canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		an
 - (IBAction)
 performOpen:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandOpenSession, nullptr/* target */);
 	}
@@ -4909,7 +4341,7 @@ canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSaveAs:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSaveSession, nullptr/* target */);
 	}
@@ -4981,7 +4413,7 @@ replyEvent:(NSAppleEventDescriptor*)			replyEvent
 - (IBAction)
 performNewTEKPage:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTEKPageCommand, nullptr/* target */);
 	}
@@ -5001,7 +4433,7 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPageClearToggle:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTEKPageClearsScreen, nullptr/* target */);
 	}
@@ -5035,7 +4467,7 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performCheckForUpdates:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandCheckForUpdates, nullptr/* target */);
 	}
@@ -5051,7 +4483,7 @@ canPerformCheckForUpdates:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performGoToMainWebSite:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandURLHomePage, nullptr/* target */);
 	}
@@ -5067,7 +4499,7 @@ canPerformGoToMainWebSite:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performOpenURL:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandHandleURL, nullptr/* target */);
 	}
@@ -5112,7 +4544,7 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performProvideFeedback:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandURLAuthorMail, nullptr/* target */);
 	}
@@ -5135,7 +4567,7 @@ canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performActionForMacro:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
 		UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
@@ -5201,7 +4633,7 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchByFavoriteName:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		BOOL	isError = YES;
 		
@@ -5273,7 +4705,7 @@ canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMacroSwitchDefault:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
 		
@@ -5301,7 +4733,7 @@ canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchNone:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
 		
@@ -5329,7 +4761,7 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchNext:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		std::vector< Preferences_ContextRef >	macroSets;
 		Boolean									switchOK = false;
@@ -5376,7 +4808,7 @@ canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchPrevious:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		std::vector< Preferences_ContextRef >	macroSets;
 		Boolean									switchOK = false;
@@ -5430,7 +4862,7 @@ canPerformMacroSwitchPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performBellToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandBellEnabled, nullptr/* target */);
 	}
@@ -5460,7 +4892,7 @@ canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetActivityHandlerNone:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandWatchNothing, nullptr/* target */);
 	}
@@ -5488,7 +4920,7 @@ canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetActivityHandlerNotifyOnIdle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandWatchForInactivity, nullptr/* target */);
 	}
@@ -5516,7 +4948,7 @@ canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anI
 - (IBAction)
 performSetActivityHandlerNotifyOnNext:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandWatchForActivity, nullptr/* target */);
 	}
@@ -5544,7 +4976,7 @@ canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anI
 - (IBAction)
 performSetActivityHandlerSendKeepAliveOnIdle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTransmitOnInactivity, nullptr/* target */);
 	}
@@ -5579,7 +5011,7 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 - (IBAction)
 performDeleteMapToBackspace:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsBackspace, nullptr/* target */);
 	}
@@ -5610,7 +5042,7 @@ canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDeleteMapToDelete:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsDelete, nullptr/* target */);
 	}
@@ -5641,7 +5073,7 @@ canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performEmacsCursorModeToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandEmacsArrowMapping, nullptr/* target */);
 	}
@@ -5672,7 +5104,7 @@ canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performLocalPageKeysToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandLocalPageUpDown, nullptr/* target */);
 	}
@@ -5703,7 +5135,7 @@ canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMappingCustom:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSetKeys, nullptr/* target */);
 	}
@@ -5713,7 +5145,7 @@ performMappingCustom:(id)	sender
 - (IBAction)
 performSetFunctionKeyLayoutRxvt:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
 	}
@@ -5734,7 +5166,7 @@ canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetFunctionKeyLayoutVT220:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
 	}
@@ -5755,7 +5187,7 @@ canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performSetFunctionKeyLayoutXTermX11:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
 	}
@@ -5776,7 +5208,7 @@ canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anIte
 - (IBAction)
 performSetFunctionKeyLayoutXTermXFree86:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
 	}
@@ -5797,7 +5229,7 @@ canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	a
 - (IBAction)
 performTranslationSwitchByFavoriteName:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
@@ -5852,7 +5284,7 @@ performTranslationSwitchByFavoriteName:(id)		sender
 - (IBAction)
 performTranslationSwitchCustom:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		// legacy Carbon
 		Commands_ExecuteByIDUsingEvent(kCommandSetTranslationTable, nullptr/* target */);
@@ -5863,7 +5295,7 @@ performTranslationSwitchCustom:(id)		sender
 - (IBAction)
 performTranslationSwitchDefault:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTranslationTableDefault, nullptr/* target */);
 	}
@@ -5880,7 +5312,7 @@ performTranslationSwitchDefault:(id)	sender
 - (IBAction)
 performInterruptProcess:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSendInterruptProcess, nullptr/* target */);
 	}
@@ -5890,7 +5322,7 @@ performInterruptProcess:(id)	sender
 - (IBAction)
 performJumpScrolling:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandJumpScrolling, nullptr/* target */);
 	}
@@ -5900,7 +5332,7 @@ performJumpScrolling:(id)	sender
 - (IBAction)
 performLineWrapToggle:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandWrapMode, nullptr/* target */);
 	}
@@ -5930,7 +5362,7 @@ canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performLocalEchoToggle:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandEcho, nullptr/* target */);
 	}
@@ -5958,7 +5390,7 @@ canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performReset:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandResetTerminal, nullptr/* target */);
 	}
@@ -5968,7 +5400,7 @@ performReset:(id)	sender
 - (IBAction)
 performSaveOnClearToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandClearScreenSavesLines, nullptr/* target */);
 	}
@@ -5998,7 +5430,7 @@ canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performScrollbackClear:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandClearEntireScrollback, nullptr/* target */);
 	}
@@ -6008,7 +5440,7 @@ performScrollbackClear:(id)		sender
 - (IBAction)
 performSpeechToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSpeechEnabled, nullptr/* target */);
 	}
@@ -6036,7 +5468,7 @@ canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSuspendToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSuspendNetwork, nullptr/* target */);
 	}
@@ -6071,7 +5503,7 @@ canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performScreenResizeCustom:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		// legacy Carbon
 		Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
@@ -6082,7 +5514,7 @@ performScreenResizeCustom:(id)	sender
 - (IBAction)
 performScreenResizeNarrower:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNarrowerScreen, nullptr/* target */);
 	}
@@ -6092,7 +5524,7 @@ performScreenResizeNarrower:(id)	sender
 - (IBAction)
 performScreenResizeShorter:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShorterScreen, nullptr/* target */);
 	}
@@ -6102,7 +5534,7 @@ performScreenResizeShorter:(id)	sender
 - (IBAction)
 performScreenResizeStandard:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSmallScreen, nullptr/* target */);
 	}
@@ -6112,7 +5544,7 @@ performScreenResizeStandard:(id)	sender
 - (IBAction)
 performScreenResizeTall:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTallScreen, nullptr/* target */);
 	}
@@ -6122,7 +5554,7 @@ performScreenResizeTall:(id)	sender
 - (IBAction)
 performScreenResizeTaller:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTallerScreen, nullptr/* target */);
 	}
@@ -6132,7 +5564,7 @@ performScreenResizeTaller:(id)	sender
 - (IBAction)
 performScreenResizeWide:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandLargeScreen, nullptr/* target */);
 	}
@@ -6142,7 +5574,7 @@ performScreenResizeWide:(id)	sender
 - (IBAction)
 performScreenResizeWider:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
 	}
@@ -6282,7 +5714,7 @@ performFormatTextBigger:(id)	sender
 - (IBAction)
 performFormatTextMaximum:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandZoomMaximumSize, nullptr/* target */);
 	}
@@ -6675,8 +6107,8 @@ withAnimation:(BOOL)		isAnimated
 - (IBAction)
 mergeAllWindows:(id)	sender
 {
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMergeAllWindows:) withObject:sender preferCarbonMain:YES]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMergeAllWindows:) withObject:sender]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
 	{
 		Console_Warning(Console_WriteLine, "merging tabs is not implemented for legacy Carbon windows");
 	}
@@ -6689,7 +6121,6 @@ canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	
 	if ((nullptr != terminalWindow) &&
-		(false == TerminalWindow_IsLegacyCarbon(terminalWindow)) &&
 		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
 		TerminalWindow_IsTab(terminalWindow))
 	{
@@ -6702,8 +6133,8 @@ canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 moveTabToNewWindow:(id)		sender
 {
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMoveTabToNewWindow:) withObject:sender preferCarbonMain:YES]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMoveTabToNewWindow:) withObject:sender]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandTerminalNewWorkspace, nullptr/* target */);
 	}
@@ -6728,7 +6159,7 @@ canMoveTabToNewWindow:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performArrangeInFront:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandStackWindows, nullptr/* target */);
 	}
@@ -6738,7 +6169,7 @@ performArrangeInFront:(id)	sender
 - (IBAction)
 performHideOtherWindows:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandHideOtherWindows, nullptr/* target */);
 	}
@@ -6748,7 +6179,7 @@ performHideOtherWindows:(id)	sender
 - (IBAction)
 performHideWindow:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
 	}
@@ -6760,7 +6191,7 @@ performHideWindow:(id)	sender
 - (IBAction)
 performMaximize:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandMaximizeWindow, nullptr/* target */);
 	}
@@ -6775,24 +6206,7 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	if (false == EventLoop_IsMainWindowFullScreen())
 	{
-		if (isCarbonWindow(target))
-		{
-			HIWindowRef		userFocusWindow = GetUserFocusWindow();
-			
-			
-			if (nullptr != userFocusWindow)
-			{
-				WindowAttributes	attributes = kWindowNoAttributes;
-				
-				
-				result = YES;
-				if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
-				{
-					result = (0 != (attributes & kWindowFullZoomAttribute));
-				}
-			}
-		}
-		else if ([[target class] isSubclassOfClass:[NSWindow class]])
+		if ([[target class] isSubclassOfClass:[NSWindow class]])
 		{
 			NSWindow*	window = (NSWindow*)target;
 			
@@ -6807,7 +6221,7 @@ canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMoveWindowRight:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		
@@ -6825,7 +6239,7 @@ performMoveWindowRight:(id)		sender
 - (IBAction)
 performMoveWindowLeft:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		
@@ -6843,7 +6257,7 @@ performMoveWindowLeft:(id)		sender
 - (IBAction)
 performMoveWindowDown:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		
@@ -6861,7 +6275,7 @@ performMoveWindowDown:(id)		sender
 - (IBAction)
 performMoveWindowUp:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
 		
@@ -6879,7 +6293,7 @@ performMoveWindowUp:(id)		sender
 - (IBAction)
 performRename:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle, nullptr/* target */);
 	}
@@ -6899,7 +6313,7 @@ canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performShowHiddenWindows:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowAllHiddenWindows, nullptr/* target */);
 	}
@@ -6936,7 +6350,7 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performFind:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandFind, nullptr/* target */);
 	}
@@ -6962,7 +6376,7 @@ canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performFindCursor:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandFindCursor, nullptr/* target */);
 	}
@@ -6982,7 +6396,7 @@ canPerformFindCursor:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performFindNext:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandFindAgain, nullptr/* target */);
 	}
@@ -7001,7 +6415,7 @@ canPerformFindNext:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performFindPrevious:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandFindPrevious, nullptr/* target */);
 	}
@@ -7020,7 +6434,7 @@ canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performShowCompletions:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		NSWindow*			target = [NSApp keyWindow];
 		TerminalWindowRef	terminalWindow = [target terminalWindowRef];
@@ -7046,7 +6460,7 @@ canPerformShowCompletions:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSendMenuItemText:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		if ([[sender class] isSubclassOfClass:NSMenuItem.class])
 		{
@@ -7130,7 +6544,7 @@ canPerformSendMenuItemText:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontAbout:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandAboutThisApplication, nullptr/* target */);
 	}
@@ -7146,7 +6560,7 @@ canOrderFrontAbout:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontClipboard:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowClipboard, nullptr/* target */);
 	}
@@ -7162,7 +6576,7 @@ canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontCommandLine:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowCommandLine, nullptr/* target */);
 	}
@@ -7178,7 +6592,7 @@ canOrderFrontCommandLine:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontContextualHelp:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandContextSensitiveHelp, nullptr/* target */);
 	}
@@ -7214,7 +6628,7 @@ canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontControlKeys:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowControlKeys, nullptr/* target */);
 	}
@@ -7230,7 +6644,7 @@ canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontDebuggingOptions:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandDebuggingOptions, nullptr/* target */);
 	}
@@ -7246,7 +6660,7 @@ canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontIPAddresses:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowNetworkNumbers, nullptr/* target */);
 	}
@@ -7262,7 +6676,7 @@ canOrderFrontIPAddresses:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreferences:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kHICommandPreferences, nullptr/* target */);
 	}
@@ -7284,7 +6698,7 @@ canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontSessionInfo:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowConnectionStatus, nullptr/* target */);
 	}
@@ -7304,7 +6718,7 @@ canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontVT220FunctionKeys:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowFunction, nullptr/* target */);
 	}
@@ -7320,7 +6734,7 @@ canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontVT220Keypad:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandShowKeypad, nullptr/* target */);
 	}
@@ -7343,8 +6757,8 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 toggleFullScreen:(id)	sender
 {
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleFullScreen:) withObject:sender preferCarbonMain:YES]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleFullScreen:) withObject:sender]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
 	{
 		// assume this is potentially a Carbon window that should (for now) take a different approach;
 		// longer-term this will go away and the responder chain will be used everywhere
@@ -7410,8 +6824,8 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 toggleTabOverview:(id)	sender
 {
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabOverview:) withObject:sender preferCarbonMain:YES]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabOverview:) withObject:sender]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
 	{
 		Console_Warning(Console_WriteLine, "tab overview is not implemented for legacy Carbon windows");
 	}
@@ -7461,7 +6875,7 @@ canToggleTabOverview:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontNextWindow:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNextWindow, nullptr/* target */);
 	}
@@ -7484,7 +6898,7 @@ canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontNextWindowHidingPrevious:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandNextWindowHideCurrent, nullptr/* target */);
 	}
@@ -7507,7 +6921,7 @@ canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreviousWindow:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandPreviousWindow, nullptr/* target */);
 	}
@@ -7530,7 +6944,7 @@ canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontSpecificWindow:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		BOOL	isError = YES;
 		
@@ -7544,19 +6958,18 @@ orderFrontSpecificWindow:(id)		sender
 			if (nil != session)
 			{
 				TerminalWindowRef	terminalWindow = nullptr;
-				HIWindowRef			window = nullptr;
+				NSWindow*			window = nullptr;
 				
 				
 				// first make the window visible if it was obscured
-				window = Session_ReturnActiveLegacyCarbonWindow(session);
+				window = Session_ReturnActiveNSWindow(session);
 				terminalWindow = Session_ReturnActiveTerminalWindow(session);
 				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
 				
 				// now select the window
-				SelectWindow(window);
-				CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
+				[window makeKeyAndOrderFront:nil];
 				
-				isError = (nullptr == window);
+				isError = (nil == window);
 			}
 		}
 		
@@ -7581,21 +6994,11 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		if (nullptr != itemSession)
 		{
-			HIWindowRef const	kSessionActiveCarbonWindow = Session_ReturnActiveLegacyCarbonWindow(itemSession);
 			Boolean				isHighlighted = false;
+			NSWindow* const		kSessionActiveWindow = Session_ReturnActiveNSWindow(itemSession);
 			
 			
-			if (nullptr != kSessionActiveCarbonWindow)
-			{
-				isHighlighted = IsWindowHilited(kSessionActiveCarbonWindow);
-			}
-			else
-			{
-				NSWindow* const		kSessionActiveWindow = Session_ReturnActiveNSWindow(itemSession);
-				
-				
-				isHighlighted = kSessionActiveWindow.isKeyWindow;
-			}
+			isHighlighted = kSessionActiveWindow.isKeyWindow;
 			
 			if (isHighlighted)
 			{
@@ -7622,8 +7025,8 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 toggleTabBar:(id)	sender
 {
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabBar:) withObject:sender preferCarbonMain:YES]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES]))
+	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabBar:) withObject:sender]) &&*/
+		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
 	{
 		Console_Warning(Console_WriteLine, "tab bar is not implemented for legacy Carbon windows");
 	}
@@ -7637,7 +7040,6 @@ canToggleTabBar:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	
 	if ((nullptr != terminalWindow) &&
-		(false == TerminalWindow_IsLegacyCarbon(terminalWindow)) &&
 		TerminalWindow_IsTab(terminalWindow))
 	{
 		NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
@@ -7686,14 +7088,7 @@ performCloseSetup:(id)	sender
 	id		target = [NSApp targetForAction:@selector(performClose:)];
 	
 	
-	// NSCarbonWindow does not implement performClose: properly,
-	// so the mere existence of the method does not mean it can
-	// be called.
-	if ((nil == target) || isCarbonWindow(target))
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandCloseConnection, nullptr/* target */);
-	}
-	else
+	if (nil != target)
 	{
 		[NSApp sendAction:@selector(performClose:) to:target from:sender];
 	}
@@ -7706,24 +7101,7 @@ canPerformCloseSetup:(id <NSValidatedUserInterfaceItem>)	anItem
 	id		target = [NSApp targetForAction:@selector(performClose:)];
 	
 	
-	if (isCarbonWindow(target))
-	{
-		HIWindowRef		userFocusWindow = GetUserFocusWindow();
-		
-		
-		if (nullptr != userFocusWindow)
-		{
-			WindowAttributes	attributes = kWindowNoAttributes;
-			
-			
-			result = YES;
-			if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
-			{
-				result = (0 != (attributes & kWindowCloseBoxAttribute));
-			}
-		}
-	}
-	else if ([[target class] isSubclassOfClass:[NSWindow class]])
+	if ([[target class] isSubclassOfClass:[NSWindow class]])
 	{
 		NSWindow*	window = (NSWindow*)target;
 		
@@ -7742,13 +7120,7 @@ performMinimizeSetup:(id)	sender
 	id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 	
 	
-	// NSCarbonWindow does not implement performMiniaturize: properly, so
-	// the mere existence of the method does not mean it can be called.
-	if ((nil == target) || isCarbonWindow(target))
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandMinimizeWindow, nullptr/* target */);
-	}
-	else
+	if (nil != target)
 	{
 		[NSApp sendAction:@selector(performMiniaturize:) to:target from:sender];
 	}
@@ -7765,24 +7137,7 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 		id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
 		
 		
-		if (isCarbonWindow(target))
-		{
-			HIWindowRef		userFocusWindow = GetUserFocusWindow();
-			
-			
-			if (nullptr != userFocusWindow)
-			{
-				WindowAttributes	attributes = kWindowNoAttributes;
-				
-				
-				result = YES;
-				if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
-				{
-					result = (0 != (attributes & kWindowCollapseBoxAttribute));
-				}
-			}
-		}
-		else if ([[target class] isSubclassOfClass:[NSWindow class]])
+		if ([[target class] isSubclassOfClass:[NSWindow class]])
 		{
 			NSWindow*	window = (NSWindow*)target;
 			
@@ -7797,7 +7152,7 @@ canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSpeakSelectedText:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandSpeakSelectedText, nullptr/* target */);
 	}
@@ -7816,7 +7171,7 @@ canPerformSpeakSelectedText:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performStopSpeaking:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandStopSpeaking, nullptr/* target */);
 	}
@@ -7840,13 +7195,7 @@ performZoomSetup:(id)	sender
 	id		target = [NSApp targetForAction:@selector(performZoom:)];
 	
 	
-	// NSCarbonWindow does not implement performZoom: properly, so the
-	// mere existence of the method does not mean it can be called.
-	if ((nil == target) || isCarbonWindow(target))
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandZoomWindow, nullptr/* target */);
-	}
-	else
+	if (nil != target)
 	{
 		[NSApp sendAction:@selector(performZoom:) to:target from:sender];
 	}
@@ -7863,24 +7212,7 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 		id		target = [NSApp targetForAction:@selector(performZoom:)];
 		
 		
-		if (isCarbonWindow(target))
-		{
-			HIWindowRef		userFocusWindow = GetUserFocusWindow();
-			
-			
-			if (nullptr != userFocusWindow)
-			{
-				WindowAttributes	attributes = kWindowNoAttributes;
-				
-				
-				result = YES;
-				if (noErr == GetWindowAttributes(userFocusWindow, &attributes))
-				{
-					result = (0 != (attributes & kWindowFullZoomAttribute));
-				}
-			}
-		}
-		else if ([[target class] isSubclassOfClass:[NSWindow class]])
+		if ([[target class] isSubclassOfClass:[NSWindow class]])
 		{
 			NSWindow*	window = (NSWindow*)target;
 			
@@ -7897,7 +7229,7 @@ canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 runToolbarCustomizationPaletteSetup:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(runToolbarCustomizationPalette:) withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(runToolbarCustomizationPalette:) withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kHICommandCustomizeToolbar, nullptr/* target */);
 	}
@@ -7911,41 +7243,15 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 	
 	if (false == EventLoop_IsMainWindowFullScreen())
 	{
-		if (isCarbonWindow([NSApp mainWindow]))
+		id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
+		
+		
+		if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
 		{
-			HIWindowRef		userFocusWindow = GetUserFocusWindow();
+			NSWindow*	window = (NSWindow*)target;
 			
 			
-			if (nullptr != userFocusWindow)
-			{
-				HIToolbarRef	toolbar = nullptr;
-				
-				
-				if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
-				{
-					OptionBits		optionBits = 0;
-					
-					
-					result = YES;
-					if (noErr == HIToolbarGetAttributes(toolbar, &optionBits))
-					{
-						result = (0 != (optionBits & kHIToolbarIsConfigurable));
-					}
-				}
-			}
-		}
-		else
-		{
-			id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
-			
-			
-			if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
-			{
-				NSWindow*	window = (NSWindow*)target;
-				
-				
-				result = [[window toolbar] allowsUserCustomization];
-			}
+			result = [[window toolbar] allowsUserCustomization];
 		}
 	}
 	return ((result) ? @(YES) : @(NO));
@@ -7958,16 +7264,9 @@ canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anIt
 toggleToolbarShownSetup:(id)	sender
 {
 #pragma unused(sender)
-	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(toggleToolbarShown:) withObject:sender preferCarbonMain:YES])
+	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(toggleToolbarShown:) withObject:sender])
 	{
-		if (IsWindowToolbarVisible(GetUserFocusWindow()))
-		{
-			Commands_ExecuteByIDUsingEvent(kHICommandHideToolbar, nullptr/* target */);
-		}
-		else
-		{
-			Commands_ExecuteByIDUsingEvent(kHICommandShowToolbar, nullptr/* target */);
-		}
+		// target does not support
 	}
 }
 - (id)
@@ -7979,34 +7278,7 @@ canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
 	
 	if (false == EventLoop_IsMainWindowFullScreen())
 	{
-		if (isCarbonWindow([NSApp mainWindow]))
-		{
-			HIWindowRef		userFocusWindow = GetUserFocusWindow();
-			
-			
-			if (nullptr != userFocusWindow)
-			{
-				HIToolbarRef	toolbar = nullptr;
-				//BOOL			useShowText = YES;
-				
-				
-				if ((noErr == GetWindowToolbar(userFocusWindow, &toolbar)) && (nullptr != toolbar))
-				{
-					result = YES;
-					if (IsWindowToolbarVisible(userFocusWindow))
-					{
-						//useShowText = NO;
-					}
-				}
-				
-				// update item to use the appropriate show/hide command text
-				// UNIMPLEMENTED
-			}
-		}
-		else
-		{
-			result = (nil != [NSApp mainWindow].toolbar);
-		}
+		result = (nil != [NSApp mainWindow].toolbar);
 	}
 	return ((result) ? @(YES) : @(NO));
 }
@@ -8806,58 +8078,18 @@ Returns YES only if an action could be performed.
 viaFirstResponderTryToPerformSelector:(SEL)		aSelector
 withObject:(id)									aSenderOrNil
 {
-	BOOL	result = [self viaFirstResponderTryToPerformSelector:aSelector
-																	withObject:aSenderOrNil
-																	preferCarbonMain:NO];
+	BOOL	result = NO;
+	id		target = [NSApp targetForAction:aSelector to:nil from:aSenderOrNil];
 	
+	
+	if (self != target)
+	{
+		result = [NSApp sendAction:aSelector to:target from:aSenderOrNil];
+	}
 	
 	return result;
 }// viaFirstResponderTryToPerformSelector:withObject:
 
-
-/*!
-Traverses the responder chain to find a suitable target
-object that supports the given selector (other than
-this object), and if found invokes the selector on that
-object with the given sender as a parameter.
-
-If "aCarbonFlag" is YES, this will only try to find a
-target object if the main window is a non-Carbon window.
-Otherwise, it will assume that there is a Carbon-specific
-non-Objective-C way to handle the action and do nothing.
-(Since Apple has an NSCarbonWindow private wrapper that
-implements certain methods, it is possible for a normal
-selector/target search to accidentally match that proxy
-and cause wrong behavior.)
-
-Returns YES only if an action could be performed.
-
-(2018.03)
-*/
-- (BOOL)
-viaFirstResponderTryToPerformSelector:(SEL)		aSelector
-withObject:(id)									aSenderOrNil
-preferCarbonMain:(BOOL)							aCarbonFlag
-{
-	BOOL	searchForSelector = ((aCarbonFlag)
-									? isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow])
-									: YES);
-	BOOL	result = NO;
-	
-	
-	if (searchForSelector)
-	{
-		id		target = [NSApp targetForAction:aSelector to:nil from:aSenderOrNil];
-		
-		
-		if (self != target)
-		{
-			result = [NSApp sendAction:aSelector to:target from:aSenderOrNil];
-		}
-	}
-	
-	return result;
-}// viaFirstResponderTryToPerformSelector:withObject:preferCarbonMain:
 
 
 @end //} Commands_Executor (Commands_ExecutorInternal)

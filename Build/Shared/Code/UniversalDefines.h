@@ -68,9 +68,6 @@
 	“C IMPROVED”
 ###############################################################*/
 
-//! in C++0x, there will be a "nullptr" keyword...start using it now!
-#define nullptr 0L
-
 //! à la Perl, this is my preferred if-not term
 #define unless(x)		if (!(x))
 
@@ -96,7 +93,7 @@
 #define REINTERPRET_CAST(ref, intendedType)		reinterpret_cast< intendedType >(ref)
 #define STATIC_CAST(ref, intendedType)			static_cast< intendedType >(ref)
 #else
-#define BRIDGE_CAST(ref, intendedType)			((intendedType)(ref))	//!< “I am exchanging NSFoo* and CFFooRef because they are DOCUMENTED as being toll-free bridged”
+#define BRIDGE_CAST(ref, intendedType)			((intendqedType)(ref))	//!< “I am exchanging NSFoo* and CFFooRef because they are DOCUMENTED as being toll-free bridged”
 #define CONST_CAST(ref, intendedType)			((intendedType)(ref))	//!< “I know I am turning a constant pointer into a non-constant one”
 #define VOLATILE_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I know I am turning a volatile value into a non-volatile one”
 #define REINTERPRET_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I want to look at data as something else” (e.g. integer to pointer)
@@ -117,10 +114,19 @@
 	MAC OS CONSTANTS AND UTILITIES
 ###############################################################*/
 
-enum
+struct CGFloatRGBColor
 {
-	//! for consistency purposes, this is very useful
-	RGBCOLOR_INTENSITY_MAX = 65535
+	// replace CGDeviceColor dependencies
+	CGFloat		red;
+	CGFloat		green;
+	CGFloat		blue;
+	
+	CGFloatRGBColor	(): CGFloatRGBColor(0, 0, 0) {}
+	CGFloatRGBColor	(CGFloat r, CGFloat g, CGFloat b): red(r), green(g), blue(b) {}
+	CGFloatRGBColor	(CGFloatRGBColor const&) = default;
+	
+	CGFloatRGBColor&
+	operator =(CGFloatRGBColor const&) = default;
 };
 
 //! use this to “reference” a constant that is not available in current headers (for example,

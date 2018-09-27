@@ -30,11 +30,6 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
-// compile-time options
-#ifndef COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
-#define COCOA_EXTENSIONS_SUPPORT_QUICKDRAW 0
-#endif
-
 
 
 #pragma mark Types
@@ -62,14 +57,6 @@
 	setAsBackgroundInCGContext:(CGContextRef)_;
 	- (void)
 	setAsForegroundInCGContext:(CGContextRef)_;
-
-#if COCOA_EXTENSIONS_SUPPORT_QUICKDRAW
-// TEMPORARY AND DEPRECATED; USE ONLY AS NEEDED
-	- (void)
-	setAsBackgroundInQDCurrentPort;
-	- (void)
-	setAsForegroundInQDCurrentPort;
-#endif
 
 @end //}
 
@@ -206,15 +193,6 @@ to precisely remove the observer later.
 	isKeyboardFocusOnSelf;
 	- (NSView*)
 	superviewWithClass:(Class)_;
-
-@end //}
-
-
-@interface NSWindow (CocoaExtensions_NSWindow) //{
-
-// new methods: coordinate translation
-	- (NSPoint)
-	localToGlobalRelativeToTopForPoint:(NSPoint)_;
 
 @end //}
 

@@ -90,41 +90,6 @@ bool	textEncodingInfoComparer	(My_TextEncodingInfoPtr, My_TextEncodingInfoPtr);
 #pragma mark Public Methods
 
 /*!
-Inserts items at the end of the specified menu
-for each available character set.
-
-Specify 0 to not indent the items, or specify
-a number to indicate how many indentation levels
-(multipled by some pixel value) to inset items.
-
-(3.0)
-*/
-void
-TextTranslation_AppendCharacterSetsToMenu	(MenuRef	inToWhichMenu,
-											 UInt16		inIndentationLevel)
-{
-	MenuItemIndex		currentMenuItemIndex = CountMenuItems(inToWhichMenu);
-	
-	
-	// initialize the module if necessary
-	fillInCharacterSetList();
-	
-	for (auto dataPtr : gTextEncodingInfoList())
-	{
-		if (nullptr != dataPtr)
-		{
-			AppendMenuItemTextWithCFString(inToWhichMenu, dataPtr->name.returnCFStringRef(),
-											kMenuItemAttrIgnoreMeta/* attributes */, 0L/* command ID */,
-											&currentMenuItemIndex);
-			if (inIndentationLevel) SetMenuItemIndent(inToWhichMenu, currentMenuItemIndex, inIndentationLevel);
-			// perhaps the encoding step is not necessary now that CFStrings are used? (verify) INCOMPLETE
-			//???SetMenuItemTextEncoding(inToWhichMenu, currentMenuItemIndex, dataPtr->menuItemEncoding);
-		}
-	}
-}// AppendCharacterSetsToMenu
-
-
-/*!
 Returns the text encoding preference stored in the given
 context, preferring kPreferences_TagTextEncodingIANAName
 but using kPreferences_TagTextEncodingID if necessary.
@@ -365,12 +330,7 @@ TextTranslation_ReturnCharacterSetCount ()
 
 /*!
 Determines the index in the list of available
-encodings of the specified encoding.  The
-list used by this routine is guaranteed to be
-consistent with the order and size of the list
-used by TextTranslation_AppendConvertersToMenu(),
-so you can use this routine for initializing
-menus that have had encodings appended to them.
+encodings of the specified encoding.
 
 If the index can’t be found, 0 is returned.
 
@@ -403,13 +363,7 @@ TextTranslation_ReturnCharacterSetIndex		(CFStringEncoding	inTextEncoding)
 
 /*!
 Determines the text encoding at the specified
-index in the list of available encodings.  The
-list used by this routine is guaranteed to be
-consistent with the order and size of the list
-used by TextTranslation_AppendConvertersToMenu(),
-so you can use this routine for handling menu
-item selections from a menu that had encodings
-appended to it.
+index in the list of available encodings.
 
 If the encoding can’t be found, one is assumed.
 

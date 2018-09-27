@@ -43,6 +43,7 @@
 // standard-C++ includes
 #import <algorithm>
 #import <map>
+#import <random>
 #import <vector>
 
 // UNIX includes
@@ -53,32 +54,23 @@ extern "C"
 }
 
 // Mac includes
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventHandlerWrap.template.h>
-#import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#import <ColorUtilities.h>
-#import <CommonEventHandlers.h>
 #import <Console.h>
 #import <ContextSensitiveMenu.h>
-#import <HIViewWrap.h>
-#import <HIViewWrapManip.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceTracker.template.h>
 #import <MemoryBlocks.h>
-#import <NIBLoader.h>
-#import <RandomWrap.h>
 #import <RegionUtilities.h>
 #import <Registrar.template.h>
 #import <SoundSystem.h>
@@ -87,7 +79,6 @@ extern "C"
 // application includes
 #import "AppResources.h"
 #import "Commands.h"
-#import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "FindDialog.h"
 #import "GenericDialog.h"
@@ -118,16 +109,6 @@ enum My_FullScreenState : UInt8
 };
 
 /*!
-These are hacks.  But they make up for the fact that theme
-APIs do not really work very well at all, and it is
-necessary in a few places to figure out how much space is
-occupied by certain parts of a scroll bar.
-*/
-float const		kMy_ScrollBarThumbEndCapSize = 16.0; // pixels
-float const		kMy_ScrollBarThumbMinimumSize = kMy_ScrollBarThumbEndCapSize + 32.0 + kMy_ScrollBarThumbEndCapSize; // pixels
-float const		kMy_ScrollBarArrowHeight = 16.0; // pixels
-
-/*!
 Specifies the type of sheet (if any) that is currently
 displayed.  This is used by the preferences context
 monitor, so that it knows what settings were changed.
@@ -139,14 +120,6 @@ enum My_SheetType
 	kMy_SheetTypeScreenSize		= 2,
 	kMy_SheetTypeTranslation	= 3
 };
-
-/*!
-IMPORTANT
-
-The following values MUST agree with the control IDs in the
-"Tab" NIB from the package "TerminalWindow.nib".
-*/
-HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -241,7 +214,6 @@ The private class interface.
 namespace {
 
 typedef std::map< TerminalViewRef, TerminalScreenRef >			My_ScreenByTerminalView;
-typedef std::map< HIWindowRef, TerminalWindowRef >				My_TerminalWindowByHIWindowRef;
 typedef std::map< NSWindow*, TerminalWindowRef >				My_TerminalWindowByNSWindow;
 typedef std::vector< TerminalScreenRef >						My_TerminalScreenList;
 typedef std::vector< TerminalViewRef >							My_TerminalViewList;
@@ -251,50 +223,9 @@ typedef std::multimap< TerminalScreenRef, TerminalViewRef >		My_ViewsByScreen;
 typedef MemoryBlockReferenceTracker< TerminalWindowRef >	My_RefTracker;
 typedef Registrar< TerminalWindowRef, My_RefTracker >		My_RefRegistrar;
 
-/*!
-A structure of obsolete data that will be systematically removed;
-separating for now to make shared state easier during the move to
-Cocoa-based windows.  Its lifetime must be less than that of the
-Terminal Window that is using the data.
-*/
-struct My_TerminalWindowCarbonState
-{
-	My_TerminalWindowCarbonState	();
-	~My_TerminalWindowCarbonState	();
-	
-	void
-	initialize		(TerminalWindowRef, HIWindowRef);
-	
-	CFRetainRelease				tab;									// the Mac OS window reference (if any) for the sister window acting as a tab
-	WindowGroupRef				tabAndWindowGroup;						// WindowGroupRef; forces the window and its tab to move together
-	HIViewRef					scrollBarH;								// scroll bar used to specify which range of columns is visible
-	HIViewRef					scrollBarV;								// scroll bar used to specify which range of rows is visible
-	HIToolbarRef				toolbar;								// customizable toolbar of icons at the top
-	CFRetainRelease				toolbarItemBell;						// if present, enable/disable bell item
-	CFRetainRelease				toolbarItemKillRestart;					// if present, kill/restart item
-	CFRetainRelease				toolbarItemLED1;						// if present, LED #1 status item
-	CFRetainRelease				toolbarItemLED2;						// if present, LED #2 status item
-	CFRetainRelease				toolbarItemLED3;						// if present, LED #3 status item
-	CFRetainRelease				toolbarItemLED4;						// if present, LED #4 status item
-	CFRetainRelease				toolbarItemScrollLock;					// if present, scroll lock status item
-	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
-	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
-	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
-	CarbonEventHandlerWrap		mouseWheelHandler;						// responds to scroll wheel events
-	CarbonEventHandlerWrap		scrollTickHandler;						// responds to drawing events in the scroll bar
-	EventHandlerUPP				commandUPP;								// wrapper for command callback
-	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
-	EventHandlerUPP				windowFullScreenUPP;					// wrapper for window full-screen callback
-	EventHandlerRef				windowFullScreenHandler;				// invoked whenever a full-screen window event occurs for a terminal window
-	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
-	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
-	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
-	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
-};
-
 struct My_TerminalWindow
 {
-	My_TerminalWindow  (Boolean, Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef, Boolean);
+	My_TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef, Boolean);
 	~My_TerminalWindow ();
 	
 	bool
@@ -306,7 +237,7 @@ struct My_TerminalWindow
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
 	
 	TerminalWindow_Controller*	windowController;			// controller for the main NSWindow (responds to events, etc.)
-	NSWindow*					window;						// the Cocoa window reference for the terminal window (wrapping Carbon)
+	NSWindow*					window;						// the Cocoa window reference for the terminal window
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
@@ -343,9 +274,6 @@ struct My_TerminalWindow
 	My_TerminalViewList				allViews;				// all views represented in the two maps above
 	
 	My_UndoableActionList			installedActions;		// undoable things installed on behalf of this window
-	
-	// Carbon-specific (will remove):
-	My_TerminalWindowCarbonState*	carbonData;		// set to nullptr for Cocoa windows
 };
 typedef My_TerminalWindow*			My_TerminalWindowPtr;
 typedef My_TerminalWindow const*	My_TerminalWindowConstPtr;
@@ -386,55 +314,23 @@ namespace {
 
 void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, UInt16, UInt16, HIPoint*);
 void					calculateWindowFrameCocoa		(My_TerminalWindowPtr, UInt16*, UInt16*, NSRect*);
-void					calculateWindowRectCarbon		(My_TerminalWindowPtr, UInt16*, UInt16*, HIRect*);
 void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
-IconRef					createBellOffIcon				();
-IconRef					createBellOnIcon				();
-IconRef					createCustomizeToolbarIcon		();
-IconRef					createFullScreenIcon			();
-IconRef					createHideWindowIcon			();
-IconRef					createKillSessionIcon			();
-IconRef					createScrollLockOnIcon			();
-IconRef					createLEDOffIcon				();
-IconRef					createLEDOnIcon					();
-IconRef					createPrintIcon					();
-IconRef					createRestartSessionIcon		();
-Boolean					createTabWindow					(My_TerminalWindowPtr);
-NSWindow*				createWindowCarbonCocoa			();
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
-TerminalViewRef			getScrollBarView				(My_TerminalWindowPtr, HIViewRef);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					handleFindDialogClose			(FindDialog_Ref);
-void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
-void					handleNewSize					(WindowRef, Float32, Float32, void*);
-void					installTickHandler				(My_TerminalWindowPtr, Boolean);
 void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 void					installUndoScreenDimensionChanges	(TerminalWindowRef);
-bool					lessThanIfGreaterAreaCarbon		(HIWindowRef, HIWindowRef);
 bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
-OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowFullScreenChange	(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
-HIWindowRef				returnCarbonWindow				(My_TerminalWindowPtr);
-UInt16					returnGrowBoxHeight				(My_TerminalWindowPtr);
-UInt16					returnGrowBoxWidth				(My_TerminalWindowPtr);
-UInt16					returnScrollBarHeight			(My_TerminalWindowPtr);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
 UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-void					scrollProc						(HIViewRef, HIViewPartCode);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void					setCarbonWindowFullScreenIcon	(HIWindowRef, Boolean);
 void					setCocoaWindowFullScreenIcon	(NSWindow*, Boolean);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
 void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean, Boolean = false);
-void					setTerminalWindowFullScreen		(My_TerminalWindowPtr, Boolean, Boolean);
 void					setUpForFullScreenModal			(My_TerminalWindowPtr, Boolean, Boolean, My_FullScreenState);
 void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setViewSizeIndependentFromWindow(My_TerminalWindowPtr, Boolean);
@@ -455,72 +351,14 @@ void					updateScrollBars				(My_TerminalWindowPtr);
 #pragma mark Variables
 namespace {
 
-My_TerminalWindowByHIWindowRef&	gTerminalWindowRefsByHIWindowRef ()	{ static My_TerminalWindowByHIWindowRef x; return x; }
-My_TerminalWindowByNSWindow&	gCarbonTerminalWindowRefsByNSWindow ()		{ static My_TerminalWindowByNSWindow x; return x; }
 My_TerminalWindowByNSWindow&	gTerminalWindowRefsByNSWindow ()		{ static My_TerminalWindowByNSWindow x; return x; }
 My_RefTracker&					gTerminalWindowValidRefs ()		{ static My_RefTracker x; return x; }
 My_TerminalWindowPtrLocker&		gTerminalWindowPtrLocks ()		{ static My_TerminalWindowPtrLocker x; return x; }
-IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
-IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
-IconRef&					gCustomizeToolbarIcon ()		{ static IconRef x = createCustomizeToolbarIcon(); return x; }
-IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
-IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
-IconRef&					gKillSessionIcon ()				{ static IconRef x = createKillSessionIcon(); return x; }
-IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
-IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
-IconRef&					gPrintIcon ()					{ static IconRef x = createPrintIcon(); return x; }
-IconRef&					gRestartSessionIcon ()			{ static IconRef x = createRestartSessionIcon(); return x; }
-IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
-Float32						gDefaultTabWidth = 0.0;		// set later
-Float32						gDefaultTabHeight = 0.0;	// set later
 
 } // anonymous namespace
 
 
 #pragma mark Public Methods
-
-/*!
-Creates a new terminal window that is configured in the given
-ways.  If any problems occur, nullptr is returned; otherwise,
-a reference to the new terminal window is returned.
-
-Any of the contexts can be "nullptr" if you want to rely on
-defaults.  These contexts only determine initial settings;
-future changes to the contexts will not affect the window.
-
-The "inNoStagger" argument should normally be set to false; it
-is used for the special case of a new window that duplicates
-an existing window (so that it can be animated into its final
-position).
-
-IMPORTANT:	In general, you should NOT create terminal windows
-			this way; use the Session Factory module.
-
-(3.0)
-*/
-TerminalWindowRef
-TerminalWindow_NewCarbonLegacy  (Preferences_ContextRef		inTerminalInfoOrNull,
-								 Preferences_ContextRef		inFontInfoOrNull,
-								 Preferences_ContextRef		inTranslationOrNull,
-								 Boolean					inNoStagger)
-{
-	TerminalWindowRef	result = nullptr;
-	
-	
-	try
-	{
-		result = REINTERPRET_CAST(new My_TerminalWindow(true/* Carbon */,
-														inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
-														inNoStagger),
-									TerminalWindowRef);
-	}
-	catch (std::bad_alloc)
-	{
-		result = nullptr;
-	}
-	return result;
-}// NewCarbonLegacy
-
 
 /*!
 Creates a new terminal window that is configured in the given
@@ -552,8 +390,7 @@ TerminalWindow_New		(Preferences_ContextRef		inTerminalInfoOrNull,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_TerminalWindow(false/* Carbon */,
-														inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
+		result = REINTERPRET_CAST(new My_TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull,
 														inNoStagger),
 									TerminalWindowRef);
 	}
@@ -665,18 +502,9 @@ TerminalWindow_DisplayCustomFormatUI	(TerminalWindowRef		inRef)
 			
 			
 			// display the sheet
-			if (TerminalWindow_IsLegacyCarbon(inRef))
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(inRef),
-																			embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
-			else
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
-																embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
+			dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
+															embeddedPanel, temporaryContext),
+										GenericDialog_Wrap::kAlreadyRetained);
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -745,18 +573,9 @@ TerminalWindow_DisplayCustomScreenSizeUI		(TerminalWindowRef		inRef)
 			
 			
 			// display the sheet
-			if (TerminalWindow_IsLegacyCarbon(inRef))
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(inRef),
-																			embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
-			else
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
-																embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
+			dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
+															embeddedPanel, temporaryContext),
+										GenericDialog_Wrap::kAlreadyRetained);
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -817,18 +636,9 @@ TerminalWindow_DisplayCustomTranslationUI	(TerminalWindowRef		inRef)
 			
 			
 			// display the sheet
-			if (TerminalWindow_IsLegacyCarbon(inRef))
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(inRef),
-																			embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
-			else
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
-																embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
+			dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
+															embeddedPanel, temporaryContext),
+										GenericDialog_Wrap::kAlreadyRetained);
 			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
@@ -895,59 +705,6 @@ TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 
 
 /*!
-Determines if the specified mouse (or drag) event is hitting
-any part of the given terminal window.
-
-Carbon only.
-
-(3.1)
-*/
-Boolean
-TerminalWindow_EventInside	(TerminalWindowRef	inRef,
-							 EventRef			inMouseEvent)
-{
-	Boolean		result = false;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		HIViewRef						hitView = nullptr;
-		OSStatus						error = noErr;
-		
-		
-		error = HIViewGetViewForMouseEvent(HIViewGetRoot(returnCarbonWindow(ptr)), inMouseEvent, &hitView);
-		if (noErr == error)
-		{
-			result = true;
-		}
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to test event in invalid terminal window", inRef);
-	}
-	return result;
-}// EventInside
-
-
-/*!
-Determines if a Mac OS window has a terminal window
-reference.
-
-(3.0)
-*/
-Boolean
-TerminalWindow_ExistsFor	(WindowRef	inWindow)
-{
-	auto		toPair = gTerminalWindowRefsByHIWindowRef().find(inWindow);
-	Boolean		result = (gTerminalWindowRefsByHIWindowRef().end() != toPair);
-	
-	
-	return result;
-}// ExistsFor
-
-
-/*!
 Makes a terminal window the target of keyboard input, but does
 not force it to be in front.
 
@@ -955,10 +712,7 @@ See also TerminalWindow_IsFocused().
 
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
-Cocoa window directly.  All calls to the Carbon SelectWindow(),
-that had been using TerminalWindow_ReturnLegacyCarbonWindow()
-should DEFINITELY change to call this routine, instead (which
-manipulates the Cocoa window internally).
+Cocoa window directly.
 
 (4.0)
 */
@@ -1074,133 +828,6 @@ TerminalWindow_GetScreenDimensions	(TerminalWindowRef	inRef,
 	if (outColumnCountPtrOrNull != nullptr) *outColumnCountPtrOrNull = Terminal_ReturnColumnCount(getActiveScreen(ptr)/* TEMPORARY */);
 	if (outRowCountPtrOrNull != nullptr) *outRowCountPtrOrNull = Terminal_ReturnRowCount(getActiveScreen(ptr)/* TEMPORARY */);
 }// GetScreenDimensions
-
-
-/*!
-Returns the tab width, in pixels, of the specified terminal
-window (or height, for left/right tabs).  If the window has never
-been explicitly sized, some default size will be returned.
-Otherwise, the size most recently set with
-TerminalWindow_SetTabWidth() will be returned.
-
-See also TerminalWindow_GetTabWidthAvailable().
-
-\retval kTerminalWindow_ResultOK
-if there are no errors
-
-\retval kTerminalWindow_ResultInvalidReference
-if the specified terminal window is unrecognized
-
-\retval kTerminalWindow_ResultGenericFailure
-if no window has ever had a tab; "outWidthHeightInPixels" will be 0
-
-(3.1)
-*/
-TerminalWindow_Result
-TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
-							 Float32&			outWidthHeightInPixels)
-{
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
-	
-	
-	if (false == TerminalWindow_IsValid(inRef))
-	{
-		result = kTerminalWindow_ResultInvalidReference;
-		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
-		outWidthHeightInPixels = 0;
-	}
-	else
-	{
-		Float32 const	kMinimumWidth = 32.0; // arbitrary
-		
-		
-		if (ptr->tabSizeInPixels < kMinimumWidth)
-		{
-			result = kTerminalWindow_ResultGenericFailure;
-			outWidthHeightInPixels = kMinimumWidth;
-		}
-		else
-		{
-			outWidthHeightInPixels = ptr->tabSizeInPixels;
-		}
-	}
-	return result;
-}// GetTabWidth
-
-
-/*!
-Returns the space for tabs, in pixels, along the tab edge of the
-specified terminal window, at the current window size.  This is
-automatically a vertical measurement if the user preference is
-for left-edge or right-edge tabs.
-
-Note that it is not generally a good idea to rely on the width
-available to one window.  Every window in a workspace should be
-consulted, and the smallest range available to any of the windows
-should be used as the available range for all of them.  This way,
-a tab cannot be positioned in such a way that the parent window
-is forced to be widened.
-
-See also TerminalWindow_GetTabWidth().
-
-\retval kTerminalWindow_ResultOK
-if there are no errors
-
-\retval kTerminalWindow_ResultInvalidReference
-if the specified terminal window is unrecognized
-
-\retval kTerminalWindow_ResultGenericFailure
-if no window has ever had a tab; "outWidthHeightInPixels" will be 0
-
-(3.1)
-*/
-TerminalWindow_Result
-TerminalWindow_GetTabWidthAvailable		(TerminalWindowRef	inRef,
-										 Float32&			outMaxWidthHeightInPixels)
-{
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
-	
-	
-	if (false == TerminalWindow_IsValid(inRef))
-	{
-		result = kTerminalWindow_ResultInvalidReference;
-		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidthAvailable() with invalid reference", inRef);
-		outMaxWidthHeightInPixels = 500.0; // arbitrary!
-	}
-	else if (ptr->isCocoa())
-	{
-		Console_Warning(Console_WriteLine, "get-tab-width-available not implemented for Cocoa window");
-	}
-	else
-	{
-		Rect					windowRect;
-		OSStatus				error = noErr;
-		OptionBits				preferredEdge = kWindowEdgeTop;
-		Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
-																	sizeof(preferredEdge), &preferredEdge);
-		
-		
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			preferredEdge = kWindowEdgeTop;
-		}
-		
-		error = GetWindowBounds(returnCarbonWindow(ptr), kWindowStructureRgn, &windowRect);
-		assert_noerr(error);
-		
-		if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
-		{
-			outMaxWidthHeightInPixels = windowRect.bottom - windowRect.top;
-		}
-		else
-		{
-			outMaxWidthHeightInPixels = windowRect.right - windowRect.left;
-		}
-	}
-	return result;
-}// GetTabWidthAvailable
 
 
 /*!
@@ -1332,10 +959,7 @@ See also TerminalWindow_Focus().
 
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
-Cocoa window directly.  Calls to the Carbon IsWindowFocused(),
-that had been using TerminalWindow_ReturnLegacyCarbonWindow()
-should DEFINITELY change to call this routine, instead (which
-manipulates the Cocoa window internally).
+Cocoa window directly.
 
 (4.0)
 */
@@ -1425,36 +1049,6 @@ TerminalWindow_IsFullScreenMode ()
 
 
 /*!
-Returns "true" only if the specified window was constructed
-using the legacy Carbon implementation.
-
-If a window uses the new Cocoa implementation, the function
-TerminalWindow_ReturnLegacyCarbonWindow() will return nullptr
-and log a warning and stack trace to the console instead of
-returning valid data.  Also, TerminalWindow_ReturnNSWindow()
-will return a pure Cocoa window (as opposed to a Cocoa window
-that defines a Carbon HIWindowRef).
-
-(2018.02)
-*/
-Boolean
-TerminalWindow_IsLegacyCarbon	(TerminalWindowRef	inRef)
-{
-	Boolean		result = false;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		result = (false == ptr->isCocoa());
-	}
-	return result;
-}// IsLegacyCarbon
-
-
-/*!
 Returns "true" only if the specified window is obscured,
 meaning it is invisible to the user but technically
 considered a visible window.  This is the state used by
@@ -1500,16 +1094,9 @@ TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		
 		
-		if (ptr->isCocoa())
+		if ([ptr->window respondsToSelector:@selector(addTabbedWindow:ordered:)])
 		{
-			if ([ptr->window respondsToSelector:@selector(addTabbedWindow:ordered:)])
-			{
-				result = true;
-			}
-		}
-		else
-		{
-			result = ptr->carbonData->tab.exists();
+			result = true;
 		}
 	}
 	else
@@ -1609,8 +1196,7 @@ TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
 
 /*!
 Returns the Terminal Window associated with the most recently
-active non-floating Cocoa or Carbon window, or nullptr if there
-is none.
+active non-floating window, or nullptr if there is none.
 
 Use this in cases where you want to interact with the terminal
 window even if something else is focused, e.g. if a floating
@@ -1625,20 +1211,14 @@ TerminalWindow_ReturnFromMainWindow ()
 	TerminalWindowRef	result = [activeWindow terminalWindowRef];
 	
 	
-	if (nullptr == result)
-	{
-		// old method; temporary, for Carbon
-		result = TerminalWindow_ReturnFromWindow(ActiveNonFloatingWindow());
-	}
 	return result;
 }// ReturnFromMainWindow
 
 
 /*!
-Returns the Terminal Window associated with the Cocoa or Carbon
-window that has keyboard focus, or nullptr if there is none.  In
-particular, if a floating window is focused, this will always
-return nullptr.
+Returns the Terminal Window associated with the window that has
+keyboard focus, or nullptr if there is none.  In particular, if a
+floating window is focused, this will always return nullptr.
 
 Use this in cases where the target of keyboard input absolutely
 must be a terminal, and cannot be a floating non-terminal window.
@@ -1652,74 +1232,8 @@ TerminalWindow_ReturnFromKeyWindow ()
 	TerminalWindowRef	result = [activeWindow terminalWindowRef];
 	
 	
-	if (nullptr == result)
-	{
-		// old method; temporary, for Carbon
-		result = TerminalWindow_ReturnFromWindow(GetUserFocusWindow());
-	}
 	return result;
 }// ReturnFromKeyWindow
-
-
-/*!
-Returns the Terminal Window associated with the specified
-window, if any.  A window that is not a terminal window
-will cause a nullptr return value.
-
-See also TerminalWindow_ReturnFromActiveWindow().
-
-(3.0)
-*/
-TerminalWindowRef
-TerminalWindow_ReturnFromWindow		(WindowRef	inWindow)
-{
-	TerminalWindowRef	result = nullptr;
-	auto				toPair = gTerminalWindowRefsByHIWindowRef().find(inWindow);
-	
-	
-	if (gTerminalWindowRefsByHIWindowRef().end() != toPair)
-	{
-		result = toPair->second;
-	}
-	
-	return result;
-}// ReturnFromWindow
-
-
-/*!
-Returns the Mac OS Carbon window reference for the specified
-terminal window.
-
-DEPRECATED.  You should generally manipulate the Cocoa window,
-if anything (which can also be used to find the Carbon window).
-See TerminalWindow_ReturnNSWindow().
-
-IMPORTANT:	If an API exists to manipulate a terminal
-			window, use the Terminal Window API; only
-			use the Mac OS window reference when
-			absolutely necessary.
-
-(3.0)
-*/
-HIWindowRef
-TerminalWindow_ReturnLegacyCarbonWindow		(TerminalWindowRef	inRef)
-{
-	HIWindowRef		result = nullptr;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		result = returnCarbonWindow(ptr);
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to find Carbon window of invalid terminal window", inRef);
-	}
-	return result;
-}// ReturnLegacyCarbonWindow
 
 
 /*!
@@ -1821,47 +1335,6 @@ TerminalWindow_ReturnScreenWithFocus	(TerminalWindowRef	inRef)
 	}
 	return result;
 }// ReturnScreenWithFocus
-
-
-/*!
-Returns the Mac OS window reference for the tab drawer that
-is sometimes attached to a terminal window.
-
-IMPORTANT:	This is not for general use.  It is an accessor
-			temporarily required to enable alpha-channel
-			changes, and will probably go way.
-
-(4.0)
-*/
-HIWindowRef
-TerminalWindow_ReturnTabWindow		(TerminalWindowRef	inRef)
-{
-	HIWindowRef		result = nullptr;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		if (ptr->isCocoa())
-		{
-			Console_Warning(Console_WriteLine, "“tab window” property not implemented for Cocoa windows");
-		}
-		else
-		{
-			if (ptr->carbonData->tab.exists())
-			{
-				result = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
-			}
-		}
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to find tab window of invalid terminal window", inRef);
-	}
-	return result;
-}// ReturnTabWindow
 
 
 /*!
@@ -1993,10 +1466,7 @@ See also TerminalWindow_Focus() and TerminalWindow_IsFocused().
 
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
-Cocoa window directly.  All calls to the Carbon SelectWindow(),
-that had been using TerminalWindow_ReturnLegacyCarbonWindow()
-should DEFINITELY change to call this routine, instead (which
-manipulates the Cocoa window internally).
+Cocoa window directly.
 
 (4.0)
 */
@@ -2137,10 +1607,10 @@ TerminalWindow_SetFontRelativeSize	(TerminalWindowRef		inRef,
 
 /*!
 Temporary, controlled by the Session in response to changes
-in user preferences.  Updates all Carbon and Cocoa windows
-appropriately to let the user enter or exit Full Screen with
-the standard mechanism.  This should not be called except as
-a side effect of preferences changes.
+in user preferences.  Updates all windows appropriately to
+let the user enter or exit Full Screen with the standard
+mechanism.  This should not be called except as a side effect
+of preferences changes.
 
 (4.1)
 */
@@ -2148,15 +1618,9 @@ void
 TerminalWindow_SetFullScreenIconsEnabled	(Boolean	inAllTerminalWindowsHaveFullScreenIcons)
 {
 	My_TerminalWindowByNSWindow::const_iterator		toPair;
-	My_TerminalWindowByNSWindow::const_iterator		endPairs(gCarbonTerminalWindowRefsByNSWindow().end());
+	My_TerminalWindowByNSWindow::const_iterator		endPairs(gTerminalWindowRefsByNSWindow().end());
 	
 	
-	for (toPair = gCarbonTerminalWindowRefsByNSWindow().begin(); toPair != endPairs; ++toPair)
-	{
-		setCarbonWindowFullScreenIcon(REINTERPRET_CAST([toPair->first windowRef], HIWindowRef), inAllTerminalWindowsHaveFullScreenIcons);
-	}
-	
-	endPairs = gTerminalWindowRefsByNSWindow().end();
 	for (toPair = gTerminalWindowRefsByNSWindow().begin(); toPair != endPairs; ++toPair)
 	{
 		setCocoaWindowFullScreenIcon(toPair->first, inAllTerminalWindowsHaveFullScreenIcons);
@@ -2309,104 +1773,10 @@ TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
 	{
 		result = kTerminalWindow_ResultInvalidReference;
 	}
-	else if (ptr->isCocoa())
+	else
 	{
 		Console_Warning(Console_WriteLine, "“set tab appearance” not implemented for Cocoa windows");
 		result = kTerminalWindow_ResultGenericFailure;
-	}
-	else
-	{
-		if (inIsTab)
-		{
-			HIWindowRef		tabWindow = nullptr;
-			Boolean			isNew = false;
-			
-			
-			// create a sister tab window and group it with the terminal window
-			if (false == ptr->carbonData->tab.exists())
-			{
-				Boolean		createOK = createTabWindow(ptr);
-				
-				
-				assert(createOK);
-				assert(ptr->carbonData->tab.exists());
-				isNew = true;
-			}
-			
-			tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
-			
-			if (isNew)
-			{
-				OSStatus	error = noErr;
-				
-				
-				// update the tab display to match the window title
-				TerminalWindow_SetWindowTitle(inRef, ptr->baseTitleString.returnCFStringRef());
-				
-				// attach the tab to the top edge of the window
-				error = SetDrawerParent(tabWindow, TerminalWindow_ReturnLegacyCarbonWindow(inRef));
-				if (noErr == error)
-				{
-					OptionBits				preferredEdge = kWindowEdgeTop;
-					Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
-																				sizeof(preferredEdge), &preferredEdge);
-					
-					
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						preferredEdge = kWindowEdgeTop;
-					}
-					UNUSED_RETURN(OSStatus)SetDrawerPreferredEdge(tabWindow, preferredEdge);
-					
-					result = kTerminalWindow_ResultOK;
-				}
-			}
-			else
-			{
-				// note that the drawer is NOT opened when it is first created,
-				// above, because this would have the undesirable visual side effect
-				// of an oversized tab sliding out in the wrong position; instead,
-				// this function is called again, later; at that point, the tab is
-				// no longer new, and is opened here at the correct size
-				if (kWindowDrawerOpen != GetDrawerState(tabWindow))
-				{
-					// IMPORTANT: This will return paramErr if the window is invisible.
-					OSStatus	error = OpenDrawer(tabWindow, kWindowEdgeDefault, false/* asynchronously */);
-					
-					
-					if (noErr == error)
-					{
-						result = kTerminalWindow_ResultOK;
-					}
-				}
-				else
-				{
-					result = kTerminalWindow_ResultOK;
-				}
-			}
-		}
-		else
-		{
-			// remove window from group and destroy tab
-			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
-			
-			
-			if (ptr->carbonData->tab.exists())
-			{
-				// IMPORTANT: This will return paramErr if the window is invisible.
-				OSStatus	error = CloseDrawer(tabWindow, false/* asynchronously */);
-				
-				
-				if (noErr == error)
-				{
-					result = kTerminalWindow_ResultOK;
-				}
-			}
-			else
-			{
-				result = kTerminalWindow_ResultOK;
-			}
-		}
 	}
 	
 	return result;
@@ -2461,173 +1831,12 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 	}
 	else
 	{
-		Float32 const	kWidth = (FLT_MAX == inWidthInPixelsOrFltMax) ? ptr->tabSizeInPixels : inWidthInPixelsOrFltMax;
-		
-		
-		ptr->tabOffsetInPixels = inOffsetFromStartingPointInPixels;
-		
-		// “setting the width” has the side effect of putting the tab in the right place
-		result = TerminalWindow_SetTabWidth(inRef, kWidth);
+		// there is probably some way to do this with new Cocoa window tabs...
+		// UNIMPLEMENTED
+		Console_Warning(Console_WriteLine, "not implemented: TerminalWindow_SetTabPosition()");
 	}
 	return result;
 }// SetTabPosition
-
-
-/*!
-Specifies the size of the tab (if any) for this window,
-including any frame it has.  This is a visual adornment
-only; see also TerminalWindow_SetTabPosition().
-
-Note that this is a legacy API that only has effect for
-the drawer-based tabs of Carbon windows; Cocoa windows
-use system window tabs that resize automatically.  This
-API may be called on Cocoa windows but it will have no
-effect.
-
-Currently, for tabs attached to the left or right edges of
-a window, the specified width may be ignored (not even
-used as a height); these tabs tend to have uniform size.
-
-You can pass "kTerminalWindow_DefaultMetaTabWidth" to
-indicate that the tab should be resized to its ordinary
-(default) width or height.
-
-Note that since this affects only a single window, this is
-not the proper API for general tab manipulation; it is a
-low-level routine.  See the Workspace module.
-
-\retval kTerminalWindow_ResultOK
-if there are no errors
-
-\retval kTerminalWindow_ResultInvalidReference
-if the specified terminal window is unrecognized
-
-\retval kTerminalWindow_ResultGenericFailure
-if the specified terminal window has no tab (however,
-the proper width is still remembered)
-
-(3.1)
-*/
-TerminalWindow_Result
-TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
-							 Float32			inWidthInPixels)
-{
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
-	
-	
-	if (false == TerminalWindow_IsValid(inRef))
-	{
-		result = kTerminalWindow_ResultInvalidReference;
-		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_SetTabWidth() with invalid reference", inRef);
-	}
-	else
-	{
-		if (ptr->isCocoa())
-		{
-			// there is no way to implement this for system window tabs (they implicitly resize)
-			//Console_Warning(Console_WriteLine, "“set tab width” not implemented for Cocoa windows");
-		}
-		else
-		{
-			if (false == ptr->carbonData->tab.exists())
-			{
-				result = kTerminalWindow_ResultGenericFailure;
-			}
-			else
-			{
-				// drawers are managed in terms of start and end offsets as opposed to
-				// a “width”, so some roundabout calculations are done to find offsets
-				HIWindowRef				tabWindow = REINTERPRET_CAST(ptr->carbonData->tab.returnHIObjectRef(), HIWindowRef);
-				HIWindowRef				parentWindow = GetDrawerParent(tabWindow);
-				Rect					currentParentBounds;
-				OSStatus				error = noErr;
-				float					leadingOffset = kWindowOffsetUnchanged;
-				OptionBits				preferredEdge = kWindowEdgeTop;
-				Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
-																			sizeof(preferredEdge), &preferredEdge);
-				
-				
-				if (kPreferences_ResultOK != prefsResult)
-				{
-					preferredEdge = kWindowEdgeTop;
-				}
-				
-				// the tab width must refer to the structure region of the tab window,
-				// however the total space available to tabs is limited to the width
-				// of the parent window’s content region, not its structure region
-				error = GetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-				assert_noerr(error);
-				leadingOffset = STATIC_CAST(ptr->tabOffsetInPixels, float);
-				if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
-				{
-					// currently, vertically-stacked tabs are all the same size
-					ptr->tabSizeInPixels = gDefaultTabHeight;
-				}
-				else
-				{
-					ptr->tabSizeInPixels = inWidthInPixels;
-				}
-				
-				// ensure that the drawer stays at its assigned size; but note that the
-				// given tab width refers to the entire structure, whereas the constrained
-				// dimensions are only for the interior (content region)
-				{
-					Float32		width = 0.0;
-					Float32		height = 0.0;
-					Rect		borderWidths;
-					
-					
-					error = GetWindowStructureWidths(tabWindow, &borderWidths);
-					assert_noerr(error);
-					error = ptr->carbonData->tabDrawerWindowResizeHandler.getWindowMaximumSize(width, height);
-					assert_noerr(error);
-					if ((kWindowEdgeTop == preferredEdge) || (kWindowEdgeBottom == preferredEdge))
-					{
-						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMinimumSize
-																		(ptr->tabSizeInPixels - borderWidths.right - borderWidths.left, height);
-						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMaximumSize
-																		(ptr->tabSizeInPixels - borderWidths.right - borderWidths.left, height);
-					}
-					else
-					{
-						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMinimumSize
-																		(width, ptr->tabSizeInPixels - borderWidths.bottom - borderWidths.top);
-						ptr->carbonData->tabDrawerWindowResizeHandler.setWindowMaximumSize
-																		(width, ptr->tabSizeInPixels - borderWidths.bottom - borderWidths.top);
-					}
-				}
-				
-				// resize the drawer; setting the trailing offset would be
-				// counterproductive, because it would force the parent window
-				// to remain relatively wide (or high, for left/right tabs)
-				error = SetDrawerOffsets(tabWindow, leadingOffset, kWindowOffsetUnchanged);
-				if (noErr != error)
-				{
-					Console_Warning(Console_WriteValue, "failed to set drawer offsets for terminal window, error", error);
-				}
-				
-				// force a “resize” to cause the tab position to update immediately
-				// (TEMPORARY: is there a better way to do this?)
-				if ((kWindowEdgeTop == preferredEdge) || (kWindowEdgeBottom == preferredEdge))
-				{
-					++currentParentBounds.right;
-					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-					--currentParentBounds.right;
-					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-				}
-				else
-				{
-					++currentParentBounds.bottom;
-					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-					--currentParentBounds.bottom;
-					SetWindowBounds(parentWindow, kWindowContentRgn, &currentParentBounds);
-				}
-			}
-		}
-	}
-	return result;
-}// SetTabWidth
 
 
 /*!
@@ -2635,10 +1844,7 @@ Set to "true" to show a terminal window, and "false" to hide it.
 
 This is a TEMPORARY API that should be used in any code that
 cannot use TerminalWindow_ReturnNSWindow() to manipulate the
-Cocoa window directly.  All calls to the Carbon ShowWindow() or
-HideWindow(), via TerminalWindow_ReturnLegacyCarbonWindow(),
-should DEFINITELY change to call this routine, instead (which
-manipulates the Cocoa window internally).
+Cocoa window directly.
 
 (4.0)
 */
@@ -2733,14 +1939,11 @@ separately on each display.
 void
 TerminalWindow_StackWindows ()
 {
-	typedef std::vector< HIWindowRef >					My_CarbonWindowList;
 	typedef std::vector< NSWindow* >					My_CocoaWindowList;
-	typedef std::map< NSScreen*, My_CarbonWindowList >	My_CarbonWindowsByDisplay;
 	typedef std::map< NSScreen*, My_CocoaWindowList >	My_CocoaWindowsByDisplay; // which windows are on which devices?
 	
 	NSArray*					currentSpaceWindowNumbers = [NSWindow windowNumbersWithOptions:0];
 	NSWindow*					activeWindow = [NSApp mainWindow];
-	My_CarbonWindowsByDisplay	carbonWindowsByDisplay;
 	My_CocoaWindowsByDisplay	cocoaWindowsByDisplay;
 	
 	
@@ -2752,22 +1955,7 @@ TerminalWindow_StackWindows ()
 		TerminalWindowRef	terminalWindow = [window terminalWindowRef];
 		
 		
-		if ((nil != terminalWindow) && TerminalWindow_IsLegacyCarbon(terminalWindow))
-		{
-			HIWindowRef const		kWindow = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
-			My_CarbonWindowList&	windowsOnThisDisplay = carbonWindowsByDisplay[window.screen];
-			
-			
-			if (windowsOnThisDisplay.empty())
-			{
-				// the first time a display’s window list is seen, allocate
-				// an approximately-correct vector size up front (this value
-				// will only be exactly right on single-display systems)
-				windowsOnThisDisplay.reserve([currentSpaceWindowNumbers count]);
-			}
-			windowsOnThisDisplay.push_back(kWindow);
-		}
-		else if ((nil != terminalWindow) && (false == TerminalWindow_IsLegacyCarbon(terminalWindow)))
+		if (nil != terminalWindow)
 		{
 			NSWindow* const			kWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
 			My_CocoaWindowList&		windowsOnThisDisplay = cocoaWindowsByDisplay[window.screen];
@@ -2791,13 +1979,6 @@ TerminalWindow_StackWindows ()
 	// sort windows by largest area arbitrarily to minimize the chance
 	// that a window will be completely hidden by the stacking of other
 	// windows on its display
-	for (auto& displayWindowPair : carbonWindowsByDisplay)
-	{
-		My_CarbonWindowList&	windowsOnThisDisplay = displayWindowPair.second;
-		
-		
-		std::sort(windowsOnThisDisplay.begin(), windowsOnThisDisplay.end(), lessThanIfGreaterAreaCarbon);
-	}
 	for (auto& displayWindowPair : cocoaWindowsByDisplay)
 	{
 		My_CocoaWindowList&		windowsOnThisDisplay = displayWindowPair.second;
@@ -2807,82 +1988,6 @@ TerminalWindow_StackWindows ()
 	}
 	
 	// for each display, stack windows separately
-	for (auto displayWindowPair : carbonWindowsByDisplay)
-	{
-		My_CarbonWindowList const&		windowsOnThisDisplay = displayWindowPair.second;
-		auto							toWindow = windowsOnThisDisplay.begin();
-		auto							endWindows = windowsOnThisDisplay.end();
-		UInt16							staggerListIndexHint = 0;
-		UInt16							localWindowIndexHint = 0;
-		UInt16							transitioningWindowCount = 0;
-		
-		
-		for (; toWindow != endWindows; ++toWindow, ++localWindowIndexHint)
-		{
-			// arbitrary limit: only animate a few windows (asynchronously)
-			// per display, moving the rest into position immediately
-			HIWindowRef const				kHIWindow = *toWindow;
-			TerminalWindowRef const			kTerminalWindow = TerminalWindow_ReturnFromWindow(kHIWindow);
-			NSWindow* const					kNSWindow = TerminalWindow_ReturnNSWindow(kTerminalWindow);
-			Boolean const					kTooManyWindows = (transitioningWindowCount > 3/* arbitrary */);
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), kTerminalWindow);
-			HIRect							originalStructureBounds;
-			HIRect							structureBounds;
-			HIRect							screenBounds;
-			OSStatus						error = noErr;
-			
-			
-			++transitioningWindowCount;
-			
-			error = HIWindowGetBounds(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel, &structureBounds);
-			assert_noerr(error);
-			error = HIWindowGetGreatestAreaDisplay(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
-													nullptr/* display ID */, &screenBounds);
-			assert_noerr(error);
-			originalStructureBounds = structureBounds;
-			
-			// NOTE: on return, "structureBounds" is updated again
-			calculateWindowRectCarbon(ptr, &staggerListIndexHint, &localWindowIndexHint, &structureBounds);
-			
-			// if a window’s current position places it entirely on-screen
-			// and its “stacked” location would put it partially off-screen,
-			// do not relocate the window (presumably it was better before!)
-			if ((false == CGRectContainsRect(screenBounds, originalStructureBounds)) ||
-				CGRectContainsRect(screenBounds, structureBounds))
-			{
-				// select each window as it is stacked so that keyboard cycling
-				// will be in sync with the new order of windows
-				[kNSWindow orderFront:nil];
-				
-				if (kTooManyWindows)
-				{
-					// move the window immediately without animation
-					error = HIWindowSetBounds(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
-												&structureBounds);
-					assert_noerr(error);
-				}
-				else
-				{
-					// do a cool slide animation to move the window into place
-					TransitionWindowOptions		transitionOptions;
-					
-					
-					// transition asynchronously for minimum interruption to the user
-					bzero(&transitionOptions, sizeof(transitionOptions));
-					transitionOptions.version = 0;
-					if (noErr !=
-						TransitionWindowWithOptions(kHIWindow, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-													&structureBounds, true/* asynchronous */, &transitionOptions))
-					{
-						// on error, just move the window
-						error = HIWindowSetBounds(kHIWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
-													&structureBounds);
-						assert_noerr(error);
-					}
-				}
-			}
-		}
-	}
 	for (auto displayWindowPair : cocoaWindowsByDisplay)
 	{
 		My_CocoaWindowList const&		windowsOnThisDisplay = displayWindowPair.second;
@@ -3017,282 +2122,10 @@ namespace {
 /*!
 Constructor.  See TerminalWindow_New().
 
-(2018.02)
-*/
-My_TerminalWindowCarbonState::
-My_TerminalWindowCarbonState ()
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-tab(),
-tabAndWindowGroup(nullptr),
-scrollBarH(nullptr),
-scrollBarV(nullptr),
-toolbar(nullptr),
-toolbarItemBell(),
-toolbarItemKillRestart(),
-toolbarItemLED1(),
-toolbarItemLED2(),
-toolbarItemLED3(),
-toolbarItemLED4(),
-toolbarItemScrollLock(),
-scrollProcUPP(nullptr), // reset below
-windowResizeHandler(),
-tabDrawerWindowResizeHandler(),
-mouseWheelHandler(GetApplicationEventTarget(), receiveMouseWheelEvent,
-					CarbonEventSetInClass(CarbonEventClass(kEventClassMouse), kEventMouseWheelMoved),
-					nullptr/* user data */),
-scrollTickHandler(),
-commandUPP(nullptr),
-commandHandler(nullptr),
-windowFullScreenUPP(nullptr),
-windowFullScreenHandler(nullptr),
-windowResizeEmbellishUPP(nullptr),
-windowResizeEmbellishHandler(nullptr),
-toolbarEventUPP(nullptr),
-toolbarEventHandler(nullptr)
-{
-}// My_TerminalWindowCarbonState constructor
-
-
-/*!
-Destructor.
-
-(2018.02)
-*/
-My_TerminalWindowCarbonState::
-~My_TerminalWindowCarbonState ()
-{
-	if (nullptr == this->tabAndWindowGroup)
-	{
-		ReleaseWindowGroup(this->tabAndWindowGroup), this->tabAndWindowGroup = nullptr;
-	}
-	
-	// disable window command callback
-	RemoveEventHandler(this->commandHandler), this->commandHandler = nullptr;
-	DisposeEventHandlerUPP(this->commandUPP), this->commandUPP = nullptr;
-	
-	// disable window full-screen callback
-	RemoveEventHandler(this->windowFullScreenHandler), this->windowFullScreenHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowFullScreenUPP), this->windowFullScreenUPP = nullptr;
-	
-	// disable window resize callback
-	RemoveEventHandler(this->windowResizeEmbellishHandler), this->windowResizeEmbellishHandler = nullptr;
-	DisposeEventHandlerUPP(this->windowResizeEmbellishUPP), this->windowResizeEmbellishUPP = nullptr;
-	
-	// disable toolbar callback
-	RemoveEventHandler(this->toolbarEventHandler), this->toolbarEventHandler = nullptr;
-	DisposeEventHandlerUPP(this->toolbarEventUPP), this->toolbarEventUPP = nullptr;
-	
-	// disable scroll bar callback
-	DisposeControlActionUPP(this->scrollProcUPP), this->scrollProcUPP = nullptr;
-}// My_TerminalWindowCarbonState destructor
-
-
-/*!
-Constructor.  See TerminalWindow_New().
-
-(2018.02)
-*/
-void
-My_TerminalWindowCarbonState::
-initialize	(TerminalWindowRef		inEventuallyValidWindowRef,
-			 HIWindowRef			inWindow)
-{
-	// create controls
-	{
-		HIViewWrap	contentView(kHIViewWindowContentID, inWindow);
-		Rect		rect;
-		OSStatus	error = noErr;
-		
-		
-		assert(contentView.exists());
-		
-		// create routine to handle scroll activity
-		this->scrollProcUPP = NewControlActionUPP(scrollProc); // this is disposed via TerminalWindow_Dispose()
-		
-		// create a vertical scroll bar; the resize event handler initializes its size correctly
-		bzero(&rect, sizeof(rect));
-		error = CreateScrollBarControl(inWindow, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-										true/* live tracking */, this->scrollProcUPP, &this->scrollBarV);
-		assert_noerr(error);
-		error = SetControlProperty(this->scrollBarV, AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-									sizeof(inEventuallyValidWindowRef), &inEventuallyValidWindowRef); // used in scrollProc
-		assert_noerr(error);
-		error = HIViewAddSubview(contentView, this->scrollBarV);
-		assert_noerr(error);
-		
-		// create a horizontal scroll bar; the resize event handler initializes its size correctly
-		bzero(&rect, sizeof(rect));
-		error = CreateScrollBarControl(inWindow, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-										true/* live tracking */, this->scrollProcUPP, &this->scrollBarH);
-		assert_noerr(error);
-		error = SetControlProperty(this->scrollBarH, AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-									sizeof(inEventuallyValidWindowRef), &inEventuallyValidWindowRef); // used in scrollProc
-		assert_noerr(error);
-		error = HIViewAddSubview(contentView, this->scrollBarH);
-		assert_noerr(error);
-		// horizontal scrolling is not supported for now...
-		UNUSED_RETURN(OSStatus)HIViewSetVisible(this->scrollBarH, false);
-	}
-	
-	// install a callback that responds as a window is resized
-	this->windowResizeHandler.install(inWindow, handleNewSize, inEventuallyValidWindowRef/* user data */,
-										250/* arbitrary minimum width */,
-										200/* arbitrary minimum height */,
-										SHRT_MAX/* maximum width */,
-										SHRT_MAX/* maximum height */);
-	assert(this->windowResizeHandler.isInstalled());
-	
-	// install a callback that handles commands relevant to terminal windows
-	{
-		EventTypeSpec const		whenCommandExecuted[] =
-								{
-									{ kEventClassCommand, kEventCommandProcess }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->commandUPP = NewEventHandlerUPP(receiveHICommand);
-		error = InstallWindowEventHandler(inWindow, this->commandUPP, GetEventTypeCount(whenCommandExecuted),
-											whenCommandExecuted, inEventuallyValidWindowRef/* user data */,
-											&this->commandHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that responds to full-screen events for a terminal window
-	{
-		EventTypeSpec const		whenWindowFullScreenChanges[] =
-								{
-									{ kEventClassWindow, FUTURE_SYMBOL(241, kEventWindowFullScreenEnterStarted) },
-									{ kEventClassWindow, FUTURE_SYMBOL(242, kEventWindowFullScreenEnterCompleted) },
-									{ kEventClassWindow, FUTURE_SYMBOL(243, kEventWindowFullScreenExitStarted) },
-									{ kEventClassWindow, FUTURE_SYMBOL(244, kEventWindowFullScreenExitCompleted) }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowFullScreenUPP = NewEventHandlerUPP(receiveWindowFullScreenChange);
-		error = InstallWindowEventHandler(inWindow, this->windowFullScreenUPP, GetEventTypeCount(whenWindowFullScreenChanges),
-											whenWindowFullScreenChanges, inEventuallyValidWindowRef/* user data */,
-											&this->windowFullScreenHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// install a callback that uses the title bar to display terminal dimensions during resize
-	{
-		EventTypeSpec const		whenWindowResizeStartsContinuesOrStops[] =
-								{
-									{ kEventClassWindow, kEventWindowResizeStarted },
-									{ kEventClassWindow, kEventWindowBoundsChanging },
-									{ kEventClassWindow, kEventWindowResizeCompleted }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->windowResizeEmbellishUPP = NewEventHandlerUPP(receiveWindowResize);
-		error = InstallWindowEventHandler(inWindow, this->windowResizeEmbellishUPP, GetEventTypeCount(whenWindowResizeStartsContinuesOrStops),
-											whenWindowResizeStartsContinuesOrStops, inEventuallyValidWindowRef/* user data */,
-											&this->windowResizeEmbellishHandler/* event handler reference */);
-		assert_noerr(error);
-	}
-	
-	// create toolbar icons
-	if (noErr == HIToolbarCreate(kConstantsRegistry_HIToolbarIDTerminal,
-									kHIToolbarAutoSavesConfig | kHIToolbarIsConfigurable, &this->toolbar))
-	{
-		// IMPORTANT: Do not invoke toolbar manipulation APIs at this stage,
-		// until the event handlers below are installed.  A saved toolbar may
-		// contain references to items that only the handlers below can create;
-		// manipulation APIs often trigger creation of the entire toolbar, so
-		// that means some saved items would fail to be inserted properly.
-		
-		// install a callback that can create any items needed for this
-		// toolbar (used in the toolbar and in the customization sheet, etc.);
-		// and, a callback that specifies which items are in the toolbar by
-		// default, and which items are available in the customization sheet
-		{
-			EventTypeSpec const		whenToolbarEventOccurs[] =
-									{
-										{ kEventClassToolbar, kEventToolbarCreateItemWithIdentifier },
-										{ kEventClassToolbar, kEventToolbarGetAllowedIdentifiers },
-										{ kEventClassToolbar, kEventToolbarGetDefaultIdentifiers },
-										{ kEventClassToolbar, kEventToolbarItemRemoved }
-									};
-			OSStatus				error = noErr;
-			
-			
-			this->toolbarEventUPP = NewEventHandlerUPP(receiveToolbarEvent);
-			error = InstallEventHandler(HIObjectGetEventTarget(this->toolbar), this->toolbarEventUPP,
-										GetEventTypeCount(whenToolbarEventOccurs), whenToolbarEventOccurs,
-										inEventuallyValidWindowRef/* user data */,
-										&this->toolbarEventHandler/* event handler reference */);
-			assert_noerr(error);
-		}
-		
-		// Check preferences for a stored toolbar; if one exists, leave the
-		// toolbar display mode and size untouched, as the user will have
-		// specified one; otherwise, initialize it to the desired look.
-		//
-		// IMPORTANT: This is a bit of a hack, as it relies on the key name
-		// that Mac OS X happens to use for toolbar preferences as of 10.4.
-		// If that ever changes, this code will be pointless.
-		CFPropertyListRef	toolbarConfigPref = CFPreferencesCopyAppValue
-												(CFSTR("HIToolbar Config com.mactelnet.toolbar.terminal"),
-													kCFPreferencesCurrentApplication);
-		Boolean				usingSavedToolbar = false;
-		if (nullptr != toolbarConfigPref)
-		{
-			usingSavedToolbar = true;
-			CFRelease(toolbarConfigPref), toolbarConfigPref = nullptr;
-		}
-		unless (usingSavedToolbar)
-		{
-			UNUSED_RETURN(OSStatus)HIToolbarSetDisplayMode(this->toolbar, kHIToolbarDisplayModeIconAndLabel);
-			UNUSED_RETURN(OSStatus)HIToolbarSetDisplaySize(this->toolbar, kHIToolbarDisplaySizeSmall);
-		}
-		
-		// the toolbar is NOT used yet and NOT released yet, until it is installed (below)
-	}
-	
-	// put the toolbar in the window
-	{
-		OSStatus	error = noErr;
-		Boolean		headersCollapsed = false;
-		
-		
-		error = SetWindowToolbar(inWindow, this->toolbar);
-		assert_noerr(error);
-		
-		// also show the toolbar, unless the user preference to collapse is set
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
-									&headersCollapsed))
-		{
-			headersCollapsed = false; // assume headers aren’t collapsed, if preference can’t be found
-		}
-		unless (headersCollapsed)
-		{
-			error = ShowHideWindowToolbar(inWindow, true/* show */, false/* animate */);
-			assert_noerr(error);
-		}
-	}
-	CFRelease(this->toolbar); // once set in the window, the toolbar is retained, so release the creation lock
-	
-	// enable drag tracking so that certain default toolbar behaviors work
-	UNUSED_RETURN(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(inWindow, true/* enabled */);
-}// My_TerminalWindowCarbonState::initialize 
-
-
-/*!
-Constructor.  See TerminalWindow_New().
-
 (3.0)
 */
 My_TerminalWindow::
-My_TerminalWindow	(Boolean					inCarbonLegacy,
-					 Preferences_ContextRef		inTerminalInfoOrNull,
+My_TerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 					 Preferences_ContextRef		inFontInfoOrNull,
 					 Preferences_ContextRef		inTranslationInfoOrNull,
 					 Boolean					inNoStagger)
@@ -3305,7 +2138,7 @@ changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 windowController([[TerminalWindow_Controller alloc]
 					initWithTerminalVC:[[[TerminalView_Controller alloc] init] autorelease]
 										owner:REINTERPRET_CAST(this, TerminalWindowRef)]),
-window((inCarbonLegacy) ? createWindowCarbonCocoa() : windowController.window),
+window(windowController.window),
 tabOffsetInPixels(0.0),
 tabSizeInPixels(0.0),
 preResizeViewDisplayMode(kTerminalView_DisplayModeNormal/* corrected below */),
@@ -3329,9 +2162,7 @@ screensToViews(),
 viewsToScreens(),
 allScreens(),
 allViews(),
-installedActions(),
-// Carbon-specific (will remove):
-carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
+installedActions()
 {
 @autoreleasepool {
 	TerminalScreenRef			newScreen = nullptr;
@@ -3372,7 +2203,8 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 			if (Preferences_GetContextsInClass(Quills::Prefs::FORMAT, contextList))
 			{
 				std::vector< UInt16 >	numberList(contextList.size());
-				RandomWrap				generator;
+				std::random_device		randomDevice;
+				std::mt19937			generator(randomDevice());
 				UInt16					counter = 0;
 				
 				
@@ -3380,7 +2212,7 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 				{
 					*toNumber = counter;
 				}
-				std::random_shuffle(numberList.begin(), numberList.end(), generator);
+				std::shuffle(numberList.begin(), numberList.end(), generator);
 				inFontInfoOrNull = contextList[numberList[0]];
 			}
 			
@@ -3395,24 +2227,6 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 		}
 	}
 	
-	// further Carbon-specific setup
-	if (nullptr != carbonData)
-	{
-		HIWindowRef		carbonWindow = returnCarbonWindow(this);
-		
-		
-		carbonData->initialize(this->selfRef, carbonWindow);
-		
-		// set up Window Info; it is important to do this right away
-		// because this is relied upon by other code to find the
-		// terminal window data attached to the Mac OS window
-		assert(this->window != nil);
-		gCarbonTerminalWindowRefsByNSWindow()[this->window] = this->selfRef;
-		gTerminalWindowRefsByHIWindowRef()[carbonWindow] = this->selfRef;
-		
-		// set up the Help System
-		HelpSystem_SetWindowKeyPhrase(carbonWindow, kHelpSystem_KeyPhraseTerminals);
-	}
 	gTerminalWindowRefsByNSWindow()[this->window] = this->selfRef;
 	
 	// create controls
@@ -3428,57 +2242,32 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 	}
 	if (nullptr != newScreen)
 	{
-		if (this->isCocoa())
+		// already set up by window controller
+		[this->windowController enumerateTerminalViewControllersUsingBlock:
+		^(TerminalView_Controller* aVC, BOOL* UNUSED_ARGUMENT(outStopFlagPtr))
 		{
-			// already set up by window controller
-			[this->windowController enumerateTerminalViewControllersUsingBlock:
-			^(TerminalView_Controller* aVC, BOOL* UNUSED_ARGUMENT(outStopFlagPtr))
-			{
-				newView = [aVC.terminalView.terminalContentView terminalViewRef];
-				if (nullptr == newView)
-				{
-					Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
-				}
-				else
-				{
-					TerminalView_Result		viewResult = kTerminalView_ResultOK;
-					
-					
-					viewResult = TerminalView_RemoveDataSource(newView, nullptr/* specific screen or "nullptr" for all screens */);
-					if (kTerminalView_ResultOK != viewResult)
-					{
-						Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
-					}
-					viewResult = TerminalView_AddDataSource(newView, newScreen);
-					if (kTerminalView_ResultOK != viewResult)
-					{
-						Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
-					}
-				}
-			}];
-		}
-		else
-		{
-			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);
+			newView = [aVC.terminalView.terminalContentView terminalViewRef];
 			if (nullptr == newView)
 			{
-				Console_Warning(Console_WriteLine, "failed to construct Carbon TerminalViewRef!");
+				Console_Warning(Console_WriteLine, "failed to construct Cocoa TerminalViewRef!");
 			}
 			else
 			{
-				HIViewWrap		contentView(kHIViewWindowContentID, returnCarbonWindow(this));
-				HIViewRef		terminalHIView = TerminalView_ReturnContainerHIView(newView);
-				OSStatus		error = noErr;
+				TerminalView_Result		viewResult = kTerminalView_ResultOK;
 				
 				
-				assert(contentView.exists());
-				error = HIViewAddSubview(contentView, terminalHIView);
-				assert_noerr(error);
-				
-				error = HIViewSetVisible(terminalHIView, true);
-				assert_noerr(error);
+				viewResult = TerminalView_RemoveDataSource(newView, nullptr/* specific screen or "nullptr" for all screens */);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to remove Cocoa terminal view’s previous data source, error", viewResult);
+				}
+				viewResult = TerminalView_AddDataSource(newView, newScreen);
+				if (kTerminalView_ResultOK != viewResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to set new data source for Cocoa terminal view, error", viewResult);
+				}
 			}
-		}
+		}];
 		
 		// remember the initial screen-to-view and view-to-screen mapping;
 		// later, additional views or screens may be added
@@ -3514,63 +2303,26 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 	// window location will be overridden by the workspace configuration)
 	unless (inNoStagger)
 	{
-		if (this->isCocoa())
+		NSWindow*	frontWindow = [NSApp mainWindow];
+		NSRect		thisFrame = this->window.frame;
+		UInt16		staggerListIndex = 0;
+		UInt16		localWindowIndex = 0;
+		
+		
+		calculateWindowFrameCocoa(this, &staggerListIndex, &localWindowIndex, &thisFrame);
+		
+		// if the frontmost window already occupies the location for
+		// the new window, offset it slightly
+		if (nil != frontWindow)
 		{
-			NSWindow*	frontWindow = [NSApp mainWindow];
-			NSRect		thisFrame = this->window.frame;
-			UInt16		staggerListIndex = 0;
-			UInt16		localWindowIndex = 0;
-			
-			
-			calculateWindowFrameCocoa(this, &staggerListIndex, &localWindowIndex, &thisFrame);
-			
-			// if the frontmost window already occupies the location for
-			// the new window, offset it slightly
-			if (nil != frontWindow)
+			if (NSEqualPoints(frontWindow.frame.origin, thisFrame.origin))
 			{
-				if (NSEqualPoints(frontWindow.frame.origin, thisFrame.origin))
-				{
-					thisFrame.origin.x += 20; // per Aqua Human Interface Guidelines
-					thisFrame.origin.y -= 20; // per Aqua Human Interface Guidelines
-				}
+				thisFrame.origin.x += 20; // per Aqua Human Interface Guidelines
+				thisFrame.origin.y -= 20; // per Aqua Human Interface Guidelines
 			}
-			
-			[this->window setFrameOrigin:thisFrame.origin];
 		}
-		else
-		{
-			HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
-			HIRect			structureBounds;
-			UInt16			staggerListIndex = 0;
-			UInt16			localWindowIndex = 0;
-			OSStatus		error = noErr;
-			
-			
-			error = HIWindowGetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
-										&structureBounds);
-			assert_noerr(error);
-			calculateWindowRectCarbon(this, &staggerListIndex, &localWindowIndex, &structureBounds);
-			
-			// if the frontmost window already occupies the location for
-			// the new window, offset it slightly
-			if (nullptr != frontWindow)
-			{
-				HIRect		frontStructureBounds;
-				
-				
-				if ((noErr == HIWindowGetBounds(frontWindow, kWindowStructureRgn, kHICoordSpaceScreenPixel,
-												&frontStructureBounds)) &&
-					CGPointEqualToPoint(frontStructureBounds.origin, structureBounds.origin))
-				{
-					structureBounds.origin.x += 20; // per Aqua Human Interface Guidelines
-					structureBounds.origin.y += 20; // per Aqua Human Interface Guidelines
-				}
-			}
-			
-			error = HIWindowSetBounds(returnCarbonWindow(this), kWindowStructureRgn, kHICoordSpaceScreenPixel,
-										&structureBounds);
-			assert_noerr(error);
-		}
+		
+		[this->window setFrameOrigin:thisFrame.origin];
 	}
 	
 	// set up callbacks to receive various state change notifications
@@ -3583,9 +2335,7 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener.returnRef());
 	this->terminalStateChangeEventListener.setWithNoRetain(ListenerModel_NewStandardListener
 															(terminalStateChanged, this->selfRef/* context */));
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeExcessiveErrors, this->terminalStateChangeEventListener.returnRef());
-	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener.returnRef());
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener.returnRef());
@@ -3613,7 +2363,7 @@ carbonData((inCarbonLegacy) ? new My_TerminalWindowCarbonState() : nullptr)
 	// are immediately closeable for the first 15 seconds
 	setWarningOnWindowClose(this, false);
 }// @autoreleasepool
-}// My_TerminalWindow 2-argument constructor
+}// My_TerminalWindow constructor
 
 
 /*!
@@ -3650,11 +2400,6 @@ My_TerminalWindow::
 		
 		// remove from tracking maps
 		gTerminalWindowRefsByNSWindow().erase(this->window);
-		if (false == this->isCocoa())
-		{
-			gTerminalWindowRefsByHIWindowRef().erase(returnCarbonWindow(this));
-			gCarbonTerminalWindowRefsByNSWindow().erase(this->window);
-		}
 		
 		// determine if animation should occur
 		unless (kPreferences_ResultOK ==
@@ -3676,12 +2421,6 @@ My_TerminalWindow::
 			// the rest of the destructor to run (cleaning up other state) even
 			// if the animation finishes after the original window is destroyed
 			CocoaAnimation_TransitionWindowForRemove(this->window);
-		}
-		
-		// kill controls to disable callbacks
-		if (false == this->isCocoa())
-		{
-			KillControls(returnCarbonWindow(this));
 		}
 	}
 	
@@ -3721,11 +2460,6 @@ My_TerminalWindow::
 	// finally, dispose of the window
 	if (nil != this->window)
 	{
-		if (false == this->isCocoa())
-		{
-			HelpSystem_SetWindowKeyPhrase(returnCarbonWindow(this), kHelpSystem_KeyPhraseDefault); // clean up
-			DisposeWindow(returnCarbonWindow(this));
-		}
 		[this->window close], this->window = nil;
 	}
 	
@@ -3737,16 +2471,12 @@ My_TerminalWindow::
 	{
 		Terminal_ReleaseScreen(&screenRef);
 	}
-	
-	delete carbonData;
 }// @autoreleasepool
 }// My_TerminalWindow destructor
 
 
 /*!
-Returns true only if this structure was initialized as a
-modern (Cocoa and Core Graphics) user interface instead of
-a legacy (Carbon and QuickDraw) interface.
+Returns true.  Left over porting from legacy code.
 
 (2018.02)
 */
@@ -3755,7 +2485,7 @@ My_TerminalWindow::
 isCocoa ()
 const
 {
-	return (nullptr == this->carbonData);
+	return true;
 }// My_TerminalWindow::isCocoa
 
 
@@ -3813,7 +2543,6 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 		stagger = CGPointMake(20, 20);
 		
 		// convert to floating-point rectangle
-		if (inPtr->isCocoa())
 		{
 			NSScreen*	windowScreen = [inPtr->window screen];
 			
@@ -3823,16 +2552,6 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 				windowScreen = [NSScreen mainScreen];
 			}
 			screenRect = NSRectToCGRect([windowScreen visibleFrame]);
-		}
-		else
-		{
-			Rect	integerRect;
-			
-			
-			RegionUtilities_GetPositioningBounds(returnCarbonWindow(inPtr), &integerRect);
-			screenRect = CGRectMake(integerRect.left, integerRect.top,
-									integerRect.right - integerRect.left,
-									integerRect.bottom - integerRect.top);
 		}
 		
 		if (CGRectContainsPoint(screenRect, stackingOrigin))
@@ -3935,85 +2654,6 @@ calculateWindowFrameCocoa	(My_TerminalWindowPtr	inPtr,
 
 
 /*!
-Calculates the stagger position of Carbon windows.
-
-The index hints can be used to strongly suggest where
-a window should end up on the screen.  (Use this if
-the given window is part of an iteration over several
-windows, where its order in the list is important.)
-If no hints are provided, a window position is
-determined in some other way.
-
-On input, the rectangle must be the structure/frame
-of the window in screen-pixel coordinates.
-
-On output, a new frame rectangle is provided in
-screen-pixel coordinates.
-
-(4.1)
-*/
-void
-calculateWindowRectCarbon	(My_TerminalWindowPtr	inPtr,
-							 UInt16*				inoutStaggerListIndexHintPtr,
-							 UInt16*				inoutLocalWindowIndexHintPtr,
-							 HIRect*				inoutArrangement)
-{
-	HIRect const	kStructureRegionBounds = *inoutArrangement;
-	Float32 const	kStructureWidth = kStructureRegionBounds.size.width;
-	Float32 const	kStructureHeight = kStructureRegionBounds.size.height;
-	NSScreen*		windowScreen = [inPtr->window screen];
-	CGRect			screenRect;
-	HIPoint			structureTopLeftScrap = CGPointMake(0, 0);
-	Boolean			doneCalculation = false;
-	Boolean			tooFarRight = false;
-	Boolean			tooFarDown = false;
-	
-	
-	if (nil == windowScreen)
-	{
-		windowScreen = [NSScreen mainScreen];
-	}
-	screenRect = NSRectToCGRect([windowScreen visibleFrame]);
-	
-	while ((false == doneCalculation) && (false == tooFarRight))
-	{
-		calculateIndexedWindowPosition(inPtr, *inoutStaggerListIndexHintPtr, *inoutLocalWindowIndexHintPtr,
-										&structureTopLeftScrap);
-		inoutArrangement->origin.x = structureTopLeftScrap.x;
-		inoutArrangement->origin.y = structureTopLeftScrap.y;
-		inoutArrangement->size.width = kStructureWidth;
-		inoutArrangement->size.height = kStructureHeight;
-		
-		// see if the window position would start to nudge it off
-		// the bottom or right edge of its display
-		tooFarRight = ((inoutArrangement->origin.x + inoutArrangement->size.width) > (screenRect.origin.x + screenRect.size.width));
-		tooFarDown = ((inoutArrangement->origin.y + inoutArrangement->size.height) > (screenRect.origin.y + screenRect.size.height));
-		
-		if (tooFarDown)
-		{
-			if (0 == *inoutLocalWindowIndexHintPtr)
-			{
-				// the window is already offscreen despite being at the
-				// stacking origin so there is nowhere else to go
-				doneCalculation = true;
-			}
-			else
-			{
-				// try shifting the top-left-corner origin over to see
-				// if there is still room for a new window stack
-				++(*inoutStaggerListIndexHintPtr);
-				*inoutLocalWindowIndexHintPtr = 0;
-			}
-		}
-		else
-		{
-			doneCalculation = true;
-		}
-	}
-}// calculateWindowRectCarbon
-
-
-/*!
 Notifies all listeners for the specified Terminal
 Window state change, passing the given context to
 the listener.
@@ -4033,480 +2673,6 @@ changeNotifyForTerminalWindow	(My_TerminalWindowPtr	inPtr,
 	// invoke listener callback routines appropriately, from the specified terminal window’s listener model
 	ListenerModel_NotifyListenersOfEvent(inPtr->changeListenerModel, inWhatChanged, inContextPtr);
 }// changeNotifyForTerminalWindow
-
-
-/*!
-Registers the “bell off” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createBellOffIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnBellOffIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemBellOff,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createBellOffIcon
-
-
-/*!
-Registers the “bell on” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createBellOnIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnBellOnIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemBellOn,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createBellOnIcon
-
-
-/*!
-Registers the “customize toolbar” icon reference with the system,
-and returns a reference to the new icon.
-
-NOTE:	This is only being created for short-term Carbon use; it
-		will not be necessary to allocate icons at all in Cocoa
-		windows.
-
-(4.0)
-*/
-IconRef
-createCustomizeToolbarIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnCustomizeToolbarIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemCustomize,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createCustomizeToolbarIcon
-
-
-/*!
-Registers the “full screen” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createFullScreenIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnFullScreenIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemFullScreen,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createFullScreenIcon
-
-
-/*!
-Registers the “hide window” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createHideWindowIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnHideWindowIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemHideWindow,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createHideWindowIcon
-
-
-/*!
-Registers the “kill session” icon reference with the system,
-and returns a reference to the new icon.
-
-NOTE:	This is only being created for short-term Carbon use; it
-		will not be necessary to allocate icons at all in Cocoa
-		windows.
-
-(4.0)
-*/
-IconRef
-createKillSessionIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnKillSessionIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemKillSession,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createKillSessionIcon
-
-
-/*!
-Registers the “LED off” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createLEDOffIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnLEDOffIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemLEDOff,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createLEDOffIcon
-
-
-/*!
-Registers the “LED on” icon reference with the system,
-and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createLEDOnIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnLEDOnIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemLEDOn,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createLEDOnIcon
-
-
-/*!
-Registers the “print” icon reference with the system, and returns
-a reference to the new icon.
-
-NOTE:	This is only being created for short-term Carbon use; it
-		will not be necessary to allocate icons at all in Cocoa
-		windows.
-
-(4.0)
-*/
-IconRef
-createPrintIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnPrintIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemPrint,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createPrintIcon
-
-
-/*!
-Registers the “restart session” icon reference with the system,
-and returns a reference to the new icon.
-
-NOTE:	This is only being created for short-term Carbon use; it
-		will not be necessary to allocate icons at all in Cocoa
-		windows.
-
-(4.0)
-*/
-IconRef
-createRestartSessionIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnRestartSessionIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemRestartSession,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createRestartSessionIcon
-
-
-/*!
-Registers the “scroll lock on” icon reference with the
-system, and returns a reference to the new icon.
-
-(3.1)
-*/
-IconRef
-createScrollLockOnIcon ()
-{
-	IconRef		result = nullptr;
-	FSRef		iconFile;
-	
-	
-	if (AppResources_GetArbitraryResourceFileFSRef
-		(AppResources_ReturnScrollLockOnIconFilenameNoExtension(),
-			CFSTR("icns")/* type */, iconFile))
-	{
-		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn,
-												&iconFile, &result))
-		{
-			// failed!
-			result = nullptr;
-		}
-	}
-	
-	return result;
-}// createScrollLockOnIcon
-
-
-/*!
-Creates a floating window that looks like a tab, used to
-“attach” to an existing terminal window in tab view.
-
-Also installs a resize handler to ensure the drawer is
-no bigger than its default size (otherwise, the Toolbox
-will make it as wide as the window).
-
-Carbon only.
-
-(3.1)
-*/
-Boolean
-createTabWindow		(My_TerminalWindowPtr	inPtr)
-{
-	HIWindowRef		tabWindow = nullptr;
-	Boolean			result = false;
-	
-	
-	// load the NIB containing this floater (automatically finds the right localization)
-	tabWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-							CFSTR("TerminalWindow"), CFSTR("Tab")) << NIBLoader_AssertWindowExists;
-	if (nullptr != tabWindow)
-	{
-		OSStatus	error = noErr;
-		Rect		currentBounds;
-		
-		
-		// install a callback that responds as the drawer window is resized; this is used
-		// primarily to enforce a maximum drawer width, not to allow a resizable drawer;
-		// these are also only initial values, they are updated later if anything resizes
-		error = GetWindowBounds(tabWindow, kWindowContentRgn, &currentBounds);
-		assert_noerr(error);
-		inPtr->carbonData->tabDrawerWindowResizeHandler.install(tabWindow, handleNewDrawerWindowSize, inPtr->selfRef/* user data */,
-																currentBounds.right - currentBounds.left/* minimum width */,
-																currentBounds.bottom - currentBounds.top/* minimum height */,
-																currentBounds.right - currentBounds.left/* maximum width */,
-																currentBounds.bottom - currentBounds.top/* maximum height */);
-		assert(inPtr->carbonData->tabDrawerWindowResizeHandler.isInstalled());
-		
-		// if the global default width has not yet been initialized, set it;
-		// initialize this window’s tab size field to the global default
-		if (0.0 == gDefaultTabWidth)
-		{
-			error = GetWindowBounds(tabWindow, kWindowStructureRgn, &currentBounds);
-			assert_noerr(error);
-			gDefaultTabWidth = STATIC_CAST(currentBounds.right - currentBounds.left, Float32);
-			gDefaultTabHeight = STATIC_CAST(currentBounds.bottom - currentBounds.top, Float32);
-		}
-		{
-			OptionBits				preferredEdge = kWindowEdgeTop;
-			Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
-																		sizeof(preferredEdge), &preferredEdge);
-			
-			
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				preferredEdge = kWindowEdgeTop;
-			}
-			if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
-			{
-				inPtr->tabSizeInPixels = gDefaultTabHeight;
-			}
-			else
-			{
-				inPtr->tabSizeInPixels = gDefaultTabWidth;
-			}
-		}
-	}
-	
-	inPtr->carbonData->tab.setWithRetain(tabWindow);
-	result = (nullptr != tabWindow);
-	
-	return result;
-}// createTabWindow
-
-
-/*!
-Creates a Cocoa window for the specified terminal window,
-based on a Carbon window if requested, and constructs a
-root view for subsequent embedding.
-
-Returns nullptr if the window was not created successfully.
-
-(4.0)
-*/
-NSWindow*
-createWindowCarbonCocoa ()
-{
-@autoreleasepool {
-	NSWindow*		result = nil;
-	Boolean			useCustomFullScreenMode = false;
-	
-	
-	if (kPreferences_ResultOK !=
-		Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-							&useCustomFullScreenMode))
-	{
-		useCustomFullScreenMode = false; // assume a default if preference can’t be found
-	}
-	
-	{
-		// load the NIB containing this window (automatically finds the right localization)
-		HIWindowRef		window = nullptr;
-		
-		
-		window = NIBWindow(AppResources_ReturnBundleForNIBs(),
-							CFSTR("TerminalWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
-		if (nullptr != window)
-		{
-			result = CocoaBasic_ReturnNewOrExistingCocoaCarbonWindow(window);
-		}
-		
-		// override this default; technically terminal windows
-		// are immediately closeable for the first 15 seconds
-		UNUSED_RETURN(OSStatus)SetWindowModified(window, false);
-		
-		if (false == useCustomFullScreenMode)
-		{
-			setCarbonWindowFullScreenIcon(window, true);
-		}
-	}
-	
-	return result;
-}// @autoreleasepool
-}// createWindowCarbonCocoa
 
 
 /*!
@@ -4548,21 +2714,6 @@ getActiveView	(My_TerminalWindowPtr	inPtr)
 
 
 /*!
-Returns the view that the given scroll bar controls,
-or nullptr if none.
-
-(3.0)
-*/
-TerminalViewRef
-getScrollBarView	(My_TerminalWindowPtr	inPtr,
-					 HIViewRef				UNUSED_ARGUMENT(inScrollBarControl))
-{
-	assert(!inPtr->allViews.empty());
-	return inPtr->allViews.front(); // one day, if more than one view per window exists, this logic will be more complex
-}// getScrollBarView
-
-
-/*!
 Returns the width and height of the content region
 of a terminal window whose screen interior has the
 specified dimensions.
@@ -4583,7 +2734,7 @@ getWindowSizeFromViewSize	(My_TerminalWindowPtr	inPtr,
 	if (nullptr != outWindowContentHeightInPixels)
 	{
 		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels + returnStatusBarHeight(inPtr) +
-											returnToolbarHeight(inPtr) + returnScrollBarHeight(inPtr);
+											returnToolbarHeight(inPtr);
 	}
 }// getWindowSizeFromViewSize
 
@@ -4614,193 +2765,6 @@ handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 		ptr->recentSearchOptions = FindDialog_ReturnOptions(inDialogThatClosed);
 	}
 }// handleFindDialogClose
-
-
-/*!
-This routine is called whenever the tab is resized, and it
-should resize and relocate views as appropriate.
-
-Even if this implementation does nothing, it must exist so the
-drawer height (or width, for vertical tabs) is constrained.
-
-(3.1)
-*/
-void
-handleNewDrawerWindowSize	(WindowRef		inWindowRef,
-							 Float32		inDeltaX,
-							 Float32		UNUSED_ARGUMENT(inDeltaY),
-							 void*			UNUSED_ARGUMENT(inContext))
-{
-	HIViewWrap		viewWrap;
-	
-	
-	// resize the title view, and move the pop-out button
-	if (Localization_IsLeftToRight())
-	{
-		viewWrap = HIViewWrap(idMyLabelTabTitle, inWindowRef);
-		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
-	}
-	else
-	{
-		viewWrap = HIViewWrap(idMyLabelTabTitle, inWindowRef);
-		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
-	}
-}// handleNewDrawerWindowSize
-
-
-/*!
-This method moves and resizes the contents of a terminal
-window in response to a resize.
-
-Carbon only.
-
-(3.0)
-*/
-void
-handleNewSize	(WindowRef	inWindow,
-				 Float32	UNUSED_ARGUMENT(inDeltaX),
-				 Float32	UNUSED_ARGUMENT(inDeltaY),
-				 void*		inTerminalWindowRef)
-{
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	HIRect				contentBounds;
-	OSStatus			error = noErr;
-	
-	
-	// get window boundaries in local coordinates
-	error = HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, inWindow), &contentBounds);
-	assert_noerr(error);
-	
-	if (terminalWindow != nullptr)
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		HIRect							viewBounds;
-		
-		
-		// glue the vertical scroll bar to the new right side of the window and to the
-		// bottom edge of the status bar, and ensure it is glued to the size box in the
-		// corner (so vertically resize it)
-		viewBounds.origin.x = contentBounds.size.width - returnScrollBarWidth(ptr);
-		viewBounds.origin.y = -1; // frame thickness
-		viewBounds.size.width = returnScrollBarWidth(ptr);
-		viewBounds.size.height = contentBounds.size.height - returnGrowBoxHeight(ptr);
-		error = HIViewSetFrame(ptr->carbonData->scrollBarV, &viewBounds);
-		assert_noerr(error);
-		
-		// glue the horizontal scroll bar to the new bottom edge of the window; it must
-		// also move because its left edge is glued to the window edge, and it must resize
-		// because its right edge is glued to the size box in the corner
-		viewBounds.origin.x = -1; // frame thickness
-		viewBounds.origin.y = contentBounds.size.height - returnScrollBarHeight(ptr);
-		viewBounds.size.width = contentBounds.size.width - returnGrowBoxWidth(ptr);
-		viewBounds.size.height = returnScrollBarHeight(ptr);
-		UNUSED_RETURN(OSStatus)HIViewSetFrame(ptr->carbonData->scrollBarH, &viewBounds); // ignore error since scroll bar is unused
-		
-		// change the screen sizes to match the user’s window size as well as possible,
-		// notifying listeners of the change (to trigger actions such as sending messages
-		// to the Unix process in the window, etc.); the number of columns in each screen
-		// will be changed to closely match the overall width, but only the last screen’s
-		// line count will be changed; in the event that there are tabs, only views
-		// belonging to the same group will be scaled together during the resizing
-		{
-			TerminalWindow_ViewGroup const	kViewGroupArray[] =
-											{
-												kTerminalWindow_ViewGroupEverything
-											};
-			UInt16 const					kNumberOfViews = TerminalWindow_ReturnViewCount(terminalWindow);
-			TerminalViewRef*				viewArray = new TerminalViewRef[kNumberOfViews];
-			SInt16							groupIndex = 0;
-			
-			
-			for (groupIndex = 0; groupIndex < STATIC_CAST(sizeof(kViewGroupArray) / sizeof(TerminalWindow_ViewGroup), SInt16); ++groupIndex)
-			{
-				SInt16		i = 0;
-				UInt16		actualNumberOfViews = 0;
-				
-				
-				// find all the views belonging to this tab and apply the resize
-				// algorithm only while considering views belonging to the same tab
-				TerminalWindow_GetViewsInGroup(terminalWindow, kViewGroupArray[groupIndex], kNumberOfViews, viewArray,
-												&actualNumberOfViews);
-				if (actualNumberOfViews > 0)
-				{
-					HIRect		terminalScreenBounds;
-					
-					
-					for (i = 0; i < actualNumberOfViews; ++i)
-					{
-						// figure out how big the screen is becoming;
-						// TEMPORARY: sets each view size to the whole area, since there is only one right now
-						
-						// make the view stick to the scroll bars, effectively adding perhaps a few pixels of padding
-						{
-							HIRect		scrollBarBounds;
-							
-							
-							error = HIViewGetFrame(TerminalView_ReturnContainerHIView(viewArray[i]), &terminalScreenBounds);
-							assert_noerr(error);
-							error = HIViewGetFrame(ptr->carbonData->scrollBarV, &scrollBarBounds);
-							assert_noerr(error);
-							terminalScreenBounds.origin.x = -1/* frame thickness */;
-							terminalScreenBounds.origin.y = -1/* frame thickness */;
-							terminalScreenBounds.size.width = scrollBarBounds.origin.x - terminalScreenBounds.origin.x;
-							error = HIViewGetFrame(ptr->carbonData->scrollBarH, &scrollBarBounds);
-							assert_noerr(error);
-							terminalScreenBounds.size.height = scrollBarBounds.origin.y - terminalScreenBounds.origin.y;
-						}
-						error = HIViewSetFrame(TerminalView_ReturnContainerHIView(viewArray[i]), &terminalScreenBounds);
-						assert_noerr(error);
-					}
-				}
-			}
-			delete [] viewArray, viewArray = nullptr;
-		}
-		
-		// when the window size changes, the screen dimensions are likely to change
-		// TEMPORARY: analyze this further, see if this behavior is really desirable
-		changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, terminalWindow/* context */);
-		
-		// update the scroll bars’ values to reflect the new screen size
-		updateScrollBars(ptr);
-	}
-}// handleNewSize
-
-
-/*!
-Installs or removes a handler to draw tick marks on top of
-the standard scroll bar (for showing the location of search
-results).
-
-This handler is not always installed because it is only
-needed while there are search results defined, and there
-is a cost to allowing scroll bar draws to enter the
-application’s memory space.
-
-(4.0)
-*/
-void
-installTickHandler	(My_TerminalWindowPtr	inPtr,
-					 Boolean				inInstall)
-{
-	if (inPtr->isCocoa())
-	{
-		Console_Warning(Console_WriteLine, "scroll bar tick handler not implemented for Cocoa");
-	}
-	else
-	{
-		inPtr->carbonData->scrollTickHandler.remove();
-		assert(false == inPtr->carbonData->scrollTickHandler.isInstalled());
-		if (inInstall)
-		{
-			inPtr->carbonData->scrollTickHandler.install(HIViewGetEventTarget(inPtr->carbonData->scrollBarV), receiveScrollBarDraw,
-															CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
-															inPtr->selfRef/* user data */);
-			assert(inPtr->carbonData->scrollTickHandler.isInstalled());
-		}
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarH, true);
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarV, true);
-	}
-}// installTickHandler
 
 
 /*!
@@ -4909,44 +2873,6 @@ returns true if the first window is strictly less-than
 the second based on whether or not "inWindow1" covers a
 strictly larger pixel area.
 
-(4.1)
-*/
-bool
-lessThanIfGreaterAreaCarbon		(HIWindowRef	inWindow1,
-								 HIWindowRef	inWindow2)
-{
-	bool	result = false;
-	Rect	structureBounds1;
-	Rect	structureBounds2;
-	
-	
-	if ((noErr == GetWindowBounds(inWindow1, kWindowStructureRgn, &structureBounds1)) &&
-		(noErr == GetWindowBounds(inWindow2, kWindowStructureRgn, &structureBounds2)))
-	{
-		UInt32 const	kArea1 = ((structureBounds1.right - structureBounds1.left) *
-									(structureBounds1.bottom - structureBounds1.top));
-		UInt32 const	kArea2 = ((structureBounds2.right - structureBounds2.left) *
-									(structureBounds2.bottom - structureBounds2.top));
-		
-		
-		result = (kArea1 > kArea2);
-		if (kArea1 == kArea2)
-		{
-			// enforce strict weak ordering to make ties consistent
-			result = (inWindow1 < inWindow2);
-		}
-	}
-	
-	return result;
-}// lessThanIfGreaterAreaCarbon
-
-
-/*!
-A comparison routine that is compatible with std::sort();
-returns true if the first window is strictly less-than
-the second based on whether or not "inWindow1" covers a
-strictly larger pixel area.
-
 (2018.03)
 */
 bool
@@ -4972,1872 +2898,6 @@ lessThanIfGreaterAreaCocoa		(NSWindow*		inWindow1,
 
 
 /*!
-Handles "kEventCommandProcess" of "kEventClassCommand" for
-terminal window commands.
-
-(3.0)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inTerminalWindowRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (result == noErr)
-		{
-			// don’t claim to have handled any commands not shown below
-			result = eventNotHandledErr;
-			
-			switch (kEventKind)
-			{
-			case kEventCommandProcess:
-				// Execute a command selected from a menu (or sent from a control, etc.).
-				//
-				// IMPORTANT: This could imply ANY form of menu selection, whether from
-				//            the menu bar, from a contextual menu, or from a pop-up menu!
-				switch (received.commandID)
-				{
-				case kCommandFind:
-					// enter search mode
-					TerminalWindow_DisplayTextSearchDialog(terminalWindow);
-					result = noErr;
-					break;
-				
-				case kCommandFindAgain:
-				case kCommandFindPrevious:
-					// rotate to next or previous match; since ALL matches are highlighted at
-					// once, this is simply a focusing mechanism and does not conduct a search
-					{
-						TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-						Boolean				noAnimations = false;
-						
-						
-						// determine if animation should occur
-						unless (kPreferences_ResultOK ==
-								Preferences_GetData(kPreferences_TagNoAnimations,
-													sizeof(noAnimations), &noAnimations))
-						{
-							noAnimations = false; // assume a value, if preference can’t be found
-						}
-						
-						TerminalView_RotateSearchResultHighlight(view, (kCommandFindPrevious == received.commandID) ? -1 : +1);
-						
-						unless (noAnimations)
-						{
-							TerminalView_ZoomToSearchResults(view);
-						}
-					}
-					result = noErr;
-					break;
-				
-				case kCommandFindCursor:
-					// draw attention to terminal cursor location
-					TerminalView_ZoomToCursor(TerminalWindow_ReturnViewWithFocus(terminalWindow));
-					result = noErr;
-					break;
-				
-				case kCommandBiggerText:
-				case kCommandSmallerText:
-					{
-						if (kCommandBiggerText == received.commandID)
-						{
-							UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(terminalWindow, +1, 0/* absolute limit */, true/* allow Undo */);
-						}
-						else
-						{
-							UNUSED_RETURN(Boolean)TerminalWindow_SetFontRelativeSize(terminalWindow, -1, 4/* absolute limit */, true/* allow Undo */);
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandFullScreenToggle:
-					{
-						// transition active window into or out of full-screen mode
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						// NOTE: while it would be more consistent to require the Control key,
-						// this isn't really possible (it would cause problems when trying to
-						// Control-click the Full Screen toolbar icon, and it would cause the
-						// default Control-command-F key equivalent to always trigger a swap);
-						// so a Full Screen preference swap requires Option, even though the
-						// equivalent behavior during a window resize requires the Control key
-						Boolean const					kSwapModes = EventLoop_IsOptionKeyDown();
-						
-						
-						setTerminalWindowFullScreen(ptr, false == TerminalWindow_IsFullScreen(terminalWindow), kSwapModes);
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandZoomMaximumSize:
-					{
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						
-						
-						if (ptr->isCocoa())
-						{
-							Console_Warning(Console_WriteLine, "zoom-max-size not implemented for Cocoa window");
-						}
-						else
-						{
-							Rect							maxBounds;
-							TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
-							
-							
-							// zoom the window to the largest possible size; this can be
-							// done by choosing the largest possible window frame and
-							// temporarily pretending that the view should zoom its text
-							RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(ptr), &maxBounds,
-																	nullptr/* previous bounds */, true/* no insets */);
-							installUndoFontSizeChanges(ptr->selfRef, false/* undo font */, true/* undo font size */);
-							TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
-							setViewSizeIndependentFromWindow(ptr, true);
-							UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(ptr), kWindowContentRgn, &maxBounds);
-							setViewSizeIndependentFromWindow(ptr, false);
-							TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandFormatDefault:
-					{
-						// reformat frontmost window using the Default preferences
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef			defaultSettings = nullptr;
-						
-						
-						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
-						{
-							setViewFormatPreferences(ptr, defaultSettings);
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandFormatByFavoriteName:
-					// IMPORTANT: This implementation is for Carbon compatibility only, as the
-					// Session Preferences panel is still Carbon-based and has a menu that
-					// relies on this command handler.  The equivalent menu bar command does
-					// not use this, it has an associated Objective-C action method.
-					{
-						// reformat frontmost window using the specified preferences
-						if (received.attributes & kHICommandFromMenu)
-						{
-							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							CFStringRef						collectionName = nullptr;
-							
-							
-							if ((noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)) &&
-								Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
-							{
-								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-																			(Quills::Prefs::FORMAT, collectionName),
-																			Preferences_ContextWrap::kAlreadyRetained);
-								
-								
-								if (namedSettings.exists())
-								{
-									setViewFormatPreferences(ptr, namedSettings.returnRef());
-								}
-								CFRelease(collectionName), collectionName = nullptr;
-							}
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandFormat:
-					{
-						// display a format customization dialog
-						TerminalWindow_DisplayCustomFormatUI(terminalWindow);
-						result = noErr;
-					}
-					break;
-				
-				case kCommandHideFrontWindow:
-					// hide the frontmost terminal window from view
-					TerminalWindow_SetObscured(terminalWindow, true);
-					result = noErr;
-					break;
-				
-				case kCommandHideOtherWindows:
-					// hide all except the frontmost terminal window from view
-					if ((TerminalWindow_IsLegacyCarbon(terminalWindow) &&
-							(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow) != GetUserFocusWindow())) ||
-						((false == TerminalWindow_IsLegacyCarbon(terminalWindow)) &&
-							(TerminalWindow_ReturnNSWindow(terminalWindow) != [NSApp keyWindow])))
-					{
-						TerminalWindow_SetObscured(terminalWindow, true);
-						
-						// since every terminal window installs a handler for this command,
-						// pretending this event was not handled allows the next window to
-						// be notified; in effect, returning this value causes all windows
-						// to be hidden automatically as a side effect of notifying listeners!
-						result = eventNotHandledErr;
-					}
-					break;
-				
-				case kCommandWiderScreen:
-				case kCommandNarrowerScreen:
-				case kCommandTallerScreen:
-				case kCommandShorterScreen:
-					{
-						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-						UInt16				columns = Terminal_ReturnColumnCount(activeScreen);
-						UInt16				rows = Terminal_ReturnRowCount(activeScreen);
-						
-						
-						if (received.commandID == kCommandNarrowerScreen)
-						{
-							columns -= 4; // arbitrary delta
-						}
-						else if (received.commandID == kCommandTallerScreen)
-						{
-							rows += 2; // arbitrary delta
-						}
-						else if (received.commandID == kCommandShorterScreen)
-						{
-							rows -= 2; // arbitrary delta
-						}
-						else
-						{
-							columns += 4; // arbitrary delta
-						}
-						
-						// arbitrarily restrict the minimum size
-						if (columns < 10)
-						{
-							columns = 10;
-						}
-						if (rows < 10)
-						{
-							rows = 10;
-						}
-						
-						// resize the screen and the window
-						TerminalWindow_SetScreenDimensions(terminalWindow, columns, rows, true/* recordable */);
-						
-						// if the resulting window is close to a screen edge (less than
-						// the space of a terminal row or column), snap to the screen edge
-						{
-							HIWindowRef		windowRef = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
-							HIRect			frameBounds;
-							HIRect			screenBounds;
-							
-							
-							if ((noErr == HIWindowGetBounds(windowRef, kWindowStructureRgn,
-															kHICoordSpaceScreenPixel, &frameBounds)) &&
-								(noErr == HIWindowGetGreatestAreaDisplay(windowRef, kWindowStructureRgn,
-																			kHICoordSpaceScreenPixel,
-																			nullptr/* display ID */,
-																			&screenBounds)))
-							{
-								Float32 const	kRightPad = ((screenBounds.origin.x + screenBounds.size.width) -
-																(frameBounds.origin.x + frameBounds.size.width));
-								Float32 const	kBottomPad = ((screenBounds.origin.y + screenBounds.size.height) -
-																(frameBounds.origin.y + frameBounds.size.height));
-								Boolean			autoResize = false;
-								
-								
-								if (kRightPad < 15/* arbitrary */)
-								{
-									frameBounds.size.width += kRightPad;
-									autoResize = true;
-								}
-								
-								if (kBottomPad < 15/* arbitrary */)
-								{
-									frameBounds.size.height += kBottomPad;
-									autoResize = true;
-								}
-								
-								if (autoResize)
-								{
-									UNUSED_RETURN(OSStatus)HIWindowSetBounds(windowRef, kWindowStructureRgn,
-																				kHICoordSpaceScreenPixel,
-																				&frameBounds);
-								}
-							}
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandLargeScreen:
-				case kCommandSmallScreen:
-				case kCommandTallScreen:
-					{
-						UInt16		columns = 0;
-						UInt16		rows = 0;
-						
-						
-						// NOTE: Currently these are arbitrary, primarily because
-						// certain terminals like VT100 *must* have these quick
-						// switch commands available at specific dimensions of
-						// 132 and 80 column widths.  However, this could be
-						// expanded in the future to allow user-customized sets
-						// of dimensions as well.
-						if (received.commandID == kCommandLargeScreen)
-						{
-							columns = 132;
-							rows = 24;
-						}
-						else if (received.commandID == kCommandTallScreen)
-						{
-							columns = 80;
-							rows = 40;
-						}
-						else
-						{
-							columns = 80;
-							rows = 24;
-						}
-						
-						// resize the screen and the window
-						installUndoScreenDimensionChanges(terminalWindow);
-						TerminalWindow_SetScreenDimensions(terminalWindow, columns, rows, true/* recordable */);
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandSetScreenSize:
-					{
-						// display a screen size customization dialog
-						TerminalWindow_DisplayCustomScreenSizeUI(terminalWindow);
-						result = noErr;
-					}
-					break;
-				
-				case kCommandTerminalDefault:
-					{
-						// reformat frontmost window using the Default preferences
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Preferences_ContextRef			defaultSettings = nullptr;
-						
-						
-						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TERMINAL))
-						{
-							setScreenPreferences(ptr, defaultSettings, true/* animate */);
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandTerminalByFavoriteName:
-					// IMPORTANT: This implementation is for Carbon compatibility only, as the
-					// Session Preferences panel is still Carbon-based and has a menu that
-					// relies on this command handler.  The equivalent menu bar command does
-					// not use this, it has an associated Objective-C action method.
-					{
-						// reformat frontmost window using the specified preferences
-						if (received.attributes & kHICommandFromMenu)
-						{
-							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							CFStringRef						collectionName = nullptr;
-							
-							
-							if ((noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)) &&
-								Preferences_IsContextNameInUse(Quills::Prefs::TERMINAL, collectionName))
-							{
-								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-																			(Quills::Prefs::TERMINAL, collectionName),
-																			Preferences_ContextWrap::kAlreadyRetained);
-								
-								
-								if (namedSettings.exists())
-								{
-									setScreenPreferences(ptr, namedSettings.returnRef(), true/* animate */);
-								}
-								CFRelease(collectionName), collectionName = nullptr;
-							}
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandTranslationTableDefault:
-					{
-						// change character set of frontmost window according to Default preferences
-						My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						SessionRef						session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-						
-						
-						if (nullptr != session)
-						{
-							Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
-							
-							
-							if (nullptr != sessionSettings)
-							{
-								Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
-								
-								
-								if (nullptr != translationTags)
-								{
-									Preferences_ContextRef		defaultSettings = nullptr;
-									Preferences_Result			prefsResult = Preferences_GetDefaultContext
-																				(&defaultSettings, Quills::Prefs::TRANSLATION);
-									
-									
-									if (kPreferences_ResultOK != prefsResult)
-									{
-										Console_Warning(Console_WriteValue, "failed to locate default translation settings, error", prefsResult);
-									}
-									else
-									{
-										prefsResult = Preferences_ContextCopy(defaultSettings, sessionSettings, translationTags);
-										if (kPreferences_ResultOK != prefsResult)
-										{
-											Console_Warning(Console_WriteValue, "failed to apply named translation settings to session, error", prefsResult);
-										}
-									}
-									Preferences_ReleaseTagSet(&translationTags);
-								}
-							}
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandTranslationTableByFavoriteName:
-					// IMPORTANT: This implementation is for Carbon compatibility only, as the
-					// Session Preferences panel is still Carbon-based and has a menu that
-					// relies on this command handler.  The equivalent menu bar command does
-					// not use this, it has an associated Objective-C action method.
-					{
-						// change character set of frontmost window according to the specified preferences
-						if (received.attributes & kHICommandFromMenu)
-						{
-							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							SessionRef						session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-							CFStringRef						collectionName = nullptr;
-							
-							
-							if ((nullptr != session) &&
-								(noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName)) &&
-								Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
-							{
-								Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-																			(Quills::Prefs::TRANSLATION, collectionName),
-																			Preferences_ContextWrap::kAlreadyRetained);
-								Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
-								
-								
-								if (namedSettings.exists() && (nullptr != sessionSettings))
-								{
-									Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
-									
-									
-									if (nullptr != translationTags)
-									{
-										// change character set of frontmost window according to the specified preferences
-										Preferences_Result		prefsResult = Preferences_ContextCopy
-																				(namedSettings.returnRef(), sessionSettings, translationTags);
-										
-										
-										if (kPreferences_ResultOK != prefsResult)
-										{
-											Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
-										}
-										Preferences_ReleaseTagSet(&translationTags);
-									}
-								}
-								CFRelease(collectionName), collectionName = nullptr;
-							}
-						}
-						
-						result = noErr;
-					}
-					break;
-				
-				case kCommandSetTranslationTable:
-					{
-						// display a translation customization dialog
-						TerminalWindow_DisplayCustomTranslationUI(terminalWindow);
-						result = noErr;
-					}
-					break;
-				
-				case kCommandTerminalNewWorkspace:
-					// note that this event often originates from the tab drawer, but
-					// due to event hierarchy it will eventually be sent to the handler
-					// installed on the parent terminal window (how convenient!)
-					SessionFactory_MoveTerminalWindowToNewWorkspace(terminalWindow);
-					result = noErr;
-					break;
-				
-				case kCommandToggleTerminalLED1:
-					{
-						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-						
-						
-						if (nullptr == activeScreen)
-						{
-							// error...
-							Sound_StandardAlert();
-						}
-						else
-						{
-							Terminal_LEDSetState(activeScreen, 1/* LED number */, false == Terminal_LEDIsOn(activeScreen, 1));
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandToggleTerminalLED2:
-					{
-						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-						
-						
-						if (nullptr == activeScreen)
-						{
-							// error...
-							Sound_StandardAlert();
-						}
-						else
-						{
-							Terminal_LEDSetState(activeScreen, 2/* LED number */, false == Terminal_LEDIsOn(activeScreen, 2));
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandToggleTerminalLED3:
-					{
-						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-						
-						
-						if (nullptr == activeScreen)
-						{
-							// error...
-							Sound_StandardAlert();
-						}
-						else
-						{
-							Terminal_LEDSetState(activeScreen, 3/* LED number */, false == Terminal_LEDIsOn(activeScreen, 3));
-						}
-						result = noErr;
-					}
-					break;
-				
-				case kCommandToggleTerminalLED4:
-					{
-						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-						
-						
-						if (nullptr == activeScreen)
-						{
-							// error...
-							Sound_StandardAlert();
-						}
-						else
-						{
-							Terminal_LEDSetState(activeScreen, 4/* LED number */, false == Terminal_LEDIsOn(activeScreen, 4));
-						}
-						result = noErr;
-					}
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-	return result;
-}// receiveHICommand
-
-
-/*!
-Handles "kEventMouseWheelMoved" of "kEventClassMouse".
-
-Invoked by Mac OS X whenever a mouse with a scrolling
-function is used on the frontmost window.
-
-(3.1)
-*/
-OSStatus
-receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassMouse);
-	assert(kEventKind == kEventMouseWheelMoved);
-	{
-		EventMouseWheelAxis		axis = kEventMouseWheelAxisY;
-		
-		
-		// find out which way the mouse wheel moved
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis, axis);
-		
-		// if the axis information was found, continue
-		if (noErr == result)
-		{
-			SInt32		delta = 0;
-			UInt32		modifiers = 0;
-			
-			
-			// determine modifier keys pressed during scroll
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-			if (noErr != result)
-			{
-				// ignore modifier key parameter if absent
-				modifiers = 0;
-			}
-			
-			// determine how far the mouse wheel was scrolled
-			// and in which direction; negative means up/left,
-			// positive means down/right
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeLongInteger, delta);
-			
-			// if all information can be found, proceed with scrolling
-			if (noErr == result)
-			{
-				HIWindowRef		targetWindow = nullptr;
-				
-				
-				if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamWindowRef, typeWindowRef, targetWindow))
-				{
-					// cannot find information (implies Mac OS X 10.0.x) - fine, assume frontmost window
-					targetWindow = EventLoop_ReturnRealFrontWindow();
-				}
-				
-				if (TerminalWindow_ExistsFor(targetWindow))
-				{
-					TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
-					Boolean					isFullScreenWindow = TerminalWindow_IsFullScreen(terminalWindow);
-					
-					
-					if (nullptr == terminalWindow) result = eventNotHandledErr;
-					else if (modifiers & controlKey)
-					{
-						// like Firefox, use control-scroll-wheel to affect font size
-						if (false == isFullScreenWindow)
-						{
-							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
-						}
-						result = noErr;
-					}
-					else if (modifiers & optionKey)
-					{
-						// adjust screen width or height
-						if (kEventMouseWheelAxisX == axis)
-						{
-							// adjust screen width
-							if (false == isFullScreenWindow)
-							{
-								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandNarrowerScreen : kCommandWiderScreen);
-							}
-							result = noErr;
-						}
-						else
-						{
-							if (modifiers & cmdKey)
-							{
-								// adjust screen width
-								if (false == isFullScreenWindow)
-								{
-									Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandWiderScreen : kCommandNarrowerScreen);
-								}
-								result = noErr;
-							}
-							else
-							{
-								if (false == isFullScreenWindow)
-								{
-									Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandTallerScreen : kCommandShorterScreen);
-								}
-								result = noErr;
-							}
-						}
-					}
-					else
-					{
-						// ordinary scrolling; when in Full Screen mode, scrolling is allowed
-						// as long as the user preference to show a scroll bar is set;
-						// otherwise, any form of scrolling (via mouse or not) is disabled
-						Boolean		allowScrolling = true;
-						
-						
-						if (TerminalWindow_IsFullScreen(terminalWindow))
-						{
-							if (kPreferences_ResultOK !=
-								Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(allowScrolling),
-													&allowScrolling))
-							{
-								allowScrolling = true; // assume a value if the preference cannot be found
-							}
-						}
-						
-						if (allowScrolling)
-						{
-							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							HIViewRef						scrollBar = ptr->carbonData->scrollBarV;
-							HIViewPartCode					hitPart = (delta > 0)
-																		? (modifiers & optionKey)
-																			? kControlPageUpPart
-																			: kControlUpButtonPart
-																		: (modifiers & optionKey)
-																			? kControlPageDownPart
-																			: kControlDownButtonPart;
-							
-							
-							// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
-							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-						}
-						result = noErr;
-					}
-				}
-				else
-				{
-					result = eventNotHandledErr;
-				}
-			}
-		}
-	}
-	return result;
-}// receiveMouseWheelEvent
-
-
-/*!
-Embellishes "kEventControlDraw" of "kEventClassControl"
-for scroll bars.
-
-Invoked by Mac OS X whenever a scroll bar needs to be
-rendered; calls through to the default renderer, and
-then adds “on top” tick marks for any active searches.
-
-(4.0)
-*/
-OSStatus
-receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inContext))
-{
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlDraw);
-	OSStatus		result = eventNotHandledErr;
-	HIViewRef		view = nullptr;
-	
-	
-	// first use the system implementation to draw the scroll bar,
-	// because this drawing should appear “on top”
-	UNUSED_RETURN(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-	
-	// get the target view
-	result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-	
-	// if the view was found, continue
-	if (noErr == result)
-	{
-		TerminalWindowRef	terminalWindow = nullptr;
-		OSStatus			error = noErr;
-		UInt32				actualSize = 0L;
-		CGContextRef		drawingContext = nullptr;
-		
-		
-		// retrieve TerminalWindowRef from the scroll bar
-		error = GetControlProperty(view, AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-									sizeof(terminalWindow), &actualSize, &terminalWindow);
-		assert_noerr(error);
-		assert(actualSize == sizeof(terminalWindow));
-		
-		// determine the context to draw in with Core Graphics
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
-														drawingContext);
-		assert_noerr(result);
-		
-		// if all information can be found, proceed with drawing
-		if ((noErr == error) && (noErr == result) && (nullptr != terminalWindow))
-		{
-			TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-			TerminalViewRef		activeView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-			
-			
-			// draw line markers
-			if (nullptr != activeView)
-			{
-				HIRect		floatBounds;
-				
-				
-				// determine boundaries of the content view being drawn;
-				// ensure view-local coordinates
-				HIViewGetBounds(view, &floatBounds);
-				
-				// overlay tick marks on the region, assuming a vertical scroll bar
-				// and using the scale of the underlying terminal screen buffer
-				if (TerminalView_SearchResultsExist(activeView))
-				{
-					TerminalView_CellRangeList	searchResults;
-					SInt32						kNumberOfScrollbackLines = Terminal_ReturnInvisibleRowCount(activeScreen);
-					SInt32						kNumberOfLines = Terminal_ReturnRowCount(activeScreen) + kNumberOfScrollbackLines;
-					TerminalView_Result			viewResult = kTerminalView_ResultOK;
-					
-					
-					viewResult = TerminalView_GetSearchResults(activeView, searchResults);
-					if (kTerminalView_ResultOK == viewResult)
-					{
-						HIRect						trackBounds = floatBounds;
-						ThemeScrollBarThumbStyle	arrowLocations = kThemeScrollBarArrowsSingle;
-						
-						
-						// It would be nice to use HITheme APIs here, but after a few trials
-						// they seem to be largely broken, returning at best a subset of the
-						// required information (e.g. scroll bar boundaries without taking
-						// into account the location of arrows).  Therefore, a series of hacks
-						// is used instead, to approximate where the arrows will be, in order
-						// to avoid drawing on top of any arrows.
-						UNUSED_RETURN(OSStatus)GetThemeScrollBarThumbStyle(&arrowLocations);
-						trackBounds.size.height -= 2 * kMy_ScrollBarThumbEndCapSize;
-						trackBounds.origin.y += kMy_ScrollBarThumbEndCapSize;
-						if (kThemeScrollBarArrowsSingle == arrowLocations)
-						{
-							trackBounds.size.height -= 2 * kMy_ScrollBarArrowHeight;
-							trackBounds.origin.y += kMy_ScrollBarArrowHeight;
-						}
-						else
-						{
-							// make space for two arrows at each end, regardless
-							// (since that is a hidden style that many people use)
-							trackBounds.size.height -= 4 * kMy_ScrollBarArrowHeight;
-							trackBounds.origin.y += 2 * kMy_ScrollBarArrowHeight;
-						}
-						
-						// now draw the tick marks
-						{
-							float const				kXPad = 4; // in pixels, arbitrary; reduces line size
-							float const				kYPad = 0; // in pixels, arbitrary
-							float const				kX1 = trackBounds.origin.x + kXPad;
-							float const				kX2 = trackBounds.origin.x + trackBounds.size.width - kXPad - kXPad;
-							float const				kY1 = trackBounds.origin.y + kYPad;
-							float const				kHeight = trackBounds.size.height - kYPad - kYPad;
-							CGContextSaveRestore	_(drawingContext);
-							float					y = 0;
-							SInt32					topRelativeRow = 0;
-							
-							
-							// arbitrary color
-							// TEMPORARY - this could be a preference, even if it is just a low-level setting
-							CGContextSetRGBStrokeColor(drawingContext, 1.0/* red */, 0/* green */, 0/* blue */, 1.0/* alpha */);
-							
-							// draw a line in the scroll bar for each thumb
-							// TEMPORARY - this might be very inefficient to calculate per draw;
-							// it is probably better to detect changes in the search results,
-							// cache the line locations, and then render as often as required
-							CGContextBeginPath(drawingContext);
-							for (auto cellRange : searchResults)
-							{
-								// negative means “in scrollback” and positive means “main screen”, so
-								// translate into a single space
-								topRelativeRow = cellRange.first.second + kNumberOfScrollbackLines;
-								
-								y = kY1 + topRelativeRow * (kHeight / STATIC_CAST(kNumberOfLines, Float32));
-								CGContextMoveToPoint(drawingContext, kX1, y);
-								CGContextAddLineToPoint(drawingContext, kX2, y);
-							}
-							CGContextStrokePath(drawingContext);
-						}
-					}
-				}
-			}
-		}
-	}
-	return result;
-}// receiveScrollBarDraw
-
-
-/*!
-Handles "kEventToolbarGetAllowedIdentifiers" and
-"kEventToolbarGetDefaultIdentifiers" from "kEventClassToolbar"
-for the floating general terminal toolbar.  Responds by
-updating the given lists of identifiers.
-
-(3.1)
-*/
-OSStatus
-receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					inTerminalWindowRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassToolbar);
-	{
-		HIToolbarRef	toolbarRef = nullptr;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbar, typeHIToolbarRef, toolbarRef);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			// don’t claim to have handled any commands not shown below
-			result = eventNotHandledErr;
-			
-			switch (kEventKind)
-			{
-			case kEventToolbarGetAllowedIdentifiers:
-				{
-					CFMutableArrayRef	allowedIdentifiers = nullptr;
-					
-					
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMutableArray,
-																	typeCFMutableArrayRef, allowedIdentifiers);
-					if (noErr == result)
-					{
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED1);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED2);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED3);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDRestartSession);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
-						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(allowedIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
-						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
-					}
-				}
-				break;
-			
-			case kEventToolbarGetDefaultIdentifiers:
-				{
-					CFMutableArrayRef	defaultIdentifiers = nullptr;
-					
-					
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMutableArray,
-																	typeCFMutableArrayRef, defaultIdentifiers);
-					if (noErr == result)
-					{
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDRestartSession);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED1);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED2);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED3);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalLED4);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDPrint);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kHIToolbarSpaceIdentifier);
-						CFArrayAppendValue(defaultIdentifiers, kConstantsRegistry_HIToolbarItemIDCustomize);
-					}
-				}
-				break;
-			
-			case kEventToolbarCreateItemWithIdentifier:
-				{
-					CFStringRef		identifierCFString = nullptr;
-					HIToolbarRef	targetToolbar = nullptr;
-					HIToolbarRef	terminalToolbar = nullptr;
-					Boolean			isPermanentItem = false;
-					
-					
-					// see if this item is for a toolbar; if not, it may be used for something
-					// else (like a customization sheet); this is used to determine whether or
-					// not to save the toolbar item reference for later use (e.g. icon updates)
-					if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbar,
-																		typeHIToolbarRef, targetToolbar))
-					{
-						targetToolbar = nullptr;
-					}
-					isPermanentItem = (nullptr != targetToolbar);
-					if (noErr == GetWindowToolbar(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow), &terminalToolbar))
-					{
-						isPermanentItem = ((isPermanentItem) && (terminalToolbar == targetToolbar));
-					}
-					
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbarItemIdentifier,
-																	typeCFStringRef, identifierCFString);
-					if (noErr == result)
-					{
-						CFTypeRef	itemData = nullptr;
-						
-						
-						// NOTE: configuration data is not always present
-						result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbarItemConfigData,
-																		typeCFTypeRef, itemData);
-						if (noErr != result)
-						{
-							itemData = nullptr;
-						}
-						
-						// create the specified item, if its identifier is recognized
-						{
-							HIToolbarItemRef	itemRef = nullptr;
-							Boolean const		kIs1 = (kCFCompareEqualTo == CFStringCompare
-																				(kConstantsRegistry_HIToolbarItemIDTerminalLED1,
-																					identifierCFString,
-																					kCFCompareBackwards));
-							Boolean const		kIs2 = (kCFCompareEqualTo == CFStringCompare
-																				(kConstantsRegistry_HIToolbarItemIDTerminalLED2,
-																					identifierCFString,
-																					kCFCompareBackwards));
-							Boolean const		kIs3 = (kCFCompareEqualTo == CFStringCompare
-																				(kConstantsRegistry_HIToolbarItemIDTerminalLED3,
-																					identifierCFString,
-																					kCFCompareBackwards));
-							Boolean const		kIs4 = (kCFCompareEqualTo == CFStringCompare
-																				(kConstantsRegistry_HIToolbarItemIDTerminalLED4,
-																					identifierCFString,
-																					kCFCompareBackwards));
-							
-							
-							// all LED items are very similar in appearance, so check all at once
-							if ((kIs1) || (kIs2) || (kIs3) || (kIs4))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								if (noErr == HIToolbarItemCreate(identifierCFString,
-																	kHIToolbarItemNoAttributes, &itemRef))
-								{
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									// set the label based on which LED is being created
-									if (kIs1)
-									{
-										UInt32 const	kMyCommandID = kCommandToggleTerminalLED1;
-										
-										
-										// then this is the LED 1 item; remember it so it can be updated later
-										if (isPermanentItem)
-										{
-											ptr->carbonData->toolbarItemLED1.setWithRetain(itemRef);
-										}
-										
-										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED1, nameCFString).ok())
-										{
-											result = HIToolbarItemSetLabel(itemRef, nameCFString);
-											assert_noerr(result);
-											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																				nullptr/* long text */);
-											assert_noerr(result);
-											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-											assert_noerr(result);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-									}
-									else if (kIs2)
-									{
-										UInt32 const	kMyCommandID = kCommandToggleTerminalLED2;
-										
-										
-										// then this is the LED 2 item; remember it so it can be updated later
-										if (isPermanentItem)
-										{
-											ptr->carbonData->toolbarItemLED2.setWithRetain(itemRef);
-										}
-										
-										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED2, nameCFString).ok())
-										{
-											result = HIToolbarItemSetLabel(itemRef, nameCFString);
-											assert_noerr(result);
-											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																				nullptr/* long text */);
-											assert_noerr(result);
-											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-											assert_noerr(result);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-									}
-									else if (kIs3)
-									{
-										UInt32 const	kMyCommandID = kCommandToggleTerminalLED3;
-										
-										
-										// then this is the LED 3 item; remember it so it can be updated later
-										if (isPermanentItem)
-										{
-											ptr->carbonData->toolbarItemLED3.setWithRetain(itemRef);
-										}
-										
-										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED3, nameCFString).ok())
-										{
-											result = HIToolbarItemSetLabel(itemRef, nameCFString);
-											assert_noerr(result);
-											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																				nullptr/* long text */);
-											assert_noerr(result);
-											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-											assert_noerr(result);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-									}
-									else if (kIs4)
-									{
-										UInt32 const	kMyCommandID = kCommandToggleTerminalLED4;
-										
-										
-										// then this is the LED 4 item; remember it so it can be updated later
-										if (isPermanentItem)
-										{
-											ptr->carbonData->toolbarItemLED4.setWithRetain(itemRef);
-										}
-										
-										if (UIStrings_Copy(kUIStrings_ToolbarItemTerminalLED4, nameCFString).ok())
-										{
-											result = HIToolbarItemSetLabel(itemRef, nameCFString);
-											assert_noerr(result);
-											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																				nullptr/* long text */);
-											assert_noerr(result);
-											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-											assert_noerr(result);
-											CFRelease(nameCFString), nameCFString = nullptr;
-										}
-									}
-									
-									// set icon; currently, all LEDs have the same icon, but perhaps
-									// some day they will have different colors, etc.
-									result = HIToolbarItemSetIconRef(itemRef, gLEDOffIcon());
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDScrollLock,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kCommandSuspendNetwork;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									// remember this item so its icon can be kept in sync with scroll lock state
-									if (isPermanentItem)
-									{
-										ptr->carbonData->toolbarItemScrollLock.setWithRetain(itemRef);
-									}
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gScrollLockOnIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDHideWindow,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kCommandHideFrontWindow;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gHideWindowIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDFullScreen,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kCommandFullScreenToggle;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gFullScreenIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDCustomize,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kHICommandCustomizeToolbar;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gCustomizeToolbarIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDPrint,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kCommandPrint;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gPrintIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDRestartSession,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kCommandKillProcessesKeepWindow;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									// remember this item so its icon can be kept in sync with the session state
-									if (isPermanentItem)
-									{
-										ptr->carbonData->toolbarItemKillRestart.setWithRetain(itemRef);
-									}
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gKillSessionIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalBell,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-								
-								
-								result = HIToolbarItemCreate(identifierCFString,
-																kHIToolbarItemNoAttributes, &itemRef);
-								if (noErr == result)
-								{
-									UInt32 const	kMyCommandID = kCommandBellEnabled;
-									CFStringRef		nameCFString = nullptr;
-									
-									
-									// then this is the bell item; remember it so it can be updated later
-									if (isPermanentItem)
-									{
-										ptr->carbonData->toolbarItemBell.setWithRetain(itemRef);
-									}
-									
-									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
-									{
-										result = HIToolbarItemSetLabel(itemRef, nameCFString);
-										assert_noerr(result);
-										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
-																			nullptr/* long text */);
-										assert_noerr(result);
-										CFRelease(nameCFString), nameCFString = nullptr;
-									}
-									result = HIToolbarItemSetIconRef(itemRef, gBellOffIcon());
-									assert_noerr(result);
-									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
-									assert_noerr(result);
-								}
-							}
-							
-							if (nullptr == itemRef)
-							{
-								result = eventNotHandledErr;
-							}
-							else
-							{
-								result = SetEventParameter(inEvent, kEventParamToolbarItem, typeHIToolbarItemRef,
-															sizeof(itemRef), &itemRef);
-							}
-						}
-					}
-				}
-				break;
-			
-			case kEventToolbarItemRemoved:
-				// if the removed item was a known status item, forget its reference
-				{
-					HIToolbarItemRef	removedItem = nullptr;
-					
-					
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbarItem,
-																	typeHIToolbarItemRef, removedItem);
-					if (noErr == result)
-					{
-						CFStringRef		identifierCFString = nullptr;
-						
-						
-						result = HIToolbarItemCopyIdentifier(removedItem, &identifierCFString);
-						if (noErr == result)
-						{
-							My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							
-							
-							// forget any stale references to important items being removed
-							if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDScrollLock,
-																		identifierCFString, kCFCompareBackwards))
-							{
-								ptr->carbonData->toolbarItemScrollLock.clear();
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalBell,
-																		identifierCFString, kCFCompareBackwards))
-							{
-								ptr->carbonData->toolbarItemBell.clear();
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED1,
-																		identifierCFString, kCFCompareBackwards))
-							{
-								ptr->carbonData->toolbarItemLED1.clear();
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED2,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								ptr->carbonData->toolbarItemLED2.clear();
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED3,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								ptr->carbonData->toolbarItemLED3.clear();
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED4,
-																			identifierCFString, kCFCompareBackwards))
-							{
-								ptr->carbonData->toolbarItemLED4.clear();
-							}
-							
-							CFRelease(identifierCFString), identifierCFString = nullptr;
-						}
-					}
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-	
-	return result;
-}// receiveToolbarEvent
-
-
-/*!
-Handles "kEventWindowFullScreenEnterStarted", "kEventWindowFullScreenEnterCompleted",
-"kEventWindowFullScreenExitStarted" and "kEventWindowFullScreenExitCompleted" of
-"kEventClassWindow" for a terminal window.
-
-(4.1)
-*/
-OSStatus
-receiveWindowFullScreenChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					inTerminalWindowRef)
-{
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	UInt32 const		enterStarted = FUTURE_SYMBOL(241, kEventWindowFullScreenEnterStarted);
-	UInt32 const		enterCompleted = FUTURE_SYMBOL(242, kEventWindowFullScreenEnterCompleted);
-	UInt32 const		exitStarted = FUTURE_SYMBOL(243, kEventWindowFullScreenExitStarted);
-	UInt32 const		exitCompletedOrFailed = FUTURE_SYMBOL(244, kEventWindowFullScreenExitCompleted);
-	UInt32				keyModifiers = 0;
-	HIWindowRef			window = nullptr;
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	OSStatus			result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert((kEventKind == enterStarted) ||
-			(kEventKind == enterCompleted) ||
-			(kEventKind == exitStarted) ||
-			(kEventKind == exitCompletedOrFailed));
-	
-	// determine which special keys are down
-	if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, keyModifiers))
-	{
-		// hack...
-		if (EventLoop_IsOptionKeyDown())
-		{
-			keyModifiers |= optionKey;
-		}
-	}
-	
-	// all event types have a window as a direct object
-	result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-	if (noErr == result)
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		Boolean const					kSwapModes = (0 != (keyModifiers & optionKey)); // MUST be consistent with other modifier-key checks for this flag
-		
-		
-		switch (kEventKind)
-		{
-		case enterStarted:
-			setUpForFullScreenModal(ptr, true, kSwapModes, kMy_FullScreenStateInProgress);
-			break;
-		
-		case enterCompleted:
-			setUpForFullScreenModal(ptr, true, kSwapModes, kMy_FullScreenStateCompleted);
-			break;
-		
-		case exitStarted:
-			setUpForFullScreenModal(ptr, false, kSwapModes, kMy_FullScreenStateInProgress);
-			break;
-		
-		case exitCompletedOrFailed:
-			setUpForFullScreenModal(ptr, false, kSwapModes, kMy_FullScreenStateCompleted);
-			break;
-		
-		default:
-			// ???
-			result = eventNotHandledErr;
-			break;
-		}
-	}
-	
-	return result;
-}// receiveWindowFullScreenChange
-
-
-/*!
-Embellishes "kEventWindowResizeStarted", "kEventWindowBoundsChanging",
-and "kEventWindowResizeCompleted" of "kEventClassWindow" for a
-terminal window.
-
-(3.0)
-*/
-OSStatus
-receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					inTerminalWindowRef)
-{
-@autoreleasepool {
-	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	OSStatus			result = eventNotHandledErr;
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert((kEventKind == kEventWindowResizeStarted) ||
-			(kEventKind == kEventWindowBoundsChanging) ||
-			(kEventKind == kEventWindowResizeCompleted));
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			Boolean							useSheet = false;
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			
-			
-			if (kEventKind == kEventWindowResizeStarted)
-			{
-				TerminalViewRef		focusedView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-				
-				
-				// on Mac OS X 10.7 and beyond, the system can initiate resizes in ways that do
-				// not allow the detection of modifier keys; so unfortunately it is necessary
-				// to check the raw key state at this point (e.g. responding to clicks in a
-				// size box will no longer work)
-				if (nullptr != focusedView)
-				{
-					// remember the previous view mode, so that it can be restored later
-					ptr->preResizeViewDisplayMode = TerminalView_ReturnDisplayMode(focusedView);
-					
-					// the Control key must be used because Mac OS X 10.7 assigns special
-					// meaning to the Shift and Option keys during a window resize
-					if (EventLoop_IsControlKeyDown())
-					{
-						TerminalView_SetDisplayMode(focusedView,
-													(kTerminalView_DisplayModeNormal ==
-														TerminalView_ReturnDisplayMode(focusedView))
-														? kTerminalView_DisplayModeZoom
-														: kTerminalView_DisplayModeNormal);
-					}
-				}
-				
-				// display resize info in a floating window
-				[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"";
-				[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:ptr->window.screen]; 
-				[[TerminalWindow_InfoBubble sharedInfoBubble] display];
-				
-				// remember the old window title
-				{
-					CFStringRef		nameCFString = BRIDGE_CAST([ptr->window title], CFStringRef);
-					
-					
-					ptr->preResizeTitleString.setWithRetain(nameCFString);
-				}
-			}
-			else if ((kEventKind == kEventWindowBoundsChanging) && (ptr->preResizeTitleString.exists()))
-			{
-				// for bounds-changing, ensure a resize is in progress (denoted
-				// by a non-nullptr preserved title string), make sure the window
-				// bounds are changing because of a user interaction, and make
-				// sure the dimensions themselves are changing
-				UInt32		attributes = 0L;
-				
-				
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAttributes, typeUInt32, attributes);
-				if ((result == noErr) && (attributes & kWindowBoundsChangeUserResize) &&
-					(attributes & kWindowBoundsChangeSizeChanged))
-				{
-					// update display; the contents of the display depend on the view mode,
-					// either dimension changing (the default) or font size changing
-					CFStringRef			newTitle = nullptr;
-					TerminalViewRef		focusedView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-					Boolean				isFontSizeDisplay = false;
-					
-					
-					if (nullptr != focusedView)
-					{
-						isFontSizeDisplay = (kTerminalView_DisplayModeZoom == TerminalView_ReturnDisplayMode(focusedView));
-					}
-					
-					if (isFontSizeDisplay)
-					{
-						// font size display
-						UInt16		fontSize = 0;
-						
-						
-						TerminalWindow_GetFontAndSize(terminalWindow, nullptr/* font */, &fontSize);
-						newTitle = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-															CFSTR("%d pt")/* LOCALIZE THIS */, fontSize);
-					}
-					else
-					{
-						// columns and rows display
-						UInt16		columns = 0;
-						UInt16		rows = 0;
-						
-						
-						TerminalWindow_GetScreenDimensions(terminalWindow, &columns, &rows);
-						newTitle = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-															CFSTR("%d×%d")/* LOCALIZE THIS */, columns, rows);
-					}
-					
-					if (nullptr != newTitle)
-					{
-						unless (useSheet)
-						{
-							// here the title is set directly, instead of via the
-							// TerminalWindow_SetWindowTitle() routine, because
-							// it is a “secret” and temporary change to the title
-							// that will be undone when resizing completes
-							[ptr->window setTitle:BRIDGE_CAST(newTitle, NSString*)];
-						}
-						
-						// update the floater
-						[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(newTitle, NSString*);
-						[[TerminalWindow_InfoBubble sharedInfoBubble] display];
-						
-						CFRelease(newTitle), newTitle = nullptr;
-					}
-				}
-			}
-			else if (kEventKind == kEventWindowResizeCompleted)
-			{
-				// in case the reverse resize mode was enabled by the resize click, restore the original resize mode
-				{
-					TerminalViewRef		focusedView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-					
-					
-					if (nullptr != focusedView)
-					{
-						TerminalView_SetDisplayMode(focusedView, ptr->preResizeViewDisplayMode);
-					}
-				}
-				
-				// dispose of the floater
-				// (implied by fade-out delay in TerminalWindow_InfoBubble)
-				//[[TerminalWindow_InfoBubble sharedInfoBubble] ...];
-				
-				// restore the window title
-				if (ptr->preResizeTitleString.exists())
-				{
-					[ptr->window setTitle:(NSString*)ptr->preResizeTitleString.returnCFStringRef()];
-					ptr->preResizeTitleString.clear();
-				}
-			}
-		}
-	}
-	
-	return result;
-}// @autoreleasepool
-}// receiveWindowResize
-
-
-/*!
-Implementation of TerminalWindow_ReturnLegacyCarbonWindow().
-
-(4.0)
-*/
-HIWindowRef
-returnCarbonWindow		(My_TerminalWindowPtr	inPtr)
-{
-@autoreleasepool {
-	HIWindowRef		result = nullptr;
-	
-	
-	if (inPtr->isCocoa())
-	{
-		Console_Warning(Console_WriteLine, "invalid request for Carbon reference to Cocoa-based terminal");
-		Console_WriteStackTrace(10/* arbitrary */);
-	}
-	else
-	{
-		result = (HIWindowRef)[inPtr->window windowRef];
-	}
-	
-	return result;
-}// @autoreleasepool
-}// returnCarbonWindow
-
-
-/*!
-Returns the height in pixels of the grow box in a terminal
-window.  Currently this is identical to the height of a
-horizontal scroll bar, but this function exists so that
-code can explicitly identify this metric when no horizontal
-scroll bar may be present or when the size box is missing
-(Full Screen mode).
-
-(3.0)
-*/
-UInt16
-returnGrowBoxHeight		(My_TerminalWindowPtr	inPtr)
-{
-	UInt16		result = 0;
-	
-	
-	if (inPtr->isCocoa())
-	{
-		// grow box is obsolete appearance in Cocoa windows
-	}
-	else
-	{
-		Boolean				hasSizeBox = false;
-		WindowAttributes	attributes = kWindowNoAttributes;
-		OSStatus			error = noErr;
-		
-		
-		error = GetWindowAttributes(returnCarbonWindow(inPtr), &attributes);
-		if (noErr != error)
-		{
-			// not sure if the window has a size box; assume it does
-			hasSizeBox = true;
-		}
-		else
-		{
-			if (attributes & kWindowResizableAttribute)
-			{
-				hasSizeBox = true;
-			}
-		}
-		
-		if (hasSizeBox)
-		{
-			SInt32		data = 0;
-			
-			
-			error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-			if (noErr != error)
-			{
-				Console_WriteValue("unexpected error using GetThemeMetric()", error);
-				result = 16; // arbitrary
-			}
-			else
-			{
-				result = STATIC_CAST(data, UInt16);
-			}
-		}
-	}
-	
-	return result;
-}// returnGrowBoxHeight
-
-
-/*!
-Returns the width in pixels of the grow box in a terminal
-window.  Currently this is identical to the width of a
-vertical scroll bar, but this function exists so that code
-can explicitly identify this metric when no vertical scroll
-bar may be present.
-
-(3.0)
-*/
-UInt16
-returnGrowBoxWidth		(My_TerminalWindowPtr	inPtr)
-{
-	return returnScrollBarWidth(inPtr);
-}// returnGrowBoxWidth
-
-
-/*!
-Returns the height in pixels of a scroll bar in the given
-terminal window.  If the scroll bar is invisible, the height
-is set to 0.
-
-(3.0)
-*/
-UInt16
-returnScrollBarHeight	(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
-{
-	UInt16		result = 0;
-	//SInt32		data = 0L;
-	//OSStatus	error = noErr;
-	
-	
-	// temporarily disable horizontal scroll bars; one option
-	// is to have this routine dynamically return a nonzero
-	// height if the terminal actually needs horizontal
-	// scrolling (extremely rare), and to otherwise use 0 to
-	// effectively hide the scroll bar and save some space
-#if 0
-	error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-	if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
-	result = data;
-#endif
-	return result;
-}// returnScrollBarHeight
-
-
-/*!
 Returns the width in pixels of a scroll bar in the given
 terminal window.  If the scroll bar is invisible, the width
 is set to 0.
@@ -6860,13 +2920,8 @@ returnScrollBarWidth	(My_TerminalWindowPtr	inPtr)
 	
 	if ((false == TerminalWindow_IsFullScreen(inPtr->selfRef)) || (showScrollBar))
 	{
-		SInt32		data = 0L;
-		OSStatus	error = noErr;
-		
-		
-		error = GetThemeMetric(kThemeMetricScrollBarWidth, &data);
-		if (error != noErr) Console_WriteValue("unexpected error using GetThemeMetric()", error);
-		result = STATIC_CAST(data, UInt16);
+		// TEMPORARY; update this value
+		result = 16;
 	}
 	return result;
 }// returnScrollBarWidth
@@ -7019,99 +3074,6 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 
 
 /*!
-This is a standard control action procedure that dynamically
-scrolls a terminal window.
-
-(2.6)
-*/
-void
-scrollProc	(HIViewRef			inScrollBarClicked,
-			 HIViewPartCode		inPartCode)
-{
-	TerminalWindowRef	terminalWindow = nullptr;
-	OSStatus			error = noErr;
-	UInt32				actualSize = 0L;
-	
-	
-	// retrieve TerminalWindowRef from control
-	error = GetControlProperty(inScrollBarClicked, AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-								sizeof(terminalWindow), &actualSize, &terminalWindow);
-	assert_noerr(error);
-	assert(actualSize == sizeof(terminalWindow));
-	
-	if (nullptr != terminalWindow)
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		TerminalViewRef					view = nullptr;
-		
-		
-		view = getScrollBarView(ptr, inScrollBarClicked); // 3.0
-		
-		if (inScrollBarClicked == ptr->carbonData->scrollBarH)
-		{
-			switch (inPartCode)
-			{
-			case kControlUpButtonPart: // “up arrow” on a horizontal scroll bar means “left arrow”
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
-				break;
-			
-			case kControlDownButtonPart: // “down arrow” on a horizontal scroll bar means “right arrow”
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
-				break;
-			
-			case kControlPageUpPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardRightEdge(view);
-				break;
-			
-			case kControlPageDownPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardLeftEdge(view);
-				break;
-			
-			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->carbonData->scrollBarV),
-																							GetControl32BitValue(ptr->carbonData->scrollBarH));
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-		else if (inScrollBarClicked == ptr->carbonData->scrollBarV)
-		{
-			switch (inPartCode)
-			{
-			case kControlUpButtonPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
-				break;
-			
-			case kControlDownButtonPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
-				break;
-			
-			case kControlPageUpPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardBottomEdge(view);
-				break;
-			
-			case kControlPageDownPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollPageTowardTopEdge(view);
-				break;
-			
-			case kControlIndicatorPart:
-				UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToIndicatorPosition(view, GetControl32BitValue(ptr->carbonData->scrollBarV));
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-}// scrollProc
-
-
-/*!
 Invoked whenever a monitored session state is changed
 (see TerminalWindow_New() to see which states are
 monitored).  This routine responds by updating session
@@ -7177,30 +3139,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					{
 						ptr->windowController.toolbarDelegate.session = session;
 					}
-					
-					// the restart toolbar item, if visible, should have its icon and command set
-					// (needed only for Carbon, since TerminalToolbar_ItemForceQuit does its own
-					// monitoring)
-					if ((false == ptr->isCocoa()) && ptr->carbonData->toolbarItemKillRestart.exists())
-					{
-						UInt32 const		kNewCommandID = kCommandKillProcessesKeepWindow;
-						HIToolbarItemRef	itemRef = ptr->carbonData->toolbarItemKillRestart.returnHIObjectRef();
-						CFStringRef			nameCFString = nullptr;
-						OSStatus			error = noErr;
-						
-						
-						if (Commands_CopyCommandName(kNewCommandID, kCommands_NameTypeShort, nameCFString))
-						{
-							error = HIToolbarItemSetLabel(itemRef, nameCFString);
-							assert_noerr(error);
-							UNUSED_RETURN(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
-							CFRelease(nameCFString), nameCFString = nullptr;
-						}
-						error = HIToolbarItemSetIconRef(itemRef, gKillSessionIcon());
-						assert_noerr(error);
-						error = HIToolbarItemSetCommandID(itemRef, kNewCommandID);
-						assert_noerr(error);
-					}
 				}
 				if (Session_StateIsActiveUnstable(session) || Session_StateIsActiveStable(session))
 				{
@@ -7219,30 +3157,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					ptr->isDead = true;
 					TerminalWindow_SetWindowTitle(terminalWindow, nullptr/* keep title, evaluate state again */);
 					setWarningOnWindowClose(ptr, false);
-					
-					// the restart toolbar item, if visible, should have its icon and command changed
-					// (needed only for Carbon, since TerminalToolbar_ItemForceQuit does its own
-					// monitoring)
-					if ((false == ptr->isCocoa()) && ptr->carbonData->toolbarItemKillRestart.exists())
-					{
-						UInt32 const		kNewCommandID = kCommandRestartSession;
-						HIToolbarItemRef	itemRef = ptr->carbonData->toolbarItemKillRestart.returnHIObjectRef();
-						CFStringRef			nameCFString = nullptr;
-						OSStatus			error = noErr;
-						
-						
-						if (Commands_CopyCommandName(kNewCommandID, kCommands_NameTypeShort, nameCFString))
-						{
-							error = HIToolbarItemSetLabel(itemRef, nameCFString);
-							assert_noerr(error);
-							UNUSED_RETURN(OSStatus)HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */, nullptr/* long text */);
-							CFRelease(nameCFString), nameCFString = nullptr;
-						}
-						error = HIToolbarItemSetIconRef(itemRef, gRestartSessionIcon());
-						assert_noerr(error);
-						error = HIToolbarItemSetCommandID(itemRef, kNewCommandID);
-						assert_noerr(error);
-					}
 					
 					// the cursor should not be displayed for inactive sessions
 					for (auto viewRef : ptr->allViews)
@@ -7291,10 +3205,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				if (TerminalWindow_IsFullScreen(terminalWindow))
 				{
-					My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-					
-					
-					setTerminalWindowFullScreen(ptr, false/* full screen */, false/* swap view mode */);
+					[TerminalWindow_ReturnNSWindow(terminalWindow) toggleFullScreen:nil];
 				}
 			}
 		}
@@ -7327,32 +3238,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	}
 }// @autoreleasepool
 }// sessionStateChanged
-
-
-/*!
-Adds or removes a Full Screen icon from the specified window.
-Not for normal use, called as a side effect of changes to
-user preferences.
-
-(4.1)
-*/
-void
-setCarbonWindowFullScreenIcon	(HIWindowRef	inWindow,
-								 Boolean		inHasFullScreenIcon)
-{
-	int		windowBits[] = { FUTURE_SYMBOL(45, kHIWindowBitFullScreenPrimary), 0 }; // must be zero-terminated
-	int		noBits[] = { 0 }; // must be zero-terminated
-	
-	
-	if (inHasFullScreenIcon)
-	{
-		assert_noerr(HIWindowChangeAttributes(inWindow, windowBits/* bits to set */, noBits/* bits to clear */));
-	}
-	else
-	{
-		assert_noerr(HIWindowChangeAttributes(inWindow, noBits/* bits to set */, windowBits/* bits to clear */));
-	}
-}// setCarbonWindowFullScreenIcon
 
 
 /*!
@@ -7458,7 +3343,6 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 	
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
 	
-	if (inPtr->isCocoa())
 	{
 		NSRect		newContentRect = [inPtr->window contentRectForFrameRect:inPtr->window.frame];
 		NSRect		newFrameRect;
@@ -7469,195 +3353,7 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 		newFrameRect = [inPtr->window frameRectForContentRect:newContentRect];
 		[inPtr->window setFrame:newFrameRect display:YES animate:inAnimatedResize];
 	}
-	else
-	{
-		Rect		structureBounds;
-		Rect		contentBounds;
-		OSStatus	error = noErr;
-		
-		
-		UNUSED_RETURN(OSStatus)inPtr->carbonData->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
-		
-		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowStructureRgn, &structureBounds);
-		assert_noerr(error);
-		error = GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &contentBounds);
-		assert_noerr(error);
-		
-		// force the current size regardless (in reality, the event handlers
-		// will be consulted so that the window size is constrained); but
-		// resize at the same time, if that is applicable
-		if (inResizeWindow)
-		{
-			SInt16 const	kExtraWidth = ((structureBounds.right - structureBounds.left) -
-											(contentBounds.right - contentBounds.left));
-			SInt16 const	kExtraHeight = ((structureBounds.bottom - structureBounds.top) -
-											(contentBounds.bottom - contentBounds.top));
-			
-			
-			structureBounds.right = structureBounds.left + windowWidth + kExtraWidth;
-			structureBounds.bottom = structureBounds.top + windowHeight + kExtraHeight;
-		}
-		if (inAnimatedResize)
-		{
-			error = TransitionWindow(returnCarbonWindow(inPtr), kWindowSlideTransitionEffect,
-										kWindowResizeTransitionAction, &structureBounds);
-			assert_noerr(error);
-		}
-		else
-		{
-			error = SetWindowBounds(returnCarbonWindow(inPtr), kWindowStructureRgn, &structureBounds);
-			assert_noerr(error);
-		}
-	}
 }// setStandardState
-
-
-/*!
-Specifies whether or not the given terminal window takes over
-its entire display.  This is also used to zoom a window to its
-largest possible size without entering a modal state.
-
-If "inIsModal" is not set, “full screen” is simply a request
-to zoom the window to fit the screen as well as possible (or
-return it to its original size) without changing system-wide
-state such as the Dock and menu bar.
-
-Otherwise, the window is zoomed to fill the screen and it
-enters a special mode (e.g. the menu bar may be hidden and
-various commands may become unavailable).  The exact behavior
-depends on the user preference for using the full-screen mode
-of the OS:
-
-- If the new full-screen mode (introduced in Lion) is used,
-  the window zooms to Full Screen with animation and the menu
-  bar is hidden but remains accessible.  User preferences to
-  disable Force Quit, show the title bar or permanently hide
-  the menu bar are ignored because the system does not
-  support them in this mode.
-
-- If the original full-screen mode is in effect, the window
-  zooms to Full Screen without animation and the user has
-  more control over what is disabled (e.g. many more menu
-  commands can be inactive and the entire window frame can
-  remain visible if desired).  On the other hand, the mode
-  is more permanent: it does not allow any number of other
-  windows to also become Full Screen as their own Spaces.
-
-(4.1)
-*/
-void
-setTerminalWindowFullScreen		(My_TerminalWindowPtr	inPtr,
-								 Boolean				inIsFullScreen,
-								 Boolean				inSwapViewMode)
-{
-	Boolean		useCustomFullScreenMode = false; // if not set, implies modal mode
-	
-	
-	if (false == inIsFullScreen)
-	{
-		// if the window is already Full Screen, it must be returned
-		// in the way that it started (the user may have changed the
-		// preference in the meantime)
-		useCustomFullScreenMode = (false == inPtr->fullScreen.isUsingOS);
-	}
-	else
-	{
-		if (kPreferences_ResultOK !=
-			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode))
-		{
-			useCustomFullScreenMode = false; // assume a value if the preference cannot be found
-		}
-	}
-	
-	// enable kiosk mode only if it is not enabled already
-	if (inIsFullScreen)
-	{
-		if (useCustomFullScreenMode)
-		{
-			// old-style Full Screen
-			Rect		maxBounds;
-			Boolean		showWindowFrame = true;
-			
-			
-			// prepare to enter full-screen mode
-			setUpForFullScreenModal(inPtr, true, inSwapViewMode, kMy_FullScreenStateInProgress);
-			
-			// read relevant user preferences
-			if (kPreferences_ResultOK !=
-				Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
-									&showWindowFrame))
-			{
-				showWindowFrame = true; // assume a value if the preference cannot be found
-			}
-			
-			if (inPtr->isCocoa())
-			{
-				Console_Warning(Console_WriteLine, "old-style Full Screen not implemented for Cocoa window");
-			}
-			else
-			{
-				if (showWindowFrame)
-				{
-					RegionUtilities_GetWindowMaximumBounds(returnCarbonWindow(inPtr), &maxBounds,
-															nullptr/* previous bounds */, true/* no insets */);
-				}
-				else
-				{
-					// entire screen is available, so use it
-					RegionUtilities_GetWindowDeviceGrayRect(returnCarbonWindow(inPtr), &maxBounds);
-				}
-				
-				UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &maxBounds);
-			}
-			
-			// finish initiation of full-screen mode
-			setUpForFullScreenModal(inPtr, true, inSwapViewMode, kMy_FullScreenStateCompleted);
-		}
-		else
-		{
-			// new-style Full Screen (take over display); first select the
-			// target window to make sure the command is handled properly
-			// (NOTE: Carbon event handlers respond to key transitions,
-			// effectively performing the same calls as the old-style
-			// version above)
-			TerminalWindow_Select(inPtr->selfRef);
-			Commands_ExecuteByIDUsingEvent(FUTURE_SYMBOL('fsm ', kHICommandToggleFullScreen));
-		}
-	}
-	else
-	{
-		if (useCustomFullScreenMode)
-		{
-			// prepare to return to normal mode
-			setUpForFullScreenModal(inPtr, false, inSwapViewMode, kMy_FullScreenStateInProgress);
-			
-			// old-style Full Screen; restore window frame
-			if (inPtr->isCocoa())
-			{
-				Console_Warning(Console_WriteLine, "restore-frame not implemented for Cocoa window");
-			}
-			else
-			{
-				UNUSED_RETURN(OSStatus)SetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
-			}
-			
-			// finish return to normal mode
-			setUpForFullScreenModal(inPtr, false, inSwapViewMode, kMy_FullScreenStateCompleted);
-		}
-		else
-		{
-			// new-style Full Screen (take over display); first select the
-			// target window to make sure the command is handled properly
-			// (NOTE: Carbon event handlers respond to key transitions,
-			// effectively performing the same calls as the old-style
-			// version above)
-			TerminalWindow_Select(inPtr->selfRef);
-			Commands_ExecuteByIDUsingEvent(FUTURE_SYMBOL('fsm ', kHICommandToggleFullScreen),
-											GetWindowEventTarget(returnCarbonWindow(inPtr)));
-		}
-	}
-}// setTerminalWindowFullScreen
 
 
 /*!
@@ -7760,14 +3456,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 		// everything here should be the opposite of the off-state code below
 		if (kMy_FullScreenStateCompleted == inState)
 		{
-			if (false == inPtr->isCocoa())
-			{
-				// hide or disable the close box, zoom box and size box
-				UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr), 0/* attributes to set */,
-																kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-																kWindowResizableAttribute/* attributes to clear */);
-			}
-			
 			if (useCustomFullScreenMode)
 			{
 				// remove any shadow so that “neighboring” full-screen windows
@@ -7779,15 +3467,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			if (showOffSwitch)
 			{
 				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
-				if (inPtr->isCocoa())
-				{
-					[inPtr->window makeKeyAndOrderFront:NSApp];
-				}
-				else
-				{
-					SelectWindow(returnCarbonWindow(inPtr)); // return focus to the terminal window
-					CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
-				}
+				[inPtr->window makeKeyAndOrderFront:NSApp];
 			}
 			
 			// set flags last because the window is not in a complete
@@ -7817,14 +3497,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			
 			unless (showScrollBar)
 			{
-				if (inPtr->isCocoa())
-				{
-					Console_Warning(Console_WriteLine, "hide-scroll-bar not implemented for Cocoa window");
-				}
-				else
-				{
-					UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->carbonData->scrollBarV, false);
-				}
+				Console_Warning(Console_WriteLine, "hide-scroll-bar not implemented for Cocoa window");
 			}
 			
 			// configure the view to allow a font size change instead of
@@ -7833,14 +3506,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			// changes the user’s preferred behavior for the window and
 			// it must be undone when Full Screen ends)
 			TerminalWindow_GetFontAndSize(inPtr->selfRef, nullptr/* font name */, &inPtr->fullScreen.oldFontSize);
-			if (inPtr->isCocoa())
-			{
-				Console_Warning(Console_WriteLine, "save-window-frame not implemented for Cocoa window");
-			}
-			else
-			{
-				UNUSED_RETURN(OSStatus)GetWindowBounds(returnCarbonWindow(inPtr), kWindowContentRgn, &inPtr->fullScreen.oldContentBounds);
-			}
+			Console_Warning(Console_WriteLine, "save-window-frame not implemented for Cocoa window");
 			inPtr->fullScreen.oldMode = kOldMode;
 			inPtr->fullScreen.newMode = (false == inSwapViewMode)
 										? kOldMode
@@ -7862,21 +3528,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 		// everything here should be the opposite of the code above
 		if (kMy_FullScreenStateCompleted == inState)
 		{
-			if (false == inPtr->isCocoa())
-			{
-				// restore the close box, zoom box and size box
-				UNUSED_RETURN(OSStatus)ChangeWindowAttributes(returnCarbonWindow(inPtr),
-																kWindowCollapseBoxAttribute | kWindowFullZoomAttribute |
-																kWindowResizableAttribute/* attributes to set */,
-																0/* attributes to clear */);
-				
-				// the scroll bar may or may not have been hidden but
-				// just show it anyway; that way, if preferences were
-				// crossed or some other condition changed, the
-				// window cannot end up with a missing scroll bar
-				UNUSED_RETURN(OSStatus)HIViewSetVisible(inPtr->carbonData->scrollBarV, true);
-			}
-			
 			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
 			{
 				// window is set to normally zoom text but was temporarily
@@ -8059,14 +3710,7 @@ setWarningOnWindowClose		(My_TerminalWindowPtr	inPtr,
 		// attach or remove an adornment in the window that shows
 		// that attempting to close it will display a warning;
 		// on Mac OS X, a dot appears in the middle of the close box
-		if (inPtr->isCocoa())
-		{
-			inPtr->window.documentEdited = ((inCloseBoxHasDot) ? YES : NO);
-		}
-		else
-		{
-			UNUSED_RETURN(OSStatus)SetWindowModified(returnCarbonWindow(inPtr), inCloseBoxHasDot);
-		}
+		inPtr->window.documentEdited = ((inCloseBoxHasDot) ? YES : NO);
 	}
 }// setWarningOnWindowClose
 
@@ -8085,41 +3729,12 @@ setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
 {
 @autoreleasepool {
 	[inPtr->window setTitle:(NSString*)inNewTitle];
-	if (inPtr->isCocoa())
-	{
-		// technically the default behavior for Cocoa windows with tabs is
-		// to keep the titles of both in sync, though new APIs were added
-		// in 10.13 (NSWindow "tab" property, NSWindowTab class) that will
-		// allow the two strings to diverge in the future if this is
-		// desired... 
-	}
-	else
-	{
-		if (inPtr->carbonData->tab.exists())
-		{
-			HIViewWrap			titleWrap(idMyLabelTabTitle,
-											REINTERPRET_CAST(inPtr->carbonData->tab.returnHIObjectRef(), HIWindowRef));
-			HMHelpContentRec	helpTag;
-			
-			
-			// set text
-			SetControlTextWithCFString(titleWrap, inNewTitle);
-			
-			// set help tag, to show full title on hover
-			// in case it is too long to display
-			bzero(&helpTag, sizeof(helpTag));
-			helpTag.version = kMacHelpVersion;
-			helpTag.tagSide = kHMOutsideBottomCenterAligned;
-			helpTag.content[0].contentType = kHMCFStringContent;
-			helpTag.content[0].u.tagCFString = inNewTitle;
-			helpTag.content[1].contentType = kHMCFStringContent;
-			helpTag.content[1].u.tagCFString = CFSTR("");
-			OSStatus error = noErr;
-			//(OSStatus)HMSetControlHelpContent(titleWrap, &helpTag);
-			error = HMSetControlHelpContent(titleWrap, &helpTag);
-			assert_noerr(error);
-		}
-	}
+	
+	// technically the default behavior for Cocoa windows with tabs is
+	// to keep the titles of both in sync, though new APIs were added
+	// in 10.13 (NSWindow "tab" property, NSWindowTab class) that will
+	// allow the two strings to diverge in the future if this is
+	// desired...
 }// @autoreleasepool
 }// setWindowAndTabTitle
 
@@ -8361,32 +3976,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 {
 	switch (inTerminalSettingThatChanged)
 	{
-	case kTerminal_ChangeAudioState:
-		// update the bell toolbar item based on the bell being enabled or disabled
-		// (needed only for Carbon, as TerminalToolbar_ItemBell does its own
-		// monitoring)
-		{
-			TerminalScreenRef				screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
-			TerminalWindowRef				terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			
-			
-			if ((nullptr != screen) && (nullptr != ptr) && (false == ptr->isCocoa()))
-			{
-				HIToolbarItemRef	bellItem = nullptr;
-				OSStatus			error = noErr;
-				
-				
-				bellItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemBell.returnHIObjectRef(), HIToolbarItemRef);
-				if (nullptr != bellItem)
-				{
-					error = HIToolbarItemSetIconRef(bellItem, (Terminal_BellIsEnabled(screen)) ? gBellOffIcon() : gBellOnIcon());
-					assert_noerr(error);
-				}
-			}
-		}
-		break;
-	
 	case kTerminal_ChangeExcessiveErrors:
 		// the terminal has finally had enough, having seen a ridiculous
 		// number of data errors; report this to the user
@@ -8416,62 +4005,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				// show the message
 				Alert_Display(box.returnRef()); // retains alert until it is dismissed
-			}
-		}
-		break;
-	
-	case kTerminal_ChangeNewLEDState:
-		// find the new LED state(s); needed only for Carbon (since
-		// the TerminalToolbar_LEDItem does its own monitoring)
-		{
-			TerminalScreenRef				screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
-			TerminalWindowRef				terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-			
-			
-			if ((nullptr != screen) && (nullptr != ptr) && (false == ptr->isCocoa()))
-			{
-				// find the 4 terminal LED states; update internal state, and the toolbar
-				HIToolbarItemRef	relevantItem = nullptr;
-				UInt16				i = 0;
-				OSStatus			error = noErr;
-				
-				
-				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED1.returnHIObjectRef(), HIToolbarItemRef);
-				if (nullptr != relevantItem)
-				{
-					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
-					assert_noerr(error);
-				}
-				++i;
-				
-				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED2.returnHIObjectRef(), HIToolbarItemRef);
-				if (nullptr != relevantItem)
-				{
-					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
-					assert_noerr(error);
-				}
-				++i;
-				
-				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED3.returnHIObjectRef(), HIToolbarItemRef);
-				if (nullptr != relevantItem)
-				{
-					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
-					assert_noerr(error);
-				}
-				++i;
-				
-				ptr->isLEDOn[i] = Terminal_LEDIsOn(screen, i + 1/* LED # */);
-				relevantItem = REINTERPRET_CAST(ptr->carbonData->toolbarItemLED4.returnHIObjectRef(), HIToolbarItemRef);
-				if (nullptr != relevantItem)
-				{
-					error = HIToolbarItemSetIconRef(relevantItem, (ptr->isLEDOn[i]) ? gLEDOnIcon() : gLEDOffIcon());
-					assert_noerr(error);
-				}
-				++i;
 			}
 		}
 		break;
@@ -8533,13 +4066,6 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Terminal_CopyTitleForIcon(screen, titleCFString);
 				if (nullptr != titleCFString)
 				{
-					if (false == ptr->isCocoa())
-					{
-						// TEMPORARY - Cocoa wrapper window does not seem to recognize setMiniwindowTitle:,
-						// so the Carbon call is also used in the meantime
-						UNUSED_RETURN(OSStatus)SetWindowAlternateTitle(returnCarbonWindow(ptr), titleCFString);
-					}
-					
 					[ptr->window setMiniwindowTitle:BRIDGE_CAST(titleCFString, NSString*)];
 					
 					CFRelease(titleCFString), titleCFString = nullptr;
@@ -8622,7 +4148,8 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
 			
 			
-			installTickHandler(ptr, TerminalView_SearchResultsExist(view));
+			// INCOMPLETE; when search results are found, add tick marks to Cocoa scroll bar
+			//installTickHandler(ptr, TerminalView_SearchResultsExist(view));
 		}
 		break;
 	
@@ -8647,65 +4174,9 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 	{
 		// nothing needed
 	}
-	else if (inPtr->isCocoa())
-	{
-		Console_Warning(Console_WriteLine, "update-scroll-bars not implemented for Cocoa window");
-	}
 	else
 	{
-		// update the scroll bars to reflect the contents of the selected view
-		TerminalViewRef			view = getActiveView(inPtr);
-		HIViewRef				scrollBarView = nullptr;
-		SInt32					scrollVStartView = 0;
-		SInt32					scrollVPastEndView = 0;
-		SInt32					scrollVRangeMinimum = 0;
-		SInt32					scrollVRangePastMaximum = 0;
-		TerminalView_Result		rangeResult = kTerminalView_ResultOK;
-		
-		
-		// use the maximum possible screen size for the maximum resize limits
-		rangeResult = TerminalView_GetScrollVerticalInfo(view, scrollVStartView, scrollVPastEndView,
-															scrollVRangeMinimum, scrollVRangePastMaximum);
-		assert(kTerminalView_ResultOK == rangeResult);
-		
-		// update controls’ maximum and minimum values; the vertical scroll bar
-		// is special, in that its maximum value is zero (this ensures the main
-		// area is pinned in view even if new scrollback rows show up, etc.)
-		scrollBarView = inPtr->carbonData->scrollBarH;
-		SetControl32BitMinimum(scrollBarView, 0);
-		SetControl32BitMaximum(scrollBarView, 0);
-		SetControl32BitValue(scrollBarView, 0);
-		SetControlViewSize(scrollBarView, 0);
-		scrollBarView = inPtr->carbonData->scrollBarV;
-		SetControl32BitMinimum(scrollBarView, scrollVRangeMinimum);
-		SetControl32BitMaximum(scrollBarView, scrollVRangePastMaximum - (scrollVPastEndView - scrollVStartView)/* subtract last page */);
-		SetControl32BitValue(scrollBarView, scrollVStartView);
-		
-		// set the size of the scroll thumb, but refuse to make it as ridiculously
-		// tiny as Apple allows; artificially require it to be bigger
-		{
-			UInt32		proposedViewSize = scrollVPastEndView - scrollVStartView;
-			HIRect		scrollBarBounds;
-			Float64		viewDenominator = (STATIC_CAST(GetControl32BitMaximum(scrollBarView), Float32) -
-											STATIC_CAST(GetControl32BitMinimum(scrollBarView), Float32));
-			Float64		viewScale = STATIC_CAST(proposedViewSize, Float32) / viewDenominator;
-			Float64		barScale = 0;
-			
-			
-			UNUSED_RETURN(OSStatus)HIViewGetBounds(scrollBarView, &scrollBarBounds);
-			
-			// adjust the numerator to require a larger minimum size for the thumb
-			barScale = kMy_ScrollBarThumbMinimumSize / (scrollBarBounds.size.height - 2 * kMy_ScrollBarArrowHeight);
-			if (viewScale < barScale)
-			{
-				proposedViewSize = STATIC_CAST(barScale * viewDenominator, UInt32);
-			}
-			
-			SetControlViewSize(scrollBarView, proposedViewSize);
-		}
-		
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarV, true);
-		UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inPtr->carbonData->scrollBarH, true);
+		Console_Warning(Console_WriteLine, "update-scroll-bars not implemented for Cocoa window");
 	}
 }// updateScrollBars
 
@@ -9479,6 +4950,7 @@ the position.
 moveBelowCursorInTerminalWindow:(TerminalWindowRef)		aTerminalWindow
 {
 	NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(aTerminalWindow);
+	NSView*		parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
 	CGRect		globalCursorBounds;
 	
 	
@@ -9491,27 +4963,11 @@ moveBelowCursorInTerminalWindow:(TerminalWindowRef)		aTerminalWindow
 	{
 		PopoverManager_Dispose(&_popoverMgr);
 	}
-	if (TerminalWindow_IsLegacyCarbon(aTerminalWindow))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), aTerminalWindow);
-		HIWindowRef						carbonWindow = returnCarbonWindow(ptr);
-		
-		
-		self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
-												self/* delegate */, kPopoverManager_AnimationTypeStandard,
-												kPopoverManager_BehaviorTypeFloating,
-												carbonWindow);
-	}
-	else
-	{
-		NSView*		parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
-		
-		
-		self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
-												self/* delegate */, kPopoverManager_AnimationTypeStandard,
-												kPopoverManager_BehaviorTypeFloating,
-												parentView);
-	}
+	
+	self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
+											self/* delegate */, kPopoverManager_AnimationTypeStandard,
+											kPopoverManager_BehaviorTypeFloating,
+											parentView);
 }// moveBelowCursorInTerminalWindow:
 
 
@@ -10081,21 +5537,13 @@ or nullptr if there is none.
 - (TerminalWindowRef)
 terminalWindowRef
 {
-	auto				toPair = gCarbonTerminalWindowRefsByNSWindow().find(self);
+	auto				toPair = gTerminalWindowRefsByNSWindow().find(self);
 	TerminalWindowRef	result = nullptr;
 	
 	
-	if (gCarbonTerminalWindowRefsByNSWindow().end() != toPair)
+	if (gTerminalWindowRefsByNSWindow().end() != toPair)
 	{
 		result = toPair->second;
-	}
-	else
-	{
-		toPair = gTerminalWindowRefsByNSWindow().find(self);
-		if (gTerminalWindowRefsByNSWindow().end() != toPair)
-		{
-			result = toPair->second;
-		}
 	}
 	return result;
 }// terminalWindowRef

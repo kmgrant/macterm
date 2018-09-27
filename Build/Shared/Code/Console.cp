@@ -42,7 +42,6 @@
 #include <execinfo.h>
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 // library includes
@@ -347,7 +346,7 @@ Console_WriteStackTrace		(UInt16		inDepth)
 	backtrace_symbols_fd(symbolArray, actualSize, STDERR_FILENO);
 	Console_WriteHorizontalRule();
 	
-	delete [] symbolArray, symbolArray = nullptr;
+	delete [] symbolArray; symbolArray = nullptr;
 }// WriteStackTrace
 
 
@@ -391,7 +390,7 @@ is written to the console (with a new-line).
 */
 void
 Console_WriteValue		(char const*	inLabel,
-						 SInt32			inValue)
+						 SInt64			inValue)
 {
 	std::ostringstream	s;
 	s << inLabel << " = " << inValue;
@@ -523,7 +522,7 @@ Console_WriteValueCFTypeOf	(char const*	inLabel,
 		if (nullptr != objectTypeCFString)
 		{
 			Console_WriteValueCFString(inLabel, objectTypeCFString);
-			CFRelease(objectTypeCFString), objectTypeCFString = nullptr;
+			CFRelease(objectTypeCFString); objectTypeCFString = nullptr;
 		}
 	}
 }// Console_WriteValueCFTypeOf

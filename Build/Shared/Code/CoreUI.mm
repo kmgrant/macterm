@@ -322,11 +322,11 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 focusRingMaskBounds
 {
 	// IMPORTANT: make consistent with "drawFocusRingMask"
-	NSRect		result = NSInsetRect(self.bounds, 3, 3);
+	NSRect		result = NSInsetRect(self.bounds, 5, 5);
 	
 	
 	// adjust to match help button as drawn by superclass
-	result.size.height -= 1; // meant to match system layout
+	result.origin.y -= 2; // shift up for Mojave
 	
 	return result;
 }// focusRingMaskBounds

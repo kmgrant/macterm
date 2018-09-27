@@ -48,22 +48,20 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
-#import <QuickTime/QuickTime.h>
+//CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
 #import <AlertMessages.h>
 #import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
+#import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <CocoaFuture.objc++.h>
-#import <ColorUtilities.h>
-#import <CommonEventHandlers.h>
 #import <ContextSensitiveMenu.h>
 #import <Console.h>
-#import <HIViewWrap.h>
 #import <ListenerModel.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
@@ -76,7 +74,6 @@
 #import "Clipboard.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
-#import "DialogUtilities.h"
 #import "DragAndDrop.h"
 #import "EventLoop.h"
 #import "MacroManager.h"
@@ -85,7 +82,6 @@
 #import "QuillsTerminal.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
-#import "TerminalBackground.h"
 #import "TerminalGlyphDrawing.objc++.h"
 #import "TerminalWindow.h"
 #import "TextTranslation.h"
@@ -163,23 +159,6 @@ enum
 	kMy_CoreColorCount								= 256
 };
 
-enum
-{
-	/*!
-	Mac OS HIView part codes for Terminal Views (used ONLY when dealing
-	with the HIView directly!!!).  Every visible line is assigned a part
-	code number; if the terminal has more than 120 lines visible, the
-	behavior is undefined.
-	*/
-	kTerminalView_ContentPartVoid			= kControlNoPart,	//!< nowhere in the content area
-	kTerminalView_ContentPartFirstLine		= 1,				//!< draw topmost visible line
-	//kTerminalView_ContentPartLineN			= <value in range>,	//!< draw line with this number
-	kTerminalView_ContentPartLastLine		= 120,				//!< the largest line number that can be explicitly drawn
-	kTerminalView_ContentPartText			= 121,				//!< draw a focus ring around terminal text area
-	kTerminalView_ContentPartCursor			= 122,				//!< draw cursor (this part can’t be hit or focused)
-	kTerminalView_ContentPartCursorGhost	= 123,				//!< draw cursor outline (also can’t be hit or focused)
-};
-
 enum MyCursorState
 {
 	kMyCursorStateInvisible = 0,
@@ -226,43 +205,17 @@ struct My_PreferenceProxies
 	UInt16					renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
 };
 
-typedef std::vector< CGDeviceColor >			My_CGColorList;
-typedef std::map< UInt16, CGDeviceColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
+typedef std::vector< CGFloatRGBColor >			My_CGColorList;
+typedef std::map< UInt16, CGFloatRGBColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
 typedef std::vector< EventTime >				My_TimeIntervalList;
 
 class My_XTerm256Table;
-
-/*!
-A structure of obsolete data that will be systematically removed;
-separating for now to make shared state easier during the move to
-Cocoa-based views.  Its lifetime must be less than that of the
-Terminal View that is using the data.
-*/
-struct My_TerminalViewCarbonState
-{
-	My_TerminalViewCarbonState	(HIViewRef);
-	~My_TerminalViewCarbonState	();
-	
-	void
-	initialize		(TerminalViewRef, TerminalScreenRef, Preferences_ContextRef, CGDeviceColor const&, CGDeviceColor const&);
-	
-	HIViewRef			encompassingHIView;		// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			backgroundHIView;		// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			focusHIView;			// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			paddingHIView;			// Carbon version; will go away when Cocoa transition is complete
-	HIViewRef			contentHIView;			// Carbon version; will go away when Cocoa transition is complete
-	
-	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
-	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
-	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
-};
 
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
 // be simplified and become more object-oriented in the future.
 struct My_TerminalView
 {
-	My_TerminalView		(HIViewRef);
 	My_TerminalView		(TerminalView_Object*);
 	~My_TerminalView	();
 	
@@ -279,7 +232,7 @@ struct My_TerminalView
 	std::set< Preferences_Tag >		configFilter;	// settings that this view ignores when they are changed globally by the user
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
 	TerminalView_DisplayMode	displayMode;	// how the content fills the display area
-	Boolean				isActive;				// true if the HIView is in an active state, false otherwise; kept in sync
+	Boolean				isActive;				// true if the view is in an active state, false otherwise; kept in sync
 												// using Carbon Events, stored here to avoid extra system calls in cases
 												// where this would be slow (e.g. drawing)
 	
@@ -327,7 +280,7 @@ struct My_TerminalView
 		ListenerModel_ListenerWrap	videoModeMonitor;		// listener for changes to the reverse-video setting
 		HIMutableShapeRef			refreshRegion;			// used to optimize redraws
 		EventLoopTimerUPP			refreshTimerUPP;		// UPP for the equivalent timer ref
-		EventLoopTimerRef			refreshTimerRef;		// timer to invoke HIViewSetNeedsDisplayInRegion() at controlled intervals
+		EventLoopTimerRef			refreshTimerRef;		// timer to request updates at controlled intervals
 		
 		struct
 		{
@@ -395,7 +348,7 @@ TerminalView_PixelHeight	heightPerCell;	// number of pixels high each character 
 			Float32			thicknessVerticalBold;		// thickness of bold vertical lines in manually-drawn glyphs; diagonal lines may use based on angle
 		} font;
 		
-		CGDeviceColor	colors[kMyBasicColorCount];	// indices are "kMyBasicColorIndexNormalText", etc.
+		CGFloatRGBColor		colors[kMyBasicColorCount];	// indices are "kMyBasicColorIndexNormalText", etc.
 		
 		struct
 		{
@@ -410,9 +363,6 @@ TerminalView_PixelHeight	heightPerCell;	// number of pixels high each character 
 		TerminalView_CellRangeList				searchResults;			// regions matching the most recent Find results
 		TerminalView_CellRangeList::iterator	toCurrentSearchResult;	// most recently focused match; MUST change if "searchResults" changes
 	} text;
-	
-	// Carbon-specific (will remove):
-	My_TerminalViewCarbonState*		carbonData;		// set to nullptr for Cocoa views
 };
 typedef My_TerminalView*		My_TerminalViewPtr;
 typedef My_TerminalView const*	My_TerminalViewConstPtr;
@@ -434,7 +384,7 @@ public:
 	My_XTerm256Table ();
 	
 	static void
-	makeCGDeviceColor	(UInt8, UInt8, UInt8, CGDeviceColor&);
+	makeCGFloatRGBColor		(UInt8, UInt8, UInt8, CGFloatRGBColor&);
 	
 	void
 	setColor	(UInt8, UInt8, UInt8, UInt8);
@@ -457,7 +407,7 @@ UInt16				copyColorPreferences				(My_TerminalViewPtr, Preferences_ContextRef, B
 UInt16				copyFontPreferences					(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
 void				copySelectedTextIfUserPreference	(My_TerminalViewPtr);
 void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef);
-OSStatus			createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
+Boolean				createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 Terminal_CursorType	cursorType							(My_TerminalViewPtr);
 NSCursor*			customCursorCrosshairs				();
@@ -470,7 +420,7 @@ Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, Terminal
 														 UInt16, TerminalView_RowIndex);
 void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
 void				drawTerminalScreenRunOp				(My_TerminalViewPtr, UInt16, CFStringRef, UInt16, TextAttributes_Object);
-void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, CFIndex,
+void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, CFIndex,
 														 CFStringRef, TextAttributes_Object);
 void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char,
 														 CGFloat, TextAttributes_Object);
@@ -481,15 +431,15 @@ Terminal_LineRef	findRowIteratorRelativeTo			(My_TerminalViewPtr, TerminalView_R
 														 Terminal_LineStackStorage*);
 Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
 Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, SInt16&, SInt16&);
-void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor*);
+void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGFloatRGBColor*);
 void				getImagesInVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, NSMutableArray*);
 void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
 TerminalView_PixelWidth		getRowCharacterWidth		(My_TerminalViewPtr, TerminalView_RowIndex);
 void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, Rect*);
-void				getScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
-void				getScreenColorsForAttributes		(My_TerminalViewPtr, TextAttributes_Object, CGDeviceColor*, CGDeviceColor*, Boolean*);
-Boolean				getScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor*);
-void				getScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor*);
+void				getScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor*);
+void				getScreenColorsForAttributes		(My_TerminalViewPtr, TextAttributes_Object, CGFloatRGBColor*, CGFloatRGBColor*, Boolean*);
+Boolean				getScreenCoreColor					(My_TerminalViewPtr, UInt16, CGFloatRGBColor*);
+void				getScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor*);
 void				getScreenOrigin						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				getScreenOriginFloat				(My_TerminalViewPtr, Float32&, Float32&);
 HIShapeRef			getSelectedTextAsNewHIShape			(My_TerminalViewPtr, Float32 = 0.0);
@@ -498,13 +448,10 @@ HIShapeRef			getVirtualRangeAsNewHIShape			(My_TerminalViewPtr, TerminalView_Cel
 														 Float32, Boolean);
 void				getVirtualVisibleRegion				(My_TerminalViewPtr, UInt16*, TerminalView_RowIndex*, UInt16*, TerminalView_RowIndex*);
 void				handleMultiClick					(My_TerminalViewPtr, UInt16);
-void				handleNewViewContainerBounds		(HIViewRef, Float32, Float32, void*);
-void				handlePendingUpdates				();
 void				highlightCurrentSelection			(My_TerminalViewPtr, Boolean, Boolean);
 void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, TextAttributes_Object,
 														 Boolean, Boolean);
 void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, UInt16);
-Boolean				isMonospacedFont					(FMFontFamily);
 Boolean				isSmallIBeam						(My_TerminalViewPtr);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
@@ -513,15 +460,6 @@ void				populateContextualMenu				(My_TerminalViewPtr, NSMenu*);
 void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				preferenceChangedForView			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				recalculateCachedDimensions			(My_TerminalViewPtr);
-OSStatus			receiveTerminalHIObjectEvents		(EventHandlerCallRef, EventRef, void*);
-OSStatus			receiveTerminalViewActiveStateChange(EventHandlerCallRef, EventRef, TerminalViewRef);
-OSStatus			receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef, EventRef, void*);
-OSStatus			receiveTerminalViewDraw				(EventHandlerCallRef, EventRef, TerminalViewRef);
-OSStatus			receiveTerminalViewGetData			(EventHandlerCallRef, EventRef, TerminalViewRef);
-OSStatus			receiveTerminalViewHitTest			(EventHandlerCallRef, EventRef, TerminalViewRef);
-OSStatus			receiveTerminalViewRawKeyDown		(EventHandlerCallRef, EventRef, void*);
-OSStatus			receiveTerminalViewRegionRequest	(EventHandlerCallRef, EventRef, TerminalViewRef);
-OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalViewRef);
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				releaseRowIterator					(My_TerminalViewPtr, Terminal_LineRef*);
 Boolean				removeDataSource					(My_TerminalViewPtr, TerminalScreenRef);
@@ -530,13 +468,13 @@ CFStringRef			returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr, UInt16, Term
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
-void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
+void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
 void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, UInt16, Float32 = 0, Boolean = true);
-void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
-void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGDeviceColor const*);
-void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGDeviceColor const*);
+void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
+void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
+void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
 void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
 														 Float32 = 1.0);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, CGRect*, HIMutableShapeRef,
@@ -692,8 +630,6 @@ The private class interface.
 #pragma mark Variables
 namespace {
 
-HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
-EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
 ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
 struct My_PreferenceProxies	gPreferenceProxies;
 Boolean						gTerminalViewInitialized = false;
@@ -715,40 +651,6 @@ from this module.
 void
 TerminalView_Init ()
 {
-	// register a Human Interface Object class with Mac OS X
-	// so that terminal view text areas can be easily created
-	{
-		EventTypeSpec const		whenHIObjectEventOccurs[] =
-								{
-									{ kEventClassHIObject, kEventHIObjectConstruct },
-									{ kEventClassHIObject, kEventHIObjectInitialize },
-									{ kEventClassHIObject, kEventHIObjectDestruct },
-									{ kEventClassControl, kEventControlInitialize },
-									{ kEventClassControl, kEventControlActivate },
-									{ kEventClassControl, kEventControlDeactivate },
-									{ kEventClassControl, kEventControlDraw },
-									{ kEventClassControl, kEventControlGetData },
-									{ kEventClassControl, kEventControlGetPartBounds },
-									{ kEventClassControl, kEventControlGetPartRegion },
-									{ kEventClassControl, kEventControlHitTest },
-									{ kEventClassControl, kEventControlSetCursor },
-									{ kEventClassControl, kEventControlTrack },
-									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
-									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
-									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gMyTextViewConstructorUPP = NewEventHandlerUPP(receiveTerminalHIObjectEvents);
-		assert(nullptr != gMyTextViewConstructorUPP);
-		error = HIObjectRegisterSubclass(kConstantsRegistry_HIObjectClassIDTerminalTextView/* derived class */,
-											kHIViewClassID/* base class */, 0/* options */, gMyTextViewConstructorUPP,
-											GetEventTypeCount(whenHIObjectEventOccurs), whenHIObjectEventOccurs,
-											nullptr/* constructor data */, &gTerminalTextViewHIObjectClassRef);
-		assert_noerr(error);
-	}
-	
 	// set up a callback to receive preference change notifications
 	gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
 	{
@@ -787,21 +689,6 @@ TerminalView_Init ()
 		}
 	}
 	
-	// on older Mac OS X systems, custom cursors do not seem
-	// to take effect in Carbon windows until a Cocoa window
-	// has been displayed; to work around this odd behavior,
-	// a useless Cocoa window is “displayed” at startup time
-	{
-		NSWindow*	invisibleWindow = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
-																			backing:NSBackingStoreRetained
-																			defer:NO];
-		
-		
-		[invisibleWindow orderBack:NSApp];
-		[invisibleWindow orderOut:NSApp];
-		[invisibleWindow release];
-	}
-	
 	gTerminalViewInitialized = true;
 }// Init
 
@@ -817,9 +704,6 @@ TerminalView_Done ()
 {
 	gTerminalViewInitialized = false;
 	
-	HIObjectUnregisterClass(gTerminalTextViewHIObjectClassRef), gTerminalTextViewHIObjectClassRef = nullptr;
-	DisposeEventHandlerUPP(gMyTextViewConstructorUPP), gMyTextViewConstructorUPP = nullptr;
-	
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
@@ -827,116 +711,6 @@ TerminalView_Done ()
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 }// Done
-
-
-/*!
-Creates a new HIView hierarchy for a terminal view, complete
-with all the callbacks and data necessary to drive it.
-
-DEPRECATED.  Use TerminalView_NewNSViewBased() instead.
-However, until the Carbon window is retired completely, that
-window will need this version of the view.
-
-The font, colors, etc. are based on the default preferences
-context, where any settings in "inFormatOrNull" will override
-the defaults.  You can access this configuration later with
-TerminalView_ReturnFormatConfiguration().
-
-Since this is entirely associated with an HIObject, the view
-automatically goes away whenever the HIView from
-TerminalView_ReturnContainerHIView() is destroyed.  (For
-example, if you have this view in a window and then dispose
-of the window.)
-
-If any problems occur, nullptr is returned; otherwise, a
-reference to the data associated with the new view is
-returned.  (Use TerminalView_ReturnContainerHIView() or
-TerminalView_ReturnUserFocusHIView() to get at parts of the
-actual HIView hierarchy.)
-
-NOTE:	Since this is now based on an HIObject, you can
-		technically create the view without this API.  But
-		you will generally find this API to be simplest.
-
-IMPORTANT:	As with all APIs in this module, you must have
-			called TerminalView_Init() first.  In this case,
-			that will have registered the appropriate
-			HIObject class with the Mac OS X Toolbox.
-
-(3.1)
-*/
-TerminalViewRef
-TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
-								 Preferences_ContextRef		inFormatOrNull)
-{
-	TerminalViewRef		result = nullptr;
-	HIViewRef			contentHIView = nullptr;
-	EventRef			initializationEvent = nullptr;
-	OSStatus			error = noErr;
-	
-	
-	assert(gTerminalViewInitialized);
-	
-	error = CreateEvent(kCFAllocatorDefault, kEventClassHIObject, kEventHIObjectInitialize,
-						GetCurrentEventTime(), kEventAttributeNone, &initializationEvent);
-	if (noErr == error)
-	{
-		// specify the first source of data for this terminal (there must be at least one)
-		error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalDataSource,
-									typeNetEvents_TerminalScreenRef, sizeof(inScreenDataSource), &inScreenDataSource);
-		if (noErr == error)
-		{
-			Boolean		keepView = false; // used to tell when everything succeeds
-			
-			
-			// optional - set format
-			if (nullptr != inFormatOrNull)
-			{
-				error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFormatPreferences,
-											typeNetEvents_PreferencesContextRef, sizeof(inFormatOrNull), &inFormatOrNull);
-				if (noErr != error) Console_Warning(Console_WriteValue, "failed to use given format with new view, error", error);
-			}
-			
-			// now construct!
-			error = HIObjectCreate(kConstantsRegistry_HIObjectClassIDTerminalTextView, initializationEvent,
-									REINTERPRET_CAST(&contentHIView, HIObjectRef*));
-			if (noErr == error)
-			{
-				UInt32		actualSize = 0;
-				
-				
-				// give the content view an ID, so that the background (parent) can find it when forwarding clicks
-				{
-					ControlID		newID = TerminalView_ReturnContainerHIViewID();
-					
-					
-					error = SetControlID(contentHIView, &newID);
-					assert_noerr(error);
-				}
-				
-				// the event handlers for this class of HIObject will attach a custom
-				// property to the new view, containing the TerminalViewRef
-				error = GetControlProperty(contentHIView, AppResources_ReturnCreatorCode(),
-											kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-											sizeof(result), &actualSize, &result);
-				if (noErr == error)
-				{
-					// success!
-					keepView = true;
-				}
-			}
-			
-			// any errors?
-			unless (keepView)
-			{
-				result = nullptr;
-			}
-		}
-		
-		ReleaseEvent(initializationEvent);
-	}
-	return result;
-}// NewHIViewBased
 
 
 /*!
@@ -1250,26 +1024,6 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 								++completionIndex;
 							}
 							
-							// specify that menu should pop up at cursor location
-							if (nullptr != viewPtr->carbonData)
-							{
-								Rect		screenRect;
-								HIRect		cursorHIRect;
-								
-								
-								RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->carbonData->contentHIView), &screenRect);
-								
-								cursorHIRect = viewPtr->screen.cursor.bounds;
-								
-								HIRectConvert(&cursorHIRect, kHICoordSpaceView, viewPtr->carbonData->contentHIView,
-												kHICoordSpaceScreenPixel, nullptr/* target object */);
-								
-								// translate the selection area into Cocoa coordinates that are
-								// relative to the content view of the window
-								globalLocation = NSMakePoint(cursorHIRect.origin.x,
-																screenRect.bottom - screenRect.top - cursorHIRect.origin.y);
-							}
-							
 							// display the menu; note that this mechanism does not require
 							// either a positioning item or a view, effectively making the
 							// menu appear at the given global location
@@ -1553,34 +1307,7 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 	
 	if (viewPtr->text.selection.exists)
 	{
-		SInt16		i = 0;
-		UInt32		finalTick = 0L;
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
-		
-		
-		// for better performance on Mac OS X, lock the bits of a port
-		// before performing a series of QuickDraw operations in it
-		GetGWorld(&currentPort, &currentDevice);
-		UNUSED_RETURN(OSStatus)LockPortBits(currentPort);
-		
-		for (i = 0; i < 2; ++i)
-		{
-			Delay(5/* arbitrary; measured in 60ths of a second */, &finalTick);
-			highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
-			
-			// hand-hold Mac OS X to get the damned changes to show up!
-			updateDisplay(viewPtr);
-			
-			Delay(5, &finalTick);
-			highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-			
-			// hand-hold Mac OS X to get the damned changes to show up!
-			updateDisplay(viewPtr);
-		}
-		
-		// undo the lock done earlier in this block
-		UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
+		Console_Warning(Console_WriteLine, "TerminalView_FlashSelection() not implemented for Cocoa");
 	}
 }// FlashSelection
 
@@ -1588,13 +1315,6 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 /*!
 Changes the focus of the specified view’s owning
 window to be the given view’s container.
-
-This is ONLY AN ADORNMENT; a Terminal View has no
-ability to process keystrokes on its own.  However, a
-controlling module such as Session might compare a
-window’s currently-focused view with the result of
-TerminalView_ReturnUserFocusHIView() to see whether
-keyboard input should go to the specified view.
 
 (3.0)
 */
@@ -1605,14 +1325,7 @@ TerminalView_FocusForUser	(TerminalViewRef	inView)
 	NSView*						cocoaView = TerminalView_ReturnUserFocusNSView(inView);
 	
 	
-	if (nil != cocoaView)
-	{
-		[[cocoaView window] makeFirstResponder:TerminalView_ReturnUserFocusNSView(inView)];
-	}
-	else
-	{
-		UNUSED_RETURN(OSStatus)DialogUtilities_SetKeyboardFocus(TerminalView_ReturnUserFocusHIView(inView));
-	}
+	[[cocoaView window] makeFirstResponder:TerminalView_ReturnUserFocusNSView(inView)];
 }// FocusForUser
 
 
@@ -1636,7 +1349,7 @@ NOTE:	This routine returns a base color, which
 Boolean
 TerminalView_GetColor	(TerminalViewRef			inView,
 						 TerminalView_ColorIndex	inColorEntryNumber,
-						 CGDeviceColor*				outColorPtr)
+						 CGFloatRGBColor*			outColorPtr)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	Boolean						result = false;
@@ -1691,25 +1404,8 @@ TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
 	else
 	{
 		outGlobalBounds = viewPtr->screen.cursor.bounds; // initially...
-		if (nullptr != viewPtr->carbonData)
-		{
-			Rect		screenRect;
-			
-			
-			RegionUtilities_GetWindowDeviceGrayRect(HIViewGetWindow(viewPtr->carbonData->contentHIView), &screenRect);
-			HIRectConvert(&outGlobalBounds, kHICoordSpaceView, viewPtr->carbonData->contentHIView,
-							kHICoordSpaceScreenPixel, nullptr/* target object */);
-			
-			// translate the selection area into Cocoa coordinates that are
-			// relative to the content view of the window
-			outGlobalBounds.origin = CGPointMake(outGlobalBounds.origin.x,
-													screenRect.bottom - screenRect.top - outGlobalBounds.origin.y);
-		}
-		else
-		{
-			// UNIMPLEMENTED; may need this calculation for Cocoa
-			Console_Warning(Console_WriteLine, "get-cursor-global-bounds not implemented for Cocoa");
-		}
+		// UNIMPLEMENTED; may need this calculation for Cocoa
+		Console_Warning(Console_WriteLine, "get-cursor-global-bounds not implemented for Cocoa");
 	}
 	
 	return result;
@@ -2251,55 +1947,6 @@ TerminalView_RemoveDataSource	(TerminalViewRef		inView,
 
 
 /*!
-Returns the Mac OS HIView that is the root of the specified
-screen.  With the container, you can safely position a screen
-anywhere in a window and the contents of the screen (embedded
-in the container) will move with it.
-
-To resize a screen’s view area, use a routine like
-HIViewSetFrame() - Carbon Event handlers are installed such
-that embedded views are properly resized when you do that.
-
-DEPRECATED; use TerminalView_ReturnContainerNSView() instead.
-However, until the Carbon window is retired completely, that
-window will need this version of the view.
-
-(3.0)
-*/
-HIViewRef
-TerminalView_ReturnContainerHIView		(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	HIViewRef					result = nullptr;
-	
-	
-	if (nullptr != viewPtr->carbonData)
-	{
-		result = viewPtr->carbonData->encompassingHIView;
-	}
-	
-	return result;
-}// ReturnContainerHIView
-
-
-/*!
-Returns the ID that can be used to find the terminal view’s
-content view in a view hierarchy.  This is currently required to
-allow click forwarding from the parent background view.
-
-(4.0)
-*/
-HIViewID
-TerminalView_ReturnContainerHIViewID ()
-{
-	HIViewID	result = { 'Cnvs', 0/* ID */ };
-	
-	
-	return result;
-}// ReturnContainerHIViewID
-
-
-/*!
 Returns the Cocoa NSView* that is the root of the specified
 screen.  With the container, you can safely position a screen
 anywhere in a window and the contents of the screen (embedded
@@ -2376,37 +2023,6 @@ TerminalView_ReturnDisplayMode	(TerminalViewRef	inView)
 	result = viewPtr->displayMode;
 	return result;
 }// ReturnDisplayMode
-
-
-/*!
-Returns the Mac OS HIView that can render a drag highlight
-(via TerminalView_SetDragHighlight()) and should have drag
-handlers installed on it.
-
-This might be, but is NOT guaranteed to be, the same as the
-user focus view.  See also TerminalView_ReturnUserFocusHIView().
-
-DEPRECATED; use TerminalView_ReturnDragFocusHIView() instead.
-However, until the Carbon window is retired completely, that
-window will need this version of the view.
-
-(3.1)
-*/
-HIViewRef
-TerminalView_ReturnDragFocusHIView	(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	HIViewRef					result = nullptr;
-	
-	
-	// should match whichever view has drag handlers installed on it
-	if (nullptr != viewPtr->carbonData)
-	{
-		result = viewPtr->carbonData->contentHIView;
-	}
-	
-	return result;
-}// ReturnDragFocusHIView
 
 
 /*!
@@ -2646,35 +2262,6 @@ TerminalView_ReturnTranslationConfiguration		(TerminalViewRef	inView)
 
 
 /*!
-Returns the Mac OS HIView that can be focused for keyboard
-input.  You can use this compared with the current keyboard
-focus for a window to determine if the specified view is
-focused.
-
-DEPRECATED; use TerminalView_ReturnUserFocusHIView() instead.
-However, until the Carbon window is retired completely, that
-window will need this version of the view.
-
-(3.0)
-*/
-HIViewRef
-TerminalView_ReturnUserFocusHIView	(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	HIViewRef					result = nullptr;
-	
-	
-	// should match whichever view has the set-focus-part event handler installed on it
-	if (nullptr != viewPtr->carbonData)
-	{
-		result = viewPtr->carbonData->focusHIView;
-	}
-	
-	return result;
-}// ReturnUserFocusHIView
-
-
-/*!
 Returns the Cocoa NSView* that can be focused for keyboard
 input.  You can use this compared with the current keyboard
 focus for a window to determine if the specified view is
@@ -2696,71 +2283,6 @@ TerminalView_ReturnUserFocusNSView	(TerminalViewRef	inView)
 
 
 /*!
-If the user focus event target appears to belong to ANY
-terminal view, it is returned from this routine; otherwise,
-nullptr is returned.
-
-WARNING:	Since the user is in control, the focus can
-			change over time; do not retain this value
-			indefinitely if there is a chance the event
-			loop will run.
-
-(3.1)
-*/
-TerminalViewRef
-TerminalView_ReturnUserFocusTerminalView ()
-{
-	TerminalViewRef		result = nullptr;
-	WindowRef			focusWindow = GetUserFocusWindow();
-	
-	
-	if (nullptr != focusWindow)
-	{
-		HIViewRef	focusView = nullptr;
-		
-		
-		if (noErr == GetKeyboardFocus(focusWindow, &focusView))
-		{
-			UInt32		actualSize = 0;
-			OSStatus	error = noErr;
-			
-			
-			// if this control really is a Terminal View, it should have
-			// the view reference attached as a control property
-			error = GetControlProperty(focusView, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-										sizeof(result), &actualSize, &result);
-			if (noErr != error) result = nullptr;
-		}
-	}
-	return result;
-}// ReturnUserFocusTerminalView
-
-
-/*!
-Returns the Mac OS window reference for the given
-Terminal View.
-
-(3.0)
-*/
-HIWindowRef
-TerminalView_ReturnWindow	(TerminalViewRef	inView)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	WindowRef					result = nullptr;
-	
-	
-	if (nullptr != viewPtr->carbonData)
-	{
-		result = HIViewGetWindow(viewPtr->carbonData->contentHIView);
-		assert(IsValidWindowRef(result));
-	}
-	
-	return result;
-}// ReturnWindow
-
-
-/*!
 Reverses the foreground and background colors
 of a window.
 
@@ -2775,8 +2297,8 @@ TerminalView_ReverseVideo	(TerminalViewRef	inView,
 	
 	if (inReverseVideo != viewPtr->screen.isReverseVideo)
 	{
-		CGDeviceColor	oldTextColor;
-		CGDeviceColor	oldBackgroundColor;
+		CGFloatRGBColor		oldTextColor;
+		CGFloatRGBColor		oldBackgroundColor;
 		
 		
 		viewPtr->screen.isReverseVideo = !viewPtr->screen.isReverseVideo;
@@ -2955,13 +2477,10 @@ TerminalView_ScrollPageTowardBottomEdge		(TerminalViewRef	inView)
 		
 		
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_DIV_4(kVisibleRowCount));
 	}
@@ -2997,13 +2516,10 @@ TerminalView_ScrollPageTowardLeftEdge		(TerminalViewRef	inView)
 		
 		
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCountBy4);
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCountBy4);
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCountBy4);
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardLeftEdge(inView, kVisibleColumnCount - 3 * kVisibleColumnCountBy4);
 	}
@@ -3039,13 +2555,10 @@ TerminalView_ScrollPageTowardRightEdge		(TerminalViewRef	inView)
 		
 		
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCountBy4);
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCountBy4);
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCountBy4);
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollColumnsTowardRightEdge(inView, kVisibleColumnCount - 3 * kVisibleColumnCountBy4);
 	}
@@ -3080,13 +2593,10 @@ TerminalView_ScrollPageTowardTopEdge		(TerminalViewRef	inView)
 		
 		
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
-		handlePendingUpdates();
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_DIV_4(kVisibleRowCount));
 	}
@@ -3581,7 +3091,7 @@ color could be set.
 Boolean
 TerminalView_SetColor	(TerminalViewRef			inView,
 						 TerminalView_ColorIndex	inColorEntryNumber,
-						 CGDeviceColor const*		inColorPtr)
+						 CGFloatRGBColor const*		inColorPtr)
 {
 	Boolean		result = false;
 	
@@ -3669,49 +3179,6 @@ TerminalView_SetDisplayMode		(TerminalViewRef			inView,
 
 
 /*!
-Arranges for a drag highlight to be shown or hidden for
-the given view, which should be the drag focus view of a
-terminal view.  Also updates the cursor, because this is
-presumably happening during a drag.
-
-The highlight is only rendered when the view is drawn.
-However, this call will invalidate the appropriate area.
-
-See TerminalView_ReturnDragFocusHIView().
-
-(3.1)
-*/
-void
-TerminalView_SetDragHighlight	(HIViewRef		inView,
-								 DragRef		UNUSED_ARGUMENT(inDrag),
-								 Boolean		inIsHighlighted)
-{
-	Boolean		showHighlight = inIsHighlighted;
-	
-	
-	// set a property so that the view drawing routine understands
-	// when it should include a drag highlight
-	// TEMPORARY: this error is ignored, perhaps this function should return an error
-	UNUSED_RETURN(OSStatus)SetControlProperty(inView, AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-												sizeof(showHighlight), &showHighlight);
-	
-	// change the cursor, for additional visual feedback
-	if (showHighlight)
-	{
-		[[NSCursor dragCopyCursor] set];
-	}
-	else
-	{
-		[[NSCursor arrowCursor] set];
-	}
-	
-	// redraw the view
-	UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inView, true);
-}// SetDragHighlight
-
-
-/*!
 Specifies whether screen updates should be serviced
 for a particular terminal screen.  If drawing is
 disabled, events that would normally trigger screen
@@ -3726,14 +3193,7 @@ TerminalView_SetDrawingEnabled	(TerminalViewRef	inView,
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (nullptr != viewPtr->carbonData)
-	{
-		UNUSED_RETURN(OSStatus)HIViewSetDrawingEnabled(viewPtr->carbonData->contentHIView, inIsDrawingEnabled);
-	}
-	else
-	{
-		Console_Warning(Console_WriteLine, "set-drawing-enabled not implemented for Cocoa");
-	}
+	Console_Warning(Console_WriteLine, "set-drawing-enabled not implemented for Cocoa");
 }// SetDrawingEnabled
 
 
@@ -4114,40 +3574,7 @@ TerminalView_ZoomOpenFromSelection		(TerminalViewRef	inView)
 	
 	if (nullptr != viewPtr)
 	{
-		// the selection region is currently defined in the window’s local (content view) coordinates
-		HIShapeRef	selectionShape = getSelectedTextAsNewHIShape(viewPtr, 0);
-		
-		
-		if (nullptr != selectionShape)
-		{
-			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-			HIRect				selectionViewBounds = CGRectZero;
-			CGRect				selectionCGRect = CGRectZero;
-			
-			
-			// since the region is currently defined in content-local coordinates,
-			// the “height” of the “view” containing the selection is actually
-			// going to be the entire content view and not just the screen part
-			UNUSED_RETURN(OSStatus)HIViewGetBounds(HIViewWrap(kHIViewWindowContentID, screenWindow), &selectionViewBounds);
-			
-			// translate the selection area into Cocoa coordinates that are
-			// relative to the content view of the window
-			UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
-			selectionCGRect.origin.y = selectionViewBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
-			
-			// animate!
-			TerminalView_FlashSelection(inView);
-			if (nullptr != terminalWindow)
-			{
-				NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-				
-				
-				CocoaAnimation_TransitionWindowSectionForOpen(cocoaWindow, selectionCGRect);
-			}
-			
-			CFRelease(selectionShape), selectionShape = nullptr;
-		}
+		Console_Warning(Console_WriteLine, "zoom-open-from-selection not implemented for Cocoa");
 	}
 }// ZoomOpenFromSelection
 
@@ -4166,41 +3593,7 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView)
 	
 	if (viewPtr != nullptr)
 	{
-		if (nullptr == viewPtr->carbonData)
-		{
-			Console_Warning(Console_WriteLine, "zoom-to-cursor not implemented for Cocoa");
-		}
-		else
-		{
-			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-			HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
-			HIRect				windowContentBounds = CGRectZero;
-			CGRect				cursorCGRect = viewPtr->screen.cursor.bounds;
-			
-			
-			// since the region is currently defined in content-local coordinates,
-			// the “height” of the “view” containing the selection is actually
-			// going to be the entire content view and not just the screen part
-			UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
-			UNUSED_RETURN(OSStatus)HIViewConvertRect(&cursorCGRect, viewPtr->carbonData->contentHIView, windowContentHIView);
-			
-			// translate the selection area into Cocoa coordinates that are
-			// relative to the content view of the window
-			cursorCGRect.origin.y = windowContentBounds.size.height - (cursorCGRect.origin.y + cursorCGRect.size.height);
-			cursorCGRect = CGRectInset(cursorCGRect, -50, -50); // arbitrary
-			
-			// animate!
-			if (nullptr != terminalWindow)
-			{
-				NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-				
-				
-				// this is a bit of a hack, but the “search result” animation is a
-				// reasonable way to draw attention to the cursor’s rectangle
-				CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, cursorCGRect);
-			}
-		}
+		Console_Warning(Console_WriteLine, "zoom-to-cursor not implemented for Cocoa");
 	}
 }// ZoomToCursor
 
@@ -4223,51 +3616,7 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 		// try to scroll to the right part of the terminal view
 		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollToCell(inView, viewPtr->text.toCurrentSearchResult->first);
 		
-		if (nullptr == viewPtr->carbonData)
-		{
-			Console_Warning(Console_WriteLine, "zoom-to-search-results not implemented for Cocoa");
-		}
-		else
-		{
-			// the selection region is currently defined in the window’s local (content view) coordinates
-			HIShapeRef	selectionShape = getVirtualRangeAsNewHIShape(viewPtr, viewPtr->text.toCurrentSearchResult->first,
-																		viewPtr->text.toCurrentSearchResult->second,
-																		0/* insets */, false/* is rectangular */);
-			
-			
-			if (nullptr != selectionShape)
-			{
-				HIWindowRef			screenWindow = TerminalView_ReturnWindow(inView);
-				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-				HIViewWrap			windowContentHIView(kHIViewWindowContentID, screenWindow);
-				HIRect				windowContentBounds = CGRectZero;
-				CGRect				selectionCGRect = CGRectZero;
-				
-				
-				UNUSED_RETURN(CGRect*)HIShapeGetBounds(selectionShape, &selectionCGRect);
-				
-				// since the region is currently defined in content-local coordinates,
-				// the “height” of the “view” containing the selection is actually
-				// going to be the entire content view and not just the screen part
-				UNUSED_RETURN(OSStatus)HIViewGetBounds(windowContentHIView, &windowContentBounds);
-				UNUSED_RETURN(OSStatus)HIViewConvertRect(&selectionCGRect, viewPtr->carbonData->contentHIView, windowContentHIView);
-				
-				// translate the selection area into Cocoa coordinates that are
-				// relative to the content view of the window
-				selectionCGRect.origin.y = windowContentBounds.size.height - (selectionCGRect.origin.y + selectionCGRect.size.height);
-				
-				// animate!
-				if (nullptr != terminalWindow)
-				{
-					NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-					
-					
-					CocoaAnimation_TransitionWindowSectionForSearchResult(cocoaWindow, selectionCGRect);
-				}
-				
-				CFRelease(selectionShape), selectionShape = nullptr;
-			}
-		}
+		Console_Warning(Console_WriteLine, "zoom-to-search-results not implemented for Cocoa");
 	}
 }// ZoomToSearchResults
 
@@ -4331,17 +3680,17 @@ colorLevels()
 
 
 /*!
-Fills in a CGDeviceColor structure with appropriate values
-based on the given 8-bit components.
+Fills in a CGFloatRGBColor structure with appropriate
+values based on the given 8-bit components.
 
 (4.0)
 */
 void
 My_XTerm256Table::
-makeCGDeviceColor	(UInt8				inRed,
-					 UInt8				inGreen,
-					 UInt8				inBlue,
-					 CGDeviceColor&		outColor)
+makeCGFloatRGBColor		(UInt8				inRed,
+						 UInt8				inGreen,
+						 UInt8				inBlue,
+						 CGFloatRGBColor&	outColor)
 {
 	Float32		fullIntensityFraction = 0.0;
 	
@@ -4357,7 +3706,7 @@ makeCGDeviceColor	(UInt8				inRed,
 	fullIntensityFraction = inBlue;
 	fullIntensityFraction /= 255;
 	outColor.blue = fullIntensityFraction;
-}// My_XTerm256Table::makeCGDeviceColor
+}// My_XTerm256Table::makeCGFloatRGBColor
 
 
 /*!
@@ -4393,180 +3742,6 @@ setColor	(UInt8		inIndex,
 
 
 /*!
-Constructor.  See receiveTerminalHIObjectEvents().
-
-WARNING:	This constructor leaves the class uninitialized!
-			You MUST invoke the initialize() method before
-			doing anything with it.  This unsafe constructor
-			exists to support the HIObject model.
-
-(2018.02)
-*/
-My_TerminalViewCarbonState::
-My_TerminalViewCarbonState		(HIViewRef		inSuperclassViewInstance)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-encompassingHIView(nullptr), // set later
-backgroundHIView(nullptr), // set later
-focusHIView(nullptr), // set later
-paddingHIView(nullptr), // set later
-contentHIView(inSuperclassViewInstance),
-containerResizeHandler(), // set later
-contextualMenuHandler(),
-rawKeyDownHandler()
-{
-}// My_TerminalViewCarbonState constructor
-
-
-/*!
-Initializer.  See the My_TerminalViewCarbonState constructor
-as well as receiveTerminalHIObjectEvents().
-
-(2018.02)
-*/
-void
-My_TerminalViewCarbonState::
-initialize	(TerminalViewRef			inEventuallyValidViewRef,
-			 TerminalScreenRef			UNUSED_ARGUMENT(inScreenDataSource),
-			 Preferences_ContextRef		inFormat,
-			 CGDeviceColor const&		inInitialBackgroundColor,
-			 CGDeviceColor const&		inInitialMatteColor)
-{
-	// create views, set hierarchy and initialize background and matte colors
-	{
-		Preferences_Result	preferencesResult = kPreferences_ResultOK;
-		CFStringRef			imageURLCFString = nullptr;
-		OSStatus			error = noErr;
-		
-		
-		// read optional image URL
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalImageNormalBackground,
-														sizeof(imageURLCFString), &imageURLCFString, true/* search defaults too */);
-		if (kPreferences_ResultOK != preferencesResult)
-		{
-			imageURLCFString = nullptr;
-		}
-		
-		// see the HIObject callbacks, this will already exist
-		error = HIViewSetVisible(this->contentHIView, true);
-		assert_noerr(error);
-		
-		assert_noerr(TerminalBackground_CreateHIView(this->paddingHIView, false/* is matte */, imageURLCFString));
-		error = HIViewSetVisible(this->paddingHIView, true);
-		assert_noerr(error);
-		// IMPORTANT: Set a property with the TerminalViewRef, so that
-		// TerminalView_ReturnUserFocusHIView() works properly
-		error = SetControlProperty(this->paddingHIView,
-									AppResources_ReturnCreatorCode(),
-									kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-									sizeof(inEventuallyValidViewRef),
-									&inEventuallyValidViewRef);
-		assert_noerr(error);
-		
-		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView, true/* is matte */));
-		error = HIViewSetVisible(this->backgroundHIView, true);
-		assert_noerr(error);
-		
-		// specify the view to use for focus and basic input
-		//this->focusHIView = this->paddingHIView;
-		this->focusHIView = this->backgroundHIView;
-		
-		// initialize colors
-		{
-			error = SetControlProperty(this->paddingHIView, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-										sizeof(inInitialBackgroundColor), &inInitialBackgroundColor);
-			assert_noerr(error);
-		}
-		{
-			error = SetControlProperty(this->backgroundHIView, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-										sizeof(inInitialMatteColor), &inInitialMatteColor);
-			assert_noerr(error);
-		}
-		
-		// since no extra rendering, etc. is required, make this a mere ALIAS
-		// for the background view; this is so that code intending to operate
-		// on the “entire” view can clearly indicate this by referring to the
-		// encompassing pane instead of some specific pane that might change
-		this->encompassingHIView = this->backgroundHIView;
-		
-		// set up embedding hierarchy
-		error = HIViewAddSubview(this->backgroundHIView, this->paddingHIView);
-		assert_noerr(error);
-		error = HIViewAddSubview(this->paddingHIView, this->contentHIView);
-		assert_noerr(error);
-	}
-	
-	// install a monitor on the container that finds out about
-	// resizes (for example, because HIViewSetFrame() was called
-	// on it) and updates subviews to match
-	this->containerResizeHandler.install(this->encompassingHIView, kCommonEventHandlers_ChangedBoundsAnyEdge,
-											handleNewViewContainerBounds,
-											inEventuallyValidViewRef/* context */);
-	assert(this->containerResizeHandler.isInstalled());
-	
-	// install a handler for contextual menu clicks
-	this->contextualMenuHandler.install(HIViewGetEventTarget(this->contentHIView),
-										receiveTerminalViewContextualMenuSelect,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
-																kEventControlContextualMenuClick),
-										inEventuallyValidViewRef/* user data */);
-	assert(this->contextualMenuHandler.isInstalled());
-	
-	// set up keyboard text selection on the focus view
-	this->rawKeyDownHandler.install(HIViewGetEventTarget(this->focusHIView),
-										receiveTerminalViewRawKeyDown,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard),
-																kEventRawKeyDown, kEventRawKeyRepeat),
-										inEventuallyValidViewRef/* user data */);
-	assert(this->rawKeyDownHandler.isInstalled());
-	
-	// show all HIViews
-	HIViewSetVisible(this->encompassingHIView, true/* visible */);
-}// My_TerminalViewCarbonState::initialize
-
-
-/*!
-Destructor.  See the handler for HIObject events
-that deals with setup and teardown.
-
-(2018.02)
-*/
-My_TerminalViewCarbonState::
-~My_TerminalViewCarbonState ()
-{
-}// My_TerminalViewCarbonState destructor
-
-
-/*!
-Constructor.  See receiveTerminalHIObjectEvents().
-
-WARNING:	This constructor leaves the class uninitialized!
-			You MUST invoke the initialize() method before
-			doing anything with it.  This unsafe constructor
-			exists to support the HIObject model.
-
-(3.1)
-*/
-My_TerminalView::
-My_TerminalView		(HIViewRef		inSuperclassViewInstance)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-selfRef(REINTERPRET_CAST(this, TerminalViewRef)),
-encodingConfig(), // set later
-formatConfig(), // set later
-configFilter(),
-changeListenerModel(nullptr), // set later
-displayMode(kTerminalView_DisplayModeNormal), // set later
-isActive(true),
-encompassingNSView(nil),
-carbonData(new My_TerminalViewCarbonState(inSuperclassViewInstance))
-{
-}// My_TerminalView 1-argument constructor (HIViewRef)
-
-
-/*!
 Constructor for Cocoa windows.
 
 WARNING:	This constructor leaves the class uninitialized!
@@ -4592,15 +3767,13 @@ configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
-encompassingNSView([inRootView retain]),
-carbonData(nullptr)
+encompassingNSView([inRootView retain])
 {
 }// My_TerminalView 3-argument constructor (NSView*)
 
 
 /*!
-Initializer.  See the My_TerminalViewCarbonState constructor
-as well as receiveTerminalHIObjectEvents().
+Initializer.
 
 IMPORTANT:	Settings that are read from "inFormat" here
 			and cached in the class, need to also be updated
@@ -4770,7 +3943,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	}
 	
 	// store the colors this view will be using
-	assert_noerr(createWindowColorPalette(this, inFormat));
+	UNUSED_RETURN(Boolean)createWindowColorPalette(this, inFormat);
 	
 	// initialize blink animation
 	{
@@ -4783,13 +3956,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->animation.rendering.stageDelta = +1;
 		this->animation.rendering.region = HIShapeCreateMutable();
 		this->animation.cursor.blinkAlpha = 1.0;
-	}
-	
-	if (nullptr != this->carbonData)
-	{
-		this->carbonData->initialize(this->selfRef, inScreenDataSource, inFormat,
-										this->text.colors[kMyBasicColorIndexNormalBackground],
-										this->text.colors[kMyBasicColorIndexMatteBackground]);
 	}
 	
 	// set up a callback to receive preference change notifications
@@ -4906,8 +4072,6 @@ My_TerminalView::
 	
 	// release strong references to data sources
 	assert(removeDataSource(this, nullptr/* specific screen or nullptr for all screens */));
-	
-	delete carbonData;
 }// My_TerminalView destructor
 
 
@@ -4923,7 +4087,7 @@ My_TerminalView::
 isCocoa ()
 const
 {
-	return (nullptr == this->carbonData);
+	return true;
 }// My_TerminalView::isCocoa
 
 
@@ -4988,7 +4152,7 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 	
 	if (ptr != nullptr)
 	{
-		CGDeviceColor	currentColor;
+		CGFloatRGBColor		currentColor;
 		
 		
 		// for simplicity, keep the cursor and text blinks in sync
@@ -5113,59 +4277,9 @@ calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
 						 SInt16&				outPointSize,
 						 SInt16&				outAscent)
 {
-	if (nullptr == inTerminalViewPtr->carbonData)
-	{
-		//Console_Warning(Console_WriteLine, "calculate-double-size not implemented for Cocoa"); // debug for later
-	}
-	else
-	{
-		HIWindowRef		window = HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView);
-		CGrafPtr		oldPort = nullptr;
-		CGrafPtr		windowPort = nullptr;
-		GDHandle		oldDevice = nullptr;
-		GDHandle		windowDevice = nullptr;
-		SInt16			preservedFontID = 0;
-		SInt16			preservedFontSize = 0;
-		Style			preservedFontStyle = 0;
-		FontInfo		info;
-		
-		
-		outPointSize = inTerminalViewPtr->text.font.normalMetrics.size;
-		outAscent = inTerminalViewPtr->text.font.normalMetrics.ascent;
-		
-		// preserve state
-		GetGWorld(&oldPort, &oldDevice);
-		SetPortWindowPort(window);
-		GetGWorld(&windowPort, &windowDevice);
-		preservedFontID = GetPortTextFont(windowPort);
-		preservedFontSize = GetPortTextSize(windowPort);
-		preservedFontStyle = GetPortTextFace(windowPort);
-		
-		// choose an appropriate font size to best fill 4 cells; favor maximum
-		// width over height, but reduce the font size if the characters overrun
-		// the bottom of the area
-		TextFontByName(inTerminalViewPtr->text.font.familyName);
-		TextSize(outPointSize);
-		while ((STATIC_CAST(CharWidth('A'), Float32) * inTerminalViewPtr->text.font.scaleWidthPerCell) <
-				INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels()))
-		{
-			TextSize(++outPointSize);
-		}
-		GetFontInfo(&info);
-		while (STATIC_CAST(info.ascent + info.descent + info.leading, unsigned int) >=
-				INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCell.integralPixels()))
-		{
-			TextSize(--outPointSize);
-			GetFontInfo(&info);
-		}
-		outAscent = info.ascent;
-		
-		// restore previous state
-		TextFont(preservedFontID);
-		TextSize(preservedFontSize);
-		TextFace(preservedFontStyle);
-		SetGWorld(oldPort, oldDevice);
-	}
+	//Console_Warning(Console_WriteLine, "calculate-double-size not implemented for Cocoa"); // debug for later
+	outPointSize = 0;
+	outAscent = 0;
 }// calculateDoubleSize
 
 
@@ -5187,7 +4301,7 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 	UInt16						currentIndex = 0;
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Preferences_Tag				currentPrefsTag = '----';
-	CGDeviceColor				colorValue;
+	CGFloatRGBColor				colorValue;
 	UInt16						result = 0;
 	
 	
@@ -5555,16 +4669,16 @@ terminal preferences.
 In order to succeed, the specified view’s self-reference must
 be valid.
 
-Returns "noErr" only if the palette is created successfully.
+Returns true only if the palette is created successfully.
 
 (3.1)
 */
-OSStatus
+Boolean
 createWindowColorPalette	(My_TerminalViewPtr			inTerminalViewPtr,
 							 Preferences_ContextRef		inFormat,
 							 Boolean					inSearchForDefaults)
 {
-	OSStatus	result = noErr;
+	Boolean		result = false;
 	
 	
 	// create palettes for future use
@@ -5585,6 +4699,8 @@ createWindowColorPalette	(My_TerminalViewPtr			inTerminalViewPtr,
 													inTerminalViewPtr->selfRef/* user data */,
 													&inTerminalViewPtr->animation.timer.ref);
 	inTerminalViewPtr->animation.timer.isActive = false;
+	
+	result = true;
 	
 	return result;
 }// createWindowColorPalette
@@ -5743,10 +4859,7 @@ Delays the active thread by the specified amount
 void
 delayMinimumTicks	(UInt16		inTickCount)
 {
-	UInt32		dummy = 0L;
-	
-	
-	Delay(inTickCount, &dummy);
+	// UNIMPLEMENTED
 }// delayMinimumTicks
 
 
@@ -5799,8 +4912,8 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 			// for better performance on Mac OS X, lock the bits of a port
 			// before performing a series of QuickDraw operations in it,
 			// and make the intended drawing area part of the dirty region
-			GetGWorld(&currentPort, &currentDevice);
-			UNUSED_RETURN(OSStatus)LockPortBits(currentPort);
+			//CARBON//GetGWorld(&currentPort, &currentDevice);
+			//CARBON//UNUSED_RETURN(OSStatus)LockPortBits(currentPort);
 		}
 		
 		// find contiguous blocks of text on each line in the given
@@ -5880,11 +4993,11 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 							PixMapHandle	pixels = nullptr;
 							
 							
-							GetGWorld(&currentPort, &currentDevice);
-							pixels = GetPortPixMap(currentPort);
-							if (LockPixels(pixels))
+							//CARBON//GetGWorld(&currentPort, &currentDevice);
+							//CARBON//pixels = GetPortPixMap(currentPort);
+							//CARBON//if (LockPixels(pixels))
 							{
-								ImageDescriptionHandle  image = nullptr;
+								//CARBON//ImageDescriptionHandle  image = nullptr;
 								Rect					sourceRect = rowBounds;
 								Rect					destRect = rowBounds;
 								OSStatus				error = noErr;
@@ -5893,7 +5006,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 								// halve the source width, as the boundaries refer to the rendering width
 								sourceRect.right -= INTEGER_DIV_2(sourceRect.right - sourceRect.left);
 								
-								error = MakeImageDescriptionForPixMap(pixels, &image);
+								//CARBON//error = MakeImageDescriptionForPixMap(pixels, &image);
 								if (error == noErr)
 								{
 									// IMPORTANT:		The source rectangle is relative to the origin of the
@@ -5901,23 +5014,23 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 									//				graphics port.  So, although the source and destination
 									//				come from the “same” place, the source is offset by the
 									//				port origin.
-									Rect	pixelMapBounds;
+									//Rect	pixelMapBounds;
 									
 									
-									GetPixBounds(pixels, &pixelMapBounds);
-									RegionUtilities_OffsetRect(&sourceRect, -pixelMapBounds.left, -pixelMapBounds.top);
-									error = DecompressImage(GetPixBaseAddr(pixels), image, pixels,
-															&sourceRect/* source rectangle */,
-															&destRect/* destination rectangle */,
-															srcCopy/* drawing mode */, nullptr/* mask */);
+									//CARBON//GetPixBounds(pixels, &pixelMapBounds);
+									//RegionUtilities_OffsetRect(&sourceRect, -pixelMapBounds.left, -pixelMapBounds.top);
+									//CARBON//error = DecompressImage(GetPixBaseAddr(pixels), image, pixels,
+									//CARBON//						&sourceRect/* source rectangle */,
+									//CARBON//						&destRect/* destination rectangle */,
+									//CARBON//						srcCopy/* drawing mode */, nullptr/* mask */);
 									if (noErr != error)
 									{
 										Console_Warning(Console_WriteValue, "failed to stretch double-wide text image, error", error);
 									}
-									DisposeHandle(REINTERPRET_CAST(image, Handle)), image = nullptr;
+									//CARBON//DisposeHandle(REINTERPRET_CAST(image, Handle)), image = nullptr;
 								}
 								
-								UnlockPixels(pixels);
+								//CARBON//UnlockPixels(pixels);
 							}
 						}
 					}
@@ -5934,7 +5047,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		if (false == inTerminalViewPtr->isCocoa())
 		{
 			// undo the lock done earlier in this block
-			UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
+			//CARBON//UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
 		}
 	}
 	return result;
@@ -6087,39 +5200,7 @@ drawSymbolFontLetter	(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr),
 	// (changing the font on the fly is probably insanely inefficient,
 	// but this is all a temporary hack anyway to make up for the lack
 	// of full Unicode rendering support, thanks to QuickDraw legacy)
-	if (FMGetFontFamilyFromName("\pSymbol") != kInvalidFontFamily)
-	{
-		// this is in Mac Roman encoding
-		UInt8	text[] = { '\0' };
-		SInt16	oldFontID = 0;
-		SInt16	oldFontSize = 0;
-		
-		
-		text[0] = inMacRomanForQuickDraw;
-		
-		{
-			CGrafPtr	currentPort = nullptr;
-			GDHandle	currentDevice = nullptr;
-			
-			
-			GetGWorld(&currentPort, &currentDevice);
-			oldFontID = GetPortTextFont(currentPort);
-			oldFontSize = GetPortTextSize(currentPort);
-		}
-		TextFontByName("\pSymbol");
-		TextSize(oldFontSize - oldFontSize / 6); // arbitrary heuristic; assume Symbol might be too big, shrink it proportionately
-		DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-		TextFont(oldFontID);
-		TextSize(oldFontSize);
-	}
-	else
-	{
-		// this is in Mac Roman encoding
-		UInt8	text[] = { '?' };
-		
-		
-		DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-	}
+	Console_Warning(Console_WriteLine, "not implemented for Core Graphics: drawSymbolFontLetter()");
 }// drawSymbolFontLetter
 
 
@@ -6144,7 +5225,6 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 							 TextAttributes_Object		inAttributes)
 {
 	CGRect		sectionBounds;
-	Rect		intBounds;
 	
 	
 	// set up context foreground and background colors appropriately
@@ -6157,11 +5237,6 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 	eraseSection(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext,
 					inZeroBasedStartColumnNumber, inZeroBasedStartColumnNumber + inLineTextBufferLength,
 					sectionBounds);
-	
-	// TEMPORARY - for QuickDraw use only
-	RegionUtilities_SetRect(&intBounds, STATIC_CAST(sectionBounds.origin.x, short), STATIC_CAST(sectionBounds.origin.y, short),
-							STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
-							STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
 	
 	// draw the text or graphics
 	if (inAttributes.hasAttributes(kTextAttributes_ColorIndexIsBitmapID))
@@ -6182,7 +5257,7 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 			CFStringRef		errorString = CFSTR("!");
 			
 			
-			drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds, intBounds,
+			drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds,
 								CFStringGetLength(errorString), errorString, kTextAttributes_StyleInverse);
 		}
 		else
@@ -6220,7 +5295,7 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 		// with QuickDraw backgrounds without them (NOTE: adjusting
 		// width is not reasonable because it refers to the whole range,
 		// which might encompass several characters)
-		drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds, intBounds,
+		drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
 		// since blinking forces frequent redraws, do not do it more
@@ -6279,14 +5354,6 @@ NOTE:	Despite the Unicode input, this routine is currently
 		transitioning from QuickDraw and does not render all
 		characters properly.
 
-IMPORTANT:	The "inOldQuickDrawBoundaries" parameter should be
-			equivalent to "inBoundaries", and will be removed
-			in the future.  It is only for convenience when
-			supporting old QuickDraw calls.  Also, QuickDraw
-			code needs to correctly outset the bottom-right
-			corner when making certain calls (e.g. filling
-			rectangles, but not framing rectangles).
-
 IMPORTANT:	The "inTextBufferAsCFString" parameter should be
 			equivalent to the pair "inTextBufferPtr" and
 			"inCharacterCount", and the CFStringRef be used
@@ -6299,318 +5366,64 @@ void
 drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 					 CGContextRef				inDrawingContext,
 					 CGRect const&				inBoundaries,
-					 Rect const&				inOldQuickDrawBoundaries,
 					 CFIndex					inCharacterCount,
 					 CFStringRef				inTextBufferAsCFString,
 					 TextAttributes_Object		inAttributes)
 {
-	if (inTerminalViewPtr->isCocoa())
+	// store new text attributes, for anything that refers to them
+	inTerminalViewPtr->text.attributes = inAttributes;
+	
+	// font attributes are set directly on the (attributed) string
+	// of the text storage, not in the graphics context
+	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
+								inAttributes, 1.0/* alpha */);
+	
+	// draw the text with the correct attributes: font, etc.
 	{
-		// store new text attributes, for anything that refers to them
-		inTerminalViewPtr->text.attributes = inAttributes;
+		NSAttributedString*		attributedString = [[[NSAttributedString alloc]
+													initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)
+																	attributes:inTerminalViewPtr->text.attributeDict]
+																	autorelease];
+		CFRetainRelease			lineObject(CTLineCreateWithAttributedString
+											(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
+											CFRetainRelease::kAlreadyRetained);
+		CTLineRef				asLineRef = REINTERPRET_CAST(lineObject.returnCFTypeRef(), CTLineRef);
+		NSPoint					drawingLocation = NSZeroPoint;
+		CGFloat					ascentMeasurement = 0;
+		CGFloat					descentMeasurement = 0;
+		CGFloat					leadingMeasurement = 0;
+		Float64					lineWidth = 0;
 		
-		// font attributes are set directly on the (attributed) string
-		// of the text storage, not in the graphics context
-		setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
-									inAttributes, 1.0/* alpha */);
 		
-		// draw the text with the correct attributes: font, etc.
+		// measure the text’s layout so that it can be centered in the
+		// background region that was chosen, regardless of how much
+		// vertical space the text would otherwise require
+		lineWidth = CTLineGetTypographicBounds(asLineRef, &ascentMeasurement, &descentMeasurement, &leadingMeasurement);
+		drawingLocation = NSMakePoint(inBoundaries.origin.x,
+										NSHeight([inTerminalViewPtr->encompassingNSView.terminalContentView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0f));
+		
 		{
-			NSAttributedString*		attributedString = [[[NSAttributedString alloc]
-														initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)
-																		attributes:inTerminalViewPtr->text.attributeDict]
-																		autorelease];
-			CFRetainRelease			lineObject(CTLineCreateWithAttributedString
-												(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
-												CFRetainRelease::kAlreadyRetained);
-			CTLineRef				asLineRef = REINTERPRET_CAST(lineObject.returnCFTypeRef(), CTLineRef);
-			NSPoint					drawingLocation = NSZeroPoint;
-			CGFloat					ascentMeasurement = 0;
-			CGFloat					descentMeasurement = 0;
-			CGFloat					leadingMeasurement = 0;
-			Float64					lineWidth = 0;
+			CGContextSaveRestore	_(inDrawingContext);
 			
 			
-			// measure the text’s layout so that it can be centered in the
-			// background region that was chosen, regardless of how much
-			// vertical space the text would otherwise require
-			lineWidth = CTLineGetTypographicBounds(asLineRef, &ascentMeasurement, &descentMeasurement, &leadingMeasurement);
-			drawingLocation = NSMakePoint(inBoundaries.origin.x,
-											NSHeight([inTerminalViewPtr->encompassingNSView.terminalContentView frame]) - inBoundaries.origin.y - ascentMeasurement - (leadingMeasurement / 2.0f));
+			CGContextTranslateCTM(inDrawingContext, 0, NSHeight([inTerminalViewPtr->encompassingNSView.terminalContentView frame]));
+			CGContextScaleCTM(inDrawingContext, 1.0, -1.0);
 			
+			CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
+			CTLineDraw(asLineRef, inDrawingContext);
+			
+			if (inAttributes.hasBold() &&
+				(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
 			{
-				CGContextSaveRestore	_(inDrawingContext);
-				
-				
-				CGContextTranslateCTM(inDrawingContext, 0, NSHeight([inTerminalViewPtr->encompassingNSView.terminalContentView frame]));
-				CGContextScaleCTM(inDrawingContext, 1.0, -1.0);
+				// COMPLETE AND UTTER HACK: occasionally a font will have no bold version
+				// in the same family and Cocoa does not seem as capable as QuickDraw in
+				// terms of inventing a bold rendering for such fonts; as a work-around
+				// text is drawn TWICE (the second at a slight offset from the original)
+				drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 30)); // arbitrary
 				
 				CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
 				CTLineDraw(asLineRef, inDrawingContext);
-				
-				if (inAttributes.hasBold() &&
-					(inTerminalViewPtr->text.font.boldFont == inTerminalViewPtr->text.font.normalFont))
-				{
-					// COMPLETE AND UTTER HACK: occasionally a font will have no bold version
-					// in the same family and Cocoa does not seem as capable as QuickDraw in
-					// terms of inventing a bold rendering for such fonts; as a work-around
-					// text is drawn TWICE (the second at a slight offset from the original)
-					drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 30)); // arbitrary
-					
-					CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
-					CTLineDraw(asLineRef, inDrawingContext);
-				}
 			}
-		}
-	}
-	else
-	{
-		// TEMPORARY: Unicode imaging is not supported yet, so the data
-		// must first be converted into Mac Roman so QuickDraw can use it
-		char const*		oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(inTextBufferAsCFString, kCFStringEncodingMacRoman);
-		UInt8*			deletedBufferPtr = nullptr;
-		
-		
-		if (nullptr == oldMacRomanBufferForQuickDraw)
-		{
-			// TEMPORARY (convert renderer to Unicode!)
-			// not ideal, but if the internal buffer is not a byte array,
-			// it must be copied before it can be interpreted that way
-			deletedBufferPtr = new UInt8[inCharacterCount];
-			
-			CFIndex		bytesUsed = 0;
-			CFIndex		conversionResult = CFStringGetBytes(inTextBufferAsCFString, CFRangeMake(0, inCharacterCount),
-															kCFStringEncodingMacRoman, '?'/* loss byte */,
-															false/* is external representation */,
-															deletedBufferPtr, inCharacterCount, &bytesUsed);
-			if (conversionResult > 0)
-			{
-				oldMacRomanBufferForQuickDraw = REINTERPRET_CAST(deletedBufferPtr, char*);
-			}
-		}
-		
-		if (nullptr == oldMacRomanBufferForQuickDraw)
-		{
-			Console_Warning(Console_WriteLine, "failed to render entire range because Mac Roman buffer was not found");
-		}
-		else
-		{
-			// draw all of the text, but scan for sub-sections that could be ANSI graphics
-			SInt16		terminalFontID = 0;
-			SInt16		terminalFontSize = 0;
-			Style		terminalFontStyle = normal;
-			
-			
-			// for better performance on Mac OS X, make the intended drawing area
-			// part of the QuickDraw port’s dirty region
-			if (inOldQuickDrawBoundaries.bottom >= 0)
-			{
-				CGrafPtr	currentPort = nullptr;
-				GDHandle	currentDevice = nullptr;
-				
-				
-				GetGWorld(&currentPort, &currentDevice);
-				UNUSED_RETURN(OSStatus)QDAddRectToDirtyRegion(currentPort, &inOldQuickDrawBoundaries);
-			}
-			
-			// set up the specified graphics context (and current QuickDraw port, for
-			// legacy calls); the colors should already be set by the caller, but
-			// this will add proper settings for font, style, etc. and set internal
-			// flags that determine whether or not to use double-width and graphics
-			useTerminalTextAttributes(inTerminalViewPtr, inDrawingContext, inAttributes);
-			
-			// get current font information (used to determine what the text should
-			// look like - including “pseudo-font” and “pseudo-font-size” values
-			// indicating VT graphics or double-width text, etc.
-			{
-				CGrafPtr	currentPort = nullptr;
-				GDHandle	currentDevice = nullptr;
-				
-				
-				GetGWorld(&currentPort, &currentDevice);
-				terminalFontID = GetPortTextFont(currentPort);
-				terminalFontSize = GetPortTextSize(currentPort);
-				terminalFontStyle = GetPortTextFace(currentPort);
-			}
-			
-			// position pen at start of text, on font baseline
-			MoveTo(inOldQuickDrawBoundaries.left,
-					inOldQuickDrawBoundaries.top +
-						(inAttributes.hasAttributes(kTextAttributes_DoubleHeightBottom)
-													? inTerminalViewPtr->text.font.doubleMetrics.ascent
-													: inTerminalViewPtr->text.font.normalMetrics.ascent));
-			
-			// if bold or large text or graphics are being drawn, do it one character
-			// at a time; bold fonts typically increase the font spacing, and double-
-			// sized text needs to occupy twice the normal font spacing, so a regular
-			// DrawText() won’t work; instead, each character must be drawn
-			// individually, allowing MacTerm to correct the pen location after
-			// each character *as if* a normal character were just rendered (this
-			// ensures that everything remains aligned with text in the same column)
-			if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
-			{
-				// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
-				Move(STATIC_CAST(inCharacterCount * INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels()), SInt16), 0);
-			}
-			else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
-			{
-				// bottom half of double-sized text; force the text to use
-				// twice the normal font metrics
-				CGFloat const	kHOffsetPerGlyph = INTEGER_TIMES_2(inTerminalViewPtr->text.font.widthPerCell.integralPixels());
-				SInt16			i = 0;
-				Point			oldPen;
-				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
-															kHOffsetPerGlyph + 4,
-															inBoundaries.size.height/*INTEGER_TIMES_2(inTerminalViewPtr->text.font.heightPerCell)*/ + 4);
-				
-				
-				for (i = 0; i < inCharacterCount; ++i)
-				{
-					GetPen(&oldPen);
-					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
-					{
-						// draw a graphics character
-						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds,
-											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
-											oldMacRomanBufferForQuickDraw[i], oldPen.v - glyphBounds.origin.y, inAttributes);
-					}
-					else
-					{
-						// draw a normal character
-						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-					}
-					
-					glyphBounds.origin.x += kHOffsetPerGlyph;
-					MoveTo(oldPen.h + STATIC_CAST(kHOffsetPerGlyph, SInt16), oldPen.v);
-				}
-			}
-			else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
-						(false == inTerminalViewPtr->text.font.isMonospaced) ||
-						(1.0 != inTerminalViewPtr->text.font.scaleWidthPerCell))
-			{
-				// proportional font, or bold, or otherwise non-standard width; force the text
-				// to draw one character at a time so that the character offset can be corrected
-				CGFloat const	kHOffsetPerGlyph = inTerminalViewPtr->text.font.widthPerCell.integralPixels();
-				SInt16			i = 0;
-				char			previousChar = '\0'; // aids heuristic algorithm; certain letter combinations may demand different offsets
-				Point			oldPen;
-				CGRect			glyphBounds = CGRectMake(inBoundaries.origin.x - 2, inBoundaries.origin.y - 2,
-															kHOffsetPerGlyph + 4,
-															inBoundaries.size.height/*inTerminalViewPtr->text.font.heightPerCell.precisePixels()*/ + 4);
-				
-				
-				for (i = 0; i < inCharacterCount; ++i)
-				{
-					char const	thisChar = *(oldMacRomanBufferForQuickDraw + i);
-					SInt16		offset = 0;
-					
-					
-					if (false == inTerminalViewPtr->text.font.isMonospaced)
-					{
-						// the following is completely arbitrary, a heuristic; in an attempt to make
-						// font display nicer when proportional fonts are shoehorned into monospace
-						// layout, ASSUME that certain characters will TEND to be an unusual size,
-						// and nudge them a bit to center them in the fixed-size cell that they use
-						// (note: these are pixel-based instead of being proportional to the width,
-						// so at small or very large font sizes they won’t really work as intended)
-						switch (thisChar)
-						{
-						case ':':
-						case ';':
-						case '.':
-						case ',':
-						case '-':
-						case '"':
-						case '\'':
-						case '/':
-						case '\\':
-							++offset;
-							break;
-						case 'c':
-						case 'e':
-						case 'r':
-						case 's':
-						case 't':
-							++offset;
-							if (std::isupper(previousChar))
-							{
-								++offset;
-							}
-							break;
-						case 'i':
-						case 'l':
-						case '[':
-						case '{':
-						case '(':
-							offset += 2;
-							break;
-						case 'I':
-							offset += 3;
-							break;
-						case 'C':
-						case 'O':
-						case 'T':
-							if (false == std::isupper(previousChar))
-							{
-								--offset;
-							}
-							break;
-						case 'Q':
-						case 'U':
-							if (false == std::isupper(previousChar))
-							{
-								offset -= 2;
-							}
-							break;
-						case 'w':
-							offset -= 2;
-							break;
-						case 'm':
-						case 'M':
-						case 'W':
-							offset -= 3;
-							break;
-						default:
-							break;
-						}
-					}
-					
-					GetPen(&oldPen);
-					if (offset != 0)
-					{
-						MoveTo(oldPen.h + offset, oldPen.v);
-					}
-					if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
-					{
-						// draw a graphics character
-						drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds,
-											CFStringGetCharacterAtIndex(inTextBufferAsCFString, i),
-											oldMacRomanBufferForQuickDraw[i], oldPen.v - glyphBounds.origin.y, inAttributes);
-					}
-					else
-					{
-						// draw a normal character
-						DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-					}
-					glyphBounds.origin.x += kHOffsetPerGlyph;
-					MoveTo(oldPen.h + STATIC_CAST(kHOffsetPerGlyph, SInt16), oldPen.v);
-					
-					previousChar = thisChar;
-				}
-			}
-			else
-			{
-				// *completely* normal text (no special style, size, or character set); this is probably
-				// fastest if rendered all at once using a single QuickDraw call, and since there are no
-				// forced font metrics with normal text, this can be a lot simpler (this is also almost
-				// certainly the common case, so it’s good if this is as efficient as possible)
-				DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, STATIC_CAST(inCharacterCount, short)); // draw text using current font, size, color, etc.
-			}
-		}
-		
-		if (nullptr != deletedBufferPtr)
-		{
-			delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
 		}
 	}
 }// drawTerminalText
@@ -6657,21 +5470,11 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	CGContextSaveRestore			_(inDrawingContext);
 	TerminalGlyphDrawing_Cache*		sourceLayerCache = nil; // may be set below
 	CGRect							floatBounds = inBoundaries;
-	CGFloat							floatCellTop = inBoundaries.origin.y;
-	CGFloat							floatCellLeft = inBoundaries.origin.x;
-	CGFloat							floatCellRight = (inBoundaries.origin.x + inBoundaries.size.width);
-	CGFloat							floatCellBottom = (inBoundaries.origin.y + inBoundaries.size.height);
 	CGColorRef						foregroundColor = nullptr;
 	NSColor*						foregroundNSColor = nil;
 	// legacy metrics for QuickDraw code (will be removed eventually)
 	SInt16							preservedFontID = 0;
 	Boolean							noDefaultRender = false;
-	Rect							cellRect; // set later...
-	Point							cellCenter; // used for line drawing glyphs
-	SInt16							cellTop = STATIC_CAST(floatCellTop, SInt16);
-	SInt16							cellLeft = STATIC_CAST(floatCellLeft, SInt16);
-	SInt16							cellRight = STATIC_CAST(floatCellRight, SInt16);
-	SInt16							cellBottom = STATIC_CAST(floatCellBottom, SInt16);
 	SInt16							lineWidth = 1; // changed later...
 	SInt16							lineHeight = 1; // changed later...
 	
@@ -6712,38 +5515,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		foregroundColor = CGColorCreateGenericRGB(asRGB.redComponent, asRGB.greenComponent, asRGB.blueComponent,
 													asRGB.alphaComponent);
 	}
-	
-	// preserve font
-	{
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
-		
-		
-		GetGWorld(&currentPort, &currentDevice);
-		preservedFontID = GetPortTextFont(currentPort);
-	}
-	
-	// Since a “pseudo-font” is used to indicate VT graphics mode,
-	// the current port’s font will NOT be correct for normal text.
-	// Many VT graphics glyphs and ALL non-graphics characters must
-	// be drawn as regular text, so here the port font is temporarily
-	// restored in case DrawText() must be called.  However, since
-	// the pseudo-font-ID is a terminal text MODE indicator, it is
-	// restored before this routine returns!
-	TextFontByName(inTerminalViewPtr->text.font.familyName);
-	
-	// set metrics
-	{
-		PenState	penState;
-		
-		
-		GetPenState(&penState);
-		lineWidth = penState.pnSize.h;
-		lineHeight = penState.pnSize.v;
-	}
-	RegionUtilities_SetRect(&cellRect, cellLeft, cellTop, cellRight, cellBottom);
-	RegionUtilities_SetPoint(&cellCenter, cellLeft + STATIC_CAST(INTEGER_DIV_2(cellRight - cellLeft), SInt16),
-								cellTop + STATIC_CAST(INTEGER_DIV_2(cellBottom - cellTop), SInt16));
 	
 #if 0
 	{
@@ -7145,17 +5916,8 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		break;
 	
 	case 0x0192: // small 'f' with hook
-	#if 0
-		MoveTo(cellCenter.h - lineWidth * 3/* arbitrary */, cellBottom - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
-		LineTo(cellCenter.h - lineWidth, cellTop + lineHeight);
-		LineTo(cellCenter.h + lineWidth * 3/* arbitrary */, cellTop + lineHeight);
-		MoveTo(cellLeft + lineWidth, cellCenter.v - lineHeight);
-		LineTo(cellCenter.h + lineWidth * 2/* arbitrary */, cellCenter.v - lineHeight);
-	#else
 		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
 							 0xA6);
-	#endif
 		break;
 	
 	case 0x0391: // capital alpha
@@ -7430,7 +6192,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 			
 			text[0] = inMacRomanForQuickDraw;
 			
-			DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+			//CARBON//DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 		}
 		break;
 	}
@@ -7458,9 +6220,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		assert(nil != renderingLayer);
 		[renderingLayer renderInContext:inDrawingContext frame:floatBounds baselineHint:inBaselineHint];
 	}
-	
-	// restore font
-	TextFont(preservedFontID);
 	
 	CGColorRelease(foregroundColor), foregroundColor = nullptr;
 }// drawVTGraphicsGlyph
@@ -7805,11 +6564,11 @@ findVirtualCellFromScreenPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 	// necessarily zero) to ensure that positions outside the
 	// screen will definitely shift by at least one unit
 	outDeltaColumn = ((deltaColumnCalculation < 0)
-						? std::min(STATIC_CAST(floor(deltaColumnCalculation), SInt16), minimumDeltaColumns)
-						: std::max(STATIC_CAST(floor(deltaColumnCalculation), SInt16), minimumDeltaColumns));
+						? std::min< SInt16 >(STATIC_CAST(floor(deltaColumnCalculation), SInt16), minimumDeltaColumns)
+						: std::max< SInt16 >(STATIC_CAST(floor(deltaColumnCalculation), SInt16), minimumDeltaColumns));
 	outDeltaRow = ((deltaRowCalculation < 0)
-					? std::min(STATIC_CAST(floor(deltaRowCalculation), SInt16), minimumDeltaRows)
-					: std::max(STATIC_CAST(floor(deltaRowCalculation), SInt16), minimumDeltaRows));
+					? std::min< SInt16 >(STATIC_CAST(floor(deltaRowCalculation), SInt16), minimumDeltaRows)
+					: std::max< SInt16 >(STATIC_CAST(floor(deltaRowCalculation), SInt16), minimumDeltaRows));
 	
 	return result;
 }// findVirtualCellFromScreenPoint
@@ -7823,7 +6582,7 @@ Given a stage of blink animation, returns its rendering color.
 inline void
 getBlinkAnimationColor	(My_TerminalViewPtr		inTerminalViewPtr,
 						 UInt16					inAnimationStage,
-						 CGDeviceColor*			outColorPtr)
+						 CGFloatRGBColor*		outColorPtr)
 {
 	*outColorPtr = inTerminalViewPtr->blinkColors[inAnimationStage];
 }// getBlinkAnimationColor
@@ -7919,21 +6678,10 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	
 	// start with the interior bounds, as this defines two of the edges
-	if (nullptr == inTerminalViewPtr->carbonData)
 	{
 		NSRect		contentFrame = [inTerminalViewPtr->encompassingNSView.terminalContentView frame];
 		
 		
-		outBoundsPtr->right = STATIC_CAST(contentFrame.size.width, SInt16);
-		outBoundsPtr->left = 0;
-	}
-	else
-	{
-		HIRect		contentFrame;
-		OSStatus	error = HIViewGetBounds(inTerminalViewPtr->carbonData->contentHIView, &contentFrame);
-		
-		
-		assert_noerr(error);
 		outBoundsPtr->right = STATIC_CAST(contentFrame.size.width, SInt16);
 		outBoundsPtr->left = 0;
 	}
@@ -8050,7 +6798,7 @@ Returns a color stored internally in the view data structure.
 inline void
 getScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 					 TerminalView_ColorIndex	inColorEntryNumber,
-					 CGDeviceColor*				outColorPtr)
+					 CGFloatRGBColor*			outColorPtr)
 {
 	switch (inColorEntryNumber)
 	{
@@ -8100,8 +6848,8 @@ background view.
 void
 getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 								 TextAttributes_Object		inAttributes,
-								 CGDeviceColor*				outForeColorPtr,
-								 CGDeviceColor*				outBackColorPtr,
+								 CGFloatRGBColor*			outForeColorPtr,
+								 CGFloatRGBColor*			outBackColorPtr,
 								 Boolean*					outNoBackgroundPtr)
 {
 	Boolean		isCustom = false;
@@ -8255,7 +7003,7 @@ getScreenColorsForAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	// to invert, swap the colors and make sure the background is drawn
 	if (inAttributes.hasAttributes(kTextAttributes_StyleInverse))
 	{
-		std::swap< CGDeviceColor >(*outForeColorPtr, *outBackColorPtr);
+		std::swap< CGFloatRGBColor >(*outForeColorPtr, *outBackColorPtr);
 		*outNoBackgroundPtr = false;
 	}
 	
@@ -8290,7 +7038,7 @@ most often needed for rendering.
 inline Boolean
 getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 					 UInt16					inColorEntryNumber,
-					 CGDeviceColor*			outColorPtr)
+					 CGFloatRGBColor*		outColorPtr)
 {
 	auto					kColorLevelsKey = STATIC_CAST(inColorEntryNumber, My_XTerm256Table::RGBLevelsByIndex::key_type);
 	auto					kGrayLevelsKey = STATIC_CAST(inColorEntryNumber, My_XTerm256Table::GrayLevelByIndex::key_type);
@@ -8313,9 +7061,9 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 		//							sourceGrid.colorLevels[kColorLevelsKey][1],
 		//							sourceGrid.colorLevels[kColorLevelsKey][2],
 		//							0);
-		My_XTerm256Table::makeCGDeviceColor(sourceGrid.colorLevels[kColorLevelsKey][0],
-											sourceGrid.colorLevels[kColorLevelsKey][1],
-											sourceGrid.colorLevels[kColorLevelsKey][2], *outColorPtr);
+		My_XTerm256Table::makeCGFloatRGBColor(sourceGrid.colorLevels[kColorLevelsKey][0],
+												sourceGrid.colorLevels[kColorLevelsKey][1],
+												sourceGrid.colorLevels[kColorLevelsKey][2], *outColorPtr);
 		result = true;
 	}
 	else if (sourceGrid.grayLevels.end() !=
@@ -8323,9 +7071,9 @@ getScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
 	{
 		// one of the standard grays
 		//Console_WriteValue("gray", sourceGrid.grayLevels[kGrayLevelsKey]);
-		My_XTerm256Table::makeCGDeviceColor(sourceGrid.grayLevels[kGrayLevelsKey],
-											sourceGrid.grayLevels[kGrayLevelsKey],
-											sourceGrid.grayLevels[kGrayLevelsKey], *outColorPtr);
+		My_XTerm256Table::makeCGFloatRGBColor(sourceGrid.grayLevels[kGrayLevelsKey],
+												sourceGrid.grayLevels[kGrayLevelsKey],
+												sourceGrid.grayLevels[kGrayLevelsKey], *outColorPtr);
 		result = true;
 	}
 	return result;
@@ -8342,7 +7090,7 @@ See also getScreenCoreColor().
 inline void
 getScreenCustomColor	(My_TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
-						 CGDeviceColor*				outColorPtr)
+						 CGFloatRGBColor*			outColorPtr)
 {
 	*outColorPtr = inTerminalViewPtr->customColors[inColorEntryNumber];
 }// getScreenCustomColor
@@ -8394,25 +7142,9 @@ getScreenOriginFloat	(My_TerminalViewPtr		inTerminalViewPtr,
 						 Float32&				outScreenPositionX,
 						 Float32&				outScreenPositionY)
 {
-	if (nullptr == inTerminalViewPtr->carbonData)
-	{
-		Console_Warning(Console_WriteLine, "get-screen-origin-float not implemented for Cocoa");
-	}
-	else
-	{
-		HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView));
-		HIRect		contentFrame;
-		OSStatus	error = noErr;
-		
-		
-		assert(windowContentView.exists());
-		error = HIViewGetFrame(inTerminalViewPtr->carbonData->contentHIView, &contentFrame);
-		assert_noerr(error);
-		error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->carbonData->contentHIView), windowContentView);
-		assert_noerr(error);
-		outScreenPositionX = contentFrame.origin.x;
-		outScreenPositionY = contentFrame.origin.y;
-	}
+	Console_Warning(Console_WriteLine, "get-screen-origin-float not implemented for Cocoa");
+	outScreenPositionX = 0;
+	outScreenPositionY = 0;
 }// getScreenOriginFloat
 
 
@@ -8485,24 +7217,12 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 								 Boolean					inIsRectangular)
 {
 	HIShapeRef			result = nullptr;
-	HIRect				screenBounds;
+	CGRect				screenBounds;
 	TerminalView_Cell	selectionStart;
 	TerminalView_Cell	selectionPastEnd;
 	
 	
-	if (nullptr != inTerminalViewPtr->carbonData)
-	{
-		OSStatus	error = noErr;
-		
-		
-		// find clipping region
-		error = HIViewGetBounds(inTerminalViewPtr->carbonData->contentHIView, &screenBounds);
-		assert_noerr(error);
-	}
-	else
-	{
-		screenBounds = NSRectToCGRect([inTerminalViewPtr->encompassingNSView.terminalContentView bounds]);
-	}
+	screenBounds = NSRectToCGRect([inTerminalViewPtr->encompassingNSView.terminalContentView bounds]);
 	
 	selectionStart = inSelectionStart;
 	selectionPastEnd = inSelectionPastEnd;
@@ -8746,185 +7466,6 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Responds to terminal view size or position changes by
-updating sub-views.
-
-Carbon only.
-
-(3.0)
-*/
-void
-handleNewViewContainerBounds	(HIViewRef		inHIView,
-								 Float32		UNUSED_ARGUMENT(inDeltaX),
-								 Float32		UNUSED_ARGUMENT(inDeltaY),
-								 void*			inTerminalViewRef)
-{
-	TerminalViewRef				view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-	HIRect						terminalViewBounds;
-	
-	
-	// get view’s boundaries, synchronize background picture with that size
-	HIViewGetFrame(inHIView, &terminalViewBounds);
-	HIViewSetFrame(viewPtr->carbonData->backgroundHIView, &terminalViewBounds);
-	
-	// from here on, use this only for the bounds, not the origin
-	HIViewGetBounds(inHIView, &terminalViewBounds);
-	
-	// determine the view size within its parent
-	{
-		TerminalView_PixelWidth		maximumViewWidth;
-		TerminalView_PixelHeight	maximumViewHeight;
-		
-		
-		maximumViewWidth.setPrecisePixels(terminalViewBounds.size.width);
-		maximumViewHeight.setPrecisePixels(terminalViewBounds.size.height);
-		
-		// if the display mode is zooming, choose a font size to fill the new boundaries
-		if (viewPtr->displayMode == kTerminalView_DisplayModeZoom)
-		{
-			UInt16				visibleColumns = Terminal_ReturnColumnCount(viewPtr->screen.ref);
-			UInt16				visibleRows = Terminal_ReturnRowCount(viewPtr->screen.ref);
-			CGrafPtr			oldPort = nullptr;
-			GDHandle			oldDevice = nullptr;
-			GrafPortFontState   fontState;
-			SInt16				fontSize = 4; // set an initial font size that is then scaled up appropriately
-			
-			
-			GetGWorld(&oldPort, &oldDevice);
-			SetPortWindowPort(HIViewGetWindow(viewPtr->carbonData->contentHIView));
-			Localization_PreservePortFontState(&fontState);
-			
-			TextFontByName(viewPtr->text.font.familyName);
-			TextSize(fontSize);
-			
-			// choose an appropriate font size to best fill the area; favor maximum
-			// width over height, but reduce the font size if the characters overrun
-			if (viewPtr->screen.cache.viewWidthInPixels.integralPixels() > 0)
-			{
-				UInt16		loopGuard = 0;
-				
-				
-				while ((STATIC_CAST(CharWidth('A'), Float32) * viewPtr->text.font.scaleWidthPerCell *
-						STATIC_CAST(visibleColumns, Float32)) < maximumViewWidth.precisePixels())
-				{
-					TextSize(++fontSize);
-					if (++loopGuard > 100/* arbitrary */) break;
-				}
-				
-				// since the final size will have gone over the edge, back up one font size
-				TextSize(--fontSize);
-			}
-			else
-			{
-				TextSize(viewPtr->text.font.normalMetrics.size);
-			}
-			if (viewPtr->screen.cache.viewHeightInPixels.integralPixels() > 0)
-			{
-				FontInfo	info;
-				UInt16		loopGuard = 0;
-				
-				
-				GetFontInfo(&info);
-				while (((info.ascent + info.descent + info.leading) * visibleRows) >= maximumViewHeight.integralPixels())
-				{
-					TextSize(--fontSize);
-					GetFontInfo(&info);
-					if (++loopGuard > 100/* arbitrary */) break;
-				}
-			}
-			
-			// updating the font size should also recalculate cached dimensions
-			// which are used later to center the view rectangle; but do not
-			// notify listeners, since this routine is itself a response to a
-			// change in another property (view size)
-			setFontAndSize(viewPtr, nullptr/* font */, fontSize, 0/* scale for character width, or zero */, false/* notify listeners */);
-			
-			Localization_RestorePortFontState(&fontState);
-			SetGWorld(oldPort, oldDevice);
-		}
-		else if (false == viewPtr->screen.sizeNotMatchedWithView)
-		{
-			UInt16					columns = 0;
-			TerminalView_RowIndex	rows = 0;
-			
-			
-			// normal mode; resize the underlying terminal screen
-			TerminalView_GetTheoreticalScreenDimensions(view, maximumViewWidth, maximumViewHeight, &columns, &rows);
-			Terminal_SetVisibleScreenDimensions(viewPtr->screen.ref, columns, STATIC_CAST(rows, UInt16));
-			recalculateCachedDimensions(viewPtr);
-		}
-	}
-	
-	// keep the text area centered inside the background region;
-	// keep the focus/padding background the right padding distance
-	// away from the text
-	{
-		Float32 const	kPadLeft = (viewPtr->screen.paddingLeftEmScale * viewPtr->text.font.widthPerCell.precisePixels());
-		Float32 const	kPadRight = (viewPtr->screen.paddingRightEmScale * viewPtr->text.font.widthPerCell.precisePixels());
-		Float32 const	kPadTop = (viewPtr->screen.paddingTopEmScale *
-									viewPtr->text.font.widthPerCell.precisePixels()/* yes, width, this is an “em” scale */);
-		Float32 const	kPadBottom = (viewPtr->screen.paddingBottomEmScale *
-										viewPtr->text.font.widthPerCell.precisePixels()/* yes, width, this is an “em” scale */);
-		HIRect			terminalFocusFrame = CGRectMake(0, 0, kPadLeft + viewPtr->screen.cache.viewWidthInPixels.precisePixels() + kPadRight,
-														kPadTop + viewPtr->screen.cache.viewHeightInPixels.precisePixels() + kPadBottom);
-		HIRect			terminalInteriorFrame = CGRectMake(kPadLeft, kPadTop,
-															viewPtr->screen.cache.viewWidthInPixels.precisePixels(),
-															viewPtr->screen.cache.viewHeightInPixels.precisePixels());
-		
-		
-		// TEMPORARY: this should in fact respect margin values too
-		RegionUtilities_CenterHIRectIn(terminalFocusFrame, terminalViewBounds);
-		HIViewSetFrame(viewPtr->carbonData->paddingHIView, &terminalFocusFrame);
-		HIViewSetFrame(viewPtr->carbonData->contentHIView, &terminalInteriorFrame);
-	}
-	
-	// recalculate cursor boundaries for the specified view
-	// (should the cursor boundaries be stored screen-relative
-	// so that this kind of maintenance can be avoided?)
-	{
-		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
-		UInt16				cursorX = 0;
-		UInt16				cursorY = 0;
-		
-		
-		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
-		if (kTerminal_ResultOK != getCursorLocationError)
-		{
-			Console_Warning(Console_WriteValue, "failed to update cursor after view resize; internal error", getCursorLocationError);
-		}
-		else
-		{
-			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds, viewPtr->screen.cursor.updatedShape);
-		}
-	}
-}// handleNewViewContainerBounds
-
-
-/*!
-On Mac OS X, displays all unrendered changes to visible graphics
-ports.  Useful in unusual circumstances, namely any time drawing
-must occur so soon that an event loop iteration is not guaranteed
-to run first.  (An event loop iteration will automatically handle
-pending updates.)
-
-(3.1)
-*/
-void
-handlePendingUpdates ()
-{
-	EventRecord		updateEvent;
-	
-	
-	// simply *checking* for events triggers approprate flushing to the
-	// display; so would WaitNextEvent(), but this is nice because it
-	// does not pull any events from the queue (after all, this routine
-	// couldn’t handle the events if they were pulled)
-	UNUSED_RETURN(Boolean)EventAvail(updateMask, &updateEvent);
-}// handlePendingUpdates
-
-
-/*!
 Like highlightVirtualRange(), but automatically uses
 the current text selection anchors for the specified
 terminal view.  Has no effect if there is no selection.
@@ -9121,65 +7662,6 @@ invalidateRowSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(gInvalidationScratchRegion(), &floatBounds);
 	updateDisplayInShape(inTerminalViewPtr, gInvalidationScratchRegion());
 }// invalidateRowSection
-
-
-/*!
-Determines if a font is monospaced.
-
-(3.0)
-*/
-Boolean
-isMonospacedFont	(FMFontFamily	inFontID)
-{
-	Boolean		result = false;
-	Boolean		doRomanTest = false;
-	SInt32		numberOfScriptsEnabled = GetScriptManagerVariable(smEnabled);	// this returns the number of scripts enabled
-	
-	
-	if (numberOfScriptsEnabled > 1)
-	{
-		ScriptCode	scriptNumber = smRoman;
-		
-		
-		scriptNumber = FontToScript(inFontID);
-		if (scriptNumber != smRoman)
-		{
-			SInt32		thisScriptEnabled = GetScriptVariable(scriptNumber, smScriptEnabled);
-			
-			
-			if (thisScriptEnabled)
-			{
-				// check if this font is the preferred monospaced font for its script
-				SInt32		theSizeAndFontFamily = 0L;
-				SInt16		thePreferredFontFamily = 0;
-				
-				
-				theSizeAndFontFamily = GetScriptVariable(scriptNumber, smScriptMonoFondSize);
-				thePreferredFontFamily = theSizeAndFontFamily >> 16; // high word is font family 
-				result = (thePreferredFontFamily == inFontID);
-			}
-			else result = false; // this font’s script isn’t enabled
-		}
-		else doRomanTest = true;
-	}
-	else doRomanTest = true;
-	
-	if (doRomanTest)
-	{
-		GDHandle	currentDevice = nullptr;
-		CGrafPtr	currentPort = nullptr;
-		SInt16		oldFont = inFontID;
-		
-		
-		GetGWorld(&currentPort, &currentDevice);
-		oldFont = GetPortTextFont(currentPort);
-		TextFont(inFontID);
-		result = (CharWidth('W') == CharWidth('.'));
-		TextFont(oldFont);
-	}
-	
-	return result;
-}// isMonospacedFont
 
 
 /*!
@@ -9500,8 +7982,8 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		ContextSensitiveMenu_NewItemGroup();
 		
 		{
-			HIWindowRef			screenWindow = TerminalView_ReturnWindow(inTerminalViewPtr->selfRef);
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
+			NSWindow*			screenWindow = TerminalView_ReturnNSWindow(inTerminalViewPtr->selfRef);
+			TerminalWindowRef	terminalWindow = [screenWindow terminalWindowRef];
 			
 			
 			if (TerminalWindow_IsFullScreen(terminalWindow))
@@ -9743,8 +8225,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		
 		case kPreferences_TagTerminalCursorType:
 			// recalculate cursor boundaries for the specified view
-			if ((nil != viewPtr->encompassingNSView.terminalContentView) ||
-				((nullptr != viewPtr->carbonData) && IsValidControlHandle(viewPtr->carbonData->contentHIView)))
+			if (nil != viewPtr->encompassingNSView.terminalContentView)
 			{
 				Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
 				UInt16				cursorX = 0;
@@ -9840,2017 +8321,6 @@ recalculateCachedDimensions		(My_TerminalViewPtr		inTerminalViewPtr)
 	inTerminalViewPtr->screen.cache.viewWidthInPixels.setPrecisePixels(kVisibleWidth * inTerminalViewPtr->text.font.widthPerCell.precisePixels());
 	inTerminalViewPtr->screen.cache.viewHeightInPixels.setPrecisePixels(kVisibleLines * inTerminalViewPtr->text.font.heightPerCell.precisePixels());
 }// recalculateCachedDimensions
-
-
-/*!
-Handles standard events for the HIObject of a terminal
-view’s text area.
-
-IMPORTANT:	You cannot simply add cases here to handle new
-			events...see TerminalView_Init() for the registry
-			of events that will invoke this routine.
-
-Invoked by Mac OS X.
-
-(3.1)
-*/
-OSStatus
-receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
-								 EventRef				inEvent,
-								 void*					inTerminalViewRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	// IMPORTANT: This data is NOT valid during the kEventClassHIObject/kEventHIObjectConstruct
-	// event: that is, in fact, when its value is defined.
-	TerminalViewRef		view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	if (kEventClass == kEventClassHIObject)
-	{
-		switch (kEventKind)
-		{
-		case kEventHIObjectConstruct:
-			///
-			///!!! REMEMBER, THIS IS CALLED DIRECTLY BY THE TOOLBOX - NO CallNextEventHandler() ALLOWED!!!
-			///
-			//Console_WriteLine("HI OBJECT construct terminal view");
-			{
-				HIObjectRef		superclassHIObject = nullptr;
-				
-				
-				// get the superclass view that has already been constructed (but not initialized)
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamHIObjectInstance,
-																typeHIObjectRef, superclassHIObject);
-				if (noErr == result)
-				{
-					// allocate a view without initializing it
-					HIViewRef		superclassHIObjectAsHIView = REINTERPRET_CAST(superclassHIObject, HIViewRef);
-					
-					
-					try
-					{
-						My_TerminalViewPtr	viewPtr = new My_TerminalView(superclassHIObjectAsHIView);
-						TerminalViewRef		ref = nullptr;
-						
-						
-						assert(nullptr != viewPtr);
-						ref = REINTERPRET_CAST(viewPtr, TerminalViewRef);
-						
-						// IMPORTANT: The setting of this parameter also ensures the context parameter
-						// "inTerminalViewRef" is equal to this value when all other events enter
-						// this function.
-						result = SetEventParameter(inEvent, kEventParamHIObjectInstance,
-													typeVoidPtr, sizeof(ref), &ref);
-						if (noErr == result)
-						{
-							// IMPORTANT: Set a property with the TerminalViewRef, so that code
-							// invoking HIObjectCreate() has a reasonable way to get this value.
-							result = SetControlProperty(superclassHIObjectAsHIView,
-														AppResources_ReturnCreatorCode(),
-														kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-														sizeof(ref), &ref);
-						}
-					}
-					catch (std::exception)
-					{
-						result = memFullErr;
-					}
-				}
-			}
-			break;
-		
-		case kEventHIObjectInitialize:
-			//Console_WriteLine("HI OBJECT initialize terminal view");
-			result = CallNextEventHandler(inHandlerCallRef, inEvent);
-			if ((noErr == result) || (eventNotHandledErr == result))
-			{
-				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-				TerminalScreenRef			initialDataSource = nullptr;
-				
-				
-				// get the terminal data source
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_TerminalDataSource,
-																typeNetEvents_TerminalScreenRef, initialDataSource);
-				if (noErr == result)
-				{
-					Preferences_ContextRef		viewFormat = nullptr;
-					
-					
-					// get the terminal format; if not found, use the default
-					result = CarbonEventUtilities_GetEventParameter
-								(inEvent, kEventParamNetEvents_TerminalFormatPreferences,
-									typeNetEvents_PreferencesContextRef, viewFormat);
-					if ((noErr != result) || (nullptr == viewFormat))
-					{
-						// set default
-						Preferences_Result		prefsResult = kPreferences_ResultOK;
-						Preferences_ContextRef	defaultContext = nullptr;
-						
-						
-						prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::FORMAT);
-						if (kPreferences_ResultOK != prefsResult)
-						{
-							Console_Warning(Console_WriteLine, "failed to find default context for new view");
-						}
-						else
-						{
-							viewFormat = Preferences_NewCloneContext(defaultContext, true/* force detach */);
-						}
-						result = noErr; // ignore
-					}
-					
-					// finally, initialize the view properly
-					try
-					{
-						assert(nullptr != initialDataSource);
-						viewPtr->initialize(initialDataSource, viewFormat);
-						result = noErr;
-					}
-					catch (std::exception)
-					{
-						result = eventNotHandledErr;
-					}
-				}
-			}
-			break;
-		
-		case kEventHIObjectDestruct:
-			///
-			///!!! REMEMBER, THIS IS CALLED DIRECTLY BY THE TOOLBOX - NO CallNextEventHandler() ALLOWED!!!
-			///
-			//Console_WriteLine("HI OBJECT destruct terminal view");
-			if (gTerminalViewPtrLocks().isLocked(view))
-			{
-				Console_Warning(Console_WriteValue, "attempt to dispose of locked terminal view; outstanding locks",
-								gTerminalViewPtrLocks().returnLockCount(view));
-			}
-			else
-			{
-				//Console_WriteValueAddress("request to destroy HIObject implementation", view);
-				delete REINTERPRET_CAST(view, My_TerminalViewPtr);
-				result = noErr;
-			}
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
-	else if (kEventClass == kEventClassAccessibility)
-	{
-		assert(kEventClass == kEventClassAccessibility);
-		switch (kEventKind)
-		{
-		case kEventAccessibleGetAllAttributeNames:
-			{
-				CFMutableArrayRef	listOfNames = nullptr;
-				
-				
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeNames,
-																typeCFMutableArrayRef, listOfNames);
-				if (noErr == result)
-				{
-					// each attribute mentioned here should be handled below
-					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
-					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
-					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
-					CFArrayAppendValue(listOfNames, kAXNumberOfCharactersAttribute);
-					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
-					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
-					CFArrayAppendValue(listOfNames, kAXParentAttribute);
-					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
-					CFArrayAppendValue(listOfNames, kAXPositionAttribute);
-					CFArrayAppendValue(listOfNames, kAXSizeAttribute);
-				}
-			}
-			break;
-		
-		case kEventAccessibleGetNamedAttribute:
-		case kEventAccessibleIsNamedAttributeSettable:
-			{
-				CFStringRef		requestedAttribute = nullptr;
-				
-				
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeName,
-																typeCFStringRef, requestedAttribute);
-				if (noErr == result)
-				{
-					// for the purposes of accessibility, identify a Terminal View as having
-					// the same role as a standard text area
-					CFStringRef		roleCFString = kAXTextAreaRole;
-					Boolean			isSettable = false;
-					
-					
-					// IMPORTANT: The cases handled here should match the list returned
-					// by "kEventAccessibleGetAllAttributeNames", above.
-					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-														sizeof(roleCFString), &roleCFString);
-						}
-					}
-					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleDescriptionAttribute,
-																	kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
-																(roleCFString, nullptr/* sub-role */);
-							
-							
-							if (nullptr != roleDescCFString)
-							{
-								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-															sizeof(roleDescCFString), &roleDescCFString);
-								CFRelease(roleDescCFString), roleDescCFString = nullptr;
-							}
-						}
-					}
-					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXNumberOfCharactersAttribute,
-																	kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-							SInt64						numChars = returnNumberOfCharacters(viewPtr);
-							CFNumberRef					numCharsCFNumber = CFNumberCreate(kCFAllocatorDefault,
-																							kCFNumberSInt64Type, &numChars);
-							
-							
-							if (nullptr != numCharsCFNumber)
-							{
-								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFTypeRef,
-															sizeof(numCharsCFNumber), &numCharsCFNumber);
-								CFRelease(numCharsCFNumber), numCharsCFNumber = nullptr;
-							}
-						}
-					}
-					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							UIStrings_Result	stringResult = kUIStrings_ResultOK;
-							CFStringRef			descriptionCFString = nullptr;
-							
-							
-							stringResult = UIStrings_Copy(kUIStrings_TerminalAccessibilityDescription,
-															descriptionCFString);
-							if (false == stringResult.ok())
-							{
-								result = resNotFound;
-							}
-							else
-							{
-								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-															sizeof(descriptionCFString), &descriptionCFString);
-							}
-						}
-					}
-					else
-					{
-						// Many attributes are already supported by the default handler:
-						//	kAXTopLevelUIElementAttribute
-						//	kAXWindowAttribute
-						//	kAXParentAttribute
-						//	kAXEnabledAttribute
-						//	kAXSizeAttribute
-						//	kAXPositionAttribute
-						result = eventNotHandledErr;
-					}
-					
-					// return the read-only flag when requested, if the attribute was used above
-					if ((noErr == result) &&
-						(kEventAccessibleIsNamedAttributeSettable == kEventKind))
-					{
-						result = SetEventParameter(inEvent, kEventParamAccessibleAttributeSettable, typeBoolean,
-													sizeof(isSettable), &isSettable);
-					}
-				}
-			}
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
-	else
-	{
-		assert(kEventClass == kEventClassControl);
-		switch (kEventKind)
-		{
-		case kEventControlInitialize:
-			//Console_WriteLine("HI OBJECT initialize control for terminal view");
-			{
-				UInt32		controlFeatures = //kControlSupportsFocus |
-												//kControlHandlesTracking |
-												//kControlGetsFocusOnClick |
-												//kControlSupportsGetRegion |
-												kControlSupportsDragAndDrop |
-												kControlSupportsSetCursor;
-				
-				
-				// Return the features of this control; note that the drag-and-drop feature
-				// in particular will NOT take effect unless this information is in the event
-				// BEFORE the call to CallNextEventHandler().
-				//
-				// The drag-and-drop bit is set here, however views themselves do NOT install
-				// drag handlers currently.  They are considered “dumb”; their intelligence
-				// is added by the Session module, which attaches them to (for instance) a
-				// running Unix process.  The Session module installs events on views that
-				// handle keyboard input and drag-and-drop, however the drag and focus features
-				// must be added here at control initialization time.
-				result = SetEventParameter(inEvent, kEventParamControlFeatures, typeUInt32,
-											sizeof(controlFeatures), &controlFeatures);
-				if (noErr == result)
-				{
-					result = CallNextEventHandler(inHandlerCallRef, inEvent);
-				}
-			}
-			break;
-		
-		case kEventControlActivate:
-		case kEventControlDeactivate:
-			//Console_WriteLine("HI OBJECT control activate or deactivate for terminal view");
-			result = receiveTerminalViewActiveStateChange(inHandlerCallRef, inEvent, view);
-			break;
-		
-		case kEventControlDraw:
-			//Console_WriteLine("HI OBJECT control draw for terminal view");
-			result = receiveTerminalViewDraw(inHandlerCallRef, inEvent, view);
-			break;
-		
-		case kEventControlGetData:
-			//Console_WriteLine("HI OBJECT control get data for terminal view");
-			result = CallNextEventHandler(inHandlerCallRef, inEvent);
-			if ((noErr == result) || (eventNotHandledErr == result))
-			{
-				result = receiveTerminalViewGetData(inHandlerCallRef, inEvent, view);
-			}
-			break;
-		
-		case kEventControlGetPartBounds:
-			//Console_WriteLine("HI OBJECT control get part bounds for terminal view");
-			// this function also handles get-bounds
-			result = receiveTerminalViewRegionRequest(inHandlerCallRef, inEvent, view);
-			break;
-		
-		case kEventControlGetPartRegion:
-			//Console_WriteLine("HI OBJECT control get part region for terminal view");
-			result = receiveTerminalViewRegionRequest(inHandlerCallRef, inEvent, view);
-			break;
-		
-		case kEventControlHitTest:
-			//Console_WriteLine("HI OBJECT control hit test for terminal view");
-			result = receiveTerminalViewHitTest(inHandlerCallRef, inEvent, view);
-			break;
-		
-		case kEventControlSetCursor:
-			//Console_WriteLine("HI OBJECT control set cursor for terminal view");
-			{
-				UInt32		eventModifiers = 0;
-				Boolean		isInSelection = false;
-				
-				
-				// attempt to read key modifiers, so as to make the cursor change more accurate
-				if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers,
-																	typeUInt32, eventModifiers))
-				{
-					eventModifiers = EventLoop_ReturnCurrentModifiers();
-				}
-				
-				// when there is a text selection, see if the mouse is in it
-				if (TerminalView_TextSelectionExists(view))
-				{
-					// figure out where the mouse is
-					Point	mouseLocation;
-					
-					
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation,
-																	typeQDPoint, mouseLocation);
-					if (noErr == result)
-					{
-						// if the mouse is in the selection, indicate it is draggable
-						isInSelection = TerminalView_PtInSelection(view, mouseLocation);
-					}
-				}
-				
-				// the event is successfully handled
-				result = noErr;
-				
-				// change the cursor appropriately...the cursor for dragging
-				// terminal text selections appears in background windows
-				// because “direct drag” is implemented for selections
-				if (isInSelection)
-				{
-					// cursor applicable to regions of text that are selected
-					if (eventModifiers & cmdKey)
-					{
-						// if clicked, a highlighted URL would be opened
-						[[NSCursor pointingHandCursor] set];
-					}
-					else
-					{
-						// text is draggable
-						[[NSCursor openHandCursor] set];
-					}
-				}
-				else
-				{
-					// these cursors should not appear in background windows
-					if (GetUserFocusWindow() == TerminalView_ReturnWindow(view))
-					{
-						// cursor applicable to regions of text that are not selected
-						if (eventModifiers & controlKey)
-						{
-							// if clicked, there would be a contextual menu
-							[[NSCursor contextualMenuCursor] set];
-						}
-						else if ((eventModifiers & optionKey) && (eventModifiers & cmdKey))
-						{
-							// if clicked, the terminal cursor will move to the mouse location
-							My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-							NSCursor*					cursorMove = customCursorMoveTerminalCursor(isSmallIBeam(viewPtr));
-							
-							
-							if (nil == cursorMove)
-							{
-								// fall back to some standard system cursor
-								[[NSCursor arrowCursor] set];
-							}
-							else
-							{
-								[cursorMove set];
-							}
-						}
-						else if (eventModifiers & optionKey)
-						{
-							// if clicked, the text selection would be rectangular
-							NSCursor*	cursorCrosshairs = customCursorCrosshairs();
-							
-							
-							if (nil == cursorCrosshairs)
-							{
-								// fall back to standard system cursor
-								[[NSCursor crosshairCursor] set];
-							}
-							else
-							{
-								[cursorCrosshairs set];
-							}
-						}
-						else
-						{
-							// normal - text selection cursor
-							My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-							NSCursor*					cursorIBeam = customCursorIBeam(isSmallIBeam(viewPtr));
-							
-							
-							if (nil == cursorIBeam)
-							{
-								// fall back to standard system cursor
-								[[NSCursor IBeamCursor] set];
-							}
-							else
-							{
-								[cursorIBeam set];
-							}
-						}
-					}
-					else
-					{
-						[[NSCursor arrowCursor] set];
-					}
-				}
-			}
-			break;
-		
-		case kEventControlTrack:
-			//Console_WriteLine("HI OBJECT control track for terminal view");
-			result = receiveTerminalViewTrack(inHandlerCallRef, inEvent, view);
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
-	return result;
-}// receiveTerminalHIObjectEvents
-
-
-/*!
-Handles "kEventControlActivate" and "kEventControlDeactivate"
-of "kEventClassControl".
-
-Invoked by Mac OS X whenever a terminal view is activated or
-dimmed.
-
-(3.1)
-*/
-OSStatus
-receiveTerminalViewActiveStateChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-										 EventRef				inEvent,
-										 TerminalViewRef		inTerminalViewRef)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert((kEventKind == kEventControlActivate) || (kEventKind == kEventControlDeactivate));
-	{
-		My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-		
-		
-		// update state flag
-		viewPtr->isActive = (kEventKind == kEventControlActivate);
-		
-		// since inactive and active terminal views have different appearances, force redraws
-		// when they are activated or deactivated
-		unless (gPreferenceProxies.dontDimTerminals)
-		{
-			HIViewRef	viewBeingActivatedOrDeactivated = nullptr;
-			
-			
-			// get the target view
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef,
-															viewBeingActivatedOrDeactivated);
-			
-			// if the view was found, continue
-			if (noErr == result)
-			{
-				result = HIViewSetNeedsDisplay(viewBeingActivatedOrDeactivated, true);
-			}
-		}
-	}
-	return result;
-}// receiveTerminalViewActiveStateChange
-
-
-/*!
-Handles "kEventControlContextualMenuClick" of "kEventClassControl"
-for terminal views.
-
-(3.0)
-*/
-OSStatus
-receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-										 EventRef				inEvent,
-										 void*					inTerminalViewRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalViewRef		terminalView = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlContextualMenuClick);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// determine the view in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, proceed
-		if (noErr == result)
-		{
-			My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), terminalView);
-			
-			
-			if (view == ptr->carbonData->contentHIView)
-			{
-				// display a contextual menu
-				NSMenu*		contextualMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
-				NSPoint		globalLocation = [NSEvent mouseLocation];
-				
-				
-				// set up the contextual menu
-				//[contextualMenu setAllowsContextMenuPlugIns:NO];
-				populateContextualMenu(ptr, contextualMenu);
-				
-				// display the menu; note that this mechanism does not require
-				// either a positioning item or a view, effectively making the
-				// menu appear at the given global location
-				UNUSED_RETURN(BOOL)[contextualMenu popUpMenuPositioningItem:nil atLocation:globalLocation inView:nil];
-				
-				result = noErr; // event is completely handled
-			}
-			else
-			{
-				// ???
-				result = eventNotHandledErr;
-			}
-		}
-	}
-	
-	return result;
-}// receiveTerminalViewContextualMenuSelect
-
-
-/*!
-Handles "kEventControlDraw" of "kEventClassControl".
-
-Invoked by Mac OS X whenever the foreground of a terminal
-view needs to be rendered.
-
-(3.0)
-*/
-OSStatus
-receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 TerminalViewRef		inTerminalViewRef)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlDraw);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (noErr == result)
-		{
-			HIViewPartCode		partCode = 0;
-			CGrafPtr			drawingPort = nullptr;
-			CGContextRef		drawingContext = nullptr;
-			CGrafPtr			oldPort = nullptr;
-			GDHandle			oldDevice = nullptr;
-			
-			
-			// find out the current port
-			GetGWorld(&oldPort, &oldDevice);
-			
-			// determine which part (if any) to draw; if none, draw everything
-			UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
-			
-			// determine the port to draw in; if none, the current port
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, drawingPort);
-			if (noErr != result)
-			{
-				// use current port
-				drawingPort = oldPort;
-			}
-			
-			// determine the context to draw in with Core Graphics
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
-															drawingContext);
-			assert_noerr(result);
-			
-			// if all information can be found, proceed with drawing
-			if (noErr == result)
-			{
-				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-				
-				
-				// draw text
-				if (nullptr != viewPtr)
-				{
-					HIRect		floatBounds;
-					CGRect		clipBounds;
-					HIShapeRef	optionalTargetShape = nullptr;
-					
-					
-					SetPort(drawingPort);
-					
-					// determine boundaries of the content view being drawn;
-					// ensure view-local coordinates
-					UNUSED_RETURN(OSStatus)HIViewGetBounds(view, &floatBounds);
-					
-					// maybe a focus region has been provided
-					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamShape, typeHIShapeRef,
-																		optionalTargetShape))
-					{
-						UNUSED_RETURN(CGRect*)HIShapeGetBounds(optionalTargetShape, &clipBounds);
-					}
-					else
-					{
-						clipBounds = CGRectMake(0, 0, floatBounds.size.width, floatBounds.size.height);
-					}
-					clipBounds = CGRectIntegral(clipBounds);
-					
-					// IMPORTANT: after transitioning to Core Graphics and precise
-					// pixels, drawing artifacts appear if the view attempts to
-					// merge its drawing with the background view; this will not
-					// be resolved for Carbon, it will simply be handled in the
-					// Cocoa version (and the view is opaque in the meantime); see
-					// also the get-region handler for the opaque region
-				#if 1
-					{
-						CGDeviceColor		backgroundColor;
-						
-						
-						getScreenBaseColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &backgroundColor);
-						CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green, backgroundColor.blue, 1.0/* alpha */);
-						CGContextSetAllowsAntialiasing(drawingContext, false);
-						CGContextFillRect(drawingContext, clipBounds);
-						CGContextSetAllowsAntialiasing(drawingContext, true);
-					}
-				#endif
-					
-					if ((partCode == kTerminalView_ContentPartText) ||
-						(partCode == kControlEntireControl) ||
-						((partCode >= kTerminalView_ContentPartFirstLine) &&
-							(partCode <= kTerminalView_ContentPartLastLine)))
-					{
-						// perform any necessary rendering for drags
-						{
-							Boolean		dragHighlight = false;
-							UInt32		actualSize = 0;
-							
-							
-							if (noErr != GetControlProperty(view, AppResources_ReturnCreatorCode(),
-															kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-															sizeof(dragHighlight), &actualSize,
-															&dragHighlight))
-							{
-								dragHighlight = false;
-							}
-							
-							if (dragHighlight)
-							{
-								DragAndDrop_ShowHighlightBackground(drawingContext, CGRectInset(floatBounds, 2, 2));
-								// frame is drawn at the end, after any content
-							}
-							else
-							{
-								// hide is not necessary because the HIView model ensures the
-								// backdrop behind this view is painted as needed
-							}
-							
-							// tell text routines to draw in black if there is a drag highlight
-							viewPtr->screen.currentRenderDragColors = dragHighlight;
-						}
-						
-						// draw text and graphics
-					#if 0
-						{
-							UInt16					startColumn = 0;
-							UInt16					pastTheEndColumn = 0;
-							TerminalView_RowIndex	startRow = 0;
-							TerminalView_RowIndex	pastTheEndRow = 0;
-							
-							
-							// draw EVERYTHING
-							getVirtualVisibleRegion(viewPtr, &startColumn, &startRow, &pastTheEndColumn, &pastTheEndRow);
-							if (pastTheEndColumn > startColumn)
-							{
-								//DEBUG//Console_WriteValueFloat4("virt vis", startColumn, pastTheEndColumn, startRow, pastTheEndRow);
-								if ((partCode >= kTerminalView_ContentPartFirstLine) &&
-									(partCode <= kTerminalView_ContentPartLastLine))
-								{
-									// restrict drawing to one row
-									startRow = partCode - 1;
-									pastTheEndRow = startRow + 1;
-									Console_WriteValuePair("view part code indicates past-the-end range", startRow, pastTheEndRow);
-								}
-								
-								// draw the window text
-								(Boolean)drawSection(viewPtr, drawingContext, startColumn - viewPtr->screen.leftVisibleEdgeInColumns,
-														startRow - viewPtr->screen.topVisibleEdgeInRows,
-														pastTheEndColumn - viewPtr->screen.leftVisibleEdgeInColumns,
-														pastTheEndRow - viewPtr->screen.topVisibleEdgeInRows);
-							}
-						}
-					#else
-						{
-							// draw only the requested area; convert from pixels to screen cells
-							HIPoint const		kTopLeftAnchor = clipBounds.origin;
-							HIPoint const		kBottomRightAnchor = CGPointMake(clipBounds.origin.x + clipBounds.size.width,
-																					clipBounds.origin.y + clipBounds.size.height);
-							TerminalView_Cell	leftTopCell;
-							TerminalView_Cell	rightBottomCell;
-							SInt16				deltaColumn = 0;
-							SInt16				deltaRow = 0;
-							
-							
-							// figure out what cells to draw
-							UNUSED_RETURN(Boolean)findVirtualCellFromScreenPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
-							UNUSED_RETURN(Boolean)findVirtualCellFromScreenPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
-							
-							// draw the text in the clipped area
-							UNUSED_RETURN(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
-																leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
-																rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
-																rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
-						}
-					#endif
-						viewPtr->text.attributes = kTextAttributes_Invalid; // forces attributes to reset themselves properly
-						
-						// if, after drawing all text, no text is actually blinking,
-						// then disable the animation timer (so unnecessary refreshes
-						// are not done); otherwise, install it
-						setBlinkingTimerActive(viewPtr, (viewPtr->isActive) && (cursorBlinks(viewPtr) ||
-																				(viewPtr->screen.currentRenderBlinking)));
-						
-						// if inactive, render the text selection as an outline
-						// (if active, the call above to draw the text will also
-						// have drawn the active selection)
-						if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
-						{
-							HIShapeRef		selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
-							
-							
-							if (nullptr != selectionShape)
-							{
-								RGBColor		highlightColorRGB;
-								CGDeviceColor	highlightColorDevice;
-								OSStatus		error = noErr;
-								
-								
-								// TEMPORARY - account for QuickDraw/Quartz differences until conversion is complete
-								{
-									HIMutableShapeRef		offsetCopy = HIShapeCreateMutableCopy(selectionShape);
-									
-									
-									if (nullptr != offsetCopy)
-									{
-										HIShapeOffset(offsetCopy, -1.0, -1.0);
-										
-										CFRelease(selectionShape), selectionShape = nullptr;
-										selectionShape = offsetCopy;
-									}
-								}
-								
-								// draw outline
-								CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
-								CGContextSetLineCap(drawingContext, kCGLineCapRound);
-								LMGetHiliteRGB(&highlightColorRGB);
-								highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
-								CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
-															highlightColorDevice.blue, 1.0/* alpha */);
-								error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
-								assert_noerr(error);
-								CGContextStrokePath(drawingContext);
-								
-								// free allocated memory
-								CFRelease(selectionShape), selectionShape = nullptr;
-							}
-						}
-						
-						// perform any necessary rendering for drags
-						{
-							Boolean		dragHighlight = false;
-							UInt32		actualSize = 0;
-							
-							
-							if (noErr != GetControlProperty(view, AppResources_ReturnCreatorCode(),
-															kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-															sizeof(dragHighlight), &actualSize,
-															&dragHighlight))
-							{
-								dragHighlight = false;
-							}
-							
-							if (dragHighlight)
-							{
-								DragAndDrop_ShowHighlightFrame(drawingContext, CGRectInset(floatBounds, 2, 2));
-							}
-						}
-					}
-					
-					// render margin line, if requested
-					if (gPreferenceProxies.renderMarginAtColumn > 0)
-					{
-						Rect			dummyBounds;
-						RGBColor		highlightColorRGB;
-						CGDeviceColor	highlightColorDevice;
-						
-						
-						getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
-											gPreferenceProxies.renderMarginAtColumn/* zero-based column number, but following column is desired */,
-											1/* character count - not important */, &dummyBounds);
-						CGContextSetLineWidth(drawingContext, 2.0);
-						CGContextSetLineCap(drawingContext, kCGLineCapButt);
-						LMGetHiliteRGB(&highlightColorRGB);
-						highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
-						CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
-													highlightColorDevice.blue, 1.0/* alpha */);
-						CGContextBeginPath(drawingContext);
-						CGContextMoveToPoint(drawingContext, dummyBounds.left, floatBounds.origin.y);
-						CGContextAddLineToPoint(drawingContext, dummyBounds.left, floatBounds.origin.y + floatBounds.size.height);
-						CGContextStrokePath(drawingContext);
-					}
-					
-					// kTerminalView_ContentPartCursor
-					if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
-					{
-						CGContextSaveRestore	_(drawingContext);
-						TextAttributes_Object	cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-						CGRect					cursorFloatBounds = viewPtr->screen.cursor.bounds;
-						
-						
-						// flip colors and paint at the current blink alpha value
-						if (cursorAttributes.hasAttributes(kTextAttributes_StyleInverse))
-						{
-							cursorAttributes.removeAttributes(kTextAttributes_StyleInverse);
-						}
-						else
-						{
-							cursorAttributes.addAttributes(kTextAttributes_StyleInverse);
-						}
-						useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
-												true/* is cursor */,
-												cursorBlinks(viewPtr)
-												? viewPtr->animation.cursor.blinkAlpha
-												: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
-						CGContextSetAllowsAntialiasing(drawingContext, false);
-						CGContextFillRect(drawingContext, cursorFloatBounds);
-						CGContextSetAllowsAntialiasing(drawingContext, true);
-						
-						// if the terminal is currently in password mode, annotate the cursor
-						if (Terminal_IsInPasswordMode(viewPtr->screen.ref))
-						{
-							CGFloat const	newHeight = viewPtr->text.font.heightPerCell.precisePixels(); // TEMPORARY; does not handle double-height lines (probably does not need to)
-							CGFloat			dotDimensions = STATIC_CAST(ceil(viewPtr->text.font.heightPerCell.precisePixels() * 0.33/* arbitrary */), CGFloat);
-							CGRect			fullRectangleBounds = cursorFloatBounds;
-							CGRect			dotBounds = CGRectMake(0, 0, dotDimensions, dotDimensions); // arbitrary
-							
-							
-							// the cursor may not be block-size so convert to a block rectangle
-							// before determining the placement of the oval inset
-							fullRectangleBounds.origin.y = fullRectangleBounds.origin.y + fullRectangleBounds.size.height - newHeight;
-							fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
-							fullRectangleBounds.size.height = newHeight;
-							RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
-							
-							// draw the dot in the middle of the cell that the cursor occupies
-							if (kTerminal_CursorTypeBlock == gPreferenceProxies.cursorType)
-							{
-								// since the disk will not be visible with a full block shape, first
-								// restore original attributes (that way the disk appears in the
-								// color of the background, not the color of the cursor)
-								cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
-								useTerminalTextColors(viewPtr, drawingContext, cursorAttributes,
-														true/* is cursor */,
-														cursorBlinks(viewPtr)
-														? viewPtr->animation.cursor.blinkAlpha
-														: 0.8f/* arbitrary, but it should be possible to see characters underneath a block shape */);
-							}
-							CGContextFillEllipseInRect(drawingContext, dotBounds);
-						}
-					}
-					
-					// kTerminalView_ContentPartCursorGhost
-					if (kMyCursorStateVisible == viewPtr->screen.cursor.ghostState)
-					{
-						// draw the cursor at its ghost location (with ghost appearance)
-						// UNIMPLEMENTED
-					}
-					
-					// debug: show the update region as a solid color
-				#if 0
-					{
-						static UInt16	colorCounter = 0;
-						CGDeviceColor	debugColor = { 0.0, 0.0, 0.0 };
-						
-						
-						// rotate through a few different colors so that
-						// adjacent updates in different areas are more likely
-						// to be seen as distinct
-						++colorCounter;
-						if (1 == colorCounter)
-						{
-							debugColor = { 1.0, 0.0, 0.0 };
-						}
-						else if (2 == colorCounter)
-						{
-							debugColor = { 0.0, 1.0, 0.0 };
-						}
-						else if (3 == colorCounter)
-						{
-							debugColor = { 1.0, 1.0, 0.0 };
-						}
-						else if (4 == colorCounter)
-						{
-							debugColor = { 0.0, 0.0, 1.0 };
-						}
-						else if (5 == colorCounter)
-						{
-							debugColor = { 0.5, 0.5, 0.5 };
-						}
-						else
-						{
-							colorCounter = 0;
-						}
-						
-						if (0 != colorCounter)
-						{
-							CGContextSetRGBFillColor(drawingContext, debugColor.red, debugColor.green,
-														debugColor.blue, 1.0/* alpha */);
-							CGContextSetAllowsAntialiasing(drawingContext, false);
-							CGContextFillRect(drawingContext, clipBounds);
-							CGContextSetAllowsAntialiasing(drawingContext, true);
-						}
-					}
-				#endif
-				}
-			}
-			
-			// restore port
-			SetGWorld(oldPort, oldDevice);
-		}
-	}
-	return result;
-}// receiveTerminalViewDraw
-
-
-/*!
-Handles "kEventControlGetData" of "kEventClassControl".
-
-Sets the control kind.
-
-(3.1)
-*/
-OSStatus
-receiveTerminalViewGetData	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef					inEvent,
-							 TerminalViewRef			UNUSED_ARGUMENT(inTerminalViewRef))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlGetData);
-	{
-		// determine the type of data being retrieved
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (result == noErr)
-		{
-			HIViewPartCode		partNeedingDataGet = kControlNoPart;
-			
-			
-			// determine the part for which data is being set
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode,
-															partNeedingDataGet);
-			if (result == noErr)
-			{
-				FourCharCode	dataType = '----';
-				
-				
-				// determine the setting that is being changed
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlDataTag,
-																typeEnumeration, dataType);
-				if (noErr == result)
-				{
-					switch (dataType)
-					{
-					case kControlKindTag:
-						{
-							SInt32		dataSize = 0;
-							
-							
-							result = CarbonEventUtilities_GetEventParameter
-										(inEvent, kEventParamControlDataBufferSize,
-											typeLongInteger, dataSize);
-							if (noErr == result)
-							{
-								ControlKind*	kindPtr = nullptr;
-								
-								
-								assert(dataSize == sizeof(ControlKind));
-								result = CarbonEventUtilities_GetEventParameter
-											(inEvent, kEventParamControlDataBuffer,
-												typePtr, kindPtr);
-								if (noErr == result)
-								{
-									kindPtr->signature = AppResources_ReturnCreatorCode();
-									kindPtr->kind = kConstantsRegistry_ControlKindTerminalView;
-								}
-							}
-						}
-						result = noErr;
-						break;
-					
-					default:
-						// ???
-						break;
-					}
-				}
-			}
-		}
-	}
-	return result;
-}// receiveTerminalViewGetData
-
-
-/*!
-Handles "kEventControlHitTest" of "kEventClassControl".
-
-Invoked by Mac OS X whenever a point needs to be mapped
-to a view part code (presumably due to a mouse click).
-
-(3.0)
-*/
-OSStatus
-receiveTerminalViewHitTest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 TerminalViewRef		inTerminalViewRef)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	// for simplicity, the tracking handler may invoke this directly with one of its events,
-	// so the event kind will be kEventControlTrack in those cases
-	assert((kEventKind == kEventControlHitTest) || (kEventKind == kEventControlTrack));
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (result == noErr)
-		{
-			HIPoint   localMouse;
-			
-			
-			// determine where the mouse is
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeHIPoint, localMouse);
-			if (result == noErr)
-			{
-				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-				HIViewPartCode				hitPart = kTerminalView_ContentPartVoid;
-				HIRect						viewBounds;
-				
-				
-				// find the part the mouse is in
-				HIViewGetBounds(view, &viewBounds);
-				if (CGRectContainsPoint(viewBounds, localMouse))
-				{
-					// TEMPORARY - a hit anywhere in the view is in text, otherwise nowhere; ignore other parts
-					// (this will be updated to detect clicks on specific lines, clicks in the cursor, etc.)
-					hitPart = kTerminalView_ContentPartText;
-				}
-				
-				// update the part code parameter with the part under the mouse
-				result = SetEventParameter(inEvent, kEventParamControlPart,
-											typeControlPartCode, sizeof(hitPart), &hitPart);
-			}
-		}
-	}
-	return result;
-}// receiveTerminalViewHitTest
-
-
-/*!
-Handles "kEventRawKeyDown" of "kEventClassKeyboard".
-Responds by modifying currently selected text (if any)
-based on keyboard shortcuts that alter selections.
-
-Invoked by Mac OS X whenever the user hits a key.
-
-(3.1)
-*/
-OSStatus
-receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-								 EventRef				inEvent,
-								 void*					inTerminalViewRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	TerminalViewRef		view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassKeyboard);
-	assert((kEventKind == kEventRawKeyDown) || (kEventKind == kEventRawKeyRepeat));
-	{
-		UInt32		virtualKeyCode = 0;
-		
-		
-		// get the key
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyCode, typeUInt32, virtualKeyCode);
-		
-		// if the key was found, continue
-		if (noErr == result)
-		{
-			UInt32		modifiers = 0;
-			
-			
-			// get modifier key states
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-			if (noErr == result)
-			{
-				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-				TerminalView_CellRange		oldSelectionRange = viewPtr->text.selection.range;
-				Boolean						selectionChanged = false;
-				
-				
-				// take the opportunity to reset the cursor state, so it is fully visible as
-				// keys are being pressed; also reset the stage so that the timing is right
-				viewPtr->animation.cursor.blinkAlpha = 1.0;
-				viewPtr->animation.rendering.stage = 0;
-				
-				// ignore Caps Lock and extra keys for the sake of the comparisons below...
-				modifiers &= (cmdKey | shiftKey | optionKey | controlKey);
-				
-				result = eventNotHandledErr; // initially...
-				switch (virtualKeyCode)
-				{
-				case kVK_LeftArrow: // 0x7B
-					if (false == viewPtr->text.selection.readOnly)
-					{
-						if (modifiers == shiftKey)
-						{
-							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-								(false == viewPtr->text.selection.exists))
-							{
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
-							}
-							
-							if (false == viewPtr->text.selection.exists)
-							{
-								TerminalView_SelectBeforeCursorCharacter(view);
-							}
-							else
-							{
-								// shift-left-arrow
-								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																			// deselect the character to the right of the bottom selection anchor
-																			? viewPtr->text.selection.range.second
-																			// extend top selection anchor one character backward
-																			: viewPtr->text.selection.range.first;
-								
-								
-								// this wraps to the next line, but the wrap column depends on
-								// the style (rectangular or not)
-								if (anchorToChange.first > 0)
-								{
-									// back up one character, same line
-									--anchorToChange.first;
-								}
-								else
-								{
-									// move to previous line, end
-									if (false == viewPtr->text.selection.isRectangular)
-									{
-										anchorToChange.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
-									}
-									--anchorToChange.second;
-								}
-								selectionChanged = true;
-							}
-							
-							// event is handled
-							result = noErr;
-						}
-						else if (modifiers == (shiftKey | cmdKey))
-						{
-							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-								(false == viewPtr->text.selection.exists))
-							{
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
-							}
-							
-							if (false == viewPtr->text.selection.exists)
-							{
-								TerminalView_SelectBeforeCursorCharacter(view);
-							}
-							
-							// shift-command-left-arrow
-							if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-							{
-								// deselect all characters on this line
-								viewPtr->text.selection.range.second.first = 0;
-							}
-							else
-							{
-								// extend selection to beginning of line
-								viewPtr->text.selection.range.first.first = 0;
-							}
-							selectionChanged = true;
-							
-							// event is handled
-							result = noErr;
-						}
-					}
-					break;
-				
-				case kVK_RightArrow: // 0x7C
-					if (false == viewPtr->text.selection.readOnly)
-					{
-						if (modifiers == shiftKey)
-						{
-							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-								(false == viewPtr->text.selection.exists))
-							{
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
-							}
-							
-							if (false == viewPtr->text.selection.exists)
-							{
-								TerminalView_SelectCursorCharacter(view);
-							}
-							else
-							{
-								// shift-right-arrow
-								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																			// extend bottom selection anchor one character forward
-																			? viewPtr->text.selection.range.second
-																			// deselect the character to the left of the top selection anchor
-																			: viewPtr->text.selection.range.first;
-								
-								
-								// this wraps to the next line, but the wrap column depends on
-								// the style (rectangular or not)
-								if (anchorToChange.first < Terminal_ReturnColumnCount(viewPtr->screen.ref))
-								{
-									// go forward one character, same line
-									++anchorToChange.first;
-								}
-								else
-								{
-									// move to next line, beginning
-									if (false == viewPtr->text.selection.isRectangular)
-									{
-										anchorToChange.first = 0;
-									}
-									++anchorToChange.second;
-								}
-								selectionChanged = true;
-							}
-							
-							// event is handled
-							result = noErr;
-						}
-						else if (modifiers == (shiftKey | cmdKey))
-						{
-							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-								(false == viewPtr->text.selection.exists))
-							{
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
-							}
-							
-							if (false == viewPtr->text.selection.exists)
-							{
-								TerminalView_SelectCursorCharacter(view);
-							}
-							
-							// shift-command-right-arrow
-							if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-							{
-								// extend selection to end of line
-								viewPtr->text.selection.range.second.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
-							}
-							else
-							{
-								// deselect all characters on this line
-								viewPtr->text.selection.range.first.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
-							}
-							selectionChanged = true;
-							
-							// event is handled
-							result = noErr;
-						}
-					}
-					break;
-				
-				case kVK_UpArrow: // 0x7E
-					if (false == viewPtr->text.selection.readOnly)
-					{
-						if (modifiers == shiftKey)
-						{
-							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-								(false == viewPtr->text.selection.exists))
-							{
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
-							}
-							
-							if (false == viewPtr->text.selection.exists)
-							{
-								TerminalView_SelectCursorLine(view);
-							}
-							else
-							{
-								// shift-up-arrow
-								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																			// reduce selection by one line off the bottom
-																			? viewPtr->text.selection.range.second
-																			// extend selection one line backward, same column
-																			: viewPtr->text.selection.range.first;
-								
-								
-								--anchorToChange.second;
-								selectionChanged = true;
-							}
-							
-							// event is handled
-							result = noErr;
-						}
-					}
-					break;
-				
-				case kVK_DownArrow: // 0x7D
-					if (false == viewPtr->text.selection.readOnly)
-					{
-						if (modifiers == shiftKey)
-						{
-							if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
-								(false == viewPtr->text.selection.exists))
-							{
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
-							}
-							
-							if (false == viewPtr->text.selection.exists)
-							{
-								TerminalView_SelectCursorLine(view);
-							}
-							else
-							{
-								// shift-down-arrow
-								TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
-																			// extend selection one line forward, same column
-																			? viewPtr->text.selection.range.second
-																			// reduce selection by one line off the top
-																			: viewPtr->text.selection.range.first;
-								
-								
-								++anchorToChange.second;
-								selectionChanged = true;
-							}
-							
-							// event is handled
-							result = noErr;
-						}
-					}
-					break;
-				
-				default:
-					// do not handle
-					break;
-				}
-				
-				if (selectionChanged)
-				{
-					// TEMPORARY - could adjust this to only invalidate the part that was
-					// actually added/removed
-					highlightVirtualRange(viewPtr, oldSelectionRange, kTextAttributes_Selected,
-											false/* highlighted */, true/* draw */);
-					highlightCurrentSelection(viewPtr, true/* highlighted */, true/* draw */);
-					copySelectedTextIfUserPreference(viewPtr);
-				}
-			}
-			else
-			{
-				result = eventNotHandledErr;
-			}
-		}
-		else
-		{
-			result = eventNotHandledErr;
-		}
-	}
-	return result;
-}// receiveTerminalViewRawKeyDown
-
-
-/*!
-Handles "kEventControlGetPartRegion" and "kEventControlGetPartBounds"
-of "kEventClassControl".
-
-Invoked by Mac OS X whenever the boundaries of a particular
-part of a terminal view must be determined.
-
-(3.1)
-*/
-OSStatus
-receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-									 EventRef				inEvent,
-									 TerminalViewRef		inTerminalViewRef)
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	Boolean const	kIsBounds = (kEventKind == kEventControlGetPartBounds);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert((kEventKind == kEventControlGetPartRegion) ||
-			(kEventKind == kEventControlGetPartBounds));
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (noErr == result)
-		{
-			HIViewPartCode		partNeedingRegion = kControlNoPart;
-			OSStatus			error = noErr;
-			Boolean				prefersShape = false;
-			
-			
-			// check region-specific parameters
-			if (false == kIsBounds)
-			{
-				// determine if a shape can be provided
-				UNUSED_RETURN(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPrefersShape, typeBoolean,
-																				prefersShape);
-			}
-			
-			// determine the focus part
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode,
-															partNeedingRegion);
-			if (noErr == result)
-			{
-				My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-				HIRect						partBounds;
-				
-				
-				// IMPORTANT: All regions are currently rectangles, so this code is simplified.
-				// If any irregular regions are added in the future, this has to be restructured.
-				switch (partNeedingRegion)
-				{
-				case kControlStructureMetaPart:
-				case kControlContentMetaPart:
-				case kTerminalView_ContentPartText:
-					{
-						error = HIViewGetBounds(viewPtr->carbonData->contentHIView, &partBounds);
-						if (noErr == error)
-						{
-							result = noErr;
-						}
-						else
-						{
-							result = eventNotHandledErr;
-						}
-					}
-					break;
-				
-				case kControlOpaqueMetaPart:
-				#if 0
-					// the text area is designed to draw on top of a background widget,
-					// so in general it is not really considered opaque anywhere (this
-					// could be changed for certain cases, however)
-					partBounds = CGRectZero;
-				#else
-					// IMPORTANT: after transitioning to Core Graphics and precise
-					// pixels, drawing artifacts appear if the view attempts to
-					// merge its drawing with the background view; this will not
-					// be resolved for Carbon, it will simply be handled in the
-					// Cocoa version (and the view is opaque in the meantime); see
-					// also the drawing handler for the background fill
-					{
-						error = HIViewGetBounds(viewPtr->carbonData->contentHIView, &partBounds);
-						if (noErr == error)
-						{
-							result = noErr;
-						}
-						else
-						{
-							result = eventNotHandledErr;
-						}
-					}
-				#endif
-					break;
-				
-				case kTerminalView_ContentPartCursor:
-					partBounds = viewPtr->screen.cursor.bounds;
-					break;
-				
-				case kTerminalView_ContentPartCursorGhost:
-					// (note: never implemented)
-					partBounds = viewPtr->screen.cursor.bounds;
-					break;
-				
-				case kTerminalView_ContentPartVoid:
-				default:
-					partBounds = CGRectZero;
-					break;
-				}
-				
-				// the line-specific regions are special part codes not
-				// easily switched, so scan for that range
-				if ((partNeedingRegion >= kTerminalView_ContentPartFirstLine) &&
-					(partNeedingRegion <= kTerminalView_ContentPartLastLine))
-				{
-					// UNIMPLEMENTED
-					result = eventNotHandledErr;
-				}
-				
-				//Console_WriteValue("request was for region code", partNeedingRegion);
-				//Console_WriteValueFloat4("returned terminal view region bounds",
-				//							partBounds.origin.x, partBounds.origin.y,
-				//							partBounds.size.width, partBounds.size.height);
-				
-				if (kIsBounds)
-				{
-					// set rectangular bounds
-					result = SetEventParameter(inEvent, kEventParamControlPartBounds,
-												typeHIRect, sizeof(partBounds), &partBounds);
-				}
-				else
-				{
-					// set region/shape
-					RgnHandle	regionToSet = nullptr;
-					Boolean		setRegion = false;
-					
-					
-					if (prefersShape)
-					{
-						HIShapeRef		shapeToReturn = HIShapeCreateWithRect(&partBounds);
-						
-						
-						if (nullptr == shapeToReturn)
-						{
-							setRegion = true;
-						}
-						else
-						{
-							error = SetEventParameter(inEvent, kEventParamShape,
-														typeHIShapeRef, sizeof(shapeToReturn), &shapeToReturn);
-							if (noErr != error)
-							{
-								setRegion = true;
-							}
-							else
-							{
-								result = noErr;
-							}
-							
-							// shape is retained by the system
-							CFRelease(shapeToReturn); shapeToReturn = nullptr;
-						}
-					}
-					else
-					{
-						setRegion = true;
-					}
-					
-					if (setRegion)
-					{
-						error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlRegion, typeQDRgnHandle,
-																		regionToSet);
-						if (noErr != error)
-						{
-							result = eventNotHandledErr;
-						}
-						else
-						{
-							Rect	intRect;
-							
-							
-							RegionUtilities_SetRect(&intRect, 0, 0, STATIC_CAST(partBounds.size.width, SInt16),
-													STATIC_CAST(partBounds.size.height, SInt16));
-							// modify the given region, which effectively returns the boundaries to the caller
-							RectRgn(regionToSet, &intRect);
-							result = noErr;
-						}
-					}
-				}
-			}
-		}
-	}
-	return result;
-}// receiveTerminalViewRegionRequest
-
-
-/*!
-Handles "kEventControlTrack" of "kEventClassControl".
-
-Invoked by Mac OS X whenever the user is dragging the
-mouse in a terminal view.  This handles text selection,
-etc.
-
-(3.0)
-*/
-OSStatus
-receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
-							 EventRef				inEvent,
-							 TerminalViewRef		inTerminalViewRef)
-{
-	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
-	OSStatus					result = eventNotHandledErr;
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlTrack);
-	if (false == viewPtr->text.selection.readOnly)
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (result == noErr)
-		{
-			Point   originalLocalMouse;
-			
-			
-			// NOTE: the following is a TOTAL HACK to help Carbon and Cocoa play nicely together;
-			// in certain situations, if a Cocoa window had focus and the user clicks in the
-			// Carbon-based terminal window, the Cocoa window won’t lose focus (which is very
-			// unexpected behavior); this FORCES the window belonging to this view to become the
-			// focus from Cocoa’s point of view, so that it will behave better
-			{
-				HIWindowRef		viewWindow = HIViewGetWindow(view);
-				
-				
-				SetUserFocusWindow(viewWindow);
-				CocoaBasic_MakeFrontWindowCarbonUserFocusWindow();
-			}
-			
-			// determine where the mouse is (view-relative!)
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseLocation, typeQDPoint, originalLocalMouse);
-			if (result == noErr)
-			{
-				UInt32		currentModifiers = 0;
-				
-				
-				// translate the mouse coordinates to QuickDraw (content-relative)
-				screenToLocal(viewPtr, &originalLocalMouse.h, &originalLocalMouse.v);
-				
-				// get current modifiers
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, currentModifiers);
-				if (result != noErr)
-				{
-					// guess
-					currentModifiers = EventLoop_ReturnCurrentModifiers();
-					result = noErr;
-				}
-				
-				// track the mouse location
-				if (viewPtr != nullptr)
-				{
-					MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
-					Point					localMouse = originalLocalMouse;
-					CGrafPtr				oldPort = nullptr;
-					GDHandle				oldDevice = nullptr;
-					Boolean					movedCursor = false; // used to avoid conflict with command-click URL handling
-					Boolean					cannotBeDoubleClick = false; // this is set if certain actions occur (such as URL handling)
-					Boolean					dragged = false; // whether text selection was dragged
-					Boolean					mouseInSelection = false; // whether the mouse was clicked inside an existing text selection
-					
-					
-					GetGWorld(&oldPort, &oldDevice);
-					SetPortWindowPort(GetControlOwner(view));
-					
-					do
-					{
-						if ((currentModifiers & optionKey) && (currentModifiers & cmdKey))
-						{
-							// send host the appropriate sequences to move the cursor to the specified
-							// position; this is done during the mouse-up-wait loop so that the user
-							// can hold down these modifier keys and drag the mouse around, causing
-							// the terminal cursor to follow the mouse continuously
-							TerminalView_MoveCursorWithArrowKeys(viewPtr->selfRef, localMouse);
-							movedCursor = true;
-							cannotBeDoubleClick = true;
-						}
-						else
-						{
-							// regular mouse-down; either drag text or adjust the text selection;
-							// first determine whether the current selection has been clicked;
-							// if drag-and-drop is possible, then maybe this will result in a drag;
-							// otherwise, it will cause the selection to be cancelled
-							if (viewPtr->text.selection.exists)
-							{
-								HIShapeRef	selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
-								RgnHandle	dragRgn = NewRgn();
-								OSStatus	error = noErr;
-								
-								
-								if (nullptr == selectionShape)
-								{
-									error = memPCErr;
-								}
-								else
-								{
-									error = HIShapeGetAsQDRgn(selectionShape, dragRgn);
-								}
-								
-								if (noErr == error)
-								{
-									mouseInSelection = PtInRgn(localMouse, dragRgn);
-									if ((mouseInSelection) && WaitMouseMoved(localMouse))
-									{
-										EventRecord		event;
-										Point			convertedOrigin;
-										
-										
-										// the user has attempted to drag text; track the drag
-										SetPortWindowPort(GetControlOwner(view));
-										RegionUtilities_SetPoint(&convertedOrigin, 0, 0);
-										screenToLocal(viewPtr, &convertedOrigin.h, &convertedOrigin.v);
-										LocalToGlobal(&convertedOrigin);
-										OffsetRgn(dragRgn, convertedOrigin.h, convertedOrigin.v);
-										{
-											// convert the region into an outline
-											RgnHandle	tempRgn = NewRgn();
-											
-											
-											if (tempRgn != nullptr)
-											{
-												CopyRgn(dragRgn, tempRgn);
-												InsetRgn(tempRgn, 1, 1);
-												DiffRgn(dragRgn, tempRgn, dragRgn);
-												DisposeRgn(tempRgn), tempRgn = nullptr;
-											}
-										}
-										event.where = localMouse;
-										SetPortWindowPort(GetControlOwner(view));
-										LocalToGlobal(&event.where);
-										event.modifiers = STATIC_CAST(currentModifiers, EventModifiers);
-										//dragged = dragTerminalSelection(viewPtr, dragRgn, &event);
-										trackingResult = kMouseTrackingMouseUp; // terminate loop
-										cannotBeDoubleClick = true;
-									}
-									else if (0 == (currentModifiers & shiftKey))
-									{
-										// no drag, but unshifted click; cancel the selection
-										TerminalView_SelectNothing(viewPtr->selfRef);
-									}
-									DisposeRgn(dragRgn); dragRgn = nullptr;
-									CFRelease(selectionShape); selectionShape = nullptr;
-								}
-							}
-							
-							// if the user clicks outside the current selection, then extend or
-							// replace the selection
-							unless (mouseInSelection)
-							{
-								Point const		kOldLocalMouse = localMouse;
-								
-								
-								// drag until the user releases the mouse, highlighting as the mouse moves
-								viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
-								trackTextSelection(viewPtr, localMouse, STATIC_CAST(currentModifiers, EventModifiers), &localMouse, &currentModifiers);
-								
-								// since trackTextSelection() loops on mouse-up, assume the mouse is now up
-								trackingResult = kMouseTrackingMouseUp;
-								
-								// if the user moved the mouse a ways or cancelled the selection, it cannot be the start of a double-click
-								unless (RegionUtilities_NearPoints(localMouse, kOldLocalMouse) && !(viewPtr->text.selection.exists))
-								{
-									cannotBeDoubleClick = true;
-								}
-							}
-						}
-						
-						// find next mouse location
-						if (trackingResult != kMouseTrackingMouseUp)
-						{
-							OSStatus	error = noErr;
-							
-							
-							error = TrackMouseLocationWithOptions(nullptr/* port, or nullptr for current port */, 0/* options */,
-																	kEventDurationForever/* timeout */, &localMouse,
-																	&currentModifiers, &trackingResult);
-							if (error != noErr) break;
-						}
-					}
-					while (trackingResult != kMouseTrackingMouseUp);
-					
-					// a single click has occurred; check for single-click actions (like URL handling);
-					// a command-click means the selection is to be interpreted as a URL, or (if there
-					// is no selection) the text nearest the cursor is to be searched for something
-					// that looks like a URL, at which time the text is handled like a URL
-					if ((!movedCursor) && (currentModifiers & cmdKey))
-					{
-						cannotBeDoubleClick = true;
-						SetPortWindowPort(GetControlOwner(view));
-						if ((false == viewPtr->text.selection.exists) ||
-							(false == TerminalView_PtInSelection(viewPtr->selfRef, localMouse)))
-						{
-							// find the URL around the click location, if possible
-							SInt16		deltaColumn = 0;
-							SInt16		deltaRow = 0;
-							
-							
-							// cancel any previous selection
-							TerminalView_SelectNothing(viewPtr->selfRef);
-							
-							// select an entire word
-							UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
-																				viewPtr->text.selection.range.first,
-																				deltaColumn, deltaRow);
-							viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
-							handleMultiClick(viewPtr, 2/* click count */);
-						}
-						
-						// open the selection (apparently a URL)
-						URL_HandleForScreenView(viewPtr->screen.ref, viewPtr->selfRef);
-					}
-					
-					// see if a double- or triple-click occurs
-					unless (cannotBeDoubleClick)
-					{
-						Boolean		foundAnotherClick = false;
-						
-						
-						// see if a double-click occurs
-						foundAnotherClick = EventLoop_IsNextDoubleClick(HIViewGetWindow(view), localMouse/* mouse in global coordinates */);
-						if (foundAnotherClick)
-						{
-							SetPortWindowPort(GetControlOwner(view));
-							GlobalToLocal(&localMouse);
-							foundAnotherClick = RegionUtilities_NearPoints(originalLocalMouse, localMouse);
-						}
-						
-						if (foundAnotherClick)
-						{
-							SInt16		deltaColumn = 0;
-							SInt16		deltaRow = 0;
-							
-							
-							// cancel any previous selection
-							TerminalView_SelectNothing(viewPtr->selfRef);
-							
-							// select an entire word
-							UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
-																				viewPtr->text.selection.range.first,
-																				deltaColumn, deltaRow);
-							viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
-							handleMultiClick(viewPtr, 2/* click count */);
-						}
-						
-						// if the mouse did come back up fairly soon (that is, within double-click
-						// time), then do essentially the same thing once more, to see if another
-						// quick click was made (which would make 3 clicks total)
-						if (foundAnotherClick)
-						{
-							// look for a triple-click
-							foundAnotherClick = EventLoop_IsNextDoubleClick(HIViewGetWindow(view), localMouse/* mouse in global coordinates */);
-							if (foundAnotherClick)
-							{
-								SetPortWindowPort(GetControlOwner(view));
-								GlobalToLocal(&localMouse);
-								foundAnotherClick = RegionUtilities_NearPoints(originalLocalMouse, localMouse);
-							}
-							
-							if (foundAnotherClick)
-							{
-								SInt16		deltaColumn = 0;
-								SInt16		deltaRow = 0;
-								
-								
-								// cancel any previous selection
-								TerminalView_SelectNothing(viewPtr->selfRef);
-								
-								// select an entire line
-								UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(viewPtr, localMouse,
-																					viewPtr->text.selection.range.first,
-																					deltaColumn, deltaRow);
-								viewPtr->text.selection.range.second = viewPtr->text.selection.range.first;
-								handleMultiClick(viewPtr, 3/* click count */);
-							}
-						}
-					}
-					
-					SetGWorld(oldPort, oldDevice);
-					
-					// update the key modifiers parameter with the latest key modifier states
-					currentModifiers = EventLoop_ReturnCurrentModifiers();
-					UNUSED_RETURN(OSStatus)SetEventParameter(inEvent, kEventParamKeyModifiers,
-																typeUInt32, sizeof(currentModifiers), &currentModifiers);
-					
-					// find the part the mouse is in, and update the event to include this part
-					// (it so happens the hit test handler is compatible with these requirements)
-					result = receiveTerminalViewHitTest(inHandlerCallRef, inEvent, inTerminalViewRef);
-				}
-			}
-		}
-	}
-	return result;
-}// receiveTerminalViewTrack
 
 
 /*!
@@ -12391,9 +8861,9 @@ will use this palette to find colors as needed.
 (4.0)
 */
 inline void
-setBlinkAnimationColor	(My_TerminalViewPtr		inTerminalViewPtr,
-						 UInt16					inAnimationStage,
-						 CGDeviceColor const*	inColorPtr)
+setBlinkAnimationColor	(My_TerminalViewPtr			inTerminalViewPtr,
+						 UInt16						inAnimationStage,
+						 CGFloatRGBColor const*		inColorPtr)
 {
 	assert(inAnimationStage < STATIC_CAST(inTerminalViewPtr->blinkColors.size(), UInt16));
 	inTerminalViewPtr->blinkColors[inAnimationStage] = *inColorPtr;
@@ -12447,14 +8917,6 @@ setCursorVisibility		(My_TerminalViewPtr		inTerminalViewPtr,
 		MyCursorState	newCursorState = (inIsVisible) ? kMyCursorStateVisible : kMyCursorStateInvisible;
 		Boolean			renderCursor = (inTerminalViewPtr->screen.cursor.currentState != newCursorState);
 		
-		
-		// cursor flashing is done within a thread; after a window closes,
-		// the flashing ought to stop, but to make sure of that the window
-		// must be valid (otherwise drawing occurs in the desktop!)
-		if (nullptr != inTerminalViewPtr->carbonData)
-		{
-			renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView)));
-		}
 		
 		// change state
 		inTerminalViewPtr->screen.cursor.currentState = newCursorState;
@@ -12562,28 +9024,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	}
 	
 	// set the font metrics (including double size)
-	if (nullptr == inTerminalViewPtr->carbonData)
-	{
-		setUpScreenFontMetrics(inTerminalViewPtr);
-	}
-	else
-	{
-		CGrafPtr			oldPort = nullptr;
-		GDHandle			oldDevice = nullptr;
-		GrafPortFontState	fontState;
-		
-		
-		GetGWorld(&oldPort, &oldDevice);
-		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView));
-		Localization_PreservePortFontState(&fontState);
-		TextFontByName(inTerminalViewPtr->text.font.familyName);
-		TextSize(inTerminalViewPtr->text.font.normalMetrics.size);
-		
-		setUpScreenFontMetrics(inTerminalViewPtr);
-		
-		Localization_RestorePortFontState(&fontState);
-		SetGWorld(oldPort, oldDevice);
-	}
+	setUpScreenFontMetrics(inTerminalViewPtr);
 	
 	// recalculate cursor boundaries for the specified view
 	{
@@ -12627,34 +9068,19 @@ call setScreenCustomColor() too.
 inline void
 setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 					 TerminalView_ColorIndex	inColorEntryNumber,
-					 CGDeviceColor const*		inColorPtr)
+					 CGFloatRGBColor const*		inColorPtr)
 {
 	switch (inColorEntryNumber)
 	{
 	case kTerminalView_ColorIndexNormalBackground:
 		{
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
-			if (inTerminalViewPtr->isCocoa())
-			{
-				// the view reads its color from the associated data structure automatically, so just redraw
-				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewBottom setNeedsDisplay:YES];
-				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewLeft setNeedsDisplay:YES];
-				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewRight setNeedsDisplay:YES];
-				[inTerminalViewPtr->encompassingNSView.terminalPaddingViewTop setNeedsDisplay:YES];
-			}
-			else
-			{
-				if (nullptr != inTerminalViewPtr->carbonData->paddingHIView)
-				{
-					OSStatus	error = noErr;
-					
-					
-					error = SetControlProperty(inTerminalViewPtr->carbonData->paddingHIView, AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-												sizeof(*inColorPtr), inColorPtr);
-					assert_noerr(error);
-				}
-			}
+			
+			// the view reads its color from the associated data structure automatically, so just redraw
+			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewBottom setNeedsDisplay:YES];
+			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewLeft setNeedsDisplay:YES];
+			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewRight setNeedsDisplay:YES];
+			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewTop setNeedsDisplay:YES];
 		}
 		break;
 	
@@ -12677,27 +9103,12 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	case kTerminalView_ColorIndexMatteBackground:
 		{
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground] = *inColorPtr;
-			if (inTerminalViewPtr->isCocoa())
-			{
-				// the view reads its color from the associated data structure automatically, so just redraw
-				[inTerminalViewPtr->encompassingNSView.terminalMarginViewBottom setNeedsDisplay:YES];
-				[inTerminalViewPtr->encompassingNSView.terminalMarginViewLeft setNeedsDisplay:YES];
-				[inTerminalViewPtr->encompassingNSView.terminalMarginViewRight setNeedsDisplay:YES];
-				[inTerminalViewPtr->encompassingNSView.terminalMarginViewTop setNeedsDisplay:YES];
-			}
-			else
-			{
-				if (nullptr != inTerminalViewPtr->carbonData->backgroundHIView)
-				{
-					OSStatus	error = noErr;
-					
-					
-					error = SetControlProperty(inTerminalViewPtr->carbonData->backgroundHIView, AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_ControlPropertyTypeBackgroundColor,
-												sizeof(*inColorPtr), inColorPtr);
-					assert_noerr(error);
-				}
-			}
+			
+			// the view reads its color from the associated data structure automatically, so just redraw
+			[inTerminalViewPtr->encompassingNSView.terminalMarginViewBottom setNeedsDisplay:YES];
+			[inTerminalViewPtr->encompassingNSView.terminalMarginViewLeft setNeedsDisplay:YES];
+			[inTerminalViewPtr->encompassingNSView.terminalMarginViewRight setNeedsDisplay:YES];
+			[inTerminalViewPtr->encompassingNSView.terminalMarginViewTop setNeedsDisplay:YES];
 		}
 		break;
 	
@@ -12711,7 +9122,7 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 	if ((inColorEntryNumber == kTerminalView_ColorIndexBlinkingText) ||
 		(inColorEntryNumber == kTerminalView_ColorIndexBlinkingBackground))
 	{
-		CGDeviceColor		colorValue;
+		CGFloatRGBColor		colorValue;
 		
 		
 		// create enough intermediate colors to make a reasonably
@@ -12741,9 +9152,9 @@ the base 16 (ANSI) colors typically are.
 (4.0)
 */
 inline void
-setScreenCoreColor	(My_TerminalViewPtr		inTerminalViewPtr,
-					 UInt16					inColorEntryNumber,
-					 CGDeviceColor const*	inColorPtr)
+setScreenCoreColor	(My_TerminalViewPtr			inTerminalViewPtr,
+					 UInt16						inColorEntryNumber,
+					 CGFloatRGBColor const*		inColorPtr)
 {
 	inTerminalViewPtr->coreColors[inColorEntryNumber] = *inColorPtr;
 }// setScreenCoreColor
@@ -12764,7 +9175,7 @@ rendering colors.
 inline void
 setScreenCustomColor	(My_TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
-						 CGDeviceColor const*		inColorPtr)
+						 CGFloatRGBColor const*		inColorPtr)
 {
 	assert(inColorEntryNumber < STATIC_CAST(inTerminalViewPtr->customColors.size(), TerminalView_ColorIndex));
 	inTerminalViewPtr->customColors[inColorEntryNumber] = *inColorPtr;
@@ -12877,8 +9288,8 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		if (nil == foregroundNSColor)
 		{
-			CGDeviceColor	backgroundDeviceColor;
-			CGDeviceColor	foregroundDeviceColor;
+			CGFloatRGBColor		backgroundDeviceColor;
+			CGFloatRGBColor		foregroundDeviceColor;
 			
 			
 			// find the correct colors in the color table
@@ -13012,8 +9423,8 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	getRowBounds(inTerminalViewPtr, inY, &rowBounds);
 	
-	RegionUtilities_SetPoint(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY).integralPixels(),
-								rowBounds.bottom - rowBounds.top);
+	characterSizeInPixels.h = getRowCharacterWidth(inTerminalViewPtr, inY).integralPixels();
+	characterSizeInPixels.v = (rowBounds.bottom - rowBounds.top);
 	
 	outBoundsPtr->origin.x = inX * characterSizeInPixels.h;
 	outBoundsPtr->origin.y = rowBounds.top;
@@ -13086,58 +9497,22 @@ is currently being drawn) and use the default font.
 void
 setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	if (inTerminalViewPtr->isCocoa())
+	NSFont* const	sourceFont = [inTerminalViewPtr->text.font.normalFont screenFont];
+	
+	
+	// TEMPORARY; eventually store floating-point values instead of casting
+	inTerminalViewPtr->text.font.normalMetrics.ascent = STATIC_CAST([sourceFont ascender], SInt16);
+	inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(sourceFont.ascender - sourceFont.descender);
+	inTerminalViewPtr->text.font.isMonospaced = (YES == [sourceFont isFixedPitch]);
+	
+	// Set the width per character.
+	if (inTerminalViewPtr->text.font.isMonospaced)
 	{
-		NSFont* const	sourceFont = [inTerminalViewPtr->text.font.normalFont screenFont];
-		
-		
-		// TEMPORARY; eventually store floating-point values instead of casting
-		inTerminalViewPtr->text.font.normalMetrics.ascent = STATIC_CAST([sourceFont ascender], SInt16);
-		inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels([sourceFont defaultLineHeightForFont]);
-		inTerminalViewPtr->text.font.isMonospaced = (YES == [sourceFont isFixedPitch]);
-		
-		// Set the width per character.
-		if (inTerminalViewPtr->text.font.isMonospaced)
-		{
-			inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont maximumAdvancement].width);
-		}
-		else
-		{
-			inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width);
-		}
+		inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont maximumAdvancement].width);
 	}
 	else
 	{
-		FontInfo	fontInfo;
-		
-		
-		GetFontInfo(&fontInfo);
-		inTerminalViewPtr->text.font.normalMetrics.ascent = fontInfo.ascent;
-		inTerminalViewPtr->text.font.heightPerCell.setIntegralPixels(fontInfo.ascent + fontInfo.descent + fontInfo.leading);
-		inTerminalViewPtr->text.font.isMonospaced = isMonospacedFont
-													(FMGetFontFamilyFromName(inTerminalViewPtr->text.font.familyName));
-		
-		// Set the width per character; for monospaced fonts one can simply
-		// use the width of any character in the set, but for proportional
-		// fonts the question is more difficult to answer.  For one thing,
-		// should the widest character in the font be used?  Technically yes
-		// to ensure enough room to display any text, but in practice this
-		// makes everything look really spaced out.  Another consideration
-		// is the script system: not all fonts are Roman, so one cannot just
-		// pick an arbitrary character because it could map to an unexpected
-		// glyph in the font and be a different width than expected.
-		//
-		// For reasonable speed and decent spacing, proportional fonts use
-		// the width of the widest character in the font, minus an arbitrary
-		// amount proportional to the font size.
-		if (inTerminalViewPtr->text.font.isMonospaced)
-		{
-			inTerminalViewPtr->text.font.baseWidthPerCell.setIntegralPixels(CharWidth('A'));
-		}
-		else
-		{
-			inTerminalViewPtr->text.font.baseWidthPerCell.setIntegralPixels(fontInfo.widMax);
-		}
+		inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width);
 	}
 	
 	// scale the font width according to user preferences
@@ -13154,9 +9529,9 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 						inTerminalViewPtr->text.font.doubleMetrics.ascent);
 	
 	// the thickness of lines in certain glyphs is also scaled with the font size
-	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max(1.0f, inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 5.0f); // arbitrary
+	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max< Float32 >(1.0f, inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 5.0f); // arbitrary
 	inTerminalViewPtr->text.font.thicknessHorizontalBold = 2.0f * inTerminalViewPtr->text.font.thicknessHorizontalLines; // arbitrary
-	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max(1.0f, inTerminalViewPtr->text.font.heightPerCell.precisePixels() / 7.0f); // arbitrary
+	inTerminalViewPtr->text.font.thicknessVerticalLines = std::max< Float32 >(1.0f, inTerminalViewPtr->text.font.heightPerCell.precisePixels() / 7.0f); // arbitrary
 	inTerminalViewPtr->text.font.thicknessVerticalBold = 2.0f * inTerminalViewPtr->text.font.thicknessVerticalLines; // arbitrary
 }// setUpScreenFontMetrics
 	
@@ -13335,251 +9710,6 @@ stopMonitoringDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Responds to a mouse-down event in a session window by
-changing the cursor to an I-beam and creating or
-extending the text selection of the specified window
-based on the user’s use of the mouse and modifier keys.
-The window also scrolls if the user moves the mouse out
-of the boundaries of the window’s content area.  Make
-sure that the “is text selected” flag has a value of 1
-when using this routine -- otherwise, autoscrolling
-screws up drawing of the text selection.
-
-Loops until the user releases the mouse button.  On
-output, the new mouse location and modifier key states
-are returned.
-
-Carbon only.
-
-(3.0)
-*/
-void
-trackTextSelection	(My_TerminalViewPtr		inTerminalViewPtr,
-					 Point					inLocalMouse,
-					 EventModifiers			inModifiers,
-					 Point*					outNewLocalMousePtr,
-					 UInt32*				outNewModifiersPtr)
-{
-	if ((false == inTerminalViewPtr->text.selection.inhibited) &&
-		(false == inTerminalViewPtr->text.selection.readOnly))
-	{
-		TerminalView_Cell		originalCellUnderMouse;
-		TerminalView_Cell		cellUnderMouse;
-		Point					previousLocalMouse;
-		SInt16					deltaColumn = 0;
-		SInt16					deltaRow = 0;
-		CGrafPtr				oldPort = nullptr;
-		GDHandle				oldDevice = nullptr;
-		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
-		Boolean					extendSelection = false;
-		
-		
-		GetGWorld(&oldPort, &oldDevice);
-		
-		// determine if the old selection should go away first
-		extendSelection = (0 != (inModifiers & shiftKey));
-		if (extendSelection)
-		{
-			originalCellUnderMouse = inTerminalViewPtr->text.selection.range.first;
-		}
-		else
-		{
-			inTerminalViewPtr->text.selection.exists = false;
-			highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
-		}
-		
-		// this must be set after unhighlighting (above), since for example
-		// the user might have had a regular selection that is being replaced
-		// by a rectangular one, and the right type of region should be erased
-		inTerminalViewPtr->text.selection.isRectangular = (0 != (inModifiers & optionKey));
-		
-		if (inTerminalViewPtr->text.selection.isRectangular)
-		{
-			NSCursor*	cursorCrosshairs = customCursorCrosshairs();
-			
-			
-			if (nil == cursorCrosshairs)
-			{
-				// fall back to standard system cursor
-				[[NSCursor crosshairCursor] set];
-			}
-			else
-			{
-				[cursorCrosshairs set];
-			}
-		}
-		else
-		{
-			NSCursor*	cursorIBeam = customCursorIBeam(isSmallIBeam(inTerminalViewPtr));
-			
-			
-			if (nil == cursorIBeam)
-			{
-				// fall back to standard system cursor
-				[[NSCursor IBeamCursor] set];
-			}
-			else
-			{
-				[cursorIBeam set];
-			}
-		}
-		
-		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView));
-		
-		// continue tracking until the mouse is released
-		*outNewLocalMousePtr = inLocalMouse;
-		*outNewModifiersPtr = inModifiers;
-		previousLocalMouse = inLocalMouse;
-		do
-		{
-			// find new mouse location, scroll if necessary
-			UNUSED_RETURN(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, *outNewLocalMousePtr, cellUnderMouse, deltaColumn, deltaRow);
-			UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
-			
-			// if the mouse moves (or the shift key is down), update the selection
-			unless (RegionUtilities_NearPoints(*outNewLocalMousePtr, previousLocalMouse) && (false == extendSelection))
-			{
-				// toggle the highlight state of text between the current and last mouse positions
-				highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
-				
-				// if this is the first move (that is, the mouse was not simply clicked to delete
-				// the previous selection), start a new selection range consisting of the cell
-				// underneath the mouse
-				if (false == inTerminalViewPtr->text.selection.exists)
-				{
-					inTerminalViewPtr->text.selection.exists = true;
-					originalCellUnderMouse = cellUnderMouse;
-					inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
-					inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
-				}
-				else
-				{
-					// LOCALIZE THIS; implies left-to-right locale
-					if (inTerminalViewPtr->text.selection.isRectangular)
-					{
-						// rectangular selection
-						CGRect		r1;
-						
-						
-						if (extendSelection)
-						{
-							// when extending, remember the section previously highlighted...
-							r1 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
-											inTerminalViewPtr->text.selection.range.first.second,
-											inTerminalViewPtr->text.selection.range.second.first -
-												inTerminalViewPtr->text.selection.range.first.first,
-											inTerminalViewPtr->text.selection.range.second.second -
-												inTerminalViewPtr->text.selection.range.first.second);
-						}
-						inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
-						inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
-						// in rectangular mode, the anchor points might not exactly match
-						// one of the mouse anchors (they could be the other two corners),
-						// so a rectangular-sort is necessary before adjustments are made
-						sortAnchors(inTerminalViewPtr->text.selection.range.first,
-									inTerminalViewPtr->text.selection.range.second,
-									true/* is rectangular */);
-						// end point’s top-left would be past-the-end for the character
-						// above and to the left, so offset in both directions to
-						// encompass the character underneath the mouse
-						++(inTerminalViewPtr->text.selection.range.second.first);
-						++(inTerminalViewPtr->text.selection.range.second.second);
-						if (extendSelection)
-						{
-							// the largest encompassing rectangle must be used when extending;
-							// this composes both the original selection and the new range,
-							// and ensures the overall rectangle is completely highlighted
-							CGRect		r2 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
-														inTerminalViewPtr->text.selection.range.first.second,
-														inTerminalViewPtr->text.selection.range.second.first -
-															inTerminalViewPtr->text.selection.range.first.first,
-														inTerminalViewPtr->text.selection.range.second.second -
-															inTerminalViewPtr->text.selection.range.first.second);
-							CGRect		r3 = CGRectUnion(r1, r2);
-							
-							
-							inTerminalViewPtr->text.selection.range.first = std::make_pair(r3.origin.x, r3.origin.y);
-							inTerminalViewPtr->text.selection.range.second = std::make_pair(r3.origin.x + r3.size.width,
-																							r3.origin.y + r3.size.height);
-							sortAnchors(inTerminalViewPtr->text.selection.range.first,
-										inTerminalViewPtr->text.selection.range.second,
-										true/* is rectangular */);
-						}
-						else
-						{
-							if (inTerminalViewPtr->text.selection.range.first.first < originalCellUnderMouse.first)
-							{
-								// selection is moving before the initial anchor point (exclusive)...
-								--(inTerminalViewPtr->text.selection.range.second.first);
-							}
-						}
-					}
-					else
-					{
-						// Mac-like continuous selection anchors
-						if ((cellUnderMouse.second < originalCellUnderMouse.second) ||
-							((cellUnderMouse.second == originalCellUnderMouse.second) &&
-								(cellUnderMouse.first < originalCellUnderMouse.first)))
-						{
-							// selection is moving before the initial anchor point (exclusive)...
-							inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
-							if (false == extendSelection)
-							{
-								inTerminalViewPtr->text.selection.range.second = originalCellUnderMouse;
-								// ...start point’s top-left would be past-the-end for the line above,
-								// so descend by one
-								++(inTerminalViewPtr->text.selection.range.second.second);
-							}
-						}
-						else
-						{
-							// selection is moving after the initial anchor point (inclusive)...
-							if (false == extendSelection)
-							{
-								inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
-								++(inTerminalViewPtr->text.selection.range.second.first);
-							}
-							inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
-							// end point’s top-left would be past-the-end for the character
-							// above and to the left, so offset in both directions to
-							// encompass the character underneath the mouse
-							++(inTerminalViewPtr->text.selection.range.second.second);
-						}
-					}
-				}
-				
-				highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
-				previousLocalMouse = *outNewLocalMousePtr;
-			}
-			
-			// find next mouse location
-			{
-				OSStatus	error = noErr;
-				
-				
-				error = TrackMouseLocationWithOptions(nullptr/* port, or nullptr for current port */, 0/* options */,
-														kEventDurationForever/* timeout */, outNewLocalMousePtr, outNewModifiersPtr,
-														&trackingResult);
-				if (noErr != error) break;
-			}
-		}
-		while (kMouseTrackingMouseUp != trackingResult);
-		
-		SetGWorld(oldPort, oldDevice);
-		
-		inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
-													inTerminalViewPtr->text.selection.range.second);
-		if (inTerminalViewPtr->text.selection.exists)
-		{
-			sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
-						inTerminalViewPtr->text.selection.isRectangular);
-		}
-		copySelectedTextIfUserPreference(inTerminalViewPtr);
-	}
-}// trackTextSelection
-
-
-/*!
 Arranges for the entire terminal screen to be redrawn at the
 next opportunity.
 
@@ -13592,19 +9722,7 @@ they must often be updated as a set.
 void
 updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	if (nullptr == inTerminalViewPtr->carbonData)
-	{
-		[inTerminalViewPtr->encompassingNSView.terminalContentView setNeedsDisplay:YES];
-	}
-	else
-	{
-		if (IsValidControlHandle(inTerminalViewPtr->carbonData->contentHIView))
-		{
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->carbonData->backgroundHIView, true);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->carbonData->paddingHIView, true);
-			UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->carbonData->contentHIView, true);
-		}
-	}
+	[inTerminalViewPtr->encompassingNSView.terminalContentView setNeedsDisplay:YES];
 	
 	UNUSED_RETURN(OSStatus)HIShapeSetEmpty(inTerminalViewPtr->screen.refreshRegion);
 }// updateDisplay
@@ -13621,7 +9739,7 @@ void
 updateDisplayInShape	(My_TerminalViewPtr		inTerminalViewPtr,
 						 HIShapeRef				inRegion)
 {
-	// it is potentially slow to call HIViewSetNeedsDisplay() here, so instead
+	// it is potentially slow to call for a display update here so instead
 	// an internal region is maintained and refreshed regularly via a timer
 	UNUSED_RETURN(OSStatus)HIShapeUnion(inTerminalViewPtr->screen.refreshRegion, inRegion, inTerminalViewPtr->screen.refreshRegion);
 	
@@ -13653,30 +9771,13 @@ updateDisplayTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	
 	if (false == HIShapeIsEmpty(ptr->screen.refreshRegion))
 	{
-		if (nullptr == ptr->carbonData)
-		{
-			CGRect	regionBounds;
-			NSRect	floatBounds;
-			
-			
-			UNUSED_RETURN(CGRect*)HIShapeGetBounds(ptr->screen.refreshRegion, &regionBounds);
-			floatBounds = NSRectFromCGRect(regionBounds);
-			[ptr->encompassingNSView.terminalContentView setNeedsDisplayInRect:floatBounds];
-		}
-		else
-		{
-			HIViewRef	currentView = ptr->carbonData->contentHIView;
-			
-			
-			if (IsValidControlHandle(currentView))
-			{
-				//UNUSED_RETURN(OSStatus)HIViewSetSubviewsNeedDisplayInShape(currentView, ptr->screen.refreshRegion, true);
-				UNUSED_RETURN(OSStatus)HIViewSetNeedsDisplayInShape(currentView, ptr->screen.refreshRegion, true);
-				
-				// if necessary for debugging, dump the shape of the update region
-				//UNUSED_RETURN(OSStatus)HIShapeEnumerate(ptr->screen.refreshRegion, kHIShapeParseFromTopLeft, Console_WriteShapeElement, nullptr/* ref. con. */); // debug
-			}
-		}
+		CGRect	regionBounds;
+		NSRect	floatBounds;
+		
+		
+		UNUSED_RETURN(CGRect*)HIShapeGetBounds(ptr->screen.refreshRegion, &regionBounds);
+		floatBounds = NSRectFromCGRect(regionBounds);
+		[ptr->encompassingNSView.terminalContentView setNeedsDisplayInRect:floatBounds];
 		
 		UNUSED_RETURN(OSStatus)HIShapeSetEmpty(ptr->screen.refreshRegion);
 	}
@@ -13711,360 +9812,138 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 						 Boolean					inIsCursor,
 						 Float32					inDesiredAlpha)
 {
-	if (inTerminalViewPtr->isCocoa())
+	// Cocoa and Quartz setup
+	CGFloatRGBColor		backgroundDeviceColor;
+	CGFloatRGBColor		foregroundDeviceColor; // not used except for reference when inverting
+	
+	
+	// find the correct colors in the color table
+	getScreenColorsForAttributes(inTerminalViewPtr, inAttributes,
+									&foregroundDeviceColor, &backgroundDeviceColor,
+									&inTerminalViewPtr->screen.currentRenderNoBackground);
+	
+	// set up background color; note that in drag highlighting mode,
+	// the background color is preset by the highlight renderer
+	if (false == inTerminalViewPtr->screen.currentRenderDragColors)
 	{
-		// Cocoa and Quartz setup
-		CGDeviceColor	backgroundDeviceColor;
-		CGDeviceColor	foregroundDeviceColor; // not used except for reference when inverting
+		NSColor*	foregroundNSColor = [NSColor colorWithCalibratedRed:foregroundDeviceColor.red
+																		green:foregroundDeviceColor.green
+																		blue:foregroundDeviceColor.blue
+																		alpha:1.0];
+		NSColor*	backgroundNSColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
+																		green:backgroundDeviceColor.green
+																		blue:backgroundDeviceColor.blue
+																		alpha:1.0];
 		
 		
-		// find the correct colors in the color table
-		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes,
-										&foregroundDeviceColor, &backgroundDeviceColor,
-										&inTerminalViewPtr->screen.currentRenderNoBackground);
+		[backgroundNSColor setAsBackgroundInCGContext:inDrawingContext];
 		
-		// set up background color; note that in drag highlighting mode,
-		// the background color is preset by the highlight renderer
-		if (false == inTerminalViewPtr->screen.currentRenderDragColors)
+		if (false == inTerminalViewPtr->text.selection.inhibited)
 		{
-			NSColor*	foregroundNSColor = [NSColor colorWithCalibratedRed:foregroundDeviceColor.red
-																			green:foregroundDeviceColor.green
-																			blue:foregroundDeviceColor.blue
-																			alpha:1.0];
-			NSColor*	backgroundNSColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
-																			green:backgroundDeviceColor.green
-																			blue:backgroundDeviceColor.blue
-																			alpha:1.0];
-			
-			
-			[backgroundNSColor setAsBackgroundInCGContext:inDrawingContext];
-			
-			if (false == inTerminalViewPtr->text.selection.inhibited)
-			{
-				// “darken” the colors if text is selected, but only in the foreground;
-				// in the background, the view renders an outline of the selection, so
-				// selected text should NOT have any special appearance in that case
-				if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
-				{
-					inTerminalViewPtr->screen.currentRenderNoBackground = false;
-					
-					if (gPreferenceProxies.invertSelections)
-					{
-						// use inverted colors (foreground is set elsewhere)
-						[foregroundNSColor setAsBackgroundInCGContext:inDrawingContext];
-					}
-					else
-					{
-						// use selection colors
-						NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
-						NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
-						
-						
-						if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
-																		background:&selectionBackgroundColor])
-						{
-							// bail; force the default color even if it won’t look as good
-							selectionBackgroundColor = [NSColor selectedTextBackgroundColor];
-						}
-						
-						// convert to RGB and then update the context
-						[selectionBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
-					}
-				}
-			}
-			
-			// when the screen is inactive, it is dimmed; in addition, any text that is
-			// not selected is FURTHER dimmed so as to emphasize the selection and show
-			// that the selection is in fact a click-through region
-			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && [NSApp isActive]))
+			// “darken” the colors if text is selected, but only in the foreground;
+			// in the background, the view renders an outline of the selection, so
+			// selected text should NOT have any special appearance in that case
+			if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 			{
 				inTerminalViewPtr->screen.currentRenderNoBackground = false;
 				
-				// dim screen
+				if (gPreferenceProxies.invertSelections)
+				{
+					// use inverted colors (foreground is set elsewhere)
+					[foregroundNSColor setAsBackgroundInCGContext:inDrawingContext];
+				}
+				else
+				{
+					// use selection colors
+					NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
+					NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
+					
+					
+					if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
+																	background:&selectionBackgroundColor])
+					{
+						// bail; force the default color even if it won’t look as good
+						selectionBackgroundColor = [NSColor selectedTextBackgroundColor];
+					}
+					
+					// convert to RGB and then update the context
+					[selectionBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
+				}
+			}
+		}
+		
+		// when the screen is inactive, it is dimmed; in addition, any text that is
+		// not selected is FURTHER dimmed so as to emphasize the selection and show
+		// that the selection is in fact a click-through region
+		unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
+				((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && [NSApp isActive]))
+		{
+			inTerminalViewPtr->screen.currentRenderNoBackground = false;
+			
+			// dim screen
+			foregroundNSColor = [foregroundNSColor colorCloserToWhite];
+			backgroundNSColor = [backgroundNSColor colorCloserToWhite];
+			
+			// for text that is not selected, do an “iPhotoesque” selection where
+			// the selection appears darker than its surrounding text; this also
+			// causes the selection to look dark (appropriate because it is draggable)
+			unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
+			{
+				// use even lighter colors (more than the dimmed color above)
 				foregroundNSColor = [foregroundNSColor colorCloserToWhite];
 				backgroundNSColor = [backgroundNSColor colorCloserToWhite];
-				
-				// for text that is not selected, do an “iPhotoesque” selection where
-				// the selection appears darker than its surrounding text; this also
-				// causes the selection to look dark (appropriate because it is draggable)
-				unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
-				{
-					// use even lighter colors (more than the dimmed color above)
-					foregroundNSColor = [foregroundNSColor colorCloserToWhite];
-					backgroundNSColor = [backgroundNSColor colorCloserToWhite];
-				}
-			}
-			
-			// give search results a special appearance
-			if (inAttributes.hasSearchHighlight())
-			{
-				// use selection colors
-				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
-				NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
-				
-				
-				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
-																	background:&searchResultBackgroundColor])
-				{
-					// bail; force the default color even if it won’t look as good
-					searchResultBackgroundColor = [[NSColor selectedTextBackgroundColor] colorWithShading];
-				}
-				
-				if (false == inTerminalViewPtr->text.selection.inhibited)
-				{
-					// adjust the colors if text is selected
-					if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
-					{
-						searchResultBackgroundColor = [searchResultBackgroundColor colorWithShading];
-					}
-				}
-				
-				searchResultBackgroundColor = [searchResultBackgroundColor
-												colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-				[searchResultBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
-				
-				inTerminalViewPtr->screen.currentRenderNoBackground = false;
-			}
-			
-			// finally, check the foreground and background colors; do not allow
-			// them to be identical unless “concealed” is the style (e.g. perhaps
-			// text is ANSI white and the background is white; that's invisible!)
-			unless (inAttributes.hasConceal())
-			{
-				// UNIMPLEMENTED
-			}
-			
-			// set the cursor color if necessary
-			if (inIsCursor)
-			{
-				CGDeviceColor	floatRGB;
-				
-				
-				if (inTerminalViewPtr->screen.cursor.isCustomColor)
-				{
-					// read the user’s preferred cursor color
-					getScreenCustomColor(inTerminalViewPtr, kTerminalView_ColorIndexCursorBackground, &floatRGB);
-					CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
-				}
 			}
 		}
-	}
-	else
-	{
-		// legacy Carbon and QuickDraw setup (will be removed after Cocoa transition)
-		RGBColor		colorRGB;
-		CGDeviceColor	backgroundDeviceColor;
-		CGDeviceColor	deviceColor;
-		Boolean			usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
 		
-		
-		// IMPORTANT: Drawing code is currently transitioning to Core Graphics;
-		// so, not all QuickDraw settings are completely replaced yet, and some
-		// are even made redundantly in both contexts.
-		
-		// find the correct colors in the color table
-		getScreenColorsForAttributes(inTerminalViewPtr, inAttributes, &deviceColor, &backgroundDeviceColor,
-										&inTerminalViewPtr->screen.currentRenderNoBackground);
-		colorRGB = ColorUtilities_QuickDrawColorMake(deviceColor);
-		
-		// set up foreground color
-		if (usingDragHighlightColors)
+		// give search results a special appearance
+		if (inAttributes.hasSearchHighlight())
 		{
-			// when rendering a drag highlight, use black text
-			colorRGB.red = 0;
-			colorRGB.green = 0;
-			colorRGB.blue = 0;
-			RGBForeColor(&colorRGB);
-			CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, 1.0/* alpha */);
-			
-			// ...and allow background (which will be the drag highlight) to show through
-			inTerminalViewPtr->screen.currentRenderNoBackground = true;
-		}
-		else
-		{
-			RGBForeColor(&colorRGB);
-			// set Core Graphics color below...
-		}
-		
-		// set up background color; note that in drag highlighting mode,
-		// the background color is preset by the highlight renderer
-		if (false == usingDragHighlightColors)
-		{
-			RGBColor	backgroundRGB = ColorUtilities_QuickDrawColorMake(backgroundDeviceColor);
+			// use selection colors
+			NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
+			NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
 			
 			
-			RGBBackColor(&backgroundRGB);
+			if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
+																background:&searchResultBackgroundColor])
+			{
+				// bail; force the default color even if it won’t look as good
+				searchResultBackgroundColor = [[NSColor selectedTextBackgroundColor] colorWithShading];
+			}
 			
 			if (false == inTerminalViewPtr->text.selection.inhibited)
 			{
-				// “darken” the colors if text is selected, but only in the foreground;
-				// in the background, the view renders an outline of the selection, so
-				// selected text should NOT have any special appearance in that case
+				// adjust the colors if text is selected
 				if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
 				{
-					inTerminalViewPtr->screen.currentRenderNoBackground = false;
-					
-					if (gPreferenceProxies.invertSelections)
-					{
-						RGBForeColor(&backgroundRGB);
-						RGBBackColor(&colorRGB);
-					}
-					else
-					{
-						// TEMPORARY: Carbon legacy will go away but for now transition this to
-						// use the new Cocoa methods for finding the appropriate colors.
-						NSColor*	selectionTextColor = [NSColor colorWithCalibratedRed:deviceColor.red
-																							green:deviceColor.green
-																							blue:deviceColor.blue
-																							alpha:1.0];
-						NSColor*	selectionBackgroundColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
-																								green:backgroundDeviceColor.green
-																								blue:backgroundDeviceColor.blue
-																								alpha:1.0];
-						
-						
-						if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
-																		background:&selectionBackgroundColor])
-						{
-							// bail; force the default color even if it won’t look as good
-							selectionBackgroundColor = [NSColor selectedTextBackgroundColor];
-						}
-						
-						// convert to RGB and then update the context
-						[selectionTextColor setAsForegroundInQDCurrentPort];
-						[selectionBackgroundColor setAsBackgroundInQDCurrentPort];
-					}
+					searchResultBackgroundColor = [searchResultBackgroundColor colorWithShading];
 				}
 			}
 			
-			// when the screen is inactive, it is dimmed; in addition, any text that is
-			// not selected is FURTHER dimmed so as to emphasize the selection and show
-			// that the selection is in fact a click-through region
-			unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
-					((false == inTerminalViewPtr->text.selection.inhibited) && inAttributes.hasSelection() && [NSApp isActive]))
-			{
-				inTerminalViewPtr->screen.currentRenderNoBackground = false;
-				
-				// dim screen
-				UseInactiveColors();
-				
-				// for text that is not selected, do an “iPhotoesque” selection where
-				// the selection appears darker than its surrounding text; this also
-				// causes the selection to look dark (appropriate because it is draggable)
-				unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
-				{
-					UseLighterColors();
-				}
-			}
+			searchResultBackgroundColor = [searchResultBackgroundColor
+											colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+			[searchResultBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
 			
-			// give search results a special appearance
-			if (inAttributes.hasSearchHighlight())
-			{
-				// TEMPORARY: Carbon legacy will go away but for now transition this to
-				// use the new Cocoa methods for finding the appropriate colors.
-				NSColor*	searchResultTextColor = [NSColor colorWithCalibratedRed:deviceColor.red
-																					green:deviceColor.green
-																					blue:deviceColor.blue
-																					alpha:1.0];
-				NSColor*	searchResultBackgroundColor = [NSColor colorWithCalibratedRed:backgroundDeviceColor.red
-																							green:backgroundDeviceColor.green
-																							blue:backgroundDeviceColor.blue
-																							alpha:1.0];
-				
-				
-				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
-																	background:&searchResultBackgroundColor])
-				{
-					// bail; force the default color even if it won’t look as good
-					searchResultBackgroundColor = [[NSColor selectedTextBackgroundColor] colorWithShading];
-				}
-				
-				if (false == inTerminalViewPtr->text.selection.inhibited)
-				{
-					// adjust the colors if text is selected
-					if (inAttributes.hasSelection() && inTerminalViewPtr->isActive)
-					{
-						searchResultBackgroundColor = [searchResultBackgroundColor colorWithShading];
-					}
-				}
-				
-				// convert to RGB and then update the context
-				[searchResultTextColor setAsForegroundInQDCurrentPort];
-				[searchResultBackgroundColor setAsBackgroundInQDCurrentPort];
-				
-				inTerminalViewPtr->screen.currentRenderNoBackground = false;
-			}
+			inTerminalViewPtr->screen.currentRenderNoBackground = false;
+		}
+		
+		// finally, check the foreground and background colors; do not allow
+		// them to be identical unless “concealed” is the style (e.g. perhaps
+		// text is ANSI white and the background is white; that's invisible!)
+		unless (inAttributes.hasConceal())
+		{
+			// UNIMPLEMENTED
+		}
+		
+		// set the cursor color if necessary
+		if (inIsCursor)
+		{
+			CGFloatRGBColor		floatRGB;
 			
-			// finally, check the foreground and background colors; do not allow
-			// them to be identical unless “concealed” is the style (e.g. perhaps
-			// text is ANSI white and the background is white; that's invisible!)
-			unless (inAttributes.hasConceal())
-			{
-				RGBColor	comparedColor;
-				
-				
-				GetForeColor(&colorRGB);
-				GetBackColor(&comparedColor);
-				if ((colorRGB.red == comparedColor.red) &&
-					(colorRGB.green == comparedColor.green) &&
-					(colorRGB.blue == comparedColor.blue))
-				{
-					// arbitrarily make the text black to resolve the contrast issue,
-					// unless the color *is* black, in which case choose white
-					// TEMPORARY: this could be some kind of user preference...
-					if ((comparedColor.red != 0) ||
-						(comparedColor.green != 0) ||
-						(comparedColor.blue != 0))
-					{
-						colorRGB.red = 0;
-						colorRGB.green = 0;
-						colorRGB.blue = 0;
-					}
-					else
-					{
-						colorRGB.red = RGBCOLOR_INTENSITY_MAX;
-						colorRGB.green = RGBCOLOR_INTENSITY_MAX;
-						colorRGB.blue = RGBCOLOR_INTENSITY_MAX;
-					}
-					RGBForeColor(&colorRGB);
-				}
-			}
 			
-			// take advantage of the color blending done in the QuickDraw
-			// port for now, and simply “steal” the colors for the CG context
+			if (inTerminalViewPtr->screen.cursor.isCustomColor)
 			{
-				CGDeviceColor	floatRGB;
-				Boolean			useScreenBackColor = true;
-				
-				
-				GetForeColor(&colorRGB);
-				floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
-				CGContextSetRGBStrokeColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
-				
-				if (inIsCursor)
-				{
-					if (inTerminalViewPtr->screen.cursor.isCustomColor)
-					{
-						// read the user’s preferred cursor color
-						getScreenCustomColor(inTerminalViewPtr, kTerminalView_ColorIndexCursorBackground, &floatRGB);
-						useScreenBackColor = false;
-					}
-					else
-					{
-						// base the cursor color on the screen (the cursor-drawing
-						// code uses inverse video so the current background is
-						// actually a foreground color)
-						useScreenBackColor = true;
-					}
-				}
-				
-				if (useScreenBackColor)
-				{
-					GetBackColor(&colorRGB);
-					floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
-				}
-				
+				// read the user’s preferred cursor color
+				getScreenCustomColor(inTerminalViewPtr, kTerminalView_ColorIndexCursorBackground, &floatRGB);
 				CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
 			}
 		}
@@ -14137,109 +10016,21 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 		
 		inTerminalViewPtr->text.attributes = inAttributes;
 		
-		if (inTerminalViewPtr->isCocoa())
-		{
-			// Cocoa and Quartz setup; note that the font and size
-			// are retrieved from the stored NSFont object and not
-			// set on the drawing context or any other temporary object
-			
-			// set font style - UNIMPLEMENTED
-			
-			// set pen - UNIMPLEMENTED
-			
-			// for a sufficiently large font, allow boldface - UNIMPLEMENTED
-			
-			// for a sufficiently large font, allow italicizing - UNIMPLEMENTED
-			
-			// for a sufficiently large font, allow underlining - UNIMPLEMENTED
-			
-			// set text mode and pen mode - UNIMPLEMENTED
-		}
-		else
-		{
-			// legacy Carbon and QuickDraw setup (will be removed after Cocoa transition)
-			CGrafPtr	currentPort = nullptr;
-			GDHandle	currentDevice = nullptr;
-			
-			
-			GetGWorld(&currentPort, &currentDevice);
-			
-			// When special glyphs should be rendered, set the font to
-			// a specific ID that tells the renderer to do graphics.
-			// The font is not actually used, it is just a marker so
-			// that the renderer knows it is in graphics mode.  In most
-			// cases, the terminal’s regular font is used instead.
-			if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
-			{
-				TextFont(kArbitraryVTGraphicsPseudoFontID);
-			}
-			else
-			{
-				TextFontByName(inTerminalViewPtr->text.font.familyName);
-			}
-			
-			// set text size...
-			TextSize(STATIC_CAST(fontSize, SInt16));
-			
-			// set font style...
-			TextFace(normal);
-			
-			// set pen...
-			PenNormal();
-			// if the text is really big, drawn lines should be bigger as well, so
-			// multiply 1 pixel by a scaling factor based on the size of the text
-			PenSize(STATIC_CAST(inTerminalViewPtr->text.font.thicknessVerticalLines, SInt16),
-					STATIC_CAST(inTerminalViewPtr->text.font.thicknessHorizontalLines, SInt16));
-			
-			// 3.0 - for a sufficiently large font, allow boldface
-			if (inAttributes.hasBold() || inAttributes.hasSearchHighlight())
-			{
-				Style	fontFace = GetPortTextFace(currentPort);
-				
-				
-				if (fontSize > 8) // arbitrary (should this be a user preference?)
-				{
-					TextFace(fontFace | bold);
-					
-					// VT graphics use the pen size when rendering, so that should be “bolded” as well
-					PenSize(STATIC_CAST(inTerminalViewPtr->text.font.thicknessVerticalBold, SInt16),
-							STATIC_CAST(inTerminalViewPtr->text.font.thicknessHorizontalBold, SInt16));
-				}
-			}
-			
-			// 3.0 - for a sufficiently large font, allow italicizing
-			if (inAttributes.hasItalic())
-			{
-				Style	fontFace = GetPortTextFace(currentPort);
-				
-				
-				if (fontSize > 12/* arbitrary (should this be a user preference?) */)
-				{
-					TextFace(fontFace | italic);
-				}
-				else if (fontSize > 8)
-				{
-					// render as underline at small font sizes
-					TextFace(fontFace | underline);
-				}
-			}
-			
-			// 3.0 - for a sufficiently large font, allow underlining
-			if (inAttributes.hasUnderline() || inAttributes.hasSearchHighlight())
-			{
-				Style	fontFace = GetPortTextFace(currentPort);
-				
-				
-				if (fontSize > 8/* arbitrary (should this be a user preference?) */)
-				{
-					TextFace(fontFace | underline);
-				}
-			}
-			
-			// set text mode and pen mode
-			TextMode(srcOr); // do not render background color
-			PenMode(patCopy);
-		}
+		// Cocoa and Quartz setup; note that the font and size
+		// are retrieved from the stored NSFont object and not
+		// set on the drawing context or any other temporary object
+		
+		// set font style - UNIMPLEMENTED
+		
+		// set pen - UNIMPLEMENTED
+		
+		// for a sufficiently large font, allow boldface - UNIMPLEMENTED
+		
+		// for a sufficiently large font, allow italicizing - UNIMPLEMENTED
+		
+		// for a sufficiently large font, allow underlining - UNIMPLEMENTED
+		
+		// set text mode and pen mode - UNIMPLEMENTED
 	}
 }// useTerminalTextAttributes
 
@@ -14260,53 +10051,7 @@ post a notification event.
 void
 visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	if (nullptr == inTerminalViewPtr->carbonData)
-	{
-		Console_Warning(Console_WriteLine, "visual-bell not implemented for Cocoa");
-	}
-	else
-	{
-		HIWindowRef const	kViewWindow = HIViewGetWindow(inTerminalViewPtr->carbonData->contentHIView);
-		Boolean const		kWasReverseVideo = inTerminalViewPtr->screen.isReverseVideo;
-		Boolean				visual = false;				// is visual used?
-		Boolean				visualPreference = false;	// is ONLY visual used?
-		
-		
-		// If the user turned off audible bells, always use a visual;
-		// otherwise, use a visual if the beep is in a background window.
-		unless (kPreferences_ResultOK ==
-				Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualPreference),
-									&visualPreference))
-		{
-			visualPreference = false; // assume audible bell, if preference can’t be found
-		}
-		visual = (visualPreference || (!IsWindowHilited(kViewWindow)));
-		
-		if (visual)
-		{
-			TerminalView_ReverseVideo(inTerminalViewPtr->selfRef, !kWasReverseVideo); // also invalidates view
-			HIWindowFlush(kViewWindow);
-		}
-		
-		// Mac OS 8 asynchronous sounds mean that a sound generates
-		// very little delay, therefore a standard visual delay of 8
-		// ticks should be enforced even if a beep was emitted.
-		{
-			UInt32		dummy = 0L;
-			
-			
-			Delay(8/* ticks */, &dummy);
-		}
-		
-		// if previously inverted, invert again to restore to normal
-		if (visual)
-		{
-			TerminalView_ReverseVideo(inTerminalViewPtr->selfRef, kWasReverseVideo); // also invalidates view
-			HIWindowFlush(kViewWindow);
-		}
-		
-		if (gPreferenceProxies.notifyOfBeeps) Alert_BackgroundNotification();
-	}
+	Console_Warning(Console_WriteLine, "visual-bell not implemented for Cocoa");
 }// visualBell
 
 } // anonymous namespace
@@ -14498,7 +10243,7 @@ drawRect:(NSRect)	aRect
 		// directly whenever the view color changes.
 		if (nullptr != viewPtr)
 		{
-			CGDeviceColor const&	asFloats = viewPtr->text.colors[self.colorIndex];
+			CGFloatRGBColor const&		asFloats = viewPtr->text.colors[self.colorIndex];
 			
 			
 			// draw background
@@ -15314,16 +11059,18 @@ drawRect:(NSRect)	aRect
 			
 			if (nullptr != selectionShape)
 			{
-				RGBColor		highlightColorRGB;
-				CGDeviceColor	highlightColorDevice;
-				OSStatus		error = noErr;
+				NSColor*			highlightColorRGB = [[NSColor highlightColor]
+															colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+				CGFloatRGBColor		highlightColorDevice;
+				OSStatus			error = noErr;
 				
 				
 				// draw outline
 				CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
 				CGContextSetLineCap(drawingContext, kCGLineCapRound);
-				LMGetHiliteRGB(&highlightColorRGB);
-				highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+				highlightColorDevice.red = [highlightColorRGB redComponent];
+				highlightColorDevice.green = [highlightColorRGB greenComponent];
+				highlightColorDevice.blue = [highlightColorRGB blueComponent];
 				CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
 											highlightColorDevice.blue, 1.0/* alpha */);
 				error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
@@ -15344,9 +11091,10 @@ drawRect:(NSRect)	aRect
 		// render margin line, if requested
 		if (gPreferenceProxies.renderMarginAtColumn > 0)
 		{
-			Rect			dummyBounds;
-			RGBColor		highlightColorRGB;
-			CGDeviceColor	highlightColorDevice;
+			Rect				dummyBounds;
+			NSColor*			highlightColorRGB = [[NSColor highlightColor]
+														colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+			CGFloatRGBColor		highlightColorDevice;
 			
 			
 			getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
@@ -15354,8 +11102,9 @@ drawRect:(NSRect)	aRect
 								1/* character count - not important */, &dummyBounds);
 			CGContextSetLineWidth(drawingContext, 2.0);
 			CGContextSetLineCap(drawingContext, kCGLineCapButt);
-			LMGetHiliteRGB(&highlightColorRGB);
-			highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+			highlightColorDevice.red = [highlightColorRGB redComponent];
+			highlightColorDevice.green = [highlightColorRGB greenComponent];
+			highlightColorDevice.blue = [highlightColorRGB blueComponent];
 			CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
 										highlightColorDevice.blue, 1.0/* alpha */);
 			CGContextBeginPath(drawingContext);
@@ -15430,8 +11179,8 @@ drawRect:(NSRect)	aRect
 		// debug: show the update region as a solid color
 	#if 0
 		{
-			static UInt16	colorCounter = 0;
-			CGDeviceColor	debugColor = { 0.0, 0.0, 0.0 };
+			static UInt16		colorCounter = 0;
+			CGFloatRGBColor		debugColor = { 0.0, 0.0, 0.0 };
 			
 			
 			// rotate through a few different colors so that

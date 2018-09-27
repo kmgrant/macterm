@@ -48,7 +48,6 @@
 
 // application includes
 #include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
 #include "RegionUtilities.h"
 
 
@@ -58,6 +57,7 @@ namespace {
 
 // these colors are based on the drag-and-drop rounded rectangles used in Mail on Tiger
 // UNIMPLEMENTED: put these into an external file such as DefaultPreferences.plist
+float RGBCOLOR_INTENSITY_MAX = 65535; // TEMPORARY;
 RGBColor const		kMy_DragHighlightFrameInColor	 = { 5140, 21074, 56026 };
 RGBColor const		kMy_DragHighlightFrameInGraphite = { 5140, 5140, 5140 };
 RGBColor const		kMy_DragHighlightBoxInColor		 = { 48316, 52685, 61680 };

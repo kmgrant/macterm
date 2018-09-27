@@ -35,9 +35,6 @@
 #include "HelpSystem.h"
 #include <UniversalDefines.h>
 
-// standard-C++ includes
-#include <map>
-
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
@@ -45,24 +42,9 @@
 #include "MacHelpUtilities.h"
 
 // application includes
-#include "EventLoop.h"
 #include "UIStrings.h"
 
 
-
-#pragma mark Types
-namespace {
-
-typedef std::map< WindowRef, HelpSystem_KeyPhrase >		WindowToKeyPhraseMap;
-
-} // anonymous namespace
-
-#pragma mark Variables
-namespace {
-
-WindowToKeyPhraseMap&	gWindowToKeyPhraseMap()		{ static WindowToKeyPhraseMap x; return x; }
-
-} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -70,7 +52,6 @@ namespace {
 HelpSystem_Result		copyCFStringHelpSearch			(HelpSystem_KeyPhrase, CFStringRef&);
 HelpSystem_Result		displayHelpFromKeyPhrase		(HelpSystem_KeyPhrase);
 HelpSystem_Result		displayMainHelp					();
-HelpSystem_KeyPhrase	getCurrentContextKeyPhrase 		();
 
 } // anonymous namespace
 
@@ -111,10 +92,7 @@ HelpSystem_DisplayHelpFromKeyPhrase		(HelpSystem_KeyPhrase	inKeyPhrase)
 
 /*!
 Opens the main help system and displays a page appropriate
-for the current context.  Typically you set a context (say,
-for a window) using HelpSystem_SetCurrentContextKeyPhrase(),
-and then you display help for that context with this routine
-when the user clicks a help button or uses a menu.
+for the current context.
 
 (3.0)
 */
@@ -124,8 +102,9 @@ HelpSystem_DisplayHelpInCurrentContext ()
 	HelpSystem_Result	result = kHelpSystem_ResultOK;
 	
 	
-	result = displayHelpFromKeyPhrase(getCurrentContextKeyPhrase());
-	if (result != kHelpSystem_ResultOK) result = displayMainHelp(); // fall back on table of contents view
+	// UNIMPLEMENTED
+	result = displayMainHelp(); // fall back on table of contents view
+	
 	return result;
 }// DisplayHelpInCurrentContext
 
@@ -192,49 +171,9 @@ is provided to the user.
 HelpSystem_KeyPhrase
 HelpSystem_ReturnCurrentContextKeyPhrase ()
 {
-	return getCurrentContextKeyPhrase();
+	// UNIMPLEMENTED
+	return kHelpSystem_KeyPhraseDefault;
 }// ReturnCurrentContextKeyPhrase
-
-
-/*!
-Sets the current help context of the specified window.
-You can clear a window’s context by passing in the
-default value, "kHelpSystem_KeyPhraseDefault"; you
-should always default the value just before destroying
-the window, to ensure this module can clean up its
-internal cache.
-
-\retval kHelpSystem_ResultOK
-if the context was changed successfully
-
-(3.0)
-*/
-HelpSystem_Result
-HelpSystem_SetWindowKeyPhrase	(WindowRef				inWindow,
-								 HelpSystem_KeyPhrase	inKeyPhrase)
-{
-	HelpSystem_Result	result = kHelpSystem_ResultOK;
-	auto				windowToKeyPhraseIterator = gWindowToKeyPhraseMap().find(inWindow);
-	
-	
-	if (inKeyPhrase == kHelpSystem_KeyPhraseDefault)
-	{
-		if (windowToKeyPhraseIterator != gWindowToKeyPhraseMap().end())
-		{
-			// default key phrase; delete this window’s key phrase
-			gWindowToKeyPhraseMap().erase(windowToKeyPhraseIterator);
-			assert(gWindowToKeyPhraseMap().find(inWindow) == gWindowToKeyPhraseMap().end());
-		}
-	}
-	else
-	{
-		// register a new window’s key phrase
-		gWindowToKeyPhraseMap()[inWindow] = inKeyPhrase;
-		assert(gWindowToKeyPhraseMap().find(inWindow) != gWindowToKeyPhraseMap().end());
-	}
-	
-	return result;
-}// SetWindowKeyPhrase
 
 
 #pragma mark Internal Methods
@@ -377,35 +316,6 @@ displayMainHelp ()
 	if (error != noErr) result = kHelpSystem_ResultCannotDisplayHelp;
 	return result;
 }// displayMainHelp
-
-
-/*!
-Returns the key phrase for the current context,
-or the default phrase if there is no particular
-context.
-
-(3.0)
-*/
-HelpSystem_KeyPhrase
-getCurrentContextKeyPhrase ()
-{
-	HelpSystem_KeyPhrase	result = kHelpSystem_KeyPhraseDefault;
-	WindowRef				frontWindow = EventLoop_ReturnRealFrontWindow();
-	
-	
-	if (frontWindow != nullptr)
-	{
-		// see if the frontmost window has a context associated with it
-		auto	windowToKeyPhraseIterator = gWindowToKeyPhraseMap().find(frontWindow);
-		
-		
-		if (windowToKeyPhraseIterator != gWindowToKeyPhraseMap().end())
-		{
-			result = windowToKeyPhraseIterator->second;
-		}
-	}
-	return result;
-}// getCurrentContextKeyPhrase
 
 } // anonymous namespace
 

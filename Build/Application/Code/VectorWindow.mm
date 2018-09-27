@@ -673,7 +673,8 @@ windowDidLoad
 	
 	if ([self.window respondsToSelector:@selector(setAnimationBehavior:)])
 	{
-		[self.window setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
+		//[self.window setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
+		[self.window setAnimationBehavior:NSWindowAnimationBehaviorDocumentWindow];
 	}
 	
 	// enable Full Screen

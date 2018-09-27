@@ -273,22 +273,7 @@ Session::handle_file	(std::string	inPathname)
 		{
 			if (extensionName == "session")
 			{
-				// TEMPORARY; should convert API to URL (or retire format)
-				FSRef		fileRef;
-				OSStatus		error = noErr;
-				
-				
-				error = FSPathMakeRef(REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), &fileRef, nullptr/* is a directory */);
-				if (noErr != error)
-				{
-					QUILLS_THROW_MSG("unable to make path reference for file '" << inPathname << "', error = " << error);
-				}
-				
-				// read a configuration set
-				if (false == SessionDescription_ReadFromFile(fileRef))
-				{
-					QUILLS_THROW_MSG("failed to parse file '" << inPathname << "'");
-				}
+				QUILLS_THROW_MSG("not implemented; unable to parse file '" << inPathname << "'");
 			}
 			else if (extensionName == "itermcolors")
 			{

@@ -49,7 +49,6 @@
 #import <CoreServices/CoreServices.h>
 
 // library includes
-#import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
@@ -62,7 +61,6 @@
 
 // application includes
 #import "DebugInterface.h"
-#import "DialogUtilities.h"
 #import "EventLoop.h"
 #import "GenericDialog.h"
 #import "InfoWindow.h"
@@ -74,7 +72,6 @@
 #import "PrefsWindow.h"
 #import "QuillsBase.h"
 #import "RegionUtilities.h"
-#import "SessionDescription.h"
 #import "Terminal.h"
 #import "TerminalView.h"
 #import "TerminalWindow.h"
@@ -159,9 +156,6 @@ void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionBlo
 void					forEachTerminalWindowInListDo	(TerminalWindowList const&, SessionFactory_TerminalWindowBlock);
 void					handleNewSessionDialogClose		(GenericDialog_Ref, Boolean);
 Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
-OSStatus				receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
-OSStatus				receiveWindowDeactivated		(EventHandlerCallRef, EventRef, void*);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -176,32 +170,10 @@ void					stopTrackingTerminalWindow		(TerminalWindowRef);
 #pragma mark Variables
 namespace {
 
-Boolean							gAutoRearrangeTabs = true;
 ListenerModel_Ref				gSessionFactoryStateChangeListenerModel = nullptr;
 ListenerModel_Ref				gSessionStateChangeListenerModel = nullptr;
 ListenerModel_ListenerRef		gSessionChangeListenerRef = nullptr;
 ListenerModel_ListenerRef		gSessionStateChangeListener = nullptr;
-CarbonEventHandlerWrap			gNewSessionCommandHandler(GetApplicationEventTarget(),
-															receiveHICommand,
-															CarbonEventSetInClass
-																(CarbonEventClass(kEventClassCommand),
-																	kEventCommandProcess),
-															nullptr/* user data */);
-Console_Assertion				_1(gNewSessionCommandHandler.isInstalled(), __FILE__, __LINE__);
-CarbonEventHandlerWrap			gSessionFactoryWindowActivateHandler(GetApplicationEventTarget(),
-																		receiveWindowActivated,
-																		CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassWindow),
-																				kEventWindowActivated),
-																		nullptr/* user data */);
-Console_Assertion				_2(gSessionFactoryWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
-CarbonEventHandlerWrap			gSessionFactoryWindowDeactivateHandler(GetApplicationEventTarget(),
-																		receiveWindowDeactivated,
-																		CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassWindow),
-																				kEventWindowDeactivated),
-																		nullptr/* user data */);
-Console_Assertion				_3(gSessionFactoryWindowActivateHandler.isInstalled(), __FILE__, __LINE__);
 SessionFactory_SessionWindowWatcher*	gSessionWindowWatcher = nil;
 SessionRef						gSessionFactoryRecentlyActiveSession = nullptr;
 EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
@@ -217,112 +189,6 @@ TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindow
 
 #pragma mark Functors
 namespace {
-
-/*!
-Examines every terminal window in the specified workspace
-and updates its tab placement to match its position in the
-workspace.  This has the effect of “nudging over” tabs
-when windows disappear or are inserted.
-
-This only applies to legacy Carbon tabs; Cocoa windows use
-system window tabs that resize and position themselves
-automatically.
-
-IMPORTANT: Consult "gAutoRearrangeTabs" before using this.
-
-Model of STL Unary Function.
-
-(3.1)
-*/
-#pragma mark fixTerminalWindowTabPositionsInWorkspace
-class fixTerminalWindowTabPositionsInWorkspace:
-public std::unary_function< Workspace_Ref/* argument */, void/* return */ >
-{
-public:
-	fixTerminalWindowTabPositionsInWorkspace ()
-	{
-	}
-	
-	void
-	operator()	(Workspace_Ref	inWorkspace)
-	{
-		Float32 const		kAverageTabWidth = 320.0; // arbitrary!
-		__block UInt16		windowCount = 0; // counts Carbon windows only
-		__block Float32		currentOffset = 0.0; // while processing, each tab size is added here to define the next offset
-		__block Float32		smallestMaxWidth = FLT_MAX;
-		
-		
-		// determine how wide each tab should be; use the smallest window
-		// for this, since Mac OS X will otherwise force a window resize
-		Workspace_ForEachTerminalWindow(inWorkspace,
-		^(TerminalWindowRef		inTerminalWindow,
-		  Boolean&				UNUSED_ARGUMENT(outStopFlag))
-		{
-			// there is no way to implement this for Cocoa windows so only
-			// the legacy Carbon window tabs are counted here (and eventually
-			// this whole function will go away)
-			if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-			{
-				TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
-				Float32					availableSpace = FLT_MAX;
-				
-				
-				++windowCount;
-				
-				terminalResult = TerminalWindow_GetTabWidthAvailable(inTerminalWindow, availableSpace);
-				if (kTerminalWindow_ResultOK == terminalResult)
-				{
-					if (availableSpace < smallestMaxWidth)
-					{
-						smallestMaxWidth = availableSpace;
-					}
-				}
-			}
-		});
-		if (windowCount > 0)
-		{
-			Float32		idealTabWidth = smallestMaxWidth / windowCount;
-			
-			
-			if (idealTabWidth > kAverageTabWidth)
-			{
-				idealTabWidth = kAverageTabWidth;
-			}
-			
-			// reposition and resize each window’s tab appropriately
-			Workspace_ForEachTerminalWindow(inWorkspace,
-			^(TerminalWindowRef		inTerminalWindow,
-			  Boolean&				UNUSED_ARGUMENT(outStopFlag))
-			{
-				TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
-				
-				
-				terminalResult = TerminalWindow_SetTabPosition(inTerminalWindow, currentOffset, idealTabWidth);
-				if (kTerminalWindow_ResultOK == terminalResult)
-				{
-					Float32		tabWidth = 0.0;
-					
-					
-					terminalResult = TerminalWindow_GetTabWidth(inTerminalWindow, tabWidth);
-					//assert(kTerminalWindow_ResultOK == terminalResult);
-					if (kTerminalWindow_ResultOK == terminalResult)
-					{
-						currentOffset += tabWidth;
-						
-						// reset the tab flag; this has the effect of opening the drawer
-						// if it is not already open (TEMPORARY - should this be done in
-						// a more direct way?)
-						UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
-					}
-				}
-			});
-		}
-	}
-
-protected:
-
-private:
-};
 
 /*!
 This is a functor that removes the terminal window
@@ -412,7 +278,7 @@ SessionFactory_Init ()
 		error = InstallApplicationEventHandler(gCarbonEventSessionSetStateUPP, GetEventTypeCount(whenSessionStateMustChange),
 												whenSessionStateMustChange, nullptr/* user data */,
 												&gCarbonEventSessionSetStateHandler/* event handler reference */);
-		assert_noerr(error);
+		//CARBON//assert_noerr(error);
 	}
 	
 	// under Carbon, listen for special Carbon Events that effectively invoke
@@ -431,7 +297,7 @@ SessionFactory_Init ()
 												GetEventTypeCount(whenSessionDataIsAvailableForProcessing),
 												whenSessionDataIsAvailableForProcessing, nullptr/* user data */,
 												&gCarbonEventSessionProcessDataHandler/* event handler reference */);
-		assert_noerr(error);
+		//CARBON//assert_noerr(error);
 	}
 }// Init
 
@@ -816,290 +682,6 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
-Creates a new session based on the parameters in the
-given Session Description, which is RETAINED with a call
-to SessionDescription_Retain() - that way, session data
-can be consulted for an indefinite period of time while
-the session is created asynchronously.
-
-If you provide an existing terminal window and the given
-file contains terminal-related settings, the window will
-be changed to use the settings in the file (for example,
-different colors or a new font size).
-
-Returns the new session, or nullptr if errors occur.
-
-(3.1)
-*/
-SessionRef
-SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindow,
-											 SessionDescription_Ref		inSessionDescription,
-											 Preferences_ContextRef		inWorkspaceOrNull,
-											 UInt16						inWindowIndexInWorkspaceOrZero)
-{
-	SessionRef					result = nullptr;
-	TerminalWindowRef			terminalWindow = inTerminalWindow;
-	SessionDescription_Result   dataAccessError = kSessionDescription_ResultOK;
-	
-	
-	SessionDescription_Retain(inSessionDescription); // prevent file object from being deleted until session setup completes
-	
-	// read terminal customization parameters
-	// INCOMPLETE
-	{
-		// macro set
-		CFStringRef		macroSetNameCFString = nullptr;
-		
-		
-		dataAccessError = SessionDescription_GetStringData
-							(inSessionDescription, kSessionDescription_StringTypeMacroSet, macroSetNameCFString);
-		if ((kSessionDescription_ResultOK != dataAccessError) || (nullptr == macroSetNameCFString))
-		{
-			(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
-		}
-		else
-		{
-			Preferences_ContextRef		defaultMacroSet = MacroManager_ReturnDefaultMacros();
-			CFStringRef					defaultName = nullptr;
-			
-			
-			if (nullptr != defaultMacroSet)
-			{
-				Preferences_Result		prefsResult = Preferences_ContextGetName(defaultMacroSet, defaultName);
-				
-				
-				if (kPreferences_ResultOK != prefsResult)
-				{
-					defaultName = nullptr;
-				}
-			}
-			
-			if ((nullptr != defaultName) &&
-				(kCFCompareEqualTo == CFStringCompare(defaultName, macroSetNameCFString, 0/* flags */)))
-			{
-				// this is the Default macro set; assign accordingly
-				MacroManager_Result		macroResult = MacroManager_SetCurrentMacros(defaultMacroSet);
-				
-				
-				if (false == macroResult.ok())
-				{
-					Console_Warning(Console_WriteLine, "unable to choose default macro set");
-				}
-			}
-			else
-			{
-				// non-Default macro set
-				if (false == Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, macroSetNameCFString))
-				{
-					Console_Warning(Console_WriteValueCFString, "unable to find requested macro set", macroSetNameCFString);
-					(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
-				}
-				else
-				{
-					Preferences_ContextWrap		macroSet(Preferences_NewContextFromFavorites(Quills::Prefs::MACRO_SET,
-																								macroSetNameCFString),
-															Preferences_ContextWrap::kAlreadyRetained);
-					
-					
-					if (false == macroSet.exists())
-					{
-						Console_Assert("macro set not found by name even though Preferences module claims it exists", false);
-						(MacroManager_Result)MacroManager_SetCurrentMacros(nullptr);
-					}
-					else
-					{
-						MacroManager_Result		macroResult = MacroManager_SetCurrentMacros(macroSet.returnRef());
-						
-						
-						if (false == macroResult.ok())
-						{
-							Console_Warning(Console_WriteValueCFString, "unable to choose macro set", macroSetNameCFString);
-						}
-					}
-				}
-			}
-		}
-	}
-	{
-		// screen dimensions (total)
-		SInt32		rows = 0;
-		SInt32		columns = 0;
-		
-		
-		dataAccessError = SessionDescription_GetIntegerData
-							(inSessionDescription, kSessionDescription_IntegerTypeTerminalVisibleColumnCount, columns);
-		if (kSessionDescription_ResultOK == dataAccessError)
-		{
-			dataAccessError = SessionDescription_GetIntegerData
-								(inSessionDescription, kSessionDescription_IntegerTypeTerminalVisibleLineCount, rows);
-			if (kSessionDescription_ResultOK == dataAccessError)
-			{
-				TerminalWindow_SetScreenDimensions(terminalWindow, STATIC_CAST(columns, UInt16), STATIC_CAST(rows, UInt16),
-													false/* send to recording scripts */);
-			}
-		}
-	}
-	{
-		// font name
-		CFStringRef		fontCFString = nullptr;
-		
-		
-		dataAccessError = SessionDescription_GetStringData
-							(inSessionDescription, kSessionDescription_StringTypeTerminalFont, fontCFString);
-		if (kSessionDescription_ResultOK == dataAccessError)
-		{
-			Str255		fontName;
-			
-			
-			CFRetain(fontCFString);
-			if (CFStringGetPascalString(fontCFString, fontName, sizeof(fontName), kCFStringEncodingMacRoman))
-			{
-				if (nullptr != CTFontCreateWithQuickdrawInstance(fontName, 0/* font identifier */,
-																	normal/* font style */, 0.0/* font size */))
-				{
-					TerminalWindow_SetFontAndSize(terminalWindow, fontCFString, 0/* font size, or 0 to ignore */);
-				}
-			}
-			CFRelease(fontCFString);
-		}
-	}
-	{
-		// font size
-		SInt32		fontSize = 0;
-		
-		
-		dataAccessError = SessionDescription_GetIntegerData
-							(inSessionDescription, kSessionDescription_IntegerTypeTerminalFontSize, fontSize);
-		if (kSessionDescription_ResultOK == dataAccessError)
-		{
-			TerminalWindow_SetFontAndSize(terminalWindow, nullptr/* font */, STATIC_CAST(fontSize, UInt16));
-		}
-	}
-	{
-		// colors (currently, cannot vary across views)
-		UInt16					viewCount = 0;
-		TerminalViewRef*		viewArray = nullptr;
-		TerminalWindow_Result   terminalWindowResult = kTerminalWindow_ResultOK;
-		
-		
-		viewCount = TerminalWindow_ReturnViewCountInGroup(terminalWindow, kTerminalWindow_ViewGroupEverything);
-		viewArray = REINTERPRET_CAST(CFAllocatorAllocate
-										(kCFAllocatorDefault, viewCount * sizeof(TerminalViewRef), 0/* hints */),
-										TerminalViewRef*);
-		if (nullptr != viewArray)
-		{
-			terminalWindowResult = TerminalWindow_GetViewsInGroup(terminalWindow, kTerminalWindow_ViewGroupEverything,
-																	viewCount, viewArray, nullptr/* actual size */);
-			if (kTerminalWindow_ResultOK != terminalWindowResult)
-			{
-				CGDeviceColor	colorValue;
-				UInt16			i = 0;
-				
-				
-				for (i = 0; i < viewCount; ++i)
-				{
-					// normal foreground color
-					dataAccessError = SessionDescription_GetRGBColorData
-										(inSessionDescription, kSessionDescription_RGBColorTypeTextNormal, colorValue);
-					if (kSessionDescription_ResultOK == dataAccessError)
-					{
-						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexNormalText, &colorValue);
-					}
-					
-					// normal background color
-					dataAccessError = SessionDescription_GetRGBColorData
-										(inSessionDescription, kSessionDescription_RGBColorTypeBackgroundNormal, colorValue);
-					if (kSessionDescription_ResultOK == dataAccessError)
-					{
-						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexNormalBackground, &colorValue);
-					}
-					
-					// bold foreground color
-					dataAccessError = SessionDescription_GetRGBColorData
-										(inSessionDescription, kSessionDescription_RGBColorTypeTextBold, colorValue);
-					if (kSessionDescription_ResultOK == dataAccessError)
-					{
-						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBoldText, &colorValue);
-					}
-					
-					// bold background color
-					dataAccessError = SessionDescription_GetRGBColorData
-										(inSessionDescription, kSessionDescription_RGBColorTypeBackgroundBold, colorValue);
-					if (kSessionDescription_ResultOK == dataAccessError)
-					{
-						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBoldBackground, &colorValue);
-					}
-					
-					// blinking foreground color
-					dataAccessError = SessionDescription_GetRGBColorData
-										(inSessionDescription, kSessionDescription_RGBColorTypeTextBlinking, colorValue);
-					if (kSessionDescription_ResultOK == dataAccessError)
-					{
-						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBlinkingText, &colorValue);
-					}
-					
-					// blinking background color
-					dataAccessError = SessionDescription_GetRGBColorData
-										(inSessionDescription, kSessionDescription_RGBColorTypeBackgroundBlinking, colorValue);
-					if (kSessionDescription_ResultOK == dataAccessError)
-					{
-						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBlinkingBackground, &colorValue);
-					}
-				}
-			}
-			CFAllocatorDeallocate(kCFAllocatorDefault, viewArray);
-		}
-	}
-	
-	// see if this is a command line session...
-	{
-		CFStringRef		commandLine = nullptr;
-		
-		
-		dataAccessError = SessionDescription_GetStringData(inSessionDescription, kSessionDescription_StringTypeCommandLine,
-															commandLine);
-		if (kSessionDescription_ResultOK == dataAccessError)
-		{
-			// okay, that data is in the file; this means it describes a “local” session...
-			CFArrayRef		argv = CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, commandLine,
-																			CFSTR(" ")/* separators */);
-			
-			
-			if (nullptr != argv)
-			{
-				assert(nullptr != terminalWindow);
-				result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argv, nullptr/* session context */,
-																	false/* reconfigure terminal window */,
-																	inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero);
-				CFRelease(argv), argv = nullptr;
-			}
-		}
-		else
-		{
-			// see if this is a remote host session...
-			//CFStringRef		hostName = nullptr;
-			
-			
-			//dataAccessError = SessionDescription_GetStringData(inSessionDescription, kSessionDescription_StringTypeHostName,
-			//													hostName);
-			if (kSessionDescription_ResultOK == dataAccessError)
-			{
-				// okay, host name data is in the file; this means it describes a “remote” session...
-				// UNIMPLEMENTED
-				// (NOTE: currently on Mac OS X, all “remote” sessions are effectively local commands...)
-			}
-			else
-			{
-				// ???
-			}
-		}
-	}
-	
-	return result;
-}// NewSessionFromDescription
-
-
-/*!
 Creates a new session whose command line is implicitly set to
 construct a login shell, and whose other session preferences
 come from user defaults.  A workspace may be given however to
@@ -1318,18 +900,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 		{
 			if ((enterFullScreen) && (nullptr != terminalWindow))
 			{
-				if (TerminalWindow_IsLegacyCarbon(terminalWindow))
-				{
-					HIWindowRef			window = TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow);
-					EventTargetRef		windowTarget = GetWindowEventTarget(window);
-					
-					
-					Commands_ExecuteByIDUsingEventAfterDelay(kCommandFullScreenToggle, windowTarget, (i + 1) * 0.5/* delay */);
-				}
-				else
-				{
-					CocoaExtensions_RunLater((i + 1) * 0.5/* delay */, ^{ [TerminalWindow_ReturnNSWindow(terminalWindow) toggleFullScreen:NSApp]; });
-				}
+				CocoaExtensions_RunLater((i + 1) * 0.5/* delay */, ^{ [TerminalWindow_ReturnNSWindow(terminalWindow) toggleFullScreen:NSApp]; });
 			}
 		}
 	}
@@ -1496,13 +1067,6 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 			
 			// display the sheet
 			dataObject.disableObservers = YES; // temporarily disable to prevent visible shift in window appearance
-			if (TerminalWindow_IsLegacyCarbon(terminalWindow))
-			{
-				dialog = GenericDialog_Wrap(GenericDialog_NewParentCarbon(TerminalWindow_ReturnLegacyCarbonWindow(terminalWindow),
-																			embeddedPanel, temporaryContext),
-											GenericDialog_Wrap::kAlreadyRetained);
-			}
-			else
 			{
 				NSWindow*	window = TerminalWindow_ReturnNSWindow(terminalWindow);
 				NSView*		parentView = STATIC_CAST(window.contentView, NSView*);
@@ -1602,59 +1166,8 @@ the window from its previous workspace.
 void
 SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalWindow)
 {
-	if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-	{
-		Workspace_Ref		newWorkspace = createWorkspace();
-		MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
-		
-		
-		// IMPORTANT: Hiding the tab prior to window group manipulation
-		// seems to be key to avoiding graphical glitches.  As long as
-		// the tab drawer is hidden when the window changes groups, and
-		// redisplayed afterwards, drawers remain in the proper position.
-		UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
-		
-		assert(nullptr != newWorkspace);
-		assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
-		
-		// ensure the window is not a member of any other workspace
-		std::for_each(workspaceList.begin(), workspaceList.end(), [=](Workspace_Ref wsp) { Workspace_RemoveTerminalWindow(wsp, inTerminalWindow); });
-		if (gAutoRearrangeTabs)
-		{
-			// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
-			// and call "fixTerminalWindowTabPositionsInWorkspace()(oldWorkspace)"
-			// (should this kind of thing be handled automatically through callbacks, when
-			// windows are removed from a workspace for any reason?)
-			(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
-																	fixTerminalWindowTabPositionsInWorkspace());
-		}
-		
-		// offset the window slightly to emphasize its detachment (Carbon only)
-		if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-		{
-			HIWindowRef		window = TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow);
-			Rect			structureBounds;
-			OSStatus		error = noErr;
-			
-			
-			error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
-			if (noErr == error)
-			{
-				RegionUtilities_OffsetRect(&structureBounds, 32/* arbitrary */, 32/* arbitrary */);
-				SetWindowBounds(window, kWindowStructureRgn, &structureBounds);
-			}
-		}
-		
-		// now add it to the new workspace
-		Workspace_AddTerminalWindow(newWorkspace, inTerminalWindow);
-		UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
-		fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
-	}
-	else
-	{
-		// Cocoa windows support this only on certain later OS versions
-		[[Commands_Executor sharedExecutor] moveTabToNewWindow:NSApp];
-	}
+	// Cocoa windows support this only on certain later OS versions
+	[[Commands_Executor sharedExecutor] moveTabToNewWindow:NSApp];
 }// MoveTerminalWindowToNewWorkspace
 
 
@@ -1776,44 +1289,6 @@ SessionFactory_ReturnUserRecentSession ()
 	
 	return result;
 }// ReturnUserRecentSession
-
-
-/*!
-Globally enables or disables the automatic rearrangement of
-tabs in all workspaces.  If you pass "true" and rearrangement
-was previously disabled, all tab positions are immediately
-updated; this makes up for not having done updates to tabs
-individually as they changed during the disabled period.
-
-This is useful in certain situations, where the animation
-would be distracting (e.g. at quitting time, where windows
-are being systematically destroyed anyway).
-
-\retval kSessionFactory_ResultOK
-always
-
-(4.0)
-*/
-SessionFactory_Result
-SessionFactory_SetAutoRearrangeTabsEnabled		(Boolean		inIsEnabled)
-{
-	SessionFactory_Result		result = kSessionFactory_ResultOK;
-	
-	
-	if (gAutoRearrangeTabs != inIsEnabled)
-	{
-		gAutoRearrangeTabs = inIsEnabled;
-		if (gAutoRearrangeTabs)
-		{
-			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
-			
-			
-			(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
-																	fixTerminalWindowTabPositionsInWorkspace());
-		}
-	}
-	return result;
-}// SetAutoRearrangeTabsEnabled
 
 
 /*!
@@ -2018,11 +1493,9 @@ appendDataForProcessing		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if ((noErr == result) && Session_IsValid(session))
 					{
 						// success!
-						UInt32	unprocessedDataSize = Session_AppendDataForProcessing
-														(session, REINTERPRET_CAST(dataPtr, UInt8*), dataSize);
-						//UInt32	unprocessedDataSize = 0;
-						//TelnetProtocol_InterpretAsCommandOrWriteToSession
-						//			(session, REINTERPRET_CAST(dataPtr, UInt8*), dataSize);
+						UInt32		unprocessedDataSize = STATIC_CAST(Session_AppendDataForProcessing
+																		(session, REINTERPRET_CAST(dataPtr, UInt8*), dataSize),
+																		UInt32);
 						
 						
 						// report to the dispatching thread that data processing is complete
@@ -2273,24 +1746,15 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Boolean					inNoStagger)
 {
 	TerminalWindowRef		result = nullptr;
-	Boolean					inCocoaPreferred = (NO == DebugInterface_UseCarbonTerminalWindowsForNewSessions()); // TEMPORARY
 	
 	
 	// create a new terminal window to house the session
-	if (inCocoaPreferred)
-	{
-		result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
-	}
-	else
-	{
-		Console_WriteLine("forcing new terminal window to use Carbon legacy implementation");
-		result = TerminalWindow_NewCarbonLegacy(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
-	}
-	
+	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull, inNoStagger);
 	if (nullptr != result)
 	{
 		startTrackingTerminalWindow(result);
 	}
+	
 	return result;
 }// createTerminalWindow
 
@@ -2334,9 +1798,6 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 						 UInt16						inWindowIndexInWorkspaceOrZero)
 {
 	Preferences_Index const		kWindowIndex = STATIC_CAST(inWindowIndexInWorkspaceOrZero, Preferences_Index);
-	HIWindowRef					legacyCarbonWindow = (TerminalWindow_IsLegacyCarbon(inTerminalWindow)
-														? TerminalWindow_ReturnLegacyCarbonWindow(inTerminalWindow)
-														: nullptr); 
 	NSWindow*					cocoaWindow = TerminalWindow_ReturnNSWindow(inTerminalWindow);
 	Boolean						result = true;
 	
@@ -2370,11 +1831,6 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 				// if the current display size disagrees, adjust the window location somehow
 				
 				// IMPORTANT: the boundaries are not guaranteed to specify the width or height
-				if (legacyCarbonWindow)
-				{
-					MoveWindowStructure(legacyCarbonWindow, STATIC_CAST(frameBounds.origin.x, SInt16), STATIC_CAST(frameBounds.origin.y, SInt16));
-				}
-				else
 				{
 					NSScreen*	windowScreen = cocoaWindow.screen;
 					
@@ -2418,10 +1874,14 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		// figure out if this window should have a tab and be arranged
 		if (nullptr == inWorkspaceOrNull)
 		{
+			// UNIMPLEMENTED; need to pass original option-key choice somehow
+			Boolean		isOptionKeyDown = false;
+			
+			
 			// no specific source for workspace preferences; therefore, the appearance
 			// and arrangement of the new window may depend on the frontmost window,
 			// or the user may have requested a new workspace
-			if (EventLoop_IsOptionKeyDown())
+			if (isOptionKeyDown)
 			{
 				// if the user requests a new workspace, ignore any frontmost window
 				// or active workspace, and choose the tabbed appearance from the
@@ -2492,32 +1952,13 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		// display the window, and give it the appropriate ordering (depends on tab setting)
 		if (useTabs)
 		{
-			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
-			
-			
 			if (nullptr == targetWorkspace)
 			{
 				targetWorkspace = returnActiveWorkspace();
 			}
 			
-			// IMPORTANT: Although you should add a window to a workspace before
-			// it is visible, the window MUST be visible before you can give it a
-			// tabbed appearance.  This is due to the tab implementation being a
-			// drawer, which refuses to associate itself with an invisible window!
 			Workspace_AddTerminalWindow(targetWorkspace, inTerminalWindow);
 			TerminalWindow_SetVisible(inTerminalWindow, true);
-			
-			// tab appearance and ordering are implied when using the new Cocoa
-			// window tab mechanism; only Carbon windows need additional steps
-			if (TerminalWindow_IsLegacyCarbon(inTerminalWindow))
-			{
-				UNUSED_RETURN(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
-				if (gAutoRearrangeTabs)
-				{
-					(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
-																			fixTerminalWindowTabPositionsInWorkspace());
-				}
-			}
 		}
 		else
 		{
@@ -2648,16 +2089,6 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 				Sound_StandardAlert();
 			}
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
-			
-			if (TerminalWindow_IsLegacyCarbon(dataObject.terminalWindow))
-			{
-				// in this case the new window must be explicitly activated to prevent the
-				// window from staying in the background; and, notably, the mechanism for
-				// selecting the window MUST be the Carbon API call SelectWindow()
-				// (otherwise system-handled commands such as Close and Minimize have no
-				// effect on the new window; it is not clear why this is an issue)
-				SelectWindow(TerminalWindow_ReturnLegacyCarbonWindow(dataObject.terminalWindow));
-			}
 		}
 	}
 	else
@@ -2774,273 +2205,6 @@ newSessionFromCommand	(TerminalWindowRef			inTerminalWindow,
 	
 	return result;
 }// newSessionFromCommand
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for commands that create new sessions.
-
-(3.1)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					UNUSED_ARGUMENT(inContextPtr))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (result == noErr)
-		{
-			// don’t claim to have handled any commands not shown below
-			result = eventNotHandledErr;
-			
-			switch (kEventKind)
-			{
-			case kEventCommandProcess:
-				// execute a command selected from a menu
-				switch (received.commandID)
-				{
-				case kCommandNewSessionDefaultFavorite:
-				case kCommandNewSessionDialog:
-				case kCommandNewSessionLoginShell:
-				case kCommandNewSessionShell:
-					{
-						Preferences_Result			prefsResult = kPreferences_ResultOK;
-						Preferences_ContextRef		defaultSession = nullptr;
-						Preferences_ContextRef		workspaceContext = nullptr;
-						TerminalWindowRef			terminalWindow = createTerminalWindow();
-						
-						
-						prefsResult = Preferences_GetDefaultContext(&defaultSession, Quills::Prefs::SESSION);
-						if (kPreferences_ResultOK != prefsResult)
-						{
-							Console_Warning(Console_WriteValue, "failed to find default session settings for new terminal window; error", prefsResult);
-						}
-						else
-						{
-							if (false == configureSessionTerminalWindow(terminalWindow, defaultSession))
-							{
-								Console_Warning(Console_WriteValueFourChars, "terminal window could not apply associated-context preferences for command ID", received.commandID);
-							}
-						}
-						
-						Boolean		launchOK = newSessionFromCommand
-												(terminalWindow, received.commandID, workspaceContext,
-													0/* window index */);
-						
-						
-						if (launchOK)
-						{
-							result = noErr;
-						}
-						else
-						{
-							// UNIMPLEMENTED - report any problems to the user!!!
-							result = eventNotHandledErr;
-						}
-					}
-					break;
-				
-				case kCommandRestoreWorkspaceDefaultFavorite:
-					{
-						std::string					preferredName = Quills::Base::_initial_workspace_name();
-						CFRetainRelease				asCFString(CFStringCreateWithCString(kCFAllocatorDefault,
-																							preferredName.c_str(),
-																							kCFStringEncodingUTF8),
-																CFRetainRelease::kAlreadyRetained);
-						Preferences_ContextRef		workspaceContext = Preferences_IsContextNameInUse
-																		(Quills::Prefs::WORKSPACE, asCFString.returnCFStringRef())
-																		? Preferences_NewContextFromFavorites
-																			(Quills::Prefs::WORKSPACE, asCFString.returnCFStringRef())
-																		: nullptr;
-						Boolean						releaseContext = (nullptr != workspaceContext);
-						
-						
-						if (nullptr == workspaceContext)
-						{
-							// preferred one does not exist; find the Default, instead
-							Preferences_Result		prefsResult = Preferences_GetDefaultContext
-																	(&workspaceContext, Quills::Prefs::WORKSPACE);
-							
-							
-							if (kPreferences_ResultOK == prefsResult)
-							{
-								// default contexts are borrowed, not allocated or retained
-								releaseContext = false;
-							}
-							else
-							{
-								// error
-								workspaceContext = nullptr;
-							}
-						}
-						
-						// finally, create the session from the specified context
-						if (nullptr == workspaceContext) result = eventNotHandledErr;
-						else
-						{
-							Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(workspaceContext);
-							
-							
-							if (launchedOK) result = noErr;
-							else result = eventNotHandledErr;
-						}
-						
-						// report any errors to the user
-						if (noErr != result)
-						{
-							// UNIMPLEMENTED!!!
-							Console_Warning(Console_WriteLine, "failed to launch startup workspace");
-							Sound_StandardAlert();
-						}
-						
-						if ((releaseContext) && (nullptr != workspaceContext))
-						{
-							Preferences_ReleaseContext(&workspaceContext);
-						}
-					}
-					break;
-				
-				default:
-					break;
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-	return result;
-}// receiveHICommand
-
-
-/*!
-Embellishes "kEventWindowActivated" of "kEventClassWindow" by
-keeping track of the session for the most-recently-activated
-window.
-
-Note that the recent-session global can also change in other
-ways, e.g. at the time a session is constructed.
-
-(4.0)
-*/
-OSStatus
-receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowActivated);
-	
-	// determine the window that was activated
-	{
-		HIWindowRef		activatedWindow = nullptr;
-		OSStatus		error = CarbonEventUtilities_GetEventParameter
-								(inEvent, kEventParamDirectObject, typeWindowRef, activatedWindow);
-		
-		
-		if (noErr == error)
-		{
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(activatedWindow);
-			
-			
-			if (nullptr != terminalWindow)
-			{
-				SessionRef		newSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-				
-				
-				if (newSession != gSessionFactoryRecentlyActiveSession)
-				{
-					// overwrite the value; assume that if there was a session
-					// active, it would have fired a deactivation event prior
-					// to being cleared
-					gSessionFactoryRecentlyActiveSession = newSession;
-					changeNotifyGlobal(kSessionFactory_ChangeActivatingSession, newSession);
-				}
-			}
-		}
-	}
-	
-	// IMPORTANT: Do not interfere with this event.
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveWindowActivated
-
-
-/*!
-Embellishes "kEventWindowDeactivated" of "kEventClassWindow" by
-sending an appropriate event notification for the corresponding
-session.
-
-(4.0)
-*/
-OSStatus
-receiveWindowDeactivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowDeactivated);
-	
-	// determine if a session window was deactivated
-	{
-		HIWindowRef		deactivatedWindow = nullptr;
-		OSStatus		error = CarbonEventUtilities_GetEventParameter
-								(inEvent, kEventParamDirectObject, typeWindowRef, deactivatedWindow);
-		
-		
-		if (noErr == error)
-		{
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(deactivatedWindow);
-			
-			
-			if (nullptr != terminalWindow)
-			{
-				SessionRef		oldSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-				
-				
-				if (nullptr != oldSession)
-				{
-					// clear the current session completely; assume that it may be
-					// quickly restored by an activation event in another window
-					changeNotifyGlobal(kSessionFactory_ChangeDeactivatingSession, oldSession);
-					gSessionFactoryRecentlyActiveSession = nullptr;
-				}
-			}
-		}
-	}
-	
-	// IMPORTANT: Do not interfere with this event.
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveWindowDeactivated
 
 
 /*!
@@ -3419,12 +2583,6 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	
 	std::for_each(workspaceList.begin(), workspaceList.end(),
 					[=](Workspace_Ref wsp) { Workspace_RemoveTerminalWindow(wsp, inTerminalWindow); });
-	
-	if (gAutoRearrangeTabs)
-	{
-		(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
-																fixTerminalWindowTabPositionsInWorkspace());
-	}
 	
 	// remove the specified window from the creation-order list;
 	// the idea here is to shuffle the list so that the given

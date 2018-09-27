@@ -33,7 +33,6 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 
@@ -49,49 +48,5 @@ void
 void
 	RegionUtilities_CenterHIRectIn				(HIRect&			inoutInner,
 												 HIRect const&		inOuter);
-
-void
-	RegionUtilities_CenterRectIn				(Rect*				inoutInner,
-												 Rect const*		inOuter);
-
-Boolean
-	RegionUtilities_EqualRects					(Rect const*			inRect1Ptr,
-												 Rect const*			inRect2Ptr);
-
-void
-	RegionUtilities_GetPositioningBounds		(WindowRef			inWindow,
-												 Rect*				outRectPtr);
-
-// RETURNS THE RECTANGLE OF THE DEVICE CONTAINING THE LARGEST PART OF THE GIVEN WINDOW
-void
-	RegionUtilities_GetWindowDeviceGrayRect		(WindowRef			inWindow,
-												 Rect*				outRectPtr);
-
-void
-	RegionUtilities_GetWindowMaximumBounds		(WindowRef			inWindow,
-												 Rect*				outNewBoundsPtr,
-												 Rect*				outOldBoundsPtrOrNull,
-												 Boolean			inNoInsets = false);
-
-Boolean
-	RegionUtilities_NearPoints					(Point				inPoint1,
-												 Point				inPoint2);
-
-void
-	RegionUtilities_OffsetRect					(Rect*				inoutRectPtr,
-												 SInt16				inDeltaX,
-												 SInt16				inDeltaY);
-
-void
-	RegionUtilities_SetPoint						(Point*				inoutPointPtr,
-												 SInt16				inX,
-												 SInt16				inY);
-
-void
-	RegionUtilities_SetRect						(Rect*				inoutRectPtr,
-												 SInt16				inLeft,
-												 SInt16				inTop,
-												 SInt16				inRight,
-												 SInt16				inBottom);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

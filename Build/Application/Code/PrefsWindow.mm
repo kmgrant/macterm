@@ -132,7 +132,7 @@ in the source list.
 	copyWithZone:(NSZone*)_;
 
 // NSObject
-	- (unsigned int)
+	- (NSUInteger)
 	hash;
 	- (BOOL)
 	isEqual:(id)_;
@@ -203,24 +203,16 @@ The private class interface.
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				copyContextToDefaults					(Preferences_ContextRef);
-CFDictionaryRef		createSearchDictionary					();
-void				deleteContext							(Preferences_ContextRef);
-OSStatus			receiveHICommand						(EventHandlerCallRef, EventRef, void*);
+void				copyContextToDefaults			(Preferences_ContextRef);
+CFDictionaryRef		createSearchDictionary			();
+void				deleteContext					(Preferences_ContextRef);
 
 } // anonymous namespace
 
 #pragma mark Variables
 namespace {
 
-CarbonEventHandlerWrap		gPrefsCommandHandler(GetApplicationEventTarget(),
-													receiveHICommand,
-													CarbonEventSetInClass
-														(CarbonEventClass(kEventClassCommand),
-															kEventCommandProcess),
-													nullptr/* user data */);
-Console_Assertion			_1(gPrefsCommandHandler.isInstalled(), __FILE__, __LINE__);
-NSDictionary*				gSearchDataDictionary ()	{ static CFDictionaryRef x = createSearchDictionary(); return BRIDGE_CAST(x, NSDictionary*); }
+NSDictionary*		gSearchDataDictionary ()	{ static CFDictionaryRef x = createSearchDictionary(); return BRIDGE_CAST(x, NSDictionary*); }
 
 } // anonymous namespace
 
@@ -418,110 +410,6 @@ createSearchDictionary ()
 	return result;
 }// createSearchDictionary
 
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the preferences toolbar.  Responds by changing
-the currently-displayed panel.
-
-(3.1)
-*/
-OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					UNUSED_ARGUMENT(inContextPtr))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommand	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (result == noErr)
-		{
-			// don’t claim to have handled any commands not shown below
-			result = eventNotHandledErr;
-			
-			switch (kEventKind)
-			{
-			case kEventCommandProcess:
-				// execute a command selected from the toolbar
-				switch (received.commandID)
-				{
-				case kCommandDisplayPrefPanelFormats:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorFormats, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelGeneral:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorGeneral, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelMacros:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorMacros, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelSessions:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorSessions, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelTerminals:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorTerminals, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelTranslations:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorTranslations, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				case kCommandDisplayPrefPanelWorkspaces:
-					[[PrefsWindow_Controller sharedPrefsWindowController]
-						displayPanelOrTabWithIdentifier:BRIDGE_CAST(kConstantsRegistry_PrefPanelDescriptorWorkspaces, NSString*)
-														withAnimation:NO];
-					result = noErr;
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-	}
-	
-	return result;
-}// receiveHICommand
-
 } // anonymous namespace
 
 
@@ -710,10 +598,10 @@ is changed).
 
 (4.1)
 */
-- (unsigned int)
+- (NSUInteger)
 hash
 {
-	return ((unsigned int)self->preferencesContext);
+	return (REINTERPRET_CAST(self->preferencesContext, NSUInteger));
 }// hash
 
 
@@ -1683,11 +1571,11 @@ unless this method is implemented.
 
 (4.1)
 */
-- (int)
+- (NSInteger)
 numberOfRowsInTableView:(NSTableView*)	aTableView
 {
 #pragma unused(aTableView)
-	int		result = [self->currentPreferenceCollections count];
+	NSInteger		result = [self->currentPreferenceCollections count];
 	
 	
 	return result;
@@ -1869,7 +1757,7 @@ dropOperation:(NSTableViewDropOperation)	anOperation
 			
 			if (nil != rowIndexes)
 			{
-				int		draggedRow = [rowIndexes firstIndex];
+				NSInteger	draggedRow = [rowIndexes firstIndex];
 				
 				
 				if (draggedRow != aTargetRow)
@@ -2010,7 +1898,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	// sure that the menu icon size approximates a normal toolbar
 	// icon’s size
 	result.menuFormRepresentation.image = result.image;
-	result.menuFormRepresentation.image.size = NSMakeSize(32, 32); // shrink default image, which is too large
+	result.menuFormRepresentation.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
 	result.menuFormRepresentation.title = result.label;
 	result.menuFormRepresentation.action = result.action;
 	result.menuFormRepresentation.target = result.target;
@@ -3175,7 +3063,7 @@ rebuildSourceList
 	
 	// attempt to preserve the selection
 	{
-		unsigned int	newIndex = [self->currentPreferenceCollections indexOfObject:selectedObject];
+		NSInteger	newIndex = [self->currentPreferenceCollections indexOfObject:selectedObject];
 		
 		
 		if (NSNotFound != newIndex)

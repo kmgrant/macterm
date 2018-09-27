@@ -355,10 +355,10 @@ importITermColorProperty		(id							aPropertyListType,
 	
 	if ([aPropertyListType isKindOfClass:NSDictionary.class])
 	{
-		CGDeviceColor	colorValue;
-		id				redNumber = [aPropertyListType objectForKey:@"Red Component"];
-		id				greenNumber = [aPropertyListType objectForKey:@"Green Component"];
-		id				blueNumber = [aPropertyListType objectForKey:@"Blue Component"];
+		CGFloatRGBColor		colorValue;
+		id					redNumber = [aPropertyListType objectForKey:@"Red Component"];
+		id					greenNumber = [aPropertyListType objectForKey:@"Green Component"];
+		id					blueNumber = [aPropertyListType objectForKey:@"Blue Component"];
 		
 		
 		if ((nil != redNumber) && (nil != greenNumber) && (nil != blueNumber))
