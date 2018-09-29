@@ -91,6 +91,7 @@
 #include "MacroManager.h"
 #include "NetEvents.h"
 #include "Session.h"
+#include "SessionFactory.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
@@ -6688,24 +6689,24 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							UInt32*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt32*);
+							SessionFactory_SpecialSession*		storedValuePtr = REINTERPRET_CAST(outDataPtr, SessionFactory_SpecialSession*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("shell"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kCommandNewSessionShell;
+								*storedValuePtr = kSessionFactory_SpecialSessionShell;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("log-in shell"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kCommandNewSessionLoginShell;
+								*storedValuePtr = kSessionFactory_SpecialSessionLogInShell;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("dialog"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kCommandNewSessionDialog;
+								*storedValuePtr = kSessionFactory_SpecialSessionInteractiveSheet;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("default"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kCommandNewSessionDefaultFavorite;
+								*storedValuePtr = kSessionFactory_SpecialSessionDefaultFavorite;
 							}
 							else
 							{
@@ -8450,24 +8451,24 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 								}
 								else
 								{
-									UInt32*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt32*);
+									SessionFactory_SpecialSession*		storedValuePtr = REINTERPRET_CAST(outDataPtr, SessionFactory_SpecialSession*);
 									
 									
 									if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("shell"), kCFCompareCaseInsensitive))
 									{
-										*storedValuePtr = kCommandNewSessionShell;
+										*storedValuePtr = kSessionFactory_SpecialSessionShell;
 									}
 									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("log-in shell"), kCFCompareCaseInsensitive))
 									{
-										*storedValuePtr = kCommandNewSessionLoginShell;
+										*storedValuePtr = kSessionFactory_SpecialSessionLogInShell;
 									}
 									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("dialog"), kCFCompareCaseInsensitive))
 									{
-										*storedValuePtr = kCommandNewSessionDialog;
+										*storedValuePtr = kSessionFactory_SpecialSessionInteractiveSheet;
 									}
 									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("default"), kCFCompareCaseInsensitive))
 									{
-										*storedValuePtr = kCommandNewSessionDefaultFavorite;
+										*storedValuePtr = kSessionFactory_SpecialSessionDefaultFavorite;
 									}
 									else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("none"), kCFCompareCaseInsensitive))
 									{
@@ -9303,19 +9304,19 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeCFStringRef == keyValueType);
 					switch (data)
 					{
-					case kCommandNewSessionDialog:
+					case kSessionFactory_SpecialSessionInteractiveSheet:
 						setApplicationPreference(keyName, CFSTR("dialog"));
 						break;
 					
-					case kCommandNewSessionDefaultFavorite:
+					case kSessionFactory_SpecialSessionDefaultFavorite:
 						setApplicationPreference(keyName, CFSTR("default"));
 						break;
 					
-					case kCommandNewSessionShell:
+					case kSessionFactory_SpecialSessionShell:
 						setApplicationPreference(keyName, CFSTR("shell"));
 						break;
 					
-					case kCommandNewSessionLoginShell:
+					case kSessionFactory_SpecialSessionLogInShell:
 					default:
 						setApplicationPreference(keyName, CFSTR("log-in shell"));
 						break;
@@ -10607,19 +10608,19 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 							assert(typeCFStringRef == keyValueType);
 							switch (data)
 							{
-							case kCommandNewSessionDialog:
+							case kSessionFactory_SpecialSessionInteractiveSheet:
 								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("dialog"));
 								break;
 							
-							case kCommandNewSessionDefaultFavorite:
+							case kSessionFactory_SpecialSessionDefaultFavorite:
 								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("default"));
 								break;
 							
-							case kCommandNewSessionShell:
+							case kSessionFactory_SpecialSessionShell:
 								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("shell"));
 								break;
 							
-							case kCommandNewSessionLoginShell:
+							case kSessionFactory_SpecialSessionLogInShell:
 								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("log-in shell"));
 								break;
 							

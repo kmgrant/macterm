@@ -44,6 +44,7 @@
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <ListenerModel.h>
+#import <SoundSystem.h>
 
 // application includes
 #import "AppResources.h"
@@ -1915,8 +1916,13 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite);
+	BOOL	didPerform = [NSApp tryToPerform:@selector(performNewDefault:) with:sender];
+	
+	
+	if (NO == didPerform)
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1975,8 +1981,13 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell);
+	BOOL	didPerform = [NSApp tryToPerform:@selector(performNewLogInShell:) with:sender];
+	
+	
+	if (NO == didPerform)
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -2035,8 +2046,13 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell);
+	BOOL	didPerform = [NSApp tryToPerform:@selector(performNewShell:) with:sender];
+	
+	
+	if (NO == didPerform)
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 

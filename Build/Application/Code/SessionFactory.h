@@ -96,6 +96,20 @@ enum
 														//!  otherwise, works like "kSessionFactory_ListInCreationOrder"
 };
 
+/*!
+These describe special commands that are not described
+by collection names in Preferences but they have very
+specific meanings and can be spawned on request.
+*/
+typedef FourCharCode SessionFactory_SpecialSession;
+enum
+{
+	kSessionFactory_SpecialSessionDefaultFavorite	= 'NSDF',	//!< use Default preference collection for session
+	kSessionFactory_SpecialSessionLogInShell		= 'NLgS',	//!< use the "login" command from Unix (reset environment)
+	kSessionFactory_SpecialSessionShell				= 'NShS',	//!< use the user’s preferred shell (inherit environment)
+	kSessionFactory_SpecialSessionInteractiveSheet	= 'NSDg',	//!< display a dialog sheet to set up an arbitrary session
+};
+
 #pragma mark Callbacks
 
 /*!
@@ -138,8 +152,8 @@ void
 //@{
 
 SessionRef
-	SessionFactory_NewCloneSession					(TerminalWindowRef				inTerminalWindow,
-													 SessionRef						inBaseSession);
+	SessionFactory_NewCloneSession					(TerminalWindowRef				inTerminalWindow = nullptr,
+													 SessionRef						inBaseSession = nullptr);
 
 SessionRef
 	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindow,
@@ -170,6 +184,12 @@ SessionRef
 SessionRef
 	SessionFactory_NewSessionUserFavorite			(TerminalWindowRef				inTerminalWindow,
 													 Preferences_ContextRef			inSessionContext,
+													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
+													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
+
+Boolean
+	SessionFactory_NewSessionWithSpecialCommand		(TerminalWindowRef				inTerminalWindow,
+													 SessionFactory_SpecialSession	inCommandID,
 													 Preferences_ContextRef			inWorkspaceOrNull = nullptr,
 													 UInt16							inWindowIndexInWorkspaceOrZero = 0);
 

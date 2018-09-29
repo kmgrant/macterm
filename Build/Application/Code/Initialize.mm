@@ -230,7 +230,13 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			
 			unless (quellAutoNew)
 			{
-				Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite);
+				BOOL	didPerform = [NSApp tryToPerform:@selector(performRestoreWorkspaceDefault:) with:nil];
+				
+				
+				if (NO == didPerform)
+				{
+					Console_Warning(Console_WriteLine, "failed to perform command to restore default workspace!");
+				}
 			}
 		}
 	}

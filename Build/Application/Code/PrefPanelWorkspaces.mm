@@ -62,6 +62,7 @@
 #import "Keypads.h"
 #import "Panel.h"
 #import "Preferences.h"
+#import "SessionFactory.h"
 #import "UIStrings.h"
 
 
@@ -642,25 +643,25 @@ description
 												@"description for “no window”");
 			break;
 		
-		case kCommandNewSessionDefaultFavorite:
+		case kSessionFactory_SpecialSessionDefaultFavorite:
 			result = NSLocalizedStringFromTable(@"Default",
 												@"PrefPanelWorkspaces"/* table */,
 												@"description of special workspace session type: Default");
 			break;
 		
-		case kCommandNewSessionLoginShell:
+		case kSessionFactory_SpecialSessionLogInShell:
 			result = NSLocalizedStringFromTable(@"Log-In Shell",
 												@"PrefPanelWorkspaces"/* table */,
 												@"description of special workspace session type: Log-In Shell");
 			break;
 		
-		case kCommandNewSessionShell:
+		case kSessionFactory_SpecialSessionShell:
 			result = NSLocalizedStringFromTable(@"Shell",
 												@"PrefPanelWorkspaces"/* table */,
 												@"description of special workspace session type: Shell");
 			break;
 		
-		case kCommandNewSessionDialog:
+		case kSessionFactory_SpecialSessionInteractiveSheet:
 			result = NSLocalizedStringFromTable(@"Custom New Session",
 												@"PrefPanelWorkspaces"/* table */,
 												@"description of special workspace session type: Custom New Session");
@@ -1547,19 +1548,19 @@ rebuildSessionList
 	
 	// add an item that means “open the Log-In Shell session in the window”
 	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
-	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionLoginShell];
+	newDesc.commandType = [NSNumber numberWithInteger:kSessionFactory_SpecialSessionLogInShell];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 	
 	// add an item that means “open the (non-log-in) Shell session in the window”
 	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
-	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionShell];
+	newDesc.commandType = [NSNumber numberWithInteger:kSessionFactory_SpecialSessionShell];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 	
 	// add an item that means “open the Custom New Session sheet when the window opens”
 	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
-	newDesc.commandType = [NSNumber numberWithInteger:kCommandNewSessionDialog];
+	newDesc.commandType = [NSNumber numberWithInteger:kSessionFactory_SpecialSessionInteractiveSheet];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 }// rebuildSessionList

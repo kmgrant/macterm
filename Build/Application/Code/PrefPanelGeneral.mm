@@ -68,6 +68,7 @@
 #import "NetEvents.h"
 #import "Panel.h"
 #import "Preferences.h"
+#import "SessionFactory.h"
 #import "Terminal.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
@@ -2575,10 +2576,10 @@ Accessor.
 - (BOOL)
 isNewCommandCustomNewSession
 {
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kCommandNewSessionDefaultFavorite];
+	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
 	
 	
-	return (kCommandNewSessionDialog == value);
+	return (kSessionFactory_SpecialSessionInteractiveSheet == value);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfNewCommandCustomNewSession
@@ -2592,7 +2593,7 @@ setNewCommandCustomNewSession:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForNewCommand];
 		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kCommandNewSessionDialog];
+		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionInteractiveSheet];
 		
 		
 		if (NO == writeOK)
@@ -2613,10 +2614,10 @@ Accessor.
 - (BOOL)
 isNewCommandDefaultSessionFavorite
 {
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kCommandNewSessionDefaultFavorite];
+	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
 	
 	
-	return (kCommandNewSessionDefaultFavorite == value);
+	return (kSessionFactory_SpecialSessionDefaultFavorite == value);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfNewCommandDefaultSessionFavorite
@@ -2630,7 +2631,7 @@ setNewCommandDefaultSessionFavorite:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForNewCommand];
 		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kCommandNewSessionDefaultFavorite];
+		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionDefaultFavorite];
 		
 		
 		if (NO == writeOK)
@@ -2651,10 +2652,10 @@ Accessor.
 - (BOOL)
 isNewCommandLogInShell
 {
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kCommandNewSessionDefaultFavorite];
+	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
 	
 	
-	return (kCommandNewSessionLoginShell == value);
+	return (kSessionFactory_SpecialSessionLogInShell == value);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfNewCommandLogInShell
@@ -2668,7 +2669,7 @@ setNewCommandLogInShell:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForNewCommand];
 		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kCommandNewSessionLoginShell];
+		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionLogInShell];
 		
 		
 		if (NO == writeOK)
@@ -2689,10 +2690,10 @@ Accessor.
 - (BOOL)
 isNewCommandShell
 {
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kCommandNewSessionDefaultFavorite];
+	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
 	
 	
-	return (kCommandNewSessionShell == value);
+	return (kSessionFactory_SpecialSessionShell == value);
 }
 + (BOOL)
 automaticallyNotifiesObserversOfNewCommandShell
@@ -2706,7 +2707,7 @@ setNewCommandShell:(BOOL)	aFlag
 	{
 		[self notifyWillChangeValueForNewCommand];
 		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kCommandNewSessionShell];
+		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionShell];
 		
 		
 		if (NO == writeOK)

@@ -155,7 +155,6 @@ Boolean					displayTerminalWindow			(TerminalWindowRef, Preferences_ContextRef =
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionBlock);
 void					forEachTerminalWindowInListDo	(TerminalWindowList const&, SessionFactory_TerminalWindowBlock);
 void					handleNewSessionDialogClose		(GenericDialog_Ref, Boolean);
-Boolean					newSessionFromCommand			(TerminalWindowRef, UInt32, Preferences_ContextRef, UInt16);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -343,27 +342,29 @@ NOTE:	A future version of this routine might add a parameter
 (3.1)
 */
 SessionRef
-SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
-								 SessionRef				inBaseSession)
+SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindowOrNull,
+								 SessionRef				inBaseSessionOrNull)
 {
-	SessionRef		result = nullptr;
-	CFArrayRef		argsArray = Session_ReturnCommandLine(inBaseSession);
+	SessionRef			result = nullptr;
+	SessionRef			sourceSession = ((nullptr == inBaseSessionOrNull)
+											? SessionFactory_ReturnUserRecentSession()
+											: inBaseSessionOrNull);
+	TerminalWindowRef	sourceTerminalWindow = Session_ReturnActiveTerminalWindow(sourceSession);
+	TerminalWindowRef	targetTerminalWindow = inTerminalWindowOrNull;
+	CFArrayRef			argsArray = Session_ReturnCommandLine(sourceSession);
 	
 	
-	if (nullptr == inTerminalWindow)
+	if (nullptr == targetTerminalWindow)
 	{
-		TerminalWindowRef	sourceTerminalWindow = Session_ReturnActiveTerminalWindow(inBaseSession);
-		
-		
 		// TEMPORARY; createTerminalWindow() accepts up to 3 context arguments,
 		// which should be extracted or derived from the original session somehow
 		// (to completely duplicate things like window size, fonts and colors);
 		// for now, a window style based on the default is chosen
-		inTerminalWindow = createTerminalWindow(nullptr, nullptr, nullptr, true/* no stagger */);
+		targetTerminalWindow = createTerminalWindow(nullptr, nullptr, nullptr, true/* no stagger */);
 		
 		if (false == TerminalWindow_IsTab(sourceTerminalWindow))
 		{
-			NSWindow*	targetWindow = TerminalWindow_ReturnNSWindow(inTerminalWindow);
+			NSWindow*	targetWindow = TerminalWindow_ReturnNSWindow(targetTerminalWindow);
 			Boolean		noAnimations = false;
 			
 			
@@ -384,17 +385,16 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindow,
 			else
 			{
 				CocoaAnimation_TransitionWindowForDuplicate(targetWindow,
-															(nullptr != sourceTerminalWindow)
-																? TerminalWindow_ReturnNSWindow(sourceTerminalWindow)
-																: TerminalWindow_ReturnNSWindow(inTerminalWindow));
+															TerminalWindow_ReturnNSWindow(sourceTerminalWindow));
 			}
 		}
 	}
 	
-	if ((nullptr != argsArray) && (nullptr != inTerminalWindow))
+	if ((nullptr != argsArray) && (nullptr != targetTerminalWindow))
 	{
-		result = SessionFactory_NewSessionArbitraryCommand(inTerminalWindow, argsArray);
+		result = SessionFactory_NewSessionArbitraryCommand(targetTerminalWindow, argsArray);
 	}
+	
 	return result;
 }// NewCloneSession
 
@@ -800,6 +800,103 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindow,
 
 
 /*!
+Creates a new session based on a command (such as from a menu);
+or, arranges for the appropriate user interface to appear, in the
+case of a custom new session.  Returns true only if successful.
+
+If the workspace is defined, then workspace-wide settings such as
+the use of tabs can be applied to the specified terminal window.
+In addition, if the window index is nonzero, any window-specific
+settings (such as location on screen) can also be applied.
+
+(2018.09)
+*/
+Boolean
+SessionFactory_NewSessionWithSpecialCommand		(TerminalWindowRef				inTerminalWindow,
+												 SessionFactory_SpecialSession	inCommandID,
+												 Preferences_ContextRef			inWorkspaceOrNull,
+												 UInt16							inWindowIndexInWorkspaceOrZero)
+{
+	Boolean		result = false;
+	
+	
+	switch (inCommandID)
+	{
+	case kSessionFactory_SpecialSessionDefaultFavorite:
+		{
+			Preferences_ContextRef		sessionContext = nullptr;
+			Preferences_Result			prefsResult = Preferences_GetDefaultContext
+														(&sessionContext, Quills::Prefs::SESSION);
+			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				sessionContext = nullptr;
+			}
+			
+			// finally, create the session from the specified context
+			if (nullptr != sessionContext)
+			{
+				SessionRef		newSession = SessionFactory_NewSessionUserFavorite
+												(inTerminalWindow, sessionContext, inWorkspaceOrNull,
+													inWindowIndexInWorkspaceOrZero);
+				
+				
+				if (nullptr != newSession)
+				{
+					// success!
+					result = true;
+				}
+			}
+		}
+		break;
+	
+	case kSessionFactory_SpecialSessionInteractiveSheet:
+		result = SessionFactory_DisplayUserCustomizationUI(inTerminalWindow, inWorkspaceOrNull,
+															inWindowIndexInWorkspaceOrZero);
+		if (false == result)
+		{
+			// some kind of problem
+			Sound_StandardAlert();
+			Console_WriteLine("unexpected problem displaying custom session dialog!");
+		}
+		break;
+	
+	case kSessionFactory_SpecialSessionLogInShell:
+	case kSessionFactory_SpecialSessionShell:
+		{
+			SessionRef		newSession = nullptr;
+			
+			
+			// create a shell
+			if (kSessionFactory_SpecialSessionLogInShell == inCommandID)
+			{
+				newSession = SessionFactory_NewSessionLoginShell(inTerminalWindow, inWorkspaceOrNull,
+																	inWindowIndexInWorkspaceOrZero);
+			}
+			else
+			{
+				newSession = SessionFactory_NewSessionDefaultShell(inTerminalWindow, inWorkspaceOrNull,
+																	inWindowIndexInWorkspaceOrZero);
+			}
+			
+			if (nullptr != newSession)
+			{
+				// success!
+				result = true;
+			}
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// NewSessionWithSpecialCommand
+
+
+/*!
 Creates new sessions for each listed in the given workspace,
 in the order they are stored.  Any other constraints (such as
 confining them to a tab stack or starting Full Screen) are
@@ -883,7 +980,7 @@ SessionFactory_NewSessionsUserFavoriteWorkspace		(Preferences_ContextRef		inWork
 			{
 				terminalWindow = createTerminalWindow();
 				
-				Boolean		launchOK = newSessionFromCommand
+				Boolean		launchOK = SessionFactory_NewSessionWithSpecialCommand
 										(terminalWindow, associatedSessionType, inWorkspaceContext, i);
 				if (false == launchOK)
 				{
@@ -1167,7 +1264,7 @@ void
 SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalWindow)
 {
 	// Cocoa windows support this only on certain later OS versions
-	[[Commands_Executor sharedExecutor] moveTabToNewWindow:NSApp];
+	[TerminalWindow_ReturnNSWindow(inTerminalWindow) moveTabToNewWindow:NSApp];
 }// MoveTerminalWindowToNewWorkspace
 
 
@@ -2106,105 +2203,6 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 	
 	[dataObject release], GenericDialog_SetImplementation(inDialogThatClosed, nullptr);
 }// handleNewSessionDialogClose
-
-
-/*!
-Creates a new session based on a command ID (such as from a
-menu); or, arranges for the appropriate user interface to
-appear, in the case of a custom new session.  Returns true only
-if successful.
-
-If the workspace is defined, then workspace-wide settings such
-as the use of tabs can be applied to the specified terminal
-window.  In addition, if the window index is nonzero, any
-window-specific settings (such as location on screen) can also
-be applied.
-
-(4.0)
-*/
-Boolean
-newSessionFromCommand	(TerminalWindowRef			inTerminalWindow,
-						 UInt32						inCommandID,
-						 Preferences_ContextRef		inWorkspaceOrNull,
-						 UInt16						inWindowIndexInWorkspaceOrZero)
-{
-	Boolean		result = false;
-	
-	
-	switch (inCommandID)
-	{
-	case kCommandNewSessionDefaultFavorite:
-		{
-			Preferences_ContextRef		sessionContext = nullptr;
-			Preferences_Result			prefsResult = Preferences_GetDefaultContext
-														(&sessionContext, Quills::Prefs::SESSION);
-			
-			
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				sessionContext = nullptr;
-			}
-			
-			// finally, create the session from the specified context
-			if (nullptr != sessionContext)
-			{
-				SessionRef		newSession = SessionFactory_NewSessionUserFavorite
-												(inTerminalWindow, sessionContext, inWorkspaceOrNull,
-													inWindowIndexInWorkspaceOrZero);
-				
-				
-				if (nullptr != newSession)
-				{
-					// success!
-					result = true;
-				}
-			}
-		}
-		break;
-	
-	case kCommandNewSessionDialog:
-		result = SessionFactory_DisplayUserCustomizationUI(inTerminalWindow, inWorkspaceOrNull,
-															inWindowIndexInWorkspaceOrZero);
-		if (false == result)
-		{
-			// some kind of problem
-			Sound_StandardAlert();
-			Console_WriteLine("unexpected problem displaying custom session dialog!");
-		}
-		break;
-	
-	case kCommandNewSessionLoginShell:
-	case kCommandNewSessionShell:
-		{
-			SessionRef		newSession = nullptr;
-			
-			
-			// create a shell
-			if (kCommandNewSessionLoginShell == inCommandID)
-			{
-				newSession = SessionFactory_NewSessionLoginShell(inTerminalWindow, inWorkspaceOrNull,
-																	inWindowIndexInWorkspaceOrZero);
-			}
-			else
-			{
-				newSession = SessionFactory_NewSessionDefaultShell(inTerminalWindow, inWorkspaceOrNull,
-																	inWindowIndexInWorkspaceOrZero);
-			}
-			
-			if (nullptr != newSession)
-			{
-				// success!
-				result = true;
-			}
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// newSessionFromCommand
 
 
 /*!

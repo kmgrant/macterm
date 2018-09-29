@@ -143,35 +143,6 @@ Internal routines.
 
 
 /*!
-Calls Commands_ExecuteByIDUsingEvent() after a delay.
-
-This is a transitional object that will not really be needed
-once the application moves to Cocoa completely.
-*/
-@interface Commands_DelayedCommand : NSObject //{
-{
-@private
-	UInt32			commandID;
-	EventTargetRef	commandTarget;
-	Float32			executionDelay;
-}
-
-// initializers
-	- (instancetype)
-	init DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithCommand:(UInt32)_
-	andEventTarget:(EventTargetRef)_
-	andDelay:(Float32)_ NS_DESIGNATED_INITIALIZER;
-
-// new methods
-	- (void)
-	execute;
-
-@end //}
-
-
-/*!
 An instance of this class handles the application’s entries in
 the Services menu.  Note that the names of messages in this
 class should match those published under NSServices (using the
@@ -210,17 +181,6 @@ with an NSMenuItem, via setRepresentedObject:.
 
 @end //}
 
-
-namespace {
-
-struct My_MenuItemInsertionInfo
-{
-	NSMenu*		menu;			//!< the menu in which to create the item
-	int			atItemIndex;	//!< the NSMenu index at which the new item should appear
-};
-typedef My_MenuItemInsertionInfo const*		My_MenuItemInsertionInfoConstPtr;
-
-} // anonymous namespace
 
 #pragma mark Functors
 namespace {
@@ -296,7 +256,7 @@ void				sessionStateChanged								(ListenerModel_Ref, ListenerModel_Event,
 void				sessionWindowStateChanged						(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 void				setItemCheckMark								(id <NSValidatedUserInterfaceItem>, BOOL);
-void				setNewCommand									(UInt32);
+void				setNewCommand									(SessionFactory_SpecialSession);
 void				setUpDynamicMenus								();
 void				setUpFormatFavoritesMenu						(NSMenu*);
 void				setUpMacroSetsMenu								(NSMenu*);
@@ -313,14 +273,14 @@ void				updateFadeAllTerminalWindows					(Boolean);
 #pragma mark Variables
 namespace {
 
-ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
-ListenerModel_ListenerRef	gSessionStateChangeEventListener = nullptr;
-ListenerModel_ListenerRef	gSessionWindowStateChangeEventListener = nullptr;
-UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
-Boolean						gCurrentQuitCancelled = false;
-UInt16						gCurrentQuitInitialSessionCount = 0;
-UInt16						gCurrentMacroSetIndex = 0;
-ListenerModel_Ref&			gCommandExecutionListenerModel	(Boolean	inDispose = false)
+ListenerModel_ListenerRef		gPreferenceChangeEventListener = nullptr;
+ListenerModel_ListenerRef		gSessionStateChangeEventListener = nullptr;
+ListenerModel_ListenerRef		gSessionWindowStateChangeEventListener = nullptr;
+SessionFactory_SpecialSession	gNewCommandShortcutEffect = kSessionFactory_SpecialSessionDefaultFavorite;
+Boolean							gCurrentQuitCancelled = false;
+UInt16							gCurrentQuitInitialSessionCount = 0;
+UInt16							gCurrentMacroSetIndex = 0;
+ListenerModel_Ref&				gCommandExecutionListenerModel	(Boolean	inDispose = false)
 {
 	static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
 													kConstantsRegistry_ListenerModelDescriptorCommandExecution);
@@ -537,13 +497,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		//case kCommandNewSessionLoginShell:
-		//case kCommandNewSessionShell:
-		//case kCommandNewSessionDialog:
-		//case kCommandNewSessionDefaultFavorite:
-		//	see SessionFactory.cp
-		//	break;
-		
 		case kCommandOpenSession:
 			//SessionDescription_Load();
 			Sound_StandardAlert();
@@ -560,22 +513,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandSaveSelection:
 			TerminalView_DisplaySaveSelectionUI(activeView);
-			break;
-		
-		case kCommandNewDuplicateSession:
-			{
-				SessionRef		newSession = nullptr;
-				
-				
-				newSession = SessionFactory_NewCloneSession(nullptr/* terminal window */, frontSession);
-				
-				// report any errors to the user
-				if (nullptr == newSession)
-				{
-					// UNIMPLEMENTED!!!
-					Sound_StandardAlert();
-				}
-			}
 			break;
 		
 		case kCommandKillProcessesKeepWindow:
@@ -2053,7 +1990,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
 									sizeof(gNewCommandShortcutEffect), &gNewCommandShortcutEffect))
 		{
-			gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite; // assume command, if preference can’t be found
+			gNewCommandShortcutEffect = kSessionFactory_SpecialSessionDefaultFavorite; // assume command, if preference can’t be found
 		}
 		setNewCommand(gNewCommandShortcutEffect);
 		break;
@@ -2422,17 +2359,13 @@ setItemCheckMark	(id <NSValidatedUserInterfaceItem>	inItem,
 
 
 /*!
-Sets the key equivalent of the specified command
-to be command-N, automatically changing other
-affected commands to use something else.
+Sets the key equivalent of the specified command to be command-N,
+automatically changing other affected commands to something else.
 
-This has no effect if the user preference for
-no menu command keys is set.
-
-(4.0)
+(2018.09)
 */
 void
-setNewCommand	(UInt32		inCommandNShortcutCommand)
+setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 {
 	CFStringRef		charCFString = nullptr;
 	NSString*		charNSString = nil;
@@ -2500,7 +2433,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 	// comments for the key equivalents used in the code below.
 	switch (inCommandNShortcutCommand)
 	{
-	case kCommandNewSessionDefaultFavorite:
+	case kSessionFactory_SpecialSessionDefaultFavorite:
 		// default case: everything here should match NIB assignments
 		{
 			NSMenuItem*		item = nil;
@@ -2524,7 +2457,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 		}
 		break;
 	
-	case kCommandNewSessionShell:
+	case kSessionFactory_SpecialSessionShell:
 		// swap Default and Shell key equivalents
 		{
 			NSMenuItem*		item = nil;
@@ -2548,7 +2481,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 		}
 		break;
 	
-	case kCommandNewSessionLoginShell:
+	case kSessionFactory_SpecialSessionLogInShell:
 		// swap Default and Log-In Shell key equivalents
 		{
 			NSMenuItem*		item = nil;
@@ -2572,7 +2505,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 		}
 		break;
 	
-	case kCommandNewSessionDialog:
+	case kSessionFactory_SpecialSessionInteractiveSheet:
 		// swap Default and Custom New Session key equivalents
 		{
 			NSMenuItem*		item = nil;
@@ -3050,73 +2983,6 @@ updateFadeAllTerminalWindows	(Boolean	inInactiveState)
 
 
 #pragma mark -
-@implementation Commands_DelayedCommand //{
-
-
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2017.06)
-*/
-- (instancetype)
-init
-{
-	assert(false && "invalid way to initialize derived class");
-	return [self initWithCommand:0L andEventTarget:nullptr andDelay:0.0];
-}// init
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initWithCommand:(UInt32)			aCommand
-andEventTarget:(EventTargetRef)		aTarget
-andDelay:(Float32)					aDelay
-{
-	self = [super init];
-	if (nil != self)
-	{
-		self->commandID = aCommand;
-		self->commandTarget = aTarget;
-		self->executionDelay = aDelay;
-	}
-	return self;
-}// initWithCommand:andEventTarget:andDelay:
-
-
-/*!
-Executes the command after the delay specified
-in the initializer has elapsed.
-
-(4.0)
-*/
-- (void)
-execute
-{
-	CocoaExtensions_RunLater(self->executionDelay, ^{ [self executeWithoutDelay]; });
-}// execute
-
-
-/*!
-Internal; invokes the command immediately.
-
-(4.0)
-*/
-- (void)
-executeWithoutDelay
-{
-	Commands_ExecuteByIDUsingEvent(self->commandID, self->commandTarget);
-}// executeWithoutDelay
-
-
-@end //} Commands_DelayedCommand
-
-
-#pragma mark -
 @implementation Commands_Executor //{
 
 
@@ -3418,7 +3284,7 @@ hasVisibleWindows:(BOOL)						flag
 	{
 		// handle the case where the application has no open windows and
 		// the user double-clicks the application icon in the Finder
-		UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
+		SessionFactory_SpecialSession		newCommandID = kSessionFactory_SpecialSessionDefaultFavorite;
 		
 		
 		// assume that the user is mapping command-N to the same type of session
@@ -3428,7 +3294,7 @@ hasVisibleWindows:(BOOL)						flag
 									sizeof(newCommandID), &newCommandID))
 		{
 			// assume a value if it cannot be found
-			newCommandID = kCommandNewSessionDefaultFavorite;
+			newCommandID = kSessionFactory_SpecialSessionDefaultFavorite;
 		}
 		
 		// no open windows - respond by spawning a new session
@@ -4060,7 +3926,17 @@ performDuplicate:(id)		sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandNewDuplicateSession, nullptr/* target */);
+		SessionRef		newSession = nullptr;
+		
+		
+		newSession = SessionFactory_NewCloneSession();
+		
+		// report any errors to the user
+		if (nullptr == newSession)
+		{
+			// UNIMPLEMENTED!!!
+			Sound_StandardAlert();
+		}
 	}
 }
 
@@ -4125,7 +4001,8 @@ performNewCustom:(id)		sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandNewSessionDialog, nullptr/* target */);
+		SessionFactory_NewSessionWithSpecialCommand(SessionFactory_NewTerminalWindowUserFavorite(),
+													kSessionFactory_SpecialSessionInteractiveSheet);
 	}
 }
 - (id)
@@ -4145,7 +4022,8 @@ performNewDefault:(id)		sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandNewSessionDefaultFavorite, nullptr/* target */);
+		SessionFactory_NewSessionWithSpecialCommand(SessionFactory_NewTerminalWindowUserFavorite(),
+													kSessionFactory_SpecialSessionDefaultFavorite);
 	}
 }
 - (id)
@@ -4165,7 +4043,8 @@ performNewLogInShell:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandNewSessionLoginShell, nullptr/* target */);
+		SessionFactory_NewSessionWithSpecialCommand(SessionFactory_NewTerminalWindowUserFavorite(),
+													kSessionFactory_SpecialSessionLogInShell);
 	}
 }
 - (id)
@@ -4185,7 +4064,8 @@ performNewShell:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell, nullptr/* target */);
+		SessionFactory_NewSessionWithSpecialCommand(SessionFactory_NewTerminalWindowUserFavorite(),
+													kSessionFactory_SpecialSessionShell);
 	}
 }
 - (id)
@@ -4251,7 +4131,32 @@ performRestoreWorkspaceDefault:(id)		sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandRestoreWorkspaceDefaultFavorite, nullptr/* target */);
+		Preferences_ContextRef		defaultContext = nullptr;
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		BOOL						isError = YES;
+		
+		
+		prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::WORKSPACE);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "failed to read default Workspace context, error", prefsResult);
+		}
+		else
+		{
+			Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(defaultContext);
+			
+			
+			if (launchedOK)
+			{
+				isError = NO;
+			}
+		}
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
 	}
 }
 - (id)
@@ -4293,7 +4198,10 @@ performRestoreWorkspaceByFavoriteName:(id)	sender
 					Boolean		launchedOK = SessionFactory_NewSessionsUserFavoriteWorkspace(namedSettings.returnRef());
 					
 					
-					if (launchedOK) isError = NO;
+					if (launchedOK)
+					{
+						isError = NO;
+					}
 				}
 			}
 		}

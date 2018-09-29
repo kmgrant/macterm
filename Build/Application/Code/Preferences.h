@@ -202,7 +202,7 @@ enum
 	kPreferences_TagKioskShowsScrollBar					= 'kscr',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsWindowFrame				= 'kwnf',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
-	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommandNewSession…" constant
+	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "SessionFactory_SpecialSession"
 	kPreferences_TagNoAnimations						= 'nanm',	//!< data: "Boolean"
 	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify…" constant
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
@@ -335,7 +335,7 @@ enum
 	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
 	// indexed tags must have a zero byte to have space for tag variants;
 	// see also Preferences_ReturnTagVariantForIndex()
-	kPreferences_TagIndexedWindowCommandType			= 'sst\0',	//!< data: "UInt32", a "kCommandNewSession…" constant
+	kPreferences_TagIndexedWindowCommandType			= 'sst\0',	//!< data: "SessionFactory_SpecialSession"
 	kPreferences_TagIndexedWindowFrameBounds			= 'wfb\0',	//!< data: "HIRect"
 	kPreferences_TagIndexedWindowScreenBounds			= 'wsb\0',	//!< data: "HIRect" (display boundaries when window saved)
 	kPreferences_TagIndexedWindowSessionFavorite		= 'ssf\0',	//!< data: "CFStringRef" (a Quills::Prefs::SESSION context name)

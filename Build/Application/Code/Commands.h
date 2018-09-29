@@ -120,15 +120,9 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandURLAuthorMail					'Mail'
 
 // File menu
-#define kCommandNewSessionDefaultFavorite		'NSDF'
-#define kCommandNewSessionLoginShell			'NLgS'
-#define kCommandNewSessionShell					'NShS'
-#define kCommandNewSessionDialog				'NSDg'
-#define kCommandRestoreWorkspaceDefaultFavorite	'RWDF'
 #define kCommandOpenSession						kHICommandOpen
 #define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
-#define kCommandNewDuplicateSession				'NewD'
 #define kCommandKillProcessesKeepWindow			'Kill'
 #define kCommandRestartSession					'RSsn'
 #define kCommandHandleURL						'HURL'
