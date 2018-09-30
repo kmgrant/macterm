@@ -209,7 +209,6 @@ IconForCommand.icns \
 IconForContextMenu.icns \
 IconForCustomize.icns \
 IconForFullScreen.icns \
-IconForFullScreenDisable.icns \
 IconForHide.icns \
 IconForKillSession.icns \
 IconForLEDOff.icns \
@@ -516,12 +515,20 @@ $(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(MAKEFILE_DIR)/_Generated/MacTerm.help
 	$(MKDIR_P) $(dir $@)
 	$(RSYNC) --archive $(MAKEFILE_DIR)/_Generated/MacTerm.help/ $@
 
-# Component Shared Asset Catalog
+# Component: Combined Asset Catalog
+
+$(MAKEFILE_DIR)/_Generated/Merged.xcassets: FORCE
+	$(call banner,$@)
+	$(MKDIR_P) $@
+	@# the "Contents.json" top-level file appears in all ".xcassets" sources but it is always the same
+	$(RSYNC) --archive $(SRC_APP_RESOURCES_TOP)/ApplicationMedia.xcassets/ $@
+	$(RSYNC) --archive $(SRC_SHARED_RESOURCES_TOP)/SharedMedia.xcassets/ $@
 
 $(DEST_APP_RESOURCES_TOP)/Assets.car: FORCE
+	$(MAKE) $(MAKEFILE_DIR)/_Generated/Merged.xcassets
 	$(call banner,$@)
 	$(MKDIR_P) $(dir $@)
-	$(ACTOOL) $(ACTOOL_COMPILE_CAR_OPTIONS) --compile $(dir $@) $(SRC_SHARED_RESOURCES_TOP)/SharedMedia.xcassets
+	$(ACTOOL) $(ACTOOL_COMPILE_CAR_OPTIONS) --compile $(dir $@) $(MAKEFILE_DIR)/_Generated/Merged.xcassets
 
 # Component: Bug Reporter
 
@@ -634,6 +641,7 @@ clean-resources:
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_FILES))' | $(XARGS) $(RM)
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES_GENERATED))' | $(XARGS) $(RM) -R
+	$(RM) $(DEST_APP_RESOURCES_TOP)/Assets.car
 	$(MAKE) clean-print-preview
 	$(MAKE) clean-prefs-converter
 	$(MAKE) clean-callpy-client

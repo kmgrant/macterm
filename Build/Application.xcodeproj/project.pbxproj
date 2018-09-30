@@ -175,6 +175,7 @@
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
 		0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeam@2x.png"; path = "Application/Resources/CursorIBeam@2x.png"; sourceTree = "<group>"; };
 		0A0C26F41DC99571000C1D56 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PrefsWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
+		0A0C9AA5216164A800A7BA7F /* ApplicationMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = ApplicationMedia.xcassets; path = Application/Resources/ApplicationMedia.xcassets; sourceTree = "<group>"; };
 		0A0D372719B43370005500DE /* CursorMoveCursor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorMoveCursor.png; path = Application/Resources/CursorMoveCursor.png; sourceTree = "<group>"; };
 		0A0D372819B43370005500DE /* CursorMoveCursor@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorMoveCursor@2x.png"; path = "Application/Resources/CursorMoveCursor@2x.png"; sourceTree = "<group>"; };
 		0A0D372919B43370005500DE /* CursorMoveCursorSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorMoveCursorSmall.png; path = Application/Resources/CursorMoveCursorSmall.png; sourceTree = "<group>"; };
@@ -223,7 +224,6 @@
 		0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		0A1022141DDBE78700CEE0DF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ApplicationTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ConstantsRegistry.mm; path = Application/Code/ConstantsRegistry.mm; sourceTree = "<group>"; };
-		0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreenDisable.icns; path = Application/Resources/IconForFullScreenDisable.icns; sourceTree = "<group>"; };
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterRef.typedef.h; path = Application/Code/VectorInterpreterRef.typedef.h; sourceTree = "<group>"; };
@@ -772,6 +772,7 @@
 				0A47E880155CD40400608A0A /* VectorWindowRef.typedef.h */,
 				0A4604570554376100ACDF3A /* VTKeys.h */,
 				0A46045A0554376100ACDF3A /* Workspace.h */,
+				0A0C9AA5216164A800A7BA7F /* ApplicationMedia.xcassets */,
 				0AFF137A0AF42067006CCA34 /* Icons */,
 				0AFF112F0AF4202B006CCA34 /* XIBs */,
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
@@ -947,7 +948,6 @@
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
 				0AD7483013073E56003E368B /* IconForCustomize.icns */,
 				0AD7481C13072342003E368B /* IconForFullScreen.icns */,
-				0A119C431522B545003A41B7 /* IconForFullScreenDisable.icns */,
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
 				0ACBF0101449232F00D17678 /* IconForKillSession.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
