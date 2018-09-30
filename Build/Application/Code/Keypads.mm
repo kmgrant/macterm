@@ -71,7 +71,6 @@ FourCharCode				gArrangeWindowDataTypeForScreenBinding = typeHIRect;
 CGPoint						gArrangeWindowStackingOrigin = CGPointZero;
 id							gArrangeWindowDidEndTarget = nil;
 SEL							gArrangeWindowDidEndSelector = nil;
-EventTargetRef				gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
 NSObject< Keypads_ControlKeyResponder >*		gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
@@ -285,51 +284,6 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 
 
 /*!
-If the current target is the given target, it is removed;
-otherwise, this call has no effect.  (Requiring you to
-specify the previous target prevents you from accidentally
-removing a target attachment that you are not aware of.)
-
-Once a target is removed, the default behavior (using a
-session window) is restored and the palette is hidden if
-it was only made visible originally by the target’s
-attachment.  If the user had the palette open when the
-original attachment was made, the palette remains visible.
-
-Note that the current target is also removed automatically
-if Keypads_SetEventTarget() is called to set a new one.
-
-(4.1)
-*/
-void
-Keypads_RemoveEventTarget	(Keypads_WindowType		inFromKeypad,
-							 EventTargetRef			inCurrentTarget)
-{
-	switch (inFromKeypad)
-	{
-	case kKeypads_WindowTypeControlKeys:
-		if (gControlKeysEventTarget == inCurrentTarget)
-		{
-			gControlKeysEventTarget = nullptr;
-			if (gControlKeysMayAutoHide)
-			{
-				Keypads_SetVisible(inFromKeypad, false);
-				gControlKeysMayAutoHide = false;
-			}
-		}
-		break;
-	
-	case kKeypads_WindowTypeArrangeWindow:
-	case kKeypads_WindowTypeFullScreen:
-	case kKeypads_WindowTypeFunctionKeys:
-	case kKeypads_WindowTypeVT220Keys:
-	default:
-		break;
-	}
-}// RemoveEventTarget
-
-
-/*!
 If the current responder is the given target, it is removed;
 otherwise, this call has no effect.  (Requiring you to
 specify the previous responder prevents you from accidentally
@@ -375,52 +329,6 @@ Keypads_RemoveResponder		(Keypads_WindowType		inFromKeypad,
 
 
 /*!
-Sets the current event target for button commands issued
-by the specified keypad, and automatically shows or hides
-the keypad window.  Currently, only the control keys palette
-(kKeypads_WindowTypeControlKeys) is recognized.
-
-Passing a responder of "nullptr" has no effect.  To remove
-a responder, call Keypads_RemoveResponder().
-
-Any Cocoa responder previously set by Keypads_SetResponder()
-is automatically cleared.
-
-IMPORTANT:	This is for Carbon compatibility and is not a
-			long-term solution.
-
-(3.1)
-*/
-void
-Keypads_SetEventTarget	(Keypads_WindowType		inFromKeypad,
-						 EventTargetRef			inCurrentTarget)
-{
-	if (nullptr != inCurrentTarget)
-	{
-		switch (inFromKeypad)
-		{
-		case kKeypads_WindowTypeControlKeys:
-			gControlKeysResponder = nil; // clear this because it will be ignored now anyway
-			gControlKeysEventTarget = inCurrentTarget;
-			if (false == Keypads_IsVisible(kKeypads_WindowTypeControlKeys))
-			{
-				Keypads_SetVisible(inFromKeypad, true);
-				gControlKeysMayAutoHide = true;
-			}
-			break;
-		
-		case kKeypads_WindowTypeArrangeWindow:
-		case kKeypads_WindowTypeFullScreen:
-		case kKeypads_WindowTypeFunctionKeys:
-		case kKeypads_WindowTypeVT220Keys:
-		default:
-			break;
-		}
-	}
-}// SetEventTarget
-
-
-/*!
 Arranges for button presses to send a message to the given
 object instead of causing characters to be typed into the
 active terminal session.  The given object must respond to
@@ -459,7 +367,6 @@ Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
 		switch (inFromKeypad)
 		{
 		case kKeypads_WindowTypeControlKeys:
-			gControlKeysEventTarget = nullptr; // clear this because it will be ignored now anyway
 			if ([inCurrentTarget conformsToProtocol:@protocol(Keypads_ControlKeyResponder)])
 			{
 				auto		asResponder = STATIC_CAST(inCurrentTarget, NSObject< Keypads_ControlKeyResponder >*);
@@ -1016,7 +923,6 @@ typeNull:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x00];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlAtSign, gControlKeysEventTarget);
 }// typeNull:
 
 
@@ -1030,7 +936,6 @@ typeControlA:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x01];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlA, gControlKeysEventTarget);
 }// typeControlA:
 
 
@@ -1044,7 +949,6 @@ typeControlB:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x02];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlB, gControlKeysEventTarget);
 }// typeControlB:
 
 
@@ -1058,7 +962,6 @@ typeControlC:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x03];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlC, gControlKeysEventTarget);
 }// typeControlC:
 
 
@@ -1072,7 +975,6 @@ typeControlD:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x04];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlD, gControlKeysEventTarget);
 }// typeControlD:
 
 
@@ -1086,7 +988,6 @@ typeControlE:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x05];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlE, gControlKeysEventTarget);
 }// typeControlE:
 
 
@@ -1100,7 +1001,6 @@ typeControlF:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x06];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlF, gControlKeysEventTarget);
 }// typeControlF:
 
 
@@ -1114,7 +1014,6 @@ typeControlG:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x07];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlG, gControlKeysEventTarget);
 }// typeControlG:
 
 
@@ -1128,7 +1027,6 @@ typeControlH:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x08];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlH, gControlKeysEventTarget);
 }// typeControlH:
 
 
@@ -1142,7 +1040,6 @@ typeControlI:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x09];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlI, gControlKeysEventTarget);
 }// typeControlI:
 
 
@@ -1156,7 +1053,6 @@ typeControlJ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0A];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlJ, gControlKeysEventTarget);
 }// typeControlJ:
 
 
@@ -1170,7 +1066,6 @@ typeControlK:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0B];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlK, gControlKeysEventTarget);
 }// typeControlK:
 
 
@@ -1184,7 +1079,6 @@ typeControlL:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0C];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlL, gControlKeysEventTarget);
 }// typeControlL:
 
 
@@ -1198,7 +1092,6 @@ typeControlM:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0D];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlM, gControlKeysEventTarget);
 }// typeControlM:
 
 
@@ -1212,7 +1105,6 @@ typeControlN:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0E];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlN, gControlKeysEventTarget);
 }// typeControlN:
 
 
@@ -1226,7 +1118,6 @@ typeControlO:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0F];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlO, gControlKeysEventTarget);
 }// typeControlO:
 
 
@@ -1240,7 +1131,6 @@ typeControlP:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x10];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlP, gControlKeysEventTarget);
 }// typeControlP:
 
 
@@ -1254,7 +1144,6 @@ typeControlQ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x11];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlQ, gControlKeysEventTarget);
 }// typeControlQ:
 
 
@@ -1268,7 +1157,6 @@ typeControlR:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x12];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlR, gControlKeysEventTarget);
 }// typeControlR:
 
 
@@ -1282,7 +1170,6 @@ typeControlS:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x13];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlS, gControlKeysEventTarget);
 }// typeControlS:
 
 
@@ -1296,7 +1183,6 @@ typeControlT:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x14];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlT, gControlKeysEventTarget);
 }// typeControlT:
 
 
@@ -1310,7 +1196,6 @@ typeControlU:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x15];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlU, gControlKeysEventTarget);
 }// typeControlU:
 
 
@@ -1324,7 +1209,6 @@ typeControlV:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x16];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlV, gControlKeysEventTarget);
 }// typeControlV:
 
 
@@ -1338,7 +1222,6 @@ typeControlW:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x17];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlW, gControlKeysEventTarget);
 }// typeControlW:
 
 
@@ -1352,7 +1235,6 @@ typeControlX:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x18];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlX, gControlKeysEventTarget);
 }// typeControlX:
 
 
@@ -1366,7 +1248,6 @@ typeControlY:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x19];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlY, gControlKeysEventTarget);
 }// typeControlY:
 
 
@@ -1380,7 +1261,6 @@ typeControlZ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1A];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlZ, gControlKeysEventTarget);
 }// typeControlZ:
 
 
@@ -1394,7 +1274,6 @@ typeControlLeftSquareBracket:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1B];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlLeftSquareBracket, gControlKeysEventTarget);
 }// typeControlLeftSquareBracket:
 
 
@@ -1408,7 +1287,6 @@ typeControlBackslash:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1C];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlBackslash, gControlKeysEventTarget);
 }// typeControlBackslash:
 
 
@@ -1422,7 +1300,6 @@ typeControlRightSquareBracket:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1D];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlRightSquareBracket, gControlKeysEventTarget);
 }// typeControlRightSquareBracket:
 
 
@@ -1436,7 +1313,6 @@ typeControlCaret:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1E];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlCaret, gControlKeysEventTarget);
 }// typeControlCaret:
 
 
@@ -1450,7 +1326,6 @@ typeControlUnderscore:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1F];
-	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlUnderscore, gControlKeysEventTarget);
 }// typeControlUnderscore:
 
 
@@ -1547,7 +1422,13 @@ Turns off Full Screen mode.
 disableFullScreen:(id)	sender
 {
 #pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandFullScreenToggle);
+	BOOL	didPerform = [NSApp tryToPerform:@selector(toggleFullScreen:) with:nil];
+	
+	
+	if (NO == didPerform)
+	{
+		Console_Warning(Console_WriteLine, "failed to perform command to disable Full Screen!");
+	}
 }// disableFullScreen:
 
 

@@ -230,7 +230,6 @@ IconForPrint.icns \
 IconForRefresh.png \
 IconForRestartSession.icns \
 IconForSearch.icns \
-IconForSearchKey.icns \
 IconForScrollLockOff.icns \
 IconForScrollLockOn.icns \
 IconForSession.icns \

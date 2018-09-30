@@ -36,7 +36,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
 #else
@@ -477,16 +476,8 @@ Boolean
 	Keypads_IsVisible							(Keypads_WindowType			inKeypad);
 
 void
-	Keypads_RemoveEventTarget					(Keypads_WindowType			inKeypad,
-												 EventTargetRef				inTarget);
-
-void
 	Keypads_RemoveResponder						(Keypads_WindowType			inKeypad,
 												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >*
-
-void
-	Keypads_SetEventTarget						(Keypads_WindowType			inKeypad,
-												 EventTargetRef				inTarget);
 
 void
 	Keypads_SetResponder						(Keypads_WindowType			inKeypad,

@@ -4514,6 +4514,99 @@ toolbarDidChangeVisibility:(NSNotification*)	aNotification
 }// toolbarDidChangeVisibility
 
 
+/*!
+Performs additional tasks after terminal window becomes
+Full Screen, such as showing an “off switch” window if
+that user preference is set.
+
+(2018.09)
+*/
+- (void)
+windowDidEnterFullScreen:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	Boolean const					isBecomingFullScreen = true;
+	Boolean const					shouldSwapViewMode = false;
+	TerminalWindowRef				terminalWindow = [self.window terminalWindowRef];
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+	
+	
+	if (nullptr != ptr)
+	{
+		setUpForFullScreenModal(ptr, isBecomingFullScreen, shouldSwapViewMode, kMy_FullScreenStateCompleted);
+	}
+}// windowDidEnterFullScreen:
+
+
+/*!
+Performs additional tasks after terminal window leaves
+Full Screen.
+
+(2018.09)
+*/
+- (void)
+windowDidExitFullScreen:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	Boolean const					isBecomingFullScreen = false;
+	Boolean const					shouldSwapViewMode = false;
+	TerminalWindowRef				terminalWindow = [self.window terminalWindowRef];
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+	
+	
+	if (nullptr != ptr)
+	{
+		setUpForFullScreenModal(ptr, isBecomingFullScreen, shouldSwapViewMode, kMy_FullScreenStateCompleted);
+	}
+}// windowDidExitFullScreen:
+
+
+/*!
+Performs additional tasks after user has requested to make
+terminal window Full Screen.
+
+(2018.09)
+*/
+- (void)
+windowWillEnterFullScreen:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	Boolean const					isBecomingFullScreen = true;
+	Boolean const					shouldSwapViewMode = false;
+	TerminalWindowRef				terminalWindow = [self.window terminalWindowRef];
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+	
+	
+	if (nullptr != ptr)
+	{
+		setUpForFullScreenModal(ptr, isBecomingFullScreen, shouldSwapViewMode, kMy_FullScreenStateInProgress);
+	}
+}// windowWillEnterFullScreen:
+
+
+/*!
+Performs additional tasks after user has requested to stop
+Full Screen mode for terminal window.
+
+(2018.09)
+*/
+- (void)
+windowWillExitFullScreen:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	Boolean const					isBecomingFullScreen = false;
+	Boolean const					shouldSwapViewMode = false;
+	TerminalWindowRef				terminalWindow = [self.window terminalWindowRef];
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
+	
+	
+	if (nullptr != ptr)
+	{
+		setUpForFullScreenModal(ptr, isBecomingFullScreen, shouldSwapViewMode, kMy_FullScreenStateInProgress);
+	}
+}// windowWillExitFullScreen:
+
+
 #pragma mark NSWindowDelegate
 
 

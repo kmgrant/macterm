@@ -6664,13 +6664,12 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 toggleFullScreen:(id)	sender
 {
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleFullScreen:) withObject:sender]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
-	{
-		// assume this is potentially a Carbon window that should (for now) take a different approach;
-		// longer-term this will go away and the responder chain will be used everywhere
-		Commands_ExecuteByIDUsingEvent(kCommandFullScreenToggle, nullptr/* target */);
-	}
+#pragma unused(sender)
+	// special case; since all windows have this method and the “off switch”
+	// in MacTerm is a floating window, the command would be absorbed if
+	// the "toggleFullScreen:" message starts from that binding; therefore,
+	// this is intentionally sent starting from the main window instead 
+	[NSApp sendAction:_cmd to:[NSApp mainWindow] from:nil];
 }
 - (id)
 canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
