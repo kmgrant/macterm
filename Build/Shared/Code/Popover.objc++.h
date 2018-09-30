@@ -207,6 +207,7 @@ frame appearance.
 	BOOL					_userResizeRight;
 	BOOL					_userResizeBottom;
 	Popover_Properties		_windowPropertyFlags;
+	Popover_WindowStyle		_lastAppliedWindowStyle;
 }
 
 // initializers

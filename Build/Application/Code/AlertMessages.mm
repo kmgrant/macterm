@@ -1622,9 +1622,12 @@ didLoadContainerView:(NSView*)			aContainerView
 	[dialogTextUI setAlignment:NSNaturalTextAlignment];
 	[dialogTextUI setDrawsBackground:NO];
 	[dialogTextUI setEditable:NO];
+	[dialogTextUI setTextColor:[NSColor textColor]];
 	[helpTextUI setAlignment:NSNaturalTextAlignment];
 	[helpTextUI setDrawsBackground:NO];
 	[helpTextUI setEditable:NO];
+	[helpTextUI setTextColor:[NSColor labelColor]];
+	[titleTextUI setTextColor:[NSColor secondaryLabelColor]];
 	[mainIconUI setImage:[self imageForIconImageName:[self iconImageName]]];
 	mainIconUI.mouseDownCanMoveWindow = YES;
 	

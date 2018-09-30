@@ -89,6 +89,8 @@ BUILD_CONF := ForDebugging
 #BUILD_CONF := ForRelease
 
 # tools
+ACTOOL=$(DEVELOPER_DIR)/usr/bin/actool
+ACTOOL_COMPILE_CAR_OPTIONS=--errors --warnings --notices --output-format xml1 --minimum-deployment-target 10.10 --platform macosx
 CHMOD=/bin/chmod
 CODE_SIGN=/usr/bin/codesign
 COPY=/bin/cp
@@ -515,6 +517,13 @@ $(DEST_APP_RESOURCES_TOP)/MacTerm.help: $(MAKEFILE_DIR)/_Generated/MacTerm.help
 	$(MKDIR_P) $(dir $@)
 	$(RSYNC) --archive $(MAKEFILE_DIR)/_Generated/MacTerm.help/ $@
 
+# Component Shared Asset Catalog
+
+$(DEST_APP_RESOURCES_TOP)/Assets.car: FORCE
+	$(call banner,$@)
+	$(MKDIR_P) $(dir $@)
+	$(ACTOOL) $(ACTOOL_COMPILE_CAR_OPTIONS) --compile $(dir $@) $(SRC_SHARED_RESOURCES_TOP)/SharedMedia.xcassets
+
 # Component: Bug Reporter
 
 .PHONY: install-bug-reporter
@@ -599,7 +608,8 @@ clean-print-preview:
 
 .PHONY: install-resources
 install-resources: \
-$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_COPIED))
+$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_COPIED)) \
+$(DEST_APP_RESOURCES_TOP)/Assets.car
 	$(call banner,$@)
 	@# build any NIBs that are based on XIBs
 	$(foreach PREFIX,$(APP_XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_APP_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))

@@ -45,6 +45,12 @@ CGFloat const		kMy_ResizeClickWidth = 7.0; // arbitrary; space from edge that st
 
 
 #pragma mark Internal Method Prototypes
+namespace {
+
+NSColor*	colorRGBA	(CGFloat, CGFloat, CGFloat, CGFloat = 1.0);
+
+} // anonymous namespace
+
 
 /*!
 The private class interface.
@@ -122,7 +128,28 @@ The private class interface.
 	- (void)
 	updateBackground;
 
-// accessors
+// accessors: colors
+	- (NSColor*)
+	colorAlertFrameOuter;
+	- (NSColor*)
+	colorAlertFramePrimary;
+	- (NSColor*)
+	colorDialogFrameOuter;
+	- (NSColor*)
+	colorDialogFramePrimary;
+	- (NSColor*)
+	colorPopoverBackground;
+	- (NSColor*)
+	colorPopoverFrameOuter;
+	- (NSColor*)
+	colorPopoverFramePrimary;
+	- (NSColor*)
+	colorWithName:(NSString*)_
+	grayName:(NSString*)_
+	defaultColor:(NSColor*)_
+	defaultGray:(NSColor*)_;
+
+// accessors: other
 	- (CGFloat)
 	arrowInset;
 	- (Popover_Properties)
@@ -167,6 +194,8 @@ The private class interface.
 	borderPrimaryDisplayColor;
 	@property (assign) BOOL
 	isBeingResizedByUser;
+	@property (assign) Popover_WindowStyle
+	lastAppliedWindowStyle;
 	@property (assign) BOOL
 	layoutInProgress;
 	@property (strong) NSMutableArray*
@@ -292,6 +321,12 @@ corner.
 Set internally, only during resize; see "mouseDown:".
 */
 @synthesize isBeingResizedByUser = _isBeingResizedByUser;
+
+/*!
+The window style given at initialization time, or the last
+style used with "applyWindowStyle:".
+*/
+@synthesize lastAppliedWindowStyle = _lastAppliedWindowStyle;
 
 /*!
 Set internally, only during layout; see "redisplay".
@@ -557,6 +592,7 @@ vibrancy:(BOOL)							aVisualEffectFlag
 			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
 			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(resizeDelegate)] autorelease]];
 			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(windowPropertyFlags)] autorelease]];
+			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0] autorelease]];
 			
 			// ensure that frame-dependent property changes will cause the
 			// frame to be synchronized with the new values (note that the
@@ -767,9 +803,9 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 		// an actual popover window with an arrow, that is
 		// typically transient (any click outside dismisses it);
 		// caller can later decide to remove the arrow
-		self.backgroundColor = [NSColor colorWithCalibratedRed:0.9f green:0.9f blue:0.9f alpha:0.95f];
-		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.25f green:0.25f blue:0.25f alpha:0.7f];
-		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:1.0f green:1.0f blue:1.0f alpha:0.8f];
+		self.backgroundColor = [self colorPopoverBackground];
+		self.borderOuterColor = [self colorPopoverFrameOuter];
+		self.borderPrimaryColor = [self colorPopoverFramePrimary];
 		self.viewMargin = 3.0f;
 		self.borderWidth = 2.2f;
 		self.cornerRadius = 4.0f;
@@ -779,23 +815,15 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 		// not really a popover but an application-modal dialog box
 		// for displaying an alert message
 		[self applyWindowStyle:kPopover_WindowStyleDialogAppModal];
-		if ([self.class isGraphiteTheme])
-		{
-			self.borderOuterColor = [NSColor colorWithCalibratedRed:0.9f green:0.9f blue:0.9f alpha:1.0f];
-			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.7f green:0.7f blue:0.7f alpha:1.0f];
-		}
-		else
-		{
-			self.borderOuterColor = [NSColor colorWithCalibratedRed:1.0f green:0.9f blue:0.9f alpha:1.0f];
-			self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.75f green:0.7f blue:0.7f alpha:1.0f];
-		}
+		self.borderOuterColor = [self colorAlertFrameOuter];
+		self.borderPrimaryColor = [self colorAlertFramePrimary];
 		break;
 	
 	case kPopover_WindowStyleAlertSheet:
 		// not really a popover but a window-modal dialog for
 		// displaying an alert message
 		[self applyWindowStyle:kPopover_WindowStyleAlertAppModal];
-		self.viewMargin = 7.0f;
+		self.viewMargin = 5.0f;
 		self.borderWidth = 6.0f;
 		self.cornerRadius = 3.0f;
 		break;
@@ -803,8 +831,8 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 	case kPopover_WindowStyleDialogAppModal:
 		// not really a popover but an application-modal dialog box
 		[self applyWindowStyle:kPopover_WindowStyleNormal];
-		self.borderOuterColor = [NSColor colorWithCalibratedRed:0.85f green:0.85f blue:0.85f alpha:1.0f];
-		self.borderPrimaryColor = [NSColor colorWithCalibratedRed:0.55f green:0.55f blue:0.55f alpha:1.0f];
+		self.borderOuterColor = [self colorDialogFrameOuter];
+		self.borderPrimaryColor = [self colorDialogFramePrimary];
 		self.viewMargin = 10.0f;
 		self.borderWidth = 9.0f;
 		self.cornerRadius = 9.0f;
@@ -820,13 +848,20 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 	
 	case kPopover_WindowStyleHelp:
 		// a floating window that typically contains only help text
-		if ([self.class isGraphiteTheme])
+		if (@available(macOS 10.14, *))
 		{
-			self.backgroundColor = [NSColor colorWithCalibratedRed:0.45f green:0.45f blue:0.45f alpha:0.96f];
+			self.backgroundColor = [NSColor controlAccentColor];
 		}
 		else
 		{
-			self.backgroundColor = [NSColor colorWithCalibratedRed:0.0f green:0.20f blue:0.45f alpha:0.96f];
+			if ([self.class isGraphiteTheme])
+			{
+				self.backgroundColor = colorRGBA(0.45f, 0.45f, 0.45f, 0.96f);
+			}
+			else
+			{
+				self.backgroundColor = colorRGBA(0.0f, 0.20f, 0.45f, 0.96f);
+			}
 		}
 		self.borderOuterColor = [NSColor whiteColor];
 		self.borderPrimaryColor = [NSColor blackColor];
@@ -840,6 +875,8 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 		assert(false && "unsupported window style type");
 		break;
 	}
+	
+	self.lastAppliedWindowStyle = aWindowStyle;
 }// applyWindowStyle:
 
 
@@ -1249,6 +1286,14 @@ context:(void*)						aContext
 			}
 			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(borderPrimaryColor)))
 			{
+				[self updateBackground];
+			}
+			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(effectiveAppearance)))
+			{
+				// NSApplication has changed appearance, e.g. Dark or not; this
+				// may cause the colors themselves to be different so apply the
+				// window style again
+				[self applyWindowStyle:self.lastAppliedWindowStyle];
 				[self updateBackground];
 			}
 			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(hasRoundCornerBesideArrow)))
@@ -1816,8 +1861,14 @@ Responds to window deactivation by graying the frame colors.
 windowDidResignKey:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	self.borderOuterDisplayColor = [NSColor colorWithCalibratedRed:0.95f green:0.95f blue:0.95f alpha:1.0f];
-	self.borderPrimaryDisplayColor = [NSColor colorWithCalibratedRed:0.65f green:0.65f blue:0.65f alpha:1.0f];
+	self.borderOuterDisplayColor = [self colorWithName:@"DialogFrameOuterInactive"
+														grayName:@"DialogFrameOuterInactive"
+														defaultColor:colorRGBA(0.95f, 0.95f, 0.95f, 1.0f)
+														defaultGray:colorRGBA(0.95f, 0.95f, 0.95f, 1.0f)];
+	self.borderPrimaryDisplayColor = [self colorWithName:@"DialogFramePrimaryInactive"
+															grayName:@"DialogFramePrimaryInactive"
+															defaultColor:colorRGBA(0.65f, 0.65f, 0.65f, 1.0f)
+															defaultGray:colorRGBA(0.65f, 0.65f, 0.65f, 1.0f)];
 	[self removeTrackingAreas];
 	[self updateBackground];
 }// windowDidResignKey:
@@ -2057,6 +2108,9 @@ side:(Popover_Properties)			aSide
 Returns YES only if the current system appearance is
 using the graphite theme (grayscale).  This is used
 to determine if frames should use color.
+
+Use this only as a hint on macOS 10.14 or later, as
+there are more appearance-specific APIs available.
 
 (2016.06)
 */
@@ -2720,7 +2774,176 @@ updateBackground
 }// updateBackground
 
 
-#pragma mark Accessors
+#pragma mark Accessors: Colors
+
+
+/*!
+Returns the outer edge color for "kPopover_WindowStyleAlertAppModal"
+and "kPopover_WindowStyleAlertSheet".
+
+(2018.09)
+*/
+- (NSColor*)
+colorAlertFrameOuter
+{
+	NSColor*	result = [self colorWithName:@"AlertFrameOuter"
+												grayName:@"DialogFrameOuter"
+												defaultColor:colorRGBA(1.0f, 0.9f, 0.9f, 1.0f)
+												defaultGray:colorRGBA(0.9f, 0.9f, 0.9f, 1.0f)];
+	
+	
+	return result;
+}// colorAlertFrameOuter
+
+
+/*!
+Returns the primary edge color for "kPopover_WindowStyleAlertAppModal"
+and "kPopover_WindowStyleAlertSheet".
+
+(2018.09)
+*/
+- (NSColor*)
+colorAlertFramePrimary
+{
+	NSColor*	result = [self colorWithName:@"AlertFramePrimary"
+												grayName:@"DialogFramePrimary"
+												defaultColor:colorRGBA(0.75f, 0.7f, 0.7f, 1.0f)
+												defaultGray:colorRGBA(0.7f, 0.7f, 0.7f, 1.0f)];
+	
+	
+	return result;
+}// colorAlertFramePrimary
+
+
+/*!
+Returns the outer edge color for "kPopover_WindowStyleDialogAppModal"
+and "kPopover_WindowStyleDialogSheet".
+
+(2018.09)
+*/
+- (NSColor*)
+colorDialogFrameOuter
+{
+	NSColor*	result = [self colorWithName:@"DialogFrameOuter"
+												grayName:@"DialogFrameOuter"
+												defaultColor:colorRGBA(0.85f, 0.85f, 0.85f, 1.0f)
+												defaultGray:colorRGBA(0.85f, 0.85f, 0.85f, 1.0f)];
+	
+	
+	return result;
+}// colorDialogFrameOuter
+
+
+/*!
+Returns the primary edge color for "kPopover_WindowStyleDialogAppModal"
+and "kPopover_WindowStyleDialogSheet".
+
+(2018.09)
+*/
+- (NSColor*)
+colorDialogFramePrimary
+{
+	NSColor*	result = [self colorWithName:@"DialogFramePrimary"
+												grayName:@"DialogFramePrimary"
+												defaultColor:colorRGBA(0.55f, 0.55f, 0.55f, 1.0f)
+												defaultGray:colorRGBA(0.55f, 0.55f, 0.55f, 1.0f)];
+	
+	
+	return result;
+}// colorDialogFramePrimary
+
+
+/*!
+Returns the primary edge color for "kPopover_WindowStyleNormal".
+
+(2018.09)
+*/
+- (NSColor*)
+colorPopoverBackground
+{
+	NSColor*	result = [self colorWithName:@"PopoverBackground"
+												grayName:@"PopoverBackground"
+												defaultColor:colorRGBA(0.9f, 0.9f, 0.9f, 0.95f)
+												defaultGray:colorRGBA(0.9f, 0.9f, 0.9f, 0.95f)];
+	
+	
+	return result;
+}// colorPopoverBackground
+
+
+/*!
+Returns the outer edge color for "kPopover_WindowStyleNormal".
+
+(2018.09)
+*/
+- (NSColor*)
+colorPopoverFrameOuter
+{
+	NSColor*	result = [self colorWithName:@"PopoverFrameOuter"
+												grayName:@"PopoverFrameOuter"
+												defaultColor:colorRGBA(0.25f, 0.25f, 0.25f, 0.7f)
+												defaultGray:colorRGBA(0.25f, 0.25f, 0.25f, 0.7f)];
+	
+	
+	return result;
+}// colorPopoverFrameOuter
+
+
+/*!
+Returns the primary edge color for "kPopover_WindowStyleNormal".
+
+(2018.09)
+*/
+- (NSColor*)
+colorPopoverFramePrimary
+{
+	NSColor*	result = [self colorWithName:@"PopoverFramePrimary"
+												grayName:@"PopoverFramePrimary"
+												defaultColor:colorRGBA(1.0f, 1.0f, 1.0f, 0.8f)
+												defaultGray:colorRGBA(1.0f, 1.0f, 1.0f, 0.8f)];
+	
+	
+	return result;
+}// colorPopoverFramePrimary
+
+
+/*!
+Returns the outer edge color for "kPopover_WindowStyleAlertAppModal".
+
+(2018.09)
+*/
+- (NSColor*)
+colorWithName:(NSString*)	aColorAssetName
+grayName:(NSString*)		aGrayColorAssetName
+defaultColor:(NSColor*)		aColor
+defaultGray:(NSColor*)		aGrayColor
+{
+	NSString*	colorName = [self.class isGraphiteTheme] ? aGrayColorAssetName : aColorAssetName;
+	NSColor*	defaultColor = [self.class isGraphiteTheme] ? aGrayColor : aColor;
+	NSColor*	result = defaultColor;
+	
+	
+	if (@available(macOS 10.13, *))
+	{
+		NSColor*	loadedColor = [NSColor colorNamed:colorName];
+		
+		
+		if (nil == loadedColor)
+		{
+			Console_Warning(Console_WriteValueCFString, "failed to load color, name",
+							BRIDGE_CAST(colorName, CFStringRef));
+		}
+		else
+		{
+			result = loadedColor;
+		}
+	}
+	
+	return result;
+}// colorWithName:grayName:defaultColor:defaultGray:
+
+
+#pragma mark Accessors: Other
 
 
 /*!
@@ -2801,10 +3024,16 @@ backgroundFrameImageAsColor
 													: 48.0);
 			NSPoint			drawnBoundsOrigin = drawnFrame.origin;
 			NSRect			handleRect;
-			NSColor*		outerLineColor = [NSColor colorWithCalibratedRed:0.8 green:0.8 blue:0.8 alpha:1.0];
-			NSColor*		middleLineColor = [NSColor colorWithCalibratedRed:0.4 green:0.4 blue:0.4 alpha:1.0];
-			NSColor*		innerLineColor = [NSColor colorWithCalibratedRed:0.8 green:0.8 blue:0.8 alpha:1.0];
-			NSColor*		innerLine2Color = [NSColor colorWithCalibratedRed:0.6 green:0.6 blue:0.6 alpha:1.0];
+			NSColor*		outerLineColor = [self colorWithName:@"ResizeHandle1"
+																	grayName:@"ResizeHandle1"
+																	defaultColor:colorRGBA(0.8f, 0.8f, 0.8f, 1.0f)
+																	defaultGray:colorRGBA(0.8f, 0.8f, 0.8f, 1.0f)];
+			NSColor*		middleLineColor = [self colorWithName:@"ResizeHandle2"
+																	grayName:@"ResizeHandle2"
+																	defaultColor:colorRGBA(0.4f, 0.4f, 0.4f, 1.0f)
+																	defaultGray:colorRGBA(0.4f, 0.4f, 0.4f, 1.0f)];
+			NSColor*		innerLineColor = outerLineColor;
+			NSColor*		innerLine2Color = middleLineColor;
 			
 			
 			if (self.allowHorizontalResize)
@@ -3407,5 +3636,25 @@ windowPlacement
 
 
 @end //} Popover_Window (Popover_WindowInternal)
+
+
+#pragma mark Internal Methods
+namespace {
+
+/*!
+Short-cut for painfully verbose Objective-C color construction.
+
+(2018.09)
+*/
+NSColor*
+colorRGBA	(CGFloat	inRed,
+			 CGFloat	inGreen,
+			 CGFloat	inBlue,
+			 CGFloat	inAlpha)
+{
+	return [NSColor colorWithCalibratedRed:inRed green:inGreen blue:inBlue alpha:inAlpha];
+}// colorRGBA
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

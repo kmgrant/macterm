@@ -318,6 +318,7 @@
 		0A46059605543D7C00ACDF3A /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		0A46059705543D7C00ACDF3A /* System.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = System.framework; path = /System/Library/Frameworks/System.framework; sourceTree = "<absolute>"; };
 		0A46079705543DE400ACDF3A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		0A461725215F3B1F0038EA77 /* SharedMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = SharedMedia.xcassets; path = Shared/Resources/SharedMedia.xcassets; sourceTree = "<group>"; };
 		0A46C56B15D864A500843BBC /* PreferenceValue.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PreferenceValue.objc++.h"; path = "Application/Code/PreferenceValue.objc++.h"; sourceTree = "<group>"; };
 		0A46C56C15D864B700843BBC /* PreferenceValue.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PreferenceValue.mm; path = Application/Code/PreferenceValue.mm; sourceTree = "<group>"; };
 		0A46FDB8055432A400ACDF3A /* AlertMessages.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AlertMessages.mm; path = Application/Code/AlertMessages.mm; sourceTree = "<group>"; };
@@ -630,6 +631,7 @@
 				0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */,
 				0AB19DA91D87556600D80A2D /* WindowTitleDialog.h */,
 				0A1FE93E1A39F196003C81BA /* XPCCallPythonClient.objc++.h */,
+				0A461725215F3B1F0038EA77 /* SharedMedia.xcassets */,
 				0AA19F551D8A07E600FD70FF /* Shared XIBs */,
 			);
 			name = Shared;
