@@ -224,8 +224,6 @@
 		0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		0A1022141DDBE78700CEE0DF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ApplicationTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ConstantsRegistry.mm; path = Application/Code/ConstantsRegistry.mm; sourceTree = "<group>"; };
-		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
-		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterRef.typedef.h; path = Application/Code/VectorInterpreterRef.typedef.h; sourceTree = "<group>"; };
 		0A1A06860ABA6236002C95D7 /* PrintTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintTerminal.h; path = Application/Code/PrintTerminal.h; sourceTree = "<group>"; };
 		0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrintTerminal.mm; path = Application/Code/PrintTerminal.mm; sourceTree = "<group>"; };
@@ -242,7 +240,6 @@
 		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
 		0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TerminalLine.h; path = Application/Code/TerminalLine.h; sourceTree = "<group>"; };
 		0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalLine.cp; path = Application/Code/TerminalLine.cp; sourceTree = "<group>"; };
-		0A30289A1DB294F400C1C557 /* IconForRefresh.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = IconForRefresh.png; path = Application/Resources/IconForRefresh.png; sourceTree = "<group>"; };
 		0A30289B1DB2BE1800C1C557 /* NetEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = "<group>"; };
 		0A30289C1DB2BE2500C1C557 /* Network.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Network.mm; path = Application/Code/Network.mm; sourceTree = "<group>"; };
 		0A30289E1DB5D45200C1C557 /* MenuUtilities.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MenuUtilities.objc++.h"; path = "Shared/Code/MenuUtilities.objc++.h"; sourceTree = "<group>"; };
@@ -254,12 +251,10 @@
 		0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
 		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
-		0A3A2A21161D151500D489F6 /* IconForSearch.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSearch.icns; path = Application/Resources/IconForSearch.icns; sourceTree = "<group>"; };
 		0A3C2C1A140C73E000739966 /* CocoaAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaAnimation.h; path = Shared/Code/CocoaAnimation.h; sourceTree = "<group>"; };
 		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTranslations.mm; path = Application/Code/PrefPanelTranslations.mm; sourceTree = "<group>"; };
 		0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTranslations.h; path = Application/Code/PrefPanelTranslations.h; sourceTree = "<group>"; };
-		0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTranslations.icns; path = Application/Resources/IconForPrefPanelTranslations.icns; sourceTree = "<group>"; };
 		0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalGlyphDrawing.mm; path = Application/Code/TerminalGlyphDrawing.mm; sourceTree = "<group>"; };
 		0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TerminalGlyphDrawing.objc++.h"; path = "Application/Code/TerminalGlyphDrawing.objc++.h"; sourceTree = "<group>"; };
 		0A442C4F1B810760008B046B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -366,7 +361,6 @@
 		0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorWindow.mm; path = Application/Code/VectorWindow.mm; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelWorkspaces.mm; path = Application/Code/PrefPanelWorkspaces.mm; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
-		0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelWorkspaces.icns; path = Application/Resources/IconForPrefPanelWorkspaces.icns; sourceTree = "<group>"; };
 		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
@@ -388,10 +382,8 @@
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SixelDecoder.cp; path = Application/Code/SixelDecoder.cp; sourceTree = "<group>"; };
 		0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SixelDecoder.h; path = Application/Code/SixelDecoder.h; sourceTree = "<group>"; };
-		0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForRestartSession.icns; path = Application/Resources/IconForRestartSession.icns; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
-		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
 		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A90C79A1DBC557B005EABE0 /* CoreUI.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CoreUI.mm; path = Shared/Code/CoreUI.mm; sourceTree = "<group>"; };
 		0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CoreUI.objc++.h"; path = "Shared/Code/CoreUI.objc++.h"; sourceTree = "<group>"; };
@@ -433,9 +425,6 @@
 		0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = WindowTitleDialog.mm; path = Shared/Code/WindowTitleDialog.mm; sourceTree = "<group>"; };
 		0AB19DA91D87556600D80A2D /* WindowTitleDialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WindowTitleDialog.h; path = Shared/Code/WindowTitleDialog.h; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/__init__.py; sourceTree = "<group>"; };
-		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
-		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
-		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
 		0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFormats.mm; path = Application/Code/PrefPanelFormats.mm; sourceTree = "<group>"; };
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
 		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelSessions.mm; path = Application/Code/PrefPanelSessions.mm; sourceTree = "<group>"; };
@@ -445,31 +434,21 @@
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC4185A208BB7A10068A309 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/TerminalScrollableRootViewCocoa.xib; sourceTree = "<group>"; };
 		0AC4185C208D35800068A309 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = Application/Resources/English.lproj/TerminalRootCocoa.xib; sourceTree = "<group>"; };
-		0AC4185D208D35AE0068A309 /* IconForWindowTitleCenter.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForWindowTitleCenter.icns; path = Application/Resources/IconForWindowTitleCenter.icns; sourceTree = "<group>"; };
-		0AC4185E208D35AE0068A309 /* IconForWindowTitleLeft.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForWindowTitleLeft.icns; path = Application/Resources/IconForWindowTitleLeft.icns; sourceTree = "<group>"; };
-		0AC4185F208D35AE0068A309 /* IconForWindowTitleRight.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForWindowTitleRight.icns; path = Application/Resources/IconForWindowTitleRight.icns; sourceTree = "<group>"; };
 		0AC5687512CFC73800BAA7F0 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = English; path = Application/Resources/English.lproj/Credits.html; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
 		0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsSession.cp; path = Application/Code/QuillsSession.cp; sourceTree = "<group>"; };
 		0AC6A6040AC4E45600FF6FC6 /* QuillsSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSession.h; path = Application/Code/QuillsSession.h; sourceTree = "<group>"; };
 		0AC6BAD20A8C0A8B00AFF37A /* MacTermQuills.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MacTermQuills.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForHide.icns; path = Application/Resources/IconForHide.icns; sourceTree = "<group>"; };
-		0AC810AB1221EC5800687DB2 /* IconForNewSessionLogInShell.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForNewSessionLogInShell.icns; path = Application/Resources/IconForNewSessionLogInShell.icns; sourceTree = "<group>"; };
-		0AC810AC1221EC6100687DB2 /* IconForNewSessionShell.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForNewSessionShell.icns; path = Application/Resources/IconForNewSessionShell.icns; sourceTree = "<group>"; };
 		0AC810AD1221EC9300687DB2 /* IconForMacroSet.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForMacroSet.icns; path = Application/Resources/IconForMacroSet.icns; sourceTree = "<group>"; };
 		0AC810AE1221ECA500687DB2 /* IconForCommand.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCommand.icns; path = Application/Resources/IconForCommand.icns; sourceTree = "<group>"; };
-		0AC810AF1221ECF000687DB2 /* IconForNewSessionDefault.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForNewSessionDefault.icns; path = Application/Resources/IconForNewSessionDefault.icns; sourceTree = "<group>"; };
 		0AC810B01221ED2300687DB2 /* IconForSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSession.icns; path = Application/Resources/IconForSession.icns; sourceTree = "<group>"; };
 		0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForContextMenu.icns; path = Application/Resources/IconForContextMenu.icns; sourceTree = "<group>"; };
-		0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOff.icns; path = Application/Resources/IconForScrollLockOff.icns; sourceTree = "<group>"; };
-		0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScrollLockOn.icns; path = Application/Resources/IconForScrollLockOn.icns; sourceTree = "<group>"; };
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericDialog.mm; path = Application/Code/GenericDialog.mm; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
 		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		0ACBF0101449232F00D17678 /* IconForKillSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKillSession.icns; path = Application/Resources/IconForKillSession.icns; sourceTree = "<group>"; };
 		0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelNumberedList.mm; path = Application/Code/GenericPanelNumberedList.mm; sourceTree = "<group>"; };
 		0ACC406B1A433265009D0D53 /* GenericPanelNumberedList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GenericPanelNumberedList.h; path = Application/Code/GenericPanelNumberedList.h; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
@@ -483,9 +462,6 @@
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
 		0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationPrefix.pch; path = Application/Code/ApplicationPrefix.pch; sourceTree = "<group>"; };
 		0AD638F91350172E00035D4E /* RetainRelease.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RetainRelease.template.h; path = Shared/Code/RetainRelease.template.h; sourceTree = "<group>"; };
-		0AD7481C13072342003E368B /* IconForFullScreen.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForFullScreen.icns; path = Application/Resources/IconForFullScreen.icns; sourceTree = "<group>"; };
-		0AD7483013073E56003E368B /* IconForCustomize.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCustomize.icns; path = Application/Resources/IconForCustomize.icns; sourceTree = "<group>"; };
-		0AD7483813074260003E368B /* IconForPrint.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrint.icns; path = Application/Resources/IconForPrint.icns; sourceTree = "<group>"; };
 		0AD7B343176C3212004A1532 /* BoundName.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "BoundName.objc++.h"; path = "Shared/Code/BoundName.objc++.h"; sourceTree = "<group>"; };
 		0AD7B344176C3224004A1532 /* BoundName.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BoundName.mm; path = Shared/Code/BoundName.mm; sourceTree = "<group>"; };
 		0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefsContextManager.mm; path = Application/Code/PrefsContextManager.mm; sourceTree = "<group>"; };
@@ -512,8 +488,6 @@
 		0AF931851592E0E6008A41C6 /* QuillsSWIG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSWIG.h; path = Application/Code/QuillsSWIG.h; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
-		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
-		0AF995F30CC3C849000A11DC /* IconForBellOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOn.icns; path = Application/Resources/IconForBellOn.icns; sourceTree = "<group>"; };
 		0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventHandlerWrap.template.h; path = Shared/Code/CarbonEventHandlerWrap.template.h; sourceTree = "<group>"; };
 		0AFF11220AF41FEE006CCA34 /* RunApplication.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = RunApplication.py; path = Application/PythonCode/RunApplication.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -940,44 +914,18 @@
 				0A0D372819B43370005500DE /* CursorMoveCursor@2x.png */,
 				0A0D372919B43370005500DE /* CursorMoveCursorSmall.png */,
 				0A0D372A19B43370005500DE /* CursorMoveCursorSmall@2x.png */,
-				0AF995F20CC3C849000A11DC /* IconForBellOff.icns */,
-				0AF995F30CC3C849000A11DC /* IconForBellOn.icns */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
 				0AAB323314B2BC59002C6F33 /* IconForCaution.icns */,
 				0AC810AE1221ECA500687DB2 /* IconForCommand.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
-				0AD7483013073E56003E368B /* IconForCustomize.icns */,
-				0AD7481C13072342003E368B /* IconForFullScreen.icns */,
-				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
-				0ACBF0101449232F00D17678 /* IconForKillSession.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
 				0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */,
 				0AC810AD1221EC9300687DB2 /* IconForMacroSet.icns */,
-				0AC810AF1221ECF000687DB2 /* IconForNewSessionDefault.icns */,
-				0AC810AB1221EC5800687DB2 /* IconForNewSessionLogInShell.icns */,
-				0AC810AC1221EC6100687DB2 /* IconForNewSessionShell.icns */,
-				0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */,
-				0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */,
-				0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */,
-				0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */,
-				0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */,
-				0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */,
-				0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */,
 				0AF84E8514A82F2A001F6C1D /* IconForPrefs.icns */,
-				0AD7483813074260003E368B /* IconForPrint.icns */,
-				0A30289A1DB294F400C1C557 /* IconForRefresh.png */,
-				0A831A9E143FFA4E00A422B6 /* IconForRestartSession.icns */,
-				0A3A2A21161D151500D489F6 /* IconForSearch.icns */,
-				0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */,
-				0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */,
 				0AC810B01221ED2300687DB2 /* IconForSession.icns */,
 				0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */,
 				0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */,
-				0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */,
 				0A54E40F0560B62F005B4592 /* IconForTerminal.icns */,
-				0AC4185D208D35AE0068A309 /* IconForWindowTitleCenter.icns */,
-				0AC4185E208D35AE0068A309 /* IconForWindowTitleLeft.icns */,
-				0AC4185F208D35AE0068A309 /* IconForWindowTitleRight.icns */,
 			);
 			name = Icons;
 			sourceTree = "<group>";

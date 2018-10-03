@@ -345,6 +345,6 @@
         </window>
     </objects>
     <resources>
-        <image name="IconForSearch" width="128" height="128"/>
+        <image name="IconForSearch" width="64" height="64"/>
     </resources>
 </document>
