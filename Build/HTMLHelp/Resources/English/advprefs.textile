@@ -1,4 +1,4 @@
-notextile. <div class="navigation">
+notextile. <div class="navigation"><a id="dummyanchor"></a>
 
 * MacTerm Help
 * "Home":../index.html

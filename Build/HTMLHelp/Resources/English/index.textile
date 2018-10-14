@@ -1,6 +1,6 @@
 notextile. <!-- NOTE: this file is installed one level higher so URLs generally refer to "content/" -->
 
-notextile. <div class="navigation">
+notextile. <div class="navigation"><a id="dummyanchor"></a>
 
 * MacTerm Help
 

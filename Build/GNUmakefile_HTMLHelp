@@ -1,5 +1,9 @@
 # GNU makefile for building the help bundle.
 #
+# Set MACTERM_HELP_NO_BROWSER=1 in the environment (e.g. using
+# an "env" command) to suppress the automatic display of the
+# generated page in a web browser.
+#
 # DESIGN OVERVIEW:
 # - primary rules are listed first
 # - patterns (foobar-%) are used for language-specific rules
@@ -89,9 +93,12 @@ all:
 	$(RM) -R ~/Library/Preferences/com.apple.helpindexer.*
 	$(RM) -R ~/Library/Preferences/com.apple.helpviewer.*
 	-killall helpd
-	@# now build a new help book and display it in a web browser
+	@# now build a new help book
 	$(MAKE) -f $(MAKEFILE_LIST) build
+ifneq ($(strip $(MACTERM_HELP_NO_BROWSER)),1)
+	@# display it in a web browser
 	$(call open_browser_to_page,$(APP_HELP_RESOURCES_ROOT)/English.lproj/index.html)
+endif
 	$(end_target)
 
 .PHONY: clean
@@ -206,8 +213,13 @@ $(APP_HELP_CONTENTS_ROOT)/Info.plist: $(MAIN_SRC)/Template-Info.plist
 
 %.lproj/search.helpindex: $(foreach L,$(ALL_LANGUAGES),$(call SOURCE_HTML,$(L)))
 	$(HIUTIL) --verbose --verbose --verbose -1 --create --anchors --exclude '\.css$$' --exclude '\.png$$' --file "$@" "$(dir $@)"
-	$(HIUTIL) --verbose -1 --list-anchors --file "$@"
-	$(HIUTIL) --verbose -1 --list-files --file "$@"
+	@# as of macOS Mojave, these steps will NOT work due to a vague error
+	@# opening the file (furthermore, the same errors seem to occur even
+	@# when trying to open help index files from Apple apps!); for now,
+	@# ignoring the return codes for these to prevent build failure but
+	@# it would be nice to fix eventually
+	-$(HIUTIL) --verbose -1 --list-anchors --file "$@"
+	-$(HIUTIL) --verbose -1 --list-files --file "$@"
 
 define begin_target
 	@date "+      $(notdir $@): Started at %T."
