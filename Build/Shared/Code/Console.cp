@@ -647,8 +647,8 @@ is written to the console (with a new-line).
 */
 void
 Console_WriteValuePair	(char const*	inLabel,
-						 SInt32			inValue1,
-						 SInt32			inValue2)
+						 SInt64			inValue1,
+						 SInt64			inValue2)
 {
 	std::ostringstream	s;
 	s << inLabel << " = " << inValue1 << "," << inValue2;

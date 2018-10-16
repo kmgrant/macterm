@@ -2131,7 +2131,7 @@ IMPORTANT:	An iterator is completely invalid once the screen
 */
 Terminal_LineRef
 Terminal_NewScrollbackLineIterator	(TerminalScreenRef				inRef,
-									 UInt32							inLineNumberZeroForNewest,
+									 UInt64							inLineNumberZeroForNewest,
 									 Terminal_LineStackStorage*		inStackAllocationOrNull)
 {
 	Terminal_LineRef		result = nullptr;
@@ -2993,7 +2993,7 @@ if the given terminal screen reference is invalid
 Terminal_Result
 Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 								 UInt8 const*		inBuffer,
-								 UInt32				inLength)
+								 size_t				inLength)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
 	
@@ -3023,7 +3023,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			// character in this particular buffer may form the first character
 			// in a sequence, and this scan must be continued the next time this
 			// function is called)
-			for (UInt32 i = inLength; i > 0; )
+			for (size_t i = inLength; i > 0; )
 			{
 				Boolean		skipEmulators = false;
 				
@@ -3267,7 +3267,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 							std::string::size_type const	kOldSize = dataPtr->bytesToEcho.size();
 							UInt32							bytesUsed = invokeEmulatorEchoDataProc
 																		(dataPtr->emulator.currentCallbacks.dataWriter, dataPtr,
-																			dataPtr->bytesToEcho.data(), kOldSize);
+																			dataPtr->bytesToEcho.data(), STATIC_CAST(kOldSize, UInt32));
 							
 							
 							// it is possible for this chunk of the stream to terminate with
@@ -4360,7 +4360,7 @@ Terminal_ReturnConfiguration	(TerminalScreenRef		inRef)
 	}
 	
 	{
-		UInt32		dimension = dataPtr->text.scrollback.numberOfRowsPermitted;
+		UInt32		dimension = STATIC_CAST(dataPtr->text.scrollback.numberOfRowsPermitted, UInt32);
 		
 		
 		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalScreenScrollbackRows,
@@ -4387,7 +4387,7 @@ Terminal_ReturnInvisibleRowCount	(TerminalScreenRef		inRef)
 	
 	if (nullptr != dataPtr)
 	{
-		result = dataPtr->scrollbackBufferCachedSize;
+		result = STATIC_CAST(dataPtr->scrollbackBufferCachedSize, UInt32);
 	}
 	return result;
 }// ReturnInvisibleRowCount
@@ -4647,7 +4647,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			threadContextPtr->threadNumber = 0;
 			threadContextPtr->rangeStart = dataPtr->screenBuffer.begin();
 			threadContextPtr->startRowIndex = 0;
-			threadContextPtr->rowCount = dataPtr->screenBuffer.size();
+			threadContextPtr->rowCount = STATIC_CAST(dataPtr->screenBuffer.size(), UInt32);
 			
 			threadResult = pthread_create(&threadList[0], &threadAttributes,
 											threadForTerminalSearch, threadContextPtr);
@@ -4681,7 +4681,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			{
 				scrollbackThreadCount = kMaxThreads - 1;
 			}
-			size_t		averageLinesPerThread = kScrollbackSize / scrollbackThreadCount;
+			UInt32		averageLinesPerThread = STATIC_CAST(kScrollbackSize, UInt32) / scrollbackThreadCount;
 			for (UInt16 i = 1; i <= scrollbackThreadCount; ++i)
 			{
 				if (threadOK)
@@ -4708,7 +4708,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					{
 						// since the scrollback size is unlikely to divide perfectly between
 						// threads, the last thread picks up the slack
-						threadContextPtr->rowCount = kScrollbackSize - threadContextPtr->startRowIndex;
+						threadContextPtr->rowCount = STATIC_CAST(kScrollbackSize, UInt32) - threadContextPtr->startRowIndex;
 					}
 					
 					threadResult = pthread_create(&threadList[i], &threadAttributes,
@@ -17257,7 +17257,7 @@ locateCursorLine	(My_ScreenBufferPtr						inDataPtr,
 	{
 		// near the bottom; search from the end
 		// (NOTE: linear search is still horrible, but this makes it less horrible)
-		SInt32 const	kDelta = inDataPtr->current.cursorY/* zero-based */ - kMaximumLines;
+		SInt64 const	kDelta = inDataPtr->current.cursorY/* zero-based */ - kMaximumLines;
 		
 		
 		outCursorLine = inDataPtr->screenBuffer.end();
@@ -17308,7 +17308,7 @@ locateScrollingRegion	(My_ScreenBufferPtr						inDataPtr,
 		// note the region boundary is inclusive but past-the-end is exclusive;
 		// also, for efficiency, assume this will be much closer to the end and
 		// advance backwards to save some pointer iterations
-		SInt32 const	kDelta = inDataPtr->customScrollingRegion.lastRow/* zero-based */ - kMaximumLines + 1/* past-end */;
+		SInt64 const	kDelta = inDataPtr->customScrollingRegion.lastRow/* zero-based */ - kMaximumLines + 1/* past-end */;
 		
 		
 		outPastBottomLine = inDataPtr->screenBuffer.end();

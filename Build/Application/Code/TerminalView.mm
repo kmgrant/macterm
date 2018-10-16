@@ -454,7 +454,7 @@ void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt
 Boolean				isSmallIBeam						(My_TerminalViewPtr);
 void				localToScreen						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
-void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt32);
+void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt64);
 void				populateContextualMenu				(My_TerminalViewPtr, NSMenu*);
 void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				preferenceChangedForView			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1510,10 +1510,10 @@ if the view reference is unrecognized
 */
 TerminalView_Result
 TerminalView_GetScrollVerticalInfo	(TerminalViewRef	inView,
-									 SInt32&			outStartOfView,
-									 SInt32&			outPastEndOfView,
-									 SInt32&			outStartOfMaximumRange,
-									 SInt32&			outPastEndOfMaximumRange)
+									 SInt64&			outStartOfView,
+									 SInt64&			outPastEndOfView,
+									 SInt64&			outStartOfMaximumRange,
+									 SInt64&			outPastEndOfMaximumRange)
 {
 	TerminalView_Result			result = kTerminalView_ResultOK;
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -1522,8 +1522,8 @@ TerminalView_GetScrollVerticalInfo	(TerminalViewRef	inView,
 	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else
 	{
-		SInt32 const	kScrollbackRows = Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref);
-		SInt16 const	kRows = Terminal_ReturnRowCount(viewPtr->screen.ref);
+		SInt64 const	kScrollbackRows = Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref);
+		SInt64 const	kRows = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
 		// WARNING: this must use the same logic as TerminalView_ScrollToIndicatorPosition()
@@ -2475,13 +2475,13 @@ TerminalView_ScrollPageTowardBottomEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount / 4);
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount / 4);
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount / 4);
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardBottomEdge(inView, kVisibleRowCount - 3 * (kVisibleRowCount / 4));
 	}
 	return result;
 }// ScrollPageTowardBottomEdge
@@ -2591,13 +2591,13 @@ TerminalView_ScrollPageTowardTopEdge		(TerminalViewRef	inView)
 		UInt16 const	kVisibleRowCount = Terminal_ReturnRowCount(viewPtr->screen.ref);
 		
 		
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount / 4);
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount / 4);
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount / 4);
 		delayMinimumTicks(kMy_PageScrollDelayTicks);
-		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * INTEGER_DIV_4(kVisibleRowCount));
+		UNUSED_RETURN(TerminalView_Result)TerminalView_ScrollRowsTowardTopEdge(inView, kVisibleRowCount - 3 * (kVisibleRowCount / 4));
 	}
 	return result;
 }// ScrollPageTowardTopEdge
@@ -4983,55 +4983,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 					}
 					if (lineGlobalAttributes.hasDoubleWidth())
 					{
-						Rect	rowBounds;
-						
-						
-						getRowBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine, &rowBounds);
-						
-						{
-							PixMapHandle	pixels = nullptr;
-							
-							
-							//CARBON//GetGWorld(&currentPort, &currentDevice);
-							//CARBON//pixels = GetPortPixMap(currentPort);
-							//CARBON//if (LockPixels(pixels))
-							{
-								//CARBON//ImageDescriptionHandle  image = nullptr;
-								Rect					sourceRect = rowBounds;
-								Rect					destRect = rowBounds;
-								OSStatus				error = noErr;
-								
-								
-								// halve the source width, as the boundaries refer to the rendering width
-								sourceRect.right -= INTEGER_DIV_2(sourceRect.right - sourceRect.left);
-								
-								//CARBON//error = MakeImageDescriptionForPixMap(pixels, &image);
-								if (error == noErr)
-								{
-									// IMPORTANT:		The source rectangle is relative to the origin of the
-									//				pixel map, whereas the destination is relative to the
-									//				graphics port.  So, although the source and destination
-									//				come from the “same” place, the source is offset by the
-									//				port origin.
-									//Rect	pixelMapBounds;
-									
-									
-									//CARBON//GetPixBounds(pixels, &pixelMapBounds);
-									//RegionUtilities_OffsetRect(&sourceRect, -pixelMapBounds.left, -pixelMapBounds.top);
-									//CARBON//error = DecompressImage(GetPixBaseAddr(pixels), image, pixels,
-									//CARBON//						&sourceRect/* source rectangle */,
-									//CARBON//						&destRect/* destination rectangle */,
-									//CARBON//						srcCopy/* drawing mode */, nullptr/* mask */);
-									if (noErr != error)
-									{
-										Console_Warning(Console_WriteValue, "failed to stretch double-wide text image, error", error);
-									}
-									//CARBON//DisposeHandle(REINTERPRET_CAST(image, Handle)), image = nullptr;
-								}
-								
-								//CARBON//UnlockPixels(pixels);
-							}
-						}
+						// UNIMPLEMENTED: stretch line to double-width image
 					}
 					
 					releaseRowIterator(inTerminalViewPtr, &lineIterator);
@@ -7749,8 +7701,8 @@ offsetLeftVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
 	SInt16			newDiscreteValue = kOldDiscreteValue + inDeltaInColumns;
 	
 	
-	newDiscreteValue = STATIC_CAST(INTEGER_MAXIMUM(kMinimum, newDiscreteValue), SInt16);
-	newDiscreteValue = STATIC_CAST(INTEGER_MINIMUM(kMaximum, newDiscreteValue), SInt16);
+	newDiscreteValue = STATIC_CAST(std::max<SInt16>(kMinimum, newDiscreteValue), SInt16);
+	newDiscreteValue = STATIC_CAST(std::min<SInt16>(kMaximum, newDiscreteValue), SInt16);
 	inTerminalViewPtr->screen.leftVisibleEdgeInColumns = newDiscreteValue;
 	
 	inTerminalViewPtr->text.selection.range.first.first += (newDiscreteValue - kOldDiscreteValue);
@@ -7769,16 +7721,16 @@ the screen is redrawn.
 */
 void
 offsetTopVisibleEdge	(My_TerminalViewPtr		inTerminalViewPtr,
-						 SInt32					inDeltaInRows)
+						 SInt64					inDeltaInRows)
 {
-	SInt32 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
-	SInt32 const	kMaximum = 0;
-	SInt32 const	kOldDiscreteValue = inTerminalViewPtr->screen.topVisibleEdgeInRows;
-	SInt32			newDiscreteValue = kOldDiscreteValue + inDeltaInRows;
+	SInt64 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	SInt64 const	kMaximum = 0;
+	SInt64 const	kOldDiscreteValue = inTerminalViewPtr->screen.topVisibleEdgeInRows;
+	SInt64			newDiscreteValue = kOldDiscreteValue + inDeltaInRows;
 	
 	
-	newDiscreteValue = INTEGER_MAXIMUM(kMinimum, newDiscreteValue);
-	newDiscreteValue = INTEGER_MINIMUM(kMaximum, newDiscreteValue);
+	newDiscreteValue = std::max<SInt64>(kMinimum, newDiscreteValue);
+	newDiscreteValue = std::min<SInt64>(kMaximum, newDiscreteValue);
 	inTerminalViewPtr->screen.topVisibleEdgeInRows = newDiscreteValue;
 	
 #if 0
@@ -8660,7 +8612,7 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
 																				Terminal_RangeDescriptionConstPtr);
-			SInt32								i = 0;
+			SInt64								i = 0;
 			
 			
 			// debug

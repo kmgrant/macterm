@@ -285,7 +285,7 @@ CallPythonLongVectorReturnStringByLong	(void*							inPythonFunctionObject,
 	if (nullptr != pythonResult)
 	{
 		PyObject*	keys = nullptr;
-		int			keyCount = 0;
+		Py_ssize_t	keyCount = 0;
 		
 		
 		if (false == PyDict_Check(pythonResult))
@@ -298,7 +298,7 @@ CallPythonLongVectorReturnStringByLong	(void*							inPythonFunctionObject,
 			throw _Quills_CallbackError("Expected dictionary keys to be a list", pythonDef);
 		}
 		keyCount = PyList_Size(keys);
-		for (int i = 0; i < keyCount; ++i)
+		for (Py_ssize_t i = 0; i < keyCount; ++i)
 		{
 			PyObject*	aKey = PyList_GetItem(keys, i);
 			PyObject*	stringValue = nullptr;

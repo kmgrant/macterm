@@ -480,7 +480,7 @@ Session_Result
 void
 	Session_TerminalWrite					(SessionRef							inRef,
 											 UInt8 const*						inBuffer,
-											 UInt32								inLength);
+											 size_t								inLength);
 
 void
 	Session_TerminalWriteCString			(SessionRef							inRef,

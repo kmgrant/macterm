@@ -219,7 +219,7 @@ just some integer) to represent an index for a row.  Note
 that a row index is signed because negative values indicate
 scrollback rows and positive values indicate screen rows.
 */
-typedef SInt32												TerminalView_RowIndex;
+typedef SInt64												TerminalView_RowIndex;
 
 typedef std::pair< UInt16, TerminalView_RowIndex >			TerminalView_Cell;		//!< order: column, row
 
@@ -667,10 +667,10 @@ NSWindow*
 
 TerminalView_Result
 	TerminalView_GetScrollVerticalInfo			(TerminalViewRef			inView,
-												 SInt32&					outStartOfRange,
-												 SInt32&					outPastEndOfRange,
-												 SInt32&					outStartOfMaximum,
-												 SInt32&					outPastEndOfMaximum);
+												 SInt64&					outStartOfRange,
+												 SInt64&					outPastEndOfRange,
+												 SInt64&					outStartOfMaximum,
+												 SInt64&					outPastEndOfMaximum);
 
 TerminalView_DisplayMode
 	TerminalView_ReturnDisplayMode				(TerminalViewRef			inView);

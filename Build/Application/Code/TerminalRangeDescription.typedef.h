@@ -42,11 +42,11 @@
 struct Terminal_RangeDescription
 {
 	TerminalScreenRef	screen;				//!< the screen for which this text range applies
-	SInt32				firstRow;			//!< zero-based row number where range occurs; 0 is topmost main screen line,
+	SInt64				firstRow;			//!< zero-based row number where range occurs; 0 is topmost main screen line,
 											//!  a negative line number is in the scrollback buffer
 	UInt16				firstColumn;		//!< zero-based column number where range begins
 	UInt16				columnCount;		//!< number of columns wide the range is; if 0, the range is empty
-	UInt32				rowCount;			//!< number of rows the range covers (it is rectangular, not flush to the edges)
+	SInt64				rowCount;			//!< number of rows the range covers (it is rectangular, not flush to the edges)
 };
 typedef Terminal_RangeDescription const*	Terminal_RangeDescriptionConstPtr;
 

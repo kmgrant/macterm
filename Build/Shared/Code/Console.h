@@ -286,8 +286,8 @@ void
 
 void
 	Console_WriteValuePair			(char const*		inLabel,
-									 SInt32				inValue1,
-									 SInt32				inValue2);
+									 SInt64				inValue1,
+									 SInt64				inValue2);
 
 void
 	Console_WriteValueStdString		(char const*		inLabel,

@@ -336,7 +336,7 @@ Terminal_LineRef
 
 Terminal_LineRef
 	Terminal_NewScrollbackLineIterator		(TerminalScreenRef			inScreen,
-											 UInt32						inLineNumberZeroForNewest,
+											 UInt64						inLineNumberZeroForNewest,
 											 Terminal_LineStackStorage*	inStackAllocationOrNull = nullptr);
 
 void
@@ -598,7 +598,7 @@ Terminal_Result
 Terminal_Result
 	Terminal_EmulatorProcessData			(TerminalScreenRef			inScreen,
 											 UInt8 const*				inBuffer,
-											 UInt32						inLength);
+											 size_t						inLength);
 
 //@}
 

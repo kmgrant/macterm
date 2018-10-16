@@ -227,7 +227,7 @@ item that matches the given string value.
 
 (3.1)
 */
-- (unsigned int)
+- (NSUInteger)
 comboBox:(NSComboBox*)					aComboBox
 indexOfItemWithStringValue:(NSString*)	string
 {
@@ -243,8 +243,8 @@ at the given index.
 (3.1)
 */
 - (id)
-comboBox:(NSComboBox*)				aComboBox
-objectValueForItemAtIndex:(int)		index
+comboBox:(NSComboBox*)					aComboBox
+objectValueForItemAtIndex:(NSInteger)	index
 {
 #pragma unused(aComboBox)
 	return [_commandHistoryArray objectAtIndex:index];
@@ -256,7 +256,7 @@ Returns the size of the underlying array.
 
 (3.1)
 */
-- (int)
+- (NSInteger)
 numberOfItemsInComboBox:(NSComboBox*)	aComboBox
 {
 #pragma unused(aComboBox)

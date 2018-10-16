@@ -1782,7 +1782,7 @@ Accessor.
 discoveredHost
 {
 	ServerBrowser_NetService*	result = nil;
-	unsigned int				selectedIndex = [self.discoveredHostIndexes firstIndex];
+	NSUInteger					selectedIndex = [self.discoveredHostIndexes firstIndex];
 	
 	
 	if (NSNotFound != selectedIndex)
@@ -1853,7 +1853,7 @@ Accessor.
 protocol
 {
 	ServerBrowser_Protocol*		result = nil;
-	unsigned int				selectedIndex = [self.protocolIndexes firstIndex];
+	NSUInteger					selectedIndex = [self.protocolIndexes firstIndex];
 	
 	
 	if (NSNotFound != selectedIndex)

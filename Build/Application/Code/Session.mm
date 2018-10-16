@@ -3244,7 +3244,7 @@ display appropriately if any commands are embedded
 void
 Session_TerminalWrite	(SessionRef		inRef,
 						 UInt8 const*	inBuffer,
-						 UInt32			inLength)
+						 size_t			inLength)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	

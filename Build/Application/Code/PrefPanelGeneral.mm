@@ -1278,7 +1278,7 @@ automaticallyNotifiesObserversOfSoundNameIndexes
 - (void)
 setSoundNameIndexes:(NSIndexSet*)	indexes
 {
-	unsigned int					newIndex = (nil != indexes)
+	NSUInteger						newIndex = (nil != indexes)
 												? [indexes firstIndex]
 												: 0;
 	PrefPanelGeneral_SoundInfo*		info = ((NSNotFound != newIndex) && (newIndex < [[self soundNames] count]))

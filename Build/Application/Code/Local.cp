@@ -1492,10 +1492,10 @@ printTerminalControlStructure	(struct termios const*		inTerminalControlPtr)
 	speed_t const*		outputSpeedPtr = &inTerminalControlPtr->c_ospeed;
 	
 	
-	Console_WriteValueBitFlags("input flags", *inputFlagsPtr);
-	Console_WriteValueBitFlags("output flags", *outputFlagsPtr);
-	Console_WriteValueBitFlags("hardware control flags", *hardwareControlFlagsPtr);
-	Console_WriteValueBitFlags("local flags", *localFlagsPtr);
+	Console_WriteValueBitFlags("input flags", STATIC_CAST(*inputFlagsPtr, UInt32));
+	Console_WriteValueBitFlags("output flags", STATIC_CAST(*outputFlagsPtr, UInt32));
+	Console_WriteValueBitFlags("hardware control flags", STATIC_CAST(*hardwareControlFlagsPtr, UInt32));
+	Console_WriteValueBitFlags("local flags", STATIC_CAST(*localFlagsPtr, UInt32));
 	Console_WriteValueCharacter("end-of-file character", controlCharacterArray[VEOF]);
 	Console_WriteValueCharacter("end-of-line character", controlCharacterArray[VEOL]);
 	Console_WriteValueCharacter("end-of-line character ext.", controlCharacterArray[VEOL2]);
@@ -1865,7 +1865,7 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			
 			// notify that data has arrived
 			postingResult = Session_PostDataArrivedEventToMainQueue
-							(contextPtr->session, processingBegin, processingPastEnd - processingBegin,
+							(contextPtr->session, processingBegin, STATIC_CAST(processingPastEnd - processingBegin, UInt32),
 								kEventPriorityStandard, contextPtr->eventQueue);
 			assert(kSession_ResultOK == postingResult);
 			{

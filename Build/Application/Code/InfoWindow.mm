@@ -134,7 +134,7 @@ The private class interface.
 
 // new methods
 	- (InfoWindow_SessionRow*)
-	infoForRow:(int)_;
+	infoForRow:(NSInteger)_;
 	- (InfoWindow_SessionRow*)
 	infoForSession:(SessionRef)_;
 	- (void)
@@ -258,7 +258,7 @@ InfoWindow_ReturnSelectedSession ()
 {
 	SessionRef				result = nullptr;
 	InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-	int						selectedRow = [controller->infoTable selectedRow];
+	NSInteger				selectedRow = [controller->infoTable selectedRow];
 	
 	
 	if (selectedRow >= 0)
@@ -309,7 +309,7 @@ refreshDisplay ()
 {
 	InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
 	InfoWindow_SessionRow*		selectedRowData = nil;
-	int							oldSelectedRow = [controller->infoTable selectedRow];
+	NSInteger					oldSelectedRow = [controller->infoTable selectedRow];
 	
 	
 	// update the new Cocoa-based table
@@ -903,7 +903,7 @@ Returns the size of the internal array.
 
 (4.0)
 */
-- (int)
+- (NSInteger)
 numberOfRowsInTableView:(NSTableView*)	tableView
 {
 	if (self->infoTable == tableView)
@@ -973,7 +973,7 @@ sortDescriptorsDidChange:(NSArray*)		oldDescriptors
 {
 #pragma unused(oldDescriptors)
 	InfoWindow_SessionRow*	selectedRowData = nil;
-	int						oldSelectedRow = [tableView selectedRow];
+	NSInteger				oldSelectedRow = [tableView selectedRow];
 	
 	
 	if (oldSelectedRow >= 0)
@@ -1251,8 +1251,8 @@ didDoubleClickInView:(id)	sender
 	if ([sender isKindOfClass:NSTableView.class])
 	{
 		NSTableView*	asTableView = (NSTableView*)sender;
-		//int			clickedColumn = [asTableView clickedColumn]; // not important in this case
-		int				clickedRow = [asTableView clickedRow];
+		//NSInteger		clickedColumn = [asTableView clickedColumn]; // not important in this case
+		NSInteger		clickedRow = [asTableView clickedRow];
 		
 		
 		if (clickedRow >= 0)
@@ -1275,7 +1275,7 @@ Returns an object representing the specified row in the table.
 (4.0)
 */
 - (InfoWindow_SessionRow*)
-infoForRow:(int)	row
+infoForRow:(NSInteger)	row
 {
 	InfoWindow_SessionRow*	result = nil;
 	
