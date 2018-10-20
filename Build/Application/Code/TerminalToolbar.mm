@@ -1031,8 +1031,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandBellEnabled);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performBellToggle:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1238,9 +1240,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	// TEMPORARY; only doing it this way during Carbon/Cocoa transition
-	[[Commands_Executor sharedExecutor] runToolbarCustomizationPaletteSetup:NSApp];
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(runToolbarCustomizationPalette:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1259,10 +1262,7 @@ window instead of some special class of window), the
 - (void)
 validate
 {
-	NSNumber*	boolNumber = [[Commands_Executor sharedExecutor] canRunToolbarCustomizationPaletteSetup:self];
-	
-	
-	self.enabled = [boolNumber boolValue];
+	self.enabled = ([NSApp keyWindow].toolbar.allowsUserCustomization || [NSApp mainWindow].toolbar.allowsUserCustomization);
 }// validate
 
 
@@ -1325,17 +1325,22 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
 	SessionRef		targetSession = [self session];
 	
 	
 	if (Session_IsValid(targetSession) && Session_StateIsDead(targetSession))
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandRestartSession);
+		if (false == Commands_ViaFirstResponderPerformSelector(@selector(performRestart:), sender))
+		{
+			Sound_StandardAlert();
+		}
 	}
 	else
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandKillProcessesKeepWindow);
+		if (false == Commands_ViaFirstResponderPerformSelector(@selector(performKill:), sender))
+		{
+			Sound_StandardAlert();
+		}
 	}
 }// performToolbarItemAction:
 
@@ -1539,9 +1544,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
-	[[Commands_Executor sharedExecutor] toggleFullScreen:NSApp];
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(toggleFullScreen:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1620,8 +1626,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performHideWindow:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1679,8 +1687,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED1);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performTerminalLED1Toggle:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1738,8 +1748,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED2);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performTerminalLED2Toggle:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1797,8 +1809,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED3);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performTerminalLED3Toggle:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -1856,8 +1870,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandToggleTerminalLED4);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performTerminalLED4Toggle:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -2111,8 +2127,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandPrint);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performPrintSelection:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -2171,8 +2189,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandStackWindows);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performArrangeInFront:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -2257,8 +2277,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandSuspendNetwork);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performSuspendToggle:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 
@@ -4119,8 +4141,10 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-#pragma unused(sender)
-	Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle);
+	if (false == Commands_ViaFirstResponderPerformSelector(@selector(performRename:), sender))
+	{
+		Sound_StandardAlert();
+	}
 }// performToolbarItemAction:
 
 

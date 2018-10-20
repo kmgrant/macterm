@@ -536,6 +536,10 @@ The private class interface.
 */
 @interface TerminalView_ContentView (TerminalView_ContentViewInternal) //{
 
+// new methods
+	- (SessionRef)
+	boundSession;
+
 @end //}
 
 
@@ -10458,6 +10462,86 @@ canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
+- (IBAction)
+performKill:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	Boolean				allowForceQuit = true;
+	
+	
+	// in Full Screen mode, this command might not always be allowed
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
+							&allowForceQuit))
+	{
+		allowForceQuit = true; // assume a value if the preference cannot be found
+	}
+	
+	if ((false == TerminalWindow_IsFullScreen(terminalWindow)) || (allowForceQuit))
+	{
+		Session_DisplayTerminationWarning([self boundSession], kSession_TerminationDialogOptionKeepWindow);
+	}
+	else
+	{
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		listeningSession = [self boundSession];
+	BOOL			result = NO;
+	
+	
+	if (nullptr != listeningSession)
+	{
+		result = (false == Session_StateIsDead(listeningSession));
+	}
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performRestart:(id)		sender
+{
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	Boolean				allowForceQuit = true;
+	
+	
+	// in Full Screen mode, this command might not always be allowed
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
+							&allowForceQuit))
+	{
+		allowForceQuit = true; // assume a value if the preference cannot be found
+	}
+	
+	if ((false == TerminalWindow_IsFullScreen(terminalWindow)) || (allowForceQuit))
+	{
+		Session_DisplayTerminationWarning([self boundSession], kSession_TerminationDialogOptionKeepWindow |
+																kSession_TerminationDialogOptionRestart);
+	}
+	else
+	{
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	// this is not exactly the same as the default validator;
+	// in particular, this is permitted in Full Screen mode
+	if (nullptr != SessionFactory_ReturnUserFocusSession())
+	{
+		return @(YES);
+	}
+	return @(NO);
+}
+
+
 #pragma mark NSDraggingDestination
 
 
@@ -10522,8 +10606,7 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 {
 	BOOL				result = NO;
 	NSPasteboard*		dragPasteboard = [sender draggingPasteboard];
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	SessionRef			listeningSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	SessionRef			listeningSession = [self boundSession];
 	Session_Result		sessionResult = kSession_ResultOK;
 	//NSPoint				pointInView = [self convertPointFromBase:sender.draggingLocation];
 	//Point				legacyPixelLocation = { 0, 0 }; // TEMPORARY (UNIMPLEMENTED); update APIs to use Cocoa coordinates
@@ -11305,6 +11388,25 @@ resetCursorRects
 
 #pragma mark -
 @implementation TerminalView_ContentView (TerminalView_ContentViewInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+Return any listening session for this view, or nil.
+
+(2018.10)
+*/
+- (SessionRef)
+boundSession
+{
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	SessionRef			result = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	return result;
+}// boundSession
 
 
 @end //} TerminalView_ContentView (TerminalView_ContentViewInternal)

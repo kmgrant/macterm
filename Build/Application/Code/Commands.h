@@ -123,8 +123,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandOpenSession						kHICommandOpen
 #define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
-#define kCommandKillProcessesKeepWindow			'Kill'
-#define kCommandRestartSession					'RSsn'
 #define kCommandHandleURL						'HURL'
 #define kCommandSaveSelection					'SvSl'
 #define kCommandCaptureToFile					'Capt'
@@ -397,10 +395,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetNewlineCarriageReturnNull	'CR00'		// multiple interfaces
 #define kCommandSetNewlineCarriageReturnOnly	'NLCR'		// multiple interfaces
 #define kCommandSetNewlineLineFeedOnly			'NLLF'		// multiple interfaces
-#define kCommandToggleTerminalLED1				'LED1'		// terminal window toolbars
-#define kCommandToggleTerminalLED2				'LED2'		// terminal window toolbars
-#define kCommandToggleTerminalLED3				'LED3'		// terminal window toolbars
-#define kCommandToggleTerminalLED4				'LED4'		// terminal window toolbars
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 
 // commands used only in contextual menus
@@ -549,10 +543,6 @@ Actions that create new terminal-based sessions.
 	- (IBAction)
 	performRestoreWorkspaceByFavoriteName:(id)_;
 	- (IBAction)
-	performKill:(id)_;
-	- (IBAction)
-	performRestart:(id)_;
-	- (IBAction)
 	performOpen:(id)_;
 	- (IBAction)
 	performDuplicate:(id)_;
@@ -693,6 +683,14 @@ Actions to change various terminal behaviors.
 	performSpeechToggle:(id)_;
 	- (IBAction)
 	performSuspendToggle:(id)_;
+	- (IBAction)
+	performTerminalLED1Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED2Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED3Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED4Toggle:(id)_;
 
 @end //}
 
@@ -860,36 +858,9 @@ Actions to cycle through windows.
 @end //}
 
 /*!
-These methods are similar to those typically found on NSWindow
-derivatives.  They are TEMPORARY, used to transition away from
-Carbon.  After observing that Apple’s Cocoa wrappers for Carbon
-windows can do unexpected things with “standard” messages (e.g.
-when receiving "performClose:"), the choice was made to map the
-Cocoa menus to the variants below.  These methods detect when
-the action receiver would be a Carbon window, and then they
-send the request in the “Carbon way”.  If the action receiver
-would be a “real” Cocoa window, the standard action is sent up
-the responder chain in the usual way.
+Temporary methods.
 */
 @interface Commands_Executor (Commands_TransitionFromCarbon) //{
-
-// actions
-	- (IBAction)
-	performCloseSetup:(id)_;
-	- (IBAction)
-	performMinimizeSetup:(id)_;
-	- (IBAction)
-	performSpeakSelectedText:(id)_;
-	- (IBAction)
-	performStopSpeaking:(id)_;
-	- (IBAction)
-	performZoomSetup:(id)_;
-	- (IBAction)
-	runToolbarCustomizationPaletteSetup:(id)_;
-	- (id)
-	canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)_;
-	- (IBAction)
-	toggleToolbarShownSetup:(id)_;
 
 // new methods
 	- (NSMenuItem*)
@@ -926,6 +897,12 @@ Boolean
 Boolean
 	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
 											 EventTargetRef				inTarget = nullptr);
+
+#ifdef __OBJC__
+Boolean
+	Commands_ViaFirstResponderPerformSelector	(SEL					inSelector,
+											 id							inObjectOrNil = nil);
+#endif
 
 //@}
 

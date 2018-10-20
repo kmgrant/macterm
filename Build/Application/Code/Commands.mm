@@ -515,55 +515,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			TerminalView_DisplaySaveSelectionUI(activeView);
 			break;
 		
-		case kCommandKillProcessesKeepWindow:
-			{
-				Boolean		allowForceQuit = true;
-				
-				
-				// in Full Screen mode, this command might not always be allowed
-				if (kPreferences_ResultOK !=
-					Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-										&allowForceQuit))
-				{
-					allowForceQuit = true; // assume a value if the preference cannot be found
-				}
-				
-				if ((false == TerminalWindow_IsFullScreen(frontTerminalWindow)) || (allowForceQuit))
-				{
-					Session_DisplayTerminationWarning(frontSession, kSession_TerminationDialogOptionKeepWindow);
-				}
-				else
-				{
-					Sound_StandardAlert();
-				}
-			}
-			break;
-		
-		case kCommandRestartSession:
-			{
-				Boolean		allowForceQuit = true;
-				
-				
-				// in Full Screen mode, this command might not always be allowed
-				if (kPreferences_ResultOK !=
-					Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-										&allowForceQuit))
-				{
-					allowForceQuit = true; // assume a value if the preference cannot be found
-				}
-				
-				if ((false == TerminalWindow_IsFullScreen(frontTerminalWindow)) || (allowForceQuit))
-				{
-					Session_DisplayTerminationWarning(frontSession, kSession_TerminationDialogOptionKeepWindow |
-																	kSession_TerminationDialogOptionRestart);
-				}
-				else
-				{
-					Sound_StandardAlert();
-				}
-			}
-			break;
-		
 		case kCommandHandleURL:
 			// open the appropriate helper application for the URL in the selected
 			// text (which may be MacTerm itself), and send a “handle URL” event
@@ -1437,6 +1388,26 @@ Commands_StopHandlingExecution	(UInt32						inImplementedCommand,
 	ListenerModel_RemoveListenerForEvent(gCommandExecutionListenerModel(), inImplementedCommand, inCommandImplementor);
 	return result;
 }// StopHandlingExecution
+
+
+/*!
+Starting with the first responder, finds a target for
+the given action and performs the action with the
+first object in the chain that can respond.  Returns
+true only if a handler is found.
+
+(2018.10)
+*/
+Boolean
+Commands_ViaFirstResponderPerformSelector	(SEL	inSelector,
+											 id		inObjectOrNil)
+{
+	Boolean		result = (YES == [[Commands_Executor sharedExecutor]
+									viaFirstResponderTryToPerformSelector:inSelector withObject:inObjectOrNil]);
+	
+	
+	return result;
+}// ViaFirstResponderPerformSelector
 
 
 #pragma mark Internal Methods
@@ -4077,52 +4048,6 @@ canPerformNewShell:(id <NSValidatedUserInterfaceItem>)		anItem
 		return @(NO);
 	}
 	return @(YES);
-}
-
-
-- (IBAction)
-performKill:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandKillProcessesKeepWindow, nullptr/* target */);
-	}
-}
-- (id)
-canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	SessionRef		currentSession = SessionFactory_ReturnUserRecentSession();
-	BOOL			result = NO;
-	
-	
-	if (nullptr != currentSession)
-	{
-		result = (false == Session_StateIsDead(currentSession));
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performRestart:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandRestartSession, nullptr/* target */);
-	}
-}
-- (id)
-canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	// this is not exactly the same as the default validator;
-	// in particular, this is permitted in Full Screen mode
-	if (nullptr != SessionFactory_ReturnUserFocusSession())
-	{
-		return @(YES);
-	}
-	return @(NO);
 }
 
 
@@ -6981,213 +6906,6 @@ canToggleTabBar:(id <NSValidatedUserInterfaceItem>)		anItem
 
 #pragma mark -
 @implementation Commands_Executor (Commands_TransitionFromCarbon) //{
-
-
-// These are obviously Carbon-specific, and will disappear
-// once target windows are based exclusively on NSWindow.
-//
-// This method’s name cannot exactly match the standard
-// method used by a Cocoa window.
-- (IBAction)
-performCloseSetup:(id)	sender
-{
-	id		target = [NSApp targetForAction:@selector(performClose:)];
-	
-	
-	if (nil != target)
-	{
-		[NSApp sendAction:@selector(performClose:) to:target from:sender];
-	}
-}
-- (id)
-canPerformCloseSetup:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	id		target = [NSApp targetForAction:@selector(performClose:)];
-	
-	
-	if ([[target class] isSubclassOfClass:[NSWindow class]])
-	{
-		NSWindow*	window = (NSWindow*)target;
-		
-		
-		result = (0 != ([window styleMask] & NSClosableWindowMask));
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-// These are obviously Carbon-specific, and will disappear
-// once target windows are based exclusively on NSWindow.
-- (IBAction)
-performMinimizeSetup:(id)	sender
-{
-	id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
-	
-	
-	if (nil != target)
-	{
-		[NSApp sendAction:@selector(performMiniaturize:) to:target from:sender];
-	}
-}
-- (id)
-canPerformMinimizeSetup:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == EventLoop_IsMainWindowFullScreen())
-	{
-		id		target = [NSApp targetForAction:@selector(performMiniaturize:)];
-		
-		
-		if ([[target class] isSubclassOfClass:[NSWindow class]])
-		{
-			NSWindow*	window = (NSWindow*)target;
-			
-			
-			result = (0 != ([window styleMask] & NSMiniaturizableWindowMask));
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSpeakSelectedText:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSpeakSelectedText, nullptr/* target */);
-	}
-}
-- (id)
-canPerformSpeakSelectedText:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = textSelectionExists();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performStopSpeaking:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandStopSpeaking, nullptr/* target */);
-	}
-}
-- (id)
-canPerformStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = CocoaBasic_SpeakingInProgress();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-// These are obviously Carbon-specific, and will disappear
-// once target windows are based exclusively on NSWindow.
-- (IBAction)
-performZoomSetup:(id)	sender
-{
-	id		target = [NSApp targetForAction:@selector(performZoom:)];
-	
-	
-	if (nil != target)
-	{
-		[NSApp sendAction:@selector(performZoom:) to:target from:sender];
-	}
-}
-- (id)
-canPerformZoomSetup:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == EventLoop_IsMainWindowFullScreen())
-	{
-		id		target = [NSApp targetForAction:@selector(performZoom:)];
-		
-		
-		if ([[target class] isSubclassOfClass:[NSWindow class]])
-		{
-			NSWindow*	window = (NSWindow*)target;
-			
-			
-			result = (0 != ([window styleMask] & NSResizableWindowMask));
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-// These are obviously Carbon-specific, and will disappear
-// once target windows are based exclusively on NSWindow.
-- (IBAction)
-runToolbarCustomizationPaletteSetup:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(runToolbarCustomizationPalette:) withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kHICommandCustomizeToolbar, nullptr/* target */);
-	}
-}
-- (id)
-canRunToolbarCustomizationPaletteSetup:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == EventLoop_IsMainWindowFullScreen())
-	{
-		id		target = [NSApp targetForAction:@selector(runToolbarCustomizationPalette:)];
-		
-		
-		if ((target) && ([[target class] isSubclassOfClass:[NSWindow class]]))
-		{
-			NSWindow*	window = (NSWindow*)target;
-			
-			
-			result = [[window toolbar] allowsUserCustomization];
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-// These are obviously Carbon-specific, and will disappear
-// once target windows are based exclusively on NSWindow.
-- (IBAction)
-toggleToolbarShownSetup:(id)	sender
-{
-#pragma unused(sender)
-	if (NO == [self viaFirstResponderTryToPerformSelector:@selector(toggleToolbarShown:) withObject:sender])
-	{
-		// target does not support
-	}
-}
-- (id)
-canToggleToolbarShownSetup:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if (false == EventLoop_IsMainWindowFullScreen())
-	{
-		result = (nil != [NSApp mainWindow].toolbar);
-	}
-	return ((result) ? @(YES) : @(NO));
-}
 
 
 /*!
