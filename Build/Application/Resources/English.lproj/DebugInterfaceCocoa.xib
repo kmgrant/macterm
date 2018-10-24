@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17G65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14313.18"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -12,228 +12,264 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window title="Debugging Options" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
+        <window title="Debugging Options" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" appearanceType="darkAqua" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
-            <rect key="contentRect" x="191" y="400" width="466" height="355"/>
+            <rect key="contentRect" x="191" y="400" width="517" height="271"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
-            <view key="contentView" misplaced="YES" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="466" height="355"/>
+            <view key="contentView" id="2">
+                <rect key="frame" x="0.0" y="0.0" width="517" height="271"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button wantsLayer="YES" id="47">
-                        <rect key="frame" x="184" y="317" width="264" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="check" title="Log Terminal State (Except Echo)" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="48">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.logsTerminalState" id="51"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" misplaced="YES" id="52">
-                        <rect key="frame" x="184" y="277" width="264" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="check" title="Log Terminal Input Characters" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="53">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.logsTerminalInputChar" id="55"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" misplaced="YES" id="112">
-                        <rect key="frame" x="184" y="257" width="264" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="check" title="Log Pseudoterminal Device Settings" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="113">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.logsTeletypewriterState" id="116"/>
-                        </connections>
-                    </button>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="56">
-                        <rect key="frame" x="17" y="318" width="146" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Global:" id="57">
-                            <font key="font" metaFont="systemBold"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="58">
-                        <rect key="frame" x="17" y="162" width="146" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Active Terminal:" id="59">
-                            <font key="font" metaFont="systemBold"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="60" customClass="CoreUI_Button">
-                        <rect key="frame" x="180" y="152" width="182" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="push" title="Log Detailed Snapshot" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="61">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="dumpStateOfActiveTerminal:" target="-2" id="62"/>
-                        </connections>
-                    </button>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="72">
-                        <rect key="frame" x="17" y="122" width="146" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Incomplete Work:" id="75">
-                            <font key="font" metaFont="systemBold"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="73" customClass="CoreUI_Button">
-                        <rect key="frame" x="180" y="112" width="182" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="push" title="Show Cocoa Toolbar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="74">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="showTestTerminalToolbar:" target="-2" id="XQj-Pf-fl1"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" id="117" customClass="CoreUI_Button">
-                        <rect key="frame" x="180" y="79" width="182" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="push" title="Launch XPC Service" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="118">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="launchNewCallPythonClient:" target="-2" id="sPz-yD-uuw"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" misplaced="YES" id="yBK-8Y-YCX">
-                        <rect key="frame" x="184" y="297" width="264" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="check" title="Log Terminal Echo State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="pck-Cm-LWf">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.logsTerminalEcho" id="9GI-08-zix"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" misplaced="YES" id="uPX-aU-Umx">
-                        <rect key="frame" x="184" y="237" width="264" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="check" title="Log Sixel Graphics Decoder State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="Pom-eV-Sqc">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.logsSixelDecoderState" id="YQa-Ry-mMk"/>
-                        </connections>
-                    </button>
-                    <button wantsLayer="YES" misplaced="YES" id="XeQ-4N-PG4">
-                        <rect key="frame" x="184" y="217" width="264" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <contentFilters>
-                            <ciFilter name="CIColorInvert">
-                                <configuration>
-                                    <null key="inputImage"/>
-                                </configuration>
-                            </ciFilter>
-                        </contentFilters>
-                        <buttonCell key="cell" type="check" title="Use Carbon Windows for New Sessions" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="jpU-f1-0XA">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.useCarbonTerminalWindowsForNewSessions" id="Rrv-N8-llX"/>
-                        </connections>
-                    </button>
+                    <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="QUx-Do-ofX">
+                        <rect key="frame" x="20" y="20" width="477" height="231"/>
+                        <subviews>
+                            <stackView distribution="fill" orientation="horizontal" alignment="top" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="F0k-qy-C4j">
+                                <rect key="frame" x="0.0" y="115" width="477" height="116"/>
+                                <subviews>
+                                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="56">
+                                        <rect key="frame" x="-2" y="99" width="204" height="17"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="rFc-pr-7wd"/>
+                                        </constraints>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Global:" id="57">
+                                            <font key="font" metaFont="systemBold"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                    <stackView distribution="equalSpacing" orientation="vertical" alignment="leading" spacing="6" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6jI-T7-xZj">
+                                        <rect key="frame" x="220" y="0.0" width="257" height="114"/>
+                                        <subviews>
+                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="47">
+                                                <rect key="frame" x="-2" y="98" width="224" height="18"/>
+                                                <buttonCell key="cell" type="check" title="Log Terminal State (Except Echo)" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="48">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <binding destination="-2" name="value" keyPath="self.logsTerminalState" id="51"/>
+                                                </connections>
+                                            </button>
+                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="yBK-8Y-YCX">
+                                                <rect key="frame" x="-2" y="78" width="169" height="18"/>
+                                                <buttonCell key="cell" type="check" title="Log Terminal Echo State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="pck-Cm-LWf">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <binding destination="-2" name="value" keyPath="self.logsTerminalEcho" id="9GI-08-zix"/>
+                                                </connections>
+                                            </button>
+                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="52">
+                                                <rect key="frame" x="-2" y="58" width="205" height="18"/>
+                                                <buttonCell key="cell" type="check" title="Log Terminal Input Characters" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="53">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <binding destination="-2" name="value" keyPath="self.logsTerminalInputChar" id="55"/>
+                                                </connections>
+                                            </button>
+                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="112">
+                                                <rect key="frame" x="-2" y="38" width="241" height="18"/>
+                                                <buttonCell key="cell" type="check" title="Log Pseudoterminal Device Settings" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="113">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <binding destination="-2" name="value" keyPath="self.logsTeletypewriterState" id="116"/>
+                                                </connections>
+                                            </button>
+                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="uPX-aU-Umx">
+                                                <rect key="frame" x="-2" y="18" width="225" height="18"/>
+                                                <buttonCell key="cell" type="check" title="Log Sixel Graphics Decoder State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="Pom-eV-Sqc">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <binding destination="-2" name="value" keyPath="self.logsSixelDecoderState" id="YQa-Ry-mMk"/>
+                                                </connections>
+                                            </button>
+                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="XeQ-4N-PG4">
+                                                <rect key="frame" x="-2" y="-2" width="261" height="18"/>
+                                                <buttonCell key="cell" type="check" title="Use Carbon Windows for New Sessions" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="jpU-f1-0XA">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <binding destination="-2" name="value" keyPath="self.useCarbonTerminalWindowsForNewSessions" id="Rrv-N8-llX"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="47" firstAttribute="firstBaseline" secondItem="56" secondAttribute="firstBaseline" id="9lI-7M-4s6"/>
+                                </constraints>
+                                <visibilityPriorities>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                </visibilityPriorities>
+                                <customSpacing>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                </customSpacing>
+                            </stackView>
+                            <stackView distribution="fill" orientation="horizontal" alignment="top" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ikG-0m-gvu">
+                                <rect key="frame" x="0.0" y="74" width="477" height="21"/>
+                                <subviews>
+                                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="58">
+                                        <rect key="frame" x="-2" y="3" width="204" height="17"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="Kpd-lv-vEa"/>
+                                        </constraints>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Active Terminal:" id="59">
+                                            <font key="font" metaFont="systemBold"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                    <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N9i-aT-TpN">
+                                        <rect key="frame" x="220" y="0.0" width="257" height="21"/>
+                                        <subviews>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="60" customClass="CoreUI_Button">
+                                                <rect key="frame" x="-6" y="-7" width="177" height="32"/>
+                                                <buttonCell key="cell" type="push" title="Log Detailed Snapshot" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="61">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="dumpStateOfActiveTerminal:" target="-2" id="62"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="60" firstAttribute="firstBaseline" secondItem="58" secondAttribute="firstBaseline" id="zqa-sM-ZVn"/>
+                                </constraints>
+                                <visibilityPriorities>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                </visibilityPriorities>
+                                <customSpacing>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                </customSpacing>
+                            </stackView>
+                            <stackView distribution="fill" orientation="horizontal" alignment="top" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tVs-2P-Psn">
+                                <rect key="frame" x="0.0" y="0.0" width="385" height="54"/>
+                                <subviews>
+                                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="72">
+                                        <rect key="frame" x="-2" y="36" width="204" height="17"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="QEA-Cc-aNv"/>
+                                        </constraints>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Incomplete Work:" id="75">
+                                            <font key="font" metaFont="systemBold"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                    <stackView distribution="equalSpacing" orientation="vertical" alignment="leading" spacing="12" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="w8o-dq-3uW">
+                                        <rect key="frame" x="220" y="0.0" width="165" height="54"/>
+                                        <subviews>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="73" customClass="CoreUI_Button">
+                                                <rect key="frame" x="-6" y="26" width="177" height="32"/>
+                                                <buttonCell key="cell" type="push" title="Show Cocoa Toolbar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="74">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="showTestTerminalToolbar:" target="-2" id="XQj-Pf-fl1"/>
+                                                </connections>
+                                            </button>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="117" customClass="CoreUI_Button">
+                                                <rect key="frame" x="-6" y="-7" width="177" height="32"/>
+                                                <buttonCell key="cell" type="push" title="Launch XPC Service" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="118">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="launchNewCallPythonClient:" target="-2" id="sPz-yD-uuw"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="73" firstAttribute="firstBaseline" secondItem="72" secondAttribute="firstBaseline" id="xEe-nM-8RI"/>
+                                </constraints>
+                                <visibilityPriorities>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                </visibilityPriorities>
+                                <customSpacing>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                </customSpacing>
+                            </stackView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="117" firstAttribute="width" secondItem="60" secondAttribute="width" id="2zp-GG-5Ke"/>
+                            <constraint firstItem="58" firstAttribute="trailing" secondItem="56" secondAttribute="trailing" id="AhD-wc-h1f"/>
+                            <constraint firstItem="72" firstAttribute="trailing" secondItem="56" secondAttribute="trailing" id="bDg-Ba-Wqd"/>
+                            <constraint firstItem="w8o-dq-3uW" firstAttribute="leading" secondItem="6jI-T7-xZj" secondAttribute="leading" id="hNY-LG-IxY"/>
+                            <constraint firstItem="72" firstAttribute="width" secondItem="56" secondAttribute="width" id="kuu-1M-rP0"/>
+                            <constraint firstItem="58" firstAttribute="width" secondItem="56" secondAttribute="width" id="lBQ-Bn-d7V"/>
+                            <constraint firstItem="73" firstAttribute="width" secondItem="60" secondAttribute="width" id="oA1-C4-nsr"/>
+                            <constraint firstAttribute="trailing" secondItem="ikG-0m-gvu" secondAttribute="trailing" id="ol2-vH-CIR"/>
+                            <constraint firstItem="N9i-aT-TpN" firstAttribute="leading" secondItem="6jI-T7-xZj" secondAttribute="leading" id="tcb-aO-T4j"/>
+                        </constraints>
+                        <visibilityPriorities>
+                            <integer value="1000"/>
+                            <integer value="1000"/>
+                            <integer value="1000"/>
+                        </visibilityPriorities>
+                        <customSpacing>
+                            <real value="3.4028234663852886e+38"/>
+                            <real value="3.4028234663852886e+38"/>
+                            <real value="3.4028234663852886e+38"/>
+                        </customSpacing>
+                    </stackView>
                 </subviews>
+                <constraints>
+                    <constraint firstItem="QUx-Do-ofX" firstAttribute="top" secondItem="2" secondAttribute="top" constant="20" symbolic="YES" id="hUy-AN-tGe"/>
+                    <constraint firstItem="QUx-Do-ofX" firstAttribute="leading" secondItem="2" secondAttribute="leading" constant="20" symbolic="YES" id="k5M-O2-Z4B"/>
+                </constraints>
             </view>
-            <point key="canvasLocation" x="244" y="378.5"/>
+            <point key="canvasLocation" x="192.5" y="15.5"/>
         </window>
     </objects>
 </document>
