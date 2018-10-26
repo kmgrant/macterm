@@ -34,48 +34,15 @@
 #import <cctype>
 
 // Mac includes
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
 // library includes
 #import <CFRetainRelease.h>
 #import <Console.h>
 
-// application includes
-#import "AppResources.h"
-
-
-
-#pragma mark Variables
-namespace {
-
-CFRetainRelease		gApplicationNameCFString;
-Boolean				gLeftToRight = true;		// text reads left-to-right?
-
-} // anonymous namespace
-
 
 
 #pragma mark Public Methods
-
-/*!
-This routine should be called once, before any
-other Localization Utilities routine.  It allows
-you to set flags that affect operation of all of
-the module’s functions, and (optionally) to set
-the file descriptor of a localization resource
-file.
-
-(1.0)
-*/
-void
-Localization_Init	(UInt32		inFlags)
-{
-	gApplicationNameCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
-											(AppResources_ReturnBundleForInfo(), CFSTR("CFBundleName")));
-	gLeftToRight = !(inFlags & kLocalization_InitFlagReadTextRightToLeft);
-}// Init
-
 
 /*!
 Auto-arranges a window’s help button to occupy the
@@ -94,7 +61,7 @@ Localization_AdjustHelpNSButton		(NSButton*		inHelpButton)
 	CGFloat		buttonHeight = NSHeight([inHelpButton frame]);
 	
 	
-	if (false == Localization_IsLeftToRight())
+	if (NSUserInterfaceLayoutDirectionRightToLeft == NSApp.userInterfaceLayoutDirection)
 	{
 		// in right-to-left locales, the help button is in the lower right
 		NSRect		parentFrame = [[inHelpButton superview] bounds];
@@ -139,7 +106,7 @@ Localization_ArrangeNSButtonArray	(CFArrayRef		inNSButtonArray)
 		CGFloat		buttonHeight = NSHeight([firstButton frame]);
 		
 		
-		if (false == Localization_IsLeftToRight())
+		if (NSUserInterfaceLayoutDirectionRightToLeft == NSApp.userInterfaceLayoutDirection)
 		{
 			// in right-to-left locales, the action buttons
 			// are anchored in the bottom-left corner and
@@ -235,78 +202,5 @@ Localization_AutoSizeNSButton	(NSButton*		inButton,
 	return result;
 }// @autoreleasepool
 }// AutoSizeNSButton
-
-
-/*!
-Returns a copy of the name of this process.
-Unreliable unless Localization_Init() has
-been called.
-
-(3.0)
-*/
-void
-Localization_GetCurrentApplicationNameAsCFString	(CFStringRef*		outProcessDisplayNamePtr)
-{
-	*outProcessDisplayNamePtr = gApplicationNameCFString.returnCFStringRef();
-}// GetCurrentApplicationName
-
-
-/*!
-Determines if the Localization module was
-initialized such that text reads left to
-right (such as in North America).
-
-(1.0)
-*/
-Boolean
-Localization_IsLeftToRight ()
-{
-	Boolean		result = gLeftToRight;
-	
-	
-	return result;
-}// IsLeftToRight
-
-
-/*!
-Saves the current font, font size, font style,
-and text mode of the current graphics port.
-
-(1.0)
-*/
-void
-Localization_PreservePortFontState	(GrafPortFontState*		outState)
-{
-	if (outState != nullptr)
-	{
-		GrafPtr		port = nullptr;
-		
-		
-		//CARBON//GetPort(&port);
-		//CARBON//outState->fontID = GetPortTextFont(port);
-		//CARBON//outState->fontSize = GetPortTextSize(port);
-		//CARBON//outState->fontStyle = GetPortTextFace(port);
-		//CARBON//outState->textMode = GetPortTextMode(port);
-	}
-}// PreservePortFontState
-
-
-/*!
-Restores the font, font size, font style, and
-text mode of the current graphics port.
-
-(1.0)
-*/
-void
-Localization_RestorePortFontState	(GrafPortFontState const*	inState)
-{
-	if (inState != nullptr)
-	{
-		//CARBON//TextFont(inState->fontID);
-		//CARBON//TextSize(inState->fontSize);
-		//CARBON//TextFace(inState->fontStyle);
-		//CARBON//TextMode(inState->textMode);
-	}
-}// RestorePortFontState
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

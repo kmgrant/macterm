@@ -67,6 +67,7 @@
 #import <MemoryBlocks.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // application includes
 #import "AppResources.h"
@@ -93,7 +94,6 @@
 namespace {
 
 UInt16 const	kMy_LargeIBeamMinimumFontSize = 16;						//!< mouse I-beam cursor is 32x32 only if the font is at least this size
-SInt16 const	kArbitraryVTGraphicsPseudoFontID = 74;					//!< should not match any real font; used to flag switch to VT graphics
 SInt16 const	kArbitraryDoubleWidthDoubleHeightPseudoFontSize = 1;	//!< should not match any real size; used to flag the *lower* half
 																		//!  of double-width, double-height text (upper half is marked by
 																		//!  double the normal font size)
@@ -5428,7 +5428,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	CGColorRef						foregroundColor = nullptr;
 	NSColor*						foregroundNSColor = nil;
 	// legacy metrics for QuickDraw code (will be removed eventually)
-	SInt16							preservedFontID = 0;
 	Boolean							noDefaultRender = false;
 	SInt16							lineWidth = 1; // changed later...
 	SInt16							lineHeight = 1; // changed later...
@@ -10506,6 +10505,7 @@ canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRestart:(id)		sender
 {
+#pragma unused(sender)
 	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
 	Boolean				allowForceQuit = true;
 	

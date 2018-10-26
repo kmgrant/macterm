@@ -315,25 +315,6 @@ to the user.
 void
 initApplicationCore ()
 {
-	// set up the Localization module, and define where all user interface resources should come from
-	{
-		Localization_InitFlags		flags = 0L;
-		
-		
-	#if 0
-		// TEMPORARY; disable for now (revisit soon, after moving
-		// entire interface to Cocoa)
-		//if ([NSApp userInterfaceLayoutDirection] == NSUserInterfaceLayoutDirectionRightToLeft)
-		if (false)
-		{
-			// then the text reads from the right side of a page to the left (the opposite of North America)
-			flags |= kLocalization_InitFlagReadTextRightToLeft;
-		}
-	#endif
-		
-		Localization_Init(flags);
-	}
-	
 	// determine help system attributes
 	{
 		UIStrings_Result	stringResult = kUIStrings_ResultOK;
