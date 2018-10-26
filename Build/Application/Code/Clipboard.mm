@@ -55,6 +55,7 @@
 #import <MemoryBlocks.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
+#import <StringUtilities.h>
 
 // application includes
 #import "Clipboard.h"

@@ -53,6 +53,7 @@
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
+#include <StringUtilities.h>
 
 // application includes
 #include "AppResources.h"
