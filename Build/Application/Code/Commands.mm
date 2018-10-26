@@ -234,18 +234,18 @@ public std::binary_function< NSScreen*/* argument 1 */, NSScreen*/* argument 2 *
 namespace {
 
 void				activateAnotherWindow							(My_WindowActivationDirection, My_WindowSwitchingActions = 0);
-BOOL				addWindowMenuItemForSession						(SessionRef, NSMenu*, int, CFStringRef);
+BOOL				addWindowMenuItemForSession						(SessionRef, NSMenu*, NSInteger, CFStringRef);
 NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
 void				changeNotifyForCommandExecution					(UInt32);
 BOOL				handleQuitReview								();
-int					indexOfItemWithAction							(NSMenu*, SEL);
+NSInteger			indexOfItemWithAction							(NSMenu*, SEL);
 Boolean				isAnyListenerForCommandExecution				(UInt32);
 BOOL				isCocoaWindowMoreImportantThanCarbon			(NSWindow*);
 BOOL				isWindowVisible									(NSWindow*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 BOOL				quellAutoNew									();
-int					returnFirstWindowItemAnchor						(NSMenu*);
+NSInteger			returnFirstWindowItemAnchor						(NSMenu*);
 NSMenu*				returnMenu										(UInt32);
 SessionRef			returnMenuItemSession							(NSMenuItem*);
 SessionRef			returnTEKSession								();
@@ -1238,8 +1238,8 @@ if "inClass" is not valid
 Commands_Result
 Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 									 NSMenu*				inoutMenu,
-									 int					inAtItemIndex,
-									 int					inInitialIndent,
+									 SInt64					inAtItemIndex,
+									 SInt16					inInitialIndent,
 									 SEL					inAction)
 {
 	Commands_Result		result = kCommands_ResultOK;
@@ -1255,9 +1255,9 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 	else
 	{
 		// now re-populate the menu using resource information
-		int const		kMenuItemCount = CFArrayGetCount(nameCFStringCFArray);
-		int				i = 0;
-		int				totalItems = 0;
+		CFIndex const	kMenuItemCount = CFArrayGetCount(nameCFStringCFArray);
+		CFIndex			i = 0;
+		CFIndex			totalItems = 0;
 		CFStringRef		nameCFString = nullptr;
 		
 		
@@ -1579,7 +1579,7 @@ Returns true only if an item was added.
 BOOL
 addWindowMenuItemForSession		(SessionRef			inSession,
 								 NSMenu*			inMenu,
-								 int				inItemIndex,
+								 NSInteger			inItemIndex,
 								 CFStringRef		inWindowName)
 {
 	BOOL			result = NO;
@@ -1854,11 +1854,11 @@ whose "action" method returns the given selector, or
 
 (4.0)
 */
-int
+NSInteger
 indexOfItemWithAction	(NSMenu*	inMenu,
 						 SEL		inSelector)
 {
-	int		result = -1;
+	NSInteger	result = -1;
 	
 	
 	for (NSMenuItem* item in [inMenu itemArray])
@@ -2019,10 +2019,10 @@ Window menu and the would-be first window item.
 
 (4.0)
 */
-int
+NSInteger
 returnFirstWindowItemAnchor		(NSMenu*	inWindowMenu)
 {
-	int		result = [inWindowMenu indexOfItemWithTag:kCommands_MenuItemIDPrecedingWindowList];
+	NSInteger		result = [inWindowMenu indexOfItemWithTag:kCommands_MenuItemIDPrecedingWindowList];
 	assert(result >= 0); // make sure the tag is set correctly in the NIB
 	
 	
@@ -2121,14 +2121,14 @@ specified session’s window.
 NSMenuItem*
 returnWindowMenuItemForSession		(SessionRef		inSession)
 {
-	NSMenu*			windowMenu = returnMenu(kCommands_MenuIDWindow);
-	int const		kItemCount = [windowMenu numberOfItems];
-	int const		kStartItem = returnFirstWindowItemAnchor(windowMenu);
-	int const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
-	NSMenuItem*		result = nil;
+	NSMenu*				windowMenu = returnMenu(kCommands_MenuIDWindow);
+	NSInteger const		kItemCount = [windowMenu numberOfItems];
+	NSInteger const		kStartItem = returnFirstWindowItemAnchor(windowMenu);
+	NSInteger const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
+	NSMenuItem*			result = nil;
 	
 	
-	for (int i = kStartItem; ((i != kPastEndItem) && (i < kItemCount)); ++i)
+	for (NSInteger i = kStartItem; ((i != kPastEndItem) && (i < kItemCount)); ++i)
 	{
 		NSMenuItem*		item = [windowMenu itemAtIndex:i];
 		SessionRef		itemSession = returnMenuItemSession(item);
@@ -2540,7 +2540,7 @@ a terminal format.
 void
 setUpFormatFavoritesMenu	(NSMenu*	inMenu)
 {
-	int		pastAnchorIndex = 0;
+	NSInteger	pastAnchorIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
@@ -2550,7 +2550,7 @@ setUpFormatFavoritesMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::FORMAT;
 		SEL						byNameAction = @selector(performFormatByFavoriteName:);
-		int						deletedItemIndex = -1;
+		NSInteger				deletedItemIndex = -1;
 		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
@@ -2580,7 +2580,7 @@ the active macro set.
 void
 setUpMacroSetsMenu	(NSMenu*	inMenu)
 {
-	int		pastAnchorIndex = 0;
+	NSInteger	pastAnchorIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
@@ -2590,7 +2590,7 @@ setUpMacroSetsMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::MACRO_SET;
 		SEL						byNameAction = @selector(performMacroSwitchByFavoriteName:);
-		int						deletedItemIndex = -1;
+		NSInteger				deletedItemIndex = -1;
 		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
@@ -2626,7 +2626,7 @@ sessions with particular Session Favorite names.
 void
 setUpSessionFavoritesMenu	(NSMenu*	inMenu)
 {
-	int		pastAnchorIndex = 0;
+	NSInteger	pastAnchorIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
@@ -2636,7 +2636,7 @@ setUpSessionFavoritesMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::SESSION;
 		SEL						byNameAction = @selector(performNewByFavoriteName:);
-		int						deletedItemIndex = -1;
+		NSInteger				deletedItemIndex = -1;
 		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
@@ -2669,7 +2669,7 @@ the active translation table.
 void
 setUpTranslationTablesMenu	(NSMenu*	inMenu)
 {
-	int		pastAnchorIndex = 0;
+	NSInteger	pastAnchorIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
@@ -2679,7 +2679,7 @@ setUpTranslationTablesMenu	(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::TRANSLATION;
 		SEL						byNameAction = @selector(performTranslationSwitchByFavoriteName:);
-		int						deletedItemIndex = -1;
+		NSInteger				deletedItemIndex = -1;
 		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		
@@ -2709,10 +2709,10 @@ windows and their states.
 void
 setUpWindowMenu		(NSMenu*	inMenu)
 {
-	int const		kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
-	int const		kDividerIndex = kFirstWindowItemIndex - 1;
-	int				deletedItemIndex = -1;
-	__block int		numberOfWindowMenuItemsAdded = 0;
+	NSInteger const		kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
+	NSInteger const		kDividerIndex = kFirstWindowItemIndex - 1;
+	NSInteger			deletedItemIndex = -1;
+	__block NSInteger	numberOfWindowMenuItemsAdded = 0;
 	
 	
 	// erase previous items
@@ -2772,7 +2772,7 @@ sessions with particular Workspace Favorite names.
 void
 setUpWorkspaceFavoritesMenu		(NSMenu*	inMenu)
 {
-	int		pastAnchorIndex = 0;
+	NSInteger		pastAnchorIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
@@ -2782,7 +2782,7 @@ setUpWorkspaceFavoritesMenu		(NSMenu*	inMenu)
 	{
 		Quills::Prefs::Class	prefsClass = Quills::Prefs::WORKSPACE;
 		SEL						byNameAction = @selector(performRestoreWorkspaceByFavoriteName:);
-		int						deletedItemIndex = -1;
+		NSInteger				deletedItemIndex = -1;
 		Commands_Result			insertResult = kCommands_ResultOK;
 		
 		

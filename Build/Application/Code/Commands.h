@@ -912,8 +912,8 @@ Boolean
 Commands_Result
 	Commands_InsertPrefNamesIntoMenu		(Quills::Prefs::Class		inClass,
 											 NSMenu*					inoutMenu,
-											 int						inAtItemIndex,
-											 int						inInitialIndent,
+											 SInt64						inAtItemIndex,
+											 SInt16						inInitialIndent,
 											 SEL						inAction);
 
 // WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
