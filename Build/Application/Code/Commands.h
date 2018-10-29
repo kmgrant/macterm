@@ -113,15 +113,9 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 // Application (Apple) menu
 // WARNING: These are referenced by value in the MainMenus.nib and
 //          MenuForDockIcon.nib files!
-#define kCommandAboutThisApplication			kHICommandAbout
 #define kCommandFullScreenToggle				'Kios'
-#define kCommandCheckForUpdates					'ChUp'
-#define kCommandURLHomePage						'.com'
-#define kCommandURLAuthorMail					'Mail'
 
 // File menu
-#define kCommandOpenSession						kHICommandOpen
-#define kCommandSaveSession						kHICommandSaveAs
 #define kCommandHandleURL						'HURL'
 #define kCommandSaveSelection					'SvSl'
 #define kCommandCaptureToFile					'Capt'
@@ -131,8 +125,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // Edit menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandUndo							kHICommandUndo
-#define kCommandRedo							kHICommandRedo
 #define kCommandCut								kHICommandCut
 #define kCommandCopy							kHICommandCopy
 #define kCommandCopyTable						'CpyT'
@@ -147,8 +139,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSelectAll						kHICommandSelectAll
 #define kCommandSelectAllWithScrollback			'SlSb'
 #define kCommandSelectNothing					'Sel0'
-#define kCommandShowClipboard					'ShCl'
-#define kCommandHideClipboard					'HiCl'
 
 // View menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
@@ -210,15 +200,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPreviousWindowHideCurrent		'PrWH'
 #define kCommandShowConnectionStatus			'ShCS'
 #define kCommandHideConnectionStatus			'HiCS'
-#define kCommandShowCommandLine					'ShCL'
-#define kCommandShowNetworkNumbers				'CIPn'
-#define kCommandShowControlKeys					'ShCK'
-#define kCommandShowFunction					'ShFn'
-#define kCommandShowKeypad						'ShKp'
-#define kCommandSessionByWindowName				'Wind'
-
-// Debug menu
-#define kCommandDebuggingOptions				'Dbug'
 
 // Help menu
 #define kCommandMainHelp						kHICommandAppHelp
@@ -257,20 +238,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandTerminalViewEnd					'TVPE'
 
 // commands currently used only in dialogs
-#define kCommandAlertOtherButton				'Othr'		// alerts
-#define kCommandCreditsAndLicenseInfo			'Cred'		// about box
-#define kCommandEditFontAndSize					'EdFS'		// multiple interfaces
-#define kCommandEditBackupFont					'EdBF'		// multiple interfaces
-#define kCommandUseBackupFont					'XUBF'		// multiple interfaces
-#define kCommandShowProtocolOptions				'POpt'		// multiple interfaces
-#define kCommandLookUpSelectedHostName			'Look'		// multiple interfaces
-#define kCommandCopyLogInShellCommandLine		'CmLS'		// multiple interfaces
-#define kCommandCopyShellCommandLine			'CmSh'		// multiple interfaces
-#define kCommandCopySessionDefaultCommandLine	'CmDf'		// multiple interfaces
-#define kCommandCopySessionFavoriteCommandLine	'CmFv'		// multiple interfaces
-#define kCommandEditCommandLine					'ECmd'		// multiple interfaces
-#define kCommandTerminalDefault					'TrmD'		// multiple interfaces
-#define kCommandTerminalByFavoriteName			'TFav'		// multiple interfaces
 #define kCommandDisplayPrefPanelFormats			'SPrF'		// “Preferences“ window
 #define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces
 #define kCommandDisplayPrefPanelFormatsNormal	'SPFN'		// multiple interfaces
@@ -288,62 +255,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
 #define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
-#define kCommandAutoSetCursorColor				'AuCr'		// multiple interfaces
-#define kCommandRestoreToDefault				'MkDf'		// multiple interfaces
-#define kCommandPrefCursorBlock					'CrBl'		// “Preferences” window
-#define kCommandPrefCursorUnderline				'CrUn'		// “Preferences” window
-#define kCommandPrefCursorVerticalBar			'CrVB'		// “Preferences” window
-#define kCommandPrefCursorThickUnderline		'CrBU'		// “Preferences” window
-#define kCommandPrefCursorThickVerticalBar		'CrBV'		// “Preferences” window
-#define kCommandPrefSetWindowLocation			'WLoc'		// “Preferences” window
-#define kCommandPrefWindowResizeSetsScreenSize	'WRSS'		// “Preferences” window
-#define kCommandPrefWindowResizeSetsFontSize	'WRFS'		// “Preferences” window
-#define kCommandPrefCommandNOpensDefault		'CNDf'		// “Preferences” window
-#define kCommandPrefCommandNOpensShell			'CNSh'		// “Preferences” window
-#define kCommandPrefCommandNOpensLogInShell		'CNLI'		// “Preferences” window
-#define kCommandPrefCommandNOpensCustomSession	'CNDg'		// “Preferences” window
-#define kCommandPrefBellOff						'NoBp'		// “Preferences” window
-#define kCommandPrefBellSystemAlert				'BpBl'		// “Preferences” window
-#define kCommandPrefBellLibrarySound			'BpLb'		// “Preferences” window
-#define kCommandPrefOpenGrowlPreferencesPane	'Grwl'		// “Preferences” window
-#define kCommandToggleMacrosMenuVisibility		'McMn'		// “Preferences” window
-#define kCommandEditMacroKey					'SMKy'		// “Preferences” window
-#define kCommandSetMacroKeyTypeOrdinaryChar		'MKCh'		// “Preferences” window
-#define kCommandSetMacroKeyTypeBackwardDelete	'MKBD'		// “Preferences” window
-#define kCommandSetMacroKeyTypeForwardDelete	'MKFD'		// “Preferences” window
-#define kCommandSetMacroKeyTypeHome				'MKHm'		// “Preferences” window
-#define kCommandSetMacroKeyTypeEnd				'MKEd'		// “Preferences” window
-#define kCommandSetMacroKeyTypePageUp			'MKPU'		// “Preferences” window
-#define kCommandSetMacroKeyTypePageDown			'MKPD'		// “Preferences” window
-#define kCommandSetMacroKeyTypeUpArrow			'MKUA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeDownArrow		'MKDA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeLeftArrow		'MKLA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeRightArrow		'MKRA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeClear			'MKCl'		// “Preferences” window
-#define kCommandSetMacroKeyTypeEscape			'MKEs'		// “Preferences” window
-#define kCommandSetMacroKeyTypeReturn			'MKRt'		// “Preferences” window
-#define kCommandSetMacroKeyTypeEnter			'MKEn'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF1				'MKF1'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF2				'MKF2'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF3				'MKF3'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF4				'MKF4'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF5				'MKF5'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF6				'MKF6'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF7				'MKF7'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF8				'MKF8'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF9				'MKF9'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF10				'MKFa'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF11				'MKFb'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF12				'MKFc'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF13				'MKFd'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF14				'MKFe'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF15				'MKFf'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF16				'MKFg'		// “Preferences” window
-#define kCommandSetMacroKeyModifierCommand		'McMC'		// “Preferences” window
-#define kCommandSetMacroKeyModifierControl		'McML'		// “Preferences” window
-#define kCommandSetMacroKeyModifierOption		'McMO'		// “Preferences” window
-#define kCommandSetMacroKeyModifierShift		'McMS'		// “Preferences” window
-#define kCommandSetMacroKeyAllowOnlyInMacroMode	'XRMM'		// “Preferences” window
 #define kCommandSetMacroActionEnterTextWithSub	'MAET'		// “Preferences” window
 #define kCommandSetMacroActionEnterTextVerbatim	'MAEV'		// “Preferences” window
 #define kCommandSetMacroActionFindTextWithSub	'MAFS'		// “Preferences” window
@@ -352,47 +263,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetMacroActionNewWindowCommand	'MANW'		// “Preferences” window
 #define kCommandSetMacroActionSelectWindow		'MASW'		// “Preferences” window
 #define kCommandSetMacroActionBeginMacroMode	'MAMM'		// “Preferences” window
-#define kCommandEditMacroTextWithControlKeys	'EMTC'		// “Preferences” window
-#define kCommandSetTEKModeDisabled				'RTNo'		// “Preferences” window
-#define kCommandSetTEKModeTEK4014				'4014'		// “Preferences” window
-#define kCommandSetTEKModeTEK4105				'4105'		// “Preferences” window
-#define kCommandSetTEKPageClearsScreen			'XPCS'		// “Preferences” window
-#define kCommandSetWorkspaceSessionNone			'WSNo'		// “Preferences” window
-#define kCommandSetWorkspaceSessionDefault		'WSDf'		// “Preferences” window
-#define kCommandSetWorkspaceSessionByFavoriteName	'WSFv'	// “Preferences” window
-#define kCommandSetWorkspaceSessionShell		'WSSh'		// “Preferences” window
-#define kCommandSetWorkspaceSessionLogInShell	'WSLI'		// “Preferences” window
-#define kCommandSetWorkspaceSessionCustom		'WSDg'		// “Preferences” window
-#define kCommandSetWorkspaceDisplayRegions1x1	'R1x1'		// multiple interfaces
-#define kCommandSetWorkspaceDisplayRegions2x2	'R2x2'		// multiple interfaces
-#define kCommandSetWorkspaceDisplayRegions3x3	'R3x3'		// multiple interfaces
-#define kCommandSetWorkspaceWindowPosition		'SPos'		// multiple interfaces
-#define kCommandSetEmulatorANSIBBS				'EmAB'		// multiple interfaces
-#define kCommandSetEmulatorVT100				'E100'		// multiple interfaces
-#define kCommandSetEmulatorVT102				'E102'		// multiple interfaces
-#define kCommandSetEmulatorVT220				'E220'		// multiple interfaces
-#define kCommandSetEmulatorVT320				'E320'		// multiple interfaces
-#define kCommandSetEmulatorVT420				'E420'		// multiple interfaces
-#define kCommandSetEmulatorXTermOriginal		'EmXT'		// multiple interfaces
-#define kCommandSetEmulatorNone					'EDmb'		// multiple interfaces
-#define kCommandSetScrollbackTypeDisabled		'ScNo'		// multiple interfaces
-#define kCommandSetScrollbackTypeFixed			'ScFx'		// multiple interfaces
-#define kCommandSetScrollbackTypeUnlimited		'ScUL'		// multiple interfaces
-#define kCommandSetScrollbackTypeDistributed	'ScDs'		// multiple interfaces
-#define kCommandSetScrollbackUnitsRows			'SbUR'		// multiple interfaces
-#define kCommandSetScrollbackUnitsKilobytes		'SbUK'		// multiple interfaces
-#define kCommandRetrySearch						'RFnd'		// “Find” dialog
-#define kCommandResetANSIColors					'ANSD'		// “Preferences” window
-#define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
-#define kCommandEditResumeKey					'SRKy'		// multiple interfaces
-#define kCommandEditSuspendKey					'SSKy'		// multiple interfaces
-#define kCommandSetMetaNone						'EMNo'		// multiple interfaces
-#define kCommandSetMetaOptionKey				'EMOp'		// multiple interfaces
-#define kCommandSetMetaShiftAndOptionKeys		'EMSO'		// multiple interfaces
-#define kCommandSetNewlineCarriageReturnLineFeed	'CRLF'	// multiple interfaces
-#define kCommandSetNewlineCarriageReturnNull	'CR00'		// multiple interfaces
-#define kCommandSetNewlineCarriageReturnOnly	'NLCR'		// multiple interfaces
-#define kCommandSetNewlineLineFeedOnly			'NLLF'		// multiple interfaces
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 
 // commands used only in contextual menus
@@ -807,8 +677,6 @@ Actions that display specific windows.
 	- (IBAction)
 	orderFrontAbout:(id)_;
 	- (IBAction)
-	orderFrontClipboard:(id)_;
-	- (IBAction)
 	orderFrontCommandLine:(id)_;
 	- (IBAction)
 	orderFrontContextualHelp:(id)_;
@@ -826,6 +694,8 @@ Actions that display specific windows.
 	orderFrontVT220FunctionKeys:(id)_;
 	- (IBAction)
 	orderFrontVT220Keypad:(id)_;
+	- (IBAction)
+	toggleClipboard:(id)_;
 
 @end //}
 

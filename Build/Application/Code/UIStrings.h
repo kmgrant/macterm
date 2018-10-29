@@ -197,6 +197,8 @@ Strings appearing in the window used by Show Clipboard.
 */
 enum UIStrings_ClipboardWindowCFString
 {
+	kUIStrings_ClipboardWindowShowCommand				= 'ShwC',
+	kUIStrings_ClipboardWindowHideCommand				= 'HidC',
 	kUIStrings_ClipboardWindowIconName					= 'Icon',
 	kUIStrings_ClipboardWindowLabelWidth				= 'LWid',
 	kUIStrings_ClipboardWindowLabelHeight				= 'LHgt',

@@ -615,6 +615,16 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_ClipboardWindowShowCommand:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Show Clipboard"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowShowCommand"));
+		break;
+	
+	case kUIStrings_ClipboardWindowHideCommand:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Hide Clipboard"), CFSTR("ClipboardWindow"),
+													CFSTR("kUIStrings_ClipboardWindowHideCommand"));
+		break;
+	
 	case kUIStrings_ClipboardWindowIconName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Clipboard"), CFSTR("ClipboardWindow"),
 													CFSTR("kUIStrings_ClipboardWindowIconName"));

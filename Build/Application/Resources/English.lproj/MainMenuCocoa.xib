@@ -321,10 +321,10 @@ Gw
                                     <action selector="performFindCursor:" target="-1" id="y5k-Rd-OoT"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Clipboard" id="829">
+                            <menuItem title="&lt;clipboard&gt;" id="829">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="orderFrontClipboard:" target="-1" id="WXY-p6-j1f"/>
+                                    <action selector="toggleClipboard:" target="-1" id="QFK-Rg-Vaz"/>
                                 </connections>
                             </menuItem>
                         </items>

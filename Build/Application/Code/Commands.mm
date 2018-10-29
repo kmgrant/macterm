@@ -240,7 +240,6 @@ void				changeNotifyForCommandExecution					(UInt32);
 BOOL				handleQuitReview								();
 NSInteger			indexOfItemWithAction							(NSMenu*, SEL);
 Boolean				isAnyListenerForCommandExecution				(UInt32);
-BOOL				isCocoaWindowMoreImportantThanCarbon			(NSWindow*);
 BOOL				isWindowVisible									(NSWindow*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
@@ -433,80 +432,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		switch (inCommandID)
 		{
-		case kCommandAboutThisApplication:
-			CocoaBasic_AboutPanelDisplay();
-			break;
-		
-		//case kCommandCreditsAndLicenseInfo:
-		//	see AboutBox.cp
-		//  break;
-		
-		case kCommandCheckForUpdates:
-			// NOTE: There used to be an elaborate HTTP download-and-scan section
-			// here, to consult the MacPAD file, determine whether the version is
-			// up-to-date, potentially display release notes and a download link,
-			// etc.  It was determined that this was not desirable: for one thing,
-			// the default implementation was modal and could hang significantly
-			// if the Internet connection was down; also, it could take longer than
-			// simply downloading a web page, and it was still somewhat unclear
-			// whether it would work long-term.  Opening a web page is simple, is
-			// pretty fast, is something the user can bookmark in other ways and
-			// is easy to maintain, so that is the final solution.
-			if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationUpdatesPage))
-			{
-				Sound_StandardAlert();
-			}
-			break;
-		
-		case kCommandURLHomePage:
-			if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage))
-			{
-				Sound_StandardAlert();
-			}
-			break;
-		
-		case kCommandURLAuthorMail:
-			{
-				CFStringRef				appVersionCFString = CFUtilities_StringCast
-																(CFBundleGetValueForInfoDictionaryKey
-																	(AppResources_ReturnBundleForInfo(),
-																		CFSTR("CFBundleVersion")));
-				NSMutableDictionary*	appEnvDict = [[[NSMutableDictionary alloc] initWithCapacity:1/* arbitrary */]
-														autorelease];
-				NSRunningApplication*	runHandle = nil;
-				CFErrorRef				errorRef = nullptr;
-				
-				
-				// MUST correspond to environment variables expected
-				// by the Bug Reporter internal application (also,
-				// every value must be an NSString* type)
-				[appEnvDict setValue:@"1" forKey:@"BUG_REPORTER_MACTERM_COMMENT_EMAIL_ONLY"];
-				if (nullptr != appVersionCFString)
-				{
-					[appEnvDict setValue:BRIDGE_CAST(appVersionCFString, NSString*) forKey:@"BUG_REPORTER_MACTERM_VERSION"];
-				}
-				runHandle = AppResources_LaunchBugReporter(BRIDGE_CAST(appEnvDict, CFDictionaryRef), &errorRef);
-				if (nullptr != errorRef)
-				{
-					[NSApp presentError:BRIDGE_CAST(errorRef, NSError*)];
-				}
-				else
-				{
-					// success (E-mail application should have opened)
-				}
-			}
-			break;
-		
-		case kCommandOpenSession:
-			//SessionDescription_Load();
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteLine, "UNIMPLEMENTED; need to rewrite '.session' parser in Python");
-			break;
-		
-		case kCommandSaveSession:
-			if (isSession) Session_DisplaySaveDialog(frontSession);
-			break;
-		
 		case kCommandSaveSelection:
 			TerminalView_DisplaySaveSelectionUI(activeView);
 			break;
@@ -545,46 +470,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 															(printJob, nil/* window; INCOMPLETE */);
 						PrintTerminal_ReleaseJob(&printJob);
 					}
-				}
-			}
-			break;
-		
-		case kCommandUndo:
-			{
-				NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
-				
-				
-				// NOTE: Carbon windows in Cocoa appear to provide their own
-				// NSUndoManager instance, which is useless; detect this and
-				// ensure NSUndoManager is only used for pure Cocoa windows
-				if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-				{
-					[undoManager undo];
-				}
-				else
-				{
-					// legacy
-					Undoables_UndoLastAction();
-				}
-			}
-			break;
-		
-		case kCommandRedo:
-			{
-				NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
-				
-				
-				// NOTE: Carbon windows in Cocoa appear to provide their own
-				// NSUndoManager instance, which is useless; detect this and
-				// ensure NSUndoManager is only used for pure Cocoa windows
-				if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
-				{
-					[undoManager redo];
-				}
-				else
-				{
-					// legacy
-					Undoables_RedoLastUndo();
 				}
 			}
 			break;
@@ -734,18 +619,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandShowClipboard:
-			Clipboard_SetWindowVisible(true);
-			break;
-		
-		case kCommandHideClipboard:
-			Clipboard_SetWindowVisible(false);
-			break;
-		
-		case kHICommandPreferences:
-			[[[PrefsWindow_Controller sharedPrefsWindowController] window] makeKeyAndOrderFront:nil];
-			break;
-		
 		//case kCommandWiderScreen:
 		//case kCommandNarrowerScreen:
 		//case kCommandTallerScreen:
@@ -768,11 +641,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//case kCommandFormatDefault:
 		//case kCommandFormatByFavoriteName:
 		//case kCommandFormat:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kCommandTerminalDefault:
-		//case kCommandTerminalByFavoriteName:
 		//	see TerminalWindow.mm
 		//	break;
 		
@@ -957,11 +825,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see TerminalWindow.mm
 		//	break;
 		
-		case kCommandShowNetworkNumbers:
-			// in the Cocoa implementation this really means “show or activate”
-			AddressDialog_Display();
-			break;
-
 		case kCommandSendInterruptProcess:
 			Session_UserInputInterruptProcess(frontSession);
 			break;
@@ -1074,11 +937,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see InfoWindow.cp
 		//	break;
 		
-		case kCommandShowCommandLine:
-			// in the Cocoa implementation this really means “show or activate”
-			CommandLine_Display();
-			break;
-		
 		//kCommandDisplayPrefPanelFormats:
 		//kCommandDisplayPrefPanelGeneral:
 		//kCommandDisplayPrefPanelMacros:
@@ -1086,25 +944,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//kCommandDisplayPrefPanelTerminals:
 		//	see PrefsWindow.mm
 		//	break;
-		
-		case kCommandShowControlKeys:
-			// in the Cocoa implementation this really means “show or activate”
-			Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
-			break;
-		
-		case kCommandShowFunction:
-			// in the Cocoa implementation this really means “show or activate”
-			Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
-			break;
-		
-		case kCommandShowKeypad:
-			// in the Cocoa implementation this really means “show or activate”
-			Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
-			break;
-		
-		case kCommandDebuggingOptions:
-			DebugInterface_Display();
-			break;
 		
 		case kCommandMainHelp:
 			HelpSystem_DisplayHelpWithoutContext();
@@ -1114,28 +953,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			// open the help system to a particular topic
 			HelpSystem_DisplayHelpInCurrentContext();
 			break;
-		
-	#if 0
-		case kCommandToggleMacrosMenuVisibility:
-			{
-				Preferences_Result		preferencesResult = kPreferences_ResultOK;
-				Boolean					isVisible = false;
-				
-				
-				preferencesResult = Preferences_GetData(kPreferences_TagMacrosMenuVisible,
-														sizeof(isVisible), &isVisible);
-				unless (preferencesResult == kPreferences_ResultOK)
-				{
-					isVisible = false; // assume a value, if preference can’t be found
-				}
-				
-				isVisible = !isVisible;
-				
-				preferencesResult = Preferences_SetData(kPreferences_TagMacrosMenuVisible,
-														sizeof(isVisible), &isVisible);
-			}
-			break;
-	#endif
 		
 		case kCommandTerminalViewPageUp:
 			TerminalView_ScrollRowsTowardBottomEdge(activeView, Terminal_ReturnRowCount(activeScreen));
@@ -1869,32 +1686,6 @@ isAnyListenerForCommandExecution	(UInt32		inCommand)
 {
 	return ListenerModel_IsAnyListenerForEvent(gCommandExecutionListenerModel(), inCommand);
 }// isAnyListenerForCommandExecution
-
-
-/*!
-Returns YES only if the specified window appears to be
-something that should override a main Carbon-based
-window.  This is important for Edit menu commands, for
-instance, containing text fields that might otherwise
-not work as the user expects.
-
-TEMPORARY, for transitional period only until all code
-is moved to Cocoa.
-
-(4.0)
-*/
-BOOL
-isCocoaWindowMoreImportantThanCarbon	(NSWindow*		inWindow)
-{
-	BOOL	result = (([inWindow level] != NSNormalWindowLevel) ||
-						[inWindow isKindOfClass:[Popover_Window class]] ||
-						[[inWindow windowController] isKindOfClass:[VectorWindow_Controller class]] ||
-						[[inWindow windowController] isKindOfClass:[PrefsWindow_Controller class]] ||
-						[[inWindow windowController] isKindOfClass:[TerminalWindow_Controller class]]);
-	
-	
-	return result;
-}// isCocoaWindowMoreImportantThanCarbon
 
 
 /*!
@@ -3725,9 +3516,17 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRedo:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	
+	
+	if (nil != undoManager)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandRedo, nullptr/* target */);
+		[undoManager redo];
+	}
+	else
+	{
+		// legacy
+		Undoables_RedoLastUndo();
 	}
 }
 - (id)
@@ -3738,10 +3537,7 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
-	// NOTE: Carbon windows in Cocoa appear to provide their own
-	// NSUndoManager instance, which is useless; detect this and
-	// ensure NSUndoManager is only used for pure Cocoa windows
-	if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+	if (nil != undoManager)
 	{
 		result = [undoManager canRedo];
 		if (result)
@@ -3822,9 +3618,17 @@ performSelectNothing:(id)	sender
 - (IBAction)
 performUndo:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	
+	
+	if (nil != undoManager)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandUndo, nullptr/* target */);
+		[undoManager undo];
+	}
+	else
+	{
+		// legacy
+		Undoables_UndoLastAction();
 	}
 }
 - (id)
@@ -3835,10 +3639,7 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
-	// NOTE: Carbon windows in Cocoa appear to provide their own
-	// NSUndoManager instance, which is useless; detect this and
-	// ensure NSUndoManager is only used for pure Cocoa windows
-	if ((nil != undoManager) && isCocoaWindowMoreImportantThanCarbon([NSApp keyWindow]))
+	if (nil != undoManager)
 	{
 		result = [undoManager canUndo];
 		if (result)
@@ -4138,10 +3939,10 @@ canPerformRestoreWorkspaceByFavoriteName:(id <NSValidatedUserInterfaceItem>)		an
 - (IBAction)
 performOpen:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandOpenSession, nullptr/* target */);
-	}
+#pragma unused(sender)
+	//SessionDescription_Load();
+	Sound_StandardAlert();
+	Console_Warning(Console_WriteLine, "UNIMPLEMENTED; need to rewrite '.session' parser in Python");
 }
 - (id)
 canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4158,9 +3959,13 @@ canPerformOpen:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performSaveAs:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	SessionRef		frontSession = SessionFactory_ReturnUserRecentSession();
+	
+	
+	if (nullptr != frontSession)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandSaveSession, nullptr/* target */);
+		Session_DisplaySaveDialog(frontSession);
 	}
 }
 - (id)
@@ -4284,9 +4089,10 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performCheckForUpdates:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationUpdatesPage))
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandCheckForUpdates, nullptr/* target */);
+		Sound_StandardAlert();
 	}
 }
 - (id)
@@ -4300,9 +4106,9 @@ canPerformCheckForUpdates:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performGoToMainWebSite:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage))
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandURLHomePage, nullptr/* target */);
+		Sound_StandardAlert();
 	}
 }
 - (id)
@@ -4361,9 +4167,33 @@ canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performProvideFeedback:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	CFStringRef				appVersionCFString = CFUtilities_StringCast
+													(CFBundleGetValueForInfoDictionaryKey
+														(AppResources_ReturnBundleForInfo(),
+															CFSTR("CFBundleVersion")));
+	NSMutableDictionary*	appEnvDict = [[[NSMutableDictionary alloc] initWithCapacity:1/* arbitrary */]
+											autorelease];
+	NSRunningApplication*	runHandle = nil;
+	CFErrorRef				errorRef = nullptr;
+	
+	
+	// MUST correspond to environment variables expected
+	// by the Bug Reporter internal application (also,
+	// every value must be an NSString* type)
+	[appEnvDict setValue:@"1" forKey:@"BUG_REPORTER_MACTERM_COMMENT_EMAIL_ONLY"];
+	if (nullptr != appVersionCFString)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandURLAuthorMail, nullptr/* target */);
+		[appEnvDict setValue:BRIDGE_CAST(appVersionCFString, NSString*) forKey:@"BUG_REPORTER_MACTERM_VERSION"];
+	}
+	runHandle = AppResources_LaunchBugReporter(BRIDGE_CAST(appEnvDict, CFDictionaryRef), &errorRef);
+	if (nullptr != errorRef)
+	{
+		[NSApp presentError:BRIDGE_CAST(errorRef, NSError*)];
+	}
+	else
+	{
+		// success (E-mail application should have opened)
 	}
 }
 - (id)
@@ -6433,10 +6263,8 @@ canPerformSendMenuItemText:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontAbout:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandAboutThisApplication, nullptr/* target */);
-	}
+#pragma unused(sender)
+	CocoaBasic_AboutPanelDisplay();
 }
 - (id)
 canOrderFrontAbout:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6447,17 +6275,44 @@ canOrderFrontAbout:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 - (IBAction)
-orderFrontClipboard:(id)	sender
+toggleClipboard:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	if (Clipboard_WindowIsVisible())
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowClipboard, nullptr/* target */);
+		Clipboard_SetWindowVisible(false);
+	}
+	else
+	{
+		Clipboard_SetWindowVisible(true);
 	}
 }
 - (id)
-canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
+canToggleClipboard:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
 {
-#pragma unused(anItem)
+	if ([anItem isKindOfClass:NSMenuItem.class])
+	{
+		NSMenuItem*		asMenuItem = STATIC_CAST(anItem, NSMenuItem*);
+		
+		
+		if (Clipboard_WindowIsVisible())
+		{
+			CFRetainRelease		newTitleCFString(UIStrings_ReturnCopy(kUIStrings_ClipboardWindowHideCommand),
+													CFRetainRelease::kAlreadyRetained);
+			
+			
+			asMenuItem.title = BRIDGE_CAST(newTitleCFString.returnCFStringRef(), NSString*);
+		}
+		else
+		{
+			CFRetainRelease		newTitleCFString(UIStrings_ReturnCopy(kUIStrings_ClipboardWindowShowCommand),
+													CFRetainRelease::kAlreadyRetained);
+			
+			
+			asMenuItem.title = BRIDGE_CAST(newTitleCFString.returnCFStringRef(), NSString*);
+		}
+	}
+	
 	return @(YES);
 }
 
@@ -6465,10 +6320,8 @@ canOrderFrontClipboard:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontCommandLine:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowCommandLine, nullptr/* target */);
-	}
+	// show or activate
+	CommandLine_Display();
 }
 - (id)
 canOrderFrontCommandLine:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6517,10 +6370,8 @@ canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontControlKeys:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowControlKeys, nullptr/* target */);
-	}
+	// show or activate
+	Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
 }
 - (id)
 canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6533,10 +6384,7 @@ canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontDebuggingOptions:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandDebuggingOptions, nullptr/* target */);
-	}
+	DebugInterface_Display();
 }
 - (id)
 canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6549,10 +6397,8 @@ canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontIPAddresses:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowNetworkNumbers, nullptr/* target */);
-	}
+	// show or activate
+	AddressDialog_Display();
 }
 - (id)
 canOrderFrontIPAddresses:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6565,10 +6411,8 @@ canOrderFrontIPAddresses:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreferences:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kHICommandPreferences, nullptr/* target */);
-	}
+#pragma unused(sender)
+	[[[PrefsWindow_Controller sharedPrefsWindowController] window] makeKeyAndOrderFront:nil];
 }
 - (id)
 canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6607,10 +6451,8 @@ canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontVT220FunctionKeys:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowFunction, nullptr/* target */);
-	}
+	// show or activate
+	Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
 }
 - (id)
 canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6623,10 +6465,8 @@ canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontVT220Keypad:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowKeypad, nullptr/* target */);
-	}
+	// show or activate
+	Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
 }
 - (id)
 canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
