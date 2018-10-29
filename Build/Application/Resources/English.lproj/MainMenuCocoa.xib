@@ -160,6 +160,12 @@
                                     <action selector="performClose:" target="-1" id="iwg-1x-f6e"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Close All" alternate="YES" keyEquivalent="w" id="u62-Gm-rcZ">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="performCloseAll:" target="-1" id="pSo-s1-gDF"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Force-Quit and Keep Window" alternate="YES" keyEquivalent="w" id="1183">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
@@ -441,7 +447,7 @@ Gw
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="835"/>
-                            <menuItem title="Show/Hide Toolbar" id="297">
+                            <menuItem title="Show Toolbar" id="297">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleToolbarShown:" target="-1" id="xz6-Jl-6jf"/>
@@ -453,7 +459,7 @@ Gw
                                     <action selector="runToolbarCustomizationPalette:" target="-1" id="JUe-UA-SPE"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show/Hide Tab Bar" keyEquivalent="T" id="nSI-06-Ycc">
+                            <menuItem title="Show Tab Bar" keyEquivalent="T" id="nSI-06-Ycc">
                                 <connections>
                                     <action selector="toggleTabBar:" target="-1" id="whN-QP-pMJ"/>
                                 </connections>
@@ -795,31 +801,36 @@ Gw
                             <menuItem title="Minimize" keyEquivalent="" id="23">
                                 <modifierMask key="keyEquivalentModifierMask" shift="YES" control="YES" command="YES"/>
                                 <connections>
-                                    <action selector="miniaturize:" target="-1" id="v3k-CL-U6Q"/>
+                                    <action selector="performMiniaturize:" target="-1" id="9rl-jG-7Mn"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Zoom" id="239">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Minimize All" alternate="YES" keyEquivalent="" id="BHJ-jc-BHy">
+                                <modifierMask key="keyEquivalentModifierMask" shift="YES" control="YES" option="YES" command="YES"/>
                                 <connections>
-                                    <action selector="zoom:" target="-1" id="L9o-DI-eyf"/>
+                                    <action selector="performMiniaturizeAll:" target="-1" id="Ybp-lk-1se"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Maximize" alternate="YES" id="855">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Zoom" keyEquivalent="\" id="239">
                                 <connections>
-                                    <action selector="zoomOut:" target="-1" id="uWm-0j-oJZ"/>
+                                    <action selector="performZoom:" target="-1" id="44e-XA-anR"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Zoom All" alternate="YES" keyEquivalent="\" id="857">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="performZoomAll:" target="-1" id="ndp-Ld-q9b"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Maximize" alternate="YES" keyEquivalent="\" id="855">
+                                <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                <connections>
+                                    <action selector="performMaximize:" target="-1" id="PCN-X3-YBy"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Move to New Workspace" id="0Qi-uV-Ea6">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="moveTabToNewWindow:" target="-1" id="G7n-gG-Lda"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Rename…" id="857">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="performRename:" target="-1" id="Z7E-53-f9M"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="858"/>
@@ -1020,6 +1031,7 @@ Gw
                     </connections>
                 </menuItem>
             </items>
+            <point key="canvasLocation" x="-337" y="220"/>
         </menu>
         <customObject id="945" userLabel="Command Delegate" customClass="Commands_Executor"/>
     </objects>

@@ -1564,7 +1564,7 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 {
 #pragma unused(anItem)
 	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
-	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:@selector(toggleFullScreen:) sender:NSApp];
+	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:@selector(toggleFullScreen:) sender:[NSApp keyWindow].firstResponder];
 	
 	
 	return result;
@@ -3243,6 +3243,22 @@ copyWithZone:(NSZone*)	zone
 }// copyWithZone:
 
 
+#pragma mark NSToolbarItem
+
+
+/*!
+Validates the button (in this case, by disabling the button
+if the target window cannot be zoomed right now).
+
+(2018.10)
+*/
+- (void)
+validate
+{
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performClose:) sender:[NSApp keyWindow]];
+}// validate
+
+
 @end //} TerminalToolbar_ItemWindowButtonClose
 
 
@@ -3308,8 +3324,7 @@ if the target window cannot be minimized right now).
 - (void)
 validate
 {
-	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
-	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performMinimizeSetup:) sender:NSApp];
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performMiniaturize:) sender:[NSApp keyWindow]];
 }// validate
 
 
@@ -3364,6 +3379,22 @@ copyWithZone:(NSZone*)	zone
 	
 	return result;
 }// copyWithZone:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+Validates the button (in this case, by disabling the button
+if the target window cannot be zoomed right now).
+
+(2018.10)
+*/
+- (void)
+validate
+{
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performZoom:) sender:[NSApp keyWindow]];
+}// validate
 
 
 @end //} TerminalToolbar_ItemWindowButtonZoom

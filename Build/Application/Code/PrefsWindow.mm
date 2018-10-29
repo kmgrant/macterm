@@ -3189,6 +3189,22 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
+/*!
+Handles Zoom command enabling for this window.
+
+(2018.10)
+*/
+- (id)
+canPerformZoom:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(NO);
+}
+
+
 @end //} PrefsWindow_Object
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

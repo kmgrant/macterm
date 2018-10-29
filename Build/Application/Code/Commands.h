@@ -121,7 +121,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // File menu
 #define kCommandOpenSession						kHICommandOpen
-#define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
 #define kCommandHandleURL						'HURL'
 #define kCommandSaveSelection					'SvSl'
@@ -200,7 +199,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // Window menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandMaximizeWindow					'Maxm'
 #define kCommandChangeWindowTitle				'WinT'
 #define kCommandHideFrontWindow					'HdFW'
 #define kCommandHideOtherWindows				'HdOW'
@@ -746,6 +744,12 @@ Actions that affect a window’s properties, placement and size.
 @interface Commands_Executor (Commands_ModifyingWindows) //{
 
 // actions
+	- (IBAction)
+	performCloseAll:(id)_;
+	- (IBAction)
+	performMiniaturizeAll:(id)_;
+	- (IBAction)
+	performZoomAll:(id)_;
 	- (IBAction)
 	mergeAllWindows:(id)_; // match OS name of selector (available only in later OS versions)
 	- (IBAction)

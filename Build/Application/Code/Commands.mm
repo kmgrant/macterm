@@ -503,10 +503,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			Console_Warning(Console_WriteLine, "UNIMPLEMENTED; need to rewrite '.session' parser in Python");
 			break;
 		
-		case kCommandCloseConnection:
-			// automatically handled by the OS
-			break;
-		
 		case kCommandSaveSession:
 			if (isSession) Session_DisplaySaveDialog(frontSession);
 			break;
@@ -773,17 +769,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//case kCommandFormatByFavoriteName:
 		//case kCommandFormat:
 		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kCommandFullScreenToggle:
-		//case kCommandZoomMaximumSize:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kHICommandShowToolbar:
-		//case kHICommandHideToolbar:
-		//case kHICommandCustomizeToolbar:
-		//	see EventLoop.mm
 		//	break;
 		
 		//case kCommandTerminalDefault:
@@ -5936,6 +5921,110 @@ withAnimation:(BOOL)		isAnimated
 }// moveWindow:distance:awayFromEdge:withAnimation:
 
 
+- (id)
+canPerformClose:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = NO;
+	
+	
+	//result = [NSApp keyWindow].hasCloseBox;
+	result = (0 != ([NSApp keyWindow].styleMask & NSWindowStyleMaskClosable));
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performCloseAll:(id)	sender
+{
+	for (NSWindow* aWindow in [NSApp orderedWindows])
+	{
+		[aWindow performClose:sender];
+	}
+}
+
+
+- (id)
+canPerformMiniaturize:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = NO;
+	
+	
+	result = (0 != ([NSApp keyWindow].styleMask & NSWindowStyleMaskMiniaturizable));
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMiniaturizeAll:(id)		sender
+{
+	for (NSWindow* aWindow in [NSApp orderedWindows])
+	{
+		[aWindow performMiniaturize:sender];
+	}
+}
+
+
+- (id)
+canPerformZoom:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = NO;
+	
+	
+	// occasionally resizable windows do not have a Zoom box, such as Preferences
+	result = ((0 != ([NSApp keyWindow].styleMask & NSWindowStyleMaskResizable)) &&
+				([[NSApp keyWindow] standardWindowButton:NSWindowZoomButton].enabled));
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performZoomAll:(id)		sender
+{
+	for (NSWindow* aWindow in [NSApp orderedWindows])
+	{
+		[aWindow performZoom:sender];
+	}
+}
+
+
+- (IBAction)
+performMaximize:(id)	sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		NSWindow*	targetWindow = [NSApp keyWindow];
+		NSScreen*	windowScreen = ((nil == targetWindow.screen)
+									? [NSScreen mainScreen]
+									: targetWindow.screen);
+		
+		
+		if (nil == windowScreen)
+		{
+			windowScreen = [NSScreen mainScreen];
+		}
+		
+		if ((nil != targetWindow) && (nil != windowScreen))
+		{
+			NSRect		maxRect = [windowScreen visibleFrame];
+			
+			
+			[targetWindow setFrame:maxRect display:NO animate:YES];
+		}
+	}
+}
+- (id)
+canPerformMaximize:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
+{
+	return [self canPerformZoom:anItem];
+}
+
+
 - (IBAction)
 mergeAllWindows:(id)	sender
 {
@@ -6015,38 +6104,6 @@ performHideWindow:(id)	sender
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
 	}
-}
-
-
-// These are obviously Carbon-specific, and will disappear
-// once target windows are based exclusively on NSWindow.
-- (IBAction)
-performMaximize:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandMaximizeWindow, nullptr/* target */);
-	}
-}
-- (id)
-canPerformMaximize:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	id		target = [NSApp targetForAction:@selector(performMaximize:)];
-	
-	
-	if (false == EventLoop_IsMainWindowFullScreen())
-	{
-		if ([[target class] isSubclassOfClass:[NSWindow class]])
-		{
-			NSWindow*	window = (NSWindow*)target;
-			
-			
-			result = (0 != ([window styleMask] & NSResizableWindowMask));
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6955,20 +7012,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
-		break;
-	
-	case kCommandCloseConnection:
-		theSelector = @selector(performCloseSetup:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"w"];
 			[result setTarget:self]; // TEMPORARY
 		}
 		break;
