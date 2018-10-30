@@ -189,15 +189,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // Window menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandChangeWindowTitle				'WinT'
-#define kCommandHideFrontWindow					'HdFW'
-#define kCommandHideOtherWindows				'HdOW'
-#define kCommandShowAllHiddenWindows			'ShAW'
-#define kCommandStackWindows					'StkW'
-#define kCommandNextWindow						'NxtW'
-#define kCommandNextWindowHideCurrent			'NxWH'
-#define kCommandPreviousWindow					'PrvW'
-#define kCommandPreviousWindowHideCurrent		'PrWH'
 #define kCommandShowConnectionStatus			'ShCS'
 #define kCommandHideConnectionStatus			'HiCS'
 
@@ -331,6 +322,12 @@ changes to an interface declared in a ".mm" file.
 	- (BOOL)
 	validateAction:(SEL)_
 	sender:(id)_;
+
+// new methods: menu items
+	- (NSMenuItem*)
+	newMenuItemForAction:(SEL)_
+	itemTitle:(NSString*)_
+	ifEnabled:(BOOL)_;
 
 @end //}
 
@@ -789,6 +786,13 @@ Commands_Result
 											 SInt64						inAtItemIndex,
 											 SInt16						inInitialIndent,
 											 SEL						inAction);
+
+#ifdef __OBJC__
+NSMenuItem*
+	Commands_NewMenuItemForAction			(SEL						inActionSelector,
+											 CFStringRef				inPreferredTitle,
+											 Boolean					inMustBeEnabled = false);
+#endif
 
 // WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
 NSMenuItem*

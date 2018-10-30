@@ -7783,10 +7783,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		// URL commands
 		ContextSensitiveMenu_NewItemGroup();
 		
-		targetCommandID = kCommandHandleURL;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuOpenThisResource, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performOpenURL:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7798,10 +7797,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		// clipboard-related text and image selection commands
 		ContextSensitiveMenu_NewItemGroup();
 		
-		targetCommandID = kCommandCopy;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performCopy:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7812,10 +7810,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (false == isImageSelection)
 		{
-			targetCommandID = kCommandCopyTable;
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCopyUsingTabsForSpaces, commandText).ok())
 			{
-				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				newItem = Commands_NewMenuItemForAction(@selector(performCopyWithTabSubstitution:), commandText, true/* must be enabled */);
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7825,10 +7822,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			}
 		}
 		
-		targetCommandID = kCommandSaveSelection;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuSaveSelectedText, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performSaveSelection:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7839,10 +7835,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (false == isImageSelection)
 		{
-			targetCommandID = kCommandShowCompletions;
 			if (UIStrings_Copy(kUIStrings_ContextualMenuShowCompletions, commandText).ok())
 			{
-				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				newItem = Commands_NewMenuItemForAction(@selector(performShowCompletions:), commandText, true/* must be enabled */);
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7863,10 +7858,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (false == isImageSelection)
 		{
-			targetCommandID = kCommandPrint;
 			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedText, commandText).ok())
 			{
-				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				newItem = Commands_NewMenuItemForAction(@selector(performPrintSelection:), commandText, true/* must be enabled */);
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7878,10 +7872,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (false == isImageSelection)
 		{
-			targetCommandID = kCommandSpeakSelectedText;
 			if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, commandText).ok())
 			{
-				newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+				newItem = Commands_NewMenuItemForAction(@selector(performSpeakSelectedText:), commandText, true/* must be enabled */);
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7891,10 +7884,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			}
 		}
 		
-		targetCommandID = kCommandStopSpeaking;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performStopSpeaking:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7908,10 +7900,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		// text-editing-related menu items
 		ContextSensitiveMenu_NewItemGroup();
 		
-		targetCommandID = kCommandPaste;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuPasteText, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performPaste:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7920,10 +7911,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandFind;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuFindInThisWindow, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performFind:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7942,10 +7932,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			
 			if (TerminalWindow_IsFullScreen(terminalWindow))
 			{
-				targetCommandID = kCommandFullScreenToggle;
 				if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenExit, commandText).ok())
 				{
-					newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+					newItem = Commands_NewMenuItemForAction(@selector(toggleFullScreen:), commandText, true/* must be enabled */);
 					if (nil != newItem)
 					{
 						ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7956,10 +7945,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			}
 		}
 		
-		targetCommandID = kCommandHideFrontWindow;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuHideThisWindow, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performHideWindow:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7968,10 +7956,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandStackWindows;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuArrangeAllInFront, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performArrangeInFront:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7980,10 +7967,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandChangeWindowTitle;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performRename:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7995,10 +7981,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		// terminal-related menu items
 		ContextSensitiveMenu_NewItemGroup();
 		
-		targetCommandID = kCommandPrintScreen;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuPrintScreen, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performPrintScreen:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -8007,10 +7992,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandSetScreenSize;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCustomScreenDimensions, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performScreenResizeCustom:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -8019,10 +8003,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandFormat;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCustomFormat, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performFormatCustom:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -8031,10 +8014,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
-		targetCommandID = kCommandSetKeys;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuSpecialKeySequences, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performMappingCustom:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -8048,10 +8030,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		// NOTE: this item is available whether or not there is a text selection,
 		// as long as speech is in progress
-		targetCommandID = kCommandStopSpeaking;
 		if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForCommand(targetCommandID, commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(performStopSpeaking:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);

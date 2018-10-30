@@ -864,74 +864,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandChangeWindowTitle:
-			// let the user change the title of certain windows
-			{
-				if (nullptr != frontSession)
-				{
-					Session_DisplayWindowRenameUI(frontSession);
-				}
-				else
-				{
-					// ???
-					Sound_StandardAlert();
-				}
-			}
-			break;
-		
-		//case kCommandHideFrontWindow:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kCommandHideOtherWindows:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		case kCommandShowAllHiddenWindows:
-			// show all windows
-			SessionFactory_ForEachTerminalWindow
-			(^(TerminalWindowRef	inTerminalWindow,
-			   Boolean&				UNUSED_ARGUMENT(outStopFlag))
-			{
-				TerminalWindow_SetObscured(inTerminalWindow, false);
-			});
-			break;
-		
-		case kCommandStackWindows:
-			{
-				// on Mac OS X, this command also requires that all application windows come to the front
-				NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
-				
-				
-				UNUSED_RETURN(BOOL)[runningApplication activateWithOptions:(NSApplicationActivateAllWindows)];
-				
-				// arrange windows in a diagonal pattern
-				TerminalWindow_StackWindows();
-			}
-			break;
-		
-		case kCommandNextWindow:
-			// activate the next window in the window list (terminal windows only)
-			activateAnotherWindow(kMy_WindowActivationDirectionNext);
-			break;
-		
-		case kCommandNextWindowHideCurrent:
-			// activate the next window in the window list (terminal windows only),
-			// but first obscure the frontmost terminal window
-			activateAnotherWindow(kMy_WindowActivationDirectionNext, (kMy_WindowSwitchingActionHide));
-			break;
-		
-		case kCommandPreviousWindow:
-			// activate the previous window in the window list (terminal windows only)
-			activateAnotherWindow(kMy_WindowActivationDirectionPrevious);
-			break;
-		
-		case kCommandPreviousWindowHideCurrent:
-			// activate the previous window in the window list (terminal windows only),
-			// but first obscure the frontmost terminal window
-			activateAnotherWindow(kMy_WindowActivationDirectionPrevious, (kMy_WindowSwitchingActionHide));
-			break;
-		
 		//case kCommandShowConnectionStatus:
 		//case kCommandHideConnectionStatus:
 		//	see InfoWindow.cp
@@ -1087,6 +1019,39 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 	
 	return result;
 }// InsertPrefNamesIntoMenu
+
+
+/*!
+Allocates and initializes a new NSMenuItem instance that
+will handle the specified command correctly.  (You must
+"release" it yourself.)
+
+If "inMustBeEnabled" is true, the result is nil whenever
+the command is not available to the user.  (This is useful
+for omitting items from contextual menus.)
+
+WARNING:	This currently only works for selectors that
+			are used for contextual menu items.
+
+(2018.10)
+*/
+NSMenuItem*
+Commands_NewMenuItemForAction	(SEL			inActionSelector,
+								 CFStringRef	inPreferredTitle,
+								 Boolean		inMustBeEnabled)
+{
+	Commands_Executor*		commandExecutor = [Commands_Executor sharedExecutor];
+	NSMenuItem*				result = nil;
+	
+	
+	assert(nil != commandExecutor);
+	
+	result = [commandExecutor newMenuItemForAction:inActionSelector
+													itemTitle:BRIDGE_CAST(inPreferredTitle, NSString*)
+													ifEnabled:inMustBeEnabled];
+	
+	return result;
+}// NewMenuItemForAction
 
 
 /*!
@@ -2804,7 +2769,7 @@ dealloc
 }// dealloc
 
 
-#pragma mark New Methods: General
+#pragma mark New Methods: Explicit Validation
 
 
 /*!
@@ -2913,6 +2878,286 @@ sender:(id)				anObject
 	}
 	return result;
 }// validateAction:sender:
+
+
+#pragma mark New Methods: Menus
+
+
+/*!
+Internal version of Commands_NewMenuItemForAction().
+
+(2018.10)
+*/
+- (NSMenuItem*)
+newMenuItemForAction:(SEL)		anActionSelector
+itemTitle:(NSString*)			aTitle
+ifEnabled:(BOOL)				onlyIfEnabled
+{
+	NSMenuItem*		result = nil;
+	BOOL			isEnabled = true;
+	
+	
+	// NOTE: Some key equivalents are arbitrarily added below.
+	// They should match whatever is chosen for the same
+	// commands in top-level menus.  Also, lower-case letters
+	// appear as single capital letters in menus and capital
+	// letters implicitly add a shift-key modifier.
+	if (@selector(toggleFullScreen:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"f"];
+			[result setKeyEquivalentModifierMask:(NSControlKeyMask | NSCommandKeyMask)];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performRename:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performCopy:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"c"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performCopyWithTabSubstitution:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"C"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performFind:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"f"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performShowCompletions:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performFormatCustom:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"t"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performOpenURL:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"u"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performHideWindow:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performPaste:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"v"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performPrintScreen:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			unichar		functionKeyChar = NSF13FunctionKey;
+			
+			
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:[NSString stringWithCharacters:&functionKeyChar
+																										length:1]];
+			[result setKeyEquivalentModifierMask:0];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performPrintSelection:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performSaveSelection:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"S"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performMappingCustom:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performScreenResizeCustom:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@"k"];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performSpeakSelectedText:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performStopSpeaking:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = CocoaBasic_SpeakingInProgress() ? YES : NO;
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(performArrangeInFront:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	else if (@selector(moveTabToNewWindow:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+			[result setTarget:self]; // TEMPORARY
+		}
+	}
+	
+	return result;
+}// newMenuItemForAction:itemTitle:ifEnabled:
 
 
 #pragma mark NSUserInterfaceValidations
@@ -5910,29 +6155,46 @@ canMoveTabToNewWindow:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performArrangeInFront:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandStackWindows, nullptr/* target */);
-	}
+	// on Mac OS X, this command also requires that all application windows come to the front
+	NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
+	
+	
+	UNUSED_RETURN(BOOL)[runningApplication activateWithOptions:(NSApplicationActivateAllWindows)];
+	
+	// arrange windows in a diagonal pattern
+	TerminalWindow_StackWindows();
 }
 
 
 - (IBAction)
 performHideOtherWindows:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	TerminalWindowRef	mainTerminalWindow = TerminalWindow_ReturnFromMainWindow();
+	
+	
+	SessionFactory_ForEachTerminalWindow
+	(^(TerminalWindowRef	inTerminalWindow,
+	   Boolean&				UNUSED_ARGUMENT(outStopFlag))
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandHideOtherWindows, nullptr/* target */);
-	}
+		if (inTerminalWindow != mainTerminalWindow)
+		{
+			TerminalWindow_SetObscured(inTerminalWindow, true);
+		}
+	});
 }
 
 
 - (IBAction)
 performHideWindow:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	
+	
+	if (nullptr != terminalWindow)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandHideFrontWindow, nullptr/* target */);
+		TerminalWindow_SetObscured(terminalWindow, true);
 	}
 }
 
@@ -6012,9 +6274,20 @@ performMoveWindowUp:(id)		sender
 - (IBAction)
 performRename:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	// let the user change the title of certain windows
+	// (application-level fallback; this method is also 
+	// implemented by vector graphics windows, etc.)
+	SessionRef		frontSession = SessionFactory_ReturnUserRecentSession();
+	
+	
+	if (nullptr != frontSession)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandChangeWindowTitle, nullptr/* target */);
+		Session_DisplayWindowRenameUI(frontSession);
+	}
+	else
+	{
+		// ???
+		Sound_StandardAlert();
 	}
 }
 - (id)
@@ -6032,10 +6305,13 @@ canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performShowHiddenWindows:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	SessionFactory_ForEachTerminalWindow
+	(^(TerminalWindowRef	inTerminalWindow,
+	   Boolean&				UNUSED_ARGUMENT(outStopFlag))
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowAllHiddenWindows, nullptr/* target */);
-	}
+		TerminalWindow_SetObscured(inTerminalWindow, false);
+	});
 }
 - (id)
 canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6603,10 +6879,8 @@ canToggleTabOverview:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontNextWindow:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandNextWindow, nullptr/* target */);
-	}
+	// activate the next window in the window list (terminal windows only)
+	activateAnotherWindow(kMy_WindowActivationDirectionNext);
 }
 - (id)
 canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6626,10 +6900,9 @@ canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontNextWindowHidingPrevious:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandNextWindowHideCurrent, nullptr/* target */);
-	}
+	// activate the next window in the window list (terminal windows only),
+	// but first obscure the frontmost terminal window
+	activateAnotherWindow(kMy_WindowActivationDirectionNext, (kMy_WindowSwitchingActionHide));
 }
 - (id)
 canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6649,10 +6922,8 @@ canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreviousWindow:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandPreviousWindow, nullptr/* target */);
-	}
+	// activate the previous window in the window list (terminal windows only)
+	activateAnotherWindow(kMy_WindowActivationDirectionPrevious);
 }
 - (id)
 canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -6827,266 +7098,73 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	// letters implicitly add a shift-key modifier.
 	switch (aCommandID)
 	{
-	case kCommandFullScreenToggle:
-		theSelector = @selector(toggleFullScreen:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"f"];
-			[result setKeyEquivalentModifierMask:(NSControlKeyMask | NSCommandKeyMask)];
-			[result setTarget:self]; // TEMPORARY
-		}
-		break;
-	
-	case kCommandChangeWindowTitle:
-		theSelector = @selector(performRename:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
-		break;
-	
 	case kCommandCopy:
 		theSelector = @selector(performCopy:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"c"];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandCopyTable:
 		theSelector = @selector(performCopyWithTabSubstitution:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"C"];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandFind:
 		theSelector = @selector(performFind:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"f"];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
-	case kCommandShowCompletions:
-		theSelector = @selector(performShowCompletions:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
+	case kCommandFullScreenToggle:
+		theSelector = @selector(toggleFullScreen:);
 		break;
 	
 	case kCommandFormat:
 		theSelector = @selector(performFormatCustom:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"t"];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandHandleURL:
 		theSelector = @selector(performOpenURL:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"u"];
-			[result setTarget:self]; // TEMPORARY
-		}
-		break;
-	
-	case kCommandHideFrontWindow:
-		theSelector = @selector(performHideWindow:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandPaste:
 		theSelector = @selector(performPaste:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"v"];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandPrintScreen:
 		theSelector = @selector(performPrintScreen:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			unichar		functionKeyChar = NSF13FunctionKey;
-			
-			
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:[NSString stringWithCharacters:&functionKeyChar
-																										length:1]];
-			[result setKeyEquivalentModifierMask:0];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandSaveSelection:
 		theSelector = @selector(performSaveSelection:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"S"];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandSetKeys:
 		theSelector = @selector(performMappingCustom:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandSetScreenSize:
 		theSelector = @selector(performScreenResizeCustom:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@"k"];
-			[result setTarget:self]; // TEMPORARY
-		}
+		break;
+	
+	case kCommandShowCompletions:
+		theSelector = @selector(performShowCompletions:);
 		break;
 	
 	case kCommandSpeakSelectedText:
 		theSelector = @selector(performSpeakSelectedText:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandStopSpeaking:
 		theSelector = @selector(performStopSpeaking:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = CocoaBasic_SpeakingInProgress() ? YES : NO;
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
-		break;
-	
-	case kCommandStackWindows:
-		theSelector = @selector(performArrangeInFront:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	case kCommandTerminalNewWorkspace:
 		theSelector = @selector(moveTabToNewWindow:);
-		if (onlyIfEnabled)
-		{
-			isEnabled = [self validateAction:theSelector sender:NSApp];
-		}
-		if (isEnabled)
-		{
-			result = [[NSMenuItem alloc] initWithTitle:aTitle action:theSelector
-														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
-		}
 		break;
 	
 	default:
 		break;
+	}
+	
+	if (nil != theSelector)
+	{
+		result = [self newMenuItemForAction:theSelector itemTitle:aTitle ifEnabled:onlyIfEnabled];
 	}
 	
 	return result;
