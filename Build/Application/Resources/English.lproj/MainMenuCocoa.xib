@@ -833,6 +833,12 @@ Gw
                                     <action selector="moveTabToNewWindow:" target="-1" id="G7n-gG-Lda"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Rename…" id="KFb-zn-Qdg">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="performRename:" target="-1" id="vkh-IP-b5G"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="858"/>
                             <menuItem title="Hide" id="859">
                                 <modifierMask key="keyEquivalentModifierMask"/>
