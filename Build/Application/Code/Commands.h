@@ -196,32 +196,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandMainHelp						kHICommandAppHelp
 #define kCommandContextSensitiveHelp			'?Ctx'
 
-// color box
-#define kCommandColorCursorBackground			'Curs'
-#define kCommandColorMatteBackground			'Mtte'
-#define kCommandColorBlinkingForeground			'BlTx'
-#define kCommandColorBlinkingBackground			'BlBk'
-#define kCommandColorBoldForeground				'BTxt'
-#define kCommandColorBoldBackground				'BBkg'
-#define kCommandColorNormalForeground			'NTxt'
-#define kCommandColorNormalBackground			'NBkg'
-#define kCommandColorBlack						'Cblk'
-#define kCommandColorBlackEmphasized			'CBlk'
-#define kCommandColorRed						'Cred'
-#define kCommandColorRedEmphasized				'CRed'
-#define kCommandColorGreen						'Cgrn'
-#define kCommandColorGreenEmphasized			'CGrn'
-#define kCommandColorYellow						'Cyel'
-#define kCommandColorYellowEmphasized			'CYel'
-#define kCommandColorBlue						'Cblu'
-#define kCommandColorBlueEmphasized				'CBlu'
-#define kCommandColorMagenta					'Cmag'
-#define kCommandColorMagentaEmphasized			'CMag'
-#define kCommandColorCyan						'Ccyn'
-#define kCommandColorCyanEmphasized				'CCyn'
-#define kCommandColorWhite						'Cwht'
-#define kCommandColorWhiteEmphasized			'CWht'
-
 // terminal view page control
 #define kCommandTerminalViewPageUp				'TVPU'
 #define kCommandTerminalViewPageDown			'TVPD'
@@ -246,14 +220,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
 #define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
-#define kCommandSetMacroActionEnterTextWithSub	'MAET'		// “Preferences” window
-#define kCommandSetMacroActionEnterTextVerbatim	'MAEV'		// “Preferences” window
-#define kCommandSetMacroActionFindTextWithSub	'MAFS'		// “Preferences” window
-#define kCommandSetMacroActionFindTextVerbatim	'MAFV'		// “Preferences” window
-#define kCommandSetMacroActionOpenURL			'MAOU'		// “Preferences” window
-#define kCommandSetMacroActionNewWindowCommand	'MANW'		// “Preferences” window
-#define kCommandSetMacroActionSelectWindow		'MASW'		// “Preferences” window
-#define kCommandSetMacroActionBeginMacroMode	'MAMM'		// “Preferences” window
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 
 // commands used only in contextual menus
