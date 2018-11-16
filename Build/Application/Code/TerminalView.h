@@ -346,6 +346,16 @@ changes to an interface declared in a ".mm" file.
 	@property (assign) id< TerminalView_TextInputClient >
 	textInputDelegate;
 
+// actions
+	- (IBAction)
+	performFormatByFavoriteName:(id)_;
+	- (IBAction)
+	performFormatDefault:(id)_;
+	- (IBAction)
+	performKill:(id)_;
+	- (IBAction)
+	performRestart:(id)_;
+
 @end //}
 
 

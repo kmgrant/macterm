@@ -633,17 +633,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see TerminalWindow.mm
 		//	break;
 		
-		//case kCommandBiggerText:
-		//case kCommandSmallerText:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kCommandFormatDefault:
-		//case kCommandFormatByFavoriteName:
-		//case kCommandFormat:
-		//	see TerminalWindow.mm
-		//	break;
-		
 		case kCommandBellEnabled:
 			if (isTerminal)
 			{
@@ -5481,145 +5470,11 @@ performScreenResizeWider:(id)	sender
 
 
 - (IBAction)
-performFormatByFavoriteName:(id)	sender
-{
-	// IMPORTANT:	TRANSITIONAL METHOD
-	//			NOW ALSO IN: TerminalView_ContentView
-	//
-	//			(What follows is boilerplate for all such methods.)
-	//
-	//			This is a transitional method.  Until the full Cocoa runtime can be
-	//			adopted, Commands_Executor is king of the responder chain and is the
-	//			ONLY thing that receives messages from user interfaces, such as menu
-	//			commands.  This means that even if a new-style Cocoa window and view
-	//			hierarchy exist, and they implement a method with the same selector
-	//			that is associated with a menu item, Cocoa will not know about it;
-	//			Commands_Executor must explicitly allow that action to fall through.
-	//
-	//			In “transitional methods” only, it does exactly that: it checks for a
-	//			target, and if it finds one, it manually invokes this same selector
-	//			on that target INSTEAD of using THIS implementation.  Otherwise, it
-	//			uses this version (e.g. presumably to deal with an old Carbon window).
-	//
-	//			Initially, transitional methods are largely COPIES of their alternate
-	//			implementations (see “NOW ALSO IN”, above).  But over time, the code
-	//			below may become simpler, until of course Commands_Executor is
-	//			removed completely and the Cocoa runtime and responder chain finally
-	//			are used the way they are traditionally used.
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		BOOL				isError = YES;
-		
-		
-		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
-		{
-			// use the specified preferences
-			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
-			
-			
-			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
-			{
-				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-															(Quills::Prefs::FORMAT, collectionName),
-															Preferences_ContextWrap::kAlreadyRetained);
-				
-				
-				if (namedSettings.exists())
-				{
-					// change font and/or colors of frontmost window according to the specified preferences
-					Boolean		changeOK = TerminalWindow_ReconfigureViewsInGroup
-											(terminalWindow, kTerminalWindow_ViewGroupActive,
-												namedSettings.returnRef(), Quills::Prefs::FORMAT);
-					
-					
-					isError = (false == changeOK);
-				}
-			}
-		}
-		
-		if (isError)
-		{
-			// failed...
-			Sound_StandardAlert();
-		}
-	}
-}
-
-
-- (IBAction)
-performFormatCustom:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		// legacy Carbon
-		Commands_ExecuteByIDUsingEvent(kCommandFormat, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performFormatDefault:(id)	sender
-{
-	// IMPORTANT:	TRANSITIONAL METHOD
-	//			NOW ALSO IN: TerminalView_ContentView
-	//
-	//			(What follows is boilerplate for all such methods.)
-	//
-	//			This is a transitional method.  Until the full Cocoa runtime can be
-	//			adopted, Commands_Executor is king of the responder chain and is the
-	//			ONLY thing that receives messages from user interfaces, such as menu
-	//			commands.  This means that even if a new-style Cocoa window and view
-	//			hierarchy exist, and they implement a method with the same selector
-	//			that is associated with a menu item, Cocoa will not know about it;
-	//			Commands_Executor must explicitly allow that action to fall through.
-	//
-	//			In “transitional methods” only, it does exactly that: it checks for a
-	//			target, and if it finds one, it manually invokes this same selector
-	//			on that target INSTEAD of using THIS implementation.  Otherwise, it
-	//			uses this version (e.g. presumably to deal with an old Carbon window).
-	//
-	//			Initially, transitional methods are largely COPIES of their alternate
-	//			implementations (see “NOW ALSO IN”, above).  But over time, the code
-	//			below may become simpler, until of course Commands_Executor is
-	//			removed completely and the Cocoa runtime and responder chain finally
-	//			are used the way they are traditionally used.
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandFormatDefault, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performFormatTextBigger:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		// legacy Carbon
-		Commands_ExecuteByIDUsingEvent(kCommandBiggerText, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
 performFormatTextMaximum:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandZoomMaximumSize, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performFormatTextSmaller:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		// legacy Carbon
-		Commands_ExecuteByIDUsingEvent(kCommandSmallerText, nullptr/* target */);
 	}
 }
 
@@ -7112,10 +6967,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	
 	case kCommandFullScreenToggle:
 		theSelector = @selector(toggleFullScreen:);
-		break;
-	
-	case kCommandFormat:
-		theSelector = @selector(performFormatCustom:);
 		break;
 	
 	case kCommandHandleURL:

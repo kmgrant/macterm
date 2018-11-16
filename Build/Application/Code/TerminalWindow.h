@@ -280,6 +280,20 @@ changes to an interface declared in a ".mm" file.
 	- (void)
 	setWindowButtonsHidden:(BOOL)_;
 
+// actions
+	- (IBAction)
+	performFind:(id)_;
+	- (IBAction)
+	performFormatCustom:(id)_;
+	- (IBAction)
+	performFormatTextBigger:(id)_;
+	- (IBAction)
+	performFormatTextSmaller:(id)_;
+	- (IBAction)
+	performScreenResizeCustom:(id)_;
+	- (IBAction)
+	performTranslationSwitchCustom:(id)_;
+
 @end //}
 
 

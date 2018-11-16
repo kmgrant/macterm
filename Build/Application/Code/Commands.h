@@ -150,12 +150,7 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandTallScreen						'Tall'
 #define kCommandLargeScreen						'Wide'
 #define kCommandSetScreenSize					'SSiz'
-#define kCommandBiggerText						'FSzB'
 #define kCommandZoomMaximumSize					'ZmMx'
-#define kCommandSmallerText						'FSzS'
-#define kCommandFormatDefault					'FmtD'
-#define kCommandFormatByFavoriteName			'FFav'
-#define kCommandFormat							'Text'
 #define	kCommandTEKPageCommand					'TEKP'
 #define	kCommandTEKPageClearsScreen				'TEKC'
 
@@ -557,17 +552,7 @@ Actions that affect fonts, colors and other format settings.
 
 // actions
 	- (IBAction)
-	performFormatDefault:(id)_;
-	- (IBAction)
-	performFormatByFavoriteName:(id)_;
-	- (IBAction)
-	performFormatCustom:(id)_;
-	- (IBAction)
-	performFormatTextBigger:(id)_;
-	- (IBAction)
 	performFormatTextMaximum:(id)_;
-	- (IBAction)
-	performFormatTextSmaller:(id)_;
 
 @end //}
 
