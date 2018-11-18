@@ -45,74 +45,29 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#include <ResultCode.template.h>
+
 
 
 #pragma mark Constants
 
-enum HelpSystem_Result
-{
-	kHelpSystem_ResultOK					= 0,
-	kHelpSystem_ResultNoSuchString			= 1,	//!< tag is invalid
-	kHelpSystem_ResultCannotDisplayHelp		= 2,	//!< some problem trying to display help system
-	kHelpSystem_ResultCannotRetrieveString	= 3		//!< some error while reading a valid key phrase
-};
-
-typedef FourCharCode HelpSystem_KeyPhrase;
-enum
-{
-	// identifiers that trigger actions in MacTerm Help (usually, opening specific pages)
-	kHelpSystem_KeyPhraseDefault		= '----', // used to open “nothing in particular”
-	kHelpSystem_KeyPhraseCommandLine	= 'CmdL',
-	kHelpSystem_KeyPhraseConnections	= 'Cnxn',
-	kHelpSystem_KeyPhraseDuplicate		= 'Dupl',
-	kHelpSystem_KeyPhraseFavorites		= 'Favr',
-	kHelpSystem_KeyPhraseFind			= 'Find',
-	kHelpSystem_KeyPhraseFormatting		= 'Frmt',
-	kHelpSystem_KeyPhraseIPAddresses	= 'IPAd',
-	kHelpSystem_KeyPhraseKioskSetup		= 'Kios',
-	kHelpSystem_KeyPhraseMacros			= 'Mcro',
-	kHelpSystem_KeyPhrasePreferences	= 'Pref',
-	kHelpSystem_KeyPhraseScreenSize		= 'ScSz',
-	kHelpSystem_KeyPhraseSpecialKeys	= 'Keys',
-	kHelpSystem_KeyPhraseTerminals		= 'Term'
-};
-
+typedef ResultCode< UInt16 >	HelpSystem_Result;
+HelpSystem_Result const		kHelpSystem_ResultOK(0);					//!< no error
+HelpSystem_Result const		kHelpSystem_ResultParameterError(1);		//!< bad input - for example, nullptr string
+HelpSystem_Result const		kHelpSystem_ResultCannotFindHelpBook(2);	//!< unable to determine help book name
 
 
 #pragma mark Public Methods
 
-//!\name Initialization
-//@{
-
-HelpSystem_Result
-	HelpSystem_Init								();
-
-void
-	HelpSystem_Done								();
-
-//@}
-
 //!\name Displaying Help
 //@{
-
-// NOT NORMALLY USED; YOU MIGHT NEED THIS FOR A CONTEXTUAL MENU ITEM
-HelpSystem_Result
-	HelpSystem_CopyKeyPhraseCFString			(HelpSystem_KeyPhrase		inKeyPhrase,
-												 CFStringRef&				outString);
-
-// DEPRECATED - USE HelpSystem_SetCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext() INSTEAD
-HelpSystem_Result
-	HelpSystem_DisplayHelpFromKeyPhrase			(HelpSystem_KeyPhrase		inKeyPhrase);
-
-HelpSystem_Result
-	HelpSystem_DisplayHelpInCurrentContext		();
 
 HelpSystem_Result
 	HelpSystem_DisplayHelpWithoutContext		();
 
-// IMPLICITLY FIGURES OUT THE KEY PHRASE, IF ANY, FOR THE FRONTMOST NON-FLOATING WINDOW
-HelpSystem_KeyPhrase
-	HelpSystem_ReturnCurrentContextKeyPhrase	();
+HelpSystem_Result
+	HelpSystem_DisplayHelpWithSearch			(CFStringRef);
 
 //@}
 

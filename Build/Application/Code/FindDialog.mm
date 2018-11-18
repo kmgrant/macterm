@@ -1116,11 +1116,15 @@ Responds to a click in the help button.
 (4.0)
 */
 - (IBAction)
-performContextSensitiveHelp:(id)	sender
+orderFrontContextualHelp:(id)	sender
 {
 #pragma unused(sender)
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseFind);
-}// performContextSensitiveHelp:
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpSearchingForText),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
+}// orderFrontContextualHelp:
 
 
 /*!

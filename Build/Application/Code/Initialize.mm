@@ -55,7 +55,6 @@
 #import <CocoaBasic.h>
 #import <Console.h>
 #import <Localization.h>
-#import <MacHelpUtilities.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
 #import <ParameterDecoder.h>
@@ -315,20 +314,6 @@ to the user.
 void
 initApplicationCore ()
 {
-	// determine help system attributes
-	{
-		UIStrings_Result	stringResult = kUIStrings_ResultOK;
-		CFStringRef			helpBookAppleTitle = nullptr;
-		
-		
-		stringResult = UIStrings_Copy(kUIStrings_HelpSystemName, helpBookAppleTitle);
-		if (stringResult.ok())
-		{
-			MacHelpUtilities_Init(helpBookAppleTitle);
-			CFRelease(helpBookAppleTitle), helpBookAppleTitle = nullptr;
-		}
-	}
-	
 	// set up notification info
 	Preferences_Init();
 	{

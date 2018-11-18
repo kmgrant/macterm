@@ -177,7 +177,7 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
-	displayHelp:(id)_;
+	orderFrontContextualHelp:(id)_;
 
 // accessors: array values
 	- (void)

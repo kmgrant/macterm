@@ -936,6 +936,19 @@ automaticallyNotifiesObserversOfCurrentPreferenceCollections
 
 
 /*!
+Invoked when the help button is clicked.
+
+(2018.11)
+*/
+- (IBAction)
+orderFrontContextualHelp:(id)	sender
+{
+#pragma unused(sender)
+	[self->activePanel orderFrontContextualHelp:sender];
+}// orderFrontContextualHelp:
+
+
+/*!
 Adds a new preferences collection.  Also immediately enters
 editing mode on the new collection so that the user may
 change its name.
@@ -966,19 +979,6 @@ performAddNewPreferenceCollection:(id)	sender
 															([self->currentPreferenceCollections count] - 1)]];
 	[self performRenamePreferenceCollection:nil];
 }// performAddNewPreferenceCollection:
-
-
-/*!
-Invoked when the help button is clicked.
-
-(4.1)
-*/
-- (IBAction)
-performContextSensitiveHelp:(id)	sender
-{
-#pragma unused(sender)
-	[self->activePanel performContextSensitiveHelp:sender];
-}// performContextSensitiveHelp:
 
 
 /*!

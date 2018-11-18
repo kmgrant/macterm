@@ -50,6 +50,7 @@
 // library includes
 #import <AlertMessages.h>
 #import <BoundName.objc++.h>
+#import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
@@ -842,7 +843,11 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpWithPreferences),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -1469,7 +1474,11 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpWithPreferences),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -2099,7 +2108,11 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpWithPreferences),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -2900,7 +2913,11 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager, sender)
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhrasePreferences);
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpWithPreferences),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 

@@ -37,6 +37,7 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <CFRetainRelease.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
 #import <SoundSystem.h>
@@ -46,6 +47,7 @@
 #import "Preferences.h"
 #import "Session.h"
 #import "SessionFactory.h"
+#import "UIStrings.h"
 
 
 
@@ -484,14 +486,18 @@ dealloc
 /*!
 Responds to a click in the help button.
 
-(3.1)
+(2018.10)
 */
 - (IBAction)
-displayHelp:(id)	sender
+orderFrontContextualHelp:(id)	sender
 {
 #pragma unused(sender)
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseCommandLine);
-}// displayHelp:
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpUsingTheCommandLine),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
+}// orderFrontContextualHelp:
 
 
 #pragma mark Accessors: Array Values

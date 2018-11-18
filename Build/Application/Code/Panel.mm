@@ -151,6 +151,24 @@ dealloc
 
 
 /*!
+Instructs the view to display context-sensitive help (e.g. when
+the user clicks the help button).
+
+Panel implementations should set the "panelHasContextualHelp"
+property if this method is implemented, as panel parents may
+decide to hide and/or disable a help button based on that
+property.
+
+(2018.11)
+*/
+- (IBAction)
+orderFrontContextualHelp:(id)	sender
+{
+	[self.delegate panelViewManager:self didPerformContextSensitiveHelp:sender];
+}// orderFrontContextualHelp:
+
+
+/*!
 Instructs the view to save all changes and prepare to be torn down
 (e.g. in a modal sheet, when the user clicks OK).
 
@@ -176,24 +194,6 @@ performCloseAndDiscard:(id)		sender
 #pragma unused(sender)
 	[self.delegate panelViewManager:self didFinishUsingContainerView:self.view userAccepted:NO];
 }// performCloseAndDiscard:
-
-
-/*!
-Instructs the view to display context-sensitive help (e.g. when
-the user clicks the help button).
-
-Panel implementations should set the "panelHasContextualHelp"
-property if this method is implemented, as panel parents may
-decide to hide and/or disable a help button based on that
-property.
-
-(4.1)
-*/
-- (IBAction)
-performContextSensitiveHelp:(id)	sender
-{
-	[self.delegate panelViewManager:self didPerformContextSensitiveHelp:sender];
-}// performContextSensitiveHelp:
 
 
 /*!

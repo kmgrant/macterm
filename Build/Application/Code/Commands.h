@@ -187,10 +187,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowConnectionStatus			'ShCS'
 #define kCommandHideConnectionStatus			'HiCS'
 
-// Help menu
-#define kCommandMainHelp						kHICommandAppHelp
-#define kCommandContextSensitiveHelp			'?Ctx'
-
 // terminal view page control
 #define kCommandTerminalViewPageUp				'TVPU'
 #define kCommandTerminalViewPageDown			'TVPD'

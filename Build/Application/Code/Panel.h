@@ -260,11 +260,11 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
+	orderFrontContextualHelp:(id)_;
+	- (IBAction)
 	performCloseAndAccept:(id)_;
 	- (IBAction)
 	performCloseAndDiscard:(id)_;
-	- (IBAction)
-	performContextSensitiveHelp:(id)_;
 	- (IBAction)
 	performDisplaySelfThroughParent:(id)_;
 

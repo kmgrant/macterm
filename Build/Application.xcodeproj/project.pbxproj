@@ -63,7 +63,7 @@
 		0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */; };
 		0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */; };
 		0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */; };
-		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.cp */; };
+		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.mm */; };
 		0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFE055432A400ACDF3A /* NetEvents.cp */; };
 		0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE08055432A400ACDF3A /* PrefsWindow.mm */; };
 		0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A03DBC7063F6BA400C38B78 /* MacroManager.mm */; };
@@ -75,7 +75,6 @@
 		0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDA055432A400ACDF3A /* Folder.cp */; };
 		0AC6BB0D0A8C0BA000AFF37A /* RecordAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0F055432A400ACDF3A /* RecordAE.cp */; };
 		0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE03055432A400ACDF3A /* Preferences.cp */; };
-		0AC6BB110A8C0BA000AFF37A /* MacHelpUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */; };
 		0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF3055432A400ACDF3A /* Local.cp */; };
 		0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD1055432A400ACDF3A /* DNR.cp */; };
 		0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */; };
@@ -327,13 +326,12 @@
 		0A46FDD6055432A400ACDF3A /* FileUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FileUtilities.cp; path = Application/Code/FileUtilities.cp; sourceTree = "<group>"; };
 		0A46FDD7055432A400ACDF3A /* FindDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FindDialog.mm; path = Application/Code/FindDialog.mm; sourceTree = "<group>"; };
 		0A46FDDA055432A400ACDF3A /* Folder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Folder.cp; path = Application/Code/Folder.cp; sourceTree = "<group>"; };
-		0A46FDE1055432A400ACDF3A /* HelpSystem.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HelpSystem.cp; path = Application/Code/HelpSystem.cp; sourceTree = "<group>"; };
+		0A46FDE1055432A400ACDF3A /* HelpSystem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = HelpSystem.mm; path = Application/Code/HelpSystem.mm; sourceTree = "<group>"; };
 		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = "<group>"; };
 		0A46FDE7055432A400ACDF3A /* InfoWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = InfoWindow.mm; path = Application/Code/InfoWindow.mm; sourceTree = "<group>"; };
 		0A46FDE8055432A400ACDF3A /* Initialize.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Initialize.mm; path = Application/Code/Initialize.mm; sourceTree = "<group>"; };
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = "<group>"; };
 		0A46FDF4055432A400ACDF3A /* Localization.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Localization.mm; path = Application/Code/Localization.mm; sourceTree = "<group>"; };
-		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
 		0A46FDFE055432A400ACDF3A /* NetEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetEvents.cp; path = Application/Code/NetEvents.cp; sourceTree = "<group>"; };
 		0A46FE01055432A400ACDF3A /* Panel.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Panel.mm; path = Application/Code/Panel.mm; sourceTree = "<group>"; };
 		0A46FE03055432A400ACDF3A /* Preferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Preferences.cp; path = Application/Code/Preferences.cp; sourceTree = "<group>"; };
@@ -375,7 +373,6 @@
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
 		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
-		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
 		0A70B8A31079C1EB0013E76F /* PythonInvoker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PythonInvoker; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A70B8AC1079C33B0013E76F /* PythonMain.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PythonMain.cp; path = Shared/Code/PythonMain.cp; sourceTree = "<group>"; };
@@ -551,7 +548,6 @@
 				0A90C79A1DBC557B005EABE0 /* CoreUI.mm */,
 				0A68811112F537A1005F418A /* GrowlSupport.mm */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.mm */,
-				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */,
 				0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */,
@@ -581,7 +577,6 @@
 				0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */,
 				0A68811012F5378C005F418A /* GrowlSupport.h */,
 				0A9B318E0D538EAB00C1616D /* ListenerModel.h */,
-				0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */,
 				0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */,
 				0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */,
 				0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */,
@@ -649,7 +644,7 @@
 				0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */,
 				0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */,
 				0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */,
-				0A46FDE1055432A400ACDF3A /* HelpSystem.cp */,
+				0A46FDE1055432A400ACDF3A /* HelpSystem.mm */,
 				0A46FDE7055432A400ACDF3A /* InfoWindow.mm */,
 				0A46FDE8055432A400ACDF3A /* Initialize.mm */,
 				0A36176A0DD286240081A445 /* Keypads.mm */,
@@ -1232,7 +1227,7 @@
 				0AC6BAF80A8C0BA000AFF37A /* ContextSensitiveMenu.mm in Sources */,
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
-				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
+				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.mm in Sources */,
 				0AEE250E1EB6EF300057DD6F /* UTF8Decoder.cp in Sources */,
 				0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */,
 				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */,
@@ -1247,7 +1242,6 @@
 				0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */,
 				0AC6BB0D0A8C0BA000AFF37A /* RecordAE.cp in Sources */,
 				0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */,
-				0AC6BB110A8C0BA000AFF37A /* MacHelpUtilities.cp in Sources */,
 				0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */,
 				0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */,
 				0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */,

@@ -866,15 +866,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see PrefsWindow.mm
 		//	break;
 		
-		case kCommandMainHelp:
-			HelpSystem_DisplayHelpWithoutContext();
-			break;
-		
-		case kCommandContextSensitiveHelp:
-			// open the help system to a particular topic
-			HelpSystem_DisplayHelpInCurrentContext();
-			break;
-		
 		case kCommandTerminalViewPageUp:
 			TerminalView_ScrollRowsTowardBottomEdge(activeView, Terminal_ReturnRowCount(activeScreen));
 			break;
@@ -3750,6 +3741,7 @@ canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performRedo:(id)	sender
 {
+#pragma unused(sender)
 	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
@@ -3852,6 +3844,7 @@ performSelectNothing:(id)	sender
 - (IBAction)
 performUndo:(id)	sender
 {
+#pragma unused(sender)
 	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
@@ -4340,6 +4333,7 @@ canPerformCheckForUpdates:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performGoToMainWebSite:(id)		sender
 {
+#pragma unused(sender)
 	if (false == URL_OpenInternetLocation(kURL_InternetLocationApplicationHomePage))
 	{
 		Sound_StandardAlert();
@@ -6010,6 +6004,7 @@ canMoveTabToNewWindow:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performArrangeInFront:(id)	sender
 {
+#pragma unused(sender)
 	// on Mac OS X, this command also requires that all application windows come to the front
 	NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
 	
@@ -6129,6 +6124,7 @@ performMoveWindowUp:(id)		sender
 - (IBAction)
 performRename:(id)	sender
 {
+#pragma unused(sender)
 	// let the user change the title of certain windows
 	// (application-level fallback; this method is also 
 	// implemented by vector graphics windows, etc.)
@@ -6451,6 +6447,7 @@ canToggleClipboard:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontCommandLine:(id)	sender
 {
+#pragma unused(sender)
 	// show or activate
 	CommandLine_Display();
 }
@@ -6467,40 +6464,23 @@ orderFrontContextualHelp:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandContextSensitiveHelp, nullptr/* target */);
+		HelpSystem_DisplayHelpWithoutContext();
 	}
 }
 - (id)
 canOrderFrontContextualHelp:(id <NSValidatedUserInterfaceItem>)		anItem
 {
-	CFStringRef				keyPhraseCFString = nullptr;
-	HelpSystem_KeyPhrase	keyPhrase = HelpSystem_ReturnCurrentContextKeyPhrase();
-	HelpSystem_Result		helpResult = kHelpSystem_ResultOK;
-	BOOL					result = NO;
-	
-	
-	if (kHelpSystem_KeyPhraseDefault != keyPhrase)
-	{
-		helpResult = HelpSystem_CopyKeyPhraseCFString(keyPhrase, keyPhraseCFString);
-		if (kHelpSystem_ResultOK == helpResult)
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:(NSString*)keyPhraseCFString];
-			result = YES;
-			
-			CFRelease(keyPhraseCFString), keyPhraseCFString = nullptr;
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
+#pragma unused(anItem)
+	// TEMPORARY; might need to implement more validation code in other
+	// parts of the responder chain
+	return @(YES);
 }
 
 
 - (IBAction)
 orderFrontControlKeys:(id)	sender
 {
+#pragma unused(sender)
 	// show or activate
 	Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
 }
@@ -6515,6 +6495,7 @@ canOrderFrontControlKeys:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontDebuggingOptions:(id)	sender
 {
+#pragma unused(sender)
 	DebugInterface_Display();
 }
 - (id)
@@ -6528,6 +6509,7 @@ canOrderFrontDebuggingOptions:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontIPAddresses:(id)	sender
 {
+#pragma unused(sender)
 	// show or activate
 	AddressDialog_Display();
 }
@@ -6582,6 +6564,7 @@ canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontVT220FunctionKeys:(id)	sender
 {
+#pragma unused(sender)
 	// show or activate
 	Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
 }
@@ -6596,6 +6579,7 @@ canOrderFrontVT220FunctionKeys:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontVT220Keypad:(id)	sender
 {
+#pragma unused(sender)
 	// show or activate
 	Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
 }
@@ -6734,6 +6718,7 @@ canToggleTabOverview:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontNextWindow:(id)		sender
 {
+#pragma unused(sender)
 	// activate the next window in the window list (terminal windows only)
 	activateAnotherWindow(kMy_WindowActivationDirectionNext);
 }
@@ -6755,6 +6740,7 @@ canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 orderFrontNextWindowHidingPrevious:(id)		sender
 {
+#pragma unused(sender)
 	// activate the next window in the window list (terminal windows only),
 	// but first obscure the frontmost terminal window
 	activateAnotherWindow(kMy_WindowActivationDirectionNext, (kMy_WindowSwitchingActionHide));
@@ -6777,6 +6763,7 @@ canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontPreviousWindow:(id)		sender
 {
+#pragma unused(sender)
 	// activate the previous window in the window list (terminal windows only)
 	activateAnotherWindow(kMy_WindowActivationDirectionPrevious);
 }
@@ -6943,7 +6930,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 {
 	NSMenuItem*		result = nil;
 	SEL				theSelector = nil;
-	BOOL			isEnabled = true;
 	
 	
 	// NOTE: Some key equivalents are arbitrarily added below.

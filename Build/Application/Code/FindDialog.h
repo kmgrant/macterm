@@ -149,7 +149,7 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
-	performContextSensitiveHelp:(id)_;
+	orderFrontContextualHelp:(id)_;
 	- (IBAction)
 	performCloseAndRevert:(id)_;
 	- (IBAction)

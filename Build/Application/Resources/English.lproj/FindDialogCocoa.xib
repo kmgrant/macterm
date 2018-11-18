@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -40,7 +39,7 @@
                 </menuItem>
             </items>
         </menu>
-        <box autoresizesSubviews="NO" misplaced="YES" borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View">
+        <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="184" userLabel="Managed View">
             <rect key="frame" x="0.0" y="0.0" width="541" height="70"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <view key="contentView" id="zSs-NM-dSR">
@@ -55,10 +54,10 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="performContextSensitiveHelp:" target="-2" id="d6s-3P-PP1"/>
+                            <action selector="orderFrontContextualHelp:" target="-1" id="fFe-Vs-bC3"/>
                         </connections>
                     </button>
-                    <searchField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="191" customClass="FindDialog_SearchField">
+                    <searchField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="191" customClass="FindDialog_SearchField">
                         <rect key="frame" x="43" y="35" width="299" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Live Search" bezelStyle="round" sendsSearchStringImmediately="YES" maximumRecents="10" id="192">
@@ -75,7 +74,7 @@
                             <outlet property="viewManager" destination="-2" id="CXU-Ha-zSR"/>
                         </connections>
                     </searchField>
-                    <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="216">
+                    <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="216">
                         <rect key="frame" x="350" y="38" width="16" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <connections>
@@ -100,7 +99,7 @@
                             </binding>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" misplaced="YES" id="Pf2-qq-wXH">
+                    <button verticalHuggingPriority="750" id="Pf2-qq-wXH">
                         <rect key="frame" x="167" y="8" width="30" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="recessed" title="All" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cfc-51-ciR">
@@ -117,7 +116,7 @@
                             </binding>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="vuI-97-oC9">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="vuI-97-oC9">
                         <rect key="frame" x="372" y="12" width="156" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="-" id="xQN-PX-OkS">
@@ -130,7 +129,7 @@
                             <binding destination="-2" name="value" keyPath="self.statusText" id="21X-Ux-b3P"/>
                         </connections>
                     </textField>
-                    <imageView misplaced="YES" id="cws-Sm-u4V">
+                    <imageView id="cws-Sm-u4V">
                         <rect key="frame" x="350" y="12" width="16" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="IconForCaution" id="wYr-4M-wmh"/>
@@ -138,7 +137,7 @@
                             <binding destination="-2" name="hidden" keyPath="self.successfulSearch" id="LKh-UQ-GNW"/>
                         </connections>
                     </imageView>
-                    <button verticalHuggingPriority="750" misplaced="YES" id="UVR-wu-6oq" customClass="CoreUI_Button">
+                    <button verticalHuggingPriority="750" id="UVR-wu-6oq" customClass="CoreUI_Button">
                         <rect key="frame" x="449" y="28" width="83" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Search" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="RSs-18-FQZ">
@@ -152,7 +151,7 @@ DQ
                             <action selector="performCloseAndSearch:" target="-2" id="Ngb-by-g6Y"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" misplaced="YES" id="b6Z-QK-Py2" customClass="CoreUI_Button">
+                    <button verticalHuggingPriority="750" id="b6Z-QK-Py2" customClass="CoreUI_Button">
                         <rect key="frame" x="368" y="28" width="82" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ebE-aU-y6U">
@@ -166,7 +165,7 @@ Gw
                             <action selector="performCloseAndRevert:" target="-2" id="BSE-dq-D3G"/>
                         </connections>
                     </button>
-                    <button misplaced="YES" id="xEh-gR-ZXh">
+                    <button id="xEh-gR-ZXh">
                         <rect key="frame" x="272" y="10" width="72" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="A=a" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="qJk-AF-HcI">

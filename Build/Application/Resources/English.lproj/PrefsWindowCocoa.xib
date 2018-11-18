@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17D102" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -19,7 +19,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <searchField wantsLayer="YES" verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="vkn-sq-ZCZ">
+        <searchField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="vkn-sq-ZCZ">
             <rect key="frame" x="0.0" y="0.0" width="160" height="22"/>
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
             <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search" usesSingleLineMode="YES" bezelStyle="round" sendsWholeSearchString="YES" id="twk-95-Uqr">
@@ -46,7 +46,7 @@
                 <binding destination="-2" name="contentArray" keyPath="self.currentPreferenceCollections" id="104"/>
             </connections>
         </arrayController>
-        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window" customClass="PrefsWindow_Object">
+        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window" customClass="PrefsWindow_Object">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="250" y="740" width="500" height="350"/>
@@ -56,7 +56,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <splitView misplaced="YES" dividerStyle="paneSplitter" vertical="YES" id="i6l-gZ-ZuL">
+                    <splitView dividerStyle="paneSplitter" vertical="YES" id="i6l-gZ-ZuL">
                         <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -64,7 +64,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
-                                    <scrollView wantsLayer="YES" focusRingType="none" misplaced="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="pgD-dZ-Wfj" userLabel="Source List Container">
+                                    <scrollView wantsLayer="YES" focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="pgD-dZ-Wfj" userLabel="Source List Container">
                                         <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <clipView key="contentView" wantsLayer="YES" drawsBackground="NO" id="IIL-1d-XyW">
@@ -78,7 +78,7 @@
                                                     <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                     <tableColumns>
-                                                        <tableColumn identifier="" width="197" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
+                                                        <tableColumn width="197" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                                 <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -120,7 +120,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
-                                    <popUpButton misplaced="YES" id="tWX-dl-QI9" userLabel="Contextual Menu">
+                                    <popUpButton id="tWX-dl-QI9" userLabel="Contextual Menu">
                                         <rect key="frame" x="104" y="8" width="40" height="26"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="SCl-A2-khl" id="Nma-1l-Vlx">
@@ -164,7 +164,7 @@
                                             </menu>
                                         </popUpButtonCell>
                                     </popUpButton>
-                                    <button verticalHuggingPriority="750" misplaced="YES" id="sHr-od-26D" userLabel="Remove Button">
+                                    <button verticalHuggingPriority="750" id="sHr-od-26D" userLabel="Remove Button">
                                         <rect key="frame" x="56" y="8" width="40" height="26"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="YcL-VU-gW3">
@@ -176,7 +176,7 @@
                                             <binding destination="-2" name="enabled" keyPath="self.canDeleteSettings" id="bXS-eB-MPa"/>
                                         </connections>
                                     </button>
-                                    <popUpButton misplaced="YES" id="Ep5-r3-AVL" userLabel="Add Menu">
+                                    <popUpButton id="Ep5-r3-AVL" userLabel="Add Menu">
                                         <rect key="frame" x="8" y="8" width="40" height="26"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="vu9-l9-42m" id="0ac-va-NF9" userLabel="Pop Up Button">
@@ -212,13 +212,12 @@
                                 <rect key="frame" x="210" y="0.0" width="290" height="350"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
-                                    <tabView misplaced="YES" drawsBackground="NO" type="noTabsNoBorder" id="149">
+                                    <tabView drawsBackground="NO" type="noTabsNoBorder" id="149">
                                         <rect key="frame" x="0.0" y="0.0" width="290" height="350"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
                                         <font key="font" metaFont="system"/>
-                                        <tabViewItems/>
                                     </tabView>
-                                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" id="43" userLabel="Help Button" customClass="CoreUI_HelpButton">
+                                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43" userLabel="Help Button" customClass="CoreUI_HelpButton">
                                         <rect key="frame" x="239" y="22" width="25" height="25"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
@@ -226,7 +225,7 @@
                                             <font key="font" metaFont="system"/>
                                         </buttonCell>
                                         <connections>
-                                            <action selector="performContextSensitiveHelp:" target="-2" id="45"/>
+                                            <action selector="orderFrontContextualHelp:" target="-1" id="4mk-x9-M0K"/>
                                         </connections>
                                     </button>
                                 </subviews>

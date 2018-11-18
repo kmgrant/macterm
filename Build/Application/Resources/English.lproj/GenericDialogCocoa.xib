@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -35,14 +34,14 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="185" customClass="CoreUI_HelpButton">
-                                    <rect key="frame" x="20.5" y="10" width="25" height="25"/>
+                                    <rect key="frame" x="21" y="10" width="25" height="25"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                     <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="198">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>
                                     <connections>
-                                        <action selector="performContextSensitiveHelp:" target="-2" id="d6s-3P-PP1"/>
+                                        <action selector="orderFrontContextualHelp:" target="-1" id="D7D-o5-TfK"/>
                                         <binding destination="-2" name="hidden" keyPath="self.panelHasContextualHelp" id="mUO-YT-XQ2">
                                             <dictionary key="options">
                                                 <string key="NSValueTransformerName">NSNegateBoolean</string>
@@ -52,7 +51,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" id="x4d-gD-k7q" customClass="CoreUI_Button">
-                                    <rect key="frame" x="377.5" y="13" width="86" height="32"/>
+                                    <rect key="frame" x="377" y="13" width="86" height="32"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                     <buttonCell key="cell" type="push" title="-" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mQS-QU-sLF">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -89,7 +88,7 @@ Gw
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" id="xOj-D2-a6L" customClass="CoreUI_Button">
-                                    <rect key="frame" x="50.5" y="13" width="46" height="32"/>
+                                    <rect key="frame" x="50" y="13" width="46" height="32"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                     <buttonCell key="cell" type="push" title="-" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="B7u-Gd-Ibv">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -110,10 +109,9 @@ Gw
                         </view>
                     </box>
                     <tabView drawsBackground="NO" type="noTabsNoBorder" id="pxA-1L-Taq" customClass="GenericDialog_PanelView">
-                        <rect key="frame" x="0.0" y="50" width="468" height="22"/>
+                        <rect key="frame" x="0.0" y="50" width="468" height="23"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
-                        <tabViewItems/>
                     </tabView>
                 </subviews>
             </view>

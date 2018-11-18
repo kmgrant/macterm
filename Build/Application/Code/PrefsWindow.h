@@ -170,9 +170,9 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
-	performAddNewPreferenceCollection:(id)_;
+	orderFrontContextualHelp:(id)_;
 	- (IBAction)
-	performContextSensitiveHelp:(id)_;
+	performAddNewPreferenceCollection:(id)_;
 	- (IBAction)
 	performCopyPreferenceCollectionToDefault:(id)_;
 	- (IBAction)

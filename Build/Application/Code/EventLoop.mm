@@ -49,7 +49,6 @@
 // application includes
 #import "Commands.h"
 #import "GrowlSupport.h"
-#import "MacHelpUtilities.h"
 #import "TerminalWindow.h"
 
 
@@ -340,7 +339,10 @@ contextInfo:(void*)				aContext
 			Alert_SetHelpButton(box.returnRef(), true);
 			Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemHelpButton,
 			^{
-				MacHelpUtilities_LaunchHelpSystemWithSearch(BRIDGE_CAST(helpSearch, CFStringRef));
+				NSString*		bookID = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleHelpBookName"];
+				
+				
+				[[NSHelpManager sharedHelpManager] openHelpAnchor:helpSearch inBook:bookID];
 			});
 		}
 		
