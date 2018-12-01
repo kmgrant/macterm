@@ -355,6 +355,12 @@ changes to an interface declared in a ".mm" file.
 	performKill:(id)_;
 	- (IBAction)
 	performRestart:(id)_;
+	- (IBAction)
+	performSaveSelection:(id)_;
+	- (IBAction)
+	performTranslationSwitchByFavoriteName:(id)_;
+	- (IBAction)
+	performTranslationSwitchDefault:(id)_;
 
 @end //}
 

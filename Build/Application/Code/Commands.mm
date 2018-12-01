@@ -432,10 +432,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		switch (inCommandID)
 		{
-		case kCommandSaveSelection:
-			TerminalView_DisplaySaveSelectionUI(activeView);
-			break;
-		
 		case kCommandHandleURL:
 			// open the appropriate helper application for the URL in the selected
 			// text (which may be MacTerm itself), and send a “handle URL” event
@@ -807,12 +803,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				Session_DisplaySpecialKeySequencesDialog(frontSession);
 			}
 			break;
-		
-		//case kCommandTranslationTableDefault:
-		//case kCommandTranslationTableByFavoriteName:
-		//case kCommandSetTranslationTable:
-		//	see TerminalWindow.mm
-		//	break;
 		
 		case kCommandSendInterruptProcess:
 			Session_UserInputInterruptProcess(frontSession);
@@ -3503,25 +3493,6 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-- (IBAction)
-performSaveSelection:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSaveSelection, nullptr/* target */);
-	}
-}
-- (id)
-canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = textSelectionExists();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
 @end //} Commands_Executor (Commands_Capturing)
 
 
@@ -5098,82 +5069,6 @@ canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	a
 	setItemCheckMark(anItem, isChecked);
 	
 	return @(YES);
-}
-
-
-- (IBAction)
-performTranslationSwitchByFavoriteName:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-		BOOL				isError = YES;
-		
-		
-		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
-		{
-			// use the specified preferences
-			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
-			
-			
-			if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
-			{
-				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-															(Quills::Prefs::TRANSLATION, collectionName),
-															Preferences_ContextWrap::kAlreadyRetained);
-				Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
-				
-				
-				if (namedSettings.exists() && (nullptr != sessionSettings))
-				{
-					Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
-					
-					
-					if (nullptr != translationTags)
-					{
-						// change character set of frontmost window according to the specified preferences
-						Preferences_Result		prefsResult = Preferences_ContextCopy
-																(namedSettings.returnRef(), sessionSettings, translationTags);
-						
-						
-						isError = (kPreferences_ResultOK != prefsResult);
-						
-						Preferences_ReleaseTagSet(&translationTags);
-					}
-				}
-			}
-		}
-		
-		if (isError)
-		{
-			// failed...
-			Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
-			Sound_StandardAlert();
-		}
-	}
-}
-
-
-- (IBAction)
-performTranslationSwitchCustom:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		// legacy Carbon
-		Commands_ExecuteByIDUsingEvent(kCommandSetTranslationTable, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performTranslationSwitchDefault:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandTranslationTableDefault, nullptr/* target */);
-	}
 }
 
 
@@ -6965,10 +6860,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	
 	case kCommandPrintScreen:
 		theSelector = @selector(performPrintScreen:);
-		break;
-	
-	case kCommandSaveSelection:
-		theSelector = @selector(performSaveSelection:);
 		break;
 	
 	case kCommandSetKeys:

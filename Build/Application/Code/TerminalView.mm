@@ -79,6 +79,7 @@
 #import "MacroManager.h"
 #import "NetEvents.h"
 #import "Preferences.h"
+#import "PrefPanelTranslations.h"
 #import "QuillsTerminal.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
@@ -10520,6 +10521,112 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 		return @(YES);
 	}
 	return @(NO);
+}
+
+
+- (IBAction)
+performSaveSelection:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+	
+	
+	TerminalView_DisplaySaveSelectionUI(terminalView);
+}
+- (id)
+canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+	BOOL				result = TerminalView_TextSelectionExists(terminalView);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performTranslationSwitchByFavoriteName:(id)		sender
+{
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	{
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		
+		
+		if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
+		{
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::TRANSLATION, collectionName),
+														Preferences_ContextWrap::kAlreadyRetained);
+			Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
+			
+			
+			if (namedSettings.exists() && (nullptr != sessionSettings))
+			{
+				Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
+				
+				
+				if (nullptr != translationTags)
+				{
+					// change character set of frontmost window according to the specified preferences
+					Preferences_Result		prefsResult = Preferences_ContextCopy
+															(namedSettings.returnRef(), sessionSettings, translationTags);
+					
+					
+					isError = (kPreferences_ResultOK != prefsResult);
+					
+					Preferences_ReleaseTagSet(&translationTags);
+				}
+			}
+		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
+		Sound_StandardAlert();
+	}
+}
+
+
+- (IBAction)
+performTranslationSwitchDefault:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
+	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	Preferences_ContextRef	sessionSettings = Session_ReturnTranslationConfiguration(session);
+	Preferences_ContextRef	defaultSettings = nullptr;
+	BOOL					isError = YES;
+	
+	
+	// reformat frontmost window using the Default preferences
+	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
+	{
+		isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, sessionSettings));
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformTranslationSwitchDefault:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	return @(YES);
 }
 
 

@@ -178,9 +178,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEmacsArrowMapping				'Emac'	// multiple interfaces
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
-#define kCommandTranslationTableDefault			'XltD'
-#define kCommandTranslationTableByFavoriteName	'XFav'
-#define kCommandSetTranslationTable				'Xlat'
 
 // Window menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
@@ -308,8 +305,6 @@ Actions related to capturing terminal data to a file.
 	performPrintScreen:(id)_;
 	- (IBAction)
 	performPrintSelection:(id)_;
-	- (IBAction)
-	performSaveSelection:(id)_;
 
 @end //}
 
@@ -472,12 +467,6 @@ Actions affecting keyboard behavior in terminal windows.
 	performSetFunctionKeyLayoutXTermX11:(id)_;
 	- (IBAction)
 	performSetFunctionKeyLayoutXTermXFree86:(id)_;
-	- (IBAction)
-	performTranslationSwitchDefault:(id)_;
-	- (IBAction)
-	performTranslationSwitchByFavoriteName:(id)_;
-	- (IBAction)
-	performTranslationSwitchCustom:(id)_;
 
 @end //}
 
