@@ -113,7 +113,6 @@ namespace {
 
 ListenerModel_ListenerRef	gSessionAttributeChangeEventListener = nullptr;
 ListenerModel_ListenerRef	gSessionStateChangeEventListener = nullptr;
-ListenerModel_ListenerRef	gInfoWindowDisplayEventListener = nullptr;
 
 } // anonymous namespace
 
@@ -123,7 +122,6 @@ namespace {
 void		refreshDisplay				();
 void		sessionAttributeChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void		sessionStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-OSStatus	showHideInfoWindow			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 
 } // anonymous namespace
 
@@ -174,11 +172,6 @@ InfoWindow_Init	()
 	SessionFactory_StartMonitoringSessions(kSession_ChangeState, gSessionStateChangeEventListener);
 	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, gSessionStateChangeEventListener);
 	
-	// ask to be told when a “show/hide info window” command occurs
-	gInfoWindowDisplayEventListener = ListenerModel_NewOSStatusListener(showHideInfoWindow);
-	Commands_StartHandlingExecution(kCommandShowConnectionStatus, gInfoWindowDisplayEventListener);
-	Commands_StartHandlingExecution(kCommandHideConnectionStatus, gInfoWindowDisplayEventListener);
-	
 	// if the window was open at last Quit, construct it right away;
 	// otherwise, wait until it is requested by the user
 	{
@@ -219,10 +212,6 @@ InfoWindow_Done	()
 		UNUSED_RETURN(Preferences_Result)Preferences_SetData(kPreferences_TagWasSessionInfoShowing,
 																sizeof(Boolean), &windowIsVisible);
 	}
-	
-	Commands_StopHandlingExecution(kCommandShowConnectionStatus, gInfoWindowDisplayEventListener);
-	Commands_StopHandlingExecution(kCommandHideConnectionStatus, gInfoWindowDisplayEventListener);
-	ListenerModel_ReleaseListener(&gInfoWindowDisplayEventListener);
 	
 	SessionFactory_StopMonitoringSessions(kSession_ChangeStateAttributes, gSessionStateChangeEventListener);
 	SessionFactory_StopMonitoringSessions(kSession_ChangeState, gSessionStateChangeEventListener);
@@ -600,35 +589,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// sessionStateChanged
-
-
-/*!
-Invoked when the visible state of the Session Info
-Window should be changed.
-
-The result is "eventNotHandledErr" if the command was
-not actually executed - this frees other possible
-handlers to take a look.  Any other return value
-including "noErr" terminates the command sequence.
-
-(3.0)
-*/
-OSStatus
-showHideInfoWindow	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-					 ListenerModel_Event	UNUSED_ARGUMENT(inCommandID),
-					 void*					inEventContextPtr,
-					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
-{
-	Commands_ExecutionEventContextPtr	commandInfoPtr = REINTERPRET_CAST(inEventContextPtr,
-																			Commands_ExecutionEventContextPtr);
-	OSStatus							result = eventNotHandledErr;
-	
-	
-	assert((kCommandShowConnectionStatus == commandInfoPtr->commandID) ||
-			(kCommandHideConnectionStatus == commandInfoPtr->commandID));
-	InfoWindow_SetVisible(kCommandShowConnectionStatus == commandInfoPtr->commandID);
-	return result;
-}// showHideInfoWindow
 
 } // anonymous namespace
 

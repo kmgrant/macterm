@@ -570,6 +570,18 @@ Gw
                                     <action selector="performSpeechToggle:" target="-1" id="Ndh-8x-h3a"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Speak Selected Text" id="Uxk-Cy-CSD">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="startSpeaking:" target="-1" id="Ejx-8U-3wq"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Stop Speaking" id="Xff-kT-HLz">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="stopSpeaking:" target="-1" id="Wdm-tM-Izg"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="903"/>
                             <menuItem title="Delete Entire Scrollback Buffer" keyEquivalent="r" id="904">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>

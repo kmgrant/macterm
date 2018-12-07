@@ -361,6 +361,10 @@ changes to an interface declared in a ".mm" file.
 	performTranslationSwitchByFavoriteName:(id)_;
 	- (IBAction)
 	performTranslationSwitchDefault:(id)_;
+	- (IBAction)
+	startSpeaking:(id)_;
+	- (IBAction)
+	stopSpeaking:(id)_;
 
 @end //}
 

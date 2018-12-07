@@ -179,11 +179,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
 
-// Window menu
-// WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandShowConnectionStatus			'ShCS'
-#define kCommandHideConnectionStatus			'HiCS'
-
 // terminal view page control
 #define kCommandTerminalViewPageUp				'TVPU'
 #define kCommandTerminalViewPageDown			'TVPD'
@@ -209,10 +204,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
 #define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
-
-// commands used only in contextual menus
-#define kCommandSpeakSelectedText				'SpkS'
-#define kCommandStopSpeaking					'SpkE'
 
 /*!
 These MUST agree with "MainMenuCocoa.xib".  In the Carbon days,
@@ -735,21 +726,6 @@ NSMenuItem*
 	Commands_NewMenuItemForCommand			(UInt32						inCommandID,
 											 CFStringRef				inPreferredTitle,
 											 Boolean					inMustBeEnabled = false);
-
-//@}
-
-//!\name Installing Callbacks That Handle Commands
-//@{
-
-// EVENT CONTEXT PASSED TO LISTENER: Commands_ExecutionEventContextPtr
-Commands_Result
-	Commands_StartHandlingExecution			(UInt32						inImplementedCommand,
-											 ListenerModel_ListenerRef	inCommandImplementor);
-
-// EVENT CONTEXT PASSED TO LISTENER: Commands_ExecutionEventContextPtr
-Commands_Result
-	Commands_StopHandlingExecution			(UInt32						inImplementedCommand,
-											 ListenerModel_ListenerRef	inCommandImplementor);
 
 //@}
 

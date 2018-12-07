@@ -7875,7 +7875,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, commandText).ok())
 			{
-				newItem = Commands_NewMenuItemForAction(@selector(performSpeakSelectedText:), commandText, true/* must be enabled */);
+				newItem = Commands_NewMenuItemForAction(@selector(startSpeaking:), commandText, true/* must be enabled */);
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7887,7 +7887,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForAction(@selector(performStopSpeaking:), commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(stopSpeaking:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -8033,7 +8033,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		// as long as speech is in progress
 		if (UIStrings_Copy(kUIStrings_ContextualMenuStopSpeaking, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForAction(@selector(performStopSpeaking:), commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(stopSpeaking:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -10627,6 +10627,45 @@ canPerformTranslationSwitchDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return @(YES);
+}
+
+
+- (IBAction)
+startSpeaking:(id)		sender
+{
+#pragma unused(sender)
+	// note: this method is named to match NSTextView selector
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+	
+	
+	TerminalView_GetSelectedTextAsAudio(terminalView);
+}
+- (id)
+canStartSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+	BOOL				result = TerminalView_TextSelectionExists(terminalView);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+stopSpeaking:(id)	sender
+{
+#pragma unused(sender)
+	// note: this method is named to match NSTextView selector
+	CocoaBasic_StopSpeaking();
+}
+- (id)
+canStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	return (CocoaBasic_SpeakingInProgress() ? @(YES) : @(NO));
 }
 
 

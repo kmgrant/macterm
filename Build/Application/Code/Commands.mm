@@ -79,6 +79,7 @@ extern "C"
 #import "EventLoop.h"
 #import "Folder.h"
 #import "HelpSystem.h"
+#import "InfoWindow.h"
 #import "Keypads.h"
 #import "MacroManager.h"
 #import "PrefPanelTranslations.h"
@@ -373,16 +374,6 @@ Commands_Done ()
 Attempts to handle a command at the application level,
 given its ID (all IDs are declared in "Commands.h").
 Returns true only if the event is handled successfully.
-
-Commands can currently be handled in three ways.  First,
-Commands_StartHandlingExecution() might have been
-invoked to register a local handler (this approach is
-deprecated), and if so, it is invoked exclusively.
-Otherwise, if the command ID matches one handled at the
-application level, it is handled.  The third method is
-to install a Carbon Event handler on a more local context
-(such as a window), and this is NOT handled here; see
-Commands_ExecuteByIDUsingEvent() for that case.
 
 IMPORTANT:	This works ONLY for command IDs that are
 			handled here, at the application level.  Many
@@ -738,17 +729,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandSpeakSelectedText:
-			if (isTerminal)
-			{
-				TerminalView_GetSelectedTextAsAudio(activeView);
-			}
-			break;
-		
-		case kCommandStopSpeaking:
-			CocoaBasic_StopSpeaking();
-			break;
-		
 		case kCommandClearEntireScrollback:
 			if (isTerminal)
 			{
@@ -843,11 +823,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		//case kCommandShowConnectionStatus:
-		//case kCommandHideConnectionStatus:
-		//	see InfoWindow.cp
-		//	break;
-		
 		//kCommandDisplayPrefPanelFormats:
 		//kCommandDisplayPrefPanelGeneral:
 		//kCommandDisplayPrefPanelMacros:
@@ -893,13 +868,6 @@ Returns true only if the event is handled successfully.
 Unlike Commands_ExecuteByID(), this request should
 propagate to an appropriate handler no matter where
 the handler is installed.
-
-IMPORTANT:	If Commands_StartHandlingExecution() was
-			used to register a handler, this function
-			will not respect it.  That method of
-			handling commands is deprecated, but
-			Commands_ExecuteByID() will still invoke
-			such handlers.
 
 (3.1)
 */
@@ -1060,71 +1028,6 @@ Commands_NewMenuItemForCommand	(UInt32			inCommandID,
 	
 	return result;
 }// NewMenuItemForCommand
-
-
-/*!
-Arranges for a callback to be invoked in order to
-execute the given command.
-
-The specified callback is expected to return an
-OSStatus value - a return value of "eventNotHandledErr"
-is the ONLY way to indicate that an execution handler
-did nothing in response to a particular command, which
-permits the Commands module to seek another handler
-for the same command.  Returning any other value will
-cause your handler to be the last attempt made to
-execute the given command.
-
-The context passed to the listener is of type
-"Commands_ExecutionEventContextPtr".
-
-\retval kCommands_ResultOK
-if no error occurred
-
-\retval kCommands_ResultParameterError
-if an OSStatus listener was not provided or otherwise
-the listener could not be registered
-
-(3.0)
-*/
-Commands_Result
-Commands_StartHandlingExecution		(UInt32						inImplementedCommand,
-									 ListenerModel_ListenerRef	inCommandImplementor)
-{
-	Commands_Result		result = kCommands_ResultOK;
-	OSStatus			error = noErr;
-	
-	
-	error = ListenerModel_AddListenerForEvent(gCommandExecutionListenerModel(), inImplementedCommand, inCommandImplementor);
-	if (error != noErr) result = kCommands_ResultParameterError;
-	
-	return result;
-}// StartHandlingExecution
-
-
-/*!
-Arranges for a callback to no longer be invoked when
-the specified command needs to be executed.
-
-The given listener should match one installed
-previously with Commands_StartHandlingExecution();
-otherwise this routine silently fails.
-
-\retval kCommands_ResultOK
-always
-
-(3.0)
-*/
-Commands_Result
-Commands_StopHandlingExecution	(UInt32						inImplementedCommand,
-								 ListenerModel_ListenerRef	inCommandImplementor)
-{
-	Commands_Result		result = kCommands_ResultOK;
-	
-	
-	ListenerModel_RemoveListenerForEvent(gCommandExecutionListenerModel(), inImplementedCommand, inCommandImplementor);
-	return result;
-}// StopHandlingExecution
 
 
 /*!
@@ -2883,7 +2786,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"f"];
 			[result setKeyEquivalentModifierMask:(NSControlKeyMask | NSCommandKeyMask)];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performRename:) == anActionSelector)
@@ -2961,7 +2863,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"t"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performOpenURL:) == anActionSelector)
@@ -3044,7 +2945,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"S"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performMappingCustom:) == anActionSelector)
@@ -3073,7 +2973,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 			[result setTarget:self]; // TEMPORARY
 		}
 	}
-	else if (@selector(performSpeakSelectedText:) == anActionSelector)
+	else if (@selector(startSpeaking:) == anActionSelector)
 	{
 		if (onlyIfEnabled)
 		{
@@ -3083,20 +2983,18 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
-	else if (@selector(performStopSpeaking:) == anActionSelector)
+	else if (@selector(stopSpeaking:) == anActionSelector)
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = CocoaBasic_SpeakingInProgress() ? YES : NO;
+			isEnabled = [self validateAction:anActionSelector sender:NSApp];
 		}
 		if (isEnabled)
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performArrangeInFront:) == anActionSelector)
@@ -6439,10 +6337,7 @@ canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontSessionInfo:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShowConnectionStatus, nullptr/* target */);
-	}
+	InfoWindow_SetVisible(false == InfoWindow_IsVisible());
 }
 - (id)
 canOrderFrontSessionInfo:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -6872,14 +6767,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	
 	case kCommandShowCompletions:
 		theSelector = @selector(performShowCompletions:);
-		break;
-	
-	case kCommandSpeakSelectedText:
-		theSelector = @selector(performSpeakSelectedText:);
-		break;
-	
-	case kCommandStopSpeaking:
-		theSelector = @selector(performStopSpeaking:);
 		break;
 	
 	case kCommandTerminalNewWorkspace:
