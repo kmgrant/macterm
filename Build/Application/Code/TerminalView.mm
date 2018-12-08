@@ -10840,9 +10840,35 @@ keyDown:(NSEvent*)		anEvent
 {
 	if (nil != anEvent)
 	{
-		// INCOMPLETE; may need to interpret certain keys directly here
-		// (also, need to use Session module to handle keys)
-		[self interpretKeyEvents:@[anEvent]]; // translate for NSTextInputClient
+		My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+		BOOL					normalText = YES;
+		
+		
+		if (anEvent.modifierFlags & NSEventModifierFlagControl)
+		{
+			// control keys should not be mapped to normal Mac text editing
+			// (e.g. they do not locally move the cursor); they should be
+			// interpreted by the Session, which has the option of still
+			// handling certain events locally
+			NSString*		characterString = anEvent.charactersIgnoringModifiers;
+			
+			
+			if ((1 == characterString.length) && ([characterString characterAtIndex:0] < 128))
+			{
+				char	asChar = STATIC_CAST([characterString characterAtIndex:0], char);
+				
+				
+				[self.textInputDelegate receivedControlCharacter:asChar terminalView:viewPtr->selfRef];
+				normalText = NO;
+			}
+		}
+		
+		if (normalText)
+		{
+			// INCOMPLETE; may need to interpret certain keys directly here
+			// (also, need to use Session module to handle keys)
+			[self interpretKeyEvents:@[anEvent]]; // translate for NSTextInputClient
+		}
 	}
 }// keyDown:
 

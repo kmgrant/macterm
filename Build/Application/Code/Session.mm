@@ -7712,6 +7712,57 @@ terminalView:(TerminalViewRef)	aTerminalViewRef
 
 
 /*!
+Handles control character sequences, e.g. if the user types
+a control-C then the parameter is 'c'.  Upper-case letters
+should not be sent.
+
+(2018.12)
+*/
+- (void)
+receivedControlCharacter:(char)		aControlChar
+terminalView:(TerminalViewRef)		aTerminalViewRef
+{
+	if (Session_IsValid(self.sessionRef))
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), self.sessionRef);
+		char					controlKeyValue = (aControlChar - '`'); // translate lower-case letter to actual control character
+		
+		
+		if (controlKeyValue == ptr->eventKeys.suspend)
+		{
+			Session_SetNetworkSuspended(self.sessionRef, true);
+		}
+		else if (controlKeyValue == ptr->eventKeys.resume)
+		{
+			Session_SetNetworkSuspended(self.sessionRef, false);
+		}
+		else if (controlKeyValue == ptr->eventKeys.interrupt)
+		{
+			Session_UserInputInterruptProcess(self.sessionRef);
+		}
+		else if ('\015' == controlKeyValue)
+		{
+			// control-M is a special case, treated as a new-line for
+			// the target session’s new-line definition (e.g. not all
+			// sessions may send the same characters as a result)
+			[self receivedNewlineInTerminalView:aTerminalViewRef];
+		}
+		else if (controlKeyValue <= 0x1F)
+		{
+			// control key (except carriage return, which is handled later,
+			// and any of the special control key sequences above)
+			Session_UserInputKey(self.sessionRef, controlKeyValue);
+		}
+		else
+		{
+			Console_Warning(Console_WriteValueCharacter, "control character not handled, sequence", controlKeyValue);
+			Session_SendData(self.sessionRef, &controlKeyValue, 1);
+		}
+	}
+}// receivedControlCharacter:terminalView:
+
+
+/*!
 Sends an appropriate delete sequence to any attached
 session.
 

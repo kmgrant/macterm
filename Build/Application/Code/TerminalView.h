@@ -311,11 +311,16 @@ sub-protocol of NSTextInputClient).
 	receivedString:(NSString*)_
 	terminalView:(TerminalViewRef)_;
 
+	// if the Control key is down, user has pressed Control with given character (e.g. Control-C)
+	- (void)
+	receivedControlCharacter:(char)_
+	terminalView:(TerminalViewRef)_;
+
 	// user input delete key (send appropriate sequence to a session)
 	- (void)
 	receivedDeleteBackwardInTerminalView:(TerminalViewRef)_;
 
-	// user input newline (send appropriate sequence to a session)
+	// user input newline, except control-M goes to "receivedControlCharacter:terminalView:" 
 	- (void)
 	receivedNewlineInTerminalView:(TerminalViewRef)_;
 
