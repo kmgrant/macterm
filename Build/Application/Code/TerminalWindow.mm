@@ -329,7 +329,7 @@ void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_A
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					setCocoaWindowFullScreenIcon	(NSWindow*, Boolean);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
-void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean, Boolean = false);
+void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean = false);
 void					setUpForFullScreenModal			(My_TerminalWindowPtr, Boolean, Boolean, My_FullScreenState);
 void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setViewSizeIndependentFromWindow(My_TerminalWindowPtr, Boolean);
@@ -2294,7 +2294,7 @@ installedActions()
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
 											Terminal_ReturnColumnCount(newScreen), Terminal_ReturnRowCount(newScreen),
 											screenWidth, screenHeight);
-		setStandardState(this, screenWidth.integralPixels(), screenHeight.integralPixels(), true/* resize window */);
+		setStandardState(this, screenWidth.integralPixels(), screenHeight.integralPixels());
 	}
 	
 	// stagger the window (this is effective for newly-created windows
@@ -3320,12 +3320,11 @@ setScreenPreferences	(My_TerminalWindowPtr		inPtr,
 
 /*!
 Sets the standard state (for zooming) of the given
-terminal window to match the size required to fit
-the specified width and height in pixels.
+terminal window to match the size required to fit the
+specified width and height in pixels.
 
-Once this is done, you can make the window this
-size by zooming “out”, or by passing "true" for
-"inResizeWindow".
+Once this is done, you can make the window this size
+by zooming “out”.
 
 (3.0)
 */
@@ -3333,11 +3332,11 @@ void
 setStandardState	(My_TerminalWindowPtr	inPtr,
 					 UInt16					inScreenWidthInPixels,
 					 UInt16					inScreenHeightInPixels,
-					 Boolean				inResizeWindow,
 					 Boolean				inAnimatedResize)
 {
 	SInt16		windowWidth = 0;
 	SInt16		windowHeight = 0;
+	SInt16		originalHeight = NSHeight(inPtr->window.frame);
 	
 	
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
@@ -3350,6 +3349,7 @@ setStandardState	(My_TerminalWindowPtr	inPtr,
 		newContentRect.size.width = windowWidth;
 		newContentRect.size.height = windowHeight;
 		newFrameRect = [inPtr->window frameRectForContentRect:newContentRect];
+		newFrameRect.origin.y += (originalHeight - NSHeight(newFrameRect));
 		[inPtr->window setFrame:newFrameRect display:YES animate:inAnimatedResize];
 	}
 }// setStandardState
@@ -3760,7 +3760,7 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 											inColumns, inRows, screenWidth, screenHeight);
-		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels(), true/* resize window */, inAnimateWindowChanges);
+		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels(), inAnimateWindowChanges);
 	}
 }// setWindowToIdealSizeForDimensions
 
@@ -3784,7 +3784,7 @@ setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 		
 		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
 									screenWidth, screenHeight);
-		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels(), true/* resize window */);
+		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels());
 	}
 }// setWindowToIdealSizeForFont
 
