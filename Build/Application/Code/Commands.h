@@ -117,9 +117,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // File menu
 #define kCommandHandleURL						'HURL'
-#define kCommandSaveSelection					'SvSl'
-#define kCommandCaptureToFile					'Capt'
-#define kCommandEndCaptureToFile				'CapE'
 #define kCommandPrint							kHICommandPrint
 #define kCommandPrintScreen						'PrSc'
 
@@ -288,10 +285,6 @@ Actions related to capturing terminal data to a file.
 @interface Commands_Executor (Commands_Capturing) //{
 
 // actions
-	- (IBAction)
-	performCaptureBegin:(id)_;
-	- (IBAction)
-	performCaptureEnd:(id)_;
 	- (IBAction)
 	performPrintScreen:(id)_;
 	- (IBAction)

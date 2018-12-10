@@ -655,21 +655,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandCaptureToFile:
-			if (isSession)
-			{
-				Terminal_FileCaptureEnd(activeScreen);
-				Session_DisplayFileCaptureSaveDialog(frontSession);
-			}
-			break;
-		
-		case kCommandEndCaptureToFile:
-			if (isSession)
-			{
-				Terminal_FileCaptureEnd(activeScreen);
-			}
-			break;
-		
 		case kCommandTEKPageCommand:
 			{
 				SessionRef		sessionForGraphic = frontSession;
@@ -3313,44 +3298,6 @@ applicationWillTerminate:(NSNotification*)		aNotification
 
 #pragma mark -
 @implementation Commands_Executor (Commands_Capturing) //{
-
-
-- (IBAction)
-performCaptureBegin:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandCaptureToFile, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performCaptureEnd:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandEndCaptureToFile, nullptr/* target */);
-	}
-}
-- (id)
-canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
-										? nullptr
-										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-	BOOL				result = NO;
-	
-	
-	if (nullptr != currentScreen)
-	{
-		result = (Terminal_FileCaptureInProgress(currentScreen) ? YES : NO);
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
 
 
 - (IBAction)

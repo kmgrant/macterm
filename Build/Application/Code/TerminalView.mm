@@ -10348,12 +10348,64 @@ terminalViewRef
 
 
 /*!
+Prompts the user to specify where to save a new file,
+and then initiates a continuous capture of terminal text
+to that file.
+
+(2018.12)
+*/
+- (IBAction)
+performCaptureBegin:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalScreenRef	currentScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	
+	
+	Terminal_FileCaptureEnd(currentScreen); // terminate any previous capture
+	Session_DisplayFileCaptureSaveDialog([self boundSession]);
+}
+
+
+/*!
+Stops the continuous capture of terminal text to a file.
+
+(2018.12)
+*/
+- (IBAction)
+performCaptureEnd:(id)		sender
+{
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalScreenRef	currentScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	
+	
+	Terminal_FileCaptureEnd(currentScreen);
+}
+- (id)
+canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	BOOL				result = NO;
+	
+	
+	if (nullptr != currentScreen)
+	{
+		result = (Terminal_FileCaptureInProgress(currentScreen) ? YES : NO);
+	}
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
 Uses the name of the given sender (expected to be a menu item) to
 find a Format set of Preferences from which to copy new font and
 color information.
-
-WARNING:	For the transition period, this can only be called
-			by Commands_Executor, and not by the responder chain.
 
 (4.0)
 */
@@ -10407,9 +10459,6 @@ canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
 
 /*!
 Copies new font and color information from the Default set.
-
-WARNING:	For the transition period, this can only be called
-			by Commands_Executor, and not by the responder chain.
 
 (4.0)
 */

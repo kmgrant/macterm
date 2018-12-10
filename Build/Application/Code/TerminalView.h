@@ -353,6 +353,10 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
+	performCaptureBegin:(id)_;
+	- (IBAction)
+	performCaptureEnd:(id)_;
+	- (IBAction)
 	performFormatByFavoriteName:(id)_;
 	- (IBAction)
 	performFormatDefault:(id)_;
