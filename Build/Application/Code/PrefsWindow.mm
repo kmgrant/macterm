@@ -1607,64 +1607,12 @@ row:(int)									aRowIndex
 For drag-and-drop support; adds the data for the given rows
 to the specified pasteboard.
 
-NOTE:	This is defined for Mac OS X 10.3 support; it may be
-		removed in the future.  See also the preferred method
-		"tableView:writeRowIndexes:toPasteboard:".
-
-(4.1)
+(2018.12)
 */
 - (BOOL)
-tableView:(NSTableView*)		aTableView
-writeRows:(NSArray*)			aRowArray
-toPasteboard:(NSPasteboard*)	aPasteboard
-{
-#pragma unused(aTableView)
-	BOOL				result = YES; // initially...
-	NSMutableIndexSet*	indexSet = [[NSMutableIndexSet alloc] init];
-	
-	
-	// drags are confined to the table, so it’s only necessary to copy row numbers;
-	// note that the Mac OS X 10.3 version gives arrays of NSNumber and the actual
-	// representation (in "tableView:writeRowIndexes:toPasteboard:") is NSIndexSet*
-	for (NSNumber* numberObject in aRowArray)
-	{
-		if (0 == [numberObject intValue])
-		{
-			// the item at index zero is Default, which may not be moved
-			result = NO;
-			break;
-		}
-		[indexSet addIndex:[numberObject intValue]];
-	}
-	
-	if (result)
-	{
-		NSData*		copiedData = [NSKeyedArchiver archivedDataWithRootObject:indexSet];
-		
-		
-		[aPasteboard declareTypes:@[kMy_PrefsWindowSourceListDataType] owner:self];
-		[aPasteboard setData:copiedData forType:kMy_PrefsWindowSourceListDataType];
-	}
-	
-	[indexSet release];
-	
-	return result;
-}// tableView:writeRows:toPasteboard:
-
-
-/*!
-For drag-and-drop support; adds the data for the given rows
-to the specified pasteboard.
-
-This is the version used by Mac OS X 10.4 and beyond; see
-also "tableView:writeRows:toPasteboard:".
-
-(4.1)
-*/
-- (BOOL)
-tableView:(NSTableView*)		aTableView
-writeRowIndexes:(NSIndexSet*)	aRowSet
-toPasteboard:(NSPasteboard*)	aPasteboard
+tableView:(NSTableView*)			aTableView
+writeRowsWithIndexes:(NSIndexSet*)	aRowSet
+toPasteboard:(NSPasteboard*)		aPasteboard
 {
 #pragma unused(aTableView)
 	BOOL	result = NO;
@@ -1682,7 +1630,7 @@ toPasteboard:(NSPasteboard*)	aPasteboard
 		result = YES;
 	}
 	return result;
-}// tableView:writeRowIndexes:toPasteboard:
+}// tableView:writeRowsWithIndexes:toPasteboard:
 
 
 /*!
