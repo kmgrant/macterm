@@ -122,20 +122,11 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // Edit menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandCut								kHICommandCut
-#define kCommandCopy							kHICommandCopy
-#define kCommandCopyTable						'CpyT'
-#define kCommandCopyAndPaste					'CpPs'
-#define kCommandPaste							kHICommandPaste
-#define kCommandClear							kHICommandClear
 #define kCommandFind							'Find'
 #define kCommandFindAgain						'FndN'
 #define kCommandFindPrevious					'FndP'
 #define kCommandShowCompletions					'SCmp'
 #define kCommandFindCursor						'FndC'
-#define kCommandSelectAll						kHICommandSelectAll
-#define kCommandSelectAllWithScrollback			'SlSb'
-#define kCommandSelectNothing					'Sel0'
 
 // View menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
@@ -302,24 +293,6 @@ Actions typically associated with the Edit menu.
 	performUndo:(id)_;
 	- (IBAction)
 	performRedo:(id)_;
-	- (IBAction)
-	performCut:(id)_;
-	- (IBAction)
-	performCopy:(id)_;
-	- (IBAction)
-	performCopyWithTabSubstitution:(id)_;
-	- (IBAction)
-	performCopyAndPaste:(id)_;
-	- (IBAction)
-	performPaste:(id)_;
-	- (IBAction)
-	performDelete:(id)_;
-	- (IBAction)
-	performSelectAll:(id)_;
-	- (IBAction)
-	performSelectNothing:(id)_;
-	- (IBAction)
-	performSelectEntireScrollbackBuffer:(id)_;
 
 @end //}
 

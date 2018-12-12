@@ -100,16 +100,10 @@ changes to an interface declared in a ".mm" file.
 	interpreterRef;
 
 // actions
-	- (id)
-	canPerformCopy:(id <NSValidatedUserInterfaceItem>)_;
 	- (IBAction)
-	performCopy:(id)_;
-	- (id)
-	canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)_;
+	copy:(id)_;
 	- (IBAction)
 	performPrintScreen:(id)_;
-	- (id)
-	canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)_;
 	- (IBAction)
 	performPrintSelection:(id)_;
 

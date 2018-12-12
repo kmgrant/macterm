@@ -1138,7 +1138,7 @@ Edit menu.)
 (4.1)
 */
 - (IBAction)
-performCopy:(id)	sender
+copy:(id)	sender
 {
 #pragma unused(sender)
 	NSRect			imageBounds = self.frame;
@@ -1162,7 +1162,7 @@ performCopy:(id)	sender
 	[copiedImage release];
 }
 - (id)
-canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
+canCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return @(YES);

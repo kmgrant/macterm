@@ -245,12 +245,12 @@ DQ
                             <menuItem isSeparatorItem="YES" id="685"/>
                             <menuItem title="Cut" keyEquivalent="x" id="686">
                                 <connections>
-                                    <action selector="performCut:" target="-1" id="TM0-pg-0AR"/>
+                                    <action selector="cut:" target="-1" id="Eib-CK-kur"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Copy" keyEquivalent="c" id="687">
                                 <connections>
-                                    <action selector="performCopy:" target="-1" id="bJ0-YB-Eks"/>
+                                    <action selector="copy:" target="-1" id="iV4-UH-WUC"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Copy with Tab Substitution" keyEquivalent="C" id="812">
@@ -265,24 +265,24 @@ DQ
                             </menuItem>
                             <menuItem title="Paste" keyEquivalent="v" id="688">
                                 <connections>
-                                    <action selector="performPaste:" target="-1" id="44k-2X-Gb7"/>
+                                    <action selector="paste:" target="-1" id="tzy-QO-5nF"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Delete" id="690">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="performDelete:" target="-1" id="5MJ-ja-T57"/>
+                                    <action selector="delete:" target="-1" id="Me5-y1-cGu"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="692"/>
                             <menuItem title="Select All" keyEquivalent="a" id="691">
                                 <connections>
-                                    <action selector="performSelectAll:" target="-1" id="56a-Yt-eVV"/>
+                                    <action selector="selectAll:" target="-1" id="ObF-Xk-4FP"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Select Nothing" alternate="YES" keyEquivalent="A" id="825">
                                 <connections>
-                                    <action selector="performSelectNothing:" target="-1" id="XBY-os-8TM"/>
+                                    <action selector="selectNone:" target="-1" id="I5a-yz-PiM"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Select Entire Scrollback Buffer" alternate="YES" keyEquivalent="a" id="833">

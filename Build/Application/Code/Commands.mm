@@ -461,118 +461,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandCut:
-		case kCommandCopy:
-		case kCommandCopyTable:
-			if ((inCommandID == kCommandCut) ||
-				(inCommandID == kCommandCopy) ||
-				(inCommandID == kCommandCopyTable))
-			{
-				// all of these operations involving copying to the clipboard
-				if (nullptr != activeView)
-				{
-					CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy(activeView),
-																CFRetainRelease::kAlreadyRetained); 
-					NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
-					
-					
-					if (selectedNSImageArray.exists() && (asArray.count > 0))
-					{
-						Boolean		haveCleared = false;
-						
-						
-						for (NSImage* asImage in asArray)
-						{
-							assert([asImage isKindOfClass:NSImage.class]);
-							OSStatus	copyStatus = noErr;
-							
-							
-							copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
-																			(false == haveCleared)/* clear flag */);
-							if (noErr != copyStatus)
-							{
-								Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
-							}
-							else
-							{
-								// if more than one image is selected, add them all
-								haveCleared = true;
-							}
-						}
-					}
-					else
-					{
-						Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
-															? kClipboard_CopyMethodTable
-															: kClipboard_CopyMethodStandard);
-					}
-				}
-			}
-			break;
-		
-		case kCommandCopyAndPaste:
-			if (isSession)
-			{
-				// type if there is a window to type into
-				CFArrayRef		clipboardStringArray = nullptr;
-				
-				
-				Clipboard_TextToScrap(activeView, kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
-				
-				if (Clipboard_CreateCFStringArrayFromPasteboard(clipboardStringArray))
-				{
-					NSArray*		asNSArray = BRIDGE_CAST(clipboardStringArray, NSArray*);
-					NSUInteger		lineCount = 0;
-					
-					
-					// NOTE: due to “inline” Copy above, there should not be more than
-					// one line retrieved from the Clipboard but this is an iteration
-					// for completeness
-					for (id anObject in asNSArray)
-					{
-						if (NO == [anObject isKindOfClass:NSString.class])
-						{
-							Sound_StandardAlert();
-							Console_Warning(Console_WriteLine, "unexpected non-string value read from clipboard");
-							break;
-						}
-						else
-						{
-							NSString*	asString = STATIC_CAST(anObject, NSString*);
-							
-							
-							Session_UserInputCFString(frontSession, BRIDGE_CAST(asString, CFStringRef));
-							++lineCount;
-							if (lineCount < asNSArray.count)
-							{
-								Session_SendNewline(frontSession, kSession_EchoCurrentSessionValue);
-							}
-						}
-					}
-					CFRelease(clipboardStringArray); clipboardStringArray = nullptr;
-				}
-			}
-			break;
-		
-		case kCommandPaste:
-			if (isSession)
-			{
-				Session_Result		sessionResult = Session_UserInputPaste(frontSession); // paste if there is a window to paste into
-				
-				
-				if (false == sessionResult.ok())
-				{
-					Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
-				}
-			}
-			else
-			{
-				// this should not happen with Cocoa if the responder chain is
-				// able to forward Paste actions to the active element
-				Console_Warning(Console_WriteLine, "failed to paste (not a session window)");
-			}
-			break;
-		
 		//case kCommandFind:
 		//case kCommandFindAgain:
 		//case kCommandFindPrevious:
@@ -582,29 +470,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//case kCommandFindCursor:
 		//	see TerminalWindow.mm
 		//	break;
-		
-		case kCommandSelectAll: // text only
-		case kCommandSelectAllWithScrollback: // text only
-		case kCommandSelectNothing: // text only
-			if (isSession)
-			{
-				if (inCommandID == kCommandSelectAllWithScrollback)
-				{
-					// select entire scrollback buffer
-					TerminalView_SelectEntireBuffer(activeView);
-				}
-				else if (inCommandID == kCommandSelectNothing)
-				{
-					// remove selection
-					TerminalView_SelectNothing(activeView);
-				}
-				else
-				{
-					// select only the bottomost windowful of text
-					TerminalView_SelectMainScreen(activeView);
-				}
-			}
-			break;
 		
 		//case kCommandWiderScreen:
 		//case kCommandNarrowerScreen:
@@ -2786,7 +2651,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 			[result setTarget:self]; // TEMPORARY
 		}
 	}
-	else if (@selector(performCopy:) == anActionSelector)
+	else if (@selector(copy:) == anActionSelector)
 	{
 		if (onlyIfEnabled)
 		{
@@ -2796,7 +2661,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"c"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performCopyWithTabSubstitution:) == anActionSelector)
@@ -2809,7 +2673,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"C"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performFind:) == anActionSelector)
@@ -2876,7 +2739,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 			[result setTarget:self]; // TEMPORARY
 		}
 	}
-	else if (@selector(performPaste:) == anActionSelector)
+	else if (@selector(paste:) == anActionSelector)
 	{
 		if (onlyIfEnabled)
 		{
@@ -2886,7 +2749,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"v"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performPrintScreen:) == anActionSelector)
@@ -3346,215 +3208,6 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 - (IBAction)
-performCopy:(id)	sender
-{
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(copy:) withObject:sender]))
-	{
-		// assume this is potentially a Carbon window that should (for now) take a different approach;
-		// longer-term this will go away and the responder chain will be used everywhere
-		Commands_ExecuteByIDUsingEvent(kCommandCopy, nullptr/* target */);
-	}
-}
-- (id)
-canPerformCopy:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	NSWindow*			target = [NSApp keyWindow];
-	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-	id					keyResponder = [target firstResponder];
-	BOOL				result = NO;
-	
-	
-	if (nullptr != terminalWindow)
-	{
-		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		
-		
-		result = TerminalView_TextSelectionExists(view);
-	}
-	else if ([keyResponder respondsToSelector:@selector(canPerformCopy:)])
-	{
-		// TEMPORARY; until the responder chain is fully-enabled, it’s necessary to
-		// manually query the responder for a validation routine
-		result = [[keyResponder canPerformCopy:anItem] boolValue];
-	}
-	else if ((nullptr == terminalWindow) && ([keyResponder respondsToSelector:@selector(copy:)]))
-	{
-		// text view
-		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
-					? NO
-					: YES;
-		if (result)
-		{
-			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performCopyAndPaste:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandCopyAndPaste, nullptr/* target */);
-	}
-}
-- (id)
-canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = textSelectionExists();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performCopyWithTabSubstitution:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandCopyTable, nullptr/* target */);
-	}
-}
-- (id)
-canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = textSelectionExists();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performCut:(id)		sender
-{
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(cut:) withObject:sender]))
-	{
-		// assume this is potentially a Carbon window that should (for now) take a different approach;
-		// longer-term this will go away and the responder chain will be used everywhere
-		Commands_ExecuteByIDUsingEvent(kCommandCut, nullptr/* target */);
-	}
-}
-- (id)
-canPerformCut:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	NSWindow*			target = [NSApp keyWindow];
-	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-	id					keyResponder = [target firstResponder];
-	BOOL				result = NO;
-	
-	
-	if (nullptr != terminalWindow)
-	{
-		result = NO;
-	}
-	else if ([keyResponder respondsToSelector:@selector(cut:)])
-	{
-		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
-					? NO
-					: YES;
-		if (result)
-		{
-			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performDelete:(id)	sender
-{
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(delete:) withObject:sender]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(clear:) withObject:sender]))
-	{
-		// assume this is potentially a Carbon window that should (for now) take a different approach;
-		// longer-term this will go away and the responder chain will be used everywhere
-		Commands_ExecuteByIDUsingEvent(kCommandClear, nullptr/* target */);
-	}
-}
-- (id)
-canPerformDelete:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	NSWindow*			target = [NSApp keyWindow];
-	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-	id					keyResponder = [target firstResponder];
-	BOOL				result = NO;
-	
-	
-	if (nullptr != terminalWindow)
-	{
-		result = NO;
-	}
-	else if ([keyResponder respondsToSelector:@selector(delete:)] || [keyResponder respondsToSelector:@selector(clear:)])
-	{
-		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
-					? NO
-					: YES;
-		if (result)
-		{
-			result = ([[target fieldEditor:NO/* create */ forObject:keyResponder] selectedRange].length > 0);
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performPaste:(id)	sender
-{
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(paste:) withObject:sender]))
-	{
-		// assume this is potentially a Carbon window that should (for now) take a different approach;
-		// longer-term this will go away and the responder chain will be used everywhere
-		Commands_ExecuteByIDUsingEvent(kCommandPaste, nullptr/* target */);
-	}
-}
-- (id)
-canPerformPaste:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	id		keyResponder = [[NSApp keyWindow] firstResponder];
-	BOOL	result = NO;
-	
-	
-	if ([keyResponder respondsToSelector:@selector(paste:)])
-	{
-		result = ([keyResponder respondsToSelector:@selector(isEditable)] && (NO == [keyResponder isEditable]))
-					? NO
-					: YES;
-	}
-	else
-	{
-		CFArrayRef		dummyCFStringArray = nullptr;
-		Boolean			clipboardContainsText = false;
-		
-		
-		if (Clipboard_CreateCFStringArrayFromPasteboard(dummyCFStringArray))
-		{
-			clipboardContainsText = true;
-			CFRelease(dummyCFStringArray); dummyCFStringArray = nullptr; 
-		}
-		result = ((clipboardContainsText) &&
-					(nullptr != TerminalWindow_ReturnFromKeyWindow()));
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
 performRedo:(id)	sender
 {
 #pragma unused(sender)
@@ -3608,52 +3261,6 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 	}
 	
 	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSelectAll:(id)	sender
-{
-	if ((NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]) &&
-		(NO == [self viaFirstResponderTryToPerformSelector:@selector(selectAll:) withObject:sender]))
-	{
-		// assume this is potentially a Carbon window that should (for now) take a different approach;
-		// longer-term this will go away and the responder chain will be used everywhere
-		Commands_ExecuteByIDUsingEvent(kCommandSelectAll, nullptr/* target */);
-	}
-}
-- (id)
-canPerformSelectAll:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	if ([[[NSApp keyWindow] firstResponder] respondsToSelector:@selector(selectAll:)])
-	{
-		result = YES;
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSelectEntireScrollbackBuffer:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSelectAllWithScrollback, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performSelectNothing:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSelectNothing, nullptr/* target */);
-	}
 }
 
 
@@ -6284,6 +5891,7 @@ canOrderFrontPreferences:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 orderFrontSessionInfo:(id)	sender
 {
+#pragma unused(sender)
 	InfoWindow_SetVisible(false == InfoWindow_IsVisible());
 }
 - (id)
@@ -6676,14 +6284,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	// letters implicitly add a shift-key modifier.
 	switch (aCommandID)
 	{
-	case kCommandCopy:
-		theSelector = @selector(performCopy:);
-		break;
-	
-	case kCommandCopyTable:
-		theSelector = @selector(performCopyWithTabSubstitution:);
-		break;
-	
 	case kCommandFind:
 		theSelector = @selector(performFind:);
 		break;
@@ -6694,10 +6294,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	
 	case kCommandHandleURL:
 		theSelector = @selector(performOpenURL:);
-		break;
-	
-	case kCommandPaste:
-		theSelector = @selector(performPaste:);
 		break;
 	
 	case kCommandPrintScreen:

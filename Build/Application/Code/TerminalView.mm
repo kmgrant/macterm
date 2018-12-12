@@ -7767,7 +7767,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 {
 	NSMenuItem*		newItem = nil;
 	CFStringRef		commandText = nullptr;
-	UInt32			targetCommandID = 0;
 	
 	
 	ContextSensitiveMenu_Init();
@@ -7800,7 +7799,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForAction(@selector(performCopy:), commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(copy:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -7903,7 +7902,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 		
 		if (UIStrings_Copy(kUIStrings_ContextualMenuPasteText, commandText).ok())
 		{
-			newItem = Commands_NewMenuItemForAction(@selector(performPaste:), commandText, true/* must be enabled */);
+			newItem = Commands_NewMenuItemForAction(@selector(paste:), commandText, true/* must be enabled */);
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
@@ -10348,6 +10347,104 @@ terminalViewRef
 
 
 /*!
+Copies selected text or images from the terminal view to
+the clipboard.
+
+(2018.12)
+*/
+- (IBAction)
+copy:(id)	sender
+{
+#pragma unused(sender)
+	// determine if the current selection is an image
+	CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy([self terminalViewRef]),
+												CFRetainRelease::kAlreadyRetained); 
+	NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
+	
+	
+	if (selectedNSImageArray.exists() && (asArray.count > 0))
+	{
+		Boolean		haveCleared = false;
+		
+		
+		for (NSImage* asImage in asArray)
+		{
+			assert([asImage isKindOfClass:NSImage.class]);
+			OSStatus	copyStatus = noErr;
+			
+			
+			copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
+															(false == haveCleared)/* clear flag */);
+			if (noErr != copyStatus)
+			{
+				Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
+			}
+			else
+			{
+				// if more than one image is selected, add them all
+				haveCleared = true;
+			}
+		}
+	}
+	else
+	{
+		Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodStandard);
+	}
+}
+- (id)
+canCopy:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
+Send text from the clipboard to the session, as if it had
+been typed by the user.  This may first trigger a warning,
+if the text spans multiple lines.
+
+(2018.12)
+*/
+- (IBAction)
+paste:(id)	sender
+{
+#pragma unused(sender)
+	Session_Result		sessionResult = Session_UserInputPaste([self boundSession]); // paste if there is a window to paste into
+	
+	
+	if (false == sessionResult.ok())
+	{
+		Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
+	}
+}
+- (id)
+canPaste:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL			result = NO;
+	CFArrayRef		dummyCFStringArray = nullptr;
+	Boolean			clipboardContainsText = false;
+	
+	
+	// TEMPORARY; this is a somewhat expensive way to check something
+	// that can probably be stored as a simple state flag (or queried
+	// from the system)
+	if (Clipboard_CreateCFStringArrayFromPasteboard(dummyCFStringArray))
+	{
+		clipboardContainsText = true;
+		CFRelease(dummyCFStringArray); dummyCFStringArray = nullptr; 
+	}
+	result = (clipboardContainsText);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
 Prompts the user to specify where to save a new file,
 and then initiates a continuous capture of terminal text
 to that file.
@@ -10397,6 +10494,63 @@ canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		result = (Terminal_FileCaptureInProgress(currentScreen) ? YES : NO);
 	}
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
+Copies selected text from the terminal view to the clipboard
+as a single joined line and immediately performs a Paste of
+that text.
+
+(2018.12)
+*/
+- (IBAction)
+performCopyAndPaste:(id)	sender
+{
+#pragma unused(sender)
+	Session_Result		sessionResult = kSession_ResultOK;
+	
+	
+	Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
+	
+	sessionResult = Session_UserInputPaste([self boundSession]);
+	if (false == sessionResult.ok())
+	{
+		Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
+	}
+}
+- (id)
+canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
+Copies selected text from the terminal view to the clipboard
+except consecutive spaces may be replaced by a single tab
+(based on user preferences).
+
+(2018.12)
+*/
+- (IBAction)
+performCopyWithTabSubstitution:(id)		sender
+{
+#pragma unused(sender)
+	Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodTable);
+}
+- (id)
+canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -10577,22 +10731,24 @@ canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 performSaveSelection:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-	
-	
-	TerminalView_DisplaySaveSelectionUI(terminalView);
+	TerminalView_DisplaySaveSelectionUI([self terminalViewRef]);
 }
 - (id)
 canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-	BOOL				result = TerminalView_TextSelectionExists(terminalView);
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
 	
 	
 	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSelectEntireScrollbackBuffer:(id)	sender
+{
+#pragma unused(sender)
+	TerminalView_SelectEntireBuffer([self terminalViewRef]);
 }
 
 
@@ -10680,23 +10836,44 @@ canPerformTranslationSwitchDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 - (IBAction)
+selectAll:(id)		sender
+{
+#pragma unused(sender)
+	// select only the bottomost windowful of text
+	TerminalView_SelectMainScreen([self terminalViewRef]);
+}
+
+
+- (IBAction)
+selectNone:(id)		sender
+{
+#pragma unused(sender)
+	// remove selection
+	TerminalView_SelectNothing([self terminalViewRef]);
+}
+- (id)
+canSelectNone:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
 startSpeaking:(id)		sender
 {
 #pragma unused(sender)
 	// note: this method is named to match NSTextView selector
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-	
-	
-	TerminalView_GetSelectedTextAsAudio(terminalView);
+	TerminalView_GetSelectedTextAsAudio([self terminalViewRef]);
 }
 - (id)
 canStartSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	TerminalViewRef		terminalView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-	BOOL				result = TerminalView_TextSelectionExists(terminalView);
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
 	
 	
 	return ((result) ? @(YES) : @(NO));

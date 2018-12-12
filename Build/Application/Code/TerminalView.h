@@ -353,9 +353,17 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
+	copy:(id)_;
+	- (IBAction)
+	paste:(id)_;
+	- (IBAction)
 	performCaptureBegin:(id)_;
 	- (IBAction)
 	performCaptureEnd:(id)_;
+	- (IBAction)
+	performCopyAndPaste:(id)_;
+	- (IBAction)
+	performCopyWithTabSubstitution:(id)_;
 	- (IBAction)
 	performFormatByFavoriteName:(id)_;
 	- (IBAction)
@@ -367,9 +375,15 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	performSaveSelection:(id)_;
 	- (IBAction)
+	performSelectEntireScrollbackBuffer:(id)_;
+	- (IBAction)
 	performTranslationSwitchByFavoriteName:(id)_;
 	- (IBAction)
 	performTranslationSwitchDefault:(id)_;
+	- (IBAction)
+	selectAll:(id)_;
+	- (IBAction)
+	selectNone:(id)_;
 	- (IBAction)
 	startSpeaking:(id)_;
 	- (IBAction)
