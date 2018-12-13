@@ -10455,11 +10455,10 @@ to that file.
 performCaptureBegin:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	TerminalScreenRef	currentScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
 	
 	
-	Terminal_FileCaptureEnd(currentScreen); // terminate any previous capture
+	Terminal_FileCaptureEnd(screenRef); // terminate any previous capture
 	Session_DisplayFileCaptureSaveDialog([self boundSession]);
 }
 
@@ -10473,27 +10472,20 @@ Stops the continuous capture of terminal text to a file.
 performCaptureEnd:(id)		sender
 {
 #pragma unused(sender)
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	TerminalScreenRef	currentScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
 	
 	
-	Terminal_FileCaptureEnd(currentScreen);
+	Terminal_FileCaptureEnd(screenRef);
 }
 - (id)
 canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
-										? nullptr
-										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
 	BOOL				result = NO;
 	
 	
-	if (nullptr != currentScreen)
-	{
-		result = (Terminal_FileCaptureInProgress(currentScreen) ? YES : NO);
-	}
+	result = (Terminal_FileCaptureInProgress(screenRef) ? YES : NO);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -10749,6 +10741,74 @@ performSelectEntireScrollbackBuffer:(id)	sender
 {
 #pragma unused(sender)
 	TerminalView_SelectEntireBuffer([self terminalViewRef]);
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED1Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 1, false == Terminal_LEDIsOn(screenRef, 1));
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED2Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 2, false == Terminal_LEDIsOn(screenRef, 2));
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED3Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 3, false == Terminal_LEDIsOn(screenRef, 3));
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED4Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 4, false == Terminal_LEDIsOn(screenRef, 4));
 }
 
 

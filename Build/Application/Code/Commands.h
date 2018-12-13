@@ -451,14 +451,6 @@ Actions to change various terminal behaviors.
 	performSpeechToggle:(id)_;
 	- (IBAction)
 	performSuspendToggle:(id)_;
-	- (IBAction)
-	performTerminalLED1Toggle:(id)_;
-	- (IBAction)
-	performTerminalLED2Toggle:(id)_;
-	- (IBAction)
-	performTerminalLED3Toggle:(id)_;
-	- (IBAction)
-	performTerminalLED4Toggle:(id)_;
 
 @end //}
 

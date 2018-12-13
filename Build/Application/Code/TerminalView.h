@@ -377,6 +377,14 @@ changes to an interface declared in a ".mm" file.
 	- (IBAction)
 	performSelectEntireScrollbackBuffer:(id)_;
 	- (IBAction)
+	performTerminalLED1Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED2Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED3Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED4Toggle:(id)_;
+	- (IBAction)
 	performTranslationSwitchByFavoriteName:(id)_;
 	- (IBAction)
 	performTranslationSwitchDefault:(id)_;

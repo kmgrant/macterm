@@ -5071,11 +5071,7 @@ Designated initializer.
 */
 - (instancetype)
 initWithContentRect:(NSRect)	aRect
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
-styleMask:(NSUInteger)			aStyleMask
-#else
 styleMask:(NSWindowStyleMask)	aStyleMask
-#endif
 backing:(NSBackingStoreType)	aBufferingType
 defer:(BOOL)					aDeferFlag
 {
