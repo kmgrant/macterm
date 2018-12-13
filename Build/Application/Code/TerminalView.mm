@@ -10908,9 +10908,11 @@ area of the terminal window.
 draggingEntered:(id <NSDraggingInfo>)	sender
 {
 	NSDragOperation		result = NSDragOperationNone;
+	My_TerminalViewPtr	viewPtr = [self internalViewPtr];
 	
 	
-	if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.readOnly) &&
+		([sender draggingSourceOperationMask] & NSDragOperationCopy))
 	{
 		TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
 		
@@ -10941,10 +10943,16 @@ area of the terminal window.
 draggingExited:(id <NSDraggingInfo>)	sender
 {
 #pragma unused(sender)
-	// show a highlight area by setting the appropriate view property
-	// and requesting a redraw
-	self.showDragHighlight = NO;
-	[self setNeedsDisplay];
+	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
+	
+	
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.readOnly))
+	{
+		// show a highlight area by setting the appropriate view property
+		// and requesting a redraw
+		self.showDragHighlight = NO;
+		[self setNeedsDisplay];
+	}
 }// draggingExited:
 
 
@@ -10990,7 +10998,11 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 	
 	// “type” the text; this could trigger the “multi-line paste” alert
 	sessionResult = Session_UserInputPaste(listeningSession, dragPasteboard);
-	if (false == sessionResult.ok())
+	if (sessionResult.ok())
+	{
+		result = YES;
+	}
+	else
 	{
 		Console_Warning(Console_WriteValue, "failed to drop pasteboard item, error", sessionResult.code());
 	}
@@ -11010,14 +11022,18 @@ acceptable.
 prepareForDragOperation:(id <NSDraggingInfo>)	sender
 {
 #pragma unused(sender)
-	BOOL	result = NO;
+	BOOL					result = NO;
+	My_TerminalViewPtr		viewPtr = [self internalViewPtr];
 	
 	
-	self.showDragHighlight = NO;
-	[self setNeedsDisplay];
-	
-	// always accept the drag
-	result = YES;
+	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.readOnly))
+	{
+		self.showDragHighlight = NO;
+		[self setNeedsDisplay];
+		
+		// always accept the drag
+		result = YES;
+	}
 	
 	return result;
 }// prepareForDragOperation:
