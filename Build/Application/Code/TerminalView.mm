@@ -11106,12 +11106,26 @@ prepareForDragOperation:(id <NSDraggingInfo>)	sender
 It is necessary for terminal views to accept “first responder”
 in order to ever receive actions such as menu commands!
 
+This returns NO for read-only views however to prevent the
+focus ring from appearing when the view is first clicked.
+
+See also "canBecomeKeyView".
+
 (4.0)
 */
 - (BOOL)
 acceptsFirstResponder
 {
-	return YES;
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	BOOL					result = YES;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		result = (false == viewPtr->text.selection.readOnly);
+	}
+	
+	return result;
 }// acceptsFirstResponder
 
 
@@ -11459,6 +11473,55 @@ characterIndexForPoint:(NSPoint)	aPoint
 
 
 /*!
+Prevents rendering of a focus ring for read-only terminals.
+
+See also "acceptsFirstResponder".
+
+(2018.12)
+*/
+- (BOOL)
+canBecomeKeyView
+{
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	BOOL					result = YES;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		result = (false == viewPtr->text.selection.readOnly);
+	}
+	
+	return result;
+}// canBecomeKeyView
+
+
+/*!
+Invoked by the OS to find the boundaries of the focus ring.
+
+NOTE:	Invoked by the system only on OS 10.7 or later, and
+		less often than one might think.
+
+(2018.12)
+*/
+- (void)
+drawFocusRingMask
+{
+	// IMPORTANT: make consistent with "focusRingMaskBounds";
+	// fill the exact shape of the focus ring however (not just
+	// the boundaries of it); the settings below are meant to
+	// match the current system appearance/layout (as such, in
+	// the future they may require adjustment)
+	NSRect		focusRingDrawingBounds = [self focusRingMaskBounds];
+	
+	
+	// based on the rules for drawing (for both NSSetFocusRingStyle()
+	// and the new-style "focusRingMaskBounds"), “filling” the target
+	// area will cause only a focus ring to appear
+	[[NSBezierPath bezierPathWithRoundedRect:focusRingDrawingBounds xRadius:3 yRadius:3] fill];
+}// drawFocusRingMask
+
+
+/*!
 Render the specified part of the terminal screen.
 
 INCOMPLETE.  This is going to be the test bed for transitioning
@@ -11713,6 +11776,28 @@ drawRect:(NSRect)	aRect
 	#endif
 	}
 }// drawRect:
+
+
+/*!
+Invoked by the OS to find the boundaries of the focus ring.
+
+NOTE:	Invoked only on OS 10.7 or later, and less often
+		than one might think.
+
+(2018.12)
+*/
+- (NSRect)
+focusRingMaskBounds
+{
+	// IMPORTANT: make consistent with "drawFocusRingMask"
+	// (TEMPORARY; this border layout does not currently read the actual
+	// offsets around the terminal interior so it could become out of sync)
+	// NOTE: the system seems to ignore boundary outsets if they are large
+	NSRect		result = NSInsetRect(self.bounds, -5, -4);
+	
+	
+	return result;
+}// focusRingMaskBounds
 
 
 /*!
