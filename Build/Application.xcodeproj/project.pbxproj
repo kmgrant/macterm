@@ -1711,7 +1711,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-g",
-					"-fpascal-strings",
 					"-v",
 					"$(PYTHON_INCLUDES)",
 					"-IApplication/Code",
@@ -1752,6 +1751,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
@@ -1838,7 +1838,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-g",
-					"-fpascal-strings",
 					"-v",
 					"$(PYTHON_INCLUDES)",
 					"-IApplication/Code",
@@ -1924,6 +1923,7 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				GCC_ENABLE_PASCAL_STRINGS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";

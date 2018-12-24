@@ -330,7 +330,7 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 			NSFont*				normalFont;		// font for most text; also represents current family, size and metrics (Cocoa terminals)
 			NSFont*				boldFont;		// alternate font for bold-weighted text (might match "normalFont" if no special font is found)
 			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
-			Str255				familyName;		// font name (as might appear in a Font menu)
+			CFRetainRelease		familyName;		// CFStringRef; font name (as might appear in a Font menu)
 			struct Metrics
 			{
 				SInt16		ascent;			// number of pixels highest character extends above the base line
@@ -1435,13 +1435,13 @@ TerminalView_GetFontAndSize		(TerminalViewRef	inView,
 	{
 		if (nullptr != outFontFamilyNameOrNull)
 		{
-			CFStringRef		newString = CFStringCreateWithPascalString(kCFAllocatorDefault,
-																		viewPtr->text.font.familyName,
-																		kCFStringEncodingMacRoman);
+			CFStringRef		fontNameCFString = viewPtr->text.font.familyName.returnCFStringRef();
+			NSString*		asNSString = BRIDGE_CAST(fontNameCFString, NSString*);
 			
 			
-			*outFontFamilyNameOrNull = newString;
-			[BRIDGE_CAST(newString, NSString*) autorelease];
+			[asNSString retain];
+			*outFontFamilyNameOrNull = fontNameCFString;
+			[asNSString autorelease];
 		}
 		
 		if (nullptr != outFontSizeOrNull)
@@ -5265,27 +5265,6 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 			inTerminalViewPtr->screen.currentRenderBlinking = true;
 		}
 	}
-	
-#if 0
-	// DEBUGGING ONLY: try to see what column is drawn where, by rendering a number
-	{
-		char x[255];
-		Str255 pstr;
-		(int)std::snprintf(x, sizeof(x), "%d", inZeroBasedStartColumnNumber);
-		StringUtilities_CToP(x, pstr);
-		DrawString(pstr);
-	}
-#endif
-#if 0
-	// DEBUGGING ONLY: try to see what line is drawn where, by rendering a number
-	{
-		char x[255];
-		Str255 pstr;
-		(int)std::snprintf(x, sizeof(x), "%d", inTerminalViewPtr->screen.currentRenderedLine);
-		StringUtilities_CToP(x, pstr);
-		DrawString(pstr);
-	}
-#endif
 }// drawTerminalScreenRunOp
 
 
@@ -6386,19 +6365,6 @@ findVirtualCellFromLocalPoint	(My_TerminalViewPtr		inTerminalViewPtr,
 		result = findVirtualCellFromScreenPoint(inTerminalViewPtr, screenPixelPosition, outCell,
 												outDeltaColumn, outDeltaRow);
 	}
-	
-#if 0
-	// TEMPORARY - for debugging purposes, could display the coordinates
-	{
-	Str31 x, y;
-	MoveTo(inLocalPixelPosition.h, inLocalPixelPosition.v);
-	NumToString(outCell.first, x);
-	NumToString(outCell.second, y);
-	DrawString(x);
-	DrawString("\p,");
-	DrawString(y);
-	}
-#endif
 	
 	return result;
 }// findVirtualCellFromLocalPoint
@@ -8936,16 +8902,7 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 	if (inFontFamilyNameOrNull != nullptr)
 	{
 		// remember font selection
-		Boolean		getOK = CFStringGetPascalString(inFontFamilyNameOrNull,
-													inTerminalViewPtr->text.font.familyName,
-													sizeof(inTerminalViewPtr->text.font.familyName),
-													kCFStringEncodingMacRoman);
-		
-		
-		if (false == getOK)
-		{
-			Console_Warning(Console_WriteValueCFString, "failed to find Pascal string for font name", inFontFamilyNameOrNull);
-		}
+		inTerminalViewPtr->text.font.familyName.setWithRetain(inFontFamilyNameOrNull);
 	}
 	
 	if (inFontSizeOrZero > 0)
