@@ -733,6 +733,51 @@ TerminalWindow_Focus	(TerminalWindowRef	inRef)
 
 
 /*!
+Performs the specified operation on every terminal view
+in the window.  The list must NOT change during iteration.
+
+The iteration terminates early if the block sets its
+stop-flag parameter.
+
+\retval kWorkspace_ResultOK
+if there are no errors
+
+\retval kWorkspace_ResultInvalidReference
+if the specified workspace is unrecognized
+
+(2018.12)
+*/
+TerminalWindow_Result
+TerminalWindow_ForEachTerminalView	(TerminalWindowRef					inRef,
+									 TerminalWindow_TerminalViewBlock	inBlock)
+{
+	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_Result			result = kTerminalWindow_ResultGenericFailure;
+	Boolean							stopFlag = false;
+	
+	
+	if (nullptr == ptr)
+	{
+		result = kTerminalWindow_ResultInvalidReference;
+	}
+	else
+	{
+		// traverse the list
+		for (auto terminalViewRef : ptr->allViews)
+		{
+			inBlock(terminalViewRef, stopFlag);
+			if (stopFlag)
+			{
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// ForEachTerminalWindow
+
+
+/*!
 Returns the font and/or size used by the terminal
 screens in the specified window.  If you are not
 interested in one of the values, simply pass nullptr
@@ -759,56 +804,6 @@ TerminalWindow_GetFontAndSize	(TerminalWindowRef	inRef,
 
 
 /*!
-Returns references to all virtual terminal screen buffers
-that can be seen in the given terminal window.  In order
-for the result to be greater than 1, there must be at
-least two distinct source buffers (and not just two
-distinct split-pane views) used by the window.
-
-Use TerminalWindow_ReturnScreenCount() to determine an
-appropriate size for your array, then allocate an array
-and pass the count as "inArrayLength".  Note that this
-is the number of elements, not necessarily the number
-of bytes!
-
-Currently, MacTerm only has one screen per window, so
-only one screen will be returned.  However, if your code
-*could* vary depending on the number of screens in a
-window, you should use this API to iterate properly now,
-to ensure correct behavior in the future.
-
-(3.0)
-*/
-void
-TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
-							 UInt16					inArrayLength,
-							 TerminalScreenRef*		outScreenArray,
-							 UInt16*				outActualCountOrNull)
-{
-	if (nullptr != outScreenArray)
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		auto							maxIterator = ptr->allScreens.begin();
-		
-		
-		// based on the available space given by the caller,
-		// find where the list “past-the-end” is
-		std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allScreens.size()));
-		
-		// copy all possible screen buffer references
-		for (auto screenIterator = ptr->allScreens.begin(); screenIterator != maxIterator; ++screenIterator)
-		{
-			*outScreenArray++ = *screenIterator;
-		}
-		if (nullptr != outActualCountOrNull)
-		{
-			*outActualCountOrNull = STATIC_CAST(ptr->allScreens.size(), UInt16);
-		}
-	}
-}// GetScreens
-
-
-/*!
 Returns the number of columns and/or the number of
 rows visible in the specified terminal window.  If
 there are multiple split-panes (multiple screens),
@@ -827,127 +822,6 @@ TerminalWindow_GetScreenDimensions	(TerminalWindowRef	inRef,
 	if (outColumnCountPtrOrNull != nullptr) *outColumnCountPtrOrNull = Terminal_ReturnColumnCount(getActiveScreen(ptr)/* TEMPORARY */);
 	if (outRowCountPtrOrNull != nullptr) *outRowCountPtrOrNull = Terminal_ReturnRowCount(getActiveScreen(ptr)/* TEMPORARY */);
 }// GetScreenDimensions
-
-
-/*!
-Returns references to all terminal views in the given
-terminal window.  In order for any views to be
-returned, there must be at least two terminal screen
-controls in use by the window.
-
-Use TerminalWindow_GetViewCount() to determine an
-appropriate size for your array, then allocate an array
-and pass the count as "inArrayLength".  Note that this
-is the number of elements, not necessarily the number
-of bytes!
-
-Currently, MacTerm only has one view per window, so
-only one view will be returned.  However, if your code
-*could* vary depending on the number of views in a
-window, you should use this API to iterate properly now,
-to ensure correct behavior in the future.
-
-IMPORTANT:	The TerminalWindow_GetViewsInGroup() API is
-			more specific and recommended.  This API
-			should now be avoided.
-
-(3.0)
-*/
-void
-TerminalWindow_GetViews		(TerminalWindowRef	inRef,
-							 UInt16				inArrayLength,
-							 TerminalViewRef*	outViewArray,
-							 UInt16*			outActualCountOrNull)
-{
-	if (nullptr != outViewArray)
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		auto							maxIterator = ptr->allViews.begin();
-		
-		
-		// based on the available space given by the caller,
-		// find where the list “past-the-end” is
-		std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allViews.size()));
-		
-		// copy all possible view references
-		for (auto viewIterator = ptr->allViews.begin(); viewIterator != maxIterator; ++viewIterator)
-		{
-			*outViewArray++ = *viewIterator;
-		}
-		if (nullptr != outActualCountOrNull)
-		{
-			*outActualCountOrNull = STATIC_CAST(ptr->allViews.size(), UInt16);
-		}
-	}
-}// GetViews
-
-
-/*!
-Returns references to all terminal views in the given
-terminal window that belong to the specified group.
-
-By specifying a group filter, you can automatically
-retrieve an ordered list of views pertinent to your
-purpose.
-
-Use TerminalWindow_GetViewCountInGroup() to determine
-an appropriate size for your array, then allocate an
-array and pass the count as "inArrayLength" (and be
-sure to pass the same group constant, too!).  Note
-that this is the number of *elements*, not necessarily
-the number of bytes!
-
-Currently, MacTerm only has one view per window, so
-only one view will be returned.  However, if your code
-*could* vary depending on the number of views in a
-window, you should use this API to iterate properly now,
-to ensure correct behavior in the future.
-
-(3.0)
-*/
-TerminalWindow_Result
-TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
-								 TerminalWindow_ViewGroup	inViewGroup,
-								 UInt16						inArrayLength,
-								 TerminalViewRef*			outViewArray,
-								 UInt16*					outActualCountOrNull)
-{
-	TerminalWindow_Result	result = kTerminalWindow_ResultGenericFailure;
-	
-	
-	switch (inViewGroup)
-	{
-	case kTerminalWindow_ViewGroupEverything:
-	case kTerminalWindow_ViewGroupActive:
-		if (nullptr != outViewArray)
-		{
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-			auto							maxIterator = ptr->allViews.begin();
-			
-			
-			// based on the available space given by the caller,
-			// find where the list “past-the-end” is
-			std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allViews.size()));
-			
-			// copy all possible view references
-			for (auto viewIterator = ptr->allViews.begin(); viewIterator != maxIterator; ++viewIterator)
-			{
-				*outViewArray++ = *viewIterator;
-			}
-			if (nullptr != outActualCountOrNull)
-			{
-				*outActualCountOrNull = STATIC_CAST(ptr->allViews.size(), UInt16);
-			}
-			result = kTerminalWindow_ResultOK;
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// GetViewsInGroup
 
 
 /*!
@@ -1266,42 +1140,6 @@ TerminalWindow_ReturnNSWindow	(TerminalWindowRef	inRef)
 
 
 /*!
-Returns the number of distinct virtual terminal screen
-buffers in the given terminal window.  For example,
-even if the window contains 3 split-pane views of the
-same screen buffer, the result will still be 1.
-
-Currently, MacTerm only has one screen per window,
-so the return value will always be 1.  However, if your
-code *could* vary depending on the number of screens in
-a window, you should use this API along with
-TerminalWindow_GetScreens() to iterate properly now, to
-ensure correct behavior in the future.
-
-(3.0)
-*/
-UInt16
-TerminalWindow_ReturnScreenCount	(TerminalWindowRef		inRef)
-{
-	UInt16		result = 0;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		result = STATIC_CAST(ptr->allScreens.size(), UInt16);
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to count screens of invalid terminal window", inRef);
-	}
-	return result;
-}// ReturnScreenCount
-
-
-/*!
 Returns a reference to the virtual terminal that has most
 recently had keyboard focus in the given terminal window.
 Thus, a valid reference is returned even if no terminal
@@ -1309,9 +1147,9 @@ screen control has the keyboard focus.
 
 WARNING:	MacTerm is going to change in the future to
 			support multiple screens per window.  Be sure
-			to use TerminalWindow_GetScreens() instead of
-			this routine if it is appropriate to iterate
-			over all screens in a window.
+			to use TerminalWindow_ForEachTerminalView()
+			instead of this routine if it is appropriate
+			to iterate over all screens in a window.
 
 (3.0)
 */
@@ -1337,91 +1175,6 @@ TerminalWindow_ReturnScreenWithFocus	(TerminalWindowRef	inRef)
 
 
 /*!
-Returns the number of distinct terminal views in the
-given terminal window.  For example, if a window has a
-single split, the result will be 2.
-
-Currently, MacTerm only has one view per window, so
-the return value will always be 1.  However, if your
-code *could* vary depending on the number of views in
-a window, you should use this API along with
-TerminalWindow_GetViewsInGroup() to iterate properly
-now, to ensure correct behavior in the future.
-
-By definition, this function is equivalent to calling
-TerminalWindow_ReturnViewCountInGroup() with a group
-of "kTerminalWindow_ViewGroupEverything".
-
-(3.0)
-*/
-UInt16
-TerminalWindow_ReturnViewCount		(TerminalWindowRef		inRef)
-{
-	UInt16		result = 0;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		result = STATIC_CAST(ptr->allViews.size(), UInt16);
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to count views of invalid terminal window", inRef);
-	}
-	return result;
-}// ReturnViewCount
-
-
-/*!
-Returns the number of distinct terminal views in the
-given group of the given terminal window.  Use this
-to determine the length of the array you need to pass
-into TerminalWindow_GetViewsInGroup().
-
-(3.0)
-*/
-UInt16
-TerminalWindow_ReturnViewCountInGroup	(TerminalWindowRef			inRef,
-										 TerminalWindow_ViewGroup	inGroup)
-{
-	UInt16		result = 0;
-	
-	
-	if (TerminalWindow_IsValid(inRef))
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-		
-		
-		switch (inGroup)
-		{
-		case kTerminalWindow_ViewGroupEverything:
-			result = STATIC_CAST(ptr->allViews.size(), UInt16);
-			assert(result == TerminalWindow_ReturnViewCount(inRef));
-			break;
-		
-		case kTerminalWindow_ViewGroupActive:
-			// currently, only one tab per window so the result is the same
-			result = STATIC_CAST(ptr->allViews.size(), UInt16);
-			assert(result == TerminalWindow_ReturnViewCount(inRef));
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
-	else
-	{
-		Console_Warning(Console_WriteValueAddress, "attempt to count views in group of invalid terminal window", inRef);
-	}
-	return result;
-}// ReturnViewCountInGroup
-
-
-/*!
 Returns a reference to the screen view that has most
 recently had keyboard focus in the given terminal window.
 Thus, a valid reference is returned even if no terminal
@@ -1429,9 +1182,9 @@ screen control has the keyboard focus.
 
 WARNING:	MacTerm is going to change in the future to
 			support multiple views per window.  Be sure
-			to use TerminalWindow_GetViews() instead of
-			this routine if it is appropriate to iterate
-			over all views in a window.
+			to use TerminalWindow_ForEachTerminalView()
+			instead of this routine if it is appropriate
+			to iterate over all views in a window.
 
 (3.0)
 */

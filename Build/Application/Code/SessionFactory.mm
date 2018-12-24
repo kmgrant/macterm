@@ -1905,8 +1905,6 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 	}
 	else
 	{
-		TerminalWindow_Result	terminalWindowResult = kTerminalWindow_ResultOK;
-		TerminalViewRef			view = nullptr;
 		Workspace_Ref			targetWorkspace = nullptr;
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		Boolean					useTabs = false;
@@ -2064,12 +2062,13 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		TerminalWindow_Select(inTerminalWindow);
 		
 		// focus the first view of the first tab
-		terminalWindowResult = TerminalWindow_GetViewsInGroup(inTerminalWindow, kTerminalWindow_ViewGroupEverything, 1/* array length */,
-																&view, nullptr/* actual count */);
-		if (terminalWindowResult == kTerminalWindow_ResultOK)
+		TerminalWindow_ForEachTerminalView(inTerminalWindow,
+		^(TerminalViewRef	aView,
+		  Boolean&			outStopFlag)
 		{
-			TerminalView_FocusForUser(view);
-		}
+			TerminalView_FocusForUser(aView);
+			outStopFlag = true; // only need first view
+		});
 	}
 	return result;
 }// displayTerminalWindow

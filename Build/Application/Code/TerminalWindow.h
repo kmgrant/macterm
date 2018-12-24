@@ -307,6 +307,20 @@ changes to an interface declared in a ".mm" file.
 
 #endif // __OBJC__
 
+#pragma mark Callbacks
+
+/*!
+Terminal View Block
+
+This is used in Terminal_ForEachTerminalView().  If the stop flag is
+set by the block, iteration will end early.
+
+Note that it is sometimes more appropriate to iterate over Sessions
+or Terminal Windows.  Carefully consider what you are trying to do
+so that you iterate at the right level of abstraction.
+*/
+typedef void (^TerminalWindow_TerminalViewBlock)	(TerminalViewRef, Boolean&);
+
 
 
 #pragma mark Public Methods
@@ -356,20 +370,6 @@ void
 													 UInt16*					outColumnCountPtrOrNull,
 													 UInt16*					outRowCountPtrOrNull);
 
-// DEPRECATED
-void
-	TerminalWindow_GetViews							(TerminalWindowRef			inRef,
-													 UInt16						inArrayLength,
-													 TerminalViewRef*			outViewArray,
-													 UInt16*					outActualCountOrNull);
-
-TerminalWindow_Result
-	TerminalWindow_GetViewsInGroup					(TerminalWindowRef			inRef,
-													 TerminalWindow_ViewGroup	inViewGroup,
-													 UInt16						inArrayLength,
-													 TerminalViewRef*			outViewArray,
-													 UInt16*					outActualCountOrNull);
-
 // TEMPORARY, FOR COCOA TRANSITION
 Boolean
 	TerminalWindow_IsFocused						(TerminalWindowRef			inRef);
@@ -392,19 +392,8 @@ Boolean
 NSWindow*
 	TerminalWindow_ReturnNSWindow					(TerminalWindowRef			inRef);
 
-UInt16
-	TerminalWindow_ReturnScreenCount				(TerminalWindowRef			inRef);
-
 TerminalScreenRef
 	TerminalWindow_ReturnScreenWithFocus			(TerminalWindowRef			inRef);
-
-// EQUIVALENT TO TerminalWindow_ReturnViewCountInGroup(inRef, kTerminalWindow_ViewGroupEverything)
-UInt16
-	TerminalWindow_ReturnViewCount					(TerminalWindowRef			inRef);
-
-UInt16
-	TerminalWindow_ReturnViewCountInGroup			(TerminalWindowRef			inRef,
-													 TerminalWindow_ViewGroup	inViewGroup);
 
 TerminalViewRef
 	TerminalWindow_ReturnViewWithFocus				(TerminalWindowRef			inRef);
@@ -447,6 +436,15 @@ void
 void
 	TerminalWindow_SetVisible						(TerminalWindowRef			inRef,
 													 Boolean					inIsVisible);
+
+//@}
+
+//!\name Iterating Over Terminal Views
+//@{
+
+TerminalWindow_Result
+	TerminalWindow_ForEachTerminalView				(TerminalWindowRef			inRef,
+													 TerminalWindow_TerminalViewBlock		inBlock);
 
 //@}
 

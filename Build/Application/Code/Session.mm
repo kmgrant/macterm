@@ -7526,6 +7526,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// install window-dependent event handlers
 		{
 			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			Session_TextInput*		inputDelegate = nil;
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 			
 			
@@ -7535,51 +7536,45 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
 											ptr->terminalWindowListener.returnRef());
+			
+			// install a listener for keystrokes on each view’s control;
+			// in the future, terminal windows may have multiple views,
+			// which can be focused independently
+			ptr->textInputDelegate = [[Session_TextInput alloc] initWithSession:session];
+			inputDelegate = ptr->textInputDelegate; // for use in block below
 			{
-				// install a listener for keystrokes on each view’s control;
-				// in the future, terminal windows may have multiple views,
-				// which can be focused independently
-				UInt16				viewCount = TerminalWindow_ReturnViewCount(ptr->terminalWindow);
-				TerminalViewRef*	viewArray = REINTERPRET_CAST(Memory_NewPtr(viewCount * sizeof(TerminalViewRef)),
-																	TerminalViewRef*);
+				TerminalWindow_Result		iterationResult = kTerminalWindow_ResultOK;
 				
 				
-				if (nullptr != viewArray)
+				iterationResult = TerminalWindow_ForEachTerminalView(ptr->terminalWindow,
+				^(TerminalViewRef	aView,
+				  Boolean&			UNUSED_ARGUMENT(outStopFlag))
 				{
-					SInt16		i = 0;
+					// set local delegate for each view; this is what allows keyboard
+					// events, etc. to be translated into session input and ultimately
+					// make the terminal work when the user starts typing!
+					TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(aView);
+					TerminalView_ContentView*	contentView = viewObject.terminalContentView;
 					
 					
-					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
-					
+					if (nil == viewObject)
 					{
-						// set local delegate for each view; this is what allows keyboard
-						// events, etc. to be translated into session input and ultimately
-						// make the terminal work when the user starts typing!
-						ptr->textInputDelegate = [[Session_TextInput alloc] initWithSession:session];
-						for (i = 0; i < viewCount; ++i)
-						{
-							TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(viewArray[i]);
-							TerminalView_ContentView*	contentView = viewObject.terminalContentView;
-							
-							
-							if (nil == viewObject)
-							{
-								Console_Warning(Console_WriteLine, "failed to set up text input for terminal view: no container view!");
-								Sound_StandardAlert();
-							}
-							else if (nil == contentView)
-							{
-								Console_Warning(Console_WriteLine, "failed to set up text input for terminal view: no content view!");
-								Sound_StandardAlert();
-							}
-							else
-							{
-								contentView.textInputDelegate = ptr->textInputDelegate;
-							}
-						}
+						Console_Warning(Console_WriteLine, "failed to set up text input for terminal view: no container view!");
+						Sound_StandardAlert();
 					}
-					
-					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
+					else if (nil == contentView)
+					{
+						Console_Warning(Console_WriteLine, "failed to set up text input for terminal view: no content view!");
+						Sound_StandardAlert();
+					}
+					else
+					{
+						contentView.textInputDelegate = inputDelegate;
+					}
+				});
+				if (kTerminalWindow_ResultOK != iterationResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to install view-specific tracking for new window, error", iterationResult);
 				}
 			}
 			
@@ -7613,30 +7608,22 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			// undo view-specific tracking (inverse of "kSession_ChangeWindowValid" case above)
 			{
-				UInt16				viewCount = TerminalWindow_ReturnViewCount(ptr->terminalWindow);
-				TerminalViewRef*	viewArray = REINTERPRET_CAST(Memory_NewPtr(viewCount * sizeof(TerminalViewRef)),
-																	TerminalViewRef*);
+				TerminalWindow_Result		iterationResult = kTerminalWindow_ResultOK;
 				
 				
-				if (nullptr != viewArray)
+				iterationResult = TerminalWindow_ForEachTerminalView(ptr->terminalWindow,
+				^(TerminalViewRef	aView,
+				  Boolean&			UNUSED_ARGUMENT(outStopFlag))
 				{
-					SInt16		i = 0;
+					TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(aView);
+					TerminalView_ContentView*	contentView = viewObject.terminalContentView;
 					
 					
-					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
-					
-					{
-						for (i = 0; i < viewCount; ++i)
-						{
-							TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(viewArray[i]);
-							TerminalView_ContentView*	contentView = viewObject.terminalContentView;
-							
-							
-							contentView.textInputDelegate = nil;
-						}
-					}
-					
-					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
+					contentView.textInputDelegate = nil;
+				});
+				if (kTerminalWindow_ResultOK != iterationResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to remove view-specific tracking for invalid window, error", iterationResult);
 				}
 			}
 		}
