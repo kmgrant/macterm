@@ -951,8 +951,8 @@ TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 
 
 /*!
-Returns "true" only if the specified window has a tab
-appearance, as set with TerminalWindow_SetTabAppearance().
+Returns "true" only if the specified terminal’s window is
+currently displayed as a tab or allowing new tabbed windows.
 
 (4.0)
 */
@@ -967,9 +967,13 @@ TerminalWindow_IsTab	(TerminalWindowRef	inRef)
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 		
 		
-		if ([ptr->window respondsToSelector:@selector(addTabbedWindow:ordered:)])
+		if (@available(macOS 10.12, *))
 		{
-			result = true;
+			if ((ptr->window.tabbedWindows.count > 1) ||
+				(NSWindowTabbingModeDisallowed != ptr->window.tabbingMode))
+			{
+				result = true;
+			}
 		}
 	}
 	else
@@ -1484,111 +1488,6 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 		setWindowToIdealSizeForDimensions(ptr, inNewColumnCount, inNewRowCount);
 	}
 }// SetScreenDimensions
-
-
-/*!
-Creates a sister window that appears to be attached to the
-specified terminal window, acting as its tab.  This is a
-visual adornment only; you typically use this for more than
-one terminal window and then place them into a window group
-that ensures only one is visible at a time.
-
-IMPORTANT:	You should only call this routine on visible
-			terminal windows, otherwise the tab may not be
-			displayed properly.  The result will only be
-			successful if the tab is properly displayed.
-
-Note that since this affects only a single window, this is
-not the proper API for general tab manipulation; it is a
-low-level routine.  See the Workspace module.
-
-\retval kTerminalWindow_ResultOK
-if there are no errors
-
-\retval kTerminalWindow_ResultInvalidReference
-if the specified terminal window is unrecognized
-
-\retval kTerminalWindow_ResultGenericFailure
-if the tab cannot be set for any reason
-
-(3.1)
-*/
-TerminalWindow_Result
-TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
-									 Boolean				inIsTab)
-{
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result			result = kTerminalWindow_ResultGenericFailure;
-	
-	
-	if (false == TerminalWindow_IsValid(inRef))
-	{
-		result = kTerminalWindow_ResultInvalidReference;
-	}
-	else
-	{
-		Console_Warning(Console_WriteLine, "“set tab appearance” not implemented for Cocoa windows");
-		result = kTerminalWindow_ResultGenericFailure;
-	}
-	
-	return result;
-}// SetTabAppearance
-
-
-/*!
-Specifies the position of the tab (if any) for this window, and
-optionally its width; set the width to FLT_MAX to auto-size.
-
-This is a visual adornment only; you typically use this when
-windows are grouped and you want all tabs to be visible at
-the same time.
-
-WARNING:	Prior to Snow Leopard, the Mac OS X window manager
-			will not allow a drawer to be cut off, and it solves
-			this problem by resizing the *parent* (terminal)
-			window to make room for the tab.  If you do not want
-			this behavior, you need to check in advance how
-			large the window is, and what a reasonable tab
-			placement would be.
-
-Note that since this affects only a single window, this is not
-the proper API for general tab manipulation; it is a low-level
-routine.  See the Workspace module.
-
-\retval kTerminalWindow_ResultOK
-if there are no errors
-
-\retval kTerminalWindow_ResultInvalidReference
-if the specified terminal window is unrecognized
-
-\retval kTerminalWindow_ResultGenericFailure
-if the specified terminal window has no tab (however,
-the proper offset is still remembered)
-
-(3.1)
-*/
-TerminalWindow_Result
-TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
-								 Float32			inOffsetFromStartingPointInPixels,
-								 Float32			inWidthInPixelsOrFltMax)
-{
-	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
-	
-	
-	if (false == TerminalWindow_IsValid(inRef))
-	{
-		result = kTerminalWindow_ResultInvalidReference;
-		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_SetTabPosition() with invalid reference", inRef);
-	}
-	else
-	{
-		// there is probably some way to do this with new Cocoa window tabs...
-		// UNIMPLEMENTED
-		Console_Warning(Console_WriteLine, "not implemented: TerminalWindow_SetTabPosition()");
-	}
-	return result;
-}// SetTabPosition
 
 
 /*!

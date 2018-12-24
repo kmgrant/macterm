@@ -589,8 +589,6 @@ Actions to enter or exit Full Screen or tab Exposé.
 // actions
 	- (IBAction)
 	toggleFullScreen:(id)_;
-	- (IBAction)
-	toggleTabOverview:(id)_; // match OS name of selector (available only in later OS versions)
 
 @end //}
 
@@ -608,8 +606,6 @@ Actions to cycle through windows.
 	orderFrontPreviousWindow:(id)_;
 	- (IBAction)
 	orderFrontSpecificWindow:(id)_;
-	- (IBAction)
-	toggleTabBar:(id)_; // match OS name of selector (available only in later OS versions)
 
 @end //}
 

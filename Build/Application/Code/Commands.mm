@@ -6009,50 +6009,6 @@ canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-- (IBAction)
-toggleTabOverview:(id)	sender
-{
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabOverview:) withObject:sender]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
-	{
-		Console_Warning(Console_WriteLine, "tab overview is not implemented for legacy Carbon windows");
-	}
-}
-- (id)
-canToggleTabOverview:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	BOOL				result = NO;
-	
-	
-	if ((nullptr != terminalWindow) &&
-		TerminalWindow_IsTab(terminalWindow))
-	{
-		NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-		
-		
-		if ([cocoaWindow respondsToSelector:@selector(tabbedWindows)])
-		{
-			id		tabArray = [cocoaWindow performSelector:@selector(tabbedWindows)];
-			
-			
-			if ((nil != tabArray) && [tabArray isKindOfClass:NSArray.class])
-			{
-				NSArray*	asArray = STATIC_CAST(tabArray, NSArray*);
-				
-				
-				if (asArray.count > 1)
-				{
-					result = YES;
-				}
-			}
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
 @end //} Commands_Executor (Commands_SwitchingModes)
 
 
@@ -6201,54 +6157,6 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 				
 				// use the Mac OS X convention of diamond-marking minimized windows
 				// UNIMPLEMENTED
-			}
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-toggleTabBar:(id)	sender
-{
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performToggleTabBar:) withObject:sender]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
-	{
-		Console_Warning(Console_WriteLine, "tab bar is not implemented for legacy Carbon windows");
-	}
-}
-- (id)
-canToggleTabBar:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	BOOL				result = NO;
-	
-	
-	if ((nullptr != terminalWindow) &&
-		TerminalWindow_IsTab(terminalWindow))
-	{
-		NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-		
-		
-		if ([cocoaWindow respondsToSelector:@selector(tabbedWindows)])
-		{
-			id		tabArray = [cocoaWindow performSelector:@selector(tabbedWindows)];
-			
-			
-			if (nil == tabArray)
-			{
-				result = YES;
-			}
-			else if ([tabArray isKindOfClass:NSArray.class])
-			{
-				NSArray*	asArray = STATIC_CAST(tabArray, NSArray*);
-				
-				
-				if (asArray.count <= 1)
-				{
-					result = YES;
-				}
 			}
 		}
 	}

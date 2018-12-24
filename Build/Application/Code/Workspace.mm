@@ -37,9 +37,6 @@
 #import <algorithm>
 #import <vector>
 
-// Mac includes
-#import <Carbon/Carbon.h>
-
 // library includes
 #import <Console.h>
 #import <MemoryBlockPtrLocker.template.h>
@@ -138,9 +135,6 @@ For Cocoa, this will add a tab for the window to the end of
 any previous tab group for the workspace.  Since this is a
 relatively new OS feature, it is not supported on older OS
 versions.
-
-For legacy Carbon, this will add the window to a group and
-possibly impose constraints on movement and sizing.
 
 \retval kWorkspace_ResultOK
 if there are no errors
@@ -255,9 +249,6 @@ Workspace_ForEachTerminalWindow		(Workspace_Ref					inWorkspace,
 Unassigns the specified window from the workspace.
 
 For Cocoa, this will move the tab into its own window.
-
-For legacy Carbon, this will release the window from any
-grouping constraints.
 
 \retval kWorkspace_ResultOK
 if there are no errors

@@ -469,15 +469,6 @@ Boolean
 void
 	TerminalWindow_SetFullScreenIconsEnabled		(Boolean					inAllTerminalWindowsHaveFullScreenIcons);
 
-TerminalWindow_Result
-	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,
-													 Boolean					inIsTab);
-
-TerminalWindow_Result
-	TerminalWindow_SetTabPosition					(TerminalWindowRef			inRef,
-													 Float32					inOffsetFromStartingPointInPixels,
-													 Float32					inWidthInPixelsOrFltMax = FLT_MAX);
-
 // API UNDER EVALUATION
 void
 	TerminalWindow_StackWindows						();

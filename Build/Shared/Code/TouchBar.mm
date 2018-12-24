@@ -120,7 +120,7 @@ loadView
 	
 	assert(nil != _touchBar);
 	
-	if (@available(macOS 12.1, *))
+	if (@available(macOS 10.12.1, *))
 	{
 		_touchBar.customizationIdentifier = self.customizationIdentifier;
 		_touchBar.customizationAllowedItemIdentifiers = self.customizationAllowedItemIdentifiers;
