@@ -312,8 +312,8 @@ changes to an interface declared in a ".mm" file.
 /*!
 Terminal View Block
 
-This is used in Terminal_ForEachTerminalView().  If the stop flag is
-set by the block, iteration will end early.
+This is used in TerminalWindow_ForEachTerminalView().  If the stop
+flag is set by the block, iteration will end early.
 
 Note that it is sometimes more appropriate to iterate over Sessions
 or Terminal Windows.  Carefully consider what you are trying to do

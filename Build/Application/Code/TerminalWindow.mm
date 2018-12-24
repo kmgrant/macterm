@@ -739,10 +739,10 @@ in the window.  The list must NOT change during iteration.
 The iteration terminates early if the block sets its
 stop-flag parameter.
 
-\retval kWorkspace_ResultOK
+\retval kTerminalWindow_ResultOK
 if there are no errors
 
-\retval kWorkspace_ResultInvalidReference
+\retval kTerminalWindow_ResultInvalidReference
 if the specified workspace is unrecognized
 
 (2018.12)
@@ -752,7 +752,7 @@ TerminalWindow_ForEachTerminalView	(TerminalWindowRef					inRef,
 									 TerminalWindow_TerminalViewBlock	inBlock)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_Result			result = kTerminalWindow_ResultGenericFailure;
+	TerminalWindow_Result			result = kTerminalWindow_ResultOK;
 	Boolean							stopFlag = false;
 	
 	
@@ -774,7 +774,7 @@ TerminalWindow_ForEachTerminalView	(TerminalWindowRef					inRef,
 	}
 	
 	return result;
-}// ForEachTerminalWindow
+}// ForEachTerminalView
 
 
 /*!
