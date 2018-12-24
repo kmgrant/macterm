@@ -357,7 +357,7 @@ void
 void
 	TerminalWindow_GetFontAndSize					(TerminalWindowRef			inRef,
 													 CFStringRef*				outFontFamilyNameOrNull,
-													 UInt16*					outFontSizeOrNull);
+													 CGFloat*					outFontSizeOrNull);
 
 void
 	TerminalWindow_GetScreens						(TerminalWindowRef			inRef,
@@ -406,7 +406,7 @@ void
 void
 	TerminalWindow_SetFontAndSize					(TerminalWindowRef			inRef,
 													 CFStringRef				inFontFamilyNameOrNull,
-													 Float32					inFontSizeOrZero);
+													 CGFloat					inFontSizeOrZero);
 
 Boolean
 	TerminalWindow_SetFontRelativeSize				(TerminalWindowRef			inRef,

@@ -94,7 +94,7 @@
 #pragma mark Constants
 namespace {
 
-UInt16 const	kMy_LargeIBeamMinimumFontSize = 16;						//!< mouse I-beam cursor is 32x32 only if the font is at least this size
+CGFloat const	kMy_LargeIBeamMinimumFontSize = 16.0;					//!< mouse I-beam cursor is 32x32 only if the font is at least this size
 SInt16 const	kArbitraryDoubleWidthDoubleHeightPseudoFontSize = 1;	//!< should not match any real size; used to flag the *lower* half
 																		//!  of double-width, double-height text (upper half is marked by
 																		//!  double the normal font size)
@@ -333,8 +333,8 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 			CFRetainRelease		familyName;		// CFStringRef; font name (as might appear in a Font menu)
 			struct Metrics
 			{
-				SInt16		ascent;			// number of pixels highest character extends above the base line
-				SInt16		size;			// point size of text written in the font indicated by "familyName"
+				CGFloat		ascent;			// number of pixels highest character extends above the base line
+				CGFloat		size;			// point size of text written in the font indicated by "familyName"
 			} normalMetrics,	// metrics for text meant to fit in a single cell (normal)
 			  doubleMetrics;	// metrics for text meant to fit in 4 cells, not 1 cell (double-width/height)
 			Float32			scaleWidthPerCell;	// a multiplier (normally 1.0) to force characters from the font to fit in a different width
@@ -402,7 +402,7 @@ Boolean				addDataSource						(My_TerminalViewPtr, TerminalScreenRef);
 void				animateBlinkingItems				(EventLoopTimerRef, void*);
 void				audioEvent							(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 EventTime			calculateAnimationStageDelay		(My_TerminalViewPtr, My_TimeIntervalList::size_type);
-void				calculateDoubleSize					(My_TerminalViewPtr, SInt16&, SInt16&);
+void				calculateDoubleSize					(My_TerminalViewPtr, CGFloat&, CGFloat&);
 UInt16				copyColorPreferences				(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
 UInt16				copyFontPreferences					(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
 void				copySelectedTextIfUserPreference	(My_TerminalViewPtr);
@@ -471,7 +471,7 @@ void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
 void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
-void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, UInt16, Float32 = 0, Boolean = true);
+void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, CGFloat, Float32 = 0, Boolean = true);
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
@@ -1426,7 +1426,7 @@ are not interested in that value.
 void
 TerminalView_GetFontAndSize		(TerminalViewRef	inView,
 								 CFStringRef*		outFontFamilyNameOrNull,
-								 UInt16*			outFontSizeOrNull)
+								 CGFloat*			outFontSizeOrNull)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
@@ -2098,7 +2098,7 @@ TerminalView_ReturnFormatConfiguration		(TerminalViewRef	inView)
 	// font size is messed with programmatically (e.g. Make Text Bigger)
 	// so its current value is resynced with the context regardless
 	{
-		SInt16		fontSize = viewPtr->text.font.normalMetrics.size;
+		Float64		fontSize = viewPtr->text.font.normalMetrics.size;
 		
 		
 		prefsResult = Preferences_ContextSetData(result, kPreferences_TagFontSize,
@@ -3265,7 +3265,7 @@ if the display mode currently sets the size automatically
 TerminalView_Result
 TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 								 CFStringRef		inFontFamilyNameOrNull,
-								 Float32			inFontSizeOrZero)
+								 CGFloat			inFontSizeOrZero)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	TerminalView_Result			result = kTerminalView_ResultOK;
@@ -4278,8 +4278,8 @@ of the specified terminal is NOT changed.
 */
 void
 calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
-						 SInt16&				outPointSize,
-						 SInt16&				outAscent)
+						 CGFloat&				outPointSize,
+						 CGFloat&				outAscent)
 {
 	//Console_Warning(Console_WriteLine, "calculate-double-size not implemented for Cocoa"); // debug for later
 	outPointSize = 0;
@@ -4573,7 +4573,7 @@ copyFontPreferences		(My_TerminalViewPtr			inTerminalViewPtr,
 {
 	UInt16			result = 0;
 	CFStringRef		fontName = nullptr;
-	SInt16			fontSize = 0;
+	Float64			fontSize = 0;
 	Float32			charWidthScale = 1.0;
 	
 	
@@ -8848,7 +8848,7 @@ The screen is not redrawn.
 void
 setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 					 CFStringRef			inFontFamilyNameOrNull,
-					 UInt16					inFontSizeOrZero,
+					 CGFloat				inFontSizeOrZero,
 					 Float32				inCharacterWidthScalingOrZero,
 					 Boolean				inNotifyListeners)
 {
@@ -9393,7 +9393,7 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 	
 	
 	// TEMPORARY; eventually store floating-point values instead of casting
-	inTerminalViewPtr->text.font.normalMetrics.ascent = STATIC_CAST([sourceFont ascender], SInt16);
+	inTerminalViewPtr->text.font.normalMetrics.ascent = [sourceFont ascender];
 	inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(sourceFont.ascender - sourceFont.descender);
 	inTerminalViewPtr->text.font.isMonospaced = (YES == [sourceFont isFixedPitch]);
 	
@@ -9882,7 +9882,7 @@ useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
 	if ((inTerminalViewPtr->text.attributes == kTextAttributes_Invalid) ||
 		(inTerminalViewPtr->text.attributes != inAttributes))
 	{
-		Float32		fontSize = 0.0;
+		CGFloat		fontSize = 0.0;
 		
 		
 		// set text size, examining “double size” bits

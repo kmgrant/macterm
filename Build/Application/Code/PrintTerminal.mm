@@ -365,7 +365,7 @@ returnNSFontForTerminalView		(TerminalViewRef	inView)
 {
 	NSFont*			result = nil;
 	CFStringRef		fontName = nullptr;
-	UInt16			fontSize = 0;
+	CGFloat			fontSize = 0;
 	
 	
 	// find font information from the Terminal View; yes, this

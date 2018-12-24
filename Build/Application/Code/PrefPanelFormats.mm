@@ -974,7 +974,7 @@ didLoadContainerView:(NSView*)			aContainerView
 	[self->byKey setObject:[[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagFontSize
 														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeUInt16] autorelease]
+														preferenceCType:kPreferenceValue_CTypeFloat64] autorelease]
 					forKey:@"fontSize"];
 	[self->byKey setObject:[[[PrefPanelFormats_CharacterWidthContent alloc]
 								initWithPreferencesTag:kPreferences_TagFontCharacterWidthMultiplier

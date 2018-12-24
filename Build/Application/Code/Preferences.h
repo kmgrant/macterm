@@ -140,7 +140,7 @@ enum
 	kPreferences_TagAutoSetCursorColor					= 'aucr',	//!< data: "Boolean"
 	kPreferences_TagFadeAlpha							= 'falp',	//!< data: "Float32"
 	kPreferences_TagFontName							= 'font',	//!< data: "CFStringRef"
-	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
+	kPreferences_TagFontSize							= 'fsiz',	//!< data: "Float64"
 	kPreferences_TagFontCharacterWidthMultiplier		= 'cwid',	//!< data: "Float32"
 	// NOTE: These match menu command IDs for convenience in color boxes.
 	kPreferences_TagTerminalColorCursorBackground		= 'Curs',	//!< data: "CGFloatRGBColor"

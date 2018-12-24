@@ -850,7 +850,7 @@ Boolean
 void
 	TerminalView_GetFontAndSize					(TerminalViewRef			inView,
 												 CFStringRef*				outFontFamilyNameOrNull,
-												 UInt16*					outFontSizeOrNull);
+												 CGFloat*					outFontSizeOrNull);
 
 Preferences_ContextRef
 	TerminalView_ReturnFormatConfiguration		(TerminalViewRef			inView);
@@ -870,7 +870,7 @@ Boolean
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,
 												 CFStringRef				inFontFamilyNameOrNull,
-												 Float32					inFontSizeOrZero);
+												 CGFloat					inFontSizeOrZero);
 
 //@}
 

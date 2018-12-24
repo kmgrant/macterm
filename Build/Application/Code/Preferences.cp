@@ -958,7 +958,7 @@ Preferences_Init ()
 									sizeof(CFStringRef), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontSize,
 									CFSTR("terminal-font-size-points"), typeNetEvents_CFNumberRef,
-									sizeof(SInt16), Quills::Prefs::FORMAT);
+									sizeof(Float64), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFunctionKeyLayout,
 									CFSTR("key-map-function-keys"), typeCFStringRef,
 									sizeof(Session_FunctionKeyLayout), Quills::Prefs::SESSION);
@@ -6341,14 +6341,14 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					else
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16* const	data = REINTERPRET_CAST(outDataPtr, SInt16*);
+						Float64* const		data = REINTERPRET_CAST(outDataPtr, Float64*);
 						
 						
 						*data = inContextPtr->returnInteger(keyName);
 						if (0 == *data)
 						{
 							// failed; make default
-							*data = 12; // arbitrary
+							*data = 12.0; // arbitrary
 							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
@@ -9000,7 +9000,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagFontSize:
 				{
-					SInt16 const* const		data = REINTERPRET_CAST(inDataPtr, SInt16 const*);
+					Float64 const* const	data = REINTERPRET_CAST(inDataPtr, Float64 const*);
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);

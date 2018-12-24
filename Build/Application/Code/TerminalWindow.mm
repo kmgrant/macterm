@@ -245,7 +245,7 @@ struct My_TerminalWindow
 	{
 		Boolean						isOn;		// temporary flag to track full-screen mode (under Cocoa this will be easier to determine from the window)
 		Boolean						isUsingOS;	// temporary flag; tracks windows that are currently Full Screen in system style so they can transition back in the same style
-		UInt16						oldFontSize;		// font size prior to full-screen
+		CGFloat						oldFontSize;		// font size prior to full-screen
 		Rect						oldContentBounds;	// old window boundaries, content area
 		TerminalView_DisplayMode	oldMode;			// previous terminal resize effect
 		TerminalView_DisplayMode	newMode;			// full-screen terminal resize effect
@@ -286,7 +286,7 @@ struct UndoDataFontSizeChanges
 	TerminalWindowRef		terminalWindow;		//!< which window was reformatted
 	Boolean					undoFontSize;		//!< is this Undo action going to reverse the font size changes?
 	Boolean					undoFont;			//!< is this Undo action going to reverse the font changes?
-	UInt16					fontSize;			//!< the old font size (ignored if "undoFontSize" is false)
+	CGFloat					fontSize;			//!< the old font size (ignored if "undoFontSize" is false)
 	CFRetainRelease			fontName;			//!< the old font (ignored if "undoFont" is false)
 };
 typedef UndoDataFontSizeChanges*		UndoDataFontSizeChangesPtr;
@@ -794,7 +794,7 @@ IMPORTANT:	This API is under evaluation.  It does
 void
 TerminalWindow_GetFontAndSize	(TerminalWindowRef	inRef,
 								 CFStringRef*		outFontFamilyNameOrNull,
-								 UInt16*			outFontSizeOrNull)
+								 CGFloat*			outFontSizeOrNull)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
@@ -1274,7 +1274,7 @@ See also setViewFormatPreferences().
 void
 TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 								 CFStringRef			inFontFamilyNameOrNull,
-								 Float32				inFontSizeOrZero)
+								 CGFloat				inFontSizeOrZero)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	TerminalViewRef					activeView = getActiveView(ptr);
@@ -1325,7 +1325,7 @@ TerminalWindow_SetFontRelativeSize	(TerminalWindowRef		inRef,
 									 Boolean				inAllowUndo)
 {
 	Float32		proposedSize = 0;
-	UInt16		fontSize = 0; // NOTE: for Carbon legacy; convert to floating-point later
+	CGFloat		fontSize = 0;
 	Boolean		preventChange = false;
 	Boolean		result = false;
 	
@@ -2647,7 +2647,7 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 		case kUndoables_ActionInstructionUndo:
 		default:
 			{
-				UInt16			oldFontSize = 0;
+				CGFloat			oldFontSize = 0;
 				CFStringRef		oldFontName = nullptr;
 				
 				
