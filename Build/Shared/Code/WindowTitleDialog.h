@@ -8,7 +8,7 @@
 /*###############################################################
 
 	Interface Library
-	© 1998-2018 by Kevin Grant
+	© 1998-2019 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
