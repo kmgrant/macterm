@@ -95,9 +95,6 @@
 namespace {
 
 CGFloat const	kMy_LargeIBeamMinimumFontSize = 16.0;					//!< mouse I-beam cursor is 32x32 only if the font is at least this size
-SInt16 const	kArbitraryDoubleWidthDoubleHeightPseudoFontSize = 1;	//!< should not match any real size; used to flag the *lower* half
-																		//!  of double-width, double-height text (upper half is marked by
-																		//!  double the normal font size)
 
 /*!
 Indices into the "colors" array of the main structure.
@@ -433,9 +430,9 @@ Boolean				findVirtualCellFromLocalPoint		(My_TerminalViewPtr, Point, TerminalVi
 Boolean				findVirtualCellFromScreenPoint		(My_TerminalViewPtr, HIPoint, TerminalView_Cell&, SInt16&, SInt16&);
 void				getBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGFloatRGBColor*);
 void				getImagesInVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange const&, NSMutableArray*);
-void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, Rect*);
+void				getRowBounds						(My_TerminalViewPtr, TerminalView_RowIndex, CGRect&);
 TerminalView_PixelWidth		getRowCharacterWidth		(My_TerminalViewPtr, TerminalView_RowIndex);
-void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, Rect*);
+void				getRowSectionBounds					(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, SInt16, CGRect&);
 void				getScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor*);
 void				getScreenColorsForAttributes		(My_TerminalViewPtr, TextAttributes_Object, CGFloatRGBColor*, CGFloatRGBColor*, Boolean*);
 Boolean				getScreenCoreColor					(My_TerminalViewPtr, UInt16, CGFloatRGBColor*);
@@ -487,7 +484,6 @@ void				trackTextSelection					(My_TerminalViewPtr, Point, EventModifiers, Point
 void				updateDisplay						(My_TerminalViewPtr);
 void				updateDisplayInShape				(My_TerminalViewPtr, HIShapeRef);
 void				updateDisplayTimer					(EventLoopTimerRef, void*);
-void				useTerminalTextAttributes			(My_TerminalViewPtr, CGContextRef, TextAttributes_Object);
 void				useTerminalTextColors				(My_TerminalViewPtr, CGContextRef, TextAttributes_Object, Boolean, Float32 = 1.0);
 void				visualBell							(My_TerminalViewPtr);
 
@@ -4907,18 +4903,7 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 	if (nullptr != inTerminalViewPtr)
 	{
 		Terminal_Result		iteratorResult = kTerminal_ResultOK;
-		CGrafPtr			currentPort = nullptr;
-		GDHandle			currentDevice = nullptr;
 		
-		
-		if (false == inTerminalViewPtr->isCocoa())
-		{
-			// for better performance on Mac OS X, lock the bits of a port
-			// before performing a series of QuickDraw operations in it,
-			// and make the intended drawing area part of the dirty region
-			//CARBON//GetGWorld(&currentPort, &currentDevice);
-			//CARBON//UNUSED_RETURN(OSStatus)LockPortBits(currentPort);
-		}
 		
 		// find contiguous blocks of text on each line in the given
 		// range that have the same attributes, and draw those blocks
@@ -4999,12 +4984,6 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 		// reset these, they shouldn’t have significance outside the above loop
 		inTerminalViewPtr->screen.currentRenderedLine = -1;
 		inTerminalViewPtr->screen.currentRenderContext = nullptr;
-		
-		if (false == inTerminalViewPtr->isCocoa())
-		{
-			// undo the lock done earlier in this block
-			//CARBON//UNUSED_RETURN(OSStatus)UnlockPortBits(currentPort);
-		}
 	}
 	return result;
 }// drawSection
@@ -5246,11 +5225,6 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 	}
 	else if ((nullptr != inLineTextBufferAsCFStringOrNull) && (0 != inLineTextBufferLength))
 	{
-		// TEMPORARY...these kinds of offsets make no sense whatsoever
-		// and yet Core Graphics drawings seem to be utterly misaligned
-		// with QuickDraw backgrounds without them (NOTE: adjusting
-		// width is not reasonable because it refers to the whole range,
-		// which might encompass several characters)
 		drawTerminalText(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderContext, sectionBounds,
 							inLineTextBufferLength, inLineTextBufferAsCFStringOrNull, inAttributes);
 		
@@ -6183,14 +6157,9 @@ eraseSection	(My_TerminalViewPtr		inTerminalViewPtr,
 				 SInt16					inPastRightmostColumnToErase,
 				 CGRect&				outRowSectionBounds)
 {
-	Rect	intBounds;
-	
-	
 	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
 						inLeftmostColumnToErase, inPastRightmostColumnToErase - inLeftmostColumnToErase,
-						&intBounds);
-	outRowSectionBounds = CGRectMake(intBounds.left, intBounds.top, intBounds.right - intBounds.left,
-										intBounds.bottom - intBounds.top);
+						outRowSectionBounds);
 	if (CGRectIsEmpty(outRowSectionBounds))
 	{
 		Console_Warning(Console_WriteValueFloat4, "attempt to erase empty row section",
@@ -6590,7 +6559,7 @@ line’s boundaries.
 void
 getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 				 TerminalView_RowIndex	inZeroBasedRowIndex,
-				 Rect*					outBoundsPtr)
+				 CGRect&				outBounds)
 {
 	Terminal_LineStackStorage	rowIteratorData;
 	Terminal_LineRef			rowIterator = nullptr;
@@ -6603,13 +6572,13 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 		NSRect		contentFrame = [inTerminalViewPtr->encompassingNSView.terminalContentView frame];
 		
 		
-		outBoundsPtr->right = STATIC_CAST(contentFrame.size.width, SInt16);
-		outBoundsPtr->left = 0;
+		outBounds.size.width = contentFrame.size.width;
+		outBounds.origin.x = 0;
 	}
 	
 	// now set the top and bottom edges based on the requested row
-	outBoundsPtr->top = sectionTopEdge;
-	outBoundsPtr->bottom = sectionTopEdge + inTerminalViewPtr->text.font.heightPerCell.integralPixels();
+	outBounds.origin.y = sectionTopEdge;
+	outBounds.size.height = inTerminalViewPtr->text.font.heightPerCell.precisePixels();
 	
 	// account for double-height rows
 	getVirtualVisibleRegion(inTerminalViewPtr, nullptr/* left */, &topRow, nullptr/* right */, nullptr/* bottom */);
@@ -6626,12 +6595,13 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (globalAttributes.hasDoubleHeightTop())
 			{
 				// if this is the top half, the total boundaries extend downwards by one normal line height
-				outBoundsPtr->bottom = outBoundsPtr->top + STATIC_CAST(INTEGER_TIMES_2(outBoundsPtr->bottom - outBoundsPtr->top), SInt16);
+				outBounds.size.height *= 2.0;
 			}
 			else if (globalAttributes.hasDoubleHeightBottom())
 			{
 				// if this is the bottom half, the total boundaries extend upwards by one normal line height
-				outBoundsPtr->top = outBoundsPtr->bottom - STATIC_CAST(INTEGER_TIMES_2(outBoundsPtr->bottom - outBoundsPtr->top), SInt16);
+				outBounds.origin.y -= outBounds.size.height;
+				outBounds.size.height *= 2.0;
 			}
 		}
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
@@ -6697,17 +6667,17 @@ getRowSectionBounds		(My_TerminalViewPtr		inTerminalViewPtr,
 						 TerminalView_RowIndex	inZeroBasedRowIndex,
 						 UInt16					inZeroBasedStartingColumnNumber,
 						 SInt16					inCharacterCount,
-						 Rect*					outBoundsPtr)
+						 CGRect&				outBounds)
 {
 	TerminalView_PixelWidth		widthPerCell = getRowCharacterWidth(inTerminalViewPtr, inZeroBasedRowIndex);
 	
 	
 	// first find the row bounds, as this defines two of the resulting edges
-	getRowBounds(inTerminalViewPtr, inZeroBasedRowIndex, outBoundsPtr);
+	getRowBounds(inTerminalViewPtr, inZeroBasedRowIndex, outBounds);
 	
 	// now set the rectangle’s left and right edges based on the requested column range
-	outBoundsPtr->left = inZeroBasedStartingColumnNumber * widthPerCell.integralPixels();
-	outBoundsPtr->right = (inZeroBasedStartingColumnNumber + inCharacterCount) * widthPerCell.integralPixels();
+	outBounds.origin.x = STATIC_CAST(inZeroBasedStartingColumnNumber, CGFloat) * widthPerCell.precisePixels();
+	outBounds.size.width = STATIC_CAST(inCharacterCount, CGFloat) * widthPerCell.precisePixels();
 }// getRowSectionBounds
 
 
@@ -7568,16 +7538,13 @@ invalidateRowSection	(My_TerminalViewPtr		inTerminalViewPtr,
 						 UInt16					inStartingColumnNumber,
 						 UInt16					inCharacterCount)
 {
-  	Rect	textBounds;
-	CGRect	floatBounds;
+  	CGRect		floatBounds;
 	
 	
 	// mark the specified area; it is already in “screen coordinates”,
 	// which match the view coordinates used by updateDisplayInShape()
-	getRowSectionBounds(inTerminalViewPtr, inLineNumber, inStartingColumnNumber, inCharacterCount, &textBounds);
-	floatBounds = CGRectIntegral(CGRectMake(textBounds.left, textBounds.top,
-											textBounds.right - textBounds.left,
-											textBounds.bottom - textBounds.top));
+	getRowSectionBounds(inTerminalViewPtr, inLineNumber, inStartingColumnNumber, inCharacterCount, floatBounds);
+	floatBounds = CGRectIntegral(floatBounds);
 	
 	UNUSED_RETURN(OSStatus)HIShapeSetEmpty(gInvalidationScratchRegion());
 	UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(gInvalidationScratchRegion(), &floatBounds);
@@ -9300,9 +9267,9 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 		kTerminalCursorThickVerticalLineWidth = 2
 	};
 	
-	Point					characterSizeInPixels; // based on font metrics
-	Rect					rowBounds;
-	UInt16					thickness = 0; // used for non-block-shaped cursors
+	CGSize					characterSizeInPixels; // based on font metrics
+	CGRect					rowBounds;
+	CGFloat					thickness = 0; // used for non-block-shaped cursors
 	Terminal_CursorType		terminalCursorType = inTerminalCursorType;
 	
 	
@@ -9313,13 +9280,13 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 		terminalCursorType = cursorType(inTerminalViewPtr);
 	}
 	
-	getRowBounds(inTerminalViewPtr, inY, &rowBounds);
+	getRowBounds(inTerminalViewPtr, inY, rowBounds);
 	
-	characterSizeInPixels.h = getRowCharacterWidth(inTerminalViewPtr, inY).integralPixels();
-	characterSizeInPixels.v = (rowBounds.bottom - rowBounds.top);
+	characterSizeInPixels.width = getRowCharacterWidth(inTerminalViewPtr, inY).precisePixels();
+	characterSizeInPixels.height = rowBounds.size.height;
 	
-	outBoundsPtr->origin.x = inX * characterSizeInPixels.h;
-	outBoundsPtr->origin.y = rowBounds.top;
+	outBoundsPtr->origin.x = inX * characterSizeInPixels.width;
+	outBoundsPtr->origin.y = rowBounds.origin.y;
 	
 	switch (terminalCursorType)
 	{
@@ -9328,8 +9295,8 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 		thickness = (terminalCursorType == kTerminal_CursorTypeUnderscore)
 						? kTerminalCursorUnderscoreHeight
 						: kTerminalCursorThickUnderscoreHeight;
-		outBoundsPtr->origin.y += (characterSizeInPixels.v - thickness);
-		outBoundsPtr->size.width = characterSizeInPixels.h;	
+		outBoundsPtr->origin.y += (characterSizeInPixels.width - thickness);
+		outBoundsPtr->size.width = characterSizeInPixels.height;	
 		outBoundsPtr->size.height = thickness;
 		break;
 	
@@ -9339,13 +9306,13 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 						? kTerminalCursorVerticalLineWidth
 						: kTerminalCursorThickVerticalLineWidth;
 		outBoundsPtr->size.width = thickness;
-		outBoundsPtr->size.height = characterSizeInPixels.v;
+		outBoundsPtr->size.height = characterSizeInPixels.height;
 		break;
 	
 	case kTerminal_CursorTypeBlock:
 	default:
-		outBoundsPtr->size.width = characterSizeInPixels.h;
-		outBoundsPtr->size.height = characterSizeInPixels.v;
+		outBoundsPtr->size.width = characterSizeInPixels.width;
+		outBoundsPtr->size.height = characterSizeInPixels.height;
 		break;
 	}
 	
@@ -9357,9 +9324,9 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 		// specify the update region for the cursor (always full-size because
 		// it may need to erase a previous cursor when changing cursor shape)
 		updatedBounds.origin.x = (outBoundsPtr->origin.x);
-		updatedBounds.origin.y = (rowBounds.top);
-		updatedBounds.size.width = (characterSizeInPixels.h);
-		updatedBounds.size.height = (characterSizeInPixels.v);
+		updatedBounds.origin.y = (rowBounds.origin.y);
+		updatedBounds.size.width = (characterSizeInPixels.width);
+		updatedBounds.size.height = (characterSizeInPixels.height);
 		updatedBounds = CGRectIntegral(updatedBounds);
 		UNUSED_RETURN(OSStatus)HIShapeSetEmpty(inoutUpdatedShapeOrNull);
 		UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(inoutUpdatedShapeOrNull, &updatedBounds);
@@ -9841,90 +9808,6 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 		}
 	}
 }// useTerminalTextColors
-
-
-/*!
-LEGACY.  Used for Carbon views only.  See also the routine
-setTextAttributesDictionary(), which returns keys and values
-suitable for use in attributed strings.
-
-Sets the screen variable for the current text attributes to be
-the specified attributes, and sets QuickDraw and Core Graphics
-settings appropriately for the requested attributes (text font,
-size, style, etc.).  Also updates internal flags for the current
-render to indicate whether or not to use double-size text and
-VT graphics.
-
-This does NOT set colors; see useTerminalTextColors().
-
-IMPORTANT:	This is ONLY for use by drawTerminalText(), in
-			order to set up the drawing port properly.  Note
-			that certain modes (such as VT graphics and
-			double-size text) are communicated to
-			drawTerminalText() through special font sizes;
-			so calling this routine does NOT necessarily leave
-			the drawing port in a state where normal calls
-			could render terminal text as expected.  Use only
-			the drawTerminalText() method for rendering text
-			and graphics, that’s what it’s there for!
-
-IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
-			may not completely update the context with all
-			necessary parameters.
-
-(3.1)
-*/
-void
-useTerminalTextAttributes	(My_TerminalViewPtr			inTerminalViewPtr,
-							 CGContextRef				inDrawingContext,
-							 TextAttributes_Object		inAttributes)
-{
-	if ((inTerminalViewPtr->text.attributes == kTextAttributes_Invalid) ||
-		(inTerminalViewPtr->text.attributes != inAttributes))
-	{
-		CGFloat		fontSize = 0.0;
-		
-		
-		// set text size, examining “double size” bits
-		// NOTE: there’s no real reason this should have to be checked
-		//       here, EVERY time text is rendered; it could eventually
-		//       be set somewhere else, e.g. whenever the attribute bits
-		//       or font size change, a rendering size could be updated
-		if (inAttributes.hasDoubleHeightTop())
-		{
-			// top half - do not render
-			fontSize = kArbitraryDoubleWidthDoubleHeightPseudoFontSize;
-		}
-		else if (inAttributes.hasDoubleHeightBottom())
-		{
-			// bottom half - double size
-			fontSize = inTerminalViewPtr->text.font.doubleMetrics.size;
-		}
-		else
-		{
-			// normal size
-			fontSize = inTerminalViewPtr->text.font.normalMetrics.size;
-		}
-		
-		inTerminalViewPtr->text.attributes = inAttributes;
-		
-		// Cocoa and Quartz setup; note that the font and size
-		// are retrieved from the stored NSFont object and not
-		// set on the drawing context or any other temporary object
-		
-		// set font style - UNIMPLEMENTED
-		
-		// set pen - UNIMPLEMENTED
-		
-		// for a sufficiently large font, allow boldface - UNIMPLEMENTED
-		
-		// for a sufficiently large font, allow italicizing - UNIMPLEMENTED
-		
-		// for a sufficiently large font, allow underlining - UNIMPLEMENTED
-		
-		// set text mode and pen mode - UNIMPLEMENTED
-	}
-}// useTerminalTextAttributes
 
 
 /*!
@@ -11600,7 +11483,7 @@ drawRect:(NSRect)	aRect
 		// render margin line, if requested
 		if (gPreferenceProxies.renderMarginAtColumn > 0)
 		{
-			Rect				dummyBounds;
+			CGRect				dummyBounds;
 			NSColor*			highlightColorRGB = [[NSColor highlightColor]
 														colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
 			CGFloatRGBColor		highlightColorDevice;
@@ -11608,7 +11491,7 @@ drawRect:(NSRect)	aRect
 			
 			getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
 								gPreferenceProxies.renderMarginAtColumn/* zero-based column number, but following column is desired */,
-								1/* character count - not important */, &dummyBounds);
+								1/* character count - not important */, dummyBounds);
 			CGContextSetLineWidth(drawingContext, 2.0);
 			CGContextSetLineCap(drawingContext, kCGLineCapButt);
 			highlightColorDevice.red = [highlightColorRGB redComponent];
@@ -11617,8 +11500,8 @@ drawRect:(NSRect)	aRect
 			CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
 										highlightColorDevice.blue, 1.0/* alpha */);
 			CGContextBeginPath(drawingContext);
-			CGContextMoveToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y);
-			CGContextAddLineToPoint(drawingContext, dummyBounds.left, contentBounds.origin.y + contentBounds.size.height);
+			CGContextMoveToPoint(drawingContext, dummyBounds.origin.x, contentBounds.origin.y);
+			CGContextAddLineToPoint(drawingContext, dummyBounds.origin.x, contentBounds.origin.y + contentBounds.size.height);
 			CGContextStrokePath(drawingContext);
 		}
 		
