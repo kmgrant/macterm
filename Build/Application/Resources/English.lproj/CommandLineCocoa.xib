@@ -37,7 +37,7 @@
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.commandLineText" id="144"/>
                             <outlet property="dataSource" destination="146" id="148"/>
-                            <outlet property="delegate" destination="-2" id="ppv-HZ-5A8"/>
+                            <outlet property="terminalLikeDelegate" destination="-2" id="102-Q9-79J"/>
                         </connections>
                     </comboBox>
                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="43">

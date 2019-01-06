@@ -273,6 +273,9 @@ numberOfItemsInComboBox:(NSComboBox*)	aComboBox
 @implementation CommandLine_TerminalLikeComboBox //{
 
 
+@synthesize terminalLikeDelegate = _terminalLikeDelegate;
+
+
 #pragma mark Accessors
 
 
@@ -282,15 +285,17 @@ Accessor.
 (2016.11)
 */
 - (id < CommandLine_TerminalLikeComboBoxDelegate >)
-delegate
+terminalLikeDelegate
 {
-	return _delegate;
+	return _terminalLikeDelegate;
 }
 - (void)
-setDelegate:(id< CommandLine_TerminalLikeComboBoxDelegate >)		aDelegate
+setTerminalLikeDelegate:(id< CommandLine_TerminalLikeComboBoxDelegate >)		aDelegate
 {
-	_delegate = aDelegate;
-}// setDelegate:
+	// this property exists only to allow the type of "delegate" to be specified more precisely
+	_terminalLikeDelegate = aDelegate;
+	self.delegate = aDelegate;
+}// setTerminalLikeDelegate:
 
 
 #pragma mark NSResponder
@@ -374,12 +379,12 @@ performKeyEquivalent:(NSEvent*)		aKeyEvent
 			if (NSOrderedSame == [aKeyEvent.charactersIgnoringModifiers compare:@"D" options:NSCaseInsensitiveSearch])
 			{
 				// control-D; interpret immediately in the terminal (shell complete, or output end-of-file)
-				result = [self.delegate control:self textView:asTextView doCommandBySelector:@selector(commandLineSendTextThenEndOfFile:)];
+				result = [self.terminalLikeDelegate control:self textView:asTextView doCommandBySelector:@selector(commandLineSendTextThenEndOfFile:)];
 			}
 			else if (NSOrderedSame == [aKeyEvent.charactersIgnoringModifiers compare:@"L" options:NSCaseInsensitiveSearch])
 			{
 				// control-L; interpret as a screen-clear immediately in the terminal
-				result = [self.delegate control:self textView:asTextView doCommandBySelector:@selector(commandLineTerminalClear:)];
+				result = [self.terminalLikeDelegate control:self textView:asTextView doCommandBySelector:@selector(commandLineTerminalClear:)];
 			}
 		}
 		else if (aKeyEvent.modifierFlags & NSCommandKeyMask)
@@ -387,7 +392,7 @@ performKeyEquivalent:(NSEvent*)		aKeyEvent
 			if (NSOrderedSame == [aKeyEvent.charactersIgnoringModifiers compare:[NSString stringWithUTF8String:"\015"] options:NSCaseInsensitiveSearch])
 			{
 				// command-return; interpret as a request to send text immediately WITHOUT a new-line
-				result = [self.delegate control:self textView:asTextView doCommandBySelector:@selector(commandLineSendTextThenNothing:)];
+				result = [self.terminalLikeDelegate control:self textView:asTextView doCommandBySelector:@selector(commandLineSendTextThenNothing:)];
 			}
 		}
 	}
@@ -801,7 +806,7 @@ windowDidLoad
 	
 	assert(nil != commandLineField);
 	assert(nil != incompleteTextField);
-	assert(self == commandLineField.delegate);
+	assert(self == commandLineField.terminalLikeDelegate);
 	
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
 	

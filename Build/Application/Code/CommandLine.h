@@ -133,15 +133,10 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface CommandLine_TerminalLikeComboBox : NSComboBox //{
-{
-	id < CommandLine_TerminalLikeComboBoxDelegate >		delegate_;
-}
 
 // accessors
-	- (id < CommandLine_TerminalLikeComboBoxDelegate >)
-	delegate;
-	- (void)
-	setDelegate:(id< CommandLine_TerminalLikeComboBoxDelegate >)_;
+	@property (assign) IBOutlet id < CommandLine_TerminalLikeComboBoxDelegate >
+	terminalLikeDelegate;
 
 // NSResponder
 	- (BOOL)
