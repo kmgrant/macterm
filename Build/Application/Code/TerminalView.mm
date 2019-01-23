@@ -415,11 +415,10 @@ void				drawSingleColorImage				(CGContextRef, CGColorRef, CGRect, id);
 void				drawSingleColorPattern				(CGContextRef, CGColorRef, CGRect, id);
 Boolean				drawSection							(My_TerminalViewPtr, CGContextRef, UInt16, TerminalView_RowIndex,
 														 UInt16, TerminalView_RowIndex);
-void				drawSymbolFontLetter				(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char);
 void				drawTerminalScreenRunOp				(My_TerminalViewPtr, UInt16, CFStringRef, UInt16, TextAttributes_Object);
 void				drawTerminalText					(My_TerminalViewPtr, CGContextRef, CGRect const&, CFIndex,
 														 CFStringRef, TextAttributes_Object);
-void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UniChar, char,
+void				drawVTGraphicsGlyph					(My_TerminalViewPtr, CGContextRef, CGRect const&, UnicodeScalarValue,
 														 CGFloat, TextAttributes_Object);
 void				eraseSection						(My_TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(My_TerminalViewConstPtr, TerminalView_Event, void*);
@@ -5114,32 +5113,6 @@ drawSingleColorPattern	(CGContextRef	inDrawingContext,
 
 
 /*!
-This is only intended to be used by drawVTGraphicsGlyph(),
-to handle glyphs that happen to be Greek letters or other
-Mac Roman characters that the Symbol font can render.
-
-It is a TEMPORARY solution for the fact that the terminal
-renderer cannot handle complete Unicode, because of
-QuickDraw legacy.
-
-(4.0)
-*/
-void
-drawSymbolFontLetter	(My_TerminalViewPtr		UNUSED_ARGUMENT(inTerminalViewPtr),
-						 CGContextRef			UNUSED_ARGUMENT(inDrawingContext),
-						 CGRect const&			UNUSED_ARGUMENT(inBoundaries),
-						 UniChar				UNUSED_ARGUMENT(inUnicode),
-						 char					inMacRomanForQuickDraw) // DEPRECATED
-{
-	// Greek character; “cheat” and try to use the Symbol font for this
-	// (changing the font on the fly is probably insanely inefficient,
-	// but this is all a temporary hack anyway to make up for the lack
-	// of full Unicode rendering support, thanks to QuickDraw legacy)
-	Console_Warning(Console_WriteLine, "not implemented for Core Graphics: drawSymbolFontLetter()");
-}// drawSymbolFontLetter
-
-
-/*!
 Draws the specified chunk of text in the given view
 (line number 1 is the oldest line in the scrollback).
 
@@ -5259,16 +5232,6 @@ and fill colors.
 For optimal performance the graphics context state may not be
 saved or restored; it could be returned in any state.
 
-NOTE:	Despite the Unicode input, this routine is currently
-		transitioning from QuickDraw and does not render all
-		characters properly.
-
-IMPORTANT:	The "inTextBufferAsCFString" parameter should be
-			equivalent to the pair "inTextBufferPtr" and
-			"inCharacterCount", and the CFStringRef be used
-			wherever possible.  The latter two are only for
-			legacy QuickDraw code and they will be removed.
-
 (3.0)
 */
 void
@@ -5287,8 +5250,31 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
 								inAttributes, 1.0/* alpha */);
 	
-	// draw the text with the correct attributes: font, etc.
+	if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
 	{
+		CGFloat				baselineHint = 0;
+		CGFloat				cellCount = inCharacterCount; // TEMPORARY; this is not really true and must be deduced from the text
+		__block CGRect		glyphBounds = CGRectMake(inBoundaries.origin.x, inBoundaries.origin.y,
+														inBoundaries.size.width / cellCount,
+														inBoundaries.size.height);
+		
+		
+		StringUtilities_ForEachComposedCharacterSequenceInRange
+		(inTextBufferAsCFString, CFRangeMake(0, inCharacterCount),
+		^(CFStringRef	aSubstring,
+		  CFRange		UNUSED_ARGUMENT(aRange),
+		  Boolean&		UNUSED_ARGUMENT(outStopFlag))
+		{
+			UnicodeScalarValue		glyphType = StringUtilities_ReturnUnicodeSymbol(aSubstring);
+			
+			
+			drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds, glyphType, baselineHint, inAttributes);
+			glyphBounds.origin.x += glyphBounds.size.width;
+		});
+	}
+	else
+	{
+		// draw the text with the correct attributes: font, etc.
 		NSAttributedString*		attributedString = [[[NSAttributedString alloc]
 													initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)
 																	attributes:inTerminalViewPtr->text.attributeDict]
@@ -5349,10 +5335,8 @@ directly and may ignore the pen location.
 All other text-related aspects of the specified port are
 used to affect graphics (such as the presence of bold face).
 
-The specified Unicode character is redundantly specified as
-a pre-translated Mac Roman character (or some loss byte if
-none is appropriate), for the TEMPORARY use of old drawing
-code that must use QuickDraw.
+The setTextAttributesDictionary() function should be called
+before calling this.
 
 Due to the difficulty of creating vector-based fonts that
 line graphics up properly, and the lousy look of scaled-up
@@ -5368,8 +5352,7 @@ void
 drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 						 CGContextRef				inDrawingContext,
 						 CGRect const&				inBoundaries,
-						 UniChar					inUnicode,
-						 char						inMacRomanForQuickDraw, // DEPRECATED
+						 UnicodeScalarValue			inUnicode,
 						 CGFloat					inBaselineHint,
 						 TextAttributes_Object		inAttributes)
 {
@@ -5381,22 +5364,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	CGRect							floatBounds = inBoundaries;
 	CGColorRef						foregroundColor = nullptr;
 	NSColor*						foregroundNSColor = nil;
-	// legacy metrics for QuickDraw code (will be removed eventually)
-	Boolean							noDefaultRender = false;
-	SInt16							lineWidth = 1; // changed later...
-	SInt16							lineHeight = 1; // changed later...
 	
-	
-	// TEMPORARY; since original bounds are based in QuickDraw
-	// coordinates, must adjust to produce equivalent results
-	// in Core Graphics (for example, when the background is
-	// filled for text selection, it must appear to be in
-	// exactly the same pixels that Core Graphics would use to
-	// draw vector graphics); definitely a hack...
-	floatBounds.origin.x += 1.0;
-	//floatBounds.origin.y += 1.0;
-	floatBounds.size.width -= 3.0;
-	//floatBounds.size.height -= 1.0;
 	
 	if (inAttributes.hasBold())
 	{
@@ -5408,11 +5376,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		drawingOptions |= kTerminalGlyphDrawing_OptionSmallSize;
 	}
 	
-	// TEMPORARY; set now to ensure correct values (later, when
-	// removing Carbon support entirely, this can probably be
-	// done earlier and persist for all other calls implicitly)
-	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
-								inAttributes, 1.0/* alpha */);
 	foregroundNSColor = STATIC_CAST([inTerminalViewPtr->text.attributeDict objectForKey:NSForegroundColorAttributeName],
 									NSColor*);
 	{
@@ -5442,13 +5405,6 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 														floatBounds.size.width - 1, floatBounds.size.height - 1));
 	//CGContextClipToRect(inDrawingContext, floatBounds);
 #endif
-	
-	// pre-check certain ranges
-	if ((inUnicode >= 0x2800) && (inUnicode <= 0x28FF))
-	{
-		// handle below (after switch)
-		noDefaultRender = true;
-	}
 	
 	// The set of characters supported here should also be used in the
 	// translateCharacter() internal method of the Terminal module.
@@ -5823,285 +5779,8 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 		}
 		break;
 	
-	case 0x0192: // small 'f' with hook
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0xA6);
-		break;
-	
-	case 0x0391: // capital alpha
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x41);
-		break;
-	
-	case 0x0392: // capital beta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x42);
-		break;
-	
-	case 0x0393: // capital gamma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x47);
-		break;
-	
-	case 0x0394: // capital delta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x44);
-		break;
-	
-	case 0x0395: // capital epsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x45);
-		break;
-	
-	case 0x0396: // capital zeta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x5A);
-		break;
-	
-	case 0x0397: // capital eta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x48);
-		break;
-	
-	case 0x0398: // capital theta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x51);
-		break;
-	
-	case 0x0399: // capital iota
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x49);
-		break;
-	
-	case 0x039A: // capital kappa
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x4B);
-		break;
-	
-	case 0x039B: // capital lambda
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x4C);
-		break;
-	
-	case 0x039C: // capital mu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x4D);
-		break;
-	
-	case 0x039D: // capital nu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x4E);
-		break;
-	
-	case 0x039E: // capital xi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x58);
-		break;
-	
-	case 0x039F: // capital omicron
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x4F);
-		break;
-	
-	case 0x03A0: // capital pi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x50);
-		break;
-	
-	case 0x03A1: // capital rho
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x52);
-		break;
-	
-	case 0x03A3: // capital sigma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x53);
-		break;
-	
-	case 0x03A4: // capital tau
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x54);
-		break;
-	
-	case 0x03A5: // capital upsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x55);
-		break;
-	
-	case 0x03A6: // capital phi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x46);
-		break;
-	
-	case 0x03A7: // capital chi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x43);
-		break;
-	
-	case 0x03A8: // capital psi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x59);
-		break;
-	
-	case 0x03A9: // capital omega
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x57);
-		break;
-	
-	case 0x03B1: // alpha
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x61);
-		break;
-	
-	case 0x03B2: // beta
-	case 0x00DF: // small sharp "S" (TEMPORARY; render as a beta due to similarity)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x62);
-		break;
-	
-	case 0x03B3: // gamma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x67);
-		break;
-	
-	case 0x03B4: // delta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x64);
-		break;
-	
-	case 0x03B5: // epsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x65);
-		break;
-	
-	case 0x03B6: // zeta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x7A);
-		break;
-	
-	case 0x03B7: // eta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x68);
-		break;
-	
-	case 0x03B8: // theta
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-						 	 0x71);
-		break;
-	
-	case 0x03B9: // iota
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x69);
-		break;
-	
-	case 0x03BA: // kappa
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x6B);
-		break;
-	
-	case 0x03BB: // lambda
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x6C);
-		break;
-	
-	case 0x00B5: // mu
-	case 0x03BC: // mu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x6D);
-		break;
-	
-	case 0x03BD: // nu
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x6E);
-		break;
-	
-	case 0x03BE: // xi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x78);
-		break;
-	
-	case 0x03BF: // omicron
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x6F);
-		break;
-	
-	case 0x03C0: // pi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x70);
-		break;
-	
-	case 0x03C1: // rho
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x72);
-		break;
-	
-	case 0x03C2: // final sigma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x56);
-		break;
-	
-	case 0x03C3: // sigma
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x73);
-		break;
-	
-	case 0x03C4: // tau
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x74);
-		break;
-	
-	case 0x03C5: // upsilon
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x75);
-		break;
-	
-	case 0x03C6: // phi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x66);
-		break;
-	
-	case 0x03C7: // chi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x63);
-		break;
-	
-	case 0x03C8: // psi
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x79);
-		break;
-	
-	case 0x03C9: // omega
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x77);
-		break;
-	
-	case 0x03D1: // theta (symbol)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x4A);
-		break;
-	
-	case 0x03D5: // phi (symbol)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x6A);
-		break;
-	
-	case 0x03D6: // pi (symbol)
-		drawSymbolFontLetter(inTerminalViewPtr, inDrawingContext, floatBounds, inUnicode,
-							 0x76);
-		break;
-	
 	default:
 		// non-graphics character
-		unless (noDefaultRender)
-		{
-			// this is in Mac Roman encoding
-			UInt8	text[] = { '\0' };
-			
-			
-			text[0] = inMacRomanForQuickDraw;
-			
-			//CARBON//DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-		}
 		break;
 	}
 	

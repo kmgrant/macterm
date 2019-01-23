@@ -1908,7 +1908,7 @@ void						tabStopClearAll							(My_ScreenBufferPtr);
 UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr, Boolean);
 void						tabStopInitialize						(My_ScreenBufferPtr);
 void*						threadForTerminalSearch					(void*);
-UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TextAttributes_Object,
+UniChar						translateCharacter						(My_ScreenBufferPtr, UnicodeScalarValue, TextAttributes_Object,
 																	 TextAttributes_Object&);
 
 } // anonymous namespace
@@ -16751,57 +16751,31 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 	// the cursor each time (and therefore being mindful of wrap settings, etc.)
 	if (false == kPrinterOnly)
 	{
-		My_ScreenBufferLineList::iterator	cursorLineIterator;
-		SInt16								preWriteCursorX = inDataPtr->current.cursorX;
-		My_ScreenRowIndex					preWriteCursorY = inDataPtr->current.cursorY;
-		TextAttributes_Object				temporaryAttributes;
-		CFStringInlineBuffer				inlineBuffer;
+		__block My_ScreenBufferLineList::iterator	cursorLineIterator;
+		__block SInt16								preWriteCursorX = inDataPtr->current.cursorX;
+		__block My_ScreenRowIndex					preWriteCursorY = inDataPtr->current.cursorY;
+		__block TextAttributes_Object				temporaryAttributes;
 		
-		
-		CFStringInitInlineBuffer(inString, &inlineBuffer, CFRangeMake(0, kLength));
 		
 		// WARNING: This is done once here, for efficiency, and is only
 		//          repeated below if the cursor actually moves vertically
 		//          (as evidenced by some moveCursor...() call that would
 		//          affect the cursor row).  Keep this in sync!!!
 		locateCursorLine(inDataPtr, cursorLineIterator);
-		for (CFIndex i = 0; i < kLength; ++i)
+		StringUtilities_ForEachComposedCharacterSequenceInRange
+		(inString, CFRangeMake(0, kLength),
+		^(CFStringRef	aSubstring,
+		  CFRange		UNUSED_ARGUMENT(aRange),
+		  Boolean&		UNUSED_ARGUMENT(outStopFlag))
 		{
-			UniChar			thisCharacter = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, i);
-			CFIndex const	kCharacterCountToCompose = CFStringGetRangeOfComposedCharactersAtIndex(inString, i).length;
+			UnicodeScalarValue		glyphType = StringUtilities_ReturnUnicodeSymbol(aSubstring);
 			
-			
-			// compose the character for display purposes
-			// IMPORTANT: this is a bit of a hack, as it is technically possible
-			// for Unicode combinations to have no single character equivalent
-			// (i.e. they can only be described in decomposed form); however, this
-			// is rare; for now composition is considered an acceptable work-around
-			if (kCharacterCountToCompose > 1)
-			{
-				CFRetainRelease		composedCharacter(CFStringCreateMutable(kCFAllocatorDefault, kCharacterCountToCompose),
-														CFRetainRelease::kAlreadyRetained);
-				
-				
-				for (CFIndex j = i; j < (i + kCharacterCountToCompose); ++j)
-				{
-					UniChar const	kNextChar = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, j);
-					
-					
-					CFStringAppendCharacters(composedCharacter.returnCFMutableStringRef(), &kNextChar, 1);
-				}
-				CFStringNormalize(composedCharacter.returnCFMutableStringRef(), kCFStringNormalizationFormC);
-				thisCharacter = CFStringGetCharacterAtIndex(composedCharacter.returnCFStringRef(), 0);
-			}
 			
 		#if 0
 			// debug
 			{
-				CFRetainRelease		s(CFStringCreateWithCharacters(kCFAllocatorDefault, &thisCharacter, 1), true);
-				
-				
-				Console_WriteValueCFString("echo character: glyph", s.returnCFStringRef());
-				Console_WriteValue("echo character: value", thisCharacter);
-				Console_WriteValue("echo character: count", kCharacterCountToCompose);
+				Console_WriteValueCFString("echo character: glyph", aSubstring);
+				Console_WriteValue("echo character: value", glyphType);
 			}
 		#endif
 			
@@ -16823,7 +16797,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			{
 				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */, kMy_AttributeRuleInitialize);
 			}
-			(*cursorLineIterator)->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, thisCharacter,
+			(*cursorLineIterator)->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, glyphType,
 																									inDataPtr->current.drawingAttributes,
 																									temporaryAttributes);
 			(*cursorLineIterator)->returnMutableAttributeVector()[inDataPtr->current.cursorX] = temporaryAttributes;
@@ -16852,13 +16826,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 					}
 				}
 			}
-			
-			// when characters are composed (e.g. a letter followed by its accent),
-			// ALL of the values used to produce the single, visible glyph should
-			// be skipped in the buffer, while still corresponding to a single
-			// position from the user’s point of view, e.g. cursor only moves once
-			i += (kCharacterCountToCompose - 1/* loop has a ++i by default */);
-		}
+		});
 		
 		// end of data; notify of a change (this will cause things like Terminal View updates)
 		{
@@ -18662,7 +18630,7 @@ not indicate a new default for the character stream.
 */
 inline UniChar
 translateCharacter	(My_ScreenBufferPtr			inDataPtr,
-					 UniChar					inCharacter,
+					 UnicodeScalarValue			inCharacter,
 					 TextAttributes_Object		inAttributes,
 					 TextAttributes_Object&		outNewAttributes)
 {
@@ -18720,6 +18688,7 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		{
 		case '`':
 			result = 0x25CA; // filled diamond; using hollow (lozenge) for now, Unicode 0x2666 is better
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 'a':
@@ -18744,10 +18713,12 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		
 		case 'f':
 			result = 0x00B0; // degrees (same in VT52)
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 'g':
 			result = 0x00B1; // plus or minus (same in VT52)
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 'h':
@@ -18762,6 +18733,7 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 			if (kVT52)
 			{
 				result = 0x00F7; // division
+				inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			}
 			else
 			{
@@ -18827,93 +18799,115 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		
 		case 'y':
 			result = 0x2264; // less than or equal to
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 'z':
 			result = 0x2265; // greater than or equal to
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case '{':
 			result = 0x03C0; // pi
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case '|':
 			result = 0x2260; // not equal to
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case '}':
 			result = 0x00A3; // British pounds (currency) symbol
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case '~':
 			if (kVT52)
 			{
 				result = 0x00B6; // pilcrow (paragraph) sign
+				inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			}
 			else
 			{
 				result = 0x2027; // centered dot
+				inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			}
 			break;
 		
 		case 159:
 			result = 0x0192; // small 'f' with hook
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 224:
 			result = 0x03B1; // alpha
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 225:
 			result = 0x00DF; // beta
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 226:
 			result = 0x0393; // capital gamma
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 227:
 			result = 0x03C0; // pi
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 228:
 			result = 0x03A3; // capital sigma
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 229:
 			result = 0x03C3; // sigma
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 230:
 			result = 0x00B5; // mu
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 231:
 			result = 0x03C4; // tau
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 232:
 			result = 0x03A6; // capital phi
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 233:
 			result = 0x0398; // capital theta
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 234:
 			result = 0x03A9; // capital omega
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 235:
 			result = 0x03B4; // delta
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 237:
 			result = 0x03C6; // phi
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 238:
 			result = 0x03B5; // epsilon
+			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
 			break;
 		
 		case 251:
@@ -18941,13 +18935,6 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		// are handled by the drawVTGraphicsGlyph() internal method in the
 		// Terminal View module
 		case '=': // equal to
-		case 0x00B5: // mu (alt)
-		case 0x00B7: // centered dot (alternate?)
-		case 0x00DF: // small sharp "S"
-		case 0x0192: // small 'f' with hook
-		case 0x2022: // bullet
-		case 0x2026: // ellipsis (three dots)
-		case 0x2027: // centered dot (hyphenation point)
 		case 0x2190: // leftwards arrow
 		case 0x2191: // upwards arrow
 		case 0x2192: // rightwards arrow
@@ -18955,13 +18942,8 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
 		case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
 		case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
-		case 0x2219: // bullet operator
 		case 0x221A: // square root left edge
-		case 0x2260: // not equal to
-		case 0x2261: // equivalent to
 		case 0x22EF: // middle ellipsis (three dots, centered)
-		case 0x2325: // option key
-		case 0x2387: // alternate key
 		case 0x23B2: // large sigma (summation), top half
 		case 0x23B3: // large sigma (summation), bottom half
 		case 0x23BA: // top line
@@ -19154,10 +19136,6 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x259D: // quadrant upper-right
 		case 0x259E: // quadrants upper-right and lower-left
 		case 0x259F: // block minus upper-left quadrant
-		case 0x25A0: // black square
-		case 0x25C6: // black diamond
-		case 0x25C7: // white diamond
-		case 0x25CA: // lozenge (narrower white diamond)
 		case 0x2699: // gear
 		case 0x26A1: // online/offline lightning bolt
 		case 0x2713: // check mark
@@ -19165,58 +19143,6 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x2718: // X mark
 		case 0x27A6: // curve-to-right arrow (used for detached-from-head in "powerline")
 		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
-		case 0x0391: // capital alpha
-		case 0x0392: // capital beta
-		case 0x0393: // capital gamma
-		case 0x0394: // capital delta
-		case 0x0395: // capital epsilon
-		case 0x0396: // capital zeta
-		case 0x0397: // capital eta
-		case 0x0398: // capital theta
-		case 0x0399: // capital iota
-		case 0x039A: // capital kappa
-		case 0x039B: // capital lambda
-		case 0x039C: // capital mu
-		case 0x039D: // capital nu
-		case 0x039E: // capital xi
-		case 0x039F: // capital omicron
-		case 0x03A0: // capital pi
-		case 0x03A1: // capital rho
-		case 0x03A3: // capital sigma
-		case 0x03A4: // capital tau
-		case 0x03A5: // capital upsilon
-		case 0x03A6: // capital phi
-		case 0x03A7: // capital chi
-		case 0x03A8: // capital psi
-		case 0x03A9: // capital omega
-		case 0x03B1: // alpha
-		case 0x03B2: // beta
-		case 0x03B3: // gamma
-		case 0x03B4: // delta
-		case 0x03B5: // epsilon
-		case 0x03B6: // zeta
-		case 0x03B7: // eta
-		case 0x03B8: // theta
-		case 0x03B9: // iota
-		case 0x03BA: // kappa
-		case 0x03BB: // lambda
-		case 0x03BC: // mu
-		case 0x03BD: // nu
-		case 0x03BE: // xi
-		case 0x03BF: // omicron
-		case 0x03C0: // pi
-		case 0x03C1: // rho
-		case 0x03C2: // final sigma
-		case 0x03C3: // sigma
-		case 0x03C4: // tau
-		case 0x03C5: // upsilon
-		case 0x03C6: // phi
-		case 0x03C7: // chi
-		case 0x03C8: // psi
-		case 0x03C9: // omega
-		case 0x03D1: // theta (symbol)
-		case 0x03D5: // phi (symbol)
-		case 0x03D6: // pi (symbol)
 		case 0xE0A0: // "powerline" version control branch
 		case 0xE0A1: // "powerline" line (LN) marker
 		case 0xE0A2: // "powerline" closed padlock
