@@ -108,7 +108,7 @@
 	<key>kiosk-no-system-full-screen-mode</key>
 	<false/>
 	<key>kiosk-off-switch-visible</key>
-	<true/>
+	<false/>
 	<key>kiosk-scroll-bar-visible</key>
 	<true/>
 	<key>kiosk-window-frame-visible</key>
@@ -251,7 +251,7 @@
 		<string>macro-12</string>
 	</array>
 	<key>new-means</key>
-	<string>dialog</string>
+	<string>log-in shell</string>
 	<key>no-animations</key>
 	<false/>
 	<key>no-auto-close</key>
@@ -441,7 +441,7 @@
 	<key>terminal-cursor-shape</key>
 	<string>vertical bar</string>
 	<key>terminal-emulator-answerback</key>
-	<string>vt100</string>
+	<string>xterm-256color</string>
 	<key>terminal-emulator-enable-color-24bit</key>
 	<true/>
 	<key>terminal-emulator-iterm-enable-graphics</key>
@@ -449,7 +449,7 @@
 	<key>terminal-emulator-sixel-enable-graphics</key>
 	<true/>
 	<key>terminal-emulator-type</key>
-	<string>vt100</string>
+	<string>xterm-256color</string>
 	<key>terminal-emulator-vt100-fix-line-wrapping-bug</key>
 	<true/>
 	<key>terminal-emulator-xterm-enable-background-color-erase</key>
@@ -529,7 +529,7 @@
 	<key>when-alert-in-background</key>
 	<string>ignore</string>
 	<key>window-01-session-built-in</key>
-	<string>dialog</string>
+	<string>log-in shell</string>
 	<key>window-clipboard-visible</key>
 	<false/>
 	<key>window-commandline-visible</key>
