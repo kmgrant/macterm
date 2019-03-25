@@ -57,6 +57,7 @@ enum
 	kFindDialog_OptionAllOpenTerminals		= (1 << 1),
 	kFindDialog_OptionNotFinal				= (1 << 2), // internal option
 	kFindDialog_OptionDoNotScrollToMatch	= (1 << 3), // internal option
+	kFindDialog_OptionRegularExpression		= (1 << 4),
 	kFindDialog_OptionsDefault				= kFindDialog_OptionCaseInsensitive
 };
 
@@ -123,6 +124,7 @@ changes to an interface declared in a ".mm" file.
 	NSString*						_statusText;
 	BOOL							_caseInsensitiveSearch;
 	BOOL							_multiTerminalSearch;
+	BOOL							_regularExpressionSearch;
 	BOOL							_searchProgressHidden;
 	BOOL							_successfulSearch;
 }
@@ -162,6 +164,8 @@ changes to an interface declared in a ".mm" file.
 	caseInsensitiveSearch; // binding
 	@property (assign) BOOL
 	multiTerminalSearch; // binding
+	@property (assign) BOOL
+	regularExpressionSearch; // binding
 	@property (readonly) FindDialog_SearchContext
 	searchContext;
 	@property (assign) BOOL

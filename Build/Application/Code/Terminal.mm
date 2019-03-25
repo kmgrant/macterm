@@ -1804,7 +1804,9 @@ struct My_SearchThreadContext
 	My_ScreenBufferPtr							screenBufferPtr; // the terminal being searched
 	std::vector< Terminal_RangeDescription >*	matchesVectorPtr;
 	CFStringRef									queryCFString;
-	CFOptionFlags								searchFlags;
+	CFOptionFlags								searchFlags; // for CFStringCreateArrayWithFindResults()
+	NSRegularExpressionOptions					regExOptions; // for NSRegularExpression calls
+	Boolean										isRegularExpression; // perform non-literal pattern match
 	UInt16										threadNumber; // thread 0 searches the screen, thread N searches every Nth scrollback line
 	My_ScreenBufferLineList::const_iterator		rangeStart; // buffer offset (into screen if thread 0, otherwise scrollback)
 	SInt32										startRowIndex; // index of the line pointed to by "rangeStart"
@@ -4559,6 +4561,8 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		typedef std::vector< Terminal_RangeDescription >	RangeDescriptionVector;
 		CFStringRef					actualQuery = inQuery; // usually the same but could change below
 		CFOptionFlags				searchFlags = 0;
+		NSRegularExpressionOptions	regExOptions = 0;
+		Boolean						isRegEx = (0 != (inFlags & kTerminal_SearchFlagsRegularExpression));
 		pthread_attr_t				threadAttributes;
 		pthread_t					threadList[] =
 									{
@@ -4584,8 +4588,15 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		
 		
 		// translate given flags to Core Foundation String search flags
-		if (0 == (inFlags & kTerminal_SearchFlagsCaseSensitive)) searchFlags |= kCFCompareCaseInsensitive;
-		if (inFlags & kTerminal_SearchFlagsSearchBackwards) searchFlags |= kCFCompareBackwards;
+		if (0 == (inFlags & kTerminal_SearchFlagsCaseSensitive))
+		{
+			searchFlags |= kCFCompareCaseInsensitive;
+			regExOptions |= NSRegularExpressionCaseInsensitive;
+		}
+		if (inFlags & kTerminal_SearchFlagsSearchBackwards)
+		{
+			searchFlags |= kCFCompareBackwards;
+		}
 		if (inFlags & kTerminal_SearchFlagsMatchOnlyAtLineEnd)
 		{
 			NSCharacterSet*		newlineSet = [NSCharacterSet characterSetWithCharactersInString:@"\n\r\0"];
@@ -4644,6 +4655,8 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			threadContextPtr->matchesVectorPtr = matchVectorsList[0];
 			threadContextPtr->queryCFString = actualQuery;
 			threadContextPtr->searchFlags = searchFlags;
+			threadContextPtr->regExOptions = regExOptions;
+			threadContextPtr->isRegularExpression = isRegEx;
 			threadContextPtr->threadNumber = 0;
 			threadContextPtr->rangeStart = dataPtr->screenBuffer.begin();
 			threadContextPtr->startRowIndex = 0;
@@ -4696,6 +4709,8 @@ Terminal_Search		(TerminalScreenRef							inRef,
 					threadContextPtr->matchesVectorPtr = matchVectorsList[i];
 					threadContextPtr->queryCFString = actualQuery;
 					threadContextPtr->searchFlags = searchFlags;
+					threadContextPtr->regExOptions = regExOptions;
+					threadContextPtr->isRegularExpression = isRegEx;
 					threadContextPtr->threadNumber = i;
 					threadContextPtr->rangeStart = dataPtr->scrollbackBuffer.begin();
 					threadContextPtr->startRowIndex = (i - 1) * averageLinesPerThread;
@@ -18549,28 +18564,80 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 		// the next, but that is a known limitation right now (TEMPORARY)
 		My_ScreenBufferLine const&	kLine = **toLine;
 		CFStringRef const			kCFStringToSearch = stringByStrippingEndWhitespace(kLine.textCFString.returnCFStringRef());
-		CFRetainRelease				resultsArray(CFStringCreateArrayWithFindResults
-													(kCFAllocatorDefault, kCFStringToSearch, contextPtr->queryCFString,
-														CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
-														contextPtr->searchFlags),
-													CFRetainRelease::kAlreadyRetained);
+		std::vector<CFRange>		matchRanges;
 		
 		
-		if (resultsArray.exists())
+		if (contextPtr->isRegularExpression)
 		{
-			// return the range of text that was found
+			// regular expression string matches
+			NSError* /*__autoreleasing*/	error = nil;
+			NSRegularExpression*			expressionMatcher = [NSRegularExpression
+																	regularExpressionWithPattern:BRIDGE_CAST(contextPtr->queryCFString, NSString*)
+																									options:contextPtr->regExOptions
+																									error:&error];
+			
+			
+			if (nil == expressionMatcher)
+			{
+				Console_Warning(Console_WriteValueCFString, "failed to create regex, error", BRIDGE_CAST([error localizedDescription], CFStringRef));
+			}
+			else
+			{
+				NSArray<NSTextCheckingResult*>*		matchObjects = [expressionMatcher
+																	matchesInString:BRIDGE_CAST(kCFStringToSearch, NSString*)
+																					options:(NSMatchingOptions)0
+																					range:NSMakeRange(0, CFStringGetLength(kCFStringToSearch))];
+				
+				
+				if (nil != matchObjects)
+				{
+					matchRanges.reserve(matchObjects.count);
+					for (NSTextCheckingResult* aMatch in matchObjects)
+					{
+						matchRanges.push_back(CFRangeMake(aMatch.range.location, aMatch.range.length));
+					}
+				}
+				else
+				{
+					Console_Warning(Console_WriteLine, "regular expression not created");
+				}
+			}
+		}
+		else
+		{
+			// literal string matches
+			CFRetainRelease		resultsArray(CFStringCreateArrayWithFindResults
+												(kCFAllocatorDefault, kCFStringToSearch, contextPtr->queryCFString,
+													CFRangeMake(0, CFStringGetLength(kCFStringToSearch)),
+													contextPtr->searchFlags),
+												CFRetainRelease::kAlreadyRetained);
 			CFArrayRef const	kResultsArrayRef = resultsArray.returnCFArrayRef();
-			CFIndex const		kNumberOfMatches = CFArrayGetCount(kResultsArrayRef);
+			CFIndex const		kNumberOfMatches = ((nullptr == kResultsArrayRef)
+													? 0
+													: CFArrayGetCount(kResultsArrayRef));
 			
 			
-			// extend the size of the results vector
-			contextPtr->matchesVectorPtr->reserve(contextPtr->matchesVectorPtr->size() + kNumberOfMatches);
-			
-			// figure out where all the matches are on the screen
+			matchRanges.reserve(kNumberOfMatches);
 			for (CFIndex i = 0; i < kNumberOfMatches; ++i)
 			{
-				CFRange const*				toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
-																		CFRange const*);
+				CFRange const*		toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
+																CFRange const*);
+				
+				
+				matchRanges.push_back(*toRange);
+			}
+		}
+		
+		if (false == matchRanges.empty())
+		{
+			// return the range of text that was found
+			
+			// extend the size of the results vector
+			contextPtr->matchesVectorPtr->reserve(contextPtr->matchesVectorPtr->size() + matchRanges.size());
+			
+			// figure out where all the matches are on the screen
+			for (CFRange aRange : matchRanges)
+			{
 				SInt32						firstRow = rowIndex;
 				UInt16						firstColumn = 0;
 				Terminal_RangeDescription	textRegion;
@@ -18579,7 +18646,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 				// translate all results ranges into external form; the
 				// caller understands rows and columns, etc. not offsets
 				// into a giant buffer
-				firstColumn = STATIC_CAST(toRange->location, UInt16);
+				firstColumn = STATIC_CAST(aRange.location, UInt16);
 				if (false == kIsScreen)
 				{
 					// translate scrollback into negative coordinates (zero-based)
@@ -18589,7 +18656,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 				textRegion.screen = contextPtr->screenBufferPtr->selfRef;
 				textRegion.firstRow = firstRow;
 				textRegion.firstColumn = firstColumn;
-				textRegion.columnCount = STATIC_CAST(toRange->length, UInt16);
+				textRegion.columnCount = STATIC_CAST(aRange.length, UInt16);
 				textRegion.rowCount = 1;
 				contextPtr->matchesVectorPtr->push_back(textRegion);
 			}

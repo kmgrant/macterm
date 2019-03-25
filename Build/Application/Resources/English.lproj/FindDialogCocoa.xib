@@ -82,9 +82,9 @@
                         </connections>
                     </progressIndicator>
                     <button verticalHuggingPriority="750" id="mrc-hN-Jzt">
-                        <rect key="frame" x="44" y="8" width="115" height="19"/>
+                        <rect key="frame" x="43" y="8" width="92" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="recessed" title="Current Window" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="UMk-wU-g7d">
+                        <buttonCell key="cell" type="recessed" title="This Window" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="UMk-wU-g7d">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="systemBold" size="12"/>
                         </buttonCell>
@@ -100,7 +100,7 @@
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" id="Pf2-qq-wXH">
-                        <rect key="frame" x="167" y="8" width="30" height="19"/>
+                        <rect key="frame" x="143" y="8" width="30" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="recessed" title="All" bezelStyle="recessed" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cfc-51-ciR">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -177,6 +177,20 @@ Gw
                         </buttonCell>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.caseInsensitiveSearch" id="o7j-te-bOu"/>
+                        </connections>
+                    </button>
+                    <button id="LdX-oa-PyL">
+                        <rect key="frame" x="196" y="10" width="72" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Regex" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="ezZ-Gb-3Sf">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <connections>
+                                <binding destination="-2" name="value" keyPath="self.regularExpressionSearch" id="mRf-Cu-hfe"/>
+                            </connections>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="-2" name="value" keyPath="self.regularExpressionSearch" id="12j-47-faG"/>
                         </connections>
                     </button>
                 </subviews>

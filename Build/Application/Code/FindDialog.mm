@@ -105,6 +105,7 @@ Manages the Find user interface.
 	display;
 	- (UInt32)
 	initiateSearchFor:(NSString*)_
+	regularExpression:(BOOL)_
 	ignoringCase:(BOOL)_
 	allTerminals:(BOOL)_
 	notFinal:(BOOL)_
@@ -178,8 +179,9 @@ FindDialog_New  (TerminalWindowRef				inTerminalWindow,
 	
 	
 	result = (FindDialog_Ref)[[FindDialog_Handler alloc]
-								initForTerminalWindow:inTerminalWindow notificationProc:inCloseNotifyProcPtr
-														previousSearches:(NSMutableArray*)inoutQueryStringHistory
+								initForTerminalWindow:inTerminalWindow
+														notificationProc:inCloseNotifyProcPtr
+														previousSearches:BRIDGE_CAST(inoutQueryStringHistory, NSMutableArray*)
 														initialOptions:inFlags];
 	return result;
 }// New
@@ -407,6 +409,10 @@ FindDialog_SearchWithoutDialog		(CFStringRef			inQueryBaseOrNullToClear,
 			if ((nullptr != inQueryBaseOrNullToClear) && (searchQueryLength > 0))
 			{
 				// configure search
+				if (inFlags & kFindDialog_OptionRegularExpression)
+				{
+					flags |= kTerminal_SearchFlagsRegularExpression;
+				}
 				if (0 == (inFlags & kFindDialog_OptionCaseInsensitive))
 				{
 					flags |= kTerminal_SearchFlagsCaseSensitive;
@@ -615,6 +621,11 @@ display
 Starts a (synchronous) search of the focused terminal screen.
 Returns the number of matches.
 
+If "regularExpression" is YES, the string is considered to be
+a regular expression instead of a literal string.  And if
+"ignoreCase" is set, case-insensitive matching is done (for
+both literal strings and regular expressions).
+
 If "isNotFinal" is YES, certain optimizations are made (mostly
 heuristics based on the nature of the query).  If the query
 looks like it might be expensive, this function automatically
@@ -634,6 +645,7 @@ occurred.
 */
 - (UInt32)
 initiateSearchFor:(NSString*)	queryString
+regularExpression:(BOOL)		regularExpression
 ignoringCase:(BOOL)				ignoreCase
 allTerminals:(BOOL)				allTerminals
 notFinal:(BOOL)					isNotFinal
@@ -662,6 +674,11 @@ didSearch:(BOOL*)				outDidSearch
 		Boolean					didSearch = false;
 		
 		
+		if (regularExpression)
+		{
+			searchFlags |= kFindDialog_OptionRegularExpression;
+		}
+		
 		if (ignoreCase)
 		{
 			searchFlags |= kFindDialog_OptionCaseInsensitive;
@@ -684,7 +701,7 @@ didSearch:(BOOL*)				outDidSearch
 	}
 	
 	return result;
-}// initiateSearchFor:ignoringCase:allTerminals:notFinal:didSearch:
+}// initiateSearchFor:regularExpression:ignoringCase:allTerminals:notFinal:didSearch:
 
 
 /*!
@@ -821,6 +838,7 @@ withQuery:(NSString*)				searchText
 #pragma unused(aManagedView)
 	BOOL		didSearch = NO;
 	UInt32		matchCount = [self initiateSearchFor:searchText
+														regularExpression:aViewMgr.regularExpressionSearch
 														ignoringCase:aViewMgr.caseInsensitiveSearch
 														allTerminals:aViewMgr.multiTerminalSearch
 														notFinal:YES didSearch:&didSearch];
@@ -849,6 +867,7 @@ finalOptions:(FindDialog_Options)		options
 {
 #pragma unused(aViewMgr, aManagedView)
 	NSString*	searchText = [aViewMgr searchText];
+	BOOL		isRegEx = aViewMgr.regularExpressionSearch;
 	BOOL		caseInsensitive = aViewMgr.caseInsensitiveSearch;
 	BOOL		multiTerminal = aViewMgr.multiTerminalSearch;
 	
@@ -873,8 +892,12 @@ finalOptions:(FindDialog_Options)		options
 		BOOL	didSearch = NO;
 		
 		
-		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:multiTerminal
-														notFinal:NO didSearch:&didSearch];
+		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText
+														regularExpression:isRegEx
+														ignoringCase:caseInsensitive
+														allTerminals:multiTerminal
+														notFinal:NO
+														didSearch:&didSearch];
 	}
 	else
 	{
@@ -885,8 +908,12 @@ finalOptions:(FindDialog_Options)		options
 			
 			
 			searchText = STATIC_CAST([recentSearchesArray objectAtIndex:0], NSString*);
-			UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText ignoringCase:caseInsensitive allTerminals:NO
-															notFinal:NO didSearch:&didSearch];
+			UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText
+															regularExpression:isRegEx
+															ignoringCase:caseInsensitive
+															allTerminals:NO
+															notFinal:NO
+															didSearch:&didSearch];
 		}
 		else
 		{
@@ -1067,6 +1094,7 @@ initialOptions:(FindDialog_Options)			options
 		terminalWindow = aTerminalWindow;
 		_caseInsensitiveSearch = (0 != (options & kFindDialog_OptionCaseInsensitive));
 		_multiTerminalSearch = (0 != (options & kFindDialog_OptionAllOpenTerminals));
+		_regularExpressionSearch = (0 != (options & kFindDialog_OptionRegularExpression));
 		_searchProgressHidden = YES;
 		_successfulSearch = YES;
 		_searchText = [@"" retain];
@@ -1144,6 +1172,10 @@ performCloseAndRevert:(id)	sender
 	FindDialog_Options		options = kFindDialog_OptionsAllOff;
 	
 	
+	if (self.regularExpressionSearch)
+	{
+		options |= kFindDialog_OptionRegularExpression;
+	}
 	if (self.caseInsensitiveSearch)
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
@@ -1174,6 +1206,10 @@ performCloseAndSearch:(id)	sender
 	FindDialog_Options		options = kFindDialog_OptionsAllOff;
 	
 	
+	if (self.regularExpressionSearch)
+	{
+		options |= kFindDialog_OptionRegularExpression;
+	}
 	if (self.caseInsensitiveSearch)
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
@@ -1307,6 +1343,27 @@ setCaseInsensitiveSearch:(BOOL)		isCaseInsensitive
 		[self performSearch:NSApp];
 	}
 }// setCaseInsensitiveSearch:
+
+
+/*!
+Accessor.
+
+(2019.03)
+*/
+- (BOOL)
+regularExpressionSearch
+{
+	return _regularExpressionSearch;
+}
+- (void)
+setRegularExpressionSearch:(BOOL)	isRegularExpression
+{
+	if (_regularExpressionSearch != isRegularExpression)
+	{
+		_regularExpressionSearch = isRegularExpression;
+		[self performSearch:NSApp];
+	}
+}// setRegularExpressionSearch:
 
 
 /*!

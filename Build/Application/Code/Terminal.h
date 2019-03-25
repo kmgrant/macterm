@@ -175,6 +175,7 @@ enum
 	kTerminal_SearchFlagsCaseSensitive		= (1 << 0),		//!< lowercase and uppercase letters not considered the same?
 	kTerminal_SearchFlagsSearchBackwards	= (1 << 1),		//!< search oldest (topmost, offscreen) rows first?
 	kTerminal_SearchFlagsMatchOnlyAtLineEnd	= (1 << 2),		//!< phrase can only match at the end of a line (excluding whitespace)
+	kTerminal_SearchFlagsRegularExpression	= (1 << 3),		//!< string is a regular expression, not a literal match
 };
 
 /*!
