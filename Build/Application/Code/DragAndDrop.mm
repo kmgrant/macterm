@@ -1,4 +1,4 @@
-/*!	\file DragAndDrop.cp
+/*!	\file DragAndDrop.mm
 	\brief Drag-and-drop management.
 */
 /*###############################################################
@@ -30,25 +30,25 @@
 
 ###############################################################*/
 
-#include "DragAndDrop.h"
-#include <UniversalDefines.h>
+#import "DragAndDrop.h"
+#import <UniversalDefines.h>
 
 // standard-C++ includes
-#include <map>
+#import <map>
 
 // Mac includes
-#include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
-#include <CoreServices/CoreServices.h>
+#import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h>
+#import <CoreServices/CoreServices.h>
 
 // library includes
-#include <CGContextSaveRestore.h>
-#include <Console.h>
-#include <MemoryBlocks.h>
+#import <CGContextSaveRestore.h>
+#import <Console.h>
+#import <MemoryBlocks.h>
 
 // application includes
-#include "ConstantsRegistry.h"
-#include "RegionUtilities.h"
+#import "ConstantsRegistry.h"
+#import "RegionUtilities.h"
 
 
 
@@ -289,20 +289,7 @@ Determines if the user wants a monochrome display.
 Boolean
 isGraphiteTheme ()
 {
-	CFStringRef		themeCFString = nullptr;
-	Boolean			result = false;
-	
-
-	// TEMPORARY: This setting should probably be cached somewhere (Preferences.h?).	
-	if (noErr == CopyThemeIdentifier(&themeCFString))
-	{
-		result = (kCFCompareEqualTo == CFStringCompare
-										(themeCFString, kThemeAppearanceAquaGraphite,
-											kCFCompareBackwards));
-		CFRelease(themeCFString), themeCFString = nullptr;
-	}
-	
-	return result;
+	return (NSGraphiteControlTint == [NSColor currentControlTint]);
 }// isGraphiteTheme
 
 } // anonymous namespace

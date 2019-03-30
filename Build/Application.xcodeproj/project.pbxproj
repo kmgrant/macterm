@@ -51,7 +51,7 @@
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
-		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
+		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.mm */; };
 		0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF4055432A400ACDF3A /* Localization.mm */; };
 		0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE17055432A400ACDF3A /* SessionFactory.mm */; };
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
@@ -326,7 +326,7 @@
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
 		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ContextSensitiveMenu.mm; path = Shared/Code/ContextSensitiveMenu.mm; sourceTree = "<group>"; };
 		0A46FDD1055432A400ACDF3A /* DNR.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DNR.cp; path = Application/Code/DNR.cp; sourceTree = "<group>"; };
-		0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DragAndDrop.cp; path = Application/Code/DragAndDrop.cp; sourceTree = "<group>"; };
+		0A46FDD2055432A400ACDF3A /* DragAndDrop.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DragAndDrop.mm; path = Application/Code/DragAndDrop.mm; sourceTree = "<group>"; };
 		0A46FDD5055432A400ACDF3A /* EventLoop.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = EventLoop.mm; path = Application/Code/EventLoop.mm; sourceTree = "<group>"; };
 		0A46FDD6055432A400ACDF3A /* FileUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FileUtilities.cp; path = Application/Code/FileUtilities.cp; sourceTree = "<group>"; };
 		0A46FDD7055432A400ACDF3A /* FindDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FindDialog.mm; path = Application/Code/FindDialog.mm; sourceTree = "<group>"; };
@@ -635,7 +635,7 @@
 				0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */,
 				0ABD01CF1068000A00BBB87A /* DebugInterface.mm */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
-				0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */,
+				0A46FDD2055432A400ACDF3A /* DragAndDrop.mm */,
 				0ACF35C517EBCC1500178DE2 /* Emulation.cp */,
 				0A46FDD5055432A400ACDF3A /* EventLoop.mm */,
 				0A46FDD6055432A400ACDF3A /* FileUtilities.cp */,
@@ -1209,7 +1209,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */,
+				0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.mm in Sources */,
 				0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */,
 				0AC6BADF0A8C0BA000AFF37A /* Localization.mm in Sources */,
 				0AC6BAE70A8C0BA000AFF37A /* SessionFactory.mm in Sources */,
