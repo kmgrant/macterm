@@ -214,59 +214,59 @@ IconForSessionStatusActive.icns \
 IconForSessionStatusDead.icns \
 IconForTerminal.icns \
 PreferencesSearch.plist \
-English.lproj/Credits.html
+Base.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 MacTerm.help
-# set to a list of "English.lproj/<xyz>" paths, where there
+# set to a list of "Base.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 APP_XIB_PREFIXES := \
-English.lproj/AddressDialogCocoa \
-English.lproj/AlertMessagesCocoa \
-English.lproj/ApplicationTouchBarCocoa \
-English.lproj/ClipboardCocoa \
-English.lproj/CommandLineCocoa \
-English.lproj/DebugInterfaceCocoa \
-English.lproj/FindDialogCocoa \
-English.lproj/GenericDialogCocoa \
-English.lproj/GenericPanelNumberedListCocoa \
-English.lproj/GenericPanelTabsCocoa \
-English.lproj/InfoWindowCocoa \
-English.lproj/InfoWindowTouchBarCocoa \
-English.lproj/KeypadArrangeWindowCocoa \
-English.lproj/KeypadControlKeysCocoa \
-English.lproj/KeypadFullScreenCocoa \
-English.lproj/KeypadFunctionKeysCocoa \
-English.lproj/KeypadVT220KeysCocoa \
-English.lproj/MainMenuCocoa \
-English.lproj/PrefPanelFormatGeneralCocoa \
-English.lproj/PrefPanelFormatStandardColorsCocoa \
-English.lproj/PrefPanelGeneralFullScreenCocoa \
-English.lproj/PrefPanelGeneralNotificationsCocoa \
-English.lproj/PrefPanelGeneralOptionsCocoa \
-English.lproj/PrefPanelGeneralSpecialCocoa \
-English.lproj/PrefPanelMacrosCocoa \
-English.lproj/PrefPanelSessionDataFlowCocoa \
-English.lproj/PrefPanelSessionGraphicsCocoa \
-English.lproj/PrefPanelSessionKeyboardCocoa \
-English.lproj/PrefPanelSessionResourceCocoa \
-English.lproj/PrefPanelTerminalEmulationCocoa \
-English.lproj/PrefPanelTerminalOptionsCocoa \
-English.lproj/PrefPanelTerminalScreenCocoa \
-English.lproj/PrefPanelTranslationsCocoa \
-English.lproj/PrefPanelWorkspaceOptionsCocoa \
-English.lproj/PrefPanelWorkspaceWindowsCocoa \
-English.lproj/PrefsWindowCocoa \
-English.lproj/PrefsWindowTouchBarCocoa \
-English.lproj/ServerBrowserCocoa \
-English.lproj/TerminalRootCocoa \
-English.lproj/TerminalScrollableRootViewCocoa \
-English.lproj/TerminalViewCocoa \
-English.lproj/TerminalWindowCocoa \
-English.lproj/TerminalWindowTouchBarCocoa \
-English.lproj/VectorWindowCocoa \
-English.lproj/VectorWindowTouchBarCocoa
+Base.lproj/AddressDialogCocoa \
+Base.lproj/AlertMessagesCocoa \
+Base.lproj/ApplicationTouchBarCocoa \
+Base.lproj/ClipboardCocoa \
+Base.lproj/CommandLineCocoa \
+Base.lproj/DebugInterfaceCocoa \
+Base.lproj/FindDialogCocoa \
+Base.lproj/GenericDialogCocoa \
+Base.lproj/GenericPanelNumberedListCocoa \
+Base.lproj/GenericPanelTabsCocoa \
+Base.lproj/InfoWindowCocoa \
+Base.lproj/InfoWindowTouchBarCocoa \
+Base.lproj/KeypadArrangeWindowCocoa \
+Base.lproj/KeypadControlKeysCocoa \
+Base.lproj/KeypadFullScreenCocoa \
+Base.lproj/KeypadFunctionKeysCocoa \
+Base.lproj/KeypadVT220KeysCocoa \
+Base.lproj/MainMenuCocoa \
+Base.lproj/PrefPanelFormatGeneralCocoa \
+Base.lproj/PrefPanelFormatStandardColorsCocoa \
+Base.lproj/PrefPanelGeneralFullScreenCocoa \
+Base.lproj/PrefPanelGeneralNotificationsCocoa \
+Base.lproj/PrefPanelGeneralOptionsCocoa \
+Base.lproj/PrefPanelGeneralSpecialCocoa \
+Base.lproj/PrefPanelMacrosCocoa \
+Base.lproj/PrefPanelSessionDataFlowCocoa \
+Base.lproj/PrefPanelSessionGraphicsCocoa \
+Base.lproj/PrefPanelSessionKeyboardCocoa \
+Base.lproj/PrefPanelSessionResourceCocoa \
+Base.lproj/PrefPanelTerminalEmulationCocoa \
+Base.lproj/PrefPanelTerminalOptionsCocoa \
+Base.lproj/PrefPanelTerminalScreenCocoa \
+Base.lproj/PrefPanelTranslationsCocoa \
+Base.lproj/PrefPanelWorkspaceOptionsCocoa \
+Base.lproj/PrefPanelWorkspaceWindowsCocoa \
+Base.lproj/PrefsWindowCocoa \
+Base.lproj/PrefsWindowTouchBarCocoa \
+Base.lproj/ServerBrowserCocoa \
+Base.lproj/TerminalRootCocoa \
+Base.lproj/TerminalScrollableRootViewCocoa \
+Base.lproj/TerminalViewCocoa \
+Base.lproj/TerminalWindowCocoa \
+Base.lproj/TerminalWindowTouchBarCocoa \
+Base.lproj/VectorWindowCocoa \
+Base.lproj/VectorWindowTouchBarCocoa
 SHARED_XIB_PREFIXES := \
-English.lproj/WindowTitleDialogCocoa
+Base.lproj/WindowTitleDialogCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \
 $(foreach PREFIX,$(APP_XIB_PREFIXES) $(SHARED_XIB_PREFIXES),$(PREFIX).nib)
 APP_RESOURCES_COPIED := \
@@ -470,13 +470,13 @@ clean-executables:
 install-app-dot-strings: $(SRC_APP_CODE_TOP)/UIStrings.cp
 	$(call banner,$@)
 	@# keep in sync with the matching clean rule
-	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
-	/usr/bin/genstrings $(SRC_APP_CODE_TOP)/UIStrings.cp -o $(DEST_APP_RESOURCES_TOP)/English.lproj
-	$(COPY) $(SRC_APP_RESOURCES_TOP)/English.lproj/PreferencesSearch.strings $(DEST_APP_RESOURCES_TOP)/English.lproj
+	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/Base.lproj
+	/usr/bin/genstrings $(SRC_APP_CODE_TOP)/UIStrings.cp -o $(DEST_APP_RESOURCES_TOP)/Base.lproj
+	$(COPY) $(SRC_APP_RESOURCES_TOP)/Base.lproj/PreferencesSearch.strings $(DEST_APP_RESOURCES_TOP)/Base.lproj
 
 .PHONY: clean-app-dot-strings
 clean-app-dot-strings:
-	$(foreach FILE,$(wildcard $(DEST_APP_RESOURCES_TOP)/English.lproj/*.strings),$(RM) $(FILE) ;)
+	$(foreach FILE,$(wildcard $(DEST_APP_RESOURCES_TOP)/Base.lproj/*.strings),$(RM) $(FILE) ;)
 
 # Component: Help
 
@@ -595,7 +595,7 @@ $(DEST_APP_RESOURCES_TOP)/Assets.car
 	$(foreach PREFIX,$(APP_XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_APP_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))
 	$(foreach PREFIX,$(SHARED_XIB_PREFIXES),$(call compile_xib_named,$(PREFIX),$(SRC_SHARED_RESOURCES_TOP),$(DEST_APP_RESOURCES_TOP)))
 	@# keep in sync with the matching clean rule
-	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
+	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/Base.lproj
 	$(MAKE) install-app-dot-strings
 	$(MAKE) install-bug-reporter
 	$(MAKE) install-callpy-client
@@ -621,7 +621,7 @@ clean-resources:
 	$(MAKE) clean-callpy-client
 	$(MAKE) clean-bug-reporter
 	$(MAKE) clean-app-dot-strings
-	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)/English.lproj 2>/dev/null
+	-$(RMDIR) $(DEST_APP_RESOURCES_TOP)/Base.lproj 2>/dev/null
 	-$(RMDIR) $(DEST_APP_RESOURCES_TOP) 2>/dev/null
 
 #
