@@ -70,7 +70,6 @@
 #import "InfoWindow.h"
 #import "Preferences.h"
 #import "PrefsWindow.h"
-#import "RecordAE.h"
 #import "SessionFactory.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
@@ -366,10 +365,6 @@ initMacOSToolbox ()
 		if (nullptr != undoNameCFString) CFRelease(undoNameCFString), undoNameCFString = nullptr;
 		if (nullptr != redoNameCFString) CFRelease(redoNameCFString), redoNameCFString = nullptr;
 	}
-	
-	// install recording handlers
-	// UNIMPLEMENTED - if recording setup fails, notify the user
-	UNUSED_RETURN(RecordAE_Result)RecordAE_Init();
 }// initMacOSToolbox
 
 } // anonymous namespace

@@ -58,7 +58,6 @@
 
 // library includes
 #import <AlertMessages.h>
-#import <AppleEventUtilities.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CarbonEventUtilities.template.h>

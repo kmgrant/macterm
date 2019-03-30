@@ -63,7 +63,6 @@
 #import "AppResources.h"
 #import "ConstantsRegistry.h"
 #import "EventLoop.h"
-#import "FileUtilities.h"
 #import "Panel.h"
 #import "Preferences.h"
 #import "PrefPanelFormats.h"
@@ -74,6 +73,7 @@
 #import "PrefPanelTranslations.h"
 #import "PrefPanelWorkspaces.h"
 #import "QuillsPrefs.h"
+#import "QuillsSession.h"
 #import "UIStrings.h"
 
 
@@ -1231,26 +1231,27 @@ performImportPreferenceCollectionFromFile:(id)	sender
 	^(CFURLRef		inFileURL)
 	{
 		NSURL*		asNSURL = BRIDGE_CAST(inFileURL, NSURL*);
-		FSRef		fileRef;
-		OSStatus	error = noErr;
+		NSString*	urlPath = [asNSURL path];
 		
 		
-		if (CFURLGetFSRef(inFileURL, &fileRef))
+		if (nil == urlPath)
 		{
-			error = FileUtilities_OpenDocument(fileRef);
-		}
-		else
-		{
-			error = kURLInvalidURLError;
+			urlPath = @"";
 		}
 		
-		if (noErr != error)
+		try
 		{
-			// TEMPORARY; should probably display a more user-friendly alert for this...
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteValueCFString, "unable to open file, URL",
-							BRIDGE_CAST([asNSURL absoluteString], CFStringRef));
-			Console_Warning(Console_WriteValue, "error", error);
+			Quills::Session::handle_file(REINTERPRET_CAST([urlPath UTF8String], char const*));
+		}
+		catch (std::exception const&	e)
+		{
+			CFStringRef			titleCFString = CFSTR("Exception during file open"); // LOCALIZE THIS
+			CFRetainRelease		messageCFString(CFStringCreateWithCString
+												(kCFAllocatorDefault, e.what(), kCFStringEncodingUTF8),
+												CFRetainRelease::kAlreadyRetained); // LOCALIZE THIS?
+			
+			
+			Console_WriteScriptError(titleCFString, messageCFString.returnCFStringRef());
 		}
 	});
 }// performImportPreferenceCollectionFromFile:
