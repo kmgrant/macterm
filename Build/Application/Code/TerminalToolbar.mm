@@ -38,8 +38,6 @@
 #import <CoreServices/CoreServices.h>
 
 // library includes
-#import <CarbonEventHandlerWrap.template.h>
-#import <CarbonEventUtilities.template.h>
 #import <CGContextSaveRestore.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
@@ -345,76 +343,13 @@ The private class interface.
 
 @end //}
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-OSStatus	receiveNewSystemUIMode		(EventHandlerCallRef, EventRef, void*);
-
-} // anonymous namespace
-
 #pragma mark Variables
 namespace {
 
 TerminalToolbar_Window*			gSharedTerminalToolbar = nil;
-CarbonEventHandlerWrap			gNewSystemUIModeHandler(GetApplicationEventTarget(),
-														receiveNewSystemUIMode,
-														CarbonEventSetInClass
-															(CarbonEventClass(kEventClassApplication),
-																kEventAppSystemUIModeChanged),
-														nullptr/* user data */);
-Console_Assertion				_1(gNewSystemUIModeHandler.isInstalled(), __FILE__, __LINE__);
 
 } // anonymous namespace
 
-
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-Embellishes "kEventAppSystemUIModeChanged" of "kEventClassApplication"
-by ensuring that toolbar windows remain attached to a screen edge when
-the application enters or exits Full Screen mode, hides the Dock or
-otherwise changes the space available for windows on the display.
-
-NOTE:	This is Carbon-based because the Carbon APIs for switching
-		the user interface mode are currently called.  If that ever
-		changes to use a newer (and presumably Cocoa-based) method,
-		then a new way of detecting the mode-switch must be found.
-
-(4.0)
-*/
-OSStatus
-receiveNewSystemUIMode	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassApplication);
-	assert(kEventKind == kEventAppSystemUIModeChanged);
-	
-	// determine the new mode (if needed)
-	{
-		//UInt32		newUIMode = kUIModeNormal;
-		//OSStatus	error = CarbonEventUtilities_GetEventParameter
-		//						(inEvent, kEventParamSystemUIMode, typeUInt32, newUIMode);
-		
-		
-		[TerminalToolbar_Window refreshWindows];
-	}
-	
-	// IMPORTANT: Do not interfere with this event.
-	result = eventNotHandledErr;
-	
-	return result;
-}// receiveNewSystemUIMode
-
-} // anonymous namespace
 
 
 #pragma mark -
