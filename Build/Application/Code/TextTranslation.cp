@@ -60,7 +60,6 @@ struct My_TextEncodingInfo
 	CFRetainRelease		name;
 	CFStringEncoding	textEncoding;
 	CFStringEncoding	menuItemEncoding;
-	TextEncodingBase	base;
 };
 typedef My_TextEncodingInfo*	My_TextEncodingInfoPtr;
 
@@ -72,7 +71,6 @@ typedef std::vector< My_TextEncodingInfoPtr >	My_TextEncodingInfoList;
 namespace {
 
 Boolean						gInitialized = false;
-TextEncodingBase			gPreferredEncodingBase = kCFStringEncodingMacRoman;
 My_TextEncodingInfoList&	gTextEncodingInfoList ()	{ static My_TextEncodingInfoList x; return x; }
 
 } // anonymous namespace
@@ -406,24 +404,17 @@ fillInCharacterSetList	(Boolean	inForce)
 {
 	if ((false == gInitialized) || (inForce))
 	{
-		CFStringEncoding			currentEncoding = GetApplicationTextEncoding();
-		TextEncodingBase			currentBase = kTextEncodingMacRoman;
 		My_TextEncodingInfoPtr		dataPtr = nullptr;
 		CFStringEncoding const*		availableEncodings = nullptr;
 		CFStringRef					encodingName = nullptr;
 		UInt32						loopTerminator = 0L;
 		
 		
-		gPreferredEncodingBase = GetTextEncodingBase(currentEncoding);
-		
 		// create one structure for each unique Text Encoding that is available
 		for (availableEncodings = CFStringGetListOfAvailableEncodings();
 				(nullptr != availableEncodings) && (kCFStringEncodingInvalidId != *availableEncodings);
 				++availableEncodings, ++loopTerminator)
 		{
-			// use the text encoding base to determine which menu items will have identical names
-			currentBase = GetTextEncodingBase(*availableEncodings);
-			
 			// find an appropriate name for the menu item
 			encodingName = CFStringGetNameOfEncoding(*availableEncodings);
 			if (nullptr == encodingName) Console_WriteValue("could not get the name of encoding", *availableEncodings);
@@ -442,7 +433,6 @@ fillInCharacterSetList	(Boolean	inForce)
 				if (nullptr == dataPtr) Console_WriteLine("not enough memory to add encoding info!");
 				else
 				{
-					dataPtr->base = currentBase;
 					dataPtr->menuItemEncoding = *availableEncodings;
 					dataPtr->textEncoding = *availableEncodings;
 					dataPtr->name.setWithRetain(encodingName);
@@ -464,7 +454,6 @@ fillInCharacterSetList	(Boolean	inForce)
 			}
 		}
 		
-		// sort items by name and by encoding base
 		std::sort(gTextEncodingInfoList().begin(), gTextEncodingInfoList().end(), textEncodingInfoComparer);
 		
 		gInitialized = true;
@@ -473,13 +462,9 @@ fillInCharacterSetList	(Boolean	inForce)
 
 
 /*!
-A standard comparison function that expects
-both of its operands to be of type
-"My_TextEncodingInfoPtr".  If the first
-name belongs before the second one in an
-ascending order, then -1 is returned.  If the
-reverse is true, 1 is returned.  Otherwise,
-the names seem to be equal, so 0 is returned.
+A standard comparison function that expects both of its
+operands to be of type "My_TextEncodingInfoPtr".  Returns
+true only if the first is less than the second.
 
 (3.0)
 */
@@ -489,28 +474,26 @@ textEncodingInfoComparer	(My_TextEncodingInfoPtr		inMyTextEncodingInfoPtr1,
 {
 	My_TextEncodingInfoPtr	dataPtr1 = inMyTextEncodingInfoPtr1;
 	My_TextEncodingInfoPtr	dataPtr2 = inMyTextEncodingInfoPtr2;
-	bool					result = 0;
+	bool					result = false;
 	
 	
-	if ((dataPtr1 != nullptr) && (dataPtr2 != nullptr))
+	if ((nullptr != dataPtr1) && (nullptr != dataPtr2))
 	{
-		if ((dataPtr1->base == gPreferredEncodingBase) && (dataPtr2->base != gPreferredEncodingBase))
-		{
-			result = true; // any encodings matching the host Mac OS version should come first in the list
-		}
-		else if ((dataPtr1->base != gPreferredEncodingBase) && (dataPtr2->base == gPreferredEncodingBase))
-		{
-			result = false; // any encodings matching the host Mac OS version should come first in the list
-		}
-		else
-		{
-			// if the bases match or otherwise are not the preferred base, then
-			// their names will determine which goes first
-			result = (kCFCompareLessThan == CFStringCompare
+		result = (kCFCompareLessThan == CFStringCompare
 											(dataPtr1->name.returnCFStringRef(), dataPtr2->name.returnCFStringRef(),
 												kNilOptions));
-		}
 	}
+	else if (nullptr == dataPtr1)
+	{
+		// less
+		result = false;
+	}
+	else
+	{
+		// greater
+		result = true;
+	}
+	
 	return result;
 }// textEncodingInfoComparer
 
