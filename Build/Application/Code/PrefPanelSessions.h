@@ -89,7 +89,9 @@ changes to an interface declared in a ".mm" file.
 	- (PreferenceValue_StringByJoiningArray*)
 	commandLine; // binding
 	- (PreferenceValue_CollectionBinding*)
-	formatFavorite; // binding
+	formatFavoriteLightMode; // binding
+	- (PreferenceValue_CollectionBinding*)
+	formatFavoriteDarkMode; // binding
 	- (PreferenceValue_CollectionBinding*)
 	terminalFavorite; // binding
 	- (PreferenceValue_CollectionBinding*)

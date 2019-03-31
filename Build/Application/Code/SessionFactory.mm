@@ -1775,7 +1775,26 @@ copySessionTerminalWindowConfiguration	(Preferences_ContextRef		inSessionContext
 	switch (inClass)
 	{
 	case Quills::Prefs::FORMAT:
-		associationTag = kPreferences_TagAssociatedFormatFavorite;
+		if (@available(macOS 10.14, *))
+		{
+			// TEMPORARY; maybe create a generic/standard way to assess if the
+			// system is currently in Dark Mode...
+			if ([NSApp.effectiveAppearance.name isEqual:NSAppearanceNameDarkAqua] ||
+				[NSApp.effectiveAppearance.name isEqual:NSAppearanceNameAccessibilityHighContrastDarkAqua] ||
+				[NSApp.effectiveAppearance.name isEqual:NSAppearanceNameVibrantDark] ||
+				[NSApp.effectiveAppearance.name isEqual:NSAppearanceNameAccessibilityHighContrastVibrantDark])
+			{
+				associationTag = kPreferences_TagAssociatedFormatFavoriteDarkMode;
+			}
+			else
+			{
+				associationTag = kPreferences_TagAssociatedFormatFavoriteLightMode;
+			}
+		}
+		else
+		{
+			associationTag = kPreferences_TagAssociatedFormatFavoriteLightMode;
+		}
 		break;
 	
 	case Quills::Prefs::TERMINAL:

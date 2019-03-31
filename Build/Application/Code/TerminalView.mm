@@ -499,6 +499,8 @@ Private properties.
 	colorIndex; // a "kTerminalView_ColorIndex..." constant
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
+	@property (strong) NSMutableArray*
+	registeredObservers;
 
 @end //}
 
@@ -521,6 +523,8 @@ Private properties.
 	internalViewPtr; // weak
 	@property (assign) NSUInteger
 	modifierFlagsForCursor;
+	@property (strong) NSMutableArray*
+	registeredObservers;
 	@property (assign) BOOL
 	showDragHighlight;
 
@@ -9525,6 +9529,11 @@ to use for rendering.
 */
 @synthesize colorIndex = _colorIndex;
 
+/*!
+Stores information on key-value observers.
+*/
+@synthesize registeredObservers = _registeredObservers;
+
 
 #pragma mark Externally-Declared Properties
 
@@ -9534,7 +9543,6 @@ Optional object to notify when a mouse event occurs
 on this background.
 */
 @synthesize clickDelegate = _clickDelegate;
-
 
 /*!
 Optional override color, which takes precedence over
@@ -9563,6 +9571,9 @@ initWithFrame:(NSRect)		aFrame
 		self->_internalViewPtr = nullptr;
 		
 		self.wantsLayer = YES;
+		
+		self->_registeredObservers = [[NSMutableArray alloc] init];
+		[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0] autorelease]];
 	}
 	return self;
 }// initWithFrame:
@@ -9576,6 +9587,8 @@ Destructor.
 - (void)
 dealloc
 {
+	[self removeObserversSpecifiedInArray:self.registeredObservers];
+	[_registeredObservers release];
 	[_exactColor release];
 	[super dealloc];
 }// dealloc
@@ -9599,6 +9612,56 @@ setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
 {
 	_internalViewPtr = aViewPtr;
 }// setInternalViewPtr:
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to key values by updating dependent
+states such as frame rectangles or the display.
+
+(2019.03)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+	BOOL	handled = NO;
+	
+	
+	if ([self observerArray:self.registeredObservers containsContext:aContext])
+	{
+		handled = YES;
+		
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			// IMPORTANT: these will only be defined if the call to add
+			// the observer includes the appropriate options
+			//id			oldValue = [aChangeDictionary objectForKey:NSKeyValueChangeOldKey];
+			//id			newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
+			
+			
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(effectiveAppearance)))
+			{
+				// NSApplication has changed appearance, e.g. Dark or not; this
+				// may cause the colors to be different so refresh the display
+				[self setNeedsDisplay];
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "terminal background view: valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
+		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
+	}
+}// observeValueForKeyPath:ofObject:change:context:
 
 
 #pragma mark NSResponder
@@ -9752,6 +9815,11 @@ modifier keys pressed).
 @synthesize modifierFlagsForCursor = _modifierFlagsForCursor;
 
 /*!
+Stores information on key-value observers.
+*/
+@synthesize registeredObservers = _registeredObservers;
+
+/*!
 If set to YES, the background and text rendering is changed
 to show that a drag-drop is pending.
 */
@@ -9789,6 +9857,9 @@ initWithFrame:(NSRect)		aFrame
 		self->_modifierFlagsForCursor = 0;
 		self->_internalViewPtr = nullptr;
 		
+		self->_registeredObservers = [[NSMutableArray alloc] init];
+		[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0] autorelease]];
+		
 		[self registerForDraggedTypes:@[
 											// in order of preference; the list of accepted drag text types should
 											// agree with what Clipboard_CreateCFStringFromPasteboard() supports
@@ -9817,6 +9888,8 @@ Destructor.
 - (void)
 dealloc
 {
+	[self removeObserversSpecifiedInArray:self.registeredObservers];
+	[_registeredObservers release];
 	[super dealloc];
 }// dealloc
 
@@ -10616,6 +10689,57 @@ prepareForDragOperation:(id <NSDraggingInfo>)	sender
 	
 	return result;
 }// prepareForDragOperation:
+
+
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to key values by updating dependent
+states such as frame rectangles or the display.
+
+(2019.03)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+	BOOL	handled = NO;
+	
+	
+	if ([self observerArray:self.registeredObservers containsContext:aContext])
+	{
+		handled = YES;
+		
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			// IMPORTANT: these will only be defined if the call to add
+			// the observer includes the appropriate options
+			//id			oldValue = [aChangeDictionary objectForKey:NSKeyValueChangeOldKey];
+			//id			newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
+			
+			
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(effectiveAppearance)))
+			{
+				// NSApplication has changed appearance, e.g. Dark or not; this
+				// may cause the colors to be different so refresh the display
+				// (INCOMPLETE; auto-switch to dark-mode Format could occur here)
+				[self setNeedsDisplay];
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "terminal content view: valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
+		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
+	}
+}// observeValueForKeyPath:ofObject:change:context:
 
 
 #pragma mark NSResponder
@@ -11719,7 +11843,6 @@ extra space around the terminal is provided by other views.)
 */
 @synthesize terminalContentView = _terminalContentView;
 
-
 /*!
 A primarily-horizontal padding along the bottom terminal edge.
 
@@ -11732,14 +11855,12 @@ Padding has the same background color as normal terminal text.
 */
 @synthesize terminalPaddingViewBottom = _terminalPaddingViewBottom;
 
-
 /*!
 A primarily-vertical padding along the left terminal edge.
 (For more comments on padding views, see the comments for
 "terminalPaddingViewBottom".)
 */
 @synthesize terminalPaddingViewLeft = _terminalPaddingViewLeft;
-
 
 /*!
 A primarily-vertical padding along the right terminal edge.
@@ -11748,14 +11869,12 @@ A primarily-vertical padding along the right terminal edge.
 */
 @synthesize terminalPaddingViewRight = _terminalPaddingViewRight;
 
-
 /*!
 A primarily-horizontal padding along the top terminal edge.
 (For more comments on padding views, see the comments for
 "terminalPaddingViewBottom".)
 */
 @synthesize terminalPaddingViewTop = _terminalPaddingViewTop;
-
 
 /*!
 A primarily-horizontal margin along the bottom terminal edge.
@@ -11772,7 +11891,6 @@ shared.   Margins are rendered with the “matte” color.
 */
 @synthesize terminalMarginViewBottom = _terminalMarginViewBottom;
 
-
 /*!
 A primarily-vertical margin along the left terminal edge.
 (For more comments on margin views, see the comments for
@@ -11780,14 +11898,12 @@ A primarily-vertical margin along the left terminal edge.
 */
 @synthesize terminalMarginViewLeft = _terminalMarginViewLeft;
 
-
 /*!
 A primarily-vertical margin along the right terminal edge.
 (For more comments on margin views, see the comments for
 "terminalMarginViewBottom".)
 */
 @synthesize terminalMarginViewRight = _terminalMarginViewRight;
-
 
 /*!
 A primarily-horizontal margin along the top terminal edge.

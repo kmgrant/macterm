@@ -293,7 +293,8 @@ PrefPanelSessions_NewResourcePaneTagSet ()
 	// that reads screen-pane preferences from the context of a data set
 	tagList.push_back(kPreferences_TagCommandLine);
 	tagList.push_back(kPreferences_TagAssociatedTerminalFavorite);
-	tagList.push_back(kPreferences_TagAssociatedFormatFavorite);
+	tagList.push_back(kPreferences_TagAssociatedFormatFavoriteLightMode);
+	tagList.push_back(kPreferences_TagAssociatedFormatFavoriteDarkMode);
 	tagList.push_back(kPreferences_TagAssociatedTranslationFavorite);
 	tagList.push_back(kPreferences_TagServerProtocol);
 	tagList.push_back(kPreferences_TagServerHost);
@@ -766,10 +767,22 @@ Accessor.
 (4.1)
 */
 - (PreferenceValue_CollectionBinding*)
-formatFavorite
+formatFavoriteLightMode
 {
-	return [self->byKey objectForKey:@"formatFavorite"];
-}// formatFavorite
+	return [self->byKey objectForKey:@"formatFavoriteLightMode"];
+}// formatFavoriteLightMode
+
+
+/*!
+Accessor.
+
+(2019.03)
+*/
+- (PreferenceValue_CollectionBinding*)
+formatFavoriteDarkMode
+{
+	return [self->byKey objectForKey:@"formatFavoriteDarkMode"];
+}// formatFavoriteDarkMode
 
 
 /*!
@@ -1140,12 +1153,19 @@ didLoadContainerView:(NSView*)			aContainerView
 							autorelease]
 					forKey:@"commandLine"];
 	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
-								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavorite
+								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavoriteLightMode
 														contextManager:self->prefsMgr
 														sourceClass:Quills::Prefs::FORMAT
 														includeDefault:YES]
 							autorelease]
-					forKey:@"formatFavorite"];
+					forKey:@"formatFavoriteLightMode"];
+	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavoriteDarkMode
+														contextManager:self->prefsMgr
+														sourceClass:Quills::Prefs::FORMAT
+														includeDefault:YES]
+							autorelease]
+					forKey:@"formatFavoriteDarkMode"];
 	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTerminalFavorite
 														contextManager:self->prefsMgr
@@ -1531,7 +1551,8 @@ to saved preferences).
 primaryDisplayBindingKeys
 {
 	return @[@"commandLine", @"serverHost", @"serverPort", @"serverProtocol",
-				@"serverUserID", @"terminalFavorite", @"formatFavorite",
+				@"serverUserID", @"terminalFavorite",
+				@"formatFavoriteLightMode", @"formatFavoriteDarkMode",
 				@"translationFavorite"];
 }// primaryDisplayBindingKeys
 

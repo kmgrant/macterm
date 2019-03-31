@@ -246,7 +246,8 @@ Tags for use with Quills::Prefs::SESSION.
 */
 enum
 {
-	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name)
+	kPreferences_TagAssociatedFormatFavoriteLightMode	= 'frmt',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name) for Light Mode
+	kPreferences_TagAssociatedFormatFavoriteDarkMode	= 'fdrk',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name) for Dark Mode
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a Quills::Prefs::TERMINAL context name)
 	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
 	kPreferences_TagBackgroundNewDataHandler			= 'ndhn',	//!< data: "UInt16" (Session_Watch; kSession_WatchForPassiveData or kSession_WatchNothing)

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -30,14 +29,14 @@
             </connections>
         </arrayController>
         <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
-            <rect key="frame" x="0.0" y="0.0" width="520" height="447"/>
+            <rect key="frame" x="0.0" y="0.0" width="520" height="458"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <view key="contentView" id="35h-3j-bxl">
-                <rect key="frame" x="0.0" y="0.0" width="520" height="447"/>
+                <rect key="frame" x="0.0" y="0.0" width="520" height="458"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" id="1913">
-                        <rect key="frame" x="18" y="297" width="484" height="17"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="1913">
+                        <rect key="frame" x="18" y="308" width="484" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Customize the command as needed:" id="1914">
                             <font key="font" metaFont="systemBold"/>
@@ -45,8 +44,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="Txe-Aj-IuL">
-                        <rect key="frame" x="18" y="410" width="484" height="17"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="Txe-Aj-IuL">
+                        <rect key="frame" x="18" y="421" width="484" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Choose a command to start from:" id="MGV-aQ-RBb">
                             <font key="font" metaFont="systemBold"/>
@@ -54,8 +53,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="2010">
-                        <rect key="frame" x="223" y="35" width="279" height="28"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2010">
+                        <rect key="frame" x="223" y="20" width="279" height="28"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="You can modify these options using Preferences." id="2011">
                             <font key="font" metaFont="smallSystem"/>
@@ -63,8 +62,8 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="2089">
-                        <rect key="frame" x="72" y="123" width="145" height="17"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2089">
+                        <rect key="frame" x="72" y="134" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Terminal:" id="2093">
                             <font key="font" metaFont="systemBold"/>
@@ -73,7 +72,7 @@
                         </textFieldCell>
                     </textField>
                     <popUpButton verticalHuggingPriority="750" id="2090" customClass="CoreUI_MenuButton">
-                        <rect key="frame" x="219" y="117" width="236" height="26"/>
+                        <rect key="frame" x="219" y="128" width="236" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="2091">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -89,7 +88,7 @@
                         </connections>
                     </popUpButton>
                     <button id="2125" customClass="CoreUI_SquareButton">
-                        <rect key="frame" x="96" y="377" width="128" height="25"/>
+                        <rect key="frame" x="96" y="388" width="128" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" title="Shell" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2126">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -101,7 +100,7 @@
                         </connections>
                     </button>
                     <button id="pKq-7k-NXT" customClass="CoreUI_SquareButton">
-                        <rect key="frame" x="234" y="377" width="128" height="25"/>
+                        <rect key="frame" x="234" y="388" width="128" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" title="Log-In Shell" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="XaE-pY-5v8">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -113,7 +112,7 @@
                         </connections>
                     </button>
                     <button id="FmE-b7-yDz" customClass="CoreUI_SquareButton">
-                        <rect key="frame" x="372" y="377" width="128" height="25"/>
+                        <rect key="frame" x="372" y="388" width="128" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" title="Remote Shell…" bezelStyle="shadowlessSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cgc-nx-gis">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -126,11 +125,11 @@
                         </connections>
                     </button>
                     <box verticalHuggingPriority="750" boxType="separator" id="2139">
-                        <rect key="frame" x="96" y="158" width="404" height="5"/>
+                        <rect key="frame" x="96" y="169" width="404" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     </box>
-                    <textField verticalHuggingPriority="750" id="2254">
-                        <rect key="frame" x="17" y="248" width="73" height="14"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="2254">
+                        <rect key="frame" x="17" y="259" width="73" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Use Default" id="2257">
                             <font key="font" metaFont="smallSystem"/>
@@ -139,7 +138,7 @@
                         </textFieldCell>
                     </textField>
                     <button id="2255">
-                        <rect key="frame" x="16" y="227" width="22" height="18"/>
+                        <rect key="frame" x="16" y="238" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2256">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -153,7 +152,7 @@
                         </connections>
                     </button>
                     <button id="2295">
-                        <rect key="frame" x="16" y="123" width="22" height="18"/>
+                        <rect key="frame" x="16" y="134" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="2296">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -166,17 +165,17 @@
                             <outlet property="nextKeyView" destination="DaW-mz-kxn" id="INF-fc-saU"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="Gvr-Q3-vOX">
-                        <rect key="frame" x="72" y="97" width="145" height="17"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="Gvr-Q3-vOX">
+                        <rect key="frame" x="72" y="108" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Format:" id="OHc-xa-SDk">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Light Mode Format:" id="OHc-xa-SDk">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                     <popUpButton verticalHuggingPriority="750" id="ZgY-RN-WYM" customClass="CoreUI_MenuButton">
-                        <rect key="frame" x="219" y="91" width="236" height="26"/>
+                        <rect key="frame" x="219" y="102" width="236" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="aQc-dY-Gm7">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -187,12 +186,12 @@
                         <connections>
                             <binding destination="gzS-4c-By3" name="content" keyPath="arrangedObjects" id="3rX-Ve-ekI"/>
                             <binding destination="gzS-4c-By3" name="contentValues" keyPath="arrangedObjects.boundName" previousBinding="3rX-Ve-ekI" id="A6h-fR-RpX"/>
-                            <binding destination="-2" name="selectedObject" keyPath="self.formatFavorite.currentValueDescriptor" previousBinding="A6h-fR-RpX" id="S9o-Sx-cb4"/>
-                            <outlet property="nextKeyView" destination="z3T-Ui-0Kx" id="vLb-eY-Mgm"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.formatFavoriteLightMode.currentValueDescriptor" previousBinding="A6h-fR-RpX" id="pcs-JM-jQR"/>
+                            <outlet property="nextKeyView" destination="Sw1-c0-SHh" id="9hc-Ep-sRe"/>
                         </connections>
                     </popUpButton>
                     <button id="DaW-mz-kxn">
-                        <rect key="frame" x="16" y="97" width="22" height="18"/>
+                        <rect key="frame" x="16" y="108" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="7gN-ms-Mpt">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -200,13 +199,13 @@
                         </buttonCell>
                         <accessibility description="Format Preference: Restore to Default Value"/>
                         <connections>
-                            <binding destination="-2" name="enabled" keyPath="self.formatFavorite.inheritEnabled" id="24V-iv-G2r"/>
-                            <binding destination="-2" name="value" keyPath="self.formatFavorite.inherited" id="JMX-mN-zjV"/>
-                            <outlet property="nextKeyView" destination="E3Z-Wg-2dV" id="kX2-F6-wDb"/>
+                            <binding destination="-2" name="enabled" keyPath="self.formatFavoriteLightMode.inheritEnabled" id="lwv-lB-egJ"/>
+                            <binding destination="-2" name="value" keyPath="self.formatFavoriteLightMode.inherited" id="w6h-0q-v1r"/>
+                            <outlet property="nextKeyView" destination="P4k-0Z-qCm" id="n7e-wi-RDm"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="FD9-4l-TPx">
-                        <rect key="frame" x="72" y="71" width="145" height="17"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="FD9-4l-TPx">
+                        <rect key="frame" x="72" y="56" width="145" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Translation:" id="xO2-fj-mT2">
                             <font key="font" metaFont="systemBold"/>
@@ -215,7 +214,7 @@
                         </textFieldCell>
                     </textField>
                     <popUpButton verticalHuggingPriority="750" id="z3T-Ui-0Kx" customClass="CoreUI_MenuButton">
-                        <rect key="frame" x="219" y="65" width="236" height="26"/>
+                        <rect key="frame" x="219" y="50" width="236" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="hVe-oJ-lfB">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -231,7 +230,7 @@
                         </connections>
                     </popUpButton>
                     <button id="E3Z-Wg-2dV">
-                        <rect key="frame" x="16" y="71" width="22" height="18"/>
+                        <rect key="frame" x="16" y="56" width="22" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="BDd-IJ-drT">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -243,8 +242,8 @@
                             <binding destination="-2" name="value" keyPath="self.translationFavorite.inherited" id="cqt-AF-rll"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" id="xqC-E8-ocs">
-                        <rect key="frame" x="94" y="351" width="214" height="17"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="xqC-E8-ocs">
+                        <rect key="frame" x="94" y="362" width="214" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="…or copy a Session:" id="ZDs-RS-pmb">
                             <font key="font" metaFont="system"/>
@@ -253,7 +252,7 @@
                         </textFieldCell>
                     </textField>
                     <popUpButton verticalHuggingPriority="750" id="X2w-tI-AfY" customClass="CoreUI_MenuButton">
-                        <rect key="frame" x="311" y="345" width="192" height="26"/>
+                        <rect key="frame" x="311" y="356" width="192" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" pullsDown="YES" id="GNP-dX-W6x">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -268,12 +267,12 @@
                             <outlet property="nextKeyView" destination="rg9-HH-8kW" id="m0y-pW-imp"/>
                         </connections>
                     </popUpButton>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="rg9-HH-8kW">
-                        <rect key="frame" x="96" y="181" width="404" height="108"/>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" id="rg9-HH-8kW">
+                        <rect key="frame" x="96" y="192" width="404" height="108"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="BSc-qb-NX9">
                             <font key="font" metaFont="fixedUser"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <accessibility description="Command Line"/>
@@ -282,11 +281,51 @@
                             <outlet property="nextKeyView" destination="2090" id="9L7-sM-2cf"/>
                         </connections>
                     </textField>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="Ys2-r8-WEc">
+                        <rect key="frame" x="72" y="82" width="145" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Dark Mode Format:" id="eGW-Z6-ALW">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <popUpButton verticalHuggingPriority="750" id="Sw1-c0-SHh" customClass="CoreUI_MenuButton">
+                        <rect key="frame" x="219" y="76" width="236" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" inset="2" id="Ail-gj-10k">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="BP8-b3-NPD"/>
+                        </popUpButtonCell>
+                        <accessibility description="Format Preference"/>
+                        <connections>
+                            <binding destination="f8W-Vv-yn0" name="content" keyPath="arrangedObjects" id="A76-vg-Qo3"/>
+                            <binding destination="f8W-Vv-yn0" name="contentValues" keyPath="arrangedObjects" previousBinding="A76-vg-Qo3" id="WOK-XO-nFz"/>
+                            <binding destination="-2" name="selectedObject" keyPath="self.formatFavoriteDarkMode.currentValueDescriptor" previousBinding="WOK-XO-nFz" id="JjT-t2-lN8"/>
+                            <outlet property="nextKeyView" destination="z3T-Ui-0Kx" id="7B5-8E-qT4"/>
+                        </connections>
+                    </popUpButton>
+                    <button id="P4k-0Z-qCm">
+                        <rect key="frame" x="16" y="82" width="22" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="mini" state="on" inset="2" id="jJn-7H-qG4">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                        <accessibility description="Format Preference: Restore to Default Value"/>
+                        <connections>
+                            <binding destination="-2" name="enabled" keyPath="self.formatFavoriteDarkMode.inheritEnabled" id="Oil-y1-0MA"/>
+                            <binding destination="-2" name="value" keyPath="self.formatFavoriteDarkMode.inherited" id="7RG-DU-Hno"/>
+                            <outlet property="nextKeyView" destination="E3Z-Wg-2dV" id="iaQ-6u-l3S"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <connections>
                 <outlet property="nextKeyView" destination="DaW-mz-kxn" id="ZUQ-cx-jxF"/>
             </connections>
+            <point key="canvasLocation" x="131" y="160"/>
         </box>
         <arrayController clearsFilterPredicateOnInsertion="NO" id="Xiw-MV-yEY" userLabel="Terminal Favorites">
             <declaredKeys>
@@ -300,12 +339,24 @@
                 </binding>
             </connections>
         </arrayController>
-        <arrayController clearsFilterPredicateOnInsertion="NO" id="gzS-4c-By3" userLabel="Format Favorites">
+        <arrayController clearsFilterPredicateOnInsertion="NO" id="gzS-4c-By3" userLabel="Format Favorites, Light">
             <declaredKeys>
                 <string>boundName</string>
             </declaredKeys>
             <connections>
-                <binding destination="-2" name="contentArray" keyPath="self.formatFavorite.valueDescriptorArray" id="U0t-fA-ajO">
+                <binding destination="-2" name="contentArray" keyPath="self.formatFavoriteLightMode.valueDescriptorArray" id="Joh-sy-8YP">
+                    <dictionary key="options">
+                        <bool key="NSConditionallySetsEditable" value="NO"/>
+                    </dictionary>
+                </binding>
+            </connections>
+        </arrayController>
+        <arrayController clearsFilterPredicateOnInsertion="NO" id="f8W-Vv-yn0" userLabel="Format Favorites, Dark">
+            <declaredKeys>
+                <string>boundName</string>
+            </declaredKeys>
+            <connections>
+                <binding destination="-2" name="contentArray" keyPath="self.formatFavoriteDarkMode.valueDescriptorArray" id="yPb-Um-S7g">
                     <dictionary key="options">
                         <bool key="NSConditionallySetsEditable" value="NO"/>
                     </dictionary>

@@ -40,7 +40,9 @@
 		<string>border</string>
 		<string>character</string>
 		<string>color</string>
+		<string>contrast</string>
 		<string>cursor</string>
+		<string>dark</string>
 		<string>flash</string>
 		<string>font</string>
 		<string>format</string>
@@ -188,7 +190,9 @@
 		<string>bonjour</string>
 		<string>command</string>
 		<string>connection</string>
+		<string>contrast</string>
 		<string>customize</string>
+		<string>dark</string>
 		<string>format</string>
 		<string>ftp</string>
 		<string>host</string>

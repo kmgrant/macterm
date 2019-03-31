@@ -886,8 +886,11 @@ Preferences_Init ()
 										CFSTR("window-terminal-full-screen"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
 										CFSTR("terminal-use-tabs"), Quills::Prefs::WORKSPACE);
-	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
+	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavoriteLightMode,
 									CFSTR("format-favorite"), typeCFStringRef,
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavoriteDarkMode,
+									CFSTR("format-favorite-dark"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTerminalFavorite,
 									CFSTR("terminal-favorite"), typeCFStringRef,
@@ -7431,7 +7434,8 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
-				case kPreferences_TagAssociatedFormatFavorite:
+				case kPreferences_TagAssociatedFormatFavoriteLightMode:
+				case kPreferences_TagAssociatedFormatFavoriteDarkMode:
 				case kPreferences_TagAssociatedTerminalFavorite:
 				case kPreferences_TagAssociatedTranslationFavorite:
 				case kPreferences_TagCaptureFileName:
@@ -9905,7 +9909,8 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
-			case kPreferences_TagAssociatedFormatFavorite:
+			case kPreferences_TagAssociatedFormatFavoriteLightMode:
+			case kPreferences_TagAssociatedFormatFavoriteDarkMode:
 			case kPreferences_TagAssociatedTerminalFavorite:
 			case kPreferences_TagAssociatedTranslationFavorite:
 			case kPreferences_TagCaptureFileName:
