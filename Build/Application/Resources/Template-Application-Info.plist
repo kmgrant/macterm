@@ -281,6 +281,8 @@
 			<string>MacTerm</string>
 			<key>NSRequiredContext</key>
 			<dict>
+				<key>NSServiceCategory</key>
+				<string>public.folder</string>
 				<key>NSTextContent</key>
 				<array>
 					<string>FilePath</string>
