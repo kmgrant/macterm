@@ -334,7 +334,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_ContentView : NSControl < NSTextInputClient > //{
+@interface TerminalView_ContentView : NSControl < NSStandardKeyBindingResponding,
+													NSTextInputClient > //{
 {
 @private
 	BOOL								_showDragHighlight;

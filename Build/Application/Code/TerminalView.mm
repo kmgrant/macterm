@@ -162,6 +162,13 @@ enum MyCursorState
 	kMyCursorStateVisible = 1
 };
 
+enum My_SelectionExtensionType
+{
+	kMy_SelectionExtensionTypeDelta			= 0,	//!< extend only by specified changes in columns and/or rows
+	kMy_SelectionExtensionTypeLineStart		= 1,	//!< extend to beginning of cursor line
+	kMy_SelectionExtensionTypeLineEnd		= 2,	//!< extend to end of cursor line
+};
+
 enum My_SelectionMode
 {
 	kMy_SelectionModeUnset				= 0,	//!< set to this mode when a text selection is first created, no keyboard action yet
@@ -351,7 +358,6 @@ TerminalView_PixelHeight	heightPerCell;	// number of pixels high each character 
 		{
 			TerminalView_CellRange		range;			// region of text selection
 			My_SelectionMode			keyboardMode;	// used for keyboard navigation; determines what is changed by keyboard-select actions
-			Boolean						exists;			// is any text highlighted anywhere in the window?
 			Boolean						isRectangular;	// is the text selection unattached from the left and right screen edges?
 			Boolean						readOnly;		// does the view respond to clicks and keystrokes that affect text selections?
 			Boolean						inhibited;		// does the view refuse to highlight or manage selections even when API calls are made?
@@ -464,6 +470,8 @@ CFStringRef			returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr, UInt16, Term
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenToLocal						(My_TerminalViewPtr, SInt16*, SInt16*);
+Boolean				selectionExists						(My_TerminalViewPtr);
+void				selectionModify						(My_TerminalViewPtr, SInt16, SInt16, My_SelectionExtensionType, Boolean = true);
 void				setBlinkAnimationColor				(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
 void				setBlinkingTimerActive				(My_TerminalViewPtr, Boolean);
 void				setCursorVisibility					(My_TerminalViewPtr, Boolean);
@@ -539,6 +547,9 @@ The private class interface.
 // new methods
 	- (SessionRef)
 	boundSession;
+	- (void)
+	extendSelectionForKeyBindingSelector:(SEL)_
+	sender:(id)_;
 
 @end //}
 
@@ -888,7 +899,7 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 		// if text is selected, assume it is the text to complete;
 		// otherwise, automatically find the word around the cursor
 		// (using the same rules as double-clicking)
-		if (false == viewPtr->text.selection.exists)
+		if (false == selectionExists(viewPtr))
 		{
 			searchQueryCFString.setWithNoRetain(TerminalView_ReturnCursorWordCopyAsUnicode(inView));
 		}
@@ -1308,7 +1319,7 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (viewPtr->text.selection.exists)
+	if (selectionExists(viewPtr))
 	{
 		Console_Warning(Console_WriteLine, "TerminalView_FlashSelection() not implemented for Cocoa");
 	}
@@ -2887,7 +2898,7 @@ TerminalView_SelectBeforeCursorCharacter	(TerminalViewRef	inView)
 				viewPtr->text.selection.range.second = std::make_pair(cursorX, cursorY + 1);
 				
 				highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-				viewPtr->text.selection.exists = true;
+				viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
 			}
 		}
 	}
@@ -2928,7 +2939,7 @@ TerminalView_SelectCursorCharacter		(TerminalViewRef	inView)
 			viewPtr->text.selection.range.second = std::make_pair(cursorX + 1, cursorY + 1);
 			
 			highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-			viewPtr->text.selection.exists = true;
+			viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
 		}
 	}
 }// SelectCursorCharacter
@@ -2959,13 +2970,11 @@ TerminalView_SelectCursorLine	(TerminalViewRef	inView)
 		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
 		if (kTerminal_ResultOK == getCursorLocationError)
 		{
-			TerminalView_SelectNothing(inView);
-			
+			highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
 			viewPtr->text.selection.range.first = std::make_pair(0, cursorY);
 			viewPtr->text.selection.range.second = std::make_pair(Terminal_ReturnColumnCount(viewPtr->screen.ref) + 1, cursorY + 1);
-			
 			highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-			viewPtr->text.selection.exists = true;
+			viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 		}
 	}
 }// SelectCursorLine
@@ -2986,16 +2995,14 @@ TerminalView_SelectEntireBuffer		(TerminalViewRef	inView)
 	
 	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
-		TerminalView_SelectNothing(inView);
-		
+		highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
 		// NOTE that the screen is anchored with a (0, 0) origin at the top of the bottommost
 		// windowful, so a negative offset is required to capture the entire scrollback buffer
 		viewPtr->text.selection.range.first = std::make_pair(0, -Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref));
 		viewPtr->text.selection.range.second = std::make_pair(Terminal_ReturnColumnCount(viewPtr->screen.ref),
 																Terminal_ReturnRowCount(viewPtr->screen.ref));
-		
 		highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-		viewPtr->text.selection.exists = true;
+		viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	}
 }// SelectEntireBuffer
 
@@ -3015,14 +3022,12 @@ TerminalView_SelectMainScreen	(TerminalViewRef	inView)
 	
 	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
-		TerminalView_SelectNothing(inView);
-		
+		highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
 		viewPtr->text.selection.range.first = std::make_pair(0, 0);
 		viewPtr->text.selection.range.second = std::make_pair(Terminal_ReturnColumnCount(viewPtr->screen.ref),
 																Terminal_ReturnRowCount(viewPtr->screen.ref));
-		
 		highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-		viewPtr->text.selection.exists = true;
+		viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	}
 }// SelectMainScreen
 
@@ -3040,13 +3045,10 @@ TerminalView_SelectNothing	(TerminalViewRef	inView)
 	
 	if (viewPtr != nullptr)
 	{
-		if (viewPtr->text.selection.exists)
-		{
-			highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
-			viewPtr->text.selection.exists = false;
-		}
+		highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
 		viewPtr->text.selection.range.first = std::make_pair(0, 0);
 		viewPtr->text.selection.range.second = std::make_pair(0, 0);
+		viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	}
 }// SelectNothing
 
@@ -3074,12 +3076,10 @@ TerminalView_SelectVirtualRange		(TerminalViewRef				inView,
 	
 	if ((nullptr != viewPtr) && (false == viewPtr->text.selection.inhibited))
 	{
-		TerminalView_SelectNothing(inView);
-		
+		highlightCurrentSelection(viewPtr, false/* is highlighted */, true/* redraw */);
 		viewPtr->text.selection.range = inSelection;
-		
 		highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
-		viewPtr->text.selection.exists = true;
+		viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	}
 }// SelectVirtualRange
 
@@ -3497,7 +3497,10 @@ TerminalView_TextSelectionExists	(TerminalViewRef	inView)
 	Boolean						result = false;
 	
 	
-	if (viewPtr != nullptr) result = viewPtr->text.selection.exists;
+	if (nullptr != viewPtr)
+	{
+		result = selectionExists(viewPtr);
+	}
 	return result;
 }// TextSelectionExists
 
@@ -3842,7 +3845,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->text.selection.range.second.first = 0;
 	this->text.selection.range.second.second = 0;
 	this->text.selection.keyboardMode = kMy_SelectionModeUnset;
-	this->text.selection.exists = false;
 	this->text.selection.isRectangular = false;
 	this->text.selection.readOnly = false;
 	this->text.selection.inhibited = false;
@@ -4620,7 +4622,7 @@ Use this when the user changes the text selection.
 void
 copySelectedTextIfUserPreference	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	if (inTerminalViewPtr->text.selection.exists)
+	if (selectionExists(inTerminalViewPtr))
 	{
 		Boolean		copySelectedText = false;
 		
@@ -6754,7 +6756,7 @@ getSelectedTextSize		(My_TerminalViewPtr		inTerminalViewPtr)
     size_t		result = 0L;
 	
 	
-	if (inTerminalViewPtr->text.selection.exists)
+	if (selectionExists(inTerminalViewPtr))
 	{
 		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
 		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
@@ -7032,8 +7034,7 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 		inTerminalViewPtr->text.selection.range.first = selectionStart;
 		inTerminalViewPtr->text.selection.range.second = selectionPastEnd;
 		highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
-		inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
-													inTerminalViewPtr->text.selection.range.second);
+		inTerminalViewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 		copySelectedTextIfUserPreference(inTerminalViewPtr);
 	}
 }// handleMultiClick
@@ -7982,7 +7983,7 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
     CFStringRef		result = nullptr;
 	
 	
-	if (inTerminalViewPtr->text.selection.exists)
+	if (selectionExists(inTerminalViewPtr))
 	{
 		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
 		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
@@ -8402,6 +8403,297 @@ screenToLocal	(My_TerminalViewPtr		inTerminalViewPtr,
 		(*inoutVerticalPixelOffsetFromScreenOrigin) += origin.v;
 	}
 }// screenToLocal
+
+
+/*!
+Returns true only if the text selection range is not empty.
+(Currently this does not check image selections.)
+
+(2019.04)
+*/
+Boolean
+selectionExists		(My_TerminalViewPtr		inTerminalViewPtr)
+{
+	Boolean		result = false;
+	SInt64		rowRange = (inTerminalViewPtr->text.selection.range.second.second - inTerminalViewPtr->text.selection.range.first.second);
+	
+	
+	if (1 == rowRange)
+	{
+		// range refers to a single row; check for empty column range
+		result = (inTerminalViewPtr->text.selection.range.first.first != inTerminalViewPtr->text.selection.range.second.first);
+	}
+	else if (0 == rowRange)
+	{
+		result = false;
+	}
+	else
+	{
+		result = true;
+	}
+	
+	return result;
+}// selectionExists
+
+
+/*!
+Modifies the current text selection, creating a new selection
+at the cursor location if necessary.  This is generally only
+called in response to a keyboard/mouse action.
+
+If the number of columns decreases or increases beyond a
+screen boundary, the selection moves to the adjacent line
+even if "inDeltaRow" is equal to 0.  The "inAllowScrolling"
+flag allows the view display to move if the selection moves
+to a line that is not currently visible.
+
+If a new selection must be created, the specified deltas are
+used to determine initial anchoring behavior, causing any
+subsequent calls to extend the start or end of the selection
+in a consistent manner.  For example, -1 might mean “shrink
+selection” if the selection is already growing to the right
+but it might mean “extend selection” if the selection is
+already growing to the left.  The My_TerminalView property
+"text.selection.keyboardMode" stores the anchor information
+across calls.
+
+(2019.04)
+*/
+void
+selectionModify		(My_TerminalViewPtr				inTerminalViewPtr,
+					 SInt16							inDeltaColumn,
+					 SInt16							inDeltaRow,
+					 My_SelectionExtensionType		inExtensionType,
+					 Boolean						inAllowScrolling)
+{
+	UInt16 const	kMinColumn = 0;
+	UInt16 const	kMaxColumn = (Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref) - 1);
+	Boolean			didChangeRows = false;
+	
+	
+	// this step may not be required, as stored ranges should
+	// already be sorted; for now, do it every time...
+	sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
+				inTerminalViewPtr->text.selection.isRectangular);
+	
+	highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
+	
+	// if nothing is selected, specify initial anchor location and extension behavior
+	if (false == selectionExists(inTerminalViewPtr))
+	{
+		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
+		
+		
+		// find the cursor location, anchor the selection there
+		getCursorLocationError = Terminal_CursorGetLocation(inTerminalViewPtr->screen.ref, &cursorX, &cursorY);
+		if (kTerminal_ResultOK != getCursorLocationError)
+		{
+			Console_Warning(Console_WriteValue, "failed to locate terminal cursor, error", (int)getCursorLocationError);
+		}
+		else
+		{
+			// IMPORTANT: these are not valid selection ranges, they only
+			// set the anchor location for +/- in the code that follows
+			// (in particular, selection is empty if start and past-the-end
+			// are the same; it needs a +/- to turn into a valid range)
+			if ((cursorX > kMinColumn) && (cursorX <= kMaxColumn))
+			{
+				inTerminalViewPtr->text.selection.range.first = std::make_pair(cursorX, cursorY);
+				inTerminalViewPtr->text.selection.range.second = std::make_pair(cursorX, cursorY + 1); // past-the-end row
+			}
+			else
+			{
+				inTerminalViewPtr->text.selection.range.first = std::make_pair(kMinColumn, cursorY);
+				inTerminalViewPtr->text.selection.range.second = std::make_pair(kMinColumn, cursorY + 1); // past-the-end row
+			}
+			
+			if ((inDeltaColumn < 0) || (inDeltaRow < 0))
+			{
+				inTerminalViewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+			}
+			else
+			{
+				inTerminalViewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+			}
+		}
+	}
+	
+	// change highlighting
+	if (kMy_SelectionExtensionTypeLineStart == inExtensionType)
+	{
+		inTerminalViewPtr->text.selection.range.first.first = kMinColumn;
+	}
+	else if (kMy_SelectionExtensionTypeLineEnd == inExtensionType)
+	{
+		// TEMPORARY; this might actually become “last defined cell” (e.g. non-whitespace), not “last column”
+		inTerminalViewPtr->text.selection.range.second.first = (1 + kMaxColumn);
+	}
+	else
+	{
+		SInt16		totalColumnDelta = inDeltaColumn;
+		SInt16		totalRowDelta = inDeltaRow;
+		
+		
+		if (kMy_SelectionModeChangeBeginning == inTerminalViewPtr->text.selection.keyboardMode)
+		{
+			// grow or shrink from the beginning of the range instead of the end
+			// NOTE: the following currently does not check rectangular-mode selections,
+			// it only constructs selection ranges that have regular anchor points
+			auto&			changingCellRef = inTerminalViewPtr->text.selection.range.first; // inclusive, start of selection
+			SInt16 const	kProposedColumn = (STATIC_CAST(changingCellRef.first, SInt16) + totalColumnDelta);
+			
+			
+			if (totalColumnDelta < 0)
+			{
+				if (kProposedColumn < kMinColumn)
+				{
+					// move to previous line
+					// TEMPORARY; this might actually become “last defined cell” (e.g. non-whitespace), not “last column”
+					changingCellRef.first = kMaxColumn; // change column here; row is changed below
+					--totalRowDelta;
+				}
+				else
+				{
+					changingCellRef.first = kProposedColumn;
+				}
+			}
+			else if (totalColumnDelta > 0)
+			{
+				if (kProposedColumn > kMaxColumn)
+				{
+					// move to next line
+					changingCellRef.first = kMinColumn; // change column here; row is changed below
+					++totalRowDelta;
+				}
+				else
+				{
+					changingCellRef.first = kProposedColumn;
+				}
+			}
+			
+			if (totalRowDelta < 0)
+			{
+				SInt64 const	kMinRow = -STATIC_CAST(Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref), SInt64);
+				SInt64 const	kProposedRow = (changingCellRef.second + totalRowDelta);
+				
+				
+				if (kProposedRow >= kMinRow)
+				{
+					changingCellRef.second = kProposedRow;
+					didChangeRows = true;
+				}
+				else
+				{
+					// cannot go up further but fill in entire line
+					changingCellRef.first = kMinColumn;
+				}
+			}
+			else if (totalRowDelta > 0)
+			{
+				UInt16 const	kMaxRow = (Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref) - 1);
+				SInt64 const	kProposedRow = (changingCellRef.second + totalRowDelta);
+				
+				
+				if (kProposedRow <= kMaxRow)
+				{
+					changingCellRef.second = kProposedRow;
+					didChangeRows = true;
+				}
+				else
+				{
+					// cannot go down further
+					Console_Warning(Console_WriteLine, "unable to extend start of selection past the bottom");
+				}
+			}
+		}
+		else
+		{
+			// grow or shrink from past-the-end of the range
+			// NOTE: the following currently does not check rectangular-mode selections,
+			// it only constructs selection ranges that have regular anchor points
+			auto&			changingCellRef = inTerminalViewPtr->text.selection.range.second; // exclusive, past-the-end of selection
+			SInt16 const	kProposedPastEndColumn = (STATIC_CAST(changingCellRef.first, SInt16) + totalColumnDelta);
+			
+			
+			if (totalColumnDelta < 0)
+			{
+				if (kProposedPastEndColumn < kMinColumn)
+				{
+					// move to previous line
+					// TEMPORARY; this might actually become “last defined cell” (e.g. non-whitespace), not “last column”
+					changingCellRef.first = (1 + kMaxColumn); // change column here; row is changed below
+					--totalRowDelta;
+				}
+				else
+				{
+					changingCellRef.first = kProposedPastEndColumn;
+				}
+			}
+			else if (totalColumnDelta > 0)
+			{
+				if (kProposedPastEndColumn > (1 + kMaxColumn))
+				{
+					// move to next line
+					changingCellRef.first = (1 + kMinColumn); // change column here; row is changed below
+					++totalRowDelta;
+				}
+				else
+				{
+					changingCellRef.first = kProposedPastEndColumn;
+				}
+			}
+			
+			if (totalRowDelta < 0)
+			{
+				SInt64 const	kMinRow = -STATIC_CAST(Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref), SInt64);
+				SInt64 const	kProposedPastEndRow = (changingCellRef.second + totalRowDelta);
+				
+				
+				if (kProposedPastEndRow >= kMinRow)
+				{
+					changingCellRef.second = kProposedPastEndRow;
+					didChangeRows = true;
+				}
+				else
+				{
+					// cannot go up further
+					Console_Warning(Console_WriteLine, "unable to extend end of selection past the top");
+				}
+			}
+			else if (totalRowDelta > 0)
+			{
+				UInt16 const	kMaxRow = (Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref) - 1);
+				SInt64 const	kProposedPastEndRow = (changingCellRef.second + totalRowDelta);
+				
+				
+				if (kProposedPastEndRow <= (1 + kMaxRow))
+				{
+					changingCellRef.second = kProposedPastEndRow;
+					didChangeRows = true;
+				}
+				else
+				{
+					// cannot go down further but fill in entire line
+					changingCellRef.first = (1 + kMaxColumn);
+				}
+			}
+		}
+	}
+	
+	// alterations above have a small chance of inversions; restore ordering
+	sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
+				inTerminalViewPtr->text.selection.isRectangular);
+	
+	highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
+	
+	if ((didChangeRows) && (inAllowScrolling))
+	{
+		// UNIMPLEMENTED: "inAllowScrolling" should allow auto-scrolling
+		// of the view if the new selection region is outside the view
+	}
+}// selectionModify
 
 
 /*!
@@ -9103,45 +9395,43 @@ LOCALIZE THIS
 void
 sortAnchors		(TerminalView_Cell&		inoutPoint1,
 				 TerminalView_Cell&		inoutPoint2,
-				 Boolean				inRectangular)
+				 Boolean				UNUSED_ARGUMENT(inRectangular))
 {
-	if (inRectangular)
+	TerminalView_Cell		newStart = inoutPoint1;
+	TerminalView_Cell		newPastEnd = inoutPoint2;
+	
+	
+	if (inoutPoint2.second == inoutPoint1.second)
 	{
-		// create a standardized rectangle (effectively sorts anchors)
-		CGRect		myRect = CGRectStandardize
-								(CGRectMake(inoutPoint1.first, inoutPoint1.second,
-											inoutPoint2.first - inoutPoint1.first,
-											inoutPoint2.second - inoutPoint1.second));
-		
-		
-		// fill in new points; since the end point is exclusive to
-		// the range, this simply requires adding the size parts
-		inoutPoint1.first = STATIC_CAST(myRect.origin.x, UInt16);
-		inoutPoint1.second = STATIC_CAST(myRect.origin.y, SInt32);
-		inoutPoint2.first = STATIC_CAST(myRect.origin.x + myRect.size.width, UInt16);
-		inoutPoint2.second = STATIC_CAST(myRect.origin.y + myRect.size.height, SInt32);
+		// empty range; require columns to be in order
+		newStart.first = std::min< UInt16 >(inoutPoint1.first, inoutPoint2.first);
+		newPastEnd.first = std::max< UInt16 >(inoutPoint1.first, inoutPoint2.first);
+	}
+	else if (INTEGER_ABSOLUTE(inoutPoint2.second - inoutPoint1.second) == 1)
+	{
+		// single line; require columns to be in order, and earlier line is at start
+		newStart.first = std::min< UInt16 >(inoutPoint1.first, inoutPoint2.first);
+		newStart.second = std::min< UInt16 >(inoutPoint1.second, inoutPoint2.second);
+		newPastEnd.first = std::max< UInt16 >(inoutPoint1.first, inoutPoint2.first);
+		newPastEnd.second = std::max< UInt16 >(inoutPoint1.second, inoutPoint2.second);
 	}
 	else
 	{
-		if ((inoutPoint2.second - inoutPoint1.second) <= 1)
+		// different lines; require point on earlier line to come first
+		if (inoutPoint1.second < inoutPoint2.second)
 		{
-			// one-line range, or empty range; 1st must be to the left of the 2nd
-			if (inoutPoint1.first > inoutPoint2.first)
-			{
-				std::swap(inoutPoint1, inoutPoint2);
-				assert(inoutPoint2.first > inoutPoint1.first);
-			}
+			newStart = inoutPoint1;
+			newPastEnd = inoutPoint2;
 		}
 		else
 		{
-			// different lines; 1st must be on earlier row than the 2nd
-			if (inoutPoint1.second > inoutPoint2.second)
-			{
-				std::swap(inoutPoint1, inoutPoint2);
-				assert(inoutPoint2.second > inoutPoint1.second);
-			}
+			newStart = inoutPoint2;
+			newPastEnd = inoutPoint1;
 		}
 	}
+	
+	inoutPoint1 = newStart;
+	inoutPoint2 = newPastEnd;
 }// sortAnchors
 
 
@@ -9429,7 +9719,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			// for text that is not selected, do an “iPhotoesque” selection where
 			// the selection appears darker than its surrounding text; this also
 			// causes the selection to look dark (appropriate because it is draggable)
-			unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
+			unless ((false == selectionExists(inTerminalViewPtr)) || (gPreferenceProxies.invertSelections))
 			{
 				// use even lighter colors (more than the dimmed color above)
 				foregroundNSColor = [foregroundNSColor colorCloserToWhite];
@@ -10832,6 +11122,93 @@ keyDown:(NSEvent*)		anEvent
 }// keyDown:
 
 
+#pragma mark NSStandardKeyBindingResponding
+
+
+/*!
+Locally extends the selection, creating a new selection at the
+cursor location if necessary.  Typically this means the Shift
+key has been held down in combination with an arrow.
+
+(2019.04)
+*/
+- (void)
+moveDownAndModifySelection:(id)		sender
+{
+	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
+}// moveDownAndModifySelection:
+
+
+/*!
+Locally extends the selection, creating a new selection at the
+cursor location if necessary.  Typically this means the Shift
+key has been held down in combination with an arrow.
+
+(2019.04)
+*/
+- (void)
+moveLeftAndModifySelection:(id)		sender
+{
+	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
+}// moveLeftAndModifySelection:
+
+
+/*!
+Sends the given selection-changing action to the attached
+terminal session, if any.  Typically this means the Shift
+key has been held down in combination with an arrow.
+
+(2019.04)
+*/
+- (void)
+moveRightAndModifySelection:(id)	sender
+{
+	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
+}// moveRightAndModifySelection:
+
+
+/*!
+Locally extends the selection, creating a new selection at the
+cursor location if necessary.  Typically this means the Shift
+and Command keys have been held down in combination with an arrow.
+
+(2019.04)
+*/
+- (void)
+moveToLeftEndOfLineAndModifySelection:(id)		sender
+{
+	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
+}// moveToLeftEndOfLineAndModifySelection:
+
+
+/*!
+Locally extends the selection, creating a new selection at the
+cursor location if necessary.  Typically this means the Shift
+and Command keys have been held down in combination with an arrow.
+
+(2019.04)
+*/
+- (void)
+moveToRightEndOfLineAndModifySelection:(id)		sender
+{
+	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
+}// moveToRightEndOfLineAndModifySelection:
+
+
+/*!
+Locally extends the selection, creating a new selection at the
+cursor location if necessary.  Typically this means the Shift
+key has been held down in combination with an arrow.
+
+(2019.04)
+*/
+- (void)
+moveUpAndModifySelection:(id)	sender
+{
+	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
+}// moveUpAndModifySelection:
+
+
 #pragma mark NSTextInputClient
 
 
@@ -11247,7 +11624,7 @@ drawRect:(NSRect)	aRect
 		// if inactive, render the text selection as an outline
 		// (if active, the call above to draw the text will also
 		// have drawn the active selection)
-		if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
+		if ((false == viewPtr->isActive) && selectionExists(viewPtr))
 		{
 			HIShapeRef		selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
 			
@@ -11590,6 +11967,62 @@ boundSession
 	
 	return result;
 }// boundSession
+
+
+/*!
+Standard handler for "moveLeftAndModifySelection:",
+"moveRightAndModifySelection:" and similar methods.
+If no selection exists yet, it is started at the
+terminal cursor location for right-extension or the
+position before the cursor for left-extension.  The
+initial direction away from the cursor position is
+noted in order to control future modification of
+the same selection (i.e. starting “left” means a
+future “right” will shrink the left edge of the
+selection, whereas starting “right” means a future
+“left” will shrink the right edge of the selection).
+
+See implementations of NSStandardKeyBindingResponding
+methods above.
+
+(2019.04)
+*/
+- (void)
+extendSelectionForKeyBindingSelector:(SEL)	aSelector
+sender:(id)									sender
+{
+#pragma unused(sender)
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		if (@selector(moveLeftAndModifySelection:) == aSelector)
+		{
+			selectionModify(viewPtr, -1, 0, kMy_SelectionExtensionTypeDelta, true/* allow scroll */);
+		}
+		else if (@selector(moveToLeftEndOfLineAndModifySelection:) == aSelector)
+		{
+			selectionModify(viewPtr, 0, 0, kMy_SelectionExtensionTypeLineStart, true/* allow scroll */);
+		}
+		else if (@selector(moveUpAndModifySelection:) == aSelector)
+		{
+			selectionModify(viewPtr, 0, -1, kMy_SelectionExtensionTypeDelta, true/* allow scroll */);
+		}
+		else if (@selector(moveDownAndModifySelection:) == aSelector)
+		{
+			selectionModify(viewPtr, 0, +1, kMy_SelectionExtensionTypeDelta, true/* allow scroll */);
+		}
+		else if (@selector(moveToRightEndOfLineAndModifySelection:) == aSelector)
+		{
+			selectionModify(viewPtr, 0, 0, kMy_SelectionExtensionTypeLineEnd, true/* allow scroll */);
+		}
+		else// if (@selector(moveRightAndModifySelection:) == aSelector)
+		{
+			selectionModify(viewPtr, +1, 0, kMy_SelectionExtensionTypeDelta, true/* allow scroll */);
+		}
+	}
+}// extendSelectionForKeyBindingSelector:sender:
 
 
 @end //} TerminalView_ContentView (TerminalView_ContentViewInternal)

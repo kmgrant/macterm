@@ -2499,10 +2499,6 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 	{
 		inZeroBasedPastTheEndColumn = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
 	}
-	if (inZeroBasedPastTheEndColumn < 1)
-	{
-		inZeroBasedPastTheEndColumn = 1;
-	}
 	
 	if (inNumberOfRowsToConsider > 0)
 	{
