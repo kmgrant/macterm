@@ -550,6 +550,9 @@ The private class interface.
 	- (void)
 	extendSelectionForKeyBindingSelector:(SEL)_
 	sender:(id)_;
+	- (void)
+	moveCursorForKeyBindingSelector:(SEL)_
+	sender:(id)_;
 
 @end //}
 
@@ -11126,6 +11129,18 @@ keyDown:(NSEvent*)		anEvent
 
 
 /*!
+Sends an arrow sequence to the active session.
+
+(2019.05)
+*/
+- (void)
+moveDown:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveDown:
+
+
+/*!
 Locally extends the selection, creating a new selection at the
 cursor location if necessary.  Typically this means the Shift
 key has been held down in combination with an arrow.
@@ -11140,6 +11155,18 @@ moveDownAndModifySelection:(id)		sender
 
 
 /*!
+Sends an arrow sequence to the active session.
+
+(2019.05)
+*/
+- (void)
+moveLeft:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveLeft:
+
+
+/*!
 Locally extends the selection, creating a new selection at the
 cursor location if necessary.  Typically this means the Shift
 key has been held down in combination with an arrow.
@@ -11151,6 +11178,18 @@ moveLeftAndModifySelection:(id)		sender
 {
 	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
 }// moveLeftAndModifySelection:
+
+
+/*!
+Sends an arrow sequence to the active session.
+
+(2019.05)
+*/
+- (void)
+moveRight:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveRight:
 
 
 /*!
@@ -11207,6 +11246,18 @@ moveUpAndModifySelection:(id)	sender
 {
 	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
 }// moveUpAndModifySelection:
+
+
+/*!
+Sends an arrow sequence to the active session.
+
+(2019.05)
+*/
+- (void)
+moveUp:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveUp:
 
 
 #pragma mark NSTextInputClient
@@ -12023,6 +12074,45 @@ sender:(id)									sender
 		}
 	}
 }// extendSelectionForKeyBindingSelector:sender:
+
+
+/*!
+Standard handler for "moveLeft:", "moveRight:" and
+similar methods.
+
+See implementations of NSStandardKeyBindingResponding
+methods above.
+
+(2019.05)
+*/
+- (void)
+moveCursorForKeyBindingSelector:(SEL)	aSelector
+sender:(id)								sender
+{
+#pragma unused(sender)
+	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		if (@selector(moveLeft:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSLT, 0/* modifier keys */);
+		}
+		else if (@selector(moveUp:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSUP, 0/* modifier keys */);
+		}
+		else if (@selector(moveDown:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSDN, 0/* modifier keys */);
+		}
+		else// if (@selector(moveRight:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSRT, 0/* modifier keys */);
+		}
+	}
+}// moveCursorForKeyBindingSelector:sender:
 
 
 @end //} TerminalView_ContentView (TerminalView_ContentViewInternal)
