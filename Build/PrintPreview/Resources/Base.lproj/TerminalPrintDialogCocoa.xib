@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="MainEntryPoint_TerminalPrintDialogWC">
+        <customObject id="-2" userLabel="File's Owner" customClass="MainEntryPoint_TerminalPrintDialogWC" customModule="PrintPreview" customModuleProvider="target">
             <connections>
                 <outlet property="previewPane" destination="28" id="36"/>
+                <outlet property="printInfoOC" destination="VE3-a8-d2S" id="Icw-gh-iFq"/>
                 <outlet property="window" destination="1" id="29"/>
             </connections>
         </customObject>
+        <objectController id="VE3-a8-d2S" userLabel="Print Info">
+            <connections>
+                <binding destination="-2" name="contentObject" keyPath="self.printInfo" id="OCJ-7Z-mVE"/>
+            </connections>
+        </objectController>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" visibleAtLaunch="NO" animationBehavior="default" id="1">
@@ -79,30 +84,6 @@ Gw
                             <outlet property="nextKeyView" destination="11" id="40"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="11">
-                        <rect key="frame" x="45" y="12" width="123" height="32"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Page Setup…" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="12">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="pageSetup:" target="-2" id="32"/>
-                            <outlet property="nextKeyView" destination="15" id="41"/>
-                        </connections>
-                    </button>
-                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="15">
-                        <rect key="frame" x="17" y="16" width="25" height="25"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="16">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="help:" target="-2" id="33"/>
-                            <outlet property="nextKeyView" destination="28" id="iSL-Xo-5t6"/>
-                        </connections>
-                    </button>
                     <button verticalHuggingPriority="750" id="7">
                         <rect key="frame" x="440" y="12" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
@@ -114,7 +95,7 @@ DQ
 </string>
                         </buttonCell>
                         <connections>
-                            <action selector="print:" target="-2" id="30"/>
+                            <action selector="printView:" target="-2" id="31v-6V-Nu4"/>
                             <outlet property="nextKeyView" destination="9" id="43"/>
                         </connections>
                     </button>
@@ -128,18 +109,6 @@ DQ
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="46">
-                        <rect key="frame" x="167" y="22" width="117" height="17"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="47">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.paperInfo" id="53"/>
-                        </connections>
-                    </textField>
                     <textField verticalHuggingPriority="750" id="54">
                         <rect key="frame" x="17" y="72" width="200" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -150,7 +119,7 @@ DQ
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="56">
-                        <rect key="frame" x="222" y="70" width="43" height="22"/>
+                        <rect key="frame" x="222" y="71" width="43" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="57">
                             <font key="font" metaFont="system"/>
@@ -158,7 +127,12 @@ DQ
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
-                            <binding destination="-2" name="value" keyPath="self.fontSize" id="r4o-Rg-FF7"/>
+                            <binding destination="-2" name="value" keyPath="self.fontSize" id="lbP-CE-2tj">
+                                <dictionary key="options">
+                                    <bool key="NSValidatesImmediately" value="YES"/>
+                                    <string key="NSValueTransformerName">MainEntryPoint_FontSizeValueTransformer</string>
+                                </dictionary>
+                            </binding>
                             <outlet property="nextKeyView" destination="63" id="cKh-Qf-7Gk"/>
                         </connections>
                     </textField>
@@ -167,12 +141,39 @@ DQ
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="64"/>
                         <connections>
-                            <binding destination="-2" name="value" keyPath="self.fontSize" previousBinding="78" id="79"/>
                             <binding destination="-2" name="maxValue" keyPath="self.maximumSensibleFontSize" id="77"/>
                             <binding destination="-2" name="minValue" keyPath="self.minimumSensibleFontSize" previousBinding="77" id="78"/>
+                            <binding destination="-2" name="value" keyPath="self.fontSize" previousBinding="78" id="4W9-IW-UwA"/>
                             <outlet property="nextKeyView" destination="7" id="moU-Nd-zLR"/>
                         </connections>
                     </slider>
+                    <textField verticalHuggingPriority="750" id="46">
+                        <rect key="frame" x="137" y="21" width="130" height="17"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" usesSingleLineMode="YES" id="47">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="VE3-a8-d2S" name="value" keyPath="selection.localizedPaperName" id="PO3-bb-RKk">
+                                <dictionary key="options">
+                                    <string key="NSNoSelectionPlaceholder">--</string>
+                                </dictionary>
+                            </binding>
+                        </connections>
+                    </textField>
+                    <button verticalHuggingPriority="750" id="11">
+                        <rect key="frame" x="14" y="12" width="123" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Page Setup…" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="12">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="pageSetup:" target="-2" id="32"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <connections>
