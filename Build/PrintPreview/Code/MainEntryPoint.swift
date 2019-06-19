@@ -198,7 +198,7 @@ applicationDidFinishLaunching(_/* <- critical underscore; without it, no app lau
 		return // make Swift compiler happy (should not be needed)
 	}
 	var isLandscape = false
-	if let isLandscapeString = ProcessInfo.processInfo.environment["MACTERM_PRINT_PREVIEW_FONT_SIZE"]
+	if let isLandscapeString = ProcessInfo.processInfo.environment["MACTERM_PRINT_PREVIEW_IS_LANDSCAPE"]
 	{
 		if isLandscapeString == "1"
 		{
