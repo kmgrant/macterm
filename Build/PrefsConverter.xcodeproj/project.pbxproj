@@ -7,14 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A2D6A7713B435F700714A1D /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */; };
 		0A2D6B3C13B4368D00714A1D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A2D6B3B13B4368D00714A1D /* Cocoa.framework */; };
-		0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */; };
-		0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */; };
 		0A42D789175C3110001F487B /* PrefsConverterCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */; };
-		0A8A38521DA83BFE000FD175 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A8A38511DA83BFE000FD175 /* CFRetainRelease.cp */; };
-		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */; };
-		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
+		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -37,24 +32,11 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
-		0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
-		0A2D6A7D13B4361300714A1D /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0A2D6B3B13B4368D00714A1D /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefsConverterPrefix.pch; path = PrefsConverter/Code/PrefsConverterPrefix.pch; sourceTree = "<group>"; };
-		0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFDictionaryManager.h; path = Shared/Code/CFDictionaryManager.h; sourceTree = "<group>"; };
-		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
-		0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFKeyValueInterface.h; path = Shared/Code/CFKeyValueInterface.h; sourceTree = "<group>"; };
-		0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
-		0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
-		0A8A38511DA83BFE000FD175 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
-		0A8A38531DA83C06000FD175 /* CFRetainRelease.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
 		0AA19F511D88F44C00FD70FF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0AA19F521D88F44C00FD70FF /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
-		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MainEntryPoint.mm; path = PrefsConverter/Code/MainEntryPoint.mm; sourceTree = "<group>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MainEntryPoint.swift; path = PrefsConverter/Code/MainEntryPoint.swift; sourceTree = "<group>"; };
 		0ADEDA79215B556000DCEFE8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrefsConverter/Resources/Base.lproj/PrefsConverterCocoa.xib; sourceTree = "<group>"; };
-		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
-		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
-		4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		8D0C4E970486CD37000505A6 /* PrefsConverter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrefsConverter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -63,7 +45,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */,
 				0A2D6B3C13B4368D00714A1D /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -71,22 +52,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0A33CC5407FABADE00248DDF /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */,
-				0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */,
-				0A8A38511DA83BFE000FD175 /* CFRetainRelease.cp */,
-				0A2D6A7613B435F700714A1D /* CocoaUserDefaults.mm */,
-				0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */,
-				0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */,
-				0A8A38531DA83C06000FD175 /* CFRetainRelease.h */,
-				0A2D6A7D13B4361300714A1D /* CocoaUserDefaults.h */,
-				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
-			);
-			name = Shared;
-			sourceTree = "<group>";
-		};
 		195DF8CFFE9D517E11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -98,14 +63,9 @@
 		20286C29FDCF999611CA2CEA /* PrefsConverter */ = {
 			isa = PBXGroup;
 			children = (
-				0A33CC5407FABADE00248DDF /* Shared */,
 				195DF8CFFE9D517E11CA2CBB /* Products */,
-				4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */,
-				20286C33FDCF999611CA2CEA /* Carbon.framework */,
 				0A2D6B3B13B4368D00714A1D /* Cocoa.framework */,
-				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
-				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.mm */,
-				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.swift */,
 				0A42D787175C3110001F487B /* PrefsConverterCocoa.xib */,
 				0AA19F511D88F44C00FD70FF /* Debug.xcconfig */,
 				0AA19F521D88F44C00FD70FF /* Production.xcconfig */,
@@ -167,9 +127,6 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
-				Japanese,
-				French,
-				German,
 				Base,
 			);
 			mainGroup = 20286C29FDCF999611CA2CEA /* PrefsConverter */;
@@ -197,11 +154,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.mm in Sources */,
-				0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */,
-				0A8A38521DA83BFE000FD175 /* CFRetainRelease.cp in Sources */,
-				0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */,
-				0A2D6A7713B435F700714A1D /* CocoaUserDefaults.mm in Sources */,
+				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,8 +182,6 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = PrefsConverter/Code/PrefsConverterPrefix.pch;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
 				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
@@ -248,7 +199,6 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrefsConverter;
 				PRODUCT_NAME = PrefsConverter;
 				RUN_CLANG_STATIC_ANALYZER = YES;
@@ -264,8 +214,6 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = PrefsConverter/Code/PrefsConverterPrefix.pch;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
 				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
@@ -283,7 +231,6 @@
 				GCC_WARN_UNUSED_VALUE = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrefsConverter;
 				PRODUCT_NAME = PrefsConverter;
 				RUN_CLANG_STATIC_ANALYZER = YES;
@@ -297,7 +244,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -324,15 +270,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
 				OBJROOT = _Generated;
-				OTHER_CFLAGS = "-IShared/Code";
 				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
 				SYMROOT = _Generated;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wextra",
-				);
 			};
 			name = ForDebugging;
 		};
@@ -342,7 +284,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
@@ -368,10 +309,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
 				OBJROOT = _Generated;
-				OTHER_CFLAGS = "-IShared/Code";
 				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
 				SYMROOT = _Generated;
 			};
 			name = ForRelease;
