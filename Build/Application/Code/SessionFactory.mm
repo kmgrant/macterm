@@ -1146,7 +1146,8 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 		// can show the user what their effect would be (e.g.
 		// different size or colors); due to callbacks, this
 		// can change the initial terminal window appearance
-		[embeddedPanel addObserver:dataObject forKeyPath:@"formatFavorite.currentValueDescriptor" options:0 context:nullptr];
+		[embeddedPanel addObserver:dataObject forKeyPath:@"formatFavoriteDarkMode.currentValueDescriptor" options:NSKeyValueObservingOptionInitial context:nullptr];
+		[embeddedPanel addObserver:dataObject forKeyPath:@"formatFavoriteLightMode.currentValueDescriptor" options:NSKeyValueObservingOptionInitial context:nullptr];
 		[embeddedPanel addObserver:dataObject forKeyPath:@"terminalFavorite.currentValueDescriptor" options:0 context:nullptr];
 		
 		// display a terminal window and then immediately display
@@ -2162,7 +2163,8 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 	
 	// remove observers added by SessionFactory_DisplayUserCustomizationUI()
 	// (the parameters should be consistent)
-	[viewMgr removeObserver:dataObject forKeyPath:@"formatFavorite.currentValueDescriptor"];
+	[viewMgr removeObserver:dataObject forKeyPath:@"formatFavoriteDarkMode.currentValueDescriptor"];
+	[viewMgr removeObserver:dataObject forKeyPath:@"formatFavoriteLightMode.currentValueDescriptor"];
 	[viewMgr removeObserver:dataObject forKeyPath:@"terminalFavorite.currentValueDescriptor"];
 	
 	if (inOKButtonPressed)
@@ -2705,7 +2707,12 @@ context:(void*)						aContext
 		{
 			if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
 			{
-				if ([aKeyPath isEqualToString:@"formatFavorite.currentValueDescriptor"])
+				if ([aKeyPath isEqualToString:@"formatFavoriteDarkMode.currentValueDescriptor"])
+				{
+					UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
+																				Quills::Prefs::FORMAT);
+				}
+				else if ([aKeyPath isEqualToString:@"formatFavoriteLightMode.currentValueDescriptor"])
 				{
 					UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
 																				Quills::Prefs::FORMAT);
