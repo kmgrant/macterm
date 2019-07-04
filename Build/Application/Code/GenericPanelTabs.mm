@@ -120,6 +120,37 @@ dealloc
 }// dealloc
 
 
+#pragma mark Actions
+
+
+/*!
+Responds to a title segment selection by switching the
+active panel.
+
+It is not possible to tell NSSegmentedControl to bind
+different actions to each title button so this single
+entry point responds to any change in selection.
+
+(2019.07)
+*/
+- (void)
+performTitleSegmentUpdate:(id)	sender
+{
+#pragma unused(sender)
+	if (STATIC_CAST(self->tabTitles.selectedSegment, NSUInteger) >= self->viewManagerArray.count)
+	{
+		Console_Warning(Console_WriteLine, "current segment index is larger than number of panels; ignoring action");
+	}
+	else
+	{
+		Panel_ViewManager*	viewMgr = [self->viewManagerArray objectAtIndex:self->tabTitles.selectedSegment];
+		
+		
+		[self->tabView selectTabViewItemWithIdentifier:viewMgr.panelIdentifier];
+	}
+}// performTitleSegmentUpdate:
+
+
 #pragma mark NSColorPanel
 
 
@@ -193,6 +224,18 @@ didSelectTabViewItem:(NSTabViewItem*)	anItem
 	
 	if (nil != newPanel)
 	{
+		// find segment
+		NSUInteger	i = 0;
+		for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+		{
+			if ([viewMgr.panelIdentifier isEqualToString:newPanel.panelIdentifier])
+			{
+				[self->tabTitles setSelected:YES forSegment:i];
+				break;
+			}
+			++i;
+		}
+		
 		self->activePanel = newPanel;
 		[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 	}
@@ -316,12 +359,17 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
+	assert(nil != tabTitles);
 	assert(nil != tabView);
 	
 	// arrange to be notified of certain changes
 	[tabView setDelegate:self];
 	
 	// create tabs for every view that was provided
+	self->tabTitles.segmentCount = self->viewManagerArray.count;
+	self->tabTitles.target = self;
+	self->tabTitles.action = @selector(performTitleSegmentUpdate:);
+	NSUInteger	i = 0;
 	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
 	{
 		NSTabViewItem*	tabItem = [[NSTabViewItem alloc] initWithIdentifier:[viewMgr panelIdentifier]];
@@ -333,7 +381,12 @@ didLoadContainerView:(NSView*)			aContainerView
 		
 		[self->tabView addTabViewItem:tabItem];
 		[tabItem release];
+		
+		[self->tabTitles setLabel:[viewMgr panelName] forSegment:i];
+		[self->tabTitles setSelected:(0 == i) forSegment:i];
+		++i;
 	}
+	[self->tabTitles sizeToFit];
 }// panelViewManager:didLoadContainerView:
 
 

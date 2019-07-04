@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11201" systemVersion="16B2555" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="GenericPanelTabs_ViewManager">
             <connections>
                 <outlet property="logicalFirstResponder" destination="1958" id="1968"/>
-                <outlet property="logicalLastResponder" destination="1958" id="1969"/>
+                <outlet property="logicalLastResponder" destination="POD-B2-oz9" id="ydO-Nc-gXy"/>
+                <outlet property="tabTitles" destination="POD-B2-oz9" id="tYI-ov-Mbp"/>
                 <outlet property="tabView" destination="1958" id="1963"/>
                 <outlet property="view" destination="1835" id="LA8-t1-8oH"/>
             </connections>
@@ -22,12 +23,28 @@
                 <rect key="frame" x="0.0" y="0.0" width="520" height="296"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <tabView id="1958">
-                        <rect key="frame" x="13" y="10" width="494" height="272"/>
+                    <box verticalHuggingPriority="750" boxType="separator" id="NWu-63-dee">
+                        <rect key="frame" x="0.0" y="254" width="520" height="5"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    </box>
+                    <tabView type="noTabsNoBorder" id="1958">
+                        <rect key="frame" x="0.0" y="0.0" width="520" height="256"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
-                        <tabViewItems/>
+                        <connections>
+                            <outlet property="nextKeyView" destination="POD-B2-oz9" id="kh2-Ic-W2T"/>
+                        </connections>
                     </tabView>
+                    <segmentedControl verticalHuggingPriority="750" id="POD-B2-oz9">
+                        <rect key="frame" x="8" y="262" width="22" height="24"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="automatic" trackingMode="selectOne" id="P3i-uJ-FQV">
+                            <font key="font" metaFont="system"/>
+                            <segments>
+                                <segment/>
+                            </segments>
+                        </segmentedCell>
+                    </segmentedControl>
                 </subviews>
             </view>
         </box>

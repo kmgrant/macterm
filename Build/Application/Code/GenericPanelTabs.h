@@ -77,7 +77,8 @@ changes to an interface declared in a ".mm" file.
 																Panel_Delegate, Panel_Parent,
 																PrefsWindow_PanelInterface > //{
 {
-	IBOutlet NSTabView*		tabView;
+	IBOutlet NSSegmentedControl*	tabTitles;
+	IBOutlet NSTabView*				tabView;
 @private
 	Panel_ViewManager*						activePanel;
 	NSString*								identifier;
