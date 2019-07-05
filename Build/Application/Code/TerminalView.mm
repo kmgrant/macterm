@@ -9404,32 +9404,40 @@ sortAnchors		(TerminalView_Cell&		inoutPoint1,
 	TerminalView_Cell		newPastEnd = inoutPoint2;
 	
 	
-	if (inoutPoint2.second == inoutPoint1.second)
+	if (newPastEnd.second == newStart.second)
 	{
 		// empty range; require columns to be in order
 		newStart.first = std::min< UInt16 >(inoutPoint1.first, inoutPoint2.first);
 		newPastEnd.first = std::max< UInt16 >(inoutPoint1.first, inoutPoint2.first);
 	}
-	else if (INTEGER_ABSOLUTE(inoutPoint2.second - inoutPoint1.second) == 1)
+	else if (INTEGER_ABSOLUTE(newPastEnd.second - newStart.second) == 1)
 	{
 		// single line; require columns to be in order, and earlier line is at start
-		newStart.first = std::min< UInt16 >(inoutPoint1.first, inoutPoint2.first);
-		newStart.second = std::min< UInt16 >(inoutPoint1.second, inoutPoint2.second);
-		newPastEnd.first = std::max< UInt16 >(inoutPoint1.first, inoutPoint2.first);
-		newPastEnd.second = std::max< UInt16 >(inoutPoint1.second, inoutPoint2.second);
+		if (newStart.first > newPastEnd.first)
+		{
+			if (newPastEnd.first > 0)
+			{
+				--newPastEnd.first; // convert to inclusive range for swap
+			}
+			--newPastEnd.second; // convert to inclusive range for swap
+			std::swap(newStart, newPastEnd);
+			++newPastEnd.first; // convert to past-the-end range
+			++newPastEnd.second; // convert to past-the-end range
+		}
 	}
 	else
 	{
 		// different lines; require point on earlier line to come first
-		if (inoutPoint1.second < inoutPoint2.second)
+		if (newStart.second >= newPastEnd.second)
 		{
-			newStart = inoutPoint1;
-			newPastEnd = inoutPoint2;
-		}
-		else
-		{
-			newStart = inoutPoint2;
-			newPastEnd = inoutPoint1;
+			if (newPastEnd.first > 0)
+			{
+				--newPastEnd.first; // convert to inclusive range for swap
+			}
+			--newPastEnd.second; // convert to inclusive range for swap
+			std::swap(newStart, newPastEnd);
+			++newPastEnd.first; // convert to past-the-end range
+			++newPastEnd.second; // convert to past-the-end range
 		}
 	}
 	
