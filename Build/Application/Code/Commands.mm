@@ -638,34 +638,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			Session_UserInputInterruptProcess(frontSession);
 			break;
 		
-		case kCommandWatchNothing:
-			if (isSession)
-			{
-				Session_SetWatch(frontSession, kSession_WatchNothing);
-			}
-			break;
-		
-		case kCommandWatchForActivity:
-			if (isSession)
-			{
-				Session_SetWatch(frontSession, kSession_WatchForPassiveData);
-			}
-			break;
-		
-		case kCommandWatchForInactivity:
-			if (isSession)
-			{
-				Session_SetWatch(frontSession, kSession_WatchForInactivity);
-			}
-			break;
-		
-		case kCommandTransmitOnInactivity:
-			if (isSession)
-			{
-				Session_SetWatch(frontSession, kSession_WatchForKeepAlive);
-			}
-			break;
-			
 		case kCommandSuspendNetwork:
 			if (nullptr != frontSession)
 			{
@@ -4192,7 +4164,11 @@ performSetActivityHandlerNone:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandWatchNothing, nullptr/* target */);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+		
+		
+		Session_SetWatch(currentSession, kSession_WatchNothing);
 	}
 }
 - (id)
@@ -4220,7 +4196,11 @@ performSetActivityHandlerNotifyOnIdle:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandWatchForInactivity, nullptr/* target */);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+		
+		
+		Session_SetWatch(currentSession, kSession_WatchForInactivity);
 	}
 }
 - (id)
@@ -4248,7 +4228,11 @@ performSetActivityHandlerNotifyOnNext:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandWatchForActivity, nullptr/* target */);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+		
+		
+		Session_SetWatch(currentSession, kSession_WatchForPassiveData);
 	}
 }
 - (id)
@@ -4276,7 +4260,11 @@ performSetActivityHandlerSendKeepAliveOnIdle:(id)	sender
 {
 	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandTransmitOnInactivity, nullptr/* target */);
+		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
+		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+		
+		
+		Session_SetWatch(currentSession, kSession_WatchForKeepAlive);
 	}
 }
 - (id)
