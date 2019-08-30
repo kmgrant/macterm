@@ -48,11 +48,6 @@
 #include <AvailabilityMacros.h>
 #include <CoreServices/CoreServices.h>
 
-// compile-time options
-#ifndef CONSOLE_EXCLUDES_GROWL_SUPPORT
-#define CONSOLE_EXCLUDES_GROWL_SUPPORT 0
-#endif
-
 
 
 #pragma mark Types

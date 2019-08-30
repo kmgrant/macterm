@@ -64,7 +64,6 @@
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <Console.h>
-#import <GrowlSupport.h>
 #import <ListenerModel.h>
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
@@ -7338,52 +7337,28 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 		case kSession_WatchForPassiveData:
 		case kSession_WatchForInactivity:
 			{
-				CFStringRef			growlNotificationName = nullptr;
-				CFStringRef			growlNotificationTitle = nullptr;
-				CFStringRef			dialogTextCFString = nullptr;
-				UIStrings_Result	stringResult = kUIStrings_ResultOK;
+				CFRetainRelease		notificationTitle;
+				CFRetainRelease		dialogTextCFString;
 				
 				
 				// set message based on watch type
 				if (kSession_WatchForInactivity == inWhatTriggered)
 				{
-					growlNotificationName = CFSTR("Session idle"); // MUST match "Growl Registration Ticket.growlRegDict"
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityTitle, growlNotificationTitle);
-					if (false == stringResult.ok())
-					{
-						growlNotificationTitle = growlNotificationName;
-						CFRetain(growlNotificationTitle);
-					}
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityPrimaryText, dialogTextCFString);
+					notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyInactivityTitle));
+					dialogTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyInactivityPrimaryText));
 				}
 				else
 				{
-					growlNotificationName = CFSTR("Session active"); // MUST match "Growl Registration Ticket.growlRegDict"
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityTitle, growlNotificationTitle);
-					if (false == stringResult.ok())
-					{
-						growlNotificationTitle = growlNotificationName;
-						CFRetain(growlNotificationTitle);
-					}
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
+					notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyActivityTitle));
+					dialogTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyActivityPrimaryText));
 				}
 				
-				// page the Mac OS X user notification center (and Growl, if
-				// it is installed) and then clear immediately, instead of
-				// waiting for the user to respond
-				GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways,
-									growlNotificationName, growlNotificationTitle,
-									dialogTextCFString/* description */);
+				// display a non-blocking alert to the user, or post a system notification
+				// (note that this may do nothing, depending on user preferences)
+				CocoaBasic_PostUserNotification(CFSTR("net.macterm.notifications.sessionevent"),
+												notificationTitle.returnCFStringRef(),
+												dialogTextCFString.returnCFStringRef());
 				watchClearForSession(inPtr);
-				
-				if (nullptr != growlNotificationTitle)
-				{
-					CFRelease(growlNotificationTitle), growlNotificationTitle = nullptr;
-				}
-				if (nullptr != dialogTextCFString)
-				{
-					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
-				}
 			}
 			break;
 		

@@ -157,8 +157,8 @@ if __name__ == "__main__":
 
     # the following is NOT required for MacTerm to run, however it is
     # useful for such things as conveniently running "pydoc" on Quills;
-    # attempts to load Quills will call dependent frameworks (currently,
-    # Growl.framework), and without a path these loads would fail
+    # attempts to load Quills will call dependent frameworks and
+    # without a path these loads would fail
     os.environ["DYLD_FRAMEWORK_PATH"] = FRAMEWORKS_DIR
 
     # DEBUGGING ONLY: if you want to do memory debugging, you can substitute

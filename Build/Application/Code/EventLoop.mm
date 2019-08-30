@@ -48,7 +48,6 @@
 
 // application includes
 #import "Commands.h"
-#import "GrowlSupport.h"
 #import "TerminalWindow.h"
 
 
@@ -106,9 +105,6 @@ EventLoop_Init ()
 		assert(loadOK);
 	}// @autoreleasepool
 	}
-	
-	// support Growl notifications if possible
-	GrowlSupport_Init();
 	
 	return result;
 }// Init

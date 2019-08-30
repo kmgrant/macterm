@@ -4233,6 +4233,11 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (nullptr != viewPtr)
 			{
 				visualBell(viewPtr);
+				
+				if (gPreferenceProxies.notifyOfBeeps)
+				{
+					[NSApp requestUserAttention:NSInformationalRequest];
+				}
 			}
 		}
 		break;
@@ -9810,7 +9815,7 @@ post a notification event.
 void
 visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	Console_Warning(Console_WriteLine, "visual-bell not implemented for Cocoa");
+	Console_Warning(Console_WriteLine, "visual-bell not completely implemented for Cocoa");
 }// visualBell
 
 } // anonymous namespace

@@ -75,8 +75,8 @@ extern "C"
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
+#include <CocoaBasic.h>
 #include <Console.h>
-#include <GrowlSupport.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 
@@ -2020,16 +2020,11 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		// only pay attention to reports for processes that were spawned by this module
 		if (gChildProcessIDs().end() != gChildProcessIDs().find(kProcessID))
 		{
-			CFStringRef					dialogTextTemplateCFString = nullptr;
-			CFStringRef					dialogTextCFString = nullptr;
-			CFStringRef					helpTextCFString = CFSTR(""); // not always used
-			CFStringRef					growlNotificationName = nullptr; // not released
-			CFStringRef					growlNotificationTitle = nullptr;
-			UIStrings_Result			stringResult = kUIStrings_ResultOK;
-			GrowlSupport_NoteDisplay	displayType = kGrowlSupport_NoteDisplayAlways;
-			Boolean						canDisplayAlert = false;
-			Boolean						canNotifyGrowl = false;
-			Boolean						releaseHelpText = false;
+			CFRetainRelease		dialogTextTemplateCFString;
+			CFRetainRelease		dialogTextCFString;
+			CFRetainRelease		helpTextCFString; // not always used
+			CFRetainRelease		notificationTitle;
+			Boolean				canPostNotification = false;
 			
 			
 			if (WIFEXITED(currentStatus))
@@ -2037,122 +2032,90 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				int const	kExitCode = WEXITSTATUS(currentStatus);
 				
 				
-				canNotifyGrowl = true;
+				canPostNotification = true;
 				if (0 != kExitCode)
 				{
 					// failed exit
-					canDisplayAlert = true;
 					Console_WriteValuePair("process exit: pid,code", kProcessID, kExitCode);
 					
 					// if more is known about the type of exit status, add help text
-					helpTextCFString = nullptr; // initially...
 					switch (kExitCode)
 					{
 					case EX_USAGE:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitUsageHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitUsageHelpText));
 						break;
 					
 					case EX_DATAERR:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitDataErrHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitDataErrHelpText));
 						break;
 					
 					case EX_NOINPUT:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoInputHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoInputHelpText));
 						break;
 					
 					case EX_NOUSER:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoUserHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoUserHelpText));
 						break;
 					
 					case EX_NOHOST:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoHostHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoHostHelpText));
 						break;
 					
 					case EX_UNAVAILABLE:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitUnavailHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitUnavailHelpText));
 						break;
 					
 					case EX_SOFTWARE:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitSoftwareHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitSoftwareHelpText));
 						break;
 					
 					case EX_OSERR:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitOSErrHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitOSErrHelpText));
 						break;
 					
 					case EX_OSFILE:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitOSFileHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitOSFileHelpText));
 						break;
 					
 					case EX_CANTCREAT:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitCreateHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitCreateHelpText));
 						break;
 					
 					case EX_IOERR:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitIOErrHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitIOErrHelpText));
 						break;
 					
 					case EX_TEMPFAIL:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitTempFailHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitTempFailHelpText));
 						break;
 					
 					case EX_PROTOCOL:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitProtocolHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitProtocolHelpText));
 						break;
 					
 					case EX_NOPERM:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitNoPermHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoPermHelpText));
 						break;
 					
 					case EX_CONFIG:
-						stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifySysExitConfigHelpText, helpTextCFString);
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitConfigHelpText));
 						break;
 					
 					default:
 						break;
 					}
-					if (false == stringResult.ok())
-					{
-						helpTextCFString = nullptr;
-					}
-					if (nullptr != helpTextCFString)
-					{
-						releaseHelpText = true;
-					}
-					else
-					{
-						helpTextCFString = CFSTR("");
-					}
 					
-					growlNotificationName = CFSTR("Session failed"); // MUST match "Growl Registration Ticket.growlRegDict"
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTitle, growlNotificationTitle);
-					if (false == stringResult.ok())
-					{
-						growlNotificationTitle = growlNotificationName;
-						CFRetain(growlNotificationTitle);
-					}
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTemplate, dialogTextTemplateCFString);
-					if (stringResult.ok())
-					{
-						// WARNING: this format must agree with how the original template string is defined
-						dialogTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-																		dialogTextTemplateCFString, kExitCode);
-					}
+					notificationTitle.setWithRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTitle));
+					dialogTextTemplateCFString.setWithRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTemplate));
+					// WARNING: this format must agree with how the original template string is defined
+					dialogTextCFString.setWithNoRetain(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+																				dialogTextTemplateCFString.returnCFStringRef(), kExitCode));
 				}
 				else
 				{
 					// successful exit
-					canDisplayAlert = false;
-					displayType = kGrowlSupport_NoteDisplayConfigurable;
-					
-					growlNotificationName = CFSTR("Session ended"); // MUST match "Growl Registration Ticket.growlRegDict"
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessExitTitle, growlNotificationTitle);
-					if (false == stringResult.ok())
-					{
-						growlNotificationTitle = growlNotificationName;
-						CFRetain(growlNotificationTitle);
-					}
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessExitPrimaryText, dialogTextCFString);
+					notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessExitTitle));
+					dialogTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessExitPrimaryText));
 				}
 			}
 			else if (WIFSIGNALED(currentStatus))
@@ -2160,16 +2123,14 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				int const	kSignal = WTERMSIG(currentStatus);
 				
 				
-				canNotifyGrowl = true;
-				canDisplayAlert = true;
+				canPostNotification = true;
 				switch (kSignal)
 				{
 				// not all termination signals should be reported
 				case SIGKILL:
 				case SIGALRM:
 				case SIGTERM:
-					canNotifyGrowl = false;
-					canDisplayAlert = false;
+					canPostNotification = false;
 					break;
 				
 				case SIGSTOP:
@@ -2195,20 +2156,11 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				}
 				
 				Console_WriteValuePair("process exit: pid,signal", kProcessID, kSignal);
-				growlNotificationName = CFSTR("Session failed"); // MUST match "Growl Registration Ticket.growlRegDict"
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTitle, growlNotificationTitle);
-				if (false == stringResult.ok())
-				{
-					growlNotificationTitle = growlNotificationName;
-					CFRetain(growlNotificationTitle);
-				}
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessSignalTemplate, dialogTextTemplateCFString);
-				if (stringResult.ok())
-				{
-					// WARNING: this format must agree with how the original template string is defined
-					dialogTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-																	dialogTextTemplateCFString, kSignal);
-				}
+				notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTitle));
+				dialogTextTemplateCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessSignalTemplate));
+				// WARNING: this format must agree with how the original template string is defined
+				dialogTextCFString.setWithNoRetain(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+																			dialogTextTemplateCFString.returnCFStringRef(), kSignal));
 			}
 			else if (WIFSTOPPED(currentStatus))
 			{
@@ -2220,33 +2172,14 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				Console_WriteValuePair("process returned unknown status", kProcessID, currentStatus);
 			}
 			
-			// display a non-blocking alert to the user, or post a Growl notification;
-			// note that some events fall back to a modeless alert message when Growl
-			// is not available, but others simply do nothing (since an alert can be
-			// excessive)
-			if ((canNotifyGrowl) || (canDisplayAlert))
+			// display a non-blocking alert to the user, or post a system notification
+			// (note that this may do nothing, depending on user preferences)
+			if (canPostNotification)
 			{
-				// page the Mac OS X user notification center (and Growl,
-				// if it is installed)
-				GrowlSupport_Notify(displayType, growlNotificationName, growlNotificationTitle,
-									dialogTextCFString/* description */);
-			}
-			
-			if (nullptr != growlNotificationTitle)
-			{
-				CFRelease(growlNotificationTitle), growlNotificationTitle = nullptr;
-			}
-			if (nullptr != dialogTextCFString)
-			{
-				CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
-			}
-			if (releaseHelpText)
-			{
-				CFRelease(helpTextCFString), helpTextCFString = nullptr;
-			}
-			if (nullptr != dialogTextTemplateCFString)
-			{
-				CFRelease(dialogTextTemplateCFString), dialogTextTemplateCFString = nullptr;
+				CocoaBasic_PostUserNotification(CFSTR("net.macterm.notifications.processexit"),
+												notificationTitle.returnCFStringRef(),
+												dialogTextCFString.returnCFStringRef(),
+												helpTextCFString.returnCFStringRef());
 			}
 		}
 	}

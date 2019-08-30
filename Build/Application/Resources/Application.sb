@@ -129,15 +129,6 @@
 ;; access to password file (temporary; reason not determined yet)
 (allow file-read* (regex #"/private/etc/passwd"))
 
-;; interaction with Growl for notifications
-(allow appleevent-send (appleevent-destination "com.growl.growlhelperapp"))
-(allow distributed-notification-post)
-(allow file-read* (regex "Applications/Growl.app$"))
-(allow file-read* (regex "Applications/Growl.app/.*"))
-(allow file-read* (regex #"Library/PreferencePanes$"))
-(allow file-read* (regex #"Library/PreferencePanes/.*"))
-(allow mach-lookup (global-name-regex #"^GrowlApplicationBridge"))
-
 ;; access to data in the sandbox or user home directory
 (allow authorization-right-obtain)
 (allow file* (regex #"Library/Caches$"))

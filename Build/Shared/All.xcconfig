@@ -1,9 +1,6 @@
 #include "CustomPaths.xcconfig"
 #include "Signature.xcconfig"
 
-// Growl is not necessarily linked
-LDFLAGS_EXTRA_FRAMEWORKS = -weak_framework Growl
-
 // the version of SWIG required to work with the system Python
 // (see also SWIG_PREFIX)
 SWIG_VERSION = 3.0.12

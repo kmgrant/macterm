@@ -46,9 +46,7 @@
 
 // library includes
 #include <CFRetainRelease.h>
-#if ! CONSOLE_EXCLUDES_GROWL_SUPPORT
-#	include <GrowlSupport.h>
-#endif
+#include <CocoaBasic.h>
 
 
 
@@ -246,9 +244,10 @@ Console_WriteLine	(char const*	inString)
 
 
 /*!
-Uses Growl to notify the user about errors in script code.  If
-Growl is not installed, attempts to send the same information
-to the console log.
+Logs an error from a user script.  This separate function exists
+so that there is an easy hook for handling errors in some
+additional way in the future, such as a notification or script
+callback.
 
 Since these messages are more likely to be presented directly
 to the user, they should be localized, and are therefore given
@@ -260,26 +259,15 @@ void
 Console_WriteScriptError	(CFStringRef		inTitle,
 							 CFStringRef		inDescription)
 {
-#if ! CONSOLE_EXCLUDES_GROWL_SUPPORT
-	if (GrowlSupport_IsAvailable())
+	char const*		cStringTitle = CFStringGetCStringPtr(inTitle, kCFStringEncodingUTF8);
+	
+	
+	if (nullptr == cStringTitle)
 	{
-		CFStringRef		growlNotificationName = CFSTR("Script error"); // MUST match "Growl Registration Ticket.growlRegDict"
-		
-		
-		GrowlSupport_Notify(kGrowlSupport_NoteDisplayAlways, growlNotificationName, inTitle, inDescription);
+		cStringTitle = "Script error";
 	}
-	else
-#endif
-	{
-		char const*		cStringTitle = CFStringGetCStringPtr(inTitle, kCFStringEncodingUTF8);
-		
-		
-		if (nullptr == cStringTitle)
-		{
-			cStringTitle = "Script error";
-		}
-		Console_WriteValueCFString(cStringTitle, inDescription);
-	}
+	CocoaBasic_PostUserNotification(CFSTR("net.macterm.notifications.scripterror"), inTitle, inDescription);
+	Console_WriteValueCFString(cStringTitle, inDescription);
 }// WriteScriptError
 
 

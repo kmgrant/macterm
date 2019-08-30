@@ -34,6 +34,7 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 #import <objc/objc-runtime.h>
+#import <UserNotifications/UserNotifications.h>
 
 // library includes
 #import <CFRetainRelease.h>
@@ -316,6 +317,119 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 	[[[[NSSound alloc] initWithContentsOfURL:(NSURL*)inFile byReference:NO] autorelease] play];
 }// @autoreleasepool
 }// PlaySoundFile
+
+
+/*!
+Posts a user notification with the specified properties
+unless user preferences disable notifications. 
+
+(2019.07)
+*/
+void
+CocoaBasic_PostUserNotification		(CFStringRef	inNotificationIdentifier,
+									 CFStringRef	inTitle,
+									 CFStringRef	inSubtitleOrNull,
+									 CFStringRef	inInformativeTextOrNull)
+{
+	// TEMPORARY; new UNUserNotificationCenter does not seem to function
+	// at all (“Notifications are not allowed for this application” error
+	// at runtime); this seems like it could be related to code-signing
+	// but the application is already signed and accepted by GateKeeper;
+	// naturally the documentation on this is vague and developer time is
+	// expensive so for now the “solution” is to stick with the older API
+	// until Apple eventually stops supporting it... 
+#if 0
+	if (@available(macOS 10.14, *))
+	{
+		// use new UNUserNotificationCenter
+		auto	notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
+		auto	requestIdentifier = BRIDGE_CAST(inNotificationIdentifier, NSString*);
+		auto	newNotification = [[[UNMutableNotificationContent alloc] init] autorelease];
+		
+		
+		newNotification.title = BRIDGE_CAST(inTitle, NSString*);
+		if (nullptr != inSubtitleOrNull)
+		{
+			newNotification.subtitle = BRIDGE_CAST(inSubtitleOrNull, NSString*);
+		}
+		if (nullptr != inInformativeTextOrNull)
+		{
+			newNotification.body = BRIDGE_CAST(inInformativeTextOrNull, NSString*);
+		}
+		auto	requestObject = [UNNotificationRequest requestWithIdentifier:requestIdentifier
+																				content:newNotification
+																				trigger:nil];
+		[notificationCenter addNotificationRequest:requestObject
+		withCompletionHandler:^(NSError* error)
+		{
+			if (nil != error)
+			{
+				Console_WriteValueCFError("User notification not sent, error", BRIDGE_CAST(error, CFErrorRef));
+			}
+			else
+			{
+				Console_WriteValueCFString("User notification sent, title", inTitle);
+			}
+		}];
+	}
+	else
+#endif
+	{
+		// use legacy NSUserNotificationCenter
+		auto	notificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
+		auto	newNotification = [[[NSUserNotification alloc] init] autorelease];
+		
+		
+		newNotification.identifier = BRIDGE_CAST(inNotificationIdentifier, NSString*);
+		newNotification.title = BRIDGE_CAST(inTitle, NSString*);
+		if (nullptr != inSubtitleOrNull)
+		{
+			newNotification.subtitle = BRIDGE_CAST(inSubtitleOrNull, NSString*);
+		}
+		if (nullptr != inInformativeTextOrNull)
+		{
+			newNotification.informativeText = BRIDGE_CAST(inInformativeTextOrNull, NSString*);
+		}
+		[notificationCenter scheduleNotification:newNotification];
+	}
+}// PostUserNotification
+
+
+/*!
+Call at launch time; may ask user for permission to
+send notifications.
+
+This will do nothing at all prior to macOS 10.14 and
+it may also not prompt if the user has made preference
+settings already.
+
+(2019.07)
+*/
+void
+CocoaBasic_PromptUserToAllowNotifications ()
+{
+	if (@available(macOS 10.14, *))
+	{
+		auto						notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
+		UNAuthorizationOptions		requestOptions = (UNAuthorizationOptionBadge |
+														UNAuthorizationOptionSound |
+														UNAuthorizationOptionAlert);
+		
+		
+		[notificationCenter requestAuthorizationWithOptions:requestOptions
+		completionHandler:^(BOOL granted, NSError* error)
+		{
+			if (nil != error)
+			{
+				Console_WriteValueCFError("User notification request error", BRIDGE_CAST(error, CFErrorRef));
+			}
+			else
+			{
+				Console_WriteValue("User notification request: granted", (int)granted);
+			}
+		}];
+	}
+}// PromptUserToAllowNotifications
 
 
 /*!

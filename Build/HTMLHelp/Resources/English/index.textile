@@ -68,7 +68,6 @@ notextile. <dl>
 notextile. <dt>Other Applications</dt><dd>
 
 * "using Automator":content/automator.html
-* "using Growl":content/growl.html
 
 notextile. </dd>
 

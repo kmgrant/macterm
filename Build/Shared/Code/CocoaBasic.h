@@ -68,6 +68,15 @@ void
 void
 	CocoaBasic_PlaySoundFile						(CFURLRef);
 
+void
+	CocoaBasic_PostUserNotification					(CFStringRef,
+													 CFStringRef,
+													 CFStringRef = nullptr,
+													 CFStringRef = nullptr);
+
+void
+	CocoaBasic_PromptUserToAllowNotifications		();
+
 CFStringRef
 	CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding);
 

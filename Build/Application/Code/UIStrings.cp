@@ -197,7 +197,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowNotifyActivityPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Data has arrived in a monitored window."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("New data in watched window."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
 		break;
 	
@@ -207,7 +207,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowNotifyInactivityPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("A monitored window is no longer transmitting data."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("No data lately in watched window."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
 		break;
 	

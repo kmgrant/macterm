@@ -33,7 +33,7 @@ first: bundle
 
 .PHONY: help
 help:
-	@echo "Usage: make [USE_GROWL=no]"
+	@echo "Usage: make"
 	@echo "       make official BUNDLE=/path/to/MacTerm.app
 	@echo "       make clean"
 	@echo
@@ -60,7 +60,6 @@ help:
 # The following should be defined by this "include":
 #	SYMROOT
 #	OBJROOT
-#	GROWL_SDK_ROOT (if using Growl)
 include $(SRC_SHARED_TOP)/CustomPaths.xcconfig
 
 # The following should be defined by this "include":
@@ -108,12 +107,6 @@ SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
 XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
 
-# set this to "no" if you want to disable Growl support for
-# notifications in MacTerm (not recommended unless you don't
-# want to download the Growl SDK); see "http://www.growl.info/"
-USE_GROWL=yes
-#GROWL_SDK_ROOT := <defined in Xcode config>
-
 # the PyMacTerm.framework target is platform-independent, but an
 # arbitrary configuration must be given to have Xcode build it
 # (and decide the output directory from which to copy)
@@ -141,14 +134,14 @@ SRC_SHARED_CODE_TOP := $(SRC_SHARED_TOP)/Code
 SRC_SHARED_RESOURCES_TOP := $(SRC_SHARED_TOP)/Resources
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTerm.framework
 SRC_PYINVOKER_TOP_LEOPARD := $(SYMROOT)/$(BUILD_CONF)
-SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Framework/Growl.framework
 SRC_QUILLS_TOP := $(SYMROOT)/$(BUILD_CONF)/MacTermQuills.framework
 
-DEST_APP_TOP := $(MAKEFILE_DIR)/MacTerm.app/Contents
-DEST_APP_FW_TOP := $(DEST_APP_TOP)/Frameworks
-DEST_APP_MACOS_TOP := $(DEST_APP_TOP)/MacOS
-DEST_APP_RESOURCES_TOP := $(DEST_APP_TOP)/Resources
-DEST_APP_XPCSERVICES_TOP := $(DEST_APP_TOP)/XPCServices
+DEST_APP_TOP := $(MAKEFILE_DIR)/MacTerm.app
+DEST_APP_CONTENTS_TOP := $(DEST_APP_TOP)/Contents
+DEST_APP_FW_TOP := $(DEST_APP_CONTENTS_TOP)/Frameworks
+DEST_APP_MACOS_TOP := $(DEST_APP_CONTENTS_TOP)/MacOS
+DEST_APP_RESOURCES_TOP := $(DEST_APP_CONTENTS_TOP)/Resources
+DEST_APP_XPCSERVICES_TOP := $(DEST_APP_CONTENTS_TOP)/XPCServices
 DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_CALLPYCLIENT_TOP := $(DEST_APP_XPCSERVICES_TOP)/net.macterm.helpers.CallPythonClient.xpc
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
@@ -156,7 +149,6 @@ DEST_PRINTPREVIEW_TOP := $(DEST_APP_RESOURCES_TOP)/PrintPreview.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTerm.framework
 DEST_PY_CODE_TOP := $(DEST_PY_TOP)/Versions/A/lib/python2.6/pymacterm
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/MacTermQuills.framework
-DEST_GROWL_TOP := $(DEST_APP_FW_TOP)/Growl.framework
 DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.6
 
 SWIG_WRAPPERS := _quills.so quills.py
@@ -200,7 +192,6 @@ DefaultFormat10.plist \
 GlyphForPatternDarkGray.png \
 GlyphForPatternLightGray.png \
 GlyphForPatternMediumGray.png \
-GrowlRegistrationTicket.growlRegDict \
 IconForBundle.icns \
 IconForCaution.icns \
 IconForCommand.icns \
@@ -279,7 +270,7 @@ $(APP_RESOURCES_BUNDLES) \
 # and not create a redundant destination directory
 $(DEST_APP_RESOURCES_TOP)/%: $(SRC_APP_RESOURCES_TOP)/%
 	$(MKDIR_P) $(dir $@)
-	@if [ -d "$<" ] ; then \
+	@if [ -d '$<' ] ; then \
 		$(RSYNC) --archive --exclude=.svn/ --exclude=.LSOverride $</ $@ ; \
 	else \
 		$(RSYNC) --archive --exclude=.svn/ --exclude=.LSOverride $< $@ ; \
@@ -376,49 +367,10 @@ clean-py-framework:
 	$(RM) $(DEST_PY_CODE_TOP)/versions.py
 	$(RM) -R $(DEST_PY_TOP)
 
-# Component: Growl.framework
-
-.PHONY: install-growl-framework
-install-growl-framework:
-	$(call banner,$@)
-	@# keep in sync with the matching clean rule
-	@# (note: this rule has a check to avoid accidental rsyncing from '/')
-	@if [ ! -d "$(GROWL_SDK_ROOT)" ] ; then \
-		echo "WARNING: Support for Growl is NOT being compiled in, due to a missing framework." >&2 ; \
-		echo "Current working directory: '$(MAKEFILE_DIR)';" >&2 ; \
-		echo "first download the Growl SDK <http://growl.info/> and install in subdirectory '$(GROWL_SDK_ROOT)'." >&2 ; \
-	else \
-		if [ "x$(SRC_GROWL_TOP)" = "x" ] ; then \
-			echo "SRC_GROWL_TOP variable unset" >&2 ; \
-			exit 1 ; \
-		fi ; \
-		$(MKDIR_P) $(dir $(DEST_GROWL_TOP)) ; \
-		$(RSYNC) --archive '$(SRC_GROWL_TOP)/' $(DEST_GROWL_TOP) ; \
-		$(CHMOD) -R +w $(DEST_GROWL_TOP) ; \
-	fi
-
-.PHONY: clean-growl-framework
-clean-growl-framework:
-	@# avoid accidental over-deletion
-	@if [ "x$(DEST_GROWL_TOP)" = "x" ] ; then \
-		echo "DEST_GROWL_TOP variable unset" >&2 ; \
-		exit 1 ; \
-	fi
-	$(RM) -R $(DEST_GROWL_TOP)
-
 # Composite: Frameworks
-
-ifeq ($(strip $(USE_GROWL)),yes)
-INSTALL_GROWL := install-growl-framework
-CLEAN_GROWL := clean-growl-framework
-else
-INSTALL_GROWL :=
-CLEAN_GROWL :=
-endif
 
 .PHONY: install-frameworks
 install-frameworks: \
-$(INSTALL_GROWL) \
 install-py-framework \
 install-quills-framework
 	@# keep in sync with the matching clean rule
@@ -426,7 +378,6 @@ install-quills-framework
 
 .PHONY: clean-frameworks
 clean-frameworks: \
-$(CLEAN_GROWL) \
 clean-quills-framework \
 clean-py-framework
 	-$(RMDIR) $(DEST_APP_FW_TOP) 2>/dev/null
@@ -601,17 +552,9 @@ $(DEST_APP_RESOURCES_TOP)/Assets.car
 	$(MAKE) install-callpy-client
 	$(MAKE) install-prefs-converter
 	$(MAKE) install-print-preview
-	@# make a special exception for Growl, which requires a filename with spaces
-	$(MOVE) $(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict \
-		'$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict'
 
 .PHONY: clean-resources
 clean-resources:
-	@# undo the special Growl exception
-	@if [ -r "$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict" ] ; then \
-			$(MOVE) '$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict' \
-				$(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict ; \
-	fi
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_FILES))' | $(XARGS) $(RM)
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES_GENERATED))' | $(XARGS) $(RM) -R
@@ -632,25 +575,25 @@ $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist: FORCE
 	$(MKDIR_P) $(dir $@)
 	@# this is always regenerated because it changes often and is a tiny file
 	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-DefaultPreferences.plist $@
-	env BUILT_PRODUCTS_DIR="$(DEST_APP_RESOURCES_TOP)" INFOPLIST_PATH=DefaultPreferences.plist \
+	env BUILT_PRODUCTS_DIR='$(DEST_APP_RESOURCES_TOP)' INFOPLIST_PATH=DefaultPreferences.plist \
 		$(MAKEFILE_DIR)/VersionInfo.sh $(MAKEFILE_DIR)/Tools/AutoDatePropertyList.sh
 
 #
 # Info.plist file
 #
 
-$(DEST_APP_TOP)/Info.plist: FORCE
+$(DEST_APP_CONTENTS_TOP)/Info.plist: FORCE
 	$(MKDIR_P) $(dir $@)
 	@# this is always regenerated because it changes daily and is a tiny file
 	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-Application-Info.plist $@
-	env BUILT_PRODUCTS_DIR="$(DEST_APP_TOP)" INFOPLIST_PATH=Info.plist \
+	env BUILT_PRODUCTS_DIR='$(DEST_APP_CONTENTS_TOP)' INFOPLIST_PATH=Info.plist \
 		$(MAKEFILE_DIR)/VersionInfo.sh $(MAKEFILE_DIR)/Tools/AutoDatePropertyList.sh
 
 #
 # PkgInfo file
 #
 
-$(DEST_APP_TOP)/PkgInfo: FORCE
+$(DEST_APP_CONTENTS_TOP)/PkgInfo: FORCE
 	$(MKDIR_P) $(dir $@)
 	/bin/echo -n 'APPLKevG' >| $@
 
@@ -686,11 +629,12 @@ endef
 
 # sign a file with a "Developer ID Application" and verify the result
 define sign_with_dev_id_app
-	$(call banner,code sign $(1))
-	$(CODE_SIGN) --deep --force --sign "$(DEVELOPER_ID_APP)" $(1)
-	$(CODE_SIGN) --display --verbose=4 $(1)
-	$(SPCTL) --assess --verbose=4 --raw $(1)
-	$(SPCTL) --assess --verbose=4 $(1)
+	$(call banner,code sign '$(strip $(1))')
+	$(CODE_SIGN) --deep --force --sign '$(DEVELOPER_ID_APP)' --timestamp '$(strip $(1))'
+	$(CODE_SIGN) --display --verbose=4 '$(strip $(1))'
+	$(CODE_SIGN) --verify --deep --strict --verbose=2 '$(strip $(1))'
+	$(SPCTL) --assess --verbose=4 --raw '$(strip $(1))'
+	$(SPCTL) --assess --verbose=4 '$(strip $(1))'
 	
 endef
 
@@ -702,12 +646,13 @@ endef
 bundle:
 	@# just comment-out anything you don't care about; MacTerm
 	@# still works with most of its components missing
-	$(MAKE) $(DEST_APP_TOP)/Info.plist
-	$(MAKE) $(DEST_APP_TOP)/PkgInfo
+	$(MAKE) $(DEST_APP_CONTENTS_TOP)/Info.plist
+	$(MAKE) $(DEST_APP_CONTENTS_TOP)/PkgInfo
 	$(MAKE) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
 	$(MAKE) install-frameworks
 	$(MAKE) install-executables
 	$(MAKE) install-resources
+	env BUNDLE='$(DEST_APP_TOP)' $(MAKE) official
 	@echo
 	@echo "Build complete."
 
@@ -716,16 +661,16 @@ clean:
 	$(MAKE) clean-resources
 	$(MAKE) clean-executables
 	$(MAKE) clean-frameworks
-	$(RM) $(DEST_APP_TOP)/Info.plist
-	$(RM) $(DEST_APP_TOP)/PkgInfo
+	$(RM) $(DEST_APP_CONTENTS_TOP)/Info.plist
+	$(RM) $(DEST_APP_CONTENTS_TOP)/PkgInfo
 	$(RM) $(DEST_APP_RESOURCES_TOP)/DefaultPreferences.plist
 	-$(RMDIR) $(SRC_PRINTPREVIEW_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_CALLPYCLIENT_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP) 2>/dev/null
 	-$(RMDIR) $(SYMROOT)/$(BUILD_CONF) 2>/dev/null
+	-$(RMDIR) $(DEST_APP_CONTENTS_TOP) 2>/dev/null
 	-$(RMDIR) $(DEST_APP_TOP) 2>/dev/null
-	-$(RMDIR) $(dir $(DEST_APP_TOP)) 2>/dev/null
 	@echo
 	@echo "NOTE: Useful Xcode intermediate files in '$(SYMROOT)'"
 	@echo "(such as code indices) have not been removed."

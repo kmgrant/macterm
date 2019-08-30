@@ -24,6 +24,7 @@
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; };
+		0A42A5892318CE3C008ED9BE /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A42A5882318CE3C008ED9BE /* UserNotifications.framework */; };
 		0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */; };
 		0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A442C4F1B810760008B046B /* QuartzCore.framework */; };
 		0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46C56C15D864B700843BBC /* PreferenceValue.mm */; };
@@ -34,7 +35,6 @@
 		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
 		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
-		0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A68811112F537A1005F418A /* GrowlSupport.mm */; };
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */; };
@@ -236,7 +236,6 @@
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelTabs.mm; path = Application/Code/GenericPanelTabs.mm; sourceTree = "<group>"; };
 		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
-		0A2A06020DF4B8F900DF8C98 /* Growl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Growl.framework; path = GrowlSDK/Frameworks/Growl.framework; sourceTree = SOURCE_ROOT; };
 		0A2A35D313AD2EFF007A1E35 /* CocoaExtensions.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "CocoaExtensions.objc++.h"; path = "Shared/Code/CocoaExtensions.objc++.h"; sourceTree = "<group>"; };
 		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
 		0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TerminalLine.h; path = Application/Code/TerminalLine.h; sourceTree = "<group>"; };
@@ -256,6 +255,7 @@
 		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTranslations.mm; path = Application/Code/PrefPanelTranslations.mm; sourceTree = "<group>"; };
 		0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTranslations.h; path = Application/Code/PrefPanelTranslations.h; sourceTree = "<group>"; };
+		0A42A5882318CE3C008ED9BE /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalGlyphDrawing.mm; path = Application/Code/TerminalGlyphDrawing.mm; sourceTree = "<group>"; };
 		0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TerminalGlyphDrawing.objc++.h"; path = "Application/Code/TerminalGlyphDrawing.objc++.h"; sourceTree = "<group>"; };
 		0A442C4F1B810760008B046B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -364,8 +364,6 @@
 		0A613E4F20592085007C0829 /* Workspace.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Workspace.mm; path = Application/Code/Workspace.mm; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
-		0A68811012F5378C005F418A /* GrowlSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrowlSupport.h; path = Shared/Code/GrowlSupport.h; sourceTree = "<group>"; };
-		0A68811112F537A1005F418A /* GrowlSupport.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlSupport.mm; path = Shared/Code/GrowlSupport.mm; sourceTree = "<group>"; };
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
 		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
@@ -499,6 +497,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A42A5892318CE3C008ED9BE /* UserNotifications.framework in Frameworks */,
 				0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */,
 				0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */,
 				0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */,
@@ -516,6 +515,7 @@
 		0A0E9FA51DB18F3C006A8BF5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0A42A5882318CE3C008ED9BE /* UserNotifications.framework */,
 				0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */,
 			);
 			name = Frameworks;
@@ -537,7 +537,6 @@
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.mm */,
 				0A90C79A1DBC557B005EABE0 /* CoreUI.mm */,
-				0A68811112F537A1005F418A /* GrowlSupport.mm */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.mm */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */,
@@ -566,7 +565,6 @@
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */,
-				0A68811012F5378C005F418A /* GrowlSupport.h */,
 				0A9B318E0D538EAB00C1616D /* ListenerModel.h */,
 				0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */,
 				0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */,
@@ -865,7 +863,6 @@
 				0A46059405543D7C00ACDF3A /* Carbon.framework */,
 				0A46079705543DE400ACDF3A /* CoreFoundation.framework */,
 				0A46059505543D7C00ACDF3A /* CoreServices.framework */,
-				0A2A06020DF4B8F900DF8C98 /* Growl.framework */,
 				0A442C4F1B810760008B046B /* QuartzCore.framework */,
 				0A46059605543D7C00ACDF3A /* QuickTime.framework */,
 				0A46059705543D7C00ACDF3A /* System.framework */,
@@ -1267,7 +1264,6 @@
 				0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A613E5020592085007C0829 /* Workspace.mm in Sources */,
-				0A68811212F537A1005F418A /* GrowlSupport.mm in Sources */,
 				0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */,
 				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
 				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,
@@ -1756,7 +1752,6 @@
 					"-IShared/Code",
 					"-IApplication/Resources",
 					"-IApplication/Resources/Base.lproj",
-					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
 				WARNING_CFLAGS = (
@@ -1929,7 +1924,6 @@
 					"-IShared/Code",
 					"-IApplication/Resources",
 					"-IApplication/Resources/Base.lproj",
-					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
 				WARNING_CFLAGS = (

@@ -55,7 +55,6 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <GrowlSupport.h>
 #import <HelpSystem.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
