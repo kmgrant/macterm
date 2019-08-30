@@ -3,7 +3,7 @@
 
 // the version of SWIG required to work with the system Python
 // (see also SWIG_PREFIX)
-SWIG_VERSION = 3.0.12
+SWIG_VERSION = 4.0.1
 
 // set to the project Python version; as of 10.9 this is not in the SDK root
 // (note: the author has chosen to use the same path when building SWIG; it is
