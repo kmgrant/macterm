@@ -34,7 +34,7 @@ first: bundle
 .PHONY: help
 help:
 	@echo "Usage: make"
-	@echo "       make official BUNDLE=/path/to/MacTerm.app
+	@echo "       make official BUNDLE=/path/to/MacTerm.app"
 	@echo "       make clean"
 	@echo
 	@echo "You can also request specific component rules;"
