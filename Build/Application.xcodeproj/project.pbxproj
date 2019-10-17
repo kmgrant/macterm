@@ -126,6 +126,8 @@
 			compilerSpec = com.apple.compilers.proxy.script;
 			filePatterns = "*.i";
 			fileType = pattern.proxy;
+			inputFiles = (
+			);
 			isEditable = 1;
 			outputFiles = (
 				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE)_wrap.cxx",
@@ -1043,7 +1045,7 @@
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1110;
 				TargetAttributes = {
 					0A70B8A21079C1EB0013E76F = {
 						DevelopmentTeam = 8BA57X86ZM;
@@ -1674,6 +1676,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1801,6 +1804,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
 			buildSettings = {
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
