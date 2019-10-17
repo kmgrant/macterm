@@ -1688,7 +1688,6 @@
 					"-IShared/Code",
 					"-IApplication/Resources",
 					"-IApplication/Resources/Base.lproj",
-					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
 				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
@@ -1783,7 +1782,6 @@
 					"$(inherited)",
 					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(GROWL_SDK_ROOT)/Framework/Legacy\"";
 				FRAMEWORK_VERSION = B;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
@@ -1816,7 +1814,6 @@
 					"-IShared/Code",
 					"-IApplication/Resources",
 					"-IApplication/Resources/Base.lproj",
-					"-F$(GROWL_SDK_ROOT)/Framework/Legacy",
 					"$(SDK_PATCH_INCLUDES)",
 				);
 				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
@@ -1920,6 +1917,7 @@
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				ONLY_ACTIVE_ARCH = YES;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1949,7 +1947,6 @@
 					"$(inherited)",
 					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(GROWL_SDK_ROOT)/Framework/Legacy\"";
 				FRAMEWORK_VERSION = B;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
