@@ -24,6 +24,10 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20190331',
+    '20190324',
+    '20181216',
+    '20180826',
     '20180825',
     '20180615',
     '20180519',
@@ -598,6 +602,18 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20190331': [
+        'Sessions can now have different associated Format settings for system Dark and Light modes.',
+    ],
+    '20190324': [
+        'The "Find…" dialog now has a Regex checkbox to interpret search strings as regular expressions.',
+    ],
+    '20181216': [
+        'Terminal windows now have keyboard focus rings.',
+    ],
+    '20180826': [
+        'Default implementation is now 5.0 alpha and 64-bit Cocoa.  MANY KNOWN BUGS.  Development mode!',
+    ],
     '20180825': [
         'Version 4.1.0 has been FINALIZED after additional testing and years of development.  While 4.1.0 is out of beta, daily builds will switch to 5.0 alpha and remain potentially unstable.',
         'This is the LAST VERSION TO SUPPORT MACOS VERSIONS 10.10 OR EARLIER.  Version 5.0 alpha will likely require more recent versions of macOS.',
@@ -717,8 +733,8 @@ notes_by_version = {
     ],
     '20170515': [
         'Fixed Undo and Redo commands in certain text fields such as the floating Command Line.',
-        'Undo and Redo can once again be used for changes made with "Custom Screen Size...".',
-        'The "Custom Terminal Setup..." command has been removed (it was never implemented and always emitted an error sound when used).  Several terminal settings can be changed dynamically using the commands in the Terminal menu.  Screen dimensions can be changed with the "Custom Screen Size..." command in the View menu.',
+        'Undo and Redo can once again be used for changes made with "Custom Screen Size…".',
+        'The "Custom Terminal Setup…" command has been removed (it was never implemented and always emitted an error sound when used).  Several terminal settings can be changed dynamically using the commands in the Terminal menu.  Screen dimensions can be changed with the "Custom Screen Size…" command in the View menu.',
     ],
     '20170511': [
         'Macros with an Action of "Find in Local Terminal Verbatim" or "Find in Local Terminal with Substitutions" will now cause automatic scrolling when invoked, just like a normal search would do.  This allows you to write macros that jump back to a certain point in the scrollback, for example, based on a pattern match.',
