@@ -1679,7 +1679,6 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-g",
 					"-v",
@@ -1692,7 +1691,6 @@
 				);
 				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
 				PRODUCT_NAME = PythonInvoker;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForDebugging;
 		};
@@ -1745,7 +1743,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1786,7 +1784,6 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
@@ -1794,7 +1791,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.frameworks.Quills;
 				PRODUCT_NAME = MacTermQuills;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForRelease;
 		};
@@ -1805,7 +1801,6 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-g",
 					"-v",
@@ -1818,7 +1813,6 @@
 				);
 				OTHER_LDFLAGS = "$(PYTHON_LDFLAGS)";
 				PRODUCT_NAME = PythonInvoker;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForRelease;
 		};
@@ -1837,7 +1831,6 @@
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-IApplication/Code",
 					"-IShared/Code",
@@ -1849,7 +1842,6 @@
 					MacTermQuills,
 				);
 				PRODUCT_NAME = Quills;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = ForRelease;
@@ -1916,7 +1908,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
 				ONLY_ACTIVE_ARCH = YES;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
@@ -1951,7 +1943,6 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/ApplicationPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = (
 					"$(PYTHON_LDFLAGS)",
@@ -1959,7 +1950,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.frameworks.Quills;
 				PRODUCT_NAME = MacTermQuills;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 			};
 			name = ForDebugging;
 		};
@@ -1978,7 +1968,6 @@
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_WARN_SHADOW = NO;
 				GCC_WARN_UNUSED_PARAMETER = NO;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-IApplication/Code",
 					"-IShared/Code",
@@ -1990,7 +1979,6 @@
 					MacTermQuills,
 				);
 				PRODUCT_NAME = Quills;
-				SDKROOT_i386 = "$(DEVELOPER_SDK_DIR)/MacOSX10.12.sdk";
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = ForDebugging;
