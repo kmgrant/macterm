@@ -822,8 +822,7 @@ drawRect:(NSRect)	rect
 	Float32 const		kVerticalScrollBarWidth = (kHasOverlayScrollBars)
 													? 0
 													: 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
-	NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef		drawingContext = (CGContextRef)[contextMgr graphicsPort];
+	CGContextRef		drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	NSRect				entireRect = [self bounds];
 	CGRect				contentBounds;
 	

@@ -10069,10 +10069,9 @@ drawRect:(NSRect)	aRect
 #pragma unused(aRect)
 	// WARNING: Since "canDrawConcurrently" returns YES, this should
 	// not do anything that requires execution on the main thread.
-	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-	CGRect					clipBounds = CGContextGetClipBoundingBox(drawingContext);
+	My_TerminalViewPtr	viewPtr = self.internalViewPtr;
+	CGContextRef		drawingContext = [[NSGraphicsContext currentContext] CGContext];
+	CGRect				clipBounds = CGContextGetClipBoundingBox(drawingContext);
 	
 	
 	if (nil != self.exactColor)
@@ -11658,13 +11657,12 @@ drawRect:(NSRect)	aRect
 	
 	if (nullptr != viewPtr)
 	{
-		NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
-		CGContextRef		drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-		CGRect				entireRect = NSRectToCGRect([self bounds]);
-		CGRect				clipBounds = CGContextGetClipBoundingBox(drawingContext);
-		CGRect				contentBounds = CGRectMake(CGRectGetMinX(entireRect), CGRectGetMinY(entireRect),
-														CGRectGetWidth(entireRect),
-														CGRectGetHeight(entireRect));
+		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
+		CGRect			entireRect = NSRectToCGRect([self bounds]);
+		CGRect			clipBounds = CGContextGetClipBoundingBox(drawingContext);
+		CGRect			contentBounds = CGRectMake(CGRectGetMinX(entireRect), CGRectGetMinY(entireRect),
+													CGRectGetWidth(entireRect),
+													CGRectGetHeight(entireRect));
 		
 		
 		// INCOMPLETE!
@@ -12688,8 +12686,7 @@ drawRect:(NSRect)	aRect
 {
 	[super drawRect:aRect];
 	
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	
 	
 #if 0
@@ -12815,8 +12812,7 @@ For debug only; show the boundaries.
 drawRect:(NSRect)	aRect
 {
 #pragma unused(aRect)
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	
 	
 	// TEMPORARY: draw background

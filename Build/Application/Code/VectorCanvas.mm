@@ -1646,8 +1646,7 @@ drawRect:(NSRect)	rect
 	
 	if (nullptr != canvasPtr)
 	{
-		NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-		CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 		
 		
 		// draw the background (unless this is for printing)
@@ -1758,10 +1757,9 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 	
 	if (nullptr != canvasPtr)
 	{
-		NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
-		CGContextRef		drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
-		CGRect				contentBounds = NSRectToCGRect(aRect);
-		BOOL				isPrinting = (nil != [NSPrintOperation currentOperation]);
+		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
+		CGRect			contentBounds = NSRectToCGRect(aRect);
+		BOOL			isPrinting = (nil != [NSPrintOperation currentOperation]);
 		
 		
 		// draw the vector graphics; this is achieved by iterating over

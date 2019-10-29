@@ -3109,8 +3109,7 @@ backgroundFrameImageAsColor
 				// when both axes allow resizing, put handles on the corners too
 				CGFloat const	kTransformWidth = NSWidth(drawnFrame);
 				CGFloat const	kTransformHeight = NSHeight(drawnFrame);
-				CGContextRef	drawingContext = REINTERPRET_CAST([[NSGraphicsContext currentContext] graphicsPort],
-																	CGContextRef);
+				CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 				NSColor*		targetColor = nil; // reused below
 				NSColor*		outerLineColorRGB = [outerLineColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
 				NSColor*		middleLineColorRGB = [middleLineColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];

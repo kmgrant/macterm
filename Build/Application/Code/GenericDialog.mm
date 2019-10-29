@@ -741,8 +741,7 @@ drawRect:(NSRect)	aRect
 #if 0
 	// for debugging; display a red rectangle to show
 	// the area occupied by the view
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	
 	
 	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);

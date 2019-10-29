@@ -135,22 +135,21 @@ to be clickable however.
 - (void)
 drawRect:(NSRect)	aRect
 {
-	NSGraphicsContext*	contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef		drawingContext = (CGContextRef)[contextMgr graphicsPort];
-	NSRect				entireRect = [self bounds];
-	CGRect				regionBounds = CGRectMake(aRect.origin.x, aRect.origin.y,
-													aRect.size.width, aRect.size.height);
-	CGRect				contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y,
-													entireRect.size.width, entireRect.size.height);
-	id					firstSubview = ([[self subviews] count] > 0)
-										? [[self subviews] objectAtIndex:0]
-										: nil;
-	NSControl*			asControl = ((nil != firstSubview) && [firstSubview isKindOfClass:[NSControl class]])
-										? (NSControl*)firstSubview
-										: nil;
-	BOOL				isEnabled = (nil != asControl)
-									? [asControl isEnabled]
-									: YES;
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
+	NSRect			entireRect = [self bounds];
+	CGRect			regionBounds = CGRectMake(aRect.origin.x, aRect.origin.y,
+												aRect.size.width, aRect.size.height);
+	CGRect			contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y,
+												entireRect.size.width, entireRect.size.height);
+	id				firstSubview = ([[self subviews] count] > 0)
+									? [[self subviews] objectAtIndex:0]
+									: nil;
+	NSControl*		asControl = ((nil != firstSubview) && [firstSubview isKindOfClass:[NSControl class]])
+									? (NSControl*)firstSubview
+									: nil;
+	BOOL			isEnabled = (nil != asControl)
+								? [asControl isEnabled]
+								: YES;
 	
 	
 	CGContextClearRect(drawingContext, regionBounds);

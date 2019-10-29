@@ -1211,8 +1211,7 @@ drawRect:(NSRect)	aRect
 #if 0
 	// for debugging; display a red rectangle to show
 	// the area occupied by the view
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	
 	
 	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
@@ -1246,8 +1245,7 @@ drawRect:(NSRect)	aRect
 #if 0
 	// for debugging; display a red rectangle to show
 	// the area occupied by the view
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	
 	
 	CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
@@ -1323,6 +1321,29 @@ initWithNibNamed:(NSString*)	aNibName
 	}
 	return self;
 }// initWithNibNamed:
+
+
+/*!
+Designated initializer.
+
+This exists to make the compiler happy, because the
+superclass has this designated initializer.  In
+reality, use the simpler "initWithNibNamed:".
+
+(2019.10)
+*/
+- (instancetype)
+initWithNibNamed:(NSString*)		aNibName
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(void*)						aContext
+{
+	self = [super initWithNibNamed:aNibName delegate:aDelegate context:aContext];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// initWithNibNamed:delegate:context:
 
 
 /*!

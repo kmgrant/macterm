@@ -3574,15 +3574,14 @@ for truncation.
 - (void)
 drawRect:(NSRect)	aRect
 {
-	CGContextRef			graphicsContext = REINTERPRET_CAST([[NSGraphicsContext currentContext] graphicsPort], CGContextRef);
+	CGContextRef			graphicsContext = [[NSGraphicsContext currentContext] CGContext];
 	CGContextSaveRestore	_(graphicsContext);
 	
 	
 	if (self.frameDisplayEnabled)
 	{
 		// presumably in toolbar customization mode; show a light boundary rectangle
-		NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-		CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 		
 		
 		CGContextSetRGBStrokeColor(drawingContext, 0.75, 0.75, 0.75, 1.0/* alpha */); // color attempts to match “space item” style
@@ -3593,8 +3592,7 @@ drawRect:(NSRect)	aRect
 	else
 	{
 		// for debugging; display a red rectangle to show the area occupied by the view
-		NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-		CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 		
 		
 		CGContextSetRGBStrokeColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);

@@ -408,7 +408,6 @@
 		0AA66DFB1315F15C00B234C4 /* DefaultFormat1.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = DefaultFormat1.plist; path = Application/Resources/DefaultFormat1.plist; sourceTree = "<group>"; };
 		0AA66E3713160F0700B234C4 /* DefaultFormat2.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = DefaultFormat2.plist; path = Application/Resources/DefaultFormat2.plist; sourceTree = "<group>"; };
 		0AA66E3E131611EF00B234C4 /* DefaultFormat3.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultFormat3.plist; path = Application/Resources/DefaultFormat3.plist; sourceTree = "<group>"; };
-		0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = GrowlRegistrationTicket.growlRegDict; path = Application/Resources/GrowlRegistrationTicket.growlRegDict; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AAB323314B2BC59002C6F33 /* IconForCaution.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCaution.icns; path = Application/Resources/IconForCaution.icns; sourceTree = "<group>"; };
@@ -616,7 +615,6 @@
 				0ADB0D3305A7FBD90054A4E9 /* Template-DefaultPreferences.plist */,
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */,
 				0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */,
-				0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */,
 				0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,

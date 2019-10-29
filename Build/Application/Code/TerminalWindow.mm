@@ -5031,8 +5031,7 @@ For debug only; show the boundaries.
 drawRect:(NSRect)	aRect
 {
 #pragma unused(aRect)
-	NSGraphicsContext*		contextMgr = [NSGraphicsContext currentContext];
-	CGContextRef			drawingContext = REINTERPRET_CAST([contextMgr graphicsPort], CGContextRef);
+	CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 	
 	
 	// TEMPORARY: draw background
