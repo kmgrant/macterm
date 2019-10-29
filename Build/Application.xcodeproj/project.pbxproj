@@ -32,6 +32,7 @@
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
+		0A50056D2367DB3C00016FCB /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A50056C2367DB3C00016FCB /* CoreImage.framework */; };
 		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
 		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
@@ -359,6 +360,7 @@
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
 		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
+		0A50056C2367DB3C00016FCB /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
 		0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterDecoder.cp; path = Shared/Code/ParameterDecoder.cp; sourceTree = "<group>"; };
@@ -506,6 +508,7 @@
 				0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */,
 				0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */,
 				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
+				0A50056D2367DB3C00016FCB /* CoreImage.framework in Frameworks */,
 				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
 				0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */,
 			);
@@ -517,6 +520,7 @@
 		0A0E9FA51DB18F3C006A8BF5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0A50056C2367DB3C00016FCB /* CoreImage.framework */,
 				0A42A5882318CE3C008ED9BE /* UserNotifications.framework */,
 				0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */,
 			);

@@ -48,6 +48,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
+#import <CoreImage/CIFilterBuiltins.h>
 //CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
@@ -535,6 +536,8 @@ Private properties.
 	registeredObservers;
 	@property (assign) BOOL
 	showDragHighlight;
+	@property (assign) BOOL
+	showVisualBell;
 
 @end //}
 
@@ -9815,7 +9818,29 @@ post a notification event.
 void
 visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	Console_Warning(Console_WriteLine, "visual-bell not completely implemented for Cocoa");
+	auto	contentView = inTerminalViewPtr->encompassingNSView.terminalContentView;
+	
+	
+	if (NO == contentView.showVisualBell)
+	{
+		id		invertFilter = [CIFilter colorInvertFilter];
+		
+		
+		contentView.showVisualBell = YES;
+		[contentView setNeedsDisplay];
+		[contentView retain];
+		if (nil != invertFilter)
+		{
+			[contentView animator].layer.filters = @[invertFilter];
+		}
+		CocoaExtensions_RunLater(0.2,
+									^{
+										contentView.showVisualBell = NO;
+										[contentView setNeedsDisplay];
+										[contentView animator].layer.filters = nil;
+										[contentView release];
+									});
+	}
 }// visualBell
 
 } // anonymous namespace
@@ -10131,6 +10156,13 @@ to show that a drag-drop is pending.
 */
 @synthesize showDragHighlight = _showDragHighlight;
 
+/*!
+If set to YES, the background and text rendering is changed
+to show that a bell sound was triggered.  (Typically this
+is immediately turned off afterward.)
+*/
+@synthesize showVisualBell = _showVisualBell;
+
 
 #pragma mark Externally-Declared Properties
 
@@ -10160,6 +10192,7 @@ initWithFrame:(NSRect)		aFrame
 	if (nil != self)
 	{
 		self->_showDragHighlight = NO;
+		self->_showVisualBell = NO;
 		self->_modifierFlagsForCursor = 0;
 		self->_internalViewPtr = nullptr;
 		
