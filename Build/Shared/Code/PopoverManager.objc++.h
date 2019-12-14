@@ -83,7 +83,7 @@ typedef struct PopoverManager_OpaqueStruct*		PopoverManager_Ref;
 Classes that are passed as delegates to PopoverManager_New()
 must conform to this protocol.
 */
-@protocol PopoverManager_Delegate //{
+@protocol PopoverManager_Delegate < NSObject > //{
 
 @required
 

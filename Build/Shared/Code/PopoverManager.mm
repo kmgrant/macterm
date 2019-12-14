@@ -38,7 +38,6 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <MemoryBlocks.h>
 #import <Popover.objc++.h>
 
 
@@ -49,10 +48,7 @@
 {
 @public
 	PopoverManager_Ref				selfRef;				// identical to address of structure, but typed as ref
-	//__weak id< PopoverManager_Delegate >	delegate;				// used to determine dynamic popover information
-	MemoryBlocks_WeakPairWrap
-	< PopoverManager_WC*,
-		id >*						delegatePtr;			// used to determine dynamic popover information
+	__weak id< PopoverManager_Delegate >	delegate;				// used to determine dynamic popover information
 	Popover_Window*					containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
 	NSView*							logicalFirstResponder;	// the view to give initial keyboard focus to, in "display" method
 	PopoverManager_AnimationType	animationType;			// specifies how to open and close the popover window
@@ -311,8 +307,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 	if (nil != self)
 	{
 		self->selfRef = STATIC_CAST(self, PopoverManager_Ref);
-		self->delegatePtr = new MemoryBlocks_WeakPairWrap< PopoverManager_WC*, id >(self);
-		self->delegatePtr->assign(anObject);
+		self->delegate = anObject;
 		self->containerWindow = aPopover;
 		[self->containerWindow retain];
 		self->containerWindow.resizeDelegate = self;
@@ -374,7 +369,6 @@ Destructor.
 - (void)
 dealloc
 {
-	delete self->delegatePtr, self->delegatePtr = nullptr;
 	[self removeWindowWithAcceptance:NO];
 	[self.class cancelPreviousPerformRequestsWithTarget:self];
 	[self ignoreWhenObjectsPostNotes];
@@ -489,8 +483,7 @@ idealAnchorPointForFrame:(NSRect)	parentFrame
 parentWindow:(NSWindow*)			parentWindow
 {
 #pragma unused(parentWindow)
-	NSPoint		result = [self->delegatePtr->returnTargetRef()
-							popoverManager:self->selfRef idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
+	NSPoint		result = [self->delegate popoverManager:self->selfRef idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
@@ -508,8 +501,7 @@ IMPORTANT:	This must be implemented by the delegate.
 idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
-	Popover_Properties	result = [self->delegatePtr->returnTargetRef()
-									popoverManager:self->selfRef idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
+	Popover_Properties	result = [self->delegate popoverManager:self->selfRef idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
@@ -531,7 +523,7 @@ idealSize
 	NSSize		result = NSMakeSize(100, 100); // arbitrary (delegate must override)
 	
 	
-	[self->delegatePtr->returnTargetRef() popoverManager:self->selfRef getIdealSize:&result];
+	[self->delegate popoverManager:self->selfRef getIdealSize:&result];
 	
 	return result;
 }// idealSize
@@ -617,15 +609,12 @@ moveToIdealPositionAfterDelay:(float)	aDelayInSeconds
 {
 	if (NO == self->isAutoPositionQueued)
 	{
-		//__weak typeof(self)	weakSelf = self; // future
-		PopoverManager_WC*		strongSelf = self;
+		__weak decltype(self)	weakSelf = self;
 		
 		
-		[strongSelf retain];
 		CocoaExtensions_RunLater(aDelayInSeconds,
 									^{
-										[strongSelf moveToIdealPosition];
-										[strongSelf release]; // TEMPORARY
+										[weakSelf moveToIdealPosition];
 									});
 		self->isAutoPositionQueued = YES;
 	}
@@ -885,7 +874,7 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeColor:(id)	sender
 {
-	NSObject*	asNSObject = STATIC_CAST(self->delegatePtr->returnTargetRef(), NSObject*);
+	NSObject*	asNSObject = STATIC_CAST(self->delegate, NSObject*);
 	
 	
 	if ([asNSObject respondsToSelector:@selector(changeColor:)])
@@ -911,7 +900,7 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeFont:(id)		sender
 {
-	NSObject*	asNSObject = STATIC_CAST(self->delegatePtr->returnTargetRef(), NSObject*);
+	NSObject*	asNSObject = STATIC_CAST(self->delegate, NSObject*);
 	
 	
 	if ([asNSObject respondsToSelector:@selector(changeFont:)])
@@ -939,14 +928,11 @@ getHorizontalResizeAllowed:(BOOL*)	outHorizontalFlagPtr
 getVerticalResizeAllowed:(BOOL*)	outVerticalFlagPtr
 {
 #pragma unused(aPopover)
-	id		delegate = self->delegatePtr->returnTargetRef();
-	
-	
-	if ([delegate respondsToSelector:@selector(popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:)])
+	if ([self->delegate respondsToSelector:@selector(popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:)])
 	{
-		[delegate popoverManager:self->selfRef
-									getHorizontalResizeAllowed:outHorizontalFlagPtr
-									getVerticalResizeAllowed:outVerticalFlagPtr];
+		[self->delegate popoverManager:self->selfRef
+										getHorizontalResizeAllowed:outHorizontalFlagPtr
+										getVerticalResizeAllowed:outVerticalFlagPtr];
 	}
 }// popover:getHorizontalResizeAllowed:getVerticalResizeAllowed:
 

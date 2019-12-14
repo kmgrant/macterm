@@ -4357,8 +4357,7 @@ startCustomAnimationToExitFullScreenWithDuration:(NSTimeInterval)	aDuration
 #pragma unused(aDuration)
 	assert([aWindow isKindOfClass:TerminalWindow_Object.class]);
 	TerminalWindow_Object*				asTerminalWindow = STATIC_CAST(aWindow, TerminalWindow_Object*);
-	//__weak TerminalWindow_Object*		weakTerminalWindow = asTerminalWindow;
-	TerminalWindow_Object*				weakTerminalWindow = asTerminalWindow; // TEMPORARY (later compiler/SDK required for __weak)
+	__weak TerminalWindow_Object*		weakTerminalWindow = asTerminalWindow;
 	NSAnimationContext*					animationContext = [NSAnimationContext currentContext];
 	
 	
@@ -4655,8 +4654,7 @@ be customized.
 - (void)
 display
 {
-	//__weak typeof(self)		weakSelf = self; // future
-	TerminalWindow_InfoBubble*	strongSelf = self;
+	__weak decltype(self)		weakSelf = self;
 	
 	
 	if (nullptr == self.popoverMgr)
@@ -4670,10 +4668,10 @@ display
 		// hide the window eventually
 		CocoaExtensions_RunLater(self.delayBeforeRemoval,
 									^{
-										PopoverManager_RemovePopover(strongSelf.popoverMgr, true/* “confirming” animation style */);
-										if (strongSelf.releaseOnClose)
+										PopoverManager_RemovePopover(weakSelf.popoverMgr, true/* “confirming” animation style */);
+										if (weakSelf.releaseOnClose)
 										{
-											//[strongSelf release]; // TEMPORARY (convert to "weakSelf" in future)
+											//[weakSelf release]; // TEMPORARY (convert to "weakSelf" in future)
 										}
 									});
 	}

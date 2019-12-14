@@ -1047,7 +1047,7 @@
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1110;
+				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					0A70B8A21079C1EB0013E76F = {
 						DevelopmentTeam = 8BA57X86ZM;
@@ -1678,6 +1678,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
@@ -1766,6 +1767,7 @@
 		0A7B832119D668FC000A4240 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				PRODUCT_NAME = MacTerm;
 			};
 			name = ForRelease;
@@ -1774,6 +1776,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -1800,6 +1803,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
@@ -1822,6 +1826,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A7B831E19D66751000A4240 /* Production.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				DYLIB_COMPATIBILITY_VERSION = "";
 				DYLIB_CURRENT_VERSION = "";
 				EXECUTABLE_EXTENSION = so;
@@ -1851,6 +1856,7 @@
 		0A7B832519D668FC000A4240 /* ForRelease */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_VERSION = A;
@@ -1933,6 +1939,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -1959,6 +1966,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Debug.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				DYLIB_COMPATIBILITY_VERSION = "";
 				DYLIB_CURRENT_VERSION = "";
 				EXECUTABLE_EXTENSION = so;
@@ -1988,6 +1996,7 @@
 		0AA249490D13342D00BCAF94 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_VERSION = A;
@@ -2000,6 +2009,7 @@
 		0AFB6A200E86FD27005C5A07 /* ForDebugging */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				PRODUCT_NAME = MacTerm;
 			};
 			name = ForDebugging;

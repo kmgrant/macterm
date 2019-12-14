@@ -112,7 +112,7 @@ to precisely remove the observer later.
 @interface CocoaExtensions_ObserverSpec : NSObject //{
 {
 @private
-	id			_observedObject;
+	__weak id	_observedObject;
 	NSString*	_keyPath;
 }
 

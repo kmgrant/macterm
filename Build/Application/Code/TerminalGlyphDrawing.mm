@@ -1143,7 +1143,7 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 	else
 	{
 		// value is in the expected range
-		/*__weak*/ TerminalGlyphDrawing_Layer*	weakSelf = self;
+		__weak decltype(self)	weakSelf = self;
 		
 		
 		switch (aUnicodePoint)
@@ -6589,9 +6589,9 @@ rebuildLayers
 		// use the block to draw the path itself (and possibly
 		// override any of the default layer settings above)
 		{
-			/*__weak*/ TerminalGlyphDrawing_Layer*	weakSelf = self;
-			TerminalGlyphDrawing_Metrics*			metrics = [TerminalGlyphDrawing_Metrics
-																metricsWithTargetLayer:layer owningLayer:weakSelf];
+			__weak decltype(self)			weakSelf = self;
+			TerminalGlyphDrawing_Metrics*	metrics = [TerminalGlyphDrawing_Metrics
+														metricsWithTargetLayer:layer owningLayer:weakSelf];
 			
 			
 			(asBlock)(mutablePath, metrics);
