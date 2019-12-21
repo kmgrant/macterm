@@ -51,7 +51,6 @@ extern "C"
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
@@ -237,10 +236,8 @@ namespace {
 void				activateAnotherWindow							(My_WindowActivationDirection, My_WindowSwitchingActions = 0);
 BOOL				addWindowMenuItemForSession						(SessionRef, NSMenu*, NSInteger, CFStringRef);
 NSAttributedString*	attributedStringForWindowMenuItemTitle			(NSString*);
-void				changeNotifyForCommandExecution					(UInt32);
 BOOL				handleQuitReview								();
 NSInteger			indexOfItemWithAction							(NSMenu*, SEL);
-Boolean				isAnyListenerForCommandExecution				(UInt32);
 BOOL				isWindowVisible									(NSWindow*);
 void				preferenceChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
@@ -280,15 +277,6 @@ SessionFactory_SpecialSession	gNewCommandShortcutEffect = kSessionFactory_Specia
 Boolean							gCurrentQuitCancelled = false;
 UInt16							gCurrentQuitInitialSessionCount = 0;
 UInt16							gCurrentMacroSetIndex = 0;
-ListenerModel_Ref&				gCommandExecutionListenerModel	(Boolean	inDispose = false)
-{
-	static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
-													kConstantsRegistry_ListenerModelDescriptorCommandExecution);
-	
-	
-	if (inDispose) ListenerModel_Dispose(&x);
-	return x;
-}
 
 } // anonymous namespace
 
@@ -391,13 +379,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 	Boolean		result = true;
 	
 	
-	if (isAnyListenerForCommandExecution(inCommandID))
-	{
-		// TEMPORARY - the following does not return any indicator
-		//             as to whether the command was handled!
-		changeNotifyForCommandExecution(inCommandID);
-	}
-	else
 	{
 		// no handler for the specified command; check against
 		// the following list of known commands
@@ -674,6 +655,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		}
 	}
+	
 	return result;
 }// ExecuteByID
 
@@ -694,8 +676,8 @@ the handler is installed.
 (3.1)
 */
 Boolean
-Commands_ExecuteByIDUsingEvent	(UInt32				inCommandID,
-								 EventTargetRef		inTarget)
+Commands_ExecuteByIDUsingEvent	(UInt32		inCommandID,
+								 void*		inUnusedLegacyPtr)
 {
 	Boolean		result = false;
 	
@@ -1101,28 +1083,6 @@ attributedStringForWindowMenuItemTitle		(NSString*		inTitleText)
 
 
 /*!
-Notifies listeners that the specified command needs
-executing, until a listener returns a result other
-than "eventNotHandledErr".  The listeners of this
-event are actually expected to perform an operation
-in response to the command.
-
-(3.0)
-*/
-void
-changeNotifyForCommandExecution		(UInt32		inCommand)
-{
-	Commands_ExecutionEventContext		context;
-	
-	
-	context.commandID = inCommand;
-	
-	// invoke listener callback routines appropriately, from the specified command’s implementation listener model
-	ListenerModel_NotifyListenersOfEvent(gCommandExecutionListenerModel(), inCommand, &context);
-}// changeNotifyForCommandExecution
-
-
-/*!
 Handles a quit by reviewing any open sessions.  Returns
 YES only if the application should quit.
 
@@ -1332,20 +1292,6 @@ indexOfItemWithAction	(NSMenu*	inMenu,
 	}
 	return result;
 }// indexOfItemWithAction
-
-
-/*!
-Returns "true" only if at least one listener
-would be invoked when the specified command
-needs executing.
-
-(3.0)
-*/
-Boolean
-isAnyListenerForCommandExecution	(UInt32		inCommand)
-{
-	return ListenerModel_IsAnyListenerForEvent(gCommandExecutionListenerModel(), inCommand);
-}// isAnyListenerForCommandExecution
 
 
 /*!

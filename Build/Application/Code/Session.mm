@@ -53,7 +53,6 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
-#import <Carbon/Carbon.h>
 #import <CoreServices/CoreServices.h>
 
 // library includes
@@ -928,7 +927,7 @@ Session_DisplayTerminationWarning	(SessionRef							inRef,
 						CGRect		centeredCGRect = NSRectToCGRect(window.frame);
 						
 						
-						RegionUtilities_CenterHIRectIn(centeredCGRect, availableCGRect);
+						RegionUtilities_CenterCGRectIn(centeredCGRect, availableCGRect);
 						centeredFrame = NSRectFromCGRect(centeredCGRect);
 						centeredFrame.origin.y -= kOffsetFromCenterV;
 					}

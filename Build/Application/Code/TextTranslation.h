@@ -36,7 +36,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 // application includes

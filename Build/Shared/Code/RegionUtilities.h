@@ -46,7 +46,7 @@ void
 												 float				inCurveHeight);
 
 void
-	RegionUtilities_CenterHIRectIn				(HIRect&			inoutInner,
-												 HIRect const&		inOuter);
+	RegionUtilities_CenterCGRectIn				(CGRect&			inoutInner,
+												 CGRect const&		inOuter);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

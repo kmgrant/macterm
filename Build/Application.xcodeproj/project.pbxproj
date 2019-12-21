@@ -477,7 +477,6 @@
 		0AF931851592E0E6008A41C6 /* QuillsSWIG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsSWIG.h; path = Application/Code/QuillsSWIG.h; sourceTree = "<group>"; };
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
-		0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CarbonEventHandlerWrap.template.h; path = Shared/Code/CarbonEventHandlerWrap.template.h; sourceTree = "<group>"; };
 		0AFF11220AF41FEE006CCA34 /* RunApplication.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = RunApplication.py; path = Application/PythonCode/RunApplication.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -556,7 +555,6 @@
 				0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */,
 				0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */,
 				0AD7B343176C3212004A1532 /* BoundName.objc++.h */,
-				0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */,
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
 				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
 				0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */,

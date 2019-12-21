@@ -109,13 +109,13 @@ The size is unchanged.
 (3.1)
 */
 void
-RegionUtilities_CenterHIRectIn	(HIRect&		inoutInner,
-								 HIRect const&	inOuter)
+RegionUtilities_CenterCGRectIn	(CGRect&		inoutInner,
+								 CGRect const&	inOuter)
 {
 	// the algorithm offsets the first rectangle based on the difference between
 	// the center points of the 2nd and 1st rectangles
 	inoutInner = CGRectOffset(inoutInner, CGRectGetMidX(inOuter) - CGRectGetMidX(inoutInner),
 								CGRectGetMidY(inOuter) - CGRectGetMidY(inoutInner));
-}// CenterHIRectIn
+}// CenterCGRectIn
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

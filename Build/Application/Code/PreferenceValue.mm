@@ -2193,7 +2193,7 @@ readValueSeeIfDefault:(BOOL*)	outIsDefault
 		{
 		case kPreferenceValue_RectTypeHIRect:
 			{
-				HIRect		rectValue;
+				CGRect		rectValue;
 				
 				
 				prefsResult = Preferences_ContextGetData(sourceContext, self.preferencesTag,
@@ -2277,7 +2277,7 @@ setNumberArrayValue:(NSArray*)		aNumberArray
 			{
 			case kPreferenceValue_RectTypeHIRect:
 				{
-					HIRect		rectValue;
+					CGRect		rectValue;
 					
 					
 					assert(4 == aNumberArray.count);

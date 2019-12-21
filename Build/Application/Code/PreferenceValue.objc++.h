@@ -70,7 +70,7 @@ coordinates that define a rectangle.
 */
 enum PreferenceValue_RectType
 {
-	kPreferenceValue_RectTypeHIRect = 1	//!< preference requires HIRect variable or equivalent
+	kPreferenceValue_RectTypeHIRect = 1	//!< preference requires CGRect variable with top-left origin
 };
 
 #pragma mark Types

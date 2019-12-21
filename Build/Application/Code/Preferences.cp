@@ -67,7 +67,6 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 // library includes

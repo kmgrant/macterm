@@ -52,8 +52,7 @@ enum
 {
 	// what kind of listeners are allowed
 	kListenerModelCallbackTypeStandard = 0,		// callback returns nothing
-	kListenerModelCallbackTypeBoolean = 1,		// callback returns true or false
-	kListenerModelCallbackTypeOSStatus = 2		// callback returns any Mac OS OSStatus value
+	kListenerModelCallbackTypeBoolean = 1		// callback returns true or false
 };
 
 typedef UInt16 ListenerModelBehavior;
@@ -107,7 +106,6 @@ struct Listener
 	union
 	{
 		ListenerModel_BooleanProcPtr	boolean;
-		ListenerModel_OSStatusProcPtr	osStatus;
 		ListenerModel_StandardProcPtr	standard;
 	} callback;		// function to invoke
 };
@@ -183,65 +181,6 @@ public:
 		{
 			result = ListenerModel_InvokeBooleanProc(listenerPtr->callback.boolean, _model, _event,
 														_context, listenerPtr->context);
-		}
-		return result;
-	}
-	
-	bool
-	anyInvalidListeners () const
-	{
-		return _anyInvalidListeners;
-	}
-
-protected:
-
-private:
-	ListenerModel_Ref		_model;
-	ListenerModel_Event		_event;
-	void*					_context;
-	bool					_anyInvalidListeners;
-};
-
-
-/*!
-This is a functor designed to invoke a listener
-of the OSStatus type (that is, it has a return
-value of true as long as the result is something
-other than "eventNotHandledErr").
-
-Model of STL Predicate.
-
-(1.0)
-*/
-#pragma mark osStatusListenerInvoker
-class osStatusListenerInvoker:
-public std::unary_function< My_EventToListenerListPtrMap::value_type/* argument */, bool/* return */ >
-{
-public:
-	osStatusListenerInvoker		(ListenerModel_Ref		inForWhichModel,
-								 ListenerModel_Event	inEventThatOccurred,
-								 void*					inEventContextPtr)
-	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr), _anyInvalidListeners(false)
-	{
-	}
-	
-	bool
-	operator()	(ListenerModel_ListenerRef	inListener)
-	{
-		ListenerAutoLocker	listenerPtr(gListenerPtrLocks(), inListener);
-		bool				result = false;
-		
-		
-		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
-		{
-			Console_Warning(Console_WriteValueAddress, "attempt to notify nonexistent OSStatus listener",
-							inListener);
-		}
-		else
-		{
-			result = (eventNotHandledErr != ListenerModel_InvokeOSStatusProc
-											(listenerPtr->callback.osStatus, _model, _event,
-												_context, listenerPtr->context));
 		}
 		return result;
 	}
@@ -391,11 +330,6 @@ ListenerModel_New	(ListenerModel_Style		inStyle,
 			ptr->callbackType = kListenerModelCallbackTypeBoolean;
 			break;
 		
-		case kListenerModel_StyleNonEventNotHandledErr:
-			ptr->notificationBehavior = kListenerModelBehaviorNotifyUntilReturnedNonEventNotHandledErr;
-			ptr->callbackType = kListenerModelCallbackTypeOSStatus;
-			break;
-		
 		case kListenerModel_StyleStandard:
 		default:
 			ptr->notificationBehavior = kListenerModelBehaviorNotifyAllSequentially;
@@ -464,41 +398,6 @@ ListenerModel_NewBooleanListener	(ListenerModel_BooleanProcPtr	inCallback,
 	}
 	return result;
 }// NewBooleanListener
-
-
-/*!
-Creates a new Mac OS event listener, a special callback function
-that is invoked to determine the success or failure of some
-OS-dependent operation, and locks it automatically (so, an
-implicit ListenerModel_RetainListener() call is made).  If any
-problems occur, nullptr is returned.
-
-The result "eventNotHandledErr" has special significance, and
-is like a logical "false" for a Boolean listener; you MAY return
-"noErr" and other error codes to indicate logical "true".  Be
-sure you remember this!!!
-
-(1.0)
-*/
-ListenerModel_ListenerRef
-ListenerModel_NewOSStatusListener	(ListenerModel_OSStatusProcPtr	inCallback,
-									 void*							inContextOrNull)
-{
-	ListenerModel_ListenerRef	result = REINTERPRET_CAST(new Listener, ListenerModel_ListenerRef);
-	
-	
-	if (nullptr != result)
-	{
-		ListenerAutoLocker	ptr(gListenerPtrLocks(), result);
-		
-		
-		ListenerModel_RetainListener(result);
-		ptr->callbackType = kListenerModelCallbackTypeOSStatus;
-		ptr->context = inContextOrNull;
-		ptr->callback.osStatus = inCallback;
-	}
-	return result;
-}// NewOSStatusListener
 
 
 /*!
@@ -842,38 +741,6 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 					if (nullptr != outReturnValuePtrOrNull)
 					{
 						*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedTrue;
-					}
-					
-					if (perListenerFunction.anyInvalidListeners())
-					{
-						result = kListenerModel_ResultInvalidListenerReference;
-					}
-				}
-			}
-			break;
-		
-		case kListenerModelCallbackTypeOSStatus:
-			{
-				auto	toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
-				
-				
-				if (ptr->eventListeners.end() != toEventToListenerListPtr)
-				{
-					// invoke each OSStatus listener and continue while "eventNotHandledErr" is
-					// returned; the fact that the callback invoker is modeled as a Predicate allows
-					// the STL find_if() algorithm to be exploited to do the right thing here
-					osStatusListenerInvoker		perListenerFunction(inForWhichModel, inEventThatOccurred,
-																	inEventContextPtr);
-					auto						toListener = std::find_if(toEventToListenerListPtr->second->begin(),
-																			toEventToListenerListPtr->second->end(),
-																			perListenerFunction);
-					Boolean						someListenerReturnedNonEventNotHandledErr = false;
-					
-					
-					someListenerReturnedNonEventNotHandledErr = (toEventToListenerListPtr->second->end() != toListener);
-					if (nullptr != outReturnValuePtrOrNull)
-					{
-						*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedNonEventNotHandledErr;
 					}
 					
 					if (perListenerFunction.anyInvalidListeners())

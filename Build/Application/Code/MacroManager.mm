@@ -43,12 +43,10 @@
 #import <string>
 
 // Mac includes
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>

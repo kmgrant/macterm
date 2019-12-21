@@ -52,7 +52,6 @@
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
-#import <Carbon/Carbon.h>
 
 // library includes
 #import <Popover.objc++.h>

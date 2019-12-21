@@ -644,7 +644,7 @@ Boolean
 
 Boolean
 	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
-											 EventTargetRef				inTarget = nullptr);
+											 void*						inUnusedLegacyPtr = nullptr);
 
 #ifdef __OBJC__
 Boolean

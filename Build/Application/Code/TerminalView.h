@@ -62,7 +62,6 @@
 class NSView;
 class NSWindow;
 #endif
-#include <Carbon/Carbon.h>
 
 // library includes
 #ifdef __OBJC__

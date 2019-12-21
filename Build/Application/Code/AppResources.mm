@@ -36,7 +36,6 @@
 
 // Mac includes
 #include <AppKit/AppKit.h>
-#include <Carbon/Carbon.h>
 //#include <QuickTime/QuickTime.h>
 
 // library includes

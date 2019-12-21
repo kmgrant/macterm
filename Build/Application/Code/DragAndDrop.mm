@@ -38,7 +38,6 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
-#import <Carbon/Carbon.h>
 #import <CoreServices/CoreServices.h>
 
 // library includes

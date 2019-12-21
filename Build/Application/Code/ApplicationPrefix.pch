@@ -3,7 +3,6 @@
 //
 
 #include <ApplicationServices/ApplicationServices.h>
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreImage/CoreImage.h>
 #include <CoreServices/CoreServices.h>

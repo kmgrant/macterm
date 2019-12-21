@@ -46,14 +46,12 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
-#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreImage/CIFilterBuiltins.h>
 //CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventHandlerWrap.template.h>
 #import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
@@ -11818,7 +11816,7 @@ drawRect:(NSRect)	aRect
 				fullRectangleBounds.origin.y = fullRectangleBounds.origin.y + fullRectangleBounds.size.height - newHeight;
 				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
 				fullRectangleBounds.size.height = newHeight;
-				RegionUtilities_CenterHIRectIn(dotBounds, fullRectangleBounds);
+				RegionUtilities_CenterCGRectIn(dotBounds, fullRectangleBounds);
 				
 				// draw the dot in the middle of the cell that the cursor occupies
 				if (kTerminal_CursorTypeBlock == gPreferenceProxies.cursorType)

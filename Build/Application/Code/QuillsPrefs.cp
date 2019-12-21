@@ -39,7 +39,6 @@
 #include <vector>
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <StringUtilities.h>
 
 // library includes

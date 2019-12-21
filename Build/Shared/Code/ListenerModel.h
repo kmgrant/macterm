@@ -89,11 +89,8 @@ are allowed.
 enum ListenerModel_Style
 {
 	kListenerModel_StyleStandard = 0,				//!< requires Standard listeners; all listeners are always notified
-	kListenerModel_StyleLogicalOR = 1,				//!< requires Boolean listeners; listeners notified until one of
+	kListenerModel_StyleLogicalOR = 1				//!< requires Boolean listeners; listeners notified until one of
 													//!  the listeners returns "true"
-	kListenerModel_StyleNonEventNotHandledErr = 2	//!< requires OSStatus listeners; listeners notified until one of
-													//!  them returns something other than "eventNotHandledErr" (this
-													//!  INCLUDES "noErr" and actual error codes)
 };
 
 #pragma mark Types
@@ -209,29 +206,6 @@ ListenerModel_InvokeBooleanProc		(ListenerModel_BooleanProcPtr	inUserRoutine,
 	return (*inUserRoutine)(inFromWhichModel, inEventThatOccurred, inEventContextPtr, inListenerContextPtr);
 }
 
-/*!
-OSStatus Listener Callback
-
-Identical to a standard callback, except it has an OSStatus
-return value.  This callback can only be used with a listener
-model whose style accepts Boolean callbacks (the logical OR
-style, for instance).  A logical "false" is defined as a
-return value of "eventNotHandledErr"!!!
-*/
-typedef OSStatus (*ListenerModel_OSStatusProcPtr)	(ListenerModel_Ref		inFromWhichModel,
-													 ListenerModel_Event	inEventThatOccurred,
-													 void*					inEventContextPtr,
-													 void*					inListenerContextPtr);
-inline OSStatus
-ListenerModel_InvokeOSStatusProc	(ListenerModel_OSStatusProcPtr	inUserRoutine,
-									 ListenerModel_Ref				inFromWhichModel,
-									 ListenerModel_Event			inEventThatOccurred,
-									 void*							inEventContextPtr,
-									 void*							inListenerContextPtr)
-{
-	return (*inUserRoutine)(inFromWhichModel, inEventThatOccurred, inEventContextPtr, inListenerContextPtr);
-}
-
 
 
 #pragma mark Public Methods
@@ -261,10 +235,6 @@ void
 
 ListenerModel_ListenerRef
 	ListenerModel_NewBooleanListener		(ListenerModel_BooleanProcPtr	inCallback,
-											 void*							inContextOrNull = nullptr);
-
-ListenerModel_ListenerRef
-	ListenerModel_NewOSStatusListener		(ListenerModel_OSStatusProcPtr	inCallback,
 											 void*							inContextOrNull = nullptr);
 
 ListenerModel_ListenerRef

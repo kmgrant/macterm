@@ -41,7 +41,6 @@
 #pragma once
 
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
 @class NSRunningApplication;
