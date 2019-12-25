@@ -1814,7 +1814,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	
 	Panel_ViewManager*		itemPanel = [self->panelsByID objectForKey:itemIdentifier];
 	NSButton*				categoryButton = [[NSButton alloc]
-												initWithFrame:NSMakeRect(0, 0, 36, 36)/* arbitrary frame */];
+												initWithFrame:NSMakeRect(0, 0, 36, 28)/* arbitrary frame */];
 	
 	
 	// configure a button to activate the main category
@@ -1931,6 +1931,11 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		
 		[menuButton addSubview:categoryButton];
 		result.view = menuButton;
+		// note: Apple documentation says that "minSize" and "maxSize" are auto-set
+		// when "view" is assigned (above) but this was recently broken in macOS and
+		// is a lie; therefore, once again, being explicit is the best way to go
+		result.minSize = CGSizeMake(result.view.frame.size.width, result.view.frame.size.height - 8/* arbitrary */);
+		result.maxSize = result.minSize;
 		[result.menuFormRepresentation setSubmenu:subMenu];
 	}
 	else
@@ -1964,6 +1969,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 	
 	
 	[result addObject:NSToolbarFlexibleSpaceItemIdentifier];
+	[result addObject:NSToolbarSpaceItemIdentifier];
 	[result addObject:kMy_PrefsWindowToolbarItemIDSearch];
 	
 	return result;
@@ -2142,7 +2148,7 @@ windowDidLoad
 	
 	// “indent” the toolbar items slightly so they are further away
 	// from the window’s controls (such as the close button)
-	for (UInt16 i = 0; i < 0/* arbitrary */; ++i)
+	for (UInt16 i = 0; i < 1/* arbitrary */; ++i)
 	{
 		[[[self window] toolbar] insertItemWithItemIdentifier:NSToolbarSpaceItemIdentifier atIndex:0];
 	}
@@ -2230,6 +2236,32 @@ windowDidLoad
 	
 	// enable drag-and-drop in the source list
 	[self->sourceListTableView registerForDraggedTypes:@[kMy_PrefsWindowSourceListDataType]];
+	
+	// add “show frame on mouse-over” behavior to master buttons
+	for (NSView* aChildView in self.masterContainer.subviews)
+	{
+		if ([aChildView isKindOfClass:[NSPopUpButton class]])
+		{
+			NSPopUpButton*		asPopupButton = STATIC_CAST(aChildView, NSPopUpButton*);
+			
+			
+			// add hover effect to pop-up buttons, similar to toolbar
+			asPopupButton.bordered = YES;
+			asPopupButton.bezelStyle = NSShadowlessSquareBezelStyle;
+			asPopupButton.showsBorderOnlyWhileMouseInside = YES;
+		}
+		else if ([aChildView isKindOfClass:[NSButton class]])
+		{
+			NSButton*	asButton = STATIC_CAST(aChildView, NSButton*);
+			
+			
+			// optionally also add hover effect to regular buttons
+			// for consistency (might disable)
+			asButton.bordered = YES;
+			asButton.bezelStyle = NSShadowlessSquareBezelStyle;
+			asButton.showsBorderOnlyWhileMouseInside = YES;
+		}
+	}
 	
 	// be notified of source list changes; not strictly necessary on
 	// newer OS versions (where bindings work perfectly) but it seems
