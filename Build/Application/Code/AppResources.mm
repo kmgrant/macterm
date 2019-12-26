@@ -36,7 +36,6 @@
 
 // Mac includes
 #include <AppKit/AppKit.h>
-//#include <QuickTime/QuickTime.h>
 
 // library includes
 #include <CFRetainRelease.h>
@@ -77,41 +76,6 @@ AppResources_Init	(CFBundleRef	inApplicationBundle)
 		gApplicationBundle().setMutableWithRetain(inApplicationBundle);
 	}
 }// Init
-
-
-/*!
-Provides an FSRef for the requested resource
-file from one of the Resources subdirectories
-of the main bundle.
-
-Returns "true" only if the file can be found.
-
-DEPRECATED.  URLs should be retrieved directly.
-
-(3.1)
-*/
-Boolean
-AppResources_GetArbitraryResourceFileFSRef	(CFStringRef	inName,
-											 CFStringRef	inTypeOrNull,
-											 FSRef&			outFSRef)
-{
-	Boolean		result = false;
-	CFURLRef	resourceFileURL = nullptr;
-	
-	
-	resourceFileURL = CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), inName, inTypeOrNull,
-												nullptr/* no particular subdirectory */);
-	if (nullptr != resourceFileURL)
-	{
-		if (CFURLGetFSRef(resourceFileURL, &outFSRef))
-		{
-			result = true;
-		}
-		CFRelease(resourceFileURL);
-	}
-	
-	return result;
-}// GetArbitraryResourceFileFSRef
 
 
 /*!
@@ -313,33 +277,5 @@ AppResources_ReturnBundleForNIBs ()
 	assert(nullptr != result);
 	return result;
 }// ReturnBundleForNIBs
-
-
-/*!
-Returns the four-character code representing the application,
-used with many system APIs as a quick way to produce a value
-that is reasonably unique compared to other applications.
-
-(3.1)
-*/
-UInt32
-AppResources_ReturnCreatorCode ()
-{
-	static UInt32	gCreatorCode = 0;
-	
-	
-	// only need to look it up once, then remember it
-	if (0 == gCreatorCode)
-	{
-		CFBundleRef		infoBundle = AppResources_ReturnBundleForInfo();
-		UInt32			typeCode = 0;
-		
-		
-		assert(nullptr != infoBundle);
-		CFBundleGetPackageInfo(infoBundle, &typeCode, &gCreatorCode);
-		assert(0 != gCreatorCode);
-	}
-	return gCreatorCode;
-}// ReturnCreatorCode
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

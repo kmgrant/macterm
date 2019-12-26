@@ -73,7 +73,6 @@
 		0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE29055432A400ACDF3A /* TerminalWindow.mm */; };
 		0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE01055432A400ACDF3A /* Panel.mm */; };
 		0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE12055432A400ACDF3A /* AppResources.mm */; };
-		0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDA055432A400ACDF3A /* Folder.cp */; };
 		0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE03055432A400ACDF3A /* Preferences.cp */; };
 		0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF3055432A400ACDF3A /* Local.cp */; };
 		0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD1055432A400ACDF3A /* DNR.cp */; };
@@ -273,7 +272,6 @@
 		0A4603DA0554376100ACDF3A /* DragAndDrop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DragAndDrop.h; path = Application/Code/DragAndDrop.h; sourceTree = "<group>"; };
 		0A4603E00554376100ACDF3A /* EventLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventLoop.h; path = Application/Code/EventLoop.h; sourceTree = "<group>"; };
 		0A4603E20554376100ACDF3A /* FindDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FindDialog.h; path = Application/Code/FindDialog.h; sourceTree = "<group>"; };
-		0A4603E50554376100ACDF3A /* Folder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Folder.h; path = Application/Code/Folder.h; sourceTree = "<group>"; };
 		0A4603ED0554376100ACDF3A /* HelpSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HelpSystem.h; path = Application/Code/HelpSystem.h; sourceTree = "<group>"; };
 		0A4603EF0554376100ACDF3A /* UIStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UIStrings.h; path = Application/Code/UIStrings.h; sourceTree = "<group>"; };
 		0A4603F10554376100ACDF3A /* InfoWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InfoWindow.h; path = Application/Code/InfoWindow.h; sourceTree = "<group>"; };
@@ -325,7 +323,6 @@
 		0A46FDD2055432A400ACDF3A /* DragAndDrop.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DragAndDrop.mm; path = Application/Code/DragAndDrop.mm; sourceTree = "<group>"; };
 		0A46FDD5055432A400ACDF3A /* EventLoop.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = EventLoop.mm; path = Application/Code/EventLoop.mm; sourceTree = "<group>"; };
 		0A46FDD7055432A400ACDF3A /* FindDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FindDialog.mm; path = Application/Code/FindDialog.mm; sourceTree = "<group>"; };
-		0A46FDDA055432A400ACDF3A /* Folder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Folder.cp; path = Application/Code/Folder.cp; sourceTree = "<group>"; };
 		0A46FDE1055432A400ACDF3A /* HelpSystem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = HelpSystem.mm; path = Application/Code/HelpSystem.mm; sourceTree = "<group>"; };
 		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = "<group>"; };
 		0A46FDE7055432A400ACDF3A /* InfoWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = InfoWindow.mm; path = Application/Code/InfoWindow.mm; sourceTree = "<group>"; };
@@ -628,7 +625,6 @@
 				0ACF35C517EBCC1500178DE2 /* Emulation.cp */,
 				0A46FDD5055432A400ACDF3A /* EventLoop.mm */,
 				0A46FDD7055432A400ACDF3A /* FindDialog.mm */,
-				0A46FDDA055432A400ACDF3A /* Folder.cp */,
 				0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */,
 				0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */,
 				0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */,
@@ -680,7 +676,6 @@
 				0ACF35C717EBCC1C00178DE2 /* Emulation.h */,
 				0A4603E00554376100ACDF3A /* EventLoop.h */,
 				0A4603E20554376100ACDF3A /* FindDialog.h */,
-				0A4603E50554376100ACDF3A /* Folder.h */,
 				0ACA57D40AEADDF300B5F482 /* GenericDialog.h */,
 				0ACC406B1A433265009D0D53 /* GenericPanelNumberedList.h */,
 				0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */,
@@ -1213,7 +1208,6 @@
 				0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */,
 				0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */,
 				0A3028A01DB5D46100C1C557 /* MenuUtilities.mm in Sources */,
-				0AC6BB0C0A8C0BA000AFF37A /* Folder.cp in Sources */,
 				0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */,
 				0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */,
 				0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */,

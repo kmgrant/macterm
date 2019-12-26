@@ -58,12 +58,6 @@ class NSRunningApplication;
 void
 	AppResources_Init													(CFBundleRef					inApplicationBundle);
 
-// DEPRECATED
-Boolean
-	AppResources_GetArbitraryResourceFileFSRef							(CFStringRef					inName,
-																		 CFStringRef					inTypeOrNull,
-																		 FSRef&							outFSRef);
-
 NSRunningApplication*
 	AppResources_LaunchBugReporter										(CFDictionaryRef,
 																		 CFErrorRef*);
@@ -85,26 +79,6 @@ CFBundleRef
 
 CFBundleRef
 	AppResources_ReturnBundleForNIBs									();
-
-//@}
-
-//!\name Old-Style File Types and Creator Codes
-//@{
-
-UInt32
-	AppResources_ReturnCreatorCode										();
-
-inline UInt32
-	AppResources_ReturnFileTypeForMacroSets								()
-{
-	return 'TEXT';
-}
-
-inline UInt32
-	AppResources_ReturnFileTypeForSessionDescriptions					()
-{
-	return 'CONF';
-}
 
 //@}
 
