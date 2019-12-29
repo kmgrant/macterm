@@ -72,7 +72,6 @@ extern "C"
 
 // library includes
 #include <AlertMessages.h>
-#include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
 #include <CocoaBasic.h>
@@ -116,9 +115,10 @@ Thread context passed to threadForLocalProcessDataLoop().
 */
 struct My_DataLoopThreadContext
 {
-	EventQueueRef		eventQueue;
+	dispatch_queue_t	dispatchQueue;
 	SessionRef			session;
 	My_TTYMasterID		masterTTY;
+	size_t				blockSize;
 };
 typedef My_DataLoopThreadContext*			My_DataLoopThreadContextPtr;
 typedef My_DataLoopThreadContext const*		My_DataLoopThreadContextConstPtr;
@@ -160,7 +160,7 @@ void			putTTYInOriginalModeAtExit			();
 Local_Result	putTTYInRawMode						(Local_TerminalID);
 void			receiveSignal						(int);
 Local_Result	sendTerminalResizeMessage			(Local_TerminalID, struct winsize const*);
-void*			threadForLocalProcessDataLoop		(void*);
+void			threadForLocalProcessDataLoop		(void*);
 void			watchForExitsTimer					(EventLoopTimerRef, void*);
 
 } // anonymous namespace
@@ -880,47 +880,43 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			}
 			
 			// start a thread for data processing so that MacTerm’s main event loop can still run
+			auto	threadContextPtr = new My_DataLoopThreadContext();
+			if (nullptr == threadContextPtr) result = kLocal_ResultInsufficientBufferSpace;
+			else
 			{
-				pthread_attr_t	attr;
-				int				error = 0;
-				
-				
-				error = pthread_attr_init(&attr);
-				if (0 != error) result = kLocal_ResultThreadError;
-				else
+				// store process information for session
 				{
-					My_DataLoopThreadContextPtr		threadContextPtr = nullptr;
-					pthread_t						thread;
+					auto				newProcessPtr = new My_Process(inArgumentArray,
+																		targetDirCFString.returnCFStringRef(),
+																		masterTTY, slaveDeviceName, processID);
+					Local_ProcessRef	newProcess = REINTERPRET_CAST(newProcessPtr, Local_ProcessRef);
 					
 					
-					// store process information for session
-					{
-						My_Process*			newProcessPtr = new My_Process(inArgumentArray,
-																			targetDirCFString.returnCFStringRef(),
-																			masterTTY, slaveDeviceName, processID);
-						Local_ProcessRef	newProcess = REINTERPRET_CAST(newProcessPtr, Local_ProcessRef);
-						
-						
-						Session_SetProcess(inUninitializedSession, newProcess);
-					}
-					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_DataLoopThreadContext)),
-														My_DataLoopThreadContextPtr);
-					if (nullptr == threadContextPtr) result = kLocal_ResultThreadError;
-					else
-					{
-						// set up context
-						threadContextPtr->eventQueue = nullptr; // set inside the handler
-						threadContextPtr->session = inUninitializedSession;
-						threadContextPtr->masterTTY = masterTTY;
-						
-						// create thread
-						error = pthread_create(&thread, &attr, threadForLocalProcessDataLoop, threadContextPtr);
-						if (0 != error) result = kLocal_ResultThreadError;
-					}
-					
-					// put the session in the initialized state, to indicate it is complete
-					Session_SetState(inUninitializedSession, kSession_StateInitialized);
+					Session_SetProcess(inUninitializedSession, newProcess);
 				}
+				
+				// set up context
+				static int		gQueueCounter = 0;
+				char			nameBuffer[256];
+				char const*		queueName = nameBuffer;
+				auto			formatStatus = snprintf(nameBuffer, sizeof(nameBuffer), "net.macterm.queues.sessions.%d", (int)++gQueueCounter);
+				
+				
+				if (formatStatus < 0)
+				{
+					Console_Warning(Console_WriteValue, "unable to create formatted string for terminal queue name, error", formatStatus);
+					queueName = nullptr;
+				}
+				threadContextPtr->dispatchQueue = dispatch_queue_create(queueName, DISPATCH_QUEUE_CONCURRENT);
+				threadContextPtr->session = inUninitializedSession;
+				threadContextPtr->masterTTY = masterTTY;
+				threadContextPtr->blockSize = 4096; // TEMPORARY; could make this a user preference
+				
+				// put the session in the initialized state, to indicate it is complete
+				Session_SetState(threadContextPtr->session, kSession_StateInitialized);
+				
+				// create and run thread with data-processing loop
+				dispatch_async_f(threadContextPtr->dispatchQueue, STATIC_CAST(threadContextPtr, void*), threadForLocalProcessDataLoop);
 			}
 		}
 	}
@@ -1775,41 +1771,34 @@ sendTerminalResizeMessage   (Local_TerminalID			inTTY,
 
 
 /*!
-A POSIX thread (which can be preempted) that handles
-the data processing loop for a particular pseudo-
-terminal device.  Using preemptive threads for this
-allows MacTerm to “block” waiting for data, without
-actually halting other important things like the main
-event loop!
+This is the data processing loop for a particular
+pseudo-terminal device, and it runs on a dedicated
+concurrent queue.  See Local_SpawnProcess().
 
-WARNING:	As this is a preemptable thread, you MUST
-			NOT use thread-unsafe system calls here.
-			On the other hand, you can arrange for
-			events to be handled (e.g. with Carbon
-			Events).
-
-(3.0)
+(2019.12)
 */
-void*
+void
 threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 {
-	size_t const					kBufferSize = 4096; // TEMPORARY - this should respect the user’s Network Block Size preference
 	My_DataLoopThreadContextPtr		contextPtr = REINTERPRET_CAST(inDataLoopThreadContextPtr, My_DataLoopThreadContextPtr);
+	size_t const					kBufferSize = contextPtr->blockSize;
 	size_t							numberOfBytesRead = 0;
-	char*							buffer = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(kBufferSize), char*);
-	char*							processingBegin = buffer;
-	char*							processingPastEnd = processingBegin;
-	OSStatus						error = noErr;
+	std::unique_ptr< UInt8[] >		dataBuffer(new UInt8[kBufferSize]);
+	UInt8*							bufferBegin = dataBuffer.get();
+	__block bool					endLoop = false;
+	__block UInt8*					processingBegin = bufferBegin;
+	UInt8*							processingPastEnd = processingBegin;
 	
-	
-	// arrange to communicate with the main application thread
-	contextPtr->eventQueue = GetCurrentEventQueue();
-	assert(contextPtr->eventQueue != GetMainEventQueue());
 	
 	for (;;)
 	{
-		assert(processingBegin >= buffer);
-		assert(processingBegin <= (buffer + kBufferSize));
+		assert(processingBegin >= bufferBegin);
+		assert(processingBegin <= (bufferBegin + kBufferSize));
+		
+		if (endLoop)
+		{
+			break;
+		}
 		
 		// There are two possible actions...read more data, or process
 		// the data that is in the buffer already.  If the processing
@@ -1819,87 +1808,47 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 		{
 			// each time through the loop, read a bit more data from the
 			// pseudo-terminal device, up to the maximum limit of the buffer
-			numberOfBytesRead = read(contextPtr->masterTTY, buffer, kBufferSize);
+			numberOfBytesRead = read(contextPtr->masterTTY, bufferBegin, kBufferSize);
 			
 			// TEMPORARY HACK - REMOVE HIGH ASCII
-			//for (unsigned char* foo = (unsigned char*)buffer; (char*)foo != (buffer + kBufferSize); ++foo) { if (*foo > 127) *foo = '?'; }
+			//for (unsigned char* foo = (unsigned char*)bufferBegin; (char*)foo != (bufferBegin + kBufferSize); ++foo) { if (*foo > 127) *foo = '?'; }
 			
 			if (numberOfBytesRead <= 0)
 			{
 				// error or EOF (process quit)
-				break;
+				endLoop = true;
 			}
-			
-			// adjust the total number of bytes remaining to be processed
-			processingBegin = buffer;
-			processingPastEnd = processingBegin + numberOfBytesRead;
+			else
+			{
+				// adjust the total number of bytes remaining to be processed
+				processingBegin = bufferBegin;
+				processingPastEnd = processingBegin + numberOfBytesRead;
+			}
 		}
 		else
 		{
-			Session_Result		postingResult = kSession_ResultOK;
-			
-			
-			//
-			// Insert the data into the processing buffer.  For thread safety,
-			// this is done indirectly by posting a session-data-arrived event
-			// to the main queue.  To do otherwise risks a pseudo-random crash
-			// because the vast majority of Mac OS APIs are NOT thread-safe.
-			// (The exception apparently is Carbon Events.)
-			//
-			// After sending a “please process this data” event, this thread
-			// blocks until a go-ahead response is received from the main queue.
-			// The go-ahead event also returns the number of unprocessed bytes,
-			// which will determine if another post is necessary (next time
-			// through the loop).
-			//
-			// WARNING:	To simplify the code below, certain assumptions are
-			//			made.  One, that the current thread serves exactly one
-			//			session, "contextPtr->session".  Two, that no one will
-			//			ever send “data processed” events to this thread except
-			//			for the purpose of continuing this loop.  Three, that
-			//			the thread must not terminate while events it sends are
-			//			being handled in the main thread - allowing addresses of
-			//			data in this thread to be passed in.  Violate any of the
-			//			assumptions, and I think you’ll deserve the outcome.
-			//
-			
-			// notify that data has arrived
-			postingResult = Session_PostDataArrivedEventToMainQueue
-							(contextPtr->session, processingBegin, STATIC_CAST(processingPastEnd - processingBegin, UInt32),
-								kEventPriorityStandard, contextPtr->eventQueue);
-			assert(kSession_ResultOK == postingResult);
-			{
-				// now block until the data processing has completed
-				EventRef				dataProcessedEvent = nullptr;
-				EventTypeSpec const		whenDataProcessingCompletes[] =
-										{
-											{ kEventClassNetEvents_Session, kEventNetEvents_SessionDataProcessed }
-										};
-				
-				
-				error = ReceiveNextEvent(GetEventTypeCount(whenDataProcessingCompletes),
-											whenDataProcessingCompletes, kEventDurationForever,
-											true/* pull event from queue */, &dataProcessedEvent);
-				if (noErr == error)
-				{
-					// now determine how much data was not yet processed
-					UInt32		unprocessedDataSize = 0L;
-					
-					
-					assert(kEventClassNetEvents_Session == GetEventClass(dataProcessedEvent));
-					assert(kEventNetEvents_SessionDataProcessed == GetEventKind(dataProcessedEvent));
-					
-					// retrieve the number of unprocessed bytes
-					error = CarbonEventUtilities_GetEventParameter
-							(dataProcessedEvent, kEventParamNetEvents_SessionDataSize,
-								typeUInt32, unprocessedDataSize);
-					if (noErr == error)
-					{
-						processingBegin = (processingPastEnd - unprocessedDataSize);
-					}
-				}
-				if (nullptr != dataProcessedEvent) ReleaseEvent(dataProcessedEvent), dataProcessedEvent = nullptr;
-			}
+			// process data via main queue (since terminal UI has to
+			// update there) and wait until the session responds
+			// before resuming the loop to process more data
+			dispatch_sync(dispatch_get_main_queue(),
+							^{
+								size_t				unprocessedSize = 0;
+								Session_Result		sessionResult = Session_AppendDataForProcessing(contextPtr->session,
+																									processingBegin,
+																									STATIC_CAST(processingPastEnd - processingBegin, size_t),
+																									&unprocessedSize);
+								
+								
+								if (sessionResult.ok())
+								{
+									processingBegin = (processingPastEnd - unprocessedSize);
+								}
+								else
+								{
+									Console_Warning(Console_WriteValue, "data-processing loop terminated, append operation error", sessionResult.code());
+									endLoop = true;
+								}
+							});
 		}
 	}
 	
@@ -1919,57 +1868,18 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 	
 	// update the state; for thread safety, this is done indirectly
 	// by posting a session-state-update event to the main queue
-	{
-		EventRef				setStateEvent = nullptr;
-		Session_State const		kNewState = kSession_StateDead;
-		
-		
-		// create a Carbon Event
-		error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_Session,
-							kEventNetEvents_SessionSetState, GetCurrentEventTime(),
-							kEventAttributeNone, &setStateEvent);
-		
-		// attach required parameters to event, then dispatch it
-		if (noErr != error) setStateEvent = nullptr;
-		else
-		{
-			// specify the session whose state is changing
-			error = SetEventParameter(setStateEvent, kEventParamNetEvents_DirectSession, typeNetEvents_SessionRef,
-										sizeof(contextPtr->session), &contextPtr->session);
-			if (noErr == error)
-			{
-				// specify the new state
-				error = SetEventParameter(setStateEvent, kEventParamNetEvents_NewSessionState,
-											typeNetEvents_SessionState, sizeof(kNewState), &kNewState);
-				if (noErr == error)
-				{
-					// specify the event queue that should receive event replies;
-					// ignore the following error because the dispatching queue
-					// is not critical for this particular event to succeed (and
-					// in fact any replies would be ignored)
-					UNUSED_RETURN(OSStatus)SetEventParameter(setStateEvent, kEventParamNetEvents_DispatcherQueue,
-																typeNetEvents_EventQueueRef, sizeof(contextPtr->eventQueue),
-																&contextPtr->eventQueue);
-					
-					// finally, send the message to the main event loop
-					error = PostEventToQueue(GetMainEventQueue(), setStateEvent, kEventPriorityStandard);
-					if (noErr != error)
-					{
-						Console_Warning(Console_WriteValue, "failed to post session set-state event to main queue, error", error);
-					}
-				}
-			}
-		}
-		
-		// dispose of event
-		if (nullptr != setStateEvent) ReleaseEvent(setStateEvent), setStateEvent = nullptr;
-	}
+	SessionRef const	kSession = contextPtr->session; // make block capture only a SessionRef and not "contextPtr"
+	dispatch_async(dispatch_get_main_queue(),
+					^{
+						if (Session_IsValid(kSession))
+						{
+							Session_SetState(kSession, kSession_StateDead);
+						}
+					});
 	
 	// since the thread is finished, dispose of dynamically-allocated memory
-	Memory_DisposePtrInterruptSafe(REINTERPRET_CAST(&buffer, void**));
-	Memory_DisposePtrInterruptSafe(REINTERPRET_CAST(&contextPtr, void**));
-	
-	return nullptr;
+	dispatch_release(contextPtr->dispatchQueue);
+	delete contextPtr;
 }// threadForLocalProcessDataLoop
 
 

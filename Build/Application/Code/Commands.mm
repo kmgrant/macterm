@@ -56,7 +56,6 @@ extern "C"
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaAnimation.h>

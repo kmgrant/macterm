@@ -134,32 +134,15 @@ knows how to interpret session data appropriately.
 
 A Session object knows which targets are compatible
 with one another, and will automatically disable all
-incompatible targets when you add a new target.  For
-example, it is OK to have many terminals and capture
-files open, but if you route data to a graphics screen
-all attached terminals and files are disabled because
-they will garble graphics data.
+incompatible targets when you add a new target.
 
 The following algorithm is used:
 - DUMB terminals are expected to render raw streams of
   data and are therefore considered compatible with
   everything, and can never be disabled
 - TEK canvases are considered incompatible with all
-  terminals or ICR graphics screens while attached,
-  and therefore will disable terminals and ICR screens
-- ICR screens are considered incompatible with all
-  terminals, but are lower precedence than TEK windows
-  so TEK windows cannot be disabled when new ICR
-  screens are attached (rather, the ICR screens will
-  be attached and disabled)
-- terminals are considered compatible with capture
-  files and print jobs; capture files and print jobs
-  will therefore be disabled whenever terminals are
-  disabled, and attaching new capture files or print
-  jobs cannot cause anything else to be disabled
-  (rather, new capture files or print jobs may be
-  disabled automatically if, say, a graphics window is
-  already attached)
+  terminals while attached so they take precedence
+  over “standard” terminals until detached
 */
 enum Session_DataTarget
 {
@@ -409,13 +392,6 @@ Boolean
 	Session_IsReadOnly						(SessionRef							inRef);
 
 Session_Result
-	Session_PostDataArrivedEventToMainQueue	(SessionRef							inRef,
-											 void*								inBuffer,
-											 UInt32								inNumberOfBytesToProcess,
-											 EventPriority						inPriority,
-											 EventQueueRef						inDispatcherQueue);
-
-Session_Result
 	Session_Select							(SessionRef							inRef);
 
 void
@@ -492,18 +468,14 @@ void
 //!\name Miscellaneous
 //@{
 
-size_t
+Session_Result
 	Session_AppendDataForProcessing			(SessionRef							inRef,
 											 UInt8 const*						inDataPtr,
-											 size_t								inSize);
+											 size_t								inSize,
+											 size_t*							outUnprocessedSizePtr);
 
 void
 	Session_FlushNetwork					(SessionRef							inRef);
-
-Session_Result
-	Session_ReceiveData						(SessionRef							inRef,
-											 void const*						inBufferPtr,
-											 size_t								inByteCount);
 
 SInt16
 	Session_SendData						(SessionRef							inRef,

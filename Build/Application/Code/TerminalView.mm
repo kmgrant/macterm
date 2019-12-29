@@ -52,7 +52,6 @@
 
 // library includes
 #import <AlertMessages.h>
-#import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CGContextSaveRestore.h>
 #import <CocoaAnimation.h>

@@ -49,7 +49,6 @@
 #import <CoreServices/CoreServices.h>
 
 // library includes
-#import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaAnimation.h>
@@ -140,7 +139,6 @@ window notifications and track the active session.
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus				appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
 void					changeNotifyGlobal				(SessionFactory_Change, void*);
 Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_ContextRef);
 Boolean					configureSessionTerminalWindowByClass	(TerminalWindowRef, Preferences_ContextRef, Quills::Prefs::Class);
@@ -158,7 +156,6 @@ void					handleNewSessionDialogClose		(GenericDialog_Ref, Boolean);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-OSStatus				setSessionState					(EventHandlerCallRef, EventRef, void*);
 void					startTrackingSession			(SessionRef, TerminalWindowRef);
 void					startTrackingTerminalWindow		(TerminalWindowRef);
 void					stopTrackingSession				(SessionRef);
@@ -175,10 +172,6 @@ ListenerModel_ListenerRef		gSessionChangeListenerRef = nullptr;
 ListenerModel_ListenerRef		gSessionStateChangeListener = nullptr;
 SessionFactory_SessionWindowWatcher*	gSessionWindowWatcher = nil;
 SessionRef						gSessionFactoryRecentlyActiveSession = nullptr;
-EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
-EventHandlerUPP					gCarbonEventSessionSetStateUPP = nullptr;
-EventHandlerRef					gCarbonEventSessionProcessDataHandler = nullptr;
-EventHandlerRef					gCarbonEventSessionSetStateHandler = nullptr;
 SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
 TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
 MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
@@ -262,42 +255,6 @@ SessionFactory_Init ()
 	// watch for changes to session states - in particular, when they die, update the internal lists
 	gSessionStateChangeListener = ListenerModel_NewStandardListener(sessionStateChanged);
 	SessionFactory_StartMonitoringSessions(kSession_ChangeState, gSessionStateChangeListener);
-	
-	// under Carbon, listen for special Carbon Events that effectively invoke Session_SetState();
-	// this is for thread safety, to force these calls to always take place in the main thread
-	{
-		EventTypeSpec const		whenSessionStateMustChange[] =
-								{
-									{ kEventClassNetEvents_Session, kEventNetEvents_SessionSetState }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gCarbonEventSessionSetStateUPP = NewEventHandlerUPP(setSessionState);
-		error = InstallApplicationEventHandler(gCarbonEventSessionSetStateUPP, GetEventTypeCount(whenSessionStateMustChange),
-												whenSessionStateMustChange, nullptr/* user data */,
-												&gCarbonEventSessionSetStateHandler/* event handler reference */);
-		//CARBON//assert_noerr(error);
-	}
-	
-	// under Carbon, listen for special Carbon Events that effectively invoke
-	// Session_AppendDataForProcessing(); this is for thread safety, to force these calls to
-	// always take place in the main thread
-	{
-		EventTypeSpec const		whenSessionDataIsAvailableForProcessing[] =
-								{
-									{ kEventClassNetEvents_Session, kEventNetEvents_SessionDataArrived }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gCarbonEventSessionProcessDataUPP = NewEventHandlerUPP(appendDataForProcessing);
-		error = InstallApplicationEventHandler(gCarbonEventSessionProcessDataUPP,
-												GetEventTypeCount(whenSessionDataIsAvailableForProcessing),
-												whenSessionDataIsAvailableForProcessing, nullptr/* user data */,
-												&gCarbonEventSessionProcessDataHandler/* event handler reference */);
-		//CARBON//assert_noerr(error);
-	}
 }// Init
 
 
@@ -318,11 +275,6 @@ SessionFactory_Done ()
 	ListenerModel_ReleaseListener(&gSessionChangeListenerRef);
 	ListenerModel_Dispose(&gSessionStateChangeListenerModel);
 	ListenerModel_Dispose(&gSessionFactoryStateChangeListenerModel);
-	
-	RemoveEventHandler(gCarbonEventSessionProcessDataHandler), gCarbonEventSessionProcessDataHandler = nullptr;
-	RemoveEventHandler(gCarbonEventSessionSetStateHandler), gCarbonEventSessionSetStateHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventSessionProcessDataUPP), gCarbonEventSessionProcessDataUPP = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventSessionSetStateUPP), gCarbonEventSessionSetStateUPP = nullptr;
 }// Done
 
 
@@ -1531,122 +1483,6 @@ SessionFactory_StopMonitoringSessions	(Session_Change				inForWhatChange,
 namespace {
 
 /*!
-Handles the "kEventNetEvents_SessionDataArrived" event
-of the "kEventClassNetEvents_Session" class.
-
-Invoked by Mac OS X whenever a custom “data is available
-for processing” event is posted (presumably by a
-preemptive thread receiving data from a process, or the
-main thread receiving input from the user).
-
-This is functionally equivalent to invoking
-Session_AppendDataForProcessing(), except it is accomplished
-by retrieving arguments from a Carbon Event.
-
-(3.0)
-*/
-OSStatus
-appendDataForProcessing		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef				inEvent,
-							 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus	result = eventNotHandledErr;
-	UInt32		eventClass = GetEventClass(inEvent);
-	UInt32		eventKind = GetEventKind(inEvent);
-	
-	
-	assert(eventClass == kEventClassNetEvents_Session);
-	assert(eventKind == kEventNetEvents_SessionDataArrived);
-	{
-		EventQueueRef	queueToNotify = nullptr;
-		
-		
-		// retrieve the queue that needs to receive an event
-		// upon completion of the data processing
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DispatcherQueue,
-														typeNetEvents_EventQueueRef, queueToNotify);
-		if (noErr == result)
-		{
-			void*	dataPtr = nullptr;
-			
-			
-			// retrieve the data that should be processed
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_SessionData, typeVoidPtr, dataPtr);
-			if (noErr == result)
-			{
-				UInt32		dataSize = 0;
-				
-				
-				// retrieve the size of the data that should be processed
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_SessionDataSize,
-																typeUInt32, dataSize);
-				if (noErr == result)
-				{
-					SessionRef		session = nullptr;
-					
-					
-					// retrieve the session for which data has arrived for processing
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DirectSession,
-																	typeNetEvents_SessionRef, session);
-					if ((noErr == result) && Session_IsValid(session))
-					{
-						// success!
-						UInt32		unprocessedDataSize = STATIC_CAST(Session_AppendDataForProcessing
-																		(session, REINTERPRET_CAST(dataPtr, UInt8*), dataSize),
-																		UInt32);
-						
-						
-						// report to the dispatching thread that data processing is complete
-						{
-							EventRef	dataProcessedEvent = nullptr;
-							
-							
-							// create a Carbon Event
-							result = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_Session,
-													kEventNetEvents_SessionDataProcessed, GetCurrentEventTime(),
-													kEventAttributeNone, &dataProcessedEvent);
-							
-							// attach required parameters to event, then dispatch it
-							if (noErr != result) dataProcessedEvent = nullptr;
-							else
-							{
-								// specify the session whose data was processed
-								result = SetEventParameter(dataProcessedEvent, kEventParamNetEvents_DirectSession,
-															typeNetEvents_SessionRef, sizeof(session), &session);
-								if (noErr == result)
-								{
-									// specify the data that was processed
-									result = SetEventParameter(dataProcessedEvent, kEventParamNetEvents_SessionData,
-																typeVoidPtr, sizeof(dataPtr), dataPtr);
-									if (noErr == result)
-									{
-										// specify the size of the data that was NOT processed
-										result = SetEventParameter(dataProcessedEvent, kEventParamNetEvents_SessionDataSize,
-																	typeUInt32, sizeof(unprocessedDataSize),
-																	&unprocessedDataSize);
-										if (noErr == result)
-										{
-											// send the message to the given queue
-											result = PostEventToQueue(queueToNotify, dataProcessedEvent,
-																		kEventPriorityStandard);
-										}
-									}
-								}
-							}
-							
-							// dispose of event
-							if (nullptr != dataProcessedEvent) ReleaseEvent(dataProcessedEvent), dataProcessedEvent = nullptr;
-						}
-					}
-				}
-			}
-		}
-	}
-	return result;
-}// appendDataForProcessing
-
-
-/*!
 Notifies all listeners of Session Factory state
 changes that the specified change occurred.  The
 given context is passed to each listener.
@@ -2389,61 +2225,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// sessionStateChanged
-
-
-/*!
-Handles "kEventNetEvents_SessionSetState" of
-"kEventClassNetEvents_Session".
-
-Invoked by Mac OS X whenever a custom “set session
-state” event is posted (presumably by a preemptive
-thread running that session).
-
-This is functionally equivalent to invoking
-Session_SetState(), except it is accomplished by
-retrieving arguments from a Carbon Event.
-
-(3.0)
-*/
-OSStatus
-setSessionState		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					UNUSED_ARGUMENT(inUserData))
-{
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
-	OSStatus		result = eventNotHandledErr;
-	
-	
-	assert((kEventClass == kEventClassNetEvents_Session) &&
-			(kEventKind == kEventNetEvents_SessionSetState));
-	{
-		SessionRef		session = nullptr;
-		
-		
-		// retrieve the session whose state should change; since this
-		// is captured asynchronously, it is possible that the session
-		// has become invalid since the time the event was first fired,
-		// so ensure the session is still in use
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DirectSession,
-														typeNetEvents_SessionRef, session);
-		if ((noErr == result) && Session_IsValid(session))
-		{
-			Session_State		newState = kSession_StateBrandNew;
-			
-			
-			// retrieve the state the session should end up in
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_NewSessionState,
-															typeNetEvents_SessionState, newState);
-			if (noErr == result)
-			{
-				// success!
-				Session_SetState(session, newState);
-			}
-		}
-	}
-	return result;
-}// setSessionState
 
 
 /*!

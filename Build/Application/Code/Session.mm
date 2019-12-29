@@ -59,7 +59,6 @@
 #import <AlertMessages.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
-#import <CarbonEventUtilities.template.h>
 #import <CocoaAnimation.h>
 #import <CocoaBasic.h>
 #import <Console.h>
@@ -225,7 +224,7 @@ struct My_Session
 	VectorInterpreter_Ref		vectorGraphicsInterpreter;	// the ID of the current graphic, if any; see "VectorInterpreter.h"
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
 	size_t						readBufferSizeInUse;		// number of bytes of data currently in the read buffer
-	UInt8*						readBufferPtr;				// buffer space for processing data
+	std::unique_ptr< UInt8[] >	readBufferPtr;				// buffer space for processing data
 	CFStringEncoding			writeEncoding;				// the character set that text (data) sent to a session should be using
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
 	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
@@ -279,7 +278,7 @@ void						localEchoKey						(My_SessionPtr, UInt8);
 void						localEchoString						(My_SessionPtr, CFStringRef);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-size_t						processMoreData						(My_SessionPtr);
+void						processMoreData						(My_SessionPtr);
 void						respawnSession						(EventLoopTimerRef, void*);
 NSWindow*					returnActiveNSWindow				(My_SessionPtr);
 void						setIconFromState					(My_SessionPtr);
@@ -605,50 +604,74 @@ Session_AddDataTarget	(SessionRef				inRef,
 
 /*!
 Copies the specified data into the “read buffer” of the
-specified session, starting one byte beyond the
-last byte currently in the buffer, and inserts an
-event in the internal queue (if there isn’t one already)
-informing the session that there is data to be handled.
+specified session, starting one byte beyond the last byte
+currently in the buffer.
 
-Returns the number of bytes NOT appended; will be 0
+The output parameter "outUnprocessedSizePtr" is used to
+find the number of bytes NOT appended; will be set to 0
 if there was enough room for all the given data.
 
-(3.0)
+This function must run on the main thread, although the
+mechanism that retrieves the input data can originate on
+a different thread.
+
+\retval kSession_ResultOK
+if no errors occurred that would prevent data processing
+
+\retval kSession_ResultInvalidReference
+if "inRef" is invalid
+
+(2019.12)
 */
-size_t
+Session_Result
 Session_AppendDataForProcessing		(SessionRef		inRef,
 									 UInt8 const*	inDataPtr,
-									 size_t			inSize)
+									 size_t			inSize,
+									 size_t*		outUnprocessedSizePtr)
 {
+	Session_Result			result = kSession_ResultInvalidReference;
+	size_t					unprocessedSize = inSize;
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t					numberOfBytesToCopy = 0;
-	size_t const			kMaximumBytesLeft = ptr->readBufferSizeMaximum - ptr->readBufferSizeInUse;
-	size_t					result = inSize;
 	
 	
-	// figure out how much to copy
-	numberOfBytesToCopy = INTEGER_MINIMUM(kMaximumBytesLeft, inSize);
-	if (numberOfBytesToCopy > 0)
+	if (Session_IsValid(inRef))
 	{
-		result = inSize - numberOfBytesToCopy;
-		CPP_STD::memcpy(ptr->readBufferPtr + ptr->readBufferSizeInUse, inDataPtr, numberOfBytesToCopy);
-		ptr->readBufferSizeInUse += numberOfBytesToCopy;
+		size_t			numberOfBytesToCopy = 0;
+		size_t const	kMaximumBytesLeft = ptr->readBufferSizeMaximum - ptr->readBufferSizeInUse;
 		
-		processMoreData(ptr);
 		
-		// also trigger a watch, if one exists
-		if (kSession_WatchForPassiveData == ptr->activeWatch)
+		result = kSession_ResultOK;
+		
+		// figure out how much to copy
+		numberOfBytesToCopy = INTEGER_MINIMUM(kMaximumBytesLeft, inSize);
+		if (numberOfBytesToCopy > 0)
 		{
-			// data arrived; notify immediately
-			watchNotifyForSession(ptr, ptr->activeWatch);
-		}
-		else if ((kSession_WatchForKeepAlive == ptr->activeWatch) ||
-					(kSession_WatchForInactivity == ptr->activeWatch))
-		{
-			// reset timer, start waiting again
-			watchTimerResetForSession(ptr, ptr->activeWatch);
+			unprocessedSize = inSize - numberOfBytesToCopy;
+			CPP_STD::memcpy(ptr->readBufferPtr.get() + ptr->readBufferSizeInUse, inDataPtr, numberOfBytesToCopy);
+			ptr->readBufferSizeInUse += numberOfBytesToCopy;
+			
+			processMoreData(ptr);
+			
+			// also trigger a watch, if one exists
+			if (kSession_WatchForPassiveData == ptr->activeWatch)
+			{
+				// data arrived; notify immediately
+				watchNotifyForSession(ptr, ptr->activeWatch);
+			}
+			else if ((kSession_WatchForKeepAlive == ptr->activeWatch) ||
+						(kSession_WatchForInactivity == ptr->activeWatch))
+			{
+				// reset timer, start waiting again
+				watchTimerResetForSession(ptr, ptr->activeWatch);
+			}
 		}
 	}
+	
+	if (nullptr != outUnprocessedSizePtr)
+	{
+		*outUnprocessedSizePtr = unprocessedSize;
+	}
+	
 	return result;
 }// AppendDataForProcessing
 
@@ -1176,15 +1199,13 @@ void
 Session_FlushNetwork	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t					remainingBytesCount = 0;
 	
 	
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									false); // no output
-	remainingBytesCount = 1; // just needs to be positive to start with
-	while (remainingBytesCount > 0)
+	while (ptr->readBufferSizeInUse > 0)
 	{
-		remainingBytesCount = processMoreData(ptr);
+		processMoreData(ptr);
 	}
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									true); // output now
@@ -1407,140 +1428,6 @@ Session_NetworkIsSuspended		(SessionRef		inRef)
 	}
 	return result;
 }// NetworkIsSuspended
-
-
-/*!
-Creates a "kMyCarbonEventKindSessionDataArrived" event
-from class "kMyCarbonEventClassSession" and sends it
-to the main queue.  Use this to report input from an
-external source (such as a running process or the user’s
-keyboard) that belongs to the specified session.  The
-session, in turn, will process the data appropriately
-and in the proper sequence if multiple events exist.
-
-(3.0)
-*/
-Session_Result
-Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
-											 void*			inBuffer,
-											 UInt32			inNumberOfBytesToProcess,
-											 EventPriority	inPriority,
-											 EventQueueRef	inDispatcherQueue)
-{
-	Session_Result		result = kSession_ResultParameterError;
-	
-	
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
-	else
-	{
-		EventRef	dataArrivedEvent = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		// create a Carbon Event
-		error = CreateEvent(nullptr/* allocator */, kEventClassNetEvents_Session,
-							kEventNetEvents_SessionDataArrived,
-							GetCurrentEventTime(), kEventAttributeNone, &dataArrivedEvent);
-		if (error == noErr)
-		{
-			// specify the event queue that should receive a reply; set this to
-			// the current thread’s event queue, otherwise it is not possible
-			// to block this thread until the data processing is finished
-			// (see below for more)
-			error = SetEventParameter(dataArrivedEvent, kEventParamNetEvents_DispatcherQueue,
-										typeNetEvents_EventQueueRef, sizeof(inDispatcherQueue),
-										&inDispatcherQueue);
-			if (error == noErr)
-			{
-				// specify the session that has new data to process
-				error = SetEventParameter(dataArrivedEvent, kEventParamNetEvents_DirectSession,
-											typeNetEvents_SessionRef, sizeof(inRef), &inRef);
-				if (error == noErr)
-				{
-					// specify the data to process; for efficiency, the pointer
-					// is passed instead of copying the data, etc. which means
-					// the buffer must remain valid until the handler returns
-					error = SetEventParameter(dataArrivedEvent, kEventParamNetEvents_SessionData,
-												typeVoidPtr, sizeof(inBuffer), &inBuffer);
-					if (error == noErr)
-					{
-						// specify the size of the data to process
-						error = SetEventParameter(dataArrivedEvent, kEventParamNetEvents_SessionDataSize,
-													typeUInt32, sizeof(inNumberOfBytesToProcess),
-													&inNumberOfBytesToProcess);
-						if (error == noErr)
-						{
-							// send the message to the main thread
-							error = PostEventToQueue(GetMainEventQueue(), dataArrivedEvent, inPriority);
-							if (error == noErr)
-							{
-								// “data arrived” event successfully queued
-								result = kSession_ResultOK;
-							}
-						}
-					}
-				}
-			}
-		}
-		if (dataArrivedEvent != nullptr) ReleaseEvent(dataArrivedEvent), dataArrivedEvent = nullptr;
-	}
-	return result;
-}// PostDataArrivedEventToQueue
-
-
-/*!
-Provides the specified data to all targets currently
-active in the given session; the targets react in
-whatever way is appropriate.  Currently, a target
-can be a terminal (VT or DUMB), a capture file, a
-TEK graphics window, or an Interactive Color Raster
-graphics device.
-
-See the documentation on Session_DataTarget for
-more information on session data targets.
-
-\retval kSession_ResultOK
-always; currently, no other errors are defined
-
-(3.0)
-*/
-Session_Result
-Session_ReceiveData		(SessionRef		inRef,
-						 void const*	inBufferPtr,
-						 size_t			inByteCount)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_Result			result = kSession_ResultOK;
-	
-	
-	// “carbon copy” the data to all active attached targets; take care
-	// not to do this once a session is flagged for destruction, since
-	// at that point it may not be able to handle data anymore
-	if ((kSession_StateImminentDisposal != ptr->status) &&
-		(kSession_StateDead != ptr->status))
-	{
-		UInt8 const* const	kBuffer = REINTERPRET_CAST(inBufferPtr, UInt8 const*);
-		
-		
-		// dumb terminals are considered compatible with any kind of data and always receive data
-		std::for_each(ptr->targetDumbTerminals.begin(), ptr->targetDumbTerminals.end(),
-						terminalDumbDataWriter(kBuffer, inByteCount));
-		
-		// if any TEK canvases are installed, they take precedence
-		if (ptr->targetVectorGraphics.empty())
-		{
-			// this is the typical case; send data to a sophisticated terminal emulator
-			std::for_each(ptr->targetTerminals.begin(), ptr->targetTerminals.end(), terminalDataWriter(kBuffer, inByteCount));
-		}
-		else
-		{
-			// write to all attached TEK windows
-			std::for_each(ptr->targetVectorGraphics.begin(), ptr->targetVectorGraphics.end(),
-							vectorGraphicsDataWriter(kBuffer, inByteCount));
-		}
-	}
-	return result;
-}// ReceiveData
 
 
 /*!
@@ -2560,9 +2447,6 @@ Session_SetState	(SessionRef			inRef,
 		isDifferentState = (inNewState != ptr->status);
 		if (isDifferentState)
 		{
-			CFStringRef		statusString = nullptr;
-			
-			
 			// update status text to reflect new state
 			assert(kSession_StateImminentDisposal != inNewState); // only the destructor may set this
 			ptr->status = inNewState;
@@ -2582,60 +2466,54 @@ Session_SetState	(SessionRef			inRef,
 				if (false == useTimeFreeStatusString)
 				{
 					// if possible, be specific about the time of disconnect
-					if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusTerminatedAtTime,
-										statusString).ok())
+					CFLocaleRef		currentLocale = CFLocaleCopyCurrent();
+					
+					
+					if (nullptr != currentLocale)
 					{
-						CFLocaleRef		currentLocale = CFLocaleCopyCurrent();
+						CFDateFormatterRef	timeOnlyFormatter = CFDateFormatterCreate
+																(kCFAllocatorDefault, currentLocale,
+																	kCFDateFormatterNoStyle/* date style */,
+																	kCFDateFormatterShortStyle/* time style */);
 						
 						
-						if (nullptr != currentLocale)
+						if (nullptr != timeOnlyFormatter)
 						{
-							CFDateFormatterRef	timeOnlyFormatter = CFDateFormatterCreate
-																	(kCFAllocatorDefault, currentLocale,
-																		kCFDateFormatterNoStyle/* date style */,
-																		kCFDateFormatterShortStyle/* time style */);
-							
-							
-							if (nullptr != timeOnlyFormatter)
-							{
-								CFStringRef		timeCFString = CFDateFormatterCreateStringWithAbsoluteTime
+							CFRetainRelease		timeCFString(CFDateFormatterCreateStringWithAbsoluteTime
 																(kCFAllocatorDefault, timeOnlyFormatter,
-																	ptr->terminationAbsoluteTime);
+																	ptr->terminationAbsoluteTime),
+																CFRetainRelease::kAlreadyRetained);
+							
+							
+							if (timeCFString.exists())
+							{
+								CFRetainRelease		statusFormatString(UIStrings_ReturnCopy(kUIStrings_SessionInfoWindowStatusTerminatedAtTime),
+																		CFRetainRelease::kAlreadyRetained);
+								CFRetainRelease		statusWithTime(CFStringCreateWithFormat
+																	(kCFAllocatorDefault, nullptr/* options */,
+																		statusFormatString.returnCFStringRef(), timeCFString.returnCFStringRef()),
+																	CFRetainRelease::kAlreadyRetained);
 								
 								
-								if (nullptr != timeCFString)
+								if (NO == statusWithTime.exists())
 								{
-									CFStringRef		statusWithTime = CFStringCreateWithFormat
-																			(kCFAllocatorDefault, nullptr/* options */,
-																				statusString/* format */, timeCFString);
-									
-									
-									if (nullptr != statusWithTime)
-									{
-										ptr->statusString.setWithRetain(statusWithTime);
-										CFRelease(statusWithTime), statusWithTime = nullptr;
-									}
-									else
-									{
-										// on error, attempt to fall back with the time-free status string
-										useTimeFreeStatusString = true;
-									}
-									CFRelease(timeCFString), timeCFString = nullptr;
+									// on error, attempt to fall back with the time-free status string
+									useTimeFreeStatusString = true;
 								}
-								CFRelease(timeOnlyFormatter), timeOnlyFormatter = nullptr;
+								else
+								{
+									ptr->statusString.setWithRetain(statusWithTime.returnCFStringRef());
+								}
 							}
-							CFRelease(currentLocale), currentLocale = nullptr;
+							CFRelease(timeOnlyFormatter), timeOnlyFormatter = nullptr;
 						}
+						CFRelease(currentLocale), currentLocale = nullptr;
 					}
 				}
 				
 				if (useTimeFreeStatusString)
 				{
-					if (UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessTerminated,
-										statusString).ok())
-					{
-						ptr->statusString.setWithRetain(statusString);
-					}
+					ptr->statusString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_SessionInfoWindowStatusProcessTerminated));
 				}
 			}
 			else if (kSession_StateActiveUnstable == ptr->status)
@@ -5053,7 +4931,7 @@ vectorGraphicsWindows(),
 vectorGraphicsInterpreter(nullptr),
 readBufferSizeMaximum(4096), // arbitrary, for initialization
 readBufferSizeInUse(0),
-readBufferPtr(new UInt8[this->readBufferSizeMaximum]),
+readBufferPtr(std::make_unique<UInt8[]>(this->readBufferSizeMaximum)),
 writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
 inactivityWatchTimerUPP(nullptr),
@@ -5231,10 +5109,6 @@ My_Session::
 	}
 	
 	// dispose contents
-	if (nullptr != this->readBufferPtr)
-	{
-		delete [] this->readBufferPtr, this->readBufferPtr = nullptr;
-	}
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
 	if (nil != textInputDelegate)
@@ -6683,25 +6557,57 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 Reads as much available data as possible (based on the size of
 the processing buffer) and processes it, which will result in
 either displaying it as text or interpreting it as one or more
-commands.  The number of bytes left to be processed is returned,
-so if the result is greater than zero you ought to call this
-routine again.
+commands.  On input, "inPtr->readBufferSizeInUse" determines
+how much data is available and this is updated upon return.
+
+Note that all sessions are now Unix processes and the original
+data from the process is retrieved by a read() system call in a
+separate thread (see the Local module).  This function processes
+data that has been indirectly enqueued by that handler.
+
+The specified data is sent to all targets currently active in
+the given session and targets react in the appropriate way.
+Currently, a target can be a terminal (VT or DUMB) or a TEK
+vector graphics window.
+
+See the documentation on Session_DataTarget for more information
+on session data targets.
 
 (3.0)
 */
-size_t
+void
 processMoreData		(My_SessionPtr	inPtr)
 {
-	size_t		result = 0;
+	// “carbon copy” the data to all active attached targets; take care
+	// not to do this once a session is flagged for destruction, since
+	// at that point it may not be able to handle data anymore
+	if ((kSession_StateImminentDisposal != inPtr->status) &&
+		(kSession_StateDead != inPtr->status))
+	{
+		size_t const		kProcessedByteCount = inPtr->readBufferSizeInUse;
+		UInt8 const* const	kBuffer = inPtr->readBufferPtr.get();
+		
+		
+		// dumb terminals are considered compatible with any kind of data and always receive data
+		std::for_each(inPtr->targetDumbTerminals.begin(), inPtr->targetDumbTerminals.end(),
+						terminalDumbDataWriter(kBuffer, kProcessedByteCount));
+		
+		// if any TEK canvases are installed, they take precedence
+		if (inPtr->targetVectorGraphics.empty())
+		{
+			// this is the typical case; send data to a sophisticated terminal emulator
+			std::for_each(inPtr->targetTerminals.begin(), inPtr->targetTerminals.end(),
+							terminalDataWriter(kBuffer, kProcessedByteCount));
+		}
+		else
+		{
+			// write to all attached TEK windows
+			std::for_each(inPtr->targetVectorGraphics.begin(), inPtr->targetVectorGraphics.end(),
+							vectorGraphicsDataWriter(kBuffer, kProcessedByteCount));
+		}
+	}
 	
-	
-	// local session data on Mac OS X is handled in a separate
-	// thread using the blocking read() system call, so in that
-	// case data is expected to have been placed in the read buffer
-	// already by that thread
-	UNUSED_RETURN(Session_Result)Session_ReceiveData(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
 	inPtr->readBufferSizeInUse = 0;
-	return result;
 }// processMoreData
 
 

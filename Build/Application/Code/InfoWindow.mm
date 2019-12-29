@@ -45,7 +45,6 @@
 #import <CoreServices/CoreServices.h>
 
 // library includes
-#import <CarbonEventUtilities.template.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaExtensions.objc++.h>
