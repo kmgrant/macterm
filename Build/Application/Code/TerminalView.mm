@@ -78,6 +78,7 @@
 #import "NetEvents.h"
 #import "Preferences.h"
 #import "PrefPanelTranslations.h"
+#import "PrintTerminal.h"
 #import "QuillsTerminal.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
@@ -552,6 +553,9 @@ The private class interface.
 	sender:(id)_;
 	- (void)
 	moveCursorForKeyBindingSelector:(SEL)_
+	sender:(id)_;
+	- (void)
+	printForSelector:(SEL)_
 	sender:(id)_;
 
 @end //}
@@ -10607,6 +10611,86 @@ canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 - (IBAction)
+performOpenURL:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screen = self.internalViewPtr->screen.ref;
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	// open the appropriate helper application for the URL in the selected
+	// text (which may be MacTerm itself), and send a “handle URL” event
+	URL_HandleForScreenView(screen, view);
+}
+- (id)
+canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = ((false == EventLoop_IsMainWindowFullScreen()) && TerminalView_TextSelectionExists([self terminalViewRef]));
+	
+	
+	if (result)
+	{
+		TerminalViewRef		view = [self terminalViewRef];
+		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
+											(view, 0/* Copy with Tab Substitution info */,
+												kTerminalView_TextFlagInline),
+											CFRetainRelease::kAlreadyRetained);
+		
+		
+		if (false == selectedText.exists())
+		{
+			result = NO;
+		}
+		else
+		{
+			URL_Type	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
+			
+			
+			if (kURL_TypeInvalid == urlKind)
+			{
+				result = NO; // disable command for non-URL text selections
+			}
+		}
+	}
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performPrintScreen:(id)		sender
+{
+	// see also "performPrintSelection:", which is similar...
+	[self printForSelector:_cmd sender:sender];
+}
+- (id)
+canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+- (IBAction)
+performPrintSelection:(id)	sender
+{
+#pragma unused(sender)
+	// see also "performPrintScreen:", which is similar...
+	[self printForSelector:_cmd sender:sender];
+}
+- (id)
+canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
 performRestart:(id)		sender
 {
 #pragma unused(sender)
@@ -11582,6 +11666,32 @@ characterIndexForPoint:(NSPoint)	aPoint
 }// characterIndexForPoint:
 
 
+#pragma mark NSUserInterfaceValidations
+
+
+/*!
+The standard Cocoa interface for validating things like menu
+commands.  This method is present here because it must be in
+the same class as the methods that perform actions; if the
+action methods move, their validation code must move as well.
+
+Returns true only if the specified item should be available
+to the user.
+
+(4.0)
+*/
+- (BOOL)
+validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
+{
+	// the call below enables the magic that allows validation to be automatic
+	// whenever a "canPerform..." method for a "perform..." action also exists
+	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:anItem.action sender:self];
+	
+	
+	return result;
+}// validateUserInterfaceItem:
+
+
 #pragma mark NSView
 
 
@@ -12154,6 +12264,45 @@ sender:(id)								sender
 		}
 	}
 }// moveCursorForKeyBindingSelector:sender:
+
+
+/*!
+Implements both “print screen” and “print selection”.
+
+(2020.01)
+*/
+- (void)
+printForSelector:(SEL)	aSelector
+sender:(id)				sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screen = self.internalViewPtr->screen.ref;
+	TerminalViewRef		view = [self terminalViewRef];
+	BOOL				isPrintScreen = ((@selector(performPrintScreen:) == aSelector) ||
+											(false == TerminalView_TextSelectionExists(view)));
+	CFRetainRelease		jobTitle(((isPrintScreen)
+									? UIStrings_ReturnCopy(kUIStrings_TerminalPrintScreenJobTitle)
+									: UIStrings_ReturnCopy(kUIStrings_TerminalPrintSelectionJobTitle)),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	if (jobTitle.exists())
+	{
+		PrintTerminal_JobRef	printJob = ((isPrintScreen)
+											? PrintTerminal_NewJobFromVisibleScreen
+												(view, screen, jobTitle.returnCFStringRef())
+											: PrintTerminal_NewJobFromSelectedText
+												(view, jobTitle.returnCFStringRef()));
+		
+		
+		if (nullptr != printJob)
+		{
+			UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
+												(printJob, nil/* window; INCOMPLETE */);
+			PrintTerminal_ReleaseJob(&printJob);
+		}
+	}
+}// printForSelector:sender:
 
 
 @end //} TerminalView_ContentView (TerminalView_ContentViewInternal)

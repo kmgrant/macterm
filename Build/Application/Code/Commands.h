@@ -63,7 +63,6 @@ class NSMenuItem;
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include <ListenerModel.h>
 #include <ResultCode.template.h>
 
 // application includes
@@ -109,16 +108,6 @@ added (for example, window content controls might gain
 contextual menus that can automatically execute the right
 MacTerm commands, such as Cut, Copy, Paste or Undo).
 */
-
-// Application (Apple) menu
-// WARNING: These are referenced by value in the MainMenus.nib and
-//          MenuForDockIcon.nib files!
-#define kCommandFullScreenToggle				'Kios'
-
-// File menu
-#define kCommandHandleURL						'HURL'
-#define kCommandPrint							kHICommandPrint
-#define kCommandPrintScreen						'PrSc'
 
 // Edit menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
@@ -267,19 +256,6 @@ see Commands.mm.
 @interface Commands_Executor (Commands_ApplicationCoreEvents) @end
 
 /*!
-Actions related to capturing terminal data to a file.
-*/
-@interface Commands_Executor (Commands_Capturing) //{
-
-// actions
-	- (IBAction)
-	performPrintScreen:(id)_;
-	- (IBAction)
-	performPrintSelection:(id)_;
-
-@end //}
-
-/*!
 Actions typically associated with the Edit menu.
 */
 @interface Commands_Executor (Commands_Editing) //{
@@ -349,8 +325,6 @@ Actions that cause Internet addresses to be accessed.
 	performCheckForUpdates:(id)_;
 	- (IBAction)
 	performGoToMainWebSite:(id)_;
-	- (IBAction)
-	performOpenURL:(id)_;
 	- (IBAction)
 	performProvideFeedback:(id)_;
 
@@ -606,15 +580,72 @@ Actions to cycle through windows.
 @end //}
 
 /*!
-Temporary methods.
-*/
-@interface Commands_Executor (Commands_TransitionFromCarbon) //{
+Actions related to printing.
 
-// new methods
-	- (NSMenuItem*)
-	newMenuItemForCommand:(UInt32)_
-	itemTitle:(NSString*)_
-	ifEnabled:(BOOL)_;
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_Printing //{
+
+// actions
+	- (IBAction)
+	performPrintScreen:(id)_;
+	- (IBAction)
+	performPrintSelection:(id)_;
+
+@end //}
+
+/*!
+Actions for accessing text via standard system commands.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardSelectionHandlingReadOnly //{
+
+// actions
+	- (IBAction)
+	copy:(id)_;
+	- (IBAction)
+	paste:(id)_;
+	- (IBAction)
+	selectAll:(id)_;
+	- (IBAction)
+	selectNone:(id)_;
+
+@end //}
+
+/*!
+Actions for speech control via standard system commands.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardSpeechHandling //{
+
+// actions
+	- (IBAction)
+	startSpeaking:(id)_;
+	- (IBAction)
+	stopSpeaking:(id)_;
+
+@end //}
+
+/*!
+Actions for opening a selected URL.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_URLSelectionHandling //{
+
+// actions
+	- (IBAction)
+	performOpenURL:(id)_;
 
 @end //}
 
@@ -670,12 +701,6 @@ NSMenuItem*
 											 CFStringRef				inPreferredTitle,
 											 Boolean					inMustBeEnabled = false);
 #endif
-
-// WARNING: CURRENTLY ONLY IMPLEMENTED FOR CONTEXTUAL MENU COMMAND IDS
-NSMenuItem*
-	Commands_NewMenuItemForCommand			(UInt32						inCommandID,
-											 CFStringRef				inPreferredTitle,
-											 Boolean					inMustBeEnabled = false);
 
 //@}
 

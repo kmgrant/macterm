@@ -38,6 +38,7 @@
 
 // library includes
 #import <CocoaExtensions.objc++.h>
+#import <Console.h>
 
 // application includes
 #import "ChildProcessWC.objc++.h"

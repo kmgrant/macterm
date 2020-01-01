@@ -333,7 +333,11 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalView_ContentView : NSControl < NSStandardKeyBindingResponding,
+@interface TerminalView_ContentView : NSControl < Commands_Printing,
+													Commands_StandardSelectionHandlingReadOnly,
+													Commands_StandardSpeechHandling,
+													Commands_URLSelectionHandling,
+													NSStandardKeyBindingResponding,
 													NSTextInputClient > //{
 {
 @private
@@ -352,10 +356,6 @@ changes to an interface declared in a ".mm" file.
 	textInputDelegate;
 
 // actions
-	- (IBAction)
-	copy:(id)_;
-	- (IBAction)
-	paste:(id)_;
 	- (IBAction)
 	performCaptureBegin:(id)_;
 	- (IBAction)
@@ -388,14 +388,6 @@ changes to an interface declared in a ".mm" file.
 	performTranslationSwitchByFavoriteName:(id)_;
 	- (IBAction)
 	performTranslationSwitchDefault:(id)_;
-	- (IBAction)
-	selectAll:(id)_;
-	- (IBAction)
-	selectNone:(id)_;
-	- (IBAction)
-	startSpeaking:(id)_;
-	- (IBAction)
-	stopSpeaking:(id)_;
 
 @end //}
 

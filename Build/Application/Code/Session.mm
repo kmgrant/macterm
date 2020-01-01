@@ -5785,7 +5785,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	#if 0
 		if (0/* if not VT220 */)
 		{
-			result = Commands_ExecuteByID(kCommandPrintScreen);
+			result = Commands_ViaFirstResponderPerformSelector(@selector(performPrintScreen:));
 		}
 		else
 	#endif

@@ -2165,10 +2165,9 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					stopTrackingSession(session);
 					
 					// end kiosk mode no matter what terminal is disconnecting
-					// TEMPORARY: fix this...why does it seem sometimes this event does not happen?!?
 					if ((nullptr != terminalWindow) && TerminalWindow_IsFullScreen(terminalWindow))
 					{
-						Commands_ExecuteByIDUsingEvent(kCommandFullScreenToggle);
+						[TerminalWindow_ReturnNSWindow(terminalWindow) toggleFullScreen:NSApp];
 					}
 				}
 				break;

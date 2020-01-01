@@ -81,7 +81,6 @@ extern "C"
 #import "MacroManager.h"
 #import "PrefPanelTranslations.h"
 #import "PrefsWindow.h"
-#import "PrintTerminal.h"
 #import "QuillsEvents.h"
 #import "QuillsSession.h"
 #import "Session.h"
@@ -402,44 +401,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		switch (inCommandID)
 		{
-		case kCommandHandleURL:
-			// open the appropriate helper application for the URL in the selected
-			// text (which may be MacTerm itself), and send a “handle URL” event
-			if (isSession) URL_HandleForScreenView(activeScreen, activeView);
-			else Sound_StandardAlert();
-			break;
-		
-		case kCommandPrint:
-		case kCommandPrintScreen:
-			// print the selection or the screen using the print dialog
-			{
-				Boolean				printScreen = ((kCommandPrintScreen == inCommandID) ||
-													(false == TerminalView_TextSelectionExists(activeView)));
-				CFRetainRelease		jobTitle(((printScreen)
-												? UIStrings_ReturnCopy(kUIStrings_TerminalPrintScreenJobTitle)
-												: UIStrings_ReturnCopy(kUIStrings_TerminalPrintSelectionJobTitle)),
-												CFRetainRelease::kAlreadyRetained);
-				
-				
-				if (jobTitle.exists())
-				{
-					PrintTerminal_JobRef	printJob = (printScreen)
-														? PrintTerminal_NewJobFromVisibleScreen
-															(activeView, activeScreen, jobTitle.returnCFStringRef())
-														: PrintTerminal_NewJobFromSelectedText
-															(activeView, jobTitle.returnCFStringRef());
-					
-					
-					if (nullptr != printJob)
-					{
-						UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-															(printJob, nil/* window; INCOMPLETE */);
-						PrintTerminal_ReleaseJob(&printJob);
-					}
-				}
-			}
-			break;
-		
 		//case kCommandFind:
 		//case kCommandFindAgain:
 		//case kCommandFindPrevious:
@@ -792,44 +753,6 @@ Commands_NewMenuItemForAction	(SEL			inActionSelector,
 	
 	return result;
 }// NewMenuItemForAction
-
-
-/*!
-Allocates and initializes a new NSMenuItem instance that
-will handle the specified command correctly.  (You must
-"release" it yourself.)
-
-If "inMustBeEnabled" is true, the result is nil whenever
-the command is not available to the user.  (This is useful
-for omitting items from contextual menus.)
-
-WARNING:	This currently only works for command IDs that
-		are used for contextual menu items.
-
-DEPRECATED.  This is here for transitional purposes, as it
-is useful in some cases (particularly contextual menus) to
-refer to items by ID.  However, menu items from now on will
-be primarily checked using Objective-C and Cocoa
-selectors.
-
-(4.1)
-*/
-NSMenuItem*
-Commands_NewMenuItemForCommand	(UInt32			inCommandID,
-								 CFStringRef	inPreferredTitle,
-								 Boolean		inMustBeEnabled)
-{
-	Commands_Executor*		commandExecutor = (Commands_Executor*)[Commands_Executor sharedExecutor];
-	NSMenuItem*				result = nil;
-	
-	
-	assert(nil != commandExecutor);
-	
-	result = [commandExecutor newMenuItemForCommand:inCommandID itemTitle:BRIDGE_CAST(inPreferredTitle, NSString*)
-													ifEnabled:inMustBeEnabled];
-	
-	return result;
-}// NewMenuItemForCommand
 
 
 /*!
@@ -2564,7 +2487,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(copy:) == anActionSelector)
@@ -2601,7 +2523,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"f"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performShowCompletions:) == anActionSelector)
@@ -2614,7 +2535,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performFormatCustom:) == anActionSelector)
@@ -2639,7 +2559,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"u"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performHideWindow:) == anActionSelector)
@@ -2652,7 +2571,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(paste:) == anActionSelector)
@@ -2682,7 +2600,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 														keyEquivalent:[NSString stringWithCharacters:&functionKeyChar
 																										length:1]];
 			[result setKeyEquivalentModifierMask:0];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performPrintSelection:) == anActionSelector)
@@ -2695,7 +2612,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performSaveSelection:) == anActionSelector)
@@ -2720,7 +2636,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(performScreenResizeCustom:) == anActionSelector)
@@ -2733,7 +2648,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"k"];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(startSpeaking:) == anActionSelector)
@@ -2770,7 +2684,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	else if (@selector(moveTabToNewWindow:) == anActionSelector)
@@ -2783,7 +2696,6 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@""];
-			[result setTarget:self]; // TEMPORARY
 		}
 	}
 	
@@ -3072,51 +2984,6 @@ applicationWillTerminate:(NSNotification*)		aNotification
 
 
 @end //} Commands_Executor (Commands_ApplicationCoreEvents)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_Capturing) //{
-
-
-- (IBAction)
-performPrintScreen:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandPrintScreen, nullptr/* target */);
-	}
-}
-- (id)
-canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = (nullptr != TerminalWindow_ReturnFromMainWindow());
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performPrintSelection:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandPrint, nullptr/* target */);
-	}
-}
-- (id)
-canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = textSelectionExists();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_Capturing)
 
 
 #pragma mark -
@@ -3683,51 +3550,6 @@ canPerformGoToMainWebSite:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	return @(YES);
-}
-
-
-- (IBAction)
-performOpenURL:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandHandleURL, nullptr/* target */);
-	}
-}
-- (id)
-canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == EventLoop_IsMainWindowFullScreen()) && textSelectionExists());
-	
-	
-	if (result)
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
-											(view, 0/* Copy with Tab Substitution info */,
-												kTerminalView_TextFlagInline),
-											CFRetainRelease::kAlreadyRetained);
-		
-		
-		if (false == selectedText.exists())
-		{
-			result = NO;
-		}
-		else
-		{
-			URL_Type	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
-			
-			
-			if (kURL_TypeInvalid == urlKind)
-			{
-				result = NO; // disable command for non-URL text selections
-			}
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -6097,79 +5919,6 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 @end //} Commands_Executor (Commands_SwitchingWindows)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_TransitionFromCarbon) //{
-
-
-/*!
-Internal version of Commands_NewMenuItemForCommand().
-
-(4.1)
-*/
-- (NSMenuItem*)
-newMenuItemForCommand:(UInt32)	aCommandID
-itemTitle:(NSString*)			aTitle
-ifEnabled:(BOOL)				onlyIfEnabled
-{
-	NSMenuItem*		result = nil;
-	SEL				theSelector = nil;
-	
-	
-	// NOTE: Some key equivalents are arbitrarily added below.
-	// They should match whatever is chosen for the same
-	// commands in top-level menus.  Also, lower-case letters
-	// appear as single capital letters in menus and capital
-	// letters implicitly add a shift-key modifier.
-	switch (aCommandID)
-	{
-	case kCommandFind:
-		theSelector = @selector(performFind:);
-		break;
-	
-	case kCommandFullScreenToggle:
-		theSelector = @selector(toggleFullScreen:);
-		break;
-	
-	case kCommandHandleURL:
-		theSelector = @selector(performOpenURL:);
-		break;
-	
-	case kCommandPrintScreen:
-		theSelector = @selector(performPrintScreen:);
-		break;
-	
-	case kCommandSetKeys:
-		theSelector = @selector(performMappingCustom:);
-		break;
-	
-	case kCommandSetScreenSize:
-		theSelector = @selector(performScreenResizeCustom:);
-		break;
-	
-	case kCommandShowCompletions:
-		theSelector = @selector(performShowCompletions:);
-		break;
-	
-	case kCommandTerminalNewWorkspace:
-		theSelector = @selector(moveTabToNewWindow:);
-		break;
-	
-	default:
-		break;
-	}
-	
-	if (nil != theSelector)
-	{
-		result = [self newMenuItemForAction:theSelector itemTitle:aTitle ifEnabled:onlyIfEnabled];
-	}
-	
-	return result;
-}// newMenuItemForCommand:itemTitle:ifEnabled:
-
-
-@end //} Commands_Executor (Commands_TransitionFromCarbon)
 
 
 #pragma mark -
