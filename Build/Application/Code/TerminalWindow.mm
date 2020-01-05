@@ -1473,8 +1473,7 @@ See also setScreenPreferences().
 void
 TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 									 UInt16				inNewColumnCount,
-									 UInt16				inNewRowCount,
-									 Boolean			UNUSED_ARGUMENT(inSendToRecordingScripts))
+									 UInt16				inNewRowCount)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	TerminalScreenRef				activeScreen = getActiveScreen(ptr);
@@ -2711,8 +2710,7 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 				TerminalWindow_GetScreenDimensions(dataPtr->terminalWindow, &oldColumns, &oldRows);
 				
 				// resize the window
-				TerminalWindow_SetScreenDimensions(dataPtr->terminalWindow, dataPtr->columns, dataPtr->rows,
-													true/* recordable */);
+				TerminalWindow_SetScreenDimensions(dataPtr->terminalWindow, dataPtr->columns, dataPtr->rows);
 				
 				// save the dimensions
 				dataPtr->columns = oldColumns;
@@ -4001,6 +3999,195 @@ performFind:(id)	sender
 
 
 /*!
+Displays an interface for the user to customize the text
+encoding.
+
+(2018.03)
+*/
+- (IBAction)
+performTranslationSwitchCustom:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
+}// performTranslationSwitchCustom:
+
+
+#pragma mark Actions: Commands_TerminalScreenResizing
+
+
+/*!
+Displays an interface for the user to customize the terminal
+screen dimensions and scrollback settings.
+
+(2018.03)
+*/
+- (IBAction)
+performScreenResizeCustom:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomScreenSizeUI(self.terminalWindowRef);
+}// performScreenResizeCustom:
+
+
+/*!
+Slightly decreases the number of columns in each terminal view.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeNarrower:(id)	sender
+{
+#pragma unused(sender)
+	UInt16 const	kMinimumDimension = 10; // arbitrary
+	// note: delta should be consistent with "performScreenResizeWider:"
+	UInt16 const	kReduction = 10; // arbitrary; resize by somewhat coarse amounts
+	UInt16			columnCount = 0;
+	UInt16			rowCount = 0;
+	
+	
+	//installUndoScreenDimensionChanges(self.terminalWindowRef);
+	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
+	if ((columnCount - kReduction) < kMinimumDimension)
+	{
+		Sound_StandardAlert();
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, kMinimumDimension, rowCount);
+	}
+	else
+	{
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount - kReduction, rowCount);
+	}
+}
+
+
+/*!
+Slightly decreases the number of rows in each terminal view.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeShorter:(id)	sender
+{
+#pragma unused(sender)
+	UInt16 const	kMinimumDimension = 1; // arbitrary
+	// note: delta should be consistent with "performScreenResizeTaller:"
+	UInt16 const	kReduction = 4; // arbitrary; resize by somewhat coarse amounts
+	UInt16			columnCount = 0;
+	UInt16			rowCount = 0;
+	
+	
+	//installUndoScreenDimensionChanges(self.terminalWindowRef);
+	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
+	if ((rowCount - kReduction) < kMinimumDimension)
+	{
+		Sound_StandardAlert();
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, kMinimumDimension);
+	}
+	else
+	{
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, rowCount - kReduction);
+	}
+}
+
+
+/*!
+Sets the size of each terminal view so that the total number of
+rows and columns is the standard 80×24 size.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeStandard:(id)	sender
+{
+#pragma unused(sender)
+	// IMPORTANT: dimensions chosen here should match what
+	// is shown in the corresponding menu item’s title;
+	// also, these dimensions are specified by VT100 modes
+	// and should not be set arbitrarily
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, 80, 24);
+}
+
+
+/*!
+Sets the size of each terminal view so that the total number of
+rows and columns is a standard 80 columns wide with a large
+number of rows.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeTall:(id)	sender
+{
+#pragma unused(sender)
+	// IMPORTANT: dimensions chosen here should match what
+	// is shown in the corresponding menu item’s title
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, 80, 40);
+}
+
+
+/*!
+Slightly increases the number of rows in each terminal view.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeTaller:(id)	sender
+{
+#pragma unused(sender)
+	// note: delta should be consistent with "performScreenResizeShorter:"
+	UInt16 const	kAddition = 4; // arbitrary; resize by somewhat coarse amounts
+	UInt16			columnCount = 0;
+	UInt16			rowCount = 0;
+	
+	
+	//installUndoScreenDimensionChanges(self.terminalWindowRef);
+	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, rowCount + kAddition);
+}
+
+
+/*!
+Sets the size of each terminal view so that the total number of
+rows and columns is the standard 132×24 size.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeWide:(id)	sender
+{
+#pragma unused(sender)
+	// IMPORTANT: dimensions chosen here should match what
+	// is shown in the corresponding menu item’s title;
+	// also, these dimensions are specified by VT100 modes
+	// and should not be set arbitrarily
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, 132, 24);
+}
+
+
+/*!
+Slightly increases the number of columns in each terminal view.
+
+(2020.01)
+*/
+- (IBAction)
+performScreenResizeWider:(id)	sender
+{
+#pragma unused(sender)
+	// note: delta should be consistent with "performScreenResizeNarrower:"
+	UInt16 const	kAddition = 10; // arbitrary; resize by somewhat coarse amounts
+	UInt16			columnCount = 0;
+	UInt16			rowCount = 0;
+	
+	
+	//installUndoScreenDimensionChanges(self.terminalWindowRef);
+	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount + kAddition, rowCount);
+}
+
+
+#pragma mark Actions: Commands_TextFormatting
+
+
+/*!
 Displays an interface for the user to customize formatting,
 such as the font and color settings.
 
@@ -4041,31 +4228,17 @@ performFormatTextSmaller:(id)	sender
 
 
 /*!
-Displays an interface for the user to customize the terminal
-screen dimensions and scrollback settings.
+Sets the font size to the largest value that will fit the
+terminal’s current number of rows and columns on the display.
 
-(2018.03)
+(2020.01)
 */
 - (IBAction)
-performScreenResizeCustom:(id)	sender
+performFormatTextMaximum:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindow_DisplayCustomScreenSizeUI(self.terminalWindowRef);
-}// performScreenResizeCustom:
-
-
-/*!
-Displays an interface for the user to customize the text
-encoding.
-
-(2018.03)
-*/
-- (IBAction)
-performTranslationSwitchCustom:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
-}// performTranslationSwitchCustom:
+	Console_Warning(Console_WriteLine, "unimplemented: set-maximum-size");
+}
 
 
 #pragma mark New Methods

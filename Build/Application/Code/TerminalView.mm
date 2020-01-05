@@ -10274,105 +10274,7 @@ terminalViewRef
 }// terminalViewRef
 
 
-#pragma mark Actions
-
-
-/*!
-Copies selected text or images from the terminal view to
-the clipboard.
-
-(2018.12)
-*/
-- (IBAction)
-copy:(id)	sender
-{
-#pragma unused(sender)
-	// determine if the current selection is an image
-	CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy([self terminalViewRef]),
-												CFRetainRelease::kAlreadyRetained); 
-	NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
-	
-	
-	if (selectedNSImageArray.exists() && (asArray.count > 0))
-	{
-		Boolean		haveCleared = false;
-		
-		
-		for (NSImage* asImage in asArray)
-		{
-			assert([asImage isKindOfClass:NSImage.class]);
-			OSStatus	copyStatus = noErr;
-			
-			
-			copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
-															(false == haveCleared)/* clear flag */);
-			if (noErr != copyStatus)
-			{
-				Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
-			}
-			else
-			{
-				// if more than one image is selected, add them all
-				haveCleared = true;
-			}
-		}
-	}
-	else
-	{
-		Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodStandard);
-	}
-}
-- (id)
-canCopy:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-/*!
-Send text from the clipboard to the session, as if it had
-been typed by the user.  This may first trigger a warning,
-if the text spans multiple lines.
-
-(2018.12)
-*/
-- (IBAction)
-paste:(id)	sender
-{
-#pragma unused(sender)
-	Session_Result		sessionResult = Session_UserInputPaste([self boundSession]); // paste if there is a window to paste into
-	
-	
-	if (false == sessionResult.ok())
-	{
-		Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
-	}
-}
-- (id)
-canPaste:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL			result = NO;
-	CFArrayRef		dummyCFStringArray = nullptr;
-	Boolean			clipboardContainsText = false;
-	
-	
-	// TEMPORARY; this is a somewhat expensive way to check something
-	// that can probably be stored as a simple state flag (or queried
-	// from the system)
-	if (Clipboard_CreateCFStringArrayFromPasteboard(dummyCFStringArray))
-	{
-		clipboardContainsText = true;
-		CFRelease(dummyCFStringArray); dummyCFStringArray = nullptr; 
-	}
-	result = (clipboardContainsText);
-	
-	return ((result) ? @(YES) : @(NO));
-}
+#pragma mark Actions: General
 
 
 /*!
@@ -10479,96 +10381,6 @@ canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
-/*!
-Uses the name of the given sender (expected to be a menu item) to
-find a Format set of Preferences from which to copy new font and
-color information.
-
-(4.0)
-*/
-- (IBAction)
-performFormatByFavoriteName:(id)	sender
-{
-	TerminalViewRef		currentView = self.internalViewPtr->selfRef;
-	BOOL				isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
-	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
-		
-		
-		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
-		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::FORMAT, collectionName),
-														Preferences_ContextWrap::kAlreadyRetained);
-			
-			
-			if (namedSettings.exists())
-			{
-				// change font and/or colors of frontmost window according to the specified preferences
-				Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
-				Preferences_Result			prefsResult = kPreferences_ResultOK;
-				
-				
-				prefsResult = Preferences_ContextCopy(namedSettings.returnRef(), currentSettings);
-				isError = (kPreferences_ResultOK != prefsResult);
-			}
-		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
-	}
-}
-- (id)
-canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
-
-
-/*!
-Copies new font and color information from the Default set.
-
-(4.0)
-*/
-- (IBAction)
-performFormatDefault:(id)	sender
-{
-#pragma unused(sender)
-	TerminalViewRef			currentView = self.internalViewPtr->selfRef;
-	Preferences_ContextRef	currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
-	Preferences_ContextRef	defaultSettings = nullptr;
-	BOOL					isError = YES;
-	
-	
-	// reformat frontmost window using the Default preferences
-	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
-	{
-		isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
-	}
-}
-- (id)
-canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
-
-
 - (IBAction)
 performKill:(id)	sender
 {
@@ -10606,86 +10418,6 @@ canPerformKill:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		result = (false == Session_StateIsDead(listeningSession));
 	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performOpenURL:(id)		sender
-{
-#pragma unused(sender)
-	TerminalScreenRef	screen = self.internalViewPtr->screen.ref;
-	TerminalViewRef		view = [self terminalViewRef];
-	
-	
-	// open the appropriate helper application for the URL in the selected
-	// text (which may be MacTerm itself), and send a “handle URL” event
-	URL_HandleForScreenView(screen, view);
-}
-- (id)
-canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((false == EventLoop_IsMainWindowFullScreen()) && TerminalView_TextSelectionExists([self terminalViewRef]));
-	
-	
-	if (result)
-	{
-		TerminalViewRef		view = [self terminalViewRef];
-		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
-											(view, 0/* Copy with Tab Substitution info */,
-												kTerminalView_TextFlagInline),
-											CFRetainRelease::kAlreadyRetained);
-		
-		
-		if (false == selectedText.exists())
-		{
-			result = NO;
-		}
-		else
-		{
-			URL_Type	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
-			
-			
-			if (kURL_TypeInvalid == urlKind)
-			{
-				result = NO; // disable command for non-URL text selections
-			}
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performPrintScreen:(id)		sender
-{
-	// see also "performPrintSelection:", which is similar...
-	[self printForSelector:_cmd sender:sender];
-}
-- (id)
-canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
-
-
-- (IBAction)
-performPrintSelection:(id)	sender
-{
-#pragma unused(sender)
-	// see also "performPrintScreen:", which is similar...
-	[self printForSelector:_cmd sender:sender];
-}
-- (id)
-canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
-	
-	
 	return ((result) ? @(YES) : @(NO));
 }
 
@@ -10906,6 +10638,142 @@ canPerformTranslationSwitchDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
+#pragma mark Actions: Commands_Printing
+
+
+- (IBAction)
+performPrintScreen:(id)		sender
+{
+	// see also "performPrintSelection:", which is similar...
+	[self printForSelector:_cmd sender:sender];
+}
+- (id)
+canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+- (IBAction)
+performPrintSelection:(id)	sender
+{
+#pragma unused(sender)
+	// see also "performPrintScreen:", which is similar...
+	[self printForSelector:_cmd sender:sender];
+}
+- (id)
+canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_StandardEditing
+
+
+/*!
+Copies selected text or images from the terminal view to
+the clipboard.
+
+(2018.12)
+*/
+- (IBAction)
+copy:(id)	sender
+{
+#pragma unused(sender)
+	// determine if the current selection is an image
+	CFRetainRelease		selectedNSImageArray(TerminalView_ReturnSelectedImageArrayCopy([self terminalViewRef]),
+												CFRetainRelease::kAlreadyRetained); 
+	NSArray*			asArray = BRIDGE_CAST(selectedNSImageArray.returnCFArrayRef(), NSArray*);
+	
+	
+	if (selectedNSImageArray.exists() && (asArray.count > 0))
+	{
+		Boolean		haveCleared = false;
+		
+		
+		for (NSImage* asImage in asArray)
+		{
+			assert([asImage isKindOfClass:NSImage.class]);
+			OSStatus	copyStatus = noErr;
+			
+			
+			copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
+															(false == haveCleared)/* clear flag */);
+			if (noErr != copyStatus)
+			{
+				Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
+			}
+			else
+			{
+				// if more than one image is selected, add them all
+				haveCleared = true;
+			}
+		}
+	}
+	else
+	{
+		Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodStandard);
+	}
+}
+- (id)
+canCopy:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
+Send text from the clipboard to the session, as if it had
+been typed by the user.  This may first trigger a warning,
+if the text spans multiple lines.
+
+(2018.12)
+*/
+- (IBAction)
+paste:(id)	sender
+{
+#pragma unused(sender)
+	Session_Result		sessionResult = Session_UserInputPaste([self boundSession]); // paste if there is a window to paste into
+	
+	
+	if (false == sessionResult.ok())
+	{
+		Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
+	}
+}
+- (id)
+canPaste:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL			result = NO;
+	CFArrayRef		dummyCFStringArray = nullptr;
+	Boolean			clipboardContainsText = false;
+	
+	
+	// TEMPORARY; this is a somewhat expensive way to check something
+	// that can probably be stored as a simple state flag (or queried
+	// from the system)
+	if (Clipboard_CreateCFStringArrayFromPasteboard(dummyCFStringArray))
+	{
+		clipboardContainsText = true;
+		CFRelease(dummyCFStringArray); dummyCFStringArray = nullptr; 
+	}
+	result = (clipboardContainsText);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
 - (IBAction)
 selectAll:(id)		sender
 {
@@ -10931,6 +10799,9 @@ canSelectNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	
 	return ((result) ? @(YES) : @(NO));
 }
+
+
+#pragma mark Actions: Commands_StandardSpeechHandling
 
 
 - (IBAction)
@@ -10963,6 +10834,150 @@ canStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return (CocoaBasic_SpeakingInProgress() ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_TextFormatting
+
+
+/*!
+Uses the name of the given sender (expected to be a menu item) to
+find a Format set of Preferences from which to copy new font and
+color information.
+
+(4.0)
+*/
+- (IBAction)
+performFormatByFavoriteName:(id)	sender
+{
+	TerminalViewRef		currentView = self.internalViewPtr->selfRef;
+	BOOL				isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	{
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		
+		
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
+		{
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::FORMAT, collectionName),
+														Preferences_ContextWrap::kAlreadyRetained);
+			
+			
+			if (namedSettings.exists())
+			{
+				// change font and/or colors of frontmost window according to the specified preferences
+				Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
+				
+				
+				prefsResult = Preferences_ContextCopy(namedSettings.returnRef(), currentSettings);
+				isError = (kPreferences_ResultOK != prefsResult);
+			}
+		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformFormatByFavoriteName:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+/*!
+Copies new font and color information from the Default set.
+
+(4.0)
+*/
+- (IBAction)
+performFormatDefault:(id)	sender
+{
+#pragma unused(sender)
+	TerminalViewRef			currentView = self.internalViewPtr->selfRef;
+	Preferences_ContextRef	currentSettings = TerminalView_ReturnFormatConfiguration(currentView);
+	Preferences_ContextRef	defaultSettings = nullptr;
+	BOOL					isError = YES;
+	
+	
+	// reformat frontmost window using the Default preferences
+	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
+	{
+		isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+#pragma mark Actions: Commands_URLSelectionHandling
+
+
+- (IBAction)
+performOpenURL:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screen = self.internalViewPtr->screen.ref;
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	// open the appropriate helper application for the URL in the selected
+	// text (which may be MacTerm itself), and send a “handle URL” event
+	URL_HandleForScreenView(screen, view);
+}
+- (id)
+canPerformOpenURL:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = ((false == EventLoop_IsMainWindowFullScreen()) && TerminalView_TextSelectionExists([self terminalViewRef]));
+	
+	
+	if (result)
+	{
+		TerminalViewRef		view = [self terminalViewRef];
+		CFRetainRelease		selectedText(TerminalView_ReturnSelectedTextCopyAsUnicode
+											(view, 0/* Copy with Tab Substitution info */,
+												kTerminalView_TextFlagInline),
+											CFRetainRelease::kAlreadyRetained);
+		
+		
+		if (false == selectedText.exists())
+		{
+			result = NO;
+		}
+		else
+		{
+			URL_Type	urlKind = URL_ReturnTypeFromCFString(selectedText.returnCFStringRef());
+			
+			
+			if (kURL_TypeInvalid == urlKind)
+			{
+				result = NO; // disable command for non-URL text selections
+			}
+		}
+	}
+	
+	return ((result) ? @(YES) : @(NO));
 }
 
 

@@ -252,7 +252,9 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalWindow_Controller : NSWindowController < NSWindowDelegate > //{
+@interface TerminalWindow_Controller : NSWindowController < Commands_TerminalScreenResizing,
+															Commands_TextFormatting,
+															NSWindowDelegate > //{
 {
 @private
 	NSRect						_preFullScreenFrame;
@@ -283,14 +285,6 @@ changes to an interface declared in a ".mm" file.
 // actions
 	- (IBAction)
 	performFind:(id)_;
-	- (IBAction)
-	performFormatCustom:(id)_;
-	- (IBAction)
-	performFormatTextBigger:(id)_;
-	- (IBAction)
-	performFormatTextSmaller:(id)_;
-	- (IBAction)
-	performScreenResizeCustom:(id)_;
 	- (IBAction)
 	performTranslationSwitchCustom:(id)_;
 
@@ -421,8 +415,7 @@ void
 void
 	TerminalWindow_SetScreenDimensions				(TerminalWindowRef			inRef,
 													 UInt16						inNewColumnCount,
-													 UInt16						inNewRowCount,
-													 Boolean					inSendToRecordingScripts);
+													 UInt16						inNewRowCount);
 
 void
 	TerminalWindow_SetIconTitle						(TerminalWindowRef			inRef,

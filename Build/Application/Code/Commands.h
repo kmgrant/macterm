@@ -119,15 +119,6 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 
 // View menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandWiderScreen						'WidI'
-#define kCommandNarrowerScreen					'WidD'
-#define kCommandTallerScreen					'HgtI'
-#define kCommandShorterScreen					'HgtD'
-#define kCommandSmallScreen						'StdW'
-#define kCommandTallScreen						'Tall'
-#define kCommandLargeScreen						'Wide'
-#define kCommandSetScreenSize					'SSiz'
-#define kCommandZoomMaximumSize					'ZmMx'
 #define	kCommandTEKPageCommand					'TEKP'
 #define	kCommandTEKPageClearsScreen				'TEKC'
 
@@ -425,42 +416,6 @@ Actions to change various terminal behaviors.
 @end //}
 
 /*!
-Actions that change the number of rows and/or columns in terminal views.
-*/
-@interface Commands_Executor (Commands_ModifyingTerminalDimensions) //{
-
-// actions
-	- (IBAction)
-	performScreenResizeCustom:(id)_;
-	- (IBAction)
-	performScreenResizeNarrower:(id)_;
-	- (IBAction)
-	performScreenResizeShorter:(id)_;
-	- (IBAction)
-	performScreenResizeStandard:(id)_;
-	- (IBAction)
-	performScreenResizeTall:(id)_;
-	- (IBAction)
-	performScreenResizeTaller:(id)_;
-	- (IBAction)
-	performScreenResizeWide:(id)_;
-	- (IBAction)
-	performScreenResizeWider:(id)_;
-
-@end //}
-
-/*!
-Actions that affect fonts, colors and other format settings.
-*/
-@interface Commands_Executor (Commands_ModifyingTerminalText) //{
-
-// actions
-	- (IBAction)
-	performFormatTextMaximum:(id)_;
-
-@end //}
-
-/*!
 Actions that affect a window’s properties, placement and size.
 */
 @interface Commands_Executor (Commands_ModifyingWindows) //{
@@ -603,11 +558,17 @@ Actions for accessing text via standard system commands.
 one location.  These are actually implemented at different
 points in the responder chain, such as views or windows.)
 */
-@protocol Commands_StandardSelectionHandlingReadOnly //{
+@protocol Commands_StandardEditing //{
+
+@required
 
 // actions
 	- (IBAction)
 	copy:(id)_;
+
+@optional
+
+// actions
 	- (IBAction)
 	paste:(id)_;
 	- (IBAction)
@@ -631,6 +592,64 @@ points in the responder chain, such as views or windows.)
 	startSpeaking:(id)_;
 	- (IBAction)
 	stopSpeaking:(id)_;
+
+@end //}
+
+/*!
+Actions to change number of rows/columns in terminal views.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalScreenResizing //{
+
+@optional
+
+// actions
+	- (IBAction)
+	performScreenResizeCustom:(id)_;
+	- (IBAction)
+	performScreenResizeNarrower:(id)_;
+	- (IBAction)
+	performScreenResizeShorter:(id)_;
+	- (IBAction)
+	performScreenResizeStandard:(id)_;
+	- (IBAction)
+	performScreenResizeTall:(id)_;
+	- (IBAction)
+	performScreenResizeTaller:(id)_;
+	- (IBAction)
+	performScreenResizeWide:(id)_;
+	- (IBAction)
+	performScreenResizeWider:(id)_;
+
+@end //}
+
+/*!
+Actions that affect fonts, colors and other format settings.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TextFormatting //{
+
+@optional
+
+// actions
+	- (IBAction)
+	performFormatByFavoriteName:(id)_;
+	- (IBAction)
+	performFormatCustom:(id)_;
+	- (IBAction)
+	performFormatDefault:(id)_;
+	- (IBAction)
+	performFormatTextBigger:(id)_;
+	- (IBAction)
+	performFormatTextMaximum:(id)_;
+	- (IBAction)
+	performFormatTextSmaller:(id)_;
 
 @end //}
 

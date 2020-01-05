@@ -334,8 +334,10 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalView_ContentView : NSControl < Commands_Printing,
-													Commands_StandardSelectionHandlingReadOnly,
+													Commands_StandardEditing,
 													Commands_StandardSpeechHandling,
+													Commands_TerminalScreenResizing,
+													Commands_TextFormatting,
 													Commands_URLSelectionHandling,
 													NSStandardKeyBindingResponding,
 													NSTextInputClient > //{
@@ -364,10 +366,6 @@ changes to an interface declared in a ".mm" file.
 	performCopyAndPaste:(id)_;
 	- (IBAction)
 	performCopyWithTabSubstitution:(id)_;
-	- (IBAction)
-	performFormatByFavoriteName:(id)_;
-	- (IBAction)
-	performFormatDefault:(id)_;
 	- (IBAction)
 	performKill:(id)_;
 	- (IBAction)

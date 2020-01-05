@@ -411,20 +411,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see TerminalWindow.mm
 		//	break;
 		
-		//case kCommandWiderScreen:
-		//case kCommandNarrowerScreen:
-		//case kCommandTallerScreen:
-		//case kCommandShorterScreen:
-		//case kCommandLargeScreen:
-		//case kCommandSmallScreen:
-		//case kCommandTallScreen:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kCommandSetScreenSize:
-		//	see TerminalWindow.mm
-		//	break;
-		
 		case kCommandBellEnabled:
 			if (isTerminal)
 			{
@@ -4470,111 +4456,6 @@ canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 @end //} Commands_Executor (Commands_ManagingTerminalSettings)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_ModifyingTerminalDimensions) //{
-
-
-- (IBAction)
-performScreenResizeCustom:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		// legacy Carbon
-		Commands_ExecuteByIDUsingEvent(kCommandSetScreenSize, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeNarrower:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandNarrowerScreen, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeShorter:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandShorterScreen, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeStandard:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSmallScreen, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeTall:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandTallScreen, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeTaller:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandTallerScreen, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeWide:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandLargeScreen, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performScreenResizeWider:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandWiderScreen, nullptr/* target */);
-	}
-}
-
-
-@end //} Commands_Executor (Commands_ModifyingTerminalDimensions)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_ModifyingTerminalText) //{
-
-
-- (IBAction)
-performFormatTextMaximum:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandZoomMaximumSize, nullptr/* target */);
-	}
-}
-
-
-@end //} Commands_Executor (Commands_ModifyingTerminalText)
 
 
 #pragma mark -

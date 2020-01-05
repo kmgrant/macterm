@@ -10305,9 +10305,13 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 				case 3:
 					// DECCOLM (80/132 column switch)
 					{
-						UNUSED_RETURN(Boolean)Commands_ExecuteByIDUsingEvent((inIsModeEnabled)
-																				? kCommandLargeScreen
-																				: kCommandSmallScreen);
+						// TEMPORARY; first responder is used for now but this may need
+						// to be sent directly to a particular view or window (in case
+						// the command appears when another window is active)
+						UNUSED_RETURN(Boolean)Commands_ViaFirstResponderPerformSelector((inIsModeEnabled)
+																						? @selector(performScreenResizeWide:)
+																						: @selector(performScreenResizeStandard:),
+																						nil/* object parameter */);
 					}
 					break;
 				
