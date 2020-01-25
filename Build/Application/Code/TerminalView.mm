@@ -63,6 +63,7 @@
 #import <Localization.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
+#import <MenuUtilities.objc++.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
 #import <StringUtilities.h>
@@ -10673,6 +10674,63 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 }
 
 
+#pragma mark Actions: Commands_SessionThrottling
+
+
+- (IBAction)
+performInterruptProcess:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
+	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	Session_UserInputInterruptProcess(session);
+}
+
+
+- (IBAction)
+performJumpScrolling:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
+	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	Session_FlushNetwork(session);
+}
+
+
+- (IBAction)
+performSuspendToggle:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
+	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	Session_SetNetworkSuspended(session, !Session_NetworkIsSuspended(session));
+}
+- (id)
+canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_NetworkIsSuspended(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
 #pragma mark Actions: Commands_StandardEditing
 
 
@@ -10802,6 +10860,45 @@ canSelectNone:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 #pragma mark Actions: Commands_StandardSpeechHandling
+
+
+- (IBAction)
+performSpeechToggle:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
+	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	if (Session_SpeechIsEnabled(session))
+	{
+		Session_SpeechPause(session);
+		Session_SetSpeechEnabled(session, false);
+	}
+	else
+	{
+		Session_SetSpeechEnabled(session, true);
+		Session_SpeechResume(session);
+	}
+}
+- (id)
+canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_SpeechIsEnabled(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
 
 
 - (IBAction)

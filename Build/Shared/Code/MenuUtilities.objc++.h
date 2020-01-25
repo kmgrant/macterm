@@ -54,4 +54,16 @@ Replaces items named "-" (dash) with real separators.
 
 @end //}
 
+
+#pragma mark Public Methods
+
+//!\name Utilities
+//@{
+
+void
+	MenuUtilities_SetItemCheckMark	(id <NSValidatedUserInterfaceItem>	inItem,
+									 BOOL								inIsChecked);
+
+//@}
+
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -85,28 +85,8 @@ enum Commands_NameType
 /*!
 Command IDs
 
-WARNING:	Although all source code should refer to these
-			IDs only via the constants below, a number of
-			Interface Builder NIB files for MacTerm will
-			refer to these by value.  Do not arbitrarily
-			change command IDs without realizing all the
-			places they may be used.
-
-These must all be unique, and Apple reserves any IDs whose
-letters are all-lowercase.
-
-Where appropriate, command IDs for actions that the OS is
-familiar with - such as creating files, closing windows,
-printing documents, etc. - match the IDs that the OS itself
-uses.  This has a number of advantages.  For one, a lot of
-things “just work right” as a result (the OS knows when to
-disable the Minimize Window menu command, for example, since
-it can tell whether the frontmost window has a minimization
-button).  Also, using standard commands means that MacTerm
-will receive events properly when future OS capabilities are
-added (for example, window content controls might gain
-contextual menus that can automatically execute the right
-MacTerm commands, such as Cut, Copy, Paste or Undo).
+These are all deprecated and are being gradually replaced
+by methods on objects in the Cocoa responder chain.
 */
 
 // Edit menu
@@ -117,31 +97,14 @@ MacTerm commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowCompletions					'SCmp'
 #define kCommandFindCursor						'FndC'
 
-// View menu
-// WARNING: These are referenced by value in the MainMenus.nib file!
-#define	kCommandTEKPageCommand					'TEKP'
-#define	kCommandTEKPageClearsScreen				'TEKC'
-
 // Terminal menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandSuspendNetwork					'Susp'
-#define kCommandSendInterruptProcess			'IP  '
 #define kCommandBellEnabled						'Bell'
 #define kCommandEcho							'Echo'
 #define kCommandWrapMode						'Wrap'
 #define kCommandClearScreenSavesLines			'CSSL'
-#define kCommandJumpScrolling					'Jump'
-#define kCommandSpeechEnabled					'Talk'
 #define kCommandClearEntireScrollback			'ClSB'
 #define kCommandResetTerminal					'RTrm'
-
-// Map menu
-// WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandDeletePressSendsBackspace		'DBks'	// multiple interfaces
-#define kCommandDeletePressSendsDelete			'DDel'	// multiple interfaces
-#define kCommandEmacsArrowMapping				'Emac'	// multiple interfaces
-#define kCommandLocalPageUpDown					'LcPg'
-#define kCommandSetKeys							'SetK'
 
 // terminal view page control
 #define kCommandTerminalViewPageUp				'TVPU'
@@ -395,10 +358,6 @@ Actions to change various terminal behaviors.
 
 // actions
 	- (IBAction)
-	performInterruptProcess:(id)_;
-	- (IBAction)
-	performJumpScrolling:(id)_;
-	- (IBAction)
 	performLineWrapToggle:(id)_;
 	- (IBAction)
 	performLocalEchoToggle:(id)_;
@@ -408,10 +367,6 @@ Actions to change various terminal behaviors.
 	performSaveOnClearToggle:(id)_;
 	- (IBAction)
 	performScrollbackClear:(id)_;
-	- (IBAction)
-	performSpeechToggle:(id)_;
-	- (IBAction)
-	performSuspendToggle:(id)_;
 
 @end //}
 
@@ -552,6 +507,28 @@ points in the responder chain, such as views or windows.)
 @end //}
 
 /*!
+Actions for controlling data flow of a session, such as
+suspend and resume.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_SessionThrottling //{
+
+@optional
+
+// actions
+	- (IBAction)
+	performInterruptProcess:(id)_;
+	- (IBAction)
+	performJumpScrolling:(id)_;
+	- (IBAction)
+	performSuspendToggle:(id)_;
+
+@end //}
+
+/*!
 Actions for accessing text via standard system commands.
 
 (Described as a protocol so that selector names appear in
@@ -588,6 +565,8 @@ points in the responder chain, such as views or windows.)
 @protocol Commands_StandardSpeechHandling //{
 
 // actions
+	- (IBAction)
+	performSpeechToggle:(id)_;
 	- (IBAction)
 	startSpeaking:(id)_;
 	- (IBAction)

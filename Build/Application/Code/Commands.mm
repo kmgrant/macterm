@@ -64,6 +64,7 @@ extern "C"
 #import <Console.h>
 #import <Localization.h>
 #import <MemoryBlocks.h>
+#import <MenuUtilities.objc++.h>
 #import <Popover.objc++.h>
 #import <SoundSystem.h>
 #import <Undoables.h>
@@ -249,7 +250,6 @@ void				sessionStateChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 void				sessionWindowStateChanged						(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
-void				setItemCheckMark								(id <NSValidatedUserInterfaceItem>, BOOL);
 void				setNewCommand									(SessionFactory_SpecialSession);
 void				setUpDynamicMenus								();
 void				setUpFormatFavoritesMenu						(NSMenu*);
@@ -439,72 +439,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandJumpScrolling:
-			if (isSession)
-			{
-				Session_FlushNetwork(frontSession);
-			}
-			break;
-		
-		case kCommandTEKPageCommand:
-			{
-				SessionRef		sessionForGraphic = frontSession;
-				
-				
-				// allow this command for either session terminal windows, or
-				// the graphics themselves (as long as the graphic can be
-				// traced to a session)
-				if (nullptr == sessionForGraphic)
-				{
-					sessionForGraphic = returnTEKSession();
-				}
-				
-				if (nullptr != sessionForGraphic)
-				{
-					// open a new window or clear the buffer of the current one
-					Session_TEKNewPage(sessionForGraphic);
-				}
-			}
-			break;
-		
-		case kCommandTEKPageClearsScreen:
-			{
-				SessionRef		sessionForGraphic = frontSession;
-				
-				
-				// allow this command for either session terminal windows, or
-				// the graphics themselves (as long as the graphic can be
-				// traced to a session)
-				if (nullptr == sessionForGraphic)
-				{
-					sessionForGraphic = returnTEKSession();
-				}
-				
-				if (nullptr != sessionForGraphic)
-				{
-					// toggle this setting
-					Session_TEKSetPageCommandOpensNewWindow
-					(sessionForGraphic, false == Session_TEKPageCommandOpensNewWindow(sessionForGraphic));
-				}
-			}
-			break;
-		
-		case kCommandSpeechEnabled:
-			if (isSession)
-			{
-				if (Session_SpeechIsEnabled(frontSession))
-				{
-					Session_SpeechPause(frontSession);
-					Session_SetSpeechEnabled(frontSession, false);
-				}
-				else
-				{
-					Session_SetSpeechEnabled(frontSession, true);
-					Session_SpeechResume(frontSession);
-				}
-			}
-			break;
-		
 		case kCommandClearEntireScrollback:
 			if (isTerminal)
 			{
@@ -516,58 +450,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (isTerminal)
 			{
 				Terminal_Reset(activeScreen);
-			}
-			break;
-		
-		case kCommandDeletePressSendsBackspace:
-		case kCommandDeletePressSendsDelete:
-			if (isSession)
-			{
-				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
-				
-				
-				keyMappings.deleteSendsBackspace = (inCommandID == kCommandDeletePressSendsBackspace);
-				Session_SetEventKeys(frontSession, keyMappings);
-			}
-			break;
-		
-		case kCommandEmacsArrowMapping:
-			if (isSession)
-			{
-				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
-				
-				
-				keyMappings.arrowsRemappedForEmacs = !(keyMappings.arrowsRemappedForEmacs);
-				Session_SetEventKeys(frontSession, keyMappings);
-			}
-			break;
-		
-		case kCommandLocalPageUpDown:
-			if (isSession)
-			{
-				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
-				
-				
-				keyMappings.pageKeysLocalControl = !(keyMappings.pageKeysLocalControl);
-				Session_SetEventKeys(frontSession, keyMappings);
-			}
-			break;
-		
-		case kCommandSetKeys:
-			if (isSession)
-			{
-				Session_DisplaySpecialKeySequencesDialog(frontSession);
-			}
-			break;
-		
-		case kCommandSendInterruptProcess:
-			Session_UserInputInterruptProcess(frontSession);
-			break;
-		
-		case kCommandSuspendNetwork:
-			if (nullptr != frontSession)
-			{
-				Session_SetNetworkSuspended(frontSession, !Session_NetworkIsSuspended(frontSession));
 			}
 			break;
 		
@@ -1599,23 +1481,6 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// sessionWindowStateChanged
-
-
-/*!
-Sets the state of a user interface item based on a flag.
-Currently only works for menu items and checkmarks.
-
-(4.0)
-*/
-void
-setItemCheckMark	(id <NSValidatedUserInterfaceItem>	inItem,
-					 BOOL								inIsChecked)
-{
-	NSMenuItem*		asMenuItem = (NSMenuItem*)inItem;
-	
-	
-	[asMenuItem setState:((inIsChecked) ? NSOnState : NSOffState)];
-}// setItemCheckMark
 
 
 /*!
@@ -3454,9 +3319,22 @@ replyEvent:(NSAppleEventDescriptor*)			replyEvent
 - (IBAction)
 performNewTEKPage:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	SessionRef		currentSession = returnTEKSession();
+	
+	
+	// allow this command for either session terminal windows, or
+	// the graphics themselves (as long as the graphic can be
+	// traced to a session)
+	if (nullptr == currentSession)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandTEKPageCommand, nullptr/* target */);
+		currentSession = returnTEKSession();
+	}
+	
+	if (nullptr != currentSession)
+	{
+		// open a new window or clear the buffer of the current one
+		Session_TEKNewPage(currentSession);
 	}
 }
 - (id)
@@ -3474,9 +3352,23 @@ canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performPageClearToggle:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+#pragma unused(sender)
+	SessionRef		currentSession = returnTEKSession();
+	
+	
+	// allow this command for either session terminal windows, or
+	// the graphics themselves (as long as the graphic can be
+	// traced to a session)
+	if (nullptr == currentSession)
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandTEKPageClearsScreen, nullptr/* target */);
+		currentSession = returnTEKSession();
+	}
+	
+	if (nullptr != currentSession)
+	{
+		// toggle this setting
+		Session_TEKSetPageCommandOpensNewWindow
+		(currentSession, false == Session_TEKPageCommandOpensNewWindow(currentSession));
 	}
 }
 - (id)
@@ -3492,7 +3384,7 @@ canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		isChecked = (false == Session_TEKPageCommandOpensNewWindow(currentSession));
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -3718,7 +3610,7 @@ canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 			}
 		}
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -3746,7 +3638,7 @@ canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL	isChecked = (MacroManager_ReturnDefaultMacros() == MacroManager_ReturnCurrentMacros());
 	
 	
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -3774,7 +3666,7 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	BOOL	isChecked = (nullptr == MacroManager_ReturnCurrentMacros());
 	
 	
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -3905,7 +3797,7 @@ canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		isChecked = Terminal_BellIsEnabled(currentScreen);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -3937,7 +3829,7 @@ canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		isChecked = Session_WatchIsOff(currentSession);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -3969,7 +3861,7 @@ canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anI
 	{
 		isChecked = Session_WatchIsForInactivity(currentSession);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4001,7 +3893,7 @@ canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anI
 	{
 		isChecked = Session_WatchIsForPassiveData(currentSession);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4033,7 +3925,7 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 	{
 		isChecked = Session_WatchIsForKeepAlive(currentSession);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4049,10 +3941,14 @@ canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceIte
 - (IBAction)
 performDeleteMapToBackspace:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsBackspace, nullptr/* target */);
-	}
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
+	
+	
+	keyMappings.deleteSendsBackspace = YES;
+	Session_SetEventKeys(currentSession, keyMappings);
 }
 - (id)
 canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4071,7 +3967,7 @@ canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		isChecked = (keyMappings.deleteSendsBackspace) ? YES : NO;
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4080,10 +3976,14 @@ canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performDeleteMapToDelete:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandDeletePressSendsDelete, nullptr/* target */);
-	}
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
+	
+	
+	keyMappings.deleteSendsBackspace = NO;
+	Session_SetEventKeys(currentSession, keyMappings);
 }
 - (id)
 canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4102,7 +4002,7 @@ canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		isChecked = (false == keyMappings.deleteSendsBackspace) ? YES : NO;
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4111,10 +4011,14 @@ canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performEmacsCursorModeToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandEmacsArrowMapping, nullptr/* target */);
-	}
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
+	
+	
+	keyMappings.arrowsRemappedForEmacs = !(keyMappings.arrowsRemappedForEmacs);
+	Session_SetEventKeys(currentSession, keyMappings);
 }
 - (id)
 canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4133,7 +4037,7 @@ canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		isChecked = (keyMappings.arrowsRemappedForEmacs) ? YES : NO;
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4142,10 +4046,14 @@ canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performLocalPageKeysToggle:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandLocalPageUpDown, nullptr/* target */);
-	}
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
+	
+	
+	keyMappings.pageKeysLocalControl = !(keyMappings.pageKeysLocalControl);
+	Session_SetEventKeys(currentSession, keyMappings);
 }
 - (id)
 canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -4164,7 +4072,7 @@ canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 		
 		isChecked = (keyMappings.pageKeysLocalControl) ? YES : NO;
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4173,10 +4081,12 @@ canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMappingCustom:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSetKeys, nullptr/* target */);
-	}
+#pragma unused(sender)
+	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
+	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	
+	
+	Session_DisplaySpecialKeySequencesDialog(currentSession);
 }
 
 
@@ -4195,7 +4105,7 @@ canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
 							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
 	
 	
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return @(YES);
 }
@@ -4216,7 +4126,7 @@ canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
 							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
 	
 	
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return @(YES);
 }
@@ -4237,7 +4147,7 @@ canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anIte
 							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
 	
 	
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return @(YES);
 }
@@ -4258,7 +4168,7 @@ canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	a
 							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
 	
 	
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return @(YES);
 }
@@ -4269,26 +4179,6 @@ canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	a
 
 #pragma mark -
 @implementation Commands_Executor (Commands_ManagingTerminalSettings) //{
-
-
-- (IBAction)
-performInterruptProcess:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSendInterruptProcess, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performJumpScrolling:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandJumpScrolling, nullptr/* target */);
-	}
-}
 
 
 - (IBAction)
@@ -4315,7 +4205,7 @@ canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		isChecked = Terminal_LineWrapIsEnabled(currentScreen);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4343,7 +4233,7 @@ canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
 	{
 		isChecked = Session_LocalEchoIsEnabled(currentSession);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4383,7 +4273,7 @@ canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 	{
 		isChecked = Terminal_SaveLinesOnClearIsEnabled(currentScreen);
 	}
-	setItemCheckMark(anItem, isChecked);
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
 	
 	return ((result) ? @(YES) : @(NO));
 }
@@ -4396,62 +4286,6 @@ performScrollbackClear:(id)		sender
 	{
 		Commands_ExecuteByIDUsingEvent(kCommandClearEntireScrollback, nullptr/* target */);
 	}
-}
-
-
-- (IBAction)
-performSpeechToggle:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSpeechEnabled, nullptr/* target */);
-	}
-}
-- (id)
-canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_SpeechIsEnabled(currentSession);
-	}
-	setItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSuspendToggle:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandSuspendNetwork, nullptr/* target */);
-	}
-}
-- (id)
-canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_NetworkIsSuspended(currentSession);
-	}
-	setItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5780,12 +5614,12 @@ canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
 			if (isHighlighted)
 			{
 				// check the active window in the menu
-				setItemCheckMark(asMenuItem, YES);
+				MenuUtilities_SetItemCheckMark(asMenuItem, YES);
 			}
 			else
 			{
 				// remove any mark, initially
-				setItemCheckMark(asMenuItem, NO);
+				MenuUtilities_SetItemCheckMark(asMenuItem, NO);
 				
 				// use the Mac OS X convention of bullet-marking windows with unsaved changes
 				// UNIMPLEMENTED

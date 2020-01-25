@@ -334,6 +334,7 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalView_ContentView : NSControl < Commands_Printing,
+													Commands_SessionThrottling,
 													Commands_StandardEditing,
 													Commands_StandardSpeechHandling,
 													Commands_TerminalScreenResizing,

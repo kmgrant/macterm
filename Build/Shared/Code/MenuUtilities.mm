@@ -71,4 +71,26 @@ menuNeedsUpdate:(NSMenu*)	aMenu
 
 @end //} MenuUtilities_DashSeparatorDelegate
 
+
+#pragma mark Public Methods
+
+/*!
+Sets the state of a user interface item based on a flag.
+Currently only works for menu items and checkmarks.
+
+(2020.01)
+*/
+void
+MenuUtilities_SetItemCheckMark	(id <NSValidatedUserInterfaceItem>	inItem,
+								 BOOL								inIsChecked)
+{
+	if ([STATIC_CAST(inItem, id) isKindOfClass:[NSMenuItem class]])
+	{
+		NSMenuItem*		asMenuItem = STATIC_CAST(inItem, NSMenuItem*);
+		
+		
+		[asMenuItem setState:((inIsChecked) ? NSOnState : NSOffState)];
+	}
+}// SetItemCheckMark
+
 // BELOW IS REQUIRED NEWLINE TO END FILE
