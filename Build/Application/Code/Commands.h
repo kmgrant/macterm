@@ -89,14 +89,6 @@ These are all deprecated and are being gradually replaced
 by methods on objects in the Cocoa responder chain.
 */
 
-// Edit menu
-// WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandFind							'Find'
-#define kCommandFindAgain						'FndN'
-#define kCommandFindPrevious					'FndP'
-#define kCommandShowCompletions					'SCmp'
-#define kCommandFindCursor						'FndC'
-
 // Terminal menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
 #define kCommandBellEnabled						'Bell'
@@ -130,7 +122,6 @@ by methods on objects in the Cocoa responder chain.
 #define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
 #define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
-#define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 
 /*!
 These MUST agree with "MainMenuCocoa.xib".  In the Carbon days,
@@ -410,27 +401,6 @@ Actions that affect a window’s properties, placement and size.
 @end //}
 
 /*!
-Actions that help the user to find things.
-*/
-@interface Commands_Executor (Commands_Searching) //{
-
-// actions
-	- (IBAction)
-	performFind:(id)_;
-	- (IBAction)
-	performFindNext:(id)_;
-	- (IBAction)
-	performFindPrevious:(id)_;
-	- (IBAction)
-	performFindCursor:(id)_;
-	- (IBAction)
-	performShowCompletions:(id)_;
-	- (IBAction)
-	performSendMenuItemText:(id)_; // from completions menu; “types” the menu item title text
-
-@end //}
-
-/*!
 Actions that display specific windows.
 */
 @interface Commands_Executor (Commands_ShowingPanels) //{
@@ -552,6 +522,37 @@ points in the responder chain, such as views or windows.)
 	selectAll:(id)_;
 	- (IBAction)
 	selectNone:(id)_;
+
+@end //}
+
+/*!
+Actions based on finding locations within a text buffer.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardSearching //{
+
+@required
+
+// actions
+	- (IBAction)
+	performFind:(id)_;
+
+@optional
+
+// actions
+	- (IBAction)
+	performFindCursor:(id)_;
+	- (IBAction)
+	performFindNext:(id)_;
+	- (IBAction)
+	performFindPrevious:(id)_;
+	- (IBAction)
+	performSendMenuItemText:(id)_; // from completions menu; “types” the menu item title text
+	- (IBAction)
+	performShowCompletions:(id)_;
 
 @end //}
 

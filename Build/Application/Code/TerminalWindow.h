@@ -252,7 +252,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface TerminalWindow_Controller : NSWindowController < Commands_TerminalScreenResizing,
+@interface TerminalWindow_Controller : NSWindowController < Commands_StandardSearching,
+															Commands_TerminalScreenResizing,
 															Commands_TextFormatting,
 															NSWindowDelegate > //{
 {
@@ -283,8 +284,6 @@ changes to an interface declared in a ".mm" file.
 	setWindowButtonsHidden:(BOOL)_;
 
 // actions
-	- (IBAction)
-	performFind:(id)_;
 	- (IBAction)
 	performTranslationSwitchCustom:(id)_;
 

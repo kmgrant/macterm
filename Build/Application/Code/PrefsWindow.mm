@@ -1185,25 +1185,6 @@ performExportPreferenceCollectionToFile:(id)	sender
 
 
 /*!
-Responds to a menu command by focusing on the search field.
-
-See also "performSearch:", which initiates a search based
-on the contents of the field.
-
-(2016.10)
-*/
-- (IBAction)
-performFind:(id)	sender
-{
-#pragma unused(sender)
-	if (NO == [self.window makeFirstResponder:self->searchField])
-	{
-		Sound_StandardAlert();
-	}
-}// performFind:
-
-
-/*!
 Adds a new preferences collection by asking the user for a
 file from which to import settings.
 
@@ -1363,6 +1344,28 @@ performSearch:(id)		sender
 #pragma unused(sender)
 	[PrefsWindow_Controller popUpResultsForQuery:self.searchText inSearchField:self->searchField];
 }// performSearch:
+
+
+#pragma mark Actions: Commands_StandardSearching
+
+
+/*!
+Responds to a menu command by focusing on the search field.
+
+See also "performSearch:", which initiates a search based
+on the contents of the field.
+
+(2016.10)
+*/
+- (IBAction)
+performFind:(id)	sender
+{
+#pragma unused(sender)
+	if (NO == [self.window makeFirstResponder:self->searchField])
+	{
+		Sound_StandardAlert();
+	}
+}// performFind:
 
 
 #pragma mark NSColorPanel

@@ -245,7 +245,6 @@ NSMenu*				returnMenu										(UInt32);
 SessionRef			returnMenuItemSession							(NSMenuItem*);
 SessionRef			returnTEKSession								();
 NSMenuItem*			returnWindowMenuItemForSession					(SessionRef);
-BOOL				searchResultsExist								();
 void				sessionStateChanged								(ListenerModel_Ref, ListenerModel_Event,
 																	 void*, void*);
 void				sessionWindowStateChanged						(ListenerModel_Ref, ListenerModel_Event,
@@ -259,7 +258,6 @@ void				setUpTranslationTablesMenu						(NSMenu*);
 void				setUpWindowMenu									(NSMenu*);
 void				setUpWorkspaceFavoritesMenu						(NSMenu*);
 void				setWindowMenuItemMarkForSession					(SessionRef, NSMenuItem* = nil);
-BOOL				textSelectionExists								();
 void				updateFadeAllTerminalWindows					(Boolean);
 
 } // anonymous namespace
@@ -401,16 +399,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		switch (inCommandID)
 		{
-		//case kCommandFind:
-		//case kCommandFindAgain:
-		//case kCommandFindPrevious:
-		//	see TerminalWindow.mm
-		//	break;
-		
-		//case kCommandFindCursor:
-		//	see TerminalWindow.mm
-		//	break;
-		
 		case kCommandBellEnabled:
 			if (isTerminal)
 			{
@@ -1315,34 +1303,6 @@ returnWindowMenuItemForSession		(SessionRef		inSession)
 
 
 /*!
-Returns true only if there is an active terminal window with
-a current text search.
-
-This is a helper for validators that commonly rely on this
-state.
-
-(4.0)
-*/
-BOOL
-searchResultsExist ()
-{
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	result = (nullptr != terminalWindow);
-	if (result)
-	{
-		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		
-		
-		result = TerminalView_SearchResultsExist(view);
-	}
-	return result;
-}// searchResultsExist
-
-
-/*!
 Invoked whenever a monitored connection state is changed
 (see Commands_Init() to see which states are monitored).
 This routine responds by ensuring that menu states are
@@ -2018,34 +1978,6 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 		}
 	}
 }// setWindowMenuItemMarkForSession
-
-
-/*!
-Returns true only if there is an active terminal window whose
-view contains selected text.
-
-This is a helper for validators that commonly rely on this
-state.
-
-(4.0)
-*/
-BOOL
-textSelectionExists ()
-{
-	BOOL				result = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	
-	
-	result = (nullptr != terminalWindow);
-	if (result)
-	{
-		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		
-		
-		result = TerminalView_TextSelectionExists(view);
-	}
-	return result;
-}// textSelectionExists
 
 
 /*!
@@ -4792,32 +4724,6 @@ canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 - (IBAction)
-moveTabToNewWindow:(id)		sender
-{
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMoveTabToNewWindow:) withObject:sender]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandTerminalNewWorkspace, nullptr/* target */);
-	}
-}
-- (id)
-canMoveTabToNewWindow:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if ((nullptr != terminalWindow) &&
-		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
-		TerminalWindow_IsTab(terminalWindow))
-	{
-		return @(YES);
-	}
-	return @(NO);
-}
-
-
-- (IBAction)
 performArrangeInFront:(id)	sender
 {
 #pragma unused(sender)
@@ -5003,200 +4909,6 @@ canPerformShowHiddenWindows:(id <NSValidatedUserInterfaceItem>)		anItem
 
 
 @end //} Commands_Executor (Commands_ModifyingWindows)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_Searching) //{
-
-
-- (IBAction)
-performFind:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandFind, nullptr/* target */);
-	}
-}
-- (id)
-canPerformFind:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (NO == result)
-	{
-		// also permitted for the Preferences window
-		result = [[[NSApp mainWindow] windowController] isKindOfClass:PrefsWindow_Controller.class];
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performFindCursor:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandFindCursor, nullptr/* target */);
-	}
-}
-- (id)
-canPerformFindCursor:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performFindNext:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandFindAgain, nullptr/* target */);
-	}
-}
-- (id)
-canPerformFindNext:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = searchResultsExist();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performFindPrevious:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandFindPrevious, nullptr/* target */);
-	}
-}
-- (id)
-canPerformFindPrevious:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = searchResultsExist();
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performShowCompletions:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		NSWindow*			target = [NSApp keyWindow];
-		TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-		
-		
-		TerminalView_DisplayCompletionsUI(view);
-	}
-}
-- (id)
-canPerformShowCompletions:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	NSWindow*			target = [NSApp keyWindow];
-	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSendMenuItemText:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		if ([[sender class] isSubclassOfClass:NSMenuItem.class])
-		{
-			SessionRef			focusSession = SessionFactory_ReturnUserFocusSession();
-			TerminalWindowRef	terminalWindow = (nullptr != focusSession)
-													? Session_ReturnActiveTerminalWindow(focusSession)
-													: nullptr;
-			TerminalViewRef		view = (nullptr != terminalWindow)
-										? TerminalWindow_ReturnViewWithFocus(terminalWindow)
-										: nullptr;
-			
-			
-			if (nullptr == view)
-			{
-				Sound_StandardAlert();
-				Console_Warning(Console_WriteLine, "unable to send menu item text because a user focus session or view was not found");
-			}
-			else
-			{
-				NSMenuItem*			asMenuItem = (NSMenuItem*)sender;
-				CFStringRef			asCFString = BRIDGE_CAST([asMenuItem title], CFStringRef);
-				CFStringRef			completionCFString = asCFString;
-				CFRetainRelease		cursorCFString(TerminalView_ReturnCursorWordCopyAsUnicode(view),
-													CFRetainRelease::kAlreadyRetained);
-				CFRetainRelease		substringCFString;
-				
-				
-				// since this is meant to be a “completion”, the text
-				// currently at the cursor position matters; characters
-				// may be pruned from the beginning of the proposed
-				// completion string if the cursor text already contains
-				// some part of it (case-insensitive)
-				if (cursorCFString.exists() && (CFStringGetLength(cursorCFString.returnCFStringRef()) > 0))
-				{
-					CFIndex const	kOriginalCompletionLength = CFStringGetLength(asCFString);
-					CFRange			matchRange = CFStringFind(asCFString, cursorCFString.returnCFStringRef(),
-																kCFCompareCaseInsensitive | kCFCompareAnchored);
-					
-					
-					if (matchRange.length > 0)
-					{
-						substringCFString = CFRetainRelease(CFStringCreateWithSubstring(kCFAllocatorDefault, asCFString,
-																						CFRangeMake(matchRange.location + matchRange.length,
-																									kOriginalCompletionLength - matchRange.length)),
-															CFRetainRelease::kAlreadyRetained);
-						completionCFString = substringCFString.returnCFStringRef();
-					}
-				}
-				
-				// send appropriate text to the session
-				Session_UserInputCFString(focusSession, completionCFString);
-			}
-		}
-		else
-		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteLine, "unable to send menu item text because given object is not apparently a menu item");
-		}
-	}
-}
-- (id)
-canPerformSendMenuItemText:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	// NOTE: should be the same criteria as showing completions
-	NSWindow*			target = [NSApp keyWindow];
-	TerminalWindowRef	terminalWindow = [target terminalWindowRef];
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-@end //} Commands_Executor (Commands_Searching)
 
 
 #pragma mark -

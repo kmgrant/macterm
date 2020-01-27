@@ -115,7 +115,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface PrefsWindow_Controller : NSWindowController< NSSplitViewDelegate,
+@interface PrefsWindow_Controller : NSWindowController< Commands_StandardSearching,
+														NSSplitViewDelegate,
 														NSToolbarDelegate,
 														Panel_Parent > //{
 {
@@ -179,8 +180,6 @@ changes to an interface declared in a ".mm" file.
 	performDuplicatePreferenceCollection:(id)_;
 	- (IBAction)
 	performExportPreferenceCollectionToFile:(id)_;
-	- (IBAction)
-	performFind:(id)_;
 	- (IBAction)
 	performImportPreferenceCollectionFromFile:(id)_;
 	- (IBAction)

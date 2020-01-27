@@ -3985,6 +3985,23 @@ rootViewController
 
 
 /*!
+Displays an interface for the user to customize the text
+encoding.
+
+(2018.03)
+*/
+- (IBAction)
+performTranslationSwitchCustom:(id)	sender
+{
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
+}// performTranslationSwitchCustom:
+
+
+#pragma mark Actions: Commands_StandardSearching
+
+
+/*!
 Displays the Find dialog for the given terminal window,
 handling searches automatically.
 
@@ -3999,17 +4016,88 @@ performFind:(id)	sender
 
 
 /*!
-Displays an interface for the user to customize the text
-encoding.
+Companion for "performShowCompletions:"; the "sender" is an NSMenuItem
+whose title should be interpreted as text to be sent as a completion
+(as if the user had typed it).
 
-(2018.03)
+(2020.01)
 */
 - (IBAction)
-performTranslationSwitchCustom:(id)	sender
+performSendMenuItemText:(id)	sender
+{
+	if ([[sender class] isSubclassOfClass:NSMenuItem.class])
+	{
+		TerminalWindowRef	terminalWindow = self.terminalWindowRef;
+		SessionRef			focusSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+		TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+		
+		
+		if (nullptr == view)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "unable to send menu item text because a user focus session or view was not found");
+		}
+		else
+		{
+			NSMenuItem*			asMenuItem = (NSMenuItem*)sender;
+			CFStringRef			asCFString = BRIDGE_CAST([asMenuItem title], CFStringRef);
+			CFStringRef			completionCFString = asCFString;
+			CFRetainRelease		cursorCFString(TerminalView_ReturnCursorWordCopyAsUnicode(view),
+												CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease		substringCFString;
+			
+			
+			// since this is meant to be a “completion”, the text
+			// currently at the cursor position matters; characters
+			// may be pruned from the beginning of the proposed
+			// completion string if the cursor text already contains
+			// some part of it (case-insensitive)
+			if (cursorCFString.exists() && (CFStringGetLength(cursorCFString.returnCFStringRef()) > 0))
+			{
+				CFIndex const	kOriginalCompletionLength = CFStringGetLength(asCFString);
+				CFRange			matchRange = CFStringFind(asCFString, cursorCFString.returnCFStringRef(),
+															kCFCompareCaseInsensitive | kCFCompareAnchored);
+				
+				
+				if (matchRange.length > 0)
+				{
+					substringCFString = CFRetainRelease(CFStringCreateWithSubstring(kCFAllocatorDefault, asCFString,
+																					CFRangeMake(matchRange.location + matchRange.length,
+																								kOriginalCompletionLength - matchRange.length)),
+														CFRetainRelease::kAlreadyRetained);
+					completionCFString = substringCFString.returnCFStringRef();
+				}
+			}
+			
+			// send appropriate text to the session
+			Session_UserInputCFString(focusSession, completionCFString);
+		}
+	}
+	else
+	{
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteLine, "unable to send menu item text because given object is not apparently a menu item");
+	}
+}
+
+
+/*!
+Uses the current cursor location in the focused terminal view to
+perform a search for the enclosing word, popping up an interface
+for choosing matching words that are already present in the view.
+
+(2020.01)
+*/
+- (IBAction)
+performShowCompletions:(id)		sender
 {
 #pragma unused(sender)
-	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
-}// performTranslationSwitchCustom:
+	TerminalWindowRef	terminalWindow = self.terminalWindowRef;
+	TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+	
+	
+	TerminalView_DisplayCompletionsUI(view);
+}
 
 
 #pragma mark Actions: Commands_TerminalScreenResizing
