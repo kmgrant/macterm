@@ -50,6 +50,7 @@ class NSWindow;
 #include <WindowTitleDialog.h>
 
 // application includes
+#include "Commands.h"
 #include "SessionRef.typedef.h"
 #include "TerminalView.h"
 #ifdef __OBJC__
@@ -93,7 +94,8 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface VectorWindow_Controller : NSWindowController < TerminalView_ClickDelegate > //{
+@interface VectorWindow_Controller : NSWindowController < Commands_WindowRenaming,
+															TerminalView_ClickDelegate > //{
 {
 	IBOutlet TerminalView_BackgroundView*	matteView;
 	IBOutlet VectorCanvas_View*				canvasView;
@@ -108,12 +110,6 @@ changes to an interface declared in a ".mm" file.
 // initializers
 	- (instancetype)
 	initWithInterpreter:(VectorInterpreter_Ref)_;
-
-// actions
-	- (id)
-	canPerformRename:(id <NSValidatedUserInterfaceItem>)_;
-	- (IBAction)
-	performRename:(id)_;
 
 // accessors
 	- (VectorCanvas_View*)

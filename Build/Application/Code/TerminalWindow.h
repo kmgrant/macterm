@@ -253,8 +253,10 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalWindow_Controller : NSWindowController < Commands_StandardSearching,
+															Commands_StandardWindowTabbing,
 															Commands_TerminalScreenResizing,
 															Commands_TextFormatting,
+															Commands_WindowRenaming,
 															NSWindowDelegate > //{
 {
 @private
@@ -282,10 +284,6 @@ changes to an interface declared in a ".mm" file.
 	setTitleVisibility:(NSInteger)_;
 	- (void)
 	setWindowButtonsHidden:(BOOL)_;
-
-// actions
-	- (IBAction)
-	performTranslationSwitchCustom:(id)_;
 
 @end //}
 

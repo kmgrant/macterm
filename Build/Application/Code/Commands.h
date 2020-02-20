@@ -89,21 +89,6 @@ These are all deprecated and are being gradually replaced
 by methods on objects in the Cocoa responder chain.
 */
 
-// Terminal menu
-// WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandBellEnabled						'Bell'
-#define kCommandEcho							'Echo'
-#define kCommandWrapMode						'Wrap'
-#define kCommandClearScreenSavesLines			'CSSL'
-#define kCommandClearEntireScrollback			'ClSB'
-#define kCommandResetTerminal					'RTrm'
-
-// terminal view page control
-#define kCommandTerminalViewPageUp				'TVPU'
-#define kCommandTerminalViewPageDown			'TVPD'
-#define kCommandTerminalViewHome				'TVPH'
-#define kCommandTerminalViewEnd					'TVPE'
-
 // commands currently used only in dialogs
 #define kCommandDisplayPrefPanelFormats			'SPrF'		// “Preferences“ window
 #define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces
@@ -157,132 +142,35 @@ typedef Commands_ExecutionEventContext*		Commands_ExecutionEventContextPtr;
 #ifdef __OBJC__
 
 /*!
-Implements an interface for menu commands to target.  See
-"MainMenuCocoa.xib".
+Actions that involve the invocation of macros.
 
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
 */
-@interface Commands_Executor : NSObject< NSUserInterfaceValidations > //{
-{
-@private
-	NSString*	_fullScreenCommandName;
-}
+@protocol Commands_MacroInvoking //{
 
-// class methods
-	+ (instancetype)
-	sharedExecutor;
-
-// accessors
-	@property (strong) NSString*
-	fullScreenCommandName;
-
-// new methods: explicit validation (rarely needed)
-	- (BOOL)
-	defaultValidationForAction:(SEL)_
-	sender:(id)_;
-	- (BOOL)
-	validateAction:(SEL)_
-	sender:(id)_;
-
-// new methods: menu items
-	- (NSMenuItem*)
-	newMenuItemForAction:(SEL)_
-	itemTitle:(NSString*)_
-	ifEnabled:(BOOL)_;
-
-@end //}
-
-/*!
-Implements NSApplicationDelegate and NSApplicationNotifications;
-see Commands.mm.
-*/
-@interface Commands_Executor (Commands_ApplicationCoreEvents) @end
-
-/*!
-Actions typically associated with the Edit menu.
-*/
-@interface Commands_Executor (Commands_Editing) //{
-
-// actions
-	- (IBAction)
-	performUndo:(id)_;
-	- (IBAction)
-	performRedo:(id)_;
-
-@end //}
-
-/*!
-Actions that create new terminal-based sessions.
-*/
-@interface Commands_Executor (Commands_OpeningSessions) //{
-
-// actions
-	- (IBAction)
-	performNewDefault:(id)_;
-	- (IBAction)
-	performNewByFavoriteName:(id)_;
-	- (IBAction)
-	performNewLogInShell:(id)_;
-	- (IBAction)
-	performNewShell:(id)_;
-	- (IBAction)
-	performNewCustom:(id)_;
-	- (IBAction)
-	performRestoreWorkspaceDefault:(id)_;
-	- (IBAction)
-	performRestoreWorkspaceByFavoriteName:(id)_;
-	- (IBAction)
-	performOpen:(id)_;
-	- (IBAction)
-	performDuplicate:(id)_;
-	- (IBAction)
-	performSaveAs:(id)_;
-
-// methods of the form required by setEventHandler:andSelector:forEventClass:andEventID:
-	- (void)
-	receiveGetURLEvent:(NSAppleEventDescriptor*)_
-	replyEvent:(NSAppleEventDescriptor*)_;
-
-@end //}
-
-/*!
-Actions related to vector graphics windows.
-*/
-@interface Commands_Executor (Commands_OpeningVectorGraphics) //{
-
-// actions
-	- (IBAction)
-	performNewTEKPage:(id)_;
-	- (IBAction)
-	performPageClearToggle:(id)_;
-
-@end //}
-
-/*!
-Actions that cause Internet addresses to be accessed.
-*/
-@interface Commands_Executor (Commands_OpeningWebPages) //{
-
-// actions
-	- (IBAction)
-	performCheckForUpdates:(id)_;
-	- (IBAction)
-	performGoToMainWebSite:(id)_;
-	- (IBAction)
-	performProvideFeedback:(id)_;
-
-@end //}
-
-/*!
-Actions related to macros.
-*/
-@interface Commands_Executor (Commands_ManagingMacros) //{
+@required
 
 // actions
 	- (IBAction)
 	performActionForMacro:(id)_;
+
+@end //}
+
+/*!
+Actions to change the current macro set.  For other types
+of key bindings, see Commands_TerminalKeyMapping.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_MacroSwitching //{
+
+@optional
+
+// actions
 	- (IBAction)
 	performMacroSwitchNone:(id)_;
 	- (IBAction)
@@ -297,169 +185,6 @@ Actions related to macros.
 @end //}
 
 /*!
-Actions to configure terminal event handlers.
-*/
-@interface Commands_Executor (Commands_ManagingTerminalEvents) //{
-
-// actions
-	- (IBAction)
-	performBellToggle:(id)_;
-	- (IBAction)
-	performSetActivityHandlerNone:(id)_;
-	- (IBAction)
-	performSetActivityHandlerNotifyOnNext:(id)_;
-	- (IBAction)
-	performSetActivityHandlerNotifyOnIdle:(id)_;
-	- (IBAction)
-	performSetActivityHandlerSendKeepAliveOnIdle:(id)_;
-
-@end //}
-
-/*!
-Actions affecting keyboard behavior in terminal windows.
-*/
-@interface Commands_Executor (Commands_ManagingTerminalKeyMappings) //{
-
-// actions
-	- (IBAction)
-	performDeleteMapToBackspace:(id)_;
-	- (IBAction)
-	performDeleteMapToDelete:(id)_;
-	- (IBAction)
-	performEmacsCursorModeToggle:(id)_;
-	- (IBAction)
-	performLocalPageKeysToggle:(id)_;
-	- (IBAction)
-	performMappingCustom:(id)_;
-	- (IBAction)
-	performSetFunctionKeyLayoutRxvt:(id)_;
-	- (IBAction)
-	performSetFunctionKeyLayoutVT220:(id)_;
-	- (IBAction)
-	performSetFunctionKeyLayoutXTermX11:(id)_;
-	- (IBAction)
-	performSetFunctionKeyLayoutXTermXFree86:(id)_;
-
-@end //}
-
-/*!
-Actions to change various terminal behaviors.
-*/
-@interface Commands_Executor (Commands_ManagingTerminalSettings) //{
-
-// actions
-	- (IBAction)
-	performLineWrapToggle:(id)_;
-	- (IBAction)
-	performLocalEchoToggle:(id)_;
-	- (IBAction)
-	performReset:(id)_;
-	- (IBAction)
-	performSaveOnClearToggle:(id)_;
-	- (IBAction)
-	performScrollbackClear:(id)_;
-
-@end //}
-
-/*!
-Actions that affect a window’s properties, placement and size.
-*/
-@interface Commands_Executor (Commands_ModifyingWindows) //{
-
-// actions
-	- (IBAction)
-	performCloseAll:(id)_;
-	- (IBAction)
-	performMiniaturizeAll:(id)_;
-	- (IBAction)
-	performZoomAll:(id)_;
-	- (IBAction)
-	mergeAllWindows:(id)_; // match OS name of selector (available only in later OS versions)
-	- (IBAction)
-	moveTabToNewWindow:(id)_; // match OS name of selector (available only in later OS versions)
-	- (IBAction)
-	performArrangeInFront:(id)_;
-	- (IBAction)
-	performHideWindow:(id)_;
-	- (IBAction)
-	performHideOtherWindows:(id)_;
-	- (IBAction)
-	performMaximize:(id)_;
-	- (IBAction)
-	performMoveWindowRight:(id)_;
-	- (IBAction)
-	performMoveWindowLeft:(id)_;
-	- (IBAction)
-	performMoveWindowDown:(id)_;
-	- (IBAction)
-	performMoveWindowUp:(id)_;
-	- (IBAction)
-	performRename:(id)_;
-	- (IBAction)
-	performShowHiddenWindows:(id)_;
-
-@end //}
-
-/*!
-Actions that display specific windows.
-*/
-@interface Commands_Executor (Commands_ShowingPanels) //{
-
-// actions
-	- (IBAction)
-	orderFrontAbout:(id)_;
-	- (IBAction)
-	orderFrontCommandLine:(id)_;
-	- (IBAction)
-	orderFrontContextualHelp:(id)_;
-	- (IBAction)
-	orderFrontControlKeys:(id)_;
-	- (IBAction)
-	orderFrontDebuggingOptions:(id)_;
-	- (IBAction)
-	orderFrontIPAddresses:(id)_;
-	- (IBAction)
-	orderFrontPreferences:(id)_;
-	- (IBAction)
-	orderFrontSessionInfo:(id)_;
-	- (IBAction)
-	orderFrontVT220FunctionKeys:(id)_;
-	- (IBAction)
-	orderFrontVT220Keypad:(id)_;
-	- (IBAction)
-	toggleClipboard:(id)_;
-
-@end //}
-
-/*!
-Actions to enter or exit Full Screen or tab Exposé.
-*/
-@interface Commands_Executor (Commands_SwitchingModes) //{
-
-// actions
-	- (IBAction)
-	toggleFullScreen:(id)_;
-
-@end //}
-
-/*!
-Actions to cycle through windows.
-*/
-@interface Commands_Executor (Commands_SwitchingWindows) //{
-
-// actions
-	- (IBAction)
-	orderFrontNextWindow:(id)_;
-	- (IBAction)
-	orderFrontNextWindowHidingPrevious:(id)_;
-	- (IBAction)
-	orderFrontPreviousWindow:(id)_;
-	- (IBAction)
-	orderFrontSpecificWindow:(id)_;
-
-@end //}
-
-/*!
 Actions related to printing.
 
 (Described as a protocol so that selector names appear in
@@ -468,11 +193,32 @@ points in the responder chain, such as views or windows.)
 */
 @protocol Commands_Printing //{
 
+@required
+
 // actions
 	- (IBAction)
 	performPrintScreen:(id)_;
 	- (IBAction)
 	performPrintSelection:(id)_;
+
+@end //}
+
+/*!
+Actions for killing or restarting running processes.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_SessionProcessControlling //{
+
+@optional
+
+// actions
+	- (IBAction)
+	performKill:(id)_;
+	- (IBAction)
+	performRestart:(id)_;
 
 @end //}
 
@@ -499,7 +245,8 @@ points in the responder chain, such as views or windows.)
 @end //}
 
 /*!
-Actions for accessing text via standard system commands.
+Actions for accessing text via standard system commands;
+see also Commands_TerminalEditing.
 
 (Described as a protocol so that selector names appear in
 one location.  These are actually implemented at different
@@ -565,6 +312,8 @@ points in the responder chain, such as views or windows.)
 */
 @protocol Commands_StandardSpeechHandling //{
 
+@required
+
 // actions
 	- (IBAction)
 	performSpeechToggle:(id)_;
@@ -572,6 +321,276 @@ points in the responder chain, such as views or windows.)
 	startSpeaking:(id)_;
 	- (IBAction)
 	stopSpeaking:(id)_;
+
+@end //}
+
+/*!
+Actions for performing an action or reversing it.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardUndoRedo //{
+
+@required
+
+// actions
+	- (IBAction)
+	performUndo:(id)_;
+
+@optional
+
+// actions
+	- (IBAction)
+	performRedo:(id)_;
+
+@end //}
+
+/*!
+Actions for entering or exiting Full Screen view, or
+otherwise changing the size of a view quickly.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardViewZooming //{
+
+@optional
+
+// actions
+	- (IBAction)
+	performMaximize:(id)_;
+	- (IBAction)
+	toggleFullScreen:(id)_;
+
+@end //}
+
+/*!
+Actions that apply to all regular open windows.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardWindowGrouping //{
+
+@optional
+
+// actions
+	- (IBAction)
+	performArrangeInFront:(id)_;
+	- (IBAction)
+	performCloseAll:(id)_;
+	- (IBAction)
+	performMiniaturizeAll:(id)_;
+	- (IBAction)
+	performZoomAll:(id)_;
+
+@end //}
+
+/*!
+Actions to cycle through windows.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardWindowSwitching //{
+
+@required
+
+// actions
+	- (IBAction)
+	orderFrontNextWindow:(id)_;
+	- (IBAction)
+	orderFrontNextWindowHidingPrevious:(id)_;
+	- (IBAction)
+	orderFrontPreviousWindow:(id)_;
+	- (IBAction)
+	orderFrontSpecificWindow:(id)_;
+
+@end //}
+
+/*!
+Actions for using window tabs via standard system commands.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_StandardWindowTabbing //{
+
+@optional
+
+// actions
+	- (IBAction)
+	mergeAllWindows:(id)_;
+	- (IBAction)
+	moveTabToNewWindow:(id)_;
+
+@end //}
+
+/*!
+Actions for terminal-specific editing commands; see also
+Commands_StandardEditing.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalEditing //{
+
+@required
+
+// actions
+	- (IBAction)
+	performCopyWithTabSubstitution:(id)_;
+	- (IBAction)
+	performSelectEntireScrollbackBuffer:(id)_;
+
+@optional
+
+// actions
+	- (IBAction)
+	performCopyAndPaste:(id)_;
+
+@end //}
+
+/*!
+Actions to configure terminal event handlers.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalEventHandling //{
+
+@required
+
+// actions
+	- (IBAction)
+	performBellToggle:(id)_;
+	- (IBAction)
+	performSetActivityHandlerNone:(id)_;
+	- (IBAction)
+	performSetActivityHandlerNotifyOnNext:(id)_;
+	- (IBAction)
+	performSetActivityHandlerNotifyOnIdle:(id)_;
+	- (IBAction)
+	performSetActivityHandlerSendKeepAliveOnIdle:(id)_;
+
+@end //}
+
+/*!
+Actions to control the capture of data to a file.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalFileCapturing //{
+
+@required
+
+// actions
+	- (IBAction)
+	performCaptureBegin:(id)_;
+	- (IBAction)
+	performCaptureEnd:(id)_;
+	- (IBAction)
+	performSaveSelection:(id)_;
+
+@end //}
+
+/*!
+Actions affecting keyboard behavior in terminal windows.
+See also Commands_MacroSwitching.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalKeyMapping //{
+
+@required
+
+// actions
+	- (IBAction)
+	performDeleteMapToBackspace:(id)_;
+	- (IBAction)
+	performDeleteMapToDelete:(id)_;
+	- (IBAction)
+	performEmacsCursorModeToggle:(id)_;
+	- (IBAction)
+	performLocalPageKeysToggle:(id)_;
+	- (IBAction)
+	performMappingCustom:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutRxvt:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutVT220:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutXTermX11:(id)_;
+	- (IBAction)
+	performSetFunctionKeyLayoutXTermXFree86:(id)_;
+
+@end //}
+
+/*!
+Actions to change various terminal behaviors.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalModeSwitching //{
+
+@required
+
+// actions
+	- (IBAction)
+	performLineWrapToggle:(id)_;
+	- (IBAction)
+	performLocalEchoToggle:(id)_;
+	- (IBAction)
+	performReset:(id)_;
+	- (IBAction)
+	performSaveOnClearToggle:(id)_;
+	- (IBAction)
+	performScrollbackClear:(id)_;
+	- (IBAction)
+	performTerminalLED1Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED2Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED3Toggle:(id)_;
+	- (IBAction)
+	performTerminalLED4Toggle:(id)_;
+
+@end //}
+
+/*!
+Actions to change the displayed part of a terminal view.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_TerminalScreenPaging //{
+
+@required
+
+// actions
+	- (IBAction)
+	performTerminalViewPageDown:(id)_;
+	- (IBAction)
+	performTerminalViewPageEnd:(id)_;
+	- (IBAction)
+	performTerminalViewPageHome:(id)_;
+	- (IBAction)
+	performTerminalViewPageUp:(id)_;
 
 @end //}
 
@@ -630,6 +649,12 @@ points in the responder chain, such as views or windows.)
 	performFormatTextMaximum:(id)_;
 	- (IBAction)
 	performFormatTextSmaller:(id)_;
+	- (IBAction)
+	performTranslationSwitchByFavoriteName:(id)_;
+	- (IBAction)
+	performTranslationSwitchCustom:(id)_;
+	- (IBAction)
+	performTranslationSwitchDefault:(id)_;
 
 @end //}
 
@@ -642,9 +667,201 @@ points in the responder chain, such as views or windows.)
 */
 @protocol Commands_URLSelectionHandling //{
 
+@required
+
 // actions
 	- (IBAction)
 	performOpenURL:(id)_;
+
+@end //}
+
+/*!
+Actions related to vector graphics windows.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_VectorGraphicsOpening //{
+
+@required
+
+// actions
+	- (IBAction)
+	performNewTEKPage:(id)_;
+	- (IBAction)
+	performPageClearToggle:(id)_;
+
+@end //}
+
+/*!
+Action to specify the name of a window.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_WindowRenaming //{
+
+@required
+
+// actions
+	- (IBAction)
+	performRename:(id)_;
+
+@end //}
+
+/*!
+Implements an interface for menu commands to target.  See
+"MainMenuCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Commands_Executor : NSObject< Commands_MacroInvoking,
+											Commands_MacroSwitching,
+											Commands_StandardUndoRedo,
+											Commands_StandardViewZooming,
+											Commands_StandardWindowGrouping,
+											Commands_StandardWindowSwitching,
+											Commands_VectorGraphicsOpening,
+											NSUserInterfaceValidations > //{
+{
+@private
+	NSString*	_fullScreenCommandName;
+}
+
+// class methods
+	+ (instancetype)
+	sharedExecutor;
+
+// accessors
+	@property (strong) NSString*
+	fullScreenCommandName;
+
+// new methods: explicit validation (rarely needed)
+	- (BOOL)
+	defaultValidationForAction:(SEL)_
+	sender:(id)_;
+	- (BOOL)
+	validateAction:(SEL)_
+	sender:(id)_;
+
+// new methods: menu items
+	- (NSMenuItem*)
+	newMenuItemForAction:(SEL)_
+	itemTitle:(NSString*)_
+	ifEnabled:(BOOL)_;
+
+@end //}
+
+/*!
+Implements NSApplicationDelegate and NSApplicationNotifications;
+see Commands.mm.
+*/
+@interface Commands_Executor (Commands_ApplicationCoreEvents) @end
+
+/*!
+Actions that create new terminal-based sessions.
+*/
+@interface Commands_Executor (Commands_OpeningSessions) //{
+
+// actions
+	- (IBAction)
+	performNewDefault:(id)_;
+	- (IBAction)
+	performNewByFavoriteName:(id)_;
+	- (IBAction)
+	performNewLogInShell:(id)_;
+	- (IBAction)
+	performNewShell:(id)_;
+	- (IBAction)
+	performNewCustom:(id)_;
+	- (IBAction)
+	performRestoreWorkspaceDefault:(id)_;
+	- (IBAction)
+	performRestoreWorkspaceByFavoriteName:(id)_;
+	- (IBAction)
+	performOpen:(id)_;
+	- (IBAction)
+	performDuplicate:(id)_;
+	- (IBAction)
+	performSaveAs:(id)_;
+
+// methods of the form required by setEventHandler:andSelector:forEventClass:andEventID:
+	- (void)
+	receiveGetURLEvent:(NSAppleEventDescriptor*)_
+	replyEvent:(NSAppleEventDescriptor*)_;
+
+@end //}
+
+/*!
+Actions that cause Internet addresses to be accessed.
+*/
+@interface Commands_Executor (Commands_OpeningWebPages) //{
+
+// actions
+	- (IBAction)
+	performCheckForUpdates:(id)_;
+	- (IBAction)
+	performGoToMainWebSite:(id)_;
+	- (IBAction)
+	performProvideFeedback:(id)_;
+
+@end //}
+
+/*!
+Actions that affect a window’s properties, placement and size.
+*/
+@interface Commands_Executor (Commands_ModifyingWindows) //{
+
+// actions
+	- (IBAction)
+	performHideWindow:(id)_;
+	- (IBAction)
+	performHideOtherWindows:(id)_;
+	- (IBAction)
+	performMoveWindowRight:(id)_;
+	- (IBAction)
+	performMoveWindowLeft:(id)_;
+	- (IBAction)
+	performMoveWindowDown:(id)_;
+	- (IBAction)
+	performMoveWindowUp:(id)_;
+	- (IBAction)
+	performShowHiddenWindows:(id)_;
+
+@end //}
+
+/*!
+Actions that display specific windows.
+*/
+@interface Commands_Executor (Commands_ShowingPanels) //{
+
+// actions
+	- (IBAction)
+	orderFrontAbout:(id)_;
+	- (IBAction)
+	orderFrontCommandLine:(id)_;
+	- (IBAction)
+	orderFrontContextualHelp:(id)_;
+	- (IBAction)
+	orderFrontControlKeys:(id)_;
+	- (IBAction)
+	orderFrontDebuggingOptions:(id)_;
+	- (IBAction)
+	orderFrontIPAddresses:(id)_;
+	- (IBAction)
+	orderFrontPreferences:(id)_;
+	- (IBAction)
+	orderFrontSessionInfo:(id)_;
+	- (IBAction)
+	orderFrontVT220FunctionKeys:(id)_;
+	- (IBAction)
+	orderFrontVT220Keypad:(id)_;
+	- (IBAction)
+	toggleClipboard:(id)_;
 
 @end //}
 

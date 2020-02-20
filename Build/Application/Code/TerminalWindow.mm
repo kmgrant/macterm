@@ -3981,21 +3981,76 @@ rootViewController
 }// rootViewController
 
 
-#pragma mark Actions
+#pragma mark New Methods
 
 
 /*!
-Displays an interface for the user to customize the text
-encoding.
+Performs an action on each terminal view controller.
+The block argument includes a flag for stopping early.
+
+(2018.04)
+*/
+- (void)
+enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)	aBlock
+{
+	[self.rootViewController enumerateTerminalViewControllersUsingBlock:aBlock];
+}// enumerateTerminalViewControllersUsingBlock:
+
+
+/*!
+Specify a value of FUTURE_SYMBOL(1, NSWindowTitleHidden) to
+indicate that the window title should be hidden.  This will
+be supported by the runtime OS but not the current SDK; in
+the future, this method can be refactored or removed.
+
+Also, the existence of this method with this exact name
+suppresses a compiler warning that might otherwise occur
+with older SDKs (as the system may not declare it).
 
 (2018.03)
 */
-- (IBAction)
-performTranslationSwitchCustom:(id)	sender
+- (void)
+setTitleVisibility:(NSInteger)		aVisibilityEnum
 {
-#pragma unused(sender)
-	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
-}// performTranslationSwitchCustom:
+	// NOTE: runtime OS is expected to support this feature but
+	// while compilation requires legacy SDK (for old Carbon code)
+	// it is not possible to just call it
+	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
+				(@selector(setTitleVisibility:), self.window,
+					aVisibilityEnum))
+	{
+		Console_Warning(Console_WriteLine, "failed to set window title bar visibility");
+	}
+}// setTitleVisibility:
+
+
+/*!
+Hides the normal window buttons for close/minimize/zoom,
+expecting the buttons to be in the toolbar or unavailable
+(due to user customization of the toolbar).
+
+Note that this creates an ugly gap on the left side of
+the toolbar by default.  This is removed in the custom
+subclass of the terminal window by implementing the
+private method "_toolbarLeadingSpace".
+
+(2018.03)
+*/
+- (void)
+setWindowButtonsHidden:(BOOL)	aHiddenFlag
+{
+	// removing the buttons entirely with "removeFromSuperview" seemed to work
+	// initially but there are situations that will bring the buttons back (such
+	// as opening a toolbar customization sheet, oddly enough); therefore,
+	// instead, the original buttons are simply marked as hidden
+	[self.window standardWindowButton:NSWindowCloseButton].hidden = aHiddenFlag;
+	[self.window standardWindowButton:NSWindowMiniaturizeButton].hidden = aHiddenFlag;
+	[self.window standardWindowButton:NSWindowZoomButton].hidden = aHiddenFlag;
+	
+	// the toolbar seems to reserve space for the window buttons even if they
+	// are not present; attempt to remove this space
+	// UNIMPLEMENTED
+}// setWindowButtonsHidden:
 
 
 #pragma mark Actions: Commands_StandardSearching
@@ -4097,6 +4152,38 @@ performShowCompletions:(id)		sender
 	
 	
 	TerminalView_DisplayCompletionsUI(view);
+}
+
+
+#pragma mark Actions: Commands_StandardWindowTabbing
+
+
+- (IBAction)
+mergeAllWindows:(id)	sender
+{
+	UNUSED_RETURN(BOOL)[super tryToPerform:_cmd with:sender];
+}
+- (id)
+canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalWindowRef	terminalWindow = self.terminalWindowRef;
+	
+	
+	if ((nullptr != terminalWindow) &&
+		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
+		TerminalWindow_IsTab(terminalWindow))
+	{
+		return @(YES);
+	}
+	return @(NO);
+}
+
+
+- (IBAction)
+moveTabToNewWindow:(id)		sender
+{
+	UNUSED_RETURN(BOOL)[super tryToPerform:_cmd with:sender];
 }
 
 
@@ -4329,76 +4416,43 @@ performFormatTextMaximum:(id)	sender
 }
 
 
-#pragma mark New Methods
-
-
 /*!
-Performs an action on each terminal view controller.
-The block argument includes a flag for stopping early.
-
-(2018.04)
-*/
-- (void)
-enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)	aBlock
-{
-	[self.rootViewController enumerateTerminalViewControllersUsingBlock:aBlock];
-}// enumerateTerminalViewControllersUsingBlock:
-
-
-/*!
-Specify a value of FUTURE_SYMBOL(1, NSWindowTitleHidden) to
-indicate that the window title should be hidden.  This will
-be supported by the runtime OS but not the current SDK; in
-the future, this method can be refactored or removed.
-
-Also, the existence of this method with this exact name
-suppresses a compiler warning that might otherwise occur
-with older SDKs (as the system may not declare it).
+Displays an interface for the user to customize the text
+encoding.
 
 (2018.03)
 */
-- (void)
-setTitleVisibility:(NSInteger)		aVisibilityEnum
+- (IBAction)
+performTranslationSwitchCustom:(id)	sender
 {
-	// NOTE: runtime OS is expected to support this feature but
-	// while compilation requires legacy SDK (for old Carbon code)
-	// it is not possible to just call it
-	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-				(@selector(setTitleVisibility:), self.window,
-					aVisibilityEnum))
-	{
-		Console_Warning(Console_WriteLine, "failed to set window title bar visibility");
-	}
-}// setTitleVisibility:
+#pragma unused(sender)
+	TerminalWindow_DisplayCustomTranslationUI(self.terminalWindowRef);
+}// performTranslationSwitchCustom:
 
 
-/*!
-Hides the normal window buttons for close/minimize/zoom,
-expecting the buttons to be in the toolbar or unavailable
-(due to user customization of the toolbar).
+#pragma mark Actions: Commands_WindowRenaming
 
-Note that this creates an ugly gap on the left side of
-the toolbar by default.  This is removed in the custom
-subclass of the terminal window by implementing the
-private method "_toolbarLeadingSpace".
 
-(2018.03)
-*/
-- (void)
-setWindowButtonsHidden:(BOOL)	aHiddenFlag
+- (IBAction)
+performRename:(id)	sender
 {
-	// removing the buttons entirely with "removeFromSuperview" seemed to work
-	// initially but there are situations that will bring the buttons back (such
-	// as opening a toolbar customization sheet, oddly enough); therefore,
-	// instead, the original buttons are simply marked as hidden
-	[self.window standardWindowButton:NSWindowCloseButton].hidden = aHiddenFlag;
-	[self.window standardWindowButton:NSWindowMiniaturizeButton].hidden = aHiddenFlag;
-	[self.window standardWindowButton:NSWindowZoomButton].hidden = aHiddenFlag;
+#pragma unused(sender)
+	// let the user change the title of certain windows
+	// (application-level fallback; this method is also 
+	// implemented by vector graphics windows, etc.)
+	SessionRef		session = SessionFactory_ReturnTerminalWindowSession(self.terminalWindowRef);
 	
-	// the toolbar seems to reserve space for the window buttons even if they
-	// are not present; attempt to remove this space
-	// UNIMPLEMENTED
-}// setWindowButtonsHidden:
+	
+	if (nullptr != session)
+	{
+		Session_DisplayWindowRenameUI(session);
+	}
+	else
+	{
+		// ???
+		Sound_StandardAlert();
+	}
+}
 
 
 #pragma mark Notifications

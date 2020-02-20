@@ -5811,7 +5811,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// active terminal type supports this
 		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
-			result = Commands_ExecuteByID(kCommandTerminalViewPageUp);
+			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageUp:));
 		}
 		break;
 	
@@ -5821,7 +5821,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// active terminal type supports this
 		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
-			result = Commands_ExecuteByID(kCommandTerminalViewPageDown);
+			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageDown:));
 		}
 		break;
 	
@@ -5831,7 +5831,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// active terminal type supports this
 		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
-			result = Commands_ExecuteByID(kCommandTerminalViewHome);
+			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageHome:));
 		}
 		break;
 	
@@ -5841,7 +5841,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// active terminal type supports this
 		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
-			result = Commands_ExecuteByID(kCommandTerminalViewEnd);
+			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageEnd:));
 		}
 		break;
 	

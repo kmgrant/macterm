@@ -75,6 +75,7 @@
 #import "ConstantsRegistry.h"
 #import "DragAndDrop.h"
 #import "EventLoop.h"
+#import "Keypads.h"
 #import "MacroManager.h"
 #import "NetEvents.h"
 #import "Preferences.h"
@@ -10275,80 +10276,32 @@ terminalViewRef
 }// terminalViewRef
 
 
-#pragma mark Actions: General
+#pragma mark Actions: Commands_Printing
 
 
-/*!
-Prompts the user to specify where to save a new file,
-and then initiates a continuous capture of terminal text
-to that file.
-
-(2018.12)
-*/
 - (IBAction)
-performCaptureBegin:(id)	sender
+performPrintScreen:(id)		sender
 {
-#pragma unused(sender)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	
-	
-	Terminal_FileCaptureEnd(screenRef); // terminate any previous capture
-	Session_DisplayFileCaptureSaveDialog([self boundSession]);
-}
-
-
-/*!
-Stops the continuous capture of terminal text to a file.
-
-(2018.12)
-*/
-- (IBAction)
-performCaptureEnd:(id)		sender
-{
-#pragma unused(sender)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	
-	
-	Terminal_FileCaptureEnd(screenRef);
+	// see also "performPrintSelection:", which is similar...
+	[self printForSelector:_cmd sender:sender];
 }
 - (id)
-canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
+canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	BOOL				result = NO;
-	
-	
-	result = (Terminal_FileCaptureInProgress(screenRef) ? YES : NO);
-	
-	return ((result) ? @(YES) : @(NO));
+	return @(YES);
 }
 
 
-/*!
-Copies selected text from the terminal view to the clipboard
-as a single joined line and immediately performs a Paste of
-that text.
-
-(2018.12)
-*/
 - (IBAction)
-performCopyAndPaste:(id)	sender
+performPrintSelection:(id)	sender
 {
 #pragma unused(sender)
-	Session_Result		sessionResult = kSession_ResultOK;
-	
-	
-	Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
-	
-	sessionResult = Session_UserInputPaste([self boundSession]);
-	if (false == sessionResult.ok())
-	{
-		Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
-	}
+	// see also "performPrintScreen:", which is similar...
+	[self printForSelector:_cmd sender:sender];
 }
 - (id)
-canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
+canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 #pragma unused(anItem)
 	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
@@ -10358,28 +10311,7 @@ canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-/*!
-Copies selected text from the terminal view to the clipboard
-except consecutive spaces may be replaced by a single tab
-(based on user preferences).
-
-(2018.12)
-*/
-- (IBAction)
-performCopyWithTabSubstitution:(id)		sender
-{
-#pragma unused(sender)
-	Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodTable);
-}
-- (id)
-canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
+#pragma mark Actions: Commands_SessionProcessControlling
 
 
 - (IBAction)
@@ -10453,224 +10385,16 @@ performRestart:(id)		sender
 canPerformRestart:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	
+	
 	// this is not exactly the same as the default validator;
 	// in particular, this is permitted in Full Screen mode
-	if (nullptr != SessionFactory_ReturnUserFocusSession())
+	if (nullptr != session)
 	{
 		return @(YES);
 	}
 	return @(NO);
-}
-
-
-- (IBAction)
-performSaveSelection:(id)	sender
-{
-#pragma unused(sender)
-	TerminalView_DisplaySaveSelectionUI([self terminalViewRef]);
-}
-- (id)
-canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSelectEntireScrollbackBuffer:(id)	sender
-{
-#pragma unused(sender)
-	TerminalView_SelectEntireBuffer([self terminalViewRef]);
-}
-
-
-/*!
-Turns the specified terminal LED on or off.  (LEDs can
-also be toggled by terminal sequences.)
-
-(2018.12)
-*/
-- (IBAction)
-performTerminalLED1Toggle:(id)		sender
-{
-#pragma unused(sender)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	
-	
-	Terminal_LEDSetState(screenRef, 1, false == Terminal_LEDIsOn(screenRef, 1));
-}
-
-
-/*!
-Turns the specified terminal LED on or off.  (LEDs can
-also be toggled by terminal sequences.)
-
-(2018.12)
-*/
-- (IBAction)
-performTerminalLED2Toggle:(id)		sender
-{
-#pragma unused(sender)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	
-	
-	Terminal_LEDSetState(screenRef, 2, false == Terminal_LEDIsOn(screenRef, 2));
-}
-
-
-/*!
-Turns the specified terminal LED on or off.  (LEDs can
-also be toggled by terminal sequences.)
-
-(2018.12)
-*/
-- (IBAction)
-performTerminalLED3Toggle:(id)		sender
-{
-#pragma unused(sender)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	
-	
-	Terminal_LEDSetState(screenRef, 3, false == Terminal_LEDIsOn(screenRef, 3));
-}
-
-
-/*!
-Turns the specified terminal LED on or off.  (LEDs can
-also be toggled by terminal sequences.)
-
-(2018.12)
-*/
-- (IBAction)
-performTerminalLED4Toggle:(id)		sender
-{
-#pragma unused(sender)
-	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
-	
-	
-	Terminal_LEDSetState(screenRef, 4, false == Terminal_LEDIsOn(screenRef, 4));
-}
-
-
-- (IBAction)
-performTranslationSwitchByFavoriteName:(id)		sender
-{
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				isError = YES;
-	
-	
-	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
-	{
-		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
-		
-		
-		if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
-		{
-			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-														(Quills::Prefs::TRANSLATION, collectionName),
-														Preferences_ContextWrap::kAlreadyRetained);
-			Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
-			
-			
-			if (namedSettings.exists() && (nullptr != sessionSettings))
-			{
-				Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
-				
-				
-				if (nullptr != translationTags)
-				{
-					// change character set of frontmost window according to the specified preferences
-					Preferences_Result		prefsResult = Preferences_ContextCopy
-															(namedSettings.returnRef(), sessionSettings, translationTags);
-					
-					
-					isError = (kPreferences_ResultOK != prefsResult);
-					
-					Preferences_ReleaseTagSet(&translationTags);
-				}
-			}
-		}
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
-		Sound_StandardAlert();
-	}
-}
-
-
-- (IBAction)
-performTranslationSwitchDefault:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
-	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	Preferences_ContextRef	sessionSettings = Session_ReturnTranslationConfiguration(session);
-	Preferences_ContextRef	defaultSettings = nullptr;
-	BOOL					isError = YES;
-	
-	
-	// reformat frontmost window using the Default preferences
-	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
-	{
-		isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, sessionSettings));
-	}
-	
-	if (isError)
-	{
-		// failed...
-		Sound_StandardAlert();
-	}
-}
-- (id)
-canPerformTranslationSwitchDefault:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
-
-
-#pragma mark Actions: Commands_Printing
-
-
-- (IBAction)
-performPrintScreen:(id)		sender
-{
-	// see also "performPrintSelection:", which is similar...
-	[self printForSelector:_cmd sender:sender];
-}
-- (id)
-canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
-
-
-- (IBAction)
-performPrintSelection:(id)	sender
-{
-#pragma unused(sender)
-	// see also "performPrintScreen:", which is similar...
-	[self printForSelector:_cmd sender:sender];
-}
-- (id)
-canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
-	
-	
-	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -10681,8 +10405,7 @@ canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
 performInterruptProcess:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
-	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	SessionRef		session = [self boundSession];
 	
 	
 	Session_UserInputInterruptProcess(session);
@@ -10693,8 +10416,7 @@ performInterruptProcess:(id)	sender
 performJumpScrolling:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
-	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	SessionRef		session = [self boundSession];
 	
 	
 	Session_FlushNetwork(session);
@@ -10705,8 +10427,7 @@ performJumpScrolling:(id)	sender
 performSuspendToggle:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
-	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	SessionRef		session = [self boundSession];
 	
 	
 	Session_SetNetworkSuspended(session, !Session_NetworkIsSuspended(session));
@@ -10715,10 +10436,9 @@ performSuspendToggle:(id)	sender
 canPerformSuspendToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
 	
 	
 	if (nullptr != session)
@@ -10866,8 +10586,7 @@ canSelectNone:(id <NSValidatedUserInterfaceItem>)	anItem
 performSpeechToggle:(id)	sender
 {
 #pragma unused(sender)
-	TerminalWindowRef		terminalWindow = [self.window terminalWindowRef];
-	SessionRef				session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
+	SessionRef		session = [self boundSession];
 	
 	
 	if (Session_SpeechIsEnabled(session))
@@ -10885,10 +10604,9 @@ performSpeechToggle:(id)	sender
 canPerformSpeechToggle:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
-	SessionRef			session = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
 	
 	
 	if (nullptr != session)
@@ -10931,6 +10649,772 @@ canStopSpeaking:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return (CocoaBasic_SpeakingInProgress() ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_TerminalEditing
+
+
+/*!
+Copies selected text from the terminal view to the clipboard
+as a single joined line and immediately performs a Paste of
+that text.
+
+(2018.12)
+*/
+- (IBAction)
+performCopyAndPaste:(id)	sender
+{
+#pragma unused(sender)
+	Session_Result		sessionResult = kSession_ResultOK;
+	
+	
+	Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodStandard | kClipboard_CopyMethodInline);
+	
+	sessionResult = Session_UserInputPaste([self boundSession]);
+	if (false == sessionResult.ok())
+	{
+		Console_Warning(Console_WriteValue, "failed to paste, error", sessionResult.code());
+	}
+}
+- (id)
+canPerformCopyAndPaste:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+/*!
+Copies selected text from the terminal view to the clipboard
+except consecutive spaces may be replaced by a single tab
+(based on user preferences).
+
+(2018.12)
+*/
+- (IBAction)
+performCopyWithTabSubstitution:(id)		sender
+{
+#pragma unused(sender)
+	Clipboard_TextToScrap([self terminalViewRef], kClipboard_CopyMethodTable);
+}
+- (id)
+canPerformCopyWithTabSubstitution:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSelectEntireScrollbackBuffer:(id)	sender
+{
+#pragma unused(sender)
+	TerminalView_SelectEntireBuffer([self terminalViewRef]);
+}
+
+
+#pragma mark Actions: Commands_TerminalEventHandling
+
+
+- (IBAction)
+performBellToggle:(id)	sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_SetBellEnabled(screenRef, !Terminal_BellIsEnabled(screenRef));
+}
+- (id)
+canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL				isChecked = NO;
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	BOOL				result = YES;
+	
+	
+	if (nullptr != screenRef)
+	{
+		isChecked = Terminal_BellIsEnabled(screenRef);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSetActivityHandlerNone:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef		session = [self boundSession];
+	
+	
+	Session_SetWatch(session, kSession_WatchNothing);
+}
+- (id)
+canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_WatchIsOff(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSetActivityHandlerNotifyOnIdle:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef		session = [self boundSession];
+	
+	
+	Session_SetWatch(session, kSession_WatchForInactivity);
+}
+- (id)
+canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_WatchIsForInactivity(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSetActivityHandlerNotifyOnNext:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef		session = [self boundSession];
+	
+	
+	Session_SetWatch(session, kSession_WatchForPassiveData);
+}
+- (id)
+canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_WatchIsForPassiveData(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSetActivityHandlerSendKeepAliveOnIdle:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef		session = [self boundSession];
+	
+	
+	Session_SetWatch(session, kSession_WatchForKeepAlive);
+}
+- (id)
+canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_WatchIsForKeepAlive(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_TerminalFileCapturing
+
+
+/*!
+Prompts the user to specify where to save a new file,
+and then initiates a continuous capture of terminal text
+to that file.
+
+(2018.12)
+*/
+- (IBAction)
+performCaptureBegin:(id)	sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_FileCaptureEnd(screenRef); // terminate any previous capture
+	Session_DisplayFileCaptureSaveDialog([self boundSession]);
+}
+
+
+/*!
+Stops the continuous capture of terminal text to a file.
+
+(2018.12)
+*/
+- (IBAction)
+performCaptureEnd:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_FileCaptureEnd(screenRef);
+}
+- (id)
+canPerformCaptureEnd:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	BOOL				result = NO;
+	
+	
+	result = (Terminal_FileCaptureInProgress(screenRef) ? YES : NO);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSaveSelection:(id)	sender
+{
+#pragma unused(sender)
+	TerminalView_DisplaySaveSelectionUI([self terminalViewRef]);
+}
+- (id)
+canPerformSaveSelection:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = TerminalView_TextSelectionExists([self terminalViewRef]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_TerminalKeyMapping
+
+
+- (IBAction)
+performDeleteMapToBackspace:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef			session = [self boundSession];
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+	
+	
+	keyMappings.deleteSendsBackspace = YES;
+	Session_SetEventKeys(session, keyMappings);
+}
+- (id)
+canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+		
+		
+		isChecked = (keyMappings.deleteSendsBackspace) ? YES : NO;
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performDeleteMapToDelete:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef			session = [self boundSession];
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+	
+	
+	keyMappings.deleteSendsBackspace = NO;
+	Session_SetEventKeys(session, keyMappings);
+}
+- (id)
+canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+		
+		
+		isChecked = (false == keyMappings.deleteSendsBackspace) ? YES : NO;
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performEmacsCursorModeToggle:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef			session = [self boundSession];
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+	
+	
+	keyMappings.arrowsRemappedForEmacs = !(keyMappings.arrowsRemappedForEmacs);
+	Session_SetEventKeys(session, keyMappings);
+}
+- (id)
+canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+		
+		
+		isChecked = (keyMappings.arrowsRemappedForEmacs) ? YES : NO;
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performLocalPageKeysToggle:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef			session = [self boundSession];
+	Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+	
+	
+	keyMappings.pageKeysLocalControl = !(keyMappings.pageKeysLocalControl);
+	Session_SetEventKeys(session, keyMappings);
+}
+- (id)
+canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		Session_EventKeys	keyMappings = Session_ReturnEventKeys(session);
+		
+		
+		isChecked = (keyMappings.pageKeysLocalControl) ? YES : NO;
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMappingCustom:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef		session = [self boundSession];
+	
+	
+	Session_DisplaySpecialKeySequencesDialog(session);
+}
+- (id)
+canPerformMappingCustom:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			result = (nullptr != session);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutRxvt:(id)	sender
+{
+#pragma unused(sender)
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutRxvt ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return @(YES);
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutVT220:(id)	sender
+{
+#pragma unused(sender)
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutVT220 ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return @(YES);
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermX11:(id)	sender
+{
+#pragma unused(sender)
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutXTerm ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return @(YES);
+}
+
+
+- (IBAction)
+performSetFunctionKeyLayoutXTermXFree86:(id)	sender
+{
+#pragma unused(sender)
+	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
+}
+- (id)
+canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	isChecked = (kSession_FunctionKeyLayoutXTermXFree86 ==
+							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	
+	
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return @(YES);
+}
+
+
+#pragma mark Actions: Commands_TerminalModeSwitching
+
+
+- (IBAction)
+performLineWrapToggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_SetLineWrapEnabled(screenRef, !Terminal_LineWrapIsEnabled(screenRef));
+}
+- (id)
+canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	if (nullptr != currentScreen)
+	{
+		isChecked = Terminal_LineWrapIsEnabled(currentScreen);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performLocalEchoToggle:(id)		sender
+{
+#pragma unused(sender)
+	SessionRef		session = [self boundSession];
+	
+	
+	Session_SetLocalEchoEnabled(session, !Session_LocalEchoIsEnabled(session));
+}
+- (id)
+canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	SessionRef		session = [self boundSession];
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != session);
+	
+	
+	if (nullptr != session)
+	{
+		isChecked = Session_LocalEchoIsEnabled(session);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performReset:(id)	sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_Reset(screenRef);
+}
+
+
+- (IBAction)
+performSaveOnClearToggle:(id)	sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_SetSaveLinesOnClear(screenRef, !Terminal_SaveLinesOnClearIsEnabled(screenRef));
+}
+- (id)
+canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL				isChecked = NO;
+	TerminalWindowRef	terminalWindow = [self.window terminalWindowRef];
+	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
+										? nullptr
+										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+	BOOL				result = (nullptr != terminalWindow);
+	
+	
+	if (nullptr != currentScreen)
+	{
+		isChecked = Terminal_SaveLinesOnClearIsEnabled(currentScreen);
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performScrollbackClear:(id)		sender
+{
+#pragma unused(sender)
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	TerminalView_DeleteScrollback(view);
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED1Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 1, false == Terminal_LEDIsOn(screenRef, 1));
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED2Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 2, false == Terminal_LEDIsOn(screenRef, 2));
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED3Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 3, false == Terminal_LEDIsOn(screenRef, 3));
+}
+
+
+/*!
+Turns the specified terminal LED on or off.  (LEDs can
+also be toggled by terminal sequences.)
+
+(2018.12)
+*/
+- (IBAction)
+performTerminalLED4Toggle:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screenRef = self.internalViewPtr->screen.ref;
+	
+	
+	Terminal_LEDSetState(screenRef, 4, false == Terminal_LEDIsOn(screenRef, 4));
+}
+
+
+#pragma mark Actions: Commands_TerminalScreenPaging
+
+
+/*!
+Scrolls the lines of the terminal view toward the top edge by
+one full “screenful”, consistent with hitting the Page Down key.
+
+(2020.02)
+*/
+- (IBAction)
+performTerminalViewPageDown:(id)	sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screen = self.internalViewPtr->screen.ref;
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	TerminalView_ScrollRowsTowardTopEdge(view, Terminal_ReturnRowCount(screen));
+}
+
+
+/*!
+Scrolls the lines of the terminal view as far up as possible,
+consistent with hitting the End key.
+
+(2020.02)
+*/
+- (IBAction)
+performTerminalViewPageEnd:(id)		sender
+{
+#pragma unused(sender)
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	TerminalView_ScrollToEnd(view);
+}
+
+
+/*!
+Scrolls the lines of the terminal view as far down as possible,
+consistent with hitting the Home key.
+
+(2020.02)
+*/
+- (IBAction)
+performTerminalViewPageHome:(id)	sender
+{
+#pragma unused(sender)
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	TerminalView_ScrollToBeginning(view);
+}
+
+
+/*!
+Scrolls the lines of the terminal view toward the bottom edge by
+one full “screenful”, consistent with hitting the Page Up key.
+
+(2020.02)
+*/
+- (IBAction)
+performTerminalViewPageUp:(id)		sender
+{
+#pragma unused(sender)
+	TerminalScreenRef	screen = self.internalViewPtr->screen.ref;
+	TerminalViewRef		view = [self terminalViewRef];
+	
+	
+	TerminalView_ScrollRowsTowardBottomEdge(view, Terminal_ReturnRowCount(screen));
 }
 
 
@@ -11021,6 +11505,87 @@ performFormatDefault:(id)	sender
 }
 - (id)
 canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+- (IBAction)
+performTranslationSwitchByFavoriteName:(id)		sender
+{
+	SessionRef		session = [self boundSession];
+	BOOL			isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+	{
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		
+		
+		if ((nullptr != session) && (nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::TRANSLATION, collectionName))
+		{
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::TRANSLATION, collectionName),
+														Preferences_ContextWrap::kAlreadyRetained);
+			Preferences_ContextRef		sessionSettings = Session_ReturnTranslationConfiguration(session);
+			
+			
+			if (namedSettings.exists() && (nullptr != sessionSettings))
+			{
+				Preferences_TagSetRef		translationTags = PrefPanelTranslations_NewTagSet();
+				
+				
+				if (nullptr != translationTags)
+				{
+					// change character set of frontmost window according to the specified preferences
+					Preferences_Result		prefsResult = Preferences_ContextCopy
+															(namedSettings.returnRef(), sessionSettings, translationTags);
+					
+					
+					isError = (kPreferences_ResultOK != prefsResult);
+					
+					Preferences_ReleaseTagSet(&translationTags);
+				}
+			}
+		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Console_Warning(Console_WriteLine, "failed to apply named translation settings to session");
+		Sound_StandardAlert();
+	}
+}
+
+
+- (IBAction)
+performTranslationSwitchDefault:(id)	sender
+{
+#pragma unused(sender)
+	SessionRef				session = [self boundSession];
+	Preferences_ContextRef	sessionSettings = Session_ReturnTranslationConfiguration(session);
+	Preferences_ContextRef	defaultSettings = nullptr;
+	BOOL					isError = YES;
+	
+	
+	// reformat frontmost window using the Default preferences
+	if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
+	{
+		isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, sessionSettings));
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
+	}
+}
+- (id)
+canPerformTranslationSwitchDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return @(YES);

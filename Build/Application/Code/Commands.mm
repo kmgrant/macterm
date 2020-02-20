@@ -399,48 +399,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		switch (inCommandID)
 		{
-		case kCommandBellEnabled:
-			if (isTerminal)
-			{
-				Terminal_SetBellEnabled(activeScreen, !Terminal_BellIsEnabled(activeScreen));
-			}
-			break;
-		
-		case kCommandEcho:
-			if (isSession)
-			{
-				Session_SetLocalEchoEnabled(frontSession, !Session_LocalEchoIsEnabled(frontSession));
-			}
-			break;
-		
-		case kCommandWrapMode:
-			if (isTerminal)
-			{
-				Terminal_SetLineWrapEnabled(activeScreen, !Terminal_LineWrapIsEnabled(activeScreen));
-			}
-			break;
-		
-		case kCommandClearScreenSavesLines:
-			if (isTerminal)
-			{
-				Terminal_SetSaveLinesOnClear(activeScreen, !Terminal_SaveLinesOnClearIsEnabled(activeScreen));
-			}
-			break;
-		
-		case kCommandClearEntireScrollback:
-			if (isTerminal)
-			{
-				TerminalView_DeleteScrollback(activeView);
-			}
-			break;
-		
-		case kCommandResetTerminal:
-			if (isTerminal)
-			{
-				Terminal_Reset(activeScreen);
-			}
-			break;
-		
 		//kCommandDisplayPrefPanelFormats:
 		//kCommandDisplayPrefPanelGeneral:
 		//kCommandDisplayPrefPanelMacros:
@@ -448,22 +406,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//kCommandDisplayPrefPanelTerminals:
 		//	see PrefsWindow.mm
 		//	break;
-		
-		case kCommandTerminalViewPageUp:
-			TerminalView_ScrollRowsTowardBottomEdge(activeView, Terminal_ReturnRowCount(activeScreen));
-			break;
-		
-		case kCommandTerminalViewPageDown:
-			TerminalView_ScrollRowsTowardTopEdge(activeView, Terminal_ReturnRowCount(activeScreen));
-			break;
-		
-		case kCommandTerminalViewHome:
-			TerminalView_ScrollToBeginning(activeView);
-			break;
-		
-		case kCommandTerminalViewEnd:
-			TerminalView_ScrollToEnd(activeView);
-			break;
 		
 		default:
 			result = false;
@@ -2486,6 +2428,736 @@ ifEnabled:(BOOL)				onlyIfEnabled
 }// newMenuItemForAction:itemTitle:ifEnabled:
 
 
+#pragma mark Actions: Commands_MacroInvoking
+
+
+- (IBAction)
+performActionForMacro:(id)		sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
+		
+		
+		MacroManager_UserInputMacro(oneBasedMacroNumber - 1/* zero-based macro number */);
+	}
+}
+- (id)
+canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
+	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
+	UInt16					macroIndex = STATIC_CAST([asMenuItem tag], UInt16);
+	Boolean					isTerminalWindowActive = (nullptr != TerminalWindow_ReturnFromMainWindow());
+	BOOL					result = (nullptr != currentMacros);
+	
+	
+	if (nullptr == currentMacros)
+	{
+		// reset the item
+		if (5 == macroIndex)
+		{
+			// LOCALIZE THIS
+			[asMenuItem setTitle:NSLocalizedString(@"Macros have been disabled.",
+													@"used in Macros menu when no macro set is active")];
+		}
+		else if (7 == macroIndex)
+		{
+			// LOCALIZE THIS
+			[asMenuItem setTitle:NSLocalizedString(@"To use macros, choose a set from the list below.",
+													@"used in Macros menu when no macro set is active")];
+		}
+		else if (8 == macroIndex)
+		{
+			// LOCALIZE THIS
+			[asMenuItem setTitle:NSLocalizedString(@"Use Preferences to modify macros, or to add or remove sets.",
+													@"used in Macros menu when no macro set is active")];
+		}
+		else
+		{
+			[asMenuItem setTitle:@""];
+		}
+		[asMenuItem setKeyEquivalent:@""];
+		[asMenuItem setKeyEquivalentModifierMask:0];
+	}
+	else
+	{
+		Boolean		macroIsUsable = MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */, isTerminalWindowActive,
+																currentMacros, true/* show inherited */);
+		
+		
+		if ((result) && (false == macroIsUsable))
+		{
+			result = NO;
+		}
+	}
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_MacroSwitching
+
+
+- (IBAction)
+performMacroSwitchByFavoriteName:(id)	sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		BOOL	isError = YES;
+		
+		
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+		{
+			// use the specified preferences
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+			
+			
+			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
+			{
+				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+															(Quills::Prefs::MACRO_SET, collectionName),
+															Preferences_ContextWrap::kAlreadyRetained);
+				
+				
+				if (namedSettings.exists())
+				{
+					MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+					
+					
+					macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
+					isError = (false == macrosResult.ok());
+				}
+			}
+		}
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
+	}
+}
+- (id)
+canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+	BOOL			result = YES;
+	BOOL			isChecked = NO;
+	NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+	
+	
+	if (nullptr != MacroManager_ReturnCurrentMacros())
+	{
+		CFStringRef		collectionName = nullptr;
+		CFStringRef		menuItemName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		
+		
+		if (nil != menuItemName)
+		{
+			// the context name should not be released
+			Preferences_Result		prefsResult = Preferences_ContextGetName(MacroManager_ReturnCurrentMacros(), collectionName);
+			
+			
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				isChecked = (kCFCompareEqualTo == CFStringCompare(collectionName, menuItemName, 0/* options */));
+			}
+		}
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMacroSwitchDefault:(id)	sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		
+		
+		macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+		if (false == macrosResult.ok())
+		{
+			Sound_StandardAlert();
+		}
+	}
+}
+- (id)
+canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	result = YES;
+	BOOL	isChecked = (MacroManager_ReturnDefaultMacros() == MacroManager_ReturnCurrentMacros());
+	
+	
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMacroSwitchNone:(id)		sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		
+		
+		macrosResult = MacroManager_SetCurrentMacros(nullptr);
+		if (false == macrosResult.ok())
+		{
+			Sound_StandardAlert();
+		}
+	}
+}
+- (id)
+canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+	BOOL	result = YES;
+	BOOL	isChecked = (nullptr == MacroManager_ReturnCurrentMacros());
+	
+	
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMacroSwitchNext:(id)		sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		std::vector< Preferences_ContextRef >	macroSets;
+		Boolean									switchOK = false;
+		
+		
+		// NOTE: this list includes “Default”
+		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+			(false == macroSets.empty()))
+		{
+			// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
+			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+			
+			
+			if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
+			{
+				gCurrentMacroSetIndex = 0;
+			}
+			else
+			{
+				++gCurrentMacroSetIndex;
+			}
+			
+			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+			switchOK = macrosResult.ok();
+		}
+		
+		if (false == switchOK)
+		{
+			Sound_StandardAlert();
+		}
+	}
+}
+- (id)
+canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = YES;
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performMacroSwitchPrevious:(id)		sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		std::vector< Preferences_ContextRef >	macroSets;
+		Boolean									switchOK = false;
+		
+		
+		// NOTE: this list includes “Default”
+		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+			(false == macroSets.empty()))
+		{
+			// NOTE: this should be quite similar to "performMacroSwitchNext:"
+			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+			
+			
+			if (gCurrentMacroSetIndex < 1)
+			{
+				gCurrentMacroSetIndex = (macroSets.size() - 1);
+			}
+			else
+			{
+				--gCurrentMacroSetIndex;
+			}
+			
+			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+			switchOK = macrosResult.ok();
+		}
+		
+		if (false == switchOK)
+		{
+			Sound_StandardAlert();
+		}
+	}
+}
+- (id)
+canPerformMacroSwitchPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = YES;
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_StandardUndoRedo
+
+
+- (IBAction)
+performRedo:(id)	sender
+{
+#pragma unused(sender)
+	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	
+	
+	if (nil != undoManager)
+	{
+		[undoManager redo];
+	}
+	else
+	{
+		// legacy
+		Undoables_RedoLastUndo();
+	}
+}
+- (id)
+canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL			result = NO;
+	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	
+	
+	if (nil != undoManager)
+	{
+		result = [undoManager canRedo];
+		if (result)
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:[undoManager redoMenuItemTitle]];
+		}
+	}
+	else
+	{
+		CFStringRef		redoCommandName = nullptr;
+		Boolean			isEnabled = false;
+		
+		
+		Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
+		if (false == EventLoop_IsMainWindowFullScreen())
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:BRIDGE_CAST(redoCommandName, NSString*)];
+			result = (isEnabled) ? YES : NO;
+		}
+	}
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performUndo:(id)	sender
+{
+#pragma unused(sender)
+	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	
+	
+	if (nil != undoManager)
+	{
+		[undoManager undo];
+	}
+	else
+	{
+		// legacy
+		Undoables_UndoLastAction();
+	}
+}
+- (id)
+canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL			result = NO;
+	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	
+	
+	if (nil != undoManager)
+	{
+		result = [undoManager canUndo];
+		if (result)
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:[undoManager undoMenuItemTitle]];
+		}
+	}
+	else
+	{
+		CFStringRef		undoCommandName = nullptr;
+		Boolean			isEnabled = false;
+		
+		
+		Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
+		if (false == EventLoop_IsMainWindowFullScreen())
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+			
+			
+			[asMenuItem setTitle:BRIDGE_CAST(undoCommandName, NSString*)];
+			result = (isEnabled) ? YES : NO;
+		}
+	}
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Actions: Commands_StandardViewZooming
+
+
+- (IBAction)
+performMaximize:(id)	sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		NSWindow*	targetWindow = [NSApp keyWindow];
+		NSScreen*	windowScreen = ((nil == targetWindow.screen)
+									? [NSScreen mainScreen]
+									: targetWindow.screen);
+		
+		
+		if (nil == windowScreen)
+		{
+			windowScreen = [NSScreen mainScreen];
+		}
+		
+		if ((nil != targetWindow) && (nil != windowScreen))
+		{
+			NSRect		maxRect = [windowScreen visibleFrame];
+			
+			
+			[targetWindow setFrame:maxRect display:NO animate:YES];
+		}
+	}
+}
+- (id)
+canPerformMaximize:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = NO;
+	
+	
+	// occasionally resizable windows do not have a Zoom box, such as Preferences
+	result = ((0 != ([NSApp keyWindow].styleMask & NSWindowStyleMaskResizable)) &&
+				([[NSApp keyWindow] standardWindowButton:NSWindowZoomButton].enabled));
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Commands_StandardWindowGrouping
+
+
+- (IBAction)
+performArrangeInFront:(id)	sender
+{
+#pragma unused(sender)
+	// on Mac OS X, this command also requires that all application windows come to the front
+	NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
+	
+	
+	UNUSED_RETURN(BOOL)[runningApplication activateWithOptions:(NSApplicationActivateAllWindows)];
+	
+	// arrange windows in a diagonal pattern
+	TerminalWindow_StackWindows();
+}
+
+
+- (IBAction)
+performCloseAll:(id)	sender
+{
+	for (NSWindow* aWindow in [NSApp orderedWindows])
+	{
+		[aWindow performClose:sender];
+	}
+}
+
+
+- (IBAction)
+performMiniaturizeAll:(id)		sender
+{
+	for (NSWindow* aWindow in [NSApp orderedWindows])
+	{
+		[aWindow performMiniaturize:sender];
+	}
+}
+
+
+- (IBAction)
+performZoomAll:(id)		sender
+{
+	for (NSWindow* aWindow in [NSApp orderedWindows])
+	{
+		[aWindow performZoom:sender];
+	}
+}
+
+
+#pragma mark Commands_StandardWindowSwitching
+
+
+- (IBAction)
+orderFrontNextWindow:(id)		sender
+{
+#pragma unused(sender)
+	// activate the next window in the window list (terminal windows only)
+	activateAnotherWindow(kMy_WindowActivationDirectionNext);
+}
+- (id)
+canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	// although other variants of this command are disallowed in
+	// Full Screen mode, a simple window cycle is OK because the
+	// rotation code is able to cycle only between Full Screen
+	// windows on the active Space (see activateAnotherWindow())
+	BOOL	result = (nil != [NSApp mainWindow]);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+orderFrontNextWindowHidingPrevious:(id)		sender
+{
+#pragma unused(sender)
+	// activate the next window in the window list (terminal windows only),
+	// but first obscure the frontmost terminal window
+	activateAnotherWindow(kMy_WindowActivationDirectionNext, (kMy_WindowSwitchingActionHide));
+}
+- (id)
+canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (nil != [NSApp mainWindow]);
+	
+	
+	if ((result) && EventLoop_IsMainWindowFullScreen())
+	{
+		result = NO;
+	}
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+orderFrontPreviousWindow:(id)		sender
+{
+#pragma unused(sender)
+	// activate the previous window in the window list (terminal windows only)
+	activateAnotherWindow(kMy_WindowActivationDirectionPrevious);
+}
+- (id)
+canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+#pragma unused(anItem)
+	BOOL	result = (nil != [NSApp mainWindow]);
+	
+	
+	if ((result) && EventLoop_IsMainWindowFullScreen())
+	{
+		result = NO;
+	}
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+orderFrontSpecificWindow:(id)		sender
+{
+	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	{
+		BOOL	isError = YES;
+		
+		
+		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+		{
+			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+			SessionRef		session = returnMenuItemSession(asMenuItem);
+			
+			
+			if (nil != session)
+			{
+				TerminalWindowRef	terminalWindow = nullptr;
+				NSWindow*			window = nullptr;
+				
+				
+				// first make the window visible if it was obscured
+				window = Session_ReturnActiveNSWindow(session);
+				terminalWindow = Session_ReturnActiveTerminalWindow(session);
+				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
+				
+				// now select the window
+				[window makeKeyAndOrderFront:nil];
+				
+				isError = (nil == window);
+			}
+		}
+		
+		if (isError)
+		{
+			// failed...
+			Sound_StandardAlert();
+		}
+	}
+}
+- (id)
+canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
+{
+	BOOL	result = (false == EventLoop_IsMainWindowFullScreen());
+	
+	
+	if (result)
+	{
+		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
+		SessionRef		itemSession = returnMenuItemSession(asMenuItem);
+		
+		
+		if (nullptr != itemSession)
+		{
+			Boolean				isHighlighted = false;
+			NSWindow* const		kSessionActiveWindow = Session_ReturnActiveNSWindow(itemSession);
+			
+			
+			isHighlighted = kSessionActiveWindow.isKeyWindow;
+			
+			if (isHighlighted)
+			{
+				// check the active window in the menu
+				MenuUtilities_SetItemCheckMark(asMenuItem, YES);
+			}
+			else
+			{
+				// remove any mark, initially
+				MenuUtilities_SetItemCheckMark(asMenuItem, NO);
+				
+				// use the Mac OS X convention of bullet-marking windows with unsaved changes
+				// UNIMPLEMENTED
+				
+				// use the Mac OS X convention of diamond-marking minimized windows
+				// UNIMPLEMENTED
+			}
+		}
+	}
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+#pragma mark Commands_VectorGraphicsOpening
+
+
+- (IBAction)
+performNewTEKPage:(id)		sender
+{
+#pragma unused(sender)
+	SessionRef		currentSession = returnTEKSession();
+	
+	
+	// allow this command for either session terminal windows, or
+	// the graphics themselves (as long as the graphic can be
+	// traced to a session)
+	if (nullptr == currentSession)
+	{
+		currentSession = returnTEKSession();
+	}
+	
+	if (nullptr != currentSession)
+	{
+		// open a new window or clear the buffer of the current one
+		Session_TEKNewPage(currentSession);
+	}
+}
+- (id)
+canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	SessionRef		currentSession = returnTEKSession();
+	BOOL			result = (nullptr != currentSession);
+	
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
+- (IBAction)
+performPageClearToggle:(id)		sender
+{
+#pragma unused(sender)
+	SessionRef		currentSession = returnTEKSession();
+	
+	
+	// allow this command for either session terminal windows, or
+	// the graphics themselves (as long as the graphic can be
+	// traced to a session)
+	if (nullptr == currentSession)
+	{
+		currentSession = returnTEKSession();
+	}
+	
+	if (nullptr != currentSession)
+	{
+		// toggle this setting
+		Session_TEKSetPageCommandOpensNewWindow
+		(currentSession, false == Session_TEKPageCommandOpensNewWindow(currentSession));
+	}
+}
+- (id)
+canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	SessionRef		currentSession = returnTEKSession();
+	BOOL			isChecked = NO;
+	BOOL			result = (nullptr != currentSession);
+	
+	
+	if (nullptr != currentSession)
+	{
+		isChecked = (false == Session_TEKPageCommandOpensNewWindow(currentSession));
+	}
+	MenuUtilities_SetItemCheckMark(anItem, isChecked);
+	
+	return ((result) ? @(YES) : @(NO));
+}
+
+
 #pragma mark NSUserInterfaceValidations
 
 
@@ -2767,127 +3439,6 @@ applicationWillTerminate:(NSNotification*)		aNotification
 
 
 @end //} Commands_Executor (Commands_ApplicationCoreEvents)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_Editing) //{
-
-
-- (IBAction)
-performRedo:(id)	sender
-{
-#pragma unused(sender)
-	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
-	
-	
-	if (nil != undoManager)
-	{
-		[undoManager redo];
-	}
-	else
-	{
-		// legacy
-		Undoables_RedoLastUndo();
-	}
-}
-- (id)
-canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL			result = NO;
-	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
-	
-	
-	if (nil != undoManager)
-	{
-		result = [undoManager canRedo];
-		if (result)
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:[undoManager redoMenuItemTitle]];
-		}
-	}
-	else
-	{
-		CFStringRef		redoCommandName = nullptr;
-		Boolean			isEnabled = false;
-		
-		
-		Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
-		if (false == EventLoop_IsMainWindowFullScreen())
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:BRIDGE_CAST(redoCommandName, NSString*)];
-			result = (isEnabled) ? YES : NO;
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performUndo:(id)	sender
-{
-#pragma unused(sender)
-	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
-	
-	
-	if (nil != undoManager)
-	{
-		[undoManager undo];
-	}
-	else
-	{
-		// legacy
-		Undoables_UndoLastAction();
-	}
-}
-- (id)
-canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL			result = NO;
-	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
-	
-	
-	if (nil != undoManager)
-	{
-		result = [undoManager canUndo];
-		if (result)
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:[undoManager undoMenuItemTitle]];
-		}
-	}
-	else
-	{
-		CFStringRef		undoCommandName = nullptr;
-		Boolean			isEnabled = false;
-		
-		
-		Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
-		if (false == EventLoop_IsMainWindowFullScreen())
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:BRIDGE_CAST(undoCommandName, NSString*)];
-			result = (isEnabled) ? YES : NO;
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_Editing)
 
 
 #pragma mark -
@@ -3245,87 +3796,6 @@ replyEvent:(NSAppleEventDescriptor*)			replyEvent
 
 
 #pragma mark -
-@implementation Commands_Executor (Commands_OpeningVectorGraphics) //{
-
-
-- (IBAction)
-performNewTEKPage:(id)		sender
-{
-#pragma unused(sender)
-	SessionRef		currentSession = returnTEKSession();
-	
-	
-	// allow this command for either session terminal windows, or
-	// the graphics themselves (as long as the graphic can be
-	// traced to a session)
-	if (nullptr == currentSession)
-	{
-		currentSession = returnTEKSession();
-	}
-	
-	if (nullptr != currentSession)
-	{
-		// open a new window or clear the buffer of the current one
-		Session_TEKNewPage(currentSession);
-	}
-}
-- (id)
-canPerformNewTEKPage:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	SessionRef		currentSession = returnTEKSession();
-	BOOL			result = (nullptr != currentSession);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performPageClearToggle:(id)		sender
-{
-#pragma unused(sender)
-	SessionRef		currentSession = returnTEKSession();
-	
-	
-	// allow this command for either session terminal windows, or
-	// the graphics themselves (as long as the graphic can be
-	// traced to a session)
-	if (nullptr == currentSession)
-	{
-		currentSession = returnTEKSession();
-	}
-	
-	if (nullptr != currentSession)
-	{
-		// toggle this setting
-		Session_TEKSetPageCommandOpensNewWindow
-		(currentSession, false == Session_TEKPageCommandOpensNewWindow(currentSession));
-	}
-}
-- (id)
-canPerformPageClearToggle:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	SessionRef		currentSession = returnTEKSession();
-	BOOL			isChecked = NO;
-	BOOL			result = (nullptr != currentSession);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = (false == Session_TEKPageCommandOpensNewWindow(currentSession));
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_OpeningVectorGraphics)
-
-
-#pragma mark -
 @implementation Commands_Executor (Commands_OpeningWebPages) //{
 
 
@@ -3404,824 +3874,6 @@ canPerformProvideFeedback:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 @end //} Commands_Executor (Commands_OpeningWebPages)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_ManagingMacros) //{
-
-
-- (IBAction)
-performActionForMacro:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
-		
-		
-		MacroManager_UserInputMacro(oneBasedMacroNumber - 1/* zero-based macro number */);
-	}
-}
-- (id)
-canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
-	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
-	UInt16					macroIndex = STATIC_CAST([asMenuItem tag], UInt16);
-	Boolean					isTerminalWindowActive = (nullptr != TerminalWindow_ReturnFromMainWindow());
-	BOOL					result = (nullptr != currentMacros);
-	
-	
-	if (nullptr == currentMacros)
-	{
-		// reset the item
-		if (5 == macroIndex)
-		{
-			// LOCALIZE THIS
-			[asMenuItem setTitle:NSLocalizedString(@"Macros have been disabled.",
-													@"used in Macros menu when no macro set is active")];
-		}
-		else if (7 == macroIndex)
-		{
-			// LOCALIZE THIS
-			[asMenuItem setTitle:NSLocalizedString(@"To use macros, choose a set from the list below.",
-													@"used in Macros menu when no macro set is active")];
-		}
-		else if (8 == macroIndex)
-		{
-			// LOCALIZE THIS
-			[asMenuItem setTitle:NSLocalizedString(@"Use Preferences to modify macros, or to add or remove sets.",
-													@"used in Macros menu when no macro set is active")];
-		}
-		else
-		{
-			[asMenuItem setTitle:@""];
-		}
-		[asMenuItem setKeyEquivalent:@""];
-		[asMenuItem setKeyEquivalentModifierMask:0];
-	}
-	else
-	{
-		Boolean		macroIsUsable = MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */, isTerminalWindowActive,
-																currentMacros, true/* show inherited */);
-		
-		
-		if ((result) && (false == macroIsUsable))
-		{
-			result = NO;
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMacroSwitchByFavoriteName:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		BOOL	isError = YES;
-		
-		
-		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
-		{
-			// use the specified preferences
-			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
-			
-			
-			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
-			{
-				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-															(Quills::Prefs::MACRO_SET, collectionName),
-															Preferences_ContextWrap::kAlreadyRetained);
-				
-				
-				if (namedSettings.exists())
-				{
-					MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-					
-					
-					macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
-					isError = (false == macrosResult.ok());
-				}
-			}
-		}
-		
-		if (isError)
-		{
-			// failed...
-			Sound_StandardAlert();
-		}
-	}
-}
-- (id)
-canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-	BOOL			result = YES;
-	BOOL			isChecked = NO;
-	NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-	
-	
-	if (nullptr != MacroManager_ReturnCurrentMacros())
-	{
-		CFStringRef		collectionName = nullptr;
-		CFStringRef		menuItemName = BRIDGE_CAST([asMenuItem title], CFStringRef);
-		
-		
-		if (nil != menuItemName)
-		{
-			// the context name should not be released
-			Preferences_Result		prefsResult = Preferences_ContextGetName(MacroManager_ReturnCurrentMacros(), collectionName);
-			
-			
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				isChecked = (kCFCompareEqualTo == CFStringCompare(collectionName, menuItemName, 0/* options */));
-			}
-		}
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMacroSwitchDefault:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-		
-		
-		macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
-		if (false == macrosResult.ok())
-		{
-			Sound_StandardAlert();
-		}
-	}
-}
-- (id)
-canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	BOOL	result = YES;
-	BOOL	isChecked = (MacroManager_ReturnDefaultMacros() == MacroManager_ReturnCurrentMacros());
-	
-	
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMacroSwitchNone:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-		
-		
-		macrosResult = MacroManager_SetCurrentMacros(nullptr);
-		if (false == macrosResult.ok())
-		{
-			Sound_StandardAlert();
-		}
-	}
-}
-- (id)
-canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	BOOL	result = YES;
-	BOOL	isChecked = (nullptr == MacroManager_ReturnCurrentMacros());
-	
-	
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMacroSwitchNext:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		std::vector< Preferences_ContextRef >	macroSets;
-		Boolean									switchOK = false;
-		
-		
-		// NOTE: this list includes “Default”
-		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
-			(false == macroSets.empty()))
-		{
-			// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
-			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-			
-			
-			if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
-			{
-				gCurrentMacroSetIndex = 0;
-			}
-			else
-			{
-				++gCurrentMacroSetIndex;
-			}
-			
-			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
-			switchOK = macrosResult.ok();
-		}
-		
-		if (false == switchOK)
-		{
-			Sound_StandardAlert();
-		}
-	}
-}
-- (id)
-canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = YES;
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMacroSwitchPrevious:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		std::vector< Preferences_ContextRef >	macroSets;
-		Boolean									switchOK = false;
-		
-		
-		// NOTE: this list includes “Default”
-		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
-			(false == macroSets.empty()))
-		{
-			// NOTE: this should be quite similar to "performMacroSwitchNext:"
-			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-			
-			
-			if (gCurrentMacroSetIndex < 1)
-			{
-				gCurrentMacroSetIndex = (macroSets.size() - 1);
-			}
-			else
-			{
-				--gCurrentMacroSetIndex;
-			}
-			
-			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
-			switchOK = macrosResult.ok();
-		}
-		
-		if (false == switchOK)
-		{
-			Sound_StandardAlert();
-		}
-	}
-}
-- (id)
-canPerformMacroSwitchPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = YES;
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_ManagingMacros)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_ManagingTerminalEvents) //{
-
-
-- (IBAction)
-performBellToggle:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandBellEnabled, nullptr/* target */);
-	}
-}
-- (id)
-canPerformBellToggle:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
-										? nullptr
-										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentScreen)
-	{
-		isChecked = Terminal_BellIsEnabled(currentScreen);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSetActivityHandlerNone:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-		
-		
-		Session_SetWatch(currentSession, kSession_WatchNothing);
-	}
-}
-- (id)
-canPerformSetActivityHandlerNone:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_WatchIsOff(currentSession);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSetActivityHandlerNotifyOnIdle:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-		
-		
-		Session_SetWatch(currentSession, kSession_WatchForInactivity);
-	}
-}
-- (id)
-canPerformSetActivityHandlerNotifyOnIdle:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_WatchIsForInactivity(currentSession);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSetActivityHandlerNotifyOnNext:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-		
-		
-		Session_SetWatch(currentSession, kSession_WatchForPassiveData);
-	}
-}
-- (id)
-canPerformSetActivityHandlerNotifyOnNext:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_WatchIsForPassiveData(currentSession);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performSetActivityHandlerSendKeepAliveOnIdle:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-		SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-		
-		
-		Session_SetWatch(currentSession, kSession_WatchForKeepAlive);
-	}
-}
-- (id)
-canPerformSetActivityHandlerSendKeepAliveOnIdle:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_WatchIsForKeepAlive(currentSession);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_ManagingTerminalEvents)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_ManagingTerminalKeyMappings) //{
-
-
-- (IBAction)
-performDeleteMapToBackspace:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-	
-	
-	keyMappings.deleteSendsBackspace = YES;
-	Session_SetEventKeys(currentSession, keyMappings);
-}
-- (id)
-canPerformDeleteMapToBackspace:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-		
-		
-		isChecked = (keyMappings.deleteSendsBackspace) ? YES : NO;
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performDeleteMapToDelete:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-	
-	
-	keyMappings.deleteSendsBackspace = NO;
-	Session_SetEventKeys(currentSession, keyMappings);
-}
-- (id)
-canPerformDeleteMapToDelete:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-		
-		
-		isChecked = (false == keyMappings.deleteSendsBackspace) ? YES : NO;
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performEmacsCursorModeToggle:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-	
-	
-	keyMappings.arrowsRemappedForEmacs = !(keyMappings.arrowsRemappedForEmacs);
-	Session_SetEventKeys(currentSession, keyMappings);
-}
-- (id)
-canPerformEmacsCursorModeToggle:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-		
-		
-		isChecked = (keyMappings.arrowsRemappedForEmacs) ? YES : NO;
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performLocalPageKeysToggle:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-	
-	
-	keyMappings.pageKeysLocalControl = !(keyMappings.pageKeysLocalControl);
-	Session_SetEventKeys(currentSession, keyMappings);
-}
-- (id)
-canPerformLocalPageKeysToggle:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		Session_EventKeys	keyMappings = Session_ReturnEventKeys(currentSession);
-		
-		
-		isChecked = (keyMappings.pageKeysLocalControl) ? YES : NO;
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMappingCustom:(id)	sender
-{
-#pragma unused(sender)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	
-	
-	Session_DisplaySpecialKeySequencesDialog(currentSession);
-}
-
-
-- (IBAction)
-performSetFunctionKeyLayoutRxvt:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
-	}
-}
-- (id)
-canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	BOOL	isChecked = (kSession_FunctionKeyLayoutRxvt ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
-	
-	
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return @(YES);
-}
-
-
-- (IBAction)
-performSetFunctionKeyLayoutVT220:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
-	}
-}
-- (id)
-canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	BOOL	isChecked = (kSession_FunctionKeyLayoutVT220 ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
-	
-	
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return @(YES);
-}
-
-
-- (IBAction)
-performSetFunctionKeyLayoutXTermX11:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
-	}
-}
-- (id)
-canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	BOOL	isChecked = (kSession_FunctionKeyLayoutXTerm ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
-	
-	
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return @(YES);
-}
-
-
-- (IBAction)
-performSetFunctionKeyLayoutXTermXFree86:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
-	}
-}
-- (id)
-canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-	BOOL	isChecked = (kSession_FunctionKeyLayoutXTermXFree86 ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
-	
-	
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return @(YES);
-}
-
-
-@end //} Commands_Executor (Commands_ManagingTerminalKeyMappings)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_ManagingTerminalSettings) //{
-
-
-- (IBAction)
-performLineWrapToggle:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandWrapMode, nullptr/* target */);
-	}
-}
-- (id)
-canPerformLineWrapToggle:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
-										? nullptr
-										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentScreen)
-	{
-		isChecked = Terminal_LineWrapIsEnabled(currentScreen);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performLocalEchoToggle:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandEcho, nullptr/* target */);
-	}
-}
-- (id)
-canPerformLocalEchoToggle:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	SessionRef			currentSession = SessionFactory_ReturnTerminalWindowSession(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentSession)
-	{
-		isChecked = Session_LocalEchoIsEnabled(currentSession);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performReset:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandResetTerminal, nullptr/* target */);
-	}
-}
-
-
-- (IBAction)
-performSaveOnClearToggle:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandClearScreenSavesLines, nullptr/* target */);
-	}
-}
-- (id)
-canPerformSaveOnClearToggle:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL				isChecked = NO;
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromKeyWindow();
-	TerminalScreenRef	currentScreen = (nullptr == terminalWindow)
-										? nullptr
-										: TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-	BOOL				result = (nullptr != terminalWindow);
-	
-	
-	if (nullptr != currentScreen)
-	{
-		isChecked = Terminal_SaveLinesOnClearIsEnabled(currentScreen);
-	}
-	MenuUtilities_SetItemCheckMark(anItem, isChecked);
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performScrollbackClear:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		Commands_ExecuteByIDUsingEvent(kCommandClearEntireScrollback, nullptr/* target */);
-	}
-}
-
-
-@end //} Commands_Executor (Commands_ManagingTerminalSettings)
 
 
 #pragma mark -
@@ -4607,16 +4259,6 @@ canPerformClose:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-- (IBAction)
-performCloseAll:(id)	sender
-{
-	for (NSWindow* aWindow in [NSApp orderedWindows])
-	{
-		[aWindow performClose:sender];
-	}
-}
-
-
 - (id)
 canPerformMiniaturize:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 {
@@ -4627,114 +4269,6 @@ canPerformMiniaturize:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 	result = (0 != ([NSApp keyWindow].styleMask & NSWindowStyleMaskMiniaturizable));
 	
 	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performMiniaturizeAll:(id)		sender
-{
-	for (NSWindow* aWindow in [NSApp orderedWindows])
-	{
-		[aWindow performMiniaturize:sender];
-	}
-}
-
-
-- (id)
-canPerformZoom:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = NO;
-	
-	
-	// occasionally resizable windows do not have a Zoom box, such as Preferences
-	result = ((0 != ([NSApp keyWindow].styleMask & NSWindowStyleMaskResizable)) &&
-				([[NSApp keyWindow] standardWindowButton:NSWindowZoomButton].enabled));
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-performZoomAll:(id)		sender
-{
-	for (NSWindow* aWindow in [NSApp orderedWindows])
-	{
-		[aWindow performZoom:sender];
-	}
-}
-
-
-- (IBAction)
-performMaximize:(id)	sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		NSWindow*	targetWindow = [NSApp keyWindow];
-		NSScreen*	windowScreen = ((nil == targetWindow.screen)
-									? [NSScreen mainScreen]
-									: targetWindow.screen);
-		
-		
-		if (nil == windowScreen)
-		{
-			windowScreen = [NSScreen mainScreen];
-		}
-		
-		if ((nil != targetWindow) && (nil != windowScreen))
-		{
-			NSRect		maxRect = [windowScreen visibleFrame];
-			
-			
-			[targetWindow setFrame:maxRect display:NO animate:YES];
-		}
-	}
-}
-- (id)
-canPerformMaximize:(id <NSObject, NSValidatedUserInterfaceItem>)	anItem
-{
-	return [self canPerformZoom:anItem];
-}
-
-
-- (IBAction)
-mergeAllWindows:(id)	sender
-{
-	if (/*(NO == [self viaFirstResponderTryToPerformSelector:@selector(performMergeAllWindows:) withObject:sender]) &&*/
-		(NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender]))
-	{
-		Console_Warning(Console_WriteLine, "merging tabs is not implemented for legacy Carbon windows");
-	}
-}
-- (id)
-canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	
-	
-	if ((nullptr != terminalWindow) &&
-		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
-		TerminalWindow_IsTab(terminalWindow))
-	{
-		return @(YES);
-	}
-	return @(NO);
-}
-
-
-- (IBAction)
-performArrangeInFront:(id)	sender
-{
-#pragma unused(sender)
-	// on Mac OS X, this command also requires that all application windows come to the front
-	NSRunningApplication*	runningApplication = [NSRunningApplication currentApplication];
-	
-	
-	UNUSED_RETURN(BOOL)[runningApplication activateWithOptions:(NSApplicationActivateAllWindows)];
-	
-	// arrange windows in a diagonal pattern
-	TerminalWindow_StackWindows();
 }
 
 
@@ -4840,38 +4374,6 @@ performMoveWindowUp:(id)		sender
 								awayFromEdge:NSMaxYEdge withAnimation:NO];
 		}
 	}
-}
-
-
-- (IBAction)
-performRename:(id)	sender
-{
-#pragma unused(sender)
-	// let the user change the title of certain windows
-	// (application-level fallback; this method is also 
-	// implemented by vector graphics windows, etc.)
-	SessionRef		frontSession = SessionFactory_ReturnUserRecentSession();
-	
-	
-	if (nullptr != frontSession)
-	{
-		Session_DisplayWindowRenameUI(frontSession);
-	}
-	else
-	{
-		// ???
-		Sound_StandardAlert();
-	}
-}
-- (id)
-canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = ((nullptr != TerminalWindow_ReturnFromKeyWindow()) ||
-						(nullptr != returnTEKSession()));
-	
-	
-	return ((result) ? @(YES) : @(NO));
 }
 
 
@@ -5118,234 +4620,6 @@ canOrderFrontVT220Keypad:(id <NSValidatedUserInterfaceItem>)	anItem
 
 
 @end //} Commands_ExecutionDelegate (Commands_ShowingPanels)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_SwitchingModes) //{
-
-
-- (IBAction)
-toggleFullScreen:(id)	sender
-{
-#pragma unused(sender)
-	// special case; since all windows have this method and the “off switch”
-	// in MacTerm is a floating window, the command would be absorbed if
-	// the "toggleFullScreen:" message starts from that binding; therefore,
-	// this is intentionally sent starting from the main window instead 
-	[NSApp sendAction:_cmd to:[NSApp mainWindow] from:nil];
-}
-- (id)
-canToggleFullScreen:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	// TEMPORARY: should not be necessary to check window controller for
-	// the test Cocoa terminal but until the Terminal Window module
-	// returns objects for such windows it will be necessary
-	TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromMainWindow();
-	BOOL				isCocoaTerminal = [[[NSApp mainWindow] windowController] isKindOfClass:[TerminalWindow_Controller class]];
-	BOOL				isGraphicsWindow = [[[NSApp mainWindow] windowController] isKindOfClass:[VectorWindow_Controller class]];
-	BOOL				result = ((nullptr != terminalWindow) || (isCocoaTerminal) || isGraphicsWindow);
-	
-	
-	// update “Enter / Exit Full Screen” item name; note that
-	// Cocoa bindings cannot be used here because the title
-	// binding is read-only (the change to the string would
-	// not change the menu item); instead, the item title has
-	// to be updated explicitly
-	{
-		BOOL			isCurrentlyFullScreen = EventLoop_IsMainWindowFullScreen();
-		CFStringRef		titleCFString = nullptr;
-		
-		
-		if (UIStrings_Copy((isCurrentlyFullScreen)
-							? kUIStrings_ContextualMenuFullScreenExit
-							: kUIStrings_ContextualMenuFullScreenEnter, titleCFString).ok())
-		{
-			self.fullScreenCommandName = BRIDGE_CAST(titleCFString, NSString*);
-			CFRelease(titleCFString), titleCFString = nullptr;
-		}
-		
-		if ([anItem isKindOfClass:NSMenuItem.class])
-		{
-			STATIC_CAST(anItem, NSMenuItem*).title = self.fullScreenCommandName;
-		}
-		else if ([anItem isKindOfClass:NSToolbarItem.class])
-		{
-			// toolbar item titles do not change but the help that
-			// appears can be updated to indicate the state change
-			STATIC_CAST(anItem, NSToolbarItem*).toolTip = self.fullScreenCommandName;
-		}
-		else if ([anItem isKindOfClass:NSApplication.class])
-		{
-			// ignore
-		}
-		else
-		{
-			Console_Warning(Console_WriteValueCFString, "unable to update Full Screen title of user interface object with unknown class",
-							BRIDGE_CAST(NSStringFromClass(anItem.class), CFStringRef));
-		}
-	}
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_SwitchingModes)
-
-
-#pragma mark -
-@implementation Commands_Executor (Commands_SwitchingWindows) //{
-
-
-- (IBAction)
-orderFrontNextWindow:(id)		sender
-{
-#pragma unused(sender)
-	// activate the next window in the window list (terminal windows only)
-	activateAnotherWindow(kMy_WindowActivationDirectionNext);
-}
-- (id)
-canOrderFrontNextWindow:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	// although other variants of this command are disallowed in
-	// Full Screen mode, a simple window cycle is OK because the
-	// rotation code is able to cycle only between Full Screen
-	// windows on the active Space (see activateAnotherWindow())
-	BOOL	result = (nil != [NSApp mainWindow]);
-	
-	
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-orderFrontNextWindowHidingPrevious:(id)		sender
-{
-#pragma unused(sender)
-	// activate the next window in the window list (terminal windows only),
-	// but first obscure the frontmost terminal window
-	activateAnotherWindow(kMy_WindowActivationDirectionNext, (kMy_WindowSwitchingActionHide));
-}
-- (id)
-canOrderFrontNextWindowHidingPrevious:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	BOOL	result = (nil != [NSApp mainWindow]);
-	
-	
-	if ((result) && EventLoop_IsMainWindowFullScreen())
-	{
-		result = NO;
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-orderFrontPreviousWindow:(id)		sender
-{
-#pragma unused(sender)
-	// activate the previous window in the window list (terminal windows only)
-	activateAnotherWindow(kMy_WindowActivationDirectionPrevious);
-}
-- (id)
-canOrderFrontPreviousWindow:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-#pragma unused(anItem)
-	BOOL	result = (nil != [NSApp mainWindow]);
-	
-	
-	if ((result) && EventLoop_IsMainWindowFullScreen())
-	{
-		result = NO;
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-- (IBAction)
-orderFrontSpecificWindow:(id)		sender
-{
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
-	{
-		BOOL	isError = YES;
-		
-		
-		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-			SessionRef		session = returnMenuItemSession(asMenuItem);
-			
-			
-			if (nil != session)
-			{
-				TerminalWindowRef	terminalWindow = nullptr;
-				NSWindow*			window = nullptr;
-				
-				
-				// first make the window visible if it was obscured
-				window = Session_ReturnActiveNSWindow(session);
-				terminalWindow = Session_ReturnActiveTerminalWindow(session);
-				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
-				
-				// now select the window
-				[window makeKeyAndOrderFront:nil];
-				
-				isError = (nil == window);
-			}
-		}
-		
-		if (isError)
-		{
-			// failed...
-			Sound_StandardAlert();
-		}
-	}
-}
-- (id)
-canOrderFrontSpecificWindow:(id <NSValidatedUserInterfaceItem>)		anItem
-{
-	BOOL	result = (false == EventLoop_IsMainWindowFullScreen());
-	
-	
-	if (result)
-	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-		SessionRef		itemSession = returnMenuItemSession(asMenuItem);
-		
-		
-		if (nullptr != itemSession)
-		{
-			Boolean				isHighlighted = false;
-			NSWindow* const		kSessionActiveWindow = Session_ReturnActiveNSWindow(itemSession);
-			
-			
-			isHighlighted = kSessionActiveWindow.isKeyWindow;
-			
-			if (isHighlighted)
-			{
-				// check the active window in the menu
-				MenuUtilities_SetItemCheckMark(asMenuItem, YES);
-			}
-			else
-			{
-				// remove any mark, initially
-				MenuUtilities_SetItemCheckMark(asMenuItem, NO);
-				
-				// use the Mac OS X convention of bullet-marking windows with unsaved changes
-				// UNIMPLEMENTED
-				
-				// use the Mac OS X convention of diamond-marking minimized windows
-				// UNIMPLEMENTED
-			}
-		}
-	}
-	return ((result) ? @(YES) : @(NO));
-}
-
-
-@end //} Commands_Executor (Commands_SwitchingWindows)
 
 
 #pragma mark -

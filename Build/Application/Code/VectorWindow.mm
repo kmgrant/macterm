@@ -441,7 +441,38 @@ dealloc
 }// dealloc
 
 
-#pragma mark New Methods
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (VectorCanvas_View*)
+canvasView
+{
+	return canvasView;
+}
+- (void)
+setCanvasView:(VectorCanvas_View*)	aView
+{
+	if (canvasView != aView)
+	{
+		if (nil != canvasView)
+		{
+			[canvasView release];
+		}
+		if (nil != aView)
+		{
+			[aView retain];
+		}
+		canvasView = aView;
+	}
+}// setCanvasView:
+
+
+#pragma mark Actions: Commands_WindowRenaming
 
 
 /*!
@@ -491,43 +522,6 @@ performRename:(id)	sender
 	}
 	WindowTitleDialog_Display(self->renameDialog);
 }
-- (id)
-canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (VectorCanvas_View*)
-canvasView
-{
-	return canvasView;
-}
-- (void)
-setCanvasView:(VectorCanvas_View*)	aView
-{
-	if (canvasView != aView)
-	{
-		if (nil != canvasView)
-		{
-			[canvasView release];
-		}
-		if (nil != aView)
-		{
-			[aView retain];
-		}
-		canvasView = aView;
-	}
-}// setCanvasView:
 
 
 #pragma mark TerminalView_ClickDelegate

@@ -334,10 +334,16 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalView_ContentView : NSControl < Commands_Printing,
+													Commands_SessionProcessControlling,
 													Commands_SessionThrottling,
 													Commands_StandardEditing,
 													Commands_StandardSpeechHandling,
-													Commands_TerminalScreenResizing,
+													Commands_TerminalEditing,
+													Commands_TerminalEventHandling,
+													Commands_TerminalFileCapturing,
+													Commands_TerminalKeyMapping,
+													Commands_TerminalModeSwitching,
+													Commands_TerminalScreenPaging,
 													Commands_TextFormatting,
 													Commands_URLSelectionHandling,
 													NSStandardKeyBindingResponding,
@@ -357,36 +363,6 @@ changes to an interface declared in a ".mm" file.
 // accessors
 	@property (assign) id< TerminalView_TextInputClient >
 	textInputDelegate;
-
-// actions
-	- (IBAction)
-	performCaptureBegin:(id)_;
-	- (IBAction)
-	performCaptureEnd:(id)_;
-	- (IBAction)
-	performCopyAndPaste:(id)_;
-	- (IBAction)
-	performCopyWithTabSubstitution:(id)_;
-	- (IBAction)
-	performKill:(id)_;
-	- (IBAction)
-	performRestart:(id)_;
-	- (IBAction)
-	performSaveSelection:(id)_;
-	- (IBAction)
-	performSelectEntireScrollbackBuffer:(id)_;
-	- (IBAction)
-	performTerminalLED1Toggle:(id)_;
-	- (IBAction)
-	performTerminalLED2Toggle:(id)_;
-	- (IBAction)
-	performTerminalLED3Toggle:(id)_;
-	- (IBAction)
-	performTerminalLED4Toggle:(id)_;
-	- (IBAction)
-	performTranslationSwitchByFavoriteName:(id)_;
-	- (IBAction)
-	performTranslationSwitchDefault:(id)_;
 
 @end //}
 
