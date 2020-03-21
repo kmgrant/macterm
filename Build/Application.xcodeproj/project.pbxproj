@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1036,24 +1036,19 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					0A70B8A21079C1EB0013E76F = {
-						DevelopmentTeam = 8BA57X86ZM;
 					};
 					0A983A9B0D11087A0054B4D2 = {
-						DevelopmentTeam = 8BA57X86ZM;
 					};
 					0A9AF64D0AF5A50500E7DF18 = {
-						DevelopmentTeam = 8BA57X86ZM;
 					};
 					0AC6BAD10A8C0A8B00AFF37A = {
-						DevelopmentTeam = 8BA57X86ZM;
 					};
 					0AFB6A1E0E86FD26005C5A07 = {
-						DevelopmentTeam = 8BA57X86ZM;
 					};
 				};
 			};
 			buildConfigurationList = 0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,6 +17,8 @@
 			isa = PBXBuildRule;
 			compilerSpec = com.apple.compilers.gcc.4_0;
 			fileType = sourcecode.c;
+			inputFiles = (
+			);
 			isEditable = 1;
 			outputFiles = (
 			);
@@ -25,6 +27,8 @@
 			isa = PBXBuildRule;
 			compilerSpec = com.apple.compilers.gcc.4_0;
 			fileType = sourcecode.c;
+			inputFiles = (
+			);
 			isEditable = 1;
 			outputFiles = (
 			);
@@ -116,13 +120,12 @@
 				LastUpgradeCheck = 1000;
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
-						DevelopmentTeam = 8BA57X86ZM;
 						ProvisioningStyle = Manual;
 					};
 				};
 			};
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (

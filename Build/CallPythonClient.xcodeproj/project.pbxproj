@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -122,7 +122,6 @@
 				TargetAttributes = {
 					0A3B584619F208A900F672A4 = {
 						CreatedOnToolsVersion = 6.0.1;
-						DevelopmentTeam = 8BA57X86ZM;
 						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.Sandbox = {
@@ -133,7 +132,7 @@
 				};
 			};
 			buildConfigurationList = 0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "CallPythonClient" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (

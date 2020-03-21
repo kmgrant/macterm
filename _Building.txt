@@ -2,21 +2,12 @@
                       How to Build MacTerm             2018-09-26
 
 PREREQUISITES
-  Build with the latest macOS and Xcode 10.x.
+  Build with the latest macOS and Xcode.
   
   Scripts in MacTerm will use "make" to run "xcodebuild" from the
   command line.  If you have used "xcode-select" to customize
   these tools, ensure that they are set to an appropriate version
   of Xcode.
-  
-  By default MacTerm compiles in support for Growl notifications
-  (http://www.growl.info/) so a default build requires the SDK
-  from that site.  It is expected to exist in a directory named
-  "GrowlSDK" under the "Build" directory (for this reference and
-  other dependencies, see "Build/Shared/CustomPaths.xcconfig").
-  If you wish to disable Growl support you may do so by invoking
-  the Build/GNUmakefile directly but you cannot easily do this
-  when building from Xcode.
   
   MacTerm is implemented as a C++ framework that is loaded into
   Python.  This is accomplished with the Simple Wrapper Interface
@@ -39,7 +30,7 @@ PREREQUISITES
   When building source code documentation only, you will need
   Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,
   http://www.graphviz.org/).  Also, doxypy for the Quills API
-  documentation is recommended (http://code.foosel.org/doxypy).
+  documentation is recommended.
 
 UNDERSTANDING THE DIRECTORY STRUCTURE
   The components of the project are in a few main folders:
