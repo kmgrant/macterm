@@ -37,7 +37,6 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
-//CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
 #import <AlertMessages.h>

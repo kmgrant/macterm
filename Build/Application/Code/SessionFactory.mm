@@ -65,7 +65,6 @@
 #import "InfoWindow.h"
 #import "Local.h"
 #import "MacroManager.h"
-#import "NetEvents.h"
 #import "Preferences.h"
 #import "PrefPanelSessions.h"
 #import "PrefsWindow.h"
@@ -1769,7 +1768,7 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		// set the window location and size appropriately
 		if ((0 != kWindowIndex) && (nullptr != inWorkspaceOrNull))
 		{
-			HIRect		frameBounds;
+			Preferences_TopLeftCGRect	frameBounds;
 			
 			
 			prefsResult = Preferences_ContextGetData(inWorkspaceOrNull, Preferences_ReturnTagVariantForIndex

@@ -111,10 +111,10 @@ DNR_New		(char const*	inHostNameCString,
 
 
 /*!
-Disposes of memory allocated by a DNR lookup.  You
-will receive this pointer as a parameter to your
-Carbon Event handler (see DNR_New()).  On return,
-your copy of the pointer is set to nullptr.
+Disposes of memory allocated by a DNR lookup (you
+will receive this pointer as a parameter to the
+block given to DNR_New()).  On return, your copy
+of the pointer is set to nullptr.
 
 (3.1)
 */

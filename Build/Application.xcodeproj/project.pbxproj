@@ -241,7 +241,6 @@
 		0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaExtensions.mm; path = Shared/Code/CocoaExtensions.mm; sourceTree = "<group>"; };
 		0A2DC1AF1881BEF5005A3979 /* TerminalLine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TerminalLine.h; path = Application/Code/TerminalLine.h; sourceTree = "<group>"; };
 		0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalLine.cp; path = Application/Code/TerminalLine.cp; sourceTree = "<group>"; };
-		0A30289B1DB2BE1800C1C557 /* NetEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = "<group>"; };
 		0A30289C1DB2BE2500C1C557 /* Network.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Network.mm; path = Application/Code/Network.mm; sourceTree = "<group>"; };
 		0A30289E1DB5D45200C1C557 /* MenuUtilities.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MenuUtilities.objc++.h"; path = "Shared/Code/MenuUtilities.objc++.h"; sourceTree = "<group>"; };
 		0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = MenuUtilities.mm; path = Shared/Code/MenuUtilities.mm; sourceTree = "<group>"; };
@@ -680,7 +679,6 @@
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
 				0A03DBC9063F6BCC00C38B78 /* MacroManager.h */,
-				0A30289B1DB2BE1800C1C557 /* NetEvents.h */,
 				0A03A1EC1D9A298A00411248 /* OtherApps.h */,
 				0A46040F0554376100ACDF3A /* Panel.h */,
 				0AFF137F0AF421C5006CCA34 /* Preferences */,
@@ -1034,18 +1032,6 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1130;
-				TargetAttributes = {
-					0A70B8A21079C1EB0013E76F = {
-					};
-					0A983A9B0D11087A0054B4D2 = {
-					};
-					0A9AF64D0AF5A50500E7DF18 = {
-					};
-					0AC6BAD10A8C0A8B00AFF37A = {
-					};
-					0AFB6A1E0E86FD26005C5A07 = {
-					};
-				};
 			};
 			buildConfigurationList = 0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */;
 			compatibilityVersion = "Xcode 10.0";

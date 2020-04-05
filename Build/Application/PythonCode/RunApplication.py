@@ -195,9 +195,6 @@ if __name__ == "__main__":
     #os.environ['MallocGuardEdges'] = '1'
     #os.environ['MallocScribble'] = '1'
 
-    # debugging of Carbon Events
-    #os.environ['EventDebug'] = '1'
-
     # preamble
     NOW_DT = datetime.datetime.now()
     print("MacTerm: %s." % NOW_DT.strftime("%A, %B %d, %Y, %I:%M %p"))

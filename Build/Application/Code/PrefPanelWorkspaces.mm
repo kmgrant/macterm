@@ -1638,10 +1638,10 @@ performSetBoundary:(id)		sender
 		Keypads_SetArrangeWindowPanelBinding(self, @selector(didFinishSettingWindowBoundary),
 												Preferences_ReturnTagVariantForIndex
 												(kPreferences_TagIndexedWindowFrameBounds, currentIndex),
-												typeHIRect,
+												kPreferences_DataTypeHIRect,
 												Preferences_ReturnTagVariantForIndex
 												(kPreferences_TagIndexedWindowScreenBounds, currentIndex),
-												typeHIRect,
+												kPreferences_DataTypeHIRect,
 												currentContext);
 		Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
 	}

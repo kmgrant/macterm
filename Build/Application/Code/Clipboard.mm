@@ -41,6 +41,7 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h> // TEMPORARY; some legacy types below (like EventLoopTimerRef)
 #import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
 //CARBON//#import <QuickTime/QuickTime.h>

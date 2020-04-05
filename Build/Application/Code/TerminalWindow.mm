@@ -54,6 +54,7 @@ extern "C"
 }
 
 // Mac includes
+#import <Carbon/Carbon.h> // for old APIs (TEMPORARY; deprecated)
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
@@ -311,7 +312,7 @@ typedef LockAcquireRelease< TerminalWindowRef, My_TerminalWindow >		My_TerminalW
 #pragma mark Internal Method Prototypes
 namespace {
 
-void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, UInt16, UInt16, HIPoint*);
+void					calculateIndexedWindowPosition	(My_TerminalWindowPtr, UInt16, UInt16, CGPoint*/* top-left origin */);
 void					calculateWindowFrameCocoa		(My_TerminalWindowPtr, UInt16*, UInt16*, NSRect*);
 void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
@@ -2163,9 +2164,9 @@ void
 calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 								 UInt16					inStaggerListIndex,
 								 UInt16					inLocalWindowIndex,
-								 HIPoint*				outPositionPtr)
+								 CGPoint*				outTopLeftPositionPtr)
 {
-	if ((nullptr != inPtr) && (nullptr != outPositionPtr))
+	if ((nullptr != inPtr) && (nullptr != outTopLeftPositionPtr))
 	{
 		// calculate the stagger offset
 		CGPoint		stackingOrigin;
@@ -2207,8 +2208,8 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 		if (CGRectContainsPoint(screenRect, stackingOrigin))
 		{
 			// window is on the display where the user set an origin preference
-			outPositionPtr->x = stackingOrigin.x + (stagger.x * inLocalWindowIndex);
-			outPositionPtr->y = stackingOrigin.y + (stagger.y * inLocalWindowIndex);
+			outTopLeftPositionPtr->x = stackingOrigin.x + (stagger.x * inLocalWindowIndex);
+			outTopLeftPositionPtr->y = stackingOrigin.y + (stagger.y * inLocalWindowIndex);
 		}
 		else
 		{
@@ -2217,8 +2218,8 @@ calculateIndexedWindowPosition	(My_TerminalWindowPtr	inPtr,
 			// (TEMPORARY; ideally the preference itself is per-display)
 			stackingOrigin.x += screenRect.origin.x;
 			stackingOrigin.y += screenRect.origin.y;
-			outPositionPtr->x = stackingOrigin.x + (stagger.x * inLocalWindowIndex);
-			outPositionPtr->y = stackingOrigin.y + (stagger.y * inLocalWindowIndex);
+			outTopLeftPositionPtr->x = stackingOrigin.x + (stagger.x * inLocalWindowIndex);
+			outTopLeftPositionPtr->y = stackingOrigin.y + (stagger.y * inLocalWindowIndex);
 		}
 	}
 }// calculateIndexedWindowPosition
@@ -3944,8 +3945,7 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 			// removed by overriding "_toolbarLeadingSpace" in the window
 			// subclass)
 			[self setWindowButtonsHidden:YES];
-			
-			[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
+			self.window.titleVisibility = NSWindowTitleHidden;
 		}
 	}
 	return self;
@@ -3995,33 +3995,6 @@ enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)	aBlock
 {
 	[self.rootViewController enumerateTerminalViewControllersUsingBlock:aBlock];
 }// enumerateTerminalViewControllersUsingBlock:
-
-
-/*!
-Specify a value of FUTURE_SYMBOL(1, NSWindowTitleHidden) to
-indicate that the window title should be hidden.  This will
-be supported by the runtime OS but not the current SDK; in
-the future, this method can be refactored or removed.
-
-Also, the existence of this method with this exact name
-suppresses a compiler warning that might otherwise occur
-with older SDKs (as the system may not declare it).
-
-(2018.03)
-*/
-- (void)
-setTitleVisibility:(NSInteger)		aVisibilityEnum
-{
-	// NOTE: runtime OS is expected to support this feature but
-	// while compilation requires legacy SDK (for old Carbon code)
-	// it is not possible to just call it
-	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-				(@selector(setTitleVisibility:), self.window,
-					aVisibilityEnum))
-	{
-		Console_Warning(Console_WriteLine, "failed to set window title bar visibility");
-	}
-}// setTitleVisibility:
 
 
 /*!
@@ -4470,13 +4443,13 @@ toolbarDidChangeVisibility:(NSNotification*)	aNotification
 #pragma unused(aNotification)
 	if (self.window.toolbar.isVisible)
 	{
-		[self setTitleVisibility:FUTURE_SYMBOL(1, NSWindowTitleHidden)];
+		self.window.titleVisibility = NSWindowTitleHidden;
 		[self setWindowButtonsHidden:YES];
 	}
 	else
 	{
 		[self setWindowButtonsHidden:NO];
-		[self setTitleVisibility:FUTURE_SYMBOL(0, NSWindowTitleVisible)];
+		self.window.titleVisibility = NSWindowTitleVisible;
 	}
 }// toolbarDidChangeVisibility
 

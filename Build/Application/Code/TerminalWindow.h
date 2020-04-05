@@ -281,8 +281,6 @@ changes to an interface declared in a ".mm" file.
 	- (void)
 	enumerateTerminalViewControllersUsingBlock:(TerminalView_ControllerBlock)_;
 	- (void)
-	setTitleVisibility:(NSInteger)_;
-	- (void)
 	setWindowButtonsHidden:(BOOL)_;
 
 @end //}

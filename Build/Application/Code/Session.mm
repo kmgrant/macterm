@@ -53,6 +53,7 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
 #import <CoreServices/CoreServices.h>
 
 // library includes
@@ -79,7 +80,6 @@
 #import "GenericDialog.h"
 #import "Local.h"
 #import "MacroManager.h"
-#import "NetEvents.h"
 #import "Preferences.h"
 #import "PrefPanelSessions.h"
 #import "QuillsSession.h"
@@ -4658,12 +4658,12 @@ Session_UserInputPaste	(SessionRef		inRef,
 									};
 			auto					normalPasteResponder =
 									^{
-										CFIndex					lineCount = blockPendingLines.count;
-										CFIndex					dispatchIndex = 0;
-										__block CFIndex			lineIndex = 0;
-										Preferences_Result		prefsResult = kPreferences_ResultOK;
-										EventTime				delayValue = 0;
-										dispatch_queue_t		targetQueue = dispatch_get_main_queue();
+										CFIndex						lineCount = blockPendingLines.count;
+										CFIndex						dispatchIndex = 0;
+										__block CFIndex				lineIndex = 0;
+										Preferences_Result			prefsResult = kPreferences_ResultOK;
+										Preferences_TimeInterval	delayValue = 0;
+										dispatch_queue_t			targetQueue = dispatch_get_main_queue();
 										
 										
 										// determine how long the delay between lines should be
@@ -4672,7 +4672,7 @@ Session_UserInputPaste	(SessionRef		inRef,
 										if (kPreferences_ResultOK != prefsResult)
 										{
 											// set an arbitrary default value
-											delayValue = 50 * kEventDurationMillisecond;
+											delayValue = 50 * kPreferences_TimeIntervalMillisecond;
 										}
 										
 										// regular Paste; periodically insert each line into the session,
@@ -4681,18 +4681,18 @@ Session_UserInputPaste	(SessionRef		inRef,
 										// pastes, force an even greater delay at a longer period
 										for (NSString* aString in blockPendingLines)
 										{
-											EventTime		localDelay = 0;
+											Preferences_TimeInterval	localDelay = 0;
 											
 											
 											++dispatchIndex;
-											localDelay = (dispatchIndex * STATIC_CAST(delayValue / kEventDurationNanosecond, int64_t));
+											localDelay = (dispatchIndex * STATIC_CAST(delayValue / kPreferences_TimeIntervalNanosecond, int64_t));
 											// TEMPORARY; create low-level preferences for these additional delay intervals
 											if (0 == (dispatchIndex % 40/* arbitrary */))
 											{
 												// for very large pastes, insert an additional delay after every
 												// so many lines (based on if-statement above), in addition to
 												// any user-prescribed per-line delay
-												localDelay += (10 * kEventDurationMillisecond); // arbitrary
+												localDelay += (10 * kPreferences_TimeIntervalMillisecond); // arbitrary
 											}
 											dispatch_after(dispatch_time(DISPATCH_TIME_NOW, localDelay),
 															targetQueue,

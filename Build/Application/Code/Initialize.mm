@@ -150,18 +150,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	ListenerModel_RunTests();
 #endif
 	
-	// if requested, automatically revert to legacy terminal windows for sessions
-	{
-		DebugInterface_PanelController*		panelController = [DebugInterface_PanelController sharedDebugInterfacePanelController];
-		char const*							varValue = getenv("MACTERM_USE_LEGACY_CARBON_TERM");
-		
-		
-		if ((nullptr != varValue) && (0 == strcmp(varValue, "1")))
-		{
-			panelController.useCarbonTerminalWindowsForNewSessions = YES;
-		}
-	}
-	
 	// do everything else
 	{
 		SessionFactory_Init();

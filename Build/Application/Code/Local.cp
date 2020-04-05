@@ -70,6 +70,9 @@ extern "C"
 #	include <util.h>
 }
 
+// Mac includes (TEMPORARY)
+#include <Carbon/Carbon.h> // DEPRECATED; need to reimplement timers below
+
 // library includes
 #include <AlertMessages.h>
 #include <CFRetainRelease.h>
@@ -83,7 +86,6 @@ extern "C"
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
 #include "DebugInterface.h"
-#include "NetEvents.h"
 #include "QuillsSession.h"
 #include "Session.h"
 #include "Terminal.h"

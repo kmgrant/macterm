@@ -43,6 +43,7 @@
 #import <string>
 
 // Mac includes
+#import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
 #import <Cocoa/Cocoa.h>
 
 // library includes

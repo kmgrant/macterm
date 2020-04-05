@@ -52,7 +52,6 @@
 class NSPasteboard;
 class NSWindow;
 #endif
-#include <Carbon/Carbon.h> // for obsolete references to old event types (short-lived)
 #include <CoreServices/CoreServices.h>
 
 // library includes

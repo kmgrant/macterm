@@ -3472,17 +3472,8 @@ initWithFrame:(NSRect)	aRect
 		[self whenObject:self postsNote:NSViewFrameDidChangeNotification
 							performSelector:@selector(textViewFrameDidChange:)];
 		
-		// NOTE: runtime OS is expected to support this feature but
-		// while compilation requires legacy SDK (for old Carbon code)
-		// it is not possible to just call it
-		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-					(@selector(setAllowsDefaultTighteningForTruncation:), self,
-						YES))
-		{
-			Console_Warning(Console_WriteLine, "failed to set window title bar text-tightening");
-		}
-		
 		// initialize various label properties
+		self.allowsDefaultTighteningForTruncation = YES;
 		self.labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified;
 	}
 	return self;

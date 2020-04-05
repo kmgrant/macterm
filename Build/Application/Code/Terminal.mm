@@ -2631,67 +2631,6 @@ Terminal_CopyTitleForWindow		(TerminalScreenRef	inRef,
 
 
 /*!
-Creates a data descriptor or object specifier that describes
-the given range of text in the given terminal screen.
-
-The ranges are zero-based, but can be negative; 0 is the
-first line of the main screen area, and -1 is the first
-scrollback line.  The oldest scrollback row is a larger
-negative number, the bottommost line of the visible screen
-is one less than the number of rows high that the terminal
-screen is.
-
-IMPORTANT:	Currently this performs text duplication, when in
-			fact a smarter approach would probably be to “copy
-			on write” and otherwise return a light-weight
-			reference to the required data.
-
-(3.0)
-*/
-OSStatus
-Terminal_CreateContentsAEDesc	(TerminalScreenRef		inRef,
-								 Terminal_LineRef		inStartRow,
-								 UInt32					inNumberOfRowsToConsider,
-								 AEDesc*				outDescPtr)
-{
-	OSStatus	result = noErr;
-	CFIndex		totalLength = 0L;
-	
-	
-	if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider, addScreenLineLength, &totalLength))
-	{
-		result = memFullErr;
-	}
-	else
-	{
-		UniChar*			buffer = new UniChar[totalLength];
-		CFRetainRelease		mutableCFString(CFStringCreateMutableWithExternalCharactersNoCopy
-											(kCFAllocatorDefault, buffer, totalLength, totalLength/* capacity */,
-												kCFAllocatorNull/* reallocator */),
-											CFRetainRelease::kAlreadyRetained);
-		
-		
-		if (false == mutableCFString.exists()) result = memFullErr;
-		else
-		{
-			if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider,
-													appendScreenLineRawToCFString, mutableCFString.returnCFMutableStringRef()))
-			{
-				// No data?  Out of memory!
-				result = memFullErr;
-			}
-			else result = AECreateDesc(typeUnicodeText, buffer,
-										CFStringGetLength(mutableCFString.returnCFMutableStringRef()) * sizeof(UniChar),
-										outDescPtr);
-		}
-		delete [] buffer;
-	}
-	
-	return result;
-}// CreateContentsAEDesc
-
-
-/*!
 Returns the zero-based column and line numbers of the
 terminal cursor in the given buffer.  Since the cursor
 is not allowed to enter the scrollback buffer, negative
@@ -18534,8 +18473,7 @@ dynamic search for a portion of a terminal buffer.
 WARNING:	As this is a preemptable thread, you MUST
 		NOT use thread-unsafe system calls here.
 		On the other hand, you can arrange for
-		events to be handled (e.g. with Carbon
-		Events).
+		events to be handled (e.g. with queues).
 
 (4.1)
 */

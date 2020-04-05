@@ -54,7 +54,6 @@ Boolean		gDebugInterface_LogsSixelDecoderState = false;
 Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalEcho = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
-Boolean		gDebugInterface_UseCarbonTerminalWindowsForNewSessions = false;
 
 
 
@@ -417,35 +416,6 @@ setLogsTerminalState:(BOOL)		aFlag
 		gDebugInterface_LogsTerminalState = aFlag;
 	}
 }// setLogsTerminalState:
-
-
-/*!
-Accessor.
-
-(2018.08)
-*/
-- (BOOL)
-useCarbonTerminalWindowsForNewSessions
-{
-	return gDebugInterface_UseCarbonTerminalWindowsForNewSessions;
-}
-- (void)
-setUseCarbonTerminalWindowsForNewSessions:(BOOL)		aFlag
-{
-	if (aFlag != gDebugInterface_UseCarbonTerminalWindowsForNewSessions)
-	{
-		if (aFlag)
-		{
-			Console_WriteLine("started using legacy Carbon implementation for new session terminal windows");
-		}
-		else
-		{
-			Console_WriteLine("stopped using legacy Carbon implementation for new session terminal windows");
-		}
-		
-		gDebugInterface_UseCarbonTerminalWindowsForNewSessions = aFlag;
-	}
-}// setUseCarbonTerminalWindowsForNewSessions:
 
 
 #pragma mark NSWindowController

@@ -45,7 +45,6 @@
 
 // application includes
 #import "Commands.h"
-#import "NetEvents.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "TranslucentMenuArrow.h"
@@ -66,8 +65,8 @@ namespace {
 Preferences_ContextRef		gArrangeWindowBindingContext = nullptr;
 Preferences_Tag				gArrangeWindowBinding = 0;
 Preferences_Tag				gArrangeWindowScreenBinding = 0;
-FourCharCode				gArrangeWindowDataTypeForWindowBinding = typeNetEvents_CGPoint;
-FourCharCode				gArrangeWindowDataTypeForScreenBinding = typeHIRect;
+FourCharCode				gArrangeWindowDataTypeForWindowBinding = kPreferences_DataTypeCGPoint;
+FourCharCode				gArrangeWindowDataTypeForScreenBinding = kPreferences_DataTypeHIRect;
 CGPoint						gArrangeWindowStackingOrigin = CGPointZero;
 id							gArrangeWindowDidEndTarget = nil;
 SEL							gArrangeWindowDidEndSelector = nil;
@@ -128,13 +127,13 @@ well, because it allows you to intelligently restore the window
 if the user has resized the screen after the window was saved.
 
 The window frame binding data type is currently allowed to be
-one of these: "typeNetEvents_CGPoint" (CGPoint), "typeHIRect"
-(HIRect).  The "inWindowBindingOrZero" tag must be documented as
-expecting the corresponding type!  If a type is rectangular, the
-width and height are set to 0, but the origin is still set
-according to the window position.
+"kPreferences_DataTypeCGPoint" or "kPreferences_DataTypeHIRect".
+The "inWindowBindingOrZero" tag must be documented as expecting
+the corresponding type!  If a type is rectangular, the width
+and height are set to 0, but the origin is still set according
+to the window position.
 
-The screen binding must currently always be "typeHIRect", and
+The screen binding must be "kPreferences_DataTypeHIRect" and
 the origin and size are both defined.
 
 Set "inBinding" to 0 to have no binding effect.
@@ -156,8 +155,8 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 	UInt16 const			kDefaultY = 128; // arbitrary
 	
 	
-	assert((typeNetEvents_CGPoint == inDataTypeForWindowBinding) || (typeHIRect == inDataTypeForWindowBinding));
-	assert((0 == inDataTypeForScreenBinding) || (typeHIRect == inDataTypeForScreenBinding));
+	assert((kPreferences_DataTypeCGPoint == inDataTypeForWindowBinding) || (kPreferences_DataTypeHIRect == inDataTypeForWindowBinding));
+	assert((0 == inDataTypeForScreenBinding) || (kPreferences_DataTypeHIRect == inDataTypeForScreenBinding));
 	
 	if (nullptr == newContext)
 	{
@@ -186,7 +185,7 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 	
 	if (0 != gArrangeWindowBinding)
 	{
-		if (typeNetEvents_CGPoint == gArrangeWindowDataTypeForWindowBinding)
+		if (kPreferences_DataTypeCGPoint == gArrangeWindowDataTypeForWindowBinding)
 		{
 			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
 														sizeof(gArrangeWindowStackingOrigin), &gArrangeWindowStackingOrigin,
@@ -196,9 +195,9 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 				gArrangeWindowStackingOrigin = CGPointMake(kDefaultX, kDefaultY); // assume a default, if preference can’t be found
 			}
 		}
-		else if (typeHIRect == gArrangeWindowDataTypeForWindowBinding)
+		else if (kPreferences_DataTypeHIRect == gArrangeWindowDataTypeForWindowBinding)
 		{
-			HIRect		prefValue;
+			Preferences_TopLeftCGRect	prefValue;
 			
 			
 			prefsResult = Preferences_ContextGetData(gArrangeWindowBindingContext, gArrangeWindowBinding,
@@ -352,9 +351,6 @@ You can pass "nil" as the target to set no target, in which
 case the default behavior (using a session window) is
 restored and the palette is hidden if there is no user
 preference to keep it visible.
-
-Any Carbon target previously set by Keypads_SetEventTarget()
-is automatically cleared.
 
 (4.1)
 */
@@ -562,16 +558,16 @@ doneArranging:(id)	sender
 		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
-		if (typeNetEvents_CGPoint == gArrangeWindowDataTypeForWindowBinding)
+		if (kPreferences_DataTypeCGPoint == gArrangeWindowDataTypeForWindowBinding)
 		{
 			CGPoint		prefValue = CGPointMake(x, y);
 			
 			
 			prefsResult = Preferences_ContextSetData(gArrangeWindowBindingContext, gArrangeWindowBinding, sizeof(prefValue), &prefValue);
 		}
-		else if (typeHIRect == gArrangeWindowDataTypeForWindowBinding)
+		else if (kPreferences_DataTypeHIRect == gArrangeWindowDataTypeForWindowBinding)
 		{
-			HIRect		prefValue;
+			Preferences_TopLeftCGRect	prefValue;
 			
 			
 			prefValue.origin.x = x;
@@ -592,9 +588,9 @@ doneArranging:(id)	sender
 		
 		if (0 != gArrangeWindowScreenBinding)
 		{
-			if (typeHIRect == gArrangeWindowDataTypeForScreenBinding)
+			if (kPreferences_DataTypeHIRect == gArrangeWindowDataTypeForScreenBinding)
 			{
-				HIRect		prefValue;
+				Preferences_TopLeftCGRect	prefValue;
 				
 				
 				// TEMPORARY: the coordinate system should probably be flipped here

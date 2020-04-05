@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16096" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14313.18"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16096"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,20 +15,20 @@
         <window title="Debugging Options" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" appearanceType="darkAqua" animationBehavior="default" id="1" userLabel="Panel" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
-            <rect key="contentRect" x="191" y="400" width="517" height="271"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
+            <rect key="contentRect" x="191" y="400" width="517" height="250"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1257"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="517" height="271"/>
-                <autoresizingMask key="autoresizingMask"/>
+                <rect key="frame" x="0.0" y="0.0" width="517" height="250"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="QUx-Do-ofX">
-                        <rect key="frame" x="20" y="20" width="477" height="231"/>
+                        <rect key="frame" x="20" y="20" width="457" height="210"/>
                         <subviews>
                             <stackView distribution="fill" orientation="horizontal" alignment="top" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="F0k-qy-C4j">
-                                <rect key="frame" x="0.0" y="115" width="477" height="116"/>
+                                <rect key="frame" x="0.0" y="115" width="457" height="95"/>
                                 <subviews>
                                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="56">
-                                        <rect key="frame" x="-2" y="99" width="204" height="17"/>
+                                        <rect key="frame" x="-2" y="79" width="204" height="16"/>
                                         <constraints>
                                             <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="rFc-pr-7wd"/>
                                         </constraints>
@@ -39,10 +39,10 @@
                                         </textFieldCell>
                                     </textField>
                                     <stackView distribution="equalSpacing" orientation="vertical" alignment="leading" spacing="6" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6jI-T7-xZj">
-                                        <rect key="frame" x="220" y="0.0" width="257" height="114"/>
+                                        <rect key="frame" x="220" y="0.0" width="237" height="94"/>
                                         <subviews>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="47">
-                                                <rect key="frame" x="-2" y="98" width="224" height="18"/>
+                                                <rect key="frame" x="-2" y="78" width="224" height="18"/>
                                                 <buttonCell key="cell" type="check" title="Log Terminal State (Except Echo)" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="48">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
@@ -52,7 +52,7 @@
                                                 </connections>
                                             </button>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="yBK-8Y-YCX">
-                                                <rect key="frame" x="-2" y="78" width="169" height="18"/>
+                                                <rect key="frame" x="-2" y="58" width="169" height="18"/>
                                                 <buttonCell key="cell" type="check" title="Log Terminal Echo State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="pck-Cm-LWf">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
@@ -62,7 +62,7 @@
                                                 </connections>
                                             </button>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="52">
-                                                <rect key="frame" x="-2" y="58" width="205" height="18"/>
+                                                <rect key="frame" x="-2" y="38" width="205" height="18"/>
                                                 <buttonCell key="cell" type="check" title="Log Terminal Input Characters" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="53">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
@@ -72,7 +72,7 @@
                                                 </connections>
                                             </button>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="112">
-                                                <rect key="frame" x="-2" y="38" width="241" height="18"/>
+                                                <rect key="frame" x="-2" y="18" width="241" height="18"/>
                                                 <buttonCell key="cell" type="check" title="Log Pseudoterminal Device Settings" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="113">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
@@ -82,23 +82,13 @@
                                                 </connections>
                                             </button>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="uPX-aU-Umx">
-                                                <rect key="frame" x="-2" y="18" width="225" height="18"/>
+                                                <rect key="frame" x="-2" y="-2" width="225" height="18"/>
                                                 <buttonCell key="cell" type="check" title="Log Sixel Graphics Decoder State" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="Pom-eV-Sqc">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                 </buttonCell>
                                                 <connections>
                                                     <binding destination="-2" name="value" keyPath="self.logsSixelDecoderState" id="YQa-Ry-mMk"/>
-                                                </connections>
-                                            </button>
-                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="XeQ-4N-PG4">
-                                                <rect key="frame" x="-2" y="-2" width="261" height="18"/>
-                                                <buttonCell key="cell" type="check" title="Use Carbon Windows for New Sessions" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="jpU-f1-0XA">
-                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                    <font key="font" metaFont="system"/>
-                                                </buttonCell>
-                                                <connections>
-                                                    <binding destination="-2" name="value" keyPath="self.useCarbonTerminalWindowsForNewSessions" id="Rrv-N8-llX"/>
                                                 </connections>
                                             </button>
                                         </subviews>
@@ -108,10 +98,8 @@
                                             <integer value="1000"/>
                                             <integer value="1000"/>
                                             <integer value="1000"/>
-                                            <integer value="1000"/>
                                         </visibilityPriorities>
                                         <customSpacing>
-                                            <real value="3.4028234663852886e+38"/>
                                             <real value="3.4028234663852886e+38"/>
                                             <real value="3.4028234663852886e+38"/>
                                             <real value="3.4028234663852886e+38"/>
@@ -133,10 +121,10 @@
                                 </customSpacing>
                             </stackView>
                             <stackView distribution="fill" orientation="horizontal" alignment="top" spacing="20" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ikG-0m-gvu">
-                                <rect key="frame" x="0.0" y="74" width="477" height="21"/>
+                                <rect key="frame" x="0.0" y="74" width="457" height="21"/>
                                 <subviews>
                                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="58">
-                                        <rect key="frame" x="-2" y="3" width="204" height="17"/>
+                                        <rect key="frame" x="-2" y="3" width="204" height="16"/>
                                         <constraints>
                                             <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="Kpd-lv-vEa"/>
                                         </constraints>
@@ -147,7 +135,7 @@
                                         </textFieldCell>
                                     </textField>
                                     <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N9i-aT-TpN">
-                                        <rect key="frame" x="220" y="0.0" width="257" height="21"/>
+                                        <rect key="frame" x="220" y="0.0" width="237" height="21"/>
                                         <subviews>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="60" customClass="CoreUI_Button">
                                                 <rect key="frame" x="-6" y="-7" width="177" height="32"/>
@@ -184,7 +172,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="385" height="54"/>
                                 <subviews>
                                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="72">
-                                        <rect key="frame" x="-2" y="36" width="204" height="17"/>
+                                        <rect key="frame" x="-2" y="36" width="204" height="16"/>
                                         <constraints>
                                             <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="QEA-Cc-aNv"/>
                                         </constraints>
@@ -269,7 +257,7 @@
                     <constraint firstItem="QUx-Do-ofX" firstAttribute="leading" secondItem="2" secondAttribute="leading" constant="20" symbolic="YES" id="k5M-O2-Z4B"/>
                 </constraints>
             </view>
-            <point key="canvasLocation" x="192.5" y="15.5"/>
+            <point key="canvasLocation" x="192.5" y="5"/>
         </window>
     </objects>
 </document>

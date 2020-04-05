@@ -67,6 +67,7 @@
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
 #include <CoreServices/CoreServices.h>
 
 // library includes
@@ -88,7 +89,6 @@
 #include "Commands.h"
 #include "Keypads.h"
 #include "MacroManager.h"
-#include "NetEvents.h"
 #include "Session.h"
 #include "SessionFactory.h"
 #include "Terminal.h"
@@ -619,7 +619,7 @@ public:
 	
 	Preferences_Tag			tag;						//!< tag that describes this setting
 	CFRetainRelease			keyName;					//!< key used to store this in XML or CFPreferences
-	FourCharCode			keyValueType;				//!< property list type of key (e.g. typeCFArrayRef)
+	FourCharCode			keyValueType;				//!< property list type of key (e.g. kPreferences_DataTypeCFArrayRef)
 	size_t					nonDictionaryValueSize;		//!< bytes required for data buffers that read/write this value
 	Quills::Prefs::Class	preferenceClass;			//!< the class of context that this tag is generally used in
 	
@@ -693,10 +693,10 @@ void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullpt
 																 Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*);
-Boolean					convertCFArrayToCGFloatRGBColor		(CFArrayRef, CGFloatRGBColor*);
-Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
-Boolean					convertCGFloatRGBColorToCFArray		(CGFloatRGBColor const*, CFArrayRef&);
-Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
+Boolean					convertCFArrayToCGFloatRGBColor			(CFArrayRef, CGFloatRGBColor*);
+Boolean					convertCFArrayToHIRect					(CFArrayRef, Preferences_TopLeftCGRect&);
+Boolean					convertCGFloatRGBColorToCFArray			(CGFloatRGBColor const*, CFArrayRef&);
+Boolean					convertHIRectToCFArray					(Preferences_TopLeftCGRect const&, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
 CFDictionaryRef			copyDefaultPrefDictionary				();
 CFStringRef				copyDomainUserSpecifiedName				(CFStringRef);
@@ -886,46 +886,46 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
 										CFSTR("terminal-use-tabs"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavoriteLightMode,
-									CFSTR("format-favorite"), typeCFStringRef,
+									CFSTR("format-favorite"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavoriteDarkMode,
-									CFSTR("format-favorite-dark"), typeCFStringRef,
+									CFSTR("format-favorite-dark"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTerminalFavorite,
-									CFSTR("terminal-favorite"), typeCFStringRef,
+									CFSTR("terminal-favorite"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTranslationFavorite,
-									CFSTR("translation-favorite"), typeCFStringRef,
+									CFSTR("translation-favorite"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagBackgroundNewDataHandler,
-									CFSTR("data-receive-when-in-background"), typeCFStringRef,
+									CFSTR("data-receive-when-in-background"), kPreferences_DataTypeCFStringRef,
 									sizeof(Session_Watch), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagBackupFontName,
-									CFSTR("terminal-backup-font-family"), typeCFStringRef,
+									CFSTR("terminal-backup-font-family"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagBellSound,
-									CFSTR("terminal-when-bell-sound-basename"), typeCFStringRef,
+									CFSTR("terminal-when-bell-sound-basename"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCaptureAutoStart,
 										CFSTR("terminal-capture-auto-start"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileDirectoryURL,
-									CFSTR("terminal-capture-directory-bookmark"), typeNetEvents_CFDataRef,
+									CFSTR("terminal-capture-directory-bookmark"), kPreferences_DataTypeCFDataRef,
 									sizeof(Preferences_URLInfo), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileName,
-									CFSTR("terminal-capture-file-name-string"), typeCFStringRef,
+									CFSTR("terminal-capture-file-name-string"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCaptureFileNameAllowsSubstitutions,
 										CFSTR("terminal-capture-file-name-is-generated"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileLineEndings,
-									CFSTR("terminal-capture-file-line-endings"), typeCFStringRef,
+									CFSTR("terminal-capture-file-line-endings"), kPreferences_DataTypeCFStringRef,
 									sizeof(Session_LineEnding), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCommandLine,
-									CFSTR("command-line-token-strings"), typeCFArrayRef,
+									CFSTR("command-line-token-strings"), kPreferences_DataTypeCFArrayRef,
 									sizeof(CFArrayRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCopySelectedText,
 										CFSTR("terminal-auto-copy-on-select"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCopyTableThreshold,
-									CFSTR("spaces-per-tab"), typeNetEvents_CFNumberRef,
+									CFSTR("spaces-per-tab"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCursorBlinks,
 										CFSTR("terminal-cursor-blinking"), Quills::Prefs::GENERAL);
@@ -934,7 +934,7 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagDataReceiveDoNotStripHighBit,
 										CFSTR("data-receive-do-not-strip-high-bit"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagDataReadBufferSize,
-									CFSTR("data-receive-buffer-size-bytes"), typeNetEvents_CFNumberRef,
+									CFSTR("data-receive-buffer-size-bytes"), kPreferences_DataTypeCFNumberRef,
 									sizeof(SInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagDontAutoClose,
 										CFSTR("no-auto-close"), Quills::Prefs::GENERAL);
@@ -943,78 +943,78 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagDontDimBackgroundScreens,
 										CFSTR("terminal-no-dim-on-deactivate"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagEmacsMetaKey,
-									CFSTR("key-map-emacs-meta"), typeCFStringRef,
+									CFSTR("key-map-emacs-meta"), kPreferences_DataTypeCFStringRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagFadeBackgroundWindows,
 										CFSTR("terminal-fade-in-background"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagFadeAlpha,
-									CFSTR("terminal-fade-alpha"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-fade-alpha"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createFlag(kPreferences_TagFocusFollowsMouse,
 										CFSTR("terminal-focus-follows-mouse"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagFontCharacterWidthMultiplier,
-									CFSTR("terminal-font-width-multiplier"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-font-width-multiplier"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontName,
-									CFSTR("terminal-font-family"), typeCFStringRef,
+									CFSTR("terminal-font-family"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontSize,
-									CFSTR("terminal-font-size-points"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-font-size-points"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float64), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFunctionKeyLayout,
-									CFSTR("key-map-function-keys"), typeCFStringRef,
+									CFSTR("key-map-function-keys"), kPreferences_DataTypeCFStringRef,
 									sizeof(Session_FunctionKeyLayout), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
 										CFSTR("window-terminal-toolbar-invisible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityHandler,
-									CFSTR("data-receive-when-idle"), typeCFStringRef,
+									CFSTR("data-receive-when-idle"), kPreferences_DataTypeCFStringRef,
 									sizeof(Session_Watch), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityInSeconds,
-									CFSTR("data-receive-idle-seconds"), typeNetEvents_CFNumberRef,
+									CFSTR("data-receive-idle-seconds"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroAction, kMacroManager_MaximumMacroSetSize,
-											CFSTR("macro-%02u-action"), typeCFStringRef,
+											CFSTR("macro-%02u-action"), kPreferences_DataTypeCFStringRef,
 											sizeof(UInt32), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroContents, kMacroManager_MaximumMacroSetSize,
-											CFSTR("macro-%02u-contents-string"), typeCFStringRef,
+											CFSTR("macro-%02u-contents-string"), kPreferences_DataTypeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKey, kMacroManager_MaximumMacroSetSize,
-											CFSTR("macro-%02u-key"), typeCFStringRef,
+											CFSTR("macro-%02u-key"), kPreferences_DataTypeCFStringRef,
 											sizeof(UInt32), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKeyModifiers, kMacroManager_MaximumMacroSetSize,
-											CFSTR("macro-%02u-modifiers"), typeCFArrayRef,
+											CFSTR("macro-%02u-modifiers"), kPreferences_DataTypeCFArrayRef,
 											sizeof(UInt32), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroName, kMacroManager_MaximumMacroSetSize,
-											CFSTR("macro-%02u-name-string"), typeCFStringRef,
+											CFSTR("macro-%02u-name-string"), kPreferences_DataTypeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowCommandType, kPreferences_MaximumWorkspaceSize,
-											CFSTR("window-%02u-session-built-in"), typeCFStringRef/* "shell", "dialog", "default" */,
+											CFSTR("window-%02u-session-built-in"), kPreferences_DataTypeCFStringRef/* "shell", "dialog", "default" */,
 											sizeof(UInt32), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowFrameBounds, kPreferences_MaximumWorkspaceSize,
-											CFSTR("window-%02u-frame-bounds-pixels"), typeCFArrayRef,
-											sizeof(HIRect), Quills::Prefs::WORKSPACE);
+											CFSTR("window-%02u-frame-bounds-pixels"), kPreferences_DataTypeCFArrayRef,
+											sizeof(Preferences_TopLeftCGRect), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowScreenBounds, kPreferences_MaximumWorkspaceSize,
-											CFSTR("window-%02u-screen-bounds-pixels"), typeCFArrayRef,
-											sizeof(HIRect), Quills::Prefs::WORKSPACE);
+											CFSTR("window-%02u-screen-bounds-pixels"), kPreferences_DataTypeCFArrayRef,
+											sizeof(Preferences_TopLeftCGRect), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowSessionFavorite, kPreferences_MaximumWorkspaceSize,
-											CFSTR("window-%02u-session-favorite"), typeCFStringRef,
+											CFSTR("window-%02u-session-favorite"), kPreferences_DataTypeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedWindowTitle, kPreferences_MaximumWorkspaceSize,
-											CFSTR("window-%02u-name-string"), typeCFStringRef,
+											CFSTR("window-%02u-name-string"), kPreferences_DataTypeCFStringRef,
 											sizeof(CFStringRef), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::createFlag(kPreferences_TagITermGraphicsEnabled,
 										CFSTR("terminal-emulator-iterm-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagKeepAlivePeriodInMinutes,
-									CFSTR("data-send-keepalive-period-minutes"), typeNetEvents_CFNumberRef,
+									CFSTR("data-send-keepalive-period-minutes"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagKeyInterruptProcess,
-									CFSTR("command-key-interrupt-process"), typeCFStringRef,
+									CFSTR("command-key-interrupt-process"), kPreferences_DataTypeCFStringRef,
 									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagKeyResumeOutput,
-									CFSTR("command-key-resume-output"), typeCFStringRef,
+									CFSTR("command-key-resume-output"), kPreferences_DataTypeCFStringRef,
 									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagKeySuspendOutput,
-									CFSTR("command-key-suspend-output"), typeCFStringRef,
+									CFSTR("command-key-suspend-output"), kPreferences_DataTypeCFStringRef,
 									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskAllowsForceQuit,
 										CFSTR("kiosk-force-quit-enabled"), Quills::Prefs::GENERAL);
@@ -1033,45 +1033,45 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
 										CFSTR("data-send-local-echo-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEmacs,
-									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
+									CFSTR("command-key-emacs-move-down"), kPreferences_DataTypeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-up"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-left"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-emacs-move-right"));
 	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
-									CFSTR("key-map-backquote"), typeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
+									CFSTR("key-map-backquote"), kPreferences_DataTypeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagMapDeleteToBackspace,
-									CFSTR("key-map-delete"), typeCFStringRef,
+									CFSTR("key-map-delete"), kPreferences_DataTypeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapKeypadTopRowForVT220,
-									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, typeCFStringRef,
+									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, kPreferences_DataTypeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-vt220-pf2"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-vt220-pf3"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-vt220-pf4"));
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
-									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
+									CFSTR("new-means"), kPreferences_DataTypeCFStringRef/* "shell", "dialog", "default" */,
 									sizeof(UInt32), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNewLineMapping,
-									CFSTR("key-map-new-line"), typeCFStringRef,
+									CFSTR("key-map-new-line"), kPreferences_DataTypeCFStringRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoAnimations,
 										CFSTR("no-animations"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagNoPasteWarning,
 										CFSTR("data-send-paste-no-warning"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagNotification,
-									CFSTR("when-alert-in-background"), typeCFStringRef/* "alert", "animate", "badge", "ignore" */,
+									CFSTR("when-alert-in-background"), kPreferences_DataTypeCFStringRef/* "alert", "animate", "badge", "ignore" */,
 									sizeof(SInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNotifyOfBeeps,
-									CFSTR("terminal-when-bell-in-background"), typeCFStringRef/* "notify", "ignore" */,
+									CFSTR("terminal-when-bell-in-background"), kPreferences_DataTypeCFStringRef/* "notify", "ignore" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagPageKeysControlLocalTerminal,
-									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, typeCFStringRef,
+									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, kPreferences_DataTypeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagPasteNewLineDelay,
-									CFSTR("data-send-paste-line-delay-milliseconds"), typeNetEvents_CFNumberRef,
-									sizeof(EventTime), Quills::Prefs::SESSION);
+									CFSTR("data-send-paste-line-delay-milliseconds"), kPreferences_DataTypeCFNumberRef,
+									sizeof(Preferences_TimeInterval), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-home"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-up"));
 	My_PreferenceDefinition::registerIndirectKeyName(CFSTR("command-key-terminal-page-down"));
@@ -1080,29 +1080,29 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagRandomTerminalFormats,
 										CFSTR("terminal-format-random"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagScrollDelay,
-									CFSTR("terminal-scroll-delay-milliseconds"), typeNetEvents_CFNumberRef,
-									sizeof(EventTime), Quills::Prefs::SESSION);
+									CFSTR("terminal-scroll-delay-milliseconds"), kPreferences_DataTypeCFNumberRef,
+									sizeof(Preferences_TimeInterval), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerHost,
-									CFSTR("server-host"), typeCFStringRef,
+									CFSTR("server-host"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerPort,
-									CFSTR("server-port"), typeNetEvents_CFNumberRef,
+									CFSTR("server-port"), kPreferences_DataTypeCFNumberRef,
 									sizeof(SInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerProtocol,
-									CFSTR("server-protocol"), typeCFStringRef,
+									CFSTR("server-protocol"), kPreferences_DataTypeCFStringRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerUserID,
-									CFSTR("server-user-id"), typeCFStringRef,
+									CFSTR("server-user-id"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagSixelGraphicsEnabled,
 										CFSTR("terminal-emulator-sixel-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTektronixMode,
-									CFSTR("tek-mode"), typeCFStringRef,
+									CFSTR("tek-mode"), kPreferences_DataTypeCFStringRef,
 									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTektronixPAGEClearsScreen,
 										CFSTR("tek-page-clears-screen"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalAnswerBackMessage,
-									CFSTR("terminal-emulator-answerback"), typeCFStringRef,
+									CFSTR("terminal-emulator-answerback"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalClearSavesLines,
 										CFSTR("terminal-clear-saves-lines"), Quills::Prefs::TERMINAL);
@@ -1158,66 +1158,66 @@ Preferences_Init ()
 											CFSTR("terminal-color-normal-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalCursorType,
 									CFSTR("terminal-cursor-shape"),
-									typeCFStringRef/* "block", "underline", "thick underline", "vertical bar", "thick vertical bar" */,
+									kPreferences_DataTypeCFStringRef/* "block", "underline", "thick underline", "vertical bar", "thick vertical bar" */,
 									sizeof(Terminal_CursorType), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalEmulatorType,
-									CFSTR("terminal-emulator-type"), typeCFStringRef,
+									CFSTR("terminal-emulator-type"), kPreferences_DataTypeCFStringRef,
 									sizeof(Emulation_FullType), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalImageNormalBackground,
-									CFSTR("terminal-image-normal-background-url"), typeCFStringRef,
+									CFSTR("terminal-image-normal-background-url"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalLineWrap,
 										CFSTR("terminal-line-wrap"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginLeft,
-									CFSTR("terminal-margin-left-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-margin-left-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginRight,
-									CFSTR("terminal-margin-right-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-margin-right-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginTop,
-									CFSTR("terminal-margin-top-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-margin-top-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginBottom,
-									CFSTR("terminal-margin-bottom-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-margin-bottom-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingLeft,
-									CFSTR("terminal-padding-left-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-padding-left-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingRight,
-									CFSTR("terminal-padding-right-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-padding-right-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingTop,
-									CFSTR("terminal-padding-top-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-padding-top-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingBottom,
-									CFSTR("terminal-padding-bottom-em"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-padding-bottom-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalResizeAffectsFontSize,
-									CFSTR("terminal-resize-affects"), typeCFStringRef/* "screen" or "font" */,
+									CFSTR("terminal-resize-affects"), kPreferences_DataTypeCFStringRef/* "screen" or "font" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenColumns,
-									CFSTR("terminal-screen-dimensions-columns"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-screen-dimensions-columns"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenRows,
-									CFSTR("terminal-screen-dimensions-rows"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-screen-dimensions-rows"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackRows,
-									CFSTR("terminal-scrollback-size-lines"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-scrollback-size-lines"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt32), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
-									CFSTR("terminal-scrollback-type"), typeCFStringRef,
+									CFSTR("terminal-scrollback-type"), kPreferences_DataTypeCFStringRef,
 									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalShowMarginAtColumn,
-									CFSTR("terminal-show-margin-at-column"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-show-margin-at-column"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTextEncodingIANAName,
-									CFSTR("terminal-text-encoding-name"), typeCFStringRef,
+									CFSTR("terminal-text-encoding-name"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagTextEncodingID,
-									CFSTR("terminal-text-encoding-id"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-text-encoding-id"), kPreferences_DataTypeCFNumberRef,
 									sizeof(CFStringEncoding), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagVisualBell,
-									CFSTR("terminal-when-bell"), typeCFStringRef/* "visual" or "audio+visual" */,
+									CFSTR("terminal-when-bell"), kPreferences_DataTypeCFStringRef/* "visual" or "audio+visual" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasClipboardShowing,
 										CFSTR("window-clipboard-visible"), Quills::Prefs::GENERAL);
@@ -1232,11 +1232,11 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasVT220KeypadShowing,
 										CFSTR("window-vt220keys-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagWindowStackingOrigin,
-									CFSTR("window-terminal-position-pixels"), typeCFArrayRef/* 2 CFNumberRefs, pixels from top-left */,
+									CFSTR("window-terminal-position-pixels"), kPreferences_DataTypeCFArrayRef/* 2 CFNumberRefs, pixels from top-left */,
 									sizeof(CGPoint), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagWindowTabPreferredEdge,
-									CFSTR("window-terminal-tab-edge"), typeCFStringRef/* "top", "bottom", "left" or "right" */,
-									sizeof(OptionBits), Quills::Prefs::GENERAL);
+									CFSTR("window-terminal-tab-edge"), kPreferences_DataTypeCFStringRef/* "top", "bottom", "left" or "right" */,
+									sizeof(CGRectEdge), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminal24BitColorEnabled,
 										CFSTR("terminal-emulator-enable-color-24bit"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
@@ -1252,7 +1252,7 @@ Preferences_Init ()
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermWindowAlterationEnabled,
 										CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagXTermReportedPatchLevel,
-									CFSTR("terminal-emulator-xterm-reported-patch-level"), typeNetEvents_CFNumberRef,
+									CFSTR("terminal-emulator-xterm-reported-patch-level"), kPreferences_DataTypeCFNumberRef,
 									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	
 	// to ensure that the rest of the application can depend on its
@@ -5072,8 +5072,8 @@ create	(Preferences_Tag			inTag,
 
 
 /*!
-A convenience routine that calls create() with the typical
-key value type (typeNetEvents_CFBooleanRef) and non-dictionary
+A convenience routine that calls create() with the typical key
+value type (kPreferences_DataTypeCFBooleanRef) and non-dictionary
 value size (sizeof(Boolean)) for flags.  This simplifies the
 construction of many preferences, as this type is very common.
 
@@ -5086,7 +5086,7 @@ createFlag	(Preferences_Tag			inTag,
 			 Quills::Prefs::Class		inClass,
 			 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
-	create(inTag, inKeyName, typeNetEvents_CFBooleanRef, sizeof(Boolean), inClass,
+	create(inTag, inKeyName, kPreferences_DataTypeCFBooleanRef, sizeof(Boolean), inClass,
 			outResultPtrPtrOrNull);
 }// My_PreferenceDefinition::createFlag
 
@@ -5127,10 +5127,11 @@ createIndexed	(Preferences_Tag		inTag,
 
 
 /*!
-A convenience routine that calls create() with the typical
-key value type (typeCFArrayRef) and non-dictionary value size
-(sizeof(CGFloatRGBColor)) for RGB colors.  This simplifies the
-construction of many preferences, as this type is very common.
+A convenience routine that calls create() with the typical key
+value type (kPreferences_DataTypeCFArrayRef) and non-dictionary
+value size (sizeof(CGFloatRGBColor)) for RGB colors.  This
+simplifies the construction of many preferences, as this type
+is very common.
 
 The array is expected to contain 3 CFNumberRefs that have
 floating-point values between 0.0 and 1.0, for intensity,
@@ -5145,7 +5146,7 @@ createRGBColor	(Preferences_Tag			inTag,
 				 Quills::Prefs::Class		inClass,
 				 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
-	create(inTag, inKeyName, typeCFArrayRef, sizeof(CGFloatRGBColor), inClass, outResultPtrPtrOrNull);
+	create(inTag, inKeyName, kPreferences_DataTypeCFArrayRef, sizeof(CGFloatRGBColor), inClass, outResultPtrPtrOrNull);
 }// My_PreferenceDefinition::createRGBColor
 
 
@@ -5560,8 +5561,9 @@ convertCFArrayToCGFloatRGBColor		(CFArrayRef			inArray,
 
 /*!
 Reads an array of 4 CFNumber elements and puts their
-values into an HIRect structure in the order origin.x,
-origin.y, size.width, size.height.
+values into a structure in the order origin.x, origin.y,
+size.width, size.height.  The origin should be treated
+as the top-left corner.
 
 Returns "true" only if successful.  Note, however, that
 a rectangle containing all zeroes may also be a problem.
@@ -5569,8 +5571,8 @@ a rectangle containing all zeroes may also be a problem.
 (4.0)
 */
 Boolean
-convertCFArrayToHIRect	(CFArrayRef		inArray,
-						 HIRect&		outRect)
+convertCFArrayToHIRect	(CFArrayRef						inArray,
+						 Preferences_TopLeftCGRect&		outRect)
 {
 	Boolean		result = false;
 	
@@ -5690,8 +5692,8 @@ See also convertCFArrayToHIRect().
 (4.0)
 */
 Boolean
-convertHIRectToCFArray	(HIRect const&	inRect,
-						 CFArrayRef&	outNewCFArray)
+convertHIRectToCFArray	(Preferences_TopLeftCGRect const&	inRect,
+						 CFArrayRef&						outNewCFArray)
 {
 	CFNumberRef		componentValues[] = { nullptr, nullptr, nullptr, nullptr };
 	SInt16			i = 0;
@@ -6288,7 +6290,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
@@ -6300,7 +6302,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
 						
 						
@@ -6316,7 +6318,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagFontName:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -6342,7 +6344,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						Float64* const		data = REINTERPRET_CAST(outDataPtr, Float64*);
 						
 						
@@ -6381,7 +6383,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagTerminalColorANSICyanBold:
 				case kPreferences_TagTerminalColorANSIWhiteBold:
 					{
-						assert(typeCFArrayRef == keyValueType);
+						assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 						CFArrayRef		valueCFArray = inContextPtr->returnArrayCopy(keyName);
 						
 						
@@ -6407,7 +6409,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTerminalImageNormalBackground:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -6441,7 +6443,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						Float32			valueFloat32 = inContextPtr->returnFloat(keyName);
 						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
 						
@@ -6517,7 +6519,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				{
 				case kPreferences_TagBellSound:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -6537,7 +6539,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagCaptureFileLineEndings:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6589,13 +6591,13 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
 				
 				case kPreferences_TagCopyTableThreshold:
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					if (false == inContextPtr->exists(keyName))
 					{
 						result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -6628,13 +6630,13 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
 				
 				case kPreferences_TagMapBackquote:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6659,7 +6661,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTerminalShowMarginAtColumn:
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					if (false == inContextPtr->exists(keyName))
 					{
 						result = kPreferences_ResultBadVersionDataNotAvailable;
@@ -6680,7 +6682,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagNewCommandShortcutEffect:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6720,7 +6722,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagNotification:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6760,7 +6762,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagNotifyOfBeeps:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6785,7 +6787,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTerminalCursorType:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6829,7 +6831,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagTerminalResizeAffectsFontSize:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6854,7 +6856,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagVisualBell:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6894,14 +6896,14 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
 				
 				case kPreferences_TagWindowStackingOrigin:
 					{
-						assert(typeCFArrayRef == keyValueType);
+						assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 						CFArrayRef		valueCFArray = inContextPtr->returnArrayCopy(keyName);
 						
 						
@@ -6944,7 +6946,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					break;
 				
 				case kPreferences_TagWindowTabPreferredEdge:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -6955,24 +6957,24 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							OptionBits*		storedValuePtr = REINTERPRET_CAST(outDataPtr, OptionBits*);
+							CGRectEdge*		storedValuePtr = REINTERPRET_CAST(outDataPtr, CGRectEdge*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("left"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kWindowEdgeLeft;
+								*storedValuePtr = CGRectMinXEdge;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("right"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kWindowEdgeRight;
+								*storedValuePtr = CGRectMaxXEdge;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("bottom"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kWindowEdgeBottom;
+								*storedValuePtr = CGRectMinYEdge;
 							}
 							else
 							{
-								*storedValuePtr = kWindowEdgeTop;
+								*storedValuePtr = CGRectMaxYEdge;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -7064,7 +7066,7 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				switch (kTagWithoutIndex)
 				{
 				case kPreferences_TagIndexedMacroAction:
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					{
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
@@ -7119,7 +7121,7 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagIndexedMacroName:
 					// all of these keys have Core Foundation string values
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7169,7 +7171,7 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagIndexedMacroKeyModifiers:
 					{
-						assert(typeCFArrayRef == keyValueType);
+						assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 						CFArrayRef		valueCFArray = inContextPtr->returnArrayCopy(keyName);
 						
 						
@@ -7442,7 +7444,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagServerUserID:
 					// all of these keys have Core Foundation string values
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7463,7 +7465,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagBackgroundNewDataHandler:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7502,14 +7504,14 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
 				
 				case kPreferences_TagCaptureFileDirectoryURL:
 					{
-						assert(typeNetEvents_CFDataRef == keyValueType);
+						assert(kPreferences_DataTypeCFDataRef == keyValueType);
 						CFRetainRelease				dataObject(inContextPtr->returnValueCopy(keyName),
 																CFRetainRelease::kAlreadyRetained);
 						Preferences_URLInfo* const	data = REINTERPRET_CAST(outDataPtr, Preferences_URLInfo*);
@@ -7560,7 +7562,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagCommandLine:
 					{
-						assert(typeCFArrayRef == keyValueType);
+						assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 						CFArrayRef* const	data = REINTERPRET_CAST(outDataPtr, CFArrayRef*);
 						
 						
@@ -7574,7 +7576,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagFunctionKeyLayout:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7610,7 +7612,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagIdleAfterInactivityHandler:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7648,7 +7650,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
 						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
@@ -7670,7 +7672,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKeyResumeOutput:
 				case kPreferences_TagKeySuspendOutput:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		keystrokeCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7695,7 +7697,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagEmacsMetaKey:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7737,7 +7739,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagMapArrowsForEmacs:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7755,7 +7757,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagMapDeleteToBackspace:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7783,7 +7785,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagNewLineMapping:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7829,12 +7831,12 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
-						EventTime* const	data = REINTERPRET_CAST(outDataPtr, EventTime*);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
+						SInt16								valueInteger = inContextPtr->returnInteger(keyName);
+						Preferences_TimeInterval* const		data = REINTERPRET_CAST(outDataPtr, Preferences_TimeInterval*);
 						
 						
-						*data = STATIC_CAST(valueInteger, EventTime) * kEventDurationMillisecond;
+						*data = STATIC_CAST(valueInteger, Preferences_TimeInterval) * kPreferences_TimeIntervalMillisecond;
 					}
 					break;
 				
@@ -7845,12 +7847,12 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
-						EventTime* const	data = REINTERPRET_CAST(outDataPtr, EventTime*);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
+						SInt16								valueInteger = inContextPtr->returnInteger(keyName);
+						Preferences_TimeInterval* const		data = REINTERPRET_CAST(outDataPtr, Preferences_TimeInterval*);
 						
 						
-						*data = STATIC_CAST(valueInteger, EventTime) * kEventDurationMillisecond;
+						*data = STATIC_CAST(valueInteger, Preferences_TimeInterval) * kPreferences_TimeIntervalMillisecond;
 						if (*data > 0.050/* arbitrary */)
 						{
 							// refuse to honor very long scroll delays
@@ -7866,7 +7868,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt16* const	data = REINTERPRET_CAST(outDataPtr, SInt16*);
 						
 						
@@ -7882,7 +7884,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagServerProtocol:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -7921,7 +7923,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTektronixMode:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8035,14 +8037,14 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
 				
 				case kPreferences_TagMapKeypadTopRowForVT220:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8060,7 +8062,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagPageKeysControlLocalTerminal:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8078,7 +8080,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTerminalAnswerBackMessage:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8099,7 +8101,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTerminalEmulatorType:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8125,7 +8127,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
 						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
@@ -8147,7 +8149,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
 						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
@@ -8169,7 +8171,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt32			valueInteger = inContextPtr->returnLong(keyName);
 						UInt32* const	data = REINTERPRET_CAST(outDataPtr, UInt32*);
 						
@@ -8186,7 +8188,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTerminalScreenScrollbackType:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8232,7 +8234,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt32			valueInteger = inContextPtr->returnInteger(keyName);
 						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
@@ -8306,7 +8308,7 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				{
 				case kPreferences_TagBackupFontName:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8327,7 +8329,7 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagTextEncodingIANAName:
 					{
-						assert(typeCFStringRef == keyValueType);
+						assert(kPreferences_DataTypeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 						
 						
@@ -8353,7 +8355,7 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						SInt32						valueInteger = inContextPtr->returnLong(keyName);
 						CFStringEncoding* const		data = REINTERPRET_CAST(outDataPtr, CFStringEncoding*);
 						
@@ -8428,7 +8430,7 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
 					}
 					break;
@@ -8443,7 +8445,7 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						switch (kTagWithoutIndex)
 						{
 						case kPreferences_TagIndexedWindowCommandType:
-							assert(typeCFStringRef == keyValueType);
+							assert(kPreferences_DataTypeCFStringRef == keyValueType);
 							{
 								CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 								
@@ -8489,7 +8491,7 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						case kPreferences_TagIndexedWindowFrameBounds:
 						case kPreferences_TagIndexedWindowScreenBounds:
 							{
-								assert(typeCFArrayRef == keyValueType);
+								assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 								CFArrayRef		valueCFArray = inContextPtr->returnArrayCopy(keyName);
 								
 								
@@ -8499,7 +8501,7 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 								}
 								else
 								{
-									HIRect* const	data = REINTERPRET_CAST(outDataPtr, HIRect*);
+									Preferences_TopLeftCGRect* const	data = REINTERPRET_CAST(outDataPtr, Preferences_TopLeftCGRect*);
 									
 									
 									if (false == convertCFArrayToHIRect(valueCFArray, *data))
@@ -8523,7 +8525,7 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						case kPreferences_TagIndexedWindowTitle:
 							// all of these keys have Core Foundation string values
 							{
-								assert(typeCFStringRef == keyValueType);
+								assert(kPreferences_DataTypeCFStringRef == keyValueType);
 								CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
 								
 								
@@ -8976,7 +8978,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
@@ -8986,7 +8988,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					Float32 const* const	data = REINTERPRET_CAST(inDataPtr, Float32 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addFloat(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -8996,7 +8998,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -9006,7 +9008,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					Float64 const* const	data = REINTERPRET_CAST(inDataPtr, Float64 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -9042,7 +9044,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					
 					if (convertCGFloatRGBColorToCFArray(data, colorCFArray))
 					{
-						assert(typeCFArrayRef == keyValueType);
+						assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 						inContextPtr->addArray(inDataPreferenceTag, keyName, colorCFArray);
 						CFRelease(colorCFArray), colorCFArray = nullptr;
 					}
@@ -9055,7 +9057,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -9073,7 +9075,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					Float32 const	data = *(REINTERPRET_CAST(inDataPtr, Float32 const*));
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addFloat(inDataPreferenceTag, keyName, data);
 				}
 				break;
@@ -9124,7 +9126,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const	data = *(REINTERPRET_CAST(inDataPtr, CFStringRef const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					setApplicationPreference(keyName, data);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9135,7 +9137,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Session_LineEnding const	data = *(REINTERPRET_CAST(inDataPtr, Session_LineEnding const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
 					case kSession_LineEndingCR:
@@ -9159,7 +9161,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9172,7 +9174,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					if (nullptr != numberRef)
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						setApplicationPreference(keyName, numberRef);
 						CFRelease(numberRef), numberRef = nullptr;
 					}
@@ -9184,7 +9186,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9195,7 +9197,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9205,7 +9207,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9215,7 +9217,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9225,7 +9227,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9236,7 +9238,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9246,7 +9248,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9257,7 +9259,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9272,7 +9274,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9282,7 +9284,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9293,7 +9295,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? CFSTR("\\e") : CFSTR(""));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9304,7 +9306,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
 					case kSessionFactory_SpecialSessionInteractiveSheet:
@@ -9333,7 +9335,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
 					case kAlert_NotifyDoNothing:
@@ -9362,7 +9364,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? CFSTR("notify") : CFSTR("ignore"));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9373,7 +9375,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9384,7 +9386,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9394,7 +9396,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Terminal_CursorType const	data = *(REINTERPRET_CAST(inDataPtr, Terminal_CursorType const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
 					case kTerminal_CursorTypeUnderscore:
@@ -9427,7 +9429,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? CFSTR("font") : CFSTR("screen"));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9442,7 +9444,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					if (nullptr != numberRef)
 					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
+						assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 						setApplicationPreference(keyName, numberRef);
 						changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 						CFRelease(numberRef), numberRef = nullptr;
@@ -9455,7 +9457,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? CFSTR("visual") : CFSTR("audio"));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9466,7 +9468,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9476,7 +9478,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9486,7 +9488,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9496,7 +9498,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9506,7 +9508,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9516,7 +9518,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
@@ -9545,7 +9547,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 							
 							if (nullptr != coords)
 							{
-								assert(typeCFArrayRef == keyValueType);
+								assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 								setApplicationPreference(keyName, coords);
 								CFRelease(coords), coords = nullptr;
 							}
@@ -9558,25 +9560,25 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagWindowTabPreferredEdge:
 				{
-					OptionBits const	data = *(REINTERPRET_CAST(inDataPtr, OptionBits const*));
+					CGRectEdge const	data = *(REINTERPRET_CAST(inDataPtr, CGRectEdge const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
-					case kWindowEdgeLeft:
+					case CGRectMinXEdge:
 						setApplicationPreference(keyName, CFSTR("left"));
 						break;
 					
-					case kWindowEdgeRight:
+					case CGRectMaxXEdge:
 						setApplicationPreference(keyName, CFSTR("right"));
 						break;
 					
-					case kWindowEdgeBottom:
+					case CGRectMinYEdge:
 						setApplicationPreference(keyName, CFSTR("bottom"));
 						break;
 					
-					case kWindowEdgeTop:
+					case CGRectMaxYEdge:
 					default:
 						setApplicationPreference(keyName, CFSTR("top"));
 						break;
@@ -9680,7 +9682,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -9771,7 +9773,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 						
 						if (nullptr != modifierCFArray)
 						{
-							assert(typeCFArrayRef == keyValueType);
+							assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 							inContextPtr->addArray(inDataPreferenceTag, keyName, modifierCFArray);
 							CFRelease(modifierCFArray), modifierCFArray = nullptr;
 						}
@@ -9920,7 +9922,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -9930,7 +9932,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					Session_Watch const* const		data = REINTERPRET_CAST(inDataPtr, Session_Watch const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (*data)
 					{
 					case kSession_WatchForPassiveData:
@@ -9962,7 +9964,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
@@ -9997,7 +9999,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					}
 					else
 					{
-						assert(typeNetEvents_CFDataRef == keyValueType);
+						assert(kPreferences_DataTypeCFDataRef == keyValueType);
 						inContextPtr->addData(inDataPreferenceTag, keyName,
 												CFUtilities_DataCast(object.returnCFTypeRef()));
 					}
@@ -10009,7 +10011,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFArrayRef const* const		data = REINTERPRET_CAST(inDataPtr, CFArrayRef const*);
 					
 					
-					assert(typeCFArrayRef == keyValueType);
+					assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 					inContextPtr->addArray(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10020,7 +10022,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					SInt16 const* const		data = REINTERPRET_CAST(inDataPtr, SInt16 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10030,7 +10032,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					Session_FunctionKeyLayout const* const		data = REINTERPRET_CAST(inDataPtr, Session_FunctionKeyLayout const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (*data)
 					{
 					case kSession_FunctionKeyLayoutRxvt:
@@ -10059,7 +10061,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					Session_Watch const* const		data = REINTERPRET_CAST(inDataPtr, Session_Watch const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (*data)
 					{
 					case kSession_WatchForInactivity:
@@ -10090,7 +10092,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10122,7 +10124,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
 					case kSession_EmacsMetaKeyOption:
@@ -10146,7 +10148,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-down"),
 											(data) ? CFSTR("down-arrow") : CFSTR(""));
 					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-left"),
@@ -10163,7 +10165,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const* const	data = REINTERPRET_CAST(inDataPtr, Boolean const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("backspace") : CFSTR("delete"));
 				}
 				break;
@@ -10174,7 +10176,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (*data)
 					{
 					case kSession_NewlineModeMapCR:
@@ -10199,22 +10201,22 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagPasteNewLineDelay:
 				{
-					EventTime const* const		data = REINTERPRET_CAST(inDataPtr, EventTime const*);
-					EventTime					junk = *data / kEventDurationMillisecond;
+					Preferences_TimeInterval const* const		data = REINTERPRET_CAST(inDataPtr, Preferences_TimeInterval const*);
+					Preferences_TimeInterval					junk = *data / kPreferences_TimeIntervalMillisecond;
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
 				}
 				break;
 			
 			case kPreferences_TagScrollDelay:
 				{
-					EventTime const* const		data = REINTERPRET_CAST(inDataPtr, EventTime const*);
-					EventTime					junk = *data / kEventDurationMillisecond;
+					Preferences_TimeInterval const* const		data = REINTERPRET_CAST(inDataPtr, Preferences_TimeInterval const*);
+					Preferences_TimeInterval					junk = *data / kPreferences_TimeIntervalMillisecond;
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -10225,7 +10227,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (*data)
 					{
 					case kSession_ProtocolSFTP:
@@ -10253,7 +10255,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (*data)
 					{
 					case kVectorInterpreter_ModeDisabled:
@@ -10323,7 +10325,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-vt220-pf1"),
 											(data) ? CFSTR("") : CFSTR("keypad-clear"));
 					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-vt220-pf2"),
@@ -10340,7 +10342,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-terminal-end"),
 											(data) ? CFSTR("end") : CFSTR(""));
 					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-terminal-home"),
@@ -10357,7 +10359,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10370,7 +10372,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 																CFRetainRelease::kNotYetRetained);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					if (false == nameCFString.exists()) result = kPreferences_ResultGenericFailure;
 					else
 					{
@@ -10385,7 +10387,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10395,7 +10397,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt32 const* const		data = REINTERPRET_CAST(inDataPtr, UInt32 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addLong(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10406,7 +10408,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
 					case kTerminal_ScrollbackTypeDisabled:
@@ -10445,7 +10447,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
@@ -10455,7 +10457,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10507,7 +10509,7 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10517,7 +10519,7 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					assert(typeCFStringRef == keyValueType);
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
@@ -10527,7 +10529,7 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 					CFStringEncoding const		data = *(REINTERPRET_CAST(inDataPtr, CFStringEncoding const*));
 					
 					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
+					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addLong(inDataPreferenceTag, keyName, STATIC_CAST(data, SInt32));
 				}
 				break;
@@ -10579,7 +10581,7 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
@@ -10589,7 +10591,7 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
@@ -10609,7 +10611,7 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 							UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
 							
 							
-							assert(typeCFStringRef == keyValueType);
+							assert(kPreferences_DataTypeCFStringRef == keyValueType);
 							switch (data)
 							{
 							case kSessionFactory_SpecialSessionInteractiveSheet:
@@ -10638,13 +10640,13 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 					case kPreferences_TagIndexedWindowFrameBounds:
 					case kPreferences_TagIndexedWindowScreenBounds:
 						{
-							HIRect const* const		data = REINTERPRET_CAST(inDataPtr, HIRect const*);
-							CFArrayRef				boundsCFArray = nullptr;
+							Preferences_TopLeftCGRect const* const	data = REINTERPRET_CAST(inDataPtr, Preferences_TopLeftCGRect const*);
+							CFArrayRef								boundsCFArray = nullptr;
 							
 							
 							if (convertHIRectToCFArray(*data, boundsCFArray))
 							{
-								assert(typeCFArrayRef == keyValueType);
+								assert(kPreferences_DataTypeCFArrayRef == keyValueType);
 								inContextPtr->addArray(inDataPreferenceTag, keyName, boundsCFArray);
 								CFRelease(boundsCFArray), boundsCFArray = nullptr;
 							}
@@ -10659,7 +10661,7 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 							CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 							
 							
-							assert(typeCFStringRef == keyValueType);
+							assert(kPreferences_DataTypeCFStringRef == keyValueType);
 							inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 						}
 						break;

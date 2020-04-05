@@ -1,8 +1,5 @@
 /*!	\file TerminalToolbar.objc++.h
 	\brief Items used in the toolbars of terminal windows.
-	
-	This module focuses on the Cocoa implementation even
-	though Carbon-based toolbar items are still in use.
 */
 /*###############################################################
 

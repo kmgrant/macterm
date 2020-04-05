@@ -420,12 +420,6 @@ Terminal_Result
 											 TextAttributes_Object		inAttributesToSet,
 											 TextAttributes_Object		inAttributesToClear);
 
-OSStatus
-	Terminal_CreateContentsAEDesc			(TerminalScreenRef			inScreen,
-											 Terminal_LineRef			inStartRow,
-											 UInt32						inNumberOfRowsToConsider,
-											 AEDesc*					outDescPtr);
-
 void
 	Terminal_DeleteAllSavedLines			(TerminalScreenRef			inScreen);
 

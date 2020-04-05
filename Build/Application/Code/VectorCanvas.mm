@@ -41,6 +41,7 @@
 #import <vector>
 
 // Mac includes
+#import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
 #import <Cocoa/Cocoa.h>
 
 // library includes
@@ -559,16 +560,6 @@ Clears the internal region used for scrap/temporary drawing;
 subsequent drawing commands targeting the region will therefore
 build an independent picture.  This call cannot nest; any
 previous path is thrown out.
-
-In legacy code that uses Carbon this MUST occur at drawing time.
-In the new Cocoa implementation this SHOULD NOT and NEED NOT
-occur at drawing time; simply pass "kVectorCanvas_PathTargetScrap"
-as the target when using VectorCanvas_DrawLine() to have the scrap
-path updated as drawing commands occur.  In either implementation
-VectorCanvas_ScrapPathFill() is used to ensure that the temporary
-path is added to the final rendering; in Carbon this is drawn
-immediately, and in Cocoa the internal path is merely updated
-(to be drawn at the next opportunity).
 
 (4.1)
 */

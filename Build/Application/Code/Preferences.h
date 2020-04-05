@@ -133,6 +133,31 @@ with a tag in certain circumstances.
 typedef FourCharCode Preferences_Tag;
 
 /*!
+Helpers for time-based preferences.
+*/
+typedef CFTimeInterval Preferences_TimeInterval;
+#define kPreferences_TimeIntervalSecond			((Preferences_TimeInterval)1.0)
+#define kPreferences_TimeIntervalMillisecond	((Preferences_TimeInterval)(kPreferences_TimeIntervalSecond / 1000))
+#define kPreferences_TimeIntervalNanosecond		((Preferences_TimeInterval)(kPreferences_TimeIntervalSecond / 1000000000))
+
+/*!
+Symbols to describe certain data types used in
+APIs (largely legacy).
+*/
+typedef FourCharCode Preferences_DataType;
+enum
+{
+	kPreferences_DataTypeCFArrayRef		= 'CFAr',	//!< "CFArrayRef"
+	kPreferences_DataTypeCFBooleanRef	= 'CFTF',	//!< "CFBooleanRef"
+	kPreferences_DataTypeCFDataRef		= 'CFDa',	//!< "CFDataRef"
+	kPreferences_DataTypeCFNumberRef	= 'CFNm',	//!< "CFNumberRef"
+	kPreferences_DataTypeCFStringRef	= 'CFSt',	//!< "CFStringRef"
+	kPreferences_DataTypeCGPoint		= 'CGPt',	//!< "CGPoint"
+	kPreferences_DataTypeCGRect			= 'CGRt',	//!< "CGRect"; Cocoa coordinates (not flipped)
+	kPreferences_DataTypeHIRect			= 'HIRt',	//!< "Preferences_TopLeftCGRect"; interpret as CGRect with flipped coordinates (legacy HIToolbox "HIRect")
+};
+
+/*!
 Tags for use with Quills::Prefs::FORMAT.
 */
 enum
@@ -219,7 +244,7 @@ enum
 	kPreferences_TagWasSessionInfoShowing				= 'wvsi',	//!< data: "Boolean"
 	kPreferences_TagWasVT220KeypadShowing				= 'wvvk',	//!< data: "Boolean"
 	kPreferences_TagWindowStackingOrigin				= 'wino',	//!< data: "CGPoint"
-	kPreferences_TagWindowTabPreferredEdge				= 'tedg'	//!< data: "OptionBits", a "kWindowEdge…" constant
+	kPreferences_TagWindowTabPreferredEdge				= 'tedg'	//!< data: "CGRectEdge" (CGRectMinXEdge, CGRectMinYEdge, CGRectMaxXEdge or CGRectMaxYEdge)
 };
 
 /*!
@@ -269,8 +294,8 @@ enum
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
 	kPreferences_TagNewLineMapping						= 'newl',	//!< data: "UInt16" (Session_NewlineMode)
 	kPreferences_TagNoPasteWarning						= 'npwr',	//!< data: "Boolean"
-	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
-	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime"; stored as milliseconds, but scaled to EventTime when used
+	kPreferences_TagPasteNewLineDelay					= 'pnld',	//!< data: "Preferences_TimeInterval"; stored as milliseconds, but scaled to Preferences_TimeInterval when used
+	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "Preferences_TimeInterval"; stored as milliseconds, but scaled to Preferences_TimeInterval when used
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "UInt16" (Session_Protocol)
@@ -337,8 +362,8 @@ enum
 	// indexed tags must have a zero byte to have space for tag variants;
 	// see also Preferences_ReturnTagVariantForIndex()
 	kPreferences_TagIndexedWindowCommandType			= 'sst\0',	//!< data: "SessionFactory_SpecialSession"
-	kPreferences_TagIndexedWindowFrameBounds			= 'wfb\0',	//!< data: "HIRect"
-	kPreferences_TagIndexedWindowScreenBounds			= 'wsb\0',	//!< data: "HIRect" (display boundaries when window saved)
+	kPreferences_TagIndexedWindowFrameBounds			= 'wfb\0',	//!< data: "Preferences_TopLeftCGRect"
+	kPreferences_TagIndexedWindowScreenBounds			= 'wsb\0',	//!< data: "Preferences_TopLeftCGRect" (display boundaries when window saved)
 	kPreferences_TagIndexedWindowSessionFavorite		= 'ssf\0',	//!< data: "CFStringRef" (a Quills::Prefs::SESSION context name)
 	kPreferences_TagIndexedWindowTitle					= 'wnt\0'	//!< data: "CFStringRef"
 };
@@ -433,6 +458,13 @@ struct Preferences_ChangeContext
 	Boolean						firstCall;		//!< whether or not this is the first time the preference notification has occurred
 												//!  (if so, the value of the preference reflects its initial value)
 };
+
+/*!
+For legacy support (previously system HIRect type); rectangles
+stored in preferences that have a top-left origin instead of
+a bottom-left origin.
+*/
+typedef CGRect Preferences_TopLeftCGRect;
 
 /*!
 In order to communicate both a URL and its “stale” condition

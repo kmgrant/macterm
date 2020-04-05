@@ -46,9 +46,9 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
+#import <Carbon/Carbon.h> // TEMPORARY; some legacy types used below (like EventTime)
 #import <Cocoa/Cocoa.h>
 #import <CoreImage/CIFilterBuiltins.h>
-//CARBON//#import <QuickTime/QuickTime.h>
 
 // library includes
 #import <AlertMessages.h>
@@ -77,7 +77,6 @@
 #import "EventLoop.h"
 #import "Keypads.h"
 #import "MacroManager.h"
-#import "NetEvents.h"
 #import "Preferences.h"
 #import "PrefPanelTranslations.h"
 #import "PrintTerminal.h"
@@ -12423,12 +12422,6 @@ drawFocusRingMask
 
 /*!
 Render the specified part of the terminal screen.
-
-INCOMPLETE.  This is going to be the test bed for transitioning
-away from Carbon.  And given that the Carbon view is heavily
-dependent on older technologies, it will be awhile before the
-Cocoa version is exposed to users.  (The likely debut will be in
-something like a formatting sheet’s preview pane.)
 
 (4.0)
 */

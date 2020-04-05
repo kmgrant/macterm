@@ -60,7 +60,6 @@ extern "C"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "DNR.h"
-#import "NetEvents.h"
 #import "Session.h"
 
 
@@ -1208,7 +1207,6 @@ setProtocolIndexes:(NSIndexSet*)	indexes
 		_protocolIndexes = [indexes retain];
 		
 		[self didChangeValueForKey:@"protocolIndexes"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
 		[self notifyOfChangeInValueReturnedBy:@selector(protocolIndexes)];
 		
 		ServerBrowser_Protocol*		theProtocol = [self protocol];
@@ -1293,7 +1291,6 @@ setHostName:(NSString*)		aString
 		}
 		
 		[self didChangeValueForKey:@"hostName"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
 		[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
 	}
 }// setHostName:
@@ -1333,7 +1330,6 @@ setPortNumber:(NSString*)	aString
 		self.hidesPortNumberError = YES;
 		
 		[self didChangeValueForKey:@"portNumber"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
 		[self notifyOfChangeInValueReturnedBy:@selector(portNumber)];
 	}
 }// setPortNumber:
@@ -1403,7 +1399,6 @@ setUserID:(NSString*)	aString
 		self.hidesUserIDError = YES;
 		
 		[self didChangeValueForKey:@"userID"];
-		// TEMPORARY; while Carbon is supported, send a Carbon event as well
 		[self notifyOfChangeInValueReturnedBy:@selector(userID)];
 	}
 }// setUserID:

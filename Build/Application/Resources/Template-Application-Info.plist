@@ -221,8 +221,6 @@
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.10.0</string>
-	<key>LSRequiresCarbon</key>
-	<true/>
 	<key>MyDefaultFormatPropertyLists</key>
 	<array>
 		<string>DefaultFormat1</string>

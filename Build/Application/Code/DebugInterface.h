@@ -69,17 +69,15 @@ changes to an interface declared in a ".mm" file.
 
 // accessors
 	@property (assign) BOOL
-	logsSixelDecoderState; //binding
+	logsSixelDecoderState; // binding
 	@property (assign) BOOL
 	logsTerminalInputChar; // binding
 	@property (assign) BOOL
 	logsTeletypewriterState; // binding
 	@property (assign) BOOL
-	logsTerminalEcho; //binding
+	logsTerminalEcho; // binding
 	@property (assign) BOOL
-	logsTerminalState; //binding
-	@property (assign) BOOL
-	useCarbonTerminalWindowsForNewSessions; //binding
+	logsTerminalState; // binding
 
 @end //}
 
@@ -93,7 +91,6 @@ extern Boolean		gDebugInterface_LogsSixelDecoderState;
 extern Boolean		gDebugInterface_LogsTerminalInputChar;
 extern Boolean		gDebugInterface_LogsTerminalEcho;
 extern Boolean		gDebugInterface_LogsTerminalState;
-extern Boolean		gDebugInterface_UseCarbonTerminalWindowsForNewSessions;
 
 
 
@@ -154,16 +151,6 @@ inline Boolean
 	{
 	#ifndef NDEBUG
 		return gDebugInterface_LogsTerminalState;
-	#else
-		return false;
-	#endif
-	}
-
-inline Boolean
-	DebugInterface_UseCarbonTerminalWindowsForNewSessions		()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_UseCarbonTerminalWindowsForNewSessions;
 	#else
 		return false;
 	#endif
