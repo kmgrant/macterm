@@ -683,12 +683,6 @@ official:
 		echo "BUNDLE=/path/to/MacTerm.app must be set" >&2 ; \
 		exit 1; \
 	fi
-	@# The existing signature for Growl.framework causes problems
-	@# when signing the bundle and I could find no work-around
-	@# except to delete that signature and then sign everything
-	@# (including the copy of Growl.framework being used) under
-	@# the same developer identity.
-	$(RM) -R $(BUNDLE)/Contents/Frameworks/Growl.framework/Versions/Current/_CodeSignature
 	$(call sign_with_dev_id_app, $(BUNDLE))
 
 FORCE:
