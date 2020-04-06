@@ -148,7 +148,6 @@ Obsolete data structure.
 */
 struct My_KeyPress
 {
-	ControlRef		control;			//!< which control is focused
 	SInt16			characterCode;		//!< code uniquifying the character corresponding to the key pressed
 	SInt16			characterCode2;		//!< if nonzero, the key press represents a sequence of two characters to send
 	UInt32			virtualKeyCode;		//!< code uniquifying the key pressed
@@ -201,10 +200,8 @@ struct My_Session
 	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
 	ListenerModel_ListenerWrap	vectorWindowListener;		// responds when vector graphics window states change
 	ListenerModel_ListenerWrap	preferencesListener;		// responds when certain preference values are initialized or changed
-	EventLoopTimerUPP			longLifeTimerUPP;			// procedure that is called when a session has been open 15 seconds
-	EventLoopTimerRef			longLifeTimer;				// 15-second timer
-	EventLoopTimerUPP			respawnSessionTimerUPP;		// procedure that is called when a session should be respawned
-	EventLoopTimerRef			respawnSessionTimer;		// short timer
+	NSTimer*					longLifeTimer;				// called when a session has been open 15 seconds
+	NSTimer*					respawnSessionTimer;		// called when a session should be respawned
 	MemoryBlocks_WeakPairWrap
 	< SessionRef,
 		GenericDialog_Ref >		currentDialog;				// weak reference while a sheet is still open so a 2nd sheet is not displayed
@@ -227,8 +224,7 @@ struct My_Session
 	std::unique_ptr< UInt8[] >	readBufferPtr;				// buffer space for processing data
 	CFStringEncoding			writeEncoding;				// the character set that text (data) sent to a session should be using
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
-	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
-	EventLoopTimerRef			inactivityWatchTimer;		// short timer
+	NSTimer*					inactivityWatchTimer;		// called if data has not arrived after awhile
 	Preferences_ContextWrap		recentSheetContext;			// defined temporarily while a Preferences-dependent sheet (such as key sequences) is up
 	My_SessionSheetType			sheetType;					// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
@@ -269,8 +265,7 @@ void						closeTerminalWindow					(My_SessionPtr);
 UInt16						copyAutoCapturePreferences			(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
-void						detectLongLife						(EventLoopTimerRef, void*);
-void						handleSaveFromPanel				(My_SessionPtr, NSSavePanel*);
+void						handleSaveFromPanel					(My_SessionPtr, NSSavePanel*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 Boolean						isReadOnly							(My_SessionPtr);
@@ -279,7 +274,6 @@ void						localEchoString						(My_SessionPtr, CFStringRef);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						processMoreData						(My_SessionPtr);
-void						respawnSession						(EventLoopTimerRef, void*);
 NSWindow*					returnActiveNSWindow				(My_SessionPtr);
 void						setIconFromState					(My_SessionPtr);
 void						sheetClosed							(GenericDialog_Ref, Boolean);
@@ -297,7 +291,6 @@ void						vectorGraphicsWindowChanged			(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						watchClearForSession				(My_SessionPtr);
 void						watchNotifyForSession				(My_SessionPtr, Session_Watch);
-void						watchNotifyFromTimer				(EventLoopTimerRef, void*);
 void						watchTimerResetForSession			(My_SessionPtr, Session_Watch);
 void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
@@ -2627,24 +2620,13 @@ Session_SetWatch	(SessionRef		inRef,
 	if ((kSession_WatchForInactivity == inNewWatch) ||
 		(kSession_WatchForKeepAlive == inNewWatch))
 	{
-		if (nullptr == ptr->inactivityWatchTimer)
-		{
-			// first time; create the timer
-			OSStatus	error = noErr;
-			
-			
-			ptr->inactivityWatchTimerUPP = NewEventLoopTimerUPP(watchNotifyFromTimer);
-			error = InstallEventLoopTimer(GetCurrentEventLoop(),
-											kEventDurationForever/* start time - do not start yet */,
-											kEventDurationForever/* time between fires - this timer does not repeat */,
-											ptr->inactivityWatchTimerUPP, ptr->selfRef/* user data */,
-											&ptr->inactivityWatchTimer);
-			assert_noerr(error);
-		}
-		
 		// for inactivity timers, start the clock right now (also,
 		// the timer automatically resets as new data arrives)
 		watchTimerResetForSession(ptr, inNewWatch);
+	}
+	else if (kSession_WatchNothing == inNewWatch)
+	{
+		watchClearForSession(ptr);
 	}
 }// SetWatch
 
@@ -4910,10 +4892,8 @@ vectorWindowListener(ListenerModel_NewStandardListener(vectorGraphicsWindowChang
 						ListenerModel_ListenerWrap::kAlreadyRetained),
 preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */),
 					ListenerModel_ListenerWrap::kAlreadyRetained),
-longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
-longLifeTimer(nullptr), // set later
-respawnSessionTimerUPP(NewEventLoopTimerUPP(respawnSession)),
-respawnSessionTimer(nullptr), // set later
+longLifeTimer(nil), // set later
+respawnSessionTimer(nil), // set later
 currentDialog(REINTERPRET_CAST(this, SessionRef)),
 terminalWindow(nullptr), // set at window validation time
 mainProcess(nullptr),
@@ -4934,8 +4914,7 @@ readBufferSizeInUse(0),
 readBufferPtr(std::make_unique<UInt8[]>(this->readBufferSizeMaximum)),
 writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
-inactivityWatchTimerUPP(nullptr),
-inactivityWatchTimer(nullptr),
+inactivityWatchTimer(nil),
 recentSheetContext(),
 sheetType(kMy_SessionSheetTypeNone),
 renameDialog(nullptr),
@@ -4976,11 +4955,27 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	changeNotifyForSession(this, kSession_ChangeStateAttributes, this->selfRef/* context */);
 	
 	// install a one-shot timer to tell interested parties when this session
-	// has been opened for 15 seconds
-	UNUSED_RETURN(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-													kEventDurationSecond * kSession_LifetimeMinimumForNoWarningClose,
-													kEventDurationForever/* time between fires - this timer does not repeat */,
-													this->longLifeTimerUPP, this->selfRef/* user data */, &this->longLifeTimer);
+	// has been opened for 15 seconds, changing the state of an active session
+	// to reflect its stability (this special state is for user interface events
+	// such as confirmation alerts that can be more annoying than useful for
+	// windows that have been asked to close very soon after they’ve opened)
+	SessionRef const	blockSessionRef = this->selfRef;
+	this->longLifeTimer = [NSTimer scheduledTimerWithTimeInterval:kSession_LifetimeMinimumForNoWarningClose/* in seconds */
+	repeats:NO
+	block:^(NSTimer* UNUSED_ARGUMENT(timer))
+	{
+		if (Session_IsValid(blockSessionRef))
+		{
+			//My_SessionAutoLocker	blockSessionPtr(gSessionPtrLocks(), blockSessionRef);
+			
+			
+			if (Session_StateIsActiveUnstable(blockSessionRef))
+			{
+				Session_SetState(blockSessionRef, kSession_StateActiveStable);
+			}
+		}
+	}];
+	[this->longLifeTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 	
 	// create a callback for preferences, then listen for certain preferences
 	// (this will also initialize the preferences cache values)
@@ -5053,6 +5048,25 @@ My_Session::
 	// by callbacks invoked from this destructor
 	this->terminationAbsoluteTime = CFAbsoluteTimeGetCurrent();
 	
+	if (nil != this->longLifeTimer)
+	{
+		[this->longLifeTimer invalidate];
+		[this->longLifeTimer release];
+		this->longLifeTimer = nil;
+	}
+	if (nil != this->respawnSessionTimer)
+	{
+		[this->respawnSessionTimer invalidate];
+		[this->respawnSessionTimer release];
+		this->respawnSessionTimer = nil;
+	}
+	if (nil != this->inactivityWatchTimer)
+	{
+		[this->inactivityWatchTimer invalidate];
+		[this->inactivityWatchTimer release];
+		this->inactivityWatchTimer = nil;
+	}
+	
 	if (nullptr != this->mainProcess)
 	{
 		Local_KillProcess(&this->mainProcess);
@@ -5088,17 +5102,6 @@ My_Session::
 	
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener.returnRef());
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener.returnRef());
-	
-	if (nullptr != this->longLifeTimer)
-	{
-		RemoveEventLoopTimer(this->longLifeTimer), this->longLifeTimer = nullptr;
-	}
-	DisposeEventLoopTimerUPP(this->longLifeTimerUPP), this->longLifeTimerUPP = nullptr;
-	if (nullptr != this->respawnSessionTimer)
-	{
-		RemoveEventLoopTimer(this->respawnSessionTimer), this->respawnSessionTimer = nullptr;
-	}
-	DisposeEventLoopTimerUPP(this->respawnSessionTimerUPP), this->respawnSessionTimerUPP = nullptr;
 	
 	vectorGraphicsDetachTarget(this);
 	for (auto vectorWindowRef : this->vectorGraphicsWindows)
@@ -5543,35 +5546,6 @@ copyVectorGraphicsPreferences	(My_SessionPtr				inPtr,
 
 
 /*!
-Detects when "kSession_LifetimeMinimumForNoWarningClose"
-seconds have passed, and changes the state of an active
-session to reflect its stability.
-
-This special state is useful for user interface events
-such as confirmation alerts that can be more annoying
-than useful for windows that have been asked to close
-very soon after they’ve opened.
-
-Timers that draw must save and restore the current
-graphics port.
-
-Mac OS X only.
-
-(3.0)
-*/
-void
-detectLongLife	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
-				 void*					inSessionRef)
-{
-	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	
-	
-	if (Session_StateIsActiveUnstable(ref)) Session_SetState(ref, kSession_StateActiveStable);
-}// detectLongLife
-
-
-/*!
 Responds to an NSSavePanel that closed with the
 user selecting the primary action button.  See
 Session_DisplaySaveDialog().
@@ -5579,7 +5553,7 @@ Session_DisplaySaveDialog().
 (2016.10)
 */
 void
-handleSaveFromPanel		(My_SessionPtr		inPtr,
+handleSaveFromPanel		(My_SessionPtr		UNUSED_ARGUMENT(inPtr),
 						 NSSavePanel*		inSavePanel)
 {
 	NSError*	errorObject = nil;
@@ -6612,32 +6586,6 @@ processMoreData		(My_SessionPtr	inPtr)
 
 
 /*!
-Respawns the original command line for the session, using the
-same window.  This should only be invoked after the previous
-session is dead.
-
-Timers that draw must save and restore the current graphics port.
-
-(4.0)
-*/
-void
-respawnSession	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
-				 void*					inSessionRef)
-{
-	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	Boolean					respawnOK = SessionFactory_RespawnSession(ref);
-	
-	
-	if (false == respawnOK)
-	{
-		Sound_StandardAlert();
-		Console_Warning(Console_WriteLine, "failed to restart session");
-	}
-}// respawnSession
-
-
-/*!
 Returns the window most recently used by this session.
 
 (4.1)
@@ -6967,15 +6915,7 @@ This routine disconnects and/or closes a session if
 the item hit is the OK button, otherwise it does not
 touch the session window in any way.  If the warning
 was also instructed to restart the session, then the
-session respawns after it is killed.  The given alert
-is destroyed.
-
-This routine is actually used whether or not there is
-an alert, as a convenient way to clean up a session,
-regardless.  So, "inAlertThatClosed" might not be
-defined; but, "inItemHit" always is, in order to
-instruct this routine on how to proceed.  The data
-structure is always defined.
+session respawns after it is killed.
 
 (3.0)
 */
@@ -7049,11 +6989,35 @@ terminationWarningClose		(SessionRef&	inoutSessionRef,
 				// install a one-shot timer to rerun the command line after a short delay
 				// (certain processes, such as shells, do not respawn correctly if the
 				// respawn is attempted immediately after the previous process exits)
-				UNUSED_RETURN(OSStatus)InstallEventLoopTimer
-										(GetCurrentEventLoop(),
-											200 * kEventDurationMillisecond/* delay before start; heuristic */,
-											kEventDurationForever/* time between fires - this timer does not repeat */,
-											ptr->respawnSessionTimerUPP, inoutSessionRef, &ptr->respawnSessionTimer);
+				SessionRef const	blockSessionRef = inoutSessionRef;
+				if (nil != ptr->respawnSessionTimer)
+				{
+					[ptr->respawnSessionTimer invalidate];
+					[ptr->respawnSessionTimer release];
+					ptr->respawnSessionTimer = nil;
+				}
+				ptr->respawnSessionTimer = [NSTimer scheduledTimerWithTimeInterval:(200 / 1000.0/* milliseconds per second */)/* in seconds */
+				repeats:NO
+				block:^(NSTimer* UNUSED_ARGUMENT(timer))
+				{
+					if (Session_IsValid(blockSessionRef))
+					{
+						// respawns the original command line for the session, using the
+						// same window (this should only be invoked after the previous
+						// session is dead)
+						//My_SessionAutoLocker	blockSessionPtr(gSessionPtrLocks(), blockSessionRef);
+						Boolean					respawnOK = SessionFactory_RespawnSession(blockSessionRef);
+						
+						
+						if (false == respawnOK)
+						{
+							Sound_StandardAlert();
+							Console_Warning(Console_WriteLine, "failed to restart session");
+						}
+					}
+				}];
+				//NSLog(@"schedule respawn timer %@", ptr->respawnSessionTimer);
+				[ptr->respawnSessionTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 			}
 		}
 	}
@@ -7235,6 +7199,7 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 		// note the change (e.g. can cause icon displays to be updated)
 		changeStateAttributes(inPtr, kSession_StateAttributeNotification/* attributes to set */,
 								0/* attributes to clear */);
+		//NSLog(@"watch triggered: %p / %@", inPtr, [NSNumber numberWithUnsignedInteger:(NSUInteger)inWhatTriggered]);
 		
 		// create or update the global alert
 		switch (inWhatTriggered)
@@ -7263,7 +7228,15 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 				CocoaBasic_PostUserNotification(CFSTR("net.macterm.notifications.sessionevent"),
 												notificationTitle.returnCFStringRef(),
 												dialogTextCFString.returnCFStringRef());
-				watchClearForSession(inPtr);
+				Alert_BackgroundNotification();
+				
+				// most likely, application is not currently active when watch is triggered
+				// (due to logic elsewhere); therefore, the watch is cleared here but is
+				// also cleared when the application resumes
+				if (NSApp.isActive)
+				{
+					watchClearForSession(inPtr);
+				}
 			}
 			break;
 		
@@ -7290,28 +7263,6 @@ watchNotifyForSession	(My_SessionPtr	inPtr,
 
 
 /*!
-This is invoked after a period of inactivity, and simply sends
-notification that the session is now inactive (from the point of
-view of the user).  This is not to be confused with the session
-active state.
-
-Timers that draw must save and restore the current graphics port.
-
-(3.1)
-*/
-void
-watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
-						 void*					inSessionRef)
-{
-	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	
-	
-	watchNotifyForSession(ptr, ptr->activeWatch);
-}// watchNotifyFromTimer
-
-
-/*!
 If a watch is currently active on the specified session and
 the watch is of a type that fires periodically (idle timers),
 this routine will reset the timer.  In other words, do this
@@ -7327,7 +7278,21 @@ void
 watchTimerResetForSession	(My_SessionPtr	inPtr,
 							 Session_Watch	inWatchType)
 {
-	OSStatus	error = noErr;
+	SessionRef const	blockSessionRef = inPtr->selfRef;
+	auto	timerRunBlock =
+			^(NSTimer* UNUSED_ARGUMENT(timer))
+			{
+				if (Session_IsValid(blockSessionRef))
+				{
+					My_SessionAutoLocker	blockSessionPtr(gSessionPtrLocks(), blockSessionRef);
+					
+					
+					// this is invoked after a period of inactivity, and simply sends
+					// notification that the session is now inactive (from the point of
+					// view of the user; not to be confused with session active state)
+					watchNotifyForSession(blockSessionPtr, blockSessionPtr->activeWatch);
+				}
+			};
 	
 	
 	if (kSession_WatchForKeepAlive == inWatchType)
@@ -7347,13 +7312,21 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 		{
 			// an arbitrary length of dead time must elapse before a session
 			// is considered inactive and triggers a notification
-			EventTimerInterval const	kTimeBeforeInactive = kEventDurationMinute * intValue;
+			NSTimeInterval const	kTimeBeforeInactive = (intValue * 60.0/* seconds per minute */);
 			
 			
-			// install or reset timer to trigger the no-activity notification when appropriate
-			assert(nullptr != inPtr->inactivityWatchTimer);
-			error = SetEventLoopTimerNextFireTime(inPtr->inactivityWatchTimer, kTimeBeforeInactive);
-			assert_noerr(error);
+			// set timer to trigger the no-activity notification when appropriate
+			if (nil != inPtr->inactivityWatchTimer)
+			{
+				[inPtr->inactivityWatchTimer invalidate];
+				[inPtr->inactivityWatchTimer release];
+				inPtr->inactivityWatchTimer = nil;
+			}
+			inPtr->inactivityWatchTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeBeforeInactive/* in seconds */
+																					repeats:NO
+																					block:timerRunBlock];
+			//NSLog(@"schedule keep-alive watch %@", inPtr->inactivityWatchTimer);
+			[inPtr->inactivityWatchTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 		}
 	}
 	else if (kSession_WatchForInactivity == inWatchType)
@@ -7373,13 +7346,21 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 		{
 			// an arbitrary length of dead time must elapse before a session
 			// is considered inactive and triggers a notification
-			EventTimerInterval const	kTimeBeforeInactive = kEventDurationSecond * intValue;
+			NSTimeInterval const	kTimeBeforeInactive = kEventDurationSecond * intValue;
 			
 			
 			// install or reset timer to trigger the no-activity notification when appropriate
-			assert(nullptr != inPtr->inactivityWatchTimer);
-			error = SetEventLoopTimerNextFireTime(inPtr->inactivityWatchTimer, kTimeBeforeInactive);
-			assert_noerr(error);
+			if (nil != inPtr->inactivityWatchTimer)
+			{
+				[inPtr->inactivityWatchTimer invalidate];
+				[inPtr->inactivityWatchTimer release];
+				inPtr->inactivityWatchTimer = nil;
+			}
+			inPtr->inactivityWatchTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeBeforeInactive/* in seconds */
+																					repeats:NO
+																					block:timerRunBlock];
+			//NSLog(@"schedule inactivity watch %@", inPtr->inactivityWatchTimer);
+			[inPtr->inactivityWatchTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 		}
 	}
 }// watchTimerResetForSession

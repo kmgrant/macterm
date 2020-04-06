@@ -338,42 +338,61 @@ CocoaBasic_PostUserNotification		(CFStringRef	inNotificationIdentifier,
 	// naturally the documentation on this is vague and developer time is
 	// expensive so for now the “solution” is to stick with the older API
 	// until Apple eventually stops supporting it... 
-#if 0
-	if (@available(macOS 10.14, *))
+#if 1
 	{
-		// use new UNUserNotificationCenter
-		auto	notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
-		auto	requestIdentifier = BRIDGE_CAST(inNotificationIdentifier, NSString*);
-		auto	newNotification = [[[UNMutableNotificationContent alloc] init] autorelease];
+		auto						notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
+		UNAuthorizationOptions		requestOptions = (UNAuthorizationOptionBadge |
+														UNAuthorizationOptionSound |
+														UNAuthorizationOptionAlert |
+														UNAuthorizationOptionProvisional);
 		
 		
-		newNotification.title = BRIDGE_CAST(inTitle, NSString*);
-		if (nullptr != inSubtitleOrNull)
+		[notificationCenter requestAuthorizationWithOptions:requestOptions
+		completionHandler:^(BOOL granted, NSError* requestError)
 		{
-			newNotification.subtitle = BRIDGE_CAST(inSubtitleOrNull, NSString*);
-		}
-		if (nullptr != inInformativeTextOrNull)
-		{
-			newNotification.body = BRIDGE_CAST(inInformativeTextOrNull, NSString*);
-		}
-		auto	requestObject = [UNNotificationRequest requestWithIdentifier:requestIdentifier
-																				content:newNotification
-																				trigger:nil];
-		[notificationCenter addNotificationRequest:requestObject
-		withCompletionHandler:^(NSError* error)
-		{
-			if (nil != error)
+			if (nil != requestError)
 			{
-				Console_WriteValueCFError("User notification not sent, error", BRIDGE_CAST(error, CFErrorRef));
+				Console_WriteValueCFError("User notification request error", BRIDGE_CAST(requestError, CFErrorRef));
 			}
 			else
 			{
-				Console_WriteValueCFString("User notification sent, title", inTitle);
+				Console_WriteValue("User notification request: granted", (int)granted);
+				
+				dispatch_async(dispatch_get_main_queue(),
+				^{
+					auto	requestIdentifier = BRIDGE_CAST(inNotificationIdentifier, NSString*);
+					auto	newNotification = [[[UNMutableNotificationContent alloc] init] autorelease];
+					
+					
+					newNotification.title = BRIDGE_CAST(inTitle, NSString*);
+					if (nullptr != inSubtitleOrNull)
+					{
+						newNotification.subtitle = BRIDGE_CAST(inSubtitleOrNull, NSString*);
+					}
+					if (nullptr != inInformativeTextOrNull)
+					{
+						newNotification.body = BRIDGE_CAST(inInformativeTextOrNull, NSString*);
+					}
+					auto	requestObject = [UNNotificationRequest requestWithIdentifier:requestIdentifier
+																							content:newNotification
+																							trigger:nil];
+					[notificationCenter addNotificationRequest:requestObject
+					withCompletionHandler:^(NSError* error)
+					{
+						if (nil != error)
+						{
+							Console_WriteValueCFError("User notification not sent, error", BRIDGE_CAST(error, CFErrorRef));
+						}
+						else
+						{
+							Console_WriteValueCFString("User notification sent, title", inTitle);
+						}
+					}];
+				});
 			}
 		}];
 	}
-	else
-#endif
+#else
 	{
 		// use legacy NSUserNotificationCenter
 		auto	notificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
@@ -392,44 +411,8 @@ CocoaBasic_PostUserNotification		(CFStringRef	inNotificationIdentifier,
 		}
 		[notificationCenter scheduleNotification:newNotification];
 	}
+#endif
 }// PostUserNotification
-
-
-/*!
-Call at launch time; may ask user for permission to
-send notifications.
-
-This will do nothing at all prior to macOS 10.14 and
-it may also not prompt if the user has made preference
-settings already.
-
-(2019.07)
-*/
-void
-CocoaBasic_PromptUserToAllowNotifications ()
-{
-	if (@available(macOS 10.14, *))
-	{
-		auto						notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
-		UNAuthorizationOptions		requestOptions = (UNAuthorizationOptionBadge |
-														UNAuthorizationOptionSound |
-														UNAuthorizationOptionAlert);
-		
-		
-		[notificationCenter requestAuthorizationWithOptions:requestOptions
-		completionHandler:^(BOOL granted, NSError* error)
-		{
-			if (nil != error)
-			{
-				Console_WriteValueCFError("User notification request error", BRIDGE_CAST(error, CFErrorRef));
-			}
-			else
-			{
-				Console_WriteValue("User notification request: granted", (int)granted);
-			}
-		}];
-	}
-}// PromptUserToAllowNotifications
 
 
 /*!

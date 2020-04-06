@@ -3364,6 +3364,12 @@ applicationDidBecomeActive:(NSNotification*)	aNotification
 	
 	Alert_SetIsBackgrounded(false); // automatically removes any posted notifications from alerts
 	Alert_ServiceNotification();
+	SessionFactory_ForEachSession
+	(^(SessionRef	inSession,
+	   Boolean&		UNUSED_ARGUMENT(outStopFlag))
+	{
+		Session_SetWatch(inSession, kSession_WatchNothing);
+	});
 	updateFadeAllTerminalWindows(false);
 }// applicationDidBecomeActive:
 
