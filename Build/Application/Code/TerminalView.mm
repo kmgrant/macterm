@@ -13511,12 +13511,58 @@ drawRect:(NSRect)	aRect
 		CGRect		clipBounds = CGContextGetClipBoundingBox(drawingContext);
 		
 		
-		CGContextSetRGBFillColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+		CGContextSetRGBFillColor(drawingContext, 1.0, 1.0, 0.0, 1.0/* alpha */);
 		CGContextFillRect(drawingContext, clipBounds);
 	}
 #endif
 	
-	// UNIMPLEMENTED: render red tick-marks for search results
+	// check for search results
+	if (nullptr != self.internalViewPtr)
+	{
+		TerminalView_CellRangeList		searchResultRanges;
+		TerminalView_Result				viewResult = TerminalView_GetSearchResults(self.internalViewPtr->selfRef, searchResultRanges);
+		
+		
+		if ((kTerminalView_ResultOK == viewResult) && (false == searchResultRanges.empty()))
+		{
+			// render red tick-marks for search results, showing their approximate
+			// location within the screen/scrollback buffer
+			UInt32			scrollbackRowCount = Terminal_ReturnInvisibleRowCount(self.internalViewPtr->screen.ref);
+			UInt32			screenRowCount = Terminal_ReturnRowCount(self.internalViewPtr->screen.ref);
+			UInt32 const	totalRowCount = (scrollbackRowCount + screenRowCount);
+			CGFloat const	verticalPad = 10; // arbitrary; do not show ticks right at edge of frame
+			CGFloat const	tickRange = (self.frame.size.height - verticalPad * 2);
+			CGFloat const	offsetPerTick = (tickRange / totalRowCount);
+			
+			
+			CGContextSetRGBFillColor(drawingContext, 1.0, 0.0, 0.0, 1.0/* alpha */);
+			for (auto cellRange : searchResultRanges)
+			{
+				TerminalView_RowIndex	firstRow = std::get<1>(std::get<0>(cellRange));
+				
+				
+				// convert from search result range to normalized range starting from top edge
+				if (firstRow < 0)
+				{
+					// scrollback value (negative, measured from first scrollback line)
+					firstRow += scrollbackRowCount;
+				}
+				else
+				{
+					// value is relative to top of main screen
+					firstRow = (scrollbackRowCount + firstRow);
+				}
+				
+				// draw the tick mark
+				{
+					CGRect		tickBounds = CGRectMake(0, verticalPad + offsetPerTick * firstRow, 15, 1);
+					
+					
+					CGContextFillRect(drawingContext, tickBounds);
+				}
+			}
+		}
+	}
 }// drawRect:
 
 
@@ -13765,6 +13811,7 @@ addTerminalViewController:(TerminalView_Controller*)	aVC
 {
 	[self.terminalViewControllers addObject:aVC];
 	[self.view addSubview:aVC.view];
+	self.scrollableRootView.scrollBarV.internalViewPtr = aVC.terminalView.internalViewPtr;
 	[self.view forceResize];
 }// addTerminalViewController:
 
@@ -13802,6 +13849,7 @@ Stops managing the specified controller’s terminal view
 removeTerminalViewController:(TerminalView_Controller*)		aVC
 {
 	[aVC.view removeFromSuperview];
+	self.scrollableRootView.scrollBarV.internalViewPtr = nil;
 	[self.terminalViewControllers removeObject:aVC];
 	[self.view forceResize];
 }// removeTerminalViewController:
@@ -13820,7 +13868,7 @@ layoutDelegateForView:(NSView*)		aView
 resizeSubviewsWithOldSize:(NSSize)	anOldSize
 {
 #pragma unused(aView, anOldSize)
-	CGFloat		scrollBarWidth = 16;
+	CGFloat		scrollBarWidth = [NSScroller scrollerWidthForControlSize:NSControlSizeRegular scrollerStyle:NSScrollerStyleLegacy];
 	
 	
 	// if view is ridiculously narrow, give up on the scroll bar

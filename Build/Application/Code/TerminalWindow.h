@@ -288,6 +288,8 @@ changes to an interface declared in a ".mm" file.
 @interface NSWindow (TerminalWindow_NSWindowExtensions) //{
 
 // new methods
+	- (TerminalWindow_Controller*)
+	terminalWindowController;
 	- (TerminalWindowRef)
 	terminalWindowRef;
 

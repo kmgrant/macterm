@@ -3795,11 +3795,22 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// search results either appeared or disappeared; ensure the scroll bar
 		// rendering is only installed when it is needed
 		{
-			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
+			TerminalWindow_Controller*	windowController = ptr->windowController;
+			//TerminalViewRef				view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
 			
 			
-			// INCOMPLETE; when search results are found, add tick marks to Cocoa scroll bar
-			//installTickHandler(ptr, TerminalView_SearchResultsExist(view));
+			// when search results are found, add tick marks to Cocoa scroll bar
+			for (id object in [windowController.rootViewController enumerateScrollControllers])
+			{
+				assert([object isKindOfClass:TerminalView_ScrollableRootVC.class]);
+				TerminalView_ScrollableRootVC*		asVC = STATIC_CAST(object, TerminalView_ScrollableRootVC*);
+				TerminalView_ScrollBar*				scrollBarV = asVC.scrollableRootView.scrollBarV;
+				
+				
+				// INCOMPLETE; configure custom scroll bar with tick mark values
+				//scrollBarV.searchResults = ...
+				[scrollBarV setNeedsDisplay];
+			}
 		}
 		break;
 	
@@ -3826,7 +3837,35 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 	}
 	else
 	{
-		Console_Warning(Console_WriteLine, "update-scroll-bars not implemented for Cocoa window");
+		TerminalWindow_Controller*	windowController = inPtr->windowController;
+		TerminalView_Result			viewResult = kTerminalView_ResultOK;
+		TerminalViewRef				terminalView = TerminalWindow_ReturnViewWithFocus(inPtr->selfRef);
+		SInt64						startOfView = 0;
+		SInt64						pastEndOfView = 0;
+		SInt64						startOfMaxRange = 0;
+		SInt64						pastEndMaxRange = 0;
+		
+		
+		viewResult = TerminalView_GetScrollVerticalInfo(terminalView, startOfView, pastEndOfView, startOfMaxRange, pastEndMaxRange);
+		for (id object in [windowController.rootViewController enumerateScrollControllers])
+		{
+			assert([object isKindOfClass:TerminalView_ScrollableRootVC.class]);
+			TerminalView_ScrollableRootVC*		asVC = STATIC_CAST(object, TerminalView_ScrollableRootVC*);
+			TerminalView_ScrollBar*				scrollBarV = asVC.scrollableRootView.scrollBarV;
+			
+			
+			if (kTerminalView_ResultOK == viewResult)
+			{
+				scrollBarV.enabled = YES;
+				scrollBarV.doubleValue = startOfView;
+				scrollBarV.knobProportion = (STATIC_CAST(pastEndOfView - startOfView, CGFloat) / (pastEndMaxRange - startOfMaxRange));
+			}
+			else
+			{
+				// ???
+				scrollBarV.enabled = NO;
+			}
+		}
 	}
 }// updateScrollBars
 
@@ -3908,6 +3947,10 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		// add root view controller’s view
 		self.rootViewController.view.frame = NSMakeRect(0, 0, NSWidth(contentView.frame), NSHeight(contentView.frame));
 		[contentView addSubview:self.rootViewController.view];
+		
+		// initialize content view for use in window (remove any default styling, etc.)
+		TerminalView_SelectNothing(aViewController.terminalView.terminalContentView.terminalViewRef);
+		TerminalView_FindNothing(aViewController.terminalView.terminalContentView.terminalViewRef);
 		
 		// create toolbar
 		{
@@ -5523,6 +5566,25 @@ loadView
 
 
 #pragma mark Accessors
+
+
+/*!
+Returns the "windowController" of an NSWindow as an TerminalWindow_Controller
+subclass if it is of that type; otherwise, nil.
+
+(2020.04)
+*/
+- (TerminalWindow_Controller*)
+terminalWindowController
+{
+	NSWindowController*			controller = self.windowController;
+	TerminalWindow_Controller*	result = ([controller isKindOfClass:TerminalWindow_Controller.class]
+											? STATIC_CAST(controller, TerminalWindow_Controller*)
+											: nil);
+	
+	
+	return result;
+}// terminalWindowController
 
 
 /*!
