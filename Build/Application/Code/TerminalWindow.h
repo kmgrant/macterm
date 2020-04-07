@@ -253,7 +253,6 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalWindow_Controller : NSWindowController < Commands_StandardSearching,
-															Commands_StandardWindowTabbing,
 															Commands_TerminalScreenResizing,
 															Commands_TextFormatting,
 															Commands_WindowRenaming,

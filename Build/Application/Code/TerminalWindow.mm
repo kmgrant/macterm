@@ -4128,38 +4128,6 @@ performShowCompletions:(id)		sender
 }
 
 
-#pragma mark Actions: Commands_StandardWindowTabbing
-
-
-- (IBAction)
-mergeAllWindows:(id)	sender
-{
-	UNUSED_RETURN(BOOL)[super tryToPerform:_cmd with:sender];
-}
-- (id)
-canMergeAllWindows:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	TerminalWindowRef	terminalWindow = self.terminalWindowRef;
-	
-	
-	if ((nullptr != terminalWindow) &&
-		(false == TerminalWindow_IsFullScreen(terminalWindow)) &&
-		TerminalWindow_IsTab(terminalWindow))
-	{
-		return @(YES);
-	}
-	return @(NO);
-}
-
-
-- (IBAction)
-moveTabToNewWindow:(id)		sender
-{
-	UNUSED_RETURN(BOOL)[super tryToPerform:_cmd with:sender];
-}
-
-
 #pragma mark Actions: Commands_TerminalScreenResizing
 
 

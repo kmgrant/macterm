@@ -272,20 +272,16 @@ Workspace_RemoveTerminalWindow	(Workspace_Ref			inWorkspace,
 	}
 	else
 	{
-		// move each tab to a new window
-		std::for_each(ptr->terminalWindows.begin(), ptr->terminalWindows.end(),
-						[=](TerminalWindowRef	terminalWindow)
-						{
-							NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(terminalWindow);
-							BOOL		invokeOK = NO;
-							
-							
-							invokeOK = [cocoaWindow tryToPerform:@selector(moveTabToNewWindow:) with:NSApp];
-							if (NO == invokeOK)
-							{
-								Console_Warning(Console_WriteLine, "failed to move a workspace terminal tab to a new window");
-							}
-						});
+		// move tab to new window
+		NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(inWindowToRemove);
+		BOOL		invokeOK = NO;
+		
+		
+		invokeOK = [cocoaWindow tryToPerform:@selector(moveTabToNewWindow:) with:NSApp];
+		if (NO == invokeOK)
+		{
+			Console_Warning(Console_WriteLine, "failed to move a workspace terminal tab to a new window");
+		}
 		ptr->terminalWindows.erase(std::remove(ptr->terminalWindows.begin(), ptr->terminalWindows.end(), inWindowToRemove),
 									ptr->terminalWindows.end());
 		assert(ptr->terminalWindows.end() == std::find(ptr->terminalWindows.begin(), ptr->terminalWindows.end(),
