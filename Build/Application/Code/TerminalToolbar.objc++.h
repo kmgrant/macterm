@@ -620,6 +620,10 @@ can be observed on this toolbar object to find out when
 	- (instancetype)
 	initWithIdentifier:(NSString*)_;
 
+// accessors
+	@property (readonly) NSTextAlignment
+	titleJustification;
+
 // NSToolbar
 	- (void)
 	setDisplayMode:(NSToolbarDisplayMode)_;

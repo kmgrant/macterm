@@ -1130,7 +1130,11 @@ appropriate times.
 void
 Session_DisplayWindowRenameUI	(SessionRef		inRef)
 {
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	NSWindow*					sessionWindow = returnActiveNSWindow(ptr);
+	TerminalToolbar_Object*		asTerminalToolbar = ([sessionWindow.toolbar isKindOfClass:TerminalToolbar_Object.class]
+														? STATIC_CAST(sessionWindow.toolbar, TerminalToolbar_Object*)
+														: nil); 
 	
 	
 	if (nullptr == ptr->renameDialog)
@@ -1178,6 +1182,7 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 							(Session_ReturnActiveNSWindow(inRef), (false == noAnimations),
 								initBlock, finalBlock);
 	}
+	WindowTitleDialog_SetAlignment(ptr->renameDialog, ((asTerminalToolbar.visible) ? asTerminalToolbar.titleJustification : NSTextAlignmentCenter));
 	WindowTitleDialog_Display(ptr->renameDialog);
 }// DisplayWindowRenameUI
 

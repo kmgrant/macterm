@@ -101,22 +101,6 @@ NSString*	kTerminalToolbar_ObjectDidChangeVisibilityNotification		=
 #pragma mark Types
 
 /*!
-This protocol exists only to suppress compiler warnings
-from conditionally invoking selectors in this file.
-*/
-@protocol TerminalToolbar_SierraMethods //{
-
-// various methods from newer SDKs
-	- (void)
-	setAllowsDefaultTighteningForTruncation:(BOOL)_;
-	- (void)
-	setLineBreakMode:(NSLineBreakMode)_;
-	- (void)
-	setMaximumNumberOfLines:(NSInteger)_;
-
-@end //}
-
-/*!
 The private class interface.
 */
 @interface TerminalToolbar_Delegate (TerminalToolbar_DelegateInternal) //{
@@ -299,6 +283,10 @@ The private class interface.
 Private properties.
 */
 @interface TerminalToolbar_Object () //{
+
+// accessors
+	@property (assign) NSTextAlignment
+	titleJustification;
 
 @end //}
 
@@ -766,8 +754,9 @@ toolbarDidRemoveItem:(NSNotification*)		aNotification
 	}
 	else
 	{
-		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
-		id				itemValue = [aNotification.userInfo objectForKey:@"item"];
+		NSToolbar*					asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
+		TerminalToolbar_Object*		asTerminalToolbar = ([asToolbar isKindOfClass:TerminalToolbar_Object.class] ? STATIC_CAST(asToolbar, TerminalToolbar_Object*) : nil);
+		id							itemValue = [aNotification.userInfo objectForKey:@"item"];
 		
 		
 		if (nil == itemValue)
@@ -782,6 +771,13 @@ toolbarDidRemoveItem:(NSNotification*)		aNotification
 		{
 			NSToolbarItem*		asToolbarItem = STATIC_CAST(itemValue, NSToolbarItem*);
 			
+			
+			if ([asToolbarItem.itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleLeft] ||
+				[asToolbarItem.itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleRight])
+			{
+				// assume title is returning to center position
+				asTerminalToolbar.titleJustification = NSTextAlignmentCenter;
+			}
 			
 			if ([asToolbarItem conformsToProtocol:@protocol(TerminalToolbar_ItemAddRemoveSensitive)])
 			{
@@ -813,8 +809,9 @@ toolbarWillAddItem:(NSNotification*)	aNotification
 	}
 	else
 	{
-		NSToolbar*		asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
-		id				itemValue = [aNotification.userInfo objectForKey:@"item"];
+		NSToolbar*					asToolbar = STATIC_CAST(aNotification.object, NSToolbar*);
+		TerminalToolbar_Object*		asTerminalToolbar = ([asToolbar isKindOfClass:TerminalToolbar_Object.class] ? STATIC_CAST(asToolbar, TerminalToolbar_Object*) : nil);
+		id							itemValue = [aNotification.userInfo objectForKey:@"item"];
 		
 		
 		if (nil == itemValue)
@@ -829,6 +826,20 @@ toolbarWillAddItem:(NSNotification*)	aNotification
 		{
 			NSToolbarItem*		asToolbarItem = STATIC_CAST(itemValue, NSToolbarItem*);
 			
+			
+			// keep track of unusual title positions
+			if ([asToolbarItem.itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleLeft])
+			{
+				asTerminalToolbar.titleJustification = NSTextAlignmentLeft;
+			}
+			else if ([asToolbarItem.itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleRight])
+			{
+				asTerminalToolbar.titleJustification = NSTextAlignmentRight;
+			}
+			else if ([asToolbarItem.itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitle])
+			{
+				asTerminalToolbar.titleJustification = NSTextAlignmentCenter;
+			}
 			
 			if ([asToolbarItem conformsToProtocol:@protocol(TerminalToolbar_ItemAddRemoveSensitive)])
 			{
@@ -3680,48 +3691,24 @@ layOutLabelText
 	{
 	case kTerminalToolbar_TextLabelLayoutLeftJustified:
 		self.alignment = NSLeftTextAlignment; // NSControl setting
-		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-					(@selector(setLineBreakMode:), self,
-						NSLineBreakByTruncatingTail))
-		{
-			Console_Warning(Console_WriteLine, "failed to set text label line break mode");
-		}
+		self.lineBreakMode = NSLineBreakByTruncatingTail;
 		break;
 	
 	case kTerminalToolbar_TextLabelLayoutRightJustified:
 		self.alignment = NSRightTextAlignment; // NSControl setting
-		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-					(@selector(setLineBreakMode:), self,
-						NSLineBreakByTruncatingHead))
-		{
-			Console_Warning(Console_WriteLine, "failed to set text label line break mode");
-		}
+		self.lineBreakMode = NSLineBreakByTruncatingHead;
 		break;
 	
 	case kTerminalToolbar_TextLabelLayoutCenterJustified:
 	default:
 		self.alignment = NSCenterTextAlignment; // NSControl setting
-		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-					(@selector(setLineBreakMode:), self,
-						NSLineBreakByTruncatingMiddle))
-		{
-			Console_Warning(Console_WriteLine, "failed to set text label line break mode");
-		}
+		self.lineBreakMode = NSLineBreakByTruncatingMiddle;
 		break;
 	}
 	
 	// initialize line count (may be overridden below)
-	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-				(@selector(setUsesSingleLineMode:), self,
-					YES))
-	{
-		Console_Warning(Console_WriteLine, "failed to set text label single line mode");
-	}
-	if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-				(@selector(setMaximumNumberOfLines:), self, 1))
-	{
-		Console_Warning(Console_WriteLine, "failed to set text label maximum number of lines");
-	}
+	self.usesSingleLineMode = YES;
+	self.maximumNumberOfLines = 1;
 	
 	// test a variety of font sizes to find the most reasonable one;
 	// if text ends up too long anyway then view will squish/truncate
@@ -3746,17 +3733,8 @@ layOutLabelText
 		// at this point, switch to multiple lines as well
 		// (experimental, not working yet)
 	#if 0
-		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-					(@selector(setUsesSingleLineMode:), self,
-						NO))
-		{
-			Console_Warning(Console_WriteLine, "failed to set text label single line mode");
-		}
-		if (NO == CocoaExtensions_PerformSelectorOnTargetWithValue
-					(@selector(setMaximumNumberOfLines:), self, 2))
-		{
-			Console_Warning(Console_WriteLine, "failed to set text label maximum number of lines");
-		}
+		self.usesSingleLineMode = NO;
+		self.maximumNumberOfLines = 2;
 	#endif
 		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 10 : 12)];
 		requiredSize = [self idealFrameSizeForString:layoutString];
@@ -4556,6 +4534,9 @@ paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
 @implementation TerminalToolbar_Object //{
 
 
+@synthesize titleJustification = _titleJustification;
+
+
 #pragma mark Initializers
 
 
@@ -4570,6 +4551,7 @@ initWithIdentifier:(NSString*)	anIdentifier
 	self = [super initWithIdentifier:anIdentifier];
 	if (nil != self)
 	{
+		_titleJustification = NSTextAlignmentCenter;
 	}
 	return self;
 }// initWithIdentifier:

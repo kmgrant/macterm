@@ -63,6 +63,7 @@ Manages the rename-window user interface.
 	NSView*										_managedView;			// the view that implements the majority of the interface
 	NSWindow*									_targetCocoaWindow;		// the window to be renamed, if Cocoa
 	BOOL										_animated;				// YES if there should be animation when opening/closing
+	NSTextAlignment								_arrowAlignment;		// how to place the arrow
 	NSSize										_idealSize;				// minimum size of the managed view
 	PopoverManager_Ref							_popoverMgr;				// manages common aspects of popover window behavior
 	WindowTitleDialog_ReturnTitleCopyBlock		_initBlock;				// block to invoke when initializing dialog title
@@ -87,6 +88,8 @@ Manages the rename-window user interface.
 	removeWithAcceptance:(BOOL)_;
 
 // accessors
+	@property (assign) NSTextAlignment
+	arrowAlignment;
 	- (NSWindow*)
 	renamedCocoaWindow;
 
@@ -112,8 +115,8 @@ string is provided (otherwise, the string is nullptr).
 (2016.09)
 */
 WindowTitleDialog_Ref
-WindowTitleDialog_NewWindowModal		(NSWindow*								inCocoaParentWindow,
-									 Boolean									inIsAnimated,
+WindowTitleDialog_NewWindowModal	(NSWindow*								inCocoaParentWindow,
+									 Boolean								inIsAnimated,
 									 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
 									 WindowTitleDialog_CloseNotifyBlock		inFinalBlock)
 {
@@ -121,7 +124,8 @@ WindowTitleDialog_NewWindowModal		(NSWindow*								inCocoaParentWindow,
 	
 	
 	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCocoaWindow:inCocoaParentWindow animated:inIsAnimated
+										initForCocoaWindow:inCocoaParentWindow
+															animated:inIsAnimated
 															whenInitializing:inInitBlock
 															whenClosing:inFinalBlock];
 	return result;
@@ -171,11 +175,34 @@ WindowTitleDialog_Display	(WindowTitleDialog_Ref	inDialog)
 }// Display
 
 
+/*!
+Specifies the location of the arrow on the dialog.
+(Use this if the window title moves.)
+
+(2020.04)
+*/
+void
+WindowTitleDialog_SetAlignment	(WindowTitleDialog_Ref	inDialog,
+								 NSTextAlignment		inPointerAlignment)
+{
+	WindowTitleDialog_Handler*	ptr = [WindowTitleDialog_Handler viewHandlerFromRef:inDialog];
+	
+	
+	if (nullptr != ptr)
+	{
+		ptr.arrowAlignment = inPointerAlignment;
+	}
+}// Display
+
+
 #pragma mark Internal Methods
 
 
 #pragma mark -
 @implementation WindowTitleDialog_Handler //{
+
+
+@synthesize arrowAlignment = _arrowAlignment;
 
 
 #pragma mark Class Methods
@@ -232,6 +259,7 @@ whenClosing:(WindowTitleDialog_CloseNotifyBlock)			aFinalBlock
 		_popoverMgr = nullptr;
 		_idealSize = NSZeroSize; // set later
 		_animated = anAnimationFlag;
+		_arrowAlignment = NSTextAlignmentCenter;
 		_initBlock = Block_copy(anInitBlock);
 		_closeNotifyBlock = Block_copy(aFinalBlock);
 	}
@@ -368,8 +396,24 @@ parentWindow:(NSWindow*)				parentWindow
 #pragma unused(aPopoverManager)
 	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
 	NSRect		managedViewFrame = [_managedView frame];
-	NSPoint		result = NSMakePoint(CGFLOAT_DIV_2(parentFrame.size.width), parentFrame.size.height - 12/* arbitrary */);
+	NSPoint		result = CGPointZero; // set below
 	
+	
+	if (NSTextAlignmentLeft == _arrowAlignment)
+	{
+		result.x = 40; // arbitrary
+		result.y = (parentFrame.size.height - 18/* arbitrary */);
+	}
+	else if (NSTextAlignmentRight == _arrowAlignment)
+	{
+		result.x = (parentFrame.size.width - 40); // arbitrary
+		result.y = (parentFrame.size.height - 18/* arbitrary */);
+	}
+	else
+	{
+		result.x = CGFLOAT_DIV_2(parentFrame.size.width);
+		result.y = (parentFrame.size.height - 12/* arbitrary */);
+	}
 	
 	// if the window position would make the popover fall off the top of the
 	// screen (e.g. in Full Screen mode), force the popover to move a bit
@@ -395,8 +439,21 @@ idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
 #pragma unused(aPopoverManager, parentFrame, parentWindow)
-	Popover_Properties	result = kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow;
+	Popover_Properties	result = kPopover_PropertyPlaceFrameBelowArrow;
 	
+	
+	if (NSTextAlignmentLeft == _arrowAlignment)
+	{
+		result |= kPopover_PropertyArrowBeginning;
+	}
+	else if (NSTextAlignmentRight == _arrowAlignment)
+	{
+		result |= kPopover_PropertyArrowEnd;
+	}
+	else
+	{
+		result |= kPopover_PropertyArrowMiddle;
+	}
 	
 	return result;
 }// popoverManager:idealArrowPositionForFrame:parentWindow:

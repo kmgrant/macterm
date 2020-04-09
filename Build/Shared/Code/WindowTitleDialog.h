@@ -136,8 +136,8 @@ changes to an interface declared in a ".mm" file.
 #pragma mark Public Methods
 
 WindowTitleDialog_Ref
-	WindowTitleDialog_NewWindowModal					(NSWindow*								inCocoaParentWindow,
-													 Boolean									inIsAnimated,
+	WindowTitleDialog_NewWindowModal				(NSWindow*								inCocoaParentWindow,
+													 Boolean								inIsAnimated,
 													 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
 													 WindowTitleDialog_CloseNotifyBlock		inFinalBlock);
 
@@ -146,5 +146,9 @@ void
 
 void
 	WindowTitleDialog_Display						(WindowTitleDialog_Ref					inDialog);
+
+void
+	WindowTitleDialog_SetAlignment					(WindowTitleDialog_Ref					inDialog,
+													 NSTextAlignment						inPointerLocation);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
