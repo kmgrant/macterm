@@ -41,7 +41,6 @@
 
 // Mac includes
 #import <ApplicationServices/ApplicationServices.h>
-#import <Carbon/Carbon.h> // TEMPORARY; some legacy types below (like EventLoopTimerRef)
 #import <CoreServices/CoreServices.h>
 #import <objc/objc-runtime.h>
 //CARBON//#import <QuickTime/QuickTime.h>
@@ -80,7 +79,6 @@ Float32 const	kSeparatorPerceivedWidth = 2.0;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void			clipboardUpdatesTimer		(EventLoopTimerRef, void*);
 CFStringRef		copyTypeDescription			(CFStringRef);
 Boolean			isImageType					(CFStringRef);
 Boolean			isTextType					(CFStringRef);
@@ -91,9 +89,8 @@ void			updateClipboard				();
 #pragma mark Variables
 namespace {
 
-CFRetainRelease			gCurrentRenderData;
-EventLoopTimerUPP		gClipboardUpdatesTimerUPP = nullptr;
-EventLoopTimerRef		gClipboardUpdatesTimer = nullptr;
+CFRetainRelease		gCurrentRenderData;
+NSTimer*			gClipboardUpdatesTimer = nil;
 
 } // anonymous namespace
 
@@ -112,22 +109,17 @@ void
 Clipboard_Init ()
 {
 	// install a timer that detects changes to the clipboard
+	gClipboardUpdatesTimer = [NSTimer scheduledTimerWithTimeInterval:3.0/* in seconds */
+	repeats:YES
+	block:^(NSTimer* UNUSED_ARGUMENT(timer))
 	{
-		OSStatus	error = noErr;
-		
-		
-		gClipboardUpdatesTimerUPP = NewEventLoopTimerUPP(clipboardUpdatesTimer);
-		assert(nullptr != gClipboardUpdatesTimerUPP);
-		error = InstallEventLoopTimer(GetCurrentEventLoop(),
-										kEventDurationNoWait + 0.01/* seconds before timer starts; must be nonzero for Mac OS X 10.3 */,
-										kEventDurationSecond * 3.0/* seconds between fires */,
-										gClipboardUpdatesTimerUPP, nullptr/* user data - not used */,
-										&gClipboardUpdatesTimer);
-		if (noErr != error)
-		{
-			Console_Warning(Console_WriteValue, "failed to set up timer for detecting Clipboard changes, error", error);
-		}
-	}
+		// since there does not appear to be an event that can be handled
+		// to notice clipboard changes, this timer periodically polls the
+		// system to figure out when the clipboard has changed; if it
+		// does change, the clipboard window is updated
+		updateClipboard();
+	}];
+	[gClipboardUpdatesTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 	
 	// if the window was open at last Quit, construct it right away;
 	// otherwise, wait until it is requested by the user
@@ -170,8 +162,9 @@ Clipboard_Done ()
 																sizeof(Boolean), &windowIsVisible);
 	}
 	
-	RemoveEventLoopTimer(gClipboardUpdatesTimer), gClipboardUpdatesTimer = nullptr;
-	DisposeEventLoopTimerUPP(gClipboardUpdatesTimerUPP), gClipboardUpdatesTimerUPP = nullptr;
+	[gClipboardUpdatesTimer invalidate];
+	[gClipboardUpdatesTimer release];
+	gClipboardUpdatesTimer = nil;
 }// Done
 
 
@@ -538,22 +531,6 @@ Clipboard_WindowIsVisible ()
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Since there does not appear to be an event that can be handled
-to notice clipboard changes, this timer periodically polls the
-system to figure out when the clipboard has changed.  If it
-does change, the clipboard window is updated.
-
-(3.1)
-*/
-void
-clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
-						 void*				UNUSED_ARGUMENT(inUnusedData))
-{
-	updateClipboard();
-}// clipboardUpdatesTimer
-
 
 /*!
 Returns a human-readable description of the specified data type.
