@@ -726,11 +726,11 @@ Preferences_Result		getTranslationPreference				(My_ContextInterfaceConstPtr, Pr
 																 size_t, void*, size_t*);
 Preferences_Result		getWorkspacePreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
-OSStatus				mergeInDefaultPreferences				();
+Boolean					mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Quills::Prefs::Class, CFArrayRef);
 void					readApplicationArrayPreference			(CFStringRef, CFArrayRef&);
-OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
-OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean,
+Boolean					readPreferencesDictionary				(CFDictionaryRef, Boolean);
+Boolean					readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean,
 																 Quills::Prefs::Class*, CFStringRef*);
 void					setApplicationPreference				(CFStringRef, CFPropertyListRef);
 Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
@@ -749,7 +749,7 @@ Preferences_Result		setWorkspacePreference					(My_ContextInterfacePtr, Preferen
 																 size_t, void const*);
 CFStringRef				virtualKeyCreateName					(UInt16);
 Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
-OSStatus				writePreferencesDictionaryFromContext	(My_ContextInterfacePtr, CFMutableDictionaryRef,
+Boolean					writePreferencesDictionaryFromContext	(My_ContextInterfacePtr, CFMutableDictionaryRef,
 																 Boolean, Boolean);
 Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
@@ -1264,7 +1264,7 @@ Preferences_Init ()
 	// replicate defaults; instead, the defaults are simply referred
 	// to as needed; a better future solution would be to register
 	// all defaults instead of copying them into user preferences
-	mergeInDefaultPreferences();
+	UNUSED_RETURN(Boolean)mergeInDefaultPreferences();
 	
 	gPreferenceEventListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 														kConstantsRegistry_ListenerModelDescriptorPreferences);
@@ -2441,17 +2441,17 @@ Preferences_ContextMergeInXMLData	(Preferences_ContextRef		inContext,
 		else
 		{
 			CFDictionaryRef		rootAsDictionary = CFUtilities_DictionaryCast(root);
-			OSStatus			error = noErr;
+			Boolean				readOK = false;
 			
 			
 			assert(CFPropertyListIsValid(root, kCFPropertyListXMLFormat_v1_0));
 			// reading the dictionary will also trigger the context rename if name data exists
-			error = readPreferencesDictionaryInContext(ptr, rootAsDictionary, true/* merge */,
+			readOK = readPreferencesDictionaryInContext(ptr, rootAsDictionary, true/* merge */,
 														outInferredClassOrNull, outInferredNameOrNull);
-			if (noErr != error)
+			if (false == readOK)
 			{
 				result = kPreferences_ResultBadVersionDataNotAvailable;
-				Console_Warning(Console_WriteValue, "unable to read dictionary created from XML data", error);
+				Console_Warning(Console_WriteLine, "unable to read dictionary created from XML data");
 			}
 			else
 			{
@@ -2847,14 +2847,14 @@ Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
 																		&kCFTypeDictionaryValueCallBacks),
 												CFRetainRelease::kAlreadyRetained);
 		Boolean				currentClassOnly = (0 == (inExportOptions & kPreferences_ExportFlagIncludeAllClasses));
-		OSStatus			error = noErr;
+		Boolean				writeOK = false;
 		
 		
-		error = writePreferencesDictionaryFromContext(ptr, targetDictionary.returnCFMutableDictionaryRef(),
+		writeOK = writePreferencesDictionaryFromContext(ptr, targetDictionary.returnCFMutableDictionaryRef(),
 														false/* merge */, currentClassOnly);
-		if (noErr != error)
+		if (false == writeOK)
 		{
-			Console_Warning(Console_WriteValue, "failed to read source context into dictionary, error", error);
+			Console_Warning(Console_WriteLine, "failed to read source context into dictionary");
 			result = kPreferences_ResultGenericFailure;
 		}
 		else
@@ -2873,12 +2873,12 @@ Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
 				{
 					// attempt to read defaults of the same class as well
 					// (for conflicting settings, nothing is overwritten)
-					error = writePreferencesDictionaryFromContext
-							(defaultsPtr, targetDictionary.returnCFMutableDictionaryRef(),
-								true/* merge */, currentClassOnly);
-					if (noErr != error)
+					writeOK = writePreferencesDictionaryFromContext
+								(defaultsPtr, targetDictionary.returnCFMutableDictionaryRef(),
+									true/* merge */, currentClassOnly);
+					if (false == writeOK)
 					{
-						Console_Warning(Console_WriteValue, "failed to merge in default values, error", error);
+						Console_Warning(Console_WriteLine, "failed to merge in default values");
 						result = kPreferences_ResultGenericFailure;
 						writeData = false;
 					}
@@ -3795,12 +3795,12 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 		result = assertInitialized();
 		if (result == kPreferences_ResultOK)
 		{
-			OSStatus	error = noErr;
+			Boolean		addOK = false;
 			
 			
-			error = ListenerModel_AddListenerForEvent(gPreferenceEventListenerModel, inForWhatChange,
+			addOK = ListenerModel_AddListenerForEvent(gPreferenceEventListenerModel, inForWhatChange,
 														inListener);
-			if (error != noErr)
+			if (false == addOK)
 			{
 				// should probably define a more specific error type here...
 				result = kPreferences_ResultInsufficientBufferSpace;
@@ -3959,7 +3959,6 @@ addListener		(ListenerModel_ListenerRef	inListener,
 				 Boolean					inNotifyOfInitialValue)
 {
 	Boolean		result = false;
-	OSStatus	error = noErr;
 	
 	
 	if (nullptr == _listenerModel)
@@ -3970,8 +3969,7 @@ addListener		(ListenerModel_ListenerRef	inListener,
 	
 	if (nullptr != _listenerModel)
 	{
-		error = ListenerModel_AddListenerForEvent(_listenerModel, inForWhatChange, inListener);
-		if (noErr == error) result = true;
+		result = ListenerModel_AddListenerForEvent(_listenerModel, inForWhatChange, inListener);
 	}
 	
 	if ((result) && (inNotifyOfInitialValue))
@@ -8576,16 +8574,15 @@ if some component could not be set up properly
 
 (2.6)
 */
-OSStatus
+Boolean
 mergeInDefaultPreferences ()
 {
 	CFRetainRelease		defaultPrefDictionary(copyDefaultPrefDictionary(), CFRetainRelease::kAlreadyRetained);
-	OSStatus			result = noErr;
+	Boolean				result = false;
 	
 	
 	// copy bundle's DefaultPreferences.plist
-	if (false == defaultPrefDictionary.exists()) result = resNotFound;
-	else
+	if (defaultPrefDictionary.exists())
 	{
 		// read the default preferences dictionary; for settings
 		// saved in XML, this will also make CFPreferences calls
@@ -8599,7 +8596,7 @@ mergeInDefaultPreferences ()
 		setApplicationPreference(CFSTR("name"), nullptr);
 		setApplicationPreference(CFSTR("name-string"), nullptr);
 		
-		if (noErr == result)
+		if (result)
 		{
 			// save the preferences...
 			UNUSED_RETURN(Boolean)CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
@@ -8775,12 +8772,12 @@ values.
 All of the keys in the specified dictionary must be of type
 CFStringRef.
 
-\retval noErr
+\retval true
 currently always returned; there is no way to detect errors
 
 (3.0)
 */
-OSStatus
+Boolean
 readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 							 Boolean			inMerge)
 {
@@ -8820,12 +8817,12 @@ an inferred name so you must call CFRelease() when finished.
 All of the keys in the specified dictionary must be of type
 CFStringRef.
 
-\retval noErr
+\retval true
 currently always returned; there is no way to detect errors
 
 (4.0)
 */
-OSStatus
+Boolean
 readPreferencesDictionaryInContext	(My_ContextInterfacePtr		inContextPtr,
 									 CFDictionaryRef			inPreferenceDictionary,
 									 Boolean					inMerge,
@@ -8843,7 +8840,7 @@ readPreferencesDictionaryInContext	(My_ContextInterfacePtr		inContextPtr,
 	CountByClass		classPopularity; // keep track of keys belonging to each class
 	CFPropertyListRef	nameDataValue = nullptr;
 	CFPropertyListRef	nameStringValue = nullptr;
-	OSStatus			result = noErr;
+	Boolean				result = true;
 	
 	
 	CFDictionaryGetKeysAndValues(inPreferenceDictionary, keys, nullptr/* values */);
@@ -11024,12 +11021,12 @@ dictionary is no larger than it really needs to be.
 All of the keys added to the dictionary will be of type
 CFStringRef.
 
-\retval noErr
+\retval true
 currently always returned; there is no way to detect errors
 
 (4.0)
 */
-OSStatus
+Boolean
 writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 										 CFMutableDictionaryRef		inoutPreferenceDictionary,
 										 Boolean					inMerge,
@@ -11037,7 +11034,7 @@ writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
 {
 	CFRetainRelease		keyListCFArrayObject(inContextPtr->returnKeyListCopy(), CFRetainRelease::kAlreadyRetained);
 	CFArrayRef			keyListCFArray = keyListCFArrayObject.returnCFArrayRef();
-	OSStatus			result = noErr;
+	Boolean				result = true;
 	
 	
 	for (CFIndex i = 0; i < CFArrayGetCount(keyListCFArray); ++i)

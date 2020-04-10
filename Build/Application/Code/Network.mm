@@ -174,12 +174,12 @@ Network_StartMonitoring		(Network_Change				inForWhatChange,
 	case kNetwork_ChangeAddressListDidRebuild:
 	case kNetwork_ChangeAddressListWillRebuild:
 		{
-			OSStatus	error = noErr;
+			Boolean		addOK = false;
 			
 			
-			error = ListenerModel_AddListenerForEvent(gNetworkChangeListenerModel(), inForWhatChange,
+			addOK = ListenerModel_AddListenerForEvent(gNetworkChangeListenerModel(), inForWhatChange,
 														inListener);
-			if (error != noErr)
+			if (false == addOK)
 			{
 				result = kNetwork_ResultMonitorFailed;
 			}

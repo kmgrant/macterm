@@ -1377,11 +1377,14 @@ SessionFactory_StartMonitoring	(SessionFactory_Change		inForWhatChange,
 	else
 	{
 		// add a listener to the listener model for the given setting change
-		OSStatus	error = noErr;
+		Boolean		addOK = false;
 		
 		
-		error = ListenerModel_AddListenerForEvent(gSessionFactoryStateChangeListenerModel, inForWhatChange, inListener);
-		if (noErr != error) result = kSessionFactory_ResultParameterError;
+		addOK = ListenerModel_AddListenerForEvent(gSessionFactoryStateChangeListenerModel, inForWhatChange, inListener);
+		if (false == addOK)
+		{
+			result = kSessionFactory_ResultParameterError;
+		}
 	}
 	
 	return result;
@@ -1424,11 +1427,14 @@ SessionFactory_StartMonitoringSessions	(Session_Change				inForWhatChange,
 	else
 	{
 		// add a listener to the listener model for the given setting change
-		OSStatus	error = noErr;
+		Boolean		addOK = false;
 		
 		
-		error = ListenerModel_AddListenerForEvent(gSessionStateChangeListenerModel, inForWhatChange, inListener);
-		if (noErr != error) result = kSessionFactory_ResultParameterError;
+		addOK = ListenerModel_AddListenerForEvent(gSessionStateChangeListenerModel, inForWhatChange, inListener);
+		if (false == addOK)
+		{
+			result = kSessionFactory_ResultParameterError;
+		}
 	}
 	
 	return result;

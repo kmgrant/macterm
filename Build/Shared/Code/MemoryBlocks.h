@@ -78,10 +78,6 @@ void
 void
 	Memory_DisposePtrInterruptSafe		(void**					inoutPtr);
 
-OSStatus
-	Memory_SetHandleSize				(Handle					inoutHandle,
-										 Size					inNewHandleSizeInBytes);
-
 //@}
 
 //!\name Weak References

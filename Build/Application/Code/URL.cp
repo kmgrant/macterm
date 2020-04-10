@@ -192,7 +192,7 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 	case kURL_InternetLocationApplicationHomePage:
 		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
 									(AppResources_ReturnBundleForInfo(), CFSTR("MyHomePageURL")));
-		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
+		if (URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;
@@ -202,7 +202,7 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 	case kURL_InternetLocationApplicationUpdatesPage:
 		urlCFString.setWithRetain(CFBundleGetValueForInfoDictionaryKey
 									(AppResources_ReturnBundleForInfo(), CFSTR("MyUpdatesURL")));
-		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
+		if (URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;
@@ -231,25 +231,21 @@ WARNING:	You probably want Quills::Session::handle_url()
 			exists.  Quills automatically calls this routine
 			as a fallback when all else fails.
 
-\retval noErr
+\retval true
 if the string is a URL and it is opened successfully
 
-\retval kURLInvalidURLError
-if the string is not a URL
-
-\retval (other)
-if Launch Services has a problem opening the URL
+\retval false
+if parsing failed
 
 (3.1)
 */
-OSStatus
+Boolean
 URL_ParseCFString	(CFStringRef	inURLString)
 {
-	OSStatus	result = noErr;
+	Boolean		result = false; // initially...
 	
 	
-	if (nullptr == inURLString) result = memPCErr;
-	else
+	if (nullptr != inURLString)
 	{
 		URL_Type	urlKind = kURL_TypeInvalid;
 		
@@ -257,15 +253,23 @@ URL_ParseCFString	(CFStringRef	inURLString)
 		urlKind = URL_ReturnTypeFromCFString(inURLString);
 		if (kURL_TypeInvalid != urlKind)
 		{
-			CFURLRef	theCFURL = CFURLCreateWithString(kCFAllocatorDefault, inURLString, nullptr/* base URL */);
+			CFRetainRelease		theCFURL(CFURLCreateWithString(kCFAllocatorDefault, inURLString, nullptr/* base URL */),
+											CFRetainRelease::kAlreadyRetained);
 			
 			
-			if (nullptr == theCFURL) result = kURLInvalidURLError; // just a guess!
-			else
+			if (theCFURL.exists())
 			{
-				result = LSOpenCFURLRef(theCFURL, nullptr/* URL of actual item opened */);
-				if (noErr != result) Console_WriteValue("URL open error", result);
-				CFRelease(theCFURL);
+				OSStatus	openError = LSOpenCFURLRef(theCFURL.returnCFURLRef(), nullptr/* URL of actual item opened */);
+				
+				
+				if (noErr == openError)
+				{
+					result = true;
+				}
+				else
+				{
+					Console_WriteValue("URL open error", openError);
+				}
 			}
 		}
 	}

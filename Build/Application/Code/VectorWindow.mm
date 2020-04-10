@@ -709,7 +709,7 @@ Installs a handler for an event.
 onEvent:(VectorWindow_Event)				anEvent
 notifyListener:(ListenerModel_ListenerRef)	aListener
 {
-	ListenerModel_AddListenerForEvent(self->changeListenerModel, anEvent, aListener);
+	UNUSED_RETURN(Boolean)ListenerModel_AddListenerForEvent(self->changeListenerModel, anEvent, aListener);
 }// onEvent:notifyListener:
 
 

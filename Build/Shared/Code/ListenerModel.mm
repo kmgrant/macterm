@@ -503,7 +503,8 @@ ListenerModel_ReleaseListener	(ListenerModel_ListenerRef*		inoutRefPtr)
 /*!
 Installs a new callback routine in the given model that shall be
 invoked whenever ListenerModel_NotifyListenersOfEvent() is invoked
-on the model for the specified event.
+on the model for the specified event.  Returns true only if
+successful.
 
 IMPORTANT:	A listener will fail to be installed unless its type is
 			consistent with the style of the model.  For example, a
@@ -512,32 +513,38 @@ IMPORTANT:	A listener will fail to be installed unless its type is
 
 (1.0)
 */
-OSStatus
+Boolean
 ListenerModel_AddListenerForEvent	(ListenerModel_Ref			inToWhichModel,
 									 ListenerModel_Event		inForWhichEvent,
 									 ListenerModel_ListenerRef	inListenerToAdd)
 {
 	ListenerModelAutoLocker		ptr(gListenerModelPtrLocks(), inToWhichModel);
-	OSStatus					result = noErr;
+	Boolean						result = true; // initially...
 	
 	
 	if (nullptr == ptr)
 	{
 		Console_Warning(Console_WriteValueFourChars, "attempt to add listener to nonexistent model for event",
 						inForWhichEvent);
-		result = memPCErr;
+		result = false;
 	}
 	else
 	{
 		ListenerAutoLocker	listenerPtr(gListenerPtrLocks(), inListenerToAdd);
 		
 		
-		if (nullptr == listenerPtr) result = memPCErr;
+		if (nullptr == listenerPtr)
+		{
+			result = false;
+		}
 		else
 		{
 			// it is only legal to add callbacks that are consistent with
 			// the requirements of the style of the list
-			if (listenerPtr->callbackType != ptr->callbackType) result = paramErr;
+			if (listenerPtr->callbackType != ptr->callbackType)
+			{
+				result = false;
+			}
 			else
 			{
 				if (ptr->eventListeners.end() == ptr->eventListeners.find(inForWhichEvent))
@@ -559,7 +566,7 @@ ListenerModel_AddListenerForEvent	(ListenerModel_Ref			inToWhichModel,
 				if ((ptr->eventListeners.end() == ptr->eventListeners.find(inForWhichEvent)) ||
 						(nullptr == ptr->eventListeners[inForWhichEvent]))
 				{
-					result = memFullErr;
+					result = false;
 				}
 				else
 				{
@@ -927,11 +934,11 @@ unitTest000_Begin ()
 	
 	// install the listener on specific events
 	{
-		OSStatus	installError = noErr;
+		Boolean		installOK = false;
 		
 		
-		installError = ListenerModel_AddListenerForEvent(gUnitTest000_Model, 'test', callbackWrapper.returnRef());
-		result &= Console_Assert("no errors installing handler", noErr == installError);
+		installOK = ListenerModel_AddListenerForEvent(gUnitTest000_Model, 'test', callbackWrapper.returnRef());
+		result &= Console_Assert("no errors installing handler", installOK);
 	}
 	
 	// notify listeners a certain number of times; arbitrarily pass a fake

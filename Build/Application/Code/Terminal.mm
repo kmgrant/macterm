@@ -5054,15 +5054,14 @@ Terminal_StartMonitoring	(TerminalScreenRef			inRef,
 	
 	if (dataPtr != nullptr)
 	{
-		OSStatus	error = noErr;
+		Boolean		addOK = false;
 		
 		
 		// add a listener to the specified target’s listener model for the given setting change
-		error = ListenerModel_AddListenerForEvent(dataPtr->changeListenerModel, inForWhatChange, inListener);
-		if (noErr != error)
+		addOK = ListenerModel_AddListenerForEvent(dataPtr->changeListenerModel, inForWhatChange, inListener);
+		if (false == addOK)
 		{
-			Console_Warning(Console_WriteValue, "failed to set up monitor for terminal setting, error", error);
-			Console_Warning(Console_WriteValueFourChars, "terminal setting that failed to install", inForWhatChange);
+			Console_Warning(Console_WriteValueFourChars, "failed to set up monitor for terminal setting", inForWhatChange);
 		}
 	}
 }// StartMonitoring

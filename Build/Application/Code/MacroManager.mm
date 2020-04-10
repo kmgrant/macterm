@@ -620,13 +620,10 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 					break;
 				
 				case kMacroManager_ActionHandleURL:
+					if (URL_ParseCFString(actionCFString))
 					{
-						OSStatus	error = URL_ParseCFString(actionCFString);
-						
-						
-						if (noErr == error) result = kMacroManager_ResultOK;
+						result = kMacroManager_ResultOK;
 					}
-					result = kMacroManager_ResultOK;
 					break;
 				
 				case kMacroManager_ActionNewWindowWithCommand:

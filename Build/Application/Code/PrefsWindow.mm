@@ -372,8 +372,8 @@ createSearchDictionary ()
 		{
 			// Not all data was successfully retrieved, but let the caller determine if anything
 			// important is missing.
-			// NOTE: Technically, the error code returned in "errorCode" is not an OSStatus.
-			//       If negative, it is an Apple error, and if positive it is scheme-specific.
+			// NOTE: The error code returned in "errorCode" is negative (Apple error) or
+			//       positive (scheme-specific error).
 			Console_WriteValue("error reading raw data of 'PreferencesSearch.plist'", (SInt32)errorCode);
 		}
 		

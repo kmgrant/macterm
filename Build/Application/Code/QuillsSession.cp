@@ -322,7 +322,7 @@ Session::handle_file	(std::string	inPathname)
 				
 				
 				if ((false == fileURL.exists()) ||
-					(noErr != URL_ParseCFString(CFURLGetString(fileURL.returnCFURLRef()))))
+					(false == URL_ParseCFString(CFURLGetString(fileURL.returnCFURLRef()))))
 				{
 					QUILLS_THROW_MSG("failed to open URL for file '" << inPathname << "'");
 				}
@@ -377,7 +377,7 @@ Session::handle_url		(std::string	inURL)
 			{
 				// TEMPORARY: could (should?) throw exceptions, translated by SWIG
 				// into scripting language exceptions, if an error occurs here
-				UNUSED_RETURN(OSStatus)URL_ParseCFString(urlCFString);
+				UNUSED_RETURN(Boolean)URL_ParseCFString(urlCFString);
 				CFRelease(urlCFString), urlCFString = nullptr;
 			}
 		}

@@ -387,37 +387,6 @@ Memory_EraseWeakReferences		(void*		inRefForObjectToBeDestroyed)
 
 
 /*!
-Resizes a Mac OS Memory Manager memory block to which
-you have a handle.  If there is not enough contiguous
-free space in the heap zone to successfully perform the
-resize operation, "memFullErr" is returned; otherwise,
-"noErr" is returned.
-
-Note that a locked handle may fail to be resizable
-because of its current location in the heap.  If at all
-possible, unlock a Handle before passing it to this
-routine.
-
-(1.0)
-*/
-OSStatus
-Memory_SetHandleSize	(Handle		inoutHandle,
-						 Size		inNewHandleSizeInBytes)
-{
-	OSStatus	result = noErr;
-	
-	
-	// first attempt; set the handle size, which may take some time depending
-	// on how much memory needs to be moved to make the resize possible; this
-	// may fail for a variety of reasons
-	SetHandleSize(inoutHandle, inNewHandleSizeInBytes);
-	result = MemError();
-	
-	return result;
-}// SetHandleSize
-
-
-/*!
 Returns one of the references of a weak pairing: the
 first one given to Memory_NewWeakPair().
 

@@ -294,7 +294,10 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
 		
 		
-		if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
+		if (nullptr == ptr)
+		{
+			Sound_StandardAlert(); // TEMPORARY (display alert message?)
+		}
 		else
 		{
 			if (nil != ptr->hostedViewManager)

@@ -247,11 +247,6 @@ void
 										 CFStringRef				inHelpText,
 										 Boolean					inIsHelpButton);
 
-// DEPRECATED, CARBON LEGACY.
-Boolean
-	Alert_ReportOSStatus				(OSStatus					inErrorCode,
-										 Boolean					inAssertion = false);
-
 GenericDialog_Ref
 	Alert_ReturnGenericDialog			(AlertMessages_BoxRef		inAlert);
 

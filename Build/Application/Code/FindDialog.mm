@@ -54,6 +54,7 @@
 #import <MemoryBlocks.h>
 #import <Popover.objc++.h>
 #import <PopoverManager.objc++.h>
+#import <SoundSystem.h>
 
 // application includes
 #import "Commands.h"
@@ -217,7 +218,7 @@ FindDialog_Display	(FindDialog_Ref		inDialog)
 	
 	if (nullptr == ptr)
 	{
-		Alert_ReportOSStatus(paramErr);
+		Sound_StandardAlert(); // TEMPORARY (display alert message?)
 	}
 	else
 	{

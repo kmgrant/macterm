@@ -3445,12 +3445,15 @@ TerminalView_StartMonitoring	(TerminalViewRef			inView,
 	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
-		OSStatus	error = noErr;
+		Boolean		addOK = false;
 		
 		
 		// add a listener to the specified target’s listener model for the given event
-		error = ListenerModel_AddListenerForEvent(viewPtr->changeListenerModel, inForWhatEvent, inListener);
-		if (error != noErr) result = kTerminalView_ResultParameterError;
+		addOK = ListenerModel_AddListenerForEvent(viewPtr->changeListenerModel, inForWhatEvent, inListener);
+		if (false == addOK)
+		{
+			result = kTerminalView_ResultParameterError;
+		}
 	}
 	return result;
 }// StartMonitoring
@@ -4014,17 +4017,13 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// may be expensive, and the system coalesces updates to within
 	// 60 frames (once per tick) anyway
 	{
-		OSStatus	error = noErr;
-		
-		
 		this->screen.refreshTimerUPP = NewEventLoopTimerUPP(updateDisplayTimer);
-		error = InstallEventLoopTimer(GetCurrentEventLoop(),
+		UNUSED_RETURN(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
 										kEventDurationNoWait + 0.01/* time before first fire; must be nonzero for Mac OS X 10.3 */,
 										TicksToEventTime(1)/* time between fires */,
 										this->screen.refreshTimerUPP,
 										this->selfRef/* user data */,
 										&this->screen.refreshTimerRef);
-		assert_noerr(error);
 	}
 	
 	// now that everything is initialized, start watching for data changes
@@ -10477,14 +10476,12 @@ copy:(id)	sender
 		for (NSImage* asImage in asArray)
 		{
 			assert([asImage isKindOfClass:NSImage.class]);
-			OSStatus	copyStatus = noErr;
 			
 			
-			copyStatus = Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
-															(false == haveCleared)/* clear flag */);
-			if (noErr != copyStatus)
+			if (false == Clipboard_AddNSImageToPasteboard(asImage, nullptr/* target pasteboard */,
+															(false == haveCleared)/* clear flag */))
 			{
-				Console_Warning(Console_WriteValue, "failed to Copy image, error", copyStatus);
+				Console_Warning(Console_WriteLine, "failed to Copy image");
 			}
 			else
 			{
@@ -12506,7 +12503,6 @@ drawRect:(NSRect)	aRect
 				NSColor*			highlightColorRGB = [[NSColor highlightColor]
 															colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
 				CGFloatRGBColor		highlightColorDevice;
-				OSStatus			error = noErr;
 				
 				
 				// draw outline
@@ -12517,8 +12513,7 @@ drawRect:(NSRect)	aRect
 				highlightColorDevice.blue = [highlightColorRGB blueComponent];
 				CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
 											highlightColorDevice.blue, 1.0/* alpha */);
-				error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
-				assert_noerr(error);
+				UNUSED_RETURN(OSStatus)HIShapeReplacePathInCGContext(selectionShape, drawingContext);
 				CGContextStrokePath(drawingContext);
 				
 				// free allocated memory

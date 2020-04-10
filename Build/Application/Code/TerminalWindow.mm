@@ -1715,16 +1715,15 @@ TerminalWindow_StartMonitoring	(TerminalWindowRef			inRef,
 {
 	if (TerminalWindow_IsValid(inRef))
 	{
-		OSStatus						error = noErr;
 		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+		Boolean							addOK = false;
 		
 		
 		// add a listener to the specified target’s listener model for the given setting change
-		error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
-		if (noErr != error)
+		addOK = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+		if (false == addOK)
 		{
 			Console_Warning(Console_WriteValueFourChars, "failed to start monitoring terminal window change", inForWhatChange);
-			Console_Warning(Console_WriteValue, "monitor installation error", error);
 		}
 	}
 	else
@@ -2431,16 +2430,22 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 							 Boolean			inUndoFont,
 							 Boolean			inUndoFontSize)
 {
-	OSStatus					error = noErr;
 	UndoDataFontSizeChangesPtr	dataPtr = new UndoDataFontSizeChanges;	// must be allocated by "new" because it contains C++ classes;
 																		// disposed in the action method
 	
 	
-	if (dataPtr == nullptr) error = memFullErr;
+	if (nullptr == dataPtr)
+	{
+		Console_Warning(Console_WriteLine, "could not make font and/or size change undoable");
+	}
 	else
 	{
 		// initialize context structure
-		CFStringRef		fontName = nullptr;
+		CFStringRef			fontName = nullptr;
+		CFRetainRelease		undoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoFormatChanges),
+												CFRetainRelease::kAlreadyRetained);
+		CFRetainRelease		redoNameCFString(UIStrings_ReturnCopy(kUIStrings_RedoFormatChanges),
+												CFRetainRelease::kAlreadyRetained);
 		
 		
 		dataPtr->terminalWindow = inTerminalWindow;
@@ -2448,27 +2453,19 @@ installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
 		dataPtr->undoFont = inUndoFont;
 		TerminalWindow_GetFontAndSize(inTerminalWindow, &fontName, &dataPtr->fontSize);
 		dataPtr->fontName.setWithRetain(fontName);
-	}
-	{
-		CFStringRef		undoNameCFString = nullptr;
-		CFStringRef		redoNameCFString = nullptr;
 		
-		
-		assert(UIStrings_Copy(kUIStrings_UndoFormatChanges, undoNameCFString).ok());
-		assert(UIStrings_Copy(kUIStrings_RedoFormatChanges, redoNameCFString).ok());
-		dataPtr->action = Undoables_NewAction(undoNameCFString, redoNameCFString, reverseFontChanges,
+		dataPtr->action = Undoables_NewAction(undoNameCFString.returnCFStringRef(), redoNameCFString.returnCFStringRef(),
+												reverseFontChanges,
 												kUndoableContextIdentifierTerminalFontSizeChanges, dataPtr);
-		if (nullptr != undoNameCFString) CFRelease(undoNameCFString), undoNameCFString = nullptr;
-		if (nullptr != redoNameCFString) CFRelease(redoNameCFString), redoNameCFString = nullptr;
-	}
-	Undoables_AddAction(dataPtr->action);
-	if (error != noErr) Console_WriteValue("Warning: Could not make font and/or size change undoable, error", error);
-	else
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 		
+		Undoables_AddAction(dataPtr->action); // transfer ownership of "dataPtr" to reverseFontChanges()
 		
-		ptr->installedActions.push_back(dataPtr->action);
+		{
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
+			
+			
+			ptr->installedActions.push_back(dataPtr->action);
+		}
 	}
 }// installUndoFontSizeChanges
 
@@ -2483,37 +2480,37 @@ current dimensions when the user chooses Undo.
 void
 installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 {
-	OSStatus							error = noErr;
 	UndoDataScreenDimensionChangesPtr	dataPtr = new UndoDataScreenDimensionChanges;	// disposed in the action method
 	
 	
-	if (dataPtr == nullptr) error = memFullErr;
+	if (nullptr == dataPtr)
+	{
+		Console_Warning(Console_WriteLine, "could not make dimension change undoable");
+	}
 	else
 	{
 		// initialize context structure
+		CFRetainRelease		undoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoDimensionChanges),
+												CFRetainRelease::kAlreadyRetained);
+		CFRetainRelease		redoNameCFString(UIStrings_ReturnCopy(kUIStrings_RedoDimensionChanges),
+												CFRetainRelease::kAlreadyRetained);
+		
+		
 		dataPtr->terminalWindow = inTerminalWindow;
 		TerminalWindow_GetScreenDimensions(inTerminalWindow, &dataPtr->columns, &dataPtr->rows);
-	}
-	{
-		CFStringRef		undoNameCFString = nullptr;
-		CFStringRef		redoNameCFString = nullptr;
 		
-		
-		assert(UIStrings_Copy(kUIStrings_UndoDimensionChanges, undoNameCFString).ok());
-		assert(UIStrings_Copy(kUIStrings_RedoDimensionChanges, redoNameCFString).ok());
-		dataPtr->action = Undoables_NewAction(undoNameCFString, redoNameCFString, reverseScreenDimensionChanges,
+		dataPtr->action = Undoables_NewAction(undoNameCFString.returnCFStringRef(), redoNameCFString.returnCFStringRef(),
+												reverseScreenDimensionChanges,
 												kUndoableContextIdentifierTerminalDimensionChanges, dataPtr);
-		if (nullptr != undoNameCFString) CFRelease(undoNameCFString), undoNameCFString = nullptr;
-		if (nullptr != redoNameCFString) CFRelease(redoNameCFString), redoNameCFString = nullptr;
-	}
-	Undoables_AddAction(dataPtr->action);
-	if (error != noErr) Console_WriteValue("Warning: Could not make dimension change undoable, error", error);
-	else
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 		
+		Undoables_AddAction(dataPtr->action); // transfer ownership of "dataPtr" to reverseScreenDimensionChanges()
 		
-		ptr->installedActions.push_back(dataPtr->action);
+		{
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
+			
+			
+			ptr->installedActions.push_back(dataPtr->action);
+		}
 	}
 }// installUndoScreenDimensionChanges
 
@@ -3141,7 +3138,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 					// mode (hiding the menu bar and Dock, etc.); do this early
 					// so that the usable screen space is up-to-date when the
 					// window tries to figure out how much space it can use
-					assert_noerr(SetSystemUIMode(kUIModeAllHidden, optionsForFullScreen));
+					UNUSED_RETURN(OSStatus)SetSystemUIMode(kUIModeAllHidden, optionsForFullScreen);
 				}
 			}
 			
@@ -3204,7 +3201,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 				{
 					// no windows remain that are full-screen; turn off the
 					// system-wide mode (restoring the menu bar and Dock, etc.)
-					assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
+					UNUSED_RETURN(OSStatus)SetSystemUIMode(kUIModeNormal, 0/* options */);
 				}
 			}
 			

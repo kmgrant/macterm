@@ -2764,16 +2764,15 @@ Session_StartMonitoring		(SessionRef					inRef,
 	}
 	else
 	{
-		OSStatus				error = noErr;
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		Boolean					addOK = false;
 		
 		
 		// add a listener to the specified target’s listener model for the given setting change
-		error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
-		if (noErr != error)
+		addOK = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
+		if (false == addOK)
 		{
 			Console_Warning(Console_WriteValueFourChars, "failed to start monitoring for change", inForWhatChange);
-			Console_Warning(Console_WriteValue, "monitor installation error", error);
 		}
 	}
 }// StartMonitoring
@@ -5578,7 +5577,7 @@ handleSaveFromPanel		(My_SessionPtr		UNUSED_ARGUMENT(inPtr),
 		if (noErr != error)
 		{
 			Console_Warning(Console_WriteValue, "failed to find save directory, error", error);
-			Alert_ReportOSStatus(error);
+			Sound_StandardAlert(); // TEMPORARY (display alert message?)
 		}
 	}
 	
@@ -5603,7 +5602,7 @@ handleSaveFromPanel		(My_SessionPtr		UNUSED_ARGUMENT(inPtr),
 		if (noErr != error)
 		{
 			Console_Warning(Console_WriteValue, "failed to find or create save file specified in panel, error", error);
-			Alert_ReportOSStatus(error);
+			Sound_StandardAlert(); // TEMPORARY (display alert message?)
 		}
 		
 		delete [] buffer, buffer = nullptr;

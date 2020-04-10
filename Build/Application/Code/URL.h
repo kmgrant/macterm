@@ -94,7 +94,7 @@ void
 Boolean
 	URL_OpenInternetLocation			(URL_InternetLocation			inSpecialInternetLocationToOpen);
 
-OSStatus
+Boolean
 	URL_ParseCFString					(CFStringRef					inURLCFString);
 
 URL_Type

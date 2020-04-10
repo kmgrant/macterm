@@ -506,7 +506,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	{
 		if (CFStringGetLength(textToCopy) > 0)
 		{
-			UNUSED_RETURN(OSStatus)Clipboard_AddCFStringToPasteboard(textToCopy, inDataTargetOrNull);
+			UNUSED_RETURN(Boolean)Clipboard_AddCFStringToPasteboard(textToCopy, inDataTargetOrNull);
 		}
 		CFRelease(textToCopy), textToCopy = nullptr;
 	}
@@ -923,13 +923,11 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 				if ([anObject isKindOfClass:NSImage.class])
 				{
 					NSImage*	asImage = STATIC_CAST(anObject, NSImage*);
-					OSStatus	error = noErr;
 					
 					
 					// put the text on the clipboard
-					error = Clipboard_AddNSImageToPasteboard(asImage, [NSPasteboard generalPasteboard],
-																firstImage/* clear first */);
-					if (noErr == error)
+					if (Clipboard_AddNSImageToPasteboard(asImage, [NSPasteboard generalPasteboard],
+															firstImage/* clear first */))
 					{
 						// success!
 						result = YES;

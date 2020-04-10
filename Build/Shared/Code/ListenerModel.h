@@ -252,7 +252,7 @@ void
 //!\name Manipulating Listener Models
 //@{
 
-OSStatus
+Boolean
 	ListenerModel_AddListenerForEvent		(ListenerModel_Ref				inToWhichModel,
 											 ListenerModel_Event			inForWhichEvent,
 											 ListenerModel_ListenerRef		inListenerToAdd);

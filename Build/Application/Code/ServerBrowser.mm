@@ -290,7 +290,7 @@ ServerBrowser_Display	(ServerBrowser_Ref		inDialog)
 	
 	if (nullptr == ptr)
 	{
-		Alert_ReportOSStatus(paramErr);
+		Sound_StandardAlert(); // TEMPORARY (display alert message?)
 	}
 	else
 	{
