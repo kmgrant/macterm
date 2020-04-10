@@ -193,6 +193,8 @@ The private class interface.
 	@property (copy) NSColor*
 	borderPrimaryDisplayColor;
 	@property (assign) BOOL
+	disableUpdateBackground;
+	@property (assign) BOOL
 	isBeingResizedByUser;
 	@property (assign) Popover_WindowStyle
 	lastAppliedWindowStyle;
@@ -307,6 +309,13 @@ property "borderPrimaryColor" or a temporary setting such
 as a gray border for inactive windows.
 */
 @synthesize borderPrimaryDisplayColor = _borderPrimaryDisplayColor;
+
+/*!
+When set to YES, "updateBackground" does nothing.  Set this
+when an action will trigger a series of property changes
+that would otherwise cause multiple unnecessary updates.
+*/
+@synthesize disableUpdateBackground = _disableUpdateBackground;
 
 /*!
 When the window position puts the arrow near a corner of
@@ -1293,8 +1302,17 @@ context:(void*)						aContext
 				// NSApplication has changed appearance, e.g. Dark or not; this
 				// may cause the colors themselves to be different so apply the
 				// window style again
+				NSAppearance*	oldAppearance = [NSAppearance currentAppearance];
+				
+				
+				[NSAppearance setCurrentAppearance:NSApp.effectiveAppearance];
+				// disable updates normally triggered by individual property changes,
+				// since this will make several changes...
+				self.disableUpdateBackground = YES;
 				[self applyWindowStyle:self.lastAppliedWindowStyle];
+				self.disableUpdateBackground = NO;
 				[self updateBackground];
+				[NSAppearance setCurrentAppearance:oldAppearance];
 			}
 			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(hasRoundCornerBesideArrow)))
 			{
@@ -2750,27 +2768,39 @@ resetTrackingAreas
 /*!
 Forces the window to render itself again.
 
+IMPORTANT: If the "disableUpdateBackground" property
+is set to YES, this method does nothing.
+
 (1.0)
 */
 - (void)
 updateBackground
 {
-	// frame image is out of date
-	[_animationFullImage release], _animationFullImage = nil;
-	
-	//NSDisableScreenUpdates();
-	// call superclass to avoid overridden version from this class
-	@autoreleasepool
+	if (self.disableUpdateBackground)
 	{
-		[super setBackgroundColor:[self backgroundFrameImageAsColor]];
+		//NSLog(@"(popover updates are disabled)"); // debug
 	}
-	
-	if ([self isVisible])
+	else
 	{
-		[self display];
-		[self invalidateShadow];
+		//NSLog(@"popover update"); // debug
+		
+		// frame image is out of date
+		[_animationFullImage release], _animationFullImage = nil;
+		
+		//NSDisableScreenUpdates();
+		// call superclass to avoid overridden version from this class
+		@autoreleasepool
+		{
+			[super setBackgroundColor:[self backgroundFrameImageAsColor]];
+		}
+		
+		if ([self isVisible])
+		{
+			[self display];
+			[self invalidateShadow];
+		}
+		//NSEnableScreenUpdates();
 	}
-	//NSEnableScreenUpdates();
 }// updateBackground
 
 
@@ -2908,7 +2938,12 @@ colorPopoverFramePrimary
 
 
 /*!
-Returns the outer edge color for "kPopover_WindowStyleAlertAppModal".
+Generic lookup function for the given color name, with
+backup settings that apply in certain situations (like
+a system-wide “graphite” theme).
+
+Generally this is not called directly; see other color
+methods like "colorPopoverBackground".
 
 (2018.09)
 */
@@ -2986,6 +3021,7 @@ as an NSColor so that it can be rendered naturally by NSWindow.
 backgroundFrameImageAsColor
 {
 	NSColor*		result = nil;
+	NSAppearance*	oldAppearance = [NSAppearance currentAppearance];
 	NSImage*		patternImage = [[NSImage alloc] initWithSize:self.frame.size];
 	BOOL const		kDebug = NO;
 	
@@ -2993,6 +3029,7 @@ backgroundFrameImageAsColor
 	[patternImage lockFocus];
 	
 	[NSGraphicsContext saveGraphicsState];
+	[NSAppearance setCurrentAppearance:NSApp.effectiveAppearance];
 	{
 		NSRect			drawnFrame = [self contentFrame];
 		NSBezierPath*	sourcePath = [self backgroundPath];
@@ -3218,6 +3255,7 @@ backgroundFrameImageAsColor
 		}
 	}
 	[NSGraphicsContext restoreGraphicsState];
+	[NSAppearance setCurrentAppearance:oldAppearance];
 	
 	// for debugging: show the entire frame’s actual rectangle (this
 	// must be in a separate save/restore bracket to ensure that
