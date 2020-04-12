@@ -1797,7 +1797,7 @@ displayTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 					}
 					
 					frameBounds.size.width = NSWidth(cocoaWindow.frame);
-					frameBounds.size.height = NSWidth(cocoaWindow.frame);
+					frameBounds.size.height = NSHeight(cocoaWindow.frame);
 					
 					// flip coordinates
 					frameBounds.origin.y = (windowScreen.frame.origin.y + NSHeight(windowScreen.frame) - frameBounds.origin.y - frameBounds.size.height);
