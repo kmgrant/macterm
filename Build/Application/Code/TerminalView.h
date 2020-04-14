@@ -208,7 +208,7 @@ private:
     precise_type	pixels_; // Core Graphics high-precision value
 };
 
-typedef TerminalView_PixelValue< SInt16, Float32 >	TerminalView_PixelWidth;
+typedef TerminalView_PixelValue< SInt16, CGFloat >	TerminalView_PixelWidth;
 typedef TerminalView_PixelValue< SInt32, CGFloat >	TerminalView_PixelHeight;
 
 /*!
@@ -346,6 +346,8 @@ changes to an interface declared in a ".mm" file.
 													Commands_TerminalScreenPaging,
 													Commands_TextFormatting,
 													Commands_URLSelectionHandling,
+													NSDraggingDestination,
+													NSDraggingSource,
 													NSStandardKeyBindingResponding,
 													NSTextInputClient > //{
 {
@@ -373,7 +375,7 @@ Currently used to handle layout (until a later SDK can
 be adopted, where the view controller might directly
 perform more view tasks).
 */
-@interface TerminalView_Object : CoreUI_LayoutView //{
+@interface TerminalView_Object : CoreUI_LayoutView < TerminalView_ClickDelegate > //{
 {
 @private
 	void*								_internalViewPtr;
@@ -577,15 +579,6 @@ TerminalView_Result
 
 //@}
 
-//!\name Hit Testing
-//@{
-
-Boolean
-	TerminalView_PtInSelection		(TerminalViewRef	inView,
-									 Point				inLocalPoint);
-
-//@}
-
 //!\name Managing the Text Selection
 //@{
 
@@ -761,7 +754,7 @@ TerminalView_Result
 
 void
 	TerminalView_MoveCursorWithArrowKeys		(TerminalViewRef			inView,
-												 Point						inLocalMouse);
+												 CGPoint					inNSViewLocalMouse);
 
 //@}
 
