@@ -10631,6 +10631,7 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 								inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("none"));
 								break;
 							}
+							changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 						}
 						break;
 					
@@ -10652,8 +10653,17 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 						break;
 					
 					case kPreferences_TagIndexedWindowSessionFavorite:
+						{
+							CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
+							
+							
+							assert(kPreferences_DataTypeCFStringRef == keyValueType);
+							inContextPtr->addString(inDataPreferenceTag, keyName, *data);
+							changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
+						}
+						break;
+					
 					case kPreferences_TagIndexedWindowTitle:
-						// all of these keys have Core Foundation string values
 						{
 							CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 							

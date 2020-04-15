@@ -414,6 +414,16 @@ imageFromSubRect:(NSRect)	aRect
 }// imageFromSubRect
 
 
+- (NSComparisonResult)
+imageNameCompare:(NSImage*)		anImage
+{
+	NSComparisonResult	result = [self.name localizedStandardCompare:anImage.name];
+	
+	
+	return result;
+}// imageNameCompare:
+
+
 @end //} 
 
 

@@ -57,6 +57,7 @@
 #import <SoundSystem.h>
 
 // application includes
+#import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
@@ -746,9 +747,35 @@ initWithIndex:(Preferences_Index)	anIndex
 	{
 		assert(anIndex >= 1);
 		self->_preferencesIndex = anIndex;
+		_workspacePrefListener = nil; // installed by "setCurrentContext:"
 	}
 	return self;
 }// initWithIndex:
+
+
+/*!
+Destructor.
+
+(2020.04)
+*/
+- (void)
+dealloc
+{
+	if (nullptr != _workspacePrefListener)
+	{
+		Preferences_Tag const	kThisCommandTypeTag = Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowCommandType, self.preferencesIndex);
+		Preferences_Tag const	kThisSessionFavoriteTag = Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedWindowSessionFavorite, self.preferencesIndex);
+		
+		
+		Preferences_ContextStopMonitoring(self.currentContext, [_workspacePrefListener listenerRef], kThisCommandTypeTag);
+		Preferences_ContextStopMonitoring(self.currentContext, [_workspacePrefListener listenerRef], kThisSessionFavoriteTag);
+		[_workspacePrefListener release];
+	}
+	
+	[super dealloc];
+}// dealloc
 
 
 #pragma mark Accessors
@@ -827,6 +854,41 @@ setWindowName:(NSString*)	aWindowName
 }// setWindowName:
 
 
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
+
+
+/*!
+Called when a monitored preference changes.  See the
+initializer for the set of tags that is monitored.
+
+While some preferences can be changed directly from
+a binding, "numberedListItemIconImage" could be
+affected by indirect preference changes so those are
+monitored.
+
+(2020.04)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+preferenceChange:(ListenerModel_Event)	anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel)
+	Preferences_Tag const	kThisCommandTypeTag = Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowCommandType, self.preferencesIndex);
+	Preferences_Tag const	kThisSessionFavoriteTag = Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowSessionFavorite, self.preferencesIndex);
+	
+	
+	if ((kThisCommandTypeTag == anEvent) || (kThisSessionFavoriteTag == anEvent))
+	{
+		// respond to changes in these settings by refreshing the icon in the master list
+		[self willChangeValueForKey:@"numberedListItemIconImage"];
+		[self didChangeValueForKey:@"numberedListItemIconImage"];
+	}
+}// model:preferenceChange:context:
+
+
 #pragma mark GenericPanelNumberedList_ItemBinding
 
 
@@ -846,6 +908,89 @@ numberedListIndexString
 
 
 /*!
+Return or update user interface icon for item in list.
+
+This is used to show the presence or absence of a window.
+
+(2020.04)
+*/
+- (NSImage*)
+numberedListItemIconImage
+{
+	NSString*	imageName = nil;
+	NSImage*	result = nil;
+	
+	
+	if (0 != self.preferencesIndex)
+	{
+		Preferences_Tag const	windowCommandTypeIndexedTag = Preferences_ReturnTagVariantForIndex
+																(kPreferences_TagIndexedWindowCommandType, self.preferencesIndex);
+		Preferences_Tag const	windowSessionIndexedTag = Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedWindowSessionFavorite, self.preferencesIndex);
+		CFStringRef				sessionFavoriteNameCFString = nullptr;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextGetData(self.currentContext, windowSessionIndexedTag,
+													sizeof(sessionFavoriteNameCFString), &sessionFavoriteNameCFString,
+													false/* search defaults */);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			// session binding; use session icon
+			imageName = BRIDGE_CAST(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension()/* arbitrary; TEMPORARY */, NSString*);
+		}
+		else
+		{
+			// no session binding; check for special command binding
+			UInt32		sessionCommandID = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(self.currentContext, windowCommandTypeIndexedTag,
+														sizeof(sessionCommandID), &sessionCommandID,
+														false/* search defaults */);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				// command binding; use command icon
+				switch (sessionCommandID)
+				{
+				case 0:
+					// (special value for None)
+					break;
+				
+				case kSessionFactory_SpecialSessionDefaultFavorite:
+					imageName = BRIDGE_CAST(AppResources_ReturnNewSessionDefaultIconFilenameNoExtension(), NSString*);
+					break;
+				
+				case kSessionFactory_SpecialSessionInteractiveSheet:
+					imageName = BRIDGE_CAST(AppResources_ReturnPrefPanelWorkspacesIconFilenameNoExtension()/* arbitrary; TEMPORARY */, NSString*);
+					break;
+				
+				case kSessionFactory_SpecialSessionLogInShell:
+					imageName = BRIDGE_CAST(AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension(), NSString*);
+					break;
+				
+				case kSessionFactory_SpecialSessionShell:
+					imageName = BRIDGE_CAST(AppResources_ReturnNewSessionShellIconFilenameNoExtension(), NSString*);
+					break;
+				
+				default:
+					// ???
+					break;
+				}
+			}
+		}
+	}
+	
+	if (nil != imageName)
+	{
+		result = [NSImage imageNamed:imageName];
+	}
+	
+	return result;
+}// numberedListItemIconImage
+
+
+/*!
 Return or update user interface string for name of item in list.
 
 Accesses the "windowName".
@@ -862,6 +1007,46 @@ setNumberedListItemName:(NSString*)		aName
 {
 	self.windowName = aName;
 }// setNumberedListItemName:
+
+
+#pragma mark Preferences_ContextManagerObject
+
+
+/*!
+Detects changes to the context and also installs monitors.
+
+(2020.04)
+*/
+- (void)
+setCurrentContext:(Preferences_ContextRef)	aNewContext
+{
+	Preferences_Tag const	kThisCommandTypeTag = Preferences_ReturnTagVariantForIndex
+													(kPreferences_TagIndexedWindowCommandType, self.preferencesIndex);
+	Preferences_Tag const	kThisSessionFavoriteTag = Preferences_ReturnTagVariantForIndex
+														(kPreferences_TagIndexedWindowSessionFavorite, self.preferencesIndex);
+	
+	
+	// stop monitoring the previous preferences collection
+	// (see also "dealloc")
+	if ((aNewContext != self.currentContext) && (nil != self.currentContext))
+	{
+		Preferences_ContextStopMonitoring(self.currentContext, [self->_workspacePrefListener listenerRef], kThisCommandTypeTag);
+		Preferences_ContextStopMonitoring(self.currentContext, [self->_workspacePrefListener listenerRef], kThisSessionFavoriteTag);
+	}
+	
+	[super setCurrentContext:aNewContext];
+	
+	// monitor certain settings that might change without using this UI
+	// (but that might affect what is displayed)
+	if (nil == self->_workspacePrefListener)
+	{
+		self->_workspacePrefListener = [[ListenerModel_StandardListener alloc]
+										initWithTarget:self
+														eventFiredSelector:@selector(model:preferenceChange:context:)];
+	}
+	Preferences_ContextStartMonitoring(aNewContext, [self->_workspacePrefListener listenerRef], kThisCommandTypeTag);
+	Preferences_ContextStartMonitoring(aNewContext, [self->_workspacePrefListener listenerRef], kThisSessionFavoriteTag);
+}// setCurrentContext:
 
 
 @end //}
@@ -979,6 +1164,7 @@ any other view-dependent initializations.
 containerViewDidLoadForNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewManager
 {
 	// customize numbered-list interface
+	aViewManager.headingTitleForIconColumn = NSLocalizedStringFromTable(@"Type", @"PrefPanelWorkspaces", @"the title for the item icon column");
 	aViewManager.headingTitleForNameColumn = NSLocalizedStringFromTable(@"Window Name", @"PrefPanelWorkspaces", @"the title for the item name column");
 }// containerViewDidLoadForNumberedListViewManager:
 
@@ -1372,8 +1558,8 @@ setCurrentValueDescriptor:(PrefPanelWorkspaces_SessionDescriptor*)	selectedObjec
 		else
 		{
 			// selection is one of the special session types
-			self->commandTypeObject.numberValue = selectedObject.commandType;
 			[self->sessionObject setNilPreferenceValue];
+			self->commandTypeObject.numberValue = selectedObject.commandType;
 		}
 	}
 	

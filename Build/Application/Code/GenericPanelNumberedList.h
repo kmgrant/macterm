@@ -99,6 +99,10 @@ changes to an interface declared in a ".mm" file.
 	- (NSString*)
 	numberedListIndexString;
 
+	// return strong reference to user interface icon representing item in list
+	- (NSImage*)
+	numberedListItemIconImage;
+
 	// return or update user interface string for name of item in list
 	- (NSString*)
 	numberedListItemName;
@@ -174,6 +178,8 @@ changes to an interface declared in a ".mm" file.
 	detailContainer;
 	@property (strong) IBOutlet NSTabView*
 	detailView;
+	@property (strong) NSString*
+	headingTitleForIconColumn;
 	@property (strong) NSString*
 	headingTitleForNameColumn;
 	@property (strong) IBOutlet NSArrayController*

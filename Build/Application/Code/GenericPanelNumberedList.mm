@@ -204,6 +204,29 @@ dealloc
 
 
 /*!
+Allows the title of the icon column to be customized.
+
+(2020.04)
+*/
+- (NSString*)
+headingTitleForIconColumn
+{
+	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
+	
+	
+	return [nameColumn.headerCell stringValue];
+}
+- (void)
+setHeadingTitleForIconColumn:(NSString*)	aNewTitle
+{
+	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
+	
+	
+	[nameColumn.headerCell setStringValue:aNewTitle];
+}// setHeadingTitleForIconColumn:
+
+
+/*!
 Allows the title of the name column to be customized
 (for example, to say “Window Name” in a list of window
 configurations).
@@ -213,7 +236,7 @@ configurations).
 - (NSString*)
 headingTitleForNameColumn
 {
-	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
+	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:2];
 	
 	
 	return [nameColumn.headerCell stringValue];
@@ -221,7 +244,7 @@ headingTitleForNameColumn
 - (void)
 setHeadingTitleForNameColumn:(NSString*)	aNewTitle
 {
-	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
+	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:2];
 	
 	
 	[nameColumn.headerCell setStringValue:aNewTitle];
@@ -417,6 +440,8 @@ initializeWithContext:(void*)			aContext
 											// uses "id< GenericPanelNumberedList_ItemBinding >" method names
 											[NSSortDescriptor sortDescriptorWithKey:@"numberedListIndexString" ascending:YES
 																					selector:@selector(localizedStandardCompare:)],
+											[NSSortDescriptor sortDescriptorWithKey:@"numberedListItemIconImage" ascending:YES
+																					selector:@selector(imageNameCompare:)],
 											[NSSortDescriptor sortDescriptorWithKey:@"numberedListItemName" ascending:YES
 																					selector:@selector(localizedStandardCompare:)]
 										] retain];

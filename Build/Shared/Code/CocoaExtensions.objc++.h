@@ -75,6 +75,8 @@
 // new methods
 	- (NSImage*)
 	imageFromSubRect:(NSRect)_;
+	- (NSComparisonResult)
+	imageNameCompare:(NSImage*)_;
 
 @end //}
 

@@ -37,6 +37,9 @@
 
 #pragma once
 
+// library includes
+#include <ListenerModel.h>
+
 // application includes
 #include "GenericPanelNumberedList.h"
 #include "GenericPanelTabs.h"
@@ -123,7 +126,8 @@ window title) to be updated.
 @interface PrefPanelWorkspaces_WindowInfo : PrefsContextManager_Object< GenericPanelNumberedList_ItemBinding > //{
 {
 @private
-	Preferences_Index	_preferencesIndex;
+	Preferences_Index					_preferencesIndex;
+	ListenerModel_StandardListener*		_workspacePrefListener;
 }
 
 // initializers
@@ -141,6 +145,12 @@ window title) to be updated.
 	windowIndexLabel;
 	@property (strong) NSString*
 	windowName;
+
+// new methods
+	- (void)
+	model:(ListenerModel_Ref)_
+	preferenceChange:(ListenerModel_Event)_
+	context:(void*)_;
 
 @end //}
 

@@ -58,6 +58,7 @@
 #import <SoundSystem.h>
 
 // application includes
+#import "AppResources.h"
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "HelpSystem.h"
@@ -303,6 +304,28 @@ numberedListIndexString
 {
 	return self.macroIndexLabel;
 }// numberedListIndexString
+
+
+/*!
+Return or update user interface icon for item in list.
+
+This is used to show the presence or absence of a macro.
+
+(2020.04)
+*/
+- (NSImage*)
+numberedListItemIconImage
+{
+	NSImage*	result = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension(), NSString*)];
+	
+	
+	if (0 != self.preferencesIndex)
+	{
+		// UNIMPLEMENTED; if icon is assigned to a macro, use it
+	}
+	
+	return result;
+}// numberedListItemIconImage
 
 
 /*!
