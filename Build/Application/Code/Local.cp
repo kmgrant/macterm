@@ -163,7 +163,6 @@ Local_Result	putTTYInRawMode						(Local_TerminalID);
 void			receiveSignal						(int);
 Local_Result	sendTerminalResizeMessage			(Local_TerminalID, struct winsize const*);
 void			threadForLocalProcessDataLoop		(void*);
-void			watchForExitsTimer					(EventLoopTimerRef, void*);
 
 } // anonymous namespace
 
@@ -180,22 +179,6 @@ Boolean						gPrintedRawMode = false; //!< true after the first console dump of 
 Local_TerminalID			gTerminalToRestore = 0;
 My_UnixProcessIDSet&		gChildProcessIDs ()		{ static My_UnixProcessIDSet x; return x; }
 My_ProcessByID&				gProcessesByID ()		{ static My_ProcessByID x; return x; }
-EventLoopTimerRef&			gExitWatchTimer ()
-							{
-								static EventLoopTimerRef	x = nullptr;
-								static EventLoopTimerUPP	upp = nullptr;
-								
-								
-								if (nullptr == x)
-								{
-									upp = NewEventLoopTimerUPP(watchForExitsTimer);
-									UNUSED_RETURN(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-																	kEventDurationNoWait + 0.01/* start time; must be nonzero for Mac OS X 10.3 */,
-																	3 * kEventDurationSecond/* time between fires - arbitrary (what is best?) */,
-																	upp, nullptr/* user data */, &x);
-								}
-								return x;
-							}
 sigset_t&					gSignalsBlockedInThreads	(Boolean	inBlock = true)
 							{
 								// call this from the main thread, to prevent any other thread from being
@@ -231,8 +214,219 @@ sigset_t&					gSignalsBlockedInThreads	(Boolean	inBlock = true)
 } // anonymous namespace
 
 
-
 #pragma mark Public Methods
+
+
+/*!
+This should be invoked periodically to see if any child process has exited.
+If some unusual exit occurs, the user is notified in the background.
+
+(2020.04)
+*/
+void
+Local_CheckForProcessExits ()
+{
+	static Boolean		gFirstCall = true;
+	int					currentStatus = 0;
+	pid_t				waitResult = waitpid(-1/* process or group, -1 is “any child” */, &currentStatus, WNOHANG/* options */);
+	
+	
+	if (gFirstCall)
+	{
+		sig_t		signalResult = nullptr;
+		
+		
+		// install signal handlers to prevent the OS from popping up error
+		// dialogs just because some child process aborted
+		gFirstCall = false;
+		signalResult = signal(SIGABRT, receiveSignal);
+		if (SIG_ERR == signalResult)
+		{
+			Console_Warning(Console_WriteLine, "unable to install signal handler");
+		}
+	}
+	
+	if (0 == waitResult)
+	{
+		// no status yet...okay...
+	}
+	else
+	{
+		// process may have failed - if it is a “real” problem, tell the user
+		// INCOMPLETE - it is possible to be more specific here, if information is cached and
+		// looked up based on process ID (e.g. window, process name, session info)
+		pid_t const		kProcessID = waitResult;
+		
+		
+		// only pay attention to reports for processes that were spawned by this module
+		if (gChildProcessIDs().end() != gChildProcessIDs().find(kProcessID))
+		{
+			CFRetainRelease		dialogTextTemplateCFString;
+			CFRetainRelease		dialogTextCFString;
+			CFRetainRelease		helpTextCFString; // not always used
+			CFRetainRelease		notificationTitle;
+			Boolean				canPostNotification = false;
+			
+			
+			if (WIFEXITED(currentStatus))
+			{
+				int const	kExitCode = WEXITSTATUS(currentStatus);
+				
+				
+				canPostNotification = true;
+				if (0 != kExitCode)
+				{
+					// failed exit
+					Console_WriteValuePair("process exit: pid,code", kProcessID, kExitCode);
+					
+					// if more is known about the type of exit status, add help text
+					switch (kExitCode)
+					{
+					case EX_USAGE:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitUsageHelpText));
+						break;
+					
+					case EX_DATAERR:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitDataErrHelpText));
+						break;
+					
+					case EX_NOINPUT:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoInputHelpText));
+						break;
+					
+					case EX_NOUSER:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoUserHelpText));
+						break;
+					
+					case EX_NOHOST:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoHostHelpText));
+						break;
+					
+					case EX_UNAVAILABLE:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitUnavailHelpText));
+						break;
+					
+					case EX_SOFTWARE:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitSoftwareHelpText));
+						break;
+					
+					case EX_OSERR:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitOSErrHelpText));
+						break;
+					
+					case EX_OSFILE:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitOSFileHelpText));
+						break;
+					
+					case EX_CANTCREAT:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitCreateHelpText));
+						break;
+					
+					case EX_IOERR:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitIOErrHelpText));
+						break;
+					
+					case EX_TEMPFAIL:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitTempFailHelpText));
+						break;
+					
+					case EX_PROTOCOL:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitProtocolHelpText));
+						break;
+					
+					case EX_NOPERM:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoPermHelpText));
+						break;
+					
+					case EX_CONFIG:
+						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitConfigHelpText));
+						break;
+					
+					default:
+						break;
+					}
+					
+					notificationTitle.setWithRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTitle));
+					dialogTextTemplateCFString.setWithRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTemplate));
+					// WARNING: this format must agree with how the original template string is defined
+					dialogTextCFString.setWithNoRetain(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+																				dialogTextTemplateCFString.returnCFStringRef(), kExitCode));
+				}
+				else
+				{
+					// successful exit
+					Console_WriteValue("process exit (OK): pid", kProcessID);
+					notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessExitTitle));
+					dialogTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessExitPrimaryText));
+				}
+			}
+			else if (WIFSIGNALED(currentStatus))
+			{
+				int const	kSignal = WTERMSIG(currentStatus);
+				
+				
+				canPostNotification = true;
+				switch (kSignal)
+				{
+				// not all termination signals should be reported
+				case SIGKILL:
+				case SIGALRM:
+				case SIGTERM:
+					canPostNotification = false;
+					break;
+				
+				case SIGSTOP:
+				case SIGTSTP:
+				case SIGCONT:
+					{
+						auto	toProcess = gProcessesByID().find(kProcessID);
+						
+						
+						if (gProcessesByID().end() != toProcess)
+						{
+							Local_ProcessRef		thisProcess = toProcess->second;
+							My_ProcessAutoLocker	ptr(gProcessPtrLocks(), thisProcess);
+							
+							
+							ptr->_stopped = (SIGCONT != kSignal);
+						}
+					}
+					break;
+				
+				default:
+					break;
+				}
+				
+				Console_WriteValuePair("process exit: pid,signal", kProcessID, kSignal);
+				notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTitle));
+				dialogTextTemplateCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessSignalTemplate));
+				// WARNING: this format must agree with how the original template string is defined
+				dialogTextCFString.setWithNoRetain(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+																			dialogTextTemplateCFString.returnCFStringRef(), kSignal));
+			}
+			else if (WIFSTOPPED(currentStatus))
+			{
+				// ignore (could examine WSTOPSIG(currentStatus))
+				// NOTE: this should never happen anyway, as MacTerm does not use ptrace() or the WUNTRACED option
+			}
+			else
+			{
+				Console_WriteValuePair("process returned unknown status", kProcessID, currentStatus);
+			}
+			
+			// display a non-blocking alert to the user, or post a system notification
+			// (note that this may do nothing, depending on user preferences)
+			if (canPostNotification)
+			{
+				CocoaBasic_PostUserNotification(CFSTR("net.macterm.notifications.processexit"),
+												notificationTitle.returnCFStringRef(),
+												dialogTextCFString.returnCFStringRef(),
+												helpTextCFString.returnCFStringRef());
+			}
+		}
+	}
+}// CheckForProcessExits
+
 
 /*!
 Constructs a command line based on the current user’s
@@ -848,9 +1042,6 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			
 			// prevent threads from being the receivers of signals
 			gSignalsBlockedInThreads();
-			
-			// try to detect an immediately-failed process
-			gExitWatchTimer();
 			
 			// avoid special processing of data, allow the terminal to see it all (raw mode)
 			if (0)
@@ -1879,219 +2070,6 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 	dispatch_release(contextPtr->dispatchQueue);
 	delete contextPtr;
 }// threadForLocalProcessDataLoop
-
-
-/*!
-This is invoked periodically to see if any child process has exited.
-If some unusual exit occurs, the user is notified in the background.
-
-Timers that draw must save and restore the current graphics port.
-
-(4.0)
-*/
-void
-watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
-					 void*					UNUSED_ARGUMENT(inContext))
-{
-	static Boolean		gFirstCall = true;
-	int					currentStatus = 0;
-	pid_t				waitResult = waitpid(-1/* process or group, -1 is “any child” */, &currentStatus, WNOHANG/* options */);
-	
-	
-	if (gFirstCall)
-	{
-		sig_t		signalResult = nullptr;
-		
-		
-		// install signal handlers to prevent the OS from popping up error
-		// dialogs just because some child process aborted
-		gFirstCall = false;
-		signalResult = signal(SIGABRT, receiveSignal);
-		if (SIG_ERR == signalResult)
-		{
-			Console_Warning(Console_WriteLine, "unable to install signal handler");
-		}
-	}
-	
-	if (0 == waitResult)
-	{
-		// no status yet...okay...
-	}
-	else
-	{
-		// process may have failed - if it is a “real” problem, tell the user
-		// INCOMPLETE - it is possible to be more specific here, if information is cached and
-		// looked up based on process ID (e.g. window, process name, session info)
-		pid_t const		kProcessID = waitResult;
-		
-		
-		// only pay attention to reports for processes that were spawned by this module
-		if (gChildProcessIDs().end() != gChildProcessIDs().find(kProcessID))
-		{
-			CFRetainRelease		dialogTextTemplateCFString;
-			CFRetainRelease		dialogTextCFString;
-			CFRetainRelease		helpTextCFString; // not always used
-			CFRetainRelease		notificationTitle;
-			Boolean				canPostNotification = false;
-			
-			
-			if (WIFEXITED(currentStatus))
-			{
-				int const	kExitCode = WEXITSTATUS(currentStatus);
-				
-				
-				canPostNotification = true;
-				if (0 != kExitCode)
-				{
-					// failed exit
-					Console_WriteValuePair("process exit: pid,code", kProcessID, kExitCode);
-					
-					// if more is known about the type of exit status, add help text
-					switch (kExitCode)
-					{
-					case EX_USAGE:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitUsageHelpText));
-						break;
-					
-					case EX_DATAERR:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitDataErrHelpText));
-						break;
-					
-					case EX_NOINPUT:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoInputHelpText));
-						break;
-					
-					case EX_NOUSER:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoUserHelpText));
-						break;
-					
-					case EX_NOHOST:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoHostHelpText));
-						break;
-					
-					case EX_UNAVAILABLE:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitUnavailHelpText));
-						break;
-					
-					case EX_SOFTWARE:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitSoftwareHelpText));
-						break;
-					
-					case EX_OSERR:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitOSErrHelpText));
-						break;
-					
-					case EX_OSFILE:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitOSFileHelpText));
-						break;
-					
-					case EX_CANTCREAT:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitCreateHelpText));
-						break;
-					
-					case EX_IOERR:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitIOErrHelpText));
-						break;
-					
-					case EX_TEMPFAIL:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitTempFailHelpText));
-						break;
-					
-					case EX_PROTOCOL:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitProtocolHelpText));
-						break;
-					
-					case EX_NOPERM:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitNoPermHelpText));
-						break;
-					
-					case EX_CONFIG:
-						helpTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifySysExitConfigHelpText));
-						break;
-					
-					default:
-						break;
-					}
-					
-					notificationTitle.setWithRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTitle));
-					dialogTextTemplateCFString.setWithRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTemplate));
-					// WARNING: this format must agree with how the original template string is defined
-					dialogTextCFString.setWithNoRetain(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-																				dialogTextTemplateCFString.returnCFStringRef(), kExitCode));
-				}
-				else
-				{
-					// successful exit
-					notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessExitTitle));
-					dialogTextCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessExitPrimaryText));
-				}
-			}
-			else if (WIFSIGNALED(currentStatus))
-			{
-				int const	kSignal = WTERMSIG(currentStatus);
-				
-				
-				canPostNotification = true;
-				switch (kSignal)
-				{
-				// not all termination signals should be reported
-				case SIGKILL:
-				case SIGALRM:
-				case SIGTERM:
-					canPostNotification = false;
-					break;
-				
-				case SIGSTOP:
-				case SIGTSTP:
-				case SIGCONT:
-					{
-						auto	toProcess = gProcessesByID().find(kProcessID);
-						
-						
-						if (gProcessesByID().end() != toProcess)
-						{
-							Local_ProcessRef		thisProcess = toProcess->second;
-							My_ProcessAutoLocker	ptr(gProcessPtrLocks(), thisProcess);
-							
-							
-							ptr->_stopped = (SIGCONT != kSignal);
-						}
-					}
-					break;
-				
-				default:
-					break;
-				}
-				
-				Console_WriteValuePair("process exit: pid,signal", kProcessID, kSignal);
-				notificationTitle.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessDieTitle));
-				dialogTextTemplateCFString.setWithNoRetain(UIStrings_ReturnCopy(kUIStrings_AlertWindowNotifyProcessSignalTemplate));
-				// WARNING: this format must agree with how the original template string is defined
-				dialogTextCFString.setWithNoRetain(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-																			dialogTextTemplateCFString.returnCFStringRef(), kSignal));
-			}
-			else if (WIFSTOPPED(currentStatus))
-			{
-				// ignore (could examine WSTOPSIG(currentStatus))
-				// NOTE: this should never happen anyway, as MacTerm does not use ptrace() or the WUNTRACED option
-			}
-			else
-			{
-				Console_WriteValuePair("process returned unknown status", kProcessID, currentStatus);
-			}
-			
-			// display a non-blocking alert to the user, or post a system notification
-			// (note that this may do nothing, depending on user preferences)
-			if (canPostNotification)
-			{
-				CocoaBasic_PostUserNotification(CFSTR("net.macterm.notifications.processexit"),
-												notificationTitle.returnCFStringRef(),
-												dialogTextCFString.returnCFStringRef(),
-												helpTextCFString.returnCFStringRef());
-			}
-		}
-	}
-}// watchForExitsTimer
 
 } // anonymous namespace
 

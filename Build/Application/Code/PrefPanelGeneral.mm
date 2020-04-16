@@ -224,7 +224,6 @@ PrefPanelGeneral_NewFullScreenTagSet ()
 	tagList.push_back(kPreferences_TagKioskShowsScrollBar);
 	tagList.push_back(kPreferences_TagKioskShowsWindowFrame);
 	tagList.push_back(kPreferences_TagKioskAllowsForceQuit);
-	tagList.push_back(kPreferences_TagKioskNoSystemFullScreenMode);
 	
 	result = Preferences_NewTagSet(tagList);
 	
@@ -675,29 +674,6 @@ setMenuBarShownOnDemand:(BOOL)	aFlag
 		Console_Warning(Console_WriteLine, "failed to save menu-bar-on-demand preference");
 	}
 }// setMenuBarShownOnDemand:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-nonSystemMechanismEnabled
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskNoSystemFullScreenMode defaultValue:NO];
-}
-- (void)
-setNonSystemMechanismEnabled:(BOOL)		aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskNoSystemFullScreenMode];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save full-screen mode preference");
-	}
-}// setNonSystemMechanismEnabled:
 
 
 /*!

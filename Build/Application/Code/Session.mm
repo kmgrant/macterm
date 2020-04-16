@@ -4985,8 +4985,6 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	// (this will also initialize the preferences cache values)
 	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks,
 								true/* call immediately to initialize */);
-	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagKioskNoSystemFullScreenMode,
-								true/* call immediately to initialize */);
 	Preferences_StartMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote,
 								true/* call immediately to initialize */);
 	Preferences_ContextStartMonitoring(this->configuration.returnRef(), this->preferencesListener.returnRef(),
@@ -5101,7 +5099,6 @@ My_Session::
 	UNUSED_RETURN(Preferences_Result)Preferences_ContextStopMonitoring(this->translationConfiguration.returnRef(), this->preferencesListener.returnRef(),
 																		kPreferences_ChangeContextBatchMode);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagCursorBlinks);
-	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagKioskNoSystemFullScreenMode);
 	Preferences_StopMonitoring(this->preferencesListener.returnRef(), kPreferences_TagMapBackquote);
 	
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener.returnRef());
@@ -6444,23 +6441,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
-	case kPreferences_TagKioskNoSystemFullScreenMode:
-		// update all terminal windows to show or hide a system Full Screen icon
-		{
-			Boolean		useCustomMethod = false;
-			
-			
-			unless (kPreferences_ResultOK ==
-					Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode,
-										sizeof(useCustomMethod), &useCustomMethod))
-			{
-				useCustomMethod = false; // assume a value, if preference can’t be found
-			}
-			
-			TerminalWindow_SetFullScreenIconsEnabled(false == useCustomMethod);
-		}
-		break;
-	
 	case kPreferences_TagMapBackquote:
 		// update cache with current preference value
 		unless (kPreferences_ResultOK ==
@@ -7350,7 +7330,7 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 		{
 			// an arbitrary length of dead time must elapse before a session
 			// is considered inactive and triggers a notification
-			NSTimeInterval const	kTimeBeforeInactive = kEventDurationSecond * intValue;
+			NSTimeInterval const	kTimeBeforeInactive = intValue/* in seconds */;
 			
 			
 			// install or reset timer to trigger the no-activity notification when appropriate

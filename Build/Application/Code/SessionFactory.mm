@@ -175,6 +175,7 @@ SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; re
 TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
 MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
 TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindowToSessionsMap x; return x; }
+NSTimer*						gSessionFactoryWatchForExitsTimer = nil;
 
 } // anonymous namespace
 
@@ -254,6 +255,13 @@ SessionFactory_Init ()
 	// watch for changes to session states - in particular, when they die, update the internal lists
 	gSessionStateChangeListener = ListenerModel_NewStandardListener(sessionStateChanged);
 	SessionFactory_StartMonitoringSessions(kSession_ChangeState, gSessionStateChangeListener);
+	
+	gSessionFactoryWatchForExitsTimer = [NSTimer scheduledTimerWithTimeInterval:3.0/* in seconds */
+	repeats:YES
+	block:^(NSTimer* UNUSED_ARGUMENT(timer))
+	{
+		Local_CheckForProcessExits();
+	}];
 }// Init
 
 
@@ -268,6 +276,9 @@ the Session Factory.
 void
 SessionFactory_Done ()
 {
+	[gSessionFactoryWatchForExitsTimer invalidate];
+	[gSessionFactoryWatchForExitsTimer release]; gSessionFactoryWatchForExitsTimer = nil;
+	
 	[gSessionWindowWatcher release]; gSessionWindowWatcher = nil;
 	
 	ListenerModel_ReleaseListener(&gSessionStateChangeListener);

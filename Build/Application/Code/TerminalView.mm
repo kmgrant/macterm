@@ -211,7 +211,7 @@ struct My_PreferenceProxies
 
 typedef std::vector< CGFloatRGBColor >			My_CGColorList;
 typedef std::map< UInt16, CGFloatRGBColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
-typedef std::vector< EventTime >				My_TimeIntervalList;
+typedef std::vector< NSTimeInterval >			My_TimeIntervalList;
 
 class My_XTerm256Table;
 
@@ -247,8 +247,7 @@ struct My_TerminalView
 		struct
 		{
 			Boolean					isActive;	// true only if the timer is running
-			EventLoopTimerUPP		upp;		// procedure that animates blinking text palette entries regularly
-			EventLoopTimerRef		ref;		// timer to invoke animation procedure periodically
+			NSTimer*				objectRef;	// timer to invoke animation procedure periodically
 		} timer;
 		
 		struct
@@ -400,9 +399,9 @@ public:
 namespace {
 
 Boolean				addDataSource						(My_TerminalViewPtr, TerminalScreenRef);
-void				animateBlinkingItems				(EventLoopTimerRef, void*);
+void				animateBlinkingItems				(NSTimer*, TerminalViewRef);
 void				audioEvent							(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-EventTime			calculateAnimationStageDelay		(My_TerminalViewPtr, My_TimeIntervalList::size_type);
+NSTimeInterval		calculateAnimationStageDelay		(My_TerminalViewPtr, My_TimeIntervalList::size_type);
 void				calculateDoubleSize					(My_TerminalViewPtr, CGFloat&, CGFloat&);
 UInt16				copyColorPreferences				(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
 UInt16				copyFontPreferences					(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
@@ -3999,8 +3998,11 @@ My_TerminalView::
 																		kPreferences_ChangeContextBatchMode);
 	
 	// remove timers
-	RemoveEventLoopTimer(this->animation.timer.ref), this->animation.timer.ref = nullptr;
-	DisposeEventLoopTimerUPP(this->animation.timer.upp), this->animation.timer.upp = nullptr;
+	if (nil != this->animation.timer.objectRef)
+	{
+		[this->animation.timer.objectRef invalidate];
+		[this->animation.timer.objectRef release]; this->animation.timer.objectRef = nil;
+	}
 	
 	CFRelease(this->animation.rendering.region); this->animation.rendering.region = nullptr;
 	CFRelease(this->screen.cursor.updatedShape); this->screen.cursor.updatedShape = nullptr;
@@ -4079,20 +4081,20 @@ graphics port.
 (3.0)
 */
 void
-animateBlinkingItems	(EventLoopTimerRef		inTimer,
-						 void*					inTerminalViewRef)
+animateBlinkingItems	(NSTimer*			inTimer,
+						 TerminalViewRef	inTerminalViewRef)
 {
-	TerminalViewRef				ref = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), ref);
+	My_TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), inTerminalViewRef);
 	
 	
-	if (ptr != nullptr)
+	if ((ptr != nullptr) && (inTimer.valid))
 	{
 		CGFloatRGBColor		currentColor;
 		
 		
 		// for simplicity, keep the cursor and text blinks in sync
-		UNUSED_RETURN(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->animation.rendering.delays[ptr->animation.rendering.stage]);
+		
+		inTimer.fireDate = [NSDate dateWithTimeIntervalSinceNow:ptr->animation.rendering.delays[ptr->animation.rendering.stage]];
 		
 		//
 		// blinking text
@@ -4186,18 +4188,18 @@ more interesting effects, all delays may be different.
 
 (3.1)
 */
-EventTime
+NSTimeInterval
 calculateAnimationStageDelay	(My_TerminalViewPtr					inTerminalViewPtr,
 								 My_TimeIntervalList::size_type		inZeroBasedStage)
 {
 	My_TimeIntervalList::size_type const	kNumStages = inTerminalViewPtr->animation.rendering.delays.size();
 	assert(inZeroBasedStage < kNumStages);
 	
-	EventTime		result = 0;
+	NSTimeInterval		result = 0;
 	
 	
-	//result = 200.0 * kEventDurationMillisecond; // linear
-	result = (inZeroBasedStage * inZeroBasedStage + inZeroBasedStage) * 2.0 * kEventDurationMillisecond; // quadratic
+	//result = 200.0 * 0.001/* convert from milliseconds to seconds */; // linear
+	result = (inZeroBasedStage * inZeroBasedStage + inZeroBasedStage) * 2.0 * 0.001/* convert from milliseconds to seconds */; // quadratic
 	return result;
 }// calculateAnimationStageDelay
 
@@ -4632,14 +4634,7 @@ createWindowColorPalette	(My_TerminalViewPtr			inTerminalViewPtr,
 	// the blinking colors, and the ANSI colors
 	UNUSED_RETURN(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
 	
-	// install a timer to modify blinking text color entries periodically
-	assert(nullptr != inTerminalViewPtr->selfRef);
-	inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingItems);
-	UNUSED_RETURN(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
-													kEventDurationForever/* time between fires - set later */,
-													inTerminalViewPtr->animation.timer.upp,
-													inTerminalViewPtr->selfRef/* user data */,
-													&inTerminalViewPtr->animation.timer.ref);
+	// initialize timer to modify blinking text color (see setBlinkingTimerActive())
 	inTerminalViewPtr->animation.timer.isActive = false;
 	
 	result = true;
@@ -8534,15 +8529,31 @@ setBlinkingTimerActive	(My_TerminalViewPtr		inTerminalViewPtr,
 						 Boolean				inIsActive)
 {
 #if BLINK_MEANS_BLINK
+	TerminalViewRef		blockViewRef = inTerminalViewPtr->selfRef;
+	
+	
 	if (inTerminalViewPtr->animation.timer.isActive != inIsActive)
 	{
 		if (inIsActive)
 		{
-			UNUSED_RETURN(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationNoWait);
+			// note: timer interval is modified continuously by animateBlinkingItems()
+			inTerminalViewPtr->animation.timer.objectRef = [NSTimer scheduledTimerWithTimeInterval:(1 / 1000.0/* milliseconds per second */)/* in seconds */
+			repeats:YES
+			block:^(NSTimer* timer)
+			{
+				// note: this block can be invoked at arbitrary times, the view
+				// reference must be revalidated in animateBlinkingItems()
+				animateBlinkingItems(timer, blockViewRef);
+			}];
+			[inTerminalViewPtr->animation.timer.objectRef retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 		}
 		else
 		{
-			UNUSED_RETURN(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationForever);
+			if (nil != inTerminalViewPtr->animation.timer.objectRef)
+			{
+				[inTerminalViewPtr->animation.timer.objectRef invalidate];
+				[inTerminalViewPtr->animation.timer.objectRef release]; inTerminalViewPtr->animation.timer.objectRef = nil;
+			}
 		}
 		inTerminalViewPtr->animation.timer.isActive = inIsActive;
 	}

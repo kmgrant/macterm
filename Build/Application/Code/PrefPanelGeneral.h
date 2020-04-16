@@ -85,10 +85,6 @@ changes to an interface declared in a ".mm" file.
 	- (void)
 	setMenuBarShownOnDemand:(BOOL)_; // binding
 	- (BOOL)
-	nonSystemMechanismEnabled;
-	- (void)
-	setNonSystemMechanismEnabled:(BOOL)_; // binding
-	- (BOOL)
 	isScrollBarVisible;
 	- (void)
 	setScrollBarVisible:(BOOL)_; // binding

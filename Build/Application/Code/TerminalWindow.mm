@@ -245,7 +245,6 @@ struct My_TerminalWindow
 	struct
 	{
 		Boolean						isOn;		// temporary flag to track full-screen mode (under Cocoa this will be easier to determine from the window)
-		Boolean						isUsingOS;	// temporary flag; tracks windows that are currently Full Screen in system style so they can transition back in the same style
 		CGFloat						oldFontSize;		// font size prior to full-screen
 		Rect						oldContentBounds;	// old window boundaries, content area
 		TerminalView_DisplayMode	oldMode;			// previous terminal resize effect
@@ -328,7 +327,6 @@ UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
 void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void					setCocoaWindowFullScreenIcon	(NSWindow*, Boolean);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
 void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean = false);
 void					setUpForFullScreenModal			(My_TerminalWindowPtr, Boolean, Boolean, My_FullScreenState);
@@ -1360,29 +1358,6 @@ TerminalWindow_SetFontRelativeSize	(TerminalWindowRef		inRef,
 	
 	return result;
 }// SetFontRelativeSize
-
-
-/*!
-Temporary, controlled by the Session in response to changes
-in user preferences.  Updates all windows appropriately to
-let the user enter or exit Full Screen with the standard
-mechanism.  This should not be called except as a side effect
-of preferences changes.
-
-(4.1)
-*/
-void
-TerminalWindow_SetFullScreenIconsEnabled	(Boolean	inAllTerminalWindowsHaveFullScreenIcons)
-{
-	My_TerminalWindowByNSWindow::const_iterator		toPair;
-	My_TerminalWindowByNSWindow::const_iterator		endPairs(gTerminalWindowRefsByNSWindow().end());
-	
-	
-	for (toPair = gTerminalWindowRefsByNSWindow().begin(); toPair != endPairs; ++toPair)
-	{
-		setCocoaWindowFullScreenIcon(toPair->first, inAllTerminalWindowsHaveFullScreenIcons);
-	}
-}// SetFullScreenIconsEnabled
 
 
 /*!
@@ -2888,28 +2863,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
-Adds or removes a Full Screen icon from the specified window.
-Not for normal use, called as a side effect of changes to
-user preferences.
-
-(4.1)
-*/
-void
-setCocoaWindowFullScreenIcon	(NSWindow*	inWindow,
-								 Boolean	inHasFullScreenIcon)
-{
-	if (inHasFullScreenIcon)
-	{
-		[inWindow setCollectionBehavior:([inWindow collectionBehavior] | FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary))];
-	}
-	else
-	{
-		[inWindow setCollectionBehavior:([inWindow collectionBehavior] & ~(FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary)))];
-	}
-}// setCocoaWindowFullScreenIcon
-
-
-/*!
 Copies the screen size and scrollback settings from the given
 context to the underlying terminal buffer.  The main view is
 updated to the size that will show the new dimensions entirely
@@ -3023,69 +2976,14 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 							 Boolean				inSwapViewMode,
 							 My_FullScreenState		inState)
 {
-	SystemUIOptions		optionsForFullScreen = 0;
-	Boolean				useCustomFullScreenMode = true;
-	Boolean				showOffSwitch = true;
-	Boolean				showScrollBar = true;
-	Boolean				allowForceQuit = true;
-	Boolean				showMenuBar = true;
-	Boolean				showWindowFrame = true;
+	Boolean		showScrollBar = true;
 	
-	
-	if (false == inWillBeFullScreen)
-	{
-		// if the window is already Full Screen, it must be returned
-		// in the way that it started (the user may have changed the
-		// preference in the meantime)
-		useCustomFullScreenMode = (false == inPtr->fullScreen.isUsingOS);
-	}
-	else
-	{
-		if (kPreferences_ResultOK !=
-			Preferences_GetData(kPreferences_TagKioskNoSystemFullScreenMode, sizeof(useCustomFullScreenMode),
-								&useCustomFullScreenMode))
-		{
-			useCustomFullScreenMode = false; // assume a value if the preference cannot be found
-		}
-	}
 	
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
 							&showScrollBar))
 	{
 		showScrollBar = true; // assume a value if the preference cannot be found
-	}
-	
-	if (kPreferences_ResultOK !=
-		Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
-							&allowForceQuit))
-	{
-		allowForceQuit = true; // assume a value if the preference cannot be found
-	}
-	unless (allowForceQuit) optionsForFullScreen |= kUIOptionDisableForceQuit;
-	
-	if (kPreferences_ResultOK !=
-		Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
-							&showMenuBar))
-	{
-		showMenuBar = false; // assume a value if the preference cannot be found
-	}
-	if (showMenuBar) optionsForFullScreen |= kUIOptionAutoShowMenuBar;
-	
-	if (kPreferences_ResultOK !=
-		Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
-							&showWindowFrame))
-	{
-		showWindowFrame = true; // assume a value if the preference cannot be found
-	}
-	
-	// if the system’s own Full Screen method is in use, fix
-	// certain settings (they have no effect anyway)
-	if (false == useCustomFullScreenMode)
-	{
-		allowForceQuit = true;
-		showMenuBar = true;
-		showWindowFrame = false;
 	}
 	
 	if (inWillBeFullScreen)
@@ -3096,17 +2994,9 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 		// everything here should be the opposite of the off-state code below
 		if (kMy_FullScreenStateCompleted == inState)
 		{
-			if (useCustomFullScreenMode)
-			{
-				// remove any shadow so that “neighboring” full-screen windows
-				// on other displays do not appear to have shadows over them
-				[inPtr->window setHasShadow:NO];
-			}
-			
 			// set flags last because the window is not in a complete
 			// full-screen state until every change is in effect
 			inPtr->fullScreen.isOn = true;
-			inPtr->fullScreen.isUsingOS = (false == useCustomFullScreenMode);
 		}
 		else
 		{
@@ -3115,18 +3005,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			
 			// initialize the structure to a known state
 			bzero(&inPtr->fullScreen, sizeof(inPtr->fullScreen));
-			
-			if (useCustomFullScreenMode)
-			{
-				if (false == TerminalWindow_IsFullScreenMode())
-				{
-					// no windows are full-screen yet so turn on the system-wide
-					// mode (hiding the menu bar and Dock, etc.); do this early
-					// so that the usable screen space is up-to-date when the
-					// window tries to figure out how much space it can use
-					UNUSED_RETURN(OSStatus)SetSystemUIMode(kUIModeAllHidden, optionsForFullScreen);
-				}
-			}
 			
 			unless (showScrollBar)
 			{
@@ -3179,20 +3057,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			// clear flags immediately because the window is not in a
 			// complete full-screen state once it has started to change back
 			inPtr->fullScreen.isOn = false;
-			inPtr->fullScreen.isUsingOS = false;
-			
-			if (useCustomFullScreenMode)
-			{
-				if (false == TerminalWindow_IsFullScreenMode())
-				{
-					// no windows remain that are full-screen; turn off the
-					// system-wide mode (restoring the menu bar and Dock, etc.)
-					UNUSED_RETURN(OSStatus)SetSystemUIMode(kUIModeNormal, 0/* options */);
-				}
-			}
-			
-			// restore the shadow
-			[inPtr->window setHasShadow:YES];
 			
 			// restore text size if necessary
 			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
@@ -4668,15 +4532,63 @@ willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)		propose
 {
 #pragma unused(window)
 	NSApplicationPresentationOptions	result = proposedOptions;
+	Boolean								allowForceQuit = true;
+	Boolean								showMenuBar = true;
+	Boolean								showWindowFrame = true;
 	
 	
-	// INCOMPLETE; read user preferences for things like disabling Force Quit
-	// and apply them here
+	// disable “Force Quit” if user preference is set
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
+							&allowForceQuit))
+	{
+		allowForceQuit = true; // assume a value if the preference cannot be found
+	}
+	if (allowForceQuit)
+	{
+		result &= ~NSApplicationPresentationDisableForceQuit;
+	}
+	else
+	{
+		result |= NSApplicationPresentationDisableForceQuit;
+	}
 	
-	// if desired, hide the toolbar as well (this seems to hide tab bars too,
-	// along with anything that can show the window title; for now, don’t do
-	// this but maybe later it can become a new user option)
-	//result |= FUTURE_SYMBOL(1 << 11, NSApplicationPresentationAutoHideToolbar);
+	// hide menu bar if user preference is set
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
+							&showMenuBar))
+	{
+		showMenuBar = false; // assume a value if the preference cannot be found
+	}
+	if (showMenuBar)
+	{
+		result &= ~NSApplicationPresentationHideMenuBar;
+	}
+	else
+	{
+		result |= NSApplicationPresentationHideMenuBar;
+		result |= NSApplicationPresentationHideDock; // (according to documentation, menu bar and Dock hiding must both be given)
+		result &= ~NSApplicationPresentationAutoHideMenuBar; // (according to documentation, cannot be used together)
+		result &= ~NSApplicationPresentationAutoHideDock; // (according to documentation, cannot be used together)
+	}
+	
+	// hide window frame if user preference is set
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
+							&showWindowFrame))
+	{
+		showWindowFrame = true; // assume a value if the preference cannot be found
+	}
+	if (showWindowFrame)
+	{
+		result &= ~NSApplicationPresentationAutoHideToolbar;
+	}
+	else
+	{
+		result |= NSApplicationPresentationAutoHideToolbar;
+		result |= NSApplicationPresentationAutoHideMenuBar; // (according to documentation, menu bar and toolbar auto-hide must both be given)
+		result &= ~NSApplicationPresentationHideMenuBar; // (according to documentation, cannot be used together)
+	}
 	
 	return result;
 }// window:willUseFullScreenPresentationOptions:

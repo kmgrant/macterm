@@ -33,7 +33,6 @@
 		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
 		0A694C2D2447FC590061822C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C2C2447FC590061822C /* CoreGraphics.framework */; };
-		0A694C2F2447FC6B0061822C /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C2E2447FC6B0061822C /* Carbon.framework */; };
 		0A694C312447FC770061822C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C302447FC760061822C /* AppKit.framework */; };
 		0A694C332447FC8B0061822C /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C322447FC8B0061822C /* CoreImage.framework */; };
 		0A694C352447FCC40061822C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C342447FCC30061822C /* SystemConfiguration.framework */; };
@@ -491,7 +490,6 @@
 				0A694C392447FEDF0061822C /* QuartzCore.framework in Frameworks */,
 				0A694C352447FCC40061822C /* SystemConfiguration.framework in Frameworks */,
 				0A694C2D2447FC590061822C /* CoreGraphics.framework in Frameworks */,
-				0A694C2F2447FC6B0061822C /* Carbon.framework in Frameworks */,
 				0A694C332447FC8B0061822C /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

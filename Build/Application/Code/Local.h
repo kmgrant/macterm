@@ -116,6 +116,9 @@ Local_Result
 //@{
 
 void
+	Local_CheckForProcessExits				();
+
+void
 	Local_KillProcess						(Local_ProcessRef*			inoutRefPtr);
 
 Boolean

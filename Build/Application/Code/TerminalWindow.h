@@ -455,9 +455,6 @@ void
 Boolean
 	TerminalWindow_IsTab							(TerminalWindowRef			inRef);
 
-void
-	TerminalWindow_SetFullScreenIconsEnabled		(Boolean					inAllTerminalWindowsHaveFullScreenIcons);
-
 // API UNDER EVALUATION
 void
 	TerminalWindow_StackWindows						();

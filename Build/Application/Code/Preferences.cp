@@ -1018,8 +1018,6 @@ Preferences_Init ()
 									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskAllowsForceQuit,
 										CFSTR("kiosk-force-quit-enabled"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::createFlag(kPreferences_TagKioskNoSystemFullScreenMode,
-										CFSTR("kiosk-no-system-full-screen-mode"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsMenuBar,
 										CFSTR("kiosk-menu-bar-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsScrollBar,
@@ -3779,7 +3777,6 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagFocusFollowsMouse:
-	case kPreferences_TagKioskNoSystemFullScreenMode:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagNotifyOfBeeps:
@@ -3853,7 +3850,6 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagFocusFollowsMouse:
-	case kPreferences_TagKioskNoSystemFullScreenMode:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
@@ -6617,7 +6613,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsMenuBar:
 				case kPreferences_TagKioskShowsScrollBar:
 				case kPreferences_TagKioskShowsWindowFrame:
-				case kPreferences_TagKioskNoSystemFullScreenMode:
 				case kPreferences_TagNoAnimations:
 					if (false == inContextPtr->exists(keyName))
 					{
@@ -9269,17 +9264,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
 					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-				}
-				break;
-			
-			case kPreferences_TagKioskNoSystemFullScreenMode:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(kPreferences_DataTypeCFBooleanRef == keyValueType);
-					setApplicationPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
