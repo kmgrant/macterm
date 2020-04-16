@@ -225,7 +225,6 @@ PrefPanelGeneral_NewFullScreenTagSet ()
 	tagList.push_back(kPreferences_TagKioskShowsWindowFrame);
 	tagList.push_back(kPreferences_TagKioskAllowsForceQuit);
 	tagList.push_back(kPreferences_TagKioskNoSystemFullScreenMode);
-	tagList.push_back(kPreferences_TagKioskShowsOffSwitch);
 	
 	result = Preferences_NewTagSet(tagList);
 	
@@ -699,29 +698,6 @@ setNonSystemMechanismEnabled:(BOOL)		aFlag
 		Console_Warning(Console_WriteLine, "failed to save full-screen mode preference");
 	}
 }// setNonSystemMechanismEnabled:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-offSwitchWindowEnabled
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsOffSwitch defaultValue:NO];
-}
-- (void)
-setOffSwitchWindowEnabled:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsOffSwitch];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save off-switch-window preference");
-	}
-}// setOffSwitchWindowEnabled:
 
 
 /*!

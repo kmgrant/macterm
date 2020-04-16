@@ -259,10 +259,6 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 					(YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isMiniaturized]));
 		break;
 	
-	case kKeypads_WindowTypeFullScreen:
-		result = (YES == [[[Keypads_FullScreenPanelController sharedFullScreenPanelController] window] isVisible]);
-		break;
-	
 	case kKeypads_WindowTypeFunctionKeys:
 		result = ((YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isVisible]) ||
 					(YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isMiniaturized]));
@@ -318,7 +314,6 @@ Keypads_RemoveResponder		(Keypads_WindowType		inFromKeypad,
 		break;
 	
 	case kKeypads_WindowTypeArrangeWindow:
-	case kKeypads_WindowTypeFullScreen:
 	case kKeypads_WindowTypeFunctionKeys:
 	case kKeypads_WindowTypeVT220Keys:
 	default:
@@ -382,7 +377,6 @@ Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
 			break;
 		
 		case kKeypads_WindowTypeArrangeWindow:
-		case kKeypads_WindowTypeFullScreen:
 		case kKeypads_WindowTypeFunctionKeys:
 		case kKeypads_WindowTypeVT220Keys:
 		default:
@@ -434,17 +428,6 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 			[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] close];
 		}
 		gControlKeysMayAutoHide = false;
-		break;
-	
-	case kKeypads_WindowTypeFullScreen:
-		if (inIsVisible)
-		{
-			[[Keypads_FullScreenPanelController sharedFullScreenPanelController] showWindow:NSApp];
-		}
-		else
-		{
-			[[Keypads_FullScreenPanelController sharedFullScreenPanelController] close];
-		}
 		break;
 	
 	case kKeypads_WindowTypeFunctionKeys:
@@ -1368,86 +1351,6 @@ windowFrameAutosaveName
 
 
 @end // Keypads_ControlKeysPanelController
-
-
-#pragma mark -
-@implementation Keypads_FullScreenPanelController
-
-
-static Keypads_FullScreenPanelController*		gKeypads_FullScreenPanelController = nil;
-
-
-/*!
-Returns the singleton.
-
-(3.1)
-*/
-+ (id)
-sharedFullScreenPanelController
-{
-	static dispatch_once_t		onceToken;
-	
-	
-	dispatch_once(&onceToken,
-	^{
-		gKeypads_FullScreenPanelController = [[self.class allocWithZone:NULL] init];
-	});
-	return gKeypads_FullScreenPanelController;
-}// sharedFullScreenPanelController
-
-
-/*!
-Designated initializer.
-
-(3.1)
-*/
-- (instancetype)
-init
-{
-	self = [super initWithWindowNibName:@"KeypadFullScreenCocoa"];
-	return self;
-}// init
-
-
-/*!
-Turns off Full Screen mode.
-
-(3.1)
-*/
-- (IBAction)
-disableFullScreen:(id)	sender
-{
-#pragma unused(sender)
-	BOOL	didPerform = [NSApp tryToPerform:@selector(toggleFullScreen:) with:nil];
-	
-	
-	if (NO == didPerform)
-	{
-		Console_Warning(Console_WriteLine, "failed to perform command to disable Full Screen!");
-	}
-}// disableFullScreen:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"FullScreenControls";
-}// windowFrameAutosaveName
-
-
-@end // Keypads_FullScreenPanelController
 
 
 #pragma mark -

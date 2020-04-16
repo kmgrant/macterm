@@ -61,8 +61,6 @@ table(deftable).
 (defbottom). |\2(desc). The menu bar can be reached in Full Screen mode by moving the mouse to the top of the screen.  Always true unless using @kiosk-no-system-full-screen-mode@.|
 (deftop). |(key). @kiosk-no-system-full-screen-mode@|(types). _true or false_|
 (defbottom). |\2(desc). Full-screen terminals do not use the contemporary macOS animated mode.|
-(deftop). |(key). @kiosk-off-switch-visible@|(types). _true or false_|
-(defbottom). |\2(desc). A floating window is visible to turn off Full Screen mode.|
 (deftop). |(key). @kiosk-scroll-bar-visible@|(types). _true or false_|
 (defbottom). |\2(desc). The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
 (deftop). |(key). @kiosk-window-frame-visible@|(types). _true or false_|

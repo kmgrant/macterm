@@ -180,7 +180,6 @@
 		0A08C9EF224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/InfoWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F0224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadArrangeWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F1224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadControlKeysCocoa.xib; sourceTree = "<group>"; };
-		0A08C9F2224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadFullScreenCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F3224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F4224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F5224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
@@ -807,7 +806,6 @@
 				0A07773C1DCBC130004C9F78 /* InfoWindowTouchBarCocoa.xib */,
 				0A0E9F6D1DB18127006A8BF5 /* KeypadArrangeWindowCocoa.xib */,
 				0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */,
-				0A0E9F711DB18127006A8BF5 /* KeypadFullScreenCocoa.xib */,
 				0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */,
 				0A0E9F751DB18127006A8BF5 /* KeypadVT220KeysCocoa.xib */,
 				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
@@ -1385,14 +1383,6 @@
 				0A08C9F1224F345D00DA2569 /* Base */,
 			);
 			name = KeypadControlKeysCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F711DB18127006A8BF5 /* KeypadFullScreenCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9F2224F345D00DA2569 /* Base */,
-			);
-			name = KeypadFullScreenCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */ = {

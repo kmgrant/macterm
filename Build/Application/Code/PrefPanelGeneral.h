@@ -89,10 +89,6 @@ changes to an interface declared in a ".mm" file.
 	- (void)
 	setNonSystemMechanismEnabled:(BOOL)_; // binding
 	- (BOOL)
-	offSwitchWindowEnabled;
-	- (void)
-	setOffSwitchWindowEnabled:(BOOL)_; // binding
-	- (BOOL)
 	isScrollBarVisible;
 	- (void)
 	setScrollBarVisible:(BOOL)_; // binding

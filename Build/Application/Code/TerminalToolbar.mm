@@ -545,13 +545,13 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	{
 		result = [[[TerminalToolbar_ItemForceQuit alloc] init] autorelease];
 	}
-#if 0
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDFullScreen])
 	{
-		// this is now redundant with the abilities of "TerminalToolbar_ItemWindowButtonZoom"
+		// this is redundant with the abilities of "TerminalToolbar_ItemWindowButtonZoom"
+		// but it is more convenient, especially when exiting Full Screen (also, the
+		// “off switch” option has been removed, this is effectively its replacement)
 		result = [[[TerminalToolbar_ItemFullScreen alloc] init] autorelease];
 	}
-#endif
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDHide])
 	{
 		result = [[[TerminalToolbar_ItemHide alloc] init] autorelease];
@@ -692,7 +692,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kMy_ToolbarItemIDLED2,
 									kMy_ToolbarItemIDLED3,
 									kMy_ToolbarItemIDLED4,
-									//kMy_ToolbarItemIDFullScreen, // now redundant with "kMy_ToolbarItemIDWindowButtonZoom"
+									kMy_ToolbarItemIDFullScreen,
 									kMy_ToolbarItemIDWindowTitleLeft,
 									kMy_ToolbarItemIDWindowTitle,
 									kMy_ToolbarItemIDWindowTitleRight,
@@ -731,7 +731,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 				kMy_ToolbarItemIDWindowTitle,
 				kMy_ToolbarItemIDBell,
 				kMy_ToolbarItemIDPrint,
-				//kMy_ToolbarItemIDFullScreen, // now redundant with "kMy_ToolbarItemIDWindowButtonZoom"
+				kMy_ToolbarItemIDFullScreen, // now redundant with "kMy_ToolbarItemIDWindowButtonZoom"
 				NSToolbarSpaceItemIdentifier,
 				NSToolbarSpaceItemIdentifier,
 				NSToolbarSpaceItemIdentifier,
@@ -1490,10 +1490,7 @@ Responds when the toolbar item is used.
 - (void)
 performToolbarItemAction:(id)	sender
 {
-	if (false == Commands_ViaFirstResponderPerformSelector(@selector(toggleFullScreen:), sender))
-	{
-		Sound_StandardAlert();
-	}
+	[NSApp sendAction:@selector(toggleFullScreen:) to:[NSApp mainWindow] from:sender];
 }// performToolbarItemAction:
 
 
@@ -1509,8 +1506,7 @@ Returns YES only if the item should be enabled.
 validateToolbarItem:(NSToolbarItem*)	anItem
 {
 #pragma unused(anItem)
-	// TEMPORARY; only doing it this way during Carbon/Cocoa transition (instead of using first responder)
-	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:@selector(toggleFullScreen:) sender:[NSApp keyWindow].firstResponder];
+	BOOL	result = YES;
 	
 	
 	return result;

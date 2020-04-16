@@ -3050,13 +3050,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 	}
 	
 	if (kPreferences_ResultOK !=
-		Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
-							&showOffSwitch))
-	{
-		showOffSwitch = true; // assume a value if the preference cannot be found
-	}
-	
-	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
 							&showScrollBar))
 	{
@@ -3108,13 +3101,6 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 				// remove any shadow so that “neighboring” full-screen windows
 				// on other displays do not appear to have shadows over them
 				[inPtr->window setHasShadow:NO];
-			}
-			
-			// show “off switch” if user has requested it
-			if (showOffSwitch)
-			{
-				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
-				[inPtr->window makeKeyAndOrderFront:NSApp];
 			}
 			
 			// set flags last because the window is not in a complete
@@ -3208,10 +3194,7 @@ setUpForFullScreenModal		(My_TerminalWindowPtr	inPtr,
 			// restore the shadow
 			[inPtr->window setHasShadow:YES];
 			
-			// now explicitly disable settings that apply to Full Screen
-			// mode as a whole (and not to each window)
-			Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
-			
+			// restore text size if necessary
 			if (inPtr->fullScreen.newMode != inPtr->fullScreen.oldMode)
 			{
 				// window is set to normally change dimensions but was temporarily

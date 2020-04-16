@@ -1022,8 +1022,6 @@ Preferences_Init ()
 										CFSTR("kiosk-no-system-full-screen-mode"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsMenuBar,
 										CFSTR("kiosk-menu-bar-visible"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsOffSwitch,
-										CFSTR("kiosk-off-switch-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsScrollBar,
 										CFSTR("kiosk-scroll-bar-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsWindowFrame,
@@ -6617,7 +6615,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				case kPreferences_TagKioskAllowsForceQuit:
 				case kPreferences_TagKioskShowsMenuBar:
-				case kPreferences_TagKioskShowsOffSwitch:
 				case kPreferences_TagKioskShowsScrollBar:
 				case kPreferences_TagKioskShowsWindowFrame:
 				case kPreferences_TagKioskNoSystemFullScreenMode:
@@ -9263,7 +9260,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagKioskAllowsForceQuit:
 			case kPreferences_TagKioskShowsMenuBar:
-			case kPreferences_TagKioskShowsOffSwitch:
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskShowsWindowFrame:
 			case kPreferences_TagNoAnimations:

@@ -225,7 +225,6 @@ Base.lproj/InfoWindowCocoa \
 Base.lproj/InfoWindowTouchBarCocoa \
 Base.lproj/KeypadArrangeWindowCocoa \
 Base.lproj/KeypadControlKeysCocoa \
-Base.lproj/KeypadFullScreenCocoa \
 Base.lproj/KeypadFunctionKeysCocoa \
 Base.lproj/KeypadVT220KeysCocoa \
 Base.lproj/MainMenuCocoa \

@@ -223,7 +223,6 @@ enum
 	kPreferences_TagKioskAllowsForceQuit				= 'kafq',	//!< data: "Boolean"
 	kPreferences_TagKioskNoSystemFullScreenMode			= 'knsf',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsMenuBar					= 'kmnb',	//!< data: "Boolean"
-	kPreferences_TagKioskShowsOffSwitch					= 'koff',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsScrollBar					= 'kscr',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsWindowFrame				= 'kwnf',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"

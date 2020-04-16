@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17E202" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16096" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16096"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefPanelGeneral_FullScreenViewManager">
             <connections>
                 <outlet property="logicalFirstResponder" destination="1921" id="QVp-Ab-Zhr"/>
-                <outlet property="logicalLastResponder" destination="1935" id="1963"/>
+                <outlet property="logicalLastResponder" destination="1927" id="tAZ-YL-ksL"/>
                 <outlet property="view" destination="1835" id="JM1-Ka-T0M"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <box autoresizesSubviews="NO" misplaced="YES" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
+        <box autoresizesSubviews="NO" borderType="none" titlePosition="noTitle" id="1835" userLabel="Managed View">
             <rect key="frame" x="0.0" y="0.0" width="610" height="296"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <view key="contentView" id="qNk-LM-Zwz">
                 <rect key="frame" x="0.0" y="0.0" width="610" height="296"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1913">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1913">
                         <rect key="frame" x="18" y="259" width="199" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Access Control:" id="1914">
@@ -31,7 +30,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1915">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1915">
                         <rect key="frame" x="18" y="139" width="199" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Method:" id="1916">
@@ -40,16 +39,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1917">
-                        <rect key="frame" x="18" y="55" width="199" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Deactivation:" id="1918">
-                            <font key="font" metaFont="systemBold"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <button id="1919">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1919">
                         <rect key="frame" x="220" y="234" width="282" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Show menu bar on demand" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1920">
@@ -63,7 +53,7 @@
                             <outlet property="nextKeyView" destination="1923" id="DE6-IA-Gcb"/>
                         </connections>
                     </button>
-                    <button id="1921">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1921">
                         <rect key="frame" x="220" y="258" width="282" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Show scroll bar" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1922">
@@ -76,7 +66,7 @@
                             <outlet property="nextKeyView" destination="1919" id="TlL-BS-VM6"/>
                         </connections>
                     </button>
-                    <button id="1923">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1923">
                         <rect key="frame" x="220" y="210" width="282" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Show window frame" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1924">
@@ -90,7 +80,7 @@
                             <outlet property="nextKeyView" destination="1925" id="1960"/>
                         </connections>
                     </button>
-                    <button id="1925">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1925">
                         <rect key="frame" x="220" y="186" width="282" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Allow “Force Quit” command" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1926">
@@ -104,7 +94,7 @@
                             <outlet property="nextKeyView" destination="1927" id="1961"/>
                         </connections>
                     </button>
-                    <button id="1927">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1927">
                         <rect key="frame" x="220" y="138" width="282" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Use fast (non-system) mode" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1928">
@@ -114,41 +104,30 @@
                         <accessibility description="Use Fast (Non-System) Full Screen Mode"/>
                         <connections>
                             <binding destination="-2" name="value" keyPath="self.nonSystemMechanismEnabled" id="ROn-xa-sdk"/>
-                            <outlet property="nextKeyView" destination="1935" id="1962"/>
                         </connections>
                     </button>
-                    <button id="1935">
-                        <rect key="frame" x="220" y="54" width="282" height="18"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Display an “off switch” window" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1936">
-                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="system"/>
-                        </buttonCell>
-                        <accessibility description="Display “Off Switch” in Full Screen"/>
-                        <connections>
-                            <binding destination="-2" name="value" keyPath="self.offSwitchWindowEnabled" id="1957"/>
-                        </connections>
-                    </button>
-                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1944">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1944">
                         <rect key="frame" x="238" y="90" width="354" height="42"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="System method is more integrated but it is slower (animated) and most Access Control options are unavailable." id="1945">
-                            <font key="font" metaFont="smallSystem"/>
+                            <font key="font" metaFont="message" size="11"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" misplaced="YES" allowsCharacterPickerTouchBarItem="YES" id="1946">
-                        <rect key="frame" x="238" y="20" width="354" height="28"/>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1946">
+                        <rect key="frame" x="18" y="20" width="574" height="28"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="You can also press ⌃⌘F or use the toolbar to turn off Full Screen." id="1947">
-                            <font key="font" metaFont="smallSystem"/>
+                        <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" id="1947">
+                            <font key="font" metaFont="message" size="11"/>
+                            <string key="title">You can turn off Full Screen by pressing ⌃⌘F, using the window zoom button or the toolbar, or by selecting “Exit Full Screen” from the View menu.</string>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="139" y="155"/>
         </box>
     </objects>
 </document>
