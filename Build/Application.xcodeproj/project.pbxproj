@@ -11,7 +11,6 @@
 		0A043B041D8F5A7200511F30 /* RegionUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A043B031D8F5A7200511F30 /* RegionUtilities.cp */; };
 		0A0777411DCBC815004C9F78 /* TouchBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A0777401DCBC815004C9F78 /* TouchBar.mm */; };
 		0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */; };
-		0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */; };
 		0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A23A8D11C21077B00156B1E /* TextAttributes.mm */; };
@@ -24,18 +23,23 @@
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; };
-		0A42A5892318CE3C008ED9BE /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A42A5882318CE3C008ED9BE /* UserNotifications.framework */; };
 		0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */; };
-		0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A442C4F1B810760008B046B /* QuartzCore.framework */; };
 		0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46C56C15D864B700843BBC /* PreferenceValue.mm */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */; };
 		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
-		0A50056D2367DB3C00016FCB /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A50056C2367DB3C00016FCB /* CoreImage.framework */; };
 		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
 		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
+		0A694C2D2447FC590061822C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C2C2447FC590061822C /* CoreGraphics.framework */; };
+		0A694C2F2447FC6B0061822C /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C2E2447FC6B0061822C /* Carbon.framework */; };
+		0A694C312447FC770061822C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C302447FC760061822C /* AppKit.framework */; };
+		0A694C332447FC8B0061822C /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C322447FC8B0061822C /* CoreImage.framework */; };
+		0A694C352447FCC40061822C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C342447FCC30061822C /* SystemConfiguration.framework */; };
+		0A694C372447FD000061822C /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C362447FD000061822C /* CoreServices.framework */; };
+		0A694C392447FEDF0061822C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C382447FEDF0061822C /* QuartzCore.framework */; };
+		0A694C3B2447FEEB0061822C /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C3A2447FEEB0061822C /* UserNotifications.framework */; };
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */; };
@@ -94,14 +98,8 @@
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.mm */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
-		0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059405543D7C00ACDF3A /* Carbon.framework */; };
-		0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46079705543DE400ACDF3A /* CoreFoundation.framework */; };
-		0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059505543D7C00ACDF3A /* CoreServices.framework */; };
-		0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059705543D7C00ACDF3A /* System.framework */; };
-		0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059305543D7C00ACDF3A /* ApplicationServices.framework */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */; };
 		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; };
-		0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */; };
 		0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */; };
 		0ACF35C617EBCC1500178DE2 /* Emulation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACF35C517EBCC1500178DE2 /* Emulation.cp */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
@@ -223,7 +221,6 @@
 		0A0D372A19B43370005500DE /* CursorMoveCursorSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorMoveCursorSmall@2x.png"; path = "Application/Resources/CursorMoveCursorSmall@2x.png"; sourceTree = "<group>"; };
 		0A0D372B19B4338C005500DE /* CursorCrosshairs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorCrosshairs.png; path = Application/Resources/CursorCrosshairs.png; sourceTree = "<group>"; };
 		0A0D372C19B4338C005500DE /* CursorCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorCrosshairs@2x.png"; path = "Application/Resources/CursorCrosshairs@2x.png"; sourceTree = "<group>"; };
-		0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ConstantsRegistry.mm; path = Application/Code/ConstantsRegistry.mm; sourceTree = "<group>"; };
 		0A1427340DA5D4270028510F /* VectorInterpreterRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterRef.typedef.h; path = Application/Code/VectorInterpreterRef.typedef.h; sourceTree = "<group>"; };
 		0A1A06860ABA6236002C95D7 /* PrintTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintTerminal.h; path = Application/Code/PrintTerminal.h; sourceTree = "<group>"; };
@@ -254,10 +251,8 @@
 		0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaAnimation.mm; path = Shared/Code/CocoaAnimation.mm; sourceTree = "<group>"; };
 		0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTranslations.mm; path = Application/Code/PrefPanelTranslations.mm; sourceTree = "<group>"; };
 		0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTranslations.h; path = Application/Code/PrefPanelTranslations.h; sourceTree = "<group>"; };
-		0A42A5882318CE3C008ED9BE /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TerminalGlyphDrawing.mm; path = Application/Code/TerminalGlyphDrawing.mm; sourceTree = "<group>"; };
 		0A442C4E1B80C949008B046B /* TerminalGlyphDrawing.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TerminalGlyphDrawing.objc++.h"; path = "Application/Code/TerminalGlyphDrawing.objc++.h"; sourceTree = "<group>"; };
-		0A442C4F1B810760008B046B /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		0A4603C00554376100ACDF3A /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Clipboard.h; path = Application/Code/Clipboard.h; sourceTree = "<group>"; };
 		0A4603C60554376100ACDF3A /* CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandLine.h; path = Application/Code/CommandLine.h; sourceTree = "<group>"; };
 		0A4603C70554376100ACDF3A /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = Application/Code/Commands.h; sourceTree = "<group>"; };
@@ -300,12 +295,6 @@
 		0A4604540554376100ACDF3A /* URL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = URL.h; path = Application/Code/URL.h; sourceTree = "<group>"; };
 		0A4604570554376100ACDF3A /* VTKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VTKeys.h; path = Application/Code/VTKeys.h; sourceTree = "<group>"; };
 		0A46045A0554376100ACDF3A /* Workspace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Workspace.h; path = Application/Code/Workspace.h; sourceTree = "<group>"; };
-		0A46059305543D7C00ACDF3A /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
-		0A46059405543D7C00ACDF3A /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
-		0A46059505543D7C00ACDF3A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
-		0A46059605543D7C00ACDF3A /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
-		0A46059705543D7C00ACDF3A /* System.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = System.framework; path = /System/Library/Frameworks/System.framework; sourceTree = "<absolute>"; };
-		0A46079705543DE400ACDF3A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		0A461725215F3B1F0038EA77 /* SharedMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = SharedMedia.xcassets; path = Shared/Resources/SharedMedia.xcassets; sourceTree = "<group>"; };
 		0A46C56B15D864A500843BBC /* PreferenceValue.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PreferenceValue.objc++.h"; path = "Application/Code/PreferenceValue.objc++.h"; sourceTree = "<group>"; };
 		0A46C56C15D864B700843BBC /* PreferenceValue.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PreferenceValue.mm; path = Application/Code/PreferenceValue.mm; sourceTree = "<group>"; };
@@ -351,7 +340,6 @@
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
 		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
-		0A50056C2367DB3C00016FCB /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
 		0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParameterDecoder.cp; path = Shared/Code/ParameterDecoder.cp; sourceTree = "<group>"; };
@@ -359,6 +347,14 @@
 		0A613E4F20592085007C0829 /* Workspace.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Workspace.mm; path = Application/Code/Workspace.mm; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
+		0A694C2C2447FC590061822C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		0A694C2E2447FC6B0061822C /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		0A694C302447FC760061822C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		0A694C322447FC8B0061822C /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
+		0A694C342447FCC30061822C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		0A694C362447FD000061822C /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		0A694C382447FEDF0061822C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		0A694C3A2447FEEB0061822C /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		0A69E5250DDBACB100DA7874 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ChildProcessWC.mm; path = Application/Code/ChildProcessWC.mm; sourceTree = "<group>"; };
 		0A6C44681D84A8B700E1B0E2 /* ChildProcessWC.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "ChildProcessWC.objc++.h"; path = "Application/Code/ChildProcessWC.objc++.h"; sourceTree = "<group>"; };
@@ -429,7 +425,6 @@
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
 		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
-		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelNumberedList.mm; path = Application/Code/GenericPanelNumberedList.mm; sourceTree = "<group>"; };
 		0ACC406B1A433265009D0D53 /* GenericPanelNumberedList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GenericPanelNumberedList.h; path = Application/Code/GenericPanelNumberedList.h; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
@@ -490,16 +485,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A42A5892318CE3C008ED9BE /* UserNotifications.framework in Frameworks */,
-				0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */,
-				0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */,
-				0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */,
-				0A442C501B810760008B046B /* QuartzCore.framework in Frameworks */,
-				0A0E9FA71DB18F3C006A8BF5 /* SystemConfiguration.framework in Frameworks */,
-				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
-				0A50056D2367DB3C00016FCB /* CoreImage.framework in Frameworks */,
-				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
-				0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */,
+				0A694C3B2447FEEB0061822C /* UserNotifications.framework in Frameworks */,
+				0A694C312447FC770061822C /* AppKit.framework in Frameworks */,
+				0A694C372447FD000061822C /* CoreServices.framework in Frameworks */,
+				0A694C392447FEDF0061822C /* QuartzCore.framework in Frameworks */,
+				0A694C352447FCC40061822C /* SystemConfiguration.framework in Frameworks */,
+				0A694C2D2447FC590061822C /* CoreGraphics.framework in Frameworks */,
+				0A694C2F2447FC6B0061822C /* Carbon.framework in Frameworks */,
+				0A694C332447FC8B0061822C /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -509,9 +502,14 @@
 		0A0E9FA51DB18F3C006A8BF5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				0A50056C2367DB3C00016FCB /* CoreImage.framework */,
-				0A42A5882318CE3C008ED9BE /* UserNotifications.framework */,
-				0A0E9FA61DB18F3C006A8BF5 /* SystemConfiguration.framework */,
+				0A694C302447FC760061822C /* AppKit.framework */,
+				0A694C2E2447FC6B0061822C /* Carbon.framework */,
+				0A694C2C2447FC590061822C /* CoreGraphics.framework */,
+				0A694C322447FC8B0061822C /* CoreImage.framework */,
+				0A694C362447FD000061822C /* CoreServices.framework */,
+				0A694C382447FEDF0061822C /* QuartzCore.framework */,
+				0A694C342447FCC30061822C /* SystemConfiguration.framework */,
+				0A694C3A2447FEEB0061822C /* UserNotifications.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -715,7 +713,6 @@
 				0A0C9AA5216164A800A7BA7F /* ApplicationMedia.xcassets */,
 				0AFF137A0AF42067006CCA34 /* Icons */,
 				0AFF112F0AF4202B006CCA34 /* XIBs */,
-				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
 				0A46FE73055433CA00ACDF3A /* Products */,
 				0A69E5250DDBACB100DA7874 /* Debug.xcconfig */,
 				0A7B831E19D66751000A4240 /* Production.xcconfig */,
@@ -840,21 +837,6 @@
 			name = XIBs;
 			path = Application/Resources;
 			sourceTree = SOURCE_ROOT;
-		};
-		0AFF136B0AF42045006CCA34 /* Required Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				0A46059305543D7C00ACDF3A /* ApplicationServices.framework */,
-				0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */,
-				0A46059405543D7C00ACDF3A /* Carbon.framework */,
-				0A46079705543DE400ACDF3A /* CoreFoundation.framework */,
-				0A46059505543D7C00ACDF3A /* CoreServices.framework */,
-				0A442C4F1B810760008B046B /* QuartzCore.framework */,
-				0A46059605543D7C00ACDF3A /* QuickTime.framework */,
-				0A46059705543D7C00ACDF3A /* System.framework */,
-			);
-			name = "Required Frameworks";
-			sourceTree = "<group>";
 		};
 		0AFF137A0AF42067006CCA34 /* Icons */ = {
 			isa = PBXGroup;
