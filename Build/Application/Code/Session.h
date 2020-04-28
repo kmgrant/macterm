@@ -408,7 +408,7 @@ Session_Result
 Session_Result
 	Session_UserInputKey					(SessionRef							inRef,
 											 UInt8								inKeyOrASCII,
-											 UInt32								inEventModifiers = 0);
+											 UInt64								inEventModifiers = 0);
 
 Session_Result
 	Session_UserInputPaste					(SessionRef							inRef,
@@ -487,7 +487,8 @@ CFIndex
 											 CFIndex							inFirstCharacter = 0);
 
 void
-	Session_SendDeleteBackward				(SessionRef							inRef);
+	Session_SendDeleteBackward				(SessionRef							inRef,
+											 Session_Echo						inEcho);
 
 SInt16
 	Session_SendFlush						(SessionRef							inRef);

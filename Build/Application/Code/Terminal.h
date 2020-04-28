@@ -471,14 +471,6 @@ Boolean
 TextAttributes_Object
 	Terminal_CursorReturnAttributes			(TerminalScreenRef			inScreen);
 
-// DEPRECATED
-Boolean
-	Terminal_EmulatorIsVT100				(TerminalScreenRef			inScreen);
-
-// DEPRECATED
-Boolean
-	Terminal_EmulatorIsVT220				(TerminalScreenRef			inScreen);
-
 CFStringRef
 	Terminal_EmulatorReturnDefaultName		(Emulation_FullType			inEmulator);
 
@@ -541,6 +533,12 @@ void
 Terminal_Result
 	Terminal_SetTextEncoding				(TerminalScreenRef			inScreen,
 											 CFStringEncoding			inNewEncoding);
+
+Boolean
+	Terminal_SupportsFunctionKeys			(TerminalScreenRef			inScreen);
+
+Boolean
+	Terminal_SupportsPageKeys				(TerminalScreenRef			inScreen);
 
 Terminal_Result
 	Terminal_UserInputOffsetCursor			(TerminalScreenRef			inScreen,

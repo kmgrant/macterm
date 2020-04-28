@@ -597,7 +597,7 @@ one of the standard alert constants below:
 When text is set for "kAlert_ItemButton3", the label is
 used to automatically infer a command key; the NSButton
 method "keyEquivalent" is used to set a key character and
-"keyEquivalentModifierMask" is set to "NSCommandKeyMask".
+"keyEquivalentModifierMask" is "NSEventModifierFlagCommand".
 
 You may also pass nullptr to clear the button entirely, in
 which case it is not displayed in the alert box.

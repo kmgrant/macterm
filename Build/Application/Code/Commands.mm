@@ -1468,19 +1468,19 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			item = defaultItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 			
 			item = shellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
 			
 			item = logInShellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
 			
 			item = dialogItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
 		}
 		break;
 	
@@ -1492,19 +1492,19 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			item = defaultItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
 			
 			item = shellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 			
 			item = logInShellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
 			
 			item = dialogItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
 		}
 		break;
 	
@@ -1516,19 +1516,19 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			item = defaultItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
 			
 			item = shellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
 			
 			item = logInShellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 			
 			item = dialogItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
 		}
 		break;
 	
@@ -1540,19 +1540,19 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			item = defaultItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSShiftKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
 			
 			item = shellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSControlKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
 			
 			item = logInShellItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask | NSAlternateKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
 			
 			item = dialogItem;
 			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSCommandKeyMask];
+			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 		}
 		break;
 	
@@ -2199,7 +2199,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
 														keyEquivalent:@"f"];
-			[result setKeyEquivalentModifierMask:(NSControlKeyMask | NSCommandKeyMask)];
+			[result setKeyEquivalentModifierMask:(NSEventModifierFlagControl | NSEventModifierFlagCommand)];
 		}
 	}
 	else if (@selector(performRename:) == anActionSelector)

@@ -11913,32 +11913,89 @@ keyDown:(NSEvent*)		anEvent
 	{
 		My_TerminalViewPtr		viewPtr = self.internalViewPtr;
 		BOOL					normalText = YES;
+		BOOL					metaDown = NO;
 		
 		
-		if (anEvent.modifierFlags & NSEventModifierFlagControl)
+		if ((0 != (anEvent.modifierFlags & NSEventModifierFlagShift)) || (0 != (anEvent.modifierFlags & NSEventModifierFlagOption)))
+		{
+			SessionRef			listeningSession = [self boundSession];
+			Session_EventKeys	keyMappings = Session_ReturnEventKeys(listeningSession);
+			
+			
+			// determine if user-specified Emacs meta key sequence has been used
+			if (keyMappings.meta == kSession_EmacsMetaKeyShiftOption)
+			{
+				metaDown = ((0 != (anEvent.modifierFlags & NSEventModifierFlagOption)) && (0 != (anEvent.modifierFlags & NSEventModifierFlagShift)) &&
+							(0 == (anEvent.modifierFlags & NSEventModifierFlagCommand)) && (0 == (anEvent.modifierFlags & NSEventModifierFlagControl)));
+			}
+			else if (keyMappings.meta == kSession_EmacsMetaKeyOption)
+			{
+				metaDown = ((0 != (anEvent.modifierFlags & NSEventModifierFlagOption)) && (0 == (anEvent.modifierFlags & NSEventModifierFlagShift)) &&
+							(0 == (anEvent.modifierFlags & NSEventModifierFlagCommand)) && (0 == (anEvent.modifierFlags & NSEventModifierFlagControl)));
+			}
+		}
+		
+		if ((metaDown) || (0 != (anEvent.modifierFlags & NSEventModifierFlagControl)))
 		{
 			// control keys should not be mapped to normal Mac text editing
 			// (e.g. they do not locally move the cursor); they should be
 			// interpreted by the Session, which has the option of still
 			// handling certain events locally
-			NSString*		characterString = anEvent.charactersIgnoringModifiers;
+			NSString*		characterString = [anEvent.charactersIgnoringModifiers lowercaseString];
 			
 			
-			if ((1 == characterString.length) && ([characterString characterAtIndex:0] < 128))
+			if (1 == characterString.length)
 			{
 				char	asChar = STATIC_CAST([characterString characterAtIndex:0], char);
 				
 				
-				[self.textInputDelegate receivedControlCharacter:asChar terminalView:viewPtr->selfRef];
+				if ((asChar >= 32) && (asChar <= 127))
+				{
+					if (metaDown)
+					{
+						[self.textInputDelegate receivedMetaWithCharacter:asChar terminalView:viewPtr->selfRef];
+					}
+					else
+					{
+						[self.textInputDelegate receivedControlWithCharacter:asChar terminalView:viewPtr->selfRef];
+					}
+					normalText = NO;
+				}
+			}
+		}
+		
+		if (0 != (anEvent.modifierFlags & NSEventModifierFlagFunction))
+		{
+			BOOL	didHandle = NO;
+			
+			
+			[self.textInputDelegate receivedVirtualKeyPress:anEvent.keyCode terminalView:viewPtr->selfRef didHandle:&didHandle];
+			if (didHandle)
+			{
 				normalText = NO;
 			}
 		}
 		
 		if (normalText)
 		{
-			// INCOMPLETE; may need to interpret certain keys directly here
-			// (also, need to use Session module to handle keys)
-			[self interpretKeyEvents:@[anEvent]]; // translate for NSTextInputClient
+			// normally it should be possible to pass plain text to "interpretKeyEvents:" but
+			// key repetition of ordinary keys does not work well in that case (most letters
+			// appear once, seemingly because they would otherwise display an accent window
+			// pop-up in a regular text view); since text editors such as "vim" and other
+			// terminal commands benefit from proper repetition support, manually intervene
+			// and recognize single-letter values directly (for anything else, see the method
+			// "insertText:replacementRange:")
+			if  ((1 == anEvent.characters.length) && isalnum(STATIC_CAST([anEvent.characters characterAtIndex:0], char)) &&
+					((0 == (anEvent.modifierFlags & NSEventModifierFlagOption)) && (0 == (anEvent.modifierFlags & NSEventModifierFlagShift)) &&
+						(0 == (anEvent.modifierFlags & NSEventModifierFlagCommand)) && (0 == (anEvent.modifierFlags & NSEventModifierFlagControl))))
+			{
+				[self.textInputDelegate receivedString:anEvent.characters terminalView:viewPtr->selfRef];
+			}
+			else
+			{
+				// "interpretKeyEvents:" uses "doCommandBySelector:" or "insertText:replacementRange:"
+				[self interpretKeyEvents:@[anEvent]]; // translate for NSTextInputClient
+			}
 		}
 	}
 }// keyDown:
@@ -12481,6 +12538,42 @@ moveRightAndModifySelection:(id)	sender
 
 
 /*!
+Sends a command-arrow sequence to the active session.
+
+(2020.04)
+*/
+- (void)
+moveToBeginningOfDocument:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveToBeginningOfDocument:
+
+
+/*!
+Sends a command-arrow sequence to the active session.
+
+(2020.04)
+*/
+- (void)
+moveToEndOfDocument:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveToEndOfDocument:
+
+
+/*!
+Sends a command-arrow sequence to the active session.
+
+(2020.04)
+*/
+- (void)
+moveToLeftEndOfLine:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveToLeftEndOfLine:
+
+
+/*!
 Locally extends the selection, creating a new selection at the
 cursor location if necessary.  Typically this means the Shift
 and Command keys have been held down in combination with an arrow.
@@ -12492,6 +12585,18 @@ moveToLeftEndOfLineAndModifySelection:(id)		sender
 {
 	[self extendSelectionForKeyBindingSelector:_cmd sender:sender];
 }// moveToLeftEndOfLineAndModifySelection:
+
+
+/*!
+Sends a command-arrow sequence to the active session.
+
+(2020.04)
+*/
+- (void)
+moveToRightEndOfLine:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveToRightEndOfLine:
 
 
 /*!
@@ -12534,6 +12639,30 @@ moveUp:(id)	sender
 }// moveUp:
 
 
+/*!
+Sends an option-arrow sequence to the active session.
+
+(2020.04)
+*/
+- (void)
+moveWordLeft:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveWordLeft:
+
+
+/*!
+Sends an option-arrow sequence to the active session.
+
+(2020.04)
+*/
+- (void)
+moveWordRight:(id)	sender
+{
+	[self moveCursorForKeyBindingSelector:_cmd sender:sender];
+}// moveWordRight:
+
+
 #pragma mark NSTextInputClient
 
 
@@ -12559,7 +12688,14 @@ replacementRange:(NSRange)		replacementRange
 	//NSLog(@"term view %p / %@", viewPtr, NSStringFromSelector(_cmd)); // debug
 	if (nullptr != viewPtr)
 	{
-		[self.textInputDelegate receivedString:aString terminalView:viewPtr->selfRef];
+		NSString*	asString = aString;
+		
+		
+		if ([asString isKindOfClass:NSAttributedString.class])
+		{
+			asString = STATIC_CAST(aString, NSAttributedString*).string;
+		}
+		[self.textInputDelegate receivedString:asString terminalView:viewPtr->selfRef];
 	}
 	else
 	{
@@ -12593,6 +12729,18 @@ doCommandBySelector:(SEL)	aSelector
 		if (nullptr != viewPtr)
 		{
 			[self.textInputDelegate receivedDeleteBackwardInTerminalView:viewPtr->selfRef];
+		}
+		else
+		{
+			Sound_StandardAlert();
+		}
+	}
+	else if (@selector(deleteWordBackward:) == aSelector)
+	{
+		// send appropriate delete sequence to session (varies)
+		if (nullptr != viewPtr)
+		{
+			[self.textInputDelegate receivedDeleteWordBackwardInTerminalView:viewPtr->selfRef];
 		}
 		else
 		{
@@ -12650,9 +12798,13 @@ doCommandBySelector:(SEL)	aSelector
 	}
 	else
 	{
-		[super doCommandBySelector:aSelector]; // defer to NSResponder (which defers to the window, application, delegates, etc.)
+		// NOTE: documentation specifies that "super" should not be called
+		// as a fallback here but non-text keys like arrows do not work
+		// unless "super" is called...
+		//NSLog(@"using default implementation for key command %@", NSStringFromSelector(aSelector)); // debug
+		[super doCommandBySelector:aSelector];
 	}
-}// doCommandBySelector
+}// doCommandBySelector:
 
 
 /*!
@@ -12720,19 +12872,16 @@ markedRange
 
 
 /*!
-NOTE: Marking is not currently implemented so this always
-returns NO.
+Equivalent to calling "markedRange" and checking for a
+nonzero length.
 
 (2018.05)
 */
 - (BOOL)
 hasMarkedText
 {
-	BOOL	result = NO;
+	BOOL	result = ([self markedRange].length > 0);
 	
-	
-	// UNIMPLEMENTED
-	//NSLog(@"term view %@", NSStringFromSelector(_cmd)); // debug
 	
 	return result;
 }// hasMarkedText
@@ -13294,23 +13443,23 @@ resetCursorRects
 	else
 	{
 		// the cursor varies based on the state of modifier keys
-		if (self.modifierFlagsForCursor & NSControlKeyMask)
+		if (self.modifierFlagsForCursor & NSEventModifierFlagControl)
 		{
 			// modifier key for contextual menu
 			[self addCursorRect:[self bounds] cursor:[NSCursor contextualMenuCursor]];
 		}
-		else if ((self.modifierFlagsForCursor & NSCommandKeyMask) &&
-					(self.modifierFlagsForCursor & NSAlternateKeyMask))
+		else if ((self.modifierFlagsForCursor & NSEventModifierFlagCommand) &&
+					(self.modifierFlagsForCursor & NSEventModifierFlagOption))
 		{
 			// modifier key for moving the terminal cursor to the click location
 			[self addCursorRect:[self bounds] cursor:customCursorMoveTerminalCursor(isSmallIBeam(viewPtr))];
 		}
-		else if (self.modifierFlagsForCursor & NSCommandKeyMask)
+		else if (self.modifierFlagsForCursor & NSEventModifierFlagCommand)
 		{
 			// modifier key for clicking a URL selection
 			[self addCursorRect:[self bounds] cursor:[NSCursor pointingHandCursor]];
 		}
-		else if (self.modifierFlagsForCursor & NSAlternateKeyMask)
+		else if (self.modifierFlagsForCursor & NSEventModifierFlagOption)
 		{
 			// modifier key for rectangular text selections
 			[self addCursorRect:[self bounds] cursor:customCursorCrosshairs()];
@@ -13526,6 +13675,14 @@ sender:(id)								sender
 		{
 			Session_UserInputKey(self.boundSession, VSLT, 0/* modifier keys */);
 		}
+		else if (@selector(moveToLeftEndOfLine:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSLT, NSEventModifierFlagCommand);
+		}
+		else if (@selector(moveWordLeft:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSLT, NSEventModifierFlagOption);
+		}
 		else if (@selector(moveUp:) == aSelector)
 		{
 			Session_UserInputKey(self.boundSession, VSUP, 0/* modifier keys */);
@@ -13533,6 +13690,22 @@ sender:(id)								sender
 		else if (@selector(moveDown:) == aSelector)
 		{
 			Session_UserInputKey(self.boundSession, VSDN, 0/* modifier keys */);
+		}
+		else if (@selector(moveToBeginningOfDocument:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSUP, NSEventModifierFlagCommand);
+		}
+		else if (@selector(moveToEndOfDocument:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSDN, NSEventModifierFlagCommand);
+		}
+		else if (@selector(moveToRightEndOfLine:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSRT, NSEventModifierFlagCommand);
+		}
+		else if (@selector(moveWordRight:) == aSelector)
+		{
+			Session_UserInputKey(self.boundSession, VSRT, NSEventModifierFlagOption);
 		}
 		else// if (@selector(moveRight:) == aSelector)
 		{

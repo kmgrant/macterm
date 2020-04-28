@@ -374,7 +374,7 @@ performKeyEquivalent:(NSEvent*)		aKeyEvent
 		NSTextView*		asTextView = STATIC_CAST(editorObject, NSTextView*);
 		
 		
-		if (aKeyEvent.modifierFlags & NSControlKeyMask)
+		if (aKeyEvent.modifierFlags & NSEventModifierFlagControl)
 		{
 			if (NSOrderedSame == [aKeyEvent.charactersIgnoringModifiers compare:@"D" options:NSCaseInsensitiveSearch])
 			{
@@ -387,7 +387,7 @@ performKeyEquivalent:(NSEvent*)		aKeyEvent
 				result = [self.terminalLikeDelegate control:self textView:asTextView doCommandBySelector:@selector(commandLineTerminalClear:)];
 			}
 		}
-		else if (aKeyEvent.modifierFlags & NSCommandKeyMask)
+		else if (aKeyEvent.modifierFlags & NSEventModifierFlagCommand)
 		{
 			if (NSOrderedSame == [aKeyEvent.charactersIgnoringModifiers compare:[NSString stringWithUTF8String:"\015"] options:NSCaseInsensitiveSearch])
 			{
@@ -638,7 +638,7 @@ doCommandBySelector:(SEL)	aSelector
 	{
 		// send session’s designated backspace or delete character;
 		// this should not be performed unless the field is empty!
-		Session_SendDeleteBackward(SessionFactory_ReturnUserRecentSession());
+		Session_SendDeleteBackward(SessionFactory_ReturnUserRecentSession(), kSession_EchoCurrentSessionValue);
 		result = YES;
 	}
 	else if (@selector(commandLineSendEscapeCharacter:) == aSelector)

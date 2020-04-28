@@ -266,8 +266,6 @@ UInt16						copyAutoCapturePreferences			(My_SessionPtr, Preferences_ContextRef,
 UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 UInt16						copyVectorGraphicsPreferences		(My_SessionPtr, Preferences_ContextRef, Boolean);
 void						handleSaveFromPanel					(My_SessionPtr, NSSavePanel*);
-Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
-																 void*, void*);
 Boolean						isReadOnly							(My_SessionPtr);
 void						localEchoKey						(My_SessionPtr, UInt8);
 void						localEchoString						(My_SessionPtr, CFStringRef);
@@ -2071,16 +2069,41 @@ backspace or a delete character.
 (2016.11)
 */
 void
-Session_SendDeleteBackward	(SessionRef		inRef)
+Session_SendDeleteBackward	(SessionRef		inRef,
+							 Session_Echo	inEcho)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	char					deleteChar[] = { 0x7F/* delete */ };
+	Boolean					echo = false;
 	
+	
+	// send any local echo first
+	switch (inEcho)
+	{
+	case kSession_EchoCurrentSessionValue:
+		echo = ptr->echo.enabled;
+		break;
+	
+	case kSession_EchoEnabled:
+		echo = true;
+		break;
+	
+	case kSession_EchoDisabled:
+	default:
+		echo = false;
+		break;
+	}
 	
 	if (ptr->eventKeys.deleteSendsBackspace)
 	{
 		deleteChar[0] = 0x08; // backspace
 	}
+	
+	if (echo)
+	{
+		localEchoKey(ptr, deleteChar[0]);
+	}
+	
 	Session_SendData(inRef, deleteChar, sizeof(deleteChar));
 }// SendDeleteBackward
 
@@ -4329,9 +4352,9 @@ if the key cannot be handled right now (e.g. sheet is open)
 (3.1)
 */
 Session_Result
-Session_UserInputKey	(SessionRef		inRef,
-						 UInt8			inKeyOrASCII,
-						 UInt32			inEventModifiers)
+Session_UserInputKey	(SessionRef						inRef,
+						 UInt8							inKeyOrASCII,
+						 UInt64/*NSEventModifierFlags*/		inEventModifiers)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	Session_Result			result = kSession_ResultOK;
@@ -4368,14 +4391,14 @@ Session_UserInputKey	(SessionRef		inRef,
 			{
 			case VSLT:
 				{
-					if (inEventModifiers & optionKey)
+					if (inEventModifiers & NSEventModifierFlagOption)
 					{
 						// move one word backward (meta-b)
 						actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
 						actualKeySeq[1] = 'b';
 						sequenceLength = 2;
 					}
-					else if (inEventModifiers & cmdKey)
+					else if (inEventModifiers & NSEventModifierFlagCommand)
 					{
 						// move to beginning of line (^A)
 						actualKeySeq[0] = 0x01;
@@ -4395,14 +4418,14 @@ Session_UserInputKey	(SessionRef		inRef,
 			
 			case VSRT:
 				{
-					if (inEventModifiers & optionKey)
+					if (inEventModifiers & NSEventModifierFlagOption)
 					{
 						// move one word forward (meta-f)
 						actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
 						actualKeySeq[1] = 'f';
 						sequenceLength = 2;
 					}
-					else if (inEventModifiers & cmdKey)
+					else if (inEventModifiers & NSEventModifierFlagCommand)
 					{
 						// move to beginning of line (^E)
 						actualKeySeq[0] = 0x05;
@@ -4422,12 +4445,12 @@ Session_UserInputKey	(SessionRef		inRef,
 			
 			case VSUP:
 				{
-					if (inEventModifiers & optionKey)
+					if (inEventModifiers & NSEventModifierFlagOption)
 					{
 						// move to beginning of line (^A)
 						actualKeySeq[0] = 0x01;
 					}
-					else if (inEventModifiers & cmdKey)
+					else if (inEventModifiers & NSEventModifierFlagCommand)
 					{
 						// move to beginning of buffer (meta-<)
 						actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
@@ -4449,12 +4472,12 @@ Session_UserInputKey	(SessionRef		inRef,
 			
 			case VSDN:
 				{
-					if (inEventModifiers & optionKey)
+					if (inEventModifiers & NSEventModifierFlagOption)
 					{
 						// move to end of line (^E)
 						actualKeySeq[0] = 0x05;
 					}
-					else if (inEventModifiers & cmdKey)
+					else if (inEventModifiers & NSEventModifierFlagCommand)
 					{
 						// move to end of buffer (meta-<)
 						actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
@@ -5611,357 +5634,6 @@ handleSaveFromPanel		(My_SessionPtr		UNUSED_ARGUMENT(inPtr),
 		Console_Warning(Console_WriteLine, "failed to generate '.session' (not implemented)");
 	}
 }// handleSaveFromPanel
-
-
-/*!
-Invoked whenever a monitored key-down event from the main
-event loop occurs (see Session_New() to see how this routine
-is registered).
-
-This function only responds to processed character or key
-codes; the original event handler should perform key
-mappings, etc. prior to invoking this routine.
-
-The result is "true" only if the event is to be absorbed
-(preventing anything else from seeing it).
-
-NOTE:	This used to be a direct callback, hence its strange
-		function signature.  This will probably be fixed in
-		the future.
-
-(3.1)
-*/
-Boolean
-handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-						 ListenerModel_Event	UNUSED_ARGUMENT(inEventThatOccurred),
-						 void*					inEventContextPtr,
-						 void*					inListenerContextPtr)
-{
-	enum
-	{
-		/*!
-		Important virtual key codes (see page 2-43 of
-		"Inside Macintosh: Macintosh Toolbox Essentials").
-		*/
-		BScode			= 0x33,	//!< backspace virtual key code
-		KPlowest		= 0x41	//!< lowest keypad virtual key code
-	};
-	assert(inEventContextPtr != nullptr);
-	assert(inListenerContextPtr != nullptr);
-	
-	Boolean					result = false;
-	My_KeyPressPtr			keyPressInfoPtr = REINTERPRET_CAST(inEventContextPtr, My_KeyPressPtr);
-	SessionRef				session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-	TerminalScreenRef		someScreen = ptr->targetTerminals.front(); // TEMPORARY
-	static SInt16			characterCode = '\0'; // ASCII
-	static SInt16			characterCode2 = '\0'; // ASCII
-	static UInt32			virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
-	static Boolean			commandDown = false;
-	static Boolean			controlDown = false;
-	static Boolean			optionDown  = false;
-	static Boolean			shiftDown = false;
-	static Boolean			metaDown = false;
-	static UInt32			eventModifiers = 0;
-	
-	
-	characterCode = keyPressInfoPtr->characterCode;
-	characterCode2 = keyPressInfoPtr->characterCode2;
-	virtualKeyCode = keyPressInfoPtr->virtualKeyCode;
-	commandDown = keyPressInfoPtr->commandDown;
-	controlDown = keyPressInfoPtr->controlDown;
-	optionDown = keyPressInfoPtr->optionDown;
-	shiftDown = keyPressInfoPtr->shiftDown;
-	
-	// create bit-flag short-cuts that are useful in some cases
-	// (TEMPORARY - this is a hack, the input should be cleaned up
-	// to simply pass an established set of flags in the first place)
-	eventModifiers = 0;
-	if (commandDown) eventModifiers |= cmdKey;
-	if (controlDown) eventModifiers |= controlKey;
-	if (commandDown) eventModifiers |= cmdKey;
-	if (optionDown) eventModifiers |= optionKey;
-	if (shiftDown) eventModifiers |= shiftKey;
-	
-	// technically add-on support for an Emacs concept
-	if (ptr->eventKeys.meta == kSession_EmacsMetaKeyShiftOption)
-	{
-		metaDown = ((shiftDown) && (optionDown));
-	}
-	else if (ptr->eventKeys.meta == kSession_EmacsMetaKeyOption)
-	{
-		metaDown = (optionDown);
-	}
-	
-	// scan for keys that invoke instant commands
-	switch (virtualKeyCode)
-	{
-	case kVK_F1: // 0x7A
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF6);
-		break;
-	
-	case kVK_F2: // 0x78
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF7);
-		break;
-	
-	case kVK_F3: // 0x63
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF8);
-		break;
-	
-	case kVK_F4: // 0x76
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF9);
-		break;
-	
-	case kVK_F5: // 0x60
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF10);
-		break;
-	
-	case kVK_F6: // 0x61
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF11);
-		break;
-	
-	case kVK_F7: // 0x62
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF12);
-		break;
-	
-	case kVK_F8: // 0x64
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF13);
-		break;
-	
-	case kVK_F9: // 0x65
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF14);
-		break;
-	
-	case kVK_F10: // 0x6D
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF15_220HELP);
-		break;
-	
-	case kVK_F11: // 0x67
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF16_220DO);
-		break;
-	
-	case kVK_F12: // 0x6F
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF17);
-		break;
-	
-	case kVK_F13: // 0x69 (Print Screen)
-	#if 0
-		if (0/* if not VT220 */)
-		{
-			result = Commands_ViaFirstResponderPerformSelector(@selector(performPrintScreen:));
-		}
-		else
-	#endif
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF18);
-		}
-		break;
-	
-	case kVK_F14: // 0x6B
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF19);
-		break;
-	
-	case kVK_F15: // 0x71
-		// TEMPORARY: only makes sense for VT220 terminals
-		Session_UserInputKey(session, VSF20);
-		break;
-	
-	case VSPGUP_220DEL:
-		// TEMPORARY: this needs to be determined in a more abstract way,
-		// perhaps by inquiring the Terminal module whether or not the
-		// active terminal type supports this
-		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
-		{
-			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageUp:));
-		}
-		break;
-	
-	case VSPGDN_220PGDN:
-		// TEMPORARY: this needs to be determined in a more abstract way,
-		// perhaps by inquiring the Terminal module whether or not the
-		// active terminal type supports this
-		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
-		{
-			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageDown:));
-		}
-		break;
-	
-	case VSHOME_220INS:
-		// TEMPORARY: this needs to be determined in a more abstract way,
-		// perhaps by inquiring the Terminal module whether or not the
-		// active terminal type supports this
-		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
-		{
-			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageHome:));
-		}
-		break;
-	
-	case VSEND_220PGUP:
-		// TEMPORARY: this needs to be determined in a more abstract way,
-		// perhaps by inquiring the Terminal module whether or not the
-		// active terminal type supports this
-		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
-		{
-			result = Commands_ViaFirstResponderPerformSelector(@selector(performTerminalViewPageEnd:));
-		}
-		break;
-	
-	case kVK_LeftArrow: // 0x7B
-		Session_UserInputKey(session, VSLT, eventModifiers);
-		result = true;
-		break;
-	
-	case kVK_RightArrow: // 0x7C
-		Session_UserInputKey(session, VSRT, eventModifiers);
-		result = true;
-		break;
-	
-	case kVK_DownArrow: // 0x7D
-		Session_UserInputKey(session, VSDN, eventModifiers);
-		result = true;
-		break;
-	
-	case kVK_UpArrow: // 0x7E
-		Session_UserInputKey(session, VSUP, eventModifiers);
-		result = true;
-		break;
-	
-	default:
-		// no other virtual key codes have significance
-		break;
-	}
-	
-	if (false == result)
-	{
-		// if no key-based action occurred, look for character-based actions
-		if (0 == characterCode2)
-		{
-			Boolean		sentCommand = false;
-			
-			
-			if (characterCode == ptr->eventKeys.suspend)
-			{
-				Session_SetNetworkSuspended(session, true);
-				sentCommand = true;
-				result = true;
-			}
-			if (characterCode == ptr->eventKeys.resume) 
-			{
-				Session_SetNetworkSuspended(session, false);
-				sentCommand = true;
-				result = true;
-			}
-			if (characterCode == ptr->eventKeys.interrupt)  
-			{
-				Session_UserInputInterruptProcess(session);
-				sentCommand = true;
-				result = true;
-			}
-			
-			if ((characterCode <= 0x1F) && ('\015' != characterCode) && (false == sentCommand))
-			{
-				// control key (except carriage return, which is handled later,
-				// and any of the special control key sequences above)
-				Session_UserInputKey(session, STATIC_CAST(characterCode, UInt8));
-				result = true;
-			}
-		}
-		
-		// now check for constant character matches
-		if (false == result)
-		{
-			switch (characterCode)
-			{
-			case '\015': // CR
-				Session_SendNewline(session, kSession_EchoCurrentSessionValue);
-				result = true;
-				break;
-			
-			default:
-				// no other character codes have significance
-				break;
-			}
-			
-			if (false == result)
-			{
-				// no key-based or character-based actions have occurred;
-				// fine, the key should be respected “verbatim” (send the
-				// one or two characters it represents to the session)
-				UInt8		charactersToSend[3];
-				UInt8*		characterPtr = charactersToSend;
-				size_t		theSize = sizeof(charactersToSend);
-				
-				
-				// terminate
-				charactersToSend[2] = '\0';
-				
-				// perform one final substitution: the meta key in Emacs
-				if (metaDown)
-				{
-					if (characterCode <= 32)
-					{
-						// control key changed the ASCII value; fix it
-						characterCode |= 0x40;
-					}
-				}
-				
-				// determine the equivalent characters for the given key presses
-				charactersToSend[0] = STATIC_CAST(characterCode, UInt8);
-				charactersToSend[1] = STATIC_CAST(characterCode2, UInt8);
-				
-				if (metaDown)
-				{
-					// Emacs respects a prefixing Escape character as being
-					// equivalent to meta; so ESC-CtrlA is like MetaCtrlA
-					charactersToSend[1] = charactersToSend[0];
-					charactersToSend[0] = 0x1B; // ESC
-				}
-				else if (0 == charactersToSend[0])
-				{
-					// no prefix was given; skip it
-					characterPtr = &charactersToSend[1];
-					theSize = sizeof(characterPtr[0]);
-				}
-				else if (0 == charactersToSend[1])
-				{
-					theSize = sizeof(characterPtr[0]);
-				}
-				
-				// show local echo of the keystroke, if appropriate
-				if (Session_LocalEchoIsEnabled(session))
-				{
-					CFRetainRelease		asObject(CFStringCreateWithCString(kCFAllocatorDefault, REINTERPRET_CAST(characterPtr, char const*),
-																			kCFStringEncodingUTF8),
-													CFRetainRelease::kAlreadyRetained);
-					
-					
-					localEchoString(ptr, asObject.returnCFStringRef());
-				}
-				
-				// finally, send the character sequence to the session
-				Session_SendData(session, characterPtr, theSize);
-				
-				result = true;
-			}
-		}
-	}
-	
-	return result;
-}// handleSessionKeyDown
 
 
 /*!
@@ -7525,24 +7197,6 @@ initWithSession:(SessionRef)	aSession
 
 
 /*!
-Sends the given text to any attached session.
-
-(2018.05)
-*/
-- (void)
-receivedString:(NSString*)		aString
-terminalView:(TerminalViewRef)	aTerminalViewRef
-{
-#pragma unused(aTerminalViewRef)
-	//NSLog(@"session text input: term view %p / %@: %@", aTerminalViewRef, NSStringFromSelector(_cmd), aString); // debug
-	if (Session_IsValid(self.sessionRef))
-	{
-		Session_SendDataCFString(self.sessionRef, BRIDGE_CAST(aString, CFStringRef));
-	}
-}// receivedString:terminalView:
-
-
-/*!
 Handles control character sequences, e.g. if the user types
 a control-C then the parameter is 'c'.  Upper-case letters
 should not be sent.
@@ -7550,8 +7204,8 @@ should not be sent.
 (2018.12)
 */
 - (void)
-receivedControlCharacter:(char)		aControlChar
-terminalView:(TerminalViewRef)		aTerminalViewRef
+receivedControlWithCharacter:(char)		aControlChar
+terminalView:(TerminalViewRef)			aTerminalViewRef
 {
 	if (Session_IsValid(self.sessionRef))
 	{
@@ -7586,11 +7240,11 @@ terminalView:(TerminalViewRef)		aTerminalViewRef
 		}
 		else
 		{
-			Console_Warning(Console_WriteValueCharacter, "control character not handled, sequence", controlKeyValue);
+			Console_Warning(Console_WriteValueCharacter, "not handling control key with character", aControlChar);
 			Session_SendData(self.sessionRef, &controlKeyValue, 1);
 		}
 	}
-}// receivedControlCharacter:terminalView:
+}// receivedControlWithCharacter:terminalView:
 
 
 /*!
@@ -7603,12 +7257,78 @@ session.
 receivedDeleteBackwardInTerminalView:(TerminalViewRef)		aTerminalViewRef
 {
 #pragma unused(aTerminalViewRef)
-	//NSLog(@"session text input: term view %p / %@", aTerminalViewRef, NSStringFromSelector(_cmd)); // debug
 	if (Session_IsValid(self.sessionRef))
 	{
-		Session_SendDeleteBackward(self.sessionRef);
+		Session_SendDeleteBackward(self.sessionRef, kSession_EchoCurrentSessionValue);
 	}
 }// receivedDeleteBackwardInTerminalView:
+
+
+/*!
+Sends an appropriate delete sequence to any attached
+session.
+
+(2020.04)
+*/
+- (void)
+receivedDeleteWordBackwardInTerminalView:(TerminalViewRef)		aTerminalViewRef
+{
+#pragma unused(aTerminalViewRef)
+	if (Session_IsValid(self.sessionRef))
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), self.sessionRef);
+		UInt8 const				actualKeySeq[2] = { 0x1B/* ESC */, 0x08/* control-H */ };
+		size_t const			sequenceLength = 2;
+		
+		
+		// show local echo of the keystroke, if appropriate
+		if (ptr->echo.enabled)
+		{
+			// delete; make the Unicode (UTF-8) for option-key and backward-delete symbols
+			UInt8	seqUTF8[] = { 0xE2, 0x8C, 0xA5, 0xE2, 0x8C, 0xAB };
+			
+			
+			terminalHoverLocalEchoString(ptr, seqUTF8, sizeof(seqUTF8));
+		}
+		
+		Session_SendData(self.sessionRef, actualKeySeq, sequenceLength);
+	}
+}// receivedDeleteWordBackwardInTerminalView:
+
+
+/*!
+Handles Emacs meta character sequences, e.g. if the user types
+meta-X then the parameter is 'x'.  Upper-case letters should
+not be sent.
+
+(2020.04)
+*/
+- (void)
+receivedMetaWithCharacter:(char)	aChar
+terminalView:(TerminalViewRef)		aTerminalViewRef
+{
+	if (Session_IsValid(self.sessionRef))
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), self.sessionRef);
+		UInt8					actualKeySeq[2] = { 0x1B/* ESC */, '\0' };
+		size_t const			sequenceLength = 2;
+		
+		
+		actualKeySeq[1] = aChar;
+		
+		// show local echo of the keystroke, if appropriate
+		if (ptr->echo.enabled)
+		{
+			NSString*	keyString = [NSString stringWithFormat:@"meta-%c"/* LOCALIZE THIS */, aChar];
+			
+			
+			terminalHoverLocalEchoString(ptr, REINTERPRET_CAST([keyString UTF8String], UInt8 const*), STATIC_CAST(keyString.length, size_t));
+		}
+		
+		// Emacs respects a prefixing Escape character as being equivalent to meta
+		Session_SendData(self.sessionRef, actualKeySeq, sequenceLength);
+	}
+}// receivedMetaWithCharacter:terminalView:
 
 
 /*!
@@ -7621,12 +7341,239 @@ session.
 receivedNewlineInTerminalView:(TerminalViewRef)		aTerminalViewRef
 {
 #pragma unused(aTerminalViewRef)
-	//NSLog(@"session text input: term view %p / %@", aTerminalViewRef, NSStringFromSelector(_cmd)); // debug
 	if (Session_IsValid(self.sessionRef))
 	{
 		Session_SendNewline(self.sessionRef, kSession_EchoCurrentSessionValue);
 	}
 }// receivedNewlineInTerminalView:
+
+
+/*!
+Sends the given text to any attached session.
+
+(2018.05)
+*/
+- (void)
+receivedString:(NSString*)		aString
+terminalView:(TerminalViewRef)	aTerminalViewRef
+{
+#pragma unused(aTerminalViewRef)
+	//NSLog(@"session text input: term view %p / %@: %@", aTerminalViewRef, NSStringFromSelector(_cmd), aString); // debug
+	if (Session_IsValid(self.sessionRef))
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), self.sessionRef);
+		CFStringRef				asCFString = BRIDGE_CAST(aString, CFStringRef);
+		
+		
+		// show local echo of the keystroke, if appropriate
+		if (ptr->echo.enabled)
+		{
+			localEchoString(ptr, asCFString);
+		}
+		
+		Session_SendDataCFString(self.sessionRef, asCFString);
+	}
+}// receivedString:terminalView:
+
+
+/*!
+Sends a sequence to the terminal that corresponds to a function key.
+
+Virtual key codes are somehow still only described in the legacy Carbon framework
+"Carbon.framework/Versions/Current/Frameworks/HIToolbox.framework/Headers/Events.h".
+
+(2020.04)
+*/
+- (void)
+receivedVirtualKeyPress:(UInt32)	aVirtualKeyCode
+terminalView:(TerminalViewRef)		aTerminalViewRef
+didHandle:(BOOL*)					outIsHandled
+{
+	*outIsHandled = NO;
+	
+	if (Session_IsValid(self.sessionRef))
+	{
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), self.sessionRef);
+		TerminalScreenRef		someScreen = ((false == ptr->targetTerminals.empty())
+												? ptr->targetTerminals.front()
+												: nullptr);
+		NSView*					userFocusNSView = TerminalView_ReturnUserFocusNSView(aTerminalViewRef);
+		
+		
+		*outIsHandled = YES; // initially...
+		
+		// scan for keys that invoke instant commands
+		switch (aVirtualKeyCode)
+		{
+		case kVK_F1: // 0x7A
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF6);
+			}
+			break;
+		
+		case kVK_F2: // 0x78
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF7);
+			}
+			break;
+		
+		case kVK_F3: // 0x63
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF8);
+			}
+			break;
+		
+		case kVK_F4: // 0x76
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF9);
+			}
+			break;
+		
+		case kVK_F5: // 0x60
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF10);
+			}
+			break;
+		
+		case kVK_F6: // 0x61
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF11);
+			}
+			break;
+		
+		case kVK_F7: // 0x62
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF12);
+			}
+			break;
+		
+		case kVK_F8: // 0x64
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF13);
+			}
+			break;
+		
+		case kVK_F9: // 0x65
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF14);
+			}
+			break;
+		
+		case kVK_F10: // 0x6D
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF15_220HELP);
+			}
+			break;
+		
+		case kVK_F11: // 0x67
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF16_220DO);
+			}
+			break;
+		
+		case kVK_F12: // 0x6F
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF17);
+			}
+			break;
+		
+		case kVK_F13: // 0x69 (Print Screen)
+		#if 0
+			if (0/* if not VT220 */)
+			{
+				id< Commands_Printing >		printingTarget = ([userFocusNSView conformsToProtocol:@protocol(Commands_Printing)]
+																? STATIC_CAST(userFocusNSView, id< Commands_Printing >)
+																: nil);
+				
+				
+				[printingTarget performPrintScreen:nil];
+			}
+			else
+		#endif
+			{
+				if (Terminal_SupportsFunctionKeys(someScreen))
+				{
+					Session_UserInputKey(self.sessionRef, VSF18);
+				}
+			}
+			break;
+		
+		case kVK_F14: // 0x6B
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF19);
+			}
+			break;
+		
+		case kVK_F15: // 0x71
+			if (Terminal_SupportsFunctionKeys(someScreen))
+			{
+				Session_UserInputKey(self.sessionRef, VSF20);
+			}
+			break;
+		
+		case kVK_PageUp: // 0x74 == VSPGUP_220DEL
+		case kVK_PageDown: // 0x79 == VSPGDN_220PGDN
+		case kVK_Home: // 0x73 == VSHOME_220INS
+		case kVK_End: // 0x77 == VSEND_220PGUP
+			if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_SupportsPageKeys(someScreen))
+			{
+				id< Commands_TerminalScreenPaging >		asPager = ([userFocusNSView conformsToProtocol:@protocol(Commands_TerminalScreenPaging)]
+																	? STATIC_CAST(userFocusNSView, id< Commands_TerminalScreenPaging >)
+																	: nil);
+				
+				
+				if (nil == asPager)
+				{
+					Console_Warning(Console_WriteLine, "failed to find appropriate target for paging command");
+				}
+				else
+				{
+					switch (aVirtualKeyCode)
+					{
+					case kVK_PageUp:
+						[asPager performTerminalViewPageUp:nil];
+						break;
+					
+					case kVK_PageDown:
+						[asPager performTerminalViewPageDown:nil];
+						break;
+					
+					case kVK_Home:
+						[asPager performTerminalViewPageHome:nil];
+						break;
+					
+					case kVK_End:
+						[asPager performTerminalViewPageEnd:nil];
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+				}
+			}
+			break;
+		
+		default:
+			// no other virtual key codes have significance
+			*outIsHandled = NO;
+			break;
+		}
+	}
+}// receivedVirtualKeyPress:terminalView:didHandle:
 
 
 @end //}

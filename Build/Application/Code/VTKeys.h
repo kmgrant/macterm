@@ -35,6 +35,9 @@
 
 #pragma once
 
+// Mac includes
+#import <Carbon/Carbon.h> // for kVK... virtual key codes (TEMPORARY; deprecated)
+
 
 
 #pragma mark Constants
@@ -151,43 +154,38 @@ enum VTKeys_FKey
 };
 
 /*!
-Internal codes for identifying special keys.  They appear to be
-arbitrary, however their values should be above the normal ASCII
-range.
-
-IMPORTANT:	The order of these values (and the skipped values)
-			is depended upon in code in Session.cp that performs
-			key mappings for Session_UserInputKey().
+Virtual key codes for special keys.
 */
 enum
 {
-	VSF10			= 96,  //!< function key 10; F5  on Mac keyboard
-	VSF11			= 97,  //!< function key 11; F6  on Mac keyboard
-	VSF12			= 98,  //!< function key 12; F7  on Mac keyboard
-	VSF8			= 99,  //!< function key  8; F3  on Mac keyboard
-	VSF13			= 100, //!< function key 13; F8  on Mac keyboard
-	VSF14			= 101, //!< function key 14; F9  on Mac keyboard
-	//				// 102 is unused
-	VSF16_220DO		= 103, //!< function key 16; F11 on Mac keyboard (“do” key on VT220)
-	//				// 104 is unused
-	VSF18			= 105, //!< function key 18; F13 on Mac keyboard
-	//				// 106 is unused
-	VSF19			= 107, //!< function key 19; F14 on Mac keyboard
-	//				// 108 is unused
-	VSF15_220HELP	= 109, //!< function key 15; F10 on Mac keyboard (“help” key on VT220)
-	//				// 110 is unused
-	VSF17			= 111, //!< function key 17; F12 on Mac keyboard
-	//				// 112 is unused
-	VSF20			= 113, //!< function key 20; F15 on Mac keyboard
-	VSHELP_220FIND	= 114, //!< help key (“find” key on VT220)
-	VSHOME_220INS	= 115, //!< home key (“insert” key on VT220)
-	VSPGUP_220DEL	= 116, //!< page up key (“delete” key on VT220)
-	VSDEL_220SEL	= 117, //!< forward delete key (“select” key on VT220)
-	VSF9			= 118, //!< function key  9; F4  on Mac keyboard
-	VSEND_220PGUP	= 119, //!< end key (“page up” key on VT220)
-	VSF7			= 120, //!< function key  7; F2  on Mac keyboard
-	VSPGDN_220PGDN	= 121, //!< page down key (even on VT220)
-	VSF6			= 122  //!< function key  6; F1  on Mac keyboard
+	VSF10			= kVK_F5,   //!< function key 10; F5  on Mac keyboard
+	VSF11			= kVK_F6,   //!< function key 11; F6  on Mac keyboard
+	VSF12			= kVK_F7,   //!< function key 12; F7  on Mac keyboard
+	VSF8			= kVK_F3,   //!< function key  8; F3  on Mac keyboard
+	VSF13			= kVK_F8,   //!< function key 13; F8  on Mac keyboard
+	VSF14			= kVK_F9,   //!< function key 14; F9  on Mac keyboard
+	VSF16_220DO		= kVK_F11,  //!< function key 16; F11 on Mac keyboard (“do” key on VT220)
+	VSF18			= kVK_F13,  //!< function key 18; F13 on Mac keyboard
+	VSF19			= kVK_F14,  //!< function key 19; F14 on Mac keyboard
+	VSF15_220HELP	= kVK_F10,  //!< function key 15; F10 on Mac keyboard (“help” key on VT220)
+	VSF17			= kVK_F12,  //!< function key 17; F12 on Mac keyboard
+	VSF20			= kVK_F15,  //!< function key 20; F15 on Mac keyboard
+	VSHELP_220FIND	= kVK_Help, //!< help key (“find” key on VT220)
+	VSHOME_220INS	= kVK_Home, //!< home key (“insert” key on VT220)
+	VSPGUP_220DEL	= kVK_PageUp, //!< page up key (“delete” key on VT220)
+	VSDEL_220SEL	= kVK_ForwardDelete, //!< forward delete key (“select” key on VT220)
+	VSF9			= kVK_F4,   //!< function key  9; F4  on Mac keyboard
+	VSEND_220PGUP	= kVK_End,  //!< end key (“page up” key on VT220)
+	VSF7			= kVK_F2,   //!< function key  7; F2  on Mac keyboard
+	VSPGDN_220PGDN	= kVK_PageDown, //!< page down key (even on VT220)
+	VSF6			= kVK_F1    //!< function key  6; F1  on Mac keyboard
+};
+
+enum
+{
+	// there are no apparent kVK_... codes above the value below so
+	// stuff some special values in this range...
+	kVTKeys_BaseCustomKeyCode = 0x81
 };
 
 /*!
@@ -195,10 +193,10 @@ VT220 Cursor Control keys.
 */
 enum
 {
-	VSUP			= 129, //!< up arrow
-	VSDN			= 130, //!< down arrow
-	VSRT			= 131, //!< right arrow
-	VSLT			= 132  //!< left arrow
+	VSUP			= kVTKeys_BaseCustomKeyCode + 0, //!< up arrow
+	VSDN			= kVTKeys_BaseCustomKeyCode + 1, //!< down arrow
+	VSRT			= kVTKeys_BaseCustomKeyCode + 2, //!< right arrow
+	VSLT			= kVTKeys_BaseCustomKeyCode + 3  //!< left arrow
 };
 
 /*!
@@ -206,24 +204,24 @@ VT220 Auxiliary Keypad keys.
 */
 enum
 {
-	VSK0			= 133, //!< keypad 0
-	VSK1			= 134, //!< keypad 1
-	VSK2			= 135, //!< keypad 2
-	VSK3			= 136, //!< keypad 3
-	VSK4			= 137, //!< keypad 4
-	VSK5			= 138, //!< keypad 5
-	VSK6			= 139, //!< keypad 6
-	VSK7			= 140, //!< keypad 7
-	VSK8			= 141, //!< keypad 8
-	VSK9			= 142, //!< keypad 9
-	VSKC			= 143, //!< keypad ,
-	VSKM			= 144, //!< keypad -
-	VSKP			= 145, //!< keypad .
-	VSKE			= 146, //!< enter
-	VSF1			= 147, //!< PF1 (programmable function key); clear on Mac keypad
-	VSF2			= 148, //!< PF2 (programmable function key); = on Mac keypad
-	VSF3			= 149, //!< PF3 (programmable function key); / on Mac keypad
-	VSF4			= 150  //!< PF4 (programmable function key); * on Mac keypad
+	VSK0			= kVTKeys_BaseCustomKeyCode + 4,  //!< keypad 0
+	VSK1			= kVTKeys_BaseCustomKeyCode + 5,  //!< keypad 1
+	VSK2			= kVTKeys_BaseCustomKeyCode + 6,  //!< keypad 2
+	VSK3			= kVTKeys_BaseCustomKeyCode + 7,  //!< keypad 3
+	VSK4			= kVTKeys_BaseCustomKeyCode + 8,  //!< keypad 4
+	VSK5			= kVTKeys_BaseCustomKeyCode + 9,  //!< keypad 5
+	VSK6			= kVTKeys_BaseCustomKeyCode + 10, //!< keypad 6
+	VSK7			= kVTKeys_BaseCustomKeyCode + 11, //!< keypad 7
+	VSK8			= kVTKeys_BaseCustomKeyCode + 12, //!< keypad 8
+	VSK9			= kVTKeys_BaseCustomKeyCode + 13, //!< keypad 9
+	VSKC			= kVTKeys_BaseCustomKeyCode + 14, //!< keypad ,
+	VSKM			= kVTKeys_BaseCustomKeyCode + 15, //!< keypad -
+	VSKP			= kVTKeys_BaseCustomKeyCode + 16, //!< keypad .
+	VSKE			= kVTKeys_BaseCustomKeyCode + 17, //!< enter
+	VSF1			= kVTKeys_BaseCustomKeyCode + 18, //!< PF1 (programmable function key); clear on Mac keypad
+	VSF2			= kVTKeys_BaseCustomKeyCode + 19, //!< PF2 (programmable function key); = on Mac keypad
+	VSF3			= kVTKeys_BaseCustomKeyCode + 20, //!< PF3 (programmable function key); / on Mac keypad
+	VSF4			= kVTKeys_BaseCustomKeyCode + 21  //!< PF4 (programmable function key); * on Mac keypad
 };
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

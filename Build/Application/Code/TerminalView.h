@@ -305,23 +305,39 @@ sub-protocol of NSTextInputClient).
 
 @required
 
-	// process the given string as user input (send to a session)
+	// user input of control with given character (e.g. 'c' means control-C)
 	- (void)
-	receivedString:(NSString*)_
+	receivedControlWithCharacter:(char)_
 	terminalView:(TerminalViewRef)_;
 
-	// if the Control key is down, user has pressed Control with given character (e.g. Control-C)
-	- (void)
-	receivedControlCharacter:(char)_
-	terminalView:(TerminalViewRef)_;
-
-	// user input delete key (send appropriate sequence to a session)
+	// user input of delete key (send appropriate sequence to a session)
 	- (void)
 	receivedDeleteBackwardInTerminalView:(TerminalViewRef)_;
+
+	// user input of delete key with option pressed (send appropriate sequence to a session)
+	- (void)
+	receivedDeleteWordBackwardInTerminalView:(TerminalViewRef)_;
+
+	// user input of defined Emacs meta sequence with given character (e.g. 'x' means meta-X)
+	- (void)
+	receivedMetaWithCharacter:(char)_
+	terminalView:(TerminalViewRef)_;
 
 	// user input newline, except control-M goes to "receivedControlCharacter:terminalView:" 
 	- (void)
 	receivedNewlineInTerminalView:(TerminalViewRef)_;
+
+	// generic fallback; process given string as user input (send to a session)
+	- (void)
+	receivedString:(NSString*)_
+	terminalView:(TerminalViewRef)_;
+
+	// user input of special function key (e.g. F1) not covered by normal text or other case above;
+	// if "didHandle:" is set to NO on return, the virtual key is sent to the system handler
+	- (void)
+	receivedVirtualKeyPress:(UInt32)_
+	terminalView:(TerminalViewRef)_
+	didHandle:(BOOL*)_;
 
 @end //}
 

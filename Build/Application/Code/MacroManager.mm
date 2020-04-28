@@ -448,10 +448,10 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 		
 		// NOTE: if a command key has not been assigned to the item,
 		// setting its modifiers will have no visible effect
-		if (modifiers & kMacroManager_ModifierKeyMaskCommand) abbreviatedModifiers |= NSCommandKeyMask;
-		if (modifiers & kMacroManager_ModifierKeyMaskControl) abbreviatedModifiers |= NSControlKeyMask;
-		if (modifiers & kMacroManager_ModifierKeyMaskOption) abbreviatedModifiers |= NSAlternateKeyMask;
-		if (modifiers & kMacroManager_ModifierKeyMaskShift) abbreviatedModifiers |= NSShiftKeyMask;
+		if (modifiers & kMacroManager_ModifierKeyMaskCommand) abbreviatedModifiers |= NSEventModifierFlagCommand;
+		if (modifiers & kMacroManager_ModifierKeyMaskControl) abbreviatedModifiers |= NSEventModifierFlagControl;
+		if (modifiers & kMacroManager_ModifierKeyMaskOption) abbreviatedModifiers |= NSEventModifierFlagOption;
+		if (modifiers & kMacroManager_ModifierKeyMaskShift) abbreviatedModifiers |= NSEventModifierFlagShift;
 		[inMenuItem setKeyEquivalentModifierMask:abbreviatedModifiers];
 	}
 	else

@@ -911,7 +911,7 @@ setThirdButtonName:(NSString*)		aString
 		// TEMPORARY; despite this setting, button keys do not seem
 		// to work; need to investigate why...
 		self->otherButton.keyEquivalent = keyCharString;
-		self->otherButton.keyEquivalentModifierMask = NSCommandKeyMask;
+		self->otherButton.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 	}
 	
 	// NOTE: UI updates are OK here because there are no

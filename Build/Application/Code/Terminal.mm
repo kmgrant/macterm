@@ -2807,62 +2807,6 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 
 
 /*!
-Returns whether the terminal emulator for the given
-terminal is exactly VT100 (and NOT a compatible terminal
-such as VT102).
-
-WARNING:	Try not to rely on a routine like this.  It
-			is far better to query this module generically
-			for terminal features, than to check for a
-			specific terminal.  This routine may go away
-			in the future.
-
-(3.0)
-*/
-Boolean
-Terminal_EmulatorIsVT100	(TerminalScreenRef		inRef)
-{
-	Boolean						result = false;
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		result = (dataPtr->emulator.primaryType == kEmulation_FullTypeVT100);
-	}
-	return result;
-}// EmulatorIsVT100
-
-
-/*!
-Returns whether the terminal emulator for the given
-terminal is exactly VT220 (and NOT a somewhat compatible
-terminal such as VT100).
-
-WARNING:	Try not to rely on a routine like this.  It
-			is far better to query this module generically
-			for terminal features, than to check for a
-			specific terminal.  This routine may go away
-			in the future.
-
-(3.0)
-*/
-Boolean
-Terminal_EmulatorIsVT220	(TerminalScreenRef		inRef)
-{
-	Boolean						result = false;
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (nullptr != dataPtr)
-	{
-		result = (dataPtr->emulator.primaryType == kEmulation_FullTypeVT220);
-	}
-	return result;
-}// EmulatorIsVT220
-
-
-/*!
 Sends a stream of characters originating in a
 C-style string to the specified screen’s terminal
 emulator, interpreting escape sequences, etc.
@@ -5093,6 +5037,93 @@ Terminal_StopMonitoring		(TerminalScreenRef			inRef,
 		ListenerModel_RemoveListenerForEvent(dataPtr->changeListenerModel, inForWhatChange, inListener);
 	}
 }// StopMonitoring
+
+
+/*!
+Returns true only if this type of terminal can be sent
+function key sequences (VT220 or above, and XTerm).
+
+This is a base property of the terminal; it does not
+reflect other sources of settings, such as system
+function key overrides.
+
+(2020.04)
+*/
+Boolean
+Terminal_SupportsFunctionKeys	(TerminalScreenRef		inRef)
+{
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	Boolean				result = false;
+	
+	
+	if (nullptr != dataPtr)
+	{
+		auto const		emulationType = dataPtr->emulator.primaryType;
+		auto const		baseType = (emulationType & kEmulation_BaseTypeMask);
+		auto const		variantType = (emulationType & kEmulation_VariantMask);
+		
+		
+		switch (baseType)
+		{
+		case kEmulation_BaseTypeVT:
+			result = ((kEmulation_VariantVT100 != variantType) && (kEmulation_VariantVT102 != variantType));
+			break;
+		
+		case kEmulation_BaseTypeXTerm:
+			result = true;
+			break;
+		
+		default:
+			break;
+		}
+	}
+	
+	return result;
+}// SupportsFunctionKeys
+
+
+/*!
+Returns true only if this type of terminal can be sent
+page-up, page-down, home or end sequences (VT102 or above,
+and XTerm).
+
+This is a base property of the terminal; it does not
+consider other sources of settings, such as a user
+preference for “local” page keys.
+
+(2020.04)
+*/
+Boolean
+Terminal_SupportsPageKeys	(TerminalScreenRef		inRef)
+{
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	Boolean				result = false;
+	
+	
+	if (nullptr != dataPtr)
+	{
+		auto const		emulationType = dataPtr->emulator.primaryType;
+		auto const		baseType = (emulationType & kEmulation_BaseTypeMask);
+		auto const		variantType = (emulationType & kEmulation_VariantMask);
+		
+		
+		switch (baseType)
+		{
+		case kEmulation_BaseTypeVT:
+			result = (kEmulation_VariantVT100 != variantType);
+			break;
+		
+		case kEmulation_BaseTypeXTerm:
+			result = true;
+			break;
+		
+		default:
+			break;
+		}
+	}
+	
+	return result;
+}// SupportsPageKeys
 
 
 /*!
