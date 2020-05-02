@@ -337,6 +337,7 @@
 		0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorWindow.mm; path = Application/Code/VectorWindow.mm; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelWorkspaces.mm; path = Application/Code/PrefPanelWorkspaces.mm; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
+		0A4EA9F7245DDC4C003C1C9F /* Network.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Network.h; path = Application/Code/Network.h; sourceTree = "<group>"; };
 		0A4FAF941525694700B8142A /* Popover.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Popover.mm; path = Shared/Code/Popover.mm; sourceTree = "<group>"; };
 		0A4FAF961525695400B8142A /* Popover.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Popover.objc++.h"; path = "Shared/Code/Popover.objc++.h"; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
@@ -674,6 +675,7 @@
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
 				0A03DBC9063F6BCC00C38B78 /* MacroManager.h */,
+				0A4EA9F7245DDC4C003C1C9F /* Network.h */,
 				0A03A1EC1D9A298A00411248 /* OtherApps.h */,
 				0A46040F0554376100ACDF3A /* Panel.h */,
 				0AFF137F0AF421C5006CCA34 /* Preferences */,
