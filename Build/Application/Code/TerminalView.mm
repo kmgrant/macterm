@@ -329,7 +329,6 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 		{
 			NSFont*				normalFont;		// font for most text; also represents current family, size and metrics (Cocoa terminals)
 			NSFont*				boldFont;		// alternate font for bold-weighted text (might match "normalFont" if no special font is found)
-			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
 			CFRetainRelease		familyName;		// CFStringRef; font name (as might appear in a Font menu)
 			struct Metrics
 			{
@@ -402,7 +401,6 @@ Boolean				addDataSource						(My_TerminalViewPtr, TerminalScreenRef);
 void				animateBlinkingItems				(NSTimer*, TerminalViewRef);
 void				audioEvent							(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 NSTimeInterval		calculateAnimationStageDelay		(My_TerminalViewPtr, My_TimeIntervalList::size_type);
-void				calculateDoubleSize					(My_TerminalViewPtr, CGFloat&, CGFloat&);
 UInt16				copyColorPreferences				(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
 UInt16				copyFontPreferences					(My_TerminalViewPtr, Preferences_ContextRef, Boolean);
 void				copySelectedTextIfUserPreference	(My_TerminalViewPtr);
@@ -472,8 +470,7 @@ void				setFontAndSize						(My_TerminalViewPtr, CFStringRef, CGFloat, Float32 =
 void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
-void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object,
-														 Float32 = 1.0);
+void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object, Boolean = false);
 void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, CGRect*, HIMutableShapeRef,
 														 Terminal_CursorType = kTerminal_CursorTypeCurrentPreferenceValue);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
@@ -4205,29 +4202,6 @@ calculateAnimationStageDelay	(My_TerminalViewPtr					inTerminalViewPtr,
 
 
 /*!
-Determines the ideal font size for the font of the given
-terminal screen that would fit 4 screen cells.  Normally
-text is sized to fit one cell, but double-width and double-
-height text fills 4 cells.
-
-Returns the double font size.  The “official” double size
-of the specified terminal is NOT changed.
-
-(3.0)
-*/
-void
-calculateDoubleSize		(My_TerminalViewPtr		inTerminalViewPtr,
-						 CGFloat&				outPointSize,
-						 CGFloat&				outBaseLine)
-{
-	//Console_Warning(Console_WriteLine, "calculate-double-size not implemented for Cocoa"); // debug for later
-	// UNIMPLEMENTED
-	outPointSize = 0;
-	outBaseLine = 0;
-}// calculateDoubleSize
-
-
-/*!
 Attempts to read all supported color tags from the given
 preference context, and any colors that exist will be
 used to update the specified view.
@@ -5185,8 +5159,7 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 	
 	// font attributes are set directly on the (attributed) string
 	// of the text storage, not in the graphics context
-	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict,
-								inAttributes, 1.0/* alpha */);
+	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict, inAttributes);
 	
 	if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
 	{
@@ -8843,13 +8816,17 @@ Currently this can set the following attribute keys:
 - NSForegroundColorAttributeName
 - NSUnderlineStyleAttributeName
 
+If "inSuppressKerning" is set to false, the character width
+is also adjusted by setting:
+- NSKernAttributeName
+
 (4.0)
 */
 void
 setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 								 NSMutableDictionary*		inoutDictionary,
 								 TextAttributes_Object		inAttributes,
-								 Float32					UNUSED_ARGUMENT(inAlpha))
+								 Boolean					inSuppressKerning)
 {
 	//
 	// IMPORTANT: since the output might be a persistent dictionary,
@@ -8910,7 +8887,10 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 			[inoutDictionary setObject:sourceFont forKey:NSFontAttributeName];
 		}
 		
-		if (1.0 != inTerminalViewPtr->text.font.scaleWidthPerCell)
+		// kerning only applies when setting attributes for drawing; if this
+		// function is being called in order to measure for layout, kerning
+		// should be disabled because "baseWidthPerCell" will NOT be valid
+		if ((false == inSuppressKerning) && (1.0 != inTerminalViewPtr->text.font.scaleWidthPerCell))
 		{
 			[inoutDictionary setObject:[NSNumber numberWithDouble:((inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels() * inTerminalViewPtr->text.font.scaleWidthPerCell) -
 																	inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels())]
@@ -9155,17 +9135,18 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 	// INCOMPLETE; could offer user preferences for influencing line height,
 	// e.g. perhaps to ignore leading for lines that are closer together
 #if 0
-	// alternate version that trusts the font’s base settings
-	inTerminalViewPtr->text.font.normalMetrics.baseLine = (sourceFont.descender + [sourceFont leading] / 2.0f);
-	inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(sourceFont.ascender - sourceFont.descender);
+	// alternate version that trusts the font’s base settings (note that
+	// the "descender" is negative so it is negated when finding range)
+	inTerminalViewPtr->text.font.normalMetrics.baseLine = (-sourceFont.descender + [sourceFont leading] / 2.0f);
+	inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(sourceFont.ascender + -sourceFont.descender);
 #else
 	// since Core Text is used for rendering most text, use the
 	// same API to request rendering-based measurements
 	NSMutableDictionary*	attributeDict = [[NSMutableDictionary alloc] init];
-	setTextAttributesDictionary(inTerminalViewPtr, attributeDict, TextAttributes_Object(), 1.0/* alpha */);
+	setTextAttributesDictionary(inTerminalViewPtr, attributeDict, TextAttributes_Object(), true/* suppress kerning */);
 	{
 		NSAttributedString*		attributedString = [[[NSAttributedString alloc]
-													initWithString:@"Ag"/* arbitrary; test string for measurement */
+													initWithString:@"Âgp"/* arbitrary; test string for measurement */
 																	attributes:attributeDict]
 																	autorelease];
 		CFRetainRelease			lineObject(CTLineCreateWithAttributedString
@@ -9181,23 +9162,37 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		lineWidth = CTLineGetTypographicBounds(asLineRef, &ascentMeasurement, &descentMeasurement, &leadingMeasurement);
 		inTerminalViewPtr->text.font.normalMetrics.baseLine = (descentMeasurement + (leadingMeasurement / 2.0f));
 		inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(ascentMeasurement + descentMeasurement + leadingMeasurement);
-		//inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(ascentMeasurement - (leadingMeasurement / 2.0f));
 	}
 	[attributeDict release]; attributeDict = nil;
 #endif
-	inTerminalViewPtr->text.font.isMonospaced = (YES == [sourceFont isFixedPitch]);
 	
-	// set width per character
-	if (inTerminalViewPtr->text.font.isMonospaced)
+#if 0
+	// note: monospace is not reliable; the resulting advancement is slightly
+	// different (or even a lot different) depending on the font, versus the
+	// value obtained by consistently measuring a glyph (see below)
+	if (YES == [sourceFont isFixedPitch])
 	{
 		inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont maximumAdvancement].width);
 	}
 	else
+#else
 	{
-		inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width);
+		// since NSFont "advancementForGlyph" is deprecated, find CGGlyph instead
+		CFRetainRelease		fontObject(CTFontCreateWithName(BRIDGE_CAST(sourceFont.fontName, CFStringRef), sourceFont.pointSize, nullptr/* transform */),
+										CFRetainRelease::kAlreadyRetained);
+		CTFontRef			asFontRef = REINTERPRET_CAST(fontObject.returnCFTypeRef(), CTFontRef);
+		CGGlyph				letterGlyph = CTFontGetGlyphWithName(asFontRef, CFSTR("A"));
+		
+		
+		//inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels([sourceFont advancementForGlyph:[sourceFont glyphWithName:@"A"]].width);
+		inTerminalViewPtr->text.font.baseWidthPerCell.setPrecisePixels(CTFontGetAdvancesForGlyphs(asFontRef, kCTFontOrientationHorizontal, &letterGlyph,
+																									nullptr/* array of advances */, 1/* count */));
 	}
+#endif
 	
-	// scale the font width according to user preferences
+	// scale the font width according to user preferences (this should be
+	// consistent with kerning in setTextAttributesDictionary(), which
+	// is suppressed in the call above to find a proper base width)
 	{
 		CGFloat		reduction = inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels();
 		
@@ -9206,9 +9201,11 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		inTerminalViewPtr->text.font.widthPerCell.setPrecisePixels(reduction);
 	}
 	
-	// now use the font metrics to determine how big double-width text should be
-	calculateDoubleSize(inTerminalViewPtr, inTerminalViewPtr->text.font.doubleMetrics.size,
-						inTerminalViewPtr->text.font.doubleMetrics.baseLine);
+	// now use the font metrics to determine how big double-width text should be;
+	// this is the ideal font size that would fit 4 screen cells (which is not
+	// necessarily a simple doubling of the normal font)
+	//inTerminalViewPtr->text.font.doubleMetrics.size = ...
+	//inTerminalViewPtr->text.font.doubleMetrics.baseLine = ...
 	
 	// the thickness of lines in certain glyphs is also scaled with the font size
 	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max< CGFloat >(1.0f, inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 5.0f); // arbitrary
@@ -12148,7 +12145,7 @@ mouseDown:(NSEvent*)	anEvent
 			UNUSED_RETURN(OSStatus)HIShapeOffset(imageBlockShapeCopy, -shapeBounds.origin.x, -shapeBounds.origin.y);
 			
 			// determine appropriate font, size, etc.
-			setTextAttributesDictionary(viewPtr, attributeDict, TextAttributes_Object(), 1.0/* alpha */);
+			setTextAttributesDictionary(viewPtr, attributeDict, TextAttributes_Object());
 			
 			// create a drag image (outline of selected text area)
 			dragImage = [NSImage imageWithSize:shapeBounds.size flipped:YES
