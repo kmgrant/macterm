@@ -2434,12 +2434,39 @@ ifEnabled:(BOOL)				onlyIfEnabled
 - (IBAction)
 performActionForMacro:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	UInt16		oneBasedMacroNumber = 0;
+	
+	
+	if ([sender isKindOfClass:NSToolbarItem.class])
 	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		UInt16			oneBasedMacroNumber = STATIC_CAST([asMenuItem tag], UInt16);
+		NSToolbarItem*		asToolbarItem = STATIC_CAST(sender, NSToolbarItem*);
 		
 		
+		oneBasedMacroNumber = STATIC_CAST(asToolbarItem.tag, UInt16);
+	}
+	else if ([sender isKindOfClass:NSMenuItem.class])
+	{
+		NSMenuItem*		asMenuItem = STATIC_CAST(sender, NSMenuItem*);
+		
+		
+		oneBasedMacroNumber = STATIC_CAST(asMenuItem.tag, UInt16);
+	}
+	else if ([sender isKindOfClass:NSView.class])
+	{
+		// (for view-based toolbar items or other uses)
+		NSView*		asView = STATIC_CAST(sender, NSView*);
+		
+		
+		oneBasedMacroNumber = STATIC_CAST(asView.tag, UInt16);
+	}
+	
+	if (0 == oneBasedMacroNumber)
+	{
+		Console_Warning(Console_WriteLine, "unable to determine target macro");
+		Sound_StandardAlert();
+	}
+	else
+	{
 		MacroManager_UserInputMacro(oneBasedMacroNumber - 1/* zero-based macro number */);
 	}
 }
@@ -2447,44 +2474,73 @@ performActionForMacro:(id)		sender
 canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 	Preferences_ContextRef	currentMacros = MacroManager_ReturnCurrentMacros();
-	NSMenuItem*				asMenuItem = (NSMenuItem*)anItem;
-	UInt16					macroIndex = STATIC_CAST([asMenuItem tag], UInt16);
+	NSMenuItem*				asMenuItem = nil;
+	NSToolbarItem*			asToolbarItem = nil;
+	NSView*					asView = nil;
+	UInt16					oneBasedMacroNumber = 0;
 	Boolean					isTerminalWindowActive = (nullptr != TerminalWindow_ReturnFromMainWindow());
 	BOOL					result = (nullptr != currentMacros);
 	
 	
+	if ([STATIC_CAST(anItem, id) isKindOfClass:NSToolbarItem.class])
+	{
+		asToolbarItem = STATIC_CAST(anItem, NSToolbarItem*);
+		oneBasedMacroNumber = STATIC_CAST(asToolbarItem.tag, UInt16);
+	}
+	else if ([STATIC_CAST(anItem, id) isKindOfClass:NSMenuItem.class])
+	{
+		asMenuItem = STATIC_CAST(anItem, NSMenuItem*);
+		oneBasedMacroNumber = STATIC_CAST(asMenuItem.tag, UInt16);
+	}
+	else if ([STATIC_CAST(anItem, id) isKindOfClass:NSView.class])
+	{
+		// (for view-based toolbar items or other uses)
+		asView = STATIC_CAST(anItem, NSView*);
+		oneBasedMacroNumber = STATIC_CAST(asView.tag, UInt16);
+	}
+	
 	if (nullptr == currentMacros)
 	{
 		// reset the item
-		if (5 == macroIndex)
+		if (nil != asMenuItem)
 		{
-			// LOCALIZE THIS
-			[asMenuItem setTitle:NSLocalizedString(@"Macros have been disabled.",
-													@"used in Macros menu when no macro set is active")];
+			if (5 == oneBasedMacroNumber)
+			{
+				asMenuItem.title = NSLocalizedString(@"Macros have been disabled.",
+														@"used in Macros menu when no macro set is active");
+			}
+			else if (7 == oneBasedMacroNumber)
+			{
+				asMenuItem.title = NSLocalizedString(@"To use macros, choose a set from the list below.",
+														@"used in Macros menu when no macro set is active");
+			}
+			else if (8 == oneBasedMacroNumber)
+			{
+				asMenuItem.title = NSLocalizedString(@"Use Preferences to modify macros, or to add or remove sets.",
+														@"used in Macros menu when no macro set is active");
+			}
+			else
+			{
+				asMenuItem.title = @"";
+			}
+			asMenuItem.keyEquivalent = @"";
+			asMenuItem.keyEquivalentModifierMask = 0;
 		}
-		else if (7 == macroIndex)
+		else if (nil != asToolbarItem)
 		{
-			// LOCALIZE THIS
-			[asMenuItem setTitle:NSLocalizedString(@"To use macros, choose a set from the list below.",
-													@"used in Macros menu when no macro set is active")];
+			// (nothing yet)
 		}
-		else if (8 == macroIndex)
+		else if (nil != asView)
 		{
-			// LOCALIZE THIS
-			[asMenuItem setTitle:NSLocalizedString(@"Use Preferences to modify macros, or to add or remove sets.",
-													@"used in Macros menu when no macro set is active")];
+			// (nothing yet)
 		}
-		else
-		{
-			[asMenuItem setTitle:@""];
-		}
-		[asMenuItem setKeyEquivalent:@""];
-		[asMenuItem setKeyEquivalentModifierMask:0];
 	}
 	else
 	{
-		Boolean		macroIsUsable = MacroManager_UpdateMenuItem(asMenuItem, macroIndex/* one-based */, isTerminalWindowActive,
-																currentMacros, true/* show inherited */);
+		Boolean		macroIsUsable = ((oneBasedMacroNumber > 0)
+									? MacroManager_UpdateMenuItem(asMenuItem, oneBasedMacroNumber/* one-based */, isTerminalWindowActive,
+																	currentMacros, true/* show inherited */)
+									: false);
 		
 		
 		if ((result) && (false == macroIsUsable))

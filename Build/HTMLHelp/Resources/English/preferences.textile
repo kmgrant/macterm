@@ -391,17 +391,14 @@ The menu bar is hidden in Full Screen mode but it can normally
  and pausing a moment.
 
 If you want the menu bar to be completely unusable, disable this
- option.  Note that when "Use fast (non-system) mode" is unset,
- the system always makes the menu bar available.
+ option.
 
 h5. Show window frame
 
 If unset, the content region of a terminal window fills its whole
  display, leaving no room for the window title or toolbar (though
  the colored matte space is still present, and there is space for
- a scroll bar).  Note that when "Use fast (non-system) mode" is
- unset, the system will keep the toolbar in Full Screen if it was
- visible outside of Full Screen, and the window title is hidden.
+ a scroll bar).
 
 h5. Allow "Force Quit" command
 
@@ -414,42 +411,6 @@ Note, this offers "pretty good" security but it does not guard
  For example, a background application could pop up, MacTerm
  could crash, or the user may be able to command-Tab to some other
  program.
-
-This option is only available when "Use fast (non-system) mode"
- is set, because MacTerm cannot customize the system's standard
- Full Screen mechanism.
-
-h4. Method
-
-h5. Use fast (non-system) mode
-
-Suppresses the normal Full Screen mechanism of macOS and uses
- a custom MacTerm scheme instead.
-
-The macOS mode has advantages and disadvantages; it is generally
- better than the custom scheme for small single screens such as
- laptops, and generally worse on desktops with multiple displays.
- The macOS method is more integrated with the system, allowing
- gestures and the ability to create more Full Screen windows than
- you have displays.  On the other hand, it adds slow animations
- and most of the Access Control preferences are not available
- because the system behavior cannot be changed by MacTerm.
-
-Note that the system will automatically put a standard button in
- your terminal windows when the system mode is in effect.  Using
- View >> Customize Toolbar... you can remove the MacTerm toolbar
- item for Full Screen if you wish (its effect is the same).
-
-h4. Deactivation
-
-h5. Display an "off switch" window
-
-If you do not want your kiosk disturbed, you may wish to remove
- the floating button that appears by default.  (Full Screen can
- always be disabled but without this button it is less likely
- that visitors will determine how.)
-
-
 
 h3(#generalnotification). Notifications
 
@@ -496,14 +457,14 @@ For "Background notification on bell", as well as any other alert
 h2(#macros). Macros
 
 bq. You can create more than one set of preferences in
- this category.  When you select the icon, a drawer
+ this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
- choose a name from the list in the drawer, and then
+ choose a name from the list in the sidebar, and then
  edit that collection's settings in the main Preferences
  window.
 
 bq. Each set in this category has an additional list
- of items.  First choose a set from the drawer, then
+ of items.  First choose a set from the sidebar, then
  choose an item from the numbered list, before editing.
  You can also edit the names of the numbered items, as
  you would for any item in the Finder.
@@ -517,10 +478,19 @@ The Macros menu displays macros that are currently in effect,
  from Default (actions in slots not reimplemented by the set
  that you have chosen).  See the "Default Item" section above.
 
+It is also possible to display macros in the toolbar.  Each
+ macro toolbar item is associated with an entry in the current
+ macro set, and it dynamically changes.  For example, if the
+ item “Macro 1” is put in the toolbar, the item will always
+ activate the first macro in the current macro set and the item
+ name will change with the macro.  (If a macro has no name, a
+ generic icon and macro number is shown instead.)
+
 The active set can be changed using the Macros menu.  If the "None"
  set is chosen, all macros are disabled.  Otherwise, the macros
- can be used by typing the key equivalent displayed in the menu
- or by selecting its name from the Macros menu.
+ can be used by typing the key equivalent displayed in the menu,
+ by selecting its name from the Macros menu or by clicking a
+ toolbar item corresponding to the macro.
 
 h3. Macro List
 
@@ -690,9 +660,9 @@ fn2. Currently there is no way to choose which network address is actually
 h2(#workspaces). Workspaces
 
 bq. You can create more than one set of preferences in
- this category.  When you select the icon, a drawer
+ this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
- choose a name from the list in the drawer, and then
+ choose a name from the list in the sidebar, and then
  edit that collection's settings in the main Preferences
  window.
 
@@ -776,9 +746,9 @@ See also the "Window Stacking Origin", which applies to any new
 h2(#sessions). Sessions
 
 bq. You can create more than one set of preferences in
- this category.  When you select the icon, a drawer
+ this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
- choose a name from the list in the drawer, and then
+ choose a name from the list in the sidebar, and then
  edit that collection's settings in the main Preferences
  window.
 
@@ -1061,9 +1031,9 @@ When a new vector graphics image is created (known in TEK as a
 h2(#terminals). Terminals
 
 bq. You can create more than one set of preferences in
- this category.  When you select the icon, a drawer
+ this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
- choose a name from the list in the drawer, and then
+ choose a name from the list in the sidebar, and then
  edit that collection's settings in the main Preferences
  window.
 
@@ -1400,9 +1370,9 @@ Prevents the home, end, page up and page down keys from sending
 h2(#formats). Formats
 
 bq. You can create more than one set of preferences in
- this category.  When you select the icon, a drawer
+ this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
- choose a name from the list in the drawer, and then
+ choose a name from the list in the sidebar, and then
  edit that collection's settings in the main Preferences
  window.
 
@@ -1459,9 +1429,9 @@ Not all applications in terminals will make use of these colors.
 h2(#translations). Translations
 
 bq. You can create more than one set of preferences in
- this category.  When you select the icon, a drawer
+ this category.  When you select the icon, a sidebar
  appears with all the collections you have.  Simply
- choose a name from the list in the drawer, and then
+ choose a name from the list in the sidebar, and then
  edit that collection's settings in the main Preferences
  window.
 

@@ -83,6 +83,9 @@ typedef ResultCode< UInt16 >	MacroManager_Result;
 MacroManager_Result const	kMacroManager_ResultOK(0);					//!< no error
 MacroManager_Result const	kMacroManager_ResultGenericFailure(1);		//!< unspecified error occurred
 
+/*!
+Possible ways for macros to interpret their content and act on it. 
+*/
 enum MacroManager_Action
 {
 	kMacroManager_ActionSendTextVerbatim			= 'MAEV',	//!< macro content is a string to send as-is (no
@@ -99,6 +102,16 @@ enum MacroManager_Action
 																//!  metacharacters allowed)
 	kMacroManager_ActionFindTextProcessingEscapes	= 'MAFS'	//!< macro content is a string to send (perhaps
 																//!  with metacharacters to be substituted)
+};
+
+/*!
+Used with MacroManager_StartMonitoring() and MacroManager_StopMonitoring()
+to be notified of important changes.
+*/
+enum MacroManager_Change
+{
+	kMacroManager_ChangeMacroSetFrom				= 'MMSF',	//!< macro set is about to change (context: old MacroManager_ReturnCurrentMacros())
+	kMacroManager_ChangeMacroSetTo					= 'MMST',	//!< macro set has now changed (context: new MacroManager_ReturnCurrentMacros())
 };
 
 /*!
@@ -156,6 +169,19 @@ MacroManager_Result
 	MacroManager_UserInputMacro			(UInt16						inZeroBasedMacroIndex,
 										 SessionRef					inTargetSessionOrNullForActiveSession = nullptr,
 										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
+
+//@}
+
+//!\name Receiving Notification of Changes
+//@{
+
+MacroManager_Result
+	MacroManager_StartMonitoring		(MacroManager_Change		inForWhatChange,
+										 ListenerModel_ListenerRef	inListener);
+
+MacroManager_Result
+	MacroManager_StopMonitoring			(MacroManager_Change		inForWhatChange,
+										 ListenerModel_ListenerRef	inListener);
 
 //@}
 

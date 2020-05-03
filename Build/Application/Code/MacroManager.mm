@@ -77,6 +77,7 @@
 #pragma mark Internal Method Prototypes
 namespace {
 
+void						changeNotify						(MacroManager_Change, void*, Boolean = false);
 void						macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 Preferences_ContextRef		returnDefaultMacroSet				(Boolean);
@@ -89,6 +90,15 @@ unichar						virtualKeyToUnicode					(UInt16);
 #pragma mark Variables
 namespace {
 
+ListenerModel_Ref&			gMacroManagerChangeListenerModel ()
+							{
+								static ListenerModel_Ref		_ = ListenerModel_New
+																	(kListenerModel_StyleStandard,
+																		kConstantsRegistry_ListenerModelDescriptorMacroChanges);
+								
+								
+								return _;
+							}
 ListenerModel_ListenerRef&	gMacroSetMonitor ()		{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(macroSetChanged); return x; }
 ListenerModel_ListenerRef&	gPreferencesMonitor ()	{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(preferenceChanged); return x; }
 Preferences_ContextRef&		gCurrentMacroSet ()		{ static Preferences_ContextRef x = returnDefaultMacroSet(true/* retain */); return x; }
@@ -287,6 +297,9 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
+		// notify listeners
+		changeNotify(kMacroManager_ChangeMacroSetFrom, gCurrentMacroSet());
+		
 		// perform last action for previous context
 		if (nullptr != gCurrentMacroSet())
 		{
@@ -342,11 +355,113 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 			}
 		}
 		
+		// notify listeners
+		changeNotify(kMacroManager_ChangeMacroSetTo, gCurrentMacroSet());
+		
 		result = kMacroManager_ResultOK;
 	}
 	
 	return result;
 }// SetCurrentMacros
+
+
+/*!
+Arranges for a callback to be invoked for the given type
+of change.
+
+In addition, for "kMacroManager_ChangeMacroSetTo", the
+callback is invoked immediately with the current macro set
+as the context.
+
+\retval kMacroManager_ResultOK
+if no error occurs
+
+\retval kMacroManager_ResultGenericFailure
+if the specified change type is not valid
+
+(2020.05)
+*/
+MacroManager_Result
+MacroManager_StartMonitoring	(MacroManager_Change		inForWhatChange,
+								 ListenerModel_ListenerRef	inListener)
+{
+	MacroManager_Result		result = kMacroManager_ResultGenericFailure;
+	
+	
+	switch (inForWhatChange)
+	{
+	// Keep this in sync with MacroManager_StopMonitoring().
+	case kMacroManager_ChangeMacroSetFrom:
+	case kMacroManager_ChangeMacroSetTo:
+		{
+			Boolean		addOK = false;
+			
+			
+			addOK = ListenerModel_AddListenerForEvent(gMacroManagerChangeListenerModel(), inForWhatChange,
+														inListener);
+			if (false == addOK)
+			{
+				result = kMacroManager_ResultGenericFailure;
+			}
+			else
+			{
+				result = kMacroManager_ResultOK;
+				
+				if (kMacroManager_ChangeMacroSetTo == inForWhatChange)
+				{
+					// notify of initial value
+					changeNotify(kMacroManager_ChangeMacroSetTo, gCurrentMacroSet());
+				}
+			}
+		}
+		break;
+	
+	default:
+		// unsupported tag for notifiers
+		result = kMacroManager_ResultGenericFailure;
+		break;
+	}
+	
+	return result;
+}// StartMonitoring
+
+
+/*!
+Arranges for a callback to no longer be invoked when
+the specified change occurs.
+
+\retval kMacroManager_ResultOK
+if no error occurs
+
+\retval kMacroManager_ResultGenericFailure
+if the specified change type is not valid
+
+(2020.05)
+*/
+MacroManager_Result
+MacroManager_StopMonitoring	(MacroManager_Change		inForWhatChange,
+							 ListenerModel_ListenerRef	inListener)
+{
+	MacroManager_Result		result = kMacroManager_ResultGenericFailure;
+	
+	
+	switch (inForWhatChange)
+	{
+	// Keep this in sync with MacroManager_StartMonitoring().
+	case kMacroManager_ChangeMacroSetFrom:
+	case kMacroManager_ChangeMacroSetTo:
+		ListenerModel_RemoveListenerForEvent(gMacroManagerChangeListenerModel(), inForWhatChange, inListener);
+		result = kMacroManager_ResultOK;
+		break;
+	
+	default:
+		// unsupported tag for notifiers
+		result = kMacroManager_ResultGenericFailure;
+		break;
+	}
+	
+	return result;
+}// StopMonitoring
 
 
 /*!
@@ -750,6 +865,23 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 namespace {
 
 /*!
+Notifies all listeners for the specified macro manager
+change, passing the given context to the listener.
+
+(2020.05)
+*/
+void
+changeNotify	(MacroManager_Change	inWhatChanged,
+				 void*					inContextOrNull,
+				 Boolean				inIsInitialValue)
+{
+#pragma unused(inIsInitialValue)
+	// invoke listener callback routines appropriately, from the macro manager listener model
+	ListenerModel_NotifyListenersOfEvent(gMacroManagerChangeListenerModel(), inWhatChanged, inContextOrNull);
+}// changeNotify
+
+
+/*!
 The Preferences module calls this routine whenever a
 monitored macro setting is changed.  This allows cached
 strings to be recalculated, menus to be updated, etc.
@@ -830,7 +962,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 	case kPreferences_ChangeNumberOfContexts:
 		// if the current macro set has been destroyed, stop using it!
-		if (false == Preferences_ContextIsValid(MacroManager_ReturnCurrentMacros()))
+		if ((nullptr != MacroManager_ReturnCurrentMacros()) && (false == Preferences_ContextIsValid(MacroManager_ReturnCurrentMacros())))
 		{
 			MacroManager_SetCurrentMacros(nullptr);
 		}

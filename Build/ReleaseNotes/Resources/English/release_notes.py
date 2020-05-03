@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20200502',
     '20190331',
     '20190324',
     '20181216',
@@ -602,6 +603,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20200502': [
+        'Macros can now be invoked by toolbar items.  Each item is bound only to a particular macro number, dynamically showing its action in the toolbar (as you switch to different macro sets).',
+    ],
     '20190331': [
         'Sessions can now have different associated Format settings for system Dark and Light modes.',
     ],

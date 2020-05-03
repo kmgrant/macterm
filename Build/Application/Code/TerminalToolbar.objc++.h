@@ -350,6 +350,23 @@ Toolbar item “L4”.
 
 
 /*!
+Toolbar item to invoke macro with index of tag (in active set).
+*/
+@interface TerminalToolbar_ItemMacro : NSToolbarItem < TerminalToolbar_DisplayModeSensitive,
+														TerminalToolbar_ItemAddRemoveSensitive,
+														TerminalToolbar_ItemHasPaletteProxy,
+														TerminalToolbar_SizeSensitive > //{
+{
+	ListenerModel_StandardListener*		_macroManagerChangeListener;
+	ListenerModel_StandardListener*		_preferenceChangeListener;
+	NSBox*								_borderView;
+	NSButton*							_actionButton;
+	NSInteger							_tag;
+}
+@end //}
+
+
+/*!
 Toolbar item “Default”.
 */
 @interface TerminalToolbar_ItemNewSessionDefaultFavorite : NSToolbarItem @end

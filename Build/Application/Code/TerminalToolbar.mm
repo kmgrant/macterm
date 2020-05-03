@@ -49,6 +49,7 @@
 #import "Commands.h"
 #import "ConstantsRegistry.h"
 #import "EventLoop.h"
+#import "MacroManager.h"
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
@@ -68,6 +69,18 @@ NSString*	kMy_ToolbarItemIDLED1						= @"net.macterm.MacTerm.toolbaritem.led1";
 NSString*	kMy_ToolbarItemIDLED2						= @"net.macterm.MacTerm.toolbaritem.led2";
 NSString*	kMy_ToolbarItemIDLED3						= @"net.macterm.MacTerm.toolbaritem.led3";
 NSString*	kMy_ToolbarItemIDLED4						= @"net.macterm.MacTerm.toolbaritem.led4";
+NSString*	kMy_ToolbarItemIDMacro1						= @"net.macterm.MacTerm.toolbaritem.macro1";
+NSString*	kMy_ToolbarItemIDMacro2						= @"net.macterm.MacTerm.toolbaritem.macro2";
+NSString*	kMy_ToolbarItemIDMacro3						= @"net.macterm.MacTerm.toolbaritem.macro3";
+NSString*	kMy_ToolbarItemIDMacro4						= @"net.macterm.MacTerm.toolbaritem.macro4";
+NSString*	kMy_ToolbarItemIDMacro5						= @"net.macterm.MacTerm.toolbaritem.macro5";
+NSString*	kMy_ToolbarItemIDMacro6						= @"net.macterm.MacTerm.toolbaritem.macro6";
+NSString*	kMy_ToolbarItemIDMacro7						= @"net.macterm.MacTerm.toolbaritem.macro7";
+NSString*	kMy_ToolbarItemIDMacro8						= @"net.macterm.MacTerm.toolbaritem.macro8";
+NSString*	kMy_ToolbarItemIDMacro9						= @"net.macterm.MacTerm.toolbaritem.macro9";
+NSString*	kMy_ToolbarItemIDMacro10					= @"net.macterm.MacTerm.toolbaritem.macro10";
+NSString*	kMy_ToolbarItemIDMacro11					= @"net.macterm.MacTerm.toolbaritem.macro11";
+NSString*	kMy_ToolbarItemIDMacro12					= @"net.macterm.MacTerm.toolbaritem.macro12";
 NSString*	kMy_ToolbarItemIDPrint						= @"net.macterm.MacTerm.toolbaritem.print";
 NSString*	kMy_ToolbarItemIDSuspend					= @"net.macterm.MacTerm.toolbaritem.suspend";
 NSString*	kMy_ToolbarItemIDTabs						= @"net.macterm.MacTerm.toolbaritem.tabs";
@@ -116,88 +129,13 @@ The private class interface.
 /*!
 The private class interface.
 */
-@interface TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal) //{
-
-// methods of the form required by ListenerModel_StandardListener
-	- (void)
-	model:(ListenerModel_Ref)_
-	screenChange:(ListenerModel_Event)_
-	context:(void*)_;
+@interface TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal) //{
 
 // new methods
 	- (void)
-	setStateFromScreen:(TerminalScreenRef)_;
-
-@end //}
-
-/*!
-The private class interface.
-*/
-@interface TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal) //{
-
-// methods of the form required by ListenerModel_StandardListener
+	installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
 	- (void)
-	model:(ListenerModel_Ref)_
-	sessionChange:(ListenerModel_Event)_
-	context:(void*)_;
-
-// new methods
-	- (void)
-	setStateFromSession:(SessionRef)_;
-
-@end //}
-
-/*!
-The private class interface.
-*/
-@interface TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal) //{
-
-// methods of the form required by ListenerModel_StandardListener
-	- (void)
-	model:(ListenerModel_Ref)_
-	screenChange:(ListenerModel_Event)_
-	context:(void*)_;
-
-// new methods
-	- (void)
-	setStateFromScreen:(TerminalScreenRef)_;
-
-@end //}
-
-/*!
-The private class interface.
-*/
-@interface TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal) //{
-
-// methods of the form required by ListenerModel_StandardListener
-	- (void)
-	model:(ListenerModel_Ref)_
-	sessionChange:(ListenerModel_Event)_
-	context:(void*)_;
-
-// new methods
-	- (void)
-	setStateFromSession:(SessionRef)_;
-
-@end //}
-
-/*!
-Private properties.
-*/
-@interface TerminalToolbar_ItemWindowButton () //{
-
-// accessors
-	@property (strong) NSButton*
-	button;
-	@property (strong) CocoaExtensions_ObserverSpec*
-	viewWindowObserver;
-
-@end //}
-
-/*!
-The private class interface.
-*/
-@interface TerminalToolbar_ItemWindowButton (TerminalToolbar_ItemWindowButtonInternal) //{
+	removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
 
 @end //}
 
@@ -241,6 +179,130 @@ Private properties.
 @end //}
 
 /*!
+The private class interface.
+*/
+@interface TerminalToolbar_LEDItem (TerminalToolbar_LEDItemInternal) //{
+
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	screenChange:(ListenerModel_Event)_
+	context:(void*)_;
+
+// new methods
+	- (void)
+	setStateFromScreen:(TerminalScreenRef)_;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemBell (TerminalToolbar_ItemBellInternal) //{
+
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	screenChange:(ListenerModel_Event)_
+	context:(void*)_;
+
+// new methods
+	- (void)
+	setStateFromScreen:(TerminalScreenRef)_;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemForceQuit (TerminalToolbar_ItemForceQuitInternal) //{
+
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	sessionChange:(ListenerModel_Event)_
+	context:(void*)_;
+
+// new methods
+	- (void)
+	setStateFromSession:(SessionRef)_;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_ItemMacro () //{
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemMacro (TerminalToolbar_ItemMacroInternal) //{
+
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	macroManagerChange:(ListenerModel_Event)_
+	context:(void*)_;
+	- (void)
+	model:(ListenerModel_Ref)_
+	preferenceChange:(ListenerModel_Event)_
+	context:(void*)_;
+
+// new methods
+	- (NSButton*)
+	actionButton;
+	- (NSBox*)
+	containerViewAsBox;
+	- (void)
+	resetMinMaxSizes;
+	- (void)
+	setStateForToolbar:(NSToolbar*)_;
+	- (void)
+	updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)_;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemSuspend (TerminalToolbar_ItemSuspendInternal) //{
+
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	sessionChange:(ListenerModel_Event)_
+	context:(void*)_;
+
+// new methods
+	- (void)
+	setStateFromSession:(SessionRef)_;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_ItemWindowButton () //{
+
+// accessors
+	@property (strong) NSButton*
+	button;
+	@property (strong) CocoaExtensions_ObserverSpec*
+	viewWindowObserver;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemWindowButton (TerminalToolbar_ItemWindowButtonInternal) //{
+
+@end //}
+
+/*!
 Private properties.
 */
 @interface TerminalToolbar_ItemWindowTitle () //{
@@ -263,19 +325,6 @@ The private class interface.
 	resetMinMaxSizesForHeight:(CGFloat)_;
 	- (void)
 	setStateForToolbar:(NSToolbar*)_;
-
-@end //}
-
-/*!
-The private class interface.
-*/
-@interface TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal) //{
-
-// new methods
-	- (void)
-	installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
-	- (void)
-	removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
 
 @end //}
 
@@ -540,6 +589,7 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDCustomize])
 	{
 		result = [[[TerminalToolbar_ItemCustomize alloc] init] autorelease];
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDForceQuit])
 	{
@@ -572,6 +622,78 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	{
 		result = [[[TerminalToolbar_ItemLED4 alloc] init] autorelease];
 	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro1])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 1;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro2])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 2;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro3])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 3;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro4])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 4;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro5])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 5;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro6])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 6;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro7])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 7;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro8])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 8;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro9])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 9;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro10])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 10;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro11])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 11;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDMacro12])
+	{
+		result = [[[TerminalToolbar_ItemMacro alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.tag = 12;
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityLow;
+	}
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionDefaultFavorite])
 	{
 		result = [[[TerminalToolbar_ItemNewSessionDefaultFavorite alloc] init] autorelease];
@@ -603,26 +725,32 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonClose])
 	{
 		result = [[[TerminalToolbar_ItemWindowButtonClose alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		//result.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonMinimize])
 	{
 		result = [[[TerminalToolbar_ItemWindowButtonMinimize alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		//result.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonZoom])
 	{
 		result = [[[TerminalToolbar_ItemWindowButtonZoom alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		//result.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitle])
 	{
 		result = [[[TerminalToolbar_ItemWindowTitle alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleLeft])
 	{
 		result = [[[TerminalToolbar_ItemWindowTitleLeft alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
 	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowTitleRight])
 	{
 		result = [[[TerminalToolbar_ItemWindowTitleRight alloc] initWithItemIdentifier:itemIdentifier] autorelease];
+		result.visibilityPriority = NSToolbarItemVisibilityPriorityHigh;
 	}
 	
 	// initialize session information if available (this isn’t really
@@ -692,6 +820,18 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kMy_ToolbarItemIDLED2,
 									kMy_ToolbarItemIDLED3,
 									kMy_ToolbarItemIDLED4,
+									kMy_ToolbarItemIDMacro1,
+									kMy_ToolbarItemIDMacro2,
+									kMy_ToolbarItemIDMacro3,
+									kMy_ToolbarItemIDMacro4,
+									kMy_ToolbarItemIDMacro5,
+									kMy_ToolbarItemIDMacro6,
+									kMy_ToolbarItemIDMacro7,
+									kMy_ToolbarItemIDMacro8,
+									kMy_ToolbarItemIDMacro9,
+									kMy_ToolbarItemIDMacro10,
+									kMy_ToolbarItemIDMacro11,
+									kMy_ToolbarItemIDMacro12,
 									kMy_ToolbarItemIDFullScreen,
 									kMy_ToolbarItemIDWindowTitleLeft,
 									kMy_ToolbarItemIDWindowTitle,
@@ -1820,6 +1960,618 @@ performToolbarItemAction:(id)	sender
 
 
 @end //} TerminalToolbar_ItemLED4
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemMacro //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2020.05)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anItemIdentifier
+{
+	self = [super initWithItemIdentifier:anItemIdentifier];
+	if (nil != self)
+	{
+		NSButton*	actionButton = nil;
+		NSBox*		borderView = nil;
+		
+		
+		actionButton = [NSButton buttonWithTitle:@"" target:nil action:@selector(performActionForMacro:)];
+		actionButton.buttonType = NSButtonTypeMomentaryChange;
+		//actionButton.bordered = YES;
+		//actionButton.showsBorderOnlyWhileMouseInside = YES;
+		actionButton.bordered = NO;
+		actionButton.lineBreakMode = NSLineBreakByTruncatingTail;
+		
+		borderView = [[[NSBox alloc] initWithFrame:NSZeroRect] autorelease];
+		borderView.boxType = NSBoxCustom;
+		borderView.borderType = NSLineBorder;
+		borderView.borderColor = [NSColor clearColor]; // (changes if customizing)
+		borderView.borderWidth = 1.0;
+		borderView.contentView = actionButton; // retain
+		
+		// monitor changes to macros so that the toolbar item can be updated
+		// (for example, the user renaming the macro)
+		_macroManagerChangeListener = [[ListenerModel_StandardListener alloc]
+										initWithTarget:self
+														eventFiredSelector:@selector(model:macroManagerChange:context:)];
+		{
+			MacroManager_Result		monitorResult = kMacroManager_ResultOK;
+			
+			
+			monitorResult = MacroManager_StartMonitoring(kMacroManager_ChangeMacroSetFrom, [_macroManagerChangeListener listenerRef]);
+			if (kMacroManager_ResultOK != monitorResult)
+			{
+				Console_Warning(Console_WriteValue, "macro toolbar item failed to monitor macro manager, error", monitorResult.code());
+			}
+			monitorResult = MacroManager_StartMonitoring(kMacroManager_ChangeMacroSetTo, [_macroManagerChangeListener listenerRef]);
+			if (kMacroManager_ResultOK != monitorResult)
+			{
+				Console_Warning(Console_WriteValue, "macro toolbar item failed to monitor macro manager, error", monitorResult.code());
+			}
+		}
+		_preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+										initWithTarget:self
+														eventFiredSelector:@selector(model:preferenceChange:context:)];
+		
+		// IMPORTANT: command implementation of "performActionForMacro:"
+		// depends on being able to read the "tag" to determine the
+		// one-based index of the macro to invoke for this item (as is
+		// true for macro menu items with a "tag" and the same action)
+		self.action = actionButton.action;
+		self.target = actionButton.target;
+		self.enabled = YES; // see "validate"
+		self.view = borderView; // retain
+		// see "setTag:", which sets an icon and label (the tag MUST be
+		// set before the item can be used)
+		self.tag = 0;
+		
+		assert(actionButton == [self actionButton]); // test accessor
+		assert(borderView == [self containerViewAsBox]); // test accessor
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+/*!
+Destructor.
+
+(2020.05)
+*/
+- (void)
+dealloc
+{
+	UNUSED_RETURN(MacroManager_Result)MacroManager_StopMonitoring(kMacroManager_ChangeMacroSetFrom, [_macroManagerChangeListener listenerRef]);
+	UNUSED_RETURN(MacroManager_Result)MacroManager_StopMonitoring(kMacroManager_ChangeMacroSetTo, [_macroManagerChangeListener listenerRef]);
+	[_macroManagerChangeListener release];
+	{
+		std::vector< Preferences_Tag >		monitoredTags =
+											{
+												kPreferences_TagIndexedMacroAction,
+												kPreferences_TagIndexedMacroContents,
+												kPreferences_TagIndexedMacroName,
+												kPreferences_TagIndexedMacroKey,
+												kPreferences_TagIndexedMacroKeyModifiers
+											};
+		
+		
+		if (Preferences_ContextIsValid(MacroManager_ReturnCurrentMacros()) && (self.tag > 0))
+		{
+			for (auto aTag : monitoredTags)
+			{
+				Preferences_ContextStopMonitoring(MacroManager_ReturnCurrentMacros(), [_preferenceChangeListener listenerRef],
+													Preferences_ReturnTagVariantForIndex(aTag, STATIC_CAST(self.tag, Preferences_Index)));
+			}
+		}
+	}
+	[_preferenceChangeListener release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2020.05)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id								result = [super copyWithZone:zone];
+	TerminalToolbar_ItemMacro*		asSelf = nil;
+	NSError* /*__autoreleasing*/		error = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemMacro.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemMacro*);
+	
+	asSelf->_preferenceChangeListener = [_preferenceChangeListener copy];
+	[asSelf->_preferenceChangeListener setTarget:asSelf];
+	
+	// views do not support NSCopying; archive instead
+	//asSelf.view = [self.view copy];
+	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self.view requiringSecureCoding:NO error:&error];
+	if (nil != error)
+	{
+		Console_Warning(Console_WriteValueCFString, "failed to copy toolbar item border, archiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+	}
+	asSelf.view = [NSKeyedUnarchiver unarchivedObjectOfClass:NSBox.class fromData:archivedView error:&error];
+	if (nil != error)
+	{
+		Console_Warning(Console_WriteValueCFString, "failed to copy toolbar item border, unarchiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+	}
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+Index of macro that this item represents (in the current set).
+
+(2020.05)
+*/
+- (NSInteger)
+tag
+{
+	// NOTE: NSToolbarItem "setTag:" does not work (it sets values to -1!!!)
+	// so this is being overridden with a local property
+	//return [super tag];
+	return _tag;
+}
+- (void)
+setTag:(NSInteger)	aTag
+{
+	// NOTE: NSToolbarItem "setTag:" does not work (it sets values to -1!!!)
+	// so this is being overridden with a local property
+	//[super setTag:aTag];
+	_tag = aTag;
+	
+	//self.label = [NSString stringWithFormat:@"%d", (int)aTag]; // arbitrary (INCOMPLETE; use macro name from preference)
+	self.label = @""; // view is used instead
+	
+	[self actionButton].tag = aTag; // this is critical; it is used by validations and action handlers to determine which macro applies
+	//[self actionButton].title = // set by "updateWithPreferenceValuesFromMacroSet:"
+	//[self actionButton].image = nil; // set by "updateWithPreferenceValuesFromMacroSet:"
+	[self updateWithPreferenceValuesFromMacroSet:MacroManager_ReturnCurrentMacros()]; // sets "[self actionButton].title"
+	
+	self.paletteLabel = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d", @"name for macro icon in toolbar customization palette; %1$d will be a macro number from 1 to 12"), (int)aTag];
+	self.toolTip = self.paletteLabel; // INCOMPLETE; use macro name from preference
+	
+	self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:[self actionButton].title action:[self actionButton].action keyEquivalent:@""] autorelease];
+	self.menuFormRepresentation.target = [self actionButton].target;
+	self.menuFormRepresentation.tag = aTag; // used to identify macro
+	
+	[self resetMinMaxSizes];
+}// setTag:
+
+
+/*!
+Validates the button (in this case, by disabling the button
+if the target macro cannot be used right now).
+
+(2020.05)
+*/
+- (void)
+validate
+{
+	if (0 == self.tag)
+	{
+		// invalid
+		self.enabled = NO;
+	}
+	else
+	{
+		self.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performActionForMacro:) sender:[self actionButton]];
+	}
+	//self.menuFormRepresentation.enabled = self.enabled;
+	[self actionButton].enabled = self.enabled;
+	
+	// note: once validation occurs, "canPerformActionForMacro:" will have
+	// updated the menu item representation
+	self.menuFormRepresentation.keyEquivalent = @""; // do not override keys displayed in main menu bar items
+	
+	[self setStateForToolbar:self.toolbar];
+	//[self resetMinMaxSizes]; // (handled by setStateForToolbar:)
+}// validate
+
+
+#pragma mark TerminalToolbar_DisplayModeSensitive
+
+
+/*!
+Keeps track of changes to the mode (such as “text only”)
+so that the window layout can adapt if necessary.
+
+(2020.05)
+*/
+- (void)
+didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
+{
+#pragma unused(aToolbar)
+	[self resetMinMaxSizes];
+}// didChangeDisplayModeForToolbar:
+
+
+#pragma mark TerminalToolbar_ItemAddRemoveSensitive
+
+
+/*!
+Called when the specified item has been added to the
+specified toolbar.
+
+(2020.05)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+willEnterToolbar:(NSToolbar*)	aToolbar
+{
+	assert(self == anItem);
+	[self actionButton].controlSize = (((nil != aToolbar) &&
+										(NSToolbarSizeModeSmall == aToolbar.sizeMode))
+										? NSControlSizeSmall
+										: NSControlSizeRegular);
+	[self setStateForToolbar:aToolbar];
+}// item:willEnterToolbar:
+
+
+/*!
+Called when the specified item has been removed from
+the specified toolbar.
+
+(2020.05)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+didExitToolbar:(NSToolbar*)		aToolbar
+{
+#pragma unused(aToolbar)
+	assert(self == anItem);
+}// item:didExitToolbar:
+
+
+#pragma mark TerminalToolbar_ItemHasPaletteProxy
+
+
+/*!
+Returns the item that represents this item in a customization palette.
+
+(2020.05)
+*/
+- (NSToolbarItem*)
+paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
+{
+	NSToolbarItem*		result = [[NSToolbarItem alloc] initWithItemIdentifier:anIdentifier];
+	
+	
+	result.paletteLabel = self.paletteLabel;
+	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension(), NSString*)]]; // TEMPORARY (create unique icon?)
+	
+	return [result autorelease];
+}// paletteProxyToolbarItemWithIdentifier:
+
+
+#pragma mark TerminalToolbar_SizeSensitive
+
+
+/*!
+Keeps track of changes to the icon and label size
+so that the window layout can adapt if necessary.
+
+(2020.05)
+*/
+- (void)
+didChangeSizeForToolbar:(NSToolbar*)	aToolbar
+{
+	[self actionButton].controlSize = (((nil != aToolbar) &&
+										(NSToolbarSizeModeSmall == aToolbar.sizeMode))
+										? NSControlSizeSmall
+										: NSControlSizeRegular);
+	[self setStateForToolbar:aToolbar];
+}// didChangeSizeForToolbar:
+
+
+@end //} TerminalToolbar_ItemMacro
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemMacro (TerminalToolbar_ItemMacroInternal) //{
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
+
+
+/*!
+Called when a monitored preference changes.  See the
+initializer for the set of events that is monitored.
+
+(2020.05)
+*/
+- (void)
+model:(ListenerModel_Ref)					aModel
+macroManagerChange:(ListenerModel_Event)	inMacroManagerChange
+context:(void*)								inPreferencesContext
+{
+#pragma unused(aModel)
+	Preferences_ContextRef		prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
+	
+	
+	if (kMacroManager_ChangeMacroSetFrom == inMacroManagerChange)
+	{
+		std::vector< Preferences_Tag >		monitoredTags =
+											{
+												kPreferences_TagIndexedMacroAction,
+												kPreferences_TagIndexedMacroContents,
+												kPreferences_TagIndexedMacroName,
+												kPreferences_TagIndexedMacroKey,
+												kPreferences_TagIndexedMacroKeyModifiers
+											};
+		
+		
+		if (Preferences_ContextIsValid(prefsContext) && (self.tag > 0))
+		{
+			for (auto aTag : monitoredTags)
+			{
+				Preferences_ContextStopMonitoring(prefsContext, [_preferenceChangeListener listenerRef],
+													Preferences_ReturnTagVariantForIndex(aTag, STATIC_CAST(self.tag, Preferences_Index)));
+			}
+		}
+		//[self updateWithPreferenceValuesFromMacroSet:prefsContext]; // (update occurs in "kMacroManager_ChangeMacroSetTo" case)
+	}
+	else if (kMacroManager_ChangeMacroSetTo == inMacroManagerChange)
+	{
+		std::vector< Preferences_Tag >		monitoredTags =
+											{
+												kPreferences_TagIndexedMacroAction,
+												kPreferences_TagIndexedMacroContents,
+												kPreferences_TagIndexedMacroName,
+												kPreferences_TagIndexedMacroKey,
+												kPreferences_TagIndexedMacroKeyModifiers
+											};
+		
+		
+		if (Preferences_ContextIsValid(prefsContext) && (self.tag > 0))
+		{
+			for (auto aTag : monitoredTags)
+			{
+				Preferences_ContextStartMonitoring(prefsContext, [_preferenceChangeListener listenerRef],
+													Preferences_ReturnTagVariantForIndex(aTag, STATIC_CAST(self.tag, Preferences_Index)));
+			}
+		}
+		[self updateWithPreferenceValuesFromMacroSet:prefsContext]; // update even for nullptr context (“None” is possible user selection)
+	}
+	else
+	{
+		// ???
+		Console_Warning(Console_WriteValueFourChars, "macro toolbar item callback was invoked for unrecognized macro manager change", inMacroManagerChange);
+	}
+}// model:macroManagerChange:context:
+
+
+/*!
+Called when a monitored preference changes.  See the
+initializer for the set of events that is monitored.
+
+(2020.05)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+preferenceChange:(ListenerModel_Event)	inPreferenceTagThatChanged
+context:(void*)							inPreferencesContext
+{
+#pragma unused(aModel)
+	Preferences_ContextRef		prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
+	
+	
+	if (nullptr == prefsContext)
+	{
+		Console_Warning(Console_WriteLine, "macro toolbar item preference-change callback was invoked for nonexistent macro set");
+	}
+	else
+	{
+		Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inPreferenceTagThatChanged);
+		//Preferences_Index const		kIndexFromTag = Preferences_ReturnTagIndex(inPreferenceTagThatChanged);
+		
+		
+		switch (kTagWithoutIndex)
+		{
+		case kPreferences_TagIndexedMacroAction:
+		case kPreferences_TagIndexedMacroContents:
+		case kPreferences_TagIndexedMacroName:
+		case kPreferences_TagIndexedMacroKey:		
+		case kPreferences_TagIndexedMacroKeyModifiers:
+			// user has changed preference in some significant way (such as
+			// renaming a macro); update the toolbar item
+			[self updateWithPreferenceValuesFromMacroSet:prefsContext];
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+}// model:preferenceChange:context:
+
+
+#pragma mark New Methods
+
+
+/*!
+Return the button used for sending actions to targets.
+
+(2020.05)
+*/
+- (NSButton*)
+actionButton
+{
+	NSButton*	result = nil;
+	
+	
+	for (NSView* aView in self.view.subviews)
+	{
+		if ([aView isKindOfClass:NSButton.class])
+		{
+			result = STATIC_CAST(aView, NSButton*);
+			break;
+		}
+	}
+	
+	if (nil == result)
+	{
+		//Console_Warning(Console_WriteLine, "macro toolbar item action button is not defined!"); // debug
+	}
+	
+	return result;
+}// actionButton
+
+
+/*!
+Return the main item view as an NSBox class for convenience.
+
+(2020.05)
+*/
+- (NSBox*)
+containerViewAsBox
+{
+	NSBox*	result = nil;
+	
+	
+	if ([self.view isKindOfClass:NSBox.class])
+	{
+		result = STATIC_CAST(self.view, NSBox*);
+	}
+	
+	if (nil == result)
+	{
+		Console_Warning(Console_WriteLine, "macro toolbar item container view is not NSBox type!");
+	}
+	
+	return result;
+}// containerViewAsBox
+
+
+/*!
+Return the ideal height for this item (fitting the title).
+A minimum size is enforced.
+
+(2020.05)
+*/
+- (void)
+resetMinMaxSizes
+{
+	// note: allow minimal size since some macro sets may not be full
+	// (no reason to take up extra space in the toolbar for unused macros)
+	[[self containerViewAsBox] sizeToFit];
+	
+	CGFloat const	idealWidth = ([self actionButton].intrinsicContentSize.width + (2.0 * [self containerViewAsBox].contentViewMargins.width) + 4/* arbitrary pad */);
+	CGFloat const	idealHeight = ([self actionButton].intrinsicContentSize.height + (2.0 * [self containerViewAsBox].contentViewMargins.height));
+	
+	
+	[self setMinSize:NSMakeSize(std::max<CGFloat>(24, idealWidth), idealHeight)];
+	[self setMaxSize:NSMakeSize(std::max<CGFloat>(24, idealWidth), idealHeight)];
+}// resetMinMaxSizes
+
+
+/*!
+Synchronizes other properties of the toolbar item with
+the properties of its embedded text view, preparing for
+display in the given toolbar (which may or may not be
+the item’s current toolbar).
+
+(2020.05)
+*/
+- (void)
+setStateForToolbar:(NSToolbar*)		aToolbar
+{
+	if (aToolbar.customizationPaletteIsRunning)
+	{
+		[self containerViewAsBox].borderColor = [NSColor lightGrayColor]; // color attempts to match “space item” style
+	}
+	else
+	{
+		[self containerViewAsBox].borderColor = [NSColor clearColor];
+	}
+	
+	[self resetMinMaxSizes];
+}// setStateForToolbar:
+
+
+/*!
+Updates the toolbar item to reflect the macro at this item’s
+assigned index in the current macro set.
+
+(2020.05)
+*/
+- (void)
+updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
+{
+	BOOL	usePlainAction = ((nullptr == aMacroSet) || (0 == self.tag));
+	
+	
+	[NSAnimationContext beginGrouping];
+	[[NSAnimationContext currentContext] setDuration:0.12];
+	
+	if (NO == usePlainAction)
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		CFStringRef			macroName = nullptr;
+		
+		
+		// use the name of the macro as the button title
+		prefsResult = Preferences_ContextGetData(aMacroSet,
+													Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, STATIC_CAST(self.tag, Preferences_Index)),
+													sizeof(macroName), &macroName, false/* search defaults */);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValue, "macro toolbar item failed to update macro name, error", prefsResult);
+			//Console_Warning(Console_WriteValue, "macro toolbar item failed to update, index", self.tag);
+			//Console_Warning(Console_WriteValueFourChars, "macro toolbar item failed to update, tag", Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, STATIC_CAST(self.tag, Preferences_Index)));
+			usePlainAction = YES;
+		}
+		else if (0 == CFStringGetLength(macroName))
+		{
+			usePlainAction = YES;
+		}
+		else
+		{
+			[[self actionButton] animator].image = nil;
+			[self actionButton].imagePosition = NSNoImage;
+			[[self actionButton] animator].title = BRIDGE_CAST(macroName, NSString*);
+		}
+		// (INCOMPLETE; could use other properties of macros here, perhaps)
+	}
+	
+	if (usePlainAction)
+	{
+		// set an arbitrary default title when there is no active macro
+		// (or in initial state of unassigned macro index)
+		[[self actionButton] animator].image = [NSImage imageNamed:NSImageNameActionTemplate];
+		[self actionButton].imagePosition = NSImageAbove;
+		[[self actionButton] animator].title = [NSString stringWithFormat:@"%d", (int)self.tag];
+	}
+	
+	[NSAnimationContext endGrouping];
+	
+	// it is possible that resizing an item will reveal more items
+	// than before, requiring the extra items to be revalidated
+	[self.toolbar validateVisibleItems];
+}// updateWithCurrentMacroSetPreferenceValue:
+
+
+@end //} TerminalToolbar_ItemMacroInternal
 
 
 #pragma mark -
@@ -2990,6 +3742,7 @@ copyWithZone:(NSZone*)	zone
 {
 	id									result = [super copyWithZone:zone];
 	TerminalToolbar_ItemWindowButton*	asSelf = nil;
+	NSError* /*__autoreleasing*/			error = nil;
 	
 	
 	assert([result isKindOfClass:TerminalToolbar_ItemWindowButton.class]); // parent supports NSCopying so this should have been done properly
@@ -2997,8 +3750,16 @@ copyWithZone:(NSZone*)	zone
 	
 	// views do not support NSCopying; archive instead
 	//asSelf->_button = [self->_button copy];
-	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_button];
-	asSelf->_button = [NSKeyedUnarchiver unarchiveObjectWithData:archivedView];
+	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_button requiringSecureCoding:NO error:&error];
+	if (nil != error)
+	{
+		Console_Warning(Console_WriteValueCFString, "failed to copy window button toolbar item, archiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+	}
+	asSelf->_button = [NSKeyedUnarchiver unarchivedObjectOfClass:NSButton.class fromData:archivedView error:&error];
+	if (nil != error)
+	{
+		Console_Warning(Console_WriteValueCFString, "failed to copy window button toolbar item, unarchiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+	}
 	
 	return result;
 }// copyWithZone:
@@ -4127,6 +4888,7 @@ copyWithZone:(NSZone*)	zone
 {
 	id									result = [super copyWithZone:zone];
 	TerminalToolbar_ItemWindowTitle*	asSelf = nil;
+	NSError* /*__autoreleasing*/			error = nil;
 	
 	
 	assert([result isKindOfClass:TerminalToolbar_ItemWindowTitle.class]); // parent supports NSCopying so this should have been done properly
@@ -4135,8 +4897,16 @@ copyWithZone:(NSZone*)	zone
 	
 	// views do not support NSCopying; archive instead
 	//asSelf->_textView = [self->_textView copy];
-	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_textView];
-	asSelf->_textView = [NSKeyedUnarchiver unarchiveObjectWithData:archivedView];
+	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_textView requiringSecureCoding:NO error:&error];
+	if (nil != error)
+	{
+		Console_Warning(Console_WriteValueCFString, "failed to copy window title toolbar item, archiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+	}
+	asSelf->_textView = [NSKeyedUnarchiver unarchivedObjectOfClass:TerminalToolbar_WindowTitleLabel.class fromData:archivedView error:&error];
+	if (nil != error)
+	{
+		Console_Warning(Console_WriteValueCFString, "failed to copy window title toolbar item, unarchiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+	}
 	
 	return result;
 }// copyWithZone:
