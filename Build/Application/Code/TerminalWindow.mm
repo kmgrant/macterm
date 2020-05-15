@@ -74,7 +74,6 @@ extern "C"
 #import <RegionUtilities.h>
 #import <Registrar.template.h>
 #import <SoundSystem.h>
-#import <Undoables.h>
 
 // application includes
 #import "AppResources.h"
@@ -217,7 +216,6 @@ typedef std::map< TerminalViewRef, TerminalScreenRef >			My_ScreenByTerminalView
 typedef std::map< NSWindow*, TerminalWindowRef >				My_TerminalWindowByNSWindow;
 typedef std::vector< TerminalScreenRef >						My_TerminalScreenList;
 typedef std::vector< TerminalViewRef >							My_TerminalViewList;
-typedef std::vector< Undoables_ActionRef >						My_UndoableActionList;
 typedef std::multimap< TerminalScreenRef, TerminalViewRef >		My_ViewsByScreen;
 
 typedef MemoryBlockReferenceTracker< TerminalWindowRef >	My_RefTracker;
@@ -271,37 +269,9 @@ struct My_TerminalWindow
 	My_ScreenByTerminalView			viewsToScreens;			// map of views to screen buffers
 	My_TerminalScreenList			allScreens;				// all screen buffers represented in the two maps above
 	My_TerminalViewList				allViews;				// all views represented in the two maps above
-	
-	My_UndoableActionList			installedActions;		// undoable things installed on behalf of this window
 };
 typedef My_TerminalWindow*			My_TerminalWindowPtr;
 typedef My_TerminalWindow const*	My_TerminalWindowConstPtr;
-
-/*!
-Context data for the context ID "kUndoableContextIdentifierTerminalFontSizeChanges".
-*/
-struct UndoDataFontSizeChanges
-{
-	Undoables_ActionRef		action;				//!< used to manage the Undo command
-	TerminalWindowRef		terminalWindow;		//!< which window was reformatted
-	Boolean					undoFontSize;		//!< is this Undo action going to reverse the font size changes?
-	Boolean					undoFont;			//!< is this Undo action going to reverse the font changes?
-	CGFloat					fontSize;			//!< the old font size (ignored if "undoFontSize" is false)
-	CFRetainRelease			fontName;			//!< the old font (ignored if "undoFont" is false)
-};
-typedef UndoDataFontSizeChanges*		UndoDataFontSizeChangesPtr;
-
-/*!
-Context data for the context ID "kUndoableContextIdentifierTerminalDimensionChanges".
-*/
-struct UndoDataScreenDimensionChanges
-{
-	Undoables_ActionRef		action;				//!< used to manage the Undo command
-	TerminalWindowRef		terminalWindow;		//!< which window was resized
-	UInt16					columns;			//!< the old screen width
-	UInt16					rows;				//!< the old screen height
-};
-typedef UndoDataScreenDimensionChanges*		UndoDataScreenDimensionChangesPtr;
 
 typedef MemoryBlockPtrLocker< TerminalWindowRef, My_TerminalWindow >	My_TerminalWindowPtrLocker;
 typedef LockAcquireRelease< TerminalWindowRef, My_TerminalWindow >		My_TerminalWindowAutoLocker;
@@ -318,14 +288,10 @@ TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 void					handleFindDialogClose			(FindDialog_Ref);
-void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
-void					installUndoScreenDimensionChanges	(TerminalWindowRef);
 bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
 UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
-void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
-void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undoables_ActionRef, void*);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
 void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean = false);
@@ -1349,7 +1315,46 @@ TerminalWindow_SetFontRelativeSize	(TerminalWindowRef		inRef,
 		
 		if (inAllowUndo)
 		{
-			installUndoFontSizeChanges(inRef, false/* undo font */, true/* undo font size */);
+			TerminalWindowRef const			blockRef = inRef;
+			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
+			CFRetainRelease					undoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoActionNameFormatChanges),
+																CFRetainRelease::kAlreadyRetained);
+			
+			
+			[ptr->window.undoManager registerUndoWithTarget:ptr->window
+			handler:^(id UNUSED_ARGUMENT(target))
+			{
+				if (TerminalWindow_IsValid(blockRef) && (false == TerminalWindow_IsFullScreen(blockRef)))
+				{
+					My_TerminalWindowAutoLocker		blockPtr(gTerminalWindowPtrLocks(), blockRef);
+					CFRetainRelease					redoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoActionNameFormatChanges),
+																		CFRetainRelease::kAlreadyRetained);
+					
+					
+					// change the font and/or size of the window
+					TerminalWindow_SetFontAndSize(blockRef, nullptr/* font */, fontSize);
+					
+					[blockPtr->window.undoManager registerUndoWithTarget:blockPtr->window
+					handler:^(id UNUSED_ARGUMENT(target))
+					{
+						// change back the font and/or size of the window
+						if (TerminalWindow_IsValid(blockRef) && (false == TerminalWindow_IsFullScreen(blockRef)))
+						{
+							TerminalWindow_SetFontAndSize(blockRef, nullptr/* font */, STATIC_CAST(proposedSize, UInt16));
+						}
+						else
+						{
+							Sound_StandardAlert();
+						}
+					}];
+					blockPtr->window.undoManager.actionName = BRIDGE_CAST(redoNameCFString.returnCFStringRef(), NSString*);
+				}
+				else
+				{
+					Sound_StandardAlert();
+				}
+			}];
+			ptr->window.undoManager.actionName = BRIDGE_CAST(undoNameCFString.returnCFStringRef(), NSString*);
 		}
 		
 		// set the window size to fit the new font size optimally
@@ -1449,11 +1454,16 @@ See also setScreenPreferences().
 void
 TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 									 UInt16				inNewColumnCount,
-									 UInt16				inNewRowCount)
+									 UInt16				inNewRowCount,
+									 Boolean			inAllowUndo)
 {
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	TerminalScreenRef				activeScreen = getActiveScreen(ptr);
+	UInt16							previousColumns = 0;
+	UInt16							previousRows = 0;
 	
+	
+	TerminalWindow_GetScreenDimensions(inRef, &previousColumns, &previousRows);
 	
 	Terminal_SetVisibleScreenDimensions(activeScreen, inNewColumnCount, inNewRowCount);
 	
@@ -1461,6 +1471,49 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 	unless (ptr->viewSizeIndependent)
 	{
 		setWindowToIdealSizeForDimensions(ptr, inNewColumnCount, inNewRowCount);
+	}
+	
+	if (inAllowUndo)
+	{
+		TerminalWindowRef const		blockRef = inRef;
+		CFRetainRelease				undoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoActionNameDimensionChanges),
+														CFRetainRelease::kAlreadyRetained);
+		
+		
+		[ptr->window.undoManager registerUndoWithTarget:ptr->window
+		handler:^(id UNUSED_ARGUMENT(target))
+		{
+			if (TerminalWindow_IsValid(blockRef) && (false == TerminalWindow_IsFullScreen(blockRef)))
+			{
+				My_TerminalWindowAutoLocker		blockPtr(gTerminalWindowPtrLocks(), blockRef);
+				CFRetainRelease					redoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoActionNameDimensionChanges),
+																	CFRetainRelease::kAlreadyRetained);
+				
+				
+				// change the font and/or size of the window
+				TerminalWindow_SetScreenDimensions(blockRef, previousColumns, previousRows);
+				
+				[blockPtr->window.undoManager registerUndoWithTarget:blockPtr->window
+				handler:^(id UNUSED_ARGUMENT(target))
+				{
+					// change back the font and/or size of the window
+					if (TerminalWindow_IsValid(blockRef) && (false == TerminalWindow_IsFullScreen(blockRef)))
+					{
+						TerminalWindow_SetScreenDimensions(blockRef, inNewColumnCount, inNewRowCount);
+					}
+					else
+					{
+						Sound_StandardAlert();
+					}
+				}];
+				blockPtr->window.undoManager.actionName = BRIDGE_CAST(redoNameCFString.returnCFStringRef(), NSString*);
+			}
+			else
+			{
+				Sound_StandardAlert();
+			}
+		}];
+		ptr->window.undoManager.actionName = BRIDGE_CAST(undoNameCFString.returnCFStringRef(), NSString*);
 	}
 }// SetScreenDimensions
 
@@ -1786,8 +1839,7 @@ toolbarStateChangeEventListener(),
 screensToViews(),
 viewsToScreens(),
 allScreens(),
-allViews(),
-installedActions()
+allViews()
 {
 @autoreleasepool {
 	TerminalScreenRef			newScreen = nullptr;
@@ -2005,13 +2057,6 @@ My_TerminalWindow::
 	if (nullptr != this->searchDialog)
 	{
 		FindDialog_Dispose(&this->searchDialog);
-	}
-	
-	// now that the window is going away, destroy any Undo commands
-	// that could be applied to this window
-	for (auto actionRef : this->installedActions)
-	{
-		Undoables_RemoveAction(actionRef);
 	}
 	
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
@@ -2393,104 +2438,6 @@ handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 
 
 /*!
-Installs an Undo procedure that will revert
-the font and/or font size of the specified
-screen to its current font and/or font size
-when the user chooses Undo.
-
-(3.0)
-*/
-void
-installUndoFontSizeChanges	(TerminalWindowRef	inTerminalWindow,
-							 Boolean			inUndoFont,
-							 Boolean			inUndoFontSize)
-{
-	UndoDataFontSizeChangesPtr	dataPtr = new UndoDataFontSizeChanges;	// must be allocated by "new" because it contains C++ classes;
-																		// disposed in the action method
-	
-	
-	if (nullptr == dataPtr)
-	{
-		Console_Warning(Console_WriteLine, "could not make font and/or size change undoable");
-	}
-	else
-	{
-		// initialize context structure
-		CFStringRef			fontName = nullptr;
-		CFRetainRelease		undoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoFormatChanges),
-												CFRetainRelease::kAlreadyRetained);
-		CFRetainRelease		redoNameCFString(UIStrings_ReturnCopy(kUIStrings_RedoFormatChanges),
-												CFRetainRelease::kAlreadyRetained);
-		
-		
-		dataPtr->terminalWindow = inTerminalWindow;
-		dataPtr->undoFontSize = inUndoFontSize;
-		dataPtr->undoFont = inUndoFont;
-		TerminalWindow_GetFontAndSize(inTerminalWindow, &fontName, &dataPtr->fontSize);
-		dataPtr->fontName.setWithRetain(fontName);
-		
-		dataPtr->action = Undoables_NewAction(undoNameCFString.returnCFStringRef(), redoNameCFString.returnCFStringRef(),
-												reverseFontChanges,
-												kUndoableContextIdentifierTerminalFontSizeChanges, dataPtr);
-		
-		Undoables_AddAction(dataPtr->action); // transfer ownership of "dataPtr" to reverseFontChanges()
-		
-		{
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
-			
-			
-			ptr->installedActions.push_back(dataPtr->action);
-		}
-	}
-}// installUndoFontSizeChanges
-
-
-/*!
-Installs an Undo procedure that will revert the
-dimensions of the of the specified screen to its
-current dimensions when the user chooses Undo.
-
-(3.1)
-*/
-void
-installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
-{
-	UndoDataScreenDimensionChangesPtr	dataPtr = new UndoDataScreenDimensionChanges;	// disposed in the action method
-	
-	
-	if (nullptr == dataPtr)
-	{
-		Console_Warning(Console_WriteLine, "could not make dimension change undoable");
-	}
-	else
-	{
-		// initialize context structure
-		CFRetainRelease		undoNameCFString(UIStrings_ReturnCopy(kUIStrings_UndoDimensionChanges),
-												CFRetainRelease::kAlreadyRetained);
-		CFRetainRelease		redoNameCFString(UIStrings_ReturnCopy(kUIStrings_RedoDimensionChanges),
-												CFRetainRelease::kAlreadyRetained);
-		
-		
-		dataPtr->terminalWindow = inTerminalWindow;
-		TerminalWindow_GetScreenDimensions(inTerminalWindow, &dataPtr->columns, &dataPtr->rows);
-		
-		dataPtr->action = Undoables_NewAction(undoNameCFString.returnCFStringRef(), redoNameCFString.returnCFStringRef(),
-												reverseScreenDimensionChanges,
-												kUndoableContextIdentifierTerminalDimensionChanges, dataPtr);
-		
-		Undoables_AddAction(dataPtr->action); // transfer ownership of "dataPtr" to reverseScreenDimensionChanges()
-		
-		{
-			My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
-			
-			
-			ptr->installedActions.push_back(dataPtr->action);
-		}
-	}
-}// installUndoScreenDimensionChanges
-
-
-/*!
 A comparison routine that is compatible with std::sort();
 returns true if the first window is strictly less-than
 the second based on whether or not "inWindow1" covers a
@@ -2578,121 +2525,6 @@ returnToolbarHeight		(My_TerminalWindowPtr	UNUSED_ARGUMENT(inPtr))
 {
 	return 0;
 }// returnToolbarHeight
-
-
-/*!
-This routine, of standard UndoActionProcPtr form,
-can undo or redo changes to the font and/or font
-size of a terminal screen.
-
-Note that it will really be nice to get all of
-the AppleScript stuff working, so junk like this
-does not have to be done using Copy-and-Paste
-coding™, and can be made into a recordable event.
-
-(3.0)
-*/
-void
-reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
-					 Undoables_ActionRef			inApplicableAction,
-					 void*							inContextPtr)
-{
-	// this routine only recognizes one kind of context - be absolutely sure that’s what was given!
-	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFontSizeChanges);
-	
-	{
-		UndoDataFontSizeChangesPtr	dataPtr = REINTERPRET_CAST(inContextPtr, UndoDataFontSizeChangesPtr);
-		
-		
-		switch (inDoWhat)
-		{
-		case kUndoables_ActionInstructionDispose:
-			// release memory previously allocated when this action was installed
-			Undoables_DisposeAction(&inApplicableAction);
-			if (nullptr != dataPtr)
-			{
-				delete dataPtr, dataPtr = nullptr;
-			}
-			break;
-		
-		case kUndoables_ActionInstructionRedo:
-		case kUndoables_ActionInstructionUndo:
-		default:
-			{
-				CGFloat			oldFontSize = 0;
-				CFStringRef		oldFontName = nullptr;
-				
-				
-				// make this reversible by preserving the font information
-				TerminalWindow_GetFontAndSize(dataPtr->terminalWindow, &oldFontName, &oldFontSize);
-				
-				// change the font and/or size of the window
-				TerminalWindow_SetFontAndSize(dataPtr->terminalWindow,
-												(dataPtr->undoFont) ? dataPtr->fontName.returnCFStringRef() : nullptr,
-												(dataPtr->undoFontSize) ? dataPtr->fontSize : 0);
-				
-				// save the font and size
-				dataPtr->fontSize = oldFontSize;
-				dataPtr->fontName.setWithRetain(oldFontName);
-			}
-			break;
-		}
-	}
-}// reverseFontChanges
-
-
-/*!
-This routine, of standard UndoActionProcPtr form,
-can undo or redo changes to the dimensions of a
-terminal screen.
-
-(3.1)
-*/
-void
-reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
-								 Undoables_ActionRef			inApplicableAction,
-								 void*							inContextPtr)
-{
-	// this routine only recognizes one kind of context - be absolutely sure that’s what was given!
-	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalDimensionChanges);
-	
-	{
-		UndoDataScreenDimensionChangesPtr	dataPtr = REINTERPRET_CAST(inContextPtr, UndoDataScreenDimensionChangesPtr);
-		
-		
-		switch (inDoWhat)
-		{
-		case kUndoables_ActionInstructionDispose:
-			// release memory previously allocated when this action was installed
-			Undoables_DisposeAction(&inApplicableAction);
-			if (nullptr != dataPtr)
-			{
-				delete dataPtr, dataPtr = nullptr;
-			}
-			break;
-		
-		case kUndoables_ActionInstructionRedo:
-		case kUndoables_ActionInstructionUndo:
-		default:
-			{
-				UInt16		oldColumns = 0;
-				UInt16		oldRows = 0;
-				
-				
-				// make this reversible by preserving the dimensions
-				TerminalWindow_GetScreenDimensions(dataPtr->terminalWindow, &oldColumns, &oldRows);
-				
-				// resize the window
-				TerminalWindow_SetScreenDimensions(dataPtr->terminalWindow, dataPtr->columns, dataPtr->rows);
-				
-				// save the dimensions
-				dataPtr->columns = oldColumns;
-				dataPtr->rows = oldRows;
-			}
-			break;
-		}
-	}
-}// reverseScreenDimensionChanges
 
 
 /*!
@@ -3316,7 +3148,6 @@ sheetClosed		(GenericDialog_Ref		inDialogThatClosed,
 				break;
 			
 			case kMy_SheetTypeScreenSize:
-				installUndoScreenDimensionChanges(ref);
 				setScreenPreferences(ptr, ptr->recentSheetContext.returnRef());
 				break;
 			
@@ -4048,16 +3879,15 @@ performScreenResizeNarrower:(id)	sender
 	UInt16			rowCount = 0;
 	
 	
-	//installUndoScreenDimensionChanges(self.terminalWindowRef);
 	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
 	if ((columnCount - kReduction) < kMinimumDimension)
 	{
 		Sound_StandardAlert();
-		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, kMinimumDimension, rowCount);
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, kMinimumDimension, rowCount, true/* allow Undo */);
 	}
 	else
 	{
-		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount - kReduction, rowCount);
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount - kReduction, rowCount, true/* allow Undo */);
 	}
 }
 
@@ -4078,16 +3908,15 @@ performScreenResizeShorter:(id)	sender
 	UInt16			rowCount = 0;
 	
 	
-	//installUndoScreenDimensionChanges(self.terminalWindowRef);
 	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
 	if ((rowCount - kReduction) < kMinimumDimension)
 	{
 		Sound_StandardAlert();
-		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, kMinimumDimension);
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, kMinimumDimension, true/* allow Undo */);
 	}
 	else
 	{
-		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, rowCount - kReduction);
+		TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, rowCount - kReduction, true/* allow Undo */);
 	}
 }
 
@@ -4142,9 +3971,8 @@ performScreenResizeTaller:(id)	sender
 	UInt16			rowCount = 0;
 	
 	
-	//installUndoScreenDimensionChanges(self.terminalWindowRef);
 	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
-	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, rowCount + kAddition);
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount, rowCount + kAddition, true/* allow Undo */);
 }
 
 
@@ -4181,9 +4009,8 @@ performScreenResizeWider:(id)	sender
 	UInt16			rowCount = 0;
 	
 	
-	//installUndoScreenDimensionChanges(self.terminalWindowRef);
 	TerminalWindow_GetScreenDimensions(self.terminalWindowRef, &columnCount, &rowCount);
-	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount + kAddition, rowCount);
+	TerminalWindow_SetScreenDimensions(self.terminalWindowRef, columnCount + kAddition, rowCount, true/* allow Undo */);
 }
 
 

@@ -67,7 +67,6 @@ extern "C"
 #import <MenuUtilities.objc++.h>
 #import <Popover.objc++.h>
 #import <SoundSystem.h>
-#import <Undoables.h>
 
 // application includes
 #import "AddressDialog.h"
@@ -2792,18 +2791,13 @@ performRedo:(id)	sender
 	{
 		[undoManager redo];
 	}
-	else
-	{
-		// legacy
-		Undoables_RedoLastUndo();
-	}
 }
 - (id)
 canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = NO;
-	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	BOOL				result = NO;
+	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
 	if (nil != undoManager)
@@ -2815,22 +2809,6 @@ canPerformRedo:(id <NSValidatedUserInterfaceItem>)		anItem
 			
 			
 			[asMenuItem setTitle:[undoManager redoMenuItemTitle]];
-		}
-	}
-	else
-	{
-		CFStringRef		redoCommandName = nullptr;
-		Boolean			isEnabled = false;
-		
-		
-		Undoables_GetRedoCommandInfo(redoCommandName, &isEnabled);
-		if (false == EventLoop_IsMainWindowFullScreen())
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:BRIDGE_CAST(redoCommandName, NSString*)];
-			result = (isEnabled) ? YES : NO;
 		}
 	}
 	
@@ -2849,18 +2827,13 @@ performUndo:(id)	sender
 	{
 		[undoManager undo];
 	}
-	else
-	{
-		// legacy
-		Undoables_UndoLastAction();
-	}
 }
 - (id)
 canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
-	BOOL			result = NO;
-	NSUndoManager*	undoManager = [[NSApp keyWindow] firstResponder].undoManager;
+	BOOL				result = NO;
+	NSUndoManager*		undoManager = [[NSApp keyWindow] firstResponder].undoManager;
 	
 	
 	if (nil != undoManager)
@@ -2872,22 +2845,6 @@ canPerformUndo:(id <NSValidatedUserInterfaceItem>)		anItem
 			
 			
 			[asMenuItem setTitle:[undoManager undoMenuItemTitle]];
-		}
-	}
-	else
-	{
-		CFStringRef		undoCommandName = nullptr;
-		Boolean			isEnabled = false;
-		
-		
-		Undoables_GetUndoCommandInfo(undoCommandName, &isEnabled);
-		if (false == EventLoop_IsMainWindowFullScreen())
-		{
-			NSMenuItem*		asMenuItem = (NSMenuItem*)anItem;
-			
-			
-			[asMenuItem setTitle:BRIDGE_CAST(undoCommandName, NSString*)];
-			result = (isEnabled) ? YES : NO;
 		}
 	}
 	

@@ -429,13 +429,8 @@ Strings used to describe reversible actions as menu commands.
 */
 enum UIStrings_UndoCFString
 {
-	kUIStrings_UndoDefault						= 'Undo',
-	kUIStrings_RedoDefault						= 'Redo',
-	kUIStrings_UndoDimensionChanges				= 'UndD',
-	kUIStrings_RedoDimensionChanges				= 'RedD',
-	kUIStrings_UndoFormatChanges				= 'UndF',
-	kUIStrings_RedoFormatChanges				= 'RedF',
-	kUIStrings_UndoFullScreen					= 'UndZ'
+	kUIStrings_UndoActionNameDimensionChanges	= 'UndD',
+	kUIStrings_UndoActionNameFormatChanges		= 'UndF'
 };
 
 

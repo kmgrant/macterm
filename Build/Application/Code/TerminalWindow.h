@@ -411,7 +411,8 @@ void
 void
 	TerminalWindow_SetScreenDimensions				(TerminalWindowRef			inRef,
 													 UInt16						inNewColumnCount,
-													 UInt16						inNewRowCount);
+													 UInt16						inNewRowCount,
+													 Boolean					inAllowUndo = true);
 
 void
 	TerminalWindow_SetIconTitle						(TerminalWindowRef			inRef,

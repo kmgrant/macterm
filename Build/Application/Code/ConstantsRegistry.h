@@ -99,24 +99,6 @@ extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFullSc
 //@}
 #endif
 
-//!\name Undoable-Operation Context Identifiers
-//@{
-
-/*!
-Undoable operation context IDs, used with Undoable objects.
-These are all to be considered of the type
-"UndoableContextIdentifier", defined in "Undoables.h".
-*/
-enum
-{
-	kUndoableContextIdentifierTerminalDimensionChanges		= 1,
-	kUndoableContextIdentifierTerminalFormatChanges			= 2,
-	kUndoableContextIdentifierTerminalFontSizeChanges		= 3,
-	kUndoableContextIdentifierTerminalFullScreenChanges		= 4
-};
-
-//@}
-
 //!\name Unique Identifiers for Registries of Public Events
 //@{
 

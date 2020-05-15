@@ -1743,39 +1743,14 @@ UIStrings_Copy	(UIStrings_UndoCFString		inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
-	case kUIStrings_UndoDefault:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Undo"),
-													CFSTR("Undo"), CFSTR("kUIStrings_UndoDefault"));
+	case kUIStrings_UndoActionNameDimensionChanges:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Dimension Changes"),
+													CFSTR("Undo"), CFSTR("kUIStrings_UndoActionNameDimensionChanges"));
 		break;
 	
-	case kUIStrings_RedoDefault:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Redo"),
-													CFSTR("Undo"), CFSTR("kUIStrings_RedoDefault"));
-		break;
-	
-	case kUIStrings_UndoDimensionChanges:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Undo Dimension Changes"),
-													CFSTR("Undo"), CFSTR("kUIStrings_UndoDimensionChanges"));
-		break;
-	
-	case kUIStrings_RedoDimensionChanges:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Redo Dimension Changes"),
-													CFSTR("Undo"), CFSTR("kUIStrings_RedoDimensionChanges"));
-		break;
-	
-	case kUIStrings_UndoFormatChanges:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Undo Format Changes"),
-													CFSTR("Undo"), CFSTR("kUIStrings_UndoFormatChanges"));
-		break;
-	
-	case kUIStrings_RedoFormatChanges:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Redo Format Changes"),
-													CFSTR("Undo"), CFSTR("kUIStrings_RedoFormatChanges"));
-		break;
-	
-	case kUIStrings_UndoFullScreen:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Undo Full Screen"),
-													CFSTR("Undo"), CFSTR("kUIStrings_UndoFullScreen"));
+	case kUIStrings_UndoActionNameFormatChanges:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Format Changes"),
+													CFSTR("Undo"), CFSTR("kUIStrings_UndoActionNameFormatChanges"));
 		break;
 	
 	default:

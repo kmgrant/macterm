@@ -57,7 +57,6 @@
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlocks.h>
 #import <ParameterDecoder.h>
-#import <Undoables.h>
 
 // application includes
 #import "AppResources.h"
@@ -72,16 +71,6 @@
 #import "SessionFactory.h"
 #import "TerminalView.h"
 #import "UIStrings.h"
-
-
-
-#pragma mark Internal Method Prototypes
-namespace {
-
-void	initApplicationCore		();
-void	initMacOSToolbox		();
-
-} // anonymous namespace
 
 
 
@@ -128,10 +117,27 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// initialize Cocoa
 	EventLoop_Init();
 	
-	// initialize memory manager, start up toolbox managers, etc.
-	initMacOSToolbox();
+	// set up notification info
+	Preferences_Init();
+	{
+		UInt16					notificationPreferences = kAlert_NotifyDisplayDiamondMark;
+		Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagNotification,
+																	sizeof(notificationPreferences),
+																	&notificationPreferences);
+		
+		
+		unless (kPreferences_ResultOK == prefsResult)
+		{
+			notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
+		}
+		
+		// the Interface Library Alert module is responsible for handling Notification Manager stuff...
+		Alert_SetNotificationPreferences(notificationPreferences);
+	}
 	
-	initApplicationCore();
+#if RUN_MODULE_TESTS
+	Preferences_RunTests();
+#endif
 	
 #ifndef NDEBUG
 	// the Console must be among the first things initialized if
@@ -277,83 +283,6 @@ Initialize_ApplicationShutDownRemainingComponents ()
 	TerminalView_Done();
 	Commands_Done();
 	SessionFactory_Done();
-	Undoables_Done();
 }// ApplicationShutDownRemainingComponents
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-This method initializes key modules (both
-internally and from MacTerm’s libraries),
-installs Apple Event handlers for the
-Apple Events that MacTerm supports and
-requires, and reads user preferences.
-
-If errors occur at this stage, this method
-may not return, displaying an error message
-to the user.
-
-(3.0)
-*/
-void
-initApplicationCore ()
-{
-	// set up notification info
-	Preferences_Init();
-	{
-		UInt16					notificationPreferences = kAlert_NotifyDisplayDiamondMark;
-		Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagNotification,
-																	sizeof(notificationPreferences),
-																	&notificationPreferences);
-		
-		
-		unless (kPreferences_ResultOK == prefsResult)
-		{
-			notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
-		}
-		
-		// the Interface Library Alert module is responsible for handling Notification Manager stuff...
-		Alert_SetNotificationPreferences(notificationPreferences);
-	}
-	
-#if RUN_MODULE_TESTS
-	Preferences_RunTests();
-#endif
-}// initApplicationCore
-
-
-/*!
-This method starts up all of the Mac OS tool sets
-needed by version 3.0, and allocates a memory
-reserve.
-
-If errors occur at this stage, this method may
-not return.  If this routine actually returns,
-then the user’s computer is at least minimally
-capable of running version 3.0.  However, more
-tests are done in initApplicationCore()...
-
-(3.0)
-*/
-void
-initMacOSToolbox ()
-{
-	// initialize the Undoables module
-	{
-		CFStringRef		undoNameCFString = nullptr;
-		CFStringRef		redoNameCFString = nullptr;
-		
-		
-		assert(UIStrings_Copy(kUIStrings_UndoDefault, undoNameCFString).ok());
-		assert(UIStrings_Copy(kUIStrings_RedoDefault, redoNameCFString).ok());
-		Undoables_Init(kUndoables_UndoHandlingMechanismMultiple, undoNameCFString, redoNameCFString);
-		if (nullptr != undoNameCFString) CFRelease(undoNameCFString), undoNameCFString = nullptr;
-		if (nullptr != redoNameCFString) CFRelease(redoNameCFString), redoNameCFString = nullptr;
-	}
-}// initMacOSToolbox
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
