@@ -136,6 +136,10 @@ Internal routines.
 	viaFirstResponderTryToPerformSelector:(SEL)_
 	withObject:(id)_;
 
+// notifications
+	- (void)
+	menuBarDidBeginTracking:(NSNotification*)_;
+
 @end //}
 
 
@@ -2020,6 +2024,11 @@ init
 {
 	self = [super init];
 	
+	// find out when menus are about to be tracked so that
+	// dynamic items are up-to-date
+	[self whenObject:[NSApp mainMenu] postsNote:NSMenuDidBeginTrackingNotification
+						performSelector:@selector(menuBarDidBeginTracking:)];
+	
 	// initialize dynamic menu item titles
 	{
 		CFStringRef		titleCFString = nullptr;
@@ -2051,6 +2060,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[self ignoreWhenObjectsPostNotes];
 	[super dealloc];
 }// dealloc
 
@@ -5142,6 +5152,32 @@ withObject:(id)									aSenderOrNil
 	return result;
 }// viaFirstResponderTryToPerformSelector:withObject:
 
+
+#pragma mark Notifications
+
+
+/*!
+Notified when menu bar tracking has just begun.  This is
+used to ensure that dynamic items are up-to-date.
+
+(2020.05)
+*/
+- (void)
+menuBarDidBeginTracking:(NSNotification*)	aNotification
+{
+	NSMenu*		trackedMenuBar = REINTERPRET_CAST([aNotification object], NSMenu*);
+	
+	
+	if ([NSApp mainMenu] != trackedMenuBar)
+	{
+		Console_Warning(Console_WriteLine, "'menuBarDidBeginTracking:' received unexpected notification for different menu");
+	}
+	else
+	{
+		Console_WriteLine("will begin menu tracking");
+		setUpDynamicMenus();
+	}
+}// menuBarDidBeginTracking:
 
 
 @end //} Commands_Executor (Commands_ExecutorInternal)
