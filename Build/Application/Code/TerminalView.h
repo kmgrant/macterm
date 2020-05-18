@@ -765,8 +765,8 @@ TerminalView_Result
 //@{
 
 TerminalView_Result
-	TerminalView_GetCursorGlobalBounds			(TerminalViewRef			inView,
-												 CGRect&					outGlobalBounds);
+	TerminalView_GetCursorBoundsWindowRelative	(TerminalViewRef			inView,
+												 CGRect&					outCursorBoundsRelativeToWindowFrameOrigin);
 
 void
 	TerminalView_MoveCursorWithArrowKeys		(TerminalViewRef			inView,

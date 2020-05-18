@@ -4709,14 +4709,18 @@ the position.
 - (void)
 moveBelowCursorInTerminalWindow:(TerminalWindowRef)		aTerminalWindow
 {
-	NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(aTerminalWindow);
-	NSView*		parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
-	CGRect		globalCursorBounds;
+	NSWindow*				cocoaWindow = TerminalWindow_ReturnNSWindow(aTerminalWindow);
+	NSView*					parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
+	CGRect					windowRelativeCursorBounds;
+	TerminalView_Result		viewResult = kTerminalView_ResultOK;
 	
 	
-	TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus(aTerminalWindow), globalCursorBounds);
-	self.idealWindowRelativeAnchorPoint = NSMakePoint(globalCursorBounds.origin.x - cocoaWindow.frame.origin.x,
-														globalCursorBounds.origin.y - cocoaWindow.frame.origin.y);
+	viewResult = TerminalView_GetCursorBoundsWindowRelative(TerminalWindow_ReturnViewWithFocus(aTerminalWindow), windowRelativeCursorBounds);
+	if (kTerminalView_ResultOK != viewResult)
+	{
+		Console_Warning(Console_WriteLine, "info bubble: unable to find window-relative terminal cursor coordinates");
+	}
+	self.idealWindowRelativeAnchorPoint = NSMakePoint(windowRelativeCursorBounds.origin.x, windowRelativeCursorBounds.origin.y);
 	
 	// arrange to display the label over this window
 	if (nullptr != self.popoverMgr)

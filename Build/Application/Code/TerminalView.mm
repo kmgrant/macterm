@@ -958,6 +958,7 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 					if (false == searchResults.empty())
 					{
 						NSMutableSet*	setOfCompletions = [[[NSMutableSet alloc] init] autorelease];
+						CGRect			screenRelativeCursorBounds; // set below
 						
 						
 						// find all the “words” at the locations where the
@@ -997,6 +998,22 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							}
 						}
 						
+						// find global cursor location so that the completions list can appear near the cursor
+						{
+							TerminalView_Result		viewResult = kTerminalView_ResultOK;
+							CGRect					windowRelativeCursorBounds;
+							
+							
+							viewResult = TerminalView_GetCursorBoundsWindowRelative(inView, windowRelativeCursorBounds);
+							if (kTerminalView_ResultOK != viewResult)
+							{
+								Console_Warning(Console_WriteLine, "completions list display: unable to find window-relative terminal cursor coordinates");
+								windowRelativeCursorBounds = NSMakeRect(32, 10, 0, 0); // arbitrary fallback
+							}
+							
+							screenRelativeCursorBounds = [TerminalView_ReturnNSWindow(inView) convertRectToScreen:windowRelativeCursorBounds];
+						}
+						
 						// if the resulting set has exactly one string that
 						// matches the original string, ignore it; otherwise,
 						// pop up a menu with completion options
@@ -1004,7 +1021,7 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 							(NO == [[setOfCompletions anyObject]
 									isEqualToString:BRIDGE_CAST(searchQueryCFString.returnCFStringRef(), NSString*)]))
 						{
-							NSPoint				globalLocation = NSMakePoint(300, 500); // arbitrary default (TEMPORARY)
+							NSPoint				globalLocation = NSMakePoint(screenRelativeCursorBounds.origin.x, screenRelativeCursorBounds.origin.y);
 							NSMutableArray*		sortedCompletions = [[[NSMutableArray alloc] initWithCapacity:setOfCompletions.count]
 																		autorelease];
 							NSMenu*				completionsMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
@@ -1387,9 +1404,9 @@ TerminalView_GetColor	(TerminalViewRef			inView,
 
 
 /*!
-Provides the current terminal cursor rectangle in
-coordinates that are compatible with an NSRect
-for the "frame" property of NSWindow.
+Provides the current terminal cursor rectangle with
+respect to the origin of the terminal’s NSWindow
+(not the terminal view).
 
 Note that the cursor can have different shapes...
 for instance, the returned rectangle may be very
@@ -1402,17 +1419,17 @@ if no error occurred
 \retval kTerminalView_ResultInvalidID
 if the view reference is unrecognized
 
-(2018.03)
+(2020.05)
 */
 TerminalView_Result
-TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
-									 CGRect&			outGlobalBounds)
+TerminalView_GetCursorBoundsWindowRelative	(TerminalViewRef	inView,
+											 CGRect&			outCursorBoundsRelativeToWindowFrameOrigin)
 {
 	My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	outGlobalBounds = CGRectZero;
+	outCursorBoundsRelativeToWindowFrameOrigin = CGRectZero;
 	
 	if (nullptr == viewPtr)
 	{
@@ -1420,13 +1437,12 @@ TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
 	}
 	else
 	{
-		outGlobalBounds = viewPtr->screen.cursor.bounds; // initially...
-		// UNIMPLEMENTED; may need this calculation for Cocoa
-		Console_Warning(Console_WriteLine, "get-cursor-global-bounds not implemented for Cocoa");
+		outCursorBoundsRelativeToWindowFrameOrigin = viewPtr->screen.cursor.bounds; // initially...
+		outCursorBoundsRelativeToWindowFrameOrigin = [viewPtr->encompassingNSView.terminalContentView convertRect:outCursorBoundsRelativeToWindowFrameOrigin toView:nil/* use window */];
 	}
 	
 	return result;
-}// GetCursorGlobalBounds
+}// GetCursorBoundsWindowRelative
 
 
 /*!
