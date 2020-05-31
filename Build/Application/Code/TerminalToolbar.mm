@@ -254,12 +254,17 @@ The private class interface.
 // new methods
 	- (NSButton*)
 	actionButton;
+	- (NSSize)
+	calculateMaxSize;
 	- (NSBox*)
 	containerViewAsBox;
 	- (void)
-	resetMinMaxSizes;
+	resetMinMaxSizesWithAnimation:(BOOL)_;
 	- (void)
-	setStateForToolbar:(NSToolbar*)_;
+	setStateForToolbar:(NSToolbar*)_
+	needsLayout:(BOOL)_;
+	- (void)
+	setTagUnconditionally:(NSInteger)_;
 	- (void)
 	updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)_;
 
@@ -1077,11 +1082,11 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDBell];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setLabel:NSLocalizedString(@"Bell", @"toolbar item name; for toggling the terminal bell sound")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.label = NSLocalizedString(@"Bell", @"toolbar item name; for toggling the terminal bell sound");
+		self.paletteLabel = self.label;
 		self->screenChangeListener = [[ListenerModel_StandardListener alloc]
 										initWithTarget:self
 														eventFiredSelector:@selector(model:screenChange:context:)];
@@ -1262,11 +1267,13 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 {
 	if ((nullptr == aScreen) || Terminal_BellIsEnabled(aScreen))
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnBellOffIconFilenameNoExtension()]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnBellOffIconFilenameNoExtension()];
+		self.toolTip = NSLocalizedString(@"Turn off terminal bell", @"toolbar item tooltip; turn off terminal bell sound");
 	}
 	else
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnBellOnIconFilenameNoExtension()]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnBellOnIconFilenameNoExtension()];
+		self.toolTip = NSLocalizedString(@"Turn on terminal bell", @"toolbar item tooltip; turn on terminal bell sound");
 	}
 }// setStateFromScreen:
 
@@ -1292,12 +1299,13 @@ init
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDCustomize];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Customize", @"toolbar item name; for customizing the toolbar")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Customize", @"toolbar item name; for customizing the toolbar");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1373,9 +1381,9 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDForceQuit];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
 		self->sessionChangeListener = [[ListenerModel_StandardListener alloc]
 										initWithTarget:self
 														eventFiredSelector:@selector(model:sessionChange:context:)];
@@ -1562,15 +1570,17 @@ setStateFromSession:(SessionRef)	aSession
 {
 	if (Session_IsValid(aSession) && Session_StateIsDead(aSession))
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnRestartSessionIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Restart", @"toolbar item name; for killing or restarting the active process")];
-		[self setPaletteLabel:[self label]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnRestartSessionIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Restart", @"toolbar item name; for killing or restarting the active process");
+		self.paletteLabel = self.label;
+		self.toolTip = NSLocalizedString(@"Restart process (with original command line)", @"toolbar item tooltip; restart session");
 	}
 	else
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnKillSessionIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Force Quit", @"toolbar item name; for killing or restarting the active process")];
-		[self setPaletteLabel:[self label]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnKillSessionIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Force Quit", @"toolbar item name; for killing or restarting the active process");
+		self.paletteLabel = self.label;
+		self.toolTip = NSLocalizedString(@"Force process to quit", @"toolbar item tooltip; force-quit session");
 	}
 }// setStateFromSession:
 
@@ -1596,12 +1606,13 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDFullScreen];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnFullScreenIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Full Screen", @"toolbar item name; for entering or exiting Full Screen mode")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnFullScreenIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Full Screen", @"toolbar item name; for entering or exiting Full Screen mode");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1674,12 +1685,13 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDHide];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnHideWindowIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Hide", @"toolbar item name; for hiding the frontmost window")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnHideWindowIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Hide", @"toolbar item name; for hiding the frontmost window");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1736,11 +1748,12 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED1 oneBasedIndexOfLED:1];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setLabel:NSLocalizedString(@"L1", @"toolbar item name; for terminal LED #1")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.label = NSLocalizedString(@"L1", @"toolbar item name; for terminal LED #1");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1797,11 +1810,12 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED2 oneBasedIndexOfLED:2];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setLabel:NSLocalizedString(@"L2", @"toolbar item name; for terminal LED #1")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.label = NSLocalizedString(@"L2", @"toolbar item name; for terminal LED #2");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1858,11 +1872,12 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED3 oneBasedIndexOfLED:3];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setLabel:NSLocalizedString(@"L3", @"toolbar item name; for terminal LED #1")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.label = NSLocalizedString(@"L3", @"toolbar item name; for terminal LED #3");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1919,11 +1934,12 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDLED4 oneBasedIndexOfLED:4];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setLabel:NSLocalizedString(@"L4", @"toolbar item name; for terminal LED #1")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.label = NSLocalizedString(@"L4", @"toolbar item name; for terminal LED #4");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -1998,8 +2014,23 @@ initWithItemIdentifier:(NSString*)		anItemIdentifier
 		borderView.borderWidth = 1.0;
 		borderView.contentView = actionButton; // retain
 		
+		self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:@"" action:actionButton.action keyEquivalent:@""] autorelease];
+		
+		// IMPORTANT: command implementation of "performActionForMacro:"
+		// depends on being able to read the "tag" to determine the
+		// one-based index of the macro to invoke for this item (as is
+		// true for macro menu items with a "tag" and the same action)
+		self.action = actionButton.action;
+		self.target = actionButton.target;
+		self.enabled = YES; // see "validate"
+		self.view = borderView; // retain
+		// see "setTag:", which sets an icon and label (the tag MUST be
+		// set before the item can be used)
+		[self setTagUnconditionally:0];
+		
 		// monitor changes to macros so that the toolbar item can be updated
-		// (for example, the user renaming the macro)
+		// (for example, the user renaming the macro); this will also call
+		// the "eventFiredSelector:" immediately to initialize
 		_macroManagerChangeListener = [[ListenerModel_StandardListener alloc]
 										initWithTarget:self
 														eventFiredSelector:@selector(model:macroManagerChange:context:)];
@@ -2021,18 +2052,6 @@ initWithItemIdentifier:(NSString*)		anItemIdentifier
 		_preferenceChangeListener = [[ListenerModel_StandardListener alloc]
 										initWithTarget:self
 														eventFiredSelector:@selector(model:preferenceChange:context:)];
-		
-		// IMPORTANT: command implementation of "performActionForMacro:"
-		// depends on being able to read the "tag" to determine the
-		// one-based index of the macro to invoke for this item (as is
-		// true for macro menu items with a "tag" and the same action)
-		self.action = actionButton.action;
-		self.target = actionButton.target;
-		self.enabled = YES; // see "validate"
-		self.view = borderView; // retain
-		// see "setTag:", which sets an icon and label (the tag MUST be
-		// set before the item can be used)
-		self.tag = 0;
 		
 		assert(actionButton == [self actionButton]); // test accessor
 		assert(borderView == [self containerViewAsBox]); // test accessor
@@ -2135,27 +2154,10 @@ tag
 - (void)
 setTag:(NSInteger)	aTag
 {
-	// NOTE: NSToolbarItem "setTag:" does not work (it sets values to -1!!!)
-	// so this is being overridden with a local property
-	//[super setTag:aTag];
-	_tag = aTag;
-	
-	//self.label = [NSString stringWithFormat:@"%d", (int)aTag]; // arbitrary (INCOMPLETE; use macro name from preference)
-	self.label = @""; // view is used instead
-	
-	[self actionButton].tag = aTag; // this is critical; it is used by validations and action handlers to determine which macro applies
-	//[self actionButton].title = // set by "updateWithPreferenceValuesFromMacroSet:"
-	//[self actionButton].image = nil; // set by "updateWithPreferenceValuesFromMacroSet:"
-	[self updateWithPreferenceValuesFromMacroSet:MacroManager_ReturnCurrentMacros()]; // sets "[self actionButton].title"
-	
-	self.paletteLabel = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d", @"name for macro icon in toolbar customization palette; %1$d will be a macro number from 1 to 12"), (int)aTag];
-	self.toolTip = self.paletteLabel; // INCOMPLETE; use macro name from preference
-	
-	self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:[self actionButton].title action:[self actionButton].action keyEquivalent:@""] autorelease];
-	self.menuFormRepresentation.target = [self actionButton].target;
-	self.menuFormRepresentation.tag = aTag; // used to identify macro
-	
-	[self resetMinMaxSizes];
+	if (_tag != aTag)
+	{
+		[self setTagUnconditionally:aTag];
+	}
 }// setTag:
 
 
@@ -2168,6 +2170,9 @@ if the target macro cannot be used right now).
 - (void)
 validate
 {
+	NSButton*	actionButton = [self actionButton];
+	
+	
 	if (0 == self.tag)
 	{
 		// invalid
@@ -2178,14 +2183,13 @@ validate
 		self.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performActionForMacro:) sender:[self actionButton]];
 	}
 	//self.menuFormRepresentation.enabled = self.enabled;
-	[self actionButton].enabled = self.enabled;
+	actionButton.enabled = self.enabled;
 	
 	// note: once validation occurs, "canPerformActionForMacro:" will have
 	// updated the menu item representation
 	self.menuFormRepresentation.keyEquivalent = @""; // do not override keys displayed in main menu bar items
 	
-	[self setStateForToolbar:self.toolbar];
-	//[self resetMinMaxSizes]; // (handled by setStateForToolbar:)
+	[self setStateForToolbar:self.toolbar needsLayout:NO];
 }// validate
 
 
@@ -2202,7 +2206,7 @@ so that the window layout can adapt if necessary.
 didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 {
 #pragma unused(aToolbar)
-	[self resetMinMaxSizes];
+	[self resetMinMaxSizesWithAnimation:NO];
 }// didChangeDisplayModeForToolbar:
 
 
@@ -2224,7 +2228,7 @@ willEnterToolbar:(NSToolbar*)	aToolbar
 										(NSToolbarSizeModeSmall == aToolbar.sizeMode))
 										? NSControlSizeSmall
 										: NSControlSizeRegular);
-	[self setStateForToolbar:aToolbar];
+	[self setStateForToolbar:aToolbar needsLayout:YES];
 }// item:willEnterToolbar:
 
 
@@ -2280,7 +2284,7 @@ didChangeSizeForToolbar:(NSToolbar*)	aToolbar
 										(NSToolbarSizeModeSmall == aToolbar.sizeMode))
 										? NSControlSizeSmall
 										: NSControlSizeRegular);
-	[self setStateForToolbar:aToolbar];
+	[self setStateForToolbar:aToolbar needsLayout:YES];
 }// didChangeSizeForToolbar:
 
 
@@ -2351,6 +2355,7 @@ context:(void*)								inPreferencesContext
 													Preferences_ReturnTagVariantForIndex(aTag, STATIC_CAST(self.tag, Preferences_Index)));
 			}
 		}
+		
 		[self updateWithPreferenceValuesFromMacroSet:prefsContext]; // update even for nullptr context (“None” is possible user selection)
 	}
 	else
@@ -2439,6 +2444,30 @@ actionButton
 
 
 /*!
+Update and return the ideal size for this item (fitting
+the title).  A minimum size is enforced.
+
+(2020.05)
+*/
+- (NSSize)
+calculateMaxSize
+{
+	NSBox*		containerBox = [self containerViewAsBox];
+	NSButton*	actionButton = [self actionButton];
+	
+	
+	[containerBox sizeToFit];
+	
+	CGFloat const	idealWidth = (actionButton.intrinsicContentSize.width + (2.0 * containerBox.contentViewMargins.width) + 4/* arbitrary pad */);
+	CGFloat const	idealHeight = (actionButton.intrinsicContentSize.height + (2.0 * containerBox.contentViewMargins.height));
+	NSSize			result = NSMakeSize(std::max<CGFloat>(24, idealWidth), idealHeight);
+	
+	
+	return result;
+}// calculateMaxSize
+
+
+/*!
 Return the main item view as an NSBox class for convenience.
 
 (2020.05)
@@ -2470,19 +2499,16 @@ A minimum size is enforced.
 (2020.05)
 */
 - (void)
-resetMinMaxSizes
+resetMinMaxSizesWithAnimation:(BOOL)	anAnimationFlag
 {
-	// note: allow minimal size since some macro sets may not be full
-	// (no reason to take up extra space in the toolbar for unused macros)
 	[[self containerViewAsBox] sizeToFit];
 	
-	CGFloat const	idealWidth = ([self actionButton].intrinsicContentSize.width + (2.0 * [self containerViewAsBox].contentViewMargins.width) + 4/* arbitrary pad */);
-	CGFloat const	idealHeight = ([self actionButton].intrinsicContentSize.height + (2.0 * [self containerViewAsBox].contentViewMargins.height));
+	NSSize		idealSize = [self calculateMaxSize];
 	
 	
-	[self setMinSize:NSMakeSize(std::max<CGFloat>(24, idealWidth), idealHeight)];
-	[self setMaxSize:NSMakeSize(std::max<CGFloat>(24, idealWidth), idealHeight)];
-}// resetMinMaxSizes
+	self.minSize = NSMakeSize(std::max<CGFloat>(24, idealSize.width), idealSize.height);
+	self.maxSize = NSMakeSize(std::max<CGFloat>(24, idealSize.width), idealSize.height);
+}// resetMinMaxSizesWithAnimation:
 
 
 /*!
@@ -2495,6 +2521,7 @@ the item’s current toolbar).
 */
 - (void)
 setStateForToolbar:(NSToolbar*)		aToolbar
+needsLayout:(BOOL)					aLayoutFlag
 {
 	if (aToolbar.customizationPaletteIsRunning)
 	{
@@ -2505,8 +2532,47 @@ setStateForToolbar:(NSToolbar*)		aToolbar
 		[self containerViewAsBox].borderColor = [NSColor clearColor];
 	}
 	
-	[self resetMinMaxSizes];
+	if (aLayoutFlag)
+	{
+		[self resetMinMaxSizesWithAnimation:YES];
+	}
 }// setStateForToolbar:
+
+
+/*!
+Helper function for "setTag:" with the option to force a
+value even if the given tag matches the current tag.
+
+This is useful if the current macro preferences context
+may have changed (even if the tag did not), or when
+initializing. 
+
+(2020.05)
+*/
+- (void)
+setTagUnconditionally:(NSInteger)	aTag
+{
+	NSButton*	actionButton = [self actionButton];
+	
+	
+	// NOTE: NSToolbarItem "setTag:" does not work (it sets values to -1!!!)
+	// so this is being overridden with a local property
+	//[super setTag:aTag];
+	_tag = aTag;
+	
+	//self.label = [NSString stringWithFormat:@"%d", (int)aTag]; // arbitrary (INCOMPLETE; use macro name from preference)
+	self.label = @""; // view is used instead
+	
+	actionButton.tag = aTag; // this is critical; it is used by validations and action handlers to determine which macro applies
+	//actionButton.title = // set by "updateWithPreferenceValuesFromMacroSet:"
+	//actionButton.image = nil; // set by "updateWithPreferenceValuesFromMacroSet:"
+	[self updateWithPreferenceValuesFromMacroSet:MacroManager_ReturnCurrentMacros()]; // sets "actionButton.title"
+	
+	self.paletteLabel = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d", @"name for macro icon in toolbar customization palette; %1$d will be a macro number from 1 to 12"), (int)aTag];
+	self.toolTip = self.paletteLabel; // initial value (overridden if macro name is set)
+	
+	[self resetMinMaxSizesWithAnimation:NO];
+}// setTagUnconditionally:
 
 
 /*!
@@ -2518,7 +2584,8 @@ assigned index in the current macro set.
 - (void)
 updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
 {
-	BOOL	usePlainAction = ((nullptr == aMacroSet) || (0 == self.tag));
+	NSButton*	actionButton = [self actionButton];
+	BOOL		usePlainAction = ((nullptr == aMacroSet) || (0 == self.tag));
 	
 	
 	[NSAnimationContext beginGrouping];
@@ -2536,7 +2603,7 @@ updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
 													sizeof(macroName), &macroName, false/* search defaults */);
 		if (kPreferences_ResultOK != prefsResult)
 		{
-			Console_Warning(Console_WriteValue, "macro toolbar item failed to update macro name, error", prefsResult);
+			//Console_Warning(Console_WriteValue, "macro toolbar item failed to update macro name, error", prefsResult);
 			//Console_Warning(Console_WriteValue, "macro toolbar item failed to update, index", self.tag);
 			//Console_Warning(Console_WriteValueFourChars, "macro toolbar item failed to update, tag", Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, STATIC_CAST(self.tag, Preferences_Index)));
 			usePlainAction = YES;
@@ -2547,9 +2614,22 @@ updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
 		}
 		else
 		{
-			[[self actionButton] animator].image = nil;
-			[self actionButton].imagePosition = NSNoImage;
-			[[self actionButton] animator].title = BRIDGE_CAST(macroName, NSString*);
+			NSString*	newTitle = BRIDGE_CAST(macroName, NSString*);
+			
+			
+			// animator performance does not seem to be good; avoid unless
+			// the value is actually different
+			if (nil != actionButton.image)
+			{
+				[actionButton animator].image = nil;
+				actionButton.imagePosition = NSNoImage;
+			}
+			
+			if (NO == [actionButton.title isEqualToString:newTitle])
+			{
+				[actionButton animator].title = newTitle;
+				self.toolTip = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d: “%2$@”", @"macro toolbar item tooltip; %1$d will be a macro number from 1 to 12, quoted string will be macro name"), (int)self.tag, newTitle];
+			}
 		}
 		// (INCOMPLETE; could use other properties of macros here, perhaps)
 	}
@@ -2558,12 +2638,35 @@ updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
 	{
 		// set an arbitrary default title when there is no active macro
 		// (or in initial state of unassigned macro index)
-		[[self actionButton] animator].image = [NSImage imageNamed:NSImageNameActionTemplate];
-		[self actionButton].imagePosition = NSImageAbove;
-		[[self actionButton] animator].title = [NSString stringWithFormat:@"%d", (int)self.tag];
+		NSString*	newTitle = [NSString stringWithFormat:@"%d", (int)self.tag];
+		NSImage*	newImage = [NSImage imageNamed:NSImageNameActionTemplate];
+		
+		
+		// animator performance does not seem to be good; avoid unless
+		// the value is actually different
+		if (newImage != actionButton.image)
+		{
+			[actionButton animator].image = [NSImage imageNamed:NSImageNameActionTemplate];
+			actionButton.imagePosition = NSImageAbove;
+		}
+		
+		if (NO == [actionButton.title isEqualToString:newTitle])
+		{
+			[actionButton animator].title = newTitle;
+			self.toolTip = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d", @"macro toolbar item tooltip; %1$d will be a macro number from 1 to 12"), (int)self.tag];
+		}
 	}
 	
+	[self setStateForToolbar:self.toolbar needsLayout:YES];
+	
 	[NSAnimationContext endGrouping];
+	
+	if (nil != actionButton.title)
+	{
+		self.menuFormRepresentation.title = actionButton.title;
+	}
+	self.menuFormRepresentation.target = actionButton.target;
+	self.menuFormRepresentation.tag = self.tag; // used to identify macro
 	
 	// it is possible that resizing an item will reveal more items
 	// than before, requiring the extra items to be revalidated
@@ -2592,12 +2695,13 @@ init
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDNewSessionDefaultFavorite];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionDefaultIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Default", @"toolbar item name; for opening Default session")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionDefaultIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Default", @"toolbar item name; for opening Default session");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -2657,12 +2761,13 @@ init
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDNewSessionLogInShell];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Log-In Shell", @"toolbar item name; for opening log-in shells")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Log-In Shell", @"toolbar item name; for opening log-in shells");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -2722,12 +2827,13 @@ init
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDNewSessionShell];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionShellIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Shell", @"toolbar item name; for opening shells")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionShellIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Shell", @"toolbar item name; for opening shells");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -2787,12 +2893,13 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDPrint];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnPrintIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Print", @"toolbar item name; for printing")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnPrintIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Print", @"toolbar item name; for printing");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -2849,12 +2956,13 @@ init
 	self = [super initWithItemIdentifier:kTerminalToolbar_ItemIDStackWindows];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnStackWindowsIconFilenameNoExtension()]];
-		[self setLabel:NSLocalizedString(@"Arrange in Front", @"toolbar item name; for stacking windows")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnStackWindowsIconFilenameNoExtension()];
+		self.label = NSLocalizedString(@"Arrange in Front", @"toolbar item name; for stacking windows");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
 	}
 	return self;
 }// init
@@ -2931,11 +3039,11 @@ init
 	self = [super initWithItemIdentifier:kMy_ToolbarItemIDSuspend];
 	if (nil != self)
 	{
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setLabel:NSLocalizedString(@"Suspend (Scroll Lock)", @"toolbar item name; for suspending the running process")];
-		[self setPaletteLabel:[self label]];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.label = NSLocalizedString(@"Suspend (Scroll Lock)", @"toolbar item name; for suspending the running process");
+		self.paletteLabel = self.label;
 		self->sessionChangeListener = [[ListenerModel_StandardListener alloc]
 										initWithTarget:self
 														eventFiredSelector:@selector(model:sessionChange:context:)];
@@ -3113,11 +3221,13 @@ setStateFromSession:(SessionRef)	aSession
 {
 	if (Session_IsValid(aSession) && Session_NetworkIsSuspended(aSession))
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOffIconFilenameNoExtension()]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOffIconFilenameNoExtension()];
+		self.toolTip = NSLocalizedString(@"Resume session (no scroll lock)", @"toolbar item tooltip; resume session");
 	}
 	else
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOnIconFilenameNoExtension()]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOnIconFilenameNoExtension()];
+		self.toolTip = NSLocalizedString(@"Suspend session (scroll lock)", @"toolbar item tooltip; suspend session");
 	}
 }// setStateFromSession:
 
@@ -3308,11 +3418,13 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 {
 	if ((nullptr == aScreen) || (false == Terminal_LEDIsOn(aScreen, STATIC_CAST(self->indexOfLED, SInt16))))
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()];
+		self.toolTip = NSLocalizedString(@"Turn on this LED", @"toolbar item tooltip; turn off LED");
 	}
 	else
 	{
-		[self setImage:[NSImage imageNamed:(NSString*)AppResources_ReturnLEDOnIconFilenameNoExtension()]];
+		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnLEDOnIconFilenameNoExtension()];
+		self.toolTip = NSLocalizedString(@"Turn off this LED", @"toolbar item tooltip; turn on LED");
 	}
 }// setStateFromScreen:
 
@@ -3425,18 +3537,18 @@ init
 	if (nil != self)
 	{
 		self->segmentedControl = [[NSSegmentedControl alloc] initWithFrame:NSZeroRect];
-		[self->segmentedControl setTarget:self];
-		[self->segmentedControl setAction:@selector(performSegmentedControlAction:)];
-		[self->segmentedControl setSegmentStyle:NSSegmentStyleTexturedSquare];
+		self->segmentedControl.target = self;
+		self->segmentedControl.action = @selector(performSegmentedControlAction:);
+		self->segmentedControl.segmentStyle = NSSegmentStyleTexturedSquare;
 		
-		//[self setAction:@selector(performToolbarItemAction:)];
-		//[self setTarget:self];
-		[self setEnabled:YES];
-		[self setView:self->segmentedControl];
-		[self setMinSize:NSMakeSize(120, 25)]; // arbitrary (height changes dynamically)
-		[self setMaxSize:NSMakeSize(1024, 25)]; // arbitrary (height changes dynamically)
-		[self setLabel:@""];
-		[self setPaletteLabel:NSLocalizedString(@"Tabs", @"toolbar item name; for tabs")];
+		//self.action = @selector(performToolbarItemAction:);
+		//self.target = self;
+		self.enabled = YES;
+		self.view = self->segmentedControl;
+		self.minSize = NSMakeSize(120, 25); // arbitrary (height changes dynamically)
+		self.maxSize = NSMakeSize(1024, 25); // arbitrary (height changes dynamically)
+		self.label = @"";
+		self.paletteLabel = NSLocalizedString(@"Tabs", @"toolbar item name; for tabs");
 		
 		[self setTabTargets:@[
 								[[[TerminalToolbar_TabSource alloc]
@@ -3585,8 +3697,8 @@ andAction:(SEL)				aSelector
 										autorelease];
 			
 			
-			[newItem setAttributedTitle:[object attributedDescription]];
-			[newItem setTarget:self];
+			newItem.attributedTitle = [object attributedDescription];
+			newItem.target = self;
 			[self->segmentedControl setLabel:[[object attributedDescription] string] forSegment:i];
 			if ([object respondsToSelector:@selector(toolTip)])
 			{
@@ -3595,8 +3707,8 @@ andAction:(SEL)				aSelector
 			[menuRep addItem:newItem];
 			++i;
 		}
-		[menuItem setSubmenu:menuRep];
-		[self setMenuFormRepresentation:menuItem];
+		menuItem.submenu = menuRep;
+		self.menuFormRepresentation = menuItem;
 	}
 }// setTabTargets:andAction:
 
@@ -4794,12 +4906,13 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 		//self.textView.selectable = YES;
 		self.textView.selectable = NO;
 		
-		[self setAction:@selector(performToolbarItemAction:)];
-		[self setTarget:self];
-		[self setEnabled:YES];
-		[self setView:self.textView];
-		[self setLabel:NSLocalizedString(@"Window Title", @"toolbar item name; for window title")];
-		[self setPaletteLabel:NSLocalizedString(@"Window Title", @"toolbar item name; for window title")];
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		self.enabled = YES;
+		self.view = self.textView;
+		self.label = NSLocalizedString(@"Window Title", @"toolbar item name; for window title");
+		self.paletteLabel = NSLocalizedString(@"Window Title", @"toolbar item name; for window title");
+		self.toolTip = self.label;
 		[self setStateForToolbar:nullptr];
 	}
 	return self;
@@ -5112,8 +5225,8 @@ automatically return its ideal height.
 - (void)
 resetMinMaxSizesForHeight:(CGFloat)		aHeight
 {
-	[self setMinSize:NSMakeSize(60, aHeight)];
-	[self setMaxSize:NSMakeSize(2048, aHeight)];
+	self.minSize = NSMakeSize(60, aHeight);
+	self.maxSize = NSMakeSize(2048, aHeight);
 }// resetMinMaxSizesForHeight:
 
 
@@ -5170,8 +5283,8 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	if (nil != self)
 	{
 		self.textView.labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified;
-		[self setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleLeftIconFilenameNoExtension(), NSString*)]]; // TEMPORARY
-		[self setPaletteLabel:NSLocalizedString(@"Left-Aligned Title", @"toolbar item name; for left-aligned window title")];
+		self.image = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleLeftIconFilenameNoExtension(), NSString*)]; // TEMPORARY
+		self.paletteLabel = NSLocalizedString(@"Left-Aligned Title", @"toolbar item name; for left-aligned window title");
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -5215,7 +5328,7 @@ paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
 	
 	
 	result.paletteLabel = self.paletteLabel;
-	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleLeftIconFilenameNoExtension(), NSString*)]];
+	result.image = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleLeftIconFilenameNoExtension(), NSString*)];
 	
 	return [result autorelease];
 }// paletteProxyToolbarItemWithIdentifier:
@@ -5243,7 +5356,7 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	if (nil != self)
 	{
 		self.textView.labelLayout = kTerminalToolbar_TextLabelLayoutRightJustified;
-		[self setPaletteLabel:NSLocalizedString(@"Right-Aligned Title", @"toolbar item name; for right-aligned window title")];
+		self.paletteLabel = NSLocalizedString(@"Right-Aligned Title", @"toolbar item name; for right-aligned window title");
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -5287,7 +5400,7 @@ paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
 	
 	
 	result.paletteLabel = self.paletteLabel;
-	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleRightIconFilenameNoExtension(), NSString*)]];
+	result.image = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleRightIconFilenameNoExtension(), NSString*)];
 	
 	return [result autorelease];
 }// paletteProxyToolbarItemWithIdentifier:
@@ -5769,7 +5882,7 @@ defer:(BOOL)					aDeferFlag
 								performSelector:@selector(toolbarDidChangeSizeMode:)];
 			[self whenObject:windowToolbar postsNote:kTerminalToolbar_ObjectDidChangeVisibilityNotification
 								performSelector:@selector(toolbarDidChangeVisibility:)];
-			[self setToolbar:windowToolbar];
+			self.toolbar = windowToolbar;
 		}
 		
 		// monitor the active session, but also initialize the value
@@ -5785,27 +5898,27 @@ defer:(BOOL)					aDeferFlag
 										[self->sessionFactoryChangeListener listenerRef]);
 		
 		// panel properties
-		[self setBecomesKeyOnlyIfNeeded:YES];
-		[self setFloatingPanel:YES];
-		[self setWorksWhenModal:NO];
+		self.becomesKeyOnlyIfNeeded = YES;
+		self.floatingPanel = YES;
+		self.worksWhenModal = NO;
 		
 		// window properties
-		[self setHasShadow:NO];
-		[self setHidesOnDeactivate:YES];
-		[self setLevel:NSNormalWindowLevel];
-		[self setMovableByWindowBackground:YES];
-		[self setReleasedWhenClosed:NO];
-		[[self standardWindowButton:NSWindowCloseButton] setHidden:YES];
-		[[self standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
-		[[self standardWindowButton:NSWindowZoomButton] setHidden:YES];
-		[[self standardWindowButton:NSWindowDocumentIconButton] setHidden:YES];
-		[[self standardWindowButton:NSWindowToolbarButton] setHidden:YES];
+		self.hasShadow = NO;
+		self.hidesOnDeactivate = YES;
+		self.level = NSNormalWindowLevel;
+		self.movableByWindowBackground = YES;
+		self.releasedWhenClosed = NO;
+		[self standardWindowButton:NSWindowCloseButton].hidden = YES;
+		[self standardWindowButton:NSWindowMiniaturizeButton].hidden = YES;
+		[self standardWindowButton:NSWindowZoomButton].hidden = YES;
+		[self standardWindowButton:NSWindowDocumentIconButton].hidden = YES;
+		[self standardWindowButton:NSWindowToolbarButton].hidden = YES;
 		
 		// the toolbar is meant to apply to the active window so it
 		// should be visible wherever the user is (even in a
 		// Full Screen context)
-		[self setCollectionBehavior:(NSWindowCollectionBehaviorMoveToActiveSpace |
-										NSWindowCollectionBehaviorParticipatesInCycle)];
+		self.collectionBehavior = (NSWindowCollectionBehaviorMoveToActiveSpace |
+									NSWindowCollectionBehaviorParticipatesInCycle);
 		
 		// size constraints; the window should have no content height
 		// because it is only intended to display the window’s toolbar
@@ -5813,9 +5926,9 @@ defer:(BOOL)					aDeferFlag
 			NSSize	limitedSize = NSMakeSize(512, 0); // arbitrary
 			
 			
-			[self setContentMinSize:limitedSize];
+			self.contentMinSize = limitedSize;
 			limitedSize.width = 2048; // arbitrary
-			[self setContentMaxSize:limitedSize];
+			self.contentMaxSize = limitedSize;
 		}
 		
 		// make the window fill the screen horizontally
@@ -6081,7 +6194,7 @@ which will be “as wide as possible, anchored to screen edge”
 - (void)
 setFrameWithPossibleAnimation
 {
-	[self setFrameBasedOnRect:[self frame]];
+	[self setFrameBasedOnRect:self.frame];
 }// setFrameWithPossibleAnimation
 
 
@@ -6220,7 +6333,7 @@ toolbarDidChangeVisibility:(NSNotification*)	aNotification
 #pragma unused(aNotification)
 	[self setFrameWithPossibleAnimation];
 	
-	if (NO == [[self toolbar] isVisible])
+	if (NO == [self.toolbar isVisible])
 	{
 		// if the toolbar is being hidden, just hide the entire toolbar window
 		[self orderOut:nil];

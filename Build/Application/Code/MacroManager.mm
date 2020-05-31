@@ -67,6 +67,7 @@
 #import "Session.h"
 #import "SessionFactory.h"
 #import "Terminal.h"
+#import "TerminalToolbar.objc++.h"
 #import "TerminalView.h"
 #import "TerminalWindow.h"
 #import "URL.h"
@@ -465,14 +466,11 @@ MacroManager_StopMonitoring	(MacroManager_Change		inForWhatChange,
 
 
 /*!
-Sets the title and key equivalent of the specified menu item
-based on the given macro in the set.
+Returns true only if the specified macro should be enabled.
 
-Given information on the state of the application (terminal
-window in front, etc.), a hint is returned to indicate whether
-or not the macro item should be enabled.  The state is not
-directly changed here because the enabled state of a menu item
-is typically handled at the command level. 
+If a non-nil "inMenuItem" is given, the item is updated with the
+characteristics of the macro (such as name and key equivalent).
+The enabled state of the menu item should be set separately.
 
 (4.0)
 */
@@ -483,96 +481,101 @@ MacroManager_UpdateMenuItem		(NSMenuItem*				inMenuItem,
 								 Preferences_ContextRef		inMacroSetOrNullForActiveSet,
 								 Boolean					inCheckDefaults)
 {
-	Preferences_Index const	kMacroPrefIndex = STATIC_CAST(inOneBasedMacroIndex, Preferences_Index);
-	Preferences_ContextRef	defaultContext = returnDefaultMacroSet(false/* retain */);
-	Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
-											? gCurrentMacroSet()
-											: inMacroSetOrNullForActiveSet;
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	CFStringRef				nameCFString = nullptr;
-	MacroManager_Action		macroAction = kMacroManager_ActionSendTextVerbatim;
-	MacroManager_KeyID		macroKeyID = 0;
-	UInt32					modifiers = 0;
-	Boolean					isMenuDisplayingDefault = (prefsContext == defaultContext);
-	Boolean					isDefault = false; // see below
-	Boolean					result = false;
+	Preferences_Index const		kMacroPrefIndex = STATIC_CAST(inOneBasedMacroIndex, Preferences_Index);
+	Preferences_ContextRef		defaultContext = returnDefaultMacroSet(false/* retain */);
+	Preferences_ContextRef		prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
+												? gCurrentMacroSet()
+												: inMacroSetOrNullForActiveSet;
+	MacroManager_Action			macroAction = kMacroManager_ActionSendTextVerbatim;
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
+	Boolean						isDefault = false; // see below
+	Boolean						result = false;
 	
 	
-	// retrieve name
-	prefsResult = Preferences_ContextGetData
-					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, kMacroPrefIndex),
-						sizeof(nameCFString), &nameCFString, inCheckDefaults, &isDefault);
-	if (kPreferences_ResultOK == prefsResult)
+	if (nil != inMenuItem)
 	{
-		if ((isDefault) && (false == isMenuDisplayingDefault))
+		CFStringRef			nameCFString = nullptr;
+		MacroManager_KeyID	macroKeyID = 0;
+		UInt32				modifiers = 0;
+		Boolean				isMenuDisplayingDefault = (prefsContext == defaultContext);
+		
+		
+		// retrieve name
+		prefsResult = Preferences_ContextGetData
+						(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, kMacroPrefIndex),
+							sizeof(nameCFString), &nameCFString, inCheckDefaults, &isDefault);
+		if (kPreferences_ResultOK == prefsResult)
 		{
-			NSString*	templateNSString = NSLocalizedString(@" (Default)  %@",
-																@"used in Macros menu when non-Default set is displaying macro inherited from Default");
-			
-			
-			[inMenuItem setTitle:[NSString stringWithFormat:templateNSString, BRIDGE_CAST(nameCFString, NSString*)]];
+			if ((isDefault) && (false == isMenuDisplayingDefault))
+			{
+				NSString*	templateNSString = NSLocalizedString(@" (Default)  %@",
+																	@"used in Macros menu when non-Default set is displaying macro inherited from Default");
+				
+				
+				[inMenuItem setTitle:[NSString stringWithFormat:templateNSString, BRIDGE_CAST(nameCFString, NSString*)]];
+			}
+			else
+			{
+				[inMenuItem setTitle:BRIDGE_CAST(nameCFString, NSString*)];
+			}
+			CFRelease(nameCFString), nameCFString = nullptr;
 		}
 		else
 		{
-			[inMenuItem setTitle:BRIDGE_CAST(nameCFString, NSString*)];
+			// set a dummy value
+			[inMenuItem setTitle:@""];
 		}
-		CFRelease(nameCFString), nameCFString = nullptr;
-	}
-	else
-	{
-		// set a dummy value
-		[inMenuItem setTitle:@""];
-	}
-	
-	// reset menu item
-	[inMenuItem setKeyEquivalent:@""];
-	
-	// retrieve key code
-	prefsResult = Preferences_ContextGetData
-					(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, kMacroPrefIndex),
-						sizeof(macroKeyID), &macroKeyID, inCheckDefaults, &isDefault);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
-		Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(macroKeyID);
-		unichar			keyEquivalentUnicode = '\0';
 		
+		// reset menu item
+		[inMenuItem setKeyEquivalent:@""];
 		
-		// apply new key equivalent
-		if (kIsVirtualKey)
+		// retrieve key code
+		prefsResult = Preferences_ContextGetData
+						(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, kMacroPrefIndex),
+							sizeof(macroKeyID), &macroKeyID, inCheckDefaults, &isDefault);
+		if (kPreferences_ResultOK == prefsResult)
 		{
-			keyEquivalentUnicode = virtualKeyToUnicode(kKeyCode);
-			[inMenuItem setKeyEquivalent:[NSString stringWithCharacters:&keyEquivalentUnicode length:1]];
+			UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
+			Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(macroKeyID);
+			unichar			keyEquivalentUnicode = '\0';
+			
+			
+			// apply new key equivalent
+			if (kIsVirtualKey)
+			{
+				keyEquivalentUnicode = virtualKeyToUnicode(kKeyCode);
+				[inMenuItem setKeyEquivalent:[NSString stringWithCharacters:&keyEquivalentUnicode length:1]];
+			}
+			else
+			{
+				keyEquivalentUnicode = kKeyCode;
+				[inMenuItem setKeyEquivalent:[NSString stringWithCharacters:&keyEquivalentUnicode length:1]];
+			}
+		}
+		
+		// retrieve key modifiers
+		prefsResult = Preferences_ContextGetData
+						(prefsContext,
+							Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, kMacroPrefIndex),
+							sizeof(modifiers), &modifiers, inCheckDefaults, &isDefault);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			unsigned int	abbreviatedModifiers = 0;
+			
+			
+			// NOTE: if a command key has not been assigned to the item,
+			// setting its modifiers will have no visible effect
+			if (modifiers & kMacroManager_ModifierKeyMaskCommand) abbreviatedModifiers |= NSEventModifierFlagCommand;
+			if (modifiers & kMacroManager_ModifierKeyMaskControl) abbreviatedModifiers |= NSEventModifierFlagControl;
+			if (modifiers & kMacroManager_ModifierKeyMaskOption) abbreviatedModifiers |= NSEventModifierFlagOption;
+			if (modifiers & kMacroManager_ModifierKeyMaskShift) abbreviatedModifiers |= NSEventModifierFlagShift;
+			[inMenuItem setKeyEquivalentModifierMask:abbreviatedModifiers];
 		}
 		else
 		{
-			keyEquivalentUnicode = kKeyCode;
-			[inMenuItem setKeyEquivalent:[NSString stringWithCharacters:&keyEquivalentUnicode length:1]];
+			// set a dummy value
+			[inMenuItem setKeyEquivalentModifierMask:0];
 		}
-	}
-	
-	// retrieve key modifiers
-	prefsResult = Preferences_ContextGetData
-					(prefsContext,
-						Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, kMacroPrefIndex),
-						sizeof(modifiers), &modifiers, inCheckDefaults, &isDefault);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		unsigned int	abbreviatedModifiers = 0;
-		
-		
-		// NOTE: if a command key has not been assigned to the item,
-		// setting its modifiers will have no visible effect
-		if (modifiers & kMacroManager_ModifierKeyMaskCommand) abbreviatedModifiers |= NSEventModifierFlagCommand;
-		if (modifiers & kMacroManager_ModifierKeyMaskControl) abbreviatedModifiers |= NSEventModifierFlagControl;
-		if (modifiers & kMacroManager_ModifierKeyMaskOption) abbreviatedModifiers |= NSEventModifierFlagOption;
-		if (modifiers & kMacroManager_ModifierKeyMaskShift) abbreviatedModifiers |= NSEventModifierFlagShift;
-		[inMenuItem setKeyEquivalentModifierMask:abbreviatedModifiers];
-	}
-	else
-	{
-		// set a dummy value
-		[inMenuItem setKeyEquivalentModifierMask:0];
 	}
 	
 	// retrieve action

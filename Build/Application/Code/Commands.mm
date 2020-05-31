@@ -5170,11 +5170,13 @@ menuBarDidBeginTracking:(NSNotification*)	aNotification
 	
 	if ([NSApp mainMenu] != trackedMenuBar)
 	{
-		Console_Warning(Console_WriteLine, "'menuBarDidBeginTracking:' received unexpected notification for different menu");
+		// note: apparently AppKit will send this notification for ANY menu
+		// (such as toolbars or pop-up menus); ignore if not the main menu bar
+		//Console_Warning(Console_WriteLine, "'menuBarDidBeginTracking:' received unexpected notification for different menu");
 	}
 	else
 	{
-		Console_WriteLine("will begin menu tracking");
+		//Console_WriteLine("will begin menu tracking"); // debug
 		setUpDynamicMenus();
 	}
 }// menuBarDidBeginTracking:
