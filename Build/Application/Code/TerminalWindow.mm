@@ -3443,7 +3443,7 @@ This routine responds by updating terminal windows appropriately.
 void
 terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 ListenerModel_Event	inTerminalViewEvent,
-							 void*					inEventContextPtr,
+							 void*					UNUSED_ARGUMENT(inEventContextPtr),
 							 void*					inListenerContextPtr)
 {
 	TerminalWindowRef				ref = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);

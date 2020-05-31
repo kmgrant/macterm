@@ -618,40 +618,6 @@ invokeEmulatorStateTransitionProc	(My_EmulatorStateTransitionProcPtr	inProc,
 									 My_ParserStatePair const&			inOldNew,
 									 Boolean&							outHandled);
 
-/*!
-Screen Line Operation Routine
-
-This defines a function that can be used as an iterator
-over all of the rows of a virtual screen buffer (either
-the main screen or the scrollback).  The specified text
-buffer (which is read/write) includes the contents of
-the current row.
-
-The row number passed into the routine is relative to the
-iteration currently being done; for example, if someone
-iterates over lines 5 to 8 of a buffer, the line number
-is 0 when starting at line 5, and maximizes at 3 when
-line 8 is hit.
-
-If your operation modifies the buffer (which is allowed),
-return "true" to notify the virtual screen module that
-you changed the text.  Otherwise, return "false" if you
-leave the text alone.
-*/
-typedef void (*My_ScreenLineOperationProcPtr)	(My_ScreenBuffer*		inScreen,
-												 CFMutableStringRef		inLineTextBuffer,
-												 UInt32					inZeroBasedRowNumberOrNegativeForScrollbackRow,
-												 void*					inContextPtr);
-inline void
-invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
-								 My_ScreenBuffer*				inScreen,
-								 CFMutableStringRef				inLineTextBuffer,
-								 UInt32							inZeroBasedRowNumberRelativeToStartOfIterationRange,
-								 void*							inContextPtr)
-{
-	(*inUserRoutine)(inScreen, inLineTextBuffer, inZeroBasedRowNumberRelativeToStartOfIterationRange, inContextPtr);
-}
-
 } // anonymous namespace
 
 #pragma mark Types
@@ -1819,8 +1785,6 @@ typedef My_SearchThreadContext const*	My_SearchThreadContextConstPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt32, void*);
-void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt32, void*);
 void						assertScrollingRegion					(My_ScreenBufferPtr);
 void						bufferEraseCursorLine					(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseFromCursorColumn				(My_ScreenBufferPtr, My_BufferChanges, UInt16);
@@ -1858,8 +1822,6 @@ Boolean						defineTrueColor							(My_ScreenBufferPtr, UInt8, UInt8, UInt8, Tex
 void						deleteLinePtr							(My_ScreenBufferLinePtr&);
 void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
 void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
-Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt32,
-																	 My_ScreenLineOperationProcPtr, void*);
 inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
 void						getParametersFromStringAccumulator		(My_ScreenBufferPtr, ParameterDecoder_StateMachine&,
 																	 std::basic_string< UInt8 >::const_iterator&);
@@ -15112,58 +15074,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 
 
 /*!
-A method of standard My_ScreenLineOperationProcPtr form,
-this routine adds the length of the specified line of
-text to an overall sum, pointed to by "inoutLengthPtr"
-(assumed to be a CFIndex*).
-
-Since this operation never modifies the buffer, "false"
-is always returned.
-
-(3.0)
-*/
-void
-addScreenLineLength		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
-						 CFMutableStringRef		inLineTextBuffer,
-						 UInt32					UNUSED_ARGUMENT(inOneBasedLineNumber),
-						 void*					inoutLengthPtr)
-{
-	CFIndex*	sumPtr = REINTERPRET_CAST(inoutLengthPtr, CFIndex*);
-	
-	
-	(*sumPtr) += (CFStringGetLength(inLineTextBuffer) + 1/* for newline */);
-}// addScreenLineLength
-
-
-/*!
-A method of standard My_ScreenLineOperationProcPtr form,
-this routine adds the data from the specified line text
-buffer to a CFMutableStringRef, pointed to by
-"inoutCFMutableStringRef".
-
-This is a “raw” append, there is no new-line or other
-delimiter between appended lines.
-
-Currently, this routine is somewhat naïve, but in the
-future it will do its best to express the actual rendered
-content of the line in Unicode.
-
-(3.1)
-*/
-void
-appendScreenLineRawToCFString	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
-								 CFMutableStringRef		inLineTextBuffer,
-								 UInt32					UNUSED_ARGUMENT(inOneBasedLineNumber),
-								 void*					inoutCFMutableStringRef)
-{
-	CFMutableStringRef	mutableCFString = REINTERPRET_CAST(inoutCFMutableStringRef, CFMutableStringRef);
-	
-	
-	CFStringAppend(mutableCFString, inLineTextBuffer);
-}// appendScreenLineRawToCFString
-
-
-/*!
 Performs various assertions on the current custom scrolling
 region range, to make sure all values are valid.
 
@@ -16879,66 +16789,6 @@ eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 	std::fill(textIterator, inRow.textVectorEnd, ' ');
 	std::fill(attrIterator, inRow.returnMutableAttributeVector().end(), inRow.returnGlobalAttributes());
 }// eraseRightHalfOfLine
-
-
-/*!
-Iterates over the given range of lines on the specified
-terminal screen, executing a function on each of them.
-
-The ranges are zero-based, but can be negative; 0 is the
-first line of the main screen area, and -1 is the first
-scrollback line.  The oldest scrollback row is a larger
-negative number, the bottommost line of the visible screen
-is one less than the number of rows high that the terminal
-screen is.
-
-The context is defined by you, and is passed directly to
-the specified function each time it is invoked.
-
-\retval kTerminal_ResultOK
-if no error occurred
-
-\retval kTerminal_ResultParameterError
-if the screen line operation function, screen reference or
-line iterator reference is invalid
-
-\retval kTerminal_ResultNotEnoughMemory
-if any line buffers are unexpectedly empty
-
-(3.0)
-*/
-Terminal_Result
-forEachLineDo	(TerminalScreenRef				inRef,
-				 Terminal_LineRef				inStartRow,
-				 UInt32							inNumberOfRowsToConsider,
-				 My_ScreenLineOperationProcPtr	inDoWhat,
-				 void*							inContextPtr)
-{
-	Terminal_Result			result = kTerminal_ResultOK;
-	My_ScreenBufferPtr		screenPtr = getVirtualScreenData(inRef);
-	My_LineIteratorPtr		iteratorPtr = getLineIterator(inStartRow);
-	
-	
-	if ((inDoWhat == nullptr) || (screenPtr == nullptr) || (iteratorPtr == nullptr))
-	{
-		result = kTerminal_ResultParameterError;
-	}
-	else
-	{
-		UInt32		lineNumber = 0;
-		Boolean		isEnd = false;
-		
-		
-		// iterate over all lines in the range
-		for (; ((lineNumber < inNumberOfRowsToConsider) && (false == isEnd));
-				iteratorPtr->goToNextLine(isEnd), ++lineNumber)
-		{
-			invokeScreenLineOperationProc(inDoWhat, screenPtr, iteratorPtr->currentLine().textCFString.returnCFMutableStringRef(),
-											lineNumber, inContextPtr);
-		}
-	}
-	return result;
-}// forEachLineDo
 
 
 /*!

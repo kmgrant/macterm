@@ -457,7 +457,6 @@ void				recalculateCachedDimensions			(My_TerminalViewPtr);
 void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				releaseRowIterator					(My_TerminalViewPtr, Terminal_LineRef*);
 Boolean				removeDataSource					(My_TerminalViewPtr, TerminalScreenRef);
-SInt64				returnNumberOfCharacters			(My_TerminalViewPtr);
 CFStringRef			returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr, UInt16, TerminalView_TextFlags);
 void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -7780,25 +7779,6 @@ removeDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	return result;
 }// removeDataSource
-
-
-/*!
-Returns an approximation of how many characters are
-represented by this terminal view’s text area.
-
-(3.1)
-*/
-SInt64
-returnNumberOfCharacters	(My_TerminalViewPtr		inTerminalViewPtr)
-{
-	UInt16 const	kNumVisibleRows = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
-	UInt32 const	kNumScrollbackRows = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
-	UInt16 const	kNumColumns = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-	SInt64			result = (kNumVisibleRows + kNumScrollbackRows) * kNumColumns;
-	
-	
-	return result;
-}// returnNumberOfCharacters
 
 
 /*!

@@ -437,7 +437,7 @@ the handler is installed.
 */
 Boolean
 Commands_ExecuteByIDUsingEvent	(UInt32		inCommandID,
-								 void*		inUnusedLegacyPtr)
+								 void*		UNUSED_ARGUMENT(inUnusedLegacyPtr))
 {
 	Boolean		result = false;
 	
