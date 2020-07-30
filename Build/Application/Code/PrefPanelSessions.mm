@@ -292,9 +292,10 @@ PrefPanelSessions_NewResourcePaneTagSet ()
 	// IMPORTANT: this list should be in sync with everything in this file
 	// that reads screen-pane preferences from the context of a data set
 	tagList.push_back(kPreferences_TagCommandLine);
-	tagList.push_back(kPreferences_TagAssociatedTerminalFavorite);
-	tagList.push_back(kPreferences_TagAssociatedFormatFavoriteLightMode);
 	tagList.push_back(kPreferences_TagAssociatedFormatFavoriteDarkMode);
+	tagList.push_back(kPreferences_TagAssociatedFormatFavoriteLightMode);
+	tagList.push_back(kPreferences_TagAssociatedMacroSetFavorite);
+	tagList.push_back(kPreferences_TagAssociatedTerminalFavorite);
 	tagList.push_back(kPreferences_TagAssociatedTranslationFavorite);
 	tagList.push_back(kPreferences_TagServerProtocol);
 	tagList.push_back(kPreferences_TagServerHost);
@@ -788,6 +789,18 @@ formatFavoriteDarkMode
 /*!
 Accessor.
 
+(2020.07)
+*/
+- (PreferenceValue_CollectionBinding*)
+macroSetFavorite
+{
+	return [self->byKey objectForKey:@"macroSetFavorite"];
+}// macroSetFavorite
+
+
+/*!
+Accessor.
+
 (4.1)
 */
 - (PreferenceValue_CollectionBinding*)
@@ -1166,6 +1179,13 @@ didLoadContainerView:(NSView*)			aContainerView
 														includeDefault:YES]
 							autorelease]
 					forKey:@"formatFavoriteDarkMode"];
+	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+								initWithPreferencesTag:kPreferences_TagAssociatedMacroSetFavorite
+														contextManager:self->prefsMgr
+														sourceClass:Quills::Prefs::MACRO_SET
+														includeDefault:YES]
+							autorelease]
+					forKey:@"macroSetFavorite"];
 	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTerminalFavorite
 														contextManager:self->prefsMgr
@@ -1553,7 +1573,7 @@ primaryDisplayBindingKeys
 	return @[@"commandLine", @"serverHost", @"serverPort", @"serverProtocol",
 				@"serverUserID", @"terminalFavorite",
 				@"formatFavoriteLightMode", @"formatFavoriteDarkMode",
-				@"translationFavorite"];
+				@"macroSetFavorite", @"translationFavorite"];
 }// primaryDisplayBindingKeys
 
 

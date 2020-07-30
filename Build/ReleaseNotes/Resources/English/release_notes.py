@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20200727',
     '20200502',
     '20190331',
     '20190324',
@@ -603,6 +604,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20200727': [
+        'Sessions can now have an associated Macro Set, which becomes the current set when the session first runs.',
+        'The current macro set is now tied to the active terminal window, and is automatically restored when switching windows.',
+    ],
     '20200502': [
         'Macros can now be invoked by toolbar items.  Each item is bound only to a particular macro number, dynamically showing its action in the toolbar (as you switch to different macro sets).',
     ],

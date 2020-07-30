@@ -486,11 +486,24 @@ It is also possible to display macros in the toolbar.  Each
  name will change with the macro.  (If a macro has no name, a
  generic icon and macro number is shown instead.)
 
-The active set can be changed using the Macros menu.  If the "None"
- set is chosen, all macros are disabled.  Otherwise, the macros
- can be used by typing the key equivalent displayed in the menu,
- by selecting its name from the Macros menu or by clicking a
- toolbar item corresponding to the macro.
+The active set of macros is determined in three ways:
+
+- You can use the Macros menu.  If the "None" set is chosen,
+  all macros are disabled.  Once you override macros for a
+  terminal, this choice is preserved whenever you switch back
+  to the same window.
+
+- If you select a “Default Macro Set” when configuring a new
+  Session, that set will be used when the window opens (and
+  whenever switching back to that window, unless you change it
+  manually above).
+
+- The “Default” set of macros is consulted in any other case,
+  including shell windows.
+
+A macro can be used by typing its key equivalent (displayed in
+ the Macros menu), by selecting its name from the Macros menu
+ or by clicking a toolbar item corresponding to the macro.
 
 h3. Macro List
 
@@ -811,9 +824,9 @@ Specifies the Terminals collection that will be used to set up
 In Unix sessions, you typically will set a "TERM" environment
  variable that is consistent with the Terminal setting.
 
-h4. Format
+h4. Light Mode Format / Dark Mode Format
 
-Specifies the Formats collection that will be used to set up
+Specifies the Formats collection(s) that will be used to set up
  the fonts and colors for the session terminal window.  You can
  change font and color settings while the session is running, by
  using the View menu; and the set can be modified using the
@@ -830,6 +843,15 @@ Specifies the Translations collection that will be used to
 
 In Unix sessions, you typically will set a "LANG" environment
  variable that is consistent with the Translation setting.
+
+h4. Default Macro Set
+
+When the session terminal window first opens or is later
+ reactivated, the Macros collection with this name becomes
+ current automatically.  If macros are displayed in the toolbar,
+ those items are switched as well.  (If you manually change the
+ current macro set while the window is open, that selection
+ persists instead.)
 
 h3(#sessiondataflow). Data Flow
 

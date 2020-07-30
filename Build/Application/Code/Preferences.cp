@@ -891,6 +891,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavoriteDarkMode,
 									CFSTR("format-favorite-dark"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
+	My_PreferenceDefinition::create(kPreferences_TagAssociatedMacroSetFavorite,
+									CFSTR("macro-set-favorite"), kPreferences_DataTypeCFStringRef,
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTerminalFavorite,
 									CFSTR("terminal-favorite"), kPreferences_DataTypeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
@@ -7427,6 +7430,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				{
 				case kPreferences_TagAssociatedFormatFavoriteLightMode:
 				case kPreferences_TagAssociatedFormatFavoriteDarkMode:
+				case kPreferences_TagAssociatedMacroSetFavorite:
 				case kPreferences_TagAssociatedTerminalFavorite:
 				case kPreferences_TagAssociatedTranslationFavorite:
 				case kPreferences_TagCaptureFileName:
@@ -9889,6 +9893,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			{
 			case kPreferences_TagAssociatedFormatFavoriteLightMode:
 			case kPreferences_TagAssociatedFormatFavoriteDarkMode:
+			case kPreferences_TagAssociatedMacroSetFavorite:
 			case kPreferences_TagAssociatedTerminalFavorite:
 			case kPreferences_TagAssociatedTranslationFavorite:
 			case kPreferences_TagCaptureFileName:

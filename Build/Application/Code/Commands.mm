@@ -2568,41 +2568,39 @@ canPerformActionForMacro:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchByFavoriteName:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	BOOL	isError = YES;
+	
+	
+	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 	{
-		BOOL	isError = YES;
+		// use the specified preferences
+		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
+		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
 		
 		
-		if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
+		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
 		{
-			// use the specified preferences
-			NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-			CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+			Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
+														(Quills::Prefs::MACRO_SET, collectionName),
+														Preferences_ContextWrap::kAlreadyRetained);
 			
 			
-			if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, collectionName))
+			if (namedSettings.exists())
 			{
-				Preferences_ContextWrap		namedSettings(Preferences_NewContextFromFavorites
-															(Quills::Prefs::MACRO_SET, collectionName),
-															Preferences_ContextWrap::kAlreadyRetained);
+				MacroManager_Result		macrosResult = kMacroManager_ResultOK;
 				
 				
-				if (namedSettings.exists())
-				{
-					MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-					
-					
-					macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
-					isError = (false == macrosResult.ok());
-				}
+				macrosResult = MacroManager_SetCurrentMacros(namedSettings.returnRef());
+				isError = (false == macrosResult.ok());
 			}
+			[[NSApp mainWindow] terminalWindowController].preferredMacroSetName = asMenuItem.title;
 		}
-		
-		if (isError)
-		{
-			// failed...
-			Sound_StandardAlert();
-		}
+	}
+	
+	if (isError)
+	{
+		// failed...
+		Sound_StandardAlert();
 	}
 }
 - (id)
@@ -2640,17 +2638,17 @@ canPerformMacroSwitchByFavoriteName:(id <NSValidatedUserInterfaceItem>)		anItem
 - (IBAction)
 performMacroSwitchDefault:(id)	sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+	
+	
+	macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+	if (false == macrosResult.ok())
 	{
-		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-		
-		
-		macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
-		if (false == macrosResult.ok())
-		{
-			Sound_StandardAlert();
-		}
+		Sound_StandardAlert();
 	}
+	
+	// update preferred context for window
+	[[NSApp mainWindow] terminalWindowController].preferredMacroSetName = @"Default";
 }
 - (id)
 canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -2668,17 +2666,17 @@ canPerformMacroSwitchDefault:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchNone:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+	
+	
+	macrosResult = MacroManager_SetCurrentMacros(nullptr);
+	if (false == macrosResult.ok())
 	{
-		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-		
-		
-		macrosResult = MacroManager_SetCurrentMacros(nullptr);
-		if (false == macrosResult.ok())
-		{
-			Sound_StandardAlert();
-		}
+		Sound_StandardAlert();
 	}
+	
+	// update preferred context for window
+	[[NSApp mainWindow] terminalWindowController].preferredMacroSetName = nil;
 }
 - (id)
 canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -2696,37 +2694,41 @@ canPerformMacroSwitchNone:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchNext:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	std::vector< Preferences_ContextRef >	macroSets;
+	Boolean									switchOK = false;
+	
+	
+	// NOTE: this list includes “Default”
+	if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+		(false == macroSets.empty()))
 	{
-		std::vector< Preferences_ContextRef >	macroSets;
-		Boolean									switchOK = false;
+		// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		CFStringRef				macroSetName = nullptr;
 		
 		
-		// NOTE: this list includes “Default”
-		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
-			(false == macroSets.empty()))
+		if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
 		{
-			// NOTE: this should be quite similar to "performMacroSwitchPrevious:"
-			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-			
-			
-			if (gCurrentMacroSetIndex >= (macroSets.size() - 1))
-			{
-				gCurrentMacroSetIndex = 0;
-			}
-			else
-			{
-				++gCurrentMacroSetIndex;
-			}
-			
-			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
-			switchOK = macrosResult.ok();
+			gCurrentMacroSetIndex = 0;
+		}
+		else
+		{
+			++gCurrentMacroSetIndex;
 		}
 		
-		if (false == switchOK)
+		macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+		switchOK = macrosResult.ok();
+		
+		// update preferred context for window
+		if (kPreferences_ResultOK == Preferences_ContextGetName(macroSets[gCurrentMacroSetIndex], macroSetName))
 		{
-			Sound_StandardAlert();
+			[[NSApp mainWindow] terminalWindowController].preferredMacroSetName = BRIDGE_CAST(macroSetName, NSString*);
 		}
+	}
+	
+	if (false == switchOK)
+	{
+		Sound_StandardAlert();
 	}
 }
 - (id)
@@ -2743,37 +2745,41 @@ canPerformMacroSwitchNext:(id <NSValidatedUserInterfaceItem>)	anItem
 - (IBAction)
 performMacroSwitchPrevious:(id)		sender
 {
-	if (NO == [self viaFirstResponderTryToPerformSelector:_cmd withObject:sender])
+	std::vector< Preferences_ContextRef >	macroSets;
+	Boolean									switchOK = false;
+	
+	
+	// NOTE: this list includes “Default”
+	if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
+		(false == macroSets.empty()))
 	{
-		std::vector< Preferences_ContextRef >	macroSets;
-		Boolean									switchOK = false;
+		// NOTE: this should be quite similar to "performMacroSwitchNext:"
+		MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+		CFStringRef				macroSetName = nullptr;
 		
 		
-		// NOTE: this list includes “Default”
-		if (Preferences_GetContextsInClass(Quills::Prefs::MACRO_SET, macroSets) &&
-			(false == macroSets.empty()))
+		if (gCurrentMacroSetIndex < 1)
 		{
-			// NOTE: this should be quite similar to "performMacroSwitchNext:"
-			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
-			
-			
-			if (gCurrentMacroSetIndex < 1)
-			{
-				gCurrentMacroSetIndex = (macroSets.size() - 1);
-			}
-			else
-			{
-				--gCurrentMacroSetIndex;
-			}
-			
-			macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
-			switchOK = macrosResult.ok();
+			gCurrentMacroSetIndex = (macroSets.size() - 1);
+		}
+		else
+		{
+			--gCurrentMacroSetIndex;
 		}
 		
-		if (false == switchOK)
+		macrosResult = MacroManager_SetCurrentMacros(macroSets[gCurrentMacroSetIndex]);
+		switchOK = macrosResult.ok();
+		
+		// update preferred context for window
+		if (kPreferences_ResultOK == Preferences_ContextGetName(macroSets[gCurrentMacroSetIndex], macroSetName))
 		{
-			Sound_StandardAlert();
+			[[NSApp mainWindow] terminalWindowController].preferredMacroSetName = BRIDGE_CAST(macroSetName, NSString*);
 		}
+	}
+	
+	if (false == switchOK)
+	{
+		Sound_StandardAlert();
 	}
 }
 - (id)

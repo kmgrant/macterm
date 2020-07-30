@@ -271,6 +271,7 @@ enum
 {
 	kPreferences_TagAssociatedFormatFavoriteLightMode	= 'frmt',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name) for Light Mode
 	kPreferences_TagAssociatedFormatFavoriteDarkMode	= 'fdrk',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name) for Dark Mode
+	kPreferences_TagAssociatedMacroSetFavorite			= 'mset',	//!< data: "CFStringRef" (a Quills::Prefs::MACRO_SET context name)
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a Quills::Prefs::TERMINAL context name)
 	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
 	kPreferences_TagBackgroundNewDataHandler			= 'ndhn',	//!< data: "UInt16" (Session_Watch; kSession_WatchForPassiveData or kSession_WatchNothing)

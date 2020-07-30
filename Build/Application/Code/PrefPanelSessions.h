@@ -93,6 +93,8 @@ changes to an interface declared in a ".mm" file.
 	- (PreferenceValue_CollectionBinding*)
 	formatFavoriteDarkMode; // binding
 	- (PreferenceValue_CollectionBinding*)
+	macroSetFavorite; // binding
+	- (PreferenceValue_CollectionBinding*)
 	terminalFavorite; // binding
 	- (PreferenceValue_CollectionBinding*)
 	translationFavorite; // binding

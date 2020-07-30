@@ -263,6 +263,7 @@ changes to an interface declared in a ".mm" file.
 	TerminalWindowRef			_terminalWindowRef;
 	TerminalToolbar_Delegate*	_toolbarDelegate;
 	TerminalWindow_RootVC*		_rootVC;
+	NSString*					_preferredMacroSetName;
 }
 
 // initializers
@@ -273,6 +274,8 @@ changes to an interface declared in a ".mm" file.
 // accessors
 	- (TerminalWindow_RootVC*)
 	rootViewController;
+	@property (strong) NSString*
+	preferredMacroSetName;
 	@property (assign) TerminalWindowRef
 	terminalWindowRef;
 

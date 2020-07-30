@@ -83,6 +83,7 @@ extern "C"
 #import "GenericDialog.h"
 #import "HelpSystem.h"
 #import "Keypads.h"
+#import "MacroManager.h"
 #import "Preferences.h"
 #import "PrefPanelFormats.h"
 #import "PrefPanelTerminals.h"
@@ -3598,6 +3599,7 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		
 		self.window.delegate = self;
 		
+		_preferredMacroSetName = @"Default";
 		_rootVC = [[TerminalWindow_RootVC alloc] init];
 		[self.rootViewController addScrollControllerBeyondEdge:NSMinYEdge];
 		{
@@ -3678,6 +3680,7 @@ Destructor.
 - (void)
 dealloc
 {
+	[_preferredMacroSetName release];
 	[_rootVC release];
 	[_toolbarDelegate release];
 	[super dealloc];
@@ -3697,6 +3700,24 @@ rootViewController
 {
 	return _rootVC;
 }// rootViewController
+
+
+/*!
+Accessor.
+
+(2020.07)
+*/
+- (NSString*)
+preferredMacroSetName
+{
+	return _preferredMacroSetName;
+}
+- (void)
+setPreferredMacroSetName:(NSString*)	aString
+{
+	[_preferredMacroSetName autorelease];
+	_preferredMacroSetName = [aString copy];
+}// setPreferredMacroSetName:
 
 
 #pragma mark New Methods
@@ -4114,6 +4135,46 @@ performRename:(id)	sender
 
 
 /*!
+Performs additional tasks after terminal window becomes active.
+Currently this changes the current Macro Set to the most recent
+set (if any) that was selected while the window was active.
+
+(2020.07)
+*/
+- (void)
+windowDidBecomeKey:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	NSString*		macroSetName = self.preferredMacroSetName;
+	
+	
+	if (nil == macroSetName)
+	{
+		MacroManager_SetCurrentMacros(nullptr);
+	}
+	else if ([macroSetName isEqualToString:@"Default"])
+	{
+		MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+	}
+	else
+	{
+		if (Preferences_IsContextNameInUse(Quills::Prefs::MACRO_SET, BRIDGE_CAST(macroSetName, CFStringRef)))
+		{
+			Preferences_ContextWrap		macroSet(Preferences_NewContextFromFavorites(Quills::Prefs::MACRO_SET, BRIDGE_CAST(macroSetName, CFStringRef)),
+													Preferences_ContextWrap::kAlreadyRetained);
+			
+			
+			MacroManager_SetCurrentMacros(macroSet.returnRef());
+		}
+		else
+		{
+			Console_Warning(Console_WriteValueCFString, "window cannot switch macro set, no set found with name", BRIDGE_CAST(macroSetName, CFStringRef));
+		}
+	}
+}// windowDidBecomeKey:
+
+
+/*!
 Responds when the toolbar visibility changes, by altering
 the “title visible” property of the window.
 
@@ -4133,7 +4194,7 @@ toolbarDidChangeVisibility:(NSNotification*)	aNotification
 		[self setWindowButtonsHidden:NO];
 		self.window.titleVisibility = NSWindowTitleVisible;
 	}
-}// toolbarDidChangeVisibility
+}// toolbarDidChangeVisibility:
 
 
 /*!

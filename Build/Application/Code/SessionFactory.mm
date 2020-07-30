@@ -556,6 +556,10 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindow,
 	
 	assert(nullptr != terminalWindow);
 	
+	// shells do not currently behave the same as other sessions so
+	// macros must be set manually
+	UNUSED_RETURN(MacroManager_Result)MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+	
 	// display the window
 	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
 	{
@@ -668,6 +672,10 @@ SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindow,
 	
 	
 	assert(nullptr != terminalWindow);
+	
+	// shells do not currently behave the same as other sessions so
+	// macros must be set manually
+	UNUSED_RETURN(MacroManager_Result)MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
 	
 	// display the window
 	if (false == displayTerminalWindow(terminalWindow, inWorkspaceOrNull, inWindowIndexInWorkspaceOrZero))
@@ -1110,6 +1118,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 		// can change the initial terminal window appearance
 		[embeddedPanel addObserver:dataObject forKeyPath:@"formatFavoriteDarkMode.currentValueDescriptor" options:NSKeyValueObservingOptionInitial context:nullptr];
 		[embeddedPanel addObserver:dataObject forKeyPath:@"formatFavoriteLightMode.currentValueDescriptor" options:NSKeyValueObservingOptionInitial context:nullptr];
+		[embeddedPanel addObserver:dataObject forKeyPath:@"macroSetFavorite.currentValueDescriptor" options:NSKeyValueObservingOptionInitial context:nullptr];
 		[embeddedPanel addObserver:dataObject forKeyPath:@"terminalFavorite.currentValueDescriptor" options:0 context:nullptr];
 		
 		// display a terminal window and then immediately display
@@ -1552,6 +1561,12 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		result = false;
 	}
 	
+	if (false == configureSessionTerminalWindowByClass(inTerminalWindow, inSessionContext, Quills::Prefs::MACRO_SET))
+	{
+		Console_Warning(Console_WriteLine, "unable to apply macro set preferences to window");
+		result = false;
+	}
+	
 	return result;
 }// configureSessionTerminalWindow
 
@@ -1584,11 +1599,30 @@ configureSessionTerminalWindowByClass	(TerminalWindowRef			inTerminalWindow,
 	
 	if (nullptr != sourceContext)
 	{
-		// copy recognized settings to the terminal window
-		result = TerminalWindow_ReconfigureViewsInGroup
-					(inTerminalWindow, kTerminalWindow_ViewGroupActive, sourceContext,
-						inClass);
-		Preferences_ReleaseContext(&sourceContext);
+		if (Quills::Prefs::MACRO_SET == inClass)
+		{
+			// associate a preferred macro set with the window, which is
+			// restored whenever the window is activated
+			MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+			CFStringRef				macroSetName = nullptr;
+			
+			
+			macrosResult = MacroManager_SetCurrentMacros(sourceContext);
+			result = macrosResult.ok();
+			
+			if (kPreferences_ResultOK == Preferences_ContextGetName(sourceContext, macroSetName))
+			{
+				[TerminalWindow_ReturnNSWindow(inTerminalWindow) terminalWindowController].preferredMacroSetName = BRIDGE_CAST(macroSetName, NSString*);
+			}
+		}
+		else
+		{
+			// copy recognized settings to the terminal window
+			result = TerminalWindow_ReconfigureViewsInGroup
+						(inTerminalWindow, kTerminalWindow_ViewGroupActive, sourceContext,
+							inClass);
+			Preferences_ReleaseContext(&sourceContext);
+		}
 	}
 	
 	return result;
@@ -1648,6 +1682,10 @@ copySessionTerminalWindowConfiguration	(Preferences_ContextRef		inSessionContext
 		{
 			associationTag = kPreferences_TagAssociatedFormatFavoriteLightMode;
 		}
+		break;
+	
+	case Quills::Prefs::MACRO_SET:
+		associationTag = kPreferences_TagAssociatedMacroSetFavorite;
 		break;
 	
 	case Quills::Prefs::TERMINAL:
@@ -2017,6 +2055,7 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 	// (the parameters should be consistent)
 	[viewMgr removeObserver:dataObject forKeyPath:@"formatFavoriteDarkMode.currentValueDescriptor"];
 	[viewMgr removeObserver:dataObject forKeyPath:@"formatFavoriteLightMode.currentValueDescriptor"];
+	[viewMgr removeObserver:dataObject forKeyPath:@"macroSetFavorite.currentValueDescriptor"];
 	[viewMgr removeObserver:dataObject forKeyPath:@"terminalFavorite.currentValueDescriptor"];
 	
 	if (inOKButtonPressed)
@@ -2512,6 +2551,11 @@ context:(void*)						aContext
 				{
 					UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
 																				Quills::Prefs::FORMAT);
+				}
+				else if ([aKeyPath isEqualToString:@"macroSetFavorite.currentValueDescriptor"])
+				{
+					UNUSED_RETURN(Boolean)configureSessionTerminalWindowByClass(self.terminalWindow, self.temporaryContext,
+																				Quills::Prefs::MACRO_SET);
 				}
 				else if ([aKeyPath isEqualToString:@"terminalFavorite.currentValueDescriptor"])
 				{
