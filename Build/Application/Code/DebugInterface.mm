@@ -45,15 +45,29 @@
 #import "SessionFactory.h"
 #import "Terminal.h"
 
+// Swift imports
+#import <MacTermQuills/MacTermQuills-Swift.h>
 
+
+
+#pragma mark Types
+
+/*!
+Implements the button actions of the Debug Interface panel.
+
+(Currently any changes to checkboxes do not trigger custom
+actions, and UIDebugInterface_Model simply prints log
+messages when they are toggled.  If this needs to change
+in the future, "UIDebugInterface_ActionHandling" could be
+extended to provide more hooks.)
+*/
+@interface DebugInterface_ViewManager : NSObject <UIDebugInterface_ActionHandling> //{
+
+@end //}
 
 #pragma mark Variables
 
-Boolean		gDebugInterface_LogsDeviceState = false;
-Boolean		gDebugInterface_LogsSixelDecoderState = false;
-Boolean		gDebugInterface_LogsTerminalInputChar = false;
-Boolean		gDebugInterface_LogsTerminalEcho = false;
-Boolean		gDebugInterface_LogsTerminalState = false;
+UIDebugInterface_Model*		gDebugData = [[UIDebugInterface_Model alloc] init];
 
 
 
@@ -68,52 +82,145 @@ void
 DebugInterface_Display ()
 {
 @autoreleasepool {
-	[[DebugInterface_PanelController sharedDebugInterfacePanelController] showWindow:NSApp];
+	DebugInterface_ViewManager*		runner = [[DebugInterface_ViewManager alloc] init];
+	NSViewController*				viewController = [UIDebugInterface_ObjC makeViewController:gDebugData runner:runner];
+	NSPanel*						panelObject = [NSPanel windowWithContentViewController:viewController];
+	NSWindowController*				windowController = nil;
+	
+	
+	panelObject.styleMask = (NSWindowStyleMaskTitled |
+								NSWindowStyleMaskClosable |
+								NSWindowStyleMaskHUDWindow);
+	panelObject.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+	panelObject.title = @"Debug Interface";
+	
+	windowController = [[NSWindowController alloc] initWithWindow:panelObject];
+	windowController.windowFrameAutosaveName = @"Debugging"; // (for backward compatibility, never change this)
+	[windowController showWindow:NSApp];
 }// @autoreleasepool
 }// Display
+
+
+/*!
+Return specified debug setting (can be changed from panel).
+
+(2020.08)
+*/
+Boolean
+DebugInterface_LogsSixelDecoderState ()
+{
+#ifndef NDEBUG
+	return gDebugData.logSixelGraphicsDecoderState;
+#else
+	return false;
+#endif
+}// LogsSixelDecoderState
+
+
+/*!
+Return specified debug setting (can be changed from panel).
+
+(2020.08)
+*/
+Boolean
+DebugInterface_LogsSixelInput ()
+{
+	// for now, log SIXEL input string whenever state is logged
+	return DebugInterface_LogsSixelDecoderState();
+}// LogsSixelInput
+
+
+/*!
+Return specified debug setting (can be changed from panel).
+
+(2020.08)
+*/
+Boolean
+DebugInterface_LogsTerminalInputChar ()
+{
+#ifndef NDEBUG
+	return gDebugData.logTerminalInputCharacters;
+#else
+	return false;
+#endif
+}// LogsTerminalInputChar
+
+
+/*!
+Return specified debug setting (can be changed from panel).
+
+(2020.08)
+*/
+Boolean
+DebugInterface_LogsTeletypewriterState ()
+{
+#ifndef NDEBUG
+	return gDebugData.logPseudoTerminalDeviceSettings;
+#else
+	return false;
+#endif
+}// LogsTeletypewriterState
+
+
+/*!
+Return specified debug setting (can be changed from panel).
+
+(2020.08)
+*/
+Boolean
+DebugInterface_LogsTerminalEcho ()
+{
+#ifndef NDEBUG
+	return gDebugData.logTerminalEchoState;
+#else
+	return false;
+#endif
+}// LogsTerminalEcho
+
+
+/*!
+Return specified debug setting (can be changed from panel).
+
+(2020.08)
+*/
+Boolean
+DebugInterface_LogsTerminalState ()
+{
+#ifndef NDEBUG
+	return gDebugData.logTerminalState;
+#else
+	return false;
+#endif
+}// LogsTerminalState
 
 
 #pragma mark Internal Methods
 
 #pragma mark -
-@implementation DebugInterface_PanelController
+@implementation DebugInterface_ViewManager
 
 
-static DebugInterface_PanelController*	gDebugInterface_PanelController = nil;
-static TerminalToolbar_Window*			gDebugInterface_ToolbarWindow = nil;
-static NSWindowController*				gDebugInterface_ToolbarWindowController = nil;
-
-
-/*!
-Returns the singleton.
-
-(4.0)
-*/
-+ (id)
-sharedDebugInterfacePanelController
-{
-	static dispatch_once_t		onceToken;
-	
-	
-	dispatch_once(&onceToken,
-	^{
-		gDebugInterface_PanelController = [[self.class allocWithZone:NULL] init];
-	});
-	return gDebugInterface_PanelController;
-}// sharedDebugInterfacePanelController
+static TerminalToolbar_Window*	gDebugInterface_ToolbarWindow = nil;
+static NSWindowController*		gDebugInterface_ToolbarWindowController = nil;
 
 
 /*!
 Designated initializer.
 
-(4.0)
+(2020.08)
 */
 - (instancetype)
 init
 {
-	self = [super initWithWindowNibName:@"DebugInterfaceCocoa"];
+	self = [super init];
+	if (nil != self)
+	{
+	}
 	return self;
 }// init
+
+
+#pragma mark UIDebugInterface_ActionHandling
 
 
 /*!
@@ -121,12 +228,11 @@ Prints information to the console on the current state of
 the active terminal; for example, whether it is in insert
 or replace mode.
 
-(4.0)
+(2020.08)
 */
-- (IBAction)
-dumpStateOfActiveTerminal:(id)	sender
+- (void)
+dumpStateOfActiveTerminal
 {
-#pragma unused(sender)
 	SessionRef			activeSession = nullptr;
 	TerminalWindowRef	activeTerminalWindow = nullptr;
 	TerminalScreenRef	activeScreen = nullptr;
@@ -200,19 +306,18 @@ dumpStateOfActiveTerminal:(id)	sender
 	}
 	Console_WriteLine("End of active terminal report.");
 	Console_WriteHorizontalRule();
-}// dumpStateOfActiveTerminal:
+}// dumpStateOfActiveTerminal
 
 
 /*!
 Spawns a new instance of the subprocess that wraps calls to
 external Python callbacks.
 
-(4.1)
+(2020.08)
 */
 - (void)
-launchNewCallPythonClient:(id)	sender
+launchNewCallPythonClient
 {
-#pragma unused(sender)
 	NSXPCConnection*	connectionObject = [[NSXPCConnection alloc] initWithServiceName:@"net.macterm.helpers.CallPythonClient"];
 	NSXPCInterface*		interfaceObject = [NSXPCInterface interfaceWithProtocol:@protocol(XPCCallPythonClient_RemoteObjectInterface)];
 	
@@ -239,16 +344,16 @@ launchNewCallPythonClient:(id)	sender
 		}];
 	}
 	// TEMPORARY (INCOMPLETE)
-}// launchNewCallPythonClient:
+}// launchNewCallPythonClient
 
 
 /*!
 Displays a Cocoa-based terminal toolbar window.
 
-(4.0)
+(2020.08)
 */
-- (IBAction)
-showTestTerminalToolbar:(id)	sender
+- (void)
+showTestTerminalToolbar
 {
 	if (nil == gDebugInterface_ToolbarWindow)
 	{
@@ -266,175 +371,8 @@ showTestTerminalToolbar:(id)	sender
 	{
 		gDebugInterface_ToolbarWindowController = [[NSWindowController alloc] initWithWindow:gDebugInterface_ToolbarWindow];
 	}
-	[gDebugInterface_ToolbarWindow makeKeyAndOrderFront:sender];
-}// showTestTerminalToolbar:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(2017.12)
-*/
-- (BOOL)
-logsSixelDecoderState
-{
-	return gDebugInterface_LogsSixelDecoderState;
-}
-- (void)
-setLogsSixelDecoderState:(BOOL)		aFlag
-{
-	if (aFlag != gDebugInterface_LogsSixelDecoderState)
-	{
-		if (aFlag)
-		{
-			Console_WriteLine("started logging of SIXEL decoder state");
-		}
-		else
-		{
-			Console_WriteLine("stopped logging of SIXEL decoder state");
-		}
-		
-		gDebugInterface_LogsSixelDecoderState = aFlag;
-	}
-}// setLogsSixelDecoderState:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-logsTerminalInputChar
-{
-	return gDebugInterface_LogsTerminalInputChar;
-}
-- (void)
-setLogsTerminalInputChar:(BOOL)		aFlag
-{
-	if (aFlag != gDebugInterface_LogsTerminalInputChar)
-	{
-		if (aFlag)
-		{
-			Console_WriteLine("started logging of terminal input characters");
-		}
-		else
-		{
-			Console_WriteLine("stopped logging of terminal input characters");
-		}
-		
-		gDebugInterface_LogsTerminalInputChar = aFlag;
-	}
-}// setLogsTerminalInputChar:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-logsTeletypewriterState
-{
-	return gDebugInterface_LogsDeviceState;
-}
-- (void)
-setLogsTeletypewriterState:(BOOL)	aFlag
-{
-	if (aFlag != gDebugInterface_LogsDeviceState)
-	{
-		if (aFlag)
-		{
-			Console_WriteLine("started logging of pseudo-terminal device configurations");
-		}
-		else
-		{
-			Console_WriteLine("stopped logging of pseudo-terminal device configurations");
-		}
-		
-		gDebugInterface_LogsDeviceState = aFlag;
-	}
-}// setLogsTeletypewriterState:
-
-
-/*!
-Accessor.
-
-(2016.12)
-*/
-- (BOOL)
-logsTerminalEcho
-{
-	return gDebugInterface_LogsTerminalEcho;
-}
-- (void)
-setLogsTerminalEcho:(BOOL)		aFlag
-{
-	if (aFlag != gDebugInterface_LogsTerminalEcho)
-	{
-		if (aFlag)
-		{
-			Console_WriteLine("started logging of terminal state (echo)");
-		}
-		else
-		{
-			Console_WriteLine("stopped logging of terminal state (echo)");
-		}
-		
-		gDebugInterface_LogsTerminalEcho = aFlag;
-	}
-}// setLogsTerminalEcho:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-logsTerminalState
-{
-	return gDebugInterface_LogsTerminalState;
-}
-- (void)
-setLogsTerminalState:(BOOL)		aFlag
-{
-	if (aFlag != gDebugInterface_LogsTerminalState)
-	{
-		if (aFlag)
-		{
-			Console_WriteLine("started logging of terminal state (except echo)");
-		}
-		else
-		{
-			Console_WriteLine("stopped logging of terminal state (except echo)");
-		}
-		
-		gDebugInterface_LogsTerminalState = aFlag;
-	}
-}// setLogsTerminalState:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"Debugging";
-}// windowFrameAutosaveName
+	[gDebugInterface_ToolbarWindow makeKeyAndOrderFront:nil];
+}// showTestTerminalToolbar
 
 
 @end // DebugInterface_PanelController

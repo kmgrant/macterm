@@ -2,5 +2,7 @@ Build/_Generated
 Build/*.app
 Build/HTMLHelp/**/*.html
 Build/ReleaseNotes/*.html
+Build/*.playground/timeline.xctimeline
 Build/*.xcodeproj/project.xcworkspace
 Build/*.xcodeproj/xcuserdata
+Build/*.xcworkspace/xcuserdata

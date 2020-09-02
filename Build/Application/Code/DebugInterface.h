@@ -35,63 +35,6 @@
 
 #pragma once
 
-#ifdef __OBJC__
-#	import <Cocoa/Cocoa.h>
-#endif
-
-
-
-#pragma mark Types
-
-#ifdef __OBJC__
-
-/*!
-Implements the Debugging panel.  This class must be in sync with
-references in "DebugInterfaceCocoa.xib".
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface DebugInterface_PanelController : NSWindowController //{
-
-// class methods
-	+ (id)
-	sharedDebugInterfacePanelController;
-
-// actions
-	- (IBAction)
-	dumpStateOfActiveTerminal:(id)_;
-	- (IBAction)
-	launchNewCallPythonClient:(id)_;
-	- (IBAction)
-	showTestTerminalToolbar:(id)_;
-
-// accessors
-	@property (assign) BOOL
-	logsSixelDecoderState; // binding
-	@property (assign) BOOL
-	logsTerminalInputChar; // binding
-	@property (assign) BOOL
-	logsTeletypewriterState; // binding
-	@property (assign) BOOL
-	logsTerminalEcho; // binding
-	@property (assign) BOOL
-	logsTerminalState; // binding
-
-@end //}
-
-#endif // __OBJC__
-
-#pragma mark Variables
-
-// These are exposed for maximum efficiency.
-extern Boolean		gDebugInterface_LogsDeviceState;
-extern Boolean		gDebugInterface_LogsSixelDecoderState;
-extern Boolean		gDebugInterface_LogsTerminalInputChar;
-extern Boolean		gDebugInterface_LogsTerminalEcho;
-extern Boolean		gDebugInterface_LogsTerminalState;
-
 
 
 #pragma mark Public Methods
@@ -99,61 +42,22 @@ extern Boolean		gDebugInterface_LogsTerminalState;
 void
 	DebugInterface_Display					();
 
-inline Boolean
-	DebugInterface_LogsSixelDecoderState	()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_LogsSixelDecoderState;
-	#else
-		return false;
-	#endif
-	}
+Boolean
+	DebugInterface_LogsSixelDecoderState	();
 
-inline Boolean
-	DebugInterface_LogsSixelInput	()
-	{
-		// for now, log SIXEL input string whenever state is logged
-		return DebugInterface_LogsSixelDecoderState();
-	}
+Boolean
+	DebugInterface_LogsSixelInput			();
 
-inline Boolean
-	DebugInterface_LogsTerminalInputChar	()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_LogsTerminalInputChar;
-	#else
-		return false;
-	#endif
-	}
+Boolean
+	DebugInterface_LogsTerminalInputChar	();
 
-inline Boolean
-	DebugInterface_LogsTeletypewriterState	()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_LogsDeviceState;
-	#else
-		return false;
-	#endif
-	}
+Boolean
+	DebugInterface_LogsTeletypewriterState	();
 
-inline Boolean
-	DebugInterface_LogsTerminalEcho			()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_LogsTerminalEcho;
-	#else
-		return false;
-	#endif
-	}
+Boolean
+	DebugInterface_LogsTerminalEcho			();
 
-inline Boolean
-	DebugInterface_LogsTerminalState		()
-	{
-	#ifndef NDEBUG
-		return gDebugInterface_LogsTerminalState;
-	#else
-		return false;
-	#endif
-	}
+Boolean
+	DebugInterface_LogsTerminalState		();
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

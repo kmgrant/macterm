@@ -216,7 +216,6 @@ Base.lproj/AlertMessagesCocoa \
 Base.lproj/ApplicationTouchBarCocoa \
 Base.lproj/ClipboardCocoa \
 Base.lproj/CommandLineCocoa \
-Base.lproj/DebugInterfaceCocoa \
 Base.lproj/FindDialogCocoa \
 Base.lproj/GenericDialogCocoa \
 Base.lproj/GenericPanelNumberedListCocoa \
