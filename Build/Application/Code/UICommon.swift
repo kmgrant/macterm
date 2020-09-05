@@ -59,7 +59,6 @@ extension Text {
 
 struct UICommon_OptionLineView <Content: View> : View {
 
-	@State private var unusedDefault = true
 	let optionView: Content
 	var title = ""
 
@@ -83,6 +82,27 @@ struct UICommon_OptionLineView <Content: View> : View {
 			Text(title).asMacTermSectionHeading()
 			optionView
 		}.withMacTermSectionLayout()
+	}
+
+}
+
+struct UICommon_ProgressCircleView : NSViewRepresentable {
+
+	typealias NSViewType = NSProgressIndicator
+
+	// MARK: NSViewRepresentable
+
+	func makeNSView(context: Self.Context) -> Self.NSViewType {
+		let result = NSViewType()
+		result.controlSize = .small
+		result.isIndeterminate = true
+		result.style = .spinning
+		result.startAnimation(nil)
+		return result
+	}
+
+	func updateNSView(_ nsView: Self.NSViewType, context: Self.Context) {
+		// (nothing needed)
 	}
 
 }

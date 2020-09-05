@@ -16,6 +16,7 @@
 		0A22068A24FC668D00E27657 /* MacTermQuills.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AFC021524FB2688009C863F /* MacTermQuills.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0A22068D24FCA5F600E27657 /* UICommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A22068C24FCA5F600E27657 /* UICommon.swift */; };
 		0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A23A8D11C21077B00156B1E /* TextAttributes.mm */; };
+		0A23B1EC2502A22D000F643B /* UIArrangeWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A23B1EB2502A22D000F643B /* UIArrangeWindow.swift */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */; };
@@ -53,6 +54,7 @@
 		0A998CB31E5F62D30002C083 /* url_open.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA61E5F62400002C083 /* url_open.py */; };
 		0A998CB41E5F62D30002C083 /* url_parse.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA71E5F62400002C083 /* url_parse.py */; };
 		0A998CB51E5F62D30002C083 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA91E5F62570002C083 /* utilities.py */; };
+		0AA8131D24FF54A200E6B9E3 /* UIAddressList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA8131C24FF54A200E6B9E3 /* UIAddressList.swift */; };
 		0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
@@ -165,7 +167,6 @@
 		0A0777401DCBC815004C9F78 /* TouchBar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TouchBar.mm; path = Shared/Code/TouchBar.mm; sourceTree = "<group>"; };
 		0A0777421DCBC824004C9F78 /* TouchBar.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "TouchBar.objc++.h"; path = "Shared/Code/TouchBar.objc++.h"; sourceTree = "<group>"; };
 		0A08C9E3224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/WindowTitleDialogCocoa.xib; sourceTree = "<group>"; };
-		0A08C9E4224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/AddressDialogCocoa.xib; sourceTree = "<group>"; };
 		0A08C9E5224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/AlertMessagesCocoa.xib; sourceTree = "<group>"; };
 		0A08C9E6224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ApplicationTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A08C9E7224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ClipboardCocoa.xib; sourceTree = "<group>"; };
@@ -176,7 +177,6 @@
 		0A08C9ED224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/GenericPanelTabsCocoa.xib; sourceTree = "<group>"; };
 		0A08C9EE224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/InfoWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08C9EF224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/InfoWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
-		0A08C9F0224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadArrangeWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F1224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadControlKeysCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F3224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F4224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
@@ -231,6 +231,7 @@
 		0A21A1CD131766EA0012240D /* DefaultFormat4.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultFormat4.plist; path = Application/Resources/DefaultFormat4.plist; sourceTree = "<group>"; };
 		0A22068C24FCA5F600E27657 /* UICommon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UICommon.swift; path = Application/Code/UICommon.swift; sourceTree = "<group>"; };
 		0A23A8D11C21077B00156B1E /* TextAttributes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TextAttributes.mm; path = Application/Code/TextAttributes.mm; sourceTree = "<group>"; };
+		0A23B1EB2502A22D000F643B /* UIArrangeWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIArrangeWindow.swift; path = Application/Code/UIArrangeWindow.swift; sourceTree = "<group>"; };
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GenericPanelTabs.mm; path = Application/Code/GenericPanelTabs.mm; sourceTree = "<group>"; };
 		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
@@ -395,6 +396,7 @@
 		0AA66DFB1315F15C00B234C4 /* DefaultFormat1.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = DefaultFormat1.plist; path = Application/Resources/DefaultFormat1.plist; sourceTree = "<group>"; };
 		0AA66E3713160F0700B234C4 /* DefaultFormat2.plist */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = DefaultFormat2.plist; path = Application/Resources/DefaultFormat2.plist; sourceTree = "<group>"; };
 		0AA66E3E131611EF00B234C4 /* DefaultFormat3.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultFormat3.plist; path = Application/Resources/DefaultFormat3.plist; sourceTree = "<group>"; };
+		0AA8131C24FF54A200E6B9E3 /* UIAddressList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIAddressList.swift; path = Application/Code/UIAddressList.swift; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AAB323314B2BC59002C6F33 /* IconForCaution.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCaution.icns; path = Application/Resources/IconForCaution.icns; sourceTree = "<group>"; };
@@ -600,6 +602,8 @@
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */,
 				0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */,
 				0AFC021524FB2688009C863F /* MacTermQuills.h */,
+				0AA8131C24FF54A200E6B9E3 /* UIAddressList.swift */,
+				0A23B1EB2502A22D000F643B /* UIArrangeWindow.swift */,
 				0A22068C24FCA5F600E27657 /* UICommon.swift */,
 				0A400EF224FB128100550A8F /* UIDebugInterface.swift */,
 				0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */,
@@ -790,7 +794,6 @@
 		0AFF112F0AF4202B006CCA34 /* XIBs */ = {
 			isa = PBXGroup;
 			children = (
-				0A0E9F571DB18127006A8BF5 /* AddressDialogCocoa.xib */,
 				0A0E9F591DB18127006A8BF5 /* AlertMessagesCocoa.xib */,
 				0A1022131DDBE78700CEE0DF /* ApplicationTouchBarCocoa.xib */,
 				0A0E9F5D1DB18127006A8BF5 /* ClipboardCocoa.xib */,
@@ -801,7 +804,6 @@
 				0A0E9F691DB18127006A8BF5 /* GenericPanelTabsCocoa.xib */,
 				0A0E9F6B1DB18127006A8BF5 /* InfoWindowCocoa.xib */,
 				0A07773C1DCBC130004C9F78 /* InfoWindowTouchBarCocoa.xib */,
-				0A0E9F6D1DB18127006A8BF5 /* KeypadArrangeWindowCocoa.xib */,
 				0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */,
 				0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */,
 				0A0E9F751DB18127006A8BF5 /* KeypadVT220KeysCocoa.xib */,
@@ -1156,9 +1158,11 @@
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.mm in Sources */,
+				0A23B1EC2502A22D000F643B /* UIArrangeWindow.swift in Sources */,
 				0AEE250E1EB6EF300057DD6F /* UTF8Decoder.cp in Sources */,
 				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.mm in Sources */,
 				0AC6BB030A8C0BA000AFF37A /* MacroManager.mm in Sources */,
+				0AA8131D24FF54A200E6B9E3 /* UIAddressList.swift in Sources */,
 				0AC6BB040A8C0BA000AFF37A /* SoundSystem.mm in Sources */,
 				0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */,
 				0AC6BB060A8C0BA000AFF37A /* Session.mm in Sources */,
@@ -1278,14 +1282,6 @@
 			name = WindowTitleDialogCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A0E9F571DB18127006A8BF5 /* AddressDialogCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9E4224F345D00DA2569 /* Base */,
-			);
-			name = AddressDialogCocoa.xib;
-			sourceTree = "<group>";
-		};
 		0A0E9F591DB18127006A8BF5 /* AlertMessagesCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1348,14 +1344,6 @@
 				0A08C9EE224F345D00DA2569 /* Base */,
 			);
 			name = InfoWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F6D1DB18127006A8BF5 /* KeypadArrangeWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9F0224F345D00DA2569 /* Base */,
-			);
-			name = KeypadArrangeWindowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */ = {

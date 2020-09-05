@@ -34,88 +34,11 @@
 
 #pragma once
 
-#ifdef __OBJC__
-#	import <Cocoa/Cocoa.h>
-#endif
-
-
-
-#ifdef __OBJC__
-
-@class ListenerModel_StandardListener;
-
-/*!
-Implements drag and drop for the addresses table.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface AddressDialog_AddressArrayController : NSArrayController //{
-{
-	IBOutlet NSTableView*	addressTableView;
-}
-
-// NSTableViewDataSource
-	- (BOOL)
-	tableView:(NSTableView*)_
-	writeRowsWithIndexes:(NSIndexSet*)_
-	toPasteboard:(NSPasteboard*)_;
-
-@end //}
-
-
-/*!
-Implements the IP Addresses window.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface AddressDialog_Window : NSPanel //{
-{
-}
-
-@end //}
-
-
-/*!
-Implements the IP Addresses window controller.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface AddressDialog_PanelController : NSWindowController //{
-{
-	ListenerModel_StandardListener*		_networkChangeListener;
-	NSMutableArray*						_addressObjectArray;
-	BOOL								_rebuildInProgress;
-}
-
-// class methods
-	+ (id)
-	sharedAddressPanelController;
-
-// accessors
-	@property (strong) NSArray*/* of AddressDialog_Address objects */
-	addressObjectArray; // binding
-	@property (assign) BOOL
-	rebuildInProgress; // binding
-
-// actions
-	- (IBAction)
-	performIPAddressListRefresh:(id)_;
-
-@end //}
-
-#endif // __OBJC__
-
 
 
 #pragma mark Public Methods
 
 void
-	AddressDialog_Display						();
+	AddressDialog_Display		();
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

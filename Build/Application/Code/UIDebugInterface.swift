@@ -29,14 +29,27 @@
 
 import SwiftUI
 
-typealias OptionLineView = UICommon_OptionLineView
-
 //
 // IMPORTANT: Many "public" entities below are required
 // in order to interact with Swift playgrounds.
 //
 
+@objc public protocol UIDebugInterface_ActionHandling : NSObjectProtocol {
+	// implement these functions to bind to button actions
+	func dumpStateOfActiveTerminal()
+	func launchNewCallPythonClient()
+	func showTestTerminalToolbar()
+}
+
+class UIDebugInterface_RunnerDummy : NSObject, UIDebugInterface_ActionHandling {
+	// dummy used for debugging in playground (just prints function that is called)
+	func dumpStateOfActiveTerminal() { print(#function) }
+	func launchNewCallPythonClient() { print(#function) }
+	func showTestTerminalToolbar() { print(#function) }
+}
+
 public class UIDebugInterface_Model : NSObject, ObservableObject {
+
 	@Published @objc public var logTerminalState = false {
 		willSet(isOn) {
 			if isOn {
@@ -82,31 +95,17 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 			}
 		}
 	}
-}
+	public var runner: UIDebugInterface_ActionHandling
 
-@objc public protocol UIDebugInterface_ActionHandling : NSObjectProtocol {
-	// implement these functions to bind to button actions
-	func dumpStateOfActiveTerminal()
-	func launchNewCallPythonClient()
-	func showTestTerminalToolbar()
-}
+	@objc public init(runner: UIDebugInterface_ActionHandling) {
+		self.runner = runner
+	}
 
-class UIDebugInterface_RunnerDummy : NSObject, UIDebugInterface_ActionHandling {
-	// dummy used for debugging in playground (just prints function that is called)
-	func dumpStateOfActiveTerminal() { print(#function) }
-	func launchNewCallPythonClient() { print(#function) }
-	func showTestTerminalToolbar() { print(#function) }
 }
 
 public struct UIDebugInterface_View : View {
 
-	@ObservedObject private var debugData: UIDebugInterface_Model
-	private var runner: UIDebugInterface_ActionHandling
-
-	public init(_ data: UIDebugInterface_Model, runner: UIDebugInterface_ActionHandling) {
-		self.debugData = data
-		self.runner = runner
-	}
+	@EnvironmentObject private var viewModel: UIDebugInterface_Model
 
 	public var body: some View {
 		Form {
@@ -115,24 +114,24 @@ public struct UIDebugInterface_View : View {
 				VStack(
 					alignment: .leading
 				) {
-					OptionLineView("Global") {
-						Toggle("Log Terminal State (Except Echo)", isOn: $debugData.logTerminalState)
+					UICommon_OptionLineView("Global") {
+						Toggle("Log Terminal State (Except Echo)", isOn: $viewModel.logTerminalState)
 							.fixedSize()
 					}
-					OptionLineView {
-						Toggle("Log Terminal Echo State", isOn: $debugData.logTerminalEchoState)
+					UICommon_OptionLineView {
+						Toggle("Log Terminal Echo State", isOn: $viewModel.logTerminalEchoState)
 							.fixedSize()
 					}
-					OptionLineView {
-						Toggle("Log Terminal Input Characters", isOn: $debugData.logTerminalInputCharacters)
+					UICommon_OptionLineView {
+						Toggle("Log Terminal Input Characters", isOn: $viewModel.logTerminalInputCharacters)
 							.fixedSize()
 					}
-					OptionLineView {
-						Toggle("Log Pseudoterminal Device Settings", isOn: $debugData.logPseudoTerminalDeviceSettings)
+					UICommon_OptionLineView {
+						Toggle("Log Pseudoterminal Device Settings", isOn: $viewModel.logPseudoTerminalDeviceSettings)
 							.fixedSize()
 					}
-					OptionLineView {
-						Toggle("Log Sixel Graphics Decoder State", isOn: $debugData.logSixelGraphicsDecoderState)
+					UICommon_OptionLineView {
+						Toggle("Log Sixel Graphics Decoder State", isOn: $viewModel.logSixelGraphicsDecoderState)
 							.fixedSize()
 					}
 				}
@@ -142,8 +141,8 @@ public struct UIDebugInterface_View : View {
 				VStack(
 					alignment: .leading
 				) {
-					OptionLineView("Active Terminal") {
-						Button("Log Detailed Snapshot", action: { self.runner.dumpStateOfActiveTerminal() })
+					UICommon_OptionLineView("Active Terminal") {
+						Button("Log Detailed Snapshot", action: { self.viewModel.runner.dumpStateOfActiveTerminal() })
 					}
 				}
 			}
@@ -152,11 +151,11 @@ public struct UIDebugInterface_View : View {
 				VStack(
 					alignment: .leading
 				) {
-					OptionLineView("Incomplete Work") {
-						Button("Show Cocoa Toolbar", action: { self.runner.showTestTerminalToolbar() })
+					UICommon_OptionLineView("Incomplete Work") {
+						Button("Show Cocoa Toolbar", action: { self.viewModel.runner.showTestTerminalToolbar() })
 					}
-					OptionLineView {
-						Button("Launch XPC Service", action: { self.runner.launchNewCallPythonClient() })
+					UICommon_OptionLineView {
+						Button("Launch XPC Service", action: { self.viewModel.runner.launchNewCallPythonClient() })
 					}
 				}
 			}
@@ -168,16 +167,18 @@ public struct UIDebugInterface_View : View {
 
 public class UIDebugInterface_ObjC : NSObject {
 
-	@objc public static func makeViewController(_ data: UIDebugInterface_Model, runner: UIDebugInterface_ActionHandling) -> NSViewController {
-		return NSHostingController<UIDebugInterface_View>(rootView: UIDebugInterface_View(data, runner: runner))
+	@objc public static func makeViewController(_ data: UIDebugInterface_Model) -> NSViewController {
+		return NSHostingController<AnyView>(rootView: AnyView(UIDebugInterface_View().environmentObject(data)))
 	}
 
 }
 
 public struct UIDebugInterface_Previews : PreviewProvider {
 	public static var previews: some View {
-		let data = UIDebugInterface_Model()
-		let runner = UIDebugInterface_RunnerDummy()
-		return UIDebugInterface_View(data, runner: runner)
+		let data = UIDebugInterface_Model(runner: UIDebugInterface_RunnerDummy())
+		return VStack {
+			UIDebugInterface_View().background(Color(NSColor.windowBackgroundColor)).environment(\.colorScheme, .light).environmentObject(data)
+			UIDebugInterface_View().background(Color(NSColor.windowBackgroundColor)).environment(\.colorScheme, .dark).environmentObject(data)
+		}
 	}
 }

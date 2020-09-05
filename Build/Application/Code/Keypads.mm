@@ -50,9 +50,32 @@
 #import "TranslucentMenuArrow.h"
 #import "VTKeys.h"
 
+// Swift imports
+#import <MacTermQuills/MacTermQuills-Swift.h>
+
 
 
 #pragma mark Types
+
+/*!
+Implements the Arrange Window panel.
+*/
+@interface Keypads_ArrangeWindowPanelController : NSWindowController <UIArrangeWindow_ActionHandling> //{
+{
+	UIArrangeWindow_Model*		_viewModel;
+}
+
+// class methods
+	+ (id)
+	sharedArrangeWindowPanelController;
+
+// new methods
+	- (void)
+	setOriginToX:(int)_
+	andY:(int)_;
+
+@end //}
+
 namespace {
 
 typedef std::map< NSButton*, unsigned int >		My_IntsByButton;
@@ -487,6 +510,9 @@ getCurrentSession ()
 static Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelController = nil;
 
 
+#pragma mark Class Methods
+
+
 /*!
 Returns the singleton.
 
@@ -506,30 +532,85 @@ sharedArrangeWindowPanelController
 }// sharedArrangeWindowPanelController
 
 
+#pragma mark Initializers
+
+
 /*!
 Designated initializer.
 
-(4.0)
+(2020.09)
 */
 - (instancetype)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadArrangeWindowCocoa"];
+	UIArrangeWindow_Model*	viewModel = [[UIArrangeWindow_Model alloc] initWithRunner:self];
+	NSViewController*		viewController = [UIArrangeWindow_ObjC makeViewController:viewModel];
+	NSPanel*				panelObject = [NSPanel windowWithContentViewController:viewController];
+	
+	
+	panelObject.styleMask = (NSWindowStyleMaskTitled |
+								NSWindowStyleMaskUtilityWindow);
+	panelObject.title = NSLocalizedString(@"Arrange Window", @"title for floating window that specifies window location preferences");
+	
+	self = [super initWithWindow:panelObject];
+	if (nil != self)
+	{
+		self->_viewModel = viewModel;
+	}
 	return self;
 }// init
 
+
+/*!
+Destructor.
+
+(2020.09)
+*/
+- (void)
+dealloc
+{
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Moves the window to the specified position (which is actually
+expressed relative to the top-left corner).
+
+(4.0)
+*/
+- (void)
+setOriginToX:(int)	x
+andY:(int)			y // this is flipped to be measured from the top
+{
+	NSWindow*	window = [self window];
+	NSScreen*	screen = [window screen];
+	NSPoint		origin;
+	
+	
+	origin.x = x;
+	origin.y = [screen frame].size.height - [window frame].size.height - y;
+	[[self window] setFrameOrigin:origin];
+}// setOriginToX:andY:
+
+
+#pragma mark UIArrangeWindow_ActionHandling
 
 
 /*!
 Invoked when the user has dismissed the window that represents
 a window location preference.
 
-(4.0)
+(2020.09)
 */
-- (IBAction)
-doneArranging:(id)	sender
+- (void)
+doneArrangingWithViewModel:(UIArrangeWindow_Model*)		viewModel
 {
-#pragma unused(sender)
+#pragma unused(viewModel)
 	if (0 != gArrangeWindowBinding)
 	{
 		NSWindow*			window = [self window];
@@ -607,27 +688,6 @@ doneArranging:(id)	sender
 		Preferences_ReleaseContext(&gArrangeWindowBindingContext);
 	}
 }// doneArranging
-
-
-/*!
-Moves the window to the specified position (which is actually
-expressed relative to the top-left corner).
-
-(4.0)
-*/
-- (void)
-setOriginToX:(int)	x
-andY:(int)			y // this is flipped to be measured from the top
-{
-	NSWindow*	window = [self window];
-	NSScreen*	screen = [window screen];
-	NSPoint		origin;
-	
-	
-	origin.x = x;
-	origin.y = [screen frame].size.height - [window frame].size.height - y;
-	[[self window] setFrameOrigin:origin];
-}// setOriginToX:andY:
 
 
 @end // Keypads_ArrangeWindowPanelController

@@ -211,7 +211,6 @@ MacTerm.help
 # set to a list of "Base.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 APP_XIB_PREFIXES := \
-Base.lproj/AddressDialogCocoa \
 Base.lproj/AlertMessagesCocoa \
 Base.lproj/ApplicationTouchBarCocoa \
 Base.lproj/ClipboardCocoa \
@@ -222,7 +221,6 @@ Base.lproj/GenericPanelNumberedListCocoa \
 Base.lproj/GenericPanelTabsCocoa \
 Base.lproj/InfoWindowCocoa \
 Base.lproj/InfoWindowTouchBarCocoa \
-Base.lproj/KeypadArrangeWindowCocoa \
 Base.lproj/KeypadControlKeysCocoa \
 Base.lproj/KeypadFunctionKeysCocoa \
 Base.lproj/KeypadVT220KeysCocoa \

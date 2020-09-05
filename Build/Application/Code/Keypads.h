@@ -399,32 +399,6 @@ changes to an interface declared in a ".mm" file.
 
 @end //}
 
-
-/*!
-Implements the Arrange Window panel.  See
-"KeypadArrangeWindowCocoa.xib".
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface Keypads_ArrangeWindowPanelController : NSWindowController //{
-
-// class methods
-	+ (id)
-	sharedArrangeWindowPanelController;
-
-// actions
-	- (IBAction)
-	doneArranging:(id)_;
-
-// new methods
-	- (void)
-	setOriginToX:(int)_
-	andY:(int)_;
-
-@end //}
-
 #endif
 
 

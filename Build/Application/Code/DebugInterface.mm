@@ -67,7 +67,8 @@ extended to provide more hooks.)
 
 #pragma mark Variables
 
-UIDebugInterface_Model*		gDebugData = [[UIDebugInterface_Model alloc] init];
+DebugInterface_ViewManager*		gDebugUIRunner = [[DebugInterface_ViewManager alloc] init];
+UIDebugInterface_Model*			gDebugData = [[UIDebugInterface_Model alloc] initWithRunner:gDebugUIRunner];
 
 
 
@@ -82,20 +83,27 @@ void
 DebugInterface_Display ()
 {
 @autoreleasepool {
-	DebugInterface_ViewManager*		runner = [[DebugInterface_ViewManager alloc] init];
-	NSViewController*				viewController = [UIDebugInterface_ObjC makeViewController:gDebugData runner:runner];
-	NSPanel*						panelObject = [NSPanel windowWithContentViewController:viewController];
-	NSWindowController*				windowController = nil;
+	static NSWindowController*	windowController = nil;
+	static dispatch_once_t		onceToken;
 	
 	
-	panelObject.styleMask = (NSWindowStyleMaskTitled |
-								NSWindowStyleMaskClosable |
-								NSWindowStyleMaskHUDWindow);
-	panelObject.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-	panelObject.title = @"Debug Interface";
+	dispatch_once(&onceToken,
+	^{
+		NSViewController*	viewController = [UIDebugInterface_ObjC makeViewController:gDebugData];
+		NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
+		
+		
+		panelObject.styleMask = (NSWindowStyleMaskTitled |
+									NSWindowStyleMaskClosable |
+									NSWindowStyleMaskUtilityWindow |
+									NSWindowStyleMaskHUDWindow);
+		panelObject.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+		panelObject.title = @"Debug Interface";
+		
+		windowController = [[NSWindowController alloc] initWithWindow:panelObject];
+		windowController.windowFrameAutosaveName = @"Debugging"; // (for backward compatibility, never change this)
+	});
 	
-	windowController = [[NSWindowController alloc] initWithWindow:panelObject];
-	windowController.windowFrameAutosaveName = @"Debugging"; // (for backward compatibility, never change this)
 	[windowController showWindow:NSApp];
 }// @autoreleasepool
 }// Display
