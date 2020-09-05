@@ -125,7 +125,7 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1170;
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
 						ProvisioningStyle = Manual;
@@ -204,6 +204,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = PrintPreview/PrintPreview.entitlements;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "PrintPreview/Resources/PrintPreview-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrintPreview;
 				PRODUCT_NAME = PrintPreview;
@@ -217,6 +218,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = PrintPreview/PrintPreview.entitlements;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "PrintPreview/Resources/PrintPreview-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = net.macterm.helpers.PrintPreview;
 				PRODUCT_NAME = PrintPreview;

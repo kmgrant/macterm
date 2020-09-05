@@ -117,7 +117,7 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1170;
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
 						ProvisioningStyle = Manual;
@@ -126,11 +126,11 @@
 			};
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
 			compatibilityVersion = "Xcode 10.0";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
 				Base,
+				en,
 			);
 			mainGroup = 20286C29FDCF999611CA2CEA /* PrefsConverter */;
 			projectDirPath = "";
@@ -180,8 +180,10 @@
 			baseConfigurationReference = 0AA19F511D88F44C00FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -214,8 +216,10 @@
 			baseConfigurationReference = 0AA19F521D88F44C00FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -315,6 +319,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
 				OBJROOT = _Generated;
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
 				SYMROOT = _Generated;
 			};

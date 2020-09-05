@@ -131,7 +131,7 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1170;
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
 						ProvisioningStyle = Manual;
@@ -199,9 +199,11 @@
 			baseConfigurationReference = 0AA19F4F1D88F29900FD70FF /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = BugReporter/BugReporter.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -236,9 +238,11 @@
 			baseConfigurationReference = 0AA19F501D88F29900FD70FF /* Production.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = BugReporter/BugReporter.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = "";
@@ -348,6 +352,7 @@
 				OBJROOT = _Generated;
 				OTHER_CFLAGS = "-IShared/Code";
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
 				SYMROOT = _Generated;
 			};

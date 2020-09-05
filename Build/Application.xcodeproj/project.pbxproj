@@ -1014,7 +1014,7 @@
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1170;
 				TargetAttributes = {
 					0AC6BAD10A8C0A8B00AFF37A = {
 						LastSwiftMigration = 1160;
@@ -1682,6 +1682,7 @@
 					"$(SDK_PATCH_INCLUDES)",
 				);
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_INCLUDE_PATHS = "$(BUILT_PRODUCTS_DIR)";
 				WARNING_CFLAGS = (
 					"-Wall",
