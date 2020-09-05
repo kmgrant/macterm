@@ -1259,11 +1259,16 @@ adjustViews
 	}
 	else
 	{
+		// save/restore initial width to preserve center alignment
+		// (otherwise "sizeToFit" would anchor and resize on left)
+		CGFloat const	originalWidth = titleTextUI.frame.size.width;
+		
+		
 		titleTextUI.hidden = NO;
 		[titleTextUI sizeToFit];
 		titleTextUI.frame = NSMakeRect(titleTextUI.frame.origin.x,  titleTextUI.frame.origin.y,
-										titleTextUI.frame.size.width, titleTextUI.frame.size.height);
-		spacingAfterTitle = 10/* arbitrary */;
+										originalWidth, titleTextUI.frame.size.height);
+		spacingAfterTitle = 16/* arbitrary (see IB) */;
 	}
 	aboveFrame = titleTextUI.frame;
 	
@@ -1276,10 +1281,17 @@ adjustViews
 	}
 	else
 	{
+		// save/restore initial width to preserve center alignment
+		// (otherwise "sizeToFit" would anchor and resize on left)
+		CGFloat const	originalWidth = dialogTextUI.frame.size.width;
+		
+		
 		dialogTextUI.hidden = NO;
 		[dialogTextUI sizeToFit];
+		dialogTextUI.frame = NSMakeRect(dialogTextUI.frame.origin.x,  dialogTextUI.frame.origin.y,
+										originalWidth, dialogTextUI.frame.size.height);
 		[dialogTextUI scrollRangeToVisible:NSMakeRange([dialogTextUI.string length] - 1, 1)];
-		spacingAfterMessage = 10/* arbitrary */;
+		spacingAfterMessage = 20/* arbitrary (see IB) */;
 	}
 	nextFrame = dialogTextUI.frame;
 	nextFrame.origin.y = (aboveFrame.origin.y - spacingAfterTitle - nextFrame.size.height);
@@ -1295,12 +1307,17 @@ adjustViews
 	}
 	else
 	{
+		// save/restore initial width to preserve center alignment
+		// (otherwise "sizeToFit" would anchor and resize on left)
+		CGFloat const	originalWidth = helpTextUI.frame.size.width;
+		
+		
 		helpTextUI.hidden = NO;
 		[helpTextUI sizeToFit];
+		helpTextUI.frame = NSMakeRect(helpTextUI.frame.origin.x,  helpTextUI.frame.origin.y,
+										originalWidth, helpTextUI.frame.size.height);
 		[helpTextUI scrollRangeToVisible:NSMakeRange([helpTextUI.string length] - 1, 1)];
 	}
-	[helpTextUI sizeToFit];
-	[helpTextUI scrollRangeToVisible:NSMakeRange([helpTextUI.string length] - 1, 1)];
 	nextFrame = helpTextUI.frame;
 	nextFrame.origin.y = (aboveFrame.origin.y - spacingAfterMessage - nextFrame.size.height);
 	[helpTextUI setFrameOrigin:nextFrame.origin];
@@ -1498,14 +1515,15 @@ didLoadContainerView:(NSView*)			aContainerView
 	
 	// initialize views
 	[self setUpFonts];
-	[dialogTextUI setAlignment:NSNaturalTextAlignment];
+	[dialogTextUI setAlignment:NSTextAlignmentCenter/*NSTextAlignmentNatural*/];
 	[dialogTextUI setDrawsBackground:NO];
 	[dialogTextUI setEditable:NO];
 	[dialogTextUI setTextColor:[NSColor textColor]];
-	[helpTextUI setAlignment:NSNaturalTextAlignment];
+	[helpTextUI setAlignment:NSTextAlignmentNatural/*NSTextAlignmentCenter*/];
 	[helpTextUI setDrawsBackground:NO];
 	[helpTextUI setEditable:NO];
 	[helpTextUI setTextColor:[NSColor labelColor]];
+	//[titleTextUI setAlignment:NSTextAlignmentCenter]; // set in IB
 	[titleTextUI setTextColor:[NSColor secondaryLabelColor]];
 	[mainIconUI setImage:[self imageForIconImageName:[self iconImageName]]];
 	mainIconUI.mouseDownCanMoveWindow = YES;
@@ -1519,7 +1537,7 @@ didLoadContainerView:(NSView*)			aContainerView
 	// though other uses of Generic Dialog are not); this
 	// can cause text to wrap outside of its calculated
 	// space so it is important that the width be corrected
-	self->idealFrameSize.width += 20; // TEMPORARY; why is this needed?
+	//self->idealFrameSize.width += 20; // TEMPORARY; why is this needed?
 	
 	// remember the original icon size as a minimum height
 	self->idealIconSize = mainIconUI.frame.size;
@@ -1778,7 +1796,6 @@ imageForIconImageName:(NSString*)	anImageName
 	
 	if ((nil != anImageName) && ([anImageName length] > 0))
 	{
-		result = [[[NSImage imageNamed:anImageName] copy] autorelease];
 		if (nil == result)
 		{
 			// failed to find image
@@ -1792,17 +1809,18 @@ imageForIconImageName:(NSString*)	anImageName
 		}
 		else
 		{
-			// valid image; now superimpose a small application icon
-			// in the corner, emulating standard behavior
-			NSSize		imageSize = [result size];
+			// valid image; superimpose small version of it on application icon
+			NSImage*	newImage = [NSImage imageNamed:anImageName];
+			NSSize		imageSize = NSMakeSize(appIconImage.size.width / 2.0, appIconImage.size.height / 2.0);
 			
 			
-			imageSize.width /= 2.0;
-			imageSize.height /= 2.0;
+			result = [appIconImage copy];
 			[result lockFocus];
-			[appIconImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
-												imageSize.width/* width */, imageSize.height/* height */)
-										fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+			[newImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
+											imageSize.width/* width */, imageSize.height/* height */)
+									fromRect:NSZeroRect
+									operation:NSCompositeSourceOver
+									fraction:1.0];
 			[result unlockFocus];
 		}
 	}
@@ -1822,6 +1840,8 @@ embedded panel of the change.
 recalculateIdealHeight
 {
 	self->idealFrameSize.height = 0; // initially...
+	
+	self->idealFrameSize.height += self->idealIconSize.height;
 	
 	if (NO == titleTextUI.isHidden)
 	{

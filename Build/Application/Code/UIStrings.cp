@@ -91,7 +91,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowCloseName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Close"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Close Window"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCloseName"));
 		break;
 	
@@ -106,7 +106,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowCopyToDefaultPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Overwrite the Default of this class using settings from “%1$@”?\n\nConsider backing up your Default settings first."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Overwrite the Default in this category\nwith “%1$@” settings?\n\nConsider backing up your\nDefault settings first."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCopyToDefaultPrimaryText"));
 		break;
 	
@@ -172,7 +172,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowKillSessionPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Please confirm that you want all processes in this window to stop running."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Kill every process in this window?"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowKillSessionPrimaryText"));
 		break;
 	
@@ -376,12 +376,12 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowQuitName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Quit"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Quit MacTerm"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitName"));
 		break;
 	
 	case kUIStrings_AlertWindowQuitHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Any recently-opened windows will be closed automatically."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Recently-opened windows will be closed automatically."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitHelpText"));
 		break;
 	
@@ -1230,16 +1230,6 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowAddToFavoritesButton"));
 		break;
 	
-	case kUIStrings_PreferencesWindowCollectionsDrawerDescription:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Shows or hides a customizable list of collections for the displayed preference category."), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowCollectionsDrawerDescription"));
-		break;
-	
-	case kUIStrings_PreferencesWindowCollectionsDrawerShowHideName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Collections"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowCollectionsDrawerShowHideName"));
-		break;
-	
 	case kUIStrings_PreferencesWindowDefaultFavoriteName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Default"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowDefaultFavoriteName"));
@@ -1253,21 +1243,6 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	case kUIStrings_PreferencesWindowExportCopyDefaultsHelpText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("When sharing files between users, copying Default settings is recommended (as this creates a complete snapshot)."), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowExportCopyDefaultsHelpText"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesRemoveWarning:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Remove item \"%1$@\" from the list?"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesRemoveWarning; %1$@ will be a Favorite name from the list"));
-		break;
-	
-	case kUIStrings_PreferencesWindowFavoritesRemoveWarningHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("This cannot be undone."), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowFavoritesRemoveWarningHelpText"));
-		break;
-	
-	case kUIStrings_PreferencesWindowIconName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Preferences"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowIconName"));
 		break;
 	
 	case kUIStrings_PreferencesWindowListHeaderNumber:
