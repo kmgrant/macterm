@@ -5,6 +5,18 @@
       location = "group:Application.xcodeproj">
    </FileRef>
    <FileRef
+      location = "group:BugReporter.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:CallPythonClient.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:PrefsConverter.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:PrintPreview.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:UIDebug.playground">
    </FileRef>
 </Workspace>
