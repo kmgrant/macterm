@@ -159,29 +159,19 @@ on the fly (such as in alerts).
 */
 enum UIStrings_ButtonCFString
 {
-	kUIStrings_ButtonAddAccessibilityDesc				= 'AdAA',
 	kUIStrings_ButtonCancel								= 'Cncl',
-	kUIStrings_ButtonCheckForUpdatesWithEllipsis		= 'Updt',
 	kUIStrings_ButtonClose								= 'Clos',
-	kUIStrings_ButtonColorBoxAccessibilityDesc			= 'CBAA',
 	kUIStrings_ButtonContinue							= 'Cont',
 	kUIStrings_ButtonDelete								= 'Dlte',
 	kUIStrings_ButtonDiscardAll							= 'Disc',
 	kUIStrings_ButtonDontSave							= 'DntS',
-	kUIStrings_ButtonEditTextArrowsAccessibilityDesc	= 'ETAA',
-	kUIStrings_ButtonEditTextHistoryAccessibilityDesc	= 'HiMA',
-	kUIStrings_ButtonHelpAccessibilityDesc				= 'HlpA',
 	kUIStrings_ButtonIgnore								= 'Ignr',
 	kUIStrings_ButtonKill								= 'Kill',
 	kUIStrings_ButtonMakeOneLine						= 'OneL',
-	kUIStrings_ButtonMoveDownAccessibilityDesc			= 'MDAA',
-	kUIStrings_ButtonMoveUpAccessibilityDesc			= 'MUAA',
 	kUIStrings_ButtonNo									= ' No ',
 	kUIStrings_ButtonOK									= ' OK ',
 	kUIStrings_ButtonOverwrite							= 'Ovrw',
-	kUIStrings_ButtonPasteNormally						= 'Pste',
-	kUIStrings_ButtonPopUpMenuArrowsAccessibilityDesc	= 'MnAA',
-	kUIStrings_ButtonRemoveAccessibilityDesc			= 'RmAA',
+	kUIStrings_ButtonPasteAsIs							= 'Pste',
 	kUIStrings_ButtonRestart							= 'Rsrt',
 	kUIStrings_ButtonQuit								= 'Quit',
 	kUIStrings_ButtonReviewWithEllipsis					= 'Revu',
@@ -216,27 +206,12 @@ enum UIStrings_ClipboardWindowCFString
 };
 
 /*!
-Command Line String Table ("CommandLine.strings")
-
-Strings used by the floating command line window.
-*/
-enum UIStrings_CommandLineCFString
-{
-	kUIStrings_CommandLineHelpTextCommandArgumentTemplate	= 'HCAT',
-	kUIStrings_CommandLineHelpTextCommandTemplate			= 'HCTm',
-	kUIStrings_CommandLineHelpTextDefault					= 'HDef',
-	kUIStrings_CommandLineHelpTextFreeInput					= 'HFIP',
-	kUIStrings_CommandLineHistoryMenuAccessibilityDesc		= 'HiMA'
-};
-
-/*!
 Contextual Menu Items String Table ("ContextualMenus.strings")
 
 Strings used for commands in context-sensitive pop-up menus.
 */
 enum UIStrings_ContextualMenuCFString
 {
-	kUIStrings_ContextualMenuGroupTitleMacros			= 'GrMc',
 	kUIStrings_ContextualMenuArrangeAllInFront			= 'StkW',
 	kUIStrings_ContextualMenuChangeBackground			= 'SBkg',
 	kUIStrings_ContextualMenuCloseThisWindow			= 'Kill',
@@ -248,6 +223,7 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuFixCharacterTranslation	= 'FixT',
 	kUIStrings_ContextualMenuFullScreenEnter			= 'EnFS',
 	kUIStrings_ContextualMenuFullScreenExit				= 'ExFS',
+	kUIStrings_ContextualMenuGroupTitleMacros			= 'GrMc',
 	kUIStrings_ContextualMenuHideThisWindow				= 'Hide',
 	kUIStrings_ContextualMenuMoveToNewWorkspace			= 'MTab',
 	kUIStrings_ContextualMenuOpenThisResource			= 'OURL',
@@ -274,23 +250,7 @@ enum UIStrings_FileOrFolderCFString
 	kUIStrings_FileDefaultExportPreferences				= 'DefP',
 	kUIStrings_FileDefaultImageFile						= 'DefI',
 	kUIStrings_FileDefaultMacroSet						= 'DefM',
-	kUIStrings_FileDefaultSession						= 'DefS',
-	kUIStrings_FileNameDockTileAttentionPicture			= '!Pic',
-	kUIStrings_FileNameDockTileAttentionMask			= '!Msk',
-	kUIStrings_FileNameToolbarPoofFrame1Picture			= 'Pf1P',
-	kUIStrings_FileNameToolbarPoofFrame1Mask			= 'Pf1M',
-	kUIStrings_FileNameToolbarPoofFrame2Picture			= 'Pf2P',
-	kUIStrings_FileNameToolbarPoofFrame2Mask			= 'Pf2M',
-	kUIStrings_FileNameToolbarPoofFrame3Picture			= 'Pf3P',
-	kUIStrings_FileNameToolbarPoofFrame3Mask			= 'Pf3M',
-	kUIStrings_FileNameToolbarPoofFrame4Picture			= 'Pf4P',
-	kUIStrings_FileNameToolbarPoofFrame4Mask			= 'Pf4M',
-	kUIStrings_FileNameToolbarPoofFrame5Picture			= 'Pf5P',
-	kUIStrings_FileNameToolbarPoofFrame5Mask			= 'Pf5M',
-	kUIStrings_FolderNameApplicationPreferences			= 'APrf',
-	kUIStrings_FolderNameApplicationRecentSessions		= 'ARcS',
-	kUIStrings_FolderNameApplicationScriptsMenuItems	= 'AScM',
-	kUIStrings_FolderNameHomeLibraryLogs				= 'Logs'
+	kUIStrings_FileDefaultSession						= 'DefS'
 };
 
 /*!
@@ -300,10 +260,6 @@ These strings are used to interact with the Help Viewer.
 */
 enum UIStrings_HelpSystemCFString
 {
-	kUIStrings_HelpSystemName							= 'Name',
-	kUIStrings_HelpSystemContextualHelpCommandName		= 'CHlp',
-	kUIStrings_HelpSystemShowTagsCommandName			= 'STag',
-	kUIStrings_HelpSystemHideTagsCommandName			= 'HTag',
 	kUIStrings_HelpSystemTopicHelpCreatingSessions		= 'Sess',
 	kUIStrings_HelpSystemTopicHelpSearchingForText		= 'Find',
 	kUIStrings_HelpSystemTopicHelpSettingTheScreenSize	= 'SSiz',
@@ -320,25 +276,11 @@ Identifies localizable strings used in preferences panels.
 */
 enum UIStrings_PreferencesWindowCFString
 {
-	kUIStrings_PreferencesWindowAddToFavoritesButton			= 'AFBt',
-	kUIStrings_PreferencesWindowDefaultFavoriteName				= 'DefF',
+	kUIStrings_PreferencesWindowAddToFavoritesButton		= 'AFBt',
+	kUIStrings_PreferencesWindowDefaultFavoriteName			= 'DefF',
 	kUIStrings_PreferencesWindowExportCopyDefaults			= 'ExCD',
 	kUIStrings_PreferencesWindowExportCopyDefaultsHelpText	= 'ECDH',
-	kUIStrings_PreferencesWindowListHeaderNumber				= 'Numb'
-};
-
-/*!
-Progress Windows String Table ("ProgressWindows.strings")
-
-Strings used in the various progress windows that appear:
-font list building, scripts menu building, printing, etc.
-*/
-enum UIStrings_ProgressWindowCFString
-{
-	kUIStrings_ProgressWindowFontListIconName			= 'FIcn',
-	kUIStrings_ProgressWindowPrintingPrimaryText		= 'PMsg',
-	kUIStrings_ProgressWindowScriptsMenuIconName		= 'SIcn',
-	kUIStrings_ProgressWindowScriptsMenuPrimaryText		= 'SMsg'
+	kUIStrings_PreferencesWindowListHeaderNumber			= 'Numb'
 };
 
 /*!
@@ -372,39 +314,12 @@ enum UIStrings_SystemDialogCFString
 };
 
 /*!
-Toolbar Item String Table ("ToolbarItems.strings")
-
-Strings used in window toolbars, typically accompanied by icons.
-*/
-enum UIStrings_ToolbarItemCFString
-{
-	kUIStrings_ToolbarItemArrangeAllInFront		= 'AAIF',
-	kUIStrings_ToolbarItemBell					= 'Bell',
-	kUIStrings_ToolbarItemCustomizeToolbar		= 'CTlb',
-	kUIStrings_ToolbarItemFullScreen			= 'Full',
-	kUIStrings_ToolbarItemHideFrontWindow		= 'Hide',
-	kUIStrings_ToolbarItemKillSession			= 'Kill',
-	kUIStrings_ToolbarItemNewSessionDefault		= 'NewD',
-	kUIStrings_ToolbarItemNewSessionLoginShell	= 'NewL',
-	kUIStrings_ToolbarItemNewSessionShell		= 'NewS',
-	kUIStrings_ToolbarItemPrint					= 'Prnt',
-	kUIStrings_ToolbarItemRestartSession		= 'RSsn',
-	kUIStrings_ToolbarItemSearch				= 'Find',
-	kUIStrings_ToolbarItemSuspendNetwork		= 'Susp',
-	kUIStrings_ToolbarItemTerminalLED1			= 'LED1',
-	kUIStrings_ToolbarItemTerminalLED2			= 'LED2',
-	kUIStrings_ToolbarItemTerminalLED3			= 'LED3',
-	kUIStrings_ToolbarItemTerminalLED4			= 'LED4'
-};
-
-/*!
 Terminal String Table ("Terminal.strings")
 
 Strings used in terminal windows.
 */
 enum UIStrings_TerminalCFString
 {
-	kUIStrings_TerminalAccessibilityDescription				= 'ADsc',
 	kUIStrings_TerminalInterruptProcess						= 'Intr',
 	kUIStrings_TerminalNewCommandsKeyCharacter				= 'NewK',
 	kUIStrings_TerminalPrintFromTerminalJobTitle			= 'PTrm',
@@ -448,10 +363,6 @@ UIStrings_Result
 										 CFStringRef&									outString);
 
 UIStrings_Result
-	UIStrings_Copy						(UIStrings_CommandLineCFString					inWhichString,
-										 CFStringRef&									outString);
-
-UIStrings_Result
 	UIStrings_Copy						(UIStrings_ContextualMenuCFString				inWhichString,
 										 CFStringRef&									outString);
 
@@ -468,10 +379,6 @@ UIStrings_Result
 										 CFStringRef&									outString);
 
 UIStrings_Result
-	UIStrings_Copy						(UIStrings_ProgressWindowCFString				inWhichString,
-										 CFStringRef&									outString);
-
-UIStrings_Result
 	UIStrings_Copy						(UIStrings_SessionInfoWindowCFString			inWhichString,
 										 CFStringRef&									outString);
 
@@ -481,10 +388,6 @@ UIStrings_Result
 
 UIStrings_Result
 	UIStrings_Copy						(UIStrings_TerminalCFString						inWhichString,
-										 CFStringRef&									outString);
-
-UIStrings_Result
-	UIStrings_Copy						(UIStrings_ToolbarItemCFString					inWhichString,
 										 CFStringRef&									outString);
 
 UIStrings_Result

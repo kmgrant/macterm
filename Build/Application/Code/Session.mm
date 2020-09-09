@@ -4768,7 +4768,7 @@ Session_UserInputPaste	(SessionRef		inRef,
 				{
 					CFRetainRelease		joinString(UIStrings_ReturnCopy(kUIStrings_ButtonMakeOneLine),
 													CFRetainRelease::kAlreadyRetained);
-					CFRetainRelease		pasteNormallyString(UIStrings_ReturnCopy(kUIStrings_ButtonPasteNormally),
+					CFRetainRelease		pasteNormallyString(UIStrings_ReturnCopy(kUIStrings_ButtonPasteAsIs),
 															CFRetainRelease::kAlreadyRetained);
 					
 					

@@ -505,11 +505,6 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 													CFSTR("kUIStrings_ButtonIgnore"));
 		break;
 	
-	case kUIStrings_ButtonCheckForUpdatesWithEllipsis:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Check for Updates..."), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonCheckForUpdatesWithEllipsis"));
-		break;
-	
 	case kUIStrings_ButtonReviewWithEllipsis:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Review..."), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonReviewWithEllipsis"));
@@ -520,59 +515,14 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 													CFSTR("kUIStrings_ButtonDiscardAll"));
 		break;
 	
-	case kUIStrings_ButtonPasteNormally:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Paste Normally"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonPasteNormally"));
+	case kUIStrings_ButtonPasteAsIs:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Paste As-Is"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonPasteAsIs"));
 		break;
 	
 	case kUIStrings_ButtonMakeOneLine:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Join"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonMakeOneLine"));
-		break;
-	
-	case kUIStrings_ButtonHelpAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("help"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonHelpAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonAddAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("add"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonAddAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonRemoveAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("remove"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonRemoveAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonMoveUpAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("move up"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonMoveUpAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonMoveDownAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("move down"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonMoveDownAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonColorBoxAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("color"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonColorBoxAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonEditTextArrowsAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("edit text numerical value"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonEditTextArrowsAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonEditTextHistoryAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("recent edit text values"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonEditTextHistoryAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	case kUIStrings_ButtonPopUpMenuArrowsAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("pop up menu selection"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonPopUpMenuArrowsAccessibilityDesc; lowercase with minimal punctuation"));
 		break;
 	
 	default:
@@ -702,71 +652,6 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 	}
 	return result;
 }// Copy (clipboard strings)
-
-
-/*!
-Locates the specified string used by the command line
-floating window.  Returns a reference to a Core Foundation
-string.  Since a copy is made, you must call CFRelease()
-on the returned string when you are finished with it.
-
-\retval kUIStrings_ResultOK
-if the string is copied successfully
-
-\retval kUIStrings_ResultNoSuchString
-if the given tag is invalid
-
-\retval kUIStrings_ResultCannotGetString
-if an OS error occurred
-
-(3.0)
-*/
-UIStrings_Result
-UIStrings_Copy	(UIStrings_CommandLineCFString	inWhichString,
-				 CFStringRef&					outString)
-{
-	UIStrings_Result	result = kUIStrings_ResultOK;
-	
-	
-	// IMPORTANT: The external utility program "genstrings" is not smart enough to
-	//            figure out the proper string table name if you do not inline it.
-	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
-	//            automatically generate localizable ".strings" files.
-	switch (inWhichString)
-	{
-	case kUIStrings_CommandLineHelpTextCommandArgumentTemplate:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$@ %2$@ - %3$@"), CFSTR("CommandLine"),
-													CFSTR("kUIStrings_CommandLineHelpTextCommandArgumentTemplate; %1$@ will be a command name; %2$@ will be an argument to that command; %3$@ will be a description of the argument"));
-		break;
-	
-	case kUIStrings_CommandLineHelpTextCommandTemplate:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$@ - %2$@"), CFSTR("CommandLine"),
-													CFSTR("kUIStrings_CommandLineHelpTextCommandTemplate; %1$@ will be a command name; %2$@ will be a description of the command"));
-		break;
-	
-	case kUIStrings_CommandLineHelpTextDefault:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Text is sent to the terminal window."), CFSTR("CommandLine"),
-													CFSTR("kUIStrings_CommandLineHelpTextDefault"));
-		break;
-	
-	case kUIStrings_CommandLineHelpTextFreeInput:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("This text will be sent to the frontmost session window."), CFSTR("CommandLine"),
-													CFSTR("kUIStrings_CommandLineHelpTextFreeInput"));
-		break;
-	
-	case kUIStrings_CommandLineHistoryMenuAccessibilityDesc:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("recent command lines"), CFSTR("CommandLine"),
-													CFSTR("kUIStrings_CommandLineHistoryMenuAccessibilityDesc; lowercase with minimal punctuation"));
-		break;
-	
-	default:
-		// ???
-		result = kUIStrings_ResultNoSuchString;
-		break;
-	}
-	return result;
-}// Copy (command line strings)
 
 
 /*!
@@ -985,110 +870,6 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 													CFSTR("kUIStrings_FileDefaultSession; please localize the name but keep the .session suffix"));
 		break;
 	
-	case kUIStrings_FileNameDockTileAttentionPicture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("DockTileAttention.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameDockTileAttentionMask:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("DockTileAttentionMask.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame1Picture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof1.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame1Mask:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof1Mask.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame2Picture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof2.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame2Mask:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof2Mask.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame3Picture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof3.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame3Mask:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof3Mask.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame4Picture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof4.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame4Mask:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof4Mask.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame5Picture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof5.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FileNameToolbarPoofFrame5Mask:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("ToolbarItemPoof5Mask.pict");
-		CFRetain(outString);
-		break;
-	
-	case kUIStrings_FolderNameApplicationPreferences:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTelnet Preferences"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationPreferences; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationRecentSessions:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Recent Sessions"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationRecentSessions; warning, this should be consistent with previous strings of this type because it is used to find existing preferences"));
-		break;
-	
-	case kUIStrings_FolderNameApplicationScriptsMenuItems:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Scripts Menu Items"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameApplicationScriptsMenuItems; warning, this should be consistent with previous strings of this type because it is used to find existing scripts"));
-		break;
-	
-	case kUIStrings_FolderNameHomeLibraryLogs:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Logs"), CFSTR("FileOrFolderNames"),
-													CFSTR("kUIStrings_FolderNameHomeLibraryLogs; should EXACTLY MATCH what Mac OS X uses to name this folder (we would ask the system for this name if we could)"));
-		break;
-	
 	default:
 		// ???
 		result = kUIStrings_ResultNoSuchString;
@@ -1130,26 +911,6 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
-	case kUIStrings_HelpSystemName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("MacTerm Help"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemName; must match AppleTitle in HTML"));
-		break;
-	
-	case kUIStrings_HelpSystemContextualHelpCommandName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Contextual Help"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemContextualHelpCommandName"));
-		break;
-	
-	case kUIStrings_HelpSystemShowTagsCommandName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Show Help Tags"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemShowTagsCommandName"));
-		break;
-	
-	case kUIStrings_HelpSystemHideTagsCommandName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Hide Help Tags"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemHideTagsCommandName"));
-		break;
-	
 	case kUIStrings_HelpSystemTopicHelpCreatingSessions:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Help Creating Sessions"), CFSTR("HelpSystem"),
 													CFSTR("kUIStrings_HelpSystemTopicHelpCreatingSessions; should match topic title"));
@@ -1257,66 +1018,6 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	}
 	return result;
 }// Copy (preferences window strings)
-
-
-/*!
-Locates the specified string used by a progress window,
-and returns a reference to a Core Foundation string.
-Since a copy is made, you must call CFRelease() on the
-returned string when you are finished with it.
-
-\retval kUIStrings_ResultOK
-if the string is copied successfully
-
-\retval kUIStrings_ResultNoSuchString
-if the given tag is invalid
-
-\retval kUIStrings_ResultCannotGetString
-if an OS error occurred
-
-(3.0)
-*/
-UIStrings_Result
-UIStrings_Copy	(UIStrings_ProgressWindowCFString	inWhichString,
-				 CFStringRef&						outString)
-{
-	UIStrings_Result	result = kUIStrings_ResultOK;
-	
-	
-	// IMPORTANT: The external utility program "genstrings" is not smart enough to
-	//            figure out the proper string table name if you do not inline it.
-	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
-	//            automatically generate localizable ".strings" files.
-	switch (inWhichString)
-	{
-	case kUIStrings_ProgressWindowFontListIconName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Font List Rebuilding Progress"), CFSTR("ProgressWindows"),
-													CFSTR("kUIStrings_ProgressWindowFontListIconName"));
-		break;
-	
-	case kUIStrings_ProgressWindowPrintingPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Printing..."), CFSTR("ProgressWindows"),
-													CFSTR("kUIStrings_ProgressWindowPrintingPrimaryText"));
-		break;
-	
-	case kUIStrings_ProgressWindowScriptsMenuIconName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Scripts Menu Rebuilding Progress"), CFSTR("ProgressWindows"),
-													CFSTR("kUIStrings_ProgressWindowScriptsMenuIconName"));
-		break;
-	
-	case kUIStrings_ProgressWindowScriptsMenuPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Searching for Scripts menu items..."), CFSTR("ProgressWindows"),
-													CFSTR("kUIStrings_ProgressWindowScriptsMenuPrimaryText"));
-		break;
-	
-	default:
-		// ???
-		result = kUIStrings_ResultNoSuchString;
-		break;
-	}
-	return result;
-}// Copy (progress window strings)
 
 
 /*!
@@ -1498,11 +1199,6 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
-	case kUIStrings_TerminalAccessibilityDescription:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal screen"), CFSTR("Terminal"),
-													CFSTR("kUIStrings_TerminalAccessibilityDescription; must be all-lowercase without punctuation"));
-		break;
-	
 	case kUIStrings_TerminalInterruptProcess:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("[Interrupted]"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalInterruptProcess"));
@@ -1560,131 +1256,6 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	}
 	return result;
 }// Copy (terminal strings)
-
-
-/*!
-Locates the specified string used by a toolbar item
-label, and returns a reference to a Core Foundation
-string.  Since a copy is made, you must call CFRelease()
-on the returned string when you are finished with it.
-
-\retval kUIStrings_ResultOK
-if the string is copied successfully
-
-\retval kUIStrings_ResultNoSuchString
-if the given tag is invalid
-
-\retval kUIStrings_ResultCannotGetString
-if an OS error occurred
-
-(3.0)
-*/
-UIStrings_Result
-UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
-				 CFStringRef&					outString)
-{
-	UIStrings_Result	result = kUIStrings_ResultOK;
-	
-	
-	// IMPORTANT: The external utility program "genstrings" is not smart enough to
-	//            figure out the proper string table name if you do not inline it.
-	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
-	//            automatically generate localizable ".strings" files.
-	switch (inWhichString)
-	{
-	case kUIStrings_ToolbarItemArrangeAllInFront:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Arrange All Windows in Front"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemArrangeAllInFront"));
-		break;
-	
-	case kUIStrings_ToolbarItemBell:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Bell"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemBell"));
-		break;
-	
-	case kUIStrings_ToolbarItemCustomizeToolbar:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Customize"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemCustomizeToolbar"));
-		break;
-	
-	case kUIStrings_ToolbarItemFullScreen:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Full Screen"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarFullScreen"));
-		break;
-	
-	case kUIStrings_ToolbarItemHideFrontWindow:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Hide"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemHideFrontWindow"));
-		break;
-	
-	case kUIStrings_ToolbarItemKillSession:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Force Quit"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemKillSession"));
-		break;
-	
-	case kUIStrings_ToolbarItemNewSessionDefault:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Default"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemNewSessionDefault"));
-		break;
-	
-	case kUIStrings_ToolbarItemNewSessionLoginShell:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Log-In Shell"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemNewSessionLoginShell"));
-		break;
-	
-	case kUIStrings_ToolbarItemNewSessionShell:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Shell"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemNewSessionShell"));
-		break;
-	
-	case kUIStrings_ToolbarItemPrint:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Print"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemPrint"));
-		break;
-	
-	case kUIStrings_ToolbarItemRestartSession:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Restart"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemRestartSession"));
-		break;
-	
-	case kUIStrings_ToolbarItemSearch:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Search"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemSearch"));
-		break;
-	
-	case kUIStrings_ToolbarItemSuspendNetwork:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Suspend (Scroll Lock)"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemSuspendNetwork"));
-		break;
-	
-	case kUIStrings_ToolbarItemTerminalLED1:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("L1"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemTerminalLED1"));
-		break;
-	
-	case kUIStrings_ToolbarItemTerminalLED2:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("L2"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemTerminalLED2"));
-		break;
-	
-	case kUIStrings_ToolbarItemTerminalLED3:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("L3"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemTerminalLED3"));
-		break;
-	
-	case kUIStrings_ToolbarItemTerminalLED4:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("L4"), CFSTR("ToolbarItems"),
-													CFSTR("kUIStrings_ToolbarItemTerminalLED4"));
-		break;
-	
-	default:
-		// ???
-		result = kUIStrings_ResultNoSuchString;
-		break;
-	}
-	return result;
-}// Copy (toolbar item strings)
 
 
 /*!
