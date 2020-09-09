@@ -35,9 +35,6 @@
 // Mac includes
 #import <Cocoa/Cocoa.h>
 
-// standard-C++ includes
-#import <map>
-
 // library includes
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
@@ -47,7 +44,6 @@
 #import "Commands.h"
 #import "Session.h"
 #import "SessionFactory.h"
-#import "TranslucentMenuArrow.h"
 #import "VTKeys.h"
 
 // Swift imports
@@ -66,8 +62,12 @@ Implements the Arrange Window panel.
 }
 
 // class methods
-	+ (id)
+	+ (instancetype)
 	sharedArrangeWindowPanelController;
+
+// accessors
+	- (UIArrangeWindow_Model*)
+	viewModel;
 
 // new methods
 	- (void)
@@ -76,11 +76,71 @@ Implements the Arrange Window panel.
 
 @end //}
 
+
+/*!
+Implements the Control Keys palette.
+*/
+@interface Keypads_ControlKeysPanelController : NSWindowController <UIKeypads_ActionHandling> //{
+{
+	UIKeypads_Model*	_viewModel;
+}
+
+// class methods
+	+ (instancetype)
+	sharedControlKeysPanelController;
+
+// accessors
+	- (UIKeypads_Model*)
+	viewModel;
+
+@end //}
+
+
+/*!
+Implements the multi-layout Function Keys palette.
+*/
+@interface Keypads_FunctionKeysPanelController : NSWindowController <UIKeypads_ActionHandling> //{
+{
+	UIKeypads_Model*	_viewModel;
+}
+
+// class methods
+	+ (instancetype)
+	sharedFunctionKeysPanelController;
+
+// accessors
+	- (UIKeypads_Model*)
+	viewModel;
+
+@end //}
+
+
+/*!
+Implements the VT220 Keypad palette.
+*/
+@interface Keypads_VT220KeysPanelController : NSWindowController <UIKeypads_ActionHandling> //{
+{
+	UIKeypads_Model*	_viewModel;
+}
+
+// class methods
+	+ (instancetype)
+	sharedVT220KeysPanelController;
+
+// accessors
+	- (UIKeypads_Model*)
+	viewModel;
+
+@end //}
+
+#pragma mark Internal Method Prototypes
 namespace {
 
-typedef std::map< NSButton*, unsigned int >		My_IntsByButton;
+SessionRef	getCurrentSession	();
+void		sendCharacter		(UInt8);
+void		sendKey				(UInt8);
 
-} // anonymous namespace
+}// anonymous namespace
 
 #pragma mark Variables
 namespace {
@@ -96,37 +156,6 @@ SEL							gArrangeWindowDidEndSelector = nil;
 NSObject< Keypads_ControlKeyResponder >*		gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
-My_IntsByButton&			gAnimationStagesByButton ()		{ static My_IntsByButton x; return x; }
-Float32						gDeltasFontBlowUpAnimation[] =
-							{
-								// font size deltas during each animation frame;
-								// WARNING: must be the same size as "gDelaysFontBlowUpAnimation"
-								+1.0,
-								+1.0,
-								+1.0,
-								+1.0,
-								+1.0,
-								-1.0,
-								-1.0,
-								-1.0,
-								-1.0,
-								-1.0
-							};
-NSTimeInterval				gDelaysFontBlowUpAnimation[] =
-							{
-								// delays between animation frames of the font size animation;
-								// WARNING: must be the same size as "gDeltasFontBlowUpAnimation"
-								0.01,
-								0.01,
-								0.02,
-								0.04,
-								0.06,
-								0.05,
-								0.04,
-								0.03,
-								0.01,
-								0.01
-							};
 
 }// anonymous namespace
 
@@ -258,6 +287,47 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 
 
 /*!
+Returns true only if the “Function Keys” keypad is using
+the specified layout.
+
+(2020.09)
+*/
+Boolean
+Keypads_IsFunctionKeyLayoutEqualTo	(Session_FunctionKeyLayout	inLayout)
+{
+	Boolean				result = false;
+	UIKeypads_Model*	viewModel = [Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController].viewModel;
+	auto				currentLayout = viewModel.functionKeyLayout;
+	
+	
+	switch (inLayout)
+	{
+	case kSession_FunctionKeyLayoutRxvt:
+		result = (UIKeypads_FunctionKeyLayoutRxvt == currentLayout);
+		break;
+	
+	case kSession_FunctionKeyLayoutVT220:
+		result = (UIKeypads_FunctionKeyLayoutVt220 == currentLayout);
+		break;
+	
+	case kSession_FunctionKeyLayoutXTerm:
+		result = (UIKeypads_FunctionKeyLayoutXtermX11 == currentLayout);
+		break;
+	
+	case kSession_FunctionKeyLayoutXTermXFree86:
+		result = (UIKeypads_FunctionKeyLayoutXtermXFree86 == currentLayout);
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	return result;
+}// IsFunctionKeyLayoutEqualTo
+
+
+/*!
 Returns true only if the specified panel is showing.
 Windows that have been minimized into the Dock are still
 considered visible.
@@ -343,6 +413,45 @@ Keypads_RemoveResponder		(Keypads_WindowType		inFromKeypad,
 		break;
 	}
 }// RemoveResponder
+
+
+/*!
+Update the button names and layout of the “Function Keys”
+keypad, based on the specified layout.
+
+(2020.09)
+*/
+void
+Keypads_SetFunctionKeyLayout	(Session_FunctionKeyLayout	inLayout)
+{
+	UIKeypads_Model*	viewModel = [Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController].viewModel;
+	
+	
+	// update UI and save to preferences (triggers "saveChangesWithViewModel:")
+	switch (inLayout)
+	{
+	case kSession_FunctionKeyLayoutRxvt:
+		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutRxvt;
+		break;
+	
+	case kSession_FunctionKeyLayoutVT220:
+		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutVt220;
+		break;
+	
+	case kSession_FunctionKeyLayoutXTerm:
+		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermX11;
+		break;
+	
+	case kSession_FunctionKeyLayoutXTermXFree86:
+		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermXFree86;
+		break;
+	
+	default:
+		// ???
+		Console_Warning(Console_WriteValue, "ignoring unrecognized function key layout", (int)inLayout);
+		break;
+	}
+}// SetFunctionKeyLayout
 
 
 /*!
@@ -500,11 +609,105 @@ getCurrentSession ()
 	return SessionFactory_ReturnUserRecentSession();
 }// getCurrentSession
 
+
+/*!
+If Keypads_SetResponder() has been called, the message
+"controlKeypadSentCharacterCode:" is sent to that view
+with the given value (as an NSNumber*).
+
+Otherwise, this finds the appropriate target session and
+sends the specified character, as if the user had typed
+that character.
+
+(2020.09)
+*/
+void
+sendCharacter	(UInt8		inCharacter)
+{
+	if (nil != gControlKeysResponder)
+	{
+		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadSentCharacterCode:)])
+		{
+			[gControlKeysResponder controlKeypadSentCharacterCode:[NSNumber numberWithChar:inCharacter]];
+		}
+	}
+	else
+	{
+		SessionRef		currentSession = getCurrentSession();
+		
+		
+		if (nullptr != currentSession)
+		{
+			Session_UserInputKey(currentSession, inCharacter);
+		}
+	}
+}// sendCharacter
+
+
+/*!
+Finds the appropriate target session and sends the character
+represented by the specified virtual key, as if the user had
+typed that key.  The key code should match those that are
+valid for Session_UserInputKey().
+
+(2020.09)
+*/
+void
+sendFunctionKey	(UInt8						inNumber,
+				 Session_FunctionKeyLayout	inLayout)
+{
+	SessionRef		currentSession = getCurrentSession();
+	
+	
+	if (nullptr != currentSession)
+	{
+		Session_Result		sessionResult = Session_UserInputFunctionKey(currentSession, inNumber, inLayout);
+		
+		
+		if (kSession_ResultOK != sessionResult)
+		{
+			Sound_StandardAlert();
+		}
+	}
+}// sendFunctionKey
+
+
+/*!
+Finds the appropriate target session and sends the character
+represented by the specified virtual key, as if the user had
+typed that key.  The key code should match those that are
+valid for Session_UserInputKey().
+
+NOTE:	For historical reasons it is possible to transmit
+		certain function key codes this way, but it is better
+		to use "sendFunctionKeyWithIndex:forLayout:" for
+		function keys.
+
+(2020.09)
+*/
+void
+sendKey	(UInt8		inKey)
+{
+	SessionRef		currentSession = getCurrentSession();
+	
+	
+	if (nullptr != currentSession)
+	{
+		Session_Result		sessionResult = Session_UserInputKey(currentSession, inKey);
+		
+		
+		if (kSession_ResultOK != sessionResult)
+		{
+			Sound_StandardAlert();
+		}
+	}
+}// sendKey
+
 }// anonymous namespace
 
 
 #pragma mark -
-@implementation Keypads_ArrangeWindowPanelController
+@implementation Keypads_ArrangeWindowPanelController //{
 
 
 static Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelController = nil;
@@ -516,7 +719,7 @@ static Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelControll
 /*!
 Returns the singleton.
 
-(4.0)
+(2020.09)
 */
 + (id)
 sharedArrangeWindowPanelController
@@ -543,7 +746,7 @@ Designated initializer.
 - (instancetype)
 init
 {
-	UIArrangeWindow_Model*	viewModel = [[UIArrangeWindow_Model alloc] initWithRunner:self];
+	UIArrangeWindow_Model*	viewModel = [[[UIArrangeWindow_Model alloc] initWithRunner:self] autorelease];
 	NSViewController*		viewController = [UIArrangeWindow_ObjC makeViewController:viewModel];
 	NSPanel*				panelObject = [NSPanel windowWithContentViewController:viewController];
 	
@@ -555,7 +758,7 @@ init
 	self = [super initWithWindow:panelObject];
 	if (nil != self)
 	{
-		self->_viewModel = viewModel;
+		self->_viewModel = [viewModel retain];
 	}
 	return self;
 }// init
@@ -572,6 +775,21 @@ dealloc
 	[_viewModel release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Returns the object that binds to the UI.
+
+(2020.09)
+*/
+- (UIArrangeWindow_Model*)
+viewModel
+{
+	return _viewModel;
+}// viewModel
 
 
 #pragma mark New Methods
@@ -690,213 +908,11 @@ doneArrangingWithViewModel:(UIArrangeWindow_Model*)		viewModel
 }// doneArranging
 
 
-@end // Keypads_ArrangeWindowPanelController
+@end //} Keypads_ArrangeWindowPanelController
 
 
 #pragma mark -
-@implementation Keypads_PanelController
-
-
-/*!
-Designated initializer.
-
-Subclasses should set "baseFontSize" in their "windowDidLoad"
-implementation, according to the current "pointSize" of the
-"font" of one of the window’s buttons.
-
-(4.0)
-*/
-- (instancetype)
-initWithWindowNibName:(NSString*)	aName
-{
-	self = [super initWithWindowNibName:aName];
-	if (nil != self)
-	{
-		self->baseFontSize = 13.0; // arbitrary, some sane value; should reset later in "windowDidLoad"
-	}
-	return self;
-}// initWithWindowNibName:
-
-
-/*!
-Changes the size of the font of the specified button by the
-amount currently set for its size delta, and then reinstalls a
-delayed call to this method.
-
-If the font size rises an arbitrary amount beyond the saved
-"self->baseFontSize", the delta is reversed so that it will
-return to the base size eventually.  Once it reaches that size,
-no more delayed calls are installed.
-
-Therefore the goal of the overall animation is to blow up the
-font size slightly before bouncing back to the original size.
-
-IMPORTANT:	Subclasses should set "self->baseFontSize" as
-			described in "initWithWindowNibName:"; the default
-			value may not be adequate.
-
-(4.0)
-*/
-- (void)
-deltaSizeFontOfButton:(NSButton*)	aButton
-{
-	auto	toPair = gAnimationStagesByButton().find(aButton);
-	
-	
-	if (gAnimationStagesByButton().end() != toPair)
-	{
-		unsigned int const	kOriginalIndex = toPair->second;
-		float const			kCurrentSize = [[aButton font] pointSize];
-		float const			kFontSizeDelta = gDeltasFontBlowUpAnimation[kOriginalIndex];
-		NSTimeInterval		kDelay = gDelaysFontBlowUpAnimation[kOriginalIndex];
-		float				newSize = kCurrentSize;
-		
-		
-		// alter the font size; once the animation frames are exhausted, stop
-		newSize += kFontSizeDelta;
-		if ((newSize < self->baseFontSize) || (toPair->second >= (sizeof(gDeltasFontBlowUpAnimation) - 1)) ||
-			(newSize > (self->baseFontSize + 10/* arbitrary */)))
-		{
-			newSize = self->baseFontSize;
-			gAnimationStagesByButton().erase(aButton);
-		}
-		
-		// nudge the button’s label to a new font size
-		{
-			NSFont*		resizedFont = [NSFont fontWithName:[[aButton font] fontName] size:newSize];
-			
-			
-			[aButton setFont:resizedFont];
-			
-			toPair = gAnimationStagesByButton().find(aButton);
-			if (gAnimationStagesByButton().end() != toPair)
-			{
-				// as long as the button has an animation frame associated with it,
-				// arrange to call this method again (delaying each animation frame)
-				toPair->second = 1 + kOriginalIndex;
-				CocoaExtensions_RunLater(kDelay, ^{ [self deltaSizeFontOfButton:aButton]; });
-			}
-		}
-	}
-}// deltaSizeFontOfButton:
-
-
-/*!
-Animates the specified button to highlight a change.
-
-IMPORTANT:	Subclasses should set "self->baseFontSize" as
-			described in "initWithWindowNibName:"; the default
-			value may not be adequate.
-
-(4.0)
-*/
-- (void)
-drawAttentionToButton:(NSButton*)	aButton
-{
-	gAnimationStagesByButton()[aButton] = 0;
-	[self deltaSizeFontOfButton:aButton];
-}// drawAttentionToButton:
-
-
-/*!
-If Keypads_SetResponder() has been called, the message
-"controlKeypadSentCharacterCode:" is sent to that view
-with the given value (as an NSNumber*).
-
-Otherwise, this finds the appropriate target session and
-sends the specified character, as if the user had typed
-that character.
-
-(3.1)
-*/
-- (void)
-sendCharacter:(UInt8)	inCharacter
-{
-	if (nil != gControlKeysResponder)
-	{
-		if ([gControlKeysResponder respondsToSelector:@selector(controlKeypadSentCharacterCode:)])
-		{
-			[gControlKeysResponder controlKeypadSentCharacterCode:[NSNumber numberWithChar:inCharacter]];
-		}
-	}
-	else
-	{
-		SessionRef		currentSession = getCurrentSession();
-		
-		
-		if (nullptr != currentSession)
-		{
-			Session_UserInputKey(currentSession, inCharacter);
-		}
-	}
-}// sendCharacter:
-
-
-/*!
-Finds the appropriate target session and sends the character
-represented by the specified virtual key, as if the user had
-typed that key.  The key code should match those that are
-valid for Session_UserInputKey().
-
-(4.0)
-*/
-- (void)
-sendFunctionKeyWithIndex:(UInt8)		inNumber
-forLayout:(Session_FunctionKeyLayout)	inLayout
-{
-	SessionRef		currentSession = getCurrentSession();
-	
-	
-	if (nullptr != currentSession)
-	{
-		Session_Result		sessionResult = Session_UserInputFunctionKey(currentSession, inNumber, inLayout);
-		
-		
-		if (kSession_ResultOK != sessionResult)
-		{
-			Sound_StandardAlert();
-		}
-	}
-}// sendFunctionKeyWithIndex:forLayout:
-
-
-/*!
-Finds the appropriate target session and sends the character
-represented by the specified virtual key, as if the user had
-typed that key.  The key code should match those that are
-valid for Session_UserInputKey().
-
-NOTE:	For historical reasons it is possible to transmit
-		certain function key codes this way, but it is better
-		to use "sendFunctionKeyWithIndex:forLayout:" for
-		function keys.
-
-(3.1)
-*/
-- (void)
-sendKey:(UInt8)		inKey
-{
-	SessionRef		currentSession = getCurrentSession();
-	
-	
-	if (nullptr != currentSession)
-	{
-		Session_Result		sessionResult = Session_UserInputKey(currentSession, inKey);
-		
-		
-		if (kSession_ResultOK != sessionResult)
-		{
-			Sound_StandardAlert();
-		}
-	}
-}// sendKey:
-
-
-@end // Keypads_PanelController
-
-
-#pragma mark -
-@implementation Keypads_ControlKeysPanelController
+@implementation Keypads_ControlKeysPanelController //{
 
 
 static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController = nil;
@@ -905,7 +921,7 @@ static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController 
 /*!
 Returns the singleton.
 
-(3.1)
+(2020.09)
 */
 + (id)
 sharedControlKeysPanelController
@@ -924,14 +940,29 @@ sharedControlKeysPanelController
 /*!
 Designated initializer.
 
-(3.1)
+(2020.09)
 */
 - (instancetype)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadControlKeysCocoa"];
+	UIKeypads_Model*	viewModel = [[[UIKeypads_Model alloc] initWithRunner:self] autorelease];
+	NSViewController*	viewController = [UIKeypads_ObjC makeControlKeysViewController:viewModel];
+	NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
+	
+	
+	panelObject.styleMask = (NSWindowStyleMaskTitled |
+								NSWindowStyleMaskClosable |
+								NSWindowStyleMaskMiniaturizable |
+								NSWindowStyleMaskUtilityWindow);
+	panelObject.title = NSLocalizedString(@"Control Keys", @"title for floating keypad that shows control keys");
+	
+	self = [super initWithWindow:panelObject];
 	if (nil != self)
 	{
+		self->_viewModel = [viewModel retain];
+		
+		self.windowFrameAutosaveName = @"ControlKeys"; // (for backward compatibility, never change this)
+		
 		[self whenObject:self.window postsNote:NSWindowWillCloseNotification
 							performSelector:@selector(windowWillClose:)];
 	}
@@ -942,430 +973,195 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.09)
 */
 - (void)
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
+	[_viewModel release];
 	[super dealloc];
 }// dealloc
 
 
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeNull:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x00];
-}// typeNull:
+#pragma mark Accessors
 
 
 /*!
-Sends the specified control character to the active session.
+Returns the object that binds to the UI.
 
-(3.1)
+(2020.09)
 */
-- (IBAction)
-typeControlA:(id)	sender
+- (UIKeypads_Model*)
+viewModel
 {
-#pragma unused(sender)
-	[self sendCharacter:0x01];
-}// typeControlA:
+	return _viewModel;
+}// viewModel
+
+
+#pragma mark UIKeypads_ActionHandling
 
 
 /*!
-Sends the specified control character to the active session.
+Responds to user invocation of keypad keys.
 
-(3.1)
+(This implementation only responds to keys that are
+actually part of this palette; the UIKeypads_KeyID
+enumeration has values spanning multiple keypads.)
+
+(2020.09)
 */
-- (IBAction)
-typeControlB:(id)	sender
+- (void)
+respondToActionWithViewModel:(UIKeypads_Model*)		aViewModel
+keyID:(UIKeypads_KeyID)								aKeyID
 {
-#pragma unused(sender)
-	[self sendCharacter:0x02];
-}// typeControlB:
+	switch (aKeyID)
+	{
+	case UIKeypads_KeyIDControlNull:
+		sendCharacter(0x00);
+		break;
+	
+	case UIKeypads_KeyIDControlA:
+		sendCharacter(0x01);
+		break;
+	
+	case UIKeypads_KeyIDControlB:
+		sendCharacter(0x02);
+		break;
+	
+	case UIKeypads_KeyIDControlC:
+		sendCharacter(0x03);
+		break;
+	
+	case UIKeypads_KeyIDControlD:
+		sendCharacter(0x04);
+		break;
+	
+	case UIKeypads_KeyIDControlE:
+		sendCharacter(0x05);
+		break;
+	
+	case UIKeypads_KeyIDControlF:
+		sendCharacter(0x06);
+		break;
+	
+	case UIKeypads_KeyIDControlG:
+		sendCharacter(0x07);
+		break;
+	
+	case UIKeypads_KeyIDControlH:
+		sendCharacter(0x08);
+		break;
+	
+	case UIKeypads_KeyIDControlI:
+		sendCharacter(0x09);
+		break;
+	
+	case UIKeypads_KeyIDControlJ:
+		sendCharacter(0x0A);
+		break;
+	
+	case UIKeypads_KeyIDControlK:
+		sendCharacter(0x0B);
+		break;
+	
+	case UIKeypads_KeyIDControlL:
+		sendCharacter(0x0C);
+		break;
+	
+	case UIKeypads_KeyIDControlM:
+		sendCharacter(0x0D);
+		break;
+	
+	case UIKeypads_KeyIDControlN:
+		sendCharacter(0x0E);
+		break;
+	
+	case UIKeypads_KeyIDControlO:
+		sendCharacter(0x0F);
+		break;
+	
+	case UIKeypads_KeyIDControlP:
+		sendCharacter(0x10);
+		break;
+	
+	case UIKeypads_KeyIDControlQ:
+		sendCharacter(0x11);
+		break;
+	
+	case UIKeypads_KeyIDControlR:
+		sendCharacter(0x12);
+		break;
+	
+	case UIKeypads_KeyIDControlS:
+		sendCharacter(0x13);
+		break;
+	
+	case UIKeypads_KeyIDControlT:
+		sendCharacter(0x14);
+		break;
+	
+	case UIKeypads_KeyIDControlU:
+		sendCharacter(0x15);
+		break;
+	
+	case UIKeypads_KeyIDControlV:
+		sendCharacter(0x16);
+		break;
+	
+	case UIKeypads_KeyIDControlW:
+		sendCharacter(0x17);
+		break;
+	
+	case UIKeypads_KeyIDControlX:
+		sendCharacter(0x18);
+		break;
+	
+	case UIKeypads_KeyIDControlY:
+		sendCharacter(0x19);
+		break;
+	
+	case UIKeypads_KeyIDControlZ:
+		sendCharacter(0x1A);
+		break;
+	
+	case UIKeypads_KeyIDControlLeftSquareBracket:
+		sendCharacter(0x1B);
+		break;
+	
+	case UIKeypads_KeyIDControlBackslash:
+		sendCharacter(0x1C);
+		break;
+	
+	case UIKeypads_KeyIDControlRightSquareBracket:
+		sendCharacter(0x1D);
+		break;
+	
+	case UIKeypads_KeyIDControlCaret:
+		sendCharacter(0x1E);
+		break;
+	
+	case UIKeypads_KeyIDControlUnderscore:
+		sendCharacter(0x1F);
+		break;
+	
+	default:
+		Console_Warning(Console_WriteValue, "“control keys” keypad not handling keyID", (int)aKeyID);
+		break;
+	}
+}// respondToActionWithViewModel:keyID:
 
 
 /*!
-Sends the specified control character to the active session.
+Writes any settings to preferences, if appropriate.
 
-(3.1)
+(2020.09)
 */
-- (IBAction)
-typeControlC:(id)	sender
+- (void)
+saveChangesWithViewModel:(UIKeypads_Model*)		aViewModel
 {
-#pragma unused(sender)
-	[self sendCharacter:0x03];
-}// typeControlC:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlD:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x04];
-}// typeControlD:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlE:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x05];
-}// typeControlE:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlF:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x06];
-}// typeControlF:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlG:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x07];
-}// typeControlG:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlH:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x08];
-}// typeControlH:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlI:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x09];
-}// typeControlI:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlJ:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x0A];
-}// typeControlJ:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlK:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x0B];
-}// typeControlK:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlL:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x0C];
-}// typeControlL:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlM:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x0D];
-}// typeControlM:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlN:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x0E];
-}// typeControlN:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlO:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x0F];
-}// typeControlO:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlP:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x10];
-}// typeControlP:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlQ:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x11];
-}// typeControlQ:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlR:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x12];
-}// typeControlR:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlS:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x13];
-}// typeControlS:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlT:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x14];
-}// typeControlT:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlU:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x15];
-}// typeControlU:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlV:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x16];
-}// typeControlV:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlW:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x17];
-}// typeControlW:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlX:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x18];
-}// typeControlX:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlY:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x19];
-}// typeControlY:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlZ:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x1A];
-}// typeControlZ:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlLeftSquareBracket:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x1B];
-}// typeControlLeftSquareBracket:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlBackslash:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x1C];
-}// typeControlBackslash:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlRightSquareBracket:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x1D];
-}// typeControlRightSquareBracket:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlCaret:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x1E];
-}// typeControlCaret:
-
-
-/*!
-Sends the specified control character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeControlUnderscore:(id)	sender
-{
-#pragma unused(sender)
-	[self sendCharacter:0x1F];
-}// typeControlUnderscore:
+	// (nothing needed here)
+}// saveChangesWithViewModel:
 
 
 #pragma mark NSWindowDelegate
@@ -1375,7 +1171,7 @@ typeControlUnderscore:(id)	sender
 If a responder has been set for the keypad then that
 responder is notified that the keypad is being hidden.
 
-(4.1)
+(2020.09)
 */
 - (void)
 windowWillClose:(NSNotification*)	aNotification
@@ -1391,30 +1187,11 @@ windowWillClose:(NSNotification*)	aNotification
 }// windowWillClose:
 
 
-#pragma mark NSWindowController
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"ControlKeys";
-}// windowFrameAutosaveName
-
-
-@end // Keypads_ControlKeysPanelController
+@end //} Keypads_ControlKeysPanelController
 
 
 #pragma mark -
-@implementation Keypads_FunctionKeysPanelController
+@implementation Keypads_FunctionKeysPanelController //{
 
 
 static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelController = nil;
@@ -1423,7 +1200,7 @@ static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelControlle
 /*!
 Returns the singleton.
 
-(3.1)
+(2020.09)
 */
 + (id)
 sharedFunctionKeysPanelController
@@ -1446,12 +1223,62 @@ sharedFunctionKeysPanelController
 /*!
 Designated initializer.
 
-(3.1)
+(2020.09)
 */
 - (instancetype)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadFunctionKeysCocoa"];
+	UIKeypads_Model*	viewModel = [[[UIKeypads_Model alloc] initWithRunner:self] autorelease];
+	NSViewController*	viewController = [UIKeypads_ObjC makeFunctionKeysViewController:viewModel];
+	NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
+	
+	
+	panelObject.styleMask = (NSWindowStyleMaskTitled |
+								NSWindowStyleMaskClosable |
+								NSWindowStyleMaskMiniaturizable |
+								NSWindowStyleMaskUtilityWindow);
+	panelObject.title = NSLocalizedString(@"Function Keys", @"title for floating keypad that shows function keys");
+	
+	self = [super initWithWindow:panelObject];
+	if (nil != self)
+	{
+		self->_viewModel = [viewModel retain];
+		
+		// update the menu and the global variable based on user preferences
+		{
+			Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagFunctionKeyLayout,
+																		sizeof(gFunctionKeysLayout), &gFunctionKeysLayout);
+			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteLine, "no existing setting for function key layout was found");
+				gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
+			}
+			
+			switch (gFunctionKeysLayout)
+			{
+			case kSession_FunctionKeyLayoutRxvt:
+				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutRxvt;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTerm:
+				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermX11;
+				break;
+			
+			case kSession_FunctionKeyLayoutXTermXFree86:
+				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermXFree86;
+				break;
+			
+			case kSession_FunctionKeyLayoutVT220:
+			default:
+				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutVt220;
+				break;
+			}
+		}
+		
+		self.windowFrameAutosaveName = @"FunctionKeys"; // (for backward compatibility, never change this)
+	}
 	return self;
 }// init
 
@@ -1459,411 +1286,286 @@ init
 /*!
 Destructor.
 
-(4.0)
+(2020.09)
 */
 - (void)
 dealloc
 {
-	[self ignoreWhenObject:self.window postsNote:NSWindowDidBecomeKeyNotification];
-	[self ignoreWhenObject:self.window postsNote:NSWindowDidResizeNotification];
-	[self ignoreWhenObject:self.window postsNote:NSWindowWillCloseNotification];
-	[menuChildWindow release];
+	[_viewModel release];
 	[super dealloc];
 }// dealloc
 
 
-#pragma mark Internal Methods
+#pragma mark Accessors
 
 
 /*!
-Returns the size of the pop-up menu button at a zero origin.
+Returns the object that binds to the UI.
 
-(4.0)
+(2020.09)
 */
-- (NSRect)
-popUpMenuButtonBounds
+- (UIKeypads_Model*)
+viewModel
 {
-	NSRect		result = NSMakeRect(0, 0, 20, 16); // arbitrary
-	
-	
-	return result;
-}// popUpMenuButtonBounds
+	return _viewModel;
+}// viewModel
+
+
+#pragma mark UIKeypads_ActionHandling
 
 
 /*!
-Returns the screen rectangle that should be occupied by the
-invisible window that renders a pop-up menu arrow.
+Responds to user invocation of keypad keys.
 
-(4.0)
-*/
-- (NSRect)
-popUpMenuButtonFrame
-{
-	// determine the location of the menu; this cannot be set up in
-	// Interface Builder too easily because it must appear to be in
-	// the title bar of the window (everything is handled with a
-	// frameless and transparent window at the right location)
-	NSRect		result = [[self window] frame];
-	NSRect		innerFrame = [self popUpMenuButtonBounds];
-	Float32		minWidth = [NSWindow minFrameWidthWithTitle:[[self window] title] styleMask:[[self window] styleMask]];
-	
-	
-	result.origin.x += (result.size.width + minWidth) / 2.0;
-	result.origin.y += (result.size.height - innerFrame.size.height);
-	result.size = innerFrame.size;
-	
-	// TEMPORARY, basically a hack: the frame width measurement
-	// for the title positions the menu a bit too far from the
-	// title text, so move the menu slightly closer
-	result.origin.x -= 32; // arbitrary
-	
-	return result;
-}// popUpMenuButtonFrame
+(This implementation only responds to keys that are
+actually part of this palette; the UIKeypads_KeyID
+enumeration has values spanning multiple keypads.)
 
-
-/*!
-If YES, then the key at the F1 location is called “PF1”;
-otherwise, it is named “F1”.
-
-Do not call this until the window is loaded, because the
-state is maintained entirely within the user interface
-element.
-
-This is an adornment only and has no effect on the actual
-behavior of the button!  Be sure to keep the function key
-layout setting in sync.
-
-(4.0)
+(2020.09)
 */
 - (void)
-setF1IsPF1:(BOOL)	isPF1
+respondToActionWithViewModel:(UIKeypads_Model*)		aViewModel
+keyID:(UIKeypads_KeyID)								aKeyID
 {
-	NSButton*	target = self->functionKeyF1;
-	NSString*	oldTitle = [target title];
-	
-	
-	if (isPF1)
+	switch (aKeyID)
 	{
-		[target setTitle:NSLocalizedString(@"PF1", @"name for function key PF1")];
-	}
-	else
-	{
-		[target setTitle:NSLocalizedString(@"F1", @"name for function key F1")];
-	}
+	case UIKeypads_KeyIDF1:
+		sendFunctionKey(1, gFunctionKeysLayout);
+		break;
 	
-	if (NO == [oldTitle isEqualToString:[target title]])
-	{
-		// make the change a bit more obvious
-		[self drawAttentionToButton:target];
+	case UIKeypads_KeyIDF2:
+		sendFunctionKey(2, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF3:
+		sendFunctionKey(3, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF4:
+		sendFunctionKey(4, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF5:
+		sendFunctionKey(5, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF6:
+		sendFunctionKey(6, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF7:
+		sendFunctionKey(7, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF8:
+		sendFunctionKey(8, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF9:
+		sendFunctionKey(9, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF10:
+		sendFunctionKey(10, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF11:
+		sendFunctionKey(11, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF12:
+		sendFunctionKey(12, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF13:
+		sendFunctionKey(13, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF14:
+		sendFunctionKey(14, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF15:
+		sendFunctionKey(15, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF16:
+		sendFunctionKey(16, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF17:
+		sendFunctionKey(17, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF18:
+		sendFunctionKey(18, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF19:
+		sendFunctionKey(19, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF20:
+		sendFunctionKey(20, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF21:
+		sendFunctionKey(21, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF22:
+		sendFunctionKey(22, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF23:
+		sendFunctionKey(23, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF24:
+		sendFunctionKey(24, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF25:
+		sendFunctionKey(25, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF26:
+		sendFunctionKey(26, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF27:
+		sendFunctionKey(27, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF28:
+		sendFunctionKey(28, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF29:
+		sendFunctionKey(29, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF30:
+		sendFunctionKey(30, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF31:
+		sendFunctionKey(31, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF32:
+		sendFunctionKey(32, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF33:
+		sendFunctionKey(33, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF34:
+		sendFunctionKey(34, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF35:
+		sendFunctionKey(35, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF36:
+		sendFunctionKey(36, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF37:
+		sendFunctionKey(37, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF38:
+		sendFunctionKey(38, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF39:
+		sendFunctionKey(39, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF40:
+		sendFunctionKey(40, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF41:
+		sendFunctionKey(41, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF42:
+		sendFunctionKey(42, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF43:
+		sendFunctionKey(43, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF44:
+		sendFunctionKey(44, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF45:
+		sendFunctionKey(45, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF46:
+		sendFunctionKey(46, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF47:
+		sendFunctionKey(47, gFunctionKeysLayout);
+		break;
+	
+	case UIKeypads_KeyIDF48:
+		sendFunctionKey(48, gFunctionKeysLayout);
+		break;
+	
+	default:
+		Console_Warning(Console_WriteValue, "“function keys” keypad not handling keyID", (int)aKeyID);
+		break;
 	}
-}// setF1IsPF1:
+}// respondToActionWithViewModel:keyID:
 
 
 /*!
-If YES, then the key at the F2 location is called “PF2”;
-otherwise, it is named “F2”.
+Writes any settings to preferences, if appropriate.
 
-Do not call this until the window is loaded, because the
-state is maintained entirely within the user interface
-element.
-
-This is an adornment only and has no effect on the actual
-behavior of the button!  Be sure to keep the function key
-layout setting in sync.
-
-(4.0)
+(2020.09)
 */
 - (void)
-setF2IsPF2:(BOOL)	isPF2
+saveChangesWithViewModel:(UIKeypads_Model*)		aViewModel
 {
-	NSButton*	target = self->functionKeyF2;
-	NSString*	oldTitle = [target title];
+	Session_FunctionKeyLayout	savedValue = kSession_FunctionKeyLayoutVT220;
 	
 	
-	if (isPF2)
+	switch (aViewModel.functionKeyLayout)
 	{
-		[target setTitle:NSLocalizedString(@"PF2", @"name for function key PF2")];
-	}
-	else
-	{
-		[target setTitle:NSLocalizedString(@"F2", @"name for function key F2")];
-	}
+	case UIKeypads_FunctionKeyLayoutRxvt:
+		savedValue = kSession_FunctionKeyLayoutRxvt;
+		break;
 	
-	if (NO == [oldTitle isEqualToString:[target title]])
-	{
-		// make the change a bit more obvious
-		[self drawAttentionToButton:target];
-	}
-}// setF2IsPF2:
-
-
-/*!
-If YES, then the key at the F3 location is called “PF3”;
-otherwise, it is named “F3”.
-
-Do not call this until the window is loaded, because the
-state is maintained entirely within the user interface
-element.
-
-This is an adornment only and has no effect on the actual
-behavior of the button!  Be sure to keep the function key
-layout setting in sync.
-
-(4.0)
-*/
-- (void)
-setF3IsPF3:(BOOL)	isPF3
-{
-	NSButton*	target = self->functionKeyF3;
-	NSString*	oldTitle = [target title];
+	case UIKeypads_FunctionKeyLayoutVt220:
+		savedValue = kSession_FunctionKeyLayoutVT220;
+		break;
 	
+	case UIKeypads_FunctionKeyLayoutXtermX11:
+		savedValue = kSession_FunctionKeyLayoutXTerm;
+		break;
 	
-	if (isPF3)
-	{
-		[target setTitle:NSLocalizedString(@"PF3", @"name for function key PF3")];
-	}
-	else
-	{
-		[target setTitle:NSLocalizedString(@"F3", @"name for function key F3")];
+	case UIKeypads_FunctionKeyLayoutXtermXFree86:
+		savedValue = kSession_FunctionKeyLayoutXTermXFree86;
+		break;
+	
+	default:
+		break;
 	}
 	
-	if (NO == [oldTitle isEqualToString:[target title]])
-	{
-		// make the change a bit more obvious
-		[self drawAttentionToButton:target];
-	}
-}// setF3IsPF3:
-
-
-/*!
-If YES, then the key at the F4 location is called “PF4”;
-otherwise, it is named “F4”.
-
-Do not call this until the window is loaded, because the
-state is maintained entirely within the user interface
-element.
-
-This is an adornment only and has no effect on the actual
-behavior of the button!  Be sure to keep the function key
-layout setting in sync.
-
-(4.0)
-*/
-- (void)
-setF4IsPF4:(BOOL)	isPF4
-{
-	NSButton*	target = self->functionKeyF4;
-	NSString*	oldTitle = [target title];
-	
-	
-	if (isPF4)
-	{
-		[target setTitle:NSLocalizedString(@"PF4", @"name for function key PF4")];
-	}
-	else
-	{
-		[target setTitle:NSLocalizedString(@"F4", @"name for function key F4")];
-	}
-	
-	if (NO == [oldTitle isEqualToString:[target title]])
-	{
-		// make the change a bit more obvious
-		[self drawAttentionToButton:target];
-	}
-}// setF4IsPF4:
-
-
-/*!
-If YES, then the key at the F15 location becomes a help key;
-otherwise, it is named “F15”.
-
-Do not call this until the window is loaded, because the
-state is maintained entirely within the user interface
-element.
-
-This is an adornment only and has no effect on the actual
-behavior of the button!  Be sure to keep the function key
-layout setting in sync.
-
-(4.0)
-*/
-- (void)
-setF15IsHelp:(BOOL)		isHelp
-{
-	NSButton*	target = self->functionKeyF15;
-	NSString*	oldTitle = [target title];
-	
-	
-	if (isHelp)
-	{
-		[target setTitle:NSLocalizedString(@"?", @"name for the help function key")];
-		[target setToolTip:NSLocalizedString(@"Help", @"tool tip for the help function key")];
-	}
-	else
-	{
-		[target setTitle:NSLocalizedString(@"F15", @"name for function key F15")];
-		[target setToolTip:nil];
-	}
-	
-	if (NO == [oldTitle isEqualToString:[target title]])
-	{
-		// make the change a bit more obvious
-		[self drawAttentionToButton:target];
-	}
-}// setF15IsHelp:
-
-
-/*!
-If YES, then the key at the F16 location becomes the “do” key;
-otherwise, it is named “F16”.
-
-Do not call this until the window is loaded, because the
-state is maintained entirely within the user interface
-element.
-
-This is an adornment only and has no effect on the actual
-behavior of the button!  Be sure to keep the function key
-layout setting in sync.
-
-(4.0)
-*/
-- (void)
-setF16IsDo:(BOOL)	isDo
-{
-	NSButton*	target = self->functionKeyF16;
-	NSString*	oldTitle = [target title];
-	
-	
-	if (isDo)
-	{
-		[target setTitle:NSLocalizedString(@"do", @"name for the do function key")];
-	}
-	else
-	{
-		[target setTitle:NSLocalizedString(@"F16", @"name for function key F16")];
-	}
-	
-	if (NO == [oldTitle isEqualToString:[target title]])
-	{
-		// make the change a bit more obvious
-		[self drawAttentionToButton:target];
-	}
-}// setF16IsDo:
-
-
-/*!
-Helper method to update certain button labels appropriately
-for the “rxvt” terminal.
-
-(4.0)
-*/
-- (void)
-setLabelsRxvt:(id)	anArgument
-{
-#pragma unused(anArgument)
-	[self setF1IsPF1:NO];
-	[self setF2IsPF2:NO];
-	[self setF3IsPF3:NO];
-	[self setF4IsPF4:NO];
-	[self setF15IsHelp:YES];
-	[self setF16IsDo:YES];
-}// setLabelsRxvt:
-
-
-/*!
-Helper method to update certain button labels appropriately
-for the VT220 layout.
-
-(4.0)
-*/
-- (void)
-setLabelsVT220:(id)		anArgument
-{
-#pragma unused(anArgument)
-	[self setF1IsPF1:YES];
-	[self setF2IsPF2:YES];
-	[self setF3IsPF3:YES];
-	[self setF4IsPF4:YES];
-	[self setF15IsHelp:YES];
-	[self setF16IsDo:YES];
-}// setLabelsVT220:
-
-
-/*!
-Helper method to update certain button labels appropriately
-for the “xterm” X11 layout.
-
-(4.0)
-*/
-- (void)
-setLabelsXTermX11:(id)	anArgument
-{
-#pragma unused(anArgument)
-	[self setF1IsPF1:NO];
-	[self setF2IsPF2:NO];
-	[self setF3IsPF3:NO];
-	[self setF4IsPF4:NO];
-	[self setF15IsHelp:NO];
-	[self setF16IsDo:NO];
-}// setLabelsXTermX11:
-
-
-/*!
-Helper method to update certain button labels appropriately
-for the “xterm” X11 layout.
-
-(4.0)
-*/
-- (void)
-setLabelsXTermXFree86:(id)	anArgument
-{
-#pragma unused(anArgument)
-	[self setF1IsPF1:YES];
-	[self setF2IsPF2:YES];
-	[self setF3IsPF3:YES];
-	[self setF4IsPF4:YES];
-	[self setF15IsHelp:NO];
-	[self setF16IsDo:NO];
-}// setLabelsXTermXFree86:
-
-
-#pragma mark Public Methods
-
-
-/*!
-Returns the function key layout currently in use.
-
-WARNING:	This returns the same for any controller right now
-			because the setting is global.
-
-(4.0)
-*/
-- (Session_FunctionKeyLayout)
-currentFunctionKeyLayout
-{
-	return gFunctionKeysLayout;
-}// currentFunctionKeyLayout
-
-
-/*!
-Changes the keyboard layout to match the “rxvt” terminal.
-
-(4.0)
-*/
-- (IBAction)
-performSetFunctionKeyLayoutRxvt:(id)	sender
-{
-#pragma unused(sender)
-	Session_FunctionKeyLayout const		kLayout = kSession_FunctionKeyLayoutRxvt;
-	NSTimeInterval						resizeTime = 0;
-	
-	
-	[layoutMenu selectItemAtIndex:[layoutMenu indexOfItemWithTarget:self andAction:@selector(performSetFunctionKeyLayoutRxvt:)]];
-	
-	if (kLayout != gFunctionKeysLayout)
+	// save function key layout
+	if (savedValue != gFunctionKeysLayout)
 	{
 		Preferences_Result		prefsResult = Preferences_SetData(kPreferences_TagFunctionKeyLayout,
-																	sizeof(kLayout), &kLayout);
+																	sizeof(savedValue), &savedValue);
 		
 		
 		if (kPreferences_ResultOK != prefsResult)
@@ -1871,968 +1573,13 @@ performSetFunctionKeyLayoutRxvt:(id)	sender
 			Console_Warning(Console_WriteLine, "unable to save function key layout");
 		}
 		
-		// resize the window to reveal all 48 keys
-		{
-			NSRect	frame = [[self window] frame];
-			
-			
-			frame.size = [[self window] maxSize];
-			[[self window] setFrame:frame display:YES animate:YES];
-			resizeTime = [[self window] animationResizeTime:frame];
-		}
-		
 		// retain this setting
-		gFunctionKeysLayout = kLayout;
+		gFunctionKeysLayout = savedValue;
 	}
-	
-	// update labels; this is done always for the convenience of the initialization code
-	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsRxvt:nil]; });
-}// performSetFunctionKeyLayoutRxvt:
+}// saveChangesWithViewModel:
 
 
-/*!
-Changes the keyboard layout to match a traditional VT220
-terminal, plus mappings for VT100 function keys.
-
-(4.0)
-*/
-- (IBAction)
-performSetFunctionKeyLayoutVT220:(id)	sender
-{
-#pragma unused(sender)
-	Session_FunctionKeyLayout const		kLayout = kSession_FunctionKeyLayoutVT220;
-	NSTimeInterval						resizeTime = 0;
-	
-	
-	[layoutMenu selectItemAtIndex:[layoutMenu indexOfItemWithTarget:self andAction:@selector(performSetFunctionKeyLayoutVT220:)]];
-	
-	if (kLayout != gFunctionKeysLayout)
-	{
-		Preferences_Result		prefsResult = Preferences_SetData(kPreferences_TagFunctionKeyLayout,
-																	sizeof(kLayout), &kLayout);
-		
-		
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Console_Warning(Console_WriteLine, "unable to save function key layout");
-		}
-		
-		// resize the window to hide XTerm-specific keys
-		{
-			NSRect	frame = [[self window] frame];
-			
-			
-			frame.size = [[self window] minSize];
-			[[self window] setFrame:frame display:YES animate:YES];
-			resizeTime = [[self window] animationResizeTime:frame];
-		}
-		
-		// retain this setting
-		gFunctionKeysLayout = kLayout;
-	}
-	
-	// update labels; this is done always for the convenience of the initialization code
-	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsVT220:nil]; });
-}// performSetFunctionKeyLayoutVT220:
-
-
-/*!
-Changes the keyboard layout to match the “xterm” terminal
-in a traditional X11R6 environment.
-
-(4.0)
-*/
-- (IBAction)
-performSetFunctionKeyLayoutXTermX11:(id)	sender
-{
-#pragma unused(sender)
-	Session_FunctionKeyLayout const		kLayout = kSession_FunctionKeyLayoutXTerm;
-	NSTimeInterval						resizeTime = 0;
-	
-	
-	[layoutMenu selectItemAtIndex:[layoutMenu indexOfItemWithTarget:self andAction:@selector(performSetFunctionKeyLayoutXTermX11:)]];
-	
-	if (kLayout != gFunctionKeysLayout)
-	{
-		Preferences_Result		prefsResult = Preferences_SetData(kPreferences_TagFunctionKeyLayout,
-																	sizeof(kLayout), &kLayout);
-		
-		
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Console_Warning(Console_WriteLine, "unable to save function key layout");
-		}
-		
-		// resize the window to reveal all 48 keys
-		{
-			NSRect	frame = [[self window] frame];
-			
-			
-			frame.size = [[self window] maxSize];
-			[[self window] setFrame:frame display:YES animate:YES];
-			resizeTime = [[self window] animationResizeTime:frame];
-		}
-		
-		// retain this setting
-		gFunctionKeysLayout = kLayout;
-	}
-	
-	// update labels; this is done always for the convenience of the initialization code
-	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsXTermX11:nil]; });
-}// performSetFunctionKeyLayoutXTermX11:
-
-
-/*!
-Changes the keyboard layout to match the “xterm” terminal
-in the XFree86 implementation.
-
-(4.0)
-*/
-- (IBAction)
-performSetFunctionKeyLayoutXTermXFree86:(id)	sender
-{
-#pragma unused(sender)
-	Session_FunctionKeyLayout const		kLayout = kSession_FunctionKeyLayoutXTermXFree86;
-	NSTimeInterval						resizeTime = 0;
-	
-	
-	[layoutMenu selectItemAtIndex:[layoutMenu indexOfItemWithTarget:self andAction:@selector(performSetFunctionKeyLayoutXTermXFree86:)]];
-	
-	if (kLayout != gFunctionKeysLayout)
-	{
-		Preferences_Result		prefsResult = Preferences_SetData(kPreferences_TagFunctionKeyLayout,
-																	sizeof(kLayout), &kLayout);
-		
-		
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Console_Warning(Console_WriteLine, "unable to save function key layout");
-		}
-		
-		// resize the window to reveal all 48 keys
-		{
-			NSRect	frame = [[self window] frame];
-			
-			
-			frame.size = [[self window] maxSize];
-			[[self window] setFrame:frame display:YES animate:YES];
-			resizeTime = [[self window] animationResizeTime:frame];
-		}
-		
-		// retain this setting
-		gFunctionKeysLayout = kLayout;
-	}
-	
-	// update labels; this is done always for the convenience of the initialization code
-	CocoaExtensions_RunLater(resizeTime, ^{ [self setLabelsXTermXFree86:nil]; });
-}// performSetFunctionKeyLayoutXTermXFree86:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF1:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:1 forLayout:gFunctionKeysLayout];
-}// typeF1:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF2:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:2 forLayout:gFunctionKeysLayout];
-}// typeF2:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF3:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:3 forLayout:gFunctionKeysLayout];
-}// typeF3:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF4:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:4 forLayout:gFunctionKeysLayout];
-}// typeF4:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF5:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:5 forLayout:gFunctionKeysLayout];
-}// typeF5:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF6:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:6 forLayout:gFunctionKeysLayout];
-}// typeF6:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF7:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:7 forLayout:gFunctionKeysLayout];
-}// typeF7:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF8:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:8 forLayout:gFunctionKeysLayout];
-}// typeF8:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF9:(id)		sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:9 forLayout:gFunctionKeysLayout];
-}// typeF9:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF10:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:10 forLayout:gFunctionKeysLayout];
-}// typeF10:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF11:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:11 forLayout:gFunctionKeysLayout];
-}// typeF11:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF12:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:12 forLayout:gFunctionKeysLayout];
-}// typeF12:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF13:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:13 forLayout:gFunctionKeysLayout];
-}// typeF13:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF14:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:14 forLayout:gFunctionKeysLayout];
-}// typeF14:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF15:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:15 forLayout:gFunctionKeysLayout];
-}// typeF15:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF16:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:16 forLayout:gFunctionKeysLayout];
-}// typeF16:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF17:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:17 forLayout:gFunctionKeysLayout];
-}// typeF17:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF18:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:18 forLayout:gFunctionKeysLayout];
-}// typeF18:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF19:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:19 forLayout:gFunctionKeysLayout];
-}// typeF19:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeF20:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:20 forLayout:gFunctionKeysLayout];
-}// typeF20:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF21:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:21 forLayout:gFunctionKeysLayout];
-}// typeF21:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF22:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:22 forLayout:gFunctionKeysLayout];
-}// typeF22:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF23:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:23 forLayout:gFunctionKeysLayout];
-}// typeF23:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF24:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:24 forLayout:gFunctionKeysLayout];
-}// typeF24:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF25:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:25 forLayout:gFunctionKeysLayout];
-}// typeF25:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF26:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:26 forLayout:gFunctionKeysLayout];
-}// typeF26:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF27:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:27 forLayout:gFunctionKeysLayout];
-}// typeF27:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF28:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:28 forLayout:gFunctionKeysLayout];
-}// typeF28:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF29:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:29 forLayout:gFunctionKeysLayout];
-}// typeF29:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF30:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:30 forLayout:gFunctionKeysLayout];
-}// typeF30:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF31:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:31 forLayout:gFunctionKeysLayout];
-}// typeF31:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF32:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:32 forLayout:gFunctionKeysLayout];
-}// typeF32:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF33:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:33 forLayout:gFunctionKeysLayout];
-}// typeF33:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF34:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:34 forLayout:gFunctionKeysLayout];
-}// typeF34:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF35:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:35 forLayout:gFunctionKeysLayout];
-}// typeF35:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF36:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:36 forLayout:gFunctionKeysLayout];
-}// typeF36:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF37:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:37 forLayout:gFunctionKeysLayout];
-}// typeF37:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF38:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:38 forLayout:gFunctionKeysLayout];
-}// typeF38:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF39:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:39 forLayout:gFunctionKeysLayout];
-}// typeF39:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF40:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:40 forLayout:gFunctionKeysLayout];
-}// typeF40:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF41:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:41 forLayout:gFunctionKeysLayout];
-}// typeF41:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF42:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:42 forLayout:gFunctionKeysLayout];
-}// typeF42:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF43:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:43 forLayout:gFunctionKeysLayout];
-}// typeF43:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF44:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:44 forLayout:gFunctionKeysLayout];
-}// typeF44:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF45:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:45 forLayout:gFunctionKeysLayout];
-}// typeF45:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF46:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:46 forLayout:gFunctionKeysLayout];
-}// typeF46:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF47:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:47 forLayout:gFunctionKeysLayout];
-}// typeF47:
-
-
-/*!
-Sends the specified VT function key to the active session.
-
-(4.0)
-*/
-- (IBAction)
-typeF48:(id)	sender
-{
-#pragma unused(sender)
-	[self sendFunctionKeyWithIndex:48 forLayout:gFunctionKeysLayout];
-}// typeF48:
-
-
-#pragma mark NSWindowNotifications
-
-
-/*!
-Responds to a focus of the keypad by ensuring that the
-title bar’s pop-up menu is also visible.
-
-(4.0)
-*/
-- (void)
-windowDidBecomeKey:(NSNotification*)	aNotification
-{
-	NSWindow*	keyWindow = (NSWindow*)[aNotification object];
-	
-	
-	[self->menuChildWindow orderWindow:NSWindowAbove relativeTo:[keyWindow windowNumber]];
-}// windowDidBecomeKey:
-
-
-/*!
-Responds to a change in the frame of the window by ensuring
-that the pop-up menu still seems to be “attached” to the
-window’s title bar.
-
-(4.0)
-*/
-- (void)
-windowDidResize:(NSNotification*)		aNotification
-{
-#pragma unused(aNotification)
-	//NSWindow*	resizedWindow = (NSWindow*)[aNotification object];
-	
-	
-	[self->menuChildWindow setFrame:[self popUpMenuButtonFrame] display:YES];
-}// windowDidResize:
-
-
-/*!
-Responds to a close of the keypad by ensuring that the
-title bar’s pop-up menu is also removed.
-
-(4.0)
-*/
-- (void)
-windowWillClose:(NSNotification*)	aNotification
-{
-#pragma unused(aNotification)
-	//NSWindow*	closingWindow = (NSWindow*)[aNotification object];
-	
-	
-	[self->menuChildWindow orderOut:NSApp];
-}// windowWillClose:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-When the window has loaded, this moves the NIB-provided
-pop-up menu into the proper place in the title bar region
-and updates the menu based on current user preferences.
-
-(4.0)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-	
-	assert(nil != functionKeyF1);
-	assert(nil != functionKeyF2);
-	assert(nil != functionKeyF3);
-	assert(nil != functionKeyF4);
-	assert(nil != functionKeyF15);
-	assert(nil != functionKeyF16);
-	assert(nil != layoutMenu);
-	
-	NSRect		innerFrame = [self popUpMenuButtonBounds];
-	NSRect		childFrame = [self popUpMenuButtonFrame];
-	NSView*		childContent = [[[TranslucentMenuArrow_View alloc] initWithFrame:innerFrame] autorelease];
-	
-	
-	// store font attribute
-	self->baseFontSize = [[self->functionKeyF1 font] pointSize];
-	if ((self->baseFontSize < 8) || (self->baseFontSize > 20))
-	{
-		// arbitrary; protect against insane values
-		self->baseFontSize = 13.0;
-	}
-	
-	// create a window that will be attached to the main keypad window,
-	// providing the illusion of being part of the title bar
-	self->menuChildWindow = [[NSWindow alloc] initWithContentRect:childFrame styleMask:NSBorderlessWindowMask
-																	backing:NSBackingStoreBuffered
-																	defer:YES];
-	[self->menuChildWindow setBackgroundColor:[NSColor clearColor]];
-	[self->menuChildWindow setReleasedWhenClosed:NO];
-	[self->menuChildWindow setOpaque:NO];
-	[self->menuChildWindow setHasShadow:NO];
-	[self->menuChildWindow setContentView:childContent];
-	[layoutMenu setFrame:innerFrame];
-	[[self->menuChildWindow contentView] addSubview:layoutMenu];
-	
-	// attach the menu pop-up’s window to the keypad window; note that
-	// all of these ordering steps seem to be required in order for
-	// the icon to appear above the title bar of the parent (the level
-	// must be set to work on Panther, and "orderWindow:relativeTo:"
-	// must be called to work on any OS version)
-	[self->menuChildWindow setLevel:[[self window] level]];
-	[[self window] addChildWindow:self->menuChildWindow ordered:NSWindowAbove];
-	if ([[self window] isVisible])
-	{
-		[self->menuChildWindow orderWindow:NSWindowAbove relativeTo:[[self window] windowNumber]];
-	}
-	
-	// update the menu and the global variable based on user preferences
-	{
-		Session_FunctionKeyLayout	layout = kSession_FunctionKeyLayoutVT220;
-		Preferences_Result			prefsResult = Preferences_GetData(kPreferences_TagFunctionKeyLayout,
-																		sizeof(layout), &layout);
-		
-		
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Console_Warning(Console_WriteLine, "no existing setting for function key layout was found");
-			layout = kSession_FunctionKeyLayoutVT220;
-		}
-		
-		[layoutMenu selectItemAtIndex:0]; // initially...
-		switch (layout)
-		{
-		case kSession_FunctionKeyLayoutRxvt:
-			[self performSetFunctionKeyLayoutRxvt:NSApp];
-			break;
-		
-		case kSession_FunctionKeyLayoutXTerm:
-			[self performSetFunctionKeyLayoutXTermX11:NSApp];
-			break;
-		
-		case kSession_FunctionKeyLayoutXTermXFree86:
-			[self performSetFunctionKeyLayoutXTermXFree86:NSApp];
-			break;
-		
-		case kSession_FunctionKeyLayoutVT220:
-		default:
-			[self performSetFunctionKeyLayoutVT220:NSApp];
-			break;
-		}
-	}
-	
-	// clear this flag to ensure that the title item remains disabled
-	// (cannot be set from the NIB for some reason)
-	[layoutMenu setAutoenablesItems:NO];
-	
-	// keep the window attached to the title bar
-	[self whenObject:self.window postsNote:NSWindowDidBecomeKeyNotification
-						performSelector:@selector(windowDidBecomeKey:)];
-	[self whenObject:self.window postsNote:NSWindowDidResizeNotification
-						performSelector:@selector(windowDidResize:)];
-	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
-						performSelector:@selector(windowWillClose:)];
-}// windowDidLoad
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"FunctionKeys";
-}// windowFrameAutosaveName
-
-
-@end // Keypads_FunctionKeysPanelController
+@end //} Keypads_FunctionKeysPanelController
 
 
 #pragma mark -
@@ -2845,7 +1592,7 @@ static Keypads_VT220KeysPanelController*	gKeypads_VT220KeysPanelController = nil
 /*!
 Returns the singleton.
 
-(3.1)
+(2020.09)
 */
 + (id)
 sharedVT220KeysPanelController
@@ -2864,397 +1611,208 @@ sharedVT220KeysPanelController
 /*!
 Designated initializer.
 
-(3.1)
+(2020.09)
 */
 - (instancetype)
 init
 {
-	self = [super initWithWindowNibName:@"KeypadVT220KeysCocoa"];
+	UIKeypads_Model*	viewModel = [[[UIKeypads_Model alloc] initWithRunner:self] autorelease];
+	NSViewController*	viewController = [UIKeypads_ObjC makeVT220KeysViewController:viewModel];
+	NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
+	
+	
+	panelObject.styleMask = (NSWindowStyleMaskTitled |
+								NSWindowStyleMaskClosable |
+								NSWindowStyleMaskMiniaturizable |
+								NSWindowStyleMaskUtilityWindow);
+	panelObject.title = NSLocalizedString(@"VT220 Keypad", @"title for floating keypad that shows VT220 keypad");
+	
+	self = [super initWithWindow:panelObject];
+	if (nil != self)
+	{
+		self->_viewModel = [viewModel retain];
+		
+		self.windowFrameAutosaveName = @"VT220Keys"; // (for backward compatibility, never change this)
+	}
 	return self;
 }// init
 
 
 /*!
-Sends the specified key’s character to the active session.
+Destructor.
 
-(3.1)
+(2020.09)
 */
-- (IBAction)
-type0:(id)	sender
+- (void)
+dealloc
 {
-#pragma unused(sender)
-	[self sendKey:VSK0];
-}// type0:
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Accessors
 
 
 /*!
-Sends the specified key’s character to the active session.
+Returns the object that binds to the UI.
 
-(3.1)
+(2020.09)
 */
-- (IBAction)
-type1:(id)	sender
+- (UIKeypads_Model*)
+viewModel
 {
-#pragma unused(sender)
-	[self sendKey:VSK1];
-}// type1:
+	return _viewModel;
+}// viewModel
+
+
+#pragma mark UIKeypads_ActionHandling
 
 
 /*!
-Sends the specified key’s character to the active session.
+Responds to user invocation of keypad keys.
 
-(3.1)
+(This implementation only responds to keys that are
+actually part of this palette; the UIKeypads_KeyID
+enumeration has values spanning multiple keypads.)
+
+(2020.09)
 */
-- (IBAction)
-type2:(id)	sender
+- (void)
+respondToActionWithViewModel:(UIKeypads_Model*)		aViewModel
+keyID:(UIKeypads_KeyID)								aKeyID
 {
-#pragma unused(sender)
-	[self sendKey:VSK2];
-}// type2:
+	switch (aKeyID)
+	{
+	case UIKeypads_KeyIDKeypad0:
+		sendKey(VSK0);
+		break;
+	
+	case UIKeypads_KeyIDKeypad1:
+		sendKey(VSK1);
+		break;
+	
+	case UIKeypads_KeyIDKeypad2:
+		sendKey(VSK2);
+		break;
+	
+	case UIKeypads_KeyIDKeypad3:
+		sendKey(VSK3);
+		break;
+	
+	case UIKeypads_KeyIDKeypad4:
+		sendKey(VSK4);
+		break;
+	
+	case UIKeypads_KeyIDKeypad5:
+		sendKey(VSK5);
+		break;
+	
+	case UIKeypads_KeyIDKeypad6:
+		sendKey(VSK6);
+		break;
+	
+	case UIKeypads_KeyIDKeypad7:
+		sendKey(VSK7);
+		break;
+	
+	case UIKeypads_KeyIDKeypad8:
+		sendKey(VSK8);
+		break;
+	
+	case UIKeypads_KeyIDKeypad9:
+		sendKey(VSK9);
+		break;
+	
+	case UIKeypads_KeyIDArrowDown:
+		sendKey(VSDN);
+		break;
+	
+	case UIKeypads_KeyIDArrowLeft:
+		sendKey(VSLT);
+		break;
+	
+	case UIKeypads_KeyIDArrowRight:
+		sendKey(VSRT);
+		break;
+	
+	case UIKeypads_KeyIDArrowUp:
+		sendKey(VSUP);
+		break;
+	
+	case UIKeypads_KeyIDKeypadComma:
+		sendKey(VSKC);
+		break;
+	
+	case UIKeypads_KeyIDKeypadDecimalPoint:
+		sendKey(VSKP);
+		break;
+	
+	case UIKeypads_KeyIDKeypadDelete:
+		sendKey(VSPGUP_220DEL);
+		break;
+	
+	case UIKeypads_KeyIDKeypadEnter:
+		sendKey(VSKE);
+		break;
+	
+	case UIKeypads_KeyIDKeypadFind:
+		sendKey(VSHELP_220FIND);
+		break;
+	
+	case UIKeypads_KeyIDKeypadHyphen:
+		sendKey(VSKM);
+		break;
+	
+	case UIKeypads_KeyIDKeypadInsert:
+		sendKey(VSHOME_220INS);
+		break;
+	
+	case UIKeypads_KeyIDKeypadPageDown:
+		sendKey(VSPGDN_220PGDN);
+		break;
+	
+	case UIKeypads_KeyIDKeypadPageUp:
+		sendKey(VSEND_220PGUP);
+		break;
+	
+	case UIKeypads_KeyIDKeypadPF1:
+		sendKey(VSF1);
+		break;
+	
+	case UIKeypads_KeyIDKeypadPF2:
+		sendKey(VSF2);
+		break;
+	
+	case UIKeypads_KeyIDKeypadPF3:
+		sendKey(VSF3);
+		break;
+	
+	case UIKeypads_KeyIDKeypadPF4:
+		sendKey(VSF4);
+		break;
+	
+	case UIKeypads_KeyIDKeypadSelect:
+		sendKey(VSDEL_220SEL);
+		break;
+	
+	default:
+		Console_Warning(Console_WriteValue, "“VT220 keys” keypad not handling keyID", (int)aKeyID);
+		break;
+	}
+}// respondToActionWithViewModel:keyID:
 
 
 /*!
-Sends the specified key’s character to the active session.
+Writes any settings to preferences, if appropriate.
 
-(3.1)
+(2020.09)
 */
-- (IBAction)
-type3:(id)	sender
+- (void)
+saveChangesWithViewModel:(UIKeypads_Model*)		aViewModel
 {
-#pragma unused(sender)
-	[self sendKey:VSK3];
-}// type3:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-type4:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSK4];
-}// type4:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-type5:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSK5];
-}// type5:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-type6:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSK6];
-}// type6:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-type7:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSK7];
-}// type7:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-type8:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSK8];
-}// type8:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-type9:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSK9];
-}// type9:
-
-
-/*!
-Sends the specified arrow key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeArrowDown:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSDN];
-}// typeArrowDown:
-
-
-/*!
-Sends the specified arrow key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeArrowLeft:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSLT];
-}// typeArrowLeft:
-
-
-/*!
-Sends the specified arrow key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeArrowRight:(id)		sender
-{
-#pragma unused(sender)
-	[self sendKey:VSRT];
-}// typeArrowRight:
-
-
-/*!
-Sends the specified arrow key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeArrowUp:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSUP];
-}// typeArrowUp:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeComma:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSKC];
-}// typeComma:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeDecimalPoint:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSKP];
-}// typeDecimalPoint:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeDelete:(id)		sender
-{
-#pragma unused(sender)
-	[self sendKey:VSPGUP_220DEL/* yes this is correct, based on key position */];
-}// typeDelete:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeEnter:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSKE];
-}// typeEnter:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeFind:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSHELP_220FIND/* yes this is correct, based on key position */];
-}// typeFind:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeHyphen:(id)		sender
-{
-#pragma unused(sender)
-	[self sendKey:VSKM];
-}// typeHyphen:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeInsert:(id)		sender
-{
-#pragma unused(sender)
-	[self sendKey:VSHOME_220INS/* yes this is correct, based on key position */];
-}// typeInsert:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typePageDown:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSPGDN_220PGDN];
-}// typePageDown:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typePageUp:(id)		sender
-{
-#pragma unused(sender)
-	[self sendKey:VSEND_220PGUP/* yes this is correct, based on key position */];
-}// typePageUp:
-
-
-/*!
-Sends the specified function key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typePF1:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSF1];
-}// typeF1:
-
-
-/*!
-Sends the specified function key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typePF2:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSF2];
-}// typePF2:
-
-
-/*!
-Sends the specified function key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typePF3:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSF3];
-}// typePF3:
-
-
-/*!
-Sends the specified function key sequence to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typePF4:(id)	sender
-{
-#pragma unused(sender)
-	[self sendKey:VSF4];
-}// typePF4:
-
-
-/*!
-Sends the specified key’s character to the active session.
-
-(3.1)
-*/
-- (IBAction)
-typeSelect:(id)		sender
-{
-#pragma unused(sender)
-	[self sendKey:VSDEL_220SEL/* yes this is correct, based on key position */];
-}// typeSelect:
-
-
-#pragma mark NSWindowController
-
-
-/*!
-Affects the preferences key under which window position
-and size information are automatically saved and
-restored.
-
-(4.0)
-*/
-- (NSString*)
-windowFrameAutosaveName
-{
-	// NOTE: do not ever change this, it would only cause existing
-	// user settings to be forgotten
-	return @"VT220Keys";
-}// windowFrameAutosaveName
+	// (nothing needed here)
+}// saveChangesWithViewModel:
 
 
 @end // Keypads_VT220KeysPanelController

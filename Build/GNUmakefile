@@ -221,9 +221,6 @@ Base.lproj/GenericPanelNumberedListCocoa \
 Base.lproj/GenericPanelTabsCocoa \
 Base.lproj/InfoWindowCocoa \
 Base.lproj/InfoWindowTouchBarCocoa \
-Base.lproj/KeypadControlKeysCocoa \
-Base.lproj/KeypadFunctionKeysCocoa \
-Base.lproj/KeypadVT220KeysCocoa \
 Base.lproj/MainMenuCocoa \
 Base.lproj/PrefPanelFormatGeneralCocoa \
 Base.lproj/PrefPanelFormatStandardColorsCocoa \

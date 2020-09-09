@@ -10,7 +10,6 @@
 		0A03A1EB1D9A297000411248 /* OtherApps.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A03A1EA1D9A297000411248 /* OtherApps.mm */; };
 		0A043B041D8F5A7200511F30 /* RegionUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A043B031D8F5A7200511F30 /* RegionUtilities.cp */; };
 		0A0777411DCBC815004C9F78 /* TouchBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A0777401DCBC815004C9F78 /* TouchBar.mm */; };
-		0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */; };
 		0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
 		0A22068A24FC668D00E27657 /* MacTermQuills.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AFC021524FB2688009C863F /* MacTermQuills.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -114,6 +113,7 @@
 		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
 		0AEE250E1EB6EF300057DD6F /* UTF8Decoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */; };
+		0AF0ADF225042F6F001A2C37 /* UIKeypads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF0ADF125042F6E001A2C37 /* UIKeypads.swift */; };
 		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
@@ -177,9 +177,6 @@
 		0A08C9ED224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/GenericPanelTabsCocoa.xib; sourceTree = "<group>"; };
 		0A08C9EE224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/InfoWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08C9EF224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/InfoWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
-		0A08C9F1224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadControlKeysCocoa.xib; sourceTree = "<group>"; };
-		0A08C9F3224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadFunctionKeysCocoa.xib; sourceTree = "<group>"; };
-		0A08C9F4224F345D00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/KeypadVT220KeysCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F5224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F6224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F7224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
@@ -210,8 +207,6 @@
 		0A08CA10224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/VectorWindowTouchBarCocoa.xib; sourceTree = "<group>"; };
 		0A08CA12224F346C00DA2569 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Application/Resources/en.lproj/PreferencesSearch.strings; sourceTree = "<group>"; };
 		0A08CA1A224F7E3500DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Application/Resources/Base.lproj/Credits.html; sourceTree = "<group>"; };
-		0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TranslucentMenuArrow.h; path = Application/Code/TranslucentMenuArrow.h; sourceTree = "<group>"; };
-		0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TranslucentMenuArrow.mm; path = Application/Code/TranslucentMenuArrow.mm; sourceTree = "<group>"; };
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
 		0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeam@2x.png"; path = "Application/Resources/CursorIBeam@2x.png"; sourceTree = "<group>"; };
 		0A0C9AA5216164A800A7BA7F /* ApplicationMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = ApplicationMedia.xcassets; path = Application/Resources/ApplicationMedia.xcassets; sourceTree = "<group>"; };
@@ -454,6 +449,7 @@
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UTF8Decoder.cp; path = Shared/Code/UTF8Decoder.cp; sourceTree = "<group>"; };
 		0AEE250F1EB6EF380057DD6F /* UTF8Decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UTF8Decoder.h; path = Shared/Code/UTF8Decoder.h; sourceTree = "<group>"; };
+		0AF0ADF125042F6E001A2C37 /* UIKeypads.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIKeypads.swift; path = Application/Code/UIKeypads.swift; sourceTree = "<group>"; };
 		0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
 		0AF5022F0F872CC30068CB19 /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
 		0AF502300F872D150068CB19 /* CGContextSaveRestore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CGContextSaveRestore.h; path = Shared/Code/CGContextSaveRestore.h; sourceTree = "<group>"; };
@@ -606,6 +602,7 @@
 				0A23B1EB2502A22D000F643B /* UIArrangeWindow.swift */,
 				0A22068C24FCA5F600E27657 /* UICommon.swift */,
 				0A400EF224FB128100550A8F /* UIDebugInterface.swift */,
+				0AF0ADF125042F6E001A2C37 /* UIKeypads.swift */,
 				0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,
@@ -650,7 +647,6 @@
 				0A46FE29055432A400ACDF3A /* TerminalWindow.mm */,
 				0A23A8D11C21077B00156B1E /* TextAttributes.mm */,
 				0A46FE2D055432A400ACDF3A /* TextTranslation.cp */,
-				0A08DD8C1405B4B50005129F /* TranslucentMenuArrow.mm */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE21055432A400ACDF3A /* VectorCanvas.mm */,
@@ -705,7 +701,6 @@
 				0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */,
 				0A46043F0554376100ACDF3A /* TextAttributes.h */,
 				0A4604470554376100ACDF3A /* TextTranslation.h */,
-				0A08DD8B1405B4AA0005129F /* TranslucentMenuArrow.h */,
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,
 				0A4604540554376100ACDF3A /* URL.h */,
 				0A4604360554376100ACDF3A /* VectorCanvas.h */,
@@ -804,9 +799,6 @@
 				0A0E9F691DB18127006A8BF5 /* GenericPanelTabsCocoa.xib */,
 				0A0E9F6B1DB18127006A8BF5 /* InfoWindowCocoa.xib */,
 				0A07773C1DCBC130004C9F78 /* InfoWindowTouchBarCocoa.xib */,
-				0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */,
-				0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */,
-				0A0E9F751DB18127006A8BF5 /* KeypadVT220KeysCocoa.xib */,
 				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
 				0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */,
 				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
@@ -1224,8 +1216,8 @@
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A613E5020592085007C0829 /* Workspace.mm in Sources */,
 				0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */,
+				0AF0ADF225042F6F001A2C37 /* UIKeypads.swift in Sources */,
 				0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */,
-				0A08DD8D1405B4B50005129F /* TranslucentMenuArrow.mm in Sources */,
 				0A400EF324FB128100550A8F /* UIDebugInterface.swift in Sources */,
 				0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */,
 				0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */,
@@ -1344,30 +1336,6 @@
 				0A08C9EE224F345D00DA2569 /* Base */,
 			);
 			name = InfoWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F6F1DB18127006A8BF5 /* KeypadControlKeysCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9F1224F345D00DA2569 /* Base */,
-			);
-			name = KeypadControlKeysCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F731DB18127006A8BF5 /* KeypadFunctionKeysCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9F3224F345D00DA2569 /* Base */,
-			);
-			name = KeypadFunctionKeysCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F751DB18127006A8BF5 /* KeypadVT220KeysCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9F4224F345D00DA2569 /* Base */,
-			);
-			name = KeypadVT220KeysCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */ = {

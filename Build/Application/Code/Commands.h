@@ -743,10 +743,11 @@ changes to an interface declared in a ".mm" file.
 // new methods: explicit validation (rarely needed)
 	- (BOOL)
 	defaultValidationForAction:(SEL)_
-	sender:(id)_;
+	sourceItem:(id <NSValidatedUserInterfaceItem>)_;
 	- (BOOL)
 	validateAction:(SEL)_
-	sender:(id)_;
+	sender:(id)_
+	sourceItem:(id <NSValidatedUserInterfaceItem>)_;
 
 // new methods: menu items
 	- (NSMenuItem*)

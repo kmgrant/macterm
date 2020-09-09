@@ -2084,10 +2084,10 @@ be unavailable).
 (4.1)
 */
 - (BOOL)
-defaultValidationForAction:(SEL)	aSelector
-sender:(id)							anObject
+defaultValidationForAction:(SEL)				aSelector
+sourceItem:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-#pragma unused(aSelector, anObject)
+#pragma unused(aSelector, anItem)
 	// It is actually much more common for a command to apply to a
 	// terminal window, than to apply at all times.  Therefore, the
 	// default behavior is to allow a command only if there is a
@@ -2108,7 +2108,7 @@ sender:(id)							anObject
 		result = NO;
 	}
 	return result;
-}// defaultValidationForAction:sender:
+}// defaultValidationForAction:sourceItem:
 
 
 /*!
@@ -2119,7 +2119,7 @@ exists, this call performs reasonable default validation actions:
 it tries to find a validation selector on the Commands_Executor
 class itself first, with the same name that it sought in the
 responder chain; barring that, it returns the result of
-"defaultValidationForAction:sender:".
+"defaultValidationForAction:sourceItem:".
 
 NOTE:	Menu items with actions and validators in this class
 		are handled implicitly.  This routine must only be
@@ -2131,15 +2131,16 @@ NOTE:	Menu items with actions and validators in this class
 		item is meant to invoke "toggleFullScreen:", the
 		"validateUserInterfaceItem:" implementation for the
 		item could call "[[Command_Executor sharedExecutor]
-		validateAction:@selector(toggleFullScreen:)]" to
+		validateAction:@selector(toggleFullScreen:) ...]" to
 		determine its YES or NO value implicitly through the
 		validation method "canToggleFullScreen:".
 
 (4.1)
 */
 - (BOOL)
-validateAction:(SEL)	aSelector
-sender:(id)				anObject
+validateAction:(SEL)							aSelector
+sender:(id)										anObject
+sourceItem:(id <NSValidatedUserInterfaceItem>)	anItem
 {
 	SEL		validator = [self.class selectorToValidateAction:aSelector];
 	BOOL	result = YES;
@@ -2153,12 +2154,12 @@ sender:(id)				anObject
 		if (nil != target)
 		{
 			// See selectorToValidateAction: for more information on the form of the selector.
-			result = [[target performSelector:validator withObject:anObject] boolValue];
+			result = [[target performSelector:validator withObject:anItem] boolValue];
 		}
 		else if ([self respondsToSelector:validator])
 		{
 			// See selectorToValidateAction: for more information on the form of the selector.
-			result = [[self performSelector:validator withObject:anObject] boolValue];
+			result = [[self performSelector:validator withObject:anItem] boolValue];
 		}
 		else
 		{
@@ -2169,11 +2170,11 @@ sender:(id)				anObject
 			// available will need to define its own validation method,
 			// and any command that has no other requirements (aside from a
 			// terminal) does not need a validator at all.
-			result = [self defaultValidationForAction:aSelector sender:anObject];
+			result = [self defaultValidationForAction:aSelector sourceItem:anItem];
 		}
 	}
 	return result;
-}// validateAction:sender:
+}// validateAction:sender:sourceItem:
 
 
 #pragma mark New Methods: Menus
@@ -2202,7 +2203,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2215,7 +2216,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2227,7 +2228,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2239,7 +2240,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2251,7 +2252,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2263,7 +2264,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2275,7 +2276,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2287,7 +2288,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2299,7 +2300,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2311,7 +2312,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2323,7 +2324,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2340,7 +2341,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2352,7 +2353,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2364,7 +2365,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2376,7 +2377,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2388,7 +2389,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2400,7 +2401,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2412,7 +2413,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -2424,7 +2425,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 	{
 		if (onlyIfEnabled)
 		{
-			isEnabled = [self validateAction:anActionSelector sender:NSApp];
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
 		}
 		if (isEnabled)
 		{
@@ -3204,7 +3205,7 @@ to the user.
 - (BOOL)
 validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 {
-	return [self validateAction:[anItem action] sender:anItem];
+	return [self validateAction:[anItem action] sender:NSApp sourceItem:anItem];
 }// validateUserInterfaceItem:
 
 

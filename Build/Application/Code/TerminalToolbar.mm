@@ -2180,7 +2180,7 @@ validate
 	}
 	else
 	{
-		self.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performActionForMacro:) sender:[self actionButton]];
+		self.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performActionForMacro:) sender:[self actionButton] sourceItem:self];
 	}
 	//self.menuFormRepresentation.enabled = self.enabled;
 	actionButton.enabled = self.enabled;
@@ -4070,7 +4070,7 @@ if the target window cannot be zoomed right now).
 - (void)
 validate
 {
-	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performClose:) sender:[NSApp keyWindow]];
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performClose:) sender:[NSApp keyWindow] sourceItem:self];
 }// validate
 
 
@@ -4139,7 +4139,7 @@ if the target window cannot be minimized right now).
 - (void)
 validate
 {
-	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performMiniaturize:) sender:[NSApp keyWindow]];
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performMiniaturize:) sender:[NSApp keyWindow] sourceItem:self];
 }// validate
 
 
@@ -4208,7 +4208,7 @@ if the target window cannot be zoomed right now).
 - (void)
 validate
 {
-	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performZoom:) sender:[NSApp keyWindow]];
+	self.button.enabled = [[Commands_Executor sharedExecutor] validateAction:@selector(performZoom:) sender:[NSApp keyWindow] sourceItem:self];
 }// validate
 
 

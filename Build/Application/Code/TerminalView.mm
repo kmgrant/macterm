@@ -10923,13 +10923,12 @@ canPerformMappingCustom:(id <NSValidatedUserInterfaceItem>)		anItem
 performSetFunctionKeyLayoutRxvt:(id)	sender
 {
 #pragma unused(sender)
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutRxvt:sender];
+	Keypads_SetFunctionKeyLayout(kSession_FunctionKeyLayoutRxvt);
 }
 - (id)
 canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	isChecked = (kSession_FunctionKeyLayoutRxvt ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	BOOL	isChecked = Keypads_IsFunctionKeyLayoutEqualTo(kSession_FunctionKeyLayoutRxvt);
 	
 	
 	MenuUtilities_SetItemCheckMark(anItem, isChecked);
@@ -10942,13 +10941,12 @@ canPerformSetFunctionKeyLayoutRxvt:(id <NSValidatedUserInterfaceItem>)	anItem
 performSetFunctionKeyLayoutVT220:(id)	sender
 {
 #pragma unused(sender)
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutVT220:sender];
+	Keypads_SetFunctionKeyLayout(kSession_FunctionKeyLayoutVT220);
 }
 - (id)
 canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	isChecked = (kSession_FunctionKeyLayoutVT220 ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	BOOL	isChecked = Keypads_IsFunctionKeyLayoutEqualTo(kSession_FunctionKeyLayoutVT220);
 	
 	
 	MenuUtilities_SetItemCheckMark(anItem, isChecked);
@@ -10961,13 +10959,12 @@ canPerformSetFunctionKeyLayoutVT220:(id <NSValidatedUserInterfaceItem>)	anItem
 performSetFunctionKeyLayoutXTermX11:(id)	sender
 {
 #pragma unused(sender)
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermX11:sender];
+	Keypads_SetFunctionKeyLayout(kSession_FunctionKeyLayoutXTerm);
 }
 - (id)
 canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	isChecked = (kSession_FunctionKeyLayoutXTerm ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	BOOL	isChecked = Keypads_IsFunctionKeyLayoutEqualTo(kSession_FunctionKeyLayoutXTerm);
 	
 	
 	MenuUtilities_SetItemCheckMark(anItem, isChecked);
@@ -10980,13 +10977,12 @@ canPerformSetFunctionKeyLayoutXTermX11:(id <NSValidatedUserInterfaceItem>)	anIte
 performSetFunctionKeyLayoutXTermXFree86:(id)	sender
 {
 #pragma unused(sender)
-	[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] performSetFunctionKeyLayoutXTermXFree86:sender];
+	Keypads_SetFunctionKeyLayout(kSession_FunctionKeyLayoutXTermXFree86);
 }
 - (id)
 canPerformSetFunctionKeyLayoutXTermXFree86:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-	BOOL	isChecked = (kSession_FunctionKeyLayoutXTermXFree86 ==
-							[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] currentFunctionKeyLayout]);
+	BOOL	isChecked = Keypads_IsFunctionKeyLayoutEqualTo(kSession_FunctionKeyLayoutXTermXFree86);
 	
 	
 	MenuUtilities_SetItemCheckMark(anItem, isChecked);
@@ -12975,7 +12971,7 @@ validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
 {
 	// the call below enables the magic that allows validation to be automatic
 	// whenever a "canPerform..." method for a "perform..." action also exists
-	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:anItem.action sender:self];
+	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:anItem.action sender:self sourceItem:anItem];
 	
 	
 	return result;
