@@ -75,10 +75,10 @@ public struct UIAddressList_ItemView : View {
 	@EnvironmentObject private var itemModel: UIAddressList_ItemModel
 
 	public var body: some View {
-		Text(self.itemModel.addressString)
+		Text(itemModel.addressString)
 			//.fixedSize()
 			.font(Font.system(.body, design: .monospaced))
-			.onDrag({ return NSItemProvider(object: self.itemModel.addressString as NSString) })
+			.onDrag({ return NSItemProvider(object: itemModel.addressString as NSString) })
 	}
 
 }
@@ -101,7 +101,7 @@ public struct UIAddressList_View : View {
 					.font(Font.system(.caption))
 					.padding([.leading], 8)
 				Spacer()
-				if self.viewModel.refreshInProgress {
+				if viewModel.refreshInProgress {
 					UICommon_ProgressCircleView()
 						.alignmentGuide(.firstTextBaseline, computeValue: { $0[.bottom] - 3 })
 				} else {
@@ -111,9 +111,9 @@ public struct UIAddressList_View : View {
 				}
 				Button(
 					action: {
-						self.viewModel.refreshInProgress = true
+						viewModel.refreshInProgress = true
 						// implementation of refresh() must reset "refreshInProgress" to false!
-						self.viewModel.runner.refresh(addressList: self.viewModel)
+						viewModel.runner.refresh(addressList: viewModel)
 					}
 				) {
 					//Text("Refresh")

@@ -68,7 +68,7 @@ public struct UIArrangeWindow_View : View {
 				.font(Font.system(.subheadline))
 			HStack {
 				Spacer()
-				Button("Done", action: { self.viewModel.runner.doneArranging(viewModel: self.viewModel) })
+				Button("Done", action: { viewModel.runner.doneArranging(viewModel: viewModel) })
 			}
 		}.frame(minWidth: 500)
 			.padding(20)

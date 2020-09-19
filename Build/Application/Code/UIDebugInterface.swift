@@ -142,7 +142,7 @@ public struct UIDebugInterface_View : View {
 					alignment: .leading
 				) {
 					UICommon_OptionLineView("Active Terminal") {
-						Button("Log Detailed Snapshot", action: { self.viewModel.runner.dumpStateOfActiveTerminal() })
+						Button("Log Detailed Snapshot", action: { viewModel.runner.dumpStateOfActiveTerminal() })
 					}
 				}
 			}
@@ -152,10 +152,10 @@ public struct UIDebugInterface_View : View {
 					alignment: .leading
 				) {
 					UICommon_OptionLineView("Incomplete Work") {
-						Button("Show Cocoa Toolbar", action: { self.viewModel.runner.showTestTerminalToolbar() })
+						Button("Show Cocoa Toolbar", action: { viewModel.runner.showTestTerminalToolbar() })
 					}
 					UICommon_OptionLineView {
-						Button("Launch XPC Service", action: { self.viewModel.runner.launchNewCallPythonClient() })
+						Button("Launch XPC Service", action: { viewModel.runner.launchNewCallPythonClient() })
 					}
 				}
 			}

@@ -379,7 +379,7 @@ public struct UIKeypads_ControlKeysView : View {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlNull) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlNull) }) {
 						VStack {
 							Text("⌃@")
 							if showKeyNames {
@@ -391,7 +391,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("NUL (0x00) — Filler") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlA) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlA) }) {
 						VStack {
 							Text("⌃A")
 							if showKeyNames {
@@ -403,7 +403,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("SOH (0x01) — Start of Heading") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlB) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlB) }) {
 						VStack {
 							Text("⌃B")
 							if showKeyNames {
@@ -415,7 +415,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("STX (0x02) — Start of Text") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlC) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlC) }) {
 						VStack {
 							Text("⌃C")
 							if showKeyNames {
@@ -429,7 +429,7 @@ public struct UIKeypads_ControlKeysView : View {
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlD) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlD) }) {
 						VStack {
 							Text("⌃D")
 							if showKeyNames {
@@ -441,7 +441,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("EOT (0x04) — End of Transmission") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlE) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlE) }) {
 						VStack {
 							Text("⌃E")
 							if showKeyNames {
@@ -453,7 +453,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("ENQ (0x05) — Enquiry") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlF) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlF) }) {
 						VStack {
 							Text("⌃F")
 							if showKeyNames {
@@ -465,7 +465,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("ACK (0x06) — Acknowledge") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlG) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlG) }) {
 						VStack {
 							Text("⌃G")
 							if showKeyNames {
@@ -484,7 +484,7 @@ public struct UIKeypads_ControlKeysView : View {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlH) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlH) }) {
 						VStack {
 							Text("⌃H")
 							if showKeyNames {
@@ -496,7 +496,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("BS (0x08) — Backspace") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlI) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlI) }) {
 						VStack {
 							Text("⌃I")
 							if showKeyNames {
@@ -508,7 +508,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("HT (0x09) — Horizontal Tabulation") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlJ) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlJ) }) {
 						VStack {
 							Text("⌃J")
 							if showKeyNames {
@@ -520,7 +520,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("NL / LF (0x0A) — New Line / Line Feed") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlK) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlK) }) {
 						VStack {
 							Text("⌃K")
 							if showKeyNames {
@@ -534,7 +534,7 @@ public struct UIKeypads_ControlKeysView : View {
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlL) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlL) }) {
 						VStack {
 							Text("⌃L")
 							if showKeyNames {
@@ -546,7 +546,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("NP / FF (0x0C) — New Page / Form Feed") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlM) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlM) }) {
 						VStack {
 							Text("⌃M")
 							if showKeyNames {
@@ -558,7 +558,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("CR (0x0D) — Carriage Return") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlN) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlN) }) {
 						VStack {
 							Text("⌃N")
 							if showKeyNames {
@@ -570,7 +570,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("SO (0x0E) — Shift Out (Character Set)") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlO) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlO) }) {
 						VStack {
 							Text("⌃O")
 							if showKeyNames {
@@ -589,7 +589,7 @@ public struct UIKeypads_ControlKeysView : View {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlP) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlP) }) {
 						VStack {
 							Text("⌃P")
 							if showKeyNames {
@@ -601,7 +601,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("DLE (0x10) — Data Link Escape") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlQ) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlQ) }) {
 						VStack {
 							Text("⌃Q")
 							if showKeyNames {
@@ -614,7 +614,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("DC1 (0x11) — XON / Device Control 1") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlR) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlR) }) {
 						VStack {
 							Text("⌃R")
 							if showKeyNames {
@@ -626,7 +626,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("DC2 (0x12) — Device Control 2") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlS) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlS) }) {
 						VStack {
 							Text("⌃S")
 							if showKeyNames {
@@ -641,7 +641,7 @@ public struct UIKeypads_ControlKeysView : View {
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlT) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlT) }) {
 						VStack {
 							Text("⌃T")
 							if showKeyNames {
@@ -653,7 +653,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("DC4 (0x14) — Device Control 4") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlU) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlU) }) {
 						VStack {
 							Text("⌃U")
 							if showKeyNames {
@@ -665,7 +665,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("NAK (0x15) — Negative Acknowledge") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlV) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlV) }) {
 						VStack {
 							Text("⌃V")
 							if showKeyNames {
@@ -677,7 +677,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("SYN (0x16) — Synchronous Idle") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlW) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlW) }) {
 						VStack {
 							Text("⌃W")
 							if showKeyNames {
@@ -696,7 +696,7 @@ public struct UIKeypads_ControlKeysView : View {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlX) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlX) }) {
 						VStack {
 							Text("⌃X")
 							if showKeyNames {
@@ -708,7 +708,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("CAN (0x18) — Cancel") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlY) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlY) }) {
 						VStack {
 							Text("⌃Y")
 							if showKeyNames {
@@ -720,7 +720,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("EM (0x19) — End of Medium") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlZ) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlZ) }) {
 						VStack {
 							Text("⌃Z")
 							if showKeyNames {
@@ -732,7 +732,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("SUB (0x1A) — Substitute") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlLeftSquareBracket) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlLeftSquareBracket) }) {
 						VStack {
 							Text("⌃[")
 							if showKeyNames {
@@ -746,7 +746,7 @@ public struct UIKeypads_ControlKeysView : View {
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlBackslash) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlBackslash) }) {
 						VStack {
 							Text("⌃\\")
 							if showKeyNames {
@@ -758,7 +758,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("FS (0x1C) — Field Separator") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlRightSquareBracket) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlRightSquareBracket) }) {
 						VStack {
 							Text("⌃]")
 							if showKeyNames {
@@ -770,7 +770,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("GS (0x1D) — Group Separator") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlCaret) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlCaret) }) {
 						VStack {
 							Text("⌃^")
 							if showKeyNames {
@@ -782,7 +782,7 @@ public struct UIKeypads_ControlKeysView : View {
 					}.asMacTermKeypadKeySquare()
 						//.help("RS (0x1E) — Record Separator") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .controlUnderscore) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlUnderscore) }) {
 						VStack {
 							Text("⌃_")
 							if showKeyNames {
@@ -798,7 +798,7 @@ public struct UIKeypads_ControlKeysView : View {
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
 		}.padding(0)
-		.disabled(self.viewModel.buttonsDisabled)
+		.disabled(viewModel.buttonsDisabled)
 	}
 
 }
@@ -845,19 +845,19 @@ public struct UIKeypads_FunctionKeysView : View {
 		var nameF15 = "F15"
 		var nameF16 = "F16"
 		var is48Keys = true
-		if self.viewModel.functionKeyLayout == .vt220 ||
-			self.viewModel.functionKeyLayout == .xtermXFree86 {
+		if viewModel.functionKeyLayout == .vt220 ||
+			viewModel.functionKeyLayout == .xtermXFree86 {
 			nameF1 = "PF1"
 			nameF2 = "PF2"
 			nameF3 = "PF3"
 			nameF4 = "PF4"
 		}
-		if self.viewModel.functionKeyLayout == .vt220 ||
-			self.viewModel.functionKeyLayout == .rxvt {
+		if viewModel.functionKeyLayout == .vt220 ||
+			viewModel.functionKeyLayout == .rxvt {
 			nameF15 = "?"
 			nameF16 = "do"
 		}
-		if self.viewModel.functionKeyLayout == .vt220 {
+		if viewModel.functionKeyLayout == .vt220 {
 			is48Keys = false
 		}
 		return VStack {
@@ -876,63 +876,31 @@ public struct UIKeypads_FunctionKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Group {
-						Button(nameF1, action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f1) })
+						Button(nameF1, action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f1) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button(nameF2, action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f2) })
+						Button(nameF2, action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f2) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button(nameF3, action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f3) })
+						Button(nameF3, action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f3) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button(nameF4, action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f4) })
+						Button(nameF4, action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f4) })
 							.asMacTermKeypadKeySquare()
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
 					Spacer().asMacTermKeypadKeySpacingH()
 					Group {
-						Button("F5", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f5) })
+						Button("F5", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f5) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F6", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f6) })
+						Button("F6", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f6) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F7", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f7) })
+						Button("F7", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f7) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F8", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f8) })
-							.asMacTermKeypadKeySquare()
-					}
-				}
-				Spacer().asMacTermKeypadKeySpacingH()
-				Spacer().asMacTermKeypadKeySpacingH()
-				Group {
-					Group {
-						Button("F9", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f9) })
-							.asMacTermKeypadKeySquare()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F10", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f10) })
-							.asMacTermKeypadKeySquare()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F11", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f11) })
-							.asMacTermKeypadKeySquare()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F12", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f12) })
-							.asMacTermKeypadKeySquare()
-					}
-					Spacer().asMacTermKeypadKeySpacingH()
-					Spacer().asMacTermKeypadKeySpacingH()
-					Group {
-						Button("F13", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f13) })
-							.asMacTermKeypadKeySquare()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F14", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f14) })
-							.asMacTermKeypadKeySquare()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Button(nameF15, action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f15) })
-							.asMacTermKeypadKeySquare()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Button(nameF16, action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f16) })
+						Button("F8", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f8) })
 							.asMacTermKeypadKeySquare()
 					}
 				}
@@ -940,31 +908,63 @@ public struct UIKeypads_FunctionKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Group {
-						Button("F17", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f17) })
+						Button("F9", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f9) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F18", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f18) })
+						Button("F10", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f10) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F19", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f19) })
+						Button("F11", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f11) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F20", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f20) })
+						Button("F12", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f12) })
 							.asMacTermKeypadKeySquare()
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
 					Spacer().asMacTermKeypadKeySpacingH()
 					Group {
-						Button("F21", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f21) })
+						Button("F13", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f13) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F22", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f22) })
+						Button("F14", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f14) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F23", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f23) })
+						Button(nameF15, action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f15) })
 							.asMacTermKeypadKeySquare()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("F24", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f24) })
+						Button(nameF16, action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f16) })
+							.asMacTermKeypadKeySquare()
+					}
+				}
+				Spacer().asMacTermKeypadKeySpacingH()
+				Spacer().asMacTermKeypadKeySpacingH()
+				Group {
+					Group {
+						Button("F17", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f17) })
+							.asMacTermKeypadKeySquare()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Button("F18", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f18) })
+							.asMacTermKeypadKeySquare()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Button("F19", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f19) })
+							.asMacTermKeypadKeySquare()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Button("F20", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f20) })
+							.asMacTermKeypadKeySquare()
+					}
+					Spacer().asMacTermKeypadKeySpacingH()
+					Spacer().asMacTermKeypadKeySpacingH()
+					Group {
+						Button("F21", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f21) })
+							.asMacTermKeypadKeySquare()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Button("F22", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f22) })
+							.asMacTermKeypadKeySquare()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Button("F23", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f23) })
+							.asMacTermKeypadKeySquare()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Button("F24", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f24) })
 							.asMacTermKeypadKeySquare()
 					}
 				}
@@ -978,78 +978,38 @@ public struct UIKeypads_FunctionKeysView : View {
 					Spacer().asMacTermKeypadKeySpacingH()
 					Group {
 						Group {
-							Button("F25", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f25) })
+							Button("F25", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f25) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F26", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f26) })
+							Button("F26", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f26) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F27", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f27) })
+							Button("F27", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f27) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F28", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f28) })
+							Button("F28", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f28) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 						}
 						Spacer().asMacTermKeypadKeySpacingH()
 						Spacer().asMacTermKeypadKeySpacingH()
 						Group {
-							Button("F29", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f29) })
+							Button("F29", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f29) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F30", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f30) })
+							Button("F30", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f30) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F31", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f31) })
+							Button("F31", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f31) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F32", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f32) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-						}
-					}
-					Spacer().asMacTermKeypadKeySpacingH()
-					Spacer().asMacTermKeypadKeySpacingH()
-					Group {
-						Group {
-							Button("F33", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f33) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F34", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f34) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F35", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f35) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F36", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f36) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-						}
-						Spacer().asMacTermKeypadKeySpacingH()
-						Spacer().asMacTermKeypadKeySpacingH()
-						Group {
-							Button("F37", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f37) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F38", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f38) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F39", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f39) })
-								.asMacTermKeypadKeySquare()
-								.disabled(false == is48Keys)
-							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F40", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f40) })
+							Button("F32", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f32) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 						}
@@ -1058,38 +1018,78 @@ public struct UIKeypads_FunctionKeysView : View {
 					Spacer().asMacTermKeypadKeySpacingH()
 					Group {
 						Group {
-							Button("F41", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f41) })
+							Button("F33", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f33) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F42", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f42) })
+							Button("F34", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f34) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F43", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f43) })
+							Button("F35", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f35) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F44", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f44) })
+							Button("F36", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f36) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 						}
 						Spacer().asMacTermKeypadKeySpacingH()
 						Spacer().asMacTermKeypadKeySpacingH()
 						Group {
-							Button("F45", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f45) })
+							Button("F37", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f37) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F46", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f46) })
+							Button("F38", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f38) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F47", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f47) })
+							Button("F39", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f39) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 							Spacer().asMacTermKeypadKeySpacingH()
-							Button("F48", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .f48) })
+							Button("F40", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f40) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+						}
+					}
+					Spacer().asMacTermKeypadKeySpacingH()
+					Spacer().asMacTermKeypadKeySpacingH()
+					Group {
+						Group {
+							Button("F41", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f41) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+							Spacer().asMacTermKeypadKeySpacingH()
+							Button("F42", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f42) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+							Spacer().asMacTermKeypadKeySpacingH()
+							Button("F43", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f43) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+							Spacer().asMacTermKeypadKeySpacingH()
+							Button("F44", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f44) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+						}
+						Spacer().asMacTermKeypadKeySpacingH()
+						Spacer().asMacTermKeypadKeySpacingH()
+						Group {
+							Button("F45", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f45) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+							Spacer().asMacTermKeypadKeySpacingH()
+							Button("F46", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f46) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+							Spacer().asMacTermKeypadKeySpacingH()
+							Button("F47", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f47) })
+								.asMacTermKeypadKeySquare()
+								.disabled(false == is48Keys)
+							Spacer().asMacTermKeypadKeySpacingH()
+							Button("F48", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .f48) })
 								.asMacTermKeypadKeySquare()
 								.disabled(false == is48Keys)
 						}
@@ -1099,7 +1099,7 @@ public struct UIKeypads_FunctionKeysView : View {
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
 		}.padding(0)
-		.disabled(self.viewModel.buttonsDisabled)
+		.disabled(viewModel.buttonsDisabled)
 	}
 
 }
@@ -1116,31 +1116,31 @@ public struct UIKeypads_VT220KeysView : View {
 				Group {
 					// TEMPORARY; move to SF Symbols when SDK is updated
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button(action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadFind) }) {
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadFind) }) {
 						// note: this image is not visible in the Playground due to bundle source
 						// but it can be tested in MacTerm itself
 						Image("IconForSearch")
 					}.asMacTermKeypadKeySquare()
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("⤵", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadInsert) })
+					Button("⤵", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadInsert) })
 						.asMacTermKeypadKeySquareLargeFont()
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("⌫", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadDelete) })
+					Button("⌫", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadDelete) })
 						.asMacTermKeypadKeySquareLargeFont()
 					Spacer().asMacTermKeypadKeySpacingH()
 					Spacer().asMacTermKeypadKeySquareSpace()
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("PF1", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadPF1) })
+				Button("PF1", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPF1) })
 					.asMacTermKeypadKeySquare()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("PF2", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadPF2) })
+				Button("PF2", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPF2) })
 					.asMacTermKeypadKeySquare()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("PF3", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadPF3) })
+				Button("PF3", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPF3) })
 					.asMacTermKeypadKeySquare()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("PF4", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadPF4) })
+				Button("PF4", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPF4) })
 					.asMacTermKeypadKeySquare()
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
@@ -1150,17 +1150,17 @@ public struct UIKeypads_VT220KeysView : View {
 				Group {
 					// TEMPORARY; move to SF Symbols when SDK is updated
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("☞", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadSelect) })
+					Button("☞", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadSelect) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Select"))
 						//.help("Select") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("⇞", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadPageUp) })
+					Button("⇞", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPageUp) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Page Up"))
 						//.help("Page Up") // (add when SDK is updated)
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("⇟", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadPageDown) })
+					Button("⇟", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPageDown) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Page Down"))
 						//.help("Page Down") // (add when SDK is updated)
@@ -1168,16 +1168,16 @@ public struct UIKeypads_VT220KeysView : View {
 					Spacer().asMacTermKeypadKeySquareSpace()
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("7", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad7) })
+				Button("7", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad7) })
 					.asMacTermKeypadKeySquareLargeFont()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("8", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad8) })
+				Button("8", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad8) })
 					.asMacTermKeypadKeySquareLargeFont()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("9", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad9) })
+				Button("9", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad9) })
 					.asMacTermKeypadKeySquareLargeFont()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button(",", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadComma) })
+				Button(",", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadComma) })
 					.asMacTermKeypadKeySquareLargeFont()
 					.accessibility(label: Text("Comma"))
 					//.help("Comma") // (add when SDK is updated)
@@ -1197,16 +1197,16 @@ public struct UIKeypads_VT220KeysView : View {
 					Spacer().asMacTermKeypadKeySquareSpace()
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("4", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad4) })
+				Button("4", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad4) })
 					.asMacTermKeypadKeySquareLargeFont()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("5", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad5) })
+				Button("5", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad5) })
 					.asMacTermKeypadKeySquareLargeFont()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("6", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad6) })
+				Button("6", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad6) })
 					.asMacTermKeypadKeySquareLargeFont()
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("-", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadHyphen) })
+				Button("-", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadHyphen) })
 					.asMacTermKeypadKeySquareLargeFont()
 					.accessibility(label: Text("Hyphen"))
 					//.help("Hyphen") // (add when SDK is updated)
@@ -1220,17 +1220,17 @@ public struct UIKeypads_VT220KeysView : View {
 					VStack {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
-						Button("⇠", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .arrowLeft) })
+						Button("⇠", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowLeft) })
 							.asMacTermKeypadKeySquareLargeFont()
 							.accessibility(label: Text("Left Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
 					VStack {
-						Button("⇡", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .arrowUp) })
+						Button("⇡", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowUp) })
 							.asMacTermKeypadKeySquareLargeFont()
 							.accessibility(label: Text("Up Arrow"))
 						Spacer().asMacTermKeypadKeySpacingV()
-						Button("⇣", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .arrowDown) })
+						Button("⇣", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowDown) })
 							.asMacTermKeypadKeySquareLargeFont()
 							.accessibility(label: Text("Down Arrow"))
 					}
@@ -1238,7 +1238,7 @@ public struct UIKeypads_VT220KeysView : View {
 					VStack {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
-						Button("⇢", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .arrowRight) })
+						Button("⇢", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowRight) })
 							.asMacTermKeypadKeySquareLargeFont()
 							.accessibility(label: Text("Right Arrow"))
 					}
@@ -1252,28 +1252,28 @@ public struct UIKeypads_VT220KeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				VStack {
 					HStack {
-						Button("1", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad1) })
+						Button("1", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad1) })
 							.asMacTermKeypadKeySquareLargeFont()
 						Spacer().asMacTermKeypadKeySpacingH()
-						Button("2", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad2) })
+						Button("2", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad2) })
 							.asMacTermKeypadKeySquareLargeFont()
 					}
 					Spacer().asMacTermKeypadKeySpacingV()
-					Button("0", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad0) })
+					Button("0", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad0) })
 						.asMacTermKeypadKeyRect2HLargeFont()
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				VStack {
-					Button("3", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypad3) })
+					Button("3", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad3) })
 						.asMacTermKeypadKeySquareLargeFont()
 					Spacer().asMacTermKeypadKeySpacingV()
-					Button(".", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadDecimalPoint) })
+					Button(".", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadDecimalPoint) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Decimal Point"))
 						//.help("Decimal Point") // (add when SDK is updated)
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("⌤", action: { self.viewModel.runner.respondToAction(viewModel: self.viewModel, keyID: .keypadEnter) })
+				Button("⌤", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadEnter) })
 					.asMacTermKeypadKeyRect2VLargeFont()
 					.accessibility(label: Text("Enter"))
 					//.help("Enter") // (add when SDK is updated)
@@ -1281,7 +1281,7 @@ public struct UIKeypads_VT220KeysView : View {
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
 		}.padding(0)
-		.disabled(self.viewModel.buttonsDisabled)
+		.disabled(viewModel.buttonsDisabled)
 	}
 
 }
