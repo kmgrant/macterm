@@ -8,44 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		0A46C3A81D80CF650035E6A8 /* PrintPreviewCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */; };
-		0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A5C6C661597B1870094E3FD /* Cocoa.framework */; };
 		0A6C44541D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */; };
-		0A6C445E1D83888300E1B0E2 /* PrintPreview.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */; };
 		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXBuildRule section */
-		0AA7B35A09D8ABE70032215C /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.cpp;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-		0AA7B35B09D8AC060032215C /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.gcc.4_0;
-			fileType = sourcecode.c;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-			);
-		};
-/* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
 		0A08ADB81D88EB4000E64198 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Shared/Debug.xcconfig; sourceTree = "<group>"; };
 		0A08ADB91D88EB4000E64198 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
-		0A5C6C661597B1870094E3FD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0A6C445B1D83827D00E1B0E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrintPreview/Resources/Base.lproj/PrintPreviewCocoa.xib; sourceTree = "<group>"; };
 		0A6C445C1D83827D00E1B0E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = PrintPreview/Resources/Base.lproj/TerminalPrintDialogCocoa.xib; sourceTree = "<group>"; };
 		0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrintPreview.entitlements; path = PrintPreview/PrintPreview.entitlements; sourceTree = "<group>"; };
 		0AA2853422B6BB0000C2666B /* PrintPreview-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "PrintPreview-Info.plist"; path = "PrintPreview/Resources/PrintPreview-Info.plist"; sourceTree = "<group>"; };
 		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MainEntryPoint.swift; path = PrintPreview/Code/MainEntryPoint.swift; sourceTree = "<group>"; };
+		0AB4B1BE251403CB00E7AFC2 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = ../../../../../System/Library/Frameworks/Cocoa.framework; sourceTree = "<group>"; };
 		8D0C4E970486CD37000505A6 /* PrintPreview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrintPreview.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -54,13 +29,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A5C6C671597B1870094E3FD /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0AB4B1BD251403C400E7AFC2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0AB4B1BE251403CB00E7AFC2 /* Cocoa.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		195DF8CFFE9D517E11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -72,15 +54,15 @@
 		20286C29FDCF999611CA2CEA /* PrintPreview */ = {
 			isa = PBXGroup;
 			children = (
-				195DF8CFFE9D517E11CA2CBB /* Products */,
 				0A6C445D1D83838700E1B0E2 /* PrintPreview.entitlements */,
 				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.swift */,
 				0AA2853422B6BB0000C2666B /* PrintPreview-Info.plist */,
 				0A46C3A61D80CF650035E6A8 /* PrintPreviewCocoa.xib */,
 				0A6C44521D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib */,
+				195DF8CFFE9D517E11CA2CBB /* Products */,
 				0A08ADB81D88EB4000E64198 /* Debug.xcconfig */,
 				0A08ADB91D88EB4000E64198 /* Production.xcconfig */,
-				0A5C6C661597B1870094E3FD /* Cocoa.framework */,
+				0AB4B1BD251403C400E7AFC2 /* Frameworks */,
 			);
 			name = PrintPreview;
 			sourceTree = "<group>";
@@ -108,8 +90,6 @@
 				8D0C4E910486CD37000505A6 /* Frameworks */,
 			);
 			buildRules = (
-				0AA7B35B09D8AC060032215C /* PBXBuildRule */,
-				0AA7B35A09D8ABE70032215C /* PBXBuildRule */,
 			);
 			dependencies = (
 			);
@@ -125,7 +105,7 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1170;
+				LastUpgradeCheck = 1200;
 				TargetAttributes = {
 					8D0C4E890486CD37000505A6 = {
 						ProvisioningStyle = Manual;
@@ -159,7 +139,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A6C445E1D83888300E1B0E2 /* PrintPreview.entitlements in Resources */,
 				0A46C3A81D80CF650035E6A8 /* PrintPreviewCocoa.xib in Resources */,
 				0A6C44541D826EE700E1B0E2 /* TerminalPrintDialogCocoa.xib in Resources */,
 			);
@@ -242,6 +221,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -257,7 +237,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OBJROOT = _Generated;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -282,6 +262,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -296,7 +277,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.14.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OBJROOT = _Generated;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
