@@ -12445,6 +12445,142 @@ mouseDown:(NSEvent*)	anEvent
 }// mouseDown:
 
 
+/*!
+Obtains data from a Services item.
+
+Arbitrarily, it is assumed that text returned from a
+Service should be sent to the active session (since
+text in the terminal cannot be “replaced” like it
+would be in a document).
+
+NOTE: Both "writeSelectionToPasteboard:types:" and
+"validRequestorForSendType:returnType:" should be
+consistent with this.
+
+(2020.09)
+*/
+- (BOOL)
+readSelectionFromPasteboard:(NSPasteboard*)		aPasteboard
+{
+	BOOL		result = NO;
+	NSArray*	availableTypes = [aPasteboard types];
+	
+	
+	if ([availableTypes containsObject:NSPasteboardTypeString])
+	{
+		NSString*	availableText = [aPasteboard stringForType:NSPasteboardTypeString];
+		
+		
+		if (nil == availableText)
+		{
+			// this should not happen...
+			Console_Warning(Console_WriteLine, "failed to use Service; expected text to be available but string was not returned!");
+		}
+		else
+		{
+			// it is not technically possible to modify text in the terminal but
+			// a close approximation is to send whatever string is provided...
+		#if 1
+			// friendlier: auto-Copy, then Paste (guarded for multi-line)
+			Boolean		didCopy = Clipboard_AddCFStringToPasteboard
+									(BRIDGE_CAST(availableText, CFStringRef), nil/* nil for main pasteboard */, true/* clear first */);
+			
+			
+			if (false == didCopy)
+			{
+				Console_Warning(Console_WriteLine, "failed to use Service; unable to Copy");
+			}
+			else
+			{
+				Session_Result		pasteResult = Session_UserInputPaste([self boundSession]);
+				
+				
+				if (kSession_ResultOK != pasteResult)
+				{
+					Console_Warning(Console_WriteValue, "failed to use Service; unable to Paste, error", pasteResult.code());
+				}
+			}
+		#else
+			// send text as-is; this is too abrupt...user cannot predict what is sent
+			Session_UserInputCFString([self boundSession], BRIDGE_CAST(availableText, CFStringRef));
+		#endif
+			result = YES;
+		}
+	}
+	
+	return result;
+}// readSelectionFromPasteboard:
+
+
+/*!
+Called as part of supporting the Services menu (system-wide);
+communicates the currently-selected text to the system.
+
+NOTE: Both "writeSelectionToPasteboard:types:" and
+"readSelectionFromPasteboard:" should be consistent with this.
+
+(2020.09)
+*/
+- (id)
+validRequestorForSendType:(NSPasteboardType)	sendType
+returnType:(NSPasteboardType)					returnType
+{
+	id		result = nil;
+	
+	
+	if ([sendType isEqual:NSPasteboardTypeString] && [returnType isEqual:NSPasteboardTypeString])
+	{
+		Boolean const	isSelectedText = TerminalView_TextSelectionExists([self terminalViewRef]);
+		
+		
+		if (isSelectedText)
+		{
+			result = self;
+		}
+	}
+	else
+	{
+		result = [super validRequestorForSendType:sendType returnType:returnType];
+	}
+	
+	return result;
+}// validRequestorForSendType:returnType:
+
+
+/*!
+Provides data to a Services item.  Currently works for any text
+selected in the terminal view.  (At a future time, this could
+be extended to handle selected images as well.)
+
+NOTE: Both "validRequestorForSendType:returnType:" and
+"readSelectionFromPasteboard:" should be consistent with this.
+
+(2020.09)
+*/
+- (BOOL)
+writeSelectionToPasteboard:(NSPasteboard*)		aPasteboard
+types:(NSArray*)								aTypeArray
+{
+	BOOL	result = NO;
+	
+	
+	if (NO == [aTypeArray containsObject:NSPasteboardTypeString])
+	{
+		UInt16 const					spacesPerTab = 0;
+		TerminalView_TextFlags const	optionFlags = 0;
+		CFRetainRelease					selectedTextCFString(TerminalView_ReturnSelectedTextCopyAsUnicode
+																([self terminalViewRef], spacesPerTab, optionFlags),
+																CFRetainRelease::kAlreadyRetained);
+		
+		
+		result = [aPasteboard setString:BRIDGE_CAST(selectedTextCFString.returnCFStringRef(), NSString*)
+										forType:NSPasteboardTypeString];
+	}
+	
+	return result;
+}// writeSelectionToPasteboard:types:
+
+
 #pragma mark NSStandardKeyBindingResponding
 
 
