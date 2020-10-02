@@ -1179,6 +1179,10 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginBottom,
 									CFSTR("terminal-margin-bottom-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalMousePointerColor,
+									CFSTR("terminal-mouse-pointer-color"),
+									kPreferences_DataTypeCFStringRef/* "red", "black", "white" */,
+									sizeof(TerminalView_MousePointerColor), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingLeft,
 									CFSTR("terminal-padding-left-em"), kPreferences_DataTypeCFNumberRef,
 									sizeof(Float32), Quills::Prefs::FORMAT);
@@ -3786,6 +3790,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagPureInverse:
 	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
+	case kPreferences_TagTerminalMousePointerColor:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
 	case kPreferences_TagTerminalShowMarginAtColumn:
 	case kPreferences_ChangeContextName:
@@ -3855,9 +3860,11 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagFocusFollowsMouse:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagNewCommandShortcutEffect:
+	case kPreferences_TagNotifyOfBeeps:
 	case kPreferences_TagPureInverse:
 	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
+	case kPreferences_TagTerminalMousePointerColor:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
 	case kPreferences_TagTerminalShowMarginAtColumn:
 	case kPreferences_ChangeContextName:
@@ -6451,6 +6458,42 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 							// failed; make default
 							*data = 0; // arbitrary
 							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+					}
+					break;
+				
+				case kPreferences_TagTerminalMousePointerColor:
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
+					{
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							TerminalView_MousePointerColor*		storedValuePtr = REINTERPRET_CAST(outDataPtr, TerminalView_MousePointerColor*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("red"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminalView_MousePointerColorRed;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("black"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminalView_MousePointerColorBlack;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("white"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminalView_MousePointerColorWhite;
+							}
+							else
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
 						}
 					}
 					break;
@@ -9070,6 +9113,31 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(kPreferences_DataTypeCFNumberRef == keyValueType);
 					inContextPtr->addFloat(inDataPreferenceTag, keyName, data);
+				}
+				break;
+			
+			case kPreferences_TagTerminalMousePointerColor:
+				{
+					TerminalView_MousePointerColor const	data = *(REINTERPRET_CAST(inDataPtr, TerminalView_MousePointerColor const*));
+					
+					
+					assert(kPreferences_DataTypeCFStringRef == keyValueType);
+					switch (data)
+					{
+					case kTerminalView_MousePointerColorBlack:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("black"));
+						break;
+					
+					case kTerminalView_MousePointerColorWhite:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("white"));
+						break;
+					
+					case kTerminalView_MousePointerColorRed:
+					default:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("red"));
+						break;
+					}
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			

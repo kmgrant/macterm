@@ -197,6 +197,7 @@ enum
 	kPreferences_TagTerminalMarginRight					= 'mgnr',	//!< data: "Float32"
 	kPreferences_TagTerminalMarginTop					= 'mgnt',	//!< data: "Float32"
 	kPreferences_TagTerminalMarginBottom				= 'mgnb',	//!< data: "Float32"
+	kPreferences_TagTerminalMousePointerColor			= 'mous',	//!< data: "TerminalView_MousePointerColor"
 	kPreferences_TagTerminalPaddingLeft					= 'padl',	//!< data: "Float32", multiplies against font “m” width (even for vertical paddings)
 	kPreferences_TagTerminalPaddingRight				= 'padr',	//!< data: "Float32"
 	kPreferences_TagTerminalPaddingTop					= 'padt',	//!< data: "Float32"

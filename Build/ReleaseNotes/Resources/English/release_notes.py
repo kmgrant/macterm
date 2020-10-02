@@ -24,6 +24,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20200927',
     '20200727',
     '20200502',
     '20190331',
@@ -604,6 +605,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20200927': [
+        'Preferences window Formats pane now has a "Mouse Pointer Color" setting, with Red (default), Black or White options.',
+    ],
     '20200727': [
         'Sessions can now have an associated Macro Set, which becomes the current set when the session first runs.',
         'The current macro set is now tied to the active terminal window, and is automatically restored when switching windows.',

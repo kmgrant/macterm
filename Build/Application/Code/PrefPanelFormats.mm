@@ -209,6 +209,7 @@ PrefPanelFormats_NewNormalTagSet ()
 	tagList.push_back(kPreferences_TagTerminalColorCursorBackground);
 	tagList.push_back(kPreferences_TagAutoSetCursorColor);
 	tagList.push_back(kPreferences_TagTerminalColorMatteBackground);
+	tagList.push_back(kPreferences_TagTerminalMousePointerColor);
 	
 	result = Preferences_NewTagSet(tagList);
 	
@@ -488,6 +489,67 @@ setNilPreferenceValue
 
 
 #pragma mark -
+@implementation PrefPanelFormats_MousePointerColorValue
+
+
+/*!
+Designated initializer.
+
+(2020.09)
+*/
+- (instancetype)
+initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+{
+	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminalView_MousePointerColorRed
+																description:NSLocalizedStringFromTable
+																			(@"Red", @"PrefPanelFormats"/* table */,
+																				@"default (red) mouse pointer color")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminalView_MousePointerColorBlack
+																description:NSLocalizedStringFromTable
+																			(@"Black", @"PrefPanelFormats"/* table */,
+																				@"white mouse pointer color")]
+										autorelease],
+									[[[PreferenceValue_IntegerDescriptor alloc]
+										initWithIntegerValue:kTerminalView_MousePointerColorWhite
+																description:NSLocalizedStringFromTable
+																			(@"White", @"PrefPanelFormats"/* table */,
+																				@"white mouse pointer color")]
+										autorelease],
+									nil] autorelease];
+	
+	
+	assert(sizeof(TerminalView_MousePointerColor) == sizeof(UInt32));
+	self = [super initWithPreferencesTag:kPreferences_TagTerminalMousePointerColor
+											contextManager:aContextMgr
+											preferenceCType:kPreferenceValue_CTypeUInt32
+											valueDescriptorArray:descriptorArray];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContextManager:
+
+
+/*!
+Destructor.
+
+(2020.09)
+*/
+- (void)
+dealloc
+{
+	[super dealloc];
+}// dealloc
+
+
+@end // PrefPanelFormats_MousePointerColorValue
+
+
+#pragma mark -
 @implementation PrefPanelFormats_GeneralViewManager
 
 
@@ -645,6 +707,18 @@ matteBackgroundColor
 {
 	return [self->byKey objectForKey:@"matteBackgroundColor"];
 }// matteBackgroundColor
+
+
+/*!
+Accessor.
+
+(2020.09)
+*/
+- (PrefPanelFormats_MousePointerColorValue*)
+mousePointerColor
+{
+	return [self->byKey objectForKey:@"mousePointerColor"];
+}// mousePointerColor
 
 
 /*!
@@ -808,7 +882,7 @@ initializeWithContext:(void*)			aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:16/* arbitrary; number of colors */];
+	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:16/* must be enough space for all bound settings (see "panelViewManager:didLoadContainerView:") */];
 	self->sampleTerminalVC = [[TerminalView_Controller alloc] init];
 }// panelViewManager:initializeWithContext:
 
@@ -907,13 +981,9 @@ didLoadContainerView:(NSView*)			aContainerView
 				Terminal_EmulatorProcessCString(self->sampleScreenBuffer,
 												"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
 				// the range selected here should be as long as the length of the word “sel” above
-				TerminalView_SelectVirtualRange
-				(self->sampleScreenView, std::make_pair(std::make_pair(0, 0),
-														std::make_pair(3, 1)/* exclusive end */));
+				TerminalView_SelectVirtualRange(self->sampleScreenView, {{0, 0}, {3, 1}/* exclusive end */});
 				// the range selected here should be as long as the length of the word “find” above
-				TerminalView_FindVirtualRange
-				(self->sampleScreenView, std::make_pair(std::make_pair(4, 0),
-														std::make_pair(8, 1)/* exclusive end */));
+				TerminalView_FindVirtualRange(self->sampleScreenView, {{4, 0}, {8, 1}/* exclusive end */});
 			}
 		}
 	}
@@ -980,6 +1050,9 @@ didLoadContainerView:(NSView*)			aContainerView
 								initWithPreferencesTag:kPreferences_TagFontCharacterWidthMultiplier
 														contextManager:self->prefsMgr] autorelease]
 					forKey:@"characterWidth"];
+	[self->byKey setObject:[[[PrefPanelFormats_MousePointerColorValue alloc]
+								initWithContextManager:self->prefsMgr] autorelease]
+					forKey:@"mousePointerColor"];
 	
 	// note that all values have changed (causes the display to be refreshed)
 	for (NSString* keyName in [self primaryDisplayBindingKeys])
@@ -1207,7 +1280,7 @@ colorBindingKeys
 				@"boldBackgroundColor", @"boldForegroundColor",
 				@"blinkingBackgroundColor", @"blinkingForegroundColor",
 				@"matteBackgroundColor",
-				@"cursorBackgroundColor",
+				@"cursorBackgroundColor"
 			];
 }// colorBindingKeys
 
@@ -1229,6 +1302,7 @@ primaryDisplayBindingKeys
 	[result addObject:@"fontSize"];
 	[result addObject:@"characterWidth"];
 	[result addObject:@"autoSetCursorColor"];
+	[result addObject:@"mousePointerColor"];
 	
 	return result;
 }// primaryDisplayBindingKeys

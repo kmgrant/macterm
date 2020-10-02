@@ -196,8 +196,8 @@ To remove a local variation and restore inheritance from Default,
 
 h2(#search). About Preferences Search
 
-At the bottom of the Preferences window is a search field that
- can help you find certain settings.
+The Preferences window has a search field that can help you find
+ certain settings.
 
 To search, enter key words in the field and press Return.  If
  any matches are found, a menu pops up displaying the icon of the
@@ -1429,6 +1429,13 @@ Color settings have two entries, the leftmost box is the text
 The terminal cursor can be set to a custom color, or you can use
  the "Automatic" check box to have the color change based on the
  text that is underneath the cursor at any given time.
+
+MacTerm uses special versions of mouse pointers such as the
+ I-beam to improve contrast (as terminals can use a wide variety
+ of colors).  You can choose the primary color to use for the
+ pointer when the mouse is over a terminal window.  As with any
+ Format setting, this can be set in the Default Format and then
+ inherited, or customized on a per-Format basis for the best look.
 
 h3. Standard Colors
 

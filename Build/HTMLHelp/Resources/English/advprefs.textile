@@ -363,6 +363,8 @@ table(deftable).
 (defbottom). |\2(desc). Amount of space between the outer edge of the terminal and its keyboard focus ring.|
 (deftop). |(key). @terminal-margin-top-em@|(types). _float_: multiplied by the current font's "m" width|
 (defbottom). |\2(desc). Amount of space between the outer edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-mouse-pointer-color@|(types). _string_: @red@, @black@ or @white@|
+(defbottom). |\2(desc). Primary color of mouse pointer (I-beam, etc.) for terminal views.|
 (deftop). |(key). @terminal-padding-bottom-em@|(types). _float_: multiplied by the current font's "m" width|
 (defbottom). |\2(desc). Amount of space between the inner edge of the terminal and its keyboard focus ring.|
 (deftop). |(key). @terminal-padding-left-em@|(types). _float_: multiplied by the current font's "m" width|

@@ -104,6 +104,7 @@ RMDIR=/bin/rmdir
 RSYNC=/usr/bin/rsync
 SPCTL=/usr/sbin/spctl
 SYMLINK_REPLACE=/bin/ln -snf
+TIFFUTIL=/usr/bin/tiffutil
 XARGS=/usr/bin/xargs
 XCB=$(DEVELOPER_DIR)/usr/bin/xcodebuild $(XCODE_ENV)
 
@@ -169,16 +170,6 @@ $(wildcard $(SRC_APP_CODE_TOP)/Quills*)
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
 Application.sb \
-CursorCrosshairs.png \
-CursorCrosshairs@2x.png \
-CursorIBeam.png \
-CursorIBeam@2x.png\
-CursorIBeamSmall.png \
-CursorIBeamSmall@2x.png \
-CursorMoveCursor.png \
-CursorMoveCursor@2x.png \
-CursorMoveCursorSmall.png \
-CursorMoveCursorSmall@2x.png \
 DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \
@@ -208,6 +199,25 @@ PreferencesSearch.plist \
 Base.lproj/Credits.html
 APP_RESOURCES_BUNDLES := \
 MacTerm.help
+# set to a list of files in "MacTermQuills.framework/Resources"
+# that should move to "MacTerm.app/Contents/Resources" (used for
+# Xcode-generated images)
+APP_RESOURCES_PREFIXES_MULTI_DPI_PNG := \
+CursorBlackCrosshairs \
+CursorBlackIBeam \
+CursorBlackIBeamSmall \
+CursorBlackMoveCursor \
+CursorBlackMoveCursorSmall \
+CursorCrosshairs \
+CursorIBeam \
+CursorIBeamSmall \
+CursorMoveCursor \
+CursorMoveCursorSmall \
+CursorWhiteCrosshairs \
+CursorWhiteIBeam \
+CursorWhiteIBeamSmall \
+CursorWhiteMoveCursor \
+CursorWhiteMoveCursorSmall
 # set to a list of "Base.lproj/<xyz>" paths, where there
 # should be an <xyz>.xib source and implied <xyz>.nib output
 APP_XIB_PREFIXES := \
@@ -286,6 +296,7 @@ install-quills-framework:
 	$(RSYNC) --archive $(SRC_QUILLS_TOP)/ $(DEST_QUILLS_TOP)
 	# "Versions/A" is the legacy PowerPC-only Panther build that is no longer created
 	@# add remaining parts
+	$(MAKE) install-combined-hi-res-images
 	$(MAKE) install-swig-wrappers
 	$(SYMLINK_REPLACE) Versions/B/Resources $(DEST_QUILLS_TOP)/
 
@@ -306,6 +317,11 @@ $(SYMROOT)/$(BUILD_CONF)/quills.py: $(SWIG_DEPENDENCIES)
 	@# if Python versions are different on each Mac OS, the lightweight
 	@# SWIG wrapper code *does* have to be compiled for each separately
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration $(BUILD_CONF)
+
+# moves Xcode-generated ".tiff" files to the main bundle
+.PHONY: install-combined-hi-res-images
+install-combined-hi-res-images:
+	$(foreach PREFIX,$(APP_RESOURCES_PREFIXES_MULTI_DPI_PNG),$(TIFFUTIL) -cathidpicheck $(SRC_APP_RESOURCES_TOP)/$(PREFIX).png $(SRC_APP_RESOURCES_TOP)/$(PREFIX)@2x.png -out $(DEST_APP_RESOURCES_TOP)/$(PREFIX).tiff ;)
 
 # reinstalls a SWIG wrapper when it changes
 $(DEST_SWIG_TOP_LEOPARD)/%: $(SYMROOT)/$(BUILD_CONF)/%

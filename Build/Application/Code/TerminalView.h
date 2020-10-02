@@ -143,12 +143,23 @@ enum TerminalView_Event
 };
 
 /*!
+Determines the primary color of the mouse pointer for the
+I-beam, crosshairs or other things shown over terminal views.
+*/
+enum TerminalView_MousePointerColor
+{
+	kTerminalView_MousePointerColorBlack		= 0,	//!< black I-beam, etc.
+	kTerminalView_MousePointerColorWhite		= 1,	//!< white I-beam, etc.
+	kTerminalView_MousePointerColorRed			= 2		//!< red I-beam, etc.
+};
+
+/*!
 Options for TerminalView_ReturnSelectedTextCopyAsUnicode().
 */
 typedef UInt16 TerminalView_TextFlags;
 enum
 {
-	kTerminalView_TextFlagInline					= (1 << 0),		//!< strip end-of-line markers?
+	kTerminalView_TextFlagInline				= (1 << 0),		//!< strip end-of-line markers?
 	kTerminalView_TextFlagLineSeparatorLF 		= (1 << 1),		//!< use LF as line ending (default is CR)
 	kTerminalView_TextFlagLastLineHasSeparator 	= (1 << 2)		//!< also add end-of-line to end of text? (default is no)
 };

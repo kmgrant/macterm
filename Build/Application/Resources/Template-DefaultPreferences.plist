@@ -490,6 +490,8 @@
 	<real>0.6</real>
 	<key>terminal-margin-bottom-em</key>
 	<real>0.6</real>
+	<key>terminal-mouse-pointer-color</key>
+	<string>red</string>
 	<key>terminal-no-dim-on-deactivate</key>
 	<false/>
 	<key>terminal-padding-left-em</key>

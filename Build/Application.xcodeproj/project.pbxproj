@@ -402,12 +402,32 @@
 		0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = WindowTitleDialog.mm; path = Shared/Code/WindowTitleDialog.mm; sourceTree = "<group>"; };
 		0AB19DA91D87556600D80A2D /* WindowTitleDialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WindowTitleDialog.h; path = Shared/Code/WindowTitleDialog.h; sourceTree = "<group>"; };
 		0AB3B2640F0C1B69000559AB /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = __init__.py; path = Application/PythonCode/pymacterm/__init__.py; sourceTree = "<group>"; };
+		0AB73A8C2526C9E90058368B /* CursorBlackMoveCursorSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorBlackMoveCursorSmall.png; path = Application/Resources/CursorBlackMoveCursorSmall.png; sourceTree = "<group>"; };
+		0AB73A8D2526C9E90058368B /* CursorBlackIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorBlackIBeam@2x.png"; path = "Application/Resources/CursorBlackIBeam@2x.png"; sourceTree = "<group>"; };
+		0AB73A8E2526C9E90058368B /* CursorBlackCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorBlackCrosshairs@2x.png"; path = "Application/Resources/CursorBlackCrosshairs@2x.png"; sourceTree = "<group>"; };
+		0AB73A8F2526C9E90058368B /* CursorBlackIBeamSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorBlackIBeamSmall.png; path = Application/Resources/CursorBlackIBeamSmall.png; sourceTree = "<group>"; };
+		0AB73A902526C9E90058368B /* CursorBlackIBeamSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorBlackIBeamSmall@2x.png"; path = "Application/Resources/CursorBlackIBeamSmall@2x.png"; sourceTree = "<group>"; };
+		0AB73A912526C9E90058368B /* CursorBlackCrosshairs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorBlackCrosshairs.png; path = Application/Resources/CursorBlackCrosshairs.png; sourceTree = "<group>"; };
+		0AB73A922526C9E90058368B /* CursorBlackIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorBlackIBeam.png; path = Application/Resources/CursorBlackIBeam.png; sourceTree = "<group>"; };
+		0AB73A932526C9E90058368B /* CursorBlackMoveCursor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorBlackMoveCursor.png; path = Application/Resources/CursorBlackMoveCursor.png; sourceTree = "<group>"; };
+		0AB73A942526C9E90058368B /* CursorBlackMoveCursor@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorBlackMoveCursor@2x.png"; path = "Application/Resources/CursorBlackMoveCursor@2x.png"; sourceTree = "<group>"; };
+		0AB73A952526C9E90058368B /* CursorBlackMoveCursorSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorBlackMoveCursorSmall@2x.png"; path = "Application/Resources/CursorBlackMoveCursorSmall@2x.png"; sourceTree = "<group>"; };
 		0ABC0CFD0A450061009D07FC /* PrefPanelFormats.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelFormats.mm; path = Application/Code/PrefPanelFormats.mm; sourceTree = "<group>"; };
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
 		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelSessions.mm; path = Application/Code/PrefPanelSessions.mm; sourceTree = "<group>"; };
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelTerminals.mm; path = Application/Code/PrefPanelTerminals.mm; sourceTree = "<group>"; };
 		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
 		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
+		0AC1E891251D9F2F0044F3E5 /* CursorWhiteIBeamSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorWhiteIBeamSmall.png; path = Application/Resources/CursorWhiteIBeamSmall.png; sourceTree = "<group>"; };
+		0AC1E892251D9F2F0044F3E5 /* CursorWhiteMoveCursor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorWhiteMoveCursor.png; path = Application/Resources/CursorWhiteMoveCursor.png; sourceTree = "<group>"; };
+		0AC1E893251D9F2F0044F3E5 /* CursorWhiteIBeamSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorWhiteIBeamSmall@2x.png"; path = "Application/Resources/CursorWhiteIBeamSmall@2x.png"; sourceTree = "<group>"; };
+		0AC1E894251D9F2F0044F3E5 /* CursorWhiteIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorWhiteIBeam.png; path = Application/Resources/CursorWhiteIBeam.png; sourceTree = "<group>"; };
+		0AC1E895251D9F2F0044F3E5 /* CursorWhiteMoveCursor@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorWhiteMoveCursor@2x.png"; path = "Application/Resources/CursorWhiteMoveCursor@2x.png"; sourceTree = "<group>"; };
+		0AC1E896251D9F2F0044F3E5 /* CursorWhiteMoveCursorSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorWhiteMoveCursorSmall.png; path = Application/Resources/CursorWhiteMoveCursorSmall.png; sourceTree = "<group>"; };
+		0AC1E897251D9F2F0044F3E5 /* CursorWhiteMoveCursorSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorWhiteMoveCursorSmall@2x.png"; path = "Application/Resources/CursorWhiteMoveCursorSmall@2x.png"; sourceTree = "<group>"; };
+		0AC1E898251D9F2F0044F3E5 /* CursorWhiteIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorWhiteIBeam@2x.png"; path = "Application/Resources/CursorWhiteIBeam@2x.png"; sourceTree = "<group>"; };
+		0AC1E899251D9F2F0044F3E5 /* CursorWhiteCrosshairs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorWhiteCrosshairs.png; path = Application/Resources/CursorWhiteCrosshairs.png; sourceTree = "<group>"; };
+		0AC1E89A251D9F2F0044F3E5 /* CursorWhiteCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorWhiteCrosshairs@2x.png"; path = "Application/Resources/CursorWhiteCrosshairs@2x.png"; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
@@ -835,6 +855,16 @@
 		0AFF137A0AF42067006CCA34 /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				0AB73A912526C9E90058368B /* CursorBlackCrosshairs.png */,
+				0AB73A8E2526C9E90058368B /* CursorBlackCrosshairs@2x.png */,
+				0AB73A922526C9E90058368B /* CursorBlackIBeam.png */,
+				0AB73A8D2526C9E90058368B /* CursorBlackIBeam@2x.png */,
+				0AB73A8F2526C9E90058368B /* CursorBlackIBeamSmall.png */,
+				0AB73A902526C9E90058368B /* CursorBlackIBeamSmall@2x.png */,
+				0AB73A932526C9E90058368B /* CursorBlackMoveCursor.png */,
+				0AB73A942526C9E90058368B /* CursorBlackMoveCursor@2x.png */,
+				0AB73A8C2526C9E90058368B /* CursorBlackMoveCursorSmall.png */,
+				0AB73A952526C9E90058368B /* CursorBlackMoveCursorSmall@2x.png */,
 				0A0D372B19B4338C005500DE /* CursorCrosshairs.png */,
 				0A0D372C19B4338C005500DE /* CursorCrosshairs@2x.png */,
 				0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */,
@@ -845,6 +875,16 @@
 				0A0D372819B43370005500DE /* CursorMoveCursor@2x.png */,
 				0A0D372919B43370005500DE /* CursorMoveCursorSmall.png */,
 				0A0D372A19B43370005500DE /* CursorMoveCursorSmall@2x.png */,
+				0AC1E899251D9F2F0044F3E5 /* CursorWhiteCrosshairs.png */,
+				0AC1E89A251D9F2F0044F3E5 /* CursorWhiteCrosshairs@2x.png */,
+				0AC1E894251D9F2F0044F3E5 /* CursorWhiteIBeam.png */,
+				0AC1E898251D9F2F0044F3E5 /* CursorWhiteIBeam@2x.png */,
+				0AC1E891251D9F2F0044F3E5 /* CursorWhiteIBeamSmall.png */,
+				0AC1E893251D9F2F0044F3E5 /* CursorWhiteIBeamSmall@2x.png */,
+				0AC1E892251D9F2F0044F3E5 /* CursorWhiteMoveCursor.png */,
+				0AC1E895251D9F2F0044F3E5 /* CursorWhiteMoveCursor@2x.png */,
+				0AC1E896251D9F2F0044F3E5 /* CursorWhiteMoveCursorSmall.png */,
+				0AC1E897251D9F2F0044F3E5 /* CursorWhiteMoveCursorSmall@2x.png */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
 				0AAB323314B2BC59002C6F33 /* IconForCaution.icns */,
 				0AC810AE1221ECA500687DB2 /* IconForCommand.icns */,

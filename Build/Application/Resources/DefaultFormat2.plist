@@ -152,5 +152,7 @@
 		<real>0.77375450000000001</real>
 		<real>0.0081177999999999997</real>
 	</array>
+	<key>terminal-mouse-pointer-color</key>
+	<string>red</string>
 </dict>
 </plist>

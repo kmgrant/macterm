@@ -48,6 +48,8 @@
 		<string>format</string>
 		<string>general</string>
 		<string>matte</string>
+		<string>mouse</string>
+		<string>pointer</string>
 		<string>pulse</string>
 		<string>select</string>
 		<string>size</string>

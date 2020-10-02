@@ -292,6 +292,11 @@ struct My_TerminalView
 			Boolean				isCustomColor;	// if true, the cursor color is set by the user instead of being inherited from the screen
 		} cursor;
 		
+		struct
+		{
+			TerminalView_MousePointerColor	pointerColor;	// customize appearance of mouse cursors (I-beam, etc.)
+		} mouse;
+		
 TerminalView_RowIndex	topVisibleEdgeInRows;	// 0 if scrolled to the main screen, negative if scrollback; do not change this
 													//   value directly, use offsetTopVisibleEdge()
 		UInt16			leftVisibleEdgeInColumns;	// 0 if leftmost column is visible, positive if content is scrolled to the left;
@@ -408,9 +413,9 @@ void				copyTranslationPreferences			(My_TerminalViewPtr, Preferences_ContextRef
 Boolean				createWindowColorPalette			(My_TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(My_TerminalViewPtr);
 Terminal_CursorType	cursorType							(My_TerminalViewPtr);
-NSCursor*			customCursorCrosshairs				();
-NSCursor*			customCursorIBeam					(Boolean = false);
-NSCursor*			customCursorMoveTerminalCursor		(Boolean = false);
+NSCursor*			customCursorCrosshairs				(My_TerminalViewPtr);
+NSCursor*			customCursorIBeam					(My_TerminalViewPtr, Boolean = false);
+NSCursor*			customCursorMoveTerminalCursor		(My_TerminalViewPtr, Boolean = false);
 void				delayMinimumTicks					(UInt16 = 8);
 void				drawSingleColorImage				(CGContextRef, CGColorRef, CGRect, id);
 void				drawSingleColorPattern				(CGContextRef, CGColorRef, CGRect, id);
@@ -447,6 +452,7 @@ void				highlightVirtualRange				(My_TerminalViewPtr, TerminalView_CellRange con
 														 Boolean, Boolean);
 void				invalidateRowSection				(My_TerminalViewPtr, TerminalView_RowIndex, UInt16, UInt16);
 Boolean				isSmallIBeam						(My_TerminalViewPtr);
+TerminalView_MousePointerColor	mousePointerColor		(My_TerminalViewPtr);
 void				offsetLeftVisibleEdge				(My_TerminalViewPtr, SInt16);
 void				offsetTopVisibleEdge				(My_TerminalViewPtr, SInt64);
 Boolean				pointInSelection					(My_TerminalViewPtr, TerminalView_Cell const&);
@@ -2077,6 +2083,16 @@ TerminalView_ReturnFormatConfiguration		(TerminalViewRef	inView)
 		
 		prefsResult = Preferences_ContextSetData(result, kPreferences_TagAutoSetCursorColor,
 													sizeof(isAutoSet), &isAutoSet);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	// mouse pointer color is also set programmatically
+	{
+		TerminalView_MousePointerColor		pointerColor = viewPtr->screen.mouse.pointerColor;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalMousePointerColor,
+													sizeof(pointerColor), &pointerColor);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
@@ -3816,6 +3832,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cursor.updatedShape = HIShapeCreateMutable();
 	this->screen.cursor.inhibited = false;
 	this->screen.cursor.isCustomColor = false;
+	this->screen.mouse.pointerColor = kTerminalView_MousePointerColorRed; // set later
 	this->screen.currentRenderContext = nullptr;
 	this->text.toCurrentSearchResult = this->text.searchResults.end();
 	
@@ -3870,7 +3887,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->screen.paddingBottomEmScale = preferenceFloatValue;
 	}
 	
-	// store the colors this view will be using
+	// store the colors this view will be using (also initializes mouse pointer color)
 	UNUSED_RETURN(Boolean)createWindowColorPalette(this, inFormat);
 	
 	// copy font defaults
@@ -4331,6 +4348,18 @@ copyColorPreferences	(My_TerminalViewPtr			inTerminalViewPtr,
 		++result;
 	}
 	
+	// also update preferred mouse pointer color
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagTerminalMousePointerColor,
+															sizeof(inTerminalViewPtr->screen.mouse.pointerColor),
+															&inTerminalViewPtr->screen.mouse.pointerColor,
+															inSearchForDefaults))
+	{
+		++result;
+		
+		// immediately invalidate so the cursor is updated by the OS
+		[[inTerminalViewPtr->encompassingNSView window] invalidateCursorRectsForView:inTerminalViewPtr->encompassingNSView.terminalContentView];
+	}
+	
 	//
 	// ANSI colors
 	//
@@ -4671,19 +4700,59 @@ has a larger size and better contrast.
 (4.1)
 */
 NSCursor*
-customCursorCrosshairs ()
+customCursorCrosshairs	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	static NSCursor*	gCustomCrosshairsCursor = nil;
-	NSCursor*			result = nil;
+	NSCursor*		result = nil;
 	
 	
-	if (nil == gCustomCrosshairsCursor)
+	switch (mousePointerColor(inTerminalViewPtr))
 	{
-		// IMPORTANT: specified hot-spot should be synchronized with the image data
-		gCustomCrosshairsCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorCrosshairs"]
-																	hotSpot:NSMakePoint(15, 15)];
+	case kTerminalView_MousePointerColorBlack:
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorBlackCrosshairs"]
+																hotSpot:NSMakePoint(15, 15)];
+			}
+			result = gCachedCursor;
+		}
+		break;
+	
+	case kTerminalView_MousePointerColorWhite:
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorWhiteCrosshairs"]
+																hotSpot:NSMakePoint(15, 15)];
+			}
+			result = gCachedCursor;
+		}
+		break;
+	
+	case kTerminalView_MousePointerColorRed:
+	default:
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorCrosshairs"]
+																hotSpot:NSMakePoint(15, 15)];
+			}
+			result = gCachedCursor;
+		}
+		break;
 	}
-	result = gCustomCrosshairsCursor;
 	
 	return result;
 }// customCursorCrosshairs
@@ -4701,32 +4770,101 @@ can be returned.
 (4.1)
 */
 NSCursor*
-customCursorIBeam	(Boolean	inSmall)
+customCursorIBeam		(My_TerminalViewPtr		inTerminalViewPtr,
+						 Boolean				inSmall)
 {
-	static NSCursor*	gCustomIBeamCursor = nil;
-	static NSCursor*	gCustomIBeamCursorSmall = nil;
-	NSCursor*			result = nil;
+	NSCursor*		result = nil;
 	
 	
-	if (inSmall)
+	switch (mousePointerColor(inTerminalViewPtr))
 	{
-		if (nil == gCustomIBeamCursorSmall)
+	case kTerminalView_MousePointerColorBlack:
+		if (inSmall)
 		{
-			// IMPORTANT: specified hot-spot should be synchronized with the image data
-			gCustomIBeamCursorSmall = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeamSmall"]
-																		hotSpot:NSMakePoint(12, 11)];
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorBlackIBeamSmall"]
+																hotSpot:NSMakePoint(12, 11)];
+			}
+			result = gCachedCursor;
 		}
-		result = gCustomIBeamCursorSmall;
-	}
-	else
-	{
-		if (nil == gCustomIBeamCursor)
+		else
 		{
-			// IMPORTANT: specified hot-spot should be synchronized with the image data
-			gCustomIBeamCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeam"]
-																	hotSpot:NSMakePoint(16, 14)];
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorBlackIBeam"]
+																hotSpot:NSMakePoint(16, 14)];
+			}
+			result = gCachedCursor;
 		}
-		result = gCustomIBeamCursor;
+		break;
+	
+	case kTerminalView_MousePointerColorWhite:
+		if (inSmall)
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorWhiteIBeamSmall"]
+																hotSpot:NSMakePoint(12, 11)];
+			}
+			result = gCachedCursor;
+		}
+		else
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorWhiteIBeam"]
+																hotSpot:NSMakePoint(16, 14)];
+			}
+			result = gCachedCursor;
+		}
+		break;
+	
+	case kTerminalView_MousePointerColorRed:
+	default:
+		if (inSmall)
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeamSmall"]
+																hotSpot:NSMakePoint(12, 11)];
+			}
+			result = gCachedCursor;
+		}
+		else
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorIBeam"]
+																hotSpot:NSMakePoint(16, 14)];
+			}
+			result = gCachedCursor;
+		}
+		break;
 	}
 	
 	return result;
@@ -4744,32 +4882,101 @@ be returned.
 (4.1)
 */
 NSCursor*
-customCursorMoveTerminalCursor	(Boolean	inSmall)
+customCursorMoveTerminalCursor	(My_TerminalViewPtr		inTerminalViewPtr,
+								 Boolean				inSmall)
 {
-	static NSCursor*	gCustomMoveCursor = nil;
-	static NSCursor*	gCustomMoveCursorSmall = nil;
-	NSCursor*			result = nil;
+	NSCursor*		result = nil;
 	
 	
-	if (inSmall)
+	switch (mousePointerColor(inTerminalViewPtr))
 	{
-		if (nil == gCustomMoveCursorSmall)
+	case kTerminalView_MousePointerColorBlack:
+		if (inSmall)
 		{
-			// IMPORTANT: specified hot-spot should be synchronized with the image data
-			gCustomMoveCursorSmall = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursorSmall"]
-																		hotSpot:NSMakePoint(12, 12)];
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorBlackMoveCursorSmall"]
+																hotSpot:NSMakePoint(12, 12)];
+			}
+			result = gCachedCursor;
 		}
-		result = gCustomMoveCursorSmall;
-	}
-	else
-	{
-		if (nil == gCustomMoveCursor)
+		else
 		{
-			// IMPORTANT: specified hot-spot should be synchronized with the image data
-			gCustomMoveCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursor"]
-																	hotSpot:NSMakePoint(16, 16)];
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorBlackMoveCursor"]
+																hotSpot:NSMakePoint(16, 16)];
+			}
+			result = gCachedCursor;
 		}
-		result = gCustomMoveCursor;
+		break;
+	
+	case kTerminalView_MousePointerColorWhite:
+		if (inSmall)
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorWhiteMoveCursorSmall"]
+																hotSpot:NSMakePoint(12, 12)];
+			}
+			result = gCachedCursor;
+		}
+		else
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorWhiteMoveCursor"]
+																hotSpot:NSMakePoint(16, 16)];
+			}
+			result = gCachedCursor;
+		}
+		break;
+	
+	case kTerminalView_MousePointerColorRed:
+	default:
+		if (inSmall)
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursorSmall"]
+																hotSpot:NSMakePoint(12, 12)];
+			}
+			result = gCachedCursor;
+		}
+		else
+		{
+			static NSCursor*	gCachedCursor = nil;
+			
+			
+			if (nil == gCachedCursor)
+			{
+				// IMPORTANT: specified hot-spot should be synchronized with the image data
+				gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorMoveCursor"]
+																hotSpot:NSMakePoint(16, 16)];
+			}
+			result = gCachedCursor;
+		}
+		break;
 	}
 	
 	return result;
@@ -7076,6 +7283,27 @@ isSmallIBeam	(My_TerminalViewPtr		inTerminalViewPtr)
 	
 	return result;
 }// isSmallIBeam
+
+
+/*!
+Returns the user’s preferred mouse pointer color for
+the given terminal view.
+
+(2020.09)
+*/
+TerminalView_MousePointerColor
+mousePointerColor	(My_TerminalViewPtr		inTerminalViewPtr)
+{
+	TerminalView_MousePointerColor		result = kTerminalView_MousePointerColorRed;
+	
+	
+	if (nullptr != inTerminalViewPtr)
+	{
+		result = inTerminalViewPtr->screen.mouse.pointerColor;
+	}
+	
+	return result;
+}// mousePointerColor
 
 
 /*!
@@ -13559,6 +13787,10 @@ resetCursorRects
 	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
 	
 	
+	// note: now that mouse pointer color is customizable, the pointer is
+	// displayed on all terminals (even read-only/sample ones) so the
+	// user can see what they look like...
+#if 0
 	if ((nullptr != viewPtr) && (viewPtr->text.selection.readOnly))
 	{
 		// the user cannot interact with the terminal view so it is
@@ -13566,6 +13798,7 @@ resetCursorRects
 		[self addCursorRect:[self bounds] cursor:[NSCursor arrowCursor]];
 	}
 	else
+#endif
 	{
 		// the cursor varies based on the state of modifier keys
 		if (self.modifierFlagsForCursor & NSEventModifierFlagControl)
@@ -13577,7 +13810,7 @@ resetCursorRects
 					(self.modifierFlagsForCursor & NSEventModifierFlagOption))
 		{
 			// modifier key for moving the terminal cursor to the click location
-			[self addCursorRect:[self bounds] cursor:customCursorMoveTerminalCursor(isSmallIBeam(viewPtr))];
+			[self addCursorRect:[self bounds] cursor:customCursorMoveTerminalCursor(viewPtr, isSmallIBeam(viewPtr))];
 		}
 		else if (self.modifierFlagsForCursor & NSEventModifierFlagCommand)
 		{
@@ -13587,13 +13820,13 @@ resetCursorRects
 		else if (self.modifierFlagsForCursor & NSEventModifierFlagOption)
 		{
 			// modifier key for rectangular text selections
-			[self addCursorRect:[self bounds] cursor:customCursorCrosshairs()];
+			[self addCursorRect:[self bounds] cursor:customCursorCrosshairs(viewPtr)];
 		}
 		else
 		{
 			// normal cursor
 			//[self addCursorRect:[self bounds] cursor:[NSCursor IBeamCursor]];
-			[self addCursorRect:[self bounds] cursor:customCursorIBeam(isSmallIBeam(viewPtr))];
+			[self addCursorRect:[self bounds] cursor:customCursorIBeam(viewPtr, isSmallIBeam(viewPtr))];
 		}
 		
 		// INCOMPLETE; add support for any current text selection region

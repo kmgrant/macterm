@@ -86,5 +86,7 @@
 		<real>0.0</real>
 		<real>0.0</real>
 	</array>
+	<key>terminal-mouse-pointer-color</key>
+	<string>red</string>
 </dict>
 </plist>

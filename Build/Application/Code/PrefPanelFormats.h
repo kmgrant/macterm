@@ -87,6 +87,18 @@ Manages bindings for a character-width preference.
 
 
 /*!
+Manages bindings for the mouse pointer color mapping preference.
+*/
+@interface PrefPanelFormats_MousePointerColorValue : PreferenceValue_Array //{
+
+// initializers
+	- (instancetype)
+	initWithContextManager:(PrefsContextManager_Object*)_;
+
+@end //}
+
+
+/*!
 Loads a NIB file that defines the General pane.
 
 Note that this is only in the header for the sake of
@@ -131,6 +143,8 @@ changes to an interface declared in a ".mm" file.
 	fontSize; // binding
 	- (PrefPanelFormats_CharacterWidthContent*)
 	characterWidth; // binding
+	- (PrefPanelFormats_MousePointerColorValue*)
+	mousePointerColor; // binding
 
 // actions
 	- (IBAction)
