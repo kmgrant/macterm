@@ -6284,7 +6284,7 @@ setIconFromState	(My_SessionPtr	inPtr)
 	if ((inPtr->statusAttributes & kSession_StateAttributeNotification) ||
 		(inPtr->statusAttributes & kSession_StateAttributeOpenDialog))
 	{
-		inPtr->statusIconName.setWithRetain(AppResources_ReturnCautionIconFilenameNoExtension());
+		inPtr->statusIconName.setWithRetain(BRIDGE_CAST(NSImageNameCaution, CFStringRef));
 	}
 	else if (kSession_StateDead == inPtr->status)
 	{

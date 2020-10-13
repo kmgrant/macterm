@@ -394,7 +394,6 @@
 		0AA8131C24FF54A200E6B9E3 /* UIAddressList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIAddressList.swift; path = Application/Code/UIAddressList.swift; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
-		0AAB323314B2BC59002C6F33 /* IconForCaution.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCaution.icns; path = Application/Resources/IconForCaution.icns; sourceTree = "<group>"; };
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
 		0AB00A4E178D079D00C1D94A /* CursorIBeamSmall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeamSmall.png; path = Application/Resources/CursorIBeamSmall.png; sourceTree = "<group>"; };
 		0AB00A4F178D079D00C1D94A /* CursorIBeamSmall@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeamSmall@2x.png"; path = "Application/Resources/CursorIBeamSmall@2x.png"; sourceTree = "<group>"; };
@@ -886,7 +885,6 @@
 				0AC1E896251D9F2F0044F3E5 /* CursorWhiteMoveCursorSmall.png */,
 				0AC1E897251D9F2F0044F3E5 /* CursorWhiteMoveCursorSmall@2x.png */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
-				0AAB323314B2BC59002C6F33 /* IconForCaution.icns */,
 				0AC810AE1221ECA500687DB2 /* IconForCommand.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,

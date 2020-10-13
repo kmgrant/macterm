@@ -965,7 +965,7 @@ badgeApplicationDockTile ()
 @autoreleasepool
 {
 	NSImage*	appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
-	NSImage*	overlayImage = [NSImage imageNamed:(NSString*)AppResources_ReturnCautionIconFilenameNoExtension()];
+	NSImage*	overlayImage = [NSImage imageNamed:NSImageNameCaution];
 	NSSize		imageSize = [appIconImage size];
 	
 	
@@ -1471,7 +1471,7 @@ initializeWithContext:(void*)			aContext
 	self->_dialogText = [[NSString alloc] initWithString:@""];
 	self->_helpText = [[NSString alloc] initWithString:@""];
 	self->iconID = kAlert_IconIDDefault; // can change later
-	self->iconImageName = @"IconForCaution"; // can change later
+	self->iconImageName = NSImageNameCaution; // can change later
 	
 	// set a default value (can be changed later)
 	self.panelHasContextualHelp = NO;
@@ -1768,7 +1768,7 @@ setIconID:(Alert_IconID)	anIconID
 		case kAlert_IconIDStop: // for now, make this the same
 		case kAlert_IconIDDefault:
 		default:
-			self.iconImageName = @"IconForCaution";
+			self.iconImageName = NSImageNameCaution;
 			break;
 		}
 	}

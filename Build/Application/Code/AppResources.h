@@ -107,13 +107,6 @@ inline CFStringRef
 }
 
 inline CFStringRef
-	AppResources_ReturnCautionIconFilenameNoExtension					()
-{
-	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.png"
-	return CFSTR("IconForCaution");
-}
-
-inline CFStringRef
 	AppResources_ReturnContextMenuFilenameNoExtension					()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"

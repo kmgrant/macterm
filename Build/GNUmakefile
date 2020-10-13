@@ -184,7 +184,6 @@ GlyphForPatternDarkGray.png \
 GlyphForPatternLightGray.png \
 GlyphForPatternMediumGray.png \
 IconForBundle.icns \
-IconForCaution.icns \
 IconForCommand.icns \
 IconForContextMenu.icns \
 IconForLEDOff.icns \
