@@ -85,12 +85,32 @@ The private class interface.
 
 
 /*!
-The private class interface.
-*/
-@interface PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal) //{
+Implements SwiftUI interaction for the “terminal options” panel.
 
-	- (NSArray*)
-	primaryDisplayBindingKeys;
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
+*/
+@interface PrefPanelTerminals_OptionsActionHandler : NSObject< UIPrefsTerminalOptions_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*		_prefsMgr;
+	UIPrefsTerminalOptions_Model*	_viewModel;
+}
+
+// new methods
+	- (BOOL)
+	resetToDefaultGetFlagWithTag:(Preferences_Tag)_;
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsTerminalOptions_Model*
+	viewModel;
 
 @end //}
 
@@ -265,7 +285,7 @@ PrefPanelTerminals_NewTagSet ()
 #pragma mark Internal Methods
 
 #pragma mark -
-@implementation PrefPanelTerminals_ViewManager
+@implementation PrefPanelTerminals_ViewManager //{
 
 
 /*!
@@ -277,7 +297,7 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = @[
-										[[[PrefPanelTerminals_OptionsViewManager alloc] init] autorelease],
+										[[[PrefPanelTerminals_OptionsVC alloc] init] autorelease],
 										[[[PrefPanelTerminals_EmulationViewManager alloc] init] autorelease],
 										[[[PrefPanelTerminals_ScreenVC alloc] init] autorelease],
 									];
@@ -307,7 +327,7 @@ dealloc
 }// dealloc
 
 
-@end // PrefPanelTerminals_ViewManager
+@end //} PrefPanelTerminals_ViewManager
 
 
 #pragma mark -
@@ -1008,18 +1028,394 @@ primaryDisplayBindingKeys
 
 
 #pragma mark -
-@implementation PrefPanelTerminals_OptionsViewManager
+@implementation PrefPanelTerminals_OptionsActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelTerminalOptionsCocoa" delegate:self context:nullptr];
+	self = [super init];
+	if (nil != self)
+	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsTerminalOptions_Model alloc] initWithRunner:self]; // transfer ownership
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.11)
+*/
+- (void)
+dealloc
+{
+	[_prefsMgr release];
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Helper function for protocol methods; deletes the
+given preference tag and returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetFlagWithTag:(Preferences_Tag)		aTag
+{
+	BOOL	result = NO;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:aTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", aTag);
+	}
+	
+	// return default value
+	{
+		Boolean				preferenceValue = false;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, aTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", aTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = ((preferenceValue) ? YES : NO);
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetFlagWithTag:
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	Boolean					isDefault = false; // reused below
+	
+	
+	// allow initialization of "isDefault..." values without triggers
+	self.viewModel.defaultOverrideInProgress = YES;
+	self.viewModel.disableWriteback = YES;
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalLineWrap;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.lineWrapEnabled = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultWrapLines = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDataReceiveDoNotStripHighBit;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.eightBitEnabled = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultEightBit = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalClearSavesLines;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.saveLinesOnClearEnabled = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultSaveLinesOnClear = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapKeypadTopRowForVT220;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// NOTE: this setting is stored inverted, versus its display checkbox
+			self.viewModel.normalKeypadTopRowEnabled = (false == preferenceValue); // SwiftUI binding
+			self.viewModel.isDefaultNormalKeypadTopRow = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagPageKeysControlLocalTerminal;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.localPageKeysEnabled = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultLocalPageKeys = isDefault; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+	self.viewModel.defaultOverrideInProgress = NO;
+	
+	// finally, specify “is editing Default” to prevent user requests for
+	// “restore to Default” from deleting the Default settings themselves!
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::TERMINAL);
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsTerminalOptions_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalLineWrap;
+		Boolean				preferenceValue = self.viewModel.lineWrapEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDataReceiveDoNotStripHighBit;
+		Boolean				preferenceValue = self.viewModel.eightBitEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalClearSavesLines;
+		Boolean				preferenceValue = self.viewModel.saveLinesOnClearEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapKeypadTopRowForVT220;
+		Boolean				preferenceValue = (false == self.viewModel.normalKeypadTopRowEnabled); // NOTE: this setting is stored inverted, versus its display checkbox
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagPageKeysControlLocalTerminal;
+		Boolean				preferenceValue = self.viewModel.localPageKeysEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetWrapLines
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagTerminalLineWrap];
+}// resetToDefaultGetWrapLines
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetEightBit
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagDataReceiveDoNotStripHighBit];
+}// resetToDefaultGetEightBit
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetSaveLinesOnClear
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagTerminalClearSavesLines];
+}// resetToDefaultGetSaveLinesOnClear
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetNormalKeypadTopRow
+{
+	// NOTE: this setting is stored inverted, versus its display checkbox
+	return (NO == [self resetToDefaultGetFlagWithTag:kPreferences_TagMapKeypadTopRowForVT220]);
+}// resetToDefaultGetNormalKeypadTopRow
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetLocalPageKeys
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagPageKeysControlLocalTerminal];
+}// resetToDefaultGetLocalPageKeys
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelTerminals_OptionsVC //{
+
+
+/*!
+Designated initializer.
+
+(2020.11)
+*/
+- (instancetype)
+init
+{
+	PrefPanelTerminals_OptionsActionHandler*	actionHandler = [[PrefPanelTerminals_OptionsActionHandler alloc] init];
+	NSView*										newView = [UIPrefsTerminalOptions_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -1031,103 +1427,54 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-wrapLines
-{
-	return [self->byKey objectForKey:@"wrapLines"];
-}// wrapLines
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-eightBit
-{
-	return [self->byKey objectForKey:@"eightBit"];
-}// eightBit
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-saveLinesOnClear
-{
-	return [self->byKey objectForKey:@"saveLinesOnClear"];
-}// saveLinesOnClear
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-normalKeypadTopRow
-{
-	return [self->byKey objectForKey:@"normalKeypadTopRow"];
-}// normalKeypadTopRow
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-localPageKeys
-{
-	return [self->byKey objectForKey:@"localPageKeys"];
-}// localPageKeys
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelTerminals_OptionsActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelTerminals_OptionsActionHandler*	actionHandler = STATIC_CAST(aContext, PrefPanelTerminals_OptionsActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1142,74 +1489,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
-	
 	// remember frame from XIB (it might be changed later)
-	self->idealFrame = [aContainerView frame];
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagTerminalLineWrap
-														contextManager:self->prefsMgr] autorelease]
-					forKey:@"wrapLines"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagDataReceiveDoNotStripHighBit
-														contextManager:self->prefsMgr] autorelease]
-					forKey:@"eightBit"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagTerminalClearSavesLines
-														contextManager:self->prefsMgr] autorelease]
-					forKey:@"saveLinesOnClear"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagMapKeypadTopRowForVT220
-														contextManager:self->prefsMgr
-														inverted:YES] autorelease]
-					forKey:@"normalKeypadTopRow"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagPageKeysControlLocalTerminal
-														contextManager:self->prefsMgr] autorelease]
-					forKey:@"localPageKeys"];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = self->idealFrame.size;
+	*outIdealSize = _idealFrame.size;
 }
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1227,7 +1536,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -1240,7 +1549,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -1254,7 +1563,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 Responds to a change of data sets by resetting the panel to
 display the new data set.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1262,20 +1571,11 @@ didChangeFromDataSet:(void*)			oldDataSet
 toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
+	// apply the specified settings
+	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
-	// now apply the specified settings
-	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// update the view by changing the model’s observed variables
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -1283,7 +1583,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1316,7 +1616,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -1329,7 +1629,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -1343,7 +1643,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -1361,7 +1661,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -1376,7 +1676,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -1385,32 +1685,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelTerminals_OptionsViewManager
-
-
-#pragma mark -
-@implementation PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
-
-
-/*!
-Returns the names of key-value coding keys that represent the
-primary bindings of this panel (those that directly correspond
-to saved preferences).
-
-(4.1)
-*/
-- (NSArray*)
-primaryDisplayBindingKeys
-{
-	return @[
-				@"wrapLines", @"eightBit",
-				@"saveLinesOnClear", @"normalKeypadTopRow",
-				@"localPageKeys",
-			];
-}// primaryDisplayBindingKeys
-
-
-@end // PrefPanelTerminals_OptionsViewManager (PrefPanelTerminals_OptionsViewManagerInternal)
+@end //} PrefPanelTerminals_OptionsVC
 
 
 #pragma mark -
@@ -1447,6 +1722,9 @@ dealloc
 	[_viewModel release];
 	[super dealloc];
 }// dealloc
+
+
+#pragma mark New Methods
 
 
 /*!
@@ -2068,10 +2346,7 @@ didChangeFromDataSet:(void*)			oldDataSet
 toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
-	
-	// INCOMPLETE; may need to update or replace model object for SwiftUI to update
-	
-	// now apply the specified settings
+	// apply the specified settings
 	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
 	// update the view by changing the model’s observed variables

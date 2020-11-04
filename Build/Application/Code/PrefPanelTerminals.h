@@ -120,33 +120,23 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 
-/*!
-Loads a NIB file that defines the Options pane.
+@class PrefPanelTerminals_OptionsActionHandler; // implemented internally
 
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+
+/*!
+Implements the “terminal options” panel.
 */
-@interface PrefPanelTerminals_OptionsViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+@interface PrefPanelTerminals_OptionsVC : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSRect							idealFrame;
-	NSMutableDictionary*			byKey;
+	NSRect										_idealFrame;
+	PrefPanelTerminals_OptionsActionHandler*	_actionHandler;
 }
 
 // accessors
-	- (PreferenceValue_Flag*)
-	wrapLines; // binding
-	- (PreferenceValue_Flag*)
-	eightBit; // binding
-	- (PreferenceValue_Flag*)
-	saveLinesOnClear; // binding
-	- (PreferenceValue_Flag*)
-	normalKeypadTopRow; // binding
-	- (PreferenceValue_Flag*)
-	localPageKeys; // binding
+	@property (strong) PrefPanelTerminals_OptionsActionHandler*
+	actionHandler;
 
 @end //}
 

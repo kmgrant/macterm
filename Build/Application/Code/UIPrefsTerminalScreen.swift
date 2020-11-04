@@ -200,7 +200,7 @@ public struct UIPrefsTerminalScreen_View : View {
 				HStack(
 					alignment: .firstTextBaseline
 				) {
-					TextField("", value: $viewModel.scrollbackValue, formatter: heightFormatter)
+					TextField("", value: $viewModel.scrollbackValue, formatter: scrollbackRowsFormatter)
 						.disabled(isFixedRowCountDisabled())
 						.foregroundColor(isFixedRowCountDisabled() ? .gray : .primary) // default behavior of disabled() does not dim the text so do that manually
 						.frame(maxWidth: 80)
