@@ -1205,6 +1205,27 @@ context:(void*)						aContext
 
 
 /*!
+Designated initializer.
+
+This variant of initializer is not currently supported.
+
+(2020.11)
+*/
+- (instancetype)
+initWithView:(NSView*)				aView
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(void*)						aContext
+{
+	self = [super initWithView:aView delegate:aDelegate context:aContext];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// initWithView:delegate:context:
+
+
+/*!
 Destructor.
 
 (4.1)

@@ -244,7 +244,6 @@ Base.lproj/PrefPanelSessionKeyboardCocoa \
 Base.lproj/PrefPanelSessionResourceCocoa \
 Base.lproj/PrefPanelTerminalEmulationCocoa \
 Base.lproj/PrefPanelTerminalOptionsCocoa \
-Base.lproj/PrefPanelTerminalScreenCocoa \
 Base.lproj/PrefPanelTranslationsCocoa \
 Base.lproj/PrefPanelWorkspaceOptionsCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \

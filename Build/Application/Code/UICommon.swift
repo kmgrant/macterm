@@ -57,8 +57,56 @@ extension Text {
 	}
 }
 
+public class UICommon_DefaultingModel : NSObject {
+
+	@objc public var defaultOverrideInProgress = false // to prevent changes to default flags from causing looping updates; see below, and Objective-C models that change data sources
+	@objc public var disableWriteback = false // to prevent changes to default flags from causing looping updates; see below, and Objective-C models that change data sources
+	@objc public var isEditingDefaultContext = false {
+		willSet(isOn) {
+			if isOn {
+				// when setting this, force all Default checkboxes to be disabled and checked
+				defaultOverrideInProgress = true
+				setDefaultFlagsToTrue()
+				defaultOverrideInProgress = false
+			}
+		}
+	}
+
+	func ifUserRequestedDefault(_ block: () -> ()) {
+		// automatically do nothing if "defaultOverrideInProgress" is set; otherwise, run the
+		// given block with write-back mode disabled (see "isEditingDefaultContext/willSet")
+		if false == defaultOverrideInProgress {
+			disableWriteback = true
+			block()
+			disableWriteback = false
+		}
+	}
+
+	func ifWritebackEnabled(_ block: () -> ()) {
+		// automatically do nothing if "disableWriteback" is set; see "ifUserRequestedDefault"
+		if false == disableWriteback {
+			block()
+		}
+	}
+
+	func inNonDefaultContext(_ block: () -> ()) {
+		// automatically do nothing if "isEditingDefaultContext" is set
+		if false == isEditingDefaultContext {
+			block()
+		}
+	}
+
+	// MARK: Overrides for Subclasses
+
+	func setDefaultFlagsToTrue() {
+		// (subclasses should override; arrange to set all Default checkboxes to be disabled, in checked state)
+	}
+
+}
+
 struct UICommon_OptionLineView <Content: View> : View {
 
+	@State private var unusedDefault = true
 	let optionView: Content
 	var title = ""
 
@@ -79,8 +127,188 @@ struct UICommon_OptionLineView <Content: View> : View {
 
 	var body: some View {
 		HStack {
+			// create unused checkboxes to ensure consistent alignment if
+			// any “default” options appear in the same stack
+			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+				.controlSize(.mini)
+				.labelsHidden()
+				.hidden()
+			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+				.controlSize(.mini)
+				.labelsHidden()
+				.hidden()
+			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+				.controlSize(.mini)
+				.labelsHidden()
+				.hidden()
 			Text(title).asMacTermSectionHeading()
 			optionView
+		}.withMacTermSectionLayout()
+	}
+
+}
+
+struct UICommon_Default1OptionLineView <Content: View> : View {
+
+	@State private var unusedDefault = true
+	private var isEditingDefault = false
+	var isDefaultBinding: Binding<Bool>
+	let optionView: Content
+	var title = ""
+
+	// variant with “default” checkbox, title, and content
+	init(_ aTitle: String, bindIsDefaultTo: Binding<Bool>, isEditingDefault: Bool, @ViewBuilder content: () -> Content) {
+		if aTitle == "" {
+			self.title = " " // blank space ensures consistent vertical spacing
+		} else {
+			self.title = aTitle + ":"
+		}
+		self.isDefaultBinding = bindIsDefaultTo
+		self.isEditingDefault = isEditingDefault
+		self.optionView = content()
+	}
+
+	var body: some View {
+		HStack {
+			Toggle("Tie setting to its value in the Default collection", isOn: isDefaultBinding)
+				.controlSize(.mini)
+				.disabled(isEditingDefault || isDefaultBinding.wrappedValue)
+				.labelsHidden()
+			// create unused checkboxes to ensure consistent alignment if
+			// any “default” options appear in the same stack
+			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+				.controlSize(.mini)
+				.disabled(true)
+				.labelsHidden()
+				.hidden()
+			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+				.controlSize(.mini)
+				.disabled(true)
+				.labelsHidden()
+				.hidden()
+			Text(title).asMacTermSectionHeading()
+			optionView
+		}.withMacTermSectionLayout()
+	}
+
+}
+
+struct UICommon_Default2OptionLineView <Content: View> : View {
+
+	@State private var unusedDefault = true
+	private var isEditingDefault = false
+	var isDefault1Binding: Binding<Bool>
+	var isDefault2Binding: Binding<Bool>
+	let optionView: Content
+	var title = ""
+
+	// variant with “default” checkbox, title, and content
+	init(_ aTitle: String, bindIsDefault1To: Binding<Bool>, bindIsDefault2To: Binding<Bool>,
+			isEditingDefault: Bool, @ViewBuilder content: () -> Content) {
+		if aTitle == "" {
+			self.title = " " // blank space ensures consistent vertical spacing
+		} else {
+			self.title = aTitle + ":"
+		}
+		self.isDefault1Binding = bindIsDefault1To
+		self.isDefault2Binding = bindIsDefault2To
+		self.isEditingDefault = isEditingDefault
+		self.optionView = content()
+	}
+
+	var body: some View {
+		HStack {
+			Toggle("Tie setting to its value in the Default collection", isOn: isDefault1Binding)
+				.controlSize(.mini)
+				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
+				.labelsHidden()
+			Toggle("Tie setting to its value in the Default collection", isOn: isDefault2Binding)
+				.controlSize(.mini)
+				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
+				.labelsHidden()
+			// create unused checkboxes to ensure consistent alignment if
+			// any “default” options appear in the same stack
+			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+				.controlSize(.mini)
+				.disabled(true)
+				.labelsHidden()
+				.hidden()
+			Text(title).asMacTermSectionHeading()
+			optionView
+		}.withMacTermSectionLayout()
+	}
+
+}
+
+struct UICommon_Default3OptionLineView <Content: View> : View {
+
+	@State private var unusedDefault = true
+	private var isEditingDefault = false
+	var isDefault1Binding: Binding<Bool>
+	var isDefault2Binding: Binding<Bool>
+	var isDefault3Binding: Binding<Bool>
+	let optionView: Content
+	var title = ""
+
+	// variant with “default” checkbox, title, and content
+	init(_ aTitle: String, bindIsDefault1To: Binding<Bool>, bindIsDefault2To: Binding<Bool>, bindIsDefault3To: Binding<Bool>,
+			isEditingDefault: Bool, @ViewBuilder content: () -> Content) {
+		if aTitle == "" {
+			self.title = " " // blank space ensures consistent vertical spacing
+		} else {
+			self.title = aTitle + ":"
+		}
+		self.isDefault1Binding = bindIsDefault1To
+		self.isDefault2Binding = bindIsDefault2To
+		self.isDefault3Binding = bindIsDefault3To
+		self.isEditingDefault = isEditingDefault
+		self.optionView = content()
+	}
+
+	var body: some View {
+		HStack {
+			Toggle("Tie setting to its value in the Default collection", isOn: isDefault1Binding)
+				.controlSize(.mini)
+				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
+				.labelsHidden()
+			Toggle("Tie setting to its value in the Default collection", isOn: isDefault2Binding)
+				.controlSize(.mini)
+				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
+				.labelsHidden()
+			Toggle("Tie setting to its value in the Default collection", isOn: isDefault3Binding)
+				.controlSize(.mini)
+				.disabled(isEditingDefault || isDefault3Binding.wrappedValue)
+				.labelsHidden()
+			// (all variants have space for up to 3 checkboxes so no extra padding here)
+			Text(title).asMacTermSectionHeading()
+			optionView
+		}.withMacTermSectionLayout()
+	}
+
+}
+
+struct UICommon_DefaultOptionHeaderView : View {
+
+	var title = ""
+
+	init(_ aTitle: String = "Use Default") {
+		if aTitle == "" {
+			self.title = " " // blank space ensures consistent vertical spacing
+		} else {
+			self.title = aTitle
+		}
+	}
+
+	var body: some View {
+		HStack(
+			alignment: .firstTextBaseline
+		) {
+			// visually, this is meant to appear “above” any checkboxes that
+			// indicate a Default; see UICommon_Default1OptionLineView, etc.
+			Text(title)
+				.font(Font.system(size: 10))
+				.padding([.top], 4)
+			Spacer()
 		}.withMacTermSectionLayout()
 	}
 

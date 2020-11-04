@@ -178,6 +178,10 @@ changes to an interface declared in a ".mm" file.
 	initWithNibNamed:(NSString*)_
 	delegate:(id< Panel_Delegate >)_
 	context:(void*)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype)
+	initWithView:(NSView*)_
+	delegate:(id< Panel_Delegate >)_
+	context:(void*)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
 

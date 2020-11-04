@@ -108,58 +108,54 @@ public struct UIDebugInterface_View : View {
 	@EnvironmentObject private var viewModel: UIDebugInterface_Model
 
 	public var body: some View {
-		Form {
+		VStack(
+			alignment: .leading
+		) {
+			// maximum 10 items per stack; use Group to build more
 			Spacer().asMacTermSectionSpacingV()
-			Section {
-				VStack(
-					alignment: .leading
-				) {
-					UICommon_OptionLineView("Global") {
-						Toggle("Log Terminal State (Except Echo)", isOn: $viewModel.logTerminalState)
-							.fixedSize()
-					}
-					UICommon_OptionLineView {
-						Toggle("Log Terminal Echo State", isOn: $viewModel.logTerminalEchoState)
-							.fixedSize()
-					}
-					UICommon_OptionLineView {
-						Toggle("Log Terminal Input Characters", isOn: $viewModel.logTerminalInputCharacters)
-							.fixedSize()
-					}
-					UICommon_OptionLineView {
-						Toggle("Log Pseudoterminal Device Settings", isOn: $viewModel.logPseudoTerminalDeviceSettings)
-							.fixedSize()
-					}
-					UICommon_OptionLineView {
-						Toggle("Log Sixel Graphics Decoder State", isOn: $viewModel.logSixelGraphicsDecoderState)
-							.fixedSize()
-					}
+			Group {
+				UICommon_OptionLineView("Global") {
+					Toggle("Log Terminal State (Except Echo)", isOn: $viewModel.logTerminalState)
+						.fixedSize()
+				}
+				UICommon_OptionLineView {
+					Toggle("Log Terminal Echo State", isOn: $viewModel.logTerminalEchoState)
+						.fixedSize()
+				}
+				UICommon_OptionLineView {
+					Toggle("Log Terminal Input Characters", isOn: $viewModel.logTerminalInputCharacters)
+						.fixedSize()
+				}
+				UICommon_OptionLineView {
+					Toggle("Log Pseudoterminal Device Settings", isOn: $viewModel.logPseudoTerminalDeviceSettings)
+						.fixedSize()
+				}
+				UICommon_OptionLineView {
+					Toggle("Log Sixel Graphics Decoder State", isOn: $viewModel.logSixelGraphicsDecoderState)
+						.fixedSize()
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
-			Section {
-				VStack(
-					alignment: .leading
-				) {
-					UICommon_OptionLineView("Active Terminal") {
-						Button("Log Detailed Snapshot", action: { viewModel.runner.dumpStateOfActiveTerminal() })
-					}
+			VStack(
+				alignment: .leading
+			) {
+				UICommon_OptionLineView("Active Terminal") {
+					Button("Log Detailed Snapshot", action: { viewModel.runner.dumpStateOfActiveTerminal() })
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
-			Section {
-				VStack(
-					alignment: .leading
-				) {
-					UICommon_OptionLineView("Incomplete Work") {
-						Button("Show Cocoa Toolbar", action: { viewModel.runner.showTestTerminalToolbar() })
-					}
-					UICommon_OptionLineView {
-						Button("Launch XPC Service", action: { viewModel.runner.launchNewCallPythonClient() })
-					}
+			VStack(
+				alignment: .leading
+			) {
+				UICommon_OptionLineView("Incomplete Work") {
+					Button("Show Cocoa Toolbar", action: { viewModel.runner.showTestTerminalToolbar() })
+				}
+				UICommon_OptionLineView {
+					Button("Launch XPC Service", action: { viewModel.runner.launchNewCallPythonClient() })
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
+			Spacer().layoutPriority(1)
 		}
 	}
 

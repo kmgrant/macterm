@@ -7,7 +7,8 @@ import MacTermQuills
 //let view = UIAddressList_Previews.previews
 //let view = UIArrangeWindow_Previews.previews
 //let view = UIDebugInterface_Previews.previews
-let view = UIKeypads_Previews.previews
+//let view = UIKeypads_Previews.previews
+let view = UIPrefsTerminalScreen_Previews.previews
 
 NSSetUncaughtExceptionHandler { exception in
 	print("EXCEPTION: \(exception)")

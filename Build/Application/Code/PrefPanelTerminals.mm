@@ -67,6 +67,9 @@
 #import "Terminal.h"
 #import "UIStrings.h"
 
+// Swift imports
+#import <MacTermQuills/MacTermQuills-Swift.h>
+
 
 #pragma mark Internal Method Prototypes
 
@@ -93,12 +96,30 @@ The private class interface.
 
 
 /*!
-The private class interface.
-*/
-@interface PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal) //{
+Implements SwiftUI interaction for the “terminal screen size” panel.
 
-	- (NSArray*)
-	primaryDisplayBindingKeys;
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
+*/
+@interface PrefPanelTerminals_ScreenActionHandler : NSObject< UIPrefsTerminalScreen_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*		_prefsMgr;
+	UIPrefsTerminalScreen_Model*	_viewModel;
+}
+
+// new methods
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsTerminalScreen_Model*
+	viewModel;
 
 @end //}
 
@@ -258,7 +279,7 @@ init
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelTerminals_OptionsViewManager alloc] init] autorelease],
 										[[[PrefPanelTerminals_EmulationViewManager alloc] init] autorelease],
-										[[[PrefPanelTerminals_ScreenViewManager alloc] init] autorelease],
+										[[[PrefPanelTerminals_ScreenVC alloc] init] autorelease],
 									];
 	
 	
@@ -1393,311 +1414,505 @@ primaryDisplayBindingKeys
 
 
 #pragma mark -
-@implementation PrefPanelTerminals_ScrollbackValue
+@implementation PrefPanelTerminals_ScreenActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
-initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+init
 {
-	self = [super initWithContextManager:aContextMgr];
+	self = [super init];
 	if (nil != self)
 	{
-		self->behaviorArray = [[[NSArray alloc] initWithObjects:
-								[[[PreferenceValue_IntegerDescriptor alloc]
-									initWithIntegerValue:kTerminal_ScrollbackTypeDisabled
-															description:NSLocalizedStringFromTable
-																		(@"Off", @"PrefPanelTerminals"/* table */,
-																			@"scrollback disabled")]
-									autorelease],
-								[[[PreferenceValue_IntegerDescriptor alloc]
-									initWithIntegerValue:kTerminal_ScrollbackTypeFixed
-															description:NSLocalizedStringFromTable
-																		(@"Fixed Size", @"PrefPanelTerminals"/* table */,
-																			@"fixed-size scrollback")]
-									autorelease],
-								[[[PreferenceValue_IntegerDescriptor alloc]
-									initWithIntegerValue:kTerminal_ScrollbackTypeUnlimited
-															description:NSLocalizedStringFromTable
-																		(@"Unlimited", @"PrefPanelTerminals"/* table */,
-																			@"unlimited scrollback")]
-									autorelease],
-								[[[PreferenceValue_IntegerDescriptor alloc]
-									initWithIntegerValue:kTerminal_ScrollbackTypeDistributed
-															description:NSLocalizedStringFromTable
-																		(@"Distributed", @"PrefPanelTerminals"/* table */,
-																			@"distributed scrollback")]
-									autorelease],
-								nil] autorelease];
-		self->behaviorObject = [[PreferenceValue_Number alloc]
-									initWithPreferencesTag:kPreferences_TagTerminalScreenScrollbackType
-															contextManager:aContextMgr
-															preferenceCType:kPreferenceValue_CTypeUInt16];
-		self->rowsObject = [[PreferenceValue_Number alloc]
-									initWithPreferencesTag:kPreferences_TagTerminalScreenScrollbackRows
-															contextManager:aContextMgr
-															preferenceCType:kPreferenceValue_CTypeUInt32];
-		
-		// monitor the preferences context manager so that observers
-		// of preferences in sub-objects can be told to expect changes
-		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
-							performSelector:@selector(prefsContextWillChange:)];
-		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
-							performSelector:@selector(prefsContextDidChange:)];
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsTerminalScreen_Model alloc] initWithRunner:self]; // transfer ownership
 	}
 	return self;
-}// initWithContextManager:
+}// init
 
 
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[self ignoreWhenObjectsPostNotes];
-	[behaviorArray release];
-	[behaviorObject release];
-	[rowsObject release];
+	[_prefsMgr release];
+	[_viewModel release];
 	[super dealloc];
 }// dealloc
 
 
-#pragma mark New Methods
-
-
 /*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
+Updates the view model’s observed properties based on
+current preferences context data.
 
-(4.1)
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
 */
 - (void)
-prefsContextDidChange:(NSNotification*)		aNotification
+updateViewModelFromPrefsMgr
 {
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextWillChange:"
-	[self didChangeValueForKey:@"rowsEnabled"];
-	[self didChangeValueForKey:@"rowsNumberStringValue"];
-	[self didChangeValueForKey:@"currentBehavior"];
-	[self didSetPreferenceValue];
-}// prefsContextDidChange:
-
-
-/*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
-
-(4.1)
-*/
-- (void)
-prefsContextWillChange:(NSNotification*)	aNotification
-{
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextDidChange:"
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"currentBehavior"];
-	[self willChangeValueForKey:@"rowsNumberStringValue"];
-	[self willChangeValueForKey:@"rowsEnabled"];
-}// prefsContextWillChange:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSArray*)
-behaviorArray
-{
-	return [[behaviorArray retain] autorelease];
-}// behaviorArray
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (id)
-currentBehavior
-{
-	UInt32		currentType = [[self->behaviorObject numberStringValue] intValue];
-	id			result = nil;
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	Boolean					isDefault = false; // reused below
 	
 	
-	for (UInt16 i = 0; i < [[self behaviorArray] count]; ++i)
+	// allow initialization of "isDefault..." values without triggers
+	self.viewModel.defaultOverrideInProgress = YES;
+	self.viewModel.disableWriteback = YES;
+	
+	// update columns
 	{
-		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)
-														[[self behaviorArray] objectAtIndex:i];
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenColumns;
+		UInt16				preferenceValue = self.viewModel.widthValue;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
 		
 		
-		if (currentType == [asInfo describedIntegerValue])
+		if (kPreferences_ResultOK != prefsResult)
 		{
-			result = asInfo;
-			break;
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.widthValue = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultWidth = isDefault; // SwiftUI binding
 		}
 	}
-	return result;
-}
-- (void)
-setCurrentBehavior:(id)		selectedObject
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"currentBehavior"];
-	[self willChangeValueForKey:@"rowsNumberStringValue"];
-	[self willChangeValueForKey:@"rowsEnabled"];
 	
-	if (nil == selectedObject)
+	// update rows
 	{
-		[self setNilPreferenceValue];
-	}
-	else
-	{
-		PreferenceValue_IntegerDescriptor*	asInfo = (PreferenceValue_IntegerDescriptor*)selectedObject;
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenRows;
+		UInt16				preferenceValue = self.viewModel.heightValue;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
 		
 		
-		[self->behaviorObject setNumberStringValue:
-								[[NSNumber numberWithInt:[asInfo describedIntegerValue]] stringValue]];
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.heightValue = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultHeight = isDefault; // SwiftUI binding
+		}
 	}
 	
-	[self didChangeValueForKey:@"rowsEnabled"];
-	[self didChangeValueForKey:@"rowsNumberStringValue"];
-	[self didChangeValueForKey:@"currentBehavior"];
-	[self didSetPreferenceValue];
-}// setCurrentBehavior:
+	// update scrollback settings
+	Boolean		isDefaultScrollbackValue = false;
+	Boolean		isDefaultScrollbackType = false;
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenScrollbackRows;
+		UInt32				preferenceValue = STATIC_CAST(self.viewModel.scrollbackValue, UInt32);
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.scrollbackValue = preferenceValue; // SwiftUI binding
+			isDefaultScrollbackValue = isDefault; // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenScrollbackType;
+		UInt16				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIPrefsTerminalScreen_ScrollbackType	bindingValue = UIPrefsTerminalScreen_ScrollbackTypeOff;
+			
+			
+			switch (preferenceValue)
+			{
+			case kTerminal_ScrollbackTypeDisabled:
+				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeOff;
+				break;
+			
+			case kTerminal_ScrollbackTypeFixed:
+				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeFixed;
+				break;
+			
+			case kTerminal_ScrollbackTypeUnlimited:
+				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeUnlimited;
+				break;
+			
+			case kTerminal_ScrollbackTypeDistributed:
+				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeDistributed;
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+			self.viewModel.selectedScrollbackType = bindingValue; // SwiftUI binding
+			isDefaultScrollbackType = isDefault; // see below; used to update binding
+		}
+	}
+	self.viewModel.isDefaultScrollback = ((isDefaultScrollbackValue) && (isDefaultScrollbackType)); // SwiftUI binding
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+	self.viewModel.defaultOverrideInProgress = NO;
+	
+	// finally, specify “is editing Default” to prevent user requests for
+	// “restore to Default” from deleting the Default settings themselves!
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::TERMINAL);
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsTerminalScreen_ActionHandling
 
 
 /*!
-Accessor.
+Called by the UI when the user has made a change.
 
-(4.1)
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
 */
-- (BOOL)
-rowsEnabled
-{
-	Terminal_ScrollbackType		currentBehavior = STATIC_CAST([[self->behaviorObject numberStringValue] intValue],
-																Terminal_ScrollbackType);
-	
-	
-	return (kTerminal_ScrollbackTypeFixed == currentBehavior);
-}// rowsEnabled
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-rowsNumberStringValue
-{
-	return [self->rowsObject numberStringValue];
-}
 - (void)
-setRowsNumberStringValue:(NSString*)	aNumberString
+dataUpdated
 {
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"rowsNumberStringValue"];
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
 	
-	if (nil == aNumberString)
+	
+	// update columns
 	{
-		[self setNilPreferenceValue];
-	}
-	else
-	{
-		[self->rowsObject setNumberStringValue:aNumberString];
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenColumns;
+		UInt16				preferenceValue = self.viewModel.widthValue;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
 	}
 	
-	[self didChangeValueForKey:@"rowsNumberStringValue"];
-	[self didSetPreferenceValue];
-}// setRowsNumberStringValue:
-
-
-#pragma mark Validators
+	// update rows
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenRows;
+		UInt16				preferenceValue = self.viewModel.heightValue;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	
+	// update scrollback settings
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenScrollbackRows;
+		UInt32				preferenceValue = STATIC_CAST(self.viewModel.scrollbackValue, UInt32);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag				preferenceTag = kPreferences_TagTerminalScreenScrollbackType;
+		Terminal_ScrollbackType		enumPrefValue = kTerminal_ScrollbackTypeDisabled;
+		
+		
+		switch (self.viewModel.selectedScrollbackType)
+		{
+		case UIPrefsTerminalScreen_ScrollbackTypeOff:
+			enumPrefValue = kTerminal_ScrollbackTypeDisabled;
+			break;
+		
+		case UIPrefsTerminalScreen_ScrollbackTypeFixed:
+			enumPrefValue = kTerminal_ScrollbackTypeFixed;
+			break;
+		
+		case UIPrefsTerminalScreen_ScrollbackTypeUnlimited:
+			enumPrefValue = kTerminal_ScrollbackTypeUnlimited;
+			break;
+		
+		case UIPrefsTerminalScreen_ScrollbackTypeDistributed:
+			enumPrefValue = kTerminal_ScrollbackTypeDistributed;
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+		
+		UInt16				preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
 
 
 /*!
-Validates a number entered by the user, returning an appropriate
-error (and a NO result) if the number is incorrect.
+Deletes any local override for the column count setting and
+returns the Default value of the setting.
 
-(4.1)
+(2020.11)
 */
-- (BOOL)
-validateRowsNumberStringValue:(id*/* NSString* */)		ioValue
-error:(NSError**)									outError
+- (NSInteger)
+resetToDefaultGetWidth
 {
-	return [self->rowsObject validateNumberStringValue:ioValue error:outError];
-}// validateRowsNumberStringValue:error:
-
-
-#pragma mark PreferenceValue_Inherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isInherited
-{
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = ([self->behaviorObject isInherited] && [self->rowsObject isInherited]);
+	NSInteger			result = 0;
+	Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenColumns;
 	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt16				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = preferenceValue;
+		}
+	}
 	
 	return result;
-}// isInherited
+}// resetToDefaultGetWidth
 
 
 /*!
-Accessor.
+Deletes any local override for the row count setting and
+returns the Default value of the setting.
 
-(4.1)
+(2020.11)
 */
-- (void)
-setNilPreferenceValue
+- (NSInteger)
+resetToDefaultGetHeight
 {
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"currentBehavior"];
-	[self willChangeValueForKey:@"rowsNumberStringValue"];
-	[self willChangeValueForKey:@"rowsEnabled"];
-	[self->rowsObject setNilPreferenceValue];
-	[self->behaviorObject setNilPreferenceValue];
-	[self didChangeValueForKey:@"rowsEnabled"];
-	[self didChangeValueForKey:@"rowsNumberStringValue"];
-	[self didChangeValueForKey:@"currentBehavior"];
-	[self didSetPreferenceValue];
-}// setNilPreferenceValue
+	NSInteger			result = 0;
+	Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenRows;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt16				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = preferenceValue;
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetHeight
 
 
-@end // PrefPanelTerminals_ScrollbackValue
+/*!
+Deletes any local override for the scrollback row count setting
+and returns the Default value of the setting.
+
+(2020.11)
+*/
+- (NSInteger)
+resetToDefaultGetScrollbackRowCount
+{
+	NSInteger			result = 0;
+	Preferences_Tag		preferenceTag = kPreferences_TagTerminalScreenScrollbackRows;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt32				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = preferenceValue;
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetScrollbackRowCount
+
+
+/*!
+Deletes any local override for the scrollback-type setting
+and returns the Default value of the setting.
+
+(2020.11)
+*/
+- (UIPrefsTerminalScreen_ScrollbackType)
+resetToDefaultGetScrollbackType
+{
+	UIPrefsTerminalScreen_ScrollbackType	result = UIPrefsTerminalScreen_ScrollbackTypeOff;
+	Preferences_Tag							preferenceTag = kPreferences_TagTerminalScreenScrollbackType;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt16				preferenceValue = 0; // Terminal_ScrollbackType
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			switch (preferenceValue)
+			{
+			case kTerminal_ScrollbackTypeDisabled:
+				result = UIPrefsTerminalScreen_ScrollbackTypeOff;
+				break;
+			
+			case kTerminal_ScrollbackTypeFixed:
+				result = UIPrefsTerminalScreen_ScrollbackTypeFixed;
+				break;
+			
+			case kTerminal_ScrollbackTypeUnlimited:
+				result = UIPrefsTerminalScreen_ScrollbackTypeUnlimited;
+				break;
+			
+			case kTerminal_ScrollbackTypeDistributed:
+				result = UIPrefsTerminalScreen_ScrollbackTypeDistributed;
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetScrollbackType
+
+
+@end //}
 
 
 #pragma mark -
-@implementation PrefPanelTerminals_ScreenViewManager
+@implementation PrefPanelTerminals_ScreenVC //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelTerminalScreenCocoa" delegate:self context:nullptr];
+	PrefPanelTerminals_ScreenActionHandler*		actionHandler = [[PrefPanelTerminals_ScreenActionHandler alloc] init];
+	NSView*										newView = [UIPrefsTerminalScreen_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -1709,79 +1924,54 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Number*)
-screenWidth
-{
-	return [self->byKey objectForKey:@"screenWidth"];
-}// screenWidth
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Number*)
-screenHeight
-{
-	return [self->byKey objectForKey:@"screenHeight"];
-}// screenHeight
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelTerminals_ScrollbackValue*)
-scrollback
-{
-	return [self->byKey objectForKey:@"scrollback"];
-}// scrollback
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelTerminals_ScreenActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelTerminals_ScreenActionHandler*		actionHandler = STATIC_CAST(aContext, PrefPanelTerminals_ScreenActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 500, 200); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1796,69 +1986,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
-	
 	// remember frame from XIB (it might be changed later)
-	self->idealFrame = [aContainerView frame];
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
-								initWithPreferencesTag:kPreferences_TagTerminalScreenColumns
-														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeUInt16]
-							autorelease]
-					forKey:@"screenWidth"];
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
-								initWithPreferencesTag:kPreferences_TagTerminalScreenRows
-														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeUInt16]
-							autorelease]
-					forKey:@"screenHeight"];
-	[self->byKey setObject:[[[PrefPanelTerminals_ScrollbackValue alloc]
-								initWithContextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"scrollback"];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = self->idealFrame.size;
+	*outIdealSize = _idealFrame.size;
 }
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1876,7 +2033,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -1889,7 +2046,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -1903,7 +2060,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 Responds to a change of data sets by resetting the panel to
 display the new data set.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1911,20 +2068,14 @@ didChangeFromDataSet:(void*)			oldDataSet
 toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
+	
+	// INCOMPLETE; may need to update or replace model object for SwiftUI to update
 	
 	// now apply the specified settings
-	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// update the view by changing the model’s observed variables
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -1932,7 +2083,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1965,7 +2116,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -1978,7 +2129,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -1992,7 +2143,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -2010,7 +2161,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -2025,7 +2176,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -2034,30 +2185,6 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelTerminals_ScreenViewManager
-
-
-#pragma mark -
-@implementation PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal)
-
-
-/*!
-Returns the names of key-value coding keys that represent the
-primary bindings of this panel (those that directly correspond
-to saved preferences).
-
-(4.1)
-*/
-- (NSArray*)
-primaryDisplayBindingKeys
-{
-	return @[
-				@"screenWidth", @"screenHeight",
-				@"scrollback",
-			];
-}// primaryDisplayBindingKeys
-
-
-@end // PrefPanelTerminals_ScreenViewManager (PrefPanelTerminals_ScreenViewManagerInternal)
+@end //} PrefPanelTerminals_ScreenVC
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

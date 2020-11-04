@@ -132,7 +132,45 @@ context:(void*)						aContext
 		[self view];
 	}
 	return self;
-}// initWithDelegate:
+}// initWithNibNamed:delegate:context:
+
+
+/*!
+Designated initializer, alternate (when view exists).
+
+(2020.11)
+*/
+- (instancetype)
+initWithView:(NSView*)				aView
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(void*)						aContext
+{
+	self = [super initWithNibName:nil bundle:nil];
+	if (nil != self)
+	{
+		_delegate = aDelegate;
+		_isPanelUserInterfaceLoaded = NO;
+		_panelDisplayAction = nil;
+		_panelDisplayTarget = nil;
+		_panelParent = nil;
+		
+		// by default, assume that a panel has no help if the method to
+		// respond to help is not implemented (the property can still
+		// be changed however)
+		self.panelHasContextualHelp = [self.delegate respondsToSelector:@selector(panelViewManager:didPerformContextSensitiveHelp:)];
+		
+		// when no NIB is present, "view" must be assigned
+		self.view = aView;
+		assert(nil != self.view);
+		
+		// since NIBs can construct lots of objects and bindings it is
+		// actually pretty important to have an early hook for subclasses
+		// (subclasses may need to initialize certain data in themselves
+		// to ensure that their bindings actually succeed)
+		[self.delegate panelViewManager:self initializeWithContext:aContext];
+	}
+	return self;
+}// initWithView:delegate:context
 
 
 /*!

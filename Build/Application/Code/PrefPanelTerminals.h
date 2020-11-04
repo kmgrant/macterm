@@ -151,60 +151,23 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 
-/*!
-Manages bindings for the scrollback preference.
-*/
-@interface PrefPanelTerminals_ScrollbackValue : PreferenceValue_Inherited //{
-{
-	NSArray*					behaviorArray;
-	PreferenceValue_Number*		behaviorObject;
-	PreferenceValue_Number*		rowsObject;
-}
-
-// initializers
-	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
-
-// accessors
-	- (NSArray*)
-	behaviorArray; // binding
-	- (id)
-	currentBehavior;
-	- (void)
-	setCurrentBehavior:(id)_; // binding
-	- (NSString*)
-	rowsNumberStringValue;
-	- (void)
-	setRowsNumberStringValue:(NSString*)_; // binding
-	- (BOOL)
-	rowsEnabled; // binding
-
-@end //}
+@class PrefPanelTerminals_ScreenActionHandler; // implemented internally
 
 
 /*!
-Loads a NIB file that defines the Screen pane.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+Implements the “terminal screen size” panel.
 */
-@interface PrefPanelTerminals_ScreenViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+@interface PrefPanelTerminals_ScreenVC : Panel_ViewManager< Panel_Delegate,
+															PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSRect							idealFrame;
-	NSMutableDictionary*			byKey;
+	NSRect										_idealFrame;
+	PrefPanelTerminals_ScreenActionHandler*		_actionHandler;
 }
 
 // accessors
-	- (PreferenceValue_Number*)
-	screenWidth; // binding
-	- (PreferenceValue_Number*)
-	screenHeight; // binding
-	- (PrefPanelTerminals_ScrollbackValue*)
-	scrollback; // binding
+	@property (strong) PrefPanelTerminals_ScreenActionHandler*
+	actionHandler;
 
 @end //}
 

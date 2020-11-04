@@ -35,6 +35,7 @@
 		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
 		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; };
+		0A67A902254A0C82002798E0 /* UIPrefsTerminalScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A67A901254A0C82002798E0 /* UIPrefsTerminalScreen.swift */; };
 		0A694C2D2447FC590061822C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C2C2447FC590061822C /* CoreGraphics.framework */; };
 		0A694C312447FC770061822C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C302447FC760061822C /* AppKit.framework */; };
 		0A694C332447FC8B0061822C /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C322447FC8B0061822C /* CoreImage.framework */; };
@@ -191,7 +192,6 @@
 		0A08CA00224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
 		0A08CA01224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelTerminalEmulationCocoa.xib; sourceTree = "<group>"; };
 		0A08CA02224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelTerminalOptionsCocoa.xib; sourceTree = "<group>"; };
-		0A08CA03224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelTerminalScreenCocoa.xib; sourceTree = "<group>"; };
 		0A08CA04224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
 		0A08CA05224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelWorkspaceOptionsCocoa.xib; sourceTree = "<group>"; };
 		0A08CA06224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
@@ -344,6 +344,7 @@
 		0A613E4F20592085007C0829 /* Workspace.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Workspace.mm; path = Application/Code/Workspace.mm; sourceTree = "<group>"; };
 		0A64C5EA1059E423005B8A48 /* StreamCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StreamCapture.mm; path = Application/Code/StreamCapture.mm; sourceTree = "<group>"; };
 		0A64C5EC1059E432005B8A48 /* StreamCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamCapture.h; path = Application/Code/StreamCapture.h; sourceTree = "<group>"; };
+		0A67A901254A0C82002798E0 /* UIPrefsTerminalScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsTerminalScreen.swift; path = Application/Code/UIPrefsTerminalScreen.swift; sourceTree = "<group>"; };
 		0A694C2C2447FC590061822C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		0A694C2E2447FC6B0061822C /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		0A694C302447FC760061822C /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -622,6 +623,7 @@
 				0A22068C24FCA5F600E27657 /* UICommon.swift */,
 				0A400EF224FB128100550A8F /* UIDebugInterface.swift */,
 				0AF0ADF125042F6E001A2C37 /* UIKeypads.swift */,
+				0A67A901254A0C82002798E0 /* UIPrefsTerminalScreen.swift */,
 				0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,
@@ -832,7 +834,6 @@
 				0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */,
 				0A0E9F8D1DB18127006A8BF5 /* PrefPanelTerminalEmulationCocoa.xib */,
 				0A0E9F8F1DB18127006A8BF5 /* PrefPanelTerminalOptionsCocoa.xib */,
-				0A0E9F911DB18127006A8BF5 /* PrefPanelTerminalScreenCocoa.xib */,
 				0A0E9F931DB18127006A8BF5 /* PrefPanelTranslationsCocoa.xib */,
 				0A0E9F951DB18127006A8BF5 /* PrefPanelWorkspaceOptionsCocoa.xib */,
 				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
@@ -1243,6 +1244,7 @@
 				0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */,
 				0A36176B0DD286240081A445 /* Keypads.mm in Sources */,
 				0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */,
+				0A67A902254A0C82002798E0 /* UIPrefsTerminalScreen.swift in Sources */,
 				0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */,
 				0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */,
 				0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */,
@@ -1478,14 +1480,6 @@
 				0A08CA02224F345F00DA2569 /* Base */,
 			);
 			name = PrefPanelTerminalOptionsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F911DB18127006A8BF5 /* PrefPanelTerminalScreenCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA03224F345F00DA2569 /* Base */,
-			);
-			name = PrefPanelTerminalScreenCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F931DB18127006A8BF5 /* PrefPanelTranslationsCocoa.xib */ = {

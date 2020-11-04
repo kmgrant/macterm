@@ -529,12 +529,12 @@ TerminalWindow_DisplayCustomScreenSizeUI		(TerminalWindowRef		inRef)
 		}
 		else
 		{
-			GenericDialog_Wrap						dialog;
-			PrefPanelTerminals_ScreenViewManager*	embeddedPanel = [[PrefPanelTerminals_ScreenViewManager alloc] init];
-			CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																	CFRetainRelease::kAlreadyRetained);
-			CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-																CFRetainRelease::kAlreadyRetained);
+			GenericDialog_Wrap				dialog;
+			PrefPanelTerminals_ScreenVC*	embeddedPanel = [[PrefPanelTerminals_ScreenVC alloc] init];
+			CFRetainRelease					cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+															CFRetainRelease::kAlreadyRetained);
+			CFRetainRelease					okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+														CFRetainRelease::kAlreadyRetained);
 			
 			
 			// display the sheet
