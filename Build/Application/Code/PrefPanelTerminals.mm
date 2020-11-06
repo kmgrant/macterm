@@ -74,12 +74,36 @@
 #pragma mark Internal Method Prototypes
 
 /*!
-The private class interface.
-*/
-@interface PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal) //{
+Implements SwiftUI interaction for the “emulation” panel.
 
-	- (NSArray*)
-	primaryDisplayBindingKeys;
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
+*/
+@interface PrefPanelTerminals_EmulationActionHandler : NSObject< UIPrefsTerminalEmulation_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*			_prefsMgr;
+	UIPrefsTerminalEmulation_Model*		_viewModel;
+}
+
+// new methods
+	- (BOOL)
+	resetToDefaultGetFlagWithTag:(Preferences_Tag)_;
+	- (Emulation_FullType)
+	returnPreferenceForUIEnum:(UIPrefsTerminalEmulation_BaseEmulatorType)_;
+	- (UIPrefsTerminalEmulation_BaseEmulatorType)
+	returnUIEnumForPreference:(Emulation_FullType)_;
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsTerminalEmulation_Model*
+	viewModel;
 
 @end //}
 
@@ -170,7 +194,10 @@ PrefPanelTerminals_NewEmulationPaneTagSet ()
 	// that reads emulation-pane preferences from the context of a data set
 	tagList.push_back(kPreferences_TagTerminalEmulatorType);
 	tagList.push_back(kPreferences_TagTerminalAnswerBackMessage);
+	tagList.push_back(kPreferences_TagTerminal24BitColorEnabled);
+	tagList.push_back(kPreferences_TagITermGraphicsEnabled);
 	tagList.push_back(kPreferences_TagVT100FixLineWrappingBug);
+	tagList.push_back(kPreferences_TagSixelGraphicsEnabled);
 	tagList.push_back(kPreferences_TagXTerm256ColorsEnabled);
 	tagList.push_back(kPreferences_TagXTermBackgroundColorEraseEnabled);
 	tagList.push_back(kPreferences_TagXTermColorEnabled);
@@ -298,7 +325,7 @@ init
 {
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelTerminals_OptionsVC alloc] init] autorelease],
-										[[[PrefPanelTerminals_EmulationViewManager alloc] init] autorelease],
+										[[[PrefPanelTerminals_EmulationVC alloc] init] autorelease],
 										[[[PrefPanelTerminals_ScreenVC alloc] init] autorelease],
 									];
 	
@@ -331,218 +358,37 @@ dealloc
 
 
 #pragma mark -
-@implementation PrefPanelTerminals_BaseEmulatorValue
+@implementation PrefPanelTerminals_EmulationActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
-initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+init
 {
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kEmulation_FullTypeDumb
-																description:NSLocalizedStringFromTable
-																			(@"None (“Dumb”)", @"PrefPanelTerminals"/* table */,
-																				@"emulator disabled")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kEmulation_FullTypeVT100
-																description:NSLocalizedStringFromTable
-																			(@"VT100", @"PrefPanelTerminals"/* table */,
-																				@"emulator of VT100 terminal device")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kEmulation_FullTypeVT102
-																description:NSLocalizedStringFromTable
-																			(@"VT102", @"PrefPanelTerminals"/* table */,
-																				@"emulator of VT102 terminal device")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kEmulation_FullTypeVT220
-																description:NSLocalizedStringFromTable
-																			(@"VT220", @"PrefPanelTerminals"/* table */,
-																				@"emulator of VT220 terminal device")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kEmulation_FullTypeXTerm256Color
-																description:NSLocalizedStringFromTable
-																			(@"XTerm", @"PrefPanelTerminals"/* table */,
-																				@"emulator of XTerm terminal program")]
-										autorelease],
-									nil] autorelease];
-	
-	
-	self = [super initWithPreferencesTag:kPreferences_TagTerminalEmulatorType
-											contextManager:aContextMgr
-											preferenceCType:kPreferenceValue_CTypeUInt32
-											valueDescriptorArray:descriptorArray];
+	self = [super init];
 	if (nil != self)
 	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsTerminalEmulation_Model alloc] initWithRunner:self]; // transfer ownership
 	}
 	return self;
-}// initWithContextManager:
+}// init
 
 
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[super dealloc];
-}// dealloc
-
-
-@end // PrefPanelTerminals_BaseEmulatorValue
-
-
-#pragma mark -
-@implementation PrefPanelTerminals_EmulationTweaksValue
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
-{
-	self = [super initWithContextManager:aContextMgr];
-	if (nil != self)
-	{
-		NSMutableArray*		asMutableArray = [[[NSMutableArray alloc] init] autorelease];
-		id					valueObject = nil;
-		
-		
-		self->featureArray = [asMutableArray retain];
-		
-		// 24-bit color support
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagTerminal24BitColorEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"24-Bit Color (Millions)",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// iTerm2 graphics support
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagITermGraphicsEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"iTerm Graphics",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// VT100 line-wrapping bug
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagVT100FixLineWrappingBug
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"VT100 Fix Line Wrapping Bug",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// SIXEL graphics support
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagSixelGraphicsEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"VT340 Sixel Graphics",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// XTerm 256-color support
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagXTerm256ColorsEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm 256 Colors",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// XTerm BCE
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagXTermBackgroundColorEraseEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Background Color Erase",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// XTerm Color
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagXTermColorEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Color",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// XTerm Graphics
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagXTermGraphicsEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Graphics Characters",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// XTerm Window Alteration
-		valueObject = [[[PreferenceValue_Flag alloc]
-						initWithPreferencesTag:kPreferences_TagXTermWindowAlterationEnabled
-												contextManager:aContextMgr]
-						autorelease];
-		[[valueObject propertiesByKey] setObject:NSLocalizedStringFromTable(@"XTerm Window Alteration",
-																			@"PrefPanelTerminals"/* table */,
-																			@"description of terminal feature")
-													forKey:@"description"];
-		[asMutableArray addObject:valueObject];
-		
-		// monitor the preferences context manager so that observers
-		// of preferences in sub-objects can be told to expect changes
-		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
-							performSelector:@selector(prefsContextWillChange:)];
-		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
-							performSelector:@selector(prefsContextDidChange:)];
-	}
-	return self;
-}// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[self ignoreWhenObjectsPostNotes];
-	[featureArray release];
+	[_prefsMgr release];
+	[_viewModel release];
 	[super dealloc];
 }// dealloc
 
@@ -551,118 +397,786 @@ dealloc
 
 
 /*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
+Helper function for protocol methods; deletes the
+given preference tag and returns the Default value.
 
-(4.1)
-*/
-- (void)
-prefsContextDidChange:(NSNotification*)		aNotification
-{
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextWillChange:"
-	[self didSetPreferenceValue];
-}// prefsContextDidChange:
-
-
-/*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
-
-(4.1)
-*/
-- (void)
-prefsContextWillChange:(NSNotification*)	aNotification
-{
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextDidChange:"
-	[self willSetPreferenceValue];
-}// prefsContextWillChange:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSArray*)
-featureArray
-{
-	return [[featureArray retain] autorelease];
-}// featureArray
-
-
-#pragma mark PreferenceValue_Inherited
-
-
-/*!
-Accessor.
-
-(4.1)
+(2020.11)
 */
 - (BOOL)
-isInherited
+resetToDefaultGetFlagWithTag:(Preferences_Tag)		aTag
 {
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = YES; // initially...
+	BOOL	result = NO;
 	
 	
-	for (UInt16 i = 0; i < [[self featureArray] count]; ++i)
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:aTag])
 	{
-		PreferenceValue_Flag*	asValue = (PreferenceValue_Flag*)[[self featureArray] objectAtIndex:i];
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", aTag);
+	}
+	
+	// return default value
+	{
+		Boolean				preferenceValue = false;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, aTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
 		
 		
-		if (NO == [asValue isInherited])
+		if (kPreferences_ResultOK != prefsResult)
 		{
-			result = NO;
-			break;
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", aTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = ((preferenceValue) ? YES : NO);
 		}
 	}
+	
 	return result;
-}// isInherited
+}// resetToDefaultGetFlagWithTag:
 
 
 /*!
-Accessor.
+Translate from UI-specified base emulator type constant to
+the equivalent constant stored in Preferences.
 
-(4.1)
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "returnUIEnumForPreference:".
+
+(2020.10)
+*/
+- (Emulation_FullType)
+returnPreferenceForUIEnum:(UIPrefsTerminalEmulation_BaseEmulatorType)	aUIEnum
+{
+	Emulation_FullType		result = kEmulation_FullTypeXTerm256Color;
+	
+	
+	switch (aUIEnum)
+	{
+	case UIPrefsTerminalEmulation_BaseEmulatorTypeNone:
+		result = kEmulation_FullTypeDumb;
+		break;
+	
+	case UIPrefsTerminalEmulation_BaseEmulatorTypeVt100:
+		result = kEmulation_FullTypeVT100;
+		break;
+	
+	case UIPrefsTerminalEmulation_BaseEmulatorTypeVt102:
+		result = kEmulation_FullTypeVT102;
+		break;
+	
+	case UIPrefsTerminalEmulation_BaseEmulatorTypeVt220:
+		result = kEmulation_FullTypeVT220;
+		break;
+	
+	case UIPrefsTerminalEmulation_BaseEmulatorTypeXterm:
+	default:
+		result = kEmulation_FullTypeXTerm256Color;
+		break;
+	}
+	
+	return result;
+}// returnPreferenceForUIEnum:
+
+
+/*!
+Translate from UI-specified base emulator type constant to
+the equivalent constant stored in Preferences.
+
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "returnPreferenceForUIEnum:".
+
+(2020.10)
+*/
+- (UIPrefsTerminalEmulation_BaseEmulatorType)
+returnUIEnumForPreference:(Emulation_FullType)		aPreferenceValue
+{
+	UIPrefsTerminalEmulation_BaseEmulatorType		result = UIPrefsTerminalEmulation_BaseEmulatorTypeXterm;
+	
+	
+	switch (aPreferenceValue)
+	{
+	case kEmulation_FullTypeDumb:
+		result = UIPrefsTerminalEmulation_BaseEmulatorTypeNone;
+		break;
+	
+	case kEmulation_FullTypeVT100:
+		result = UIPrefsTerminalEmulation_BaseEmulatorTypeVt100;
+		break;
+	
+	case kEmulation_FullTypeVT102:
+		result = UIPrefsTerminalEmulation_BaseEmulatorTypeVt102;
+		break;
+	
+	case kEmulation_FullTypeVT220:
+		result = UIPrefsTerminalEmulation_BaseEmulatorTypeVt220;
+		break;
+	
+	case kEmulation_FullTypeXTerm256Color:
+	default:
+		result = UIPrefsTerminalEmulation_BaseEmulatorTypeXterm;
+		break;
+	}
+	
+	return result;
+}// returnUIEnumForPreference:
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
 */
 - (void)
-setNilPreferenceValue
+updateViewModelFromPrefsMgr
 {
-	[self willSetPreferenceValue];
-	for (UInt16 i = 0; i < [[self featureArray] count]; ++i)
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	Boolean					isDefault = false; // reused below
+	Boolean					isDefaultAllTweaks = true; // initial value; see below
+	
+	
+	// allow initialization of "isDefault..." values without triggers
+	self.viewModel.defaultOverrideInProgress = YES;
+	self.viewModel.disableWriteback = YES;
+	
+	// update base emulation type
 	{
-		PreferenceValue_Flag*	asValue = (PreferenceValue_Flag*)[[self featureArray] objectAtIndex:i];
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalEmulatorType;
+		UInt32				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
 		
 		
-		[asValue setNilPreferenceValue];
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.selectedBaseEmulatorType = [self returnUIEnumForPreference:preferenceValue]; // SwiftUI binding
+			self.viewModel.isDefaultBaseEmulator = isDefault; // SwiftUI binding
+		}
 	}
-	[self didSetPreferenceValue];
-}// setNilPreferenceValue
+	
+	// update identity string
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalAnswerBackMessage;
+		CFStringRef			preferenceValue = CFSTR("");
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.terminalIdentity = BRIDGE_CAST(preferenceValue, NSString*); // SwiftUI binding
+			self.viewModel.isDefaultIdentity = isDefault; // SwiftUI binding
+		}
+	}
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminal24BitColorEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweak24BitColorEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagITermGraphicsEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakITermGraphicsEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagVT100FixLineWrappingBug;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakVT100FixLineWrappingBugEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagSixelGraphicsEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakSixelGraphicsEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTerm256ColorsEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakXTerm256ColorsEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermBackgroundColorEraseEnabled;;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakXTermBackgroundColorEraseEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermColorEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakXTermColorEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermGraphicsEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakXTermGraphicsEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermWindowAlterationEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.tweakXTermWindowAlterationEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAllTweaks = (isDefaultAllTweaks && isDefault); // see below; used to update binding
+		}
+	}
+	self.viewModel.isDefaultEmulationTweaks = isDefaultAllTweaks; // SwiftUI binding
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+	self.viewModel.defaultOverrideInProgress = NO;
+	
+	// finally, specify “is editing Default” to prevent user requests for
+	// “restore to Default” from deleting the Default settings themselves!
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::TERMINAL);
+}// updateViewModelFromPrefsMgr
 
 
-@end // PrefPanelTerminals_EmulationTweaksValue
+#pragma mark UIPrefsTerminalEmulation_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update base emulation type
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagTerminalEmulatorType;
+		Emulation_FullType		enumPrefValue = [self returnPreferenceForUIEnum:self.viewModel.selectedBaseEmulatorType];
+		UInt32					preferenceValue = STATIC_CAST(enumPrefValue, UInt32);
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	
+	// update identity string
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalAnswerBackMessage;
+		CFStringRef			preferenceValue = BRIDGE_CAST(self.viewModel.terminalIdentity, CFStringRef);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminal24BitColorEnabled;
+		Boolean				preferenceValue = self.viewModel.tweak24BitColorEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagITermGraphicsEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakITermGraphicsEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagVT100FixLineWrappingBug;
+		Boolean				preferenceValue = self.viewModel.tweakVT100FixLineWrappingBugEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagSixelGraphicsEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakSixelGraphicsEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTerm256ColorsEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakXTerm256ColorsEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermBackgroundColorEraseEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakXTermBackgroundColorEraseEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermColorEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakXTermColorEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermGraphicsEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakXTermGraphicsEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermWindowAlterationEnabled;
+		Boolean				preferenceValue = self.viewModel.tweakXTermWindowAlterationEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Deletes any local override for the given setting and
+returns the Default value.
+
+(2020.11)
+*/
+- (UIPrefsTerminalEmulation_BaseEmulatorType)
+resetToDefaultGetSelectedBaseEmulatorType
+{
+	UIPrefsTerminalEmulation_BaseEmulatorType	result = UIPrefsTerminalEmulation_BaseEmulatorTypeXterm;
+	Preferences_Tag								preferenceTag = kPreferences_TagTerminalEmulatorType;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt32				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = [self returnUIEnumForPreference:STATIC_CAST(preferenceValue, Emulation_FullType)];
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetSelectedBaseEmulatorType
+
+
+/*!
+Deletes any local override for the given setting and
+returns the Default value.
+
+(2020.11)
+*/
+- (NSString*)
+resetToDefaultGetIdentity
+{
+	NSString*			result = @"";
+	Preferences_Tag		preferenceTag = kPreferences_TagTerminalAnswerBackMessage;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		CFStringRef			preferenceValue = CFSTR("");
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = [BRIDGE_CAST(preferenceValue, NSString*) copy];
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetIdentity
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweak24BitColorEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagTerminal24BitColorEnabled];
+}// resetToDefaultGetTweak24BitColorEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakITermGraphicsEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagITermGraphicsEnabled];
+}// resetToDefaultGetTweakITermGraphicsEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakVT100FixLineWrappingBugEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagVT100FixLineWrappingBug];
+}// resetToDefaultGetTweakVT100FixLineWrappingBugEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakSixelGraphicsEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagSixelGraphicsEnabled];
+}// resetToDefaultGetTweakSixelGraphicsEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakXTerm256ColorsEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagXTerm256ColorsEnabled];
+}// resetToDefaultGetTweakXTerm256ColorsEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakXTermBackgroundColorEraseEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagXTermBackgroundColorEraseEnabled];
+}// resetToDefaultGetTweakXTermBackgroundColorEraseEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakXTermColorEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagXTermColorEnabled];
+}// resetToDefaultGetTweakXTermColorEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakXTermGraphicsEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagXTermGraphicsEnabled];
+}// resetToDefaultGetTweakXTermGraphicsEnabled
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.11)
+*/
+- (BOOL)
+resetToDefaultGetTweakXTermWindowAlterationEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagXTermWindowAlterationEnabled];
+}// resetToDefaultGetTweakXTermWindowAlterationEnabled
+
+
+@end //}
 
 
 #pragma mark -
-@implementation PrefPanelTerminals_EmulationViewManager
+@implementation PrefPanelTerminals_EmulationVC //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelTerminalEmulationCocoa" delegate:self context:nullptr];
+	PrefPanelTerminals_EmulationActionHandler*		actionHandler = [[PrefPanelTerminals_EmulationActionHandler alloc] init];
+	NSView*											newView = [UIPrefsTerminalEmulation_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -674,79 +1188,54 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelTerminals_BaseEmulatorValue*)
-baseEmulator
-{
-	return [self->byKey objectForKey:@"baseEmulator"];
-}// baseEmulator
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelTerminals_EmulationTweaksValue*)
-emulationTweaks
-{
-	return [self->byKey objectForKey:@"emulationTweaks"];
-}// emulationTweaks
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_String*)
-identity
-{
-	return [self->byKey objectForKey:@"identity"];
-}// identity
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelTerminals_EmulationActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary; number of settings */];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelTerminals_EmulationActionHandler*		actionHandler = STATIC_CAST(aContext, PrefPanelTerminals_EmulationActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 460, 320); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -761,70 +1250,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != tweaksTableView);
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
-	
-	// do not show highlighting in this table
-	[tweaksTableView setSelectionHighlightStyle:NSTableViewSelectionHighlightStyleNone];
-	
-	// remember frame from XIB (it might be changed later)
-	self->idealFrame = [aContainerView frame];
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PrefPanelTerminals_BaseEmulatorValue alloc]
-								initWithContextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"baseEmulator"];
-	[self->byKey setObject:[[[PrefPanelTerminals_EmulationTweaksValue alloc]
-								initWithContextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"emulationTweaks"];
-	[self->byKey setObject:[[[PreferenceValue_String alloc]
-								initWithPreferencesTag:kPreferences_TagTerminalAnswerBackMessage
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"identity"];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = self->idealFrame.size;
+	*outIdealSize = _idealFrame.size;
 }
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -842,7 +1297,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -855,7 +1310,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -869,7 +1324,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 Responds to a change of data sets by resetting the panel to
 display the new data set.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -877,20 +1332,11 @@ didChangeFromDataSet:(void*)			oldDataSet
 toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
+	// apply the specified settings
+	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
-	// now apply the specified settings
-	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// update the view by changing the model’s observed variables
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -898,7 +1344,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -931,7 +1377,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -944,7 +1390,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -958,7 +1404,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -976,7 +1422,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -991,7 +1437,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -1000,31 +1446,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelTerminals_EmulationViewManager
-
-
-#pragma mark -
-@implementation PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
-
-
-/*!
-Returns the names of key-value coding keys that represent the
-primary bindings of this panel (those that directly correspond
-to saved preferences).
-
-(4.1)
-*/
-- (NSArray*)
-primaryDisplayBindingKeys
-{
-	return @[
-				@"baseEmulator", @"emulationTweaks",
-				@"identity",
-			];
-}// primaryDisplayBindingKeys
-
-
-@end // PrefPanelTerminals_EmulationViewManager (PrefPanelTerminals_EmulationViewManagerInternal)
+@end //} PrefPanelTerminals_EmulationVC
 
 
 #pragma mark -
@@ -1496,7 +1918,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	// remember frame from XIB (it might be changed later)
+	// remember initial frame (it might be changed later)
 	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
@@ -2271,7 +2693,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	// remember frame from XIB (it might be changed later)
+	// remember initial frame (it might be changed later)
 	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 

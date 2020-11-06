@@ -61,61 +61,23 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelTerminals_ViewManager : GenericPanelTabs_ViewManager @end
 
 
-/*!
-Manages bindings for the base emulator preference.
-*/
-@interface PrefPanelTerminals_BaseEmulatorValue : PreferenceValue_Array //{
-
-// initializers
-	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
-
-@end //}
+@class PrefPanelTerminals_EmulationActionHandler; // implemented internally
 
 
 /*!
-Manages bindings for the emulation tweaks preference.
+Implements the “emulation” panel.
 */
-@interface PrefPanelTerminals_EmulationTweaksValue : PreferenceValue_Inherited //{
+@interface PrefPanelTerminals_EmulationVC : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
-	NSArray*	featureArray; // array of Preference_Value* with "description" property
-}
-
-// initializers
-	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
-
-// accessors
-	- (NSArray*)
-	featureArray; // binding
-
-@end //}
-
-
-/*!
-Loads a NIB file that defines the Emulation pane.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface PrefPanelTerminals_EmulationViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
-{
-	IBOutlet NSTableView*			tweaksTableView;
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSRect							idealFrame;
-	NSMutableDictionary*			byKey;
+	NSRect										_idealFrame;
+	PrefPanelTerminals_EmulationActionHandler*	_actionHandler;
 }
 
 // accessors
-	- (PrefPanelTerminals_BaseEmulatorValue*)
-	baseEmulator; // binding
-	- (PrefPanelTerminals_EmulationTweaksValue*)
-	emulationTweaks; // binding
-	- (PreferenceValue_String*)
-	identity; // binding
+	@property (strong) PrefPanelTerminals_EmulationActionHandler*
+	actionHandler;
 
 @end //}
 

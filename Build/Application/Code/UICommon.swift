@@ -57,6 +57,26 @@ extension Text {
 	}
 }
 
+extension VerticalAlignment {
+	// for sections, when the goal is to align a custom view with the section title text;
+	// example usage:
+	// - given VStack, first child at top could use...
+	//   .alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+	// note that view helper classes below have a "disableDefaultAlignmentGuide" option
+	// to allow customizations such as the above; otherwise, by default any option view
+	// will have an alignment guide applied to encourage a nice layout by default
+	private enum MacTermSectionAlignment : AlignmentID {
+		static func defaultValue(in d: ViewDimensions) ->  CGFloat {
+			return d[.top]
+		}
+	}
+	static let sectionAlignmentMacTerm = VerticalAlignment(MacTermSectionAlignment.self)
+
+	// give a CSS-style name to vertical centering so it is easier to use (i.e. that way,
+	// one can say [.middle] instead of the ridiculous [VerticalAlignment.center])
+	static let middle = VerticalAlignment.center
+}
+
 public class UICommon_DefaultingModel : NSObject {
 
 	@objc public var defaultOverrideInProgress = false // to prevent changes to default flags from causing looping updates; see below, and Objective-C models that change data sources
@@ -107,16 +127,18 @@ public class UICommon_DefaultingModel : NSObject {
 struct UICommon_OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
+	private var disableDefaultAlignmentGuide = false
 	let optionView: Content
 	var title = ""
 
 	// variant with title and content
-	init(_ aTitle: String, @ViewBuilder content: () -> Content) {
+	init(_ aTitle: String, disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
 			self.title = aTitle + ":"
 		}
+		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
 		self.optionView = content()
 	}
 
@@ -126,23 +148,34 @@ struct UICommon_OptionLineView <Content: View> : View {
 	}
 
 	var body: some View {
-		HStack {
+		HStack(
+			alignment: .sectionAlignmentMacTerm
+		) {
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 				.controlSize(.mini)
 				.labelsHidden()
 				.hidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 				.controlSize(.mini)
 				.labelsHidden()
 				.hidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 				.controlSize(.mini)
 				.labelsHidden()
 				.hidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Text(title).asMacTermSectionHeading()
-			optionView
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			if disableDefaultAlignmentGuide {
+				optionView
+			} else {
+				optionView
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			}
 		}.withMacTermSectionLayout()
 	}
 
@@ -151,29 +184,35 @@ struct UICommon_OptionLineView <Content: View> : View {
 struct UICommon_Default1OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
+	private var disableDefaultAlignmentGuide = false
 	private var isEditingDefault = false
 	var isDefaultBinding: Binding<Bool>
 	let optionView: Content
 	var title = ""
 
 	// variant with “default” checkbox, title, and content
-	init(_ aTitle: String, bindIsDefaultTo: Binding<Bool>, isEditingDefault: Bool, @ViewBuilder content: () -> Content) {
+	init(_ aTitle: String, bindIsDefaultTo: Binding<Bool>, isEditingDefault: Bool,
+			disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
 			self.title = aTitle + ":"
 		}
+		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
 		self.isDefaultBinding = bindIsDefaultTo
 		self.isEditingDefault = isEditingDefault
 		self.optionView = content()
 	}
 
 	var body: some View {
-		HStack {
+		HStack(
+			alignment: .sectionAlignmentMacTerm
+		) {
 			Toggle("Tie setting to its value in the Default collection", isOn: isDefaultBinding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefaultBinding.wrappedValue)
 				.labelsHidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
@@ -181,13 +220,21 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 				.disabled(true)
 				.labelsHidden()
 				.hidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 				.controlSize(.mini)
 				.disabled(true)
 				.labelsHidden()
 				.hidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Text(title).asMacTermSectionHeading()
-			optionView
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			if disableDefaultAlignmentGuide {
+				optionView
+			} else {
+				optionView
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			}
 		}.withMacTermSectionLayout()
 	}
 
@@ -196,6 +243,7 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 struct UICommon_Default2OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
+	private var disableDefaultAlignmentGuide = false
 	private var isEditingDefault = false
 	var isDefault1Binding: Binding<Bool>
 	var isDefault2Binding: Binding<Bool>
@@ -204,12 +252,13 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 
 	// variant with “default” checkbox, title, and content
 	init(_ aTitle: String, bindIsDefault1To: Binding<Bool>, bindIsDefault2To: Binding<Bool>,
-			isEditingDefault: Bool, @ViewBuilder content: () -> Content) {
+			isEditingDefault: Bool, disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
 			self.title = aTitle + ":"
 		}
+		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
 		self.isDefault1Binding = bindIsDefault1To
 		self.isDefault2Binding = bindIsDefault2To
 		self.isEditingDefault = isEditingDefault
@@ -217,15 +266,19 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 	}
 
 	var body: some View {
-		HStack {
+		HStack(
+			alignment: .sectionAlignmentMacTerm
+		) {
 			Toggle("Tie setting to its value in the Default collection", isOn: isDefault1Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
 				.labelsHidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Toggle("Tie setting to its value in the Default collection", isOn: isDefault2Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
 				.labelsHidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
@@ -233,8 +286,15 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 				.disabled(true)
 				.labelsHidden()
 				.hidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Text(title).asMacTermSectionHeading()
-			optionView
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			if disableDefaultAlignmentGuide {
+				optionView
+			} else {
+				optionView
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			}
 		}.withMacTermSectionLayout()
 	}
 
@@ -243,6 +303,7 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 struct UICommon_Default3OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
+	private var disableDefaultAlignmentGuide = false
 	private var isEditingDefault = false
 	var isDefault1Binding: Binding<Bool>
 	var isDefault2Binding: Binding<Bool>
@@ -252,12 +313,13 @@ struct UICommon_Default3OptionLineView <Content: View> : View {
 
 	// variant with “default” checkbox, title, and content
 	init(_ aTitle: String, bindIsDefault1To: Binding<Bool>, bindIsDefault2To: Binding<Bool>, bindIsDefault3To: Binding<Bool>,
-			isEditingDefault: Bool, @ViewBuilder content: () -> Content) {
+			isEditingDefault: Bool, disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
 			self.title = aTitle + ":"
 		}
+		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
 		self.isDefault1Binding = bindIsDefault1To
 		self.isDefault2Binding = bindIsDefault2To
 		self.isDefault3Binding = bindIsDefault3To
@@ -266,22 +328,33 @@ struct UICommon_Default3OptionLineView <Content: View> : View {
 	}
 
 	var body: some View {
-		HStack {
+		HStack(
+			alignment: .sectionAlignmentMacTerm
+		) {
 			Toggle("Tie setting to its value in the Default collection", isOn: isDefault1Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
 				.labelsHidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Toggle("Tie setting to its value in the Default collection", isOn: isDefault2Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
 				.labelsHidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			Toggle("Tie setting to its value in the Default collection", isOn: isDefault3Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault3Binding.wrappedValue)
 				.labelsHidden()
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			// (all variants have space for up to 3 checkboxes so no extra padding here)
 			Text(title).asMacTermSectionHeading()
-			optionView
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			if disableDefaultAlignmentGuide {
+				optionView
+			} else {
+				optionView
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			}
 		}.withMacTermSectionLayout()
 	}
 
