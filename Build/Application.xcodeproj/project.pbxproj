@@ -48,6 +48,7 @@
 		0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */; };
 		0A82D1602555E2FC00950356 /* UIPrefsWorkspaceOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D15F2555E2FC00950356 /* UIPrefsWorkspaceOptions.swift */; };
 		0A82D16A2557159C00950356 /* UIPrefsGeneralOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */; };
+		0A82D1742557443C00950356 /* UIPrefsGeneralFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D1732557443C00950356 /* UIPrefsGeneralFullScreen.swift */; };
 		0A82FF0B25530D4C00768C85 /* UIPrefsTerminalOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */; };
 		0A82FF1525532A8800768C85 /* UIPrefsTerminalEmulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */; };
 		0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A90C79A1DBC557B005EABE0 /* CoreUI.mm */; };
@@ -185,7 +186,6 @@
 		0A08C9F5224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F6224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F7224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
-		0A08C9F8224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelGeneralFullScreenCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F9224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelGeneralNotificationsCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FB224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FC224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
@@ -364,6 +364,7 @@
 		0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SixelDecoder.h; path = Application/Code/SixelDecoder.h; sourceTree = "<group>"; };
 		0A82D15F2555E2FC00950356 /* UIPrefsWorkspaceOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsWorkspaceOptions.swift; path = Application/Code/UIPrefsWorkspaceOptions.swift; sourceTree = "<group>"; };
 		0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsGeneralOptions.swift; path = Application/Code/UIPrefsGeneralOptions.swift; sourceTree = "<group>"; };
+		0A82D1732557443C00950356 /* UIPrefsGeneralFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsGeneralFullScreen.swift; path = Application/Code/UIPrefsGeneralFullScreen.swift; sourceTree = "<group>"; };
 		0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsTerminalOptions.swift; path = Application/Code/UIPrefsTerminalOptions.swift; sourceTree = "<group>"; };
 		0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsTerminalEmulation.swift; path = Application/Code/UIPrefsTerminalEmulation.swift; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
@@ -627,6 +628,7 @@
 				0A22068C24FCA5F600E27657 /* UICommon.swift */,
 				0A400EF224FB128100550A8F /* UIDebugInterface.swift */,
 				0AF0ADF125042F6E001A2C37 /* UIKeypads.swift */,
+				0A82D1732557443C00950356 /* UIPrefsGeneralFullScreen.swift */,
 				0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */,
 				0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */,
 				0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */,
@@ -831,7 +833,6 @@
 				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
 				0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */,
 				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
-				0A0E9F7B1DB18127006A8BF5 /* PrefPanelGeneralFullScreenCocoa.xib */,
 				0A0E9F7D1DB18127006A8BF5 /* PrefPanelGeneralNotificationsCocoa.xib */,
 				0A0E9F811DB18127006A8BF5 /* PrefPanelGeneralSpecialCocoa.xib */,
 				0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */,
@@ -1273,6 +1274,7 @@
 				0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */,
 				0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */,
 				0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */,
+				0A82D1742557443C00950356 /* UIPrefsGeneralFullScreen.swift in Sources */,
 				0A82FF0B25530D4C00768C85 /* UIPrefsTerminalOptions.swift in Sources */,
 				0AD7B345176C3224004A1532 /* BoundName.mm in Sources */,
 				0ACF35C617EBCC1500178DE2 /* Emulation.cp in Sources */,
@@ -1400,14 +1402,6 @@
 				0A08C9F7224F345E00DA2569 /* Base */,
 			);
 			name = PrefPanelFormatStandardColorsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F7B1DB18127006A8BF5 /* PrefPanelGeneralFullScreenCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9F8224F345E00DA2569 /* Base */,
-			);
-			name = PrefPanelGeneralFullScreenCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F7D1DB18127006A8BF5 /* PrefPanelGeneralNotificationsCocoa.xib */ = {

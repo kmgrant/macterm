@@ -61,37 +61,23 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelGeneral_ViewManager : GenericPanelTabs_ViewManager @end
 
 
-/*!
-Loads a NIB file that defines this panel.
+@class PrefPanelGeneral_FullScreenActionHandler; // implemented internally
 
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+
+/*!
+Implements the “Full Screen” panel.
 */
-@interface PrefPanelGeneral_FullScreenViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+@interface PrefPanelGeneral_FullScreenVC : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
+	NSRect										_idealFrame;
+	PrefPanelGeneral_FullScreenActionHandler*	_actionHandler;
 }
 
 // accessors
-	- (BOOL)
-	isForceQuitEnabled;
-	- (void)
-	setForceQuitEnabled:(BOOL)_; // binding
-	- (BOOL)
-	isMenuBarShownOnDemand;
-	- (void)
-	setMenuBarShownOnDemand:(BOOL)_; // binding
-	- (BOOL)
-	isScrollBarVisible;
-	- (void)
-	setScrollBarVisible:(BOOL)_; // binding
-	- (BOOL)
-	isWindowFrameVisible;
-	- (void)
-	setWindowFrameVisible:(BOOL)_; // binding
+	@property (strong) PrefPanelGeneral_FullScreenActionHandler*
+	actionHandler;
 
 @end //}
 

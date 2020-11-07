@@ -80,6 +80,35 @@
 #pragma mark Types
 
 /*!
+Implements SwiftUI interaction for the “Full Screen” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
+*/
+@interface PrefPanelGeneral_FullScreenActionHandler : NSObject< UIPrefsGeneralFullScreen_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*			_prefsMgr;
+	UIPrefsGeneralFullScreen_Model*		_viewModel;
+}
+
+// new methods
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsGeneralFullScreen_Model*
+	viewModel;
+
+@end //}
+
+
+/*!
 Implements an object wrapper for sound names, that allows them
 to be correctly bound into user interface elements.  (On older
 Mac OS X versions, raw strings do not bind properly.)
@@ -124,12 +153,6 @@ Private properties.
 	didLoadView;
 
 @end //}
-
-
-/*!
-The private class interface.
-*/
-@interface PrefPanelGeneral_FullScreenViewManager (PrefPanelGeneral_FullScreenViewManagerInternal) @end
 
 
 /*!
@@ -418,7 +441,7 @@ init
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelGeneral_OptionsVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
-										[[[PrefPanelGeneral_FullScreenViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_FullScreenVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
 									];
 	
@@ -617,21 +640,242 @@ preferenceString
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_FullScreenViewManager //{
-
-
-#pragma mark Initializers
+@implementation PrefPanelGeneral_FullScreenActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelGeneralFullScreenCocoa" delegate:self context:nullptr];
+	self = [super init];
+	if (nil != self)
+	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsGeneralFullScreen_Model alloc] initWithRunner:self]; // transfer ownership
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.11)
+*/
+- (void)
+dealloc
+{
+	[_prefsMgr release];
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	
+	
+	// allow initialization of values without triggers
+	self.viewModel.disableWriteback = YES;
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskShowsScrollBar;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.showScrollBar = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskShowsMenuBar;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.showMenuBar = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskShowsWindowFrame;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.showWindowFrame = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskAllowsForceQuit;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.allowForceQuit = preferenceValue; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsGeneralOptions_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskShowsScrollBar;
+		Boolean				preferenceValue = self.viewModel.showScrollBar;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskShowsMenuBar;
+		Boolean				preferenceValue = self.viewModel.showMenuBar;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskShowsWindowFrame;
+		Boolean				preferenceValue = self.viewModel.showWindowFrame;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKioskAllowsForceQuit;
+		Boolean				preferenceValue = self.viewModel.allowForceQuit;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelGeneral_FullScreenVC //{
+
+
+/*!
+Designated initializer.
+
+(2020.11)
+*/
+- (instancetype)
+init
+{
+	PrefPanelGeneral_FullScreenActionHandler*	actionHandler = [[PrefPanelGeneral_FullScreenActionHandler alloc] init];
+	NSView*										newView = [UIPrefsGeneralFullScreen_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -643,134 +887,59 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isForceQuitEnabled
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskAllowsForceQuit defaultValue:NO];
-}
-- (void)
-setForceQuitEnabled:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskAllowsForceQuit];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save Force-Quit-in-full-screen preference");
-	}
-}// setForceQuitEnabled:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isMenuBarShownOnDemand
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsMenuBar defaultValue:NO];
-}
-- (void)
-setMenuBarShownOnDemand:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsMenuBar];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save menu-bar-on-demand preference");
-	}
-}// setMenuBarShownOnDemand:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isScrollBarVisible
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsScrollBar defaultValue:NO];
-}
-- (void)
-setScrollBarVisible:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsScrollBar];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save scroll-bar-in-full-screen preference");
-	}
-}// setScrollBarVisible:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isWindowFrameVisible
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagKioskShowsWindowFrame defaultValue:NO];
-}
-- (void)
-setWindowFrameVisible:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagKioskShowsWindowFrame];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save window-frame-in-full-screen preference");
-	}
-}// setWindowFrameVisible:
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelGeneral_FullScreenActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelGeneral_FullScreenActionHandler*	actionHandler = STATIC_CAST(aContext, PrefPanelGeneral_FullScreenActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 450, 180); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
+	
+	// update the view by changing the model’s observed variables (since this panel
+	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
+	// will never be called so the view must be initialized from the context here)
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -785,34 +954,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = [[self managedView] frame].size;
-}// panelViewManager:requestingIdealSize:
+	*outIdealSize = _idealFrame.size;
+}
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -830,7 +1001,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -843,7 +1014,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -860,7 +1031,7 @@ display the new data set.
 Not applicable to this panel because it only sets global
 (Default) preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -875,7 +1046,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -908,7 +1079,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -921,7 +1092,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -935,7 +1106,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -953,7 +1124,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -968,7 +1139,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -977,14 +1148,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end //} PrefPanelGeneral_FullScreenViewManager
-
-
-#pragma mark -
-@implementation PrefPanelGeneral_FullScreenViewManager (PrefPanelGeneral_FullScreenViewManagerInternal) //{
-
-
-@end //} PrefPanelGeneral_FullScreenViewManager (PrefPanelGeneral_FullScreenViewManagerInternal)
+@end //} PrefPanelGeneral_FullScreenVC
 
 
 #pragma mark -
