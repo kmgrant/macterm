@@ -9,8 +9,9 @@ import MacTermQuills
 //let view = UIDebugInterface_Previews.previews
 //let view = UIKeypads_Previews.previews
 //let view = UIPrefsTerminalOptions_Previews.previews
-let view = UIPrefsTerminalEmulation_Previews.previews
+//let view = UIPrefsTerminalEmulation_Previews.previews
 //let view = UIPrefsTerminalScreen_Previews.previews
+let view = UIPrefsWorkspaceOptions_Previews.previews
 
 NSSetUncaughtExceptionHandler { exception in
 	print("EXCEPTION: \(exception)")

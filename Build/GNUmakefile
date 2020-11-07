@@ -243,7 +243,6 @@ Base.lproj/PrefPanelSessionGraphicsCocoa \
 Base.lproj/PrefPanelSessionKeyboardCocoa \
 Base.lproj/PrefPanelSessionResourceCocoa \
 Base.lproj/PrefPanelTranslationsCocoa \
-Base.lproj/PrefPanelWorkspaceOptionsCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \
 Base.lproj/PrefsWindowCocoa \
 Base.lproj/PrefsWindowTouchBarCocoa \

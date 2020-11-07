@@ -68,27 +68,23 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelWorkspaces_ViewManager : GenericPanelTabs_ViewManager @end
 
 
-/*!
-Loads a NIB file that defines the Options pane.
+@class PrefPanelWorkspaces_OptionsActionHandler; // implemented internally
 
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+
+/*!
+Implements the “workspace options” panel.
 */
-@interface PrefPanelWorkspaces_OptionsViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+@interface PrefPanelWorkspaces_OptionsVC : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSSize							idealSize;
-	NSMutableDictionary*			byKey;
+	NSRect										_idealFrame;
+	PrefPanelWorkspaces_OptionsActionHandler*	_actionHandler;
 }
 
 // accessors
-	- (PreferenceValue_Flag*)
-	automaticallyEnterFullScreen; // binding
-	- (PreferenceValue_Flag*)
-	useTabbedWindows; // binding
+	@property (strong) PrefPanelWorkspaces_OptionsActionHandler*
+	actionHandler;
 
 @end //}
 
