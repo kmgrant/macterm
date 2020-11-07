@@ -77,10 +77,22 @@ extension VerticalAlignment {
 	static let middle = VerticalAlignment.center
 }
 
-public class UICommon_DefaultingModel : NSObject {
+public class UICommon_BaseModel : NSObject {
+
+	@objc public var disableWriteback = false // to prevent changes from causing looping updates; see below, and Objective-C code that initializes views or changes data sources
+
+	func ifWritebackEnabled(_ block: () -> ()) {
+		// automatically do nothing if "disableWriteback" is set; see "ifUserRequestedDefault"
+		if false == disableWriteback {
+			block()
+		}
+	}
+
+}
+
+public class UICommon_DefaultingModel : UICommon_BaseModel {
 
 	@objc public var defaultOverrideInProgress = false // to prevent changes to default flags from causing looping updates; see below, and Objective-C models that change data sources
-	@objc public var disableWriteback = false // to prevent changes to default flags from causing looping updates; see below, and Objective-C models that change data sources
 	@objc public var isEditingDefaultContext = false {
 		willSet(isOn) {
 			if isOn {
@@ -99,13 +111,6 @@ public class UICommon_DefaultingModel : NSObject {
 			disableWriteback = true
 			block()
 			disableWriteback = false
-		}
-	}
-
-	func ifWritebackEnabled(_ block: () -> ()) {
-		// automatically do nothing if "disableWriteback" is set; see "ifUserRequestedDefault"
-		if false == disableWriteback {
-			block()
 		}
 	}
 
@@ -128,17 +133,19 @@ struct UICommon_OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
 	private var disableDefaultAlignmentGuide = false
+	private var noDefaultSpacing = false
 	let optionView: Content
 	var title = ""
 
 	// variant with title and content
-	init(_ aTitle: String, disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
+	init(_ aTitle: String, disableDefaultAlignmentGuide: Bool = false, noDefaultSpacing: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
 			self.title = aTitle + ":"
 		}
 		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
+		self.noDefaultSpacing = noDefaultSpacing
 		self.optionView = content()
 	}
 
@@ -151,23 +158,25 @@ struct UICommon_OptionLineView <Content: View> : View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			// create unused checkboxes to ensure consistent alignment if
-			// any “default” options appear in the same stack
-			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
-				.controlSize(.mini)
-				.labelsHidden()
-				.hidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
-				.controlSize(.mini)
-				.labelsHidden()
-				.hidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
-				.controlSize(.mini)
-				.labelsHidden()
-				.hidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			if false == noDefaultSpacing {
+				// create unused checkboxes to ensure consistent alignment if
+				// any “default” options appear in the same stack
+				Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+					.controlSize(.mini)
+					.labelsHidden()
+					.hidden()
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+					.controlSize(.mini)
+					.labelsHidden()
+					.hidden()
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
+					.controlSize(.mini)
+					.labelsHidden()
+					.hidden()
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+			}
 			Text(title).asMacTermSectionHeading()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 			if disableDefaultAlignmentGuide {

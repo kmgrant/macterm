@@ -365,7 +365,6 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			// NOTE: this setting is stored inverted, versus its display checkbox
 			self.viewModel.autoFullScreenEnabled = preferenceValue; // SwiftUI binding
 			self.viewModel.isDefaultAutoFullScreen = isDefault; // SwiftUI binding
 		}

@@ -72,6 +72,9 @@
 #import "TerminalView.h"
 #import "UIStrings.h"
 
+// Swift imports
+#import <MacTermQuills/MacTermQuills-Swift.h>
+
 
 
 #pragma mark Types
@@ -154,9 +157,32 @@ The private class interface.
 
 
 /*!
-The private class interface.
+Implements SwiftUI interaction for the “general options” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
 */
-@interface PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal) @end
+@interface PrefPanelGeneral_OptionsActionHandler : NSObject< UIPrefsGeneralOptions_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*		_prefsMgr;
+	UIPrefsGeneralOptions_Model*	_viewModel;
+}
+
+// new methods
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsGeneralOptions_Model*
+	viewModel;
+
+@end //}
 
 
 /*!
@@ -390,7 +416,7 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = @[
-										[[[PrefPanelGeneral_OptionsViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_OptionsVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
 										[[[PrefPanelGeneral_FullScreenViewManager alloc] init] autorelease],
 										[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
@@ -1718,21 +1744,428 @@ writeBellSoundName:(NSString*)	aValue
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_OptionsViewManager //{
-
-
-#pragma mark Initializers
+@implementation PrefPanelGeneral_OptionsActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelGeneralOptionsCocoa" delegate:self context:nullptr];
+	self = [super init];
+	if (nil != self)
+	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsGeneralOptions_Model alloc] initWithRunner:self]; // transfer ownership
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.11)
+*/
+- (void)
+dealloc
+{
+	[_prefsMgr release];
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	
+	
+	// allow initialization of values without triggers
+	self.viewModel.disableWriteback = YES;
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDontAutoClose;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.noWindowCloseOnExit = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDontAutoNewOnApplicationReopen;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.noAutoNewWindows = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagFadeBackgroundWindows;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.fadeInBackground = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagPureInverse;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.invertSelectedText = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCopySelectedText;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.autoCopySelectedText = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCursorMovesPriorToDrops;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.moveCursorToTextDropLocation = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDontDimBackgroundScreens;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.doNotDimBackgroundTerminalText = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagNoPasteWarning;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.doNotWarnAboutMultiLinePaste = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapBackquote;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.mapBackquoteToEscape = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagFocusFollowsMouse;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.focusFollowsMouse = preferenceValue; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsGeneralOptions_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDontAutoClose;
+		Boolean				preferenceValue = self.viewModel.noWindowCloseOnExit;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDontAutoNewOnApplicationReopen;
+		Boolean				preferenceValue = self.viewModel.noAutoNewWindows;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagFadeBackgroundWindows;
+		Boolean				preferenceValue = self.viewModel.fadeInBackground;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagPureInverse;
+		Boolean				preferenceValue = self.viewModel.invertSelectedText;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCopySelectedText;
+		Boolean				preferenceValue = self.viewModel.autoCopySelectedText;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCursorMovesPriorToDrops;
+		Boolean				preferenceValue = self.viewModel.moveCursorToTextDropLocation;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagDontDimBackgroundScreens;
+		Boolean				preferenceValue = self.viewModel.doNotDimBackgroundTerminalText;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagNoPasteWarning;
+		Boolean				preferenceValue = self.viewModel.doNotWarnAboutMultiLinePaste;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapBackquote;
+		Boolean				preferenceValue = self.viewModel.mapBackquoteToEscape;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagFocusFollowsMouse;
+		Boolean				preferenceValue = self.viewModel.focusFollowsMouse;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelGeneral_OptionsVC //{
+
+
+/*!
+Designated initializer.
+
+(2020.11)
+*/
+- (instancetype)
+init
+{
+	PrefPanelGeneral_OptionsActionHandler*		actionHandler = [[PrefPanelGeneral_OptionsActionHandler alloc] init];
+	NSView*										newView = [UIPrefsGeneralOptions_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -1744,272 +2177,59 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-noWindowCloseOnProcessExit
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagDontAutoClose defaultValue:NO];
-}
-- (void)
-setNoWindowCloseOnProcessExit:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagDontAutoClose];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save no-auto-close preference");
-	}
-}// setNoWindowCloseOnProcessExit:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-noAutomaticNewWindows
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagDontAutoNewOnApplicationReopen defaultValue:NO];
-}
-- (void)
-setNoAutomaticNewWindows:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagDontAutoNewOnApplicationReopen];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save no-auto-new preference");
-	}
-}// setNoAutomaticNewWindows:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-fadeInBackground
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagFadeBackgroundWindows defaultValue:NO];
-}
-- (void)
-setFadeInBackground:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagFadeBackgroundWindows];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save fade-in-background preference");
-	}
-}// setFadeInBackground:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-invertSelectedText
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagPureInverse defaultValue:NO];
-}
-- (void)
-setInvertSelectedText:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagPureInverse];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save invert-selected-text preference");
-	}
-}// setInvertSelectedText:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-automaticallyCopySelectedText
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagCopySelectedText defaultValue:NO];
-}
-- (void)
-setAutomaticallyCopySelectedText:(BOOL)		aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagCopySelectedText];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save auto-copy-selected-text preference");
-	}
-}// setAutomaticallyCopySelectedText:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-moveCursorToTextDropLocation
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagCursorMovesPriorToDrops defaultValue:NO];
-}
-- (void)
-setMoveCursorToTextDropLocation:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagCursorMovesPriorToDrops];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save move-cursor-to-drop-location preference");
-	}
-}// setMoveCursorToTextDropLocation:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-doNotDimBackgroundTerminalText
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagDontDimBackgroundScreens defaultValue:NO];
-}
-- (void)
-setDoNotDimBackgroundTerminalText:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagDontDimBackgroundScreens];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save do-not-dim preference");
-	}
-}// setDoNotDimBackgroundTerminalText:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-doNotWarnAboutMultiLinePaste
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagNoPasteWarning defaultValue:NO];
-}
-- (void)
-setDoNotWarnAboutMultiLinePaste:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagNoPasteWarning];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save do-not-warn-about-multi-line-paste preference");
-	}
-}// setDoNotWarnAboutMultiLinePaste:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-treatBackquoteLikeEscape
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagMapBackquote defaultValue:NO];
-}
-- (void)
-setTreatBackquoteLikeEscape:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagMapBackquote];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save backquote-is-escape preference");
-	}
-}// setTreatBackquoteLikeEscape:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-focusFollowsMouse
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagFocusFollowsMouse defaultValue:NO];
-}
-- (void)
-setFocusFollowsMouse:(BOOL)	aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagFocusFollowsMouse];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save focus-follows-mouse preference");
-	}
-}// setFocusFollowsMouse:
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelGeneral_OptionsActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelGeneral_OptionsActionHandler*		actionHandler = STATIC_CAST(aContext, PrefPanelGeneral_OptionsActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 480, 320); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
+	
+	// update the view by changing the model’s observed variables (since this panel
+	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
+	// will never be called so the view must be initialized from the context here)
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2024,34 +2244,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = [[self managedView] frame].size;
+	*outIdealSize = _idealFrame.size;
 }
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2069,7 +2291,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -2082,7 +2304,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -2099,7 +2321,7 @@ display the new data set.
 Not applicable to this panel because it only sets global
 (Default) preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2114,7 +2336,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2147,7 +2369,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -2160,7 +2382,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -2174,7 +2396,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -2192,7 +2414,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -2207,7 +2429,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -2216,14 +2438,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end //} PrefPanelGeneral_OptionsViewManager
-
-
-#pragma mark -
-@implementation PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal) //{
-
-
-@end //} PrefPanelGeneral_OptionsViewManager (PrefPanelGeneral_OptionsViewManagerInternal)
+@end //} PrefPanelGeneral_OptionsVC
 
 
 #pragma mark -

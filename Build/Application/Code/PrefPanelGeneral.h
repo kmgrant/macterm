@@ -148,65 +148,23 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 
-/*!
-Loads a NIB file that defines the Options pane.
+@class PrefPanelGeneral_OptionsActionHandler; // implemented internally
 
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+
+/*!
+Implements the “general options” panel.
 */
-@interface PrefPanelGeneral_OptionsViewManager : Panel_ViewManager< Panel_Delegate,
-																	PrefsWindow_PanelInterface > //{
+@interface PrefPanelGeneral_OptionsVC : Panel_ViewManager< Panel_Delegate,
+															PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
+	NSRect									_idealFrame;
+	PrefPanelGeneral_OptionsActionHandler*	_actionHandler;
 }
 
-// accessors: terminal window settings
-	- (BOOL)
-	noWindowCloseOnProcessExit;
-	- (void)
-	setNoWindowCloseOnProcessExit:(BOOL)_; // binding
-	- (BOOL)
-	noAutomaticNewWindows;
-	- (void)
-	setNoAutomaticNewWindows:(BOOL)_; // binding
-	- (BOOL)
-	fadeInBackground;
-	- (void)
-	setFadeInBackground:(BOOL)_; // binding
-
-// accessors: text-related settings
-	- (BOOL)
-	invertSelectedText;
-	- (void)
-	setInvertSelectedText:(BOOL)_; // binding
-	- (BOOL)
-	automaticallyCopySelectedText;
-	- (void)
-	setAutomaticallyCopySelectedText:(BOOL)_; // binding
-	- (BOOL)
-	moveCursorToTextDropLocation;
-	- (void)
-	setMoveCursorToTextDropLocation:(BOOL)_; // binding
-	- (BOOL)
-	doNotDimBackgroundTerminalText;
-	- (void)
-	setDoNotDimBackgroundTerminalText:(BOOL)_; // binding
-	- (BOOL)
-	doNotWarnAboutMultiLinePaste;
-	- (void)
-	setDoNotWarnAboutMultiLinePaste:(BOOL)_; // binding
-
-// accessors: keyboard-related settings
-	- (BOOL)
-	treatBackquoteLikeEscape;
-	- (void)
-	setTreatBackquoteLikeEscape:(BOOL)_; // binding
-	- (BOOL)
-	focusFollowsMouse;
-	- (void)
-	setFocusFollowsMouse:(BOOL)_; // binding
+// accessors
+	@property (strong) PrefPanelGeneral_OptionsActionHandler*
+	actionHandler;
 
 @end //}
 

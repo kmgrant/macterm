@@ -692,7 +692,7 @@ updateViewModelFromPrefsMgr
 		}
 	}
 	{
-		Preferences_Tag		preferenceTag = kPreferences_TagXTermBackgroundColorEraseEnabled;;
+		Preferences_Tag		preferenceTag = kPreferences_TagXTermBackgroundColorEraseEnabled;
 		Boolean				preferenceValue = false;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
 																		sizeof(preferenceValue), &preferenceValue,

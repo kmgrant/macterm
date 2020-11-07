@@ -235,7 +235,6 @@ Base.lproj/PrefPanelFormatGeneralCocoa \
 Base.lproj/PrefPanelFormatStandardColorsCocoa \
 Base.lproj/PrefPanelGeneralFullScreenCocoa \
 Base.lproj/PrefPanelGeneralNotificationsCocoa \
-Base.lproj/PrefPanelGeneralOptionsCocoa \
 Base.lproj/PrefPanelGeneralSpecialCocoa \
 Base.lproj/PrefPanelMacrosCocoa \
 Base.lproj/PrefPanelSessionDataFlowCocoa \
