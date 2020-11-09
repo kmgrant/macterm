@@ -445,7 +445,7 @@ If MacTerm is not the active application, you can ask that you
  receive special notification from the OS when one of your
  terminals generates a bell.
 
-h4(#notifymethod). Background Notification
+h4(#notifymethod). When In Background
 
 For "Background notification on bell", as well as any other alert
  that may show up when you are in another application (such as an

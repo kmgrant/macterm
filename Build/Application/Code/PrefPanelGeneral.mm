@@ -109,72 +109,30 @@ done from this implementation file, and used by this internal class.
 
 
 /*!
-Implements an object wrapper for sound names, that allows them
-to be correctly bound into user interface elements.  (On older
-Mac OS X versions, raw strings do not bind properly.)
+Implements SwiftUI interaction for the “Notifications” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
 */
-@interface PrefPanelGeneral_SoundInfo : BoundName_Object //{
+@interface PrefPanelGeneral_NotificationsActionHandler : NSObject< UIPrefsGeneralNotifications_ActionHandling > //{
 {
 @private
-	BOOL	isDefault;
-	BOOL	isOff;
+	PrefsContextManager_Object*				_prefsMgr;
+	UIPrefsGeneralNotifications_Model*		_viewModel;
 }
 
-// initializers
-	- (instancetype)
-	initAsDefault;
-	- (instancetype)
-	initAsOff;
-	- (instancetype)
-	initWithBoundName:(NSString*)_;
-	- (instancetype)
-	initWithDescription:(NSString*)_;
-	- (instancetype)
-	initWithDescription:(NSString*)_
-	isDefault:(BOOL)_
-	isOff:(BOOL)_ NS_DESIGNATED_INITIALIZER;
-
 // new methods
 	- (void)
-	playSound;
-	- (NSString*)
-	preferenceString;
-
-@end //}
-
-
-/*!
-Private properties.
-*/
-@interface PrefPanelGeneral_NotificationsViewManager () //{
+	updateViewModelFromPrefsMgr;
 
 // accessors
-	@property (assign) BOOL
-	didLoadView;
-
-@end //}
-
-
-/*!
-The private class interface.
-*/
-@interface PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal) //{
-
-// new methods
-	- (void)
-	notifyDidChangeValueForBackgroundNotification;
-	- (void)
-	notifyWillChangeValueForBackgroundNotification;
-
-// preference setting accessors
-	- (SInt16)
-	readBackgroundNotificationTypeWithDefaultValue:(SInt16)_;
-	- (NSString*)
-	readBellSoundNameWithDefaultValue:(NSString*)_;
-	- (BOOL)
-	writeBackgroundNotificationType:(SInt16)_;
-	- (BOOL)
-	writeBellSoundName:(NSString*)_;
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsGeneralNotifications_Model*
+	viewModel;
 
 @end //}
 
@@ -442,7 +400,7 @@ init
 										[[[PrefPanelGeneral_OptionsVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
 										[[[PrefPanelGeneral_FullScreenVC alloc] init] autorelease],
-										[[[PrefPanelGeneral_NotificationsViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_NotificationsVC alloc] init] autorelease],
 									];
 	
 	
@@ -471,172 +429,6 @@ dealloc
 
 
 @end //} PrefPanelGeneral_ViewManager
-
-
-#pragma mark -
-@implementation PrefPanelGeneral_SoundInfo //{
-
-
-#pragma mark Initializers
-
-
-/*!
-Creates an object representing the user’s system-wide
-default alert sound.
-
-(4.1)
-*/
-- (instancetype)
-initAsDefault
-{
-	self = [self initWithDescription:nil isDefault:YES isOff:NO];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initAsDefault
-
-
-/*!
-Creates an object representing the sound-off state.
-
-(4.1)
-*/
-- (instancetype)
-initAsOff
-{
-	self = [self initWithDescription:nil isDefault:NO isOff:YES];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initAsOff
-
-
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2017.06)
-*/
-- (instancetype)
-initWithBoundName:(NSString*)	aDescription
-{
-	return [self initWithDescription:aDescription];
-}// initWithBoundName:
-
-
-/*!
-Creates an object representing a particular sound name.
-
-(4.1)
-*/
-- (instancetype)
-initWithDescription:(NSString*)		aDescription
-{
-	self = [self initWithDescription:aDescription isDefault:NO isOff:NO];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initWithDescription:
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-initWithDescription:(NSString*)		aDescription
-isDefault:(BOOL)					aDefaultFlag
-isOff:(BOOL)						anOffFlag
-{
-	self = [super initWithBoundName:aDescription];
-	if (nil != self)
-	{
-		self->isDefault = aDefaultFlag;
-		self->isOff = anOffFlag;
-		if (aDefaultFlag)
-		{
-			[self setDescription:NSLocalizedStringFromTable(@"Default", @"PrefPanelGeneral",
-															@"label for the default terminal bell sound")];
-		}
-		else if (anOffFlag)
-		{
-			[self setDescription:NSLocalizedStringFromTable(@"Off", @"PrefPanelGeneral",
-															@"label for turning off the terminal bell sound")];
-		}
-		else
-		{
-			[self setDescription:aDescription];
-		}
-	}
-	return self;
-}// initWithDescription:isDefault:isOff:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark New Methods
-
-
-/*!
-Plays the sound (if any) that is represented by this object.
-
-(4.1)
-*/
-- (void)
-playSound
-{
-	if (self->isDefault)
-	{
-		NSBeep();
-	}
-	else if (self->isOff)
-	{
-		// do nothing
-	}
-	else
-	{
-		CocoaBasic_PlaySoundByName((CFStringRef)[self boundName]);
-	}
-}// playSound
-
-
-/*!
-Returns the string that should be used when storing this setting
-in user preferences.  This is usually the name of the sound, but
-for the Off and Default objects it is different.
-
-(4.0)
-*/
-- (NSString*)
-preferenceString
-{
-	if (self->isDefault)
-	{
-		return @"";
-	}
-	else if (self->isOff)
-	{
-		return @"off";
-	}
-	return [self boundName];
-}// preferenceString
-
-
-@end //} PrefPanelGeneral_SoundInfo
 
 
 #pragma mark -
@@ -1152,35 +944,405 @@ preferencesClass
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_NotificationsViewManager //{
-
-
-#pragma mark Internally-Declared Properties
-
-
-/*!
-Set to YES when "panelViewManager:didLoadContainerView:"
-is completed.
-
-NOTE: In later SDKs, it may be possible to replace this
-property with the "viewLoaded" property from the parent
-NSViewController class.
-*/
-@synthesize didLoadView = _didLoadView;
-
-
-#pragma mark Initializers
+@implementation PrefPanelGeneral_NotificationsActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelGeneralNotificationsCocoa" delegate:self context:nullptr];
+	self = [super init];
+	if (nil != self)
+	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsGeneralNotifications_Model alloc] initWithRunner:self]; // transfer ownership
+		
+		// fill in names of system sounds
+		{
+			NSArray*															soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
+			NSMutableArray< UIPrefsGeneralNotification_BellSoundItemModel* >*	modelArray = [[[NSMutableArray< UIPrefsGeneralNotification_BellSoundItemModel* > alloc] init] autorelease];
+			
+			
+			for (NSString* aSoundName in soundNamesOnly)
+			{
+				UIPrefsGeneralNotification_BellSoundItemModel*		newItem = [[[UIPrefsGeneralNotification_BellSoundItemModel alloc]
+																				initWithSoundName:aSoundName helpText:nil] autorelease];
+				
+				
+				[modelArray addObject:newItem]; // (copies item)
+			}
+			self.viewModel.bellSoundItems = modelArray; // (copies array)
+		}
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.11)
+*/
+- (void)
+dealloc
+{
+	[_prefsMgr release];
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	
+	
+	// allow initialization of values without triggers
+	self.viewModel.disableWriteback = YES;
+	
+	// update notification sound
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagBellSound;
+		CFStringRef			preferenceValue = CFSTR("");
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			NSString*	asNSString = BRIDGE_CAST(preferenceValue, NSString*);
+			
+			
+			// see "Preferences.h" for special string values
+			if ([asNSString isEqualToString:@"off"])
+			{
+				// no sound
+				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID; // SwiftUI binding
+			}
+			else if ([asNSString isEqualToString:@""])
+			{
+				// default alert sound
+				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID; // SwiftUI binding
+			}
+			else
+			{
+				// named sound
+				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID; // initially...
+				for (UIPrefsGeneralNotification_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
+				{
+					if ([asNSString isEqualToString:anItem.soundName])
+					{
+						self.viewModel.selectedBellSoundID = anItem.uniqueID; // SwiftUI binding
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagVisualBell;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.visualBell = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagNotifyOfBeeps;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.bellNotificationInBackground = preferenceValue; // SwiftUI binding
+		}
+	}
+	
+	// update background notification type
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagNotification;
+		SInt16				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIPrefsGeneralNotifications_BackgroundAction	bindingValue = UIPrefsGeneralNotifications_BackgroundActionModifyIcon;
+			
+			
+			switch (preferenceValue)
+			{
+			case kAlert_NotifyDoNothing:
+				bindingValue = UIPrefsGeneralNotifications_BackgroundActionNone;
+				break;
+			
+			case kAlert_NotifyDisplayIconAndDiamondMark:
+				bindingValue = UIPrefsGeneralNotifications_BackgroundActionAndBounceIcon;
+				break;
+			
+			case kAlert_NotifyAlsoDisplayAlert:
+				bindingValue = UIPrefsGeneralNotifications_BackgroundActionAndBounceRepeatedly;
+				break;
+			
+			case kAlert_NotifyDisplayDiamondMark:
+			default:
+				bindingValue = UIPrefsGeneralNotifications_BackgroundActionModifyIcon;
+				break;
+			}
+			self.viewModel.backgroundNotificationAction = bindingValue; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsGeneralOptions_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update notification sound
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagBellSound;
+		CFStringRef			preferenceValue = CFSTR("");
+		
+		
+		if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID])
+		{
+			preferenceValue = CFSTR("off"); // special value; see "Preferences.h"
+		}
+		else if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID])
+		{
+			preferenceValue = CFSTR(""); // special value; see "Preferences.h"
+		}
+		else
+		{
+			for (UIPrefsGeneralNotification_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
+			{
+				if ([self.viewModel.selectedBellSoundID isEqual:anItem.uniqueID])
+				{
+					// note: only sound names match their labels; special items like “Off” DO NOT (see above)
+					preferenceValue = BRIDGE_CAST(anItem.soundName, CFStringRef);
+					break;
+				}
+			}
+		}
+		
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	
+	// update flags
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagVisualBell;
+		Boolean				preferenceValue = self.viewModel.visualBell;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagNotifyOfBeeps;
+		Boolean				preferenceValue = self.viewModel.bellNotificationInBackground;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	
+	// update background notification type
+	{
+		Preferences_Tag					preferenceTag = kPreferences_TagNotification;
+		/*AlertMessages_NotifyType*/UInt16	enumPrefValue = kAlert_NotifyDisplayDiamondMark;
+		
+		
+		switch (self.viewModel.backgroundNotificationAction)
+		{
+		case UIPrefsGeneralNotifications_BackgroundActionNone:
+			enumPrefValue = kAlert_NotifyDoNothing;
+			break;
+		
+		case UIPrefsGeneralNotifications_BackgroundActionAndBounceIcon:
+			enumPrefValue = kAlert_NotifyDisplayIconAndDiamondMark;
+			break;
+		
+		case UIPrefsGeneralNotifications_BackgroundActionAndBounceRepeatedly:
+			enumPrefValue = kAlert_NotifyAlsoDisplayAlert;
+			break;
+		
+		case UIPrefsGeneralNotifications_BackgroundActionModifyIcon:
+		default:
+			enumPrefValue = kAlert_NotifyDisplayDiamondMark;
+			break;
+		}
+		
+		SInt16				preferenceValue = STATIC_CAST(enumPrefValue, SInt16);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Plays the currently-selected notification sound, if any,
+by using the sound name to look up a system sound.
+
+(Called by the UI in response to user selections.)
+
+(2020.11)
+*/
+- (void)
+playSelectedBellSound
+{
+	if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID])
+	{
+		// do nothing
+	}
+	else if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID])
+	{
+		// user-specified alert sound
+		NSBeep();
+	}
+	else
+	{
+		// named alert sound
+		Boolean		foundName = false;
+		
+		
+		for (UIPrefsGeneralNotification_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
+		{
+			if ([self.viewModel.selectedBellSoundID isEqual:anItem.uniqueID])
+			{
+				CocoaBasic_PlaySoundByName(BRIDGE_CAST(anItem.soundName, CFStringRef));
+				foundName = true;
+				break;
+			}
+		}
+		
+		if (false == foundName)
+		{
+			Console_Warning(Console_WriteLine, "sound play failed; unrecognized form of selected bell ID");
+		}
+	}
+}// playSelectedBellSound
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelGeneral_NotificationsVC //{
+
+
+/*!
+Designated initializer.
+
+(2020.11)
+*/
+- (instancetype)
+init
+{
+	PrefPanelGeneral_NotificationsActionHandler*	actionHandler = [[PrefPanelGeneral_NotificationsActionHandler alloc] init];
+	NSView*											newView = [UIPrefsGeneralNotifications_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -1192,326 +1354,59 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
-	[soundNameIndexes release];
-	[soundNames release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-alwaysUseVisualBell
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagVisualBell defaultValue:NO];
-}
-- (void)
-setAlwaysUseVisualBell:(BOOL)		aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagVisualBell];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save visual-bell preference");
-	}
-}// setAlwaysUseVisualBell:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-backgroundBellsSendNotifications
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagNotifyOfBeeps defaultValue:NO];
-}
-- (void)
-setBackgroundBellsSendNotifications:(BOOL)		aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagNotifyOfBeeps];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save background-bell-notification preference");
-	}
-}// setBackgroundBellsSendNotifications:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isBackgroundNotificationNone
-{
-	return (kAlert_NotifyDoNothing == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfBackgroundNotificationNone
-{
-	return NO;
-}
-- (void)
-setBackgroundNotificationNone:(BOOL)	aFlag
-{
-	if ([self isBackgroundNotificationNone] != aFlag)
-	{
-		[self notifyWillChangeValueForBackgroundNotification];
-		
-		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyDoNothing];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save background-notification-none preference");
-		}
-		
-		[self notifyDidChangeValueForBackgroundNotification];
-	}
-}// setBackgroundNotificationNone:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isBackgroundNotificationChangeDockIcon
-{
-	return (kAlert_NotifyDisplayDiamondMark == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfBackgroundNotificationChangeDockIcon
-{
-	return NO;
-}
-- (void)
-setBackgroundNotificationChangeDockIcon:(BOOL)	aFlag
-{
-	if ([self isBackgroundNotificationChangeDockIcon] != aFlag)
-	{
-		[self notifyWillChangeValueForBackgroundNotification];
-		
-		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyDisplayDiamondMark];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save background-notification-change-Dock-icon preference");
-		}
-		
-		[self notifyDidChangeValueForBackgroundNotification];
-	}
-}// setBackgroundNotificationChangeDockIcon:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isBackgroundNotificationAnimateIcon
-{
-	return (kAlert_NotifyDisplayIconAndDiamondMark == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfBackgroundNotificationAnimateIcon
-{
-	return NO;
-}
-- (void)
-setBackgroundNotificationAnimateIcon:(BOOL)		aFlag
-{
-	if ([self isBackgroundNotificationAnimateIcon] != aFlag)
-	{
-		[self notifyWillChangeValueForBackgroundNotification];
-		
-		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyDisplayIconAndDiamondMark];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save background-notification-animate-icon preference");
-		}
-		
-		[self notifyDidChangeValueForBackgroundNotification];
-	}
-}// setBackgroundNotificationAnimateIcon:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isBackgroundNotificationDisplayMessage
-{
-	return (kAlert_NotifyAlsoDisplayAlert == [self readBackgroundNotificationTypeWithDefaultValue:kAlert_NotifyDoNothing]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfBackgroundNotificationDisplayMessage
-{
-	return NO;
-}
-- (void)
-setBackgroundNotificationDisplayMessage:(BOOL)		aFlag
-{
-	if ([self isBackgroundNotificationDisplayMessage] != aFlag)
-	{
-		[self notifyWillChangeValueForBackgroundNotification];
-		
-		BOOL	writeOK = [self writeBackgroundNotificationType:kAlert_NotifyAlsoDisplayAlert];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save background-notification-display-message preference");
-		}
-		
-		[self notifyDidChangeValueForBackgroundNotification];
-	}
-}// setBackgroundNotificationDisplayMessage:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSArray*)
-soundNames
-{
-	return [[soundNames retain] autorelease];
-}
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSIndexSet*)
-soundNameIndexes
-{
-	return [[soundNameIndexes retain] autorelease];
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfSoundNameIndexes
-{
-	return NO;
-}
-- (void)
-setSoundNameIndexes:(NSIndexSet*)	indexes
-{
-	NSUInteger						newIndex = (nil != indexes)
-												? [indexes firstIndex]
-												: 0;
-	PrefPanelGeneral_SoundInfo*		info = ((NSNotFound != newIndex) && (newIndex < [[self soundNames] count]))
-											? [[self soundNames] objectAtIndex:newIndex]
-											: nil;
-	
-	
-	if (indexes != soundNameIndexes)
-	{
-		[self willChangeValueForKey:@"soundNameIndexes"];
-		
-		[soundNameIndexes release];
-		soundNameIndexes = [indexes retain];
-		
-		// once the UI is loaded, start auto-saving the new preference
-		// (do not do this earlier, as binding setup should not overwrite
-		// previous saves with arbitrary initial values)
-		if ((self.isPanelUserInterfaceLoaded) && ([indexes count] > 0))
-		{
-			BOOL		writeOK = NO;
-			NSString*	savedName = [info preferenceString];
-			
-			
-			//Console_Warning(Console_WriteValueCFString, "write bell-sound preference", BRIDGE_CAST(savedName, CFStringRef)); // debug
-			if (nil != savedName)
-			{
-				writeOK = [self writeBellSoundName:savedName];
-				if (writeOK)
-				{
-					// do not play sounds during initialization; only afterward
-					if (self.didLoadView)
-					{
-						[info playSound];
-					}
-				}
-			}
-			
-			if (NO == writeOK)
-			{
-				Console_Warning(Console_WriteValueCFString, "failed to save bell-sound preference", BRIDGE_CAST(savedName, CFStringRef));
-			}
-		}
-		
-		[self didChangeValueForKey:@"soundNameIndexes"];
-	}
-	else
-	{
-		// play the sound either way, even if the user chooses the same item again
-		[info playSound];
-	}
-}// setSoundNameIndexes:
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelGeneral_NotificationsActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelGeneral_NotificationsActionHandler*	actionHandler = STATIC_CAST(aContext, PrefPanelGeneral_NotificationsActionHandler*);
 	
-	// set up the array of bell sounds with a dummy list
-	// so that default bindings work (these are corrected
-	// after the load completes)
-	[self willChangeValueForKey:@"soundNames"];
-	[self willChangeValueForKey:@"soundNameIndexes"];
-	self->soundNames = [[NSMutableArray alloc] init];
-	[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
-	self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:0] retain];
-	self->_didLoadView = NO;
-	[self didChangeValueForKey:@"soundNameIndexes"];
-	[self didChangeValueForKey:@"soundNames"];
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 450, 320); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
+	
+	// update the view by changing the model’s observed variables (since this panel
+	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
+	// will never be called so the view must be initialized from the context here)
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1526,88 +1421,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	// once the view is loaded (post-auto-bindings), the index
-	// values can be set from preferences; if this is done any
-	// sooner, values read from preferences can be overwritten
-	// by whatever arbitrary index is set by Cocoa bindings
-	{
-		NSArray*		soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
-		NSString*		savedName = [self readBellSoundNameWithDefaultValue:@""];
-		unsigned int	currentIndex = 0;
-		unsigned int	initialIndex = 0;
-		
-		
-		[self willChangeValueForKey:@"soundNames"];
-		[self->soundNames removeAllObjects]; // erase dummy initial values
-		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsOff] autorelease]];
-		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
-		{
-			initialIndex = currentIndex;
-		}
-		++currentIndex;
-		[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc] initAsDefault] autorelease]];
-		if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
-		{
-			initialIndex = currentIndex;
-		}
-		++currentIndex;
-		if (soundNamesOnly.count > 0)
-		{
-			// the dash "-" is translated into a separator by the menu delegate
-			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
-												initWithDescription:@"-"]
-											autorelease]];
-			++currentIndex;
-		}
-		for (NSString* soundName in soundNamesOnly)
-		{
-			[self->soundNames addObject:[[[PrefPanelGeneral_SoundInfo alloc]
-												initWithDescription:soundName]
-											autorelease]];
-			if ([savedName isEqualToString:[[self->soundNames lastObject] preferenceString]])
-			{
-				initialIndex = currentIndex;
-			}
-			++currentIndex;
-		}
-		[self willChangeValueForKey:@"soundNameIndexes"];
-		self->soundNameIndexes = [[NSIndexSet indexSetWithIndex:initialIndex] retain];
-		[self didChangeValueForKey:@"soundNameIndexes"];
-		// note: the system appears to observe "soundNames" (refreshing the
-		// array controller with a dependency on "soundNameIndexes") so this
-		// call must come last, after the desired index value is in place
-		[self didChangeValueForKey:@"soundNames"];
-		
-		self.didLoadView = YES;
-	}
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = [[self managedView] frame].size;
-}// panelViewManager:requestingIdealSize:
+	*outIdealSize = _idealFrame.size;
+}
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1625,7 +1468,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -1638,7 +1481,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -1655,7 +1498,7 @@ display the new data set.
 Not applicable to this panel because it only sets global
 (Default) preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1670,7 +1513,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -1703,7 +1546,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -1716,7 +1559,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -1730,7 +1573,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -1748,7 +1591,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -1763,7 +1606,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -1772,139 +1615,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end //} PrefPanelGeneral_NotificationsViewManager
-
-
-#pragma mark -
-@implementation PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal) //{
-
-
-#pragma mark New Methods
-
-
-/*!
-Send when changing any of the properties that affect the
-command-N key mapping (as they are related).
-
-(4.1)
-*/
-- (void)
-notifyDidChangeValueForBackgroundNotification
-{
-	// note: should occur in opposite order of corresponding "willChangeValueForKey:" invocations
-	[self didChangeValueForKey:@"backgroundNotificationNone"];
-	[self didChangeValueForKey:@"backgroundNotificationChangeDockIcon"];
-	[self didChangeValueForKey:@"backgroundNotificationAnimateIcon"];
-	[self didChangeValueForKey:@"backgroundNotificationDisplayMessage"];
-}
-- (void)
-notifyWillChangeValueForBackgroundNotification
-{
-	[self willChangeValueForKey:@"backgroundNotificationDisplayMessage"];
-	[self willChangeValueForKey:@"backgroundNotificationAnimateIcon"];
-	[self willChangeValueForKey:@"backgroundNotificationChangeDockIcon"];
-	[self willChangeValueForKey:@"backgroundNotificationNone"];
-}// notifyWillChangeValueForBackgroundNotification
-
-
-/*!
-Returns the current user preference for background notifications,
-or the specified default value if no preference exists.  The
-result will match a "kAlert_Notify..." constant.
-
-(4.1)
-*/
-- (SInt16)
-readBackgroundNotificationTypeWithDefaultValue:(SInt16)		aDefaultValue
-{
-	SInt16					result = aDefaultValue;
-	Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagNotification,
-																sizeof(result), &result);
-	
-	
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		result = aDefaultValue; // assume default, if preference can’t be found
-	}
-	return result;
-}// readBackgroundNotificationTypeWithDefaultValue:
-
-
-/*!
-Returns the current user preference for the bell sound.
-
-This is the base name of a sound file, or an empty string
-(to indicate the system’s default alert sound is played)
-or the special string "off" to indicate no sound at all.
-
-(4.1)
-*/
-- (NSString*)
-readBellSoundNameWithDefaultValue:(NSString*)	aDefaultValue
-{
-	NSString*			result = nil;
-	CFStringRef			soundName = nullptr;
-	Preferences_Result	prefsResult = kPreferences_ResultOK;
-	BOOL				releaseSoundName = YES;
-	
-	
-	// determine user’s preferred sound
-	prefsResult = Preferences_GetData(kPreferences_TagBellSound, sizeof(soundName),
-										&soundName);
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		soundName = BRIDGE_CAST(aDefaultValue, CFStringRef);
-		releaseSoundName = NO;
-	}
-	
-	result = [[((NSString*)soundName) retain] autorelease];
-	if (releaseSoundName)
-	{
-		CFRelease(soundName), soundName = nullptr;
-	}
-	
-	return result;
-}// readBellSoundNameWithDefaultValue:
-
-
-/*!
-Writes a new user preference for background notifications and
-returns YES only if this succeeds.  The given value must match
-a "kAlert_Notify..." constant.
-
-(4.1)
-*/
-- (BOOL)
-writeBackgroundNotificationType:(SInt16)	aValue
-{
-	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagNotification,
-															sizeof(aValue), &aValue);
-	
-	
-	return (kPreferences_ResultOK == prefsResult);
-}// writeBackgroundNotificationType:
-
-
-/*!
-Writes a new user preference for the bell sound.  For details
-on what the string can be, see the documentation for the
-"readBellSoundNameWithDefaultValue" method.
-
-(4.1)
-*/
-- (BOOL)
-writeBellSoundName:(NSString*)	aValue
-{
-	CFStringRef			asCFStringRef = BRIDGE_CAST(aValue, CFStringRef);
-	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagBellSound,
-															sizeof(asCFStringRef), &asCFStringRef);
-	
-	
-	return (kPreferences_ResultOK == prefsResult);
-}// writeBellSoundName:
-
-
-@end //} PrefPanelGeneral_NotificationsViewManager (PrefPanelGeneral_NotificationsViewManagerInternal)
+@end //} PrefPanelGeneral_NotificationsVC
 
 
 #pragma mark -
