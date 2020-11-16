@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -140,7 +140,8 @@
 				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE)_wrap.cxx",
 				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).py",
 			);
-			script = "Tools/RunSwig.sh -c++ -python -I`pwd`/PythonWrapper -I`pwd`/Application/Code -I`pwd`/Shared/Code -outcurrentdir ${INPUT_FILE_PATH}";
+			runOncePerArchitecture = 0;
+			script = "Tools/RunSwig.sh -c++ -python -I`pwd`/PythonWrapper -I`pwd`/Application/Code -I`pwd`/Shared/Code -outcurrentdir ${INPUT_FILE_PATH}\n";
 		};
 /* End PBXBuildRule section */
 
