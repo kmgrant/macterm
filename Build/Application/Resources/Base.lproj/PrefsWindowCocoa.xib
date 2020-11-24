@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17506"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -33,6 +33,7 @@
                 <binding destination="-2" name="value" keyPath="self.searchText" id="IGX-C2-yuF"/>
                 <outlet property="nextKeyView" destination="43" id="9xr-0F-7Mv"/>
             </connections>
+            <point key="canvasLocation" x="72" y="355"/>
         </searchField>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <arrayController clearsFilterPredicateOnInsertion="NO" id="20" userLabel="Current Preferences Contexts">
@@ -46,41 +47,36 @@
                 <binding destination="-2" name="contentArray" keyPath="self.currentPreferenceCollections" id="104"/>
             </connections>
         </arrayController>
-        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" visibleAtLaunch="NO" animationBehavior="default" id="3" userLabel="Cocoa Preferences Window" customClass="PrefsWindow_Object">
+        <window title="Preferences: MacTerm" allowsToolTipsWhenApplicationIsInactive="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="preference" id="3" userLabel="Cocoa Preferences Window" customClass="PrefsWindow_Object">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="250" y="740" width="500" height="350"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
-            <value key="minSize" type="size" width="500" height="350"/>
-            <view key="contentView" id="4" userLabel="Window Content View">
-                <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
-                <autoresizingMask key="autoresizingMask"/>
+            <rect key="contentRect" x="250" y="740" width="600" height="350"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2048" height="1255"/>
+            <value key="minSize" type="size" width="600" height="350"/>
+            <view key="contentView" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4" userLabel="Window Content View">
+                <rect key="frame" x="0.0" y="0.0" width="600" height="480"/>
                 <subviews>
-                    <splitView dividerStyle="paneSplitter" vertical="YES" id="i6l-gZ-ZuL">
-                        <rect key="frame" x="0.0" y="0.0" width="500" height="350"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <splitView dividerStyle="paneSplitter" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="i6l-gZ-ZuL">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="480"/>
                         <subviews>
-                            <customView wantsLayer="YES" id="NYq-3V-grs">
-                                <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <customView wantsLayer="YES" horizontalCompressionResistancePriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="NYq-3V-grs" userLabel="Source List Split Parent View">
+                                <rect key="frame" x="0.0" y="0.0" width="295" height="480"/>
                                 <subviews>
-                                    <scrollView wantsLayer="YES" focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="pgD-dZ-Wfj" userLabel="Source List Container">
-                                        <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
-                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <clipView key="contentView" wantsLayer="YES" drawsBackground="NO" id="IIL-1d-XyW">
-                                            <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
+                                    <scrollView wantsLayer="YES" focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pgD-dZ-Wfj" userLabel="Source List Container">
+                                        <rect key="frame" x="0.0" y="0.0" width="295" height="480"/>
+                                        <clipView key="contentView" wantsLayer="YES" drawsBackground="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IIL-1d-XyW">
+                                            <rect key="frame" x="0.0" y="0.0" width="295" height="480"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
-                                                <tableView wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" viewBased="YES" id="2uo-Zh-hqu">
-                                                    <rect key="frame" x="0.0" y="0.0" width="200" height="350"/>
-                                                    <autoresizingMask key="autoresizingMask"/>
+                                                <tableView wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" misplaced="YES" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" tableStyle="sourceList" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" viewBased="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2uo-Zh-hqu">
+                                                    <rect key="frame" x="0.0" y="0.0" width="295" height="480"/>
+                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <size key="intercellSpacing" width="3" height="2"/>
                                                     <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                     <tableColumns>
-                                                        <tableColumn width="197" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
+                                                        <tableColumn width="263" minWidth="40" maxWidth="1000" id="gSt-la-4pW">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                                <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
                                                             </tableHeaderCell>
@@ -111,115 +107,146 @@
                                             </subviews>
                                             <nil key="backgroundColor"/>
                                         </clipView>
-                                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="UUB-ts-tRR">
-                                            <rect key="frame" x="0.0" y="327" width="36" height="15"/>
+                                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UUB-ts-tRR">
+                                            <rect key="frame" x="0.0" y="505" width="250" height="15"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
-                                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="n5I-WZ-gS3">
-                                            <rect key="frame" x="-15" y="-7.5" width="15" height="0.0"/>
+                                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" translatesAutoresizingMaskIntoConstraints="NO" id="n5I-WZ-gS3">
+                                            <rect key="frame" x="-15" y="-8" width="15" height="0.0"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
                                     </scrollView>
-                                    <popUpButton id="tWX-dl-QI9" userLabel="Contextual Menu">
-                                        <rect key="frame" x="104" y="8" width="40" height="26"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="SCl-A2-khl" id="Nma-1l-Vlx">
-                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="menu"/>
-                                            <menu key="menu" id="Ry7-Ff-HN1">
-                                                <items>
-                                                    <menuItem image="NSActionTemplate" hidden="YES" id="SCl-A2-khl">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performAddNewPreferenceCollection:" target="-2" id="0z2-K7-Hfw"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="Copy Collection Settings to Default…" id="aoH-Qt-5kg">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performCopyPreferenceCollectionToDefault:" target="-2" id="OzD-4q-DGi"/>
-                                                            <binding destination="-2" name="enabled" keyPath="self.canCopySettingsToDefault" id="jdf-9Z-b8h"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="Rename Collection" id="MFn-fi-pNo">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performRenamePreferenceCollection:" target="-2" id="XCh-yt-uLF"/>
-                                                            <binding destination="-2" name="enabled" keyPath="self.canRenameSettings" id="83i-bX-Xxk"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="Duplicate Collection" id="eIq-hQ-jBi">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performDuplicatePreferenceCollection:" target="-2" id="6e1-ZF-Rk9"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="Export to File…" id="dcg-v0-i6K">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performExportPreferenceCollectionToFile:" target="-2" id="3fe-eK-eRM"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                </items>
-                                            </menu>
-                                        </popUpButtonCell>
-                                    </popUpButton>
-                                    <button verticalHuggingPriority="750" id="sHr-od-26D" userLabel="Remove Button">
-                                        <rect key="frame" x="56" y="8" width="40" height="26"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="YcL-VU-gW3">
-                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="system"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="performRemovePreferenceCollection:" target="-2" id="Aql-VQ-aOQ"/>
-                                            <binding destination="-2" name="enabled" keyPath="self.canDeleteSettings" id="bXS-eB-MPa"/>
-                                        </connections>
-                                    </button>
-                                    <popUpButton id="Ep5-r3-AVL" userLabel="Add Menu">
-                                        <rect key="frame" x="8" y="8" width="40" height="26"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="vu9-l9-42m" id="0ac-va-NF9" userLabel="Pop Up Button">
-                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="menu"/>
-                                            <menu key="menu" id="htN-ng-B3d">
-                                                <items>
-                                                    <menuItem image="NSAddTemplate" hidden="YES" id="vu9-l9-42m">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performAddNewPreferenceCollection:" target="-2" id="MsO-gP-Td9"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="New Collection" id="j3P-NJ-SVU">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performAddNewPreferenceCollection:" target="-2" id="o5N-lT-0S2"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                    <menuItem title="Import from File…" id="43B-6L-bM0">
-                                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                                        <connections>
-                                                            <action selector="performImportPreferenceCollectionFromFile:" target="-2" id="FTS-m4-zax"/>
-                                                        </connections>
-                                                    </menuItem>
-                                                </items>
-                                            </menu>
-                                        </popUpButtonCell>
-                                    </popUpButton>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9Mh-sN-sLQ" userLabel="Action Buttons HStack">
+                                        <rect key="frame" x="20" y="20" width="112" height="22"/>
+                                        <subviews>
+                                            <popUpButton translatesAutoresizingMaskIntoConstraints="NO" id="Ep5-r3-AVL" userLabel="Add Menu">
+                                                <rect key="frame" x="-5" y="0.0" width="37" height="22"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="22" id="7Pq-7Z-32Y"/>
+                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="EfI-6n-yPD"/>
+                                                </constraints>
+                                                <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="vu9-l9-42m" id="0ac-va-NF9" userLabel="Pop Up Button">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="menu"/>
+                                                    <menu key="menu" id="htN-ng-B3d">
+                                                        <items>
+                                                            <menuItem image="NSAddTemplate" hidden="YES" id="vu9-l9-42m">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performAddNewPreferenceCollection:" target="-2" id="MsO-gP-Td9"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                            <menuItem title="New Collection" id="j3P-NJ-SVU">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performAddNewPreferenceCollection:" target="-2" id="o5N-lT-0S2"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                            <menuItem title="Import from File…" id="43B-6L-bM0">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performImportPreferenceCollectionFromFile:" target="-2" id="FTS-m4-zax"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                        </items>
+                                                    </menu>
+                                                </popUpButtonCell>
+                                            </popUpButton>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="sHr-od-26D" userLabel="Remove Button">
+                                                <rect key="frame" x="40" y="3" width="32.5" height="17"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="22" id="9DN-RW-R6I"/>
+                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="bvJ-Oj-2Td"/>
+                                                </constraints>
+                                                <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="YcL-VU-gW3">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="performRemovePreferenceCollection:" target="-2" id="Aql-VQ-aOQ"/>
+                                                    <binding destination="-2" name="enabled" keyPath="self.canDeleteSettings" id="bXS-eB-MPa"/>
+                                                </connections>
+                                            </button>
+                                            <popUpButton translatesAutoresizingMaskIntoConstraints="NO" id="tWX-dl-QI9" userLabel="Contextual Menu">
+                                                <rect key="frame" x="75" y="0.0" width="37" height="22"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="8Ko-7F-kh3"/>
+                                                    <constraint firstAttribute="height" constant="22" id="PZh-QV-Q9k"/>
+                                                </constraints>
+                                                <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="SCl-A2-khl" id="Nma-1l-Vlx">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="menu"/>
+                                                    <menu key="menu" id="Ry7-Ff-HN1">
+                                                        <items>
+                                                            <menuItem image="NSActionTemplate" hidden="YES" id="SCl-A2-khl">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performAddNewPreferenceCollection:" target="-2" id="0z2-K7-Hfw"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                            <menuItem title="Copy Collection Settings to Default…" id="aoH-Qt-5kg">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performCopyPreferenceCollectionToDefault:" target="-2" id="OzD-4q-DGi"/>
+                                                                    <binding destination="-2" name="enabled" keyPath="self.canCopySettingsToDefault" id="jdf-9Z-b8h"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                            <menuItem title="Rename Collection" id="MFn-fi-pNo">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performRenamePreferenceCollection:" target="-2" id="XCh-yt-uLF"/>
+                                                                    <binding destination="-2" name="enabled" keyPath="self.canRenameSettings" id="83i-bX-Xxk"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                            <menuItem title="Duplicate Collection" id="eIq-hQ-jBi">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performDuplicatePreferenceCollection:" target="-2" id="6e1-ZF-Rk9"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                            <menuItem title="Export to File…" id="dcg-v0-i6K">
+                                                                <modifierMask key="keyEquivalentModifierMask"/>
+                                                                <connections>
+                                                                    <action selector="performExportPreferenceCollectionToFile:" target="-2" id="3fe-eK-eRM"/>
+                                                                </connections>
+                                                            </menuItem>
+                                                        </items>
+                                                    </menu>
+                                                </popUpButtonCell>
+                                            </popUpButton>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
                                 </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="pgD-dZ-Wfj" secondAttribute="trailing" id="Jpb-ez-TJl"/>
+                                    <constraint firstAttribute="bottom" secondItem="9Mh-sN-sLQ" secondAttribute="bottom" constant="20" symbolic="YES" id="UxJ-Gb-WvH"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="480" id="Vw7-33-OQ1"/>
+                                    <constraint firstItem="pgD-dZ-Wfj" firstAttribute="leading" secondItem="NYq-3V-grs" secondAttribute="leading" id="d4V-tY-Wst"/>
+                                    <constraint firstItem="pgD-dZ-Wfj" firstAttribute="top" secondItem="NYq-3V-grs" secondAttribute="top" id="n5Z-wo-jMy"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="250" id="sqc-rb-bcz"/>
+                                    <constraint firstItem="9Mh-sN-sLQ" firstAttribute="leading" secondItem="NYq-3V-grs" secondAttribute="leading" constant="20" symbolic="YES" id="wfk-K7-SCX"/>
+                                    <constraint firstAttribute="bottom" secondItem="pgD-dZ-Wfj" secondAttribute="bottom" id="zSO-t2-e7z"/>
+                                </constraints>
                             </customView>
-                            <customView id="Ym7-wy-WMQ">
-                                <rect key="frame" x="210" y="0.0" width="290" height="350"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="Ym7-wy-WMQ" userLabel="Pref Panel Split Parent View">
+                                <rect key="frame" x="305" y="0.0" width="295" height="480"/>
                                 <subviews>
-                                    <tabView drawsBackground="NO" type="noTabsNoBorder" id="149">
-                                        <rect key="frame" x="0.0" y="0.0" width="290" height="350"/>
-                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                                    <tabView drawsBackground="NO" type="noTabsNoBorder" translatesAutoresizingMaskIntoConstraints="NO" id="149">
+                                        <rect key="frame" x="0.0" y="0.0" width="295" height="480"/>
                                         <font key="font" metaFont="system"/>
                                     </tabView>
-                                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" id="43" userLabel="Help Button" customClass="CoreUI_HelpButton">
-                                        <rect key="frame" x="239" y="22" width="25" height="25"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                    <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="43" userLabel="Help Button" customClass="CoreUI_HelpButton">
+                                        <rect key="frame" x="252" y="16" width="25" height="25"/>
                                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" inset="2" id="44">
                                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                             <font key="font" metaFont="system"/>
@@ -229,8 +256,24 @@
                                         </connections>
                                     </button>
                                 </subviews>
+                                <constraints>
+                                    <constraint firstItem="149" firstAttribute="bottom" secondItem="43" secondAttribute="bottom" constant="20" id="3JT-gM-I2f"/>
+                                    <constraint firstItem="149" firstAttribute="leading" secondItem="Ym7-wy-WMQ" secondAttribute="leading" id="5Wx-pp-Wyu"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="250" id="F4I-Zd-CbU"/>
+                                    <constraint firstAttribute="trailing" secondItem="149" secondAttribute="trailing" id="J0i-vL-QsP"/>
+                                    <constraint firstAttribute="bottom" secondItem="149" secondAttribute="bottom" id="Ve6-XA-hME"/>
+                                    <constraint firstItem="149" firstAttribute="top" secondItem="Ym7-wy-WMQ" secondAttribute="top" id="X8Y-N7-eU5"/>
+                                    <constraint firstAttribute="trailing" secondItem="43" secondAttribute="trailing" constant="20" symbolic="YES" id="nkW-Wf-648"/>
+                                    <constraint firstItem="43" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Ym7-wy-WMQ" secondAttribute="leading" constant="255" id="o49-Iz-ydX"/>
+                                </constraints>
                             </customView>
                         </subviews>
+                        <constraints>
+                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="480" id="IZt-Xm-lUM"/>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="600" id="Ti1-cf-wax"/>
+                            <constraint firstAttribute="width" constant="600" placeholder="YES" id="cb2-Ou-kyn"/>
+                            <constraint firstAttribute="height" constant="480" placeholder="YES" id="gLp-AJ-Rzx"/>
+                        </constraints>
                         <holdingPriorities>
                             <real value="250"/>
                             <real value="250"/>
@@ -240,13 +283,19 @@
                         </connections>
                     </splitView>
                 </subviews>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="i6l-gZ-ZuL" secondAttribute="trailing" id="FLh-lo-rYm"/>
+                    <constraint firstItem="i6l-gZ-ZuL" firstAttribute="leading" secondItem="4" secondAttribute="leading" id="byF-rr-JhN"/>
+                    <constraint firstAttribute="bottom" secondItem="i6l-gZ-ZuL" secondAttribute="bottom" id="e0D-Vq-HqI"/>
+                    <constraint firstItem="i6l-gZ-ZuL" firstAttribute="top" secondItem="4" secondAttribute="top" id="u35-TD-Tpc"/>
+                </constraints>
             </view>
-            <point key="canvasLocation" x="-6" y="-53"/>
+            <point key="canvasLocation" x="22" y="-13"/>
         </window>
     </objects>
     <resources>
-        <image name="NSActionTemplate" width="14" height="14"/>
-        <image name="NSAddTemplate" width="11" height="11"/>
-        <image name="NSRemoveTemplate" width="11" height="11"/>
+        <image name="NSActionTemplate" width="15" height="15"/>
+        <image name="NSAddTemplate" width="14" height="13"/>
+        <image name="NSRemoveTemplate" width="14" height="4"/>
     </resources>
 </document>

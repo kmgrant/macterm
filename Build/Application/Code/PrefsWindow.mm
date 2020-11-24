@@ -1518,7 +1518,7 @@ resizeSubviewsWithOldSize:(NSSize)	anOriginalSize
 	{
 		// when relatively large, assign an arbitrary width for the list
 		// (note: this seems to avoid a LOT of quirks in NSSplitView)
-		masterWidth = 200.0; // arbitrary
+		masterWidth = 250.0; // arbitrary
 	}
 	else
 	{
@@ -1804,85 +1804,26 @@ itemForItemIdentifier:(NSString*)	itemIdentifier
 willBeInsertedIntoToolbar:(BOOL)	flag
 {
 #pragma unused(toolbar, flag)
-	// NOTE: no need to handle standard items here
-	NSToolbarItem*		result = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
-	
-	
 	if ([itemIdentifier isEqualToString:kMy_PrefsWindowToolbarItemIDSearch])
 	{
-		result = [[[PrefsWindow_ToolbarItemSearch alloc] initWithField:self->searchField] autorelease];
-		return result; // TEMPORARY
+		return [[[PrefsWindow_ToolbarItemSearch alloc] initWithField:self->searchField] autorelease]; // TEMPORARY
 	}
 	
+	// NOTE: no need to handle standard items here
 	Panel_ViewManager*		itemPanel = [self->panelsByID objectForKey:itemIdentifier];
-	NSButton*				categoryButton = [[NSButton alloc]
-												initWithFrame:NSMakeRect(0, 0, 36, 28)/* arbitrary frame */];
-	
-	
-	// configure a button to activate the main category
-	// (which exists regardless of any sub-panels)
-	categoryButton.action = itemPanel.panelDisplayAction;
-	categoryButton.target = itemPanel.panelDisplayTarget;
-	categoryButton.buttonType = NSMomentaryPushInButton;
-	categoryButton.bordered = NO;
-	categoryButton.title = @"";
-	categoryButton.image = [itemPanel panelIcon];
-	categoryButton.image.size = NSMakeSize(32, 32); // arbitrary size (approximate standard icons); see note below for "menuFormRepresentation" though
-	if (NO == [categoryButton.cell accessibilitySetOverrideValue:[itemPanel panelName] forAttribute:NSAccessibilityDescriptionAttribute])
-	{
-		//NSLog(@"warning, failed to set toolbar button cell accessibility label"); // debug
-	}
-	
 	assert(nil != itemPanel);
-	result.label = [itemPanel panelName];
-	result.image = [itemPanel panelIcon];
-	result.action = itemPanel.panelDisplayAction;
-	result.target = itemPanel.panelDisplayTarget;
-	result.menuFormRepresentation = [[[NSMenuItem alloc]
-										initWithTitle:@""
-														action:nil
-														keyEquivalent:@""] autorelease];
-	// note: it is not clear why but setting the MENU icon size
-	// affects the icon displayed in the button itself; make
-	// sure that the menu icon size approximates a normal toolbar
-	// icon’s size
-	result.menuFormRepresentation.image = result.image;
-	result.menuFormRepresentation.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
-	result.menuFormRepresentation.title = result.label;
-	result.menuFormRepresentation.action = result.action;
-	result.menuFormRepresentation.target = result.target;
+	BOOL					hasSubPanels = ([itemPanel conformsToProtocol:@protocol(Panel_Parent)] &&
+											([STATIC_CAST(itemPanel, id< Panel_Parent >) panelParentChildCount] > 1));
+	NSToolbarItem*			result = nil; // set below
 	
-	if ([itemPanel conformsToProtocol:@protocol(Panel_Parent)] &&
-		([STATIC_CAST(itemPanel, id< Panel_Parent >) panelParentChildCount] > 1))
+	
+	if (hasSubPanels)
 	{
-		// main button is available as direct action but
-		// a pop-up menu button is included underneath
-		// for access to sub-categories (tabs)
+		// use new NSMenuToolbarItem for sub-panels
+		NSMenuToolbarItem*	asMenuToolbarItem = [[[NSMenuToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
 		id< Panel_Parent >	asParent = STATIC_CAST(itemPanel, id< Panel_Parent >);
-		NSPopUpButton*		menuButton = [[NSPopUpButton alloc]
-											initWithFrame:NSMakeRect(0, 0, 54, 42)/* arbitrary frame */
-															pullsDown:YES];
 		NSMenu*				newMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
-		NSMenu*				subMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease]; // for overflow only; excludes title item
 		
-		
-		// pull-down buttons determine their appearance by using
-		// the properties of the first item (an item which is then
-		// not displayed in the menu); insert a dummy item to
-		// ensure that the menu only contains items for sub-panels
-		// and to ensure that the button has the right appearance
-		{
-			NSMenuItem*		defaultView = [[NSMenuItem alloc]
-											initWithTitle:@""
-															action:result.action
-															keyEquivalent:@""];
-			
-			
-			// note: icon is shown in the normal category button subview
-			//defaultView.image = [itemPanel panelIcon];
-			//defaultView.image.size = NSMakeSize(32, 32); // shrink default image, which is too large
-			[newMenu addItem:defaultView];
-		}
 		
 		// add an item for each sub-category, using the settings
 		// of each panel to determine how the menu command looks
@@ -1902,56 +1843,26 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 			//newItem.image = [itemPanel panelIcon];
 			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
 			[newMenu addItem:newItem];
-			[subMenu addItem:[[newItem copy] autorelease]];
 		}
+		asMenuToolbarItem.menu = newMenu;
+		asMenuToolbarItem.showsIndicator = YES;
 		
-		// configure the rest of the menu button; note that the arrow
-		// position is important but it is only visible through the cell
-		menuButton.menu = newMenu;
-		menuButton.action = result.action;
-		menuButton.target = result.target;
-		menuButton.buttonType = NSMomentaryPushInButton;
-		menuButton.bordered = YES;
-		menuButton.bezelStyle = NSShadowlessSquareBezelStyle;
-		menuButton.showsBorderOnlyWhileMouseInside = YES;
-		if ([menuButton.cell isKindOfClass:NSPopUpButtonCell.class])
-		{
-			NSPopUpButtonCell*	asPopUpButtonCell = STATIC_CAST(menuButton.cell, NSPopUpButtonCell*);
-			
-			
-			// put the arrow on the edge instead of in the center
-			asPopUpButtonCell.arrowPosition = NSPopUpArrowAtBottom;
-		}
-		
-		// when the normal category button appears on top of the menu,
-		// it is helpful to also give it hover-border behavior (otherwise
-		// it is hard to guess what will happen when clicking)
-		categoryButton.bordered = YES;
-		categoryButton.bezelStyle = NSShadowlessSquareBezelStyle;
-		categoryButton.showsBorderOnlyWhileMouseInside = YES;
-		[categoryButton setFrameOrigin:NSMakePoint(3, 3)]; // if there is a difference between the two button heights above, offset the subview
-		
-		[menuButton addSubview:categoryButton];
-		result.view = menuButton;
-		// note: Apple documentation says that "minSize" and "maxSize" are auto-set
-		// when "view" is assigned (above) but this was recently broken in macOS and
-		// is a lie; therefore, once again, being explicit is the best way to go
-		result.minSize = CGSizeMake(result.view.frame.size.width, result.view.frame.size.height - 8/* arbitrary */);
-		result.maxSize = result.minSize;
-		[result.menuFormRepresentation setSubmenu:subMenu];
+		result = asMenuToolbarItem;
 	}
 	else
 	{
-		// button is displayed by itself, no menu underneath
-		result.view = categoryButton;
-		
-		// note: may choose to disable roll-over highlight (non-standard
-		// for ordinary toolbar items but more consistent with the look
-		// and behavior of items in this particular toolbar)
-		categoryButton.bordered = YES;
-		categoryButton.bezelStyle = NSShadowlessSquareBezelStyle;
-		categoryButton.showsBorderOnlyWhileMouseInside = YES;
+		result = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
 	}
+	
+	result.label = [itemPanel panelName];
+	result.image = [itemPanel panelIcon];
+	result.action = itemPanel.panelDisplayAction;
+	result.target = itemPanel.panelDisplayTarget;
+	
+	// for some reason NSMenuToolbarItem uses a different default icon size
+	// compared to ordinary toolbar items; to ensure the image is not too
+	// big, force the size here...
+	result.image.size = NSMakeSize(24, 24);
 	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -2002,7 +1913,7 @@ Returns the identifiers for the items that may appear in a
 - (NSArray*)
 toolbarSelectableItemIdentifiers:(NSToolbar*)	toolbar
 {
-	return [self toolbarAllowedItemIdentifiers:toolbar];
+	return [self->panelIDArray copy];
 }// toolbarSelectableItemIdentifiers:
 
 
@@ -2163,6 +2074,10 @@ windowDidLoad
 		
 		extraWindowContentSize = NSMakeSize(NSWidth(contentFrame) - NSWidth(kOriginalDetailContainerFrame),
 											NSHeight(contentFrame) - NSHeight(kOriginalDetailContainerFrame));
+		if (extraWindowContentSize.height < 0)
+		{
+			extraWindowContentSize.height = 0;
+		}
 	}
 	
 	// add each panel as a subview and hide all except the first;
