@@ -550,7 +550,8 @@ IMPORTANT:	This API currently only works for the
 void
 GenericDialog_SetItemResponseBlock	(GenericDialog_Ref		inDialog,
 									 GenericDialog_ItemID	inItemID,
-									 void					(^inResponseBlock)())
+									 void					(^inResponseBlock)(),
+									 Boolean				inIsHarmfulAction)
 {
 	My_GenericDialogAutoLocker		ptr(gGenericDialogPtrLocks(), inDialog);
 	
@@ -574,6 +575,11 @@ GenericDialog_SetItemResponseBlock	(GenericDialog_Ref		inDialog,
 		else
 		{
 			ptr->containerViewManager.primaryButtonBlock = inResponseBlock;
+		}
+		
+		if (inIsHarmfulAction)
+		{
+			ptr->containerViewManager.harmfulActionItemID = inItemID;
 		}
 	}
 	else
@@ -762,6 +768,7 @@ drawRect:(NSRect)	aRect
 
 
 @synthesize cleanupBlock = _cleanupBlock;
+@synthesize harmfulActionItemID = _harmfulActionItemID;
 @synthesize helpButtonBlock = _helpButtonBlock;
 @synthesize primaryButtonBlock = _primaryButtonBlock;
 @synthesize secondButtonBlock = _secondButtonBlock;
@@ -988,6 +995,8 @@ initializeWithContext:(void*)			aContext
 	NSValue*			givenDialogRefValue = [asDictionary objectForKey:@"dialogRef"];
 	
 	
+	_harmfulActionItemID = kGenericDialog_ItemIDNone;
+	
 	self->identifier = [givenIdentifier retain];
 	self->localizedName = [givenName retain];
 	self->localizedIcon = [givenIcon retain];
@@ -1158,6 +1167,36 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 		(nullptr != self->dialogRef))
 	{
 		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		auto						setDestructiveActionBlock =
+									^(NSButton* aButton)
+									{
+										if (@available(macOS 11.0, *))
+										{
+											aButton.hasDestructiveAction = YES;
+										}
+										
+										// NSAlert and NSSavePanel will auto-style buttons based on the
+										// "hasDestructiveAction" property but otherwise the system
+										// currently does nothing with this; in addition, older OS
+										// versions do not have the property; to work around this, the
+										// button title is styled manually
+										NSDictionary*	attributeDictNormal =
+										@{
+											NSForegroundColorAttributeName: [NSColor systemRedColor],
+											NSFontAttributeName: [NSFont boldSystemFontOfSize:0.0],
+										};
+										NSDictionary*	attributeDictSelected =
+										@{
+											NSForegroundColorAttributeName: [NSColor selectedControlTextColor],
+											NSFontAttributeName: [NSFont boldSystemFontOfSize:0.0],
+										};
+										aButton.attributedTitle = [[NSAttributedString alloc]
+																	initWithString:aButton.title
+																					attributes:attributeDictNormal];
+										aButton.attributedAlternateTitle = [[NSAttributedString alloc]
+																			initWithString:aButton.title
+																							attributes:attributeDictSelected];
+									};
 		auto						setKeyEquivalentsBlock =
 									^{
 										NSButton*	keyButton = self->cancelButton;
@@ -1174,19 +1213,61 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 									};
 		
 		
-		// delay the availability of the Return-key mapping if requested
-		// or if there is exactly one button in the dialog
-		if ((ptr->delayedKeyEquivalents) ||
-			((nil == self.secondButtonBlock) && (nil == self.thirdButtonBlock)))
+		// if there is any “harmful” action, mark it as such
+		if (@available(macOS 11.0, *))
+		{
+			switch (self.harmfulActionItemID)
+			{
+			case kGenericDialog_ItemIDButton1:
+				if (nil != self->actionButton)
+				{
+					setDestructiveActionBlock(self->actionButton);
+				}
+				break;
+			
+			case kGenericDialog_ItemIDButton2:
+				if (nil != self->cancelButton)
+				{
+					setDestructiveActionBlock(self->cancelButton);
+				}
+				break;
+			
+			case kGenericDialog_ItemIDButton3:
+				if (nil != self->otherButton)
+				{
+					setDestructiveActionBlock(self->otherButton);
+				}
+				break;
+			
+			case kGenericDialog_ItemIDNone:
+			case kGenericDialog_ItemIDHelpButton:
+			default:
+				// ???
+				break;
+			}
+		}
+		
+		if (kGenericDialog_ItemIDButton1 == self.harmfulActionItemID)
 		{
 			[self.managedView.window disableKeyEquivalentForDefaultButtonCell];
 			self.managedView.window.defaultButtonCell = nil;
-			UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:self->helpButton];
-			CocoaExtensions_RunLater(1.0/* arbitrary delay in seconds */, setKeyEquivalentsBlock);
 		}
 		else
 		{
-			setKeyEquivalentsBlock();
+			// delay the availability of the Return-key mapping if requested
+			// or if there is exactly one button in the dialog
+			if ((ptr->delayedKeyEquivalents) ||
+				((nil == self.secondButtonBlock) && (nil == self.thirdButtonBlock)))
+			{
+				[self.managedView.window disableKeyEquivalentForDefaultButtonCell];
+				self.managedView.window.defaultButtonCell = nil;
+				UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:self->helpButton];
+				CocoaExtensions_RunLater(1.0/* arbitrary delay in seconds */, setKeyEquivalentsBlock);
+			}
+			else
+			{
+				setKeyEquivalentsBlock();
+			}
 		}
 	}
 	
@@ -1784,6 +1865,9 @@ Automatically resizes all action buttons and lays them out
 according to normal interface guidelines and the current
 localization (right-to-left versus left-to-right).
 
+In addition, on macOS 11 and beyond, buttons are larger if
+this is an alert-style dialog.
+
 (4.1)
 */
 -
@@ -1793,8 +1877,22 @@ updateButtonLayout
 	// do nothing unless views are loaded
 	if (nil != self->actionButton)
 	{
-		NSArray*	buttonArray = @[self->actionButton, self->cancelButton, self->otherButton];
+		NSArray<NSButton*>*			buttonArray = @[self->actionButton, self->cancelButton, self->otherButton];
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
 		
+		
+		if ((nullptr != ptr) && (ptr->isAlert))
+		{
+			if (@available(macOS 11.0, *))
+			{
+				for (NSButton* aButton in buttonArray)
+				{
+					aButton.controlSize = NSControlSizeLarge;
+				}
+				self->helpButton.controlSize = NSControlSizeLarge;
+				[self->helpButton sizeToFit];
+			}
+		}
 		
 		Localization_ArrangeNSButtonArray(BRIDGE_CAST(buttonArray, CFArrayRef));
 		Localization_AdjustHelpNSButton(self->helpButton);

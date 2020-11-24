@@ -1037,7 +1037,7 @@ performCopyPreferenceCollectionToDefault:(id)	sender
 		^{
 			// user consented to the overwrite of defaults
 			copyContextToDefaults(baseContext);
-		});
+		}, true/* is harmful action */);
 		Alert_SetHelpButton(box.returnRef(), true);
 		Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
 		Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());
@@ -1291,7 +1291,7 @@ performRemovePreferenceCollection:(id)	sender
 			^{
 				// user consented to the overwrite of defaults
 				deleteContext(deadContext);
-			});
+			}, true/* is harmful action */);
 			Alert_SetHelpButton(box.returnRef(), false);
 			Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
 			Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(), helpTextCFString.returnCFStringRef());

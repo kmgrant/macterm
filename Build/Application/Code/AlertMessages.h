@@ -265,7 +265,8 @@ void
 void
 	Alert_SetButtonResponseBlock		(AlertMessages_BoxRef		inAlert,
 										 UInt16						inWhichButton,
-										 void						(^inResponseBlock)());
+										 void						(^inResponseBlock)(),
+										 Boolean					inIsHarmfulAction = false);
 
 void
 	Alert_SetButtonText					(AlertMessages_BoxRef		inAlert,

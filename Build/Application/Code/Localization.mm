@@ -61,6 +61,14 @@ Localization_AdjustHelpNSButton		(NSButton*		inHelpButton)
 	CGFloat		buttonHeight = NSHeight([inHelpButton frame]);
 	
 	
+	if (@available(macOS 11.0, *))
+	{
+		if (NSControlSizeLarge == inHelpButton.controlSize)
+		{
+			yOffset = 8; // arbitrary (reduce offset because button is bigger)
+		}
+	}
+	
 	if (NSUserInterfaceLayoutDirectionRightToLeft == NSApp.userInterfaceLayoutDirection)
 	{
 		// in right-to-left locales, the help button is in the lower right

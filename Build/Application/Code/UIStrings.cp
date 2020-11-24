@@ -525,6 +525,11 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 													CFSTR("kUIStrings_ButtonMakeOneLine"));
 		break;
 	
+	case kUIStrings_ButtonReset:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Reset"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonReset"));
+		break;
+	
 	default:
 		// ???
 		result = kUIStrings_ResultNoSuchString;

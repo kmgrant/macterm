@@ -172,6 +172,7 @@ enum UIStrings_ButtonCFString
 	kUIStrings_ButtonOK									= ' OK ',
 	kUIStrings_ButtonOverwrite							= 'Ovrw',
 	kUIStrings_ButtonPasteAsIs							= 'Pste',
+	kUIStrings_ButtonReset								= 'Rset',
 	kUIStrings_ButtonRestart							= 'Rsrt',
 	kUIStrings_ButtonQuit								= 'Quit',
 	kUIStrings_ButtonReviewWithEllipsis					= 'Revu',

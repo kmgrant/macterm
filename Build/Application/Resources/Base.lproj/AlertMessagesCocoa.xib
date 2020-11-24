@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097.3"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17506"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -19,16 +19,16 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <view id="X1f-Jj-WHQ">
-            <rect key="frame" x="0.0" y="0.0" width="360" height="227"/>
+            <rect key="frame" x="0.0" y="0.0" width="380" height="227"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
             <subviews>
                 <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M44-en-2bl" userLabel="Icon" customClass="AlertMessages_WindowDraggingIcon">
-                    <rect key="frame" x="148" y="153" width="64" height="64"/>
+                    <rect key="frame" x="158" y="153" width="64" height="64"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="dNy-xR-sxb"/>
                 </imageView>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" alphaValue="0.80000000000000004" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rn1-It-qwq" userLabel="Title Text" customClass="AlertMessages_TitleTextField">
-                    <rect key="frame" x="30" y="122" width="300" height="23"/>
+                    <rect key="frame" x="30" y="122" width="320" height="23"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="&lt;title text&gt;" id="cBl-XC-Z58">
                         <font key="font" metaFont="systemBold" size="16"/>
@@ -47,12 +47,12 @@
                     </connections>
                 </textField>
                 <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="veC-t9-gpm" userLabel="Dialog Text" customClass="AlertMessages_TextView">
-                    <rect key="frame" x="52" y="86" width="256" height="20"/>
+                    <rect key="frame" x="52" y="86" width="276" height="20"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <accessibility description="Alert Message"/>
                 </customView>
                 <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="i9s-bA-TTg" userLabel="Help Text" customClass="AlertMessages_TextView">
-                    <rect key="frame" x="20" y="48" width="320" height="18"/>
+                    <rect key="frame" x="20" y="48" width="340" height="18"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <accessibility description="Alert Details"/>
                 </customView>

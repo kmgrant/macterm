@@ -982,7 +982,7 @@ handleQuitReview ()
 											^{
 												// “Discard All”; no alerts are displayed but the application still quits
 												result = YES;
-											});
+											}, true/* is harmful action */);
 		}
 		Alert_Display(box.returnRef()); // retains alert until it is dismissed
 	}

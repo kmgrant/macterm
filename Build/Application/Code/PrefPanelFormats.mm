@@ -1676,10 +1676,13 @@ performResetStandardColors:(id)		sender
 												CFRetainRelease::kAlreadyRetained);
 	CFRetainRelease			helpTextCFString(UIStrings_ReturnCopy(kUIStrings_AlertWindowGenericCannotUndoHelpText),
 												CFRetainRelease::kAlreadyRetained);
+	CFRetainRelease			resetButtonCFString(UIStrings_ReturnCopy(kUIStrings_ButtonReset),
+												CFRetainRelease::kAlreadyRetained);
 	
 	
 	assert(dialogTextCFString.exists());
 	assert(helpTextCFString.exists());
+	assert(resetButtonCFString.exists());
 	
 	Alert_SetButtonResponseBlock(box.returnRef(), kAlert_ItemButton1,
 	^{
@@ -1692,9 +1695,10 @@ performResetStandardColors:(id)		sender
 			Sound_StandardAlert();
 			Console_Warning(Console_WriteLine, "failed to reset all the standard colors to default values!");
 		}
-	});
+	}, true/* is harmful action */);
 	Alert_SetHelpButton(box.returnRef(), false);
 	Alert_SetParamsFor(box.returnRef(), kAlert_StyleOKCancel);
+	Alert_SetButtonText(box.returnRef(), kAlert_ItemButton1, resetButtonCFString.returnCFStringRef());
 	Alert_SetTextCFStrings(box.returnRef(), dialogTextCFString.returnCFStringRef(),
 							helpTextCFString.returnCFStringRef());
 	Alert_Display(box.returnRef()); // retains alert until it is dismissed

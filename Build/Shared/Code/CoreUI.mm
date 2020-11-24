@@ -64,6 +64,13 @@ NOTE:	Invoked by the system only on OS 10.7 or later, and
 - (void)
 drawFocusRingMask
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		[super drawFocusRingMask];
+		return;
+	}
+	
 	// IMPORTANT: make consistent with "focusRingMaskBounds";
 	// fill the exact shape of the focus ring however (not just
 	// the boundaries of it); the settings below are meant to
@@ -92,6 +99,13 @@ style in place.
 - (void)
 drawRect:(NSRect)	aRect
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		[super drawRect:aRect];
+		return;
+	}
+	
 	if (NO == [self isKeyboardFocusOnSelf])
 	{
 		// normal case; superclass handles this fine
@@ -127,6 +141,12 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 - (NSRect)
 focusRingMaskBounds
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		return [super focusRingMaskBounds];
+	}
+	
 	// IMPORTANT: make consistent with "drawFocusRingMask"
 	NSRect		result = NSInsetRect(self.bounds, 7, 7);
 	
@@ -258,6 +278,13 @@ NOTE:	Invoked by the system only on OS 10.7 or later, and
 - (void)
 drawFocusRingMask
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		[super drawFocusRingMask];
+		return;
+	}
+	
 	// IMPORTANT: make consistent with "focusRingMaskBounds";
 	// fill the exact shape of the focus ring however (not just
 	// the boundaries of it); the settings below are meant to
@@ -286,6 +313,13 @@ style in place.
 - (void)
 drawRect:(NSRect)	aRect
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		[super drawRect:aRect];
+		return;
+	}
+	
 	if (NO == [self isKeyboardFocusOnSelf])
 	{
 		// normal case; superclass handles this fine
@@ -321,6 +355,12 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 - (NSRect)
 focusRingMaskBounds
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		return [super focusRingMaskBounds];
+	}
+	
 	// IMPORTANT: make consistent with "drawFocusRingMask"
 	NSRect		result = NSInsetRect(self.bounds, 5, 5);
 	
@@ -396,6 +436,13 @@ NOTE:	Invoked by the system only on OS 10.7 or later, and
 - (void)
 drawFocusRingMask
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		[super drawFocusRingMask];
+		return;
+	}
+	
 	// IMPORTANT: make consistent with "focusRingMaskBounds";
 	// fill the exact shape of the focus ring however (not just
 	// the boundaries of it); the settings below are meant to
@@ -424,6 +471,13 @@ style in place.
 - (void)
 drawRect:(NSRect)	aRect
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		[super drawRect:aRect];
+		return;
+	}
+	
 	if (NO == [self isKeyboardFocusOnSelf])
 	{
 		// normal case; superclass handles this fine
@@ -459,6 +513,12 @@ NOTE:	Invoked only on OS 10.7 or later, and less often
 - (NSRect)
 focusRingMaskBounds
 {
+	if (@available(macOS 11.0, *))
+	{
+		// override no longer seems to be necessary
+		return [super focusRingMaskBounds];
+	}
+	
 	// IMPORTANT: make consistent with "drawFocusRingMask"
 	NSRect		result = NSInsetRect(self.bounds, 3, 3);
 	

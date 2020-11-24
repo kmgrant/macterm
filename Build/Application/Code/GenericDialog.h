@@ -104,6 +104,7 @@ changes to an interface declared in a ".mm" file.
 	void					(^_primaryButtonBlock)();
 	void					(^_secondButtonBlock)();
 	void					(^_thirdButtonBlock)();
+	GenericDialog_ItemID	_harmfulActionItemID;
 	NSString*				_primaryButtonName;
 	NSString*				_secondButtonName;
 	NSString*				_thirdButtonName;
@@ -127,6 +128,8 @@ changes to an interface declared in a ".mm" file.
 // accessors: user interface settings
 	@property (copy) void
 	(^cleanupBlock)();
+	@property (assign) GenericDialog_ItemID
+	harmfulActionItemID;
 	@property (copy) void
 	(^helpButtonBlock)();
 	@property (copy) void
@@ -203,7 +206,8 @@ void
 void
 	GenericDialog_SetItemResponseBlock			(GenericDialog_Ref					inDialog,
 												 GenericDialog_ItemID				inItemID,
-												 void								(^inResponseBlock)());
+												 void								(^inResponseBlock)(),
+												 Boolean							inIsHarmfulAction = false);
 
 void
 	GenericDialog_SetItemTitle					(GenericDialog_Ref					inDialog,

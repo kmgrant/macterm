@@ -553,7 +553,8 @@ Specifies the response for an action button.
 void
 Alert_SetButtonResponseBlock	(AlertMessages_BoxRef	inAlert,
 								 UInt16					inWhichButton,
-								 void					(^inResponseBlock)())
+								 void					(^inResponseBlock)(),
+								 Boolean				inIsHarmfulAction)
 {
 	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
@@ -575,7 +576,7 @@ Alert_SetButtonResponseBlock	(AlertMessages_BoxRef	inAlert,
 			}
 			else
 			{
-				GenericDialog_SetItemResponseBlock(alertPtr->genericDialog.returnRef(), itemID, inResponseBlock);
+				GenericDialog_SetItemResponseBlock(alertPtr->genericDialog.returnRef(), itemID, inResponseBlock, inIsHarmfulAction);
 			}
 		}
 	}
