@@ -96,49 +96,49 @@ public struct UIPrefsGeneralOptions_View : View {
 			Group {
 				UICommon_OptionLineView("Terminal Windows", noDefaultSpacing: true) {
 					Toggle("No window close on process exit", isOn: $viewModel.noWindowCloseOnExit)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if terminal windows should stay open when the processes that were running in them have quit, instead of automatically going away.  (Useful for debugging problems.)")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("No automatic new windows", isOn: $viewModel.noAutoNewWindows)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if the Default Workspace should not be spawned when MacTerm first launches.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Fade in background", isOn: $viewModel.fadeInBackground)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if terminal windows should become partly transparent when MacTerm is not the active application.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
 			Group {
 				UICommon_OptionLineView("Text", noDefaultSpacing: true) {
 					Toggle("Invert selected text", isOn: $viewModel.invertSelectedText)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if terminal text should be selected by swapping the foreground and background colors, instead of using system colors or darkening the colors.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Automatically Copy selected text", isOn: $viewModel.autoCopySelectedText)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if terminal text should be immediately copied to the Clipboard as soon as it is selected (similar to Unix-like systems).")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Move cursor to text drop location", isOn: $viewModel.moveCursorToTextDropLocation)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if terminal sequences should be sent to the session to move the cursor from its current location to the cell where text is dropped by the mouse.  Note that this usually only works in terminal text editors or other full-window applications.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Don’t dim background terminal text", isOn: $viewModel.doNotDimBackgroundTerminalText)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if terminal screen colors should not change when windows are inactive.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Don’t warn about multi–line Paste", isOn: $viewModel.doNotWarnAboutMultiLinePaste)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if the “Multi-Line Paste” alert should be suppressed and multi-line text should be inserted as-is automatically.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
 			Group {
 				UICommon_OptionLineView("Keyboard", noDefaultSpacing: true) {
 					Toggle("Treat backquote key like Escape", isOn: $viewModel.mapBackquoteToEscape)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if pressing the backquote (`) key has the same behavior as pressing the Escape (esc) key.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Focus follows mouse", isOn: $viewModel.focusFollowsMouse)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if keyboard focus and window frame highlighting are based on where the mouse is pointing, and not which window was last selected.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()

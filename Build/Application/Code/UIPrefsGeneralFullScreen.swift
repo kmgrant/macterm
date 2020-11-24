@@ -78,19 +78,19 @@ public struct UIPrefsGeneralFullScreen_View : View {
 			Group {
 				UICommon_OptionLineView("Access Control", noDefaultSpacing: true) {
 					Toggle("Show scroll bar", isOn: $viewModel.showScrollBar)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if there should be a vertical scroll bar while in Full Screen mode.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Show menu bar on demand", isOn: $viewModel.showMenuBar)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if the menu bar should appear when the mouse is moved to the top of the screen in Full Screen mode.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Show window frame", isOn: $viewModel.showWindowFrame)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if the window title and toolbar area should always be visible in Full Screen mode.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Allow “Force Quit” command", isOn: $viewModel.allowForceQuit)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if “Force Quit” and similar Apple menu actions should be accessible while in Full Screen mode.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()

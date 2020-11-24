@@ -174,14 +174,14 @@ public struct UIPrefsTerminalScreen_View : View {
 			UICommon_Default1OptionLineView("Width", bindIsDefaultTo: $viewModel.isDefaultWidth, isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", value: $viewModel.widthValue, formatter: widthFormatter)
 					.frame(minWidth: 50, maxWidth: 50)
-					//.help("Number of columns visible on the terminal screen.") // (add when SDK is updated)
+					.macTermToolTipText("Number of columns visible on the terminal screen.")
 				Spacer()
 			}
 			Spacer().asMacTermSectionSpacingV()
 			UICommon_Default1OptionLineView("Height", bindIsDefaultTo: $viewModel.isDefaultHeight, isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", value: $viewModel.heightValue, formatter: heightFormatter)
 					.frame(minWidth: 50, maxWidth: 50)
-					//.help("Number of rows visible on the terminal screen.") // (add when SDK is updated)
+					.macTermToolTipText("Number of rows visible on the terminal screen.")
 			}
 			Spacer().asMacTermSectionSpacingV()
 			UICommon_Default1OptionLineView("Scrollback", bindIsDefaultTo: $viewModel.isDefaultScrollback, isEditingDefault: viewModel.isEditingDefaultContext) {
@@ -194,7 +194,7 @@ public struct UIPrefsTerminalScreen_View : View {
 				}.pickerStyle(PopUpButtonPickerStyle())
 					.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 					.frame(minWidth: 160, maxWidth: 160)
-					//.help("How to manage text that has scrolled off the top of the terminal screen.") // (add when SDK is updated)
+					.macTermToolTipText("How to manage text that has scrolled off the top of the terminal screen.")
 			}
 			UICommon_OptionLineView() {
 				HStack(
@@ -205,7 +205,7 @@ public struct UIPrefsTerminalScreen_View : View {
 						.foregroundColor(isFixedRowCountDisabled() ? .gray : .primary) // default behavior of disabled() does not dim the text so do that manually
 						.frame(maxWidth: 80)
 						.padding([.leading], 16)
-						//.help("Number of lines of text to keep after they scroll off the top of the terminal screen (any more, and the oldest lines are discarded).") // (add when SDK is updated)
+						.macTermToolTipText("Number of lines of text to keep after they scroll off the top of the terminal screen (any more, and the oldest lines are discarded).")
 					Text("rows")
 						.disabled(isFixedRowCountDisabled())
 						.foregroundColor(isFixedRowCountDisabled() ? .gray : .primary) // default behavior of disabled() does not dim the text so do that manually

@@ -116,12 +116,18 @@ public struct UIAddressList_View : View {
 						viewModel.runner.refresh(addressList: viewModel)
 					}
 				) {
-					//Text("Refresh")
-					//Image(systemName: "arrow.clockwise") // TEMPORARY: SF Symbols is not on macOS yet
-					Text("􀅈")
+					if #available(macOS 11.0, *)
+					{
+						Image(systemName: "arrow.clockwise") // TEMPORARY: SF Symbols is not on macOS yet
+					}
+					else
+					{
+						Text("Refresh")
+						//Text("􀅈")
+					}
 				}.buttonStyle(BorderlessButtonStyle())
 					.accessibility(label: Text("Refresh"))
-					//.help("Refreshes the list by querying the system in the background for all current addresses.") // (add when SDK is updated)
+					.macTermToolTipText("Refreshes the list by querying the system in the background for all current addresses.")
 			}.padding([.trailing], 20)
 				.padding([.bottom], 4)
 		}.frame(maxWidth: 500, maxHeight: .infinity)

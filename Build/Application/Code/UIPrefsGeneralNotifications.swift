@@ -101,7 +101,7 @@ public struct UIPrefsGeneralNotification_BellSoundItemView : View {
 
 	public var body: some View {
 		Text(itemModel.soundName).tag(itemModel.uniqueID)
-			//.help(itemModel.helpText) // (add when SDK is updated)
+			.macTermToolTipText(itemModel.helpText)
 	}
 
 }
@@ -143,11 +143,11 @@ public struct UIPrefsGeneralNotifications_View : View {
 					}.pickerStyle(PopUpButtonPickerStyle())
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 						.frame(minWidth: 160, maxWidth: 160)
-						//.help("The sound to play when a terminal bell occurs.") // (add when SDK is updated)
+						.macTermToolTipText("The sound to play when a terminal bell occurs.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Always use visual bell", isOn: $viewModel.visualBell)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if “bell” events should use a visual flash even if a sound will play too.")
 				}
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Text("When a bell sounds in an inactive window, a visual appears automatically.")
@@ -161,7 +161,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 				Spacer().asMacTermSectionSpacingV()
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Background notification on bell", isOn: $viewModel.bellNotificationInBackground)
-						//.help("...") // (add when SDK is updated)
+						.macTermToolTipText("Set if a notification is sent to the system for “bell” events when MacTerm is not the active application.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
@@ -176,7 +176,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 					}.pickerStyle(RadioGroupPickerStyle())
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 						.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
-						//.help("How to respond to notifications when MacTerm is not the active application.") // (add when SDK is updated)
+						.macTermToolTipText("How to respond to notifications when MacTerm is not the active application.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()

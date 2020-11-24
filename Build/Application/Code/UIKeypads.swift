@@ -389,7 +389,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("NUL (0x00) — Filler") // (add when SDK is updated)
+						.macTermToolTipText("NUL (0x00) — Filler")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlA) }) {
 						VStack {
@@ -401,7 +401,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("SOH (0x01) — Start of Heading") // (add when SDK is updated)
+						.macTermToolTipText("SOH (0x01) — Start of Heading")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlB) }) {
 						VStack {
@@ -413,7 +413,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("STX (0x02) — Start of Text") // (add when SDK is updated)
+						.macTermToolTipText("STX (0x02) — Start of Text")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlC) }) {
 						VStack {
@@ -425,7 +425,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("ETX (0x03) — End of Text") // (add when SDK is updated)
+						.macTermToolTipText("ETX (0x03) — End of Text")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
@@ -439,7 +439,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("EOT (0x04) — End of Transmission") // (add when SDK is updated)
+						.macTermToolTipText("EOT (0x04) — End of Transmission")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlE) }) {
 						VStack {
@@ -451,7 +451,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("ENQ (0x05) — Enquiry") // (add when SDK is updated)
+						.macTermToolTipText("ENQ (0x05) — Enquiry")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlF) }) {
 						VStack {
@@ -463,7 +463,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("ACK (0x06) — Acknowledge") // (add when SDK is updated)
+						.macTermToolTipText("ACK (0x06) — Acknowledge")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlG) }) {
 						VStack {
@@ -475,7 +475,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("BEL (0x07) — Bell Sound") // (add when SDK is updated)
+						.macTermToolTipText("BEL (0x07) — Bell Sound")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
@@ -494,7 +494,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("BS (0x08) — Backspace") // (add when SDK is updated)
+						.macTermToolTipText("BS (0x08) — Backspace")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlI) }) {
 						VStack {
@@ -506,7 +506,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("HT (0x09) — Horizontal Tabulation") // (add when SDK is updated)
+						.macTermToolTipText("HT (0x09) — Horizontal Tabulation")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlJ) }) {
 						VStack {
@@ -518,7 +518,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("NL / LF (0x0A) — New Line / Line Feed") // (add when SDK is updated)
+						.macTermToolTipText("NL / LF (0x0A) — New Line / Line Feed")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlK) }) {
 						VStack {
@@ -530,7 +530,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("VT (0x0B) — Vertical Tabulation") // (add when SDK is updated)
+						.macTermToolTipText("VT (0x0B) — Vertical Tabulation")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
@@ -544,7 +544,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("NP / FF (0x0C) — New Page / Form Feed") // (add when SDK is updated)
+						.macTermToolTipText("NP / FF (0x0C) — New Page / Form Feed")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlM) }) {
 						VStack {
@@ -556,7 +556,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("CR (0x0D) — Carriage Return") // (add when SDK is updated)
+						.macTermToolTipText("CR (0x0D) — Carriage Return")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlN) }) {
 						VStack {
@@ -568,7 +568,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("SO (0x0E) — Shift Out (Character Set)") // (add when SDK is updated)
+						.macTermToolTipText("SO (0x0E) — Shift Out (Character Set)")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlO) }) {
 						VStack {
@@ -580,7 +580,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("SI (0x0F) — Shift In (Character Set)") // (add when SDK is updated)
+						.macTermToolTipText("SI (0x0F) — Shift In (Character Set)")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
@@ -599,7 +599,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("DLE (0x10) — Data Link Escape") // (add when SDK is updated)
+						.macTermToolTipText("DLE (0x10) — Data Link Escape")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlQ) }) {
 						VStack {
@@ -612,7 +612,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("DC1 (0x11) — XON / Device Control 1") // (add when SDK is updated)
+						.macTermToolTipText("DC1 (0x11) — XON / Device Control 1")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlR) }) {
 						VStack {
@@ -624,7 +624,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("DC2 (0x12) — Device Control 2") // (add when SDK is updated)
+						.macTermToolTipText("DC2 (0x12) — Device Control 2")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlS) }) {
 						VStack {
@@ -637,7 +637,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("DC3 (0x13) — XOFF / Device Control 3") // (add when SDK is updated)
+						.macTermToolTipText("DC3 (0x13) — XOFF / Device Control 3")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
@@ -651,7 +651,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("DC4 (0x14) — Device Control 4") // (add when SDK is updated)
+						.macTermToolTipText("DC4 (0x14) — Device Control 4")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlU) }) {
 						VStack {
@@ -663,7 +663,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("NAK (0x15) — Negative Acknowledge") // (add when SDK is updated)
+						.macTermToolTipText("NAK (0x15) — Negative Acknowledge")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlV) }) {
 						VStack {
@@ -675,7 +675,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("SYN (0x16) — Synchronous Idle") // (add when SDK is updated)
+						.macTermToolTipText("SYN (0x16) — Synchronous Idle")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlW) }) {
 						VStack {
@@ -687,7 +687,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("ETB (0x17) — End of Transmission Block") // (add when SDK is updated)
+						.macTermToolTipText("ETB (0x17) — End of Transmission Block")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
@@ -706,7 +706,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("CAN (0x18) — Cancel") // (add when SDK is updated)
+						.macTermToolTipText("CAN (0x18) — Cancel")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlY) }) {
 						VStack {
@@ -718,7 +718,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("EM (0x19) — End of Medium") // (add when SDK is updated)
+						.macTermToolTipText("EM (0x19) — End of Medium")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlZ) }) {
 						VStack {
@@ -730,7 +730,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("SUB (0x1A) — Substitute") // (add when SDK is updated)
+						.macTermToolTipText("SUB (0x1A) — Substitute")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlLeftSquareBracket) }) {
 						VStack {
@@ -742,7 +742,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("ESC (0x1B) — Escape") // (add when SDK is updated)
+						.macTermToolTipText("ESC (0x1B) — Escape")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
@@ -756,7 +756,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("FS (0x1C) — Field Separator") // (add when SDK is updated)
+						.macTermToolTipText("FS (0x1C) — Field Separator")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlRightSquareBracket) }) {
 						VStack {
@@ -768,7 +768,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("GS (0x1D) — Group Separator") // (add when SDK is updated)
+						.macTermToolTipText("GS (0x1D) — Group Separator")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlCaret) }) {
 						VStack {
@@ -780,7 +780,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("RS (0x1E) — Record Separator") // (add when SDK is updated)
+						.macTermToolTipText("RS (0x1E) — Record Separator")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlUnderscore) }) {
 						VStack {
@@ -792,7 +792,7 @@ public struct UIKeypads_ControlKeysView : View {
 							}
 						}
 					}.asMacTermKeypadKeySquare()
-						//.help("US (0x1F) — Unit Separator") // (add when SDK is updated)
+						.macTermToolTipText("US (0x1F) — Unit Separator")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
@@ -1121,12 +1121,18 @@ public struct UIKeypads_VT220KeysView : View {
 						// but it can be tested in MacTerm itself
 						Image("IconForSearch")
 					}.asMacTermKeypadKeySquare()
+						.accessibility(label: Text("Find"))
+						.macTermToolTipText("Find")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button("⤵", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadInsert) })
 						.asMacTermKeypadKeySquareLargeFont()
+						.accessibility(label: Text("Insert"))
+						.macTermToolTipText("Insert")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button("⌫", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadDelete) })
 						.asMacTermKeypadKeySquareLargeFont()
+						.accessibility(label: Text("Delete Backward"))
+						.macTermToolTipText("Delete Backward")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Spacer().asMacTermKeypadKeySquareSpace()
 				}
@@ -1153,17 +1159,17 @@ public struct UIKeypads_VT220KeysView : View {
 					Button("☞", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadSelect) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Select"))
-						//.help("Select") // (add when SDK is updated)
+						.macTermToolTipText("Select")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button("⇞", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPageUp) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Page Up"))
-						//.help("Page Up") // (add when SDK is updated)
+						.macTermToolTipText("Page Up")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button("⇟", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPageDown) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Page Down"))
-						//.help("Page Down") // (add when SDK is updated)
+						.macTermToolTipText("Page Down")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Spacer().asMacTermKeypadKeySquareSpace()
 				}
@@ -1180,7 +1186,7 @@ public struct UIKeypads_VT220KeysView : View {
 				Button(",", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadComma) })
 					.asMacTermKeypadKeySquareLargeFont()
 					.accessibility(label: Text("Comma"))
-					//.help("Comma") // (add when SDK is updated)
+					.macTermToolTipText("Comma")
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
@@ -1209,7 +1215,7 @@ public struct UIKeypads_VT220KeysView : View {
 				Button("-", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadHyphen) })
 					.asMacTermKeypadKeySquareLargeFont()
 					.accessibility(label: Text("Hyphen"))
-					//.help("Hyphen") // (add when SDK is updated)
+					.macTermToolTipText("Hyphen")
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
@@ -1270,13 +1276,13 @@ public struct UIKeypads_VT220KeysView : View {
 					Button(".", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadDecimalPoint) })
 						.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Decimal Point"))
-						//.help("Decimal Point") // (add when SDK is updated)
+						.macTermToolTipText("Decimal Point")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
 				Button("⌤", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadEnter) })
 					.asMacTermKeypadKeyRect2VLargeFont()
 					.accessibility(label: Text("Enter"))
-					//.help("Enter") // (add when SDK is updated)
+					.macTermToolTipText("Enter")
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()

@@ -103,11 +103,11 @@ public struct UIPrefsWorkspaceOptions_View : View {
 			UICommon_DefaultOptionHeaderView()
 			UICommon_Default1OptionLineView("Options", bindIsDefaultTo: $viewModel.isDefaultUseTabs, isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Use tabs to arrange windows", isOn: $viewModel.windowTabsEnabled)
-					//.help("...") // (add when SDK is updated)
+					.macTermToolTipText("Set if the terminals for this workspace appear as tabs in the same window frame.")
 			}
 			UICommon_Default1OptionLineView("", bindIsDefaultTo: $viewModel.isDefaultAutoFullScreen, isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Automatically enter Full Screen", isOn: $viewModel.autoFullScreenEnabled)
-					//.help("...") // (add when SDK is updated)
+					.macTermToolTipText("Set if new windows from this workspace should immediately go into Full Screen view.")
 			}
 			Spacer().asMacTermSectionSpacingV()
 			Spacer().layoutPriority(1)

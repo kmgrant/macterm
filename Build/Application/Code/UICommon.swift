@@ -77,6 +77,21 @@ extension VerticalAlignment {
 	static let middle = VerticalAlignment.center
 }
 
+extension View {
+	// simplifies call to help() API (only available in macOS 11),
+	// allowing builds for older OSes to simply do nothing; note
+	// that this erases the type of the view sequence so it should
+	// typically be one of the last things done in a view chain
+	public func macTermToolTipText(_ text: String) -> some View {
+		// note: offset(0, 0) is a hack to be able to return a
+		// view that does not materially affect anything
+		if #available(macOS 11.0, *) {
+			return AnyView(offset(x: 0, y: 0).help(text))
+		}
+		return AnyView(offset(x: 0, y: 0))
+	}
+}
+
 public class UICommon_BaseModel : NSObject {
 
 	@objc public var disableWriteback = false // to prevent changes from causing looping updates; see below, and Objective-C code that initializes views or changes data sources
@@ -190,6 +205,9 @@ struct UICommon_OptionLineView <Content: View> : View {
 
 }
 
+// (this is used several times in the views below)
+var UICommon_DefaultToggleToolTipText: String = "When the current collection is not the Default collection, this may be set to tie the preference on the right to the Default collection.  Edit the preference on the right to remove the tie and make the setting unique to this collection."
+
 struct UICommon_Default1OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
@@ -217,11 +235,12 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			Toggle("Tie setting to its value in the Default collection", isOn: isDefaultBinding)
+			Toggle(" ", isOn: isDefaultBinding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefaultBinding.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
@@ -278,16 +297,18 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			Toggle("Tie setting to its value in the Default collection", isOn: isDefault1Binding)
+			Toggle(" ", isOn: isDefault1Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-			Toggle("Tie setting to its value in the Default collection", isOn: isDefault2Binding)
+				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
+			Toggle(" ", isOn: isDefault2Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
@@ -340,21 +361,24 @@ struct UICommon_Default3OptionLineView <Content: View> : View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			Toggle("Tie setting to its value in the Default collection", isOn: isDefault1Binding)
+			Toggle(" ", isOn: isDefault1Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-			Toggle("Tie setting to its value in the Default collection", isOn: isDefault2Binding)
+				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
+			Toggle(" ", isOn: isDefault2Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-			Toggle("Tie setting to its value in the Default collection", isOn: isDefault3Binding)
+				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
+			Toggle(" ", isOn: isDefault3Binding)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || isDefault3Binding.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
 			// (all variants have space for up to 3 checkboxes so no extra padding here)
 			Text(title).asMacTermSectionHeading()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
