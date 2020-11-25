@@ -137,6 +137,25 @@ in the source list.
 @end //}
 
 /*!
+Toolbar item for category menus.
+*/
+@interface PrefsWindow_ToolbarItemCategoryMenu : NSMenuToolbarItem //{
+{
+@private
+	BOOL	_bordered;
+}
+
+// initializers
+	- (instancetype)
+	initWithItemIdentifier:(NSToolbarItemIdentifier)_;
+
+// NSToolbarItem
+	@property (assign, getter=isBordered) BOOL
+	bordered;
+
+@end //}
+
+/*!
 Toolbar item for search field.
 */
 @interface PrefsWindow_ToolbarItemSearch : NSToolbarItem //{
@@ -630,6 +649,57 @@ isEqual:(id)	anObject
 
 
 #pragma mark -
+@implementation PrefsWindow_ToolbarItemCategoryMenu //{
+
+
+/*!
+Designated initializer.
+
+(2020.11)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSToolbarItemIdentifier)	anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		_bordered = NO;
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+This is implemented to fix a bug in macOS 10.15, which
+crashes at runtime in Preferences-style toolbars because
+"isBordered" is invoked by the OS on NSMenuToolbarItem
+instances (which does not otherwise define the method).
+
+By subclassing NSMenuToolbarItem to implement the method,
+the system will not raise an exception on macOS 10.15.
+(This is not an issue on macOS 11 Big Sur.)
+
+(2020.11)
+*/
+- (BOOL)
+isBordered
+{
+	return _bordered;
+}
+- (void)
+setBordered:(BOOL)		aFlag
+{
+	_bordered = aFlag;
+}// setBordered:
+
+
+@end //}
+
+
+#pragma mark -
 @implementation PrefsWindow_ToolbarItemSearch //{
 
 
@@ -651,7 +721,7 @@ initWithField:(NSSearchField*)	aField
 		[self setPaletteLabel:NSLocalizedString(@"Search for Preferences", @"toolbar item palette name; for finding settings")];
 	}
 	return self;
-}// init
+}// initWithField:
 
 
 /*!
@@ -1820,9 +1890,9 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	if (hasSubPanels)
 	{
 		// use new NSMenuToolbarItem for sub-panels
-		NSMenuToolbarItem*	asMenuToolbarItem = [[[NSMenuToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
-		id< Panel_Parent >	asParent = STATIC_CAST(itemPanel, id< Panel_Parent >);
-		NSMenu*				newMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		PrefsWindow_ToolbarItemCategoryMenu*	asMenuToolbarItem = [[PrefsWindow_ToolbarItemCategoryMenu alloc] initWithItemIdentifier:itemIdentifier];
+		id< Panel_Parent >						asParent = STATIC_CAST(itemPanel, id< Panel_Parent >);
+		NSMenu*									newMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
 		
 		
 		// add an item for each sub-category, using the settings
@@ -1859,10 +1929,20 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	result.action = itemPanel.panelDisplayAction;
 	result.target = itemPanel.panelDisplayTarget;
 	
-	// for some reason NSMenuToolbarItem uses a different default icon size
-	// compared to ordinary toolbar items; to ensure the image is not too
-	// big, force the size here...
-	result.image.size = NSMakeSize(24, 24);
+	if (@available(macOS 11.0, *))
+	{
+		// for some reason NSMenuToolbarItem uses a different default icon size
+		// compared to ordinary toolbar items; to ensure the image is not too
+		// big, force the size here...
+		result.image.size = NSMakeSize(24, 24);
+	}
+	else
+	{
+		// conversely, prior to Big Sur, menu toolbar items use smaller icons
+		// than ordinary items, which makes icons look weirdly inconsistent;
+		// adjust images in menu toolbar items to balance the layout
+		result.image.size = NSMakeSize(28, 28);
+	}
 	
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
