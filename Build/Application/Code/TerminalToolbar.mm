@@ -1267,13 +1267,27 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 {
 	if ((nullptr == aScreen) || Terminal_BellIsEnabled(aScreen))
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnBellOffIconFilenameNoExtension()];
 		self.toolTip = NSLocalizedString(@"Turn off terminal bell", @"toolbar item tooltip; turn off terminal bell sound");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"speaker.slash" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnBellOffIconFilenameNoExtension()];
+		}
 	}
 	else
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnBellOnIconFilenameNoExtension()];
 		self.toolTip = NSLocalizedString(@"Turn on terminal bell", @"toolbar item tooltip; turn on terminal bell sound");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"speaker.wave.3" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnBellOnIconFilenameNoExtension()];
+		}
 	}
 }// setStateFromScreen:
 
@@ -1302,10 +1316,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Customize", @"toolbar item name; for customizing the toolbar");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"wrench.and.screwdriver" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnCustomizeToolbarIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -1570,17 +1591,31 @@ setStateFromSession:(SessionRef)	aSession
 {
 	if (Session_IsValid(aSession) && Session_StateIsDead(aSession))
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnRestartSessionIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Restart", @"toolbar item name; for killing or restarting the active process");
 		self.paletteLabel = self.label;
 		self.toolTip = NSLocalizedString(@"Restart process (with original command line)", @"toolbar item tooltip; restart session");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"arrow.rectanglepath" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnRestartSessionIconFilenameNoExtension()];
+		}
 	}
 	else
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnKillSessionIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Force Quit", @"toolbar item name; for killing or restarting the active process");
 		self.paletteLabel = self.label;
 		self.toolTip = NSLocalizedString(@"Force process to quit", @"toolbar item tooltip; force-quit session");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"xmark.rectangle" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnKillSessionIconFilenameNoExtension()];
+		}
 	}
 }// setStateFromSession:
 
@@ -1609,10 +1644,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnFullScreenIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Full Screen", @"toolbar item name; for entering or exiting Full Screen mode");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"arrow.up.left.and.arrow.down.right" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnFullScreenIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -1688,10 +1730,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnHideWindowIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Hide", @"toolbar item name; for hiding the frontmost window");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"eye.slash" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnHideWindowIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -2262,7 +2311,14 @@ paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
 	
 	
 	result.paletteLabel = self.paletteLabel;
-	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension(), NSString*)]]; // TEMPORARY (create unique icon?)
+	if (@available(macOS 11.0, *))
+	{
+		result.image = [NSImage imageWithSystemSymbolName:@"command" accessibilityDescription:self.label];
+	}
+	else
+	{
+		result.image = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension(), NSString*)];
+	}
 	
 	return [result autorelease];
 }// paletteProxyToolbarItemWithIdentifier:
@@ -2698,10 +2754,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionDefaultIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Default", @"toolbar item name; for opening Default session");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"heart" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionDefaultIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -2764,10 +2827,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Log-In Shell", @"toolbar item name; for opening log-in shells");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"terminal" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -2830,10 +2900,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionShellIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Shell", @"toolbar item name; for opening shells");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"terminal.fill" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnNewSessionShellIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -2896,10 +2973,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnPrintIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Print", @"toolbar item name; for printing");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"printer" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnPrintIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -2959,10 +3043,17 @@ init
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnStackWindowsIconFilenameNoExtension()];
 		self.label = NSLocalizedString(@"Arrange in Front", @"toolbar item name; for stacking windows");
 		self.paletteLabel = self.label;
 		self.toolTip = self.label;
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"macwindow.on.rectangle" accessibilityDescription:self.label];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnStackWindowsIconFilenameNoExtension()];
+		}
 	}
 	return self;
 }// init
@@ -3221,13 +3312,27 @@ setStateFromSession:(SessionRef)	aSession
 {
 	if (Session_IsValid(aSession) && Session_NetworkIsSuspended(aSession))
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOffIconFilenameNoExtension()];
 		self.toolTip = NSLocalizedString(@"Resume session (no scroll lock)", @"toolbar item tooltip; resume session");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"play.fill" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOffIconFilenameNoExtension()];
+		}
 	}
 	else
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOnIconFilenameNoExtension()];
 		self.toolTip = NSLocalizedString(@"Suspend session (scroll lock)", @"toolbar item tooltip; suspend session");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"pause.fill" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnScrollLockOnIconFilenameNoExtension()];
+		}
 	}
 }// setStateFromSession:
 
@@ -3418,13 +3523,27 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 {
 	if ((nullptr == aScreen) || (false == Terminal_LEDIsOn(aScreen, STATIC_CAST(self->indexOfLED, SInt16))))
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()];
 		self.toolTip = NSLocalizedString(@"Turn on this LED", @"toolbar item tooltip; turn off LED");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"smallcircle.circle" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnLEDOffIconFilenameNoExtension()];
+		}
 	}
 	else
 	{
-		self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnLEDOnIconFilenameNoExtension()];
 		self.toolTip = NSLocalizedString(@"Turn off this LED", @"toolbar item tooltip; turn on LED");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"largecircle.fill.circle" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			self.image = [NSImage imageNamed:(NSString*)AppResources_ReturnLEDOnIconFilenameNoExtension()];
+		}
 	}
 }// setStateFromScreen:
 
@@ -5093,7 +5212,7 @@ paletteProxyToolbarItemWithIdentifier:(NSString*)	anIdentifier
 	
 	
 	result.paletteLabel = self.paletteLabel;
-	[result setImage:[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleCenterIconFilenameNoExtension(), NSString*)]];
+	result.image = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnWindowTitleCenterIconFilenameNoExtension(), NSString*)];
 	
 	return [result autorelease];
 }// paletteProxyToolbarItemWithIdentifier:

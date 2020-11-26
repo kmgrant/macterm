@@ -619,6 +619,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"globe" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelTranslations"];
 }// panelIcon
 

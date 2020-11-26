@@ -402,12 +402,23 @@ init
 										[[[PrefPanelGeneral_FullScreenVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_NotificationsVC alloc] init] autorelease],
 									];
+	NSString*	panelName = NSLocalizedStringFromTable(@"General", @"PrefPanelGeneral",
+														@"the name of this panel");
+	NSImage*	panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"gearshape" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelGeneral"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.General"
-										localizedName:NSLocalizedStringFromTable(@"General", @"PrefPanelGeneral",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelGeneral"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										viewManagerArray:subViewManagers];
 	if (nil != self)
 	{
@@ -876,6 +887,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"arrow.up.left.and.arrow.down.right" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 
@@ -1551,6 +1566,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"bell.badge" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 
@@ -2249,6 +2268,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"gearshape" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 
@@ -3047,6 +3070,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"gearshape.2" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelGeneral"];
 }// panelIcon
 

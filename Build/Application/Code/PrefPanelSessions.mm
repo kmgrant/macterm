@@ -618,12 +618,23 @@ init
 										[[[PrefPanelSessions_KeyboardViewManager alloc] init] autorelease],
 										[[[PrefPanelSessions_GraphicsViewManager alloc] init] autorelease],
 									];
+	NSString*	panelName = NSLocalizedStringFromTable(@"Sessions", @"PrefPanelSessions",
+														@"the name of this panel");
+	NSImage*	panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"heart" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelSessions"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Sessions"
-										localizedName:NSLocalizedStringFromTable(@"Sessions", @"PrefPanelSessions",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelSessions"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										viewManagerArray:subViewManagers];
 	if (nil != self)
 	{
@@ -1383,6 +1394,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"bookmark" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
 }// panelIcon
 
@@ -2232,6 +2247,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"arrow.left.arrow.right" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
 }// panelIcon
 
@@ -2649,6 +2668,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"scribble.variable" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
 }// panelIcon
 
@@ -3673,6 +3696,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"keyboard" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
 }// panelIcon
 

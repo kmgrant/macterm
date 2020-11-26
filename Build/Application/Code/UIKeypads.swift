@@ -47,6 +47,12 @@ extension Button {
 		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
 						.buttonStyle(styleObject)
 	}
+	// set specific dimensions for square keypad keys but enlarge text further (for symbols that are hard to see, e.g. page-up)
+	public func asMacTermKeypadKeySquareHugeFont() -> some View {
+		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 28)
+		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
+						.buttonStyle(styleObject)
+	}
 	// horizontal key button (e.g. keypad “0”)
 	public func asMacTermKeypadKeyRect2HLargeFont() -> some View {
 		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 20, narrowWidth: false, narrowHeight: true)
@@ -1114,23 +1120,36 @@ public struct UIKeypads_VT220KeysView : View {
 			HStack {
 				// maximum 10 items per stack; use Group to build more
 				Group {
-					// TEMPORARY; move to SF Symbols when SDK is updated
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadFind) }) {
-						// note: this image is not visible in the Playground due to bundle source
-						// but it can be tested in MacTerm itself
-						Image("IconForSearch")
-					}.asMacTermKeypadKeySquare()
+						if #available(macOS 11.0, *) {
+							Image(systemName: "magnifyingglass")
+						} else {
+							// note: this image is not visible in the Playground due to bundle source
+							// but it can be tested in MacTerm itself
+							Image("IconForSearch")
+						}
+					}.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Find"))
 						.macTermToolTipText("Find")
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("⤵", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadInsert) })
-						.asMacTermKeypadKeySquareLargeFont()
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadInsert) }) {
+						if #available(macOS 11.0, *) {
+							Image(systemName: "text.insert")
+						} else {
+							Text("⤵")
+						}
+					}.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Insert"))
 						.macTermToolTipText("Insert")
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("⌫", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadDelete) })
-						.asMacTermKeypadKeySquareLargeFont()
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadDelete) }) {
+						if #available(macOS 11.0, *) {
+							Image(systemName: "delete.left")
+						} else {
+							Text("⌫")
+						}
+					}.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Delete Backward"))
 						.macTermToolTipText("Delete Backward")
 					Spacer().asMacTermKeypadKeySpacingH()
@@ -1156,18 +1175,23 @@ public struct UIKeypads_VT220KeysView : View {
 				Group {
 					// TEMPORARY; move to SF Symbols when SDK is updated
 					Spacer().asMacTermKeypadKeySpacingH()
-					Button("☞", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadSelect) })
-						.asMacTermKeypadKeySquareLargeFont()
+					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadSelect) }) {
+						if #available(macOS 11.0, *) {
+							Image(systemName: "hand.point.right")
+						} else {
+							Text("☞")
+						}
+					}.asMacTermKeypadKeySquareLargeFont()
 						.accessibility(label: Text("Select"))
 						.macTermToolTipText("Select")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button("⇞", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPageUp) })
-						.asMacTermKeypadKeySquareLargeFont()
+						.asMacTermKeypadKeySquareHugeFont()
 						.accessibility(label: Text("Page Up"))
 						.macTermToolTipText("Page Up")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button("⇟", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadPageDown) })
-						.asMacTermKeypadKeySquareLargeFont()
+						.asMacTermKeypadKeySquareHugeFont()
 						.accessibility(label: Text("Page Down"))
 						.macTermToolTipText("Page Down")
 					Spacer().asMacTermKeypadKeySpacingH()
@@ -1226,26 +1250,46 @@ public struct UIKeypads_VT220KeysView : View {
 					VStack {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
-						Button("⇠", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowLeft) })
-							.asMacTermKeypadKeySquareLargeFont()
+						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowLeft) }) {
+							if #available(macOS 11.0, *) {
+								Image(systemName: "arrowtriangle.left.fill")
+							} else {
+								Text("⇠")
+							}
+						}.asMacTermKeypadKeySquare()
 							.accessibility(label: Text("Left Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
 					VStack {
-						Button("⇡", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowUp) })
-							.asMacTermKeypadKeySquareLargeFont()
+						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowUp) }) {
+							if #available(macOS 11.0, *) {
+								Image(systemName: "arrowtriangle.up.fill")
+							} else {
+								Text("⇡")
+							}
+						}.asMacTermKeypadKeySquare()
 							.accessibility(label: Text("Up Arrow"))
 						Spacer().asMacTermKeypadKeySpacingV()
-						Button("⇣", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowDown) })
-							.asMacTermKeypadKeySquareLargeFont()
+						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowDown) }) {
+							if #available(macOS 11.0, *) {
+								Image(systemName: "arrowtriangle.down.fill")
+							} else {
+								Text("⇣")
+							}
+						}.asMacTermKeypadKeySquare()
 							.accessibility(label: Text("Down Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
 					VStack {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
-						Button("⇢", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowRight) })
-							.asMacTermKeypadKeySquareLargeFont()
+						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowRight) }) {
+							if #available(macOS 11.0, *) {
+								Image(systemName: "arrowtriangle.right.fill")
+							} else {
+								Text("⇢")
+							}
+						}.asMacTermKeypadKeySquare()
 							.accessibility(label: Text("Right Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
@@ -1279,15 +1323,20 @@ public struct UIKeypads_VT220KeysView : View {
 						.macTermToolTipText("Decimal Point")
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				Button("⌤", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadEnter) })
-					.asMacTermKeypadKeyRect2VLargeFont()
+				Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypadEnter) }) {
+					if #available(macOS 11.0, *) {
+						Image(systemName: "projective")
+					} else {
+						Text("⌤")
+					}
+				}.asMacTermKeypadKeyRect2VLargeFont()
 					.accessibility(label: Text("Enter"))
 					.macTermToolTipText("Enter")
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
 		}.padding(0)
-		.disabled(viewModel.buttonsDisabled)
+			.disabled(viewModel.buttonsDisabled)
 	}
 
 }

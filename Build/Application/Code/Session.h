@@ -46,9 +46,11 @@
 
 // Mac includes
 #ifdef __OBJC__
+@class NSImage;
 @class NSPasteboard;
 @class NSWindow;
 #else
+class NSImage;
 class NSPasteboard;
 class NSWindow;
 #endif
@@ -540,8 +542,8 @@ void
 //@{
 
 Session_Result
-	Session_GetStateIconName				(SessionRef							inRef,
-											 CFStringRef&						outUncopiedString);
+	Session_GetStateIconImage				(SessionRef							inRef,
+											 NSImage*&							outAutoreleasedImage);
 
 Session_Result
 	Session_GetStateString					(SessionRef							inRef,

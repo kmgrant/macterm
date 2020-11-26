@@ -316,8 +316,17 @@ This is used to show the presence or absence of a macro.
 - (NSImage*)
 numberedListItemIconImage
 {
-	NSImage*	result = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension(), NSString*)];
+	NSImage*	result = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		result = [NSImage imageWithSystemSymbolName:@"command" accessibilityDescription:@""];
+	}
+	else
+	{
+		result = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnPrefPanelMacrosIconFilenameNoExtension(), NSString*)];
+	}
 	
 	if (0 != self.preferencesIndex)
 	{
@@ -366,12 +375,23 @@ Designated initializer.
 init
 {
 	PrefPanelMacros_MacroEditorViewManager*		newViewManager = [[PrefPanelMacros_MacroEditorViewManager alloc] init];
+	NSString*									panelName = NSLocalizedStringFromTable(@"Macros", @"PrefPanelMacros",
+																						@"the name of this panel");
+	NSImage*									panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"command" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelMacros"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Macros"
-										localizedName:NSLocalizedStringFromTable(@"Macros", @"PrefPanelMacros",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelMacros"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										master:self detailViewManager:newViewManager];
 	if (nil != self)
 	{
@@ -1477,6 +1497,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"command" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelMacros"];
 }// panelIcon
 

@@ -116,12 +116,9 @@ public struct UIAddressList_View : View {
 						viewModel.runner.refresh(addressList: viewModel)
 					}
 				) {
-					if #available(macOS 11.0, *)
-					{
-						Image(systemName: "arrow.clockwise") // TEMPORARY: SF Symbols is not on macOS yet
-					}
-					else
-					{
+					if #available(macOS 11.0, *) {
+						Image(systemName: "arrow.clockwise")
+					} else {
 						Text("Refresh")
 						//Text("􀅈")
 					}

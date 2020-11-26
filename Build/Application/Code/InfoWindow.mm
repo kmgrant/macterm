@@ -341,14 +341,13 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (nullptr != terminalWindow)
 			{
 				InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-				CFStringRef				iconNameCFString = nullptr;
+				NSImage*				iconImage = nil;
 				
 				
 				isObscured = TerminalWindow_IsObscured(terminalWindow);
-				if (Session_GetStateIconName(session, iconNameCFString).ok())
+				if (Session_GetStateIconImage(session, iconImage).ok())
 				{
 					InfoWindow_SessionRow*	rowData = [controller infoForSession:session];
-					NSImage*				iconImage = [NSImage imageNamed:(NSString*)iconNameCFString];
 					BOOL					releaseImage = NO;
 					
 					
@@ -446,7 +445,21 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			switch (Session_ReturnState(session))
 			{
 			case kSession_StateBrandNew:
-				// here for completeness; there is no way to find out about transitions to the initial state
+				// change appropriate list item’s contents
+				{
+					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
+					NSImage*				iconImage = nil;
+					
+					
+					if (Session_GetStateIconImage(session, iconImage).ok())
+					{
+						InfoWindow_SessionRow*	rowData = [controller infoForSession:session];
+						
+						
+						[rowData setObject:iconImage forKey:kMyInfoColumnStatus];
+					}
+				}
+				refreshDisplay();
 				break;
 			
 			case kSession_StateInitialized:
@@ -461,7 +474,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 														initWithSession:session
 																		andActivationTime:Session_TimeOfActivation
 																							(session)];
-					CFStringRef				iconNameCFString = nullptr;
+					NSImage*				iconImage = nil;
 					CFLocaleRef				userLocale = CFLocaleCopyCurrent();
 					CFDateFormatterRef		dateFormatter = CFDateFormatterCreate
 															(kCFAllocatorDefault, userLocale,
@@ -491,11 +504,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					{
 						[newInfo setObject:[NSString string] forKey:kMyInfoColumnCreationTime];
 					}
-					if (Session_GetStateIconName(session, iconNameCFString).ok())
+					if (Session_GetStateIconImage(session, iconImage).ok())
 					{
-						NSImage*	iconImage = [NSImage imageNamed:(NSString*)iconNameCFString];
-						
-						
 						[newInfo setObject:iconImage forKey:kMyInfoColumnStatus];
 					}
 					[newInfo setObject:(NSString*)(Session_ReturnResourceLocationCFString(session))
@@ -522,6 +532,19 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			case kSession_StateActiveStable:
 				// change appropriate list item’s contents
+				{
+					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
+					NSImage*				iconImage = nil;
+					
+					
+					if (Session_GetStateIconImage(session, iconImage).ok())
+					{
+						InfoWindow_SessionRow*	rowData = [controller infoForSession:session];
+						
+						
+						[rowData setObject:iconImage forKey:kMyInfoColumnStatus];
+					}
+				}
 				refreshDisplay();
 				break;
 			
@@ -529,13 +552,12 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// change appropriate list item’s contents
 				{
 					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-					CFStringRef				iconNameCFString = nullptr;
+					NSImage*				iconImage = nil;
 					
 					
-					if (Session_GetStateIconName(session, iconNameCFString).ok())
+					if (Session_GetStateIconImage(session, iconImage).ok())
 					{
 						InfoWindow_SessionRow*	rowData = [controller infoForSession:session];
-						NSImage*				iconImage = [NSImage imageNamed:(NSString*)iconNameCFString];
 						
 						
 						[rowData setObject:iconImage forKey:kMyInfoColumnStatus];
@@ -567,13 +589,12 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-			CFStringRef				iconNameCFString = nullptr;
+			NSImage*				iconImage = nil;
 			
 			
-			if (Session_GetStateIconName(session, iconNameCFString).ok())
+			if (Session_GetStateIconImage(session, iconImage).ok())
 			{
 				InfoWindow_SessionRow*	rowData = [controller infoForSession:session];
-				NSImage*				iconImage = [NSImage imageNamed:(NSString*)iconNameCFString];
 				
 				
 				[rowData setObject:iconImage forKey:kMyInfoColumnStatus];

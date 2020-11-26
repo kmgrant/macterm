@@ -299,12 +299,23 @@ init
 										[[[PrefPanelFormats_GeneralViewManager alloc] init] autorelease],
 										[[[PrefPanelFormats_StandardColorsViewManager alloc] init] autorelease],
 									];
+	NSString*	panelName = NSLocalizedStringFromTable(@"Formats", @"PrefPanelFormats",
+														@"the name of this panel");
+	NSImage*	panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"textformat" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelFormats"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Formats"
-										localizedName:NSLocalizedStringFromTable(@"Formats", @"PrefPanelFormats",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelFormats"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										viewManagerArray:subViewManagers];
 	if (nil != self)
 	{
@@ -1196,6 +1207,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"textformat" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelFormats"];
 }// panelIcon
 
@@ -2114,6 +2129,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"textformat" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelFormats"];
 }// panelIcon
 

@@ -328,12 +328,23 @@ init
 										[[[PrefPanelTerminals_EmulationVC alloc] init] autorelease],
 										[[[PrefPanelTerminals_ScreenVC alloc] init] autorelease],
 									];
+	NSString*	panelName = NSLocalizedStringFromTable(@"Terminals", @"PrefPanelTerminals",
+														@"the name of this panel");
+	NSImage*	panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"chevron.right" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelTerminals"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Terminals"
-										localizedName:NSLocalizedStringFromTable(@"Terminals", @"PrefPanelTerminals",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelTerminals"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										viewManagerArray:subViewManagers];
 	if (nil != self)
 	{
@@ -1382,6 +1393,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"chevron.right" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelTerminals"];
 }// panelIcon
 
@@ -2043,6 +2058,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"chevron.right" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelTerminals"];
 }// panelIcon
 
@@ -2818,6 +2837,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"terminal" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelTerminals"];
 }// panelIcon
 

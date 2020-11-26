@@ -217,12 +217,23 @@ init
 					[[[PrefPanelWorkspaces_OptionsVC alloc] init] autorelease],
 					[[[PrefPanelWorkspaces_WindowsViewManager alloc] init] autorelease],
 				];
+	NSString*	panelName = NSLocalizedStringFromTable(@"Workspaces", @"PrefPanelWorkspaces",
+														@"the name of this panel");
+	NSImage*	panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"rectangle.3.offgrid" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelWorkspaces"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Workspaces"
-										localizedName:NSLocalizedStringFromTable(@"Workspaces", @"PrefPanelWorkspaces",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelWorkspaces"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										viewManagerArray:subViewManagers];
 	if (nil != self)
 	{
@@ -703,6 +714,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"rectangle.3.offgrid" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelWorkspaces"];
 }// panelIcon
 
@@ -1111,6 +1126,8 @@ This is used to show the presence or absence of a window.
 numberedListItemIconImage
 {
 	NSString*	imageName = nil;
+	NSString*	systemSymbolName = nil; // used for SF Symbols on macOS 11+
+	NSString*	descriptionString = nil;
 	NSImage*	result = nil;
 	
 	
@@ -1130,6 +1147,8 @@ numberedListItemIconImage
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			// session binding; use session icon
+			systemSymbolName = @"macwindow";
+			descriptionString = BRIDGE_CAST(sessionFavoriteNameCFString, NSString*);
 			imageName = BRIDGE_CAST(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension()/* arbitrary; TEMPORARY */, NSString*);
 		}
 		else
@@ -1151,18 +1170,34 @@ numberedListItemIconImage
 					break;
 				
 				case kSessionFactory_SpecialSessionDefaultFavorite:
+					systemSymbolName = @"heart";
+					descriptionString = NSLocalizedStringFromTable(@"Default",
+																	@"PrefPanelWorkspaces"/* table */,
+																	@"description of special workspace session type: Default");
 					imageName = BRIDGE_CAST(AppResources_ReturnNewSessionDefaultIconFilenameNoExtension(), NSString*);
 					break;
 				
 				case kSessionFactory_SpecialSessionInteractiveSheet:
+					systemSymbolName = @"text.and.command.macwindow";
+					descriptionString = NSLocalizedStringFromTable(@"Custom New Session",
+																	@"PrefPanelWorkspaces"/* table */,
+																	@"description of special workspace session type: Custom New Session");
 					imageName = BRIDGE_CAST(AppResources_ReturnPrefPanelWorkspacesIconFilenameNoExtension()/* arbitrary; TEMPORARY */, NSString*);
 					break;
 				
 				case kSessionFactory_SpecialSessionLogInShell:
+					systemSymbolName = @"terminal";
+					descriptionString = NSLocalizedStringFromTable(@"Log-In Shell",
+																	@"PrefPanelWorkspaces"/* table */,
+																	@"description of special workspace session type: Log-In Shell");
 					imageName = BRIDGE_CAST(AppResources_ReturnNewSessionLogInShellIconFilenameNoExtension(), NSString*);
 					break;
 				
 				case kSessionFactory_SpecialSessionShell:
+					systemSymbolName = @"terminal.fill";
+					descriptionString = NSLocalizedStringFromTable(@"Shell",
+																	@"PrefPanelWorkspaces"/* table */,
+																	@"description of special workspace session type: Shell");
 					imageName = BRIDGE_CAST(AppResources_ReturnNewSessionShellIconFilenameNoExtension(), NSString*);
 					break;
 				
@@ -1174,7 +1209,15 @@ numberedListItemIconImage
 		}
 	}
 	
-	if (nil != imageName)
+	if (nil != systemSymbolName)
+	{
+		if (@available(macOS 11.0, *))
+		{
+			result = [NSImage imageWithSystemSymbolName:systemSymbolName accessibilityDescription:descriptionString];
+		}
+	}
+	
+	if ((nil == result) && (nil != imageName))
 	{
 		result = [NSImage imageNamed:imageName];
 	}
@@ -1261,12 +1304,23 @@ Designated initializer.
 init
 {
 	PrefPanelWorkspaces_WindowEditorViewManager*	newViewManager = [[PrefPanelWorkspaces_WindowEditorViewManager alloc] init];
+	NSString*										panelName = NSLocalizedStringFromTable(@"Windows", @"PrefPanelWorkspaces",
+																							@"the name of this panel");
+	NSImage*										panelIcon = nil;
 	
+	
+	if (@available(macOS 11.0, *))
+	{
+		panelIcon = [NSImage imageWithSystemSymbolName:@"rectangle.3.offgrid" accessibilityDescription:self.panelName];
+	}
+	else
+	{
+		panelIcon = [NSImage imageNamed:@"IconForPrefPanelWorkspaces"];
+	}
 	
 	self = [super initWithIdentifier:@"net.macterm.prefpanels.Workspaces.Windows"
-										localizedName:NSLocalizedStringFromTable(@"Windows", @"PrefPanelWorkspaces",
-																					@"the name of this panel")
-										localizedIcon:[NSImage imageNamed:@"IconForPrefPanelWorkspaces"]
+										localizedName:panelName
+										localizedIcon:panelIcon
 										master:self detailViewManager:newViewManager];
 	if (nil != self)
 	{
@@ -2314,6 +2368,10 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"rectangle.3.offgrid" accessibilityDescription:self.panelName];
+	}
 	return [NSImage imageNamed:@"IconForPrefPanelWorkspaces"];
 }// panelIcon
 

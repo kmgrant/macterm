@@ -184,7 +184,7 @@ struct My_Session
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
 	Session_StateAttributes		statusAttributes;			// “tags” for the status, above
-	CFRetainRelease				statusIconName;				// basename of image file for icon that describes the state and/or attributes
+	CFRetainRelease				statusIconName;				// basename of image file (or, on macOS 11+, a system symbol) for icon that describes the state and/or attributes
 	CFRetainRelease				statusString;				// one word (usually) describing the state succinctly
 	CFRetainRelease				alternateTitle;				// user-defined window title
 	CFRetainRelease				resourceLocationString;		// one-liner for remote URL or local Unix command line
@@ -1209,30 +1209,42 @@ Session_FlushNetwork	(SessionRef		inRef)
 
 
 /*!
-Returns the name of an image file in the bundle (suitable
-for use with APIs such as NSImage’s "iconNamed:"), to
-represent the current state of the session.  Useful for
-user interface elements.
+Returns an image object for an icon that represents the
+current state of the session.  Useful for user interface
+elements.
 
-(4.0)
+(2020.11)
 */
 Session_Result
-Session_GetStateIconName	(SessionRef		inRef,
-							 CFStringRef&	outUncopiedString)
+Session_GetStateIconImage	(SessionRef		inRef,
+							 NSImage*&		outAutoreleasedImage)
 {
 	Session_Result		result = kSession_ResultOK;
 	
+	
+	outAutoreleasedImage = nil;
 	
 	if (nullptr == inRef) result = kSession_ResultInvalidReference;
 	else
 	{
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		NSString*				imageOrSymbolName = BRIDGE_CAST(ptr->statusIconName.returnCFStringRef(), NSString*);
 		
 		
-		outUncopiedString = ptr->statusIconName.returnCFStringRef();
+		if (@available(macOS 11.0, *))
+		{
+			NSString*	descriptionString = BRIDGE_CAST(ptr->statusString.returnCFStringRef(), NSString*);
+			
+			
+			outAutoreleasedImage = [NSImage imageWithSystemSymbolName:imageOrSymbolName accessibilityDescription:descriptionString];
+		}
+		else
+		{
+			outAutoreleasedImage = [NSImage imageNamed:imageOrSymbolName];
+		}
 	}
 	return result;
-}// GetStateString
+}// GetStateIconImage
 
 
 /*!
@@ -6281,18 +6293,71 @@ void
 setIconFromState	(My_SessionPtr	inPtr)
 {
 	
-	if ((inPtr->statusAttributes & kSession_StateAttributeNotification) ||
-		(inPtr->statusAttributes & kSession_StateAttributeOpenDialog))
+	if (inPtr->statusAttributes & kSession_StateAttributeNotification)
 	{
-		inPtr->statusIconName.setWithRetain(BRIDGE_CAST(NSImageNameCaution, CFStringRef));
+		if (@available(macOS 11.0, *))
+		{
+			inPtr->statusIconName.setWithRetain(CFSTR("bell.badge"));
+		}
+		else
+		{
+			inPtr->statusIconName.setWithRetain(BRIDGE_CAST(NSImageNameCaution, CFStringRef));
+		}
+	}
+	else if (inPtr->statusAttributes & kSession_StateAttributeOpenDialog)
+	{
+		if (@available(macOS 11.0, *))
+		{
+			inPtr->statusIconName.setWithRetain(CFSTR("exclamationmark.triangle.fill"));
+		}
+		else
+		{
+			inPtr->statusIconName.setWithRetain(BRIDGE_CAST(NSImageNameCaution, CFStringRef));
+		}
+	}
+	else if (inPtr->statusAttributes & kSession_StateAttributeSuspendNetwork)
+	{
+		if (@available(macOS 11.0, *))
+		{
+			inPtr->statusIconName.setWithRetain(CFSTR("pause"));
+		}
+		else
+		{
+			inPtr->statusIconName.setWithRetain(BRIDGE_CAST(NSImageNameCaution, CFStringRef));
+		}
+	}
+	else if (kSession_StateActiveUnstable == inPtr->status)
+	{
+		if (@available(macOS 11.0, *))
+		{
+			inPtr->statusIconName.setWithRetain(CFSTR("sparkles.rectangle.stack"));
+		}
+		else
+		{
+			inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
+		}
 	}
 	else if (kSession_StateDead == inPtr->status)
 	{
-		inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension());
+		if (@available(macOS 11.0, *))
+		{
+			inPtr->statusIconName.setWithRetain(CFSTR("xmark.rectangle"));
+		}
+		else
+		{
+			inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension());
+		}
 	}
 	else
 	{
-		inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
+		if (@available(macOS 11.0, *))
+		{
+			inPtr->statusIconName.setWithRetain(CFSTR("checkmark.rectangle"));
+		}
+		else
+		{
+			inPtr->statusIconName.setWithRetain(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension());
+		}
 	}
 }// setIconFromState
 
