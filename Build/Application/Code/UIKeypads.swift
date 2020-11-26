@@ -269,7 +269,7 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 
 	init(fontSize: CGFloat, narrowWidth: Bool, narrowHeight: Bool) {
 		self.fontSize = fontSize
-		self.width = narrowWidth ? 36 : 82
+		self.width = narrowWidth ? 36 : 81
 		self.height = narrowHeight ? 36 : 82
 	}
 
@@ -379,14 +379,21 @@ public struct UIKeypads_ControlKeysView : View {
 	private var showKeyCodes = false // (ignored if "showKeyNames" is true) keys have ASCII code values in small text below main label
 
 	public var body: some View {
-		VStack (alignment: .leading) {
+		VStack (
+			alignment: .leading,
+			spacing: 0
+		) {
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlNull) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃@")
 							if showKeyNames {
 								Text("NUL").asMacTermKeySecondaryLabel()
@@ -398,7 +405,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("NUL (0x00) — Filler")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlA) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃A")
 							if showKeyNames {
 								Text("SOH").asMacTermKeySecondaryLabel()
@@ -410,7 +419,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("SOH (0x01) — Start of Heading")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlB) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃B")
 							if showKeyNames {
 								Text("STX").asMacTermKeySecondaryLabel()
@@ -422,7 +433,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("STX (0x02) — Start of Text")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlC) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃C")
 							if showKeyNames {
 								Text("ETX").asMacTermKeySecondaryLabel()
@@ -436,7 +449,9 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlD) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃D")
 							if showKeyNames {
 								Text("EOT").asMacTermKeySecondaryLabel()
@@ -448,7 +463,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("EOT (0x04) — End of Transmission")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlE) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃E")
 							if showKeyNames {
 								Text("ENQ").asMacTermKeySecondaryLabel()
@@ -460,7 +477,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("ENQ (0x05) — Enquiry")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlF) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃F")
 							if showKeyNames {
 								Text("ACK").asMacTermKeySecondaryLabel()
@@ -472,7 +491,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("ACK (0x06) — Acknowledge")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlG) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃G")
 							if showKeyNames {
 								Text("BEL").asMacTermKeySecondaryLabel()
@@ -486,12 +507,16 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlH) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃H")
 							if showKeyNames {
 								Text("BS").asMacTermKeySecondaryLabel()
@@ -503,7 +528,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("BS (0x08) — Backspace")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlI) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃I")
 							if showKeyNames {
 								Text("HT").asMacTermKeySecondaryLabel()
@@ -515,7 +542,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("HT (0x09) — Horizontal Tabulation")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlJ) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃J")
 							if showKeyNames {
 								Text("LF").asMacTermKeySecondaryLabel()
@@ -527,7 +556,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("NL / LF (0x0A) — New Line / Line Feed")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlK) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃K")
 							if showKeyNames {
 								Text("VT").asMacTermKeySecondaryLabel()
@@ -541,7 +572,9 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlL) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃L")
 							if showKeyNames {
 								Text("FF").asMacTermKeySecondaryLabel()
@@ -553,7 +586,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("NP / FF (0x0C) — New Page / Form Feed")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlM) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃M")
 							if showKeyNames {
 								Text("CR").asMacTermKeySecondaryLabel()
@@ -565,7 +600,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("CR (0x0D) — Carriage Return")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlN) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃N")
 							if showKeyNames {
 								Text("SO").asMacTermKeySecondaryLabel()
@@ -577,7 +614,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("SO (0x0E) — Shift Out (Character Set)")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlO) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃O")
 							if showKeyNames {
 								Text("SI").asMacTermKeySecondaryLabel()
@@ -591,12 +630,16 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlP) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃P")
 							if showKeyNames {
 								Text("DLE").asMacTermKeySecondaryLabel()
@@ -608,7 +651,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("DLE (0x10) — Data Link Escape")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlQ) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃Q")
 							if showKeyNames {
 								//Text("DC1").asMacTermKeySecondaryLabel()
@@ -621,7 +666,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("DC1 (0x11) — XON / Device Control 1")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlR) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃R")
 							if showKeyNames {
 								Text("DC2").asMacTermKeySecondaryLabel()
@@ -633,7 +680,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("DC2 (0x12) — Device Control 2")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlS) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃S")
 							if showKeyNames {
 								//Text("DC3").asMacTermKeySecondaryLabel()
@@ -648,7 +697,9 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlT) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃T")
 							if showKeyNames {
 								Text("DC4").asMacTermKeySecondaryLabel()
@@ -660,7 +711,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("DC4 (0x14) — Device Control 4")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlU) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃U")
 							if showKeyNames {
 								Text("NAK").asMacTermKeySecondaryLabel()
@@ -672,7 +725,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("NAK (0x15) — Negative Acknowledge")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlV) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃V")
 							if showKeyNames {
 								Text("SYN").asMacTermKeySecondaryLabel()
@@ -684,7 +739,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("SYN (0x16) — Synchronous Idle")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlW) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃W")
 							if showKeyNames {
 								Text("ETB").asMacTermKeySecondaryLabel()
@@ -698,12 +755,16 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlX) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃X")
 							if showKeyNames {
 								Text("CAN").asMacTermKeySecondaryLabel()
@@ -715,7 +776,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("CAN (0x18) — Cancel")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlY) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃Y")
 							if showKeyNames {
 								Text("EM").asMacTermKeySecondaryLabel()
@@ -727,7 +790,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("EM (0x19) — End of Medium")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlZ) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃Z")
 							if showKeyNames {
 								Text("SUB").asMacTermKeySecondaryLabel()
@@ -739,7 +804,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("SUB (0x1A) — Substitute")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlLeftSquareBracket) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃[")
 							if showKeyNames {
 								Text("ESC").asMacTermKeySecondaryLabel()
@@ -753,7 +820,9 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlBackslash) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃\\")
 							if showKeyNames {
 								Text("FS").asMacTermKeySecondaryLabel()
@@ -765,7 +834,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("FS (0x1C) — Field Separator")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlRightSquareBracket) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃]")
 							if showKeyNames {
 								Text("GS").asMacTermKeySecondaryLabel()
@@ -777,7 +848,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("GS (0x1D) — Group Separator")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlCaret) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃^")
 							if showKeyNames {
 								Text("RS").asMacTermKeySecondaryLabel()
@@ -789,7 +862,9 @@ public struct UIKeypads_ControlKeysView : View {
 						.macTermToolTipText("RS (0x1E) — Record Separator")
 					Spacer().asMacTermKeypadKeySpacingH()
 					Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .controlUnderscore) }) {
-						VStack {
+						VStack(
+							spacing: 0
+						) {
 							Text("⌃_")
 							if showKeyNames {
 								Text("US").asMacTermKeySecondaryLabel()
@@ -803,8 +878,7 @@ public struct UIKeypads_ControlKeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-		}.padding(0)
-		.disabled(viewModel.buttonsDisabled)
+		}.disabled(viewModel.buttonsDisabled)
 	}
 
 }
@@ -866,7 +940,9 @@ public struct UIKeypads_FunctionKeysView : View {
 		if viewModel.functionKeyLayout == .vt220 {
 			is48Keys = false
 		}
-		return VStack {
+		return VStack(
+			spacing: 0
+		) {
 			/*if true {
 				// redundant UI to toggle view type (there are also
 				// commands in the menu bar to do this)
@@ -877,7 +953,9 @@ public struct UIKeypads_FunctionKeysView : View {
 				}
 			}*/
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Spacer().asMacTermKeypadKeySpacingH()
 				Group {
@@ -979,7 +1057,9 @@ public struct UIKeypads_FunctionKeysView : View {
 			//if is48Keys {
 			if true {
 				Spacer().asMacTermKeypadKeySpacingV()
-				HStack {
+				HStack(
+					spacing: 0
+				) {
 					// maximum 10 items per stack; use Group to build more
 					Spacer().asMacTermKeypadKeySpacingH()
 					Group {
@@ -1115,9 +1195,14 @@ public struct UIKeypads_VT220KeysView : View {
 	@EnvironmentObject private var viewModel: UIKeypads_Model
 
 	public var body: some View {
-		VStack (alignment: .leading) {
+		VStack (
+			alignment: .leading,
+			spacing: 0
+		) {
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Group {
 					Spacer().asMacTermKeypadKeySpacingH()
@@ -1170,7 +1255,9 @@ public struct UIKeypads_VT220KeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Group {
 					// TEMPORARY; move to SF Symbols when SDK is updated
@@ -1214,7 +1301,9 @@ public struct UIKeypads_VT220KeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Group {
 					Spacer().asMacTermKeypadKeySpacingH()
@@ -1243,11 +1332,15 @@ public struct UIKeypads_VT220KeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-			HStack {
+			HStack(
+				spacing: 0
+			) {
 				// maximum 10 items per stack; use Group to build more
 				Group {
 					Spacer().asMacTermKeypadKeySpacingH()
-					VStack {
+					VStack(
+						spacing: 0
+					) {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
 						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowLeft) }) {
@@ -1260,7 +1353,9 @@ public struct UIKeypads_VT220KeysView : View {
 							.accessibility(label: Text("Left Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
-					VStack {
+					VStack(
+						spacing: 0
+					) {
 						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowUp) }) {
 							if #available(macOS 11.0, *) {
 								Image(systemName: "arrowtriangle.up.fill")
@@ -1280,7 +1375,9 @@ public struct UIKeypads_VT220KeysView : View {
 							.accessibility(label: Text("Down Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
-					VStack {
+					VStack(
+						spacing: 0
+					) {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
 						Button(action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .arrowRight) }) {
@@ -1293,15 +1390,21 @@ public struct UIKeypads_VT220KeysView : View {
 							.accessibility(label: Text("Right Arrow"))
 					}
 					Spacer().asMacTermKeypadKeySpacingH()
-					VStack {
+					VStack(
+						spacing: 0
+					) {
 						Spacer().asMacTermKeypadKeySquareSpace()
 						Spacer().asMacTermKeypadKeySpacingV()
 						Spacer().asMacTermKeypadKeySquareSpace()
 					}
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				VStack {
-					HStack {
+				VStack(
+					spacing: 0
+				) {
+					HStack(
+						spacing: 0
+					) {
 						Button("1", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad1) })
 							.asMacTermKeypadKeySquareLargeFont()
 						Spacer().asMacTermKeypadKeySpacingH()
@@ -1313,7 +1416,9 @@ public struct UIKeypads_VT220KeysView : View {
 						.asMacTermKeypadKeyRect2HLargeFont()
 				}
 				Spacer().asMacTermKeypadKeySpacingH()
-				VStack {
+				VStack(
+					spacing: 0
+				) {
 					Button("3", action: { viewModel.runner.respondToAction(viewModel: viewModel, keyID: .keypad3) })
 						.asMacTermKeypadKeySquareLargeFont()
 					Spacer().asMacTermKeypadKeySpacingV()
@@ -1335,8 +1440,7 @@ public struct UIKeypads_VT220KeysView : View {
 				Spacer().asMacTermKeypadKeySpacingH()
 			}
 			Spacer().asMacTermKeypadKeySpacingV()
-		}.padding(0)
-			.disabled(viewModel.buttonsDisabled)
+		}.disabled(viewModel.buttonsDisabled)
 	}
 
 }
