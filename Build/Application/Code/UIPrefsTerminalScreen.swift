@@ -177,13 +177,13 @@ public struct UIPrefsTerminalScreen_View : View {
 					.macTermToolTipText("Number of columns visible on the terminal screen.")
 				Spacer()
 			}
-			Spacer().asMacTermSectionSpacingV()
+			Spacer().asMacTermMinorSectionSpacingV()
 			UICommon_Default1OptionLineView("Height", bindIsDefaultTo: $viewModel.isDefaultHeight, isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", value: $viewModel.heightValue, formatter: heightFormatter)
 					.frame(minWidth: 50, maxWidth: 50)
 					.macTermToolTipText("Number of rows visible on the terminal screen.")
 			}
-			Spacer().asMacTermSectionSpacingV()
+			Spacer().asMacTermMinorSectionSpacingV()
 			UICommon_Default1OptionLineView("Scrollback", bindIsDefaultTo: $viewModel.isDefaultScrollback, isEditingDefault: viewModel.isEditingDefaultContext) {
 				Picker("", selection: $viewModel.selectedScrollbackType) {
 					// TBD: how to insert dividing-line in this type of menu?

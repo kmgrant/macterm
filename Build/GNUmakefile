@@ -233,7 +233,6 @@ Base.lproj/InfoWindowTouchBarCocoa \
 Base.lproj/MainMenuCocoa \
 Base.lproj/PrefPanelFormatGeneralCocoa \
 Base.lproj/PrefPanelFormatStandardColorsCocoa \
-Base.lproj/PrefPanelGeneralSpecialCocoa \
 Base.lproj/PrefPanelMacrosCocoa \
 Base.lproj/PrefPanelSessionDataFlowCocoa \
 Base.lproj/PrefPanelSessionKeyboardCocoa \

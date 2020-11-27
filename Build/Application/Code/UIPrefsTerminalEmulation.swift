@@ -245,13 +245,13 @@ public struct UIPrefsTerminalEmulation_View : View {
 					.frame(minWidth: 160, maxWidth: 160)
 					.macTermToolTipText("The hardware that terminal sequences are generally expected to match (see “Emulation Tweaks” below though).")
 			}
-			Spacer().asMacTermSectionSpacingV()
+			Spacer().asMacTermMinorSectionSpacingV()
 			UICommon_Default1OptionLineView("Identity", bindIsDefaultTo: $viewModel.isDefaultIdentity, isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", text: $viewModel.terminalIdentity)
 					.frame(minWidth: 150, maxWidth: 150)
 					.macTermToolTipText("An answer-back message that applications can query to determine MacTerm’s capabilities.  For example, on Unix this might match a $TERM variable.")
 			}
-			Spacer().asMacTermSectionSpacingV()
+			Spacer().asMacTermMinorSectionSpacingV()
 			UICommon_Default1OptionLineView("Emulation Tweaks", bindIsDefaultTo: $viewModel.isDefaultEmulationTweaks, isEditingDefault: viewModel.isEditingDefaultContext,
 											disableDefaultAlignmentGuide: true) {
 				List {
@@ -273,9 +273,9 @@ public struct UIPrefsTerminalEmulation_View : View {
 						.macTermToolTipText("Set if XTerm graphics character sets are recognized (not likely to be needed anymore with UTF-8/Unicode).")
 					Toggle("XTerm Window Alteration", isOn: $viewModel.tweakXTermWindowAlterationEnabled)
 						.macTermToolTipText("Set if terminal applications can cause MacTerm windows or tabs to change (for example, to update the title text).")
-				}.frame(minWidth: 250, minHeight: 48, idealHeight: 150)
+				}.frame(minWidth: 260, minHeight: 48, idealHeight: 150)
 					.fixedSize()
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 13 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + (isOS11() ? 22 : 13) }) // TEMPORARY; try to find a nicer way to do this (top-align both)
 			}
 			UICommon_OptionLineView("") {
 				Text("The Identity should accurately describe the set of tweaks (for example, “xterm-256color”) so that applications will know what to use.")

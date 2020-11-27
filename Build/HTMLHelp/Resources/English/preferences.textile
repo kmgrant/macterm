@@ -357,7 +357,7 @@ You can hold down the Control key prior to starting a window resize
  Option key can be held down to have the same effect when you use
  the "Enter Full Screen" command.
 
-h4(#spacesfortab). Copy With Tab Substitution
+h4(#spacesfortab). Tab Conversion
 
 When copying text using Copy with Tab Substitution, this number
  determines how many consecutive spaces are replaced with a single

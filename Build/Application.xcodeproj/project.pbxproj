@@ -65,6 +65,7 @@
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC3C5552570ACA900E5DB94 /* UIPrefsSessionGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */; };
+		0AC3C56F2571680700E5DB94 /* UIPrefsGeneralSpecial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC3C56E2571680700E5DB94 /* UIPrefsGeneralSpecial.swift */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.mm */; };
@@ -189,7 +190,6 @@
 		0A08C9F5224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F6224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F7224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
-		0A08C9FB224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelGeneralSpecialCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FC224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FD224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FF224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionKeyboardCocoa.xib; sourceTree = "<group>"; };
@@ -437,6 +437,7 @@
 		0AC1E89A251D9F2F0044F3E5 /* CursorWhiteCrosshairs@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorWhiteCrosshairs@2x.png"; path = "Application/Resources/CursorWhiteCrosshairs@2x.png"; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsSessionGraphics.swift; path = Application/Code/UIPrefsSessionGraphics.swift; sourceTree = "<group>"; };
+		0AC3C56E2571680700E5DB94 /* UIPrefsGeneralSpecial.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsGeneralSpecial.swift; path = Application/Code/UIPrefsGeneralSpecial.swift; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
 		0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsSession.cp; path = Application/Code/QuillsSession.cp; sourceTree = "<group>"; };
@@ -634,6 +635,7 @@
 				0A82D1732557443C00950356 /* UIPrefsGeneralFullScreen.swift */,
 				0A82D17D2557565700950356 /* UIPrefsGeneralNotifications.swift */,
 				0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */,
+				0AC3C56E2571680700E5DB94 /* UIPrefsGeneralSpecial.swift */,
 				0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */,
 				0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */,
 				0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */,
@@ -838,7 +840,6 @@
 				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
 				0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */,
 				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
-				0A0E9F811DB18127006A8BF5 /* PrefPanelGeneralSpecialCocoa.xib */,
 				0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */,
 				0A0E9F851DB18127006A8BF5 /* PrefPanelSessionDataFlowCocoa.xib */,
 				0A0E9F891DB18127006A8BF5 /* PrefPanelSessionKeyboardCocoa.xib */,
@@ -1214,6 +1215,7 @@
 				0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */,
 				0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */,
 				0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */,
+				0AC3C56F2571680700E5DB94 /* UIPrefsGeneralSpecial.swift in Sources */,
 				0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */,
 				0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.mm in Sources */,
 				0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.mm in Sources */,
@@ -1407,14 +1409,6 @@
 				0A08C9F7224F345E00DA2569 /* Base */,
 			);
 			name = PrefPanelFormatStandardColorsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F811DB18127006A8BF5 /* PrefPanelGeneralSpecialCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9FB224F345E00DA2569 /* Base */,
-			);
-			name = PrefPanelGeneralSpecialCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */ = {

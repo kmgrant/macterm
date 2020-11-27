@@ -56,6 +56,10 @@ extension Spacer {
 	public func asMacTermSectionSpacingV() -> some View {
 		padding([.top], 16)
 	}
+	// slightly separate each new section from the one above it
+	public func asMacTermMinorSectionSpacingV() -> some View {
+		padding([.top], 4)
+	}
 }
 
 extension Text {
@@ -88,6 +92,14 @@ extension VerticalAlignment {
 }
 
 extension View {
+	// return true only if macOS 11 or greater
+	public func isOS11() -> Bool {
+		if #available(macOS 11.0, *) {
+			return true
+		}
+		return false
+	}
+
 	// simplifies call to help() API (only available in macOS 11),
 	// allowing builds for older OSes to simply do nothing; note
 	// that this erases the type of the view sequence so it should

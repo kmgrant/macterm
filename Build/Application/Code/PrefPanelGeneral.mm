@@ -167,39 +167,30 @@ done from this implementation file, and used by this internal class.
 
 
 /*!
-The private class interface.
+Implements SwiftUI interaction for the “Special” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
 */
-@interface PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal) //{
+@interface PrefPanelGeneral_SpecialActionHandler : NSObject< UIPrefsGeneralSpecial_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*		_prefsMgr;
+	UIPrefsGeneralSpecial_Model*	_viewModel;
+}
 
 // new methods
 	- (void)
-	notifyDidChangeValueForCursorShape;
-	- (void)
-	notifyWillChangeValueForCursorShape;
-	- (void)
-	notifyDidChangeValueForNewCommand;
-	- (void)
-	notifyWillChangeValueForNewCommand;
-	- (void)
-	notifyDidChangeValueForWindowResizeEffect;
-	- (void)
-	notifyWillChangeValueForWindowResizeEffect;
-	- (NSArray*)
-	primaryDisplayBindingKeys;
+	updateViewModelFromPrefsMgr;
 
-// preference setting accessors
-	- (Terminal_CursorType)
-	readCursorTypeWithDefaultValue:(Terminal_CursorType)_;
-	- (UInt32)
-	readNewCommandShortcutEffectWithDefaultValue:(UInt32)_;
-	- (UInt16)
-	readSpacesPerTabWithDefaultValue:(UInt16)_;
-	- (BOOL)
-	writeCursorType:(Terminal_CursorType)_;
-	- (BOOL)
-	writeNewCommandShortcutEffect:(UInt32)_;
-	- (BOOL)
-	writeSpacesPerTab:(UInt16)_;
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsGeneralSpecial_Model*
+	viewModel;
 
 @end //}
 
@@ -398,7 +389,7 @@ init
 {
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelGeneral_OptionsVC alloc] init] autorelease],
-										[[[PrefPanelGeneral_SpecialViewManager alloc] init] autorelease],
+										[[[PrefPanelGeneral_SpecialVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_FullScreenVC alloc] init] autorelease],
 										[[[PrefPanelGeneral_NotificationsVC alloc] init] autorelease],
 									];
@@ -979,12 +970,12 @@ init
 		// fill in names of system sounds
 		{
 			NSArray*															soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
-			NSMutableArray< UIPrefsGeneralNotification_BellSoundItemModel* >*	modelArray = [[[NSMutableArray< UIPrefsGeneralNotification_BellSoundItemModel* > alloc] init] autorelease];
+			NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* >*	modelArray = [[[NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* > alloc] init] autorelease];
 			
 			
 			for (NSString* aSoundName in soundNamesOnly)
 			{
-				UIPrefsGeneralNotification_BellSoundItemModel*		newItem = [[[UIPrefsGeneralNotification_BellSoundItemModel alloc]
+				UIPrefsGeneralNotifications_BellSoundItemModel*		newItem = [[[UIPrefsGeneralNotifications_BellSoundItemModel alloc]
 																				initWithSoundName:aSoundName helpText:nil] autorelease];
 				
 				
@@ -1057,18 +1048,18 @@ updateViewModelFromPrefsMgr
 			if ([asNSString isEqualToString:@"off"])
 			{
 				// no sound
-				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID; // SwiftUI binding
+				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotifications_BellSoundItemModel.offItemModel.uniqueID; // SwiftUI binding
 			}
 			else if ([asNSString isEqualToString:@""])
 			{
 				// default alert sound
-				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID; // SwiftUI binding
+				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotifications_BellSoundItemModel.defaultItemModel.uniqueID; // SwiftUI binding
 			}
 			else
 			{
 				// named sound
-				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID; // initially...
-				for (UIPrefsGeneralNotification_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
+				self.viewModel.selectedBellSoundID = UIPrefsGeneralNotifications_BellSoundItemModel.defaultItemModel.uniqueID; // initially...
+				for (UIPrefsGeneralNotifications_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
 				{
 					if ([asNSString isEqualToString:anItem.soundName])
 					{
@@ -1194,17 +1185,17 @@ dataUpdated
 		CFStringRef			preferenceValue = CFSTR("");
 		
 		
-		if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID])
+		if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotifications_BellSoundItemModel.offItemModel.uniqueID])
 		{
 			preferenceValue = CFSTR("off"); // special value; see "Preferences.h"
 		}
-		else if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID])
+		else if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotifications_BellSoundItemModel.defaultItemModel.uniqueID])
 		{
 			preferenceValue = CFSTR(""); // special value; see "Preferences.h"
 		}
 		else
 		{
-			for (UIPrefsGeneralNotification_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
+			for (UIPrefsGeneralNotifications_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
 			{
 				if ([self.viewModel.selectedBellSoundID isEqual:anItem.uniqueID])
 				{
@@ -1305,11 +1296,11 @@ by using the sound name to look up a system sound.
 - (void)
 playSelectedBellSound
 {
-	if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID])
+	if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotifications_BellSoundItemModel.offItemModel.uniqueID])
 	{
 		// do nothing
 	}
-	else if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel.uniqueID])
+	else if ([self.viewModel.selectedBellSoundID isEqual:UIPrefsGeneralNotifications_BellSoundItemModel.defaultItemModel.uniqueID])
 	{
 		// user-specified alert sound
 		NSBeep();
@@ -1320,7 +1311,7 @@ playSelectedBellSound
 		Boolean		foundName = false;
 		
 		
-		for (UIPrefsGeneralNotification_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
+		for (UIPrefsGeneralNotifications_BellSoundItemModel* anItem in self.viewModel.bellSoundItems)
 		{
 			if ([self.viewModel.selectedBellSoundID isEqual:anItem.uniqueID])
 			{
@@ -2340,21 +2331,396 @@ preferencesClass
 
 
 #pragma mark -
-@implementation PrefPanelGeneral_SpecialViewManager //{
-
-
-#pragma mark Initializers
+@implementation PrefPanelGeneral_SpecialActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.11)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelGeneralSpecialCocoa" delegate:self context:nullptr];
+	self = [super init];
+	if (nil != self)
+	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsGeneralSpecial_Model alloc] initWithRunner:self]; // transfer ownership
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.11)
+*/
+- (void)
+dealloc
+{
+	[_prefsMgr release];
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.11)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	
+	
+	// allow initialization of values without triggers
+	self.viewModel.disableWriteback = YES;
+	
+	// update settings
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagTerminalCursorType;
+		Terminal_CursorType		preferenceValue = kTerminal_CursorTypeVerticalLine;
+		Preferences_Result		prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue,
+																			false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIPrefsGeneralSpecial_CursorType	bindingValue = UIPrefsGeneralSpecial_CursorTypeVerticalBar;
+			
+			
+			switch (preferenceValue)
+			{
+			case kTerminal_CursorTypeBlock:
+				bindingValue = UIPrefsGeneralSpecial_CursorTypeBlock;
+				break;
+			
+			case kTerminal_CursorTypeThickUnderscore:
+				bindingValue = UIPrefsGeneralSpecial_CursorTypeThickUnderline;
+				break;
+			
+			case kTerminal_CursorTypeThickVerticalLine:
+				bindingValue = UIPrefsGeneralSpecial_CursorTypeThickVerticalBar;
+				break;
+			
+			case kTerminal_CursorTypeUnderscore:
+				bindingValue = UIPrefsGeneralSpecial_CursorTypeUnderline;
+				break;
+			
+			case kTerminal_CursorTypeVerticalLine:
+			default:
+				bindingValue = UIPrefsGeneralSpecial_CursorTypeVerticalBar;
+				break;
+			}
+			self.viewModel.selectedCursorShape = bindingValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCursorBlinks;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.cursorFlashEnabled = preferenceValue; // SwiftUI binding
+		}
+	}
+	// note: stacking origin (kPreferences_TagWindowStackingOrigin) is
+	// not directly displayed in the panel and is handled indirectly
+	// via the "setWindowStackingOrigin" protocol method
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalResizeAffectsFontSize;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.selectedWindowResizeEffect = ((preferenceValue)
+															? UIPrefsGeneralSpecial_WindowResizeEffectTextSize
+															: UIPrefsGeneralSpecial_WindowResizeEffectTerminalScreenSize); // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCopyTableThreshold;
+		UInt16				preferenceValue = 4;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.spacesPerTabValue = preferenceValue; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag					preferenceTag = kPreferences_TagNewCommandShortcutEffect;
+		SessionFactory_SpecialSession	preferenceValue = kSessionFactory_SpecialSessionDefaultFavorite;
+		Preferences_Result				prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																					sizeof(preferenceValue), &preferenceValue,
+																					false/* search defaults */);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIPrefsGeneralSpecial_CommandNBindingType	bindingValue = UIPrefsGeneralSpecial_CommandNBindingTypeBindDefaultSession;
+			
+			
+			switch (preferenceValue)
+			{
+			case kSessionFactory_SpecialSessionInteractiveSheet:
+				bindingValue = UIPrefsGeneralSpecial_CommandNBindingTypeBindCustomNewSession;
+				break;
+			
+			case kSessionFactory_SpecialSessionLogInShell:
+				bindingValue = UIPrefsGeneralSpecial_CommandNBindingTypeBindLogInShell;
+				break;
+			
+			case kSessionFactory_SpecialSessionShell:
+				bindingValue = UIPrefsGeneralSpecial_CommandNBindingTypeBindShell;
+				break;
+			
+			case kSessionFactory_SpecialSessionDefaultFavorite:
+			default:
+				bindingValue = UIPrefsGeneralSpecial_CommandNBindingTypeBindDefaultSession;
+				break;
+			}
+			self.viewModel.selectedCommandNBindingType = bindingValue; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsGeneralSpecial_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.11)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update settings
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagTerminalCursorType;
+		Terminal_CursorType		enumPrefValue = kTerminal_CursorTypeVerticalLine;
+		
+		
+		switch (self.viewModel.selectedCursorShape)
+		{
+		case UIPrefsGeneralSpecial_CursorTypeBlock:
+			enumPrefValue = kTerminal_CursorTypeBlock;
+			break;
+		
+		case UIPrefsGeneralSpecial_CursorTypeThickUnderline:
+			enumPrefValue = kTerminal_CursorTypeThickUnderscore;
+			break;
+		
+		case UIPrefsGeneralSpecial_CursorTypeThickVerticalBar:
+			enumPrefValue = kTerminal_CursorTypeThickVerticalLine;
+			break;
+		
+		case UIPrefsGeneralSpecial_CursorTypeUnderline:
+			enumPrefValue = kTerminal_CursorTypeUnderscore;
+			break;
+		
+		case UIPrefsGeneralSpecial_CursorTypeVerticalBar:
+		default:
+			enumPrefValue = kTerminal_CursorTypeVerticalLine;
+			break;
+		}
+		
+		Terminal_CursorType		preferenceValue = STATIC_CAST(enumPrefValue, Terminal_CursorType);
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCursorBlinks;
+		Boolean				preferenceValue = self.viewModel.cursorFlashEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	// note: stacking origin (kPreferences_TagWindowStackingOrigin) is
+	// not directly displayed in the panel and is handled indirectly
+	// via the "setWindowStackingOrigin" protocol method
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagTerminalResizeAffectsFontSize;
+		Boolean				preferenceValue = (UIPrefsGeneralSpecial_WindowResizeEffectTextSize == self.viewModel.selectedWindowResizeEffect);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCopyTableThreshold;
+		UInt16				preferenceValue = STATIC_CAST(self.viewModel.spacesPerTabValue, UInt16);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag					preferenceTag = kPreferences_TagNewCommandShortcutEffect;
+		SessionFactory_SpecialSession	enumPrefValue = kSessionFactory_SpecialSessionDefaultFavorite;
+		
+		
+		switch (self.viewModel.selectedCommandNBindingType)
+		{
+		case UIPrefsGeneralSpecial_CommandNBindingTypeBindCustomNewSession:
+			enumPrefValue = kSessionFactory_SpecialSessionInteractiveSheet;
+			break;
+		
+		case UIPrefsGeneralSpecial_CommandNBindingTypeBindLogInShell:
+			enumPrefValue = kSessionFactory_SpecialSessionLogInShell;
+			break;
+		
+		case UIPrefsGeneralSpecial_CommandNBindingTypeBindShell:
+			enumPrefValue = kSessionFactory_SpecialSessionShell;
+			break;
+		
+		case UIPrefsGeneralSpecial_CommandNBindingTypeBindDefaultSession:
+		default:
+			enumPrefValue = kSessionFactory_SpecialSessionDefaultFavorite;
+			break;
+		}
+		
+		SessionFactory_SpecialSession	preferenceValue = STATIC_CAST(enumPrefValue, SessionFactory_SpecialSession);
+		Preferences_Result				prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																					sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Responds to a request to set the window stacking origin.
+
+Note that "dataUpdated" and "updateViewModelFromPrefsMgr"
+do not have to handle this setting because it is managed
+indirectly through the arrange-window feature.
+
+(2020.11)
+*/
+- (void)
+setWindowStackingOrigin
+{
+	Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin, kPreferences_DataTypeCGPoint);
+	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
+}// setWindowStackingOrigin
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelGeneral_SpecialVC //{
+
+
+/*!
+Designated initializer.
+
+(2020.11)
+*/
+- (instancetype)
+init
+{
+	PrefPanelGeneral_SpecialActionHandler*		actionHandler = [[PrefPanelGeneral_SpecialActionHandler alloc] init];
+	NSView*										newView = [UIPrefsGeneralSpecial_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -2366,547 +2732,59 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.11)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
-	[byKey release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-cursorFlashes
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagCursorBlinks defaultValue:NO];
-}
-- (void)
-setCursorFlashes:(BOOL)		aFlag
-{
-	BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagCursorBlinks];
-	
-	
-	if (NO == writeOK)
-	{
-		Console_Warning(Console_WriteLine, "failed to save cursor-flashing preference");
-	}
-}// setCursorFlashes:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-cursorShapeIsBlock
-{
-	return (kTerminal_CursorTypeBlock == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfCursorShapeIsBlock
-{
-	return NO;
-}
-- (void)
-setCursorShapeIsBlock:(BOOL)	aFlag
-{
-	if ([self cursorShapeIsBlock] != aFlag)
-	{
-		[self notifyWillChangeValueForCursorShape];
-		
-		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeBlock];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save cursor-shape-block preference");
-		}
-		
-		[self notifyDidChangeValueForCursorShape];
-	}
-}// setCursorShapeIsBlock:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-cursorShapeIsThickUnderline
-{
-	return (kTerminal_CursorTypeThickUnderscore == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfCursorShapeIsThickUnderline
-{
-	return NO;
-}
-- (void)
-setCursorShapeIsThickUnderline:(BOOL)	aFlag
-{
-	if ([self cursorShapeIsThickUnderline] != aFlag)
-	{
-		[self notifyWillChangeValueForCursorShape];
-		
-		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeThickUnderscore];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save cursor-shape-thick-underline preference");
-		}
-		
-		[self notifyDidChangeValueForCursorShape];
-	}
-}// setCursorShapeIsThickUnderline:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-cursorShapeIsThickVerticalBar
-{
-	return (kTerminal_CursorTypeThickVerticalLine == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfCursorShapeIsThickVerticalBar
-{
-	return NO;
-}
-- (void)
-setCursorShapeIsThickVerticalBar:(BOOL)		aFlag
-{
-	if ([self cursorShapeIsThickVerticalBar] != aFlag)
-	{
-		[self notifyWillChangeValueForCursorShape];
-		
-		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeThickVerticalLine];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save cursor-shape-thick-vertical-bar preference");
-		}
-		
-		[self notifyDidChangeValueForCursorShape];
-	}
-}// setCursorShapeIsThickVerticalBar:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-cursorShapeIsUnderline
-{
-	return (kTerminal_CursorTypeUnderscore == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfCursorShapeIsUnderline
-{
-	return NO;
-}
-- (void)
-setCursorShapeIsUnderline:(BOOL)	aFlag
-{
-	if ([self cursorShapeIsUnderline] != aFlag)
-	{
-		[self notifyWillChangeValueForCursorShape];
-		
-		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeUnderscore];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save cursor-shape-underline preference");
-		}
-		
-		[self notifyDidChangeValueForCursorShape];
-	}
-}// setCursorShapeIsUnderline:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-cursorShapeIsVerticalBar
-{
-	return (kTerminal_CursorTypeVerticalLine == [self readCursorTypeWithDefaultValue:kTerminal_CursorTypeBlock]);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfCursorShapeIsVerticalBar
-{
-	return NO;
-}
-- (void)
-setCursorShapeIsVerticalBar:(BOOL)		aFlag
-{
-	if ([self cursorShapeIsVerticalBar] != aFlag)
-	{
-		[self notifyWillChangeValueForCursorShape];
-		
-		BOOL	writeOK = [self writeCursorType:kTerminal_CursorTypeVerticalLine];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save cursor-shape-vertical-bar preference");
-		}
-		
-		[self notifyDidChangeValueForCursorShape];
-	}
-}// setCursorShapeIsVerticalBar:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isWindowResizeEffectTerminalScreenSize
-{
-	BOOL	preferenceFlag = [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagTerminalResizeAffectsFontSize
-																		defaultValue:NO];
-	
-	
-	return (NO == preferenceFlag);
-}
-- (void)
-setWindowResizeEffectTerminalScreenSize:(BOOL)	aFlag
-{
-	if ([self isWindowResizeEffectTerminalScreenSize] != aFlag)
-	{
-		[self notifyWillChangeValueForWindowResizeEffect];
-		
-		BOOL	preferenceFlag = (NO == aFlag);
-		BOOL	writeOK = [self->prefsMgr writeFlag:preferenceFlag
-													forPreferenceTag:kPreferences_TagTerminalResizeAffectsFontSize];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save window-resize-affects-font-size preference");
-		}
-		
-		[self notifyDidChangeValueForWindowResizeEffect];
-	}
-}// setWindowResizeEffectTerminalScreenSize:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isWindowResizeEffectTextSize
-{
-	return [self->prefsMgr readFlagForPreferenceTag:kPreferences_TagTerminalResizeAffectsFontSize defaultValue:NO];
-}
-- (void)
-setWindowResizeEffectTextSize:(BOOL)	aFlag
-{
-	if ([self isWindowResizeEffectTextSize] != aFlag)
-	{
-		[self notifyWillChangeValueForWindowResizeEffect];
-		
-		BOOL	writeOK = [self->prefsMgr writeFlag:aFlag forPreferenceTag:kPreferences_TagTerminalResizeAffectsFontSize];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save window-resize-affects-font-size preference");
-		}
-		
-		[self notifyDidChangeValueForWindowResizeEffect];
-	}
-}// setWindowResizeEffectTextSize:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isNewCommandCustomNewSession
-{
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
-	
-	
-	return (kSessionFactory_SpecialSessionInteractiveSheet == value);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfNewCommandCustomNewSession
-{
-	return NO;
-}
-- (void)
-setNewCommandCustomNewSession:(BOOL)	aFlag
-{
-	if ([self isNewCommandCustomNewSession] != aFlag)
-	{
-		[self notifyWillChangeValueForNewCommand];
-		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionInteractiveSheet];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save new-command-is-custom-session preference");
-		}
-		
-		[self notifyDidChangeValueForNewCommand];
-	}
-}// setNewCommandCustomNewSession:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isNewCommandDefaultSessionFavorite
-{
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
-	
-	
-	return (kSessionFactory_SpecialSessionDefaultFavorite == value);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfNewCommandDefaultSessionFavorite
-{
-	return NO;
-}
-- (void)
-setNewCommandDefaultSessionFavorite:(BOOL)	aFlag
-{
-	if ([self isNewCommandDefaultSessionFavorite] != aFlag)
-	{
-		[self notifyWillChangeValueForNewCommand];
-		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionDefaultFavorite];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save new-command-is-default-favorite preference");
-		}
-		
-		[self notifyDidChangeValueForNewCommand];
-	}
-}// setNewCommandDefaultSessionFavorite:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isNewCommandLogInShell
-{
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
-	
-	
-	return (kSessionFactory_SpecialSessionLogInShell == value);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfNewCommandLogInShell
-{
-	return NO;
-}
-- (void)
-setNewCommandLogInShell:(BOOL)	aFlag
-{
-	if ([self isNewCommandLogInShell] != aFlag)
-	{
-		[self notifyWillChangeValueForNewCommand];
-		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionLogInShell];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save new-command-is-log-in-shell preference");
-		}
-		
-		[self notifyDidChangeValueForNewCommand];
-	}
-}// setNewCommandLogInShell:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isNewCommandShell
-{
-	UInt32	value = [self readNewCommandShortcutEffectWithDefaultValue:kSessionFactory_SpecialSessionDefaultFavorite];
-	
-	
-	return (kSessionFactory_SpecialSessionShell == value);
-}
-+ (BOOL)
-automaticallyNotifiesObserversOfNewCommandShell
-{
-	return NO;
-}
-- (void)
-setNewCommandShell:(BOOL)	aFlag
-{
-	if ([self isNewCommandShell] != aFlag)
-	{
-		[self notifyWillChangeValueForNewCommand];
-		
-		BOOL	writeOK = [self writeNewCommandShortcutEffect:kSessionFactory_SpecialSessionShell];
-		
-		
-		if (NO == writeOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save new-command-is-shell preference");
-		}
-		
-		[self notifyDidChangeValueForNewCommand];
-	}
-}// setNewCommandLogInShell:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Number*)
-spacesPerTab
-{
-	return [self->byKey objectForKey:@"spacesPerTab"];
-}// spacesPerTab
-
-
-#pragma mark Actions
-
-
-/*!
-Responds to a request to set the window stacking origin.
-
-(4.1)
-*/
-- (IBAction)
-performSetWindowStackingOrigin:(id)	sender
-{
-#pragma unused(sender)
-	Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin, kPreferences_DataTypeCGPoint);
-	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
-}// performSetWindowStackingOrigin:
-
-
-#pragma mark Validators
-
-
-/*!
-Validates the number of spaces entered by the user, returning an
-appropriate error (and a NO result) if the number is incorrect.
-
-(4.1)
-*/
-- (BOOL)
-validateSpacesPerTab:(id*/* NSString* */)	ioValue
-error:(NSError**)						outError
-{
-	BOOL	result = NO;
-	
-	
-	if (nil == *ioValue)
-	{
-		result = YES;
-	}
-	else
-	{
-		// first strip whitespace
-		*ioValue = [[*ioValue stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] retain];
-		
-		// while an NSNumberFormatter is more typical for validation,
-		// the requirements for this numerical value are quite simple
-		NSScanner*	scanner = [NSScanner scannerWithString:*ioValue];
-		int			value = 0;
-		
-		
-		// the error message below should agree with the range enforced here...
-		if ([scanner scanInt:&value] && [scanner isAtEnd] && (value >= 1) && (value <= 24/* arbitrary */))
-		{
-			result = YES;
-		}
-		else
-		{
-			if (nil != outError) result = NO;
-			else result = YES; // cannot return NO when the error instance is undefined
-		}
-		
-		if (NO == result)
-		{
-			*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
-							code:kConstantsRegistry_NSErrorBadUserID
-							userInfo:@{
-											NSLocalizedDescriptionKey: NSLocalizedStringFromTable
-																		(@"“Copy with Tab Substitution” requires a count from 1 to 24 spaces.",
-																			@"PrefPanelGeneral"/* table */,
-																			@"message displayed for bad numbers"),
-										}];
-		}
-	}
-	return result;
-}// validateSpacesPerTab:error:
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelGeneral_SpecialActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:8/* arbitrary; number of expected settings */];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelGeneral_SpecialActionHandler*		actionHandler = STATIC_CAST(aContext, PrefPanelGeneral_SpecialActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 600, 350); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
+	
+	// update the view by changing the model’s observed variables (since this panel
+	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
+	// will never be called so the view must be initialized from the context here)
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2921,55 +2799,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
-								initWithPreferencesTag:kPreferences_TagCopyTableThreshold
-														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeUInt16] autorelease]
-					forKey:@"spacesPerTab"];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = [[self managedView] frame].size;
+	*outIdealSize = _idealFrame.size;
 }
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2987,7 +2846,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -3000,7 +2859,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -3017,7 +2876,7 @@ display the new data set.
 Not applicable to this panel because it only sets global
 (Default) preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -3032,7 +2891,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.11)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -3065,7 +2924,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.11)
 */
 - (NSImage*)
 panelIcon
@@ -3082,7 +2941,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelIdentifier
@@ -3096,7 +2955,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.11)
 */
 - (NSString*)
 panelName
@@ -3114,7 +2973,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.11)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -3129,7 +2988,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.11)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -3138,222 +2997,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end //} PrefPanelGeneral_SpecialViewManager
+@end //} PrefPanelGeneral_SpecialVC
 
-
-#pragma mark -
-@implementation PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal) //{
-
-
-#pragma mark New Methods
-
-
-/*!
-Send when changing any of the properties that affect the
-shape of the cursor (as they are related).
-
-(4.1)
-*/
-- (void)
-notifyDidChangeValueForCursorShape
-{
-	// note: should occur in opposite order of corresponding "willChangeValueForKey:" invocations
-	[self didChangeValueForKey:@"cursorShapeIsVerticalBar"];
-	[self didChangeValueForKey:@"cursorShapeIsUnderline"];
-	[self didChangeValueForKey:@"cursorShapeIsThickVerticalBar"];
-	[self didChangeValueForKey:@"cursorShapeIsThickUnderline"];
-	[self didChangeValueForKey:@"cursorShapeIsBlock"];
-}
-- (void)
-notifyWillChangeValueForCursorShape
-{
-	[self willChangeValueForKey:@"cursorShapeIsBlock"];
-	[self willChangeValueForKey:@"cursorShapeIsThickUnderline"];
-	[self willChangeValueForKey:@"cursorShapeIsThickVerticalBar"];
-	[self willChangeValueForKey:@"cursorShapeIsUnderline"];
-	[self willChangeValueForKey:@"cursorShapeIsVerticalBar"];
-}// notifyWillChangeValueForCursorShape
-
-
-/*!
-Send when changing any of the properties that affect the
-command-N key mapping (as they are related).
-
-(4.1)
-*/
-- (void)
-notifyDidChangeValueForNewCommand
-{
-	// note: should occur in opposite order of corresponding "willChangeValueForKey:" invocations
-	[self didChangeValueForKey:@"newCommandShell"];
-	[self didChangeValueForKey:@"newCommandLogInShell"];
-	[self didChangeValueForKey:@"newCommandDefaultSessionFavorite"];
-	[self didChangeValueForKey:@"newCommandCustomNewSession"];
-}
-- (void)
-notifyWillChangeValueForNewCommand
-{
-	[self willChangeValueForKey:@"newCommandCustomNewSession"];
-	[self willChangeValueForKey:@"newCommandDefaultSessionFavorite"];
-	[self willChangeValueForKey:@"newCommandLogInShell"];
-	[self willChangeValueForKey:@"newCommandShell"];
-}// notifyWillChangeValueForNewCommand
-
-
-/*!
-Send when changing any of the properties that affect the
-window resize effect (as they are related).
-
-(4.1)
-*/
-- (void)
-notifyDidChangeValueForWindowResizeEffect
-{
-	// note: should occur in opposite order of corresponding "willChangeValueForKey:" invocations
-	[self didChangeValueForKey:@"windowResizeEffectTextSize"];
-	[self didChangeValueForKey:@"windowResizeEffectTerminalScreenSize"];
-}
-- (void)
-notifyWillChangeValueForWindowResizeEffect
-{
-	[self willChangeValueForKey:@"windowResizeEffectTerminalScreenSize"];
-	[self willChangeValueForKey:@"windowResizeEffectTextSize"];
-}// notifyWillChangeValueForWindowResizeEffect
-
-
-/*!
-Returns the names of key-value coding keys that represent the
-primary bindings of this panel (those that directly correspond
-to saved preferences).
-
-(4.1)
-*/
-- (NSArray*)
-primaryDisplayBindingKeys
-{
-	return @[
-				@"spacesPerTab",
-			];
-}// primaryDisplayBindingKeys
-
-
-/*!
-Returns the current user preference for the cursor shape,
-or the specified default value if no preference exists.
-
-(4.1)
-*/
-- (Terminal_CursorType)
-readCursorTypeWithDefaultValue:(Terminal_CursorType)	aDefaultValue
-{
-	Terminal_CursorType		result = aDefaultValue;
-	Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagTerminalCursorType,
-																sizeof(result), &result);
-	
-	
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		result = aDefaultValue; // assume default, if preference can’t be found
-	}
-	return result;
-}// readCursorTypeWithDefaultValue:
-
-
-/*!
-Returns the current user preference for “command-N mapping”,
-or the specified default value if no preference exists.
-
-(4.1)
-*/
-- (UInt32)
-readNewCommandShortcutEffectWithDefaultValue:(UInt32)	aDefaultValue
-{
-	UInt32				result = aDefaultValue;
-	Preferences_Result	prefsResult = Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
-															sizeof(result), &result);
-	
-	
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		result = aDefaultValue; // assume default, if preference can’t be found
-	}
-	return result;
-}// readNewCommandShortcutEffectWithDefaultValue:
-
-
-/*!
-Returns the current user preference for spaces per tab,
-or the specified default value if no preference exists.
-
-(4.1)
-*/
-- (UInt16)
-readSpacesPerTabWithDefaultValue:(UInt16)	aDefaultValue
-{
-	UInt16				result = aDefaultValue;
-	Preferences_Result	prefsResult = Preferences_GetData(kPreferences_TagCopyTableThreshold,
-															sizeof(result), &result);
-	
-	
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		result = aDefaultValue; // assume default, if preference can’t be found
-	}
-	return result;
-}// readSpacesPerTabWithDefaultValue:
-
-
-/*!
-Writes a new user preference for the cursor shape and
-returns YES only if this succeeds.
-
-(4.1)
-*/
-- (BOOL)
-writeCursorType:(Terminal_CursorType)	aValue
-{
-	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagTerminalCursorType,
-															sizeof(aValue), &aValue);
-	
-	
-	return (kPreferences_ResultOK == prefsResult);
-}// writeCursorType:
-
-
-/*!
-Writes a new user preference for “command-N mapping” and
-returns YES only if this succeeds.
-
-(4.1)
-*/
-- (BOOL)
-writeNewCommandShortcutEffect:(UInt32)	aValue
-{
-	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagNewCommandShortcutEffect,
-															sizeof(aValue), &aValue);
-	
-	
-	return (kPreferences_ResultOK == prefsResult);
-}// writeNewCommandShortcutEffect:
-
-
-/*!
-Writes a new user preference for spaces per tab and
-returns YES only if this succeeds.
-
-(4.1)
-*/
-- (BOOL)
-writeSpacesPerTab:(UInt16)	aValue
-{
-	Preferences_Result	prefsResult = Preferences_SetData(kPreferences_TagCopyTableThreshold,
-															sizeof(aValue), &aValue);
-	
-	
-	return (kPreferences_ResultOK == prefsResult);
-}// writeSpacesPerTab:
-
-
-@end //} PrefPanelGeneral_SpecialViewManager (PrefPanelGeneral_SpecialViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

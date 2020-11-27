@@ -53,13 +53,13 @@ class UIPrefsGeneralNotifications_RunnerDummy : NSObject, UIPrefsGeneralNotifica
 	func playSelectedBellSound() { print(#function) }
 }
 
-public class UIPrefsGeneralNotification_BellSoundItemModel : NSObject, Identifiable, ObservableObject {
+public class UIPrefsGeneralNotifications_BellSoundItemModel : NSObject, Identifiable, ObservableObject {
 
 	@objc public var uniqueID = UUID()
 	@Published @objc public var soundName: String // sound name or other label
 	@Published public var helpText: String // for help tag in pop-up menu
-	@objc public static let offItemModel = UIPrefsGeneralNotification_BellSoundItemModel(soundName: "Off", helpText: "When terminal bell occurs, no sound will be played.")
-	@objc public static let defaultItemModel = UIPrefsGeneralNotification_BellSoundItemModel(soundName: "Default", helpText: "When terminal bell occurs, alert sound will be played (set in System Preferences).")
+	@objc public static let offItemModel = UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Off", helpText: "When terminal bell occurs, no sound will be played.")
+	@objc public static let defaultItemModel = UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Default", helpText: "When terminal bell occurs, alert sound will be played (set in System Preferences).")
 
 	@objc public init(soundName: String, helpText: String? = nil) {
 		self.soundName = soundName
@@ -74,8 +74,8 @@ public class UIPrefsGeneralNotification_BellSoundItemModel : NSObject, Identifia
 
 public class UIPrefsGeneralNotifications_Model : UICommon_BaseModel, ObservableObject {
 
-	@Published @objc public var bellSoundItems: [UIPrefsGeneralNotification_BellSoundItemModel] = []
-	@Published @objc public var selectedBellSoundID = UIPrefsGeneralNotification_BellSoundItemModel.offItemModel.uniqueID {
+	@Published @objc public var bellSoundItems: [UIPrefsGeneralNotifications_BellSoundItemModel] = []
+	@Published @objc public var selectedBellSoundID = UIPrefsGeneralNotifications_BellSoundItemModel.offItemModel.uniqueID {
 		didSet(isOn) { ifWritebackEnabled { runner.playSelectedBellSound(); runner.dataUpdated() } }
 	}
 	@Published @objc public var visualBell = false {
@@ -95,9 +95,9 @@ public class UIPrefsGeneralNotifications_Model : UICommon_BaseModel, ObservableO
 
 }
 
-public struct UIPrefsGeneralNotification_BellSoundItemView : View {
+public struct UIPrefsGeneralNotifications_BellSoundItemView : View {
 
-	@EnvironmentObject private var itemModel: UIPrefsGeneralNotification_BellSoundItemModel
+	@EnvironmentObject private var itemModel: UIPrefsGeneralNotifications_BellSoundItemModel
 
 	public var body: some View {
 		Text(itemModel.soundName).tag(itemModel.uniqueID)
@@ -133,12 +133,12 @@ public struct UIPrefsGeneralNotifications_View : View {
 			Group {
 				UICommon_OptionLineView("Terminal Bell", noDefaultSpacing: true) {
 					Picker("", selection: $viewModel.selectedBellSoundID) {
-						UIPrefsGeneralNotification_BellSoundItemView().environmentObject(UIPrefsGeneralNotification_BellSoundItemModel.offItemModel)
-						UIPrefsGeneralNotification_BellSoundItemView().environmentObject(UIPrefsGeneralNotification_BellSoundItemModel.defaultItemModel)
+						UIPrefsGeneralNotifications_BellSoundItemView().environmentObject(UIPrefsGeneralNotifications_BellSoundItemModel.offItemModel)
+						UIPrefsGeneralNotifications_BellSoundItemView().environmentObject(UIPrefsGeneralNotifications_BellSoundItemModel.defaultItemModel)
 						// TBD: how to insert dividing-line in this type of menu?
 						//VStack { Divider().padding(.leading).disabled(true) } // this looks like a separator but is still selectable (SwiftUI bug?)
 						ForEach(viewModel.bellSoundItems) { item in
-							UIPrefsGeneralNotification_BellSoundItemView().environmentObject(item)
+							UIPrefsGeneralNotifications_BellSoundItemView().environmentObject(item)
 						}
 					}.pickerStyle(PopUpButtonPickerStyle())
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
@@ -158,7 +158,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 						.frame(maxWidth: 220)
 						.offset(x: 18, y: 0) // try to align with checkbox label
 				}
-				Spacer().asMacTermSectionSpacingV()
+				Spacer().asMacTermMinorSectionSpacingV()
 				UICommon_OptionLineView("", noDefaultSpacing: true) {
 					Toggle("Background notification on bell", isOn: $viewModel.bellNotificationInBackground)
 						.macTermToolTipText("Set if a notification is sent to the system for “bell” events when MacTerm is not the active application.")
@@ -206,9 +206,9 @@ public class UIPrefsGeneralNotifications_ObjC : NSObject {
 public struct UIPrefsGeneralNotifications_Previews : PreviewProvider {
 	public static var previews: some View {
 		let data = UIPrefsGeneralNotifications_Model(runner: UIPrefsGeneralNotifications_RunnerDummy())
-		data.bellSoundItems.append(UIPrefsGeneralNotification_BellSoundItemModel(soundName: "Basso"))
-		data.bellSoundItems.append(UIPrefsGeneralNotification_BellSoundItemModel(soundName: "Glass"))
-		data.bellSoundItems.append(UIPrefsGeneralNotification_BellSoundItemModel(soundName: "Hero"))
+		data.bellSoundItems.append(UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Basso"))
+		data.bellSoundItems.append(UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Glass"))
+		data.bellSoundItems.append(UIPrefsGeneralNotifications_BellSoundItemModel(soundName: "Hero"))
 		return VStack {
 			UIPrefsGeneralNotifications_View().background(Color(NSColor.windowBackgroundColor)).environment(\.colorScheme, .light).environmentObject(data)
 			UIPrefsGeneralNotifications_View().background(Color(NSColor.windowBackgroundColor)).environment(\.colorScheme, .dark).environmentObject(data)

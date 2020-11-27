@@ -124,85 +124,26 @@ Implements the “general options” panel.
 @end //}
 
 
-/*!
-Loads a NIB file that defines the Special pane.
+@class PrefPanelGeneral_SpecialActionHandler; // implemented internally
 
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+
+/*!
+Implements the “Special” panel.
 */
-@interface PrefPanelGeneral_SpecialViewManager : Panel_ViewManager< Panel_Delegate,
-																	PrefsWindow_PanelInterface > //{
+@interface PrefPanelGeneral_SpecialVC : Panel_ViewManager< Panel_Delegate,
+															PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSMutableDictionary*			byKey;
+	NSRect									_idealFrame;
+	PrefPanelGeneral_SpecialActionHandler*	_actionHandler;
 }
 
-// accessors: cursor settings
-	- (BOOL)
-	cursorFlashes;
-	- (void)
-	setCursorFlashes:(BOOL)_; // binding
-	- (BOOL)
-	cursorShapeIsBlock;
-	- (void)
-	setCursorShapeIsBlock:(BOOL)_; // binding
-	- (BOOL)
-	cursorShapeIsThickUnderline;
-	- (void)
-	setCursorShapeIsThickUnderline:(BOOL)_; // binding
-	- (BOOL)
-	cursorShapeIsThickVerticalBar;
-	- (void)
-	setCursorShapeIsThickVerticalBar:(BOOL)_; // binding
-	- (BOOL)
-	cursorShapeIsUnderline;
-	- (void)
-	setCursorShapeIsUnderline:(BOOL)_; // binding
-	- (BOOL)
-	cursorShapeIsVerticalBar;
-	- (void)
-	setCursorShapeIsVerticalBar:(BOOL)_; // binding
-
-// accessors: other
-	- (BOOL)
-	isNewCommandCustomNewSession;
-	- (void)
-	setNewCommandCustomNewSession:(BOOL)_; // binding
-	- (BOOL)
-	isNewCommandDefaultSessionFavorite;
-	- (void)
-	setNewCommandDefaultSessionFavorite:(BOOL)_; // binding
-	- (BOOL)
-	isNewCommandLogInShell;
-	- (void)
-	setNewCommandLogInShell:(BOOL)_; // binding
-	- (BOOL)
-	isNewCommandShell;
-	- (void)
-	setNewCommandShell:(BOOL)_; // binding
-	- (BOOL)
-	isWindowResizeEffectTerminalScreenSize;
-	- (void)
-	setWindowResizeEffectTerminalScreenSize:(BOOL)_; // binding
-	- (BOOL)
-	isWindowResizeEffectTextSize;
-	- (void)
-	setWindowResizeEffectTextSize:(BOOL)_; // binding
-	- (PreferenceValue_Number*)
-	spacesPerTab; // binding
-
-// actions
-	- (IBAction)
-	performSetWindowStackingOrigin:(id)_;
-
-// validators
-	- (BOOL)
-	validateSpacesPerTab:(id*)_
-	error:(NSError**)_;
+// accessors
+	@property (strong) PrefPanelGeneral_SpecialActionHandler*
+	actionHandler;
 
 @end //}
+
 
 #endif // __OBJC__
 
