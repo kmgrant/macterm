@@ -366,6 +366,15 @@ didLoadContainerView:(NSView*)			aContainerView
 	[tabView setDelegate:self];
 	
 	// create tabs for every view that was provided
+	if (@available(macOS 11.0, *))
+	{
+		// if possible, make tabs larger and shift down to make room
+		self->tabTitles.controlSize = NSControlSizeLarge;
+		self->tabTitles.frame = NSMakeRect(self->tabTitles.frame.origin.x,
+											self->tabTitles.frame.origin.y - 6/* arbitrary shift for larger size */,
+											self->tabTitles.frame.size.width,
+											self->tabTitles.frame.size.height);
+	}
 	self->tabTitles.segmentCount = self->viewManagerArray.count;
 	self->tabTitles.target = self;
 	self->tabTitles.action = @selector(performTitleSegmentUpdate:);

@@ -489,11 +489,24 @@ didLoadManagedView:(NSView*)			aManagedView
 			animationType = kPopoverManager_AnimationTypeNone;
 		}
 		
-		_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																windowStyle:kPopover_WindowStyleDialogSheet
-																arrowStyle:kPopover_ArrowStyleDefaultRegularSize
-																attachedToPoint:NSZeroPoint/* see delegate */
-																inWindow:asNSWindow];
+		if (@available(macOS 11.0, *))
+		{
+			// on macOS 11, sheet animations make presenting an arrow-style popover
+			// work poorly; therefore, revert to a more normal sheet appearance
+			_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																	windowStyle:kPopover_WindowStyleDialogSheet
+																	arrowStyle:kPopover_ArrowStyleNone
+																	attachedToPoint:NSZeroPoint/* see delegate */
+																	inWindow:asNSWindow];
+		}
+		else
+		{
+			_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																	windowStyle:kPopover_WindowStyleDialogSheet
+																	arrowStyle:kPopover_ArrowStyleDefaultRegularSize
+																	attachedToPoint:NSZeroPoint/* see delegate */
+																	inWindow:asNSWindow];
+		}
 		_idealSize = [_managedView frame].size;
 		[_containerWindow setReleasedWhenClosed:NO];
 		_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],

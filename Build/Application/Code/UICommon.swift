@@ -39,6 +39,16 @@ extension HStack {
 	public func withMacTermSectionLayout() -> some View {
 		padding([.horizontal], 16)
 	}
+	// for first line above views of a panel, e.g. UICommon_DefaultOptionHeaderView;
+	// preserve left and right space all the way down a vertical stack of views
+	public func withMacTermTopHeaderLayout() -> some View {
+		if #available(macOS 11.0, *) {
+			// macOS 11 seems to shift SwiftUI view up more, clipping the top;
+			// shift “header” views downward to make them fully visible
+			return AnyView(padding([.horizontal], 16).padding([.top], 16))
+		}
+		return AnyView(padding([.horizontal], 16))
+	}
 }
 
 extension Spacer {
@@ -415,7 +425,7 @@ struct UICommon_DefaultOptionHeaderView : View {
 				.font(Font.system(size: 10))
 				.padding([.top], 4)
 			Spacer()
-		}.withMacTermSectionLayout()
+		}.withMacTermTopHeaderLayout()
 	}
 
 }

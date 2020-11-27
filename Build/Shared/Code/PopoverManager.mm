@@ -389,6 +389,9 @@ invisible, puts it in front and gives it keyboard focus.
 - (void)
 display
 {
+	BOOL	noForcedDisplay = NO;
+	
+	
 	[self setToIdealSize];
 	[self moveToIdealPosition];
 	switch (self->animationType)
@@ -415,9 +418,17 @@ display
 	default:
 		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
 		{
-			// display the actual dialog; the window-modal state is
-			// achieved by the dummy sheet however
-			CocoaAnimation_TransitionWindowForSheetOpen(self->containerWindow, [self parentCocoaWindow]);
+			if (@available(macOS 11.0, *))
+			{
+				noForcedDisplay = YES;
+			}
+			
+			if (NO == noForcedDisplay)
+			{
+				// display window with custom animation; window-modal state is
+				// achieved by dummy sheet however (see below)
+				CocoaAnimation_TransitionWindowForSheetOpen(self->containerWindow, [self parentCocoaWindow]);
+			}
 			
 			// the goal is to bypass any normal sheet display/animation
 			// but the convenience of automatic window-modal event handling
@@ -425,21 +436,30 @@ display
 			// sheet for event blocking, and then covered by the popover
 			if (nil != self->parentView)
 			{
-				self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
-																			backing:NSBackingStoreBuffered defer:YES];
-				[self->dummySheet setPreventsApplicationTerminationWhenModal:NO];
-			#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000 /* MAC_OS_X_VERSION_10_10 */
-				// old method
-				[NSApp beginSheet:self->dummySheet modalForWindow:[self parentCocoaWindow] modalDelegate:nil
-									didEndSelector:nil contextInfo:self];
-			#else
-				// new method
-				[[self parentCocoaWindow] beginSheet:self->dummySheet
-														completionHandler:^(NSModalResponse aResponse)
-														{
-														#pragma unused(aResponse)
-														}];
-			#endif
+				if (noForcedDisplay)
+				{
+					// default sheet animation on macOS Big Sur is better; use it,
+					// suppressing custom animations (also, no dummy sheet is
+					// required, this also handles window-modal state)
+					[[self parentCocoaWindow] beginSheet:self->containerWindow
+															completionHandler:^(NSModalResponse aResponse)
+															{
+															#pragma unused(aResponse)
+															}];
+				}
+				else
+				{
+					// default sheet animation is slow; replace animation but use the
+					// sheet method anyway to ensure window-modal event handling
+					self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
+																				backing:NSBackingStoreBuffered defer:YES];
+					[self->dummySheet setPreventsApplicationTerminationWhenModal:NO];
+					[[self parentCocoaWindow] beginSheet:self->dummySheet
+															completionHandler:^(NSModalResponse aResponse)
+															{
+															#pragma unused(aResponse)
+															}];
+				}
 			}
 		}
 		else
@@ -453,15 +473,19 @@ display
 		}
 		break;
 	}
-	[[self parentCocoaWindow] addChildWindow:self->containerWindow ordered:NSWindowAbove];
 	
-	if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+	if (NO == noForcedDisplay)
 	{
-		[self popOverMakeKey:NO forceVisible:YES];
-	}
-	else
-	{
-		[self makeKeyAndOrderFront];
+		[[self parentCocoaWindow] addChildWindow:self->containerWindow ordered:NSWindowAbove];
+		
+		if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+		{
+			[self popOverMakeKey:NO forceVisible:YES];
+		}
+		else
+		{
+			[self makeKeyAndOrderFront];
+		}
 	}
 }// display
 
