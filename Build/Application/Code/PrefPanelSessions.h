@@ -295,39 +295,23 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 
-/*!
-Manages bindings for the TEK-mode preference.
-*/
-@interface PrefPanelSessions_GraphicsModeValue : PreferenceValue_Array //{
-
-// initializers
-	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
-
-@end //}
+@class PrefPanelSessions_GraphicsActionHandler; // implemented internally
 
 
 /*!
-Loads a NIB file that defines the Graphics pane.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+Implements the “vector graphics” panel.
 */
-@interface PrefPanelSessions_GraphicsViewManager : Panel_ViewManager< Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+@interface PrefPanelSessions_GraphicsVC : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSRect							idealFrame;
-	NSMutableDictionary*			byKey;
+	NSRect										_idealFrame;
+	PrefPanelSessions_GraphicsActionHandler*	_actionHandler;
 }
 
 // accessors
-	- (PrefPanelSessions_GraphicsModeValue*)
-	graphicsMode; // binding
-	- (PreferenceValue_Flag*)
-	pageClearsScreen; // binding
+	@property (strong) PrefPanelSessions_GraphicsActionHandler*
+	actionHandler;
 
 @end //}
 
