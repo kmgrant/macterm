@@ -57,6 +57,7 @@
 	BOOL							isHeldOpenBySheet;		// used to prevent some popovers from disappearing while sheets are open
 	BOOL							isNoActivationMonitor;	// used to temporarily disable a monitor to prevent recursion
 	NSWindow*						dummySheet;				// for convenience in event-handling for dialogs, a dummy sheet
+	NSWindow*						presentedSheet;			// might be "dummySheet" or "containerWindow", depending on mode
 	NSView*							parentView;				// the view the popover is relative to, if Cocoa (and modal to, if dialog behavior)
 }
 
@@ -318,6 +319,7 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		self->isHeldOpenBySheet = NO;
 		self->isNoActivationMonitor = NO;
 		self->dummySheet = nil; // created as needed
+		self->presentedSheet = nil; // set later
 		self->parentView = aCocoaViewOrNil;
 		
 		// there may be no parent window if it is being used to
@@ -441,7 +443,8 @@ display
 					// default sheet animation on macOS Big Sur is better; use it,
 					// suppressing custom animations (also, no dummy sheet is
 					// required, this also handles window-modal state)
-					[[self parentCocoaWindow] beginSheet:self->containerWindow
+					self->presentedSheet = self->containerWindow;
+					[[self parentCocoaWindow] beginSheet:self->presentedSheet
 															completionHandler:^(NSModalResponse aResponse)
 															{
 															#pragma unused(aResponse)
@@ -454,7 +457,8 @@ display
 					self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
 																				backing:NSBackingStoreBuffered defer:YES];
 					[self->dummySheet setPreventsApplicationTerminationWhenModal:NO];
-					[[self parentCocoaWindow] beginSheet:self->dummySheet
+					self->presentedSheet = self->dummySheet;
+					[[self parentCocoaWindow] beginSheet:self->presentedSheet
 															completionHandler:^(NSModalResponse aResponse)
 															{
 															#pragma unused(aResponse)
@@ -777,9 +781,13 @@ afterDelay:(float)					aDelay
 	}
 	
 	// if a dummy sheet was opened to absorb parent-window events, end it
+	if (nil != self->presentedSheet)
+	{
+		[NSApp endSheet:self->presentedSheet];
+		self->presentedSheet = nil;
+	}
 	if (nil != self->dummySheet)
 	{
-		[NSApp endSheet:self->dummySheet];
 		[self->dummySheet orderOut:NSApp];
 		[self->dummySheet release], self->dummySheet = nil;
 	}
