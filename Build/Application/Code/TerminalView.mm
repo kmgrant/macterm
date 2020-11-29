@@ -14105,7 +14105,7 @@ sender:(id)				sender
 		if (nullptr != printJob)
 		{
 			UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
-												(printJob, nil/* window; INCOMPLETE */);
+												(printJob, self.window);
 			PrintTerminal_ReleaseJob(&printJob);
 		}
 	}

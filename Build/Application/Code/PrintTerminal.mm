@@ -269,7 +269,7 @@ if "inRef" is not recognized
 */
 PrintTerminal_Result
 PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
-								 NSWindow*				UNUSED_ARGUMENT(inParentWindowOrNil))
+								 NSWindow*				inParentWindowOrNil)
 {
 @autoreleasepool {
 	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:inRef];
@@ -303,6 +303,8 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 		[appEnvDict setValue:[ptr->textFont fontName] forKey:@"MACTERM_PRINT_PREVIEW_FONT_NAME"];
 		[appEnvDict setValue:[NSString stringWithFormat:@"%f", STATIC_CAST([ptr->textFont pointSize], float)]
 								forKey:@"MACTERM_PRINT_PREVIEW_FONT_SIZE"];
+		[appEnvDict setValue:[NSString stringWithFormat:@"%f", STATIC_CAST(inParentWindowOrNil.contentView.frame.size.width, float)]
+								forKey:@"MACTERM_PRINT_PREVIEW_PIXEL_WIDTH_HINT"];
 		[appEnvDict setValue:pasteboardName forKey:@"MACTERM_PRINT_PREVIEW_PASTEBOARD_NAME"];
 		[appEnvDict setValue:((ptr->isLandscapeMode) ? @"1" : @"0") forKey:@"MACTERM_PRINT_PREVIEW_IS_LANDSCAPE"];
 		
