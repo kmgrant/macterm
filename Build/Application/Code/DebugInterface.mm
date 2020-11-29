@@ -69,6 +69,12 @@ extended to provide more hooks.)
 
 DebugInterface_ViewManager*		gDebugUIRunner = [[DebugInterface_ViewManager alloc] init];
 UIDebugInterface_Model*			gDebugData = [[UIDebugInterface_Model alloc] initWithRunner:gDebugUIRunner];
+Boolean							gDebugInterface_LogsSixelDecoderState = false;
+Boolean							gDebugInterface_LogsSixelInput = false;
+Boolean							gDebugInterface_LogsTerminalInputChar = false;
+Boolean							gDebugInterface_LogsTeletypewriterState = false;
+Boolean							gDebugInterface_LogsTerminalEcho = false;
+Boolean							gDebugInterface_LogsTerminalState = false;
 
 
 
@@ -107,99 +113,6 @@ DebugInterface_Display ()
 	[windowController showWindow:NSApp];
 }// @autoreleasepool
 }// Display
-
-
-/*!
-Return specified debug setting (can be changed from panel).
-
-(2020.08)
-*/
-Boolean
-DebugInterface_LogsSixelDecoderState ()
-{
-#ifndef NDEBUG
-	return gDebugData.logSixelGraphicsDecoderState;
-#else
-	return false;
-#endif
-}// LogsSixelDecoderState
-
-
-/*!
-Return specified debug setting (can be changed from panel).
-
-(2020.08)
-*/
-Boolean
-DebugInterface_LogsSixelInput ()
-{
-	// for now, log SIXEL input string whenever state is logged
-	return DebugInterface_LogsSixelDecoderState();
-}// LogsSixelInput
-
-
-/*!
-Return specified debug setting (can be changed from panel).
-
-(2020.08)
-*/
-Boolean
-DebugInterface_LogsTerminalInputChar ()
-{
-#ifndef NDEBUG
-	return gDebugData.logTerminalInputCharacters;
-#else
-	return false;
-#endif
-}// LogsTerminalInputChar
-
-
-/*!
-Return specified debug setting (can be changed from panel).
-
-(2020.08)
-*/
-Boolean
-DebugInterface_LogsTeletypewriterState ()
-{
-#ifndef NDEBUG
-	return gDebugData.logPseudoTerminalDeviceSettings;
-#else
-	return false;
-#endif
-}// LogsTeletypewriterState
-
-
-/*!
-Return specified debug setting (can be changed from panel).
-
-(2020.08)
-*/
-Boolean
-DebugInterface_LogsTerminalEcho ()
-{
-#ifndef NDEBUG
-	return gDebugData.logTerminalEchoState;
-#else
-	return false;
-#endif
-}// LogsTerminalEcho
-
-
-/*!
-Return specified debug setting (can be changed from panel).
-
-(2020.08)
-*/
-Boolean
-DebugInterface_LogsTerminalState ()
-{
-#ifndef NDEBUG
-	return gDebugData.logTerminalState;
-#else
-	return false;
-#endif
-}// LogsTerminalState
 
 
 #pragma mark Internal Methods
@@ -381,6 +294,25 @@ showTestTerminalToolbar
 	}
 	[gDebugInterface_ToolbarWindow makeKeyAndOrderFront:nil];
 }// showTestTerminalToolbar
+
+
+/*!
+Synchronizes cache variables with the UI state so that
+queries for debug modes can be as fast as possible
+(see header file, where accesses are inlined away).
+
+(2020.11)
+*/
+- (void)
+updateSettingCache
+{
+	gDebugInterface_LogsSixelDecoderState = gDebugData.logSixelGraphicsDecoderState;
+	gDebugInterface_LogsSixelInput = gDebugData.logSixelGraphicsDecoderState; // note: currently the same as decoder state
+	gDebugInterface_LogsTerminalInputChar = gDebugData.logTerminalInputCharacters;
+	gDebugInterface_LogsTeletypewriterState = gDebugData.logPseudoTerminalDeviceSettings;
+	gDebugInterface_LogsTerminalEcho = gDebugData.logTerminalEchoState;
+	gDebugInterface_LogsTerminalState = gDebugData.logTerminalState;
+}// updateSettingCache
 
 
 @end // DebugInterface_PanelController

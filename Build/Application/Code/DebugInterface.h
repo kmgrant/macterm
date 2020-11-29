@@ -37,27 +37,78 @@
 
 
 
+#pragma mark Variables
+
+extern Boolean gDebugInterface_LogsSixelDecoderState;
+extern Boolean gDebugInterface_LogsSixelInput;
+extern Boolean gDebugInterface_LogsTerminalInputChar;
+extern Boolean gDebugInterface_LogsTeletypewriterState;
+extern Boolean gDebugInterface_LogsTerminalEcho;
+extern Boolean gDebugInterface_LogsTerminalState;
+
 #pragma mark Public Methods
 
 void
 	DebugInterface_Display					();
 
-Boolean
-	DebugInterface_LogsSixelDecoderState	();
+inline Boolean
+	DebugInterface_LogsSixelDecoderState	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsSixelDecoderState;
+	#else
+		return false;
+	#endif
+	}
 
-Boolean
-	DebugInterface_LogsSixelInput			();
+inline Boolean
+	DebugInterface_LogsSixelInput			()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsSixelInput;
+	#else
+		return false;
+	#endif
+	}
 
-Boolean
-	DebugInterface_LogsTerminalInputChar	();
+inline Boolean
+	DebugInterface_LogsTerminalInputChar	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsTerminalInputChar;
+	#else
+		return false;
+	#endif
+	}
 
-Boolean
-	DebugInterface_LogsTeletypewriterState	();
+inline Boolean
+	DebugInterface_LogsTeletypewriterState	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsTeletypewriterState;
+	#else
+		return false;
+	#endif
+	}
 
-Boolean
-	DebugInterface_LogsTerminalEcho			();
+inline Boolean
+	DebugInterface_LogsTerminalEcho			()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsTerminalEcho;
+	#else
+		return false;
+	#endif
+	}
 
-Boolean
-	DebugInterface_LogsTerminalState		();
+inline Boolean
+	DebugInterface_LogsTerminalState		()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsTerminalState;
+	#else
+		return false;
+	#endif
+	}
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

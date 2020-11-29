@@ -39,6 +39,7 @@ import SwiftUI
 	func dumpStateOfActiveTerminal()
 	func launchNewCallPythonClient()
 	func showTestTerminalToolbar()
+	func updateSettingCache()
 }
 
 class UIDebugInterface_RunnerDummy : NSObject, UIDebugInterface_ActionHandling {
@@ -46,6 +47,7 @@ class UIDebugInterface_RunnerDummy : NSObject, UIDebugInterface_ActionHandling {
 	func dumpStateOfActiveTerminal() { print(#function) }
 	func launchNewCallPythonClient() { print(#function) }
 	func showTestTerminalToolbar() { print(#function) }
+	func updateSettingCache() { print(#function) }
 }
 
 public class UIDebugInterface_Model : NSObject, ObservableObject {
@@ -58,6 +60,9 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of terminal state (except echo)")
 			}
 		}
+		didSet(isOn) {
+			runner.updateSettingCache()
+		}
 	}
 	@Published @objc public var logTerminalEchoState = false {
 		willSet(isOn) {
@@ -66,6 +71,9 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 			} else {
 				print("no logging of terminal state (echo)")
 			}
+		}
+		didSet(isOn) {
+			runner.updateSettingCache()
 		}
 	}
 	@Published @objc public var logTerminalInputCharacters = false {
@@ -76,6 +84,9 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of terminal input characters")
 			}
 		}
+		didSet(isOn) {
+			runner.updateSettingCache()
+		}
 	}
 	@Published @objc public var logPseudoTerminalDeviceSettings = false {
 		willSet(isOn) {
@@ -85,6 +96,9 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of pseudo-terminal device configurations")
 			}
 		}
+		didSet(isOn) {
+			runner.updateSettingCache()
+		}
 	}
 	@Published @objc public var logSixelGraphicsDecoderState = false {
 		willSet(isOn) {
@@ -93,6 +107,9 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 			} else {
 				print("no logging of SIXEL decoder state")
 			}
+		}
+		didSet(isOn) {
+			runner.updateSettingCache()
 		}
 	}
 	public var runner: UIDebugInterface_ActionHandling
