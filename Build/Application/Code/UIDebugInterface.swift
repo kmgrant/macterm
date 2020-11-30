@@ -100,12 +100,36 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 			runner.updateSettingCache()
 		}
 	}
+	@Published @objc public var logSixelGraphicsDecoderErrors = false {
+		willSet(isOn) {
+			if isOn {
+				print("started logging of SIXEL decoder errors")
+			} else {
+				print("no logging of SIXEL decoder errors")
+			}
+		}
+		didSet(isOn) {
+			runner.updateSettingCache()
+		}
+	}
 	@Published @objc public var logSixelGraphicsDecoderState = false {
 		willSet(isOn) {
 			if isOn {
 				print("started logging of SIXEL decoder state")
 			} else {
 				print("no logging of SIXEL decoder state")
+			}
+		}
+		didSet(isOn) {
+			runner.updateSettingCache()
+		}
+	}
+	@Published @objc public var logSixelGraphicsSummary = false {
+		willSet(isOn) {
+			if isOn {
+				print("started logging of SIXEL graphics summary")
+			} else {
+				print("no logging of SIXEL graphics summary")
 			}
 		}
 		didSet(isOn) {
@@ -134,22 +158,40 @@ public struct UIDebugInterface_View : View {
 				UICommon_OptionLineView("Global") {
 					Toggle("Log Terminal State (Except Echo)", isOn: $viewModel.logTerminalState)
 						.fixedSize()
+						.macTermToolTipText("Print high-volume log with detailed terminal emulator input and state transition information, except for characters that will be displayed on the terminal screen.")
 				}
 				UICommon_OptionLineView {
 					Toggle("Log Terminal Echo State", isOn: $viewModel.logTerminalEchoState)
 						.fixedSize()
+						.macTermToolTipText("Print high-volume log with information on characters that will be displayed on the terminal screen.")
 				}
 				UICommon_OptionLineView {
 					Toggle("Log Terminal Input Characters", isOn: $viewModel.logTerminalInputCharacters)
 						.fixedSize()
+						.macTermToolTipText("Print high-volume log showing every character as it is processed.")
 				}
 				UICommon_OptionLineView {
 					Toggle("Log Pseudoterminal Device Settings", isOn: $viewModel.logPseudoTerminalDeviceSettings)
 						.fixedSize()
+						.macTermToolTipText("Print information on low-level terminal device, such as enabled control flags.")
+				}
+			}
+			Spacer().asMacTermSectionSpacingV()
+			Group {
+				UICommon_OptionLineView("Sixels") {
+					Toggle("Log Sixel Graphics Decoder Errors", isOn: $viewModel.logSixelGraphicsDecoderErrors)
+						.fixedSize()
+						.macTermToolTipText("Print serious problems (such as being unable to process Sixel data correctly).")
 				}
 				UICommon_OptionLineView {
 					Toggle("Log Sixel Graphics Decoder State", isOn: $viewModel.logSixelGraphicsDecoderState)
 						.fixedSize()
+						.macTermToolTipText("Print high-volume log with detailed Sixel decoder input and state transition information.")
+				}
+				UICommon_OptionLineView {
+					Toggle("Log Sixel Graphics Summary", isOn: $viewModel.logSixelGraphicsSummary)
+						.fixedSize()
+						.macTermToolTipText("Print overview details when Sixel graphic is created, such as image dimensions and pixel size.")
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
@@ -157,7 +199,11 @@ public struct UIDebugInterface_View : View {
 				alignment: .leading
 			) {
 				UICommon_OptionLineView("Active Terminal") {
-					Button("Log Detailed Snapshot", action: { viewModel.runner.dumpStateOfActiveTerminal() })
+					Button(action: { viewModel.runner.dumpStateOfActiveTerminal() }) {
+						Text("Log Detailed Snapshot")
+							.frame(minWidth: 160)
+							.macTermToolTipText("Print debugging summary of frontmost terminal window.")
+					}
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()
@@ -165,10 +211,18 @@ public struct UIDebugInterface_View : View {
 				alignment: .leading
 			) {
 				UICommon_OptionLineView("Incomplete Work") {
-					Button("Show Cocoa Toolbar", action: { viewModel.runner.showTestTerminalToolbar() })
+					Button(action: { viewModel.runner.showTestTerminalToolbar() }) {
+						Text("Show Floating Toolbar")
+							.frame(minWidth: 160)
+							.macTermToolTipText("Display window with toolbar items that is shared and updated as terminal windows are activated.")
+					}
 				}
 				UICommon_OptionLineView {
-					Button("Launch XPC Service", action: { viewModel.runner.launchNewCallPythonClient() })
+					Button(action: { viewModel.runner.launchNewCallPythonClient() }) {
+						Text("Launch XPC Service")
+							.frame(minWidth: 160)
+							.macTermToolTipText("Spawn XPC Service to experiment with communication between processes.")
+					}
 				}
 			}
 			Spacer().asMacTermSectionSpacingV()

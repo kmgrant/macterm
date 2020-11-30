@@ -61,15 +61,17 @@ messages when they are toggled.  If this needs to change
 in the future, "UIDebugInterface_ActionHandling" could be
 extended to provide more hooks.)
 */
-@interface DebugInterface_ViewManager : NSObject <UIDebugInterface_ActionHandling> //{
+@interface DebugInterface_ActionHandler : NSObject <UIDebugInterface_ActionHandling> //{
 
 @end //}
 
 #pragma mark Variables
 
-DebugInterface_ViewManager*		gDebugUIRunner = [[DebugInterface_ViewManager alloc] init];
+DebugInterface_ActionHandler*	gDebugUIRunner = [[DebugInterface_ActionHandler alloc] init];
 UIDebugInterface_Model*			gDebugData = [[UIDebugInterface_Model alloc] initWithRunner:gDebugUIRunner];
+Boolean							gDebugInterface_LogsSixelDecoderErrors = true;
 Boolean							gDebugInterface_LogsSixelDecoderState = false;
+Boolean							gDebugInterface_LogsSixelDecoderSummary = false;
 Boolean							gDebugInterface_LogsSixelInput = false;
 Boolean							gDebugInterface_LogsTerminalInputChar = false;
 Boolean							gDebugInterface_LogsTeletypewriterState = false;
@@ -110,6 +112,7 @@ DebugInterface_Display ()
 		windowController.windowFrameAutosaveName = @"Debugging"; // (for backward compatibility, never change this)
 	});
 	
+	[gDebugUIRunner updateSettingCache];
 	[windowController showWindow:NSApp];
 }// @autoreleasepool
 }// Display
@@ -118,7 +121,7 @@ DebugInterface_Display ()
 #pragma mark Internal Methods
 
 #pragma mark -
-@implementation DebugInterface_ViewManager
+@implementation DebugInterface_ActionHandler //{
 
 
 static TerminalToolbar_Window*	gDebugInterface_ToolbarWindow = nil;
@@ -306,7 +309,9 @@ queries for debug modes can be as fast as possible
 - (void)
 updateSettingCache
 {
+	gDebugInterface_LogsSixelDecoderErrors = gDebugData.logSixelGraphicsDecoderErrors; // note: currently the same as decoder state
 	gDebugInterface_LogsSixelDecoderState = gDebugData.logSixelGraphicsDecoderState;
+	gDebugInterface_LogsSixelDecoderSummary = gDebugData.logSixelGraphicsSummary; // note: currently the same as decoder state
 	gDebugInterface_LogsSixelInput = gDebugData.logSixelGraphicsDecoderState; // note: currently the same as decoder state
 	gDebugInterface_LogsTerminalInputChar = gDebugData.logTerminalInputCharacters;
 	gDebugInterface_LogsTeletypewriterState = gDebugData.logPseudoTerminalDeviceSettings;
@@ -315,6 +320,6 @@ updateSettingCache
 }// updateSettingCache
 
 
-@end // DebugInterface_PanelController
+@end //} DebugInterface_ActionHandler
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

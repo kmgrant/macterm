@@ -39,7 +39,9 @@
 
 #pragma mark Variables
 
+extern Boolean gDebugInterface_LogsSixelDecoderErrors;
 extern Boolean gDebugInterface_LogsSixelDecoderState;
+extern Boolean gDebugInterface_LogsSixelDecoderSummary;
 extern Boolean gDebugInterface_LogsSixelInput;
 extern Boolean gDebugInterface_LogsTerminalInputChar;
 extern Boolean gDebugInterface_LogsTeletypewriterState;
@@ -52,10 +54,30 @@ void
 	DebugInterface_Display					();
 
 inline Boolean
+	DebugInterface_LogsSixelDecoderErrors	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsSixelDecoderErrors;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
 	DebugInterface_LogsSixelDecoderState	()
 	{
 	#ifndef NDEBUG
 		return gDebugInterface_LogsSixelDecoderState;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
+	DebugInterface_LogsSixelDecoderSummary	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsSixelDecoderSummary;
 	#else
 		return false;
 	#endif
