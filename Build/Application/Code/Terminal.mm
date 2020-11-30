@@ -9266,8 +9266,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					break;
 				}
 				
-				if (DebugInterface_LogsSixelDecoderState())
+				if (DebugInterface_LogsSixelDecoderSummary())
 				{
+					Console_WriteHorizontalRule();
 					Console_WriteValue("default pan (Sixel aspect ratio height) set to", initialAspectRatioV);
 					Console_WriteValue("default pad (Sixel aspect ratio width) set to", initialAspectRatioH);
 				}
@@ -9278,7 +9279,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 											: false);
 				if (zeroValuePixelsKeepColor)
 				{
-					if (DebugInterface_LogsSixelDecoderState())
+					if (DebugInterface_LogsSixelDecoderSummary())
 					{
 						Console_WriteLine("Sixel image is configured to not change the color of zero-value pixels"); // debug
 					}
@@ -9286,7 +9287,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				if (paramDecoder.parameterValues.size() > 2)
 				{
-					Console_Warning(Console_WriteValue, "ignoring Sixel grid size parameter", paramDecoder.parameterValues[2]);
+					if (DebugInterface_LogsSixelDecoderErrors())
+					{
+						Console_Warning(Console_WriteValue, "ignoring Sixel grid size parameter", paramDecoder.parameterValues[2]);
+					}
 				}
 				
 				// process the Sixel data
@@ -9304,7 +9308,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					__block NSColor*				currentColor = nil; // if "nil", use background color
 					__block NSMutableDictionary*	colorsByIndex = [[[NSMutableDictionary alloc] init] autorelease];
 					NSImage*						completeImage = nil;
-					NSBitmapImageRep*				bitmapRep = nil;
+					CGContextRef					drawingContext = nullptr;
 					UInt16							defaultCellPixelsH = 9; // number of dots across to define a terminal cell at normal width
 					UInt16							defaultCellPixelsV = 12; // number of dots down to define a terminal cell at normal height
 					UInt16							totalPixelsH = 0;
@@ -9352,11 +9356,15 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						}
 					}
 					
-					// now that the maximum movement of the graphics cursor and
-					// pixel aspect ratio are known, specify the image dimensions 
+					// now that the maximum movement of the graphics cursor and pixel aspect ratio
+					// are known, specify the image dimensions (consider both the locations that
+					// the graphics cursor has moved to, and any configured image size parameters;
+					// the real canvas size will be whichever is larger!)
 					sixelDecoder.getSixelSize(sixelSizeV, sixelSizeH);
 					totalPixelsH = ((1 + sixelDecoder.graphicsCursorMaxX) * sixelSizeH);
 					totalPixelsV = ((1 + sixelDecoder.graphicsCursorMaxY) * sixelSizeV * 6/* sixel has 6 bits, one per vertical plot */);
+					//totalPixelsH = std::max< UInt16 >(totalPixelsH, sixelDecoder.suggestedImageWidth);
+					//totalPixelsV = std::max< UInt16 >(totalPixelsV, sixelDecoder.suggestedImageHeight);
 					
 					// allocate a large enough bitmap image
 					{
@@ -9364,25 +9372,24 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						NSInteger const		kSamplesPerPixel = 4; // red, green, blue, alpha
 						NSInteger const		kBitsPerPixel = (kBitsPerSample * kSamplesPerPixel);
 						NSInteger const		kBytesPerRow = ((kBitsPerPixel / 8) * totalPixelsH);
+						CGColorSpaceRef		colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 						
 						
-						// when the planes are set to "nullptr" at initialization time, the
-						// internal buffer ("bitmapData" property) is owned by the object
-						bitmapRep = [[NSBitmapImageRep alloc]
-										initWithBitmapDataPlanes:nullptr
-																	pixelsWide:totalPixelsH
-																	pixelsHigh:totalPixelsV
-																	bitsPerSample:kBitsPerSample
-																	samplesPerPixel:kSamplesPerPixel
-																	hasAlpha:YES
-																	isPlanar:NO
-																	colorSpaceName:NSCalibratedRGBColorSpace
-																	bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
-																	bytesPerRow:kBytesPerRow
-																	bitsPerPixel:kBitsPerPixel];
-						completeImage = [[NSImage alloc] initWithSize:NSZeroSize];
-						[completeImage addRepresentation:bitmapRep];
-						completeImage.size = bitmapRep.size;
+						drawingContext = CGBitmapContextCreate(nullptr/* data or nullptr to auto-allocate */, totalPixelsH, totalPixelsV, kBitsPerSample, kBytesPerRow,
+																colorSpace, (kCGBitmapByteOrderDefault | kCGImageAlphaNoneSkipLast));
+						assert(nullptr != drawingContext);
+						//NSLog(@"Sixel bitmap %lf x %lf, context@%p, colorspace@%p", (double)totalPixelsH, (double)totalPixelsV, drawingContext, colorSpace); // debug
+						CGColorSpaceRelease(colorSpace); colorSpace = nullptr;
+						
+						// transform to expected coordinate system
+						CGContextTranslateCTM(drawingContext, 0, totalPixelsV); // anchor at top
+						CGContextScaleCTM(drawingContext, 1.0, -1.0); // flip vertically
+						
+						// configure for bitmap drawing (otherwise, a line drawn at the same
+						// start and end coordinates will have no rendering)
+						CGContextSetLineWidth(drawingContext, 1.0);
+						CGContextSetLineCap(drawingContext, kCGLineCapSquare);
+						CGContextSetAllowsAntialiasing(drawingContext, false);
 					}
 					
 					// now reset the decoder and repeat the parsing sequence,
@@ -9404,7 +9411,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						switch (colorType)
 						{
 						case kSixelDecoder_ColorTypeHLS:
-							// note: given in HLS order, not HSB border (flipping last two values)
+							// note: given in HLS order, not HSB order (flipping last two values)
 							newColor = [NSColor colorWithCalibratedHue:(component1 / 360.0) saturation:(component3 / 100.0)
 																		brightness:(component2 / 100.0) alpha:1.0];
 							break;
@@ -9420,7 +9427,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						}
 						if ((nil == newColor) || (nil == colorNumber))
 						{
-							Console_Warning(Console_WriteValue, "failed to define Sixel color, index", colorIndex);
+							if (DebugInterface_LogsSixelDecoderErrors())
+							{
+								Console_Warning(Console_WriteValue, "failed to define Sixel color, index", colorIndex);
+							}
 						}
 						else
 						{
@@ -9435,7 +9445,16 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							Boolean const	kFirstColor = (0 == colorsByIndex.count);
 							
 							
+							newColor = [newColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 							[colorsByIndex setObject:newColor forKey:colorNumber];
+							
+							if (DebugInterface_LogsSixelDecoderSummary())
+							{
+								Console_WriteValue("Sixel color defined with index", colorIndex);
+								Console_WriteValueFloat4("Sixel color components", newColor.redComponent, newColor.greenComponent, newColor.blueComponent, newColor.alphaComponent);
+							}
+							
+							CGContextSetRGBFillColor(drawingContext, newColor.redComponent, newColor.greenComponent, newColor.blueComponent, 1.0/* alpha */);
 							
 							if ((kAutoFillBackground) && (kFirstColor) &&
 								(decoderRef.suggestedImageWidth > 0) && (decoderRef.suggestedImageHeight > 0))
@@ -9445,6 +9464,19 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 								// the width/height from raster attributes; it isn’t clear what
 								// “background color” should be; this interpretation is somewhat
 								// arbitrary but it seems compatible with known image utilities)
+								if (DebugInterface_LogsSixelDecoderSummary())
+								{
+									Console_WriteLine("Sixel color definition will be used for background");
+								}
+								
+							#if 1
+								// can clear suggested area (relying on Sixel-provided dimensions)
+								// or erase the actual area traversed by graphics commands, which
+								// is more accurate overall
+								//CGContextFillRect(drawingContext, CGRectMake(0, 0, decoderRef.suggestedImageWidth * sixelSizeH, decoderRef.suggestedImageHeight * 6 * sixelSizeV));
+								CGContextFillRect(drawingContext, CGRectMake(0, 0, totalPixelsH, totalPixelsV));
+							#else
+								// debug: provide a way to tweak every pixel (at performance cost)
 								for (UInt16 i = 0; i < decoderRef.suggestedImageWidth; ++i)
 								{
 									auto const	kPixelX = (sixelSizeH * i);
@@ -9452,18 +9484,13 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 									
 									for (UInt16 j = 0; j < decoderRef.suggestedImageHeight; ++j)
 									{
-										auto const	kPixelY = (sixelSizeV * (6/* bits per sixel */ + j));
+										auto const	kPixelY = (sixelSizeV * (6/* bits per sixel */ * j));
 										
 										
-										for (auto k = 0; k < sixelSizeV; ++k)
-										{
-											for (auto l = 0; l < sixelSizeH; ++l)
-											{
-												[bitmapRep setColor:newColor atX:(kPixelX + l) y:(kPixelY + k)];
-											}
-										}
+										CGContextFillRect(drawingContext, CGRectMake(kPixelX, kPixelY, sixelSizeH, 6 * sixelSizeV));
 									}
 								}
+							#endif
 							}
 						}
 					});
@@ -9491,12 +9518,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						else
 						{
 							// at least one pixel will change
-							NSColor*	onColor = ((nil == currentColor) // see earlier definition; "nil" used to mean “background”
-													? [NSColor clearColor]
-													: currentColor);
-							NSColor*	offColor = ((zeroValuePixelsKeepColor)
-													? nil
-													: [NSColor clearColor]);
+							auto			kSixelBitCount = topToBottomOnOffFlags.size();
+							CGFloat const	kForegroundRed = currentColor.redComponent;
+							CGFloat const	kForegroundGreen = currentColor.greenComponent;
+							CGFloat const	kForegroundBlue = currentColor.blueComponent;
 							
 							
 							for (UInt16 i = 0; i < repeatCount; ++i)
@@ -9504,33 +9529,41 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 								auto const	kPixelX = (sixelSizeH * (decoderRef.graphicsCursorX + i));
 								
 								
-								for (decltype(topToBottomOnOffFlags.size()) j = 0; j < topToBottomOnOffFlags.size(); ++j)
+								// see earlier definition; "nil" used to mean “use background” (also,
+								// there is no erase phase because off-pixels simply rely on the
+								// pre-filled background and/or any previous pixel at that location)
+								if (nil != currentColor)
 								{
-									auto const	kPixelY = (sixelSizeV * (decoderRef.graphicsCursorY * topToBottomOnOffFlags.size() + j));
-									
-									
-									if (topToBottomOnOffFlags.test(j))
+									CGContextSetRGBFillColor(drawingContext, kForegroundRed, kForegroundGreen, kForegroundBlue, 1.0/* alpha */);
+									if (topToBottomOnOffFlags.all())
 									{
-										// draw
-										for (auto k = 0; k < sixelSizeV; ++k)
-										{
-											for (auto l = 0; l < sixelSizeH; ++l)
-											{
-												[bitmapRep setColor:onColor atX:(kPixelX + l) y:(kPixelY + k)];
-											}
-										}
+										// all 6 pixels are being drawn
+										CGContextFillRect(drawingContext, CGRectMake(kPixelX, (sixelSizeV * (decoderRef.graphicsCursorY * kSixelBitCount)),
+																						sixelSizeH, sixelSizeV * kSixelBitCount));
 									}
 									else
 									{
-										// erase or ignore
-										if (nil != offColor)
+										// some pixels are being drawn
+										for (decltype(kSixelBitCount) j = 0; j < kSixelBitCount; ++j)
 										{
-											for (auto k = 0; k < sixelSizeV; ++k)
+											auto const	kPixelY = (sixelSizeV * (decoderRef.graphicsCursorY * kSixelBitCount + j));
+											
+											
+											if (topToBottomOnOffFlags.test(j))
 											{
-												for (auto l = 0; l < sixelSizeH; ++l)
+												// draw
+											#if 0
+												CGContextFillRect(drawingContext, CGRectMake(kPixelX, kPixelY, sixelSizeH, sixelSizeV));
+											#else
+												// debug: provide a way to tweak every pixel (at performance cost)
+												for (auto k = 0; k < sixelSizeV; ++k)
 												{
-													[bitmapRep setColor:offColor atX:(kPixelX + l) y:(kPixelY + k)];
+													for (auto l = 0; l < sixelSizeH; ++l)
+													{
+														CGContextFillRect(drawingContext, CGRectMake((kPixelX + l), (kPixelY + k), 1, 1));
+													}
 												}
+											#endif
 											}
 										}
 									}
@@ -9575,7 +9608,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 										kSixelDataSize - processedBytes);
 					}
 					
-					if (DebugInterface_LogsSixelDecoderState())
+					if (DebugInterface_LogsSixelDecoderSummary())
 					{
 						Console_WriteValue("final cursor position relative to Sixel image: x", sixelDecoder.graphicsCursorX);
 						Console_WriteValue("final cursor position relative to Sixel image: y", sixelDecoder.graphicsCursorY);
@@ -9583,8 +9616,17 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 						Console_WriteValue("apparent height in “sixels”", 1 + sixelDecoder.graphicsCursorMaxY);
 						Console_WriteValue("final pan (aspect ratio, vertical)", sixelDecoder.aspectRatioV);
 						Console_WriteValue("final pad (aspect ratio, horizontal)", sixelDecoder.aspectRatioH);
-						Console_WriteValue("calculated “sixel” width", sixelSizeH);
-						Console_WriteValue("calculated “sixel” height", sixelSizeV);
+						Console_WriteValue("calculated “sixel” width (in screen pixels)", sixelSizeH);
+						Console_WriteValue("calculated “sixel” height (in screen pixels)", sixelSizeV);
+					}
+					
+					// convert image for rendering
+					{
+						CGImageRef	snapshotCGImage = CGBitmapContextCreateImage(drawingContext);
+						
+						
+						completeImage = [[NSImage alloc] initWithCGImage:snapshotCGImage size:NSZeroSize/* if NSZeroSize, CGImage size is used */];
+						CGImageRelease(snapshotCGImage); snapshotCGImage = nullptr;
 					}
 					
 					// write complete image for debugging (helps to separate possible issues
@@ -15849,10 +15891,21 @@ bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	NSRect			subImageRect = NSZeroRect; // initialized below
 	
 	
-	if (DebugInterface_LogsSixelDecoderState())
+	if (DebugInterface_LogsSixelDecoderSummary())
 	{
-		Console_WriteValue("range of terminal text cells covered by image, horizontally", kCellsCoveredH);
-		Console_WriteValue("range of terminal text cells covered by image, vertically", kCellsCoveredV);
+		Console_WriteValue("terminal columns covered by image", kCellsCoveredH);
+		Console_WriteValue("terminal rows covered by image", kCellsCoveredV);
+		if (DebugInterface_LogsSixelDecoderErrors())
+		{
+			if (kCellsCoveredH > inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+			{
+				Console_Warning(Console_WriteLine, "the Sixel image has been clipped on the right side (terminal screen not wide enough)");
+			}
+			if (kCellsCoveredV > inDataPtr->screenBuffer.size())
+			{
+				Console_Warning(Console_WriteLine, "the Sixel image has been clipped or scrolled vertically (terminal screen not tall enough)");
+			}
+		}
 	}
 	
 	// initialize first sub-rectangle (rendered by one terminal cell)
@@ -15881,7 +15934,7 @@ bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 			// assigned portion of the overall image
 			if (false == defineBitmap(inDataPtr, inCompleteImage, subImageRect, cellBitmapID))
 			{
-				if (DebugInterface_LogsSixelDecoderState())
+				if (DebugInterface_LogsSixelDecoderErrors())
 				{
 					Console_Warning(Console_WriteLine, "failed to allocate a cell bitmap");
 				}

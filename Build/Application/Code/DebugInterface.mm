@@ -69,7 +69,7 @@ extended to provide more hooks.)
 
 DebugInterface_ActionHandler*	gDebugUIRunner = [[DebugInterface_ActionHandler alloc] init];
 UIDebugInterface_Model*			gDebugData = [[UIDebugInterface_Model alloc] initWithRunner:gDebugUIRunner];
-Boolean							gDebugInterface_LogsSixelDecoderErrors = true;
+Boolean							gDebugInterface_LogsSixelDecoderErrors = false;
 Boolean							gDebugInterface_LogsSixelDecoderState = false;
 Boolean							gDebugInterface_LogsSixelDecoderSummary = false;
 Boolean							gDebugInterface_LogsSixelInput = false;

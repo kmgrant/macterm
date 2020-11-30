@@ -203,7 +203,7 @@ handleCommandCharacter	(UInt8		inRawCommandCharacter,
 		Console_WriteValueCharacter("handle sixel with value", inRawCommandCharacter);
 		if (inRepeatCount > 1)
 		{
-			Console_WriteValueCharacter("repeat count", inRepeatCount);
+			Console_WriteValue("repeat count", inRepeatCount);
 		}
 	}
 	
@@ -412,7 +412,7 @@ stateDeterminant	(UInt8		inNextByte,
 				
 				default:
 					// ???
-					if (DebugInterface_LogsSixelDecoderState())
+					if (DebugInterface_LogsSixelDecoderErrors())
 					{
 						Console_Warning(Console_WriteValueCharacter, "current state (“repeat begin”) saw unexpected input", inNextByte);
 					}
@@ -486,7 +486,7 @@ stateDeterminant	(UInt8		inNextByte,
 				// raster attributes (must be first)
 				if (this->haveSetRasterAttributes)
 				{
-					if (DebugInterface_LogsSixelDecoderState())
+					if (DebugInterface_LogsSixelDecoderErrors())
 					{
 						Console_Warning(Console_WriteLine, "Sixel raster attributes encountered more than once; ignoring");
 					}
@@ -538,7 +538,7 @@ stateDeterminant	(UInt8		inNextByte,
 			{
 				if ((inNextByte < 0x3F) || (inNextByte > 0x7E))
 				{
-					if (DebugInterface_LogsSixelDecoderState())
+					if (DebugInterface_LogsSixelDecoderErrors())
 					{
 						Console_Warning(Console_WriteValueCharacter, "ignoring invalid Sixel data, character", inNextByte);
 					}
@@ -611,7 +611,7 @@ stateTransition		(State		inNextState)
 		{
 			if (this->haveSetRasterAttributes)
 			{
-				if (DebugInterface_LogsSixelDecoderState())
+				if (DebugInterface_LogsSixelDecoderErrors())
 				{
 					Console_Warning(Console_WriteLine, "Sixel raster attributes encountered more than once; ignoring");
 				}
@@ -689,7 +689,7 @@ stateTransition		(State		inNextState)
 				
 				default:
 					// ???
-					if (DebugInterface_LogsSixelDecoderState())
+					if (DebugInterface_LogsSixelDecoderErrors())
 					{
 						Console_WriteValue("ignoring unexpected raster attributes parameter", paramValue);
 					}
@@ -765,7 +765,7 @@ stateTransition		(State		inNextState)
 		
 		default:
 			// ???
-			if (DebugInterface_LogsSixelDecoderState())
+			if (DebugInterface_LogsSixelDecoderErrors())
 			{
 				Console_Warning(Console_WriteValue, "assertion failure, repeat-count expected digit but byte ASCII", STATIC_CAST(this->byteRegister, SInt16));
 			}
@@ -778,7 +778,7 @@ stateTransition		(State		inNextState)
 			// set the character to be repeated
 			if ((this->byteRegister < 0x3F) || (this->byteRegister > 0x7E))
 			{
-				if (DebugInterface_LogsSixelDecoderState())
+				if (DebugInterface_LogsSixelDecoderErrors())
 				{
 					Console_Warning(Console_WriteValue, "ignoring request for Sixel repetition; out of range, character", this->byteRegister);
 				}
@@ -869,7 +869,7 @@ stateTransition		(State		inNextState)
 								// hue, lightness and saturation (HLS), a.k.a. hue, saturation and brightness (HSB)
 								if ((i + 3) >= this->parameterDecoder.parameterValues.size())
 								{
-									if (DebugInterface_LogsSixelDecoderState())
+									if (DebugInterface_LogsSixelDecoderErrors())
 									{
 										Console_WriteLine("color format: error, insufficient parameters for hue, lightness and saturation (HLS)");
 									}
@@ -897,7 +897,7 @@ stateTransition		(State		inNextState)
 								// red, green, blue (RGB)
 								if ((i + 3) >= this->parameterDecoder.parameterValues.size())
 								{
-									if (DebugInterface_LogsSixelDecoderState())
+									if (DebugInterface_LogsSixelDecoderErrors())
 									{
 										Console_WriteLine("color format: error, insufficient parameters for red, green, blue (RGB)");
 									}
@@ -923,7 +923,7 @@ stateTransition		(State		inNextState)
 							
 							default:
 								// ???
-								if (DebugInterface_LogsSixelDecoderState())
+								if (DebugInterface_LogsSixelDecoderErrors())
 								{
 									Console_Warning(Console_WriteValue, "unrecognized color type", paramValue);
 								}
@@ -950,7 +950,7 @@ stateTransition		(State		inNextState)
 			if ((this->byteRegister < 0x3F) || (this->byteRegister > 0x7E))
 			{
 				// this should only be encountered while in the set-pixels command state
-				if (DebugInterface_LogsSixelDecoderState())
+				if (DebugInterface_LogsSixelDecoderErrors())
 				{
 					Console_Warning(Console_WriteValueCharacter, "ignoring invalid data for set-pixels, character", this->byteRegister);
 					//Console_Warning(Console_WriteValueFourChars, "ignoring invalid data while in state", this->currentState);
@@ -966,7 +966,7 @@ stateTransition		(State		inNextState)
 	
 	default:
 		// ???
-		if (DebugInterface_LogsSixelDecoderState())
+		if (DebugInterface_LogsSixelDecoderErrors())
 		{
 			Console_Warning(Console_WriteValueCharacter, "ignoring invalid data for set-pixels, character", this->byteRegister);
 		}
