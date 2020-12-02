@@ -802,12 +802,12 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 	}
 	else
 	{
-		GenericDialog_Wrap						dialog;
-		PrefPanelSessions_KeyboardViewManager*	embeddedPanel = [[PrefPanelSessions_KeyboardViewManager alloc] init];
-		CFRetainRelease							cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
-																CFRetainRelease::kAlreadyRetained);
-		CFRetainRelease							okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
-															CFRetainRelease::kAlreadyRetained);
+		GenericDialog_Wrap				dialog;
+		PrefPanelSessions_KeyboardVC*	embeddedPanel = [[PrefPanelSessions_KeyboardVC alloc] init];
+		CFRetainRelease					cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),
+														CFRetainRelease::kAlreadyRetained);
+		CFRetainRelease					okString(UIStrings_ReturnCopy(kUIStrings_ButtonOK),
+													CFRetainRelease::kAlreadyRetained);
 		
 		
 		dialog = GenericDialog_Wrap(GenericDialog_New(Session_ReturnActiveNSWindow(inRef).contentView, embeddedPanel, temporaryContext),

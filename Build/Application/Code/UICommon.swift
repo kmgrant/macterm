@@ -39,6 +39,7 @@ extension HStack {
 	public func withMacTermSectionLayout() -> some View {
 		padding([.horizontal], 16)
 	}
+
 	// for first line above views of a panel, e.g. UICommon_DefaultOptionHeaderView;
 	// preserve left and right space all the way down a vertical stack of views
 	public func withMacTermTopHeaderLayout() -> some View {
@@ -56,6 +57,7 @@ extension Spacer {
 	public func asMacTermSectionSpacingV() -> some View {
 		padding([.top], 16)
 	}
+
 	// slightly separate each new section from the one above it
 	public func asMacTermMinorSectionSpacingV() -> some View {
 		padding([.top], 4)
@@ -162,6 +164,24 @@ public class UICommon_DefaultingModel : UICommon_BaseModel {
 
 	func setDefaultFlagsToTrue() {
 		// (subclasses should override; arrange to set all Default checkboxes to be disabled, in checked state)
+	}
+
+}
+
+struct UICommon_DividerSectionView : View {
+
+	var body: some View {
+		// simplify the process of creating a horizontal line that
+		// separates sections of a standard container, with margins;
+		// use this in stacks that contain other section views, e.g.
+		// UICommon_OptionLineView or UICommon_Default1OptionLineView
+		HStack(
+			alignment: .sectionAlignmentMacTerm
+		) {
+			VStack {
+				Divider().disabled(true)
+			}
+		}.withMacTermSectionLayout()
 	}
 
 }

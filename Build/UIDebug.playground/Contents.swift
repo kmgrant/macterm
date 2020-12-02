@@ -9,9 +9,10 @@ import MacTermQuills
 //let view = UIDebugInterface_Previews.previews
 //let view = UIKeypads_Previews.previews
 //let view = UIPrefsGeneralOptions_Previews.previews
-let view = UIPrefsGeneralSpecial_Previews.previews
+//let view = UIPrefsGeneralSpecial_Previews.previews
 //let view = UIPrefsGeneralFullScreen_Previews.previews
 //let view = UIPrefsGeneralNotifications_Previews.previews
+let view = UIPrefsSessionKeyboard_Previews.previews
 //let view = UIPrefsSessionGraphics_Previews.previews
 //let view = UIPrefsTerminalOptions_Previews.previews
 //let view = UIPrefsTerminalEmulation_Previews.previews

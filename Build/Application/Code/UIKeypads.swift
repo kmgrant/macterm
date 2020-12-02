@@ -65,6 +65,12 @@ extension Button {
 		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
 			.buttonStyle(styleObject)
 	}
+	// compact key button (e.g. interrupt/suspend/resume settings)
+	public func asMacTermKeypadKeyRectCompact() -> some View {
+		let styleObject = UIKeypads_KeyButtonStyle(narrowWidth: false, narrowHeight: true, compact: true)
+		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
+			.buttonStyle(styleObject)
+	}
 }
 
 extension Spacer {
@@ -256,21 +262,22 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 	public var height: CGFloat
 
 	init() {
-		self.init(fontSize: 14, narrowWidth: true, narrowHeight: true)
+		self.init(fontSize: 14, narrowWidth: true, narrowHeight: true, compact: false)
 	}
 
 	init(fontSize: CGFloat) {
-		self.init(fontSize: fontSize, narrowWidth: true, narrowHeight: true)
+		self.init(fontSize: fontSize, narrowWidth: true, narrowHeight: true, compact: false)
 	}
 
-	init(narrowWidth: Bool, narrowHeight: Bool) {
-		self.init(fontSize: 12, narrowWidth: narrowWidth, narrowHeight: narrowHeight)
+	init(narrowWidth: Bool, narrowHeight: Bool, compact: Bool = false) {
+		self.init(fontSize: 12, narrowWidth: narrowWidth, narrowHeight: narrowHeight,
+					compact: compact)
 	}
 
-	init(fontSize: CGFloat, narrowWidth: Bool, narrowHeight: Bool) {
+	init(fontSize: CGFloat, narrowWidth: Bool, narrowHeight: Bool, compact: Bool = false) {
 		self.fontSize = fontSize
-		self.width = narrowWidth ? 36 : 81
-		self.height = narrowHeight ? 36 : 82
+		self.width = narrowWidth ? (compact ? 24 : 36) : (compact ? 64 : 81)
+		self.height = narrowHeight ? (compact ? 24 : 36) : (compact ? 63 : 82)
 	}
 
 	func makeBody(configuration: Self.Configuration) -> some View {
@@ -378,6 +385,79 @@ public struct UIKeypads_ControlKeysView : View {
 	private var showKeyNames = false // if set, keys have abbreviated control key names below main label
 	private var showKeyCodes = false // (ignored if "showKeyNames" is true) keys have ASCII code values in small text below main label
 
+	static func localizedLabelView(_ forType: UIKeypads_KeyID) -> some View {
+		var aTitle: String = ""
+		switch forType {
+		case .controlNull:
+			aTitle = "⌃@"
+		case .controlA:
+			aTitle = "⌃A"
+		case .controlB:
+			aTitle = "⌃B"
+		case .controlC:
+			aTitle = "⌃C"
+		case .controlD:
+			aTitle = "⌃D"
+		case .controlE:
+			aTitle = "⌃E"
+		case .controlF:
+			aTitle = "⌃F"
+		case .controlG:
+			aTitle = "⌃G"
+		case .controlH:
+			aTitle = "⌃H"
+		case .controlI:
+			aTitle = "⌃I"
+		case .controlJ:
+			aTitle = "⌃J"
+		case .controlK:
+			aTitle = "⌃K"
+		case .controlL:
+			aTitle = "⌃L"
+		case .controlM:
+			aTitle = "⌃M"
+		case .controlN:
+			aTitle = "⌃N"
+		case .controlO:
+			aTitle = "⌃O"
+		case .controlP:
+			aTitle = "⌃P"
+		case .controlQ:
+			aTitle = "⌃Q"
+		case .controlR:
+			aTitle = "⌃R"
+		case .controlS:
+			aTitle = "⌃S"
+		case .controlT:
+			aTitle = "⌃T"
+		case .controlU:
+			aTitle = "⌃U"
+		case .controlV:
+			aTitle = "⌃V"
+		case .controlW:
+			aTitle = "⌃W"
+		case .controlX:
+			aTitle = "⌃X"
+		case .controlY:
+			aTitle = "⌃Y"
+		case .controlZ:
+			aTitle = "⌃Z"
+		case .controlLeftSquareBracket:
+			aTitle = "⌃["
+		case .controlBackslash:
+			aTitle = "⌃\\"
+		case .controlRightSquareBracket:
+			aTitle = "⌃]"
+		case .controlCaret:
+			aTitle = "⌃^"
+		case .controlUnderscore:
+			aTitle = "⌃_"
+		default:
+			assert(false, "only control keys are supported")
+		}
+		return Text(aTitle).tag(forType)
+	}
+
 	public var body: some View {
 		VStack (
 			alignment: .leading,
@@ -394,7 +474,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃@")
+							Self.localizedLabelView(.controlNull)
 							if showKeyNames {
 								Text("NUL").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -408,7 +488,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃A")
+							Self.localizedLabelView(.controlA)
 							if showKeyNames {
 								Text("SOH").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -422,7 +502,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃B")
+							Self.localizedLabelView(.controlB)
 							if showKeyNames {
 								Text("STX").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -436,7 +516,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃C")
+							Self.localizedLabelView(.controlC)
 							if showKeyNames {
 								Text("ETX").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -452,7 +532,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃D")
+							Self.localizedLabelView(.controlD)
 							if showKeyNames {
 								Text("EOT").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -466,7 +546,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃E")
+							Self.localizedLabelView(.controlE)
 							if showKeyNames {
 								Text("ENQ").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -480,7 +560,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃F")
+							Self.localizedLabelView(.controlF)
 							if showKeyNames {
 								Text("ACK").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -494,7 +574,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃G")
+							Self.localizedLabelView(.controlG)
 							if showKeyNames {
 								Text("BEL").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -517,7 +597,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃H")
+							Self.localizedLabelView(.controlH)
 							if showKeyNames {
 								Text("BS").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -531,7 +611,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃I")
+							Self.localizedLabelView(.controlI)
 							if showKeyNames {
 								Text("HT").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -545,7 +625,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃J")
+							Self.localizedLabelView(.controlJ)
 							if showKeyNames {
 								Text("LF").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -559,7 +639,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃K")
+							Self.localizedLabelView(.controlK)
 							if showKeyNames {
 								Text("VT").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -575,7 +655,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃L")
+							Self.localizedLabelView(.controlL)
 							if showKeyNames {
 								Text("FF").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -589,7 +669,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃M")
+							Self.localizedLabelView(.controlM)
 							if showKeyNames {
 								Text("CR").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -603,7 +683,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃N")
+							Self.localizedLabelView(.controlN)
 							if showKeyNames {
 								Text("SO").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -617,7 +697,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃O")
+							Self.localizedLabelView(.controlO)
 							if showKeyNames {
 								Text("SI").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -640,7 +720,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃P")
+							Self.localizedLabelView(.controlP)
 							if showKeyNames {
 								Text("DLE").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -654,7 +734,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃Q")
+							Self.localizedLabelView(.controlQ)
 							if showKeyNames {
 								//Text("DC1").asMacTermKeySecondaryLabel()
 								Text("XON").asMacTermKeySecondaryLabel()
@@ -669,7 +749,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃R")
+							Self.localizedLabelView(.controlR)
 							if showKeyNames {
 								Text("DC2").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -683,7 +763,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃S")
+							Self.localizedLabelView(.controlS)
 							if showKeyNames {
 								//Text("DC3").asMacTermKeySecondaryLabel()
 								Text("XOFF").asMacTermKeySecondaryLabel()
@@ -700,7 +780,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃T")
+							Self.localizedLabelView(.controlT)
 							if showKeyNames {
 								Text("DC4").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -714,7 +794,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃U")
+							Self.localizedLabelView(.controlU)
 							if showKeyNames {
 								Text("NAK").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -728,7 +808,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃V")
+							Self.localizedLabelView(.controlV)
 							if showKeyNames {
 								Text("SYN").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -742,7 +822,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃W")
+							Self.localizedLabelView(.controlW)
 							if showKeyNames {
 								Text("ETB").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -765,7 +845,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃X")
+							Self.localizedLabelView(.controlX)
 							if showKeyNames {
 								Text("CAN").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -779,7 +859,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃Y")
+							Self.localizedLabelView(.controlY)
 							if showKeyNames {
 								Text("EM").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -793,7 +873,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃Z")
+							Self.localizedLabelView(.controlZ)
 							if showKeyNames {
 								Text("SUB").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -807,7 +887,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃[")
+							Self.localizedLabelView(.controlLeftSquareBracket)
 							if showKeyNames {
 								Text("ESC").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -823,7 +903,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃\\")
+							Self.localizedLabelView(.controlBackslash)
 							if showKeyNames {
 								Text("FS").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -837,7 +917,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃]")
+							Self.localizedLabelView(.controlRightSquareBracket)
 							if showKeyNames {
 								Text("GS").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -851,7 +931,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃^")
+							Self.localizedLabelView(.controlCaret)
 							if showKeyNames {
 								Text("RS").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {
@@ -865,7 +945,7 @@ public struct UIKeypads_ControlKeysView : View {
 						VStack(
 							spacing: 0
 						) {
-							Text("⌃_")
+							Self.localizedLabelView(.controlUnderscore)
 							if showKeyNames {
 								Text("US").asMacTermKeySecondaryLabel()
 							} else if showKeyCodes {

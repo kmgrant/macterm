@@ -235,7 +235,6 @@ Base.lproj/PrefPanelFormatGeneralCocoa \
 Base.lproj/PrefPanelFormatStandardColorsCocoa \
 Base.lproj/PrefPanelMacrosCocoa \
 Base.lproj/PrefPanelSessionDataFlowCocoa \
-Base.lproj/PrefPanelSessionKeyboardCocoa \
 Base.lproj/PrefPanelSessionResourceCocoa \
 Base.lproj/PrefPanelTranslationsCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \

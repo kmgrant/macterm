@@ -52,6 +52,7 @@
 		0A82D17E2557565700950356 /* UIPrefsGeneralNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D17D2557565700950356 /* UIPrefsGeneralNotifications.swift */; };
 		0A82FF0B25530D4C00768C85 /* UIPrefsTerminalOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */; };
 		0A82FF1525532A8800768C85 /* UIPrefsTerminalEmulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */; };
+		0A858C6A2575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A858C692575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift */; };
 		0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A90C79A1DBC557B005EABE0 /* CoreUI.mm */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0A998CB01E5F62D30002C083 /* file_kvp.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA31E5F62400002C083 /* file_kvp.py */; };
@@ -192,7 +193,6 @@
 		0A08C9F7224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FC224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
 		0A08C9FD224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
-		0A08C9FF224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionKeyboardCocoa.xib; sourceTree = "<group>"; };
 		0A08CA00224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
 		0A08CA04224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelTranslationsCocoa.xib; sourceTree = "<group>"; };
 		0A08CA06224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
@@ -369,6 +369,7 @@
 		0A82D17D2557565700950356 /* UIPrefsGeneralNotifications.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsGeneralNotifications.swift; path = Application/Code/UIPrefsGeneralNotifications.swift; sourceTree = "<group>"; };
 		0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsTerminalOptions.swift; path = Application/Code/UIPrefsTerminalOptions.swift; sourceTree = "<group>"; };
 		0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsTerminalEmulation.swift; path = Application/Code/UIPrefsTerminalEmulation.swift; sourceTree = "<group>"; };
+		0A858C692575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsSessionKeyboard.swift; path = Application/Code/UIPrefsSessionKeyboard.swift; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
@@ -636,6 +637,7 @@
 				0A82D17D2557565700950356 /* UIPrefsGeneralNotifications.swift */,
 				0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */,
 				0AC3C56E2571680700E5DB94 /* UIPrefsGeneralSpecial.swift */,
+				0A858C692575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift */,
 				0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */,
 				0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */,
 				0A82FF0A25530D4C00768C85 /* UIPrefsTerminalOptions.swift */,
@@ -842,7 +844,6 @@
 				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
 				0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */,
 				0A0E9F851DB18127006A8BF5 /* PrefPanelSessionDataFlowCocoa.xib */,
-				0A0E9F891DB18127006A8BF5 /* PrefPanelSessionKeyboardCocoa.xib */,
 				0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */,
 				0A0E9F931DB18127006A8BF5 /* PrefPanelTranslationsCocoa.xib */,
 				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
@@ -1240,6 +1241,7 @@
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,
 				0A22068D24FCA5F600E27657 /* UICommon.swift in Sources */,
+				0A858C6A2575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift in Sources */,
 				0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */,
 				0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */,
 				0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */,
@@ -1425,14 +1427,6 @@
 				0A08C9FD224F345E00DA2569 /* Base */,
 			);
 			name = PrefPanelSessionDataFlowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F891DB18127006A8BF5 /* PrefPanelSessionKeyboardCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9FF224F345E00DA2569 /* Base */,
-			);
-			name = PrefPanelSessionKeyboardCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */ = {

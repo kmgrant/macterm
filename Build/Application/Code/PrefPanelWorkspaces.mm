@@ -406,7 +406,7 @@ updateViewModelFromPrefsMgr
 	
 	// finally, specify “is editing Default” to prevent user requests for
 	// “restore to Default” from deleting the Default settings themselves!
-	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::TERMINAL);
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::WORKSPACE);
 }// updateViewModelFromPrefsMgr
 
 

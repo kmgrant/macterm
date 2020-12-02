@@ -75,23 +75,6 @@ extern "C"
 
 
 
-#pragma mark Constants
-namespace {
-
-/*!
-Used to distinguish different types of control-key
-mappings.
-*/
-enum My_KeyType
-{
-	kMy_KeyTypeNone = 0,		//!< none of the mappings
-	kMy_KeyTypeInterrupt = 1,	//!< “interrupt process” mapping
-	kMy_KeyTypeResume = 2,		//!< “resume output” mapping
-	kMy_KeyTypeSuspend = 3		//!< “suspend output” mapping
-};
-
-} // anonymous namespace
-
 #pragma mark Types
 namespace {
 
@@ -139,6 +122,51 @@ The private class interface.
 
 
 /*!
+Implements SwiftUI interaction for the “Keyboard” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
+*/
+@interface PrefPanelSessions_KeyboardActionHandler : NSObject< Keypads_ControlKeyResponder,
+																UIPrefsSessionKeyboard_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*		_prefsMgr;
+	UIPrefsSessionKeyboard_Model*	_viewModel;
+}
+
+// new methods
+	- (BOOL)
+	resetToDefaultGetFlagWithTag:(Preferences_Tag)_;
+	- (char)
+	returnKeyCharPreferenceForUIEnum:(UIKeypads_KeyID)_;
+	- (Session_EmacsMetaKey)
+	returnMetaPreferenceForUIEnum:(UIPrefsSessionKeyboard_MetaMapping)_;
+	- (Session_NewlineMode)
+	returnNewlinePreferenceForUIEnum:(UIPrefsSessionKeyboard_NewlineMapping)_;
+	- (UIPrefsSessionKeyboard_MetaMapping)
+	returnUIEnumForMetaPreference:(Session_EmacsMetaKey)_;
+	- (UIPrefsSessionKeyboard_NewlineMapping)
+	returnUIEnumForNewlinePreference:(Session_NewlineMode)_;
+	- (BOOL)
+	setKeyID:(UIKeypads_KeyID*)_
+	fromKeyCharPreference:(char)_;
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsSessionKeyboard_Model*
+	viewModel;
+
+@end //}
+
+
+/*!
 Implements SwiftUI interaction for the “vector graphics” panel.
 
 This is technically only a separate internal class because the main
@@ -171,34 +199,6 @@ done from this implementation file, and used by this internal class.
 	viewModel;
 
 @end //}
-
-
-/*!
-The private class interface.
-*/
-@interface PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal) //{
-
-// new methods
-	- (NSArray*)
-	primaryDisplayBindingKeys;
-	- (void)
-	resetGlobalState;
-
-// accessors
-	- (My_KeyType)
-	editedKeyType;
-	- (void)
-	setEditedKeyType:(My_KeyType)_;
-
-@end //}
-
-
-#pragma mark Variables
-namespace {
-
-My_KeyType		gEditedKeyType = kMy_KeyTypeNone; // shared across all occurrences; see "setEditedKeyType:"
-
-} // anonymous namespace
 
 
 
@@ -641,7 +641,7 @@ init
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelSessions_ResourceViewManager alloc] init] autorelease],
 										[[[PrefPanelSessions_DataFlowViewManager alloc] init] autorelease],
-										[[[PrefPanelSessions_KeyboardViewManager alloc] init] autorelease],
+										[[[PrefPanelSessions_KeyboardVC alloc] init] autorelease],
 										[[[PrefPanelSessions_GraphicsVC alloc] init] autorelease],
 									];
 	NSString*	panelName = NSLocalizedStringFromTable(@"Sessions", @"PrefPanelSessions",
@@ -2369,6 +2369,1583 @@ primaryDisplayBindingKeys
 
 
 #pragma mark -
+@implementation PrefPanelSessions_KeyboardActionHandler //{
+
+
+/*!
+Designated initializer.
+
+(2020.12)
+*/
+- (instancetype)
+init
+{
+	self = [super init];
+	if (nil != self)
+	{
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsSessionKeyboard_Model alloc] initWithRunner:self]; // transfer ownership
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.12)
+*/
+- (void)
+dealloc
+{
+	[_prefsMgr release];
+	[_viewModel release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark New Methods
+
+
+/*!
+Helper function for protocol methods; deletes the
+given preference tag and returns the Default value.
+
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetFlagWithTag:(Preferences_Tag)		aTag
+{
+	BOOL	result = NO;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:aTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", aTag);
+	}
+	
+	// return default value
+	{
+		Boolean				preferenceValue = false;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, aTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", aTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = ((preferenceValue) ? YES : NO);
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetFlagWithTag:
+
+
+/*!
+Translate from UI-specified key constant to the equivalent
+ASCII character constant stored in Preferences.
+
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "setKeyID:fromKeyCharPreference:".
+
+(2020.12)
+*/
+- (char)
+returnKeyCharPreferenceForUIEnum:(UIKeypads_KeyID)	aUIEnum
+{
+	char	result = '\0';
+	
+	
+	switch (aUIEnum)
+	{
+	case UIKeypads_KeyIDControlNull:
+		result = 0x00;
+		break;
+	
+	case UIKeypads_KeyIDControlA:
+		result = 0x01;
+		break;
+	
+	case UIKeypads_KeyIDControlB:
+		result = 0x02;
+		break;
+	
+	case UIKeypads_KeyIDControlC:
+		result = 0x03;
+		break;
+	
+	case UIKeypads_KeyIDControlD:
+		result = 0x04;
+		break;
+	
+	case UIKeypads_KeyIDControlE:
+		result = 0x05;
+		break;
+	
+	case UIKeypads_KeyIDControlF:
+		result = 0x06;
+		break;
+	
+	case UIKeypads_KeyIDControlG:
+		result = 0x07;
+		break;
+	
+	case UIKeypads_KeyIDControlH:
+		result = 0x08;
+		break;
+	
+	case UIKeypads_KeyIDControlI:
+		result = 0x09;
+		break;
+	
+	case UIKeypads_KeyIDControlJ:
+		result = 0x0A;
+		break;
+	
+	case UIKeypads_KeyIDControlK:
+		result = 0x0B;
+		break;
+	
+	case UIKeypads_KeyIDControlL:
+		result = 0x0C;
+		break;
+	
+	case UIKeypads_KeyIDControlM:
+		result = 0x0D;
+		break;
+	
+	case UIKeypads_KeyIDControlN:
+		result = 0x0E;
+		break;
+	
+	case UIKeypads_KeyIDControlO:
+		result = 0x0F;
+		break;
+	
+	case UIKeypads_KeyIDControlP:
+		result = 0x10;
+		break;
+	
+	case UIKeypads_KeyIDControlQ:
+		result = 0x11;
+		break;
+	
+	case UIKeypads_KeyIDControlR:
+		result = 0x12;
+		break;
+	
+	case UIKeypads_KeyIDControlS:
+		result = 0x13;
+		break;
+	
+	case UIKeypads_KeyIDControlT:
+		result = 0x14;
+		break;
+	
+	case UIKeypads_KeyIDControlU:
+		result = 0x15;
+		break;
+	
+	case UIKeypads_KeyIDControlV:
+		result = 0x16;
+		break;
+	
+	case UIKeypads_KeyIDControlW:
+		result = 0x17;
+		break;
+	
+	case UIKeypads_KeyIDControlX:
+		result = 0x18;
+		break;
+	
+	case UIKeypads_KeyIDControlY:
+		result = 0x19;
+		break;
+	
+	case UIKeypads_KeyIDControlZ:
+		result = 0x1A;
+		break;
+	
+	case UIKeypads_KeyIDControlLeftSquareBracket:
+		result = 0x1B;
+		break;
+	
+	case UIKeypads_KeyIDControlBackslash:
+		result = 0x1C;
+		break;
+	
+	case UIKeypads_KeyIDControlRightSquareBracket:
+		result = 0x1D;
+		break;
+	
+	case UIKeypads_KeyIDControlCaret:
+		result = 0x1E;
+		break;
+	
+	case UIKeypads_KeyIDControlUnderscore:
+		result = 0x1F;
+		break;
+	
+	default:
+		// only control keys are expected; other key codes not recognized
+		// ???
+		break;
+	}
+	
+	return result;
+}// returnKeyCharPreferenceForUIEnum:
+
+
+/*!
+Translate from UI-specified Emacs meta key constant to
+the equivalent constant stored in Preferences.
+
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "returnUIEnumForMetaPreference:".
+
+(2020.12)
+*/
+- (Session_EmacsMetaKey)
+returnMetaPreferenceForUIEnum:(UIPrefsSessionKeyboard_MetaMapping)	aUIEnum
+{
+	Session_EmacsMetaKey	result = kSession_EmacsMetaKeyOff;
+	
+	
+	switch (aUIEnum)
+	{
+	case UIPrefsSessionKeyboard_MetaMappingOptionKey:
+		result = kSession_EmacsMetaKeyOption;
+		break;
+	
+	case UIPrefsSessionKeyboard_MetaMappingShiftOptionKeys:
+		result = kSession_EmacsMetaKeyShiftOption;
+		break;
+	
+	case UIPrefsSessionKeyboard_MetaMappingOff:
+	default:
+		result = kSession_EmacsMetaKeyOff;
+		break;
+	}
+	
+	return result;
+}// returnMetaPreferenceForUIEnum:
+
+
+/*!
+Translate from UI-specified new-line mapping constant to
+the equivalent constant stored in Preferences.
+
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "returnUIEnumForNewlinePreference:".
+
+(2020.12)
+*/
+- (Session_NewlineMode)
+returnNewlinePreferenceForUIEnum:(UIPrefsSessionKeyboard_NewlineMapping)	aUIEnum
+{
+	Session_NewlineMode		result = kSession_NewlineModeMapLF;
+	
+	
+	switch (aUIEnum)
+	{
+	case UIPrefsSessionKeyboard_NewlineMappingCarriageReturn:
+		result = kSession_NewlineModeMapCR;
+		break;
+	
+	case UIPrefsSessionKeyboard_NewlineMappingCarriageReturnLineFeed:
+		result = kSession_NewlineModeMapCRLF;
+		break;
+	
+	case UIPrefsSessionKeyboard_NewlineMappingCarriageReturnNull:
+		result = kSession_NewlineModeMapCRNull;
+		break;
+	
+	case UIPrefsSessionKeyboard_NewlineMappingLineFeed:
+	default:
+		result = kSession_NewlineModeMapLF;
+		break;
+	}
+	
+	return result;
+}// returnNewlinePreferenceForUIEnum:
+
+
+/*!
+Translate from UI-specified Emacs meta-key constant to
+the equivalent constant stored in Preferences.
+
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "returnPreferenceForUIEnum:".
+
+(2020.12)
+*/
+- (UIPrefsSessionKeyboard_MetaMapping)
+returnUIEnumForMetaPreference:(Session_EmacsMetaKey)	aPreferenceValue
+{
+	UIPrefsSessionKeyboard_MetaMapping		result = UIPrefsSessionKeyboard_MetaMappingOff;
+	
+	
+	switch (aPreferenceValue)
+	{
+	case kSession_EmacsMetaKeyOption:
+		result = UIPrefsSessionKeyboard_MetaMappingOptionKey;
+		break;
+	
+	case kSession_EmacsMetaKeyShiftOption:
+		result = UIPrefsSessionKeyboard_MetaMappingShiftOptionKeys;
+		break;
+	
+	case kSession_EmacsMetaKeyOff:
+	default:
+		result = UIPrefsSessionKeyboard_MetaMappingOff;
+		break;
+	}
+	
+	return result;
+}// returnUIEnumForMetaPreference:
+
+
+/*!
+Translate from UI-specified new-line mapping constant to
+the equivalent constant stored in Preferences.
+
+TEMPORARY; this is primarily needed because it is tricky to
+expose certain Objective-C types in Swift.  If those can be
+consolidated, this mapping can go away.
+
+See also "returnPreferenceForUIEnum:".
+
+(2020.12)
+*/
+- (UIPrefsSessionKeyboard_NewlineMapping)
+returnUIEnumForNewlinePreference:(Session_NewlineMode)		aPreferenceValue
+{
+	UIPrefsSessionKeyboard_NewlineMapping		result = UIPrefsSessionKeyboard_NewlineMappingLineFeed;
+	
+	
+	switch (aPreferenceValue)
+	{
+	case kSession_NewlineModeMapCR:
+		result = UIPrefsSessionKeyboard_NewlineMappingCarriageReturn;
+		break;
+	
+	case kSession_NewlineModeMapCRLF:
+		result = UIPrefsSessionKeyboard_NewlineMappingCarriageReturnLineFeed;
+		break;
+	
+	case kSession_NewlineModeMapCRNull:
+		result = UIPrefsSessionKeyboard_NewlineMappingCarriageReturnNull;
+		break;
+	
+	case kSession_NewlineModeMapLF:
+	default:
+		result = UIPrefsSessionKeyboard_NewlineMappingLineFeed;
+		break;
+	}
+	
+	return result;
+}// returnUIEnumForNewlinePreference:
+
+
+/*!
+Translates an ASCII code into a UI binding for a control key;
+only invisible control characters are supported (i.e. in
+the range 0x00-0x1F inclusive).
+
+Returns YES if the character is supported and translated
+(written to "outKeyID"); NO if the character is invalid.
+
+(2020.12)
+*/
+- (BOOL)
+setKeyID:(UIKeypads_KeyID*)		outKeyID
+fromKeyCharPreference:(char)	aControlKeyChar
+{
+	BOOL	result = YES; // initially...
+	
+	
+	if (nullptr == outKeyID)
+	{
+		result = NO;
+	}
+	else
+	{
+		// note: could move this mapping to keypad code or perhaps find
+		// some better implementation...
+		switch (aControlKeyChar)
+		{
+		case 0x00:
+			*outKeyID = UIKeypads_KeyIDControlNull;
+			break;
+		
+		case 0x01:
+			*outKeyID = UIKeypads_KeyIDControlA;
+			break;
+		
+		case 0x02:
+			*outKeyID = UIKeypads_KeyIDControlB;
+			break;
+		
+		case 0x03:
+			*outKeyID = UIKeypads_KeyIDControlC;
+			break;
+		
+		case 0x04:
+			*outKeyID = UIKeypads_KeyIDControlD;
+			break;
+		
+		case 0x05:
+			*outKeyID = UIKeypads_KeyIDControlE;
+			break;
+		
+		case 0x06:
+			*outKeyID = UIKeypads_KeyIDControlF;
+			break;
+		
+		case 0x07:
+			*outKeyID = UIKeypads_KeyIDControlG;
+			break;
+		
+		case 0x08:
+			*outKeyID = UIKeypads_KeyIDControlH;
+			break;
+		
+		case 0x09:
+			*outKeyID = UIKeypads_KeyIDControlI;
+			break;
+		
+		case 0x0A:
+			*outKeyID = UIKeypads_KeyIDControlJ;
+			break;
+		
+		case 0x0B:
+			*outKeyID = UIKeypads_KeyIDControlK;
+			break;
+		
+		case 0x0C:
+			*outKeyID = UIKeypads_KeyIDControlL;
+			break;
+		
+		case 0x0D:
+			*outKeyID = UIKeypads_KeyIDControlM;
+			break;
+		
+		case 0x0E:
+			*outKeyID = UIKeypads_KeyIDControlN;
+			break;
+		
+		case 0x0F:
+			*outKeyID = UIKeypads_KeyIDControlO;
+			break;
+		
+		case 0x10:
+			*outKeyID = UIKeypads_KeyIDControlP;
+			break;
+		
+		case 0x11:
+			*outKeyID = UIKeypads_KeyIDControlQ;
+			break;
+		
+		case 0x12:
+			*outKeyID = UIKeypads_KeyIDControlR;
+			break;
+		
+		case 0x13:
+			*outKeyID = UIKeypads_KeyIDControlS;
+			break;
+		
+		case 0x14:
+			*outKeyID = UIKeypads_KeyIDControlT;
+			break;
+		
+		case 0x15:
+			*outKeyID = UIKeypads_KeyIDControlU;
+			break;
+		
+		case 0x16:
+			*outKeyID = UIKeypads_KeyIDControlV;
+			break;
+		
+		case 0x17:
+			*outKeyID = UIKeypads_KeyIDControlW;
+			break;
+		
+		case 0x18:
+			*outKeyID = UIKeypads_KeyIDControlX;
+			break;
+		
+		case 0x19:
+			*outKeyID = UIKeypads_KeyIDControlY;
+			break;
+		
+		case 0x1A:
+			*outKeyID = UIKeypads_KeyIDControlZ;
+			break;
+		
+		case 0x1B:
+			*outKeyID = UIKeypads_KeyIDControlLeftSquareBracket;
+			break;
+		
+		case 0x1C:
+			*outKeyID = UIKeypads_KeyIDControlBackslash;
+			break;
+		
+		case 0x1D:
+			*outKeyID = UIKeypads_KeyIDControlRightSquareBracket;
+			break;
+		
+		case 0x1E:
+			*outKeyID = UIKeypads_KeyIDControlCaret;
+			break;
+		
+		case 0x1F:
+			*outKeyID = UIKeypads_KeyIDControlUnderscore;
+			break;
+		
+		default:
+			// ???
+			result = NO;
+			break;
+		}
+	}
+	
+	return result;
+}// 
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.12)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	Boolean					isDefault = false; // reused below
+	
+	
+	// allow initialization of "isDefault..." values without triggers
+	self.viewModel.defaultOverrideInProgress = YES;
+	self.viewModel.disableWriteback = YES;
+	
+	// update settings
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKeyInterruptProcess;
+		char				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIKeypads_KeyID		keyBinding = UIKeypads_KeyIDControlNull;
+			
+			
+			// convert stored value into a UI value
+			if (NO == [self setKeyID:&keyBinding fromKeyCharPreference:preferenceValue])
+			{
+				// ???
+				Console_Warning(Console_WriteValueFourChars, "failed to translate default preference to key code for tag", preferenceTag);
+			}
+			else
+			{
+				self.viewModel.interruptKeyMapping = keyBinding;
+				self.viewModel.isDefaultInterruptKeyMapping = isDefault;
+			}
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKeySuspendOutput;
+		char				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIKeypads_KeyID		keyBinding = UIKeypads_KeyIDControlNull;
+			
+			
+			// convert stored value into a UI value
+			if (NO == [self setKeyID:&keyBinding fromKeyCharPreference:preferenceValue])
+			{
+				// ???
+				Console_Warning(Console_WriteValueFourChars, "failed to translate default preference to key code for tag", preferenceTag);
+			}
+			else
+			{
+				self.viewModel.suspendKeyMapping = keyBinding;
+				self.viewModel.isDefaultSuspendKeyMapping = isDefault;
+			}
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagKeyResumeOutput;
+		char				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			UIKeypads_KeyID		keyBinding = UIKeypads_KeyIDControlNull;
+			
+			
+			// convert stored value into a UI value
+			if (NO == [self setKeyID:&keyBinding fromKeyCharPreference:preferenceValue])
+			{
+				// ???
+				Console_Warning(Console_WriteValueFourChars, "failed to translate default preference to key code for tag", preferenceTag);
+			}
+			else
+			{
+				self.viewModel.resumeKeyMapping = keyBinding;
+				self.viewModel.isDefaultResumeKeyMapping = isDefault;
+			}
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapArrowsForEmacs;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.arrowKeysMapToEmacs = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultEmacsCursorArrows = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagEmacsMetaKey;
+		UInt16				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.selectedMetaMapping = [self returnUIEnumForMetaPreference:preferenceValue]; // SwiftUI binding
+			self.viewModel.isDefaultEmacsMetaMapping = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapDeleteToBackspace;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.deleteSendsBackspace = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultDeleteMapping = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagNewLineMapping;
+		UInt16				preferenceValue = 0;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.selectedNewlineMapping = [self returnUIEnumForNewlinePreference:preferenceValue]; // SwiftUI binding
+			self.viewModel.isDefaultNewlineMapping = isDefault; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+	self.viewModel.defaultOverrideInProgress = NO;
+	
+	// finally, specify “is editing Default” to prevent user requests for
+	// “restore to Default” from deleting the Default settings themselves!
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::SESSION);
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark Keypads_ControlKeyResponder
+
+
+/*!
+Received when the Control Keys keypad is closed while
+this class instance is the current keypad responder (as
+set by Keypads_SetResponder()).
+
+This handles the event by updating the UI and state.
+
+(2020.12)
+*/
+- (void)
+controlKeypadHidden
+{
+	// remove annotations from buttons that indicate binding to “Control Keys”
+	self.viewModel.isKeypadBindingToInterruptKey = NO;
+	self.viewModel.isKeypadBindingToSuspendKey = NO;
+	self.viewModel.isKeypadBindingToResumeKey = NO;
+}// controlKeypadHidden
+
+
+/*!
+Received when the Control Keys keypad is used to select
+a control key while this class instance is the current
+keypad responder (as set by Keypads_SetResponder()).
+
+This handles the event by updating the currently-selected
+key mapping preference, if any is in effect.
+
+(2020.12)
+*/
+- (void)
+controlKeypadSentCharacterCode:(NSNumber*)	asciiChar
+{
+	// convert to printable ASCII letter
+	UIKeypads_KeyID		keyBinding = UIKeypads_KeyIDControlS; // see below
+	
+	
+	if (NO == [self setKeyID:&keyBinding fromKeyCharPreference:[asciiChar charValue]])
+	{
+		// ???
+		Sound_StandardAlert();
+		Console_Warning(Console_WriteValue, "session keyboard UI: “Control Keys” sent back a key click with unsupported character code", [asciiChar charValue]);
+	}
+	else
+	{
+		// due to bindings in SwiftUI, the following assignments will cause button updates
+		if (self.viewModel.isKeypadBindingToInterruptKey)
+		{
+			self.viewModel.interruptKeyMapping = keyBinding;
+		}
+		else if (self.viewModel.isKeypadBindingToSuspendKey)
+		{
+			self.viewModel.suspendKeyMapping = keyBinding;
+		}
+		else if (self.viewModel.isKeypadBindingToResumeKey)
+		{
+			self.viewModel.resumeKeyMapping = keyBinding;
+		}
+		else
+		{
+			// ???
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "session keyboard UI: “Control Keys” sent back a key click but nothing is currently bound");
+		}
+		
+		// save new preferences
+		[self dataUpdated]; // "viewModel.runner.dataUpdated()" in SwiftUI
+	}
+}// controlKeypadSentCharacterCode:
+
+
+#pragma mark UIPrefsSessionKeyboard_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.12)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update settings
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagKeyInterruptProcess;
+		char					preferenceValue = [self returnKeyCharPreferenceForUIEnum:self.viewModel.interruptKeyMapping];
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagKeySuspendOutput;
+		char					preferenceValue = [self returnKeyCharPreferenceForUIEnum:self.viewModel.suspendKeyMapping];
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagKeyResumeOutput;
+		char					preferenceValue = [self returnKeyCharPreferenceForUIEnum:self.viewModel.resumeKeyMapping];
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapArrowsForEmacs;
+		Boolean				preferenceValue = self.viewModel.arrowKeysMapToEmacs;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagEmacsMetaKey;
+		VectorInterpreter_Mode	enumPrefValue = [self returnMetaPreferenceForUIEnum:self.viewModel.selectedMetaMapping];
+		UInt16					preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagMapDeleteToBackspace;
+		Boolean				preferenceValue = self.viewModel.deleteSendsBackspace;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagNewLineMapping;
+		VectorInterpreter_Mode	enumPrefValue = [self returnNewlinePreferenceForUIEnum:self.viewModel.selectedNewlineMapping];
+		UInt16					preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Displays the “Control Keys” palette, bound to the given
+setting, allowing the user to change the key mapping.
+
+See also "controlKeypadSentCharacterCode:".
+
+(2020.12)
+*/
+- (void)
+selectNewInterruptKeyWithViewModel:(UIPrefsSessionKeyboard_Model*)	viewModel
+{
+	viewModel.isKeypadBindingToInterruptKey = YES;
+	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self); // see "controlKeypadSentCharacterCode:"
+	Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
+}// selectNewInterruptKeyWithViewModel:
+
+
+/*!
+Displays the “Control Keys” palette, bound to the given
+setting, allowing the user to change the key mapping.
+
+See also "controlKeypadSentCharacterCode:".
+
+(2020.12)
+*/
+- (void)
+selectNewSuspendKeyWithViewModel:(UIPrefsSessionKeyboard_Model*)	viewModel
+{
+	viewModel.isKeypadBindingToSuspendKey = YES;
+	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self); // see "controlKeypadSentCharacterCode:"
+	Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
+}// selectNewSuspendKeyWithViewModel:
+
+
+/*!
+Displays the “Control Keys” palette, bound to the given
+setting, allowing the user to change the key mapping.
+
+See also "controlKeypadSentCharacterCode:".
+
+(2020.12)
+*/
+- (void)
+selectNewResumeKeyWithViewModel:(UIPrefsSessionKeyboard_Model*)	viewModel
+{
+	viewModel.isKeypadBindingToResumeKey = YES;
+	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self); // see "controlKeypadSentCharacterCode:"
+	Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
+}// selectNewResumeKeyWithViewModel:
+
+
+/*!
+Deletes any local override for the given key mapping
+and returns the Default value.
+
+(2020.12)
+*/
+- (UIKeypads_KeyID)
+resetToDefaultGetInterruptKeyMapping
+{
+	UIKeypads_KeyID		result = UIKeypads_KeyIDControlNull;
+	Preferences_Tag		preferenceTag = kPreferences_TagKeyInterruptProcess;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		char				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// convert stored value into a UI value
+			if (NO == [self setKeyID:&result fromKeyCharPreference:preferenceValue])
+			{
+				// ???
+				Console_Warning(Console_WriteValueFourChars, "failed to translate default preference to key code for tag", preferenceTag);
+				result = UIKeypads_KeyIDControlNull;
+			}
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetInterruptKeyMapping
+
+
+/*!
+Deletes any local override for the given key mapping
+and returns the Default value.
+
+(2020.12)
+*/
+- (UIKeypads_KeyID)
+resetToDefaultGetSuspendKeyMapping
+{
+	UIKeypads_KeyID		result = UIKeypads_KeyIDControlNull;
+	Preferences_Tag		preferenceTag = kPreferences_TagKeySuspendOutput;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		char				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// convert stored value into a UI value
+			if (NO == [self setKeyID:&result fromKeyCharPreference:preferenceValue])
+			{
+				// ???
+				Console_Warning(Console_WriteValueFourChars, "failed to translate default preference to key code for tag", preferenceTag);
+				result = UIKeypads_KeyIDControlNull;
+			}
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetSuspendKeyMapping
+
+
+/*!
+Deletes any local override for the given key mapping
+and returns the Default value.
+
+(2020.12)
+*/
+- (UIKeypads_KeyID)
+resetToDefaultGetResumeKeyMapping
+{
+	UIKeypads_KeyID		result = UIKeypads_KeyIDControlNull;
+	Preferences_Tag		preferenceTag = kPreferences_TagKeyResumeOutput;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		char				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// convert stored value into a UI value
+			if (NO == [self setKeyID:&result fromKeyCharPreference:preferenceValue])
+			{
+				// ???
+				Console_Warning(Console_WriteValueFourChars, "failed to translate default preference to key code for tag", preferenceTag);
+				result = UIKeypads_KeyIDControlNull;
+			}
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetResumeKeyMapping
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetArrowKeysMapToEmacs
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagMapArrowsForEmacs];
+}// resetToDefaultGetArrowKeysMapToEmacs
+
+
+/*!
+Deletes any local override for the given setting and
+returns the Default value.
+
+(2020.12)
+*/
+- (UIPrefsSessionKeyboard_MetaMapping)
+resetToDefaultGetSelectedMetaMapping
+{
+	UIPrefsSessionKeyboard_MetaMapping	result = UIPrefsSessionKeyboard_MetaMappingOff;
+	Preferences_Tag						preferenceTag = kPreferences_TagEmacsMetaKey;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt16				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = [self returnUIEnumForMetaPreference:STATIC_CAST(preferenceValue, Session_EmacsMetaKey)];
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetSelectedMetaMapping
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetDeleteSendsBackspace
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagMapDeleteToBackspace];
+}// resetToDefaultGetDeleteSendsBackspace
+
+
+/*!
+Deletes any local override for the given setting and
+returns the Default value.
+
+(2020.12)
+*/
+- (UIPrefsSessionKeyboard_NewlineMapping)
+resetToDefaultGetSelectedNewlineMapping
+{
+	UIPrefsSessionKeyboard_NewlineMapping	result = UIPrefsSessionKeyboard_NewlineMappingLineFeed;
+	Preferences_Tag							preferenceTag = kPreferences_TagNewLineMapping;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		UInt16				preferenceValue = 0;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = [self returnUIEnumForNewlinePreference:STATIC_CAST(preferenceValue, Session_NewlineMode)];
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetSelectedNewlineMapping
+
+
+@end //}
+
+
+#pragma mark -
+@implementation PrefPanelSessions_KeyboardVC //{
+
+
+/*!
+Designated initializer.
+
+(2020.12)
+*/
+- (instancetype)
+init
+{
+	PrefPanelSessions_KeyboardActionHandler*	actionHandler = [[PrefPanelSessions_KeyboardActionHandler alloc] init];
+	NSView*										newView = [UIPrefsSessionKeyboard_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
+	if (nil != self)
+	{
+		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2020.12)
+*/
+- (void)
+dealloc
+{
+	[_actionHandler release];
+	[super dealloc];
+}// dealloc
+
+
+#pragma mark Panel_Delegate
+
+
+/*!
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
+
+Upon return, "self" will be defined and return to "init".
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+initializeWithContext:(void*)			aContext/* PrefPanelSessions_KeyboardActionHandler*; see "init" */
+{
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelSessions_KeyboardActionHandler*	actionHandler = STATIC_CAST(aContext, PrefPanelSessions_KeyboardActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
+}// panelViewManager:initializeWithContext:
+
+
+/*!
+Specifies the editing style of this panel.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingEditType:(Panel_EditType*)	outEditType
+{
+#pragma unused(aViewManager)
+	*outEditType = kPanel_EditTypeInspector;
+}// panelViewManager:requestingEditType:
+
+
+/*!
+First entry point after view is loaded; responds by performing
+any other view-dependent initializations.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didLoadContainerView:(NSView*)			aContainerView
+{
+#pragma unused(aViewManager, aContainerView)
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
+}// panelViewManager:didLoadContainerView:
+
+
+/*!
+Specifies a sensible width and height for this panel.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+requestingIdealSize:(NSSize*)			outIdealSize
+{
+#pragma unused(aViewManager)
+	*outIdealSize = _idealFrame.size;
+}
+
+
+/*!
+Responds to a request for contextual help in this panel.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didPerformContextSensitiveHelp:(id)		sender
+{
+#pragma unused(aViewManager, sender)
+	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpWithPreferences),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
+}// panelViewManager:didPerformContextSensitiveHelp:
+
+
+/*!
+Responds just before a change to the visible state of this panel.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+willChangePanelVisibility:(Panel_Visibility)	aVisibility
+{
+#pragma unused(aViewManager)
+	if (kPanel_VisibilityHidden == aVisibility)
+	{
+		// unbind and possibly hide the “Control Keys” palette
+		Keypads_RemoveResponder(kKeypads_WindowTypeControlKeys, self);
+		
+		// remove annotations from buttons that indicate binding to “Control Keys”
+		self.actionHandler.viewModel.isKeypadBindingToInterruptKey = NO;
+		self.actionHandler.viewModel.isKeypadBindingToSuspendKey = NO;
+		self.actionHandler.viewModel.isKeypadBindingToResumeKey = NO;
+	}
+}// panelViewManager:willChangePanelVisibility:
+
+
+/*!
+Responds just after a change to the visible state of this panel.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)			aViewManager
+didChangePanelVisibility:(Panel_Visibility)		aVisibility
+{
+#pragma unused(aViewManager, aVisibility)
+}// panelViewManager:didChangePanelVisibility:
+
+
+/*!
+Responds to a change of data sets by resetting the panel to
+display the new data set.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didChangeFromDataSet:(void*)			oldDataSet
+toDataSet:(void*)						newDataSet
+{
+#pragma unused(aViewManager, oldDataSet)
+	// apply the specified settings
+	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	
+	// update the view by changing the model’s observed variables
+	[self.actionHandler updateViewModelFromPrefsMgr];
+}// panelViewManager:didChangeFromDataSet:toDataSet:
+
+
+/*!
+Last entry point before the user finishes making changes
+(or discarding them).  Responds by saving preferences.
+
+(2020.12)
+*/
+- (void)
+panelViewManager:(Panel_ViewManager*)	aViewManager
+didFinishUsingContainerView:(NSView*)	aContainerView
+userAccepted:(BOOL)						isAccepted
+{
+#pragma unused(aViewManager, aContainerView)
+	if (isAccepted)
+	{
+		Preferences_Result	prefsResult = Preferences_Save();
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to save preferences!");
+		}
+	}
+	else
+	{
+		// revert - UNIMPLEMENTED (not supported)
+	}
+}// panelViewManager:didFinishUsingContainerView:userAccepted:
+
+
+#pragma mark Panel_ViewManager
+
+
+/*!
+Returns the localized icon image that should represent
+this panel in user interface elements (e.g. it might be
+used in a toolbar item).
+
+(2020.12)
+*/
+- (NSImage*)
+panelIcon
+{
+	if (@available(macOS 11.0, *))
+	{
+		return [NSImage imageWithSystemSymbolName:@"keyboard" accessibilityDescription:self.panelName];
+	}
+	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
+}// panelIcon
+
+
+/*!
+Returns a unique identifier for the panel (e.g. it may be
+used in toolbar items that represent panels).
+
+(2020.12)
+*/
+- (NSString*)
+panelIdentifier
+{
+	return @"net.macterm.prefpanels.Sessions.Keyboard";
+}// panelIdentifier
+
+
+/*!
+Returns the localized name that should be displayed as
+a label for this panel in user interface elements (e.g.
+it might be the name of a tab or toolbar icon).
+
+(2020.12)
+*/
+- (NSString*)
+panelName
+{
+	return NSLocalizedStringFromTable(@"Keyboard", @"PrefPanelSessions", @"the name of this panel");
+}// panelName
+
+
+/*!
+Returns information on which directions are most useful for
+resizing the panel.  For instance a window container may
+disallow vertical resizing if no panel in the window has
+any reason to resize vertically.
+
+IMPORTANT:	This is only a hint.  Panels must be prepared
+			to resize in both directions.
+
+(2020.12)
+*/
+- (Panel_ResizeConstraint)
+panelResizeAxes
+{
+	return kPanel_ResizeConstraintHorizontal;
+}// panelResizeAxes
+
+
+#pragma mark PrefsWindow_PanelInterface
+
+
+/*!
+Returns the class of preferences edited by this panel.
+
+(2020.12)
+*/
+- (Quills::Prefs::Class)
+preferencesClass
+{
+	return Quills::Prefs::SESSION;
+}// preferencesClass
+
+
+@end //} PrefPanelSessions_KeyboardVC
+
+
+#pragma mark -
 @implementation PrefPanelSessions_GraphicsActionHandler //{
 
 
@@ -2595,11 +4172,11 @@ updateViewModelFromPrefsMgr
 	
 	// finally, specify “is editing Default” to prevent user requests for
 	// “restore to Default” from deleting the Default settings themselves!
-	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::TERMINAL);
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::SESSION);
 }// updateViewModelFromPrefsMgr
 
 
-#pragma mark UIPrefsTerminalEmulation_ActionHandling
+#pragma mark UIPrefsSessionGraphics_ActionHandling
 
 
 /*!
@@ -3005,1085 +4582,5 @@ preferencesClass
 
 
 @end //} PrefPanelSessions_GraphicsVC
-
-
-#pragma mark -
-@implementation PrefPanelSessions_ControlKeyValue
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-initWithPreferencesTag:(Preferences_Tag)		aTag
-contextManager:(PrefsContextManager_Object*)	aContextMgr
-{
-	self = [super initWithPreferencesTag:aTag contextManager:aContextMgr];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initWithPreferencesTag:contextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark New Methods
-
-
-/*!
-Parses the given label to find the control key (in ASCII)
-that it refers to.
-
-(4.1)
-*/
-- (BOOL)
-parseControlKey:(NSString*)		aString
-controlKeyChar:(char*)			aCharPtr
-{
-	NSCharacterSet*		controlCharLetters = [NSCharacterSet characterSetWithCharactersInString:
-												@"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"];
-	NSScanner*			scanner = nil; // created below
-	NSString*			controlCharString = nil;
-	NSString*			targetLetterString = nil;
-	BOOL				scanOK = NO;
-	BOOL				result = NO;
-	
-	
-	// first strip whitespace
-	aString = [aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	
-	scanner = [NSScanner scannerWithString:aString];
-	
-	// looking for a string of the form, e.g. "⌃C"; anything else is unexpected
-	// (IMPORTANT: since caret "^" is a valid control character name it is VITAL
-	// that the Unicode control character SYMBOL be the first part of the string
-	// so that it is seen as something different!)
-	scanOK = ([scanner scanUpToCharactersFromSet:controlCharLetters intoString:&controlCharString] &&
-				[scanner scanCharactersFromSet:controlCharLetters intoString:&targetLetterString] &&
-				[scanner isAtEnd]);
-	if (scanOK)
-	{
-		if ([targetLetterString length] == 1)
-		{
-			unichar		asUnicode = ([targetLetterString characterAtIndex:0] - '@');
-			
-			
-			if (asUnicode < 32)
-			{
-				// must be in ASCII control-key range
-				*aCharPtr = STATIC_CAST(asUnicode, char);
-			}
-			else
-			{
-				scanOK = NO;
-			}
-		}
-		else
-		{
-			scanOK = NO;
-		}
-	}
-	
-	if (scanOK)
-	{
-		result = YES;
-	}
-	else
-	{
-		result = NO;
-	}
-	
-	return result;
-}// parseControlKey:controlKeyChar:
-
-
-/*!
-Returns the preference’s current value, and indicates whether or
-not that value was inherited from a parent context.
-
-(4.1)
-*/
-- (char)
-readValueSeeIfDefault:(BOOL*)	outIsDefault
-{
-	char					result = '\0';
-	Boolean					isDefault = false;
-	Preferences_ContextRef	sourceContext = [[self prefsMgr] currentContext];
-	
-	
-	if (Preferences_ContextIsValid(sourceContext))
-	{
-		Preferences_Result	prefsResult = kPreferences_ResultOK;
-		
-		
-		prefsResult = Preferences_ContextGetData(sourceContext, [self preferencesTag],
-													sizeof(result), &result,
-													true/* search defaults */, &isDefault);
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Console_Warning(Console_WriteValue, "failed to read control-key preference, error", prefsResult);
-			result = '\0';
-		}
-	}
-	
-	if (nullptr != outIsDefault)
-	{
-		*outIsDefault = (true == isDefault);
-	}
-	
-	return result;
-}// readValueSeeIfDefault:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-stringValue
-{
-	BOOL		isDefault = NO;
-	char		asChar = [self readValueSeeIfDefault:&isDefault];
-	NSString*	result = [NSString stringWithFormat:@"⌃%c", ('@' + asChar)/* convert to printable ASCII */];
-	
-	
-	return result;
-}
-- (void)
-setStringValue:(NSString*)	aControlKeyString
-{
-	[self willSetPreferenceValue];
-	
-	if (nil == aControlKeyString)
-	{
-		// when given nothing and the context is non-Default, delete the setting;
-		// this will revert to either the Default value (in non-Default contexts)
-		// or the “factory default” value (in Default contexts)
-		BOOL	deleteOK = [[self prefsMgr] deleteDataForPreferenceTag:[self preferencesTag]];
-		
-		
-		if (NO == deleteOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to remove control-key preference");
-		}
-	}
-	else
-	{
-		BOOL					saveOK = NO;
-		Preferences_ContextRef	targetContext = [[self prefsMgr] currentContext];
-		
-		
-		if (Preferences_ContextIsValid(targetContext))
-		{
-			char	charValue = '\0';
-			
-			
-			// NOTE: The validation method will scrub the string beforehand.
-			// IMPORTANT: This is a bit weird...it essentially parses the
-			// given value to infer the setting that is actually being made.
-			// This was chosen over more “Cocoa-like” approaches such as an
-			// NSValueTransformer because the underlying value is not
-			// significantly different from a string and any transformed
-			// value would at least require a wrapping object.
-			if ([self parseControlKey:aControlKeyString controlKeyChar:&charValue])
-			{
-				Preferences_Result	prefsResult = kPreferences_ResultOK;
-				
-				
-				prefsResult = Preferences_ContextSetData(targetContext, [self preferencesTag],
-															sizeof(charValue), &charValue);
-				if (kPreferences_ResultOK == prefsResult)
-				{
-					saveOK = YES;
-				}
-			}
-		}
-		
-		if (NO == saveOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save control-key preference");
-		}
-	}
-	
-	[self didSetPreferenceValue];
-}// setStringValue:
-
-
-#pragma mark Validators
-
-
-/*!
-Validates a control key from a label, returning an appropriate
-error (and a NO result) if the value is incomprehensible.
-
-(4.1)
-*/
-- (BOOL)
-validateStringValue:(id*/* NSString* */)	ioValue
-error:(NSError**)						outError
-{
-	BOOL	result = NO;
-	
-	
-	if (nil == *ioValue)
-	{
-		result = YES;
-	}
-	else
-	{
-		char	asciiValue = '\0';
-		
-		
-		result = [self parseControlKey:(NSString*)*ioValue controlKeyChar:&asciiValue];
-		if (NO == result)
-		{
-			if (nullptr == outError)
-			{
-				// cannot return NO when the error instance is undefined
-				result = YES;
-			}
-			else
-			{
-				NSString*	errorMessage = nil;
-				
-				
-				errorMessage = NSLocalizedStringFromTable(@"This must be a control-key specification.",
-															@"PrefPanelSessions"/* table */,
-															@"message displayed for bad control-key values");
-				
-				*outError = [NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
-								code:kConstantsRegistry_NSErrorBadNumber
-								userInfo:@{ NSLocalizedDescriptionKey: errorMessage }];
-			}
-		}
-	}
-	return result;
-}// validateStringValue:error:
-
-
-#pragma mark PreferenceValue_Inherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isInherited
-{
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = NO;
-	
-	
-	UNUSED_RETURN(char)[self readValueSeeIfDefault:&result];
-	
-	return result;
-}// isInherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (void)
-setNilPreferenceValue
-{
-	[self setStringValue:nil];
-}// setNilPreferenceValue
-
-
-@end // PrefPanelSessions_ControlKeyValue
-
-
-#pragma mark -
-@implementation PrefPanelSessions_EmacsMetaValue
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
-{
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_EmacsMetaKeyOff
-																description:NSLocalizedStringFromTable
-																			(@"Off", @"PrefPanelSessions"/* table */,
-																				@"no meta key mapping")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_EmacsMetaKeyOption
-																description:NSLocalizedStringFromTable
-																			(@"⌥", @"PrefPanelSessions"/* table */,
-																				@"hold down Option for meta")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_EmacsMetaKeyShiftOption
-																description:NSLocalizedStringFromTable
-																			(@"⇧⌥", @"PrefPanelSessions"/* table */,
-																				@"hold down Shift + Option for meta")]
-										autorelease],
-									nil] autorelease];
-	
-	
-	self = [super initWithPreferencesTag:kPreferences_TagEmacsMetaKey
-											contextManager:aContextMgr
-											preferenceCType:kPreferenceValue_CTypeUInt16
-											valueDescriptorArray:descriptorArray];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-@end // PrefPanelSessions_EmacsMetaValue
-
-
-#pragma mark -
-@implementation PrefPanelSessions_NewLineValue
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
-{
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_NewlineModeMapLF
-																description:NSLocalizedStringFromTable
-																			(@"LF", @"PrefPanelSessions"/* table */,
-																				@"line-feed")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_NewlineModeMapCR
-																description:NSLocalizedStringFromTable
-																			(@"CR", @"PrefPanelSessions"/* table */,
-																				@"carriage-return")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_NewlineModeMapCRLF
-																description:NSLocalizedStringFromTable
-																			(@"CR LF", @"PrefPanelSessions"/* table */,
-																				@"carriage-return, line-feed")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
-										initWithIntegerValue:kSession_NewlineModeMapCRNull
-																description:NSLocalizedStringFromTable
-																			(@"CR NULL", @"PrefPanelSessions"/* table */,
-																				@"carriage-return, null-character")]
-										autorelease],
-									nil] autorelease];
-	
-	
-	self = [super initWithPreferencesTag:kPreferences_TagNewLineMapping
-											contextManager:aContextMgr
-											preferenceCType:kPreferenceValue_CTypeUInt16
-											valueDescriptorArray:descriptorArray];
-	if (nil != self)
-	{
-	}
-	return self;
-}// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-@end // PrefPanelSessions_NewLineValue
-
-
-#pragma mark -
-@implementation PrefPanelSessions_KeyboardViewManager
-
-
-/*!
-Designated initializer.
-
-(4.1)
-*/
-- (instancetype)
-init
-{
-	self = [super initWithNibNamed:@"PrefPanelSessionKeyboardCocoa" delegate:self context:nullptr];
-	if (nil != self)
-	{
-		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[prefsMgr release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-deleteKeySendsBackspace
-{
-	return [self->byKey objectForKey:@"deleteKeySendsBackspace"];
-}// deleteKeySendsBackspace
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-emacsArrowKeys
-{
-	return [self->byKey objectForKey:@"emacsArrowKeys"];
-}// emacsArrowKeys
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isEditingKeyInterruptProcess
-{
-	return isEditingKeyInterruptProcess;
-}// isEditingKeyInterruptProcess
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isEditingKeyResume
-{
-	return isEditingKeyResume;
-}// isEditingKeyResume
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isEditingKeySuspend
-{
-	return isEditingKeySuspend;
-}// isEditingKeySuspend
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelSessions_ControlKeyValue*)
-keyInterruptProcess
-{
-	return [self->byKey objectForKey:@"keyInterruptProcess"];
-}// keyInterruptProcess
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelSessions_ControlKeyValue*)
-keyResume
-{
-	return [self->byKey objectForKey:@"keyResume"];
-}// keyResume
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelSessions_ControlKeyValue*)
-keySuspend
-{
-	return [self->byKey objectForKey:@"keySuspend"];
-}// keySuspend
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelSessions_EmacsMetaValue*)
-mappingForEmacsMeta
-{
-	return [self->byKey objectForKey:@"mappingForEmacsMeta"];
-}// mappingForEmacsMeta
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelSessions_NewLineValue*)
-mappingForNewLine
-{
-	return [self->byKey objectForKey:@"mappingForNewLine"];
-}// mappingForNewLine
-
-
-#pragma mark Actions
-
-
-/*!
-Displays or removes the Control Keys palette.  If the
-button is not selected, it is highlighted and any click
-in the Control Keys palette will update the preference
-value.  If the button is selected, it is reset to a
-normal state and control key clicks stop affecting the
-preference value.
-
-(4.1)
-*/
-- (IBAction)
-performChooseInterruptProcessKey:(id)	sender
-{
-#pragma unused(sender)
-	[self setEditedKeyType:kMy_KeyTypeInterrupt];
-	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self);
-}// performChooseInterruptProcessKey:
-
-
-/*!
-Displays or removes the Control Keys palette.  If the
-button is not selected, it is highlighted and any click
-in the Control Keys palette will update the preference
-value.  If the button is selected, it is reset to a
-normal state and control key clicks stop affecting the
-preference value.
-
-(4.1)
-*/
-- (IBAction)
-performChooseResumeKey:(id)		sender
-{
-#pragma unused(sender)
-	[self setEditedKeyType:kMy_KeyTypeResume];
-	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self);
-}// performChooseResumeKey:
-
-
-/*!
-Displays or removes the Control Keys palette.  If the
-button is not selected, it is highlighted and any click
-in the Control Keys palette will update the preference
-value.  If the button is selected, it is reset to a
-normal state and control key clicks stop affecting the
-preference value.
-
-(4.1)
-*/
-- (IBAction)
-performChooseSuspendKey:(id)	sender
-{
-#pragma unused(sender)
-	[self setEditedKeyType:kMy_KeyTypeSuspend];
-	Keypads_SetResponder(kKeypads_WindowTypeControlKeys, self);
-}// performChooseSuspendKey:
-
-
-#pragma mark Keypads_SetResponder() Interface
-
-
-/*!
-Received when the Control Keys keypad is used to select
-a control key while this class instance is the current
-keypad responder (as set by Keypads_SetResponder()).
-
-This handles the event by updating the currently-selected
-key mapping preference, if any is in effect.
-
-(4.1)
-*/
-- (void)
-controlKeypadSentCharacterCode:(NSNumber*)	asciiChar
-{
-	// convert to printable ASCII letter
-	char const		kPrintableASCII = ('@' + [asciiChar charValue]);
-	
-	
-	// NOTE: This odd-looking approach is useful because the
-	// Cocoa bindings can already convert control-character
-	// strings (from button titles) into preference settings.
-	// Setting a control-character-like string value will
-	// actually cause a new preference to be saved.
-	switch ([self editedKeyType])
-	{
-	case kMy_KeyTypeInterrupt:
-		[[self keyInterruptProcess] setStringValue:[NSString stringWithFormat:@"⌃%c", kPrintableASCII]];
-		break;
-	
-	case kMy_KeyTypeResume:
-		[[self keyResume] setStringValue:[NSString stringWithFormat:@"⌃%c", kPrintableASCII]];
-		break;
-	
-	case kMy_KeyTypeSuspend:
-		[[self keySuspend] setStringValue:[NSString stringWithFormat:@"⌃%c", kPrintableASCII]];
-		break;
-	
-	default:
-		// no effect
-		break;
-	}
-}// controlKeypadSentCharacterCode:
-
-
-#pragma mark Panel_Delegate
-
-
-/*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
-{
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary; number of settings */];
-}// panelViewManager:initializeWithContext:
-
-
-/*!
-Specifies the editing style of this panel.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-requestingEditType:(Panel_EditType*)	outEditType
-{
-#pragma unused(aViewManager)
-	*outEditType = kPanel_EditTypeInspector;
-}// panelViewManager:requestingEditType:
-
-
-/*!
-First entry point after view is loaded; responds by performing
-any other view-dependent initializations.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-didLoadContainerView:(NSView*)			aContainerView
-{
-#pragma unused(aViewManager, aContainerView)
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
-	
-	// remember frame from XIB (it might be changed later)
-	self->idealFrame = [aContainerView frame];
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagMapDeleteToBackspace
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"deleteKeySendsBackspace"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagMapArrowsForEmacs
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"emacsArrowKeys"];
-	[self->byKey setObject:[[[PrefPanelSessions_ControlKeyValue alloc]
-								initWithPreferencesTag:kPreferences_TagKeyInterruptProcess
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"keyInterruptProcess"];
-	[self->byKey setObject:[[[PrefPanelSessions_ControlKeyValue alloc]
-								initWithPreferencesTag:kPreferences_TagKeyResumeOutput
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"keyResume"];
-	[self->byKey setObject:[[[PrefPanelSessions_ControlKeyValue alloc]
-								initWithPreferencesTag:kPreferences_TagKeySuspendOutput
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"keySuspend"];
-	[self->byKey setObject:[[[PrefPanelSessions_EmacsMetaValue alloc]
-								initWithContextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"mappingForEmacsMeta"];
-	[self->byKey setObject:[[[PrefPanelSessions_NewLineValue alloc]
-								initWithContextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"mappingForNewLine"];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
-}// panelViewManager:didLoadContainerView:
-
-
-/*!
-Specifies a sensible width and height for this panel.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-requestingIdealSize:(NSSize*)			outIdealSize
-{
-#pragma unused(aViewManager)
-	*outIdealSize = self->idealFrame.size;
-}
-
-
-/*!
-Responds to a request for contextual help in this panel.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-didPerformContextSensitiveHelp:(id)		sender
-{
-#pragma unused(aViewManager, sender)
-	CFRetainRelease		keyPhrase(UIStrings_ReturnCopy(kUIStrings_HelpSystemTopicHelpWithPreferences),
-									CFRetainRelease::kAlreadyRetained);
-	
-	
-	UNUSED_RETURN(HelpSystem_Result)HelpSystem_DisplayHelpWithSearch(keyPhrase.returnCFStringRef());
-}// panelViewManager:didPerformContextSensitiveHelp:
-
-
-/*!
-Responds just before a change to the visible state of this panel.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)			aViewManager
-willChangePanelVisibility:(Panel_Visibility)	aVisibility
-{
-#pragma unused(aViewManager)
-	if (kPanel_VisibilityHidden == aVisibility)
-	{
-		[self resetGlobalState];
-	}
-}// panelViewManager:willChangePanelVisibility:
-
-
-/*!
-Responds just after a change to the visible state of this panel.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)			aViewManager
-didChangePanelVisibility:(Panel_Visibility)		aVisibility
-{
-#pragma unused(aViewManager, aVisibility)
-}// panelViewManager:didChangePanelVisibility:
-
-
-/*!
-Responds to a change of data sets by resetting the panel to
-display the new data set.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-didChangeFromDataSet:(void*)			oldDataSet
-toDataSet:(void*)						newDataSet
-{
-#pragma unused(aViewManager, oldDataSet)
-	[self resetGlobalState];
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// now apply the specified settings
-	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
-}// panelViewManager:didChangeFromDataSet:toDataSet:
-
-
-/*!
-Last entry point before the user finishes making changes
-(or discarding them).  Responds by saving preferences.
-
-(4.1)
-*/
-- (void)
-panelViewManager:(Panel_ViewManager*)	aViewManager
-didFinishUsingContainerView:(NSView*)	aContainerView
-userAccepted:(BOOL)						isAccepted
-{
-#pragma unused(aViewManager, aContainerView)
-	[self resetGlobalState];
-	
-	if (isAccepted)
-	{
-		Preferences_Result	prefsResult = Preferences_Save();
-		
-		
-		if (kPreferences_ResultOK != prefsResult)
-		{
-			Console_Warning(Console_WriteLine, "failed to save preferences!");
-		}
-	}
-	else
-	{
-		// revert - UNIMPLEMENTED (not supported)
-	}
-}// panelViewManager:didFinishUsingContainerView:userAccepted:
-
-
-#pragma mark Panel_ViewManager
-
-
-/*!
-Returns the localized icon image that should represent
-this panel in user interface elements (e.g. it might be
-used in a toolbar item).
-
-(4.1)
-*/
-- (NSImage*)
-panelIcon
-{
-	if (@available(macOS 11.0, *))
-	{
-		return [NSImage imageWithSystemSymbolName:@"keyboard" accessibilityDescription:self.panelName];
-	}
-	return [NSImage imageNamed:@"IconForPrefPanelSessions"];
-}// panelIcon
-
-
-/*!
-Returns a unique identifier for the panel (e.g. it may be
-used in toolbar items that represent panels).
-
-(4.1)
-*/
-- (NSString*)
-panelIdentifier
-{
-	return @"net.macterm.prefpanels.Sessions.Keyboard";
-}// panelIdentifier
-
-
-/*!
-Returns the localized name that should be displayed as
-a label for this panel in user interface elements (e.g.
-it might be the name of a tab or toolbar icon).
-
-(4.1)
-*/
-- (NSString*)
-panelName
-{
-	return NSLocalizedStringFromTable(@"Keyboard", @"PrefPanelSessions", @"the name of this panel");
-}// panelName
-
-
-/*!
-Returns information on which directions are most useful for
-resizing the panel.  For instance a window container may
-disallow vertical resizing if no panel in the window has
-any reason to resize vertically.
-
-IMPORTANT:	This is only a hint.  Panels must be prepared
-			to resize in both directions.
-
-(4.1)
-*/
-- (Panel_ResizeConstraint)
-panelResizeAxes
-{
-	return kPanel_ResizeConstraintHorizontal;
-}// panelResizeAxes
-
-
-#pragma mark PrefsWindow_PanelInterface
-
-
-/*!
-Returns the class of preferences edited by this panel.
-
-(4.1)
-*/
-- (Quills::Prefs::Class)
-preferencesClass
-{
-	return Quills::Prefs::SESSION;
-}// preferencesClass
-
-
-@end // PrefPanelSessions_KeyboardViewManager
-
-
-#pragma mark -
-@implementation PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
-
-
-#pragma mark New Methods
-
-
-/*!
-Returns the names of key-value coding keys that represent the
-primary bindings of this panel (those that directly correspond
-to saved preferences).
-
-(4.1)
-*/
-- (NSArray*)
-primaryDisplayBindingKeys
-{
-	return @[@"deleteKeySendsBackspace", @"emacsArrowKeys", @"keyInterruptProcess",
-				@"keyResume", @"keySuspend", @"mappingForEmacsMeta", @"mappingForNewLine"];
-}// primaryDisplayBindingKeys
-
-
-/*!
-Resets anything that is shared across all panels.  This
-action should be performed whenever the panel is not in
-use, e.g. when it is hidden or dismissed by the user.
-
-(4.1)
-*/
-- (void)
-resetGlobalState
-{
-	[self setEditedKeyType:kMy_KeyTypeNone];
-}// resetGlobalState
-
-
-#pragma mark Accessors
-
-
-/*!
-Flags the specified key type (if any) as “currently being
-edited”.  Through bindings, this will cause zero or more
-buttons to enter a highlighted or normal state.
-
-This also changes GLOBAL state.  See "resetGlobalState".
-
-(4.1)
-*/
-- (My_KeyType)
-editedKeyType
-{
-	return gEditedKeyType;
-}
-- (void)
-setEditedKeyType:(My_KeyType)	aType
-{
-	[self willChangeValueForKey:@"isEditingKeyInterruptProcess"];
-	[self willChangeValueForKey:@"isEditingKeyResume"];
-	[self willChangeValueForKey:@"isEditingKeySuspend"];
-	gEditedKeyType = aType;
-	self->isEditingKeyInterruptProcess = (aType == kMy_KeyTypeInterrupt);
-	self->isEditingKeyResume = (aType == kMy_KeyTypeResume);
-	self->isEditingKeySuspend = (aType == kMy_KeyTypeSuspend);
-	if (aType == kMy_KeyTypeNone)
-	{
-		Keypads_RemoveResponder(kKeypads_WindowTypeControlKeys, self);
-	}
-	[self didChangeValueForKey:@"isEditingKeySuspend"];
-	[self didChangeValueForKey:@"isEditingKeyResume"];
-	[self didChangeValueForKey:@"isEditingKeyInterruptProcess"];
-}// setEditedKeyType:
-
-
-@end // PrefPanelSessions_KeyboardViewManager (PrefPanelSessions_KeyboardViewManagerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

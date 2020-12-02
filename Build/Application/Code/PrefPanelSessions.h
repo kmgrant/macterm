@@ -194,103 +194,23 @@ changes to an interface declared in a ".mm" file.
 @end //}
 
 
-/*!
-Manages bindings for the control-key preferences.
-The only valid preference tags are those that store
-raw control-key characters, such as
-"kPreferences_TagKeyInterruptProcess".
-*/
-@interface PrefPanelSessions_ControlKeyValue : PreferenceValue_InheritedSingleTag //{
-
-// initializers
-	- (instancetype)
-	initWithPreferencesTag:(Preferences_Tag)_
-	contextManager:(PrefsContextManager_Object*)_;
-
-// accessors
-	- (NSString*)
-	stringValue;
-	- (void)
-	setStringValue:(NSString*)_; // binding
-
-@end //}
+@class PrefPanelSessions_KeyboardActionHandler; // implemented internally
 
 
 /*!
-Manages bindings for the Emacs-meta-key mapping preference.
+Implements the “Keyboard” panel.
 */
-@interface PrefPanelSessions_EmacsMetaValue : PreferenceValue_Array //{
-
-// initializers
-	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
-
-@end //}
-
-
-/*!
-Manages bindings for the new-line preference.
-*/
-@interface PrefPanelSessions_NewLineValue : PreferenceValue_Array //{
-
-// initializers
-	- (instancetype)
-	initWithContextManager:(PrefsContextManager_Object*)_;
-
-@end //}
-
-
-/*!
-Loads a NIB file that defines the Keyboard pane.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
-*/
-@interface PrefPanelSessions_KeyboardViewManager : Panel_ViewManager< Keypads_ControlKeyResponder,
-																		Panel_Delegate,
-																		PrefsWindow_PanelInterface > //{
+@interface PrefPanelSessions_KeyboardVC : Panel_ViewManager< Panel_Delegate,
+																PrefsWindow_PanelInterface > //{
 {
 @private
-	PrefsContextManager_Object*		prefsMgr;
-	NSRect							idealFrame;
-	NSMutableDictionary*			byKey;
-	BOOL							isEditingKeyInterruptProcess;
-	BOOL							isEditingKeyResume;
-	BOOL							isEditingKeySuspend;
+	NSRect										_idealFrame;
+	PrefPanelSessions_KeyboardActionHandler*	_actionHandler;
 }
 
-// accessors: preference values
-	- (PreferenceValue_Flag*)
-	deleteKeySendsBackspace; // binding
-	- (PreferenceValue_Flag*)
-	emacsArrowKeys; // binding
-	- (PrefPanelSessions_ControlKeyValue*)
-	keyInterruptProcess; // binding
-	- (PrefPanelSessions_ControlKeyValue*)
-	keyResume; // binding
-	- (PrefPanelSessions_ControlKeyValue*)
-	keySuspend; // binding
-	- (PrefPanelSessions_EmacsMetaValue*)
-	mappingForEmacsMeta; // binding
-	- (PrefPanelSessions_NewLineValue*)
-	mappingForNewLine; // binding
-
-// accessors: low-level user interface state
-	- (BOOL)
-	isEditingKeyInterruptProcess; // binding
-	- (BOOL)
-	isEditingKeyResume; // binding
-	- (BOOL)
-	isEditingKeySuspend; // binding
-
-// actions
-	- (IBAction)
-	performChooseInterruptProcessKey:(id)_; // binding
-	- (IBAction)
-	performChooseResumeKey:(id)_; // binding
-	- (IBAction)
-	performChooseSuspendKey:(id)_; // binding
+// accessors
+	@property (strong) PrefPanelSessions_KeyboardActionHandler*
+	actionHandler;
 
 @end //}
 

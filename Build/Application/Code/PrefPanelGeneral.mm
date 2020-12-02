@@ -571,7 +571,7 @@ updateViewModelFromPrefsMgr
 }// updateViewModelFromPrefsMgr
 
 
-#pragma mark UIPrefsGeneralOptions_ActionHandling
+#pragma mark UIPrefsGeneralFullScreen_ActionHandling
 
 
 /*!
@@ -1156,7 +1156,7 @@ updateViewModelFromPrefsMgr
 }// updateViewModelFromPrefsMgr
 
 
-#pragma mark UIPrefsGeneralOptions_ActionHandling
+#pragma mark UIPrefsGeneralNotifications_ActionHandling
 
 
 /*!
