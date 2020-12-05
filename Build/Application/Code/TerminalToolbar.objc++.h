@@ -148,25 +148,6 @@ indicate that the item should be notified of size changes.
 
 /*!
 This protocol allows a toolbar item to monitor its view for
-changes in IDEAL size, which is simpler than navigating the
-mess of potential recursion with observers and other conflicts.
-This reduces the number of situations where the view frame
-changes to one: when its ideal layout is known.
-*/
-@protocol TerminalToolbar_ViewFrameSensitive < NSObject > //{
-
-@required
-
-	// respond to change in IDEAL view height
-	- (void)
-	view:(NSView*)_
-	didSetIdealFrameHeight:(CGFloat)_;
-
-@end //}
-
-
-/*!
-This protocol allows a toolbar item to monitor its view for
 changes in the window.  (Oddly, it is incredibly difficult
 for a toolbar item or even a toolbar to figure out what
 window it’s in.)
@@ -408,52 +389,6 @@ Toolbar item “Suspend”.
 
 
 /*!
-Toolbar item “Tabs”.
-*/
-@interface TerminalToolbar_ItemTabs : NSToolbarItem //{
-{
-@private
-	NSSegmentedControl*		segmentedControl;
-	NSArray*				targets;
-	SEL						action;
-}
-
-// new methods
-	- (void)
-	setTabTargets:(NSArray*)_
-	andAction:(SEL)_;
-
-@end //}
-
-
-/*!
-A sample object type that can be used to represent a tab in
-the object array of a TerminalToolbar_ItemTabs instance.
-*/
-@interface TerminalToolbar_TabSource : NSObject //{
-{
-@private
-	NSAttributedString*		description;
-}
-
-// initializers
-	- (instancetype)
-	initWithDescription:(NSAttributedString*)_;
-
-// actions
-	- (void)
-	performAction:(id)_;
-
-// accessors
-	- (NSAttributedString*)
-	attributedDescription;
-	- (NSString*)
-	toolTip;
-
-@end //}
-
-
-/*!
 Base toolbar item for close/minimize/zoom buttons.
 */
 @interface TerminalToolbar_ItemWindowButton : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive >
@@ -514,13 +449,7 @@ eventual truncation.
 */
 @interface TerminalToolbar_TextLabel : NSTextField //{
 {
-	BOOL										_disableFrameMonitor : 1;
-	BOOL										_frameDisplayEnabled : 1;
-	BOOL										_gradientFadeEnabled : 1;
-	BOOL										_mouseDownCanMoveWindow : 1;
-	BOOL										_smallSize : 1;
-	TerminalToolbar_TextLabelLayout				_labelLayout;
-	id< TerminalToolbar_ViewFrameSensitive >	_idealSizeMonitor;
+	TerminalToolbar_TextLabelLayout		_labelLayout;
 }
 
 // class methods
@@ -529,12 +458,10 @@ eventual truncation.
 	labelLayout:(TerminalToolbar_TextLabelLayout)_;
 
 // accessors
-	@property (assign) id< TerminalToolbar_ViewFrameSensitive >
-	idealSizeMonitor;
-	@property (assign) BOOL
-	mouseDownCanMoveWindow;
 	@property (assign) TerminalToolbar_TextLabelLayout
 	labelLayout;
+	@property (assign) BOOL
+	mouseDownCanMoveWindow;
 	@property (assign) BOOL
 	smallSize;
 
@@ -575,7 +502,6 @@ Toolbar item “Window Title”.
 																TerminalToolbar_ItemAddRemoveSensitive,
 																TerminalToolbar_ItemHasPaletteProxy,
 																TerminalToolbar_SizeSensitive,
-																TerminalToolbar_ViewFrameSensitive,
 																TerminalToolbar_ViewWindowSensitive >
 {
 @private

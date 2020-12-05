@@ -83,7 +83,6 @@ NSString*	kMy_ToolbarItemIDMacro11					= @"net.macterm.MacTerm.toolbaritem.macro
 NSString*	kMy_ToolbarItemIDMacro12					= @"net.macterm.MacTerm.toolbaritem.macro12";
 NSString*	kMy_ToolbarItemIDPrint						= @"net.macterm.MacTerm.toolbaritem.print";
 NSString*	kMy_ToolbarItemIDSuspend					= @"net.macterm.MacTerm.toolbaritem.suspend";
-NSString*	kMy_ToolbarItemIDTabs						= @"net.macterm.MacTerm.toolbaritem.tabs";
 NSString*	kMy_ToolbarItemIDWindowButtonClose			= @"net.macterm.MacTerm.toolbaritem.windowbuttonclose";
 NSString*	kMy_ToolbarItemIDWindowButtonMinimize		= @"net.macterm.MacTerm.toolbaritem.windowbuttonminimize";
 NSString*	kMy_ToolbarItemIDWindowButtonZoom			= @"net.macterm.MacTerm.toolbaritem.windowbuttonzoom";
@@ -151,6 +150,8 @@ Private properties.
 	frameDisplayEnabled;
 	@property (assign) BOOL
 	gradientFadeEnabled;
+	@property (strong) CocoaExtensions_ObserverSpec*
+	stringValueObserver;
 
 @end //}
 
@@ -164,6 +165,14 @@ The private class interface.
 	idealFrameSizeForString:(NSString*)_;
 	- (void)
 	layOutLabelText;
+
+@end //}
+
+/*!
+An NSBox subclass for the toolbar window title that responds
+to mouse events in a similar way (e.g. double-click to zoom).
+*/
+@interface TerminalToolbar_WindowTitleBox : NSBox //{
 
 @end //}
 
@@ -234,6 +243,14 @@ Private properties.
 */
 @interface TerminalToolbar_ItemMacro () //{
 
+// accessors
+	@property (strong) NSLayoutConstraint*
+	heightConstraint;
+	@property (strong) NSLayoutConstraint*
+	widthConstraintMax;
+	@property (strong) NSLayoutConstraint*
+	widthConstraintMin;
+
 @end //}
 
 /*!
@@ -255,16 +272,15 @@ The private class interface.
 	- (NSButton*)
 	actionButton;
 	- (NSSize)
-	calculateMaxSize;
+	calculateIdealSize;
 	- (NSBox*)
 	containerViewAsBox;
 	- (void)
-	resetMinMaxSizesWithAnimation:(BOOL)_;
-	- (void)
-	setStateForToolbar:(NSToolbar*)_
-	needsLayout:(BOOL)_;
+	setStateForToolbar:(NSToolbar*)_;
 	- (void)
 	setTagUnconditionally:(NSInteger)_;
+	- (void)
+	updateSizeConstraints;
 	- (void)
 	updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)_;
 
@@ -313,10 +329,12 @@ Private properties.
 @interface TerminalToolbar_ItemWindowTitle () //{
 
 // accessors
-	@property (assign) BOOL
-	disableFrameMonitor;
-	@property (strong) TerminalToolbar_WindowTitleLabel*
-	textView;
+	@property (strong) NSLayoutConstraint*
+	heightConstraint;
+	@property (strong) NSLayoutConstraint*
+	widthConstraintMax;
+	@property (strong) NSLayoutConstraint*
+	widthConstraintMin;
 
 @end //}
 
@@ -326,10 +344,16 @@ The private class interface.
 @interface TerminalToolbar_ItemWindowTitle (TerminalToolbar_ItemWindowTitleInternal) //{
 
 // new methods
-	- (void)
-	resetMinMaxSizesForHeight:(CGFloat)_;
+	- (NSSize)
+	calculateIdealSize;
+	- (NSBox*)
+	containerViewAsBox;
 	- (void)
 	setStateForToolbar:(NSToolbar*)_;
+	- (TerminalToolbar_WindowTitleLabel*)
+	textView;
+	- (void)
+	updateSizeConstraints;
 
 @end //}
 
@@ -723,10 +747,6 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	{
 		result = [[[TerminalToolbar_ItemSuspend alloc] init] autorelease];
 	}
-	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDTabs])
-	{
-		result = [[[TerminalToolbar_ItemTabs alloc] init] autorelease];
-	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDWindowButtonClose])
 	{
 		result = [[[TerminalToolbar_ItemWindowButtonClose alloc] initWithItemIdentifier:itemIdentifier] autorelease];
@@ -808,7 +828,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 	
 	if (self->allowExperimentalItems)
 	{
-		//[result addObject:kMy_ToolbarItemIDTabs];
+		// (nothing yet)
 	}
 	
 	[result addObjectsFromArray:@[
@@ -2045,8 +2065,9 @@ initWithItemIdentifier:(NSString*)		anItemIdentifier
 	self = [super initWithItemIdentifier:anItemIdentifier];
 	if (nil != self)
 	{
-		NSButton*	actionButton = nil;
-		NSBox*		borderView = nil;
+		NSButton*				actionButton = nil;
+		NSBox*					borderView = nil;
+		NSLayoutConstraint*		newConstraint = nil; // reused below
 		
 		
 		actionButton = [NSButton buttonWithTitle:@"" target:nil action:@selector(performActionForMacro:)];
@@ -2055,6 +2076,7 @@ initWithItemIdentifier:(NSString*)		anItemIdentifier
 		//actionButton.showsBorderOnlyWhileMouseInside = YES;
 		actionButton.bordered = NO;
 		actionButton.lineBreakMode = NSLineBreakByTruncatingTail;
+		actionButton.translatesAutoresizingMaskIntoConstraints = NO;
 		
 		borderView = [[[NSBox alloc] initWithFrame:NSZeroRect] autorelease];
 		borderView.boxType = NSBoxCustom;
@@ -2062,6 +2084,25 @@ initWithItemIdentifier:(NSString*)		anItemIdentifier
 		borderView.borderColor = [NSColor clearColor]; // (changes if customizing)
 		borderView.borderWidth = 1.0;
 		borderView.contentView = actionButton; // retain
+		borderView.translatesAutoresizingMaskIntoConstraints = NO;
+		
+		// set some constant constraints (others are defined by
+		// "updateSizeConstraints"); constraints MUST be archived
+		// because toolbar items copy from customization palette
+		newConstraint = [actionButton.leadingAnchor constraintEqualToAnchor:borderView.leadingAnchor constant:4.0/* arbitrary */];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [borderView.trailingAnchor constraintEqualToAnchor:actionButton.trailingAnchor constant:4.0/* arbitrary */];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [actionButton.topAnchor constraintEqualToAnchor:borderView.topAnchor constant:2.0/* arbitrary */];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [actionButton.bottomAnchor constraintEqualToAnchor:borderView.bottomAnchor];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		self.view = borderView; // retain
+		[self updateSizeConstraints];
 		
 		self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:@"" action:actionButton.action keyEquivalent:@""] autorelease];
 		
@@ -2072,7 +2113,6 @@ initWithItemIdentifier:(NSString*)		anItemIdentifier
 		self.action = actionButton.action;
 		self.target = actionButton.target;
 		self.enabled = YES; // see "validate"
-		self.view = borderView; // retain
 		// see "setTag:", which sets an icon and label (the tag MUST be
 		// set before the item can be used)
 		[self setTagUnconditionally:0];
@@ -2167,7 +2207,8 @@ copyWithZone:(NSZone*)	zone
 	asSelf->_preferenceChangeListener = [_preferenceChangeListener copy];
 	[asSelf->_preferenceChangeListener setTarget:asSelf];
 	
-	// views do not support NSCopying; archive instead
+	// views do not support NSCopying; archive instead (also, be sure that
+	// any NSLayoutConstraint instances have "shouldBeArchived = YES")
 	//asSelf.view = [self.view copy];
 	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self.view requiringSecureCoding:NO error:&error];
 	if (nil != error)
@@ -2238,7 +2279,7 @@ validate
 	// updated the menu item representation
 	self.menuFormRepresentation.keyEquivalent = @""; // do not override keys displayed in main menu bar items
 	
-	[self setStateForToolbar:self.toolbar needsLayout:NO];
+	[self setStateForToolbar:self.toolbar];
 }// validate
 
 
@@ -2255,7 +2296,8 @@ so that the window layout can adapt if necessary.
 didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 {
 #pragma unused(aToolbar)
-	[self resetMinMaxSizesWithAnimation:NO];
+	[self updateSizeConstraints];
+	self.view.needsDisplay = YES;
 }// didChangeDisplayModeForToolbar:
 
 
@@ -2277,7 +2319,8 @@ willEnterToolbar:(NSToolbar*)	aToolbar
 										(NSToolbarSizeModeSmall == aToolbar.sizeMode))
 										? NSControlSizeSmall
 										: NSControlSizeRegular);
-	[self setStateForToolbar:aToolbar needsLayout:YES];
+	[self setStateForToolbar:aToolbar];
+	[self updateSizeConstraints];
 }// item:willEnterToolbar:
 
 
@@ -2340,7 +2383,9 @@ didChangeSizeForToolbar:(NSToolbar*)	aToolbar
 										(NSToolbarSizeModeSmall == aToolbar.sizeMode))
 										? NSControlSizeSmall
 										: NSControlSizeRegular);
-	[self setStateForToolbar:aToolbar needsLayout:YES];
+	[self setStateForToolbar:aToolbar];
+	[self updateSizeConstraints];
+	self.view.needsDisplay = YES;
 }// didChangeSizeForToolbar:
 
 
@@ -2506,21 +2551,17 @@ the title).  A minimum size is enforced.
 (2020.05)
 */
 - (NSSize)
-calculateMaxSize
+calculateIdealSize
 {
-	NSBox*		containerBox = [self containerViewAsBox];
-	NSButton*	actionButton = [self actionButton];
-	
-	
-	[containerBox sizeToFit];
-	
-	CGFloat const	idealWidth = (actionButton.intrinsicContentSize.width + (2.0 * containerBox.contentViewMargins.width) + 4/* arbitrary pad */);
-	CGFloat const	idealHeight = (actionButton.intrinsicContentSize.height + (2.0 * containerBox.contentViewMargins.height));
+	NSBox*			containerBox = [self containerViewAsBox];
+	NSButton*		actionButton = [self actionButton];
+	CGFloat const	idealWidth = ceil(actionButton.intrinsicContentSize.width + (2.0 * containerBox.contentViewMargins.width) + (2.0 * containerBox.borderWidth));
+	CGFloat const	idealHeight = ceil(actionButton.intrinsicContentSize.height + (2.0 * containerBox.contentViewMargins.height) + (2.0 * containerBox.borderWidth));
 	NSSize			result = NSMakeSize(std::max<CGFloat>(24, idealWidth), idealHeight);
 	
 	
 	return result;
-}// calculateMaxSize
+}// calculateIdealSize
 
 
 /*!
@@ -2549,25 +2590,6 @@ containerViewAsBox
 
 
 /*!
-Return the ideal height for this item (fitting the title).
-A minimum size is enforced.
-
-(2020.05)
-*/
-- (void)
-resetMinMaxSizesWithAnimation:(BOOL)	anAnimationFlag
-{
-	[[self containerViewAsBox] sizeToFit];
-	
-	NSSize		idealSize = [self calculateMaxSize];
-	
-	
-	self.minSize = NSMakeSize(std::max<CGFloat>(24, idealSize.width), idealSize.height);
-	self.maxSize = NSMakeSize(std::max<CGFloat>(24, idealSize.width), idealSize.height);
-}// resetMinMaxSizesWithAnimation:
-
-
-/*!
 Synchronizes other properties of the toolbar item with
 the properties of its embedded text view, preparing for
 display in the given toolbar (which may or may not be
@@ -2577,7 +2599,6 @@ the item’s current toolbar).
 */
 - (void)
 setStateForToolbar:(NSToolbar*)		aToolbar
-needsLayout:(BOOL)					aLayoutFlag
 {
 	if (aToolbar.customizationPaletteIsRunning)
 	{
@@ -2586,11 +2607,6 @@ needsLayout:(BOOL)					aLayoutFlag
 	else
 	{
 		[self containerViewAsBox].borderColor = [NSColor clearColor];
-	}
-	
-	if (aLayoutFlag)
-	{
-		[self resetMinMaxSizesWithAnimation:YES];
 	}
 }// setStateForToolbar:
 
@@ -2627,8 +2643,55 @@ setTagUnconditionally:(NSInteger)	aTag
 	self.paletteLabel = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d", @"name for macro icon in toolbar customization palette; %1$d will be a macro number from 1 to 12"), (int)aTag];
 	self.toolTip = self.paletteLabel; // initial value (overridden if macro name is set)
 	
-	[self resetMinMaxSizesWithAnimation:NO];
+	[self updateSizeConstraints];
 }// setTagUnconditionally:
+
+
+/*!
+Specify minimum and maximum width and height, as well as
+priorities for content hugging and compression resistance.
+
+(2020.12)
+*/
+- (void)
+updateSizeConstraints
+{
+	NSSize		idealSize = [self calculateIdealSize];
+	
+	
+	if (nil != self.heightConstraint)
+	{
+		self.heightConstraint.active = NO;
+		[self.view removeConstraint:self.heightConstraint];
+	}
+	if (nil != self.widthConstraintMax)
+	{
+		self.widthConstraintMax.active = NO;
+		[self.view removeConstraint:self.widthConstraintMax];
+	}
+	if (nil != self.widthConstraintMin)
+	{
+		self.widthConstraintMin.active = NO;
+		[self.view removeConstraint:self.widthConstraintMin];
+	}
+	
+	// constraints MUST be archived because toolbar items are
+	// copied from the customization palette (via archiving)
+	self.heightConstraint = [self.view.heightAnchor constraintEqualToConstant:idealSize.height];
+	self.heightConstraint.active = YES;
+	self.heightConstraint.shouldBeArchived = YES;
+	self.widthConstraintMax = [self.view.widthAnchor constraintLessThanOrEqualToConstant:std::max<CGFloat>(24, idealSize.width)];
+	self.widthConstraintMax.active = YES;
+	self.widthConstraintMax.shouldBeArchived = YES;
+	self.widthConstraintMin = [self.view.widthAnchor constraintGreaterThanOrEqualToConstant:std::max<CGFloat>(24, idealSize.width)];
+	self.widthConstraintMin.active = YES;
+	self.widthConstraintMin.shouldBeArchived = YES;
+	
+	[self.view setContentHuggingPriority:NSLayoutPriorityDefaultHigh forOrientation:NSLayoutConstraintOrientationHorizontal];
+	[self.view setContentHuggingPriority:NSLayoutPriorityDefaultHigh forOrientation:NSLayoutConstraintOrientationVertical];
+	[self.view setContentCompressionResistancePriority:NSLayoutPriorityDefaultHigh forOrientation:NSLayoutConstraintOrientationHorizontal];
+	[self.view setContentCompressionResistancePriority:NSLayoutPriorityDefaultHigh forOrientation:NSLayoutConstraintOrientationVertical];
+}// updateSizeConstraints
 
 
 /*!
@@ -2641,6 +2704,9 @@ assigned index in the current macro set.
 updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
 {
 	NSButton*	actionButton = [self actionButton];
+	NSString*	genericMacroName = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d",
+																					@"macro unnamed toolbar item description; %1$d will be a macro number from 1 to 12"),
+																					(int)self.tag];
 	BOOL		usePlainAction = ((nullptr == aMacroSet) || (0 == self.tag));
 	
 	
@@ -2694,33 +2760,60 @@ updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)		aMacroSet
 	{
 		// set an arbitrary default title when there is no active macro
 		// (or in initial state of unassigned macro index)
-		NSString*	newTitle = [NSString stringWithFormat:@"%d", (int)self.tag];
-		NSImage*	newImage = [NSImage imageNamed:NSImageNameActionTemplate];
+		NSImage*	newImage = nil;
 		
 		
+		if (@available(macOS 11.0, *))
+		{
+			NSString*	symbolName = [NSString stringWithFormat:@"%d.square", (int)self.tag]; // e.g. "1.square", "2.square", ...
+			
+			
+			newImage = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:genericMacroName];
+		}
+		else
+		{
+			newImage = [NSImage imageNamed:NSImageNameActionTemplate];
+		}
+		
+		// for plain macros (with no distinct name), show the macro number;
+		// this can be shown as image-only or as image with text below but
+		// the toolbars on Big Sur make it harder to fit text underneath 
+	#if 1
 		// animator performance does not seem to be good; avoid unless
 		// the value is actually different
 		if (newImage != actionButton.image)
 		{
-			[actionButton animator].image = [NSImage imageNamed:NSImageNameActionTemplate];
+			[actionButton animator].image = newImage;
+			actionButton.imagePosition = NSImageOnly;
+		}
+		
+		[actionButton animator].title = @"";
+		self.toolTip = genericMacroName;
+	#else
+		// animator performance does not seem to be good; avoid unless
+		// the value is actually different
+		if (newImage != actionButton.image)
+		{
+			[actionButton animator].image = newImage;
 			actionButton.imagePosition = NSImageAbove;
 		}
 		
+		NSString*	newTitle = [NSString stringWithFormat:@"%d", (int)self.tag];
 		if (NO == [actionButton.title isEqualToString:newTitle])
 		{
 			[actionButton animator].title = newTitle;
-			self.toolTip = [NSString stringWithFormat:NSLocalizedString(@"Macro %1$d", @"macro toolbar item tooltip; %1$d will be a macro number from 1 to 12"), (int)self.tag];
+			self.toolTip = genericMacroName;
 		}
+	#endif
 	}
 	
-	[self setStateForToolbar:self.toolbar needsLayout:YES];
+	[self setStateForToolbar:self.toolbar];
+	[self updateSizeConstraints];
 	
 	[NSAnimationContext endGrouping];
 	
-	if (nil != actionButton.title)
-	{
-		self.menuFormRepresentation.title = actionButton.title;
-	}
+	// note: title and enabled state of "menuFormRepresentation" is set
+	// by the toolbar item validation process (see "validate")
 	self.menuFormRepresentation.target = actionButton.target;
 	self.menuFormRepresentation.tag = self.tag; // used to identify macro
 	
@@ -3552,315 +3645,6 @@ setStateFromScreen:(TerminalScreenRef)		aScreen
 
 
 #pragma mark -
-@implementation TerminalToolbar_TabSource //{
-
-
-#pragma mark Initializers
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initWithDescription:(NSAttributedString*)	aDescription
-{
-	self = [super init];
-	if (nil != self)
-	{
-		self->description = [aDescription copy];
-	}
-	return self;
-}// initWithDescription:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[description release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-The attributed string describing the title of the tab; this
-is used in the segmented control as well as any overflow menu.
-
-(4.0)
-*/
-- (NSAttributedString*)
-attributedDescription
-{
-	return description;
-}// attributedDescription
-
-
-/*!
-The tooltip that is displayed when the mouse points to the
-tab’s segment in the toolbar.
-
-(4.0)
-*/
-- (NSString*)
-toolTip
-{
-	return @"";
-}// toolTip
-
-
-#pragma mark Actions
-
-
-/*!
-Performs the action for this tab (namely, to bring something
-to the front).  The sender will be an instance of the
-"TerminalToolbar_ItemTabs" class.
-
-(4.0)
-*/
-- (void)
-performAction:(id) sender
-{
-#pragma unused(sender)
-}// performAction:
-
-
-@end //} TerminalToolbar_TabSource
-
-
-#pragma mark -
-@implementation TerminalToolbar_ItemTabs //{
-
-
-#pragma mark Initializers
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-init
-{
-	self = [super initWithItemIdentifier:kMy_ToolbarItemIDTabs];
-	if (nil != self)
-	{
-		self->segmentedControl = [[NSSegmentedControl alloc] initWithFrame:NSZeroRect];
-		self->segmentedControl.target = self;
-		self->segmentedControl.action = @selector(performSegmentedControlAction:);
-		self->segmentedControl.segmentStyle = NSSegmentStyleTexturedSquare;
-		
-		//self.action = @selector(performToolbarItemAction:);
-		//self.target = self;
-		self.enabled = YES;
-		self.view = self->segmentedControl;
-		self.minSize = NSMakeSize(120, 25); // arbitrary (height changes dynamically)
-		self.maxSize = NSMakeSize(1024, 25); // arbitrary (height changes dynamically)
-		self.label = @"";
-		self.paletteLabel = NSLocalizedString(@"Tabs", @"toolbar item name; for tabs");
-		
-		[self setTabTargets:@[
-								[[[TerminalToolbar_TabSource alloc]
-									initWithDescription:[[[NSAttributedString alloc]
-															initWithString:NSLocalizedString
-																			(@"Tab 1", @"toolbar item tabs; default segment 0 name")]
-															autorelease]] autorelease],
-								[[[TerminalToolbar_TabSource alloc]
-									initWithDescription:[[[NSAttributedString alloc]
-															initWithString:NSLocalizedString
-																			(@"Tab 2", @"toolbar item tabs; default segment 1 name")]
-															autorelease]] autorelease],
-							]
-							andAction:nil];
-	}
-	return self;
-}// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[self->segmentedControl release];
-	[self->targets release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Actions
-
-
-/*!
-Responds to an action in the menu of a toolbar item by finding
-the corresponding object in the target array and making it
-perform the action set by "setTabTargets:andAction:".
-
-(4.0)
-*/
-- (void)
-performMenuAction:(id)		sender
-{
-	if (nullptr != self->action)
-	{
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		NSMenu*			menu = [asMenuItem menu];
-		
-		
-		if (nil != menu)
-		{
-			unsigned int const		kIndex = STATIC_CAST([menu indexOfItem:asMenuItem], unsigned int);
-			
-			
-			if (kIndex < [self->targets count])
-			{
-				UNUSED_RETURN(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
-			}
-		}
-	}
-}// performMenuAction:
-
-
-/*!
-Responds to an action in a segmented control by finding the
-corresponding object in the target array and making it perform
-the action set by "setTabTargets:andAction:".
-
-(4.0)
-*/
-- (void)
-performSegmentedControlAction:(id)		sender
-{
-	if (nullptr != self->action)
-	{
-		if (self->segmentedControl == sender)
-		{
-			unsigned int const		kIndex = STATIC_CAST([self->segmentedControl selectedSegment], unsigned int);
-			
-			
-			if (kIndex < [self->targets count])
-			{
-				UNUSED_RETURN(id)[[self->targets objectAtIndex:kIndex] performSelector:self->action withObject:self];
-			}
-		}
-	}
-}// performSegmentedControlAction:
-
-
-#pragma mark New Methods
-
-
-/*!
-Specifies the model on which the tab display is based.
-
-When any tab is selected the specified selector is invoked
-on one of the given objects, with this toolbar item as the
-sender.  This is true no matter how the item is found: via
-segmented control or overflow menu.
-
-Each object:
-- MUST respond to an "attributedDescription" selector that
-  returns an "NSAttributedString*" for that tab’s label.
-- MAY respond to a "toolTip" selector to return a string for
-  that tab’s tooltip.
-
-See the class "TerminalToolbar_TabSource" which is an example
-of a valid object for the array.
-
-In the future, additional selectors may be prescribed for the
-object (to set an icon, for instance).
-
-(4.0)
-*/
-- (void)
-setTabTargets:(NSArray*)	anObjectArray
-andAction:(SEL)				aSelector
-{
-	if (self->targets != anObjectArray)
-	{
-		[self->targets release];
-		self->targets = [anObjectArray copy];
-	}
-	self->action = aSelector;
-	
-	// update the user interface
-	[self->segmentedControl setSegmentCount:[self->targets count]];
-	[self->segmentedControl setSelectedSegment:0];
-	{
-		NSMenu*			menuRep = [[[NSMenu alloc] init] autorelease];
-		NSMenuItem*		menuItem = [[[NSMenuItem alloc] initWithTitle:@"" action:self->action keyEquivalent:@""] autorelease];
-		unsigned int	i = 0;
-		
-		
-		// with "performMenuAction:" and "performSegmentedControlAction:",
-		// actions can be handled consistently by the caller; those
-		// methods reroute invocations by menu item or segmented control,
-		// and present the same sender (this NSToolbarItem) instead
-		for (id object in self->targets)
-		{
-			NSMenuItem*		newItem = [[[NSMenuItem alloc] initWithTitle:[[object attributedDescription] string]
-																			action:@selector(performMenuAction:) keyEquivalent:@""]
-										autorelease];
-			
-			
-			newItem.attributedTitle = [object attributedDescription];
-			newItem.target = self;
-			[self->segmentedControl setLabel:[[object attributedDescription] string] forSegment:i];
-			if ([object respondsToSelector:@selector(toolTip)])
-			{
-				[[self->segmentedControl cell] setToolTip:[object toolTip] forSegment:i];
-			}
-			[menuRep addItem:newItem];
-			++i;
-		}
-		menuItem.submenu = menuRep;
-		self.menuFormRepresentation = menuItem;
-	}
-}// setTabTargets:andAction:
-
-
-#pragma mark NSCopying
-
-
-/*!
-Returns a copy of this object.
-
-(2018.03)
-*/
-- (id)
-copyWithZone:(NSZone*)	zone
-{
-	id							result = [super copyWithZone:zone];
-	TerminalToolbar_ItemTabs*	asSelf = nil;
-	
-	
-	assert([result isKindOfClass:TerminalToolbar_ItemTabs.class]); // parent supports NSCopying so this should have been done properly
-	asSelf = STATIC_CAST(result, TerminalToolbar_ItemTabs*);
-	asSelf->segmentedControl = [self->segmentedControl copy];
-	asSelf->targets = [self->targets copy];
-	asSelf->action = self->action;
-	
-	return result;
-}// copyWithZone:
-
-
-@end //} TerminalToolbar_ItemTabs
-
-
-#pragma mark -
 @implementation TerminalToolbar_ItemWindowButton //{
 
 
@@ -3956,7 +3740,7 @@ the window button to redraw itself.
 windowDidBecomeMain:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	[self.view setNeedsDisplay:YES];
+	self.view.needsDisplay = YES;
 }// windowDidBecomeMain:
 
 
@@ -4036,7 +3820,7 @@ context:(void*)						aContext
 					[self ignoreWhenObject:asWindow postsNote:NSWindowDidBecomeMainNotification];
 				}
 				
-				//NSLog(@"window changed: %@", aChangeDictionary); // debug	
+				//NSLog(@"window changed: %@", aChangeDictionary); // debug
 				if ((nil != newValue) && ([NSNull null] != newValue))
 				{
 					assert([newValue isKindOfClass:NSWindow.class]);
@@ -4149,6 +3933,10 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
 																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
 		self.paletteLabel = NSLocalizedString(@"Close", @"toolbar item name; for closing the window");
+		self.menuFormRepresentation = [[[NSMenuItem alloc]
+										initWithTitle:self.paletteLabel
+														action:self.button.action
+														keyEquivalent:@""] autorelease];
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -4218,6 +4006,10 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
 																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
 		self.paletteLabel = NSLocalizedString(@"Minimize", @"toolbar item name; for minimizing the window");
+		self.menuFormRepresentation = [[[NSMenuItem alloc]
+										initWithTitle:self.paletteLabel
+														action:self.button.action
+														keyEquivalent:@""] autorelease];
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -4287,6 +4079,10 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
 																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
 		self.paletteLabel = NSLocalizedString(@"Zoom", @"toolbar item name; for zooming the window or controlling Full Screen");
+		self.menuFormRepresentation = [[[NSMenuItem alloc]
+										initWithTitle:self.paletteLabel
+														action:self.button.action
+														keyEquivalent:@""] autorelease];
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -4341,8 +4137,12 @@ validate
 #pragma mark Internally-Declared Properties
 
 /*!
-This temporarily prevents any response to a change in the
-frame of the view, which is important to prevent recursion.
+Disables this particular view’s "textViewFrameDidChange:".
+This may seem redundant with "postsFrameChangedNotifications"
+from NSView but that property can auto-trigger a notification
+when its value is set back to YES, which makes it impossible
+to prevent a loop when disabling/restoring notifications from
+the callback itself (there would be an endless loop and crash).
 */
 @synthesize disableFrameMonitor = _disableFrameMonitor;
 
@@ -4363,15 +4163,13 @@ text is truncated.
 */
 @synthesize gradientFadeEnabled = _gradientFadeEnabled;
 
+/*!
+Stores information on text "stringValue" property observer.
+*/
+@synthesize stringValueObserver = _stringValueObserver;
+
 
 #pragma mark Externally-Declared Properties
-
-/*!
-A weaker form of frame observer that is only told about
-changes to the “ideal” layout (helps toolbar items to
-match it).
-*/
-@synthesize idealSizeMonitor = _idealSizeMonitor;
 
 
 /*!
@@ -4413,7 +4211,6 @@ labelLayout:(TerminalToolbar_TextLabelLayout)	aDirection
 	
 	[NSGraphicsContext saveGraphicsState];
 	[NSGraphicsContext setCurrentContext:asContextObj];
-	// INCOMPLETE: no center fading is implemented
 	if (kTerminalToolbar_TextLabelLayoutRightJustified == aDirection)
 	{
 		NSGradient*		grayGradient = [[[NSGradient alloc] initWithColors:@[[NSColor blackColor], [NSColor whiteColor], [NSColor whiteColor], [NSColor whiteColor], [NSColor whiteColor]]]
@@ -4464,16 +4261,29 @@ initWithFrame:(NSRect)	aRect
 		_disableFrameMonitor = NO;
 		_frameDisplayEnabled = NO;
 		_gradientFadeEnabled = NO;
-		_idealSizeMonitor = nil;
+		_stringValueObserver = [self newObserverFromSelector:@selector(stringValue) ofObject:self
+																options:(NSKeyValueChangeSetting)];
+		_labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified; // see also "lineBreakMode" below
 		_mouseDownCanMoveWindow = NO;
 		_smallSize = NO;
+		
+		// initialize various text field or view properties (most of these
+		// can be changed later to have the desired effect)
+		self.allowsDefaultTighteningForTruncation = YES;
+		self.bezeled = NO;
+		self.bordered = NO;
+		self.drawsBackground = NO;
+		self.editable = NO;
+		//self.lineBreakMode = NSLineBreakByTruncatingTail; // note: set in "layOutLabelText"
+		self.maximumNumberOfLines = 1;
+		self.selectable = NO;
+		self.translatesAutoresizingMaskIntoConstraints = NO;
+		
 		self.postsFrameChangedNotifications = YES;
 		[self whenObject:self postsNote:NSViewFrameDidChangeNotification
 							performSelector:@selector(textViewFrameDidChange:)];
 		
-		// initialize various label properties
-		self.allowsDefaultTighteningForTruncation = YES;
-		self.labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified;
+		[self layOutLabelText];
 	}
 	return self;
 }// initWithFrame:
@@ -4488,6 +4298,8 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
+	[self removeObserverSpecifiedWith:self.stringValueObserver];
+	[_stringValueObserver release];
 	[super dealloc];
 }// dealloc
 
@@ -4522,19 +4334,19 @@ setLabelLayout:(TerminalToolbar_TextLabelLayout)	aLayoutValue
 
 
 /*!
-Responds when the window title toolbar item frame is changed
-by a system API such as a direct modification of the frame
-property on that view.
+Responds when the label view frame is changed by a system API
+such as a direct modification of the view’s "frame" property.
 
-This item attempts to choose a better font size when it does
-not have enough space for the whole string.
+See "layOutLabelText" for specific behavior.
 
 (2018.03)
 */
 - (void)
 textViewFrameDidChange:(NSNotification*)	aNotification
 {
-	if (NO == self.disableFrameMonitor)
+	// note: system should prevent this method from even being called
+	// while "postsFrameChangedNotifications" is NO but check anyway
+	if (self.postsFrameChangedNotifications && (NO == self.disableFrameMonitor))
 	{
 		if (NO == [aNotification.object isKindOfClass:TerminalToolbar_TextLabel.class])
 		{
@@ -4552,6 +4364,61 @@ textViewFrameDidChange:(NSNotification*)	aNotification
 }// textViewFrameDidChange:
 
 
+#pragma mark NSKeyValueObserving
+
+
+/*!
+Intercepts changes to key values by updating dependent
+states such as the display.
+
+(2020.12)
+*/
+- (void)
+observeValueForKeyPath:(NSString*)	aKeyPath
+ofObject:(id)						anObject
+change:(NSDictionary*)				aChangeDictionary
+context:(void*)						aContext
+{
+	BOOL	handled = NO;
+	
+	
+	if (aContext == self.stringValueObserver)
+	{
+		handled = YES;
+		
+		if (NSKeyValueChangeSetting == [[aChangeDictionary objectForKey:NSKeyValueChangeKindKey] intValue])
+		{
+			if (KEY_PATH_IS_SEL(aKeyPath, @selector(stringValue)))
+			{
+				id		newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
+				
+				
+				//NSLog(@"stringValue changed: %@", aChangeDictionary); // debug
+				if (nil != newValue)
+				{
+					assert([newValue isKindOfClass:NSString.class]);
+					//NSString*	asString = STATIC_CAST(newValue, NSString*);
+					
+					
+					// optimistically reset to largest possible font (layout will
+					// shrink if there is not in fact enough room)
+					[self layOutLabelText];
+				}
+			}
+			else
+			{
+				Console_Warning(Console_WriteValueCFString, "valid observer context is not handling key path", BRIDGE_CAST(aKeyPath, CFStringRef));
+			}
+		}
+	}
+	
+	if (NO == handled)
+	{
+		[super observeValueForKeyPath:aKeyPath ofObject:anObject change:aChangeDictionary context:aContext];
+	}
+}// observeValueForKeyPath:ofObject:change:context:
+
+
 #pragma mark NSView
 
 
@@ -4564,6 +4431,10 @@ for truncation.
 - (void)
 drawRect:(NSRect)	aRect
 {
+	// save/restore context upon return from function;
+	// note that "super" is called within this,
+	// allowing (for instance) gradient masks to
+	// apply to system-supplied text drawing
 	CGContextRef			graphicsContext = [[NSGraphicsContext currentContext] CGContext];
 	CGContextSaveRestore	_(graphicsContext);
 	
@@ -4606,6 +4477,31 @@ drawRect:(NSRect)	aRect
 }// drawRect:
 
 
+/*!
+Calculates the intrinsic content size using the largest
+expected font, as opposed to the current font.
+
+This is overridden because the view scales the font when
+there is not enough space; the best size is the one that
+allows the font to be as large as possible.
+
+(2020.12)
+*/
+- (NSSize)
+intrinsicContentSize
+{
+	NSSize		result = NSZeroSize;
+	NSFont*		originalFont = self.font;
+	
+	
+	self.font = [NSFont titleBarFontOfSize:((self.smallSize) ? 14 : 16)];
+	result = [super intrinsicContentSize];
+	self.font = originalFont;
+	
+	return result;
+}// intrinsicContentSize
+
+
 @end //} TerminalToolbar_TextLabel
 
 
@@ -4617,9 +4513,10 @@ drawRect:(NSRect)	aRect
 
 
 /*!
-Uses the text view’s own "sizeToFit" temporarily to
-calculate the size that the given string would
-require with the current font.
+Returns the size that best fits the given string with
+current font settings.
+
+See also "layOutLabelText".
 
 (2018.03)
 */
@@ -4631,21 +4528,20 @@ idealFrameSizeForString:(NSString*)		aString
 	
 	if (nil != aString)
 	{
-		BOOL		originalDisableFlag = self.disableFrameMonitor;
 		NSString*	originalValue = self.stringValue;
-		NSRect		originalFrame = self.frame;
 		
 		
-		// during measurement-related frame changes, ignore notifications
-		self.disableFrameMonitor = YES;
-		
+		[self removeObserverSpecifiedWith:_stringValueObserver];
+		[_stringValueObserver release];
 		self.stringValue = aString;
-		[self sizeToFit];
-		result = CGSizeMake(NSWidth(self.frame), NSHeight(self.frame));
-		self.frame = originalFrame;
+		[self invalidateIntrinsicContentSize];
+		// use superclass for intrinsic size so that current font is used
+		// (otherwise, current class overrides to use largest font)
+		result = [super intrinsicContentSize];
 		self.stringValue = originalValue; // remove sizing string
-		
-		self.disableFrameMonitor = originalDisableFlag;
+		[self invalidateIntrinsicContentSize];
+		_stringValueObserver = [self newObserverFromSelector:@selector(stringValue) ofObject:self
+																options:(NSKeyValueChangeSetting)];
 	}
 	
 	return result;
@@ -4654,8 +4550,7 @@ idealFrameSizeForString:(NSString*)		aString
 
 /*!
 Examines the current text and updates properties to make
-the ideal layout: possibly new font, etc.  This also
-informs the "idealSizeMonitor" object, if any.
+the ideal layout: possibly new font, etc.
 
 Invoke this method whenever the text needs to be reset
 (frame change, string value change, initialization, etc.).
@@ -4667,7 +4562,7 @@ layOutLabelText
 {
 	BOOL const		isSmallSize = self.smallSize;
 	CGFloat			originalWidth = NSWidth(self.frame);
-	CGSize			requiredSize = CGSizeMake(1 + originalWidth, NSHeight(self.frame));
+	//CGFloat			originalHeight = NSHeight(self.frame);
 	NSString*		layoutString = (((nil == self.stringValue) || (0 == self.stringValue.length))
 									? @"Âgp" // arbitrary; lay out with text, not a blank space
 									: self.stringValue);
@@ -4701,11 +4596,8 @@ layOutLabelText
 	// test a variety of font sizes to find the most reasonable one;
 	// if text ends up too long anyway then view will squish/truncate
 	// (TEMPORARY...should any of this be a user preference?)
-	if (requiredSize.width > originalWidth)
-	{
-		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 14 : 16)];
-		requiredSize = [self idealFrameSizeForString:layoutString];
-	}
+	self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 14 : 16)];
+	CGSize		requiredSize = [self idealFrameSizeForString:layoutString];
 	if (requiredSize.width > originalWidth)
 	{
 		self.font = [NSFont titleBarFontOfSize:((isSmallSize) ? 13 : 14)];
@@ -4736,31 +4628,121 @@ layOutLabelText
 	// if there is still not enough room, fade out the text
 	self.gradientFadeEnabled = (requiredSize.width > originalWidth);
 	
-	// NOTE: this currently is buggy in a dynamic resize scenario, since
-	// the font is updated one iteration ahead of the next toolbar layout;
-	// if the user were to stop resizing as soon as the font changes, the
-	// text is clipped instead of actually using the new minimum size
-	// (TEMPORARY; find a fix for this somehow; no forced layout seems to
-	// work...)
-	[self setNeedsDisplay:YES];
-	
-	// update frame without triggering notifications (as a frame update
-	// may have caused this layout function to be invoked originally)
-	{
-		BOOL const	wasPostingNotifications = self.postsFrameChangedNotifications;
-		
-		
-		self.postsFrameChangedNotifications = NO;
-		self.frame = NSMakeRect(self.frame.origin.x, self.frame.origin.y, NSWidth(self.frame), requiredSize.height);
-		self.postsFrameChangedNotifications = wasPostingNotifications; // may trigger immediate posting of notification
-	}
-	
-	// notify any observer
-	[self.idealSizeMonitor view:self didSetIdealFrameHeight:requiredSize.height];
+	// if the font changes then the ideal text height will change;
+	// also, the appearance has changed and text must be redrawn
+	BOOL		didNotify = self.disableFrameMonitor;
+	NSRect		oldFrame = self.frame;
+	CGFloat		newHeight = 0;
+	self.disableFrameMonitor = YES; // disable this view’s callback, otherwise setting "frame" will loop back to this point
+	[self sizeToFit];
+	newHeight = self.frame.size.height;
+	self.frame = NSMakeRect(oldFrame.origin.x, oldFrame.origin.y, oldFrame.size.width, newHeight);
+	self.disableFrameMonitor = didNotify;
+	self.needsDisplay = YES;
 }// layOutLabelText
 
 
 @end //} TerminalToolbar_TextLabel (TerminalToolbar_TextLabelInternal)
+
+
+#pragma mark -
+@implementation TerminalToolbar_WindowTitleBox //{
+
+
+#pragma mark NSResponder
+
+
+/*!
+Since this appears to be the title of a window, this tries
+to handle mouse-down events in a way that is similar to a
+normal window.
+
+Currently this is a placeholder; "mouseDownCanMoveWindow"
+is set to YES on this view so it is not necessary to use
+a custom mouse-down event to let the user move the window.
+In the future though it may be desirable to implement
+something like a command-click-path-select menu, in which
+case this event override would be required.
+
+(2020.12)
+*/
+- (void)
+mouseDown:(NSEvent*)	anEvent
+{
+	[super mouseDown:anEvent];
+}// mouseDown:
+
+
+/*!
+Since this appears to be the title of a window, this
+tries to handle a double-click event in a way that
+is similar to a normal window.  For example, it
+could cause the window to automatically zoom based
+on user preferences.
+
+(2020.12)
+*/
+- (void)
+mouseUp:(NSEvent*)	anEvent
+{
+	if (anEvent.clickCount != 2)
+	{
+		[super mouseUp:anEvent];
+	}
+	else
+	{
+		// emulate standard system behavior, e.g. to auto-zoom; currently
+		// this can be found using NSGlobalDomain and AppleActionOnDoubleClick
+		// (value will be "Minimize" or "Maximize"); note that if this ever
+		// fails to work, it is still possible for the user to get the
+		// expected behavior by clicking elsewhere in the window frame (e.g.
+		// at the top) but this is more useful because it is a bigger area
+		NSUserDefaults*					userDefaults = [NSUserDefaults standardUserDefaults];
+		NSDictionary< NSString*, id >*	prefsDict = [userDefaults persistentDomainForName:NSGlobalDomain];
+		id								prefValue = [prefsDict objectForKey:@"AppleActionOnDoubleClick"];
+		
+		
+		if (nil == prefValue)
+		{
+			if (nil == prefsDict)
+			{
+				Console_Warning(Console_WriteLine, "double-click cannot be handled, no global domain data found");
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "double-click cannot be handled, no window double-click preference found");
+			}
+		}
+		else
+		{
+			if ([prefValue isKindOfClass:NSString.class])
+			{
+				NSString*	asString = STATIC_CAST(prefValue, NSString*);
+				
+				
+				if ([asString isEqualToString:@"Minimize"])
+				{
+					[self.window performMiniaturize:nil];
+				}
+				else if ([asString isEqualToString:@"Maximize"])
+				{
+					[self.window performZoom:nil];
+				}
+				else
+				{
+					Console_Warning(Console_WriteValueCFString, "double-click cannot be handled, received unexpected preference value", BRIDGE_CAST(asString, CFStringRef));
+				}
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "double-click cannot be handled, received non-string for double-click preference value");
+			}
+		}
+	}
+}// mouseUp:
+
+
+@end //}
 
 
 #pragma mark -
@@ -4878,7 +4860,7 @@ context:(void*)						aContext
 				id		newValue = [aChangeDictionary objectForKey:NSKeyValueChangeNewKey];
 				
 				
-				//NSLog(@"title changed: %@", aChangeDictionary); // debug	
+				//NSLog(@"title changed: %@", aChangeDictionary); // debug
 				if (nil != newValue)
 				{
 					assert([newValue isKindOfClass:NSString.class]);
@@ -4886,7 +4868,6 @@ context:(void*)						aContext
 					
 					
 					self.stringValue = asString;
-					[self layOutLabelText];
 				}
 			}
 			else
@@ -4969,7 +4950,6 @@ viewWillMoveToWindow:(NSWindow*)	aWindow
 				
 				// is this necessary, or is the observer called automatically from the above?
 				self.stringValue = ((nil != aWindow.title) ? aWindow.title : @"");
-				[self layOutLabelText];
 			}
 		}
 	}
@@ -4981,21 +4961,6 @@ viewWillMoveToWindow:(NSWindow*)	aWindow
 
 #pragma mark -
 @implementation TerminalToolbar_ItemWindowTitle //{
-
-
-#pragma mark Internally-Declared Properties
-
-/*!
-This temporarily prevents any response to a change in the
-frame of the item’s view, which is important to prevent
-recursion.
-*/
-@synthesize disableFrameMonitor = _disableFrameMonitor;
-
-/*!
-The view that displays the window title text.
-*/
-@synthesize textView = _textView;
 
 
 #pragma mark Initializers
@@ -5012,27 +4977,64 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	self = [super initWithItemIdentifier:anIdentifier];
 	if (nil != self)
 	{
-		self->_disableFrameMonitor = NO;
-		self->_textView = [[TerminalToolbar_WindowTitleLabel alloc] initWithFrame:NSZeroRect];
-		self.textView.idealSizeMonitor = self;
-		self.textView.windowMonitor = self;
-		self.textView.mouseDownCanMoveWindow = YES;
-		self.textView.bezeled = NO;
-		self.textView.bordered = NO;
-		self.textView.drawsBackground = NO;
-		self.textView.editable = NO;
-		//self.textView.font = [NSFont titleBarFontOfSize:9]; // set in TerminalToolbar_WindowTitleLabel
-		//self.textView.selectable = YES;
-		self.textView.selectable = NO;
+		TerminalToolbar_WindowTitleLabel*	textView = nil;
+		TerminalToolbar_WindowTitleBox*		borderView = nil;
+		NSLayoutConstraint*					newConstraint = nil; // reused below
+		
+		
+		textView = [[[TerminalToolbar_WindowTitleLabel alloc] initWithFrame:NSZeroRect] autorelease];
+		textView.windowMonitor = self;
+		textView.mouseDownCanMoveWindow = YES;
+		//textView.font = [NSFont titleBarFontOfSize:9]; // set in TerminalToolbar_WindowTitleLabel
+		textView.labelLayout = kTerminalToolbar_TextLabelLayoutCenterJustified; // subclasses can change this; NOTE: also consulted to see if toolbar item should auto-center
+		textView.translatesAutoresizingMaskIntoConstraints = NO;
+		
+		// note: special border subclass is used to get title double-click behavior (otherwise the same as NSBox)
+		borderView = [[[TerminalToolbar_WindowTitleBox alloc] initWithFrame:NSZeroRect] autorelease];
+		borderView.boxType = NSBoxCustom;
+		borderView.borderType = NSLineBorder;
+		borderView.borderColor = [NSColor clearColor]; // (changes if customizing)
+		borderView.borderWidth = 1.0;
+		borderView.contentView = textView; // retain
+		borderView.translatesAutoresizingMaskIntoConstraints = NO;
+		
+		// set some constant constraints (others are defined by
+		// "updateSizeConstraints"); constraints MUST be archived
+		// because toolbar items copy from customization palette
+		newConstraint = [textView.leadingAnchor constraintEqualToAnchor:borderView.leadingAnchor constant:4.0/* arbitrary */];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [borderView.trailingAnchor constraintEqualToAnchor:textView.trailingAnchor constant:4.0/* arbitrary */];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [textView.centerYAnchor constraintEqualToAnchor:borderView.centerYAnchor];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [borderView.topAnchor constraintLessThanOrEqualToAnchor:textView.topAnchor];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		newConstraint = [borderView.bottomAnchor constraintGreaterThanOrEqualToAnchor:textView.bottomAnchor];
+		newConstraint.active = YES;
+		newConstraint.shouldBeArchived = YES;
+		self.view = borderView; // retain
+		[self updateSizeConstraints];
+		
+		// TEMPORARY: "minSize" and "maxSize" now trigger deprecation warnings
+		// in the debugger but these settings are required for “flexible width”
+		// behavior, despite Auto Layout (reported as FB8929720)
+		self.minSize = NSMakeSize(100, 24); // arbitrary
+		self.maxSize = NSMakeSize(2048, 32); // arbitrary
 		
 		self.action = @selector(performToolbarItemAction:);
 		self.target = self;
 		self.enabled = YES;
-		self.view = self.textView;
 		self.label = NSLocalizedString(@"Window Title", @"toolbar item name; for window title");
 		self.paletteLabel = NSLocalizedString(@"Window Title", @"toolbar item name; for window title");
 		self.toolTip = self.label;
-		[self setStateForToolbar:nullptr];
+		[self setStateForToolbar:nil];
+		
+		assert(textView == [self textView]); // test accessor
+		assert(borderView == [self containerViewAsBox]); // test accessor
 	}
 	return self;
 }// initWithItemIdentifier:
@@ -5047,7 +5049,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[_textView release];
 	[super dealloc];
 }// dealloc
 
@@ -5070,43 +5071,6 @@ performToolbarItemAction:(id)	sender
 }// performToolbarItemAction:
 
 
-#pragma mark Notifications
-
-
-/*!
-Keeps track of sheets being displayed so that the “is
-customization sheet running” flag can be checked and
-the display of a boundary can be toggled.
-
-NOTE:	It is also possible for the system to enable
-		customization by command-dragging toolbar items,
-		and it isn’t clear yet how to detect this mode.
-
-(2018.03)
-*/
-- (void)
-windowWillBeginSheet:(NSNotification*)		aNotification
-{
-#pragma unused(aNotification)
-	[self setStateForToolbar:self.toolbar]; // shows frame rectangle
-}// windowWillBeginSheet:
-
-
-/*!
-Keeps track of sheets being displayed so that the “is
-customization sheet running” flag can be checked and
-the display of a boundary can be toggled.
-
-(2018.03)
-*/
-- (void)
-windowDidEndSheet:(NSNotification*)		aNotification
-{
-#pragma unused(aNotification)
-	[self setStateForToolbar:self.toolbar]; // hides frame rectangle
-}// windowDidEndSheet:
-
-
 #pragma mark NSCopying
 
 
@@ -5125,23 +5089,45 @@ copyWithZone:(NSZone*)	zone
 	
 	assert([result isKindOfClass:TerminalToolbar_ItemWindowTitle.class]); // parent supports NSCopying so this should have been done properly
 	asSelf = STATIC_CAST(result, TerminalToolbar_ItemWindowTitle*);
-	asSelf->_disableFrameMonitor = self->_disableFrameMonitor;
 	
-	// views do not support NSCopying; archive instead
-	//asSelf->_textView = [self->_textView copy];
-	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self->_textView requiringSecureCoding:NO error:&error];
+	// views do not support NSCopying; archive instead (also, be sure that
+	// any NSLayoutConstraint instances have "shouldBeArchived = YES")
+	//asSelf.view = [self.view copy];
+	NSData*		archivedView = [NSKeyedArchiver archivedDataWithRootObject:self.view requiringSecureCoding:NO error:&error];
 	if (nil != error)
 	{
-		Console_Warning(Console_WriteValueCFString, "failed to copy window title toolbar item, archiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+		Console_Warning(Console_WriteValueCFString, "failed to copy toolbar item border, archiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
 	}
-	asSelf->_textView = [NSKeyedUnarchiver unarchivedObjectOfClass:TerminalToolbar_WindowTitleLabel.class fromData:archivedView error:&error];
+	asSelf.view = [NSKeyedUnarchiver unarchivedObjectOfClass:NSBox.class fromData:archivedView error:&error];
 	if (nil != error)
 	{
-		Console_Warning(Console_WriteValueCFString, "failed to copy window title toolbar item, unarchiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
+		Console_Warning(Console_WriteValueCFString, "failed to copy toolbar item border, unarchiving error", BRIDGE_CAST(error.localizedDescription, CFStringRef));
 	}
 	
 	return result;
 }// copyWithZone:
+
+
+#pragma mark NSToolbarItem
+
+
+/*!
+Validates the item by updating its appearance.
+
+(2020.12)
+*/
+- (void)
+validate
+{
+	TerminalToolbar_WindowTitleLabel*	textView = [self textView];
+	
+	
+	self.enabled = [self.view.window isKeyWindow];
+	//self.menuFormRepresentation.enabled = self.enabled;
+	textView.enabled = self.enabled;
+	
+	[self setStateForToolbar:self.toolbar];
+}// validate
 
 
 #pragma mark TerminalToolbar_DisplayModeSensitive
@@ -5157,8 +5143,8 @@ so that the window layout can adapt if necessary.
 didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 {
 #pragma unused(aToolbar)
-	[self.textView layOutLabelText];
-	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)];
+	[self updateSizeConstraints];
+	self.view.needsDisplay = YES;
 }// didChangeDisplayModeForToolbar:
 
 
@@ -5169,6 +5155,11 @@ didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 Called when the specified item has been added to the
 specified toolbar.
 
+If the layout of the "textView" is centered (i.e.
+"kTerminalToolbar_TextLabelLayoutCenterJustified"),
+the "centeredItemIdentifier" of the given toolbar is
+set to be the given item.
+
 (2018.03)
 */
 - (void)
@@ -5178,7 +5169,15 @@ willEnterToolbar:(NSToolbar*)	aToolbar
 	assert(self == anItem);
 	self.textView.smallSize = ((nil != aToolbar) &&
 								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
+	if (kTerminalToolbar_TextLabelLayoutCenterJustified == self.textView.labelLayout)
+	{
+		// auto-center this toolbar item if possible (in practice
+		// the system will shift the item a bit if it is not
+		// reasonable to fit other items around it)
+		aToolbar.centeredItemIdentifier = anItem.itemIdentifier;
+	}
 	[self setStateForToolbar:aToolbar];
+	[self updateSizeConstraints];
 }// item:willEnterToolbar:
 
 
@@ -5194,6 +5193,10 @@ didExitToolbar:(NSToolbar*)		aToolbar
 {
 #pragma unused(aToolbar)
 	assert(self == anItem);
+	if (kTerminalToolbar_TextLabelLayoutCenterJustified == self.textView.labelLayout)
+	{
+		aToolbar.centeredItemIdentifier = nil;
+	}
 }// item:didExitToolbar:
 
 
@@ -5232,43 +5235,19 @@ didChangeSizeForToolbar:(NSToolbar*)	aToolbar
 {
 	self.textView.smallSize = ((nil != aToolbar) &&
 								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
-	[self.textView layOutLabelText];
-	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)];
+	[self setStateForToolbar:aToolbar];
+	[self updateSizeConstraints];
+	self.view.needsDisplay = YES;
 }// didChangeSizeForToolbar:
-
-
-#pragma mark TerminalToolbar_ViewFrameSensitive
-
-
-/*!
-Updates the minimum and maximum sizes to match.
-
-(2018.03)
-*/
-- (void)
-view:(NSView*)						aView
-didSetIdealFrameHeight:(CGFloat)	aPixelHeight
-{
-	if (aView != self.textView)
-	{
-		Console_Warning(Console_WriteLine, "window title toolbar item is being notified of a different view’s ideal-frame changes");
-	}
-	else
-	{
-		[self resetMinMaxSizesForHeight:aPixelHeight];
-	}
-}// view:didSetIdealFrameHeight:
 
 
 #pragma mark TerminalToolbar_ViewWindowSensitive
 
 
 /*!
-Updates the minimum and maximum sizes to match after
-the window title view enters the toolbar and presumably
-adopts that window’s title value.  Also keeps track of
-any toolbar customization sheets on the window so that
-the boundary can be displayed in the item.
+Updates the window title item accordingly after the
+window title view enters the toolbar and presumably
+adopts that window’s title value.
 
 (2018.03)
 */
@@ -5276,51 +5255,37 @@ the boundary can be displayed in the item.
 view:(NSView*)					aView
 didEnterWindow:(NSWindow*)		aWindow
 {
+	// note: notification is sent for text view but that is not the main view
 	if (aView != self.textView)
 	{
 		Console_Warning(Console_WriteLine, "window title toolbar item is being notified of a different view’s window changes");
 	}
 	else
 	{
-		// start monitoring the toolbar customization sheet (NOTE: this
-		// does not seem to be sent for Full Screen windows; for now,
-		// the Customize item is disabled in Full Screen)
-		if (nil != aWindow)
-		{
-			[self whenObject:aWindow postsNote:NSWindowWillBeginSheetNotification
-								performSelector:@selector(windowWillBeginSheet:)];
-			[self whenObject:aWindow postsNote:NSWindowDidEndSheetNotification
-								performSelector:@selector(windowDidEndSheet:)];
-		}
-		
 		// set initial state of item for new window’s toolbar
 		[self setStateForToolbar:aWindow.toolbar];
+		[self updateSizeConstraints];
 	}
 }// view:didEnterWindow:
 
 
 /*!
-Stops tracking the toolbar customization sheet of the
-view’s current window (since that window is about to
-change).
+Notified when the toolbar item’s window is about to
+change.
 
 (2018.03)
 */
 - (void)
 willChangeWindowForView:(NSView*)	aView
 {
+	// note: notification is sent for text view but that is not the main view
 	if (aView != self.textView)
 	{
 		Console_Warning(Console_WriteLine, "window title toolbar item is being notified of a different view’s window changes");
 	}
 	else
 	{
-		// stop monitoring the toolbar customization sheet
-		if (nil != self.textView.window)
-		{
-			[self ignoreWhenObject:self.textView.window postsNote:NSWindowWillBeginSheetNotification];
-			[self ignoreWhenObject:self.textView.window postsNote:NSWindowDidEndSheetNotification];
-		}
+		// (nothing needed)
 	}
 }// willChangeWindowForView:
 
@@ -5336,17 +5301,48 @@ willChangeWindowForView:(NSView*)	aView
 
 
 /*!
-Uses a sizing string to attempt to make the text view
-automatically return its ideal height.
+Update and return the ideal size for this item (fitting
+the title).  A minimum size is enforced.
 
-(2018.03)
+(2020.12)
 */
-- (void)
-resetMinMaxSizesForHeight:(CGFloat)		aHeight
+- (NSSize)
+calculateIdealSize
 {
-	self.minSize = NSMakeSize(60, aHeight);
-	self.maxSize = NSMakeSize(2048, aHeight);
-}// resetMinMaxSizesForHeight:
+	NSBox*								containerBox = [self containerViewAsBox];
+	TerminalToolbar_WindowTitleLabel*	textView = [self textView];
+	CGFloat const	idealWidth = ceil(textView.intrinsicContentSize.width + (2.0 * containerBox.contentViewMargins.width) + (2.0 * containerBox.borderWidth));
+	CGFloat const	idealHeight = ceil(textView.intrinsicContentSize.height + (2.0 * containerBox.contentViewMargins.height) + (2.0 * containerBox.borderWidth));
+	NSSize			result = NSMakeSize(std::max<CGFloat>(120/* arbitrary */, idealWidth), idealHeight);
+	
+	
+	return result;
+}// calculateIdealSize
+
+
+/*!
+Return the main item view as an NSBox class for convenience.
+
+(2020.12)
+*/
+- (NSBox*)
+containerViewAsBox
+{
+	NSBox*	result = nil;
+	
+	
+	if ([self.view isKindOfClass:NSBox.class])
+	{
+		result = STATIC_CAST(self.view, NSBox*);
+	}
+	
+	if (nil == result)
+	{
+		Console_Warning(Console_WriteLine, "window title toolbar item container view is not NSBox type!");
+	}
+	
+	return result;
+}// containerViewAsBox
 
 
 /*!
@@ -5360,15 +5356,23 @@ the item’s current toolbar).
 - (void)
 setStateForToolbar:(NSToolbar*)		aToolbar
 {
+	if (aToolbar.customizationPaletteIsRunning)
+	{
+		[self containerViewAsBox].borderColor = [NSColor lightGrayColor]; // color attempts to match “space item” style
+	}
+	else
+	{
+		[self containerViewAsBox].borderColor = [NSColor clearColor];
+	}
+	
 	//BOOL const		isSmallSize = ((nil != aToolbar) &&
 	//								(NSToolbarSizeModeSmall == aToolbar.sizeMode));
 	BOOL const		isTextOnly = ((nil != aToolbar) &&
 									(NSToolbarDisplayModeLabelOnly == aToolbar.displayMode));
 	
 	
-	self.textView.frameDisplayEnabled = (aToolbar.customizationPaletteIsRunning);
+	//self.textView.frameDisplayEnabled = (aToolbar.customizationPaletteIsRunning);
 	self.textView.toolTip = self.textView.stringValue;
-	[self resetMinMaxSizesForHeight:NSHeight(self.textView.frame)]; // see also "view:didSetIdealFrameHeight:"
 	
 	// this allows text-only toolbars to still display the window title string
 	self.label = ((isTextOnly)
@@ -5378,6 +5382,88 @@ setStateForToolbar:(NSToolbar*)		aToolbar
 	self.menuFormRepresentation = [[[NSMenuItem alloc] initWithTitle:self.textView.stringValue action:nil keyEquivalent:@""] autorelease];
 	self.menuFormRepresentation.enabled = NO;
 }// setStateForToolbar:
+
+
+/*!
+Return the text view used for displaying the title.
+
+(2020.12)
+*/
+- (TerminalToolbar_WindowTitleLabel*)
+textView
+{
+	TerminalToolbar_WindowTitleLabel*	result = nil;
+	
+	
+	for (NSView* aView in self.view.subviews)
+	{
+		if ([aView isKindOfClass:TerminalToolbar_WindowTitleLabel.class])
+		{
+			result = STATIC_CAST(aView, TerminalToolbar_WindowTitleLabel*);
+			break;
+		}
+	}
+	
+	if (nil == result)
+	{
+		//Console_Warning(Console_WriteLine, "window title toolbar item text view is not defined!"); // debug
+	}
+	
+	return result;
+}// textView
+
+
+/*!
+Specify minimum and maximum width and height, as well as
+priorities for content hugging and compression resistance.
+
+(2020.12)
+*/
+- (void)
+updateSizeConstraints
+{
+	NSSize		idealSize = [self calculateIdealSize];
+	
+	
+	if (nil != self.heightConstraint)
+	{
+		self.heightConstraint.active = NO;
+		[self.view removeConstraint:self.heightConstraint];
+	}
+	if (nil != self.widthConstraintMax)
+	{
+		self.widthConstraintMax.active = NO;
+		[self.view removeConstraint:self.widthConstraintMax];
+	}
+	if (nil != self.widthConstraintMin)
+	{
+		self.widthConstraintMin.active = NO;
+		[self.view removeConstraint:self.widthConstraintMin];
+	}
+	
+	// constraints MUST be archived because toolbar items are
+	// copied from the customization palette (via archiving)
+	self.heightConstraint = [self.view.heightAnchor constraintEqualToConstant:idealSize.height];
+	self.heightConstraint.active = YES;
+	self.heightConstraint.shouldBeArchived = YES;
+#if 0
+	self.widthConstraintMax = [self.view.widthAnchor constraintLessThanOrEqualToConstant:2048];
+	//self.widthConstraintMax = [self.view.widthAnchor constraintLessThanOrEqualToConstant:idealSize.width];
+	self.widthConstraintMax.active = YES;
+	self.widthConstraintMax.shouldBeArchived = YES;
+#endif
+	self.widthConstraintMin = [self.view.widthAnchor constraintGreaterThanOrEqualToConstant:60];
+	//self.widthConstraintMin = [self.view.widthAnchor constraintGreaterThanOrEqualToConstant:idealSize.width];
+	self.widthConstraintMin.active = YES;
+	self.widthConstraintMin.shouldBeArchived = YES;
+	// NOTE: see initializer, "minSize" and "maxSize" are still set
+	// because “flexible width” does not seem to work otherwise
+	
+	[self.view setContentHuggingPriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
+	[self.view setContentHuggingPriority:NSLayoutPriorityDefaultHigh forOrientation:NSLayoutConstraintOrientationVertical];
+	[self.view setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
+	[self.view setContentCompressionResistancePriority:NSLayoutPriorityDefaultHigh forOrientation:NSLayoutConstraintOrientationVertical];
+}// updateSizeConstraints
 
 
 @end //} TerminalToolbar_ItemWindowTitle (TerminalToolbar_ItemWindowTitleInternal)
