@@ -1886,11 +1886,8 @@ recalculateIdealHeight
 		self->idealFrameSize.height += self->helpTextUI.frame.size.height;
 	}
 	
-	// do not truncate the icon, no matter how little text there is
-	self->idealFrameSize.height = MAX(self->idealFrameSize.height, self->idealIconSize.height);
-	
 	// ensure panel is large enough to fit its top and bottom margins
-	self->idealFrameSize.height += 40; // 20 padding at top, 20 padding at bottom
+	self->idealFrameSize.height += 50;
 	
 	// notify observers (e.g. to resize any parent window)
 	[self postNote:kPanel_IdealSizeDidChangeNotification];

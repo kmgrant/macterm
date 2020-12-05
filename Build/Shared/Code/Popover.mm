@@ -832,9 +832,19 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 		// not really a popover but a window-modal dialog for
 		// displaying an alert message
 		[self applyWindowStyle:kPopover_WindowStyleAlertAppModal];
-		self.viewMargin = 5.0f;
-		self.borderWidth = 6.0f;
-		self.cornerRadius = 3.0f;
+		if (@available(macOS 11.0, *))
+		{
+			// adjust to look better with new sheet effect
+			self.viewMargin = 2.0f;
+			self.borderWidth = 3.0f;
+			self.cornerRadius = 3.0f;
+		}
+		else
+		{
+			self.viewMargin = 5.0f;
+			self.borderWidth = 6.0f;
+			self.cornerRadius = 3.0f;
+		}
 		break;
 	
 	case kPopover_WindowStyleDialogAppModal:
