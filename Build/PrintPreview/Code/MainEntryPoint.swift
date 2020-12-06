@@ -212,7 +212,11 @@ applicationDidFinishLaunching(_/* <- critical underscore; without it, no app lau
 	
 	// convert string value of font size environment variable into a number
 	let fontSizeScanner = Scanner(string:fontSizeString)
-	if false == fontSizeScanner.scanFloat(&floatFontSize)
+	if let scannedFontSize = fontSizeScanner.scanFloat()
+	{
+		floatFontSize = scannedFontSize
+	}
+	else
 	{
 		NSLog("Warning, failed to parse “\(fontSizeString)” into a valid font size; ignoring.")
 		floatFontSize = 12.0; // arbitrary work-around
@@ -264,19 +268,22 @@ applicationDidFinishLaunching(_/* <- critical underscore; without it, no app lau
 	// read any pixel width hint from parent so that preview
 	// initial size is closer to what the user might want
 	// (and closer to the terminal window it came from)
-	var pixelWidthString = 0
 	var floatPixelWidth: Float = 0.0 // see below
 	if let pixelWidthString = ProcessInfo.processInfo.environment["MACTERM_PRINT_PREVIEW_PIXEL_WIDTH_HINT"]
 	{
 		let pixelWidthScanner = Scanner(string:pixelWidthString)
-		if false == pixelWidthScanner.scanFloat(&floatPixelWidth)
+		if let scannedPixelWidth = pixelWidthScanner.scanFloat()
+		{
+			floatPixelWidth = scannedPixelWidth
+		}
+		else
 		{
 			NSLog("Warning, failed to parse “\(pixelWidthString)” into a valid pixel width; ignoring.")
 		}
 	}
 	
 	// enable the following if desired for debugging the input environment
-	if (false)
+	/*if (false)
 	{
 		NSLog("RECEIVED JOB TITLE: “\(jobTitleString)”") // debug
 		NSLog("RECEIVED PASTEBOARD NAME: “\(pasteboardNameString)”") // debug
@@ -293,7 +300,7 @@ applicationDidFinishLaunching(_/* <- critical underscore; without it, no app lau
 		NSLog("RECEIVED FONT SIZE (converted): “\(floatFontSize)”") // debug
 		NSLog("RECEIVED LANDSCAPE MODE: \(isLandscape)") // debug
 		NSLog("RECEIVED PIXEL WIDTH HINT (converted): “\(floatPixelWidth)”") // debug
-	}
+	}*/
 	
 	// will no longer need this pasteboard anywhere
 	if let definedPasteboard = textToPrintPasteboard
@@ -317,10 +324,8 @@ applicationDidFinishLaunching(_/* <- critical underscore; without it, no app lau
 		}
 		else
 		{
-			var newFrame: NSRect = NSMakeRect(definedWindow.frame.origin.x, definedWindow.frame.origin.y,
+			let newFrame: NSRect = NSMakeRect(definedWindow.frame.origin.x, definedWindow.frame.origin.y,
 												CGFloat(floatPixelWidth), definedWindow.frame.size.height)
-			
-			
 			definedWindow.setFrame(newFrame, display: false)
 		}
 		
