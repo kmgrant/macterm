@@ -522,6 +522,12 @@ performRename:(id)	sender
 	}
 	WindowTitleDialog_Display(self->renameDialog);
 }
+- (id)
+canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
 
 
 #pragma mark TerminalView_ClickDelegate
@@ -675,6 +681,9 @@ windowDidLoad
 	
 	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
 						performSelector:@selector(windowWillClose:)];
+	
+	
+	self.window.initialFirstResponder = canvasView;
 }// windowDidLoad
 
 

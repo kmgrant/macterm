@@ -770,6 +770,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuPasteText"));
 		break;
 	
+	case kUIStrings_ContextualMenuPrintSelectedCanvasRegion:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Print This Canvas Region..."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuPrintSelectedCanvasRegion"));
+		break;
+	
 	case kUIStrings_ContextualMenuPrintSelectedText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Print Selected Text..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuPrintSelectedText"));
@@ -807,6 +812,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 	
 	case kUIStrings_ContextualMenuSpecialKeySequences:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Custom Key Sequences..."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuSpecialKeySequences"));
+		break;
+	
+	case kUIStrings_ContextualMenuZoomCanvas100Percent:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Set View to Actual Size"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuSpecialKeySequences"));
 		break;
 	

@@ -2095,18 +2095,33 @@ sourceItem:(id <NSValidatedUserInterfaceItem>)	anItem
 	// available will need to define its own validation method,
 	// and any command that has no other requirements (aside from a
 	// terminal) does not need a validator at all.
-	SessionRef	userFocusSession = SessionFactory_ReturnUserFocusSession();
-	NSWindow*	sessionWindow = Session_ReturnActiveNSWindow(userFocusSession);
-	BOOL		result = ((nullptr != userFocusSession) && (sessionWindow == [NSApp keyWindow]));
+	BOOL	isFullScreen = EventLoop_IsMainWindowFullScreen();
+	BOOL	result = NO;
 	
 	
-	// by default, assume actions cannot be used in Full Screen mode
-	// (most of them would have side effects that could mess up a
-	// Full Screen view, e.g. by changing the window size)
-	if ((result) && EventLoop_IsMainWindowFullScreen())
+	if ((isFullScreen) && (@selector(toggleFullScreen:) == aSelector))
 	{
-		result = NO;
+		// special case (avoids having to define "canToggleFullScreen:"
+		// in various places)
+		result = YES;
 	}
+	else
+	{
+		SessionRef	userFocusSession = SessionFactory_ReturnUserFocusSession();
+		NSWindow*	sessionWindow = Session_ReturnActiveNSWindow(userFocusSession);
+		
+		
+		result = ((nullptr != userFocusSession) && (sessionWindow == [NSApp keyWindow]));
+		
+		// by default, assume actions cannot be used in Full Screen mode
+		// (most of them would have side effects that could mess up a
+		// Full Screen view, e.g. by changing the window size)
+		if ((result) && (isFullScreen))
+		{
+			result = NO;
+		}
+	}
+	
 	return result;
 }// defaultValidationForAction:sourceItem:
 
@@ -2269,7 +2284,8 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		if (isEnabled)
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
-														keyEquivalent:@""];
+														keyEquivalent:@"\033"];
+			[result setKeyEquivalentModifierMask:(NSEventModifierFlagOption)];
 		}
 	}
 	else if (@selector(performFormatCustom:) == anActionSelector)
@@ -2346,7 +2362,7 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		if (isEnabled)
 		{
 			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
-														keyEquivalent:@""];
+														keyEquivalent:@"p"];
 		}
 	}
 	else if (@selector(performSaveSelection:) == anActionSelector)
@@ -2422,6 +2438,18 @@ ifEnabled:(BOOL)				onlyIfEnabled
 		}
 	}
 	else if (@selector(moveTabToNewWindow:) == anActionSelector)
+	{
+		if (onlyIfEnabled)
+		{
+			isEnabled = [self validateAction:anActionSelector sender:NSApp sourceItem:nil];
+		}
+		if (isEnabled)
+		{
+			result = [[NSMenuItem alloc] initWithTitle:aTitle action:anActionSelector
+														keyEquivalent:@""];
+		}
+	}
+	else if (@selector(performGraphicsCanvasResizeTo100Percent:) == anActionSelector)
 	{
 		if (onlyIfEnabled)
 		{

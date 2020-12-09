@@ -47,6 +47,7 @@
 // library includes
 #import <CocoaAnimation.h>
 #import <CocoaExtensions.objc++.h>
+#import <ContextSensitiveMenu.h>
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
@@ -55,9 +56,11 @@
 // application includes
 #import "Console.h"
 #import "ConstantsRegistry.h"
+#import "EventLoop.h"
 #import "Preferences.h"
 #import "Session.h"
 #import "TerminalView.h"
+#import "UIStrings.h"
 #import "VectorInterpreter.h"
 
 
@@ -165,6 +168,7 @@ struct My_VectorCanvas
 	SessionRef				session;
 	My_CGColorList			deviceColors;
 	CGFloatRGBColor			outsideColor;
+	TerminalView_MousePointerColor	mousePointerColor;
 	SInt16					ingin;
 	SInt16					canvasWidth;
 	SInt16					canvasHeight;
@@ -250,6 +254,7 @@ VectorCanvas_New	(VectorInterpreter_Ref	inData)
 	ptr->outsideColor.red = 0.8; // arbitrary (changed by preferences)
 	ptr->outsideColor.green = 0.8; // arbitrary (changed by preferences)
 	ptr->outsideColor.blue = 0.8; // arbitrary (changed by preferences)
+	ptr->mousePointerColor = kTerminalView_MousePointerColorBlack;
 	
 	return result;
 }// New
@@ -839,6 +844,18 @@ copyColorPreferences	(My_VectorCanvasPtr			inPtr,
 		}
 	}
 	
+	// also update preferred mouse pointer color
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagTerminalMousePointerColor,
+															sizeof(inPtr->mousePointerColor),
+															&inPtr->mousePointerColor,
+															inSearchForDefaults))
+	{
+		++result;
+		
+		// immediately invalidate so the cursor is updated by the OS
+		[[inPtr->canvasView window] invalidateCursorRectsForView:inPtr->canvasView];
+	}
+	
 	return result;
 }// copyColorPreferences
 
@@ -1118,7 +1135,77 @@ setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
 }// setInterpreterRef
 
 
-#pragma mark Actions
+#pragma mark Actions: Commands_Printing
+
+
+/*!
+Displays the standard printing interface for printing the
+specified drawing.  (This should be triggered by an appropriate
+printing menu command.)
+
+(4.1)
+*/
+- (IBAction)
+performPrintScreen:(id)		sender
+{
+#pragma unused(sender)
+	NSPrintInfo*	printInfo = [[[NSPrintInfo sharedPrintInfo] copy] autorelease];
+	
+	
+	// initial settings are basically arbitrary; attempting to make everything look nice
+	[printInfo setHorizontalPagination:NSFitPagination];
+	[printInfo setHorizontallyCentered:YES];
+	[printInfo setVerticalPagination:NSFitPagination];
+	[printInfo setVerticallyCentered:NO];
+	[printInfo setLeftMargin:72.0];
+	[printInfo setRightMargin:72.0];
+	[printInfo setTopMargin:72.0];
+	[printInfo setBottomMargin:72.0];
+	
+	if ([self bounds].size.width > [self bounds].size.height)
+	{
+	#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090 /* MAC_OS_X_VERSION_10_9 */
+		[printInfo setOrientation:NSLandscapeOrientation];
+	#else
+		[printInfo setOrientation:NSPaperOrientationLandscape];
+	#endif
+	}
+	
+	[[NSPrintOperation printOperationWithView:self printInfo:printInfo]
+		runOperationModalForWindow:[self window] delegate:nil didRunSelector:nil contextInfo:nullptr];
+}
+- (id)
+canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+/*!
+Displays the standard printing interface for printing the
+currently-selected part of the specified drawing.  (This
+should be triggered by an appropriate printing menu command.)
+
+(4.1)
+*/
+- (IBAction)
+performPrintSelection:(id)	sender
+{
+#pragma unused(sender)
+	// TEMPORARY; need to update this when mouse support, etc.
+	// is once again implemented in graphics windows
+	[self performPrintScreen:sender];
+}
+- (id)
+canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
+{
+#pragma unused(anItem)
+	return @(YES);
+}
+
+
+#pragma mark Actions: Commands_StandardEditing
 
 
 /*!
@@ -1158,6 +1245,9 @@ canCopy:(id <NSValidatedUserInterfaceItem>)		anItem
 #pragma unused(anItem)
 	return @(YES);
 }
+
+
+#pragma mark Actions: Commands_TextFormatting
 
 
 /*!
@@ -1260,67 +1350,36 @@ canPerformFormatDefault:(id <NSValidatedUserInterfaceItem>)		anItem
 }
 
 
-/*!
-Displays the standard printing interface for printing the
-specified drawing.  (This should be triggered by an appropriate
-printing menu command.)
-
-(4.1)
-*/
-- (IBAction)
-performPrintScreen:(id)		sender
-{
-#pragma unused(sender)
-	NSPrintInfo*	printInfo = [[[NSPrintInfo sharedPrintInfo] copy] autorelease];
-	
-	
-	// initial settings are basically arbitrary; attempting to make everything look nice
-	[printInfo setHorizontalPagination:NSFitPagination];
-	[printInfo setHorizontallyCentered:YES];
-	[printInfo setVerticalPagination:NSFitPagination];
-	[printInfo setVerticallyCentered:NO];
-	[printInfo setLeftMargin:72.0];
-	[printInfo setRightMargin:72.0];
-	[printInfo setTopMargin:72.0];
-	[printInfo setBottomMargin:72.0];
-	
-	if ([self bounds].size.width > [self bounds].size.height)
-	{
-	#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090 /* MAC_OS_X_VERSION_10_9 */
-		[printInfo setOrientation:NSLandscapeOrientation];
-	#else
-		[printInfo setOrientation:NSPaperOrientationLandscape];
-	#endif
-	}
-	
-	[[NSPrintOperation printOperationWithView:self printInfo:printInfo]
-		runOperationModalForWindow:[self window] delegate:nil didRunSelector:nil contextInfo:nullptr];
-}
-- (id)
-canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
-{
-#pragma unused(anItem)
-	return @(YES);
-}
+#pragma mark Actions: Commands_VectorGraphicsModifying
 
 
 /*!
-Displays the standard printing interface for printing the
-currently-selected part of the specified drawing.  (This
-should be triggered by an appropriate printing menu command.)
+Restores the view to normal scaling (when dragging the mouse
+the user can zoom in, or double-click to perform this action).
 
-(4.1)
+(2020.12)
 */
 - (IBAction)
-performPrintSelection:(id)	sender
+performGraphicsCanvasResizeTo100Percent:(id)	sender
 {
 #pragma unused(sender)
-	// TEMPORARY; need to update this when mouse support, etc.
-	// is once again implemented in graphics windows
-	[self performPrintScreen:sender];
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	
+	
+	canvasPtr->viewScaleX = 1.0;
+	canvasPtr->viewScaleY = 1.0;
+	canvasPtr->unscaledZoomOriginX = 0;
+	canvasPtr->unscaledZoomOriginY = 0;
+	
+	[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"100%";
+	[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
+	[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+	
+	[self setNeedsDisplay];
 }
 - (id)
-canPerformPrintSelection:(id <NSValidatedUserInterfaceItem>)	anItem
+canPerformGraphicsCanvasResizeTo100Percent:(id <NSValidatedUserInterfaceItem>)		anItem
 {
 #pragma unused(anItem)
 	return @(YES);
@@ -1436,16 +1495,7 @@ mouseDown:(NSEvent*)	anEvent
 	else if (2 == anEvent.clickCount)
 	{
 		// reset zoom on double-click
-		canvasPtr->viewScaleX = 1.0;
-		canvasPtr->viewScaleY = 1.0;
-		canvasPtr->unscaledZoomOriginX = 0;
-		canvasPtr->unscaledZoomOriginY = 0;
-		
-		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"100%";
-		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
-		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
-		
-		[self setNeedsDisplay];
+		[self performGraphicsCanvasResizeTo100Percent:nil];
 	}
 	else if (canvasPtr->ingin)
 	{
@@ -1618,6 +1668,32 @@ mouseUp:(NSEvent*)		anEvent
 }// mouseUp:
 
 
+#pragma mark NSUserInterfaceValidations
+
+
+/*!
+The standard Cocoa interface for validating things like menu
+commands.  This method is present here because it must be in
+the same class as the methods that perform actions; if the
+action methods move, their validation code must move as well.
+
+Returns true only if the specified item should be available
+to the user.
+
+(2020.12)
+*/
+- (BOOL)
+validateUserInterfaceItem:(id <NSObject, NSValidatedUserInterfaceItem>)		anItem
+{
+	// the call below enables the magic that allows validation to be automatic
+	// whenever a "canPerform..." method for a "perform..." action also exists
+	BOOL	result = [[Commands_Executor sharedExecutor] validateAction:anItem.action sender:self sourceItem:anItem];
+	
+	
+	return result;
+}// validateUserInterfaceItem:
+
+
 #pragma mark NSView
 
 
@@ -1706,6 +1782,155 @@ isOpaque
 
 
 /*!
+Returns a contextual menu for the vector canvas view.
+
+(2020.12)
+*/
+- (NSMenu*)
+menuForEvent:(NSEvent*)		anEvent
+{
+#pragma unused(anEvent)
+	NSMenu*						result = nil;
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	
+	
+	if (nullptr != canvasPtr)
+	{
+		// display a contextual menu
+		result = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		
+		// set up the contextual menu
+		//[result setAllowsContextMenuPlugIns:NO];
+		NSMenuItem*		newItem = nil;
+		CFStringRef		commandText = nullptr;
+		
+		
+		ContextSensitiveMenu_Init();
+		
+		// determine if view is currently zoomed-in on some region
+		if ((canvasPtr->viewScaleX != 1.0) || (canvasPtr->viewScaleY != 1.0))
+		{
+			// clipboard-related commands
+			ContextSensitiveMenu_NewItemGroup();
+			
+			if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(copy:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+			
+			// user macros
+			// (currently, there is no way for macros to operate on vector graphics)
+			//MacroManager_AddContextualMenuGroup(result, nullptr/* current macro set */, true/* search defaults */); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
+			
+			// other graphics-selection-related commands
+			ContextSensitiveMenu_NewItemGroup();
+			
+			// add a command to “zoom back to 100%”
+			if (UIStrings_Copy(kUIStrings_ContextualMenuZoomCanvas100Percent, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(performGraphicsCanvasResizeTo100Percent:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+			
+			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectedCanvasRegion, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(performPrintSelection:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+		}
+		else
+		{
+			// clipboard-related commands
+			ContextSensitiveMenu_NewItemGroup();
+			
+			if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(copy:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+			
+			// window arrangement menu items
+			ContextSensitiveMenu_NewItemGroup();
+			
+			if (EventLoop_IsWindowFullScreen(self.window))
+			{
+				if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenExit, commandText).ok())
+				{
+					newItem = Commands_NewMenuItemForAction(@selector(toggleFullScreen:), commandText, true/* must be enabled */);
+					if (nil != newItem)
+					{
+						ContextSensitiveMenu_AddItem(result, newItem);
+						[newItem release], newItem = nil;
+					}
+					CFRelease(commandText), commandText = nullptr;
+				}
+			}
+			
+			if (UIStrings_Copy(kUIStrings_ContextualMenuArrangeAllInFront, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(performArrangeInFront:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+			
+			if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(performRename:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+			
+			// vector graphics menu items
+			ContextSensitiveMenu_NewItemGroup();
+			
+			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintScreen, commandText).ok())
+			{
+				newItem = Commands_NewMenuItemForAction(@selector(performPrintScreen:), commandText, true/* must be enabled */);
+				if (nil != newItem)
+				{
+					ContextSensitiveMenu_AddItem(result, newItem);
+					[newItem release], newItem = nil;
+				}
+				CFRelease(commandText), commandText = nullptr;
+			}
+		}
+	}
+	
+	return result;
+}// menuForEvent:
+
+
+/*!
 Invoked by NSView whenever it’s necessary to define the regions
 that change the mouse pointer’s shape.
 
@@ -1714,7 +1939,74 @@ that change the mouse pointer’s shape.
 - (void)
 resetCursorRects
 {
-	[self addCursorRect:[self bounds] cursor:[NSCursor crosshairCursor]];
+	NSCursor*					newCursor = nil;
+	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
+	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
+	
+	
+	if (nullptr != canvasPtr)
+	{
+		// since vector graphics windows support Format settings
+		// similar to terminal windows, use any custom mouse pointer
+		// for these as well
+		switch (canvasPtr->mousePointerColor)
+		{
+		case kTerminalView_MousePointerColorBlack:
+			{
+				static NSCursor*	gCachedCursor = nil;
+				
+				
+				if (nil == gCachedCursor)
+				{
+					// IMPORTANT: specified hot-spot should be synchronized with the image data
+					gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorBlackCrosshairs"]
+																	hotSpot:NSMakePoint(15, 15)];
+				}
+				newCursor = gCachedCursor;
+			}
+			break;
+		
+		case kTerminalView_MousePointerColorWhite:
+			{
+				static NSCursor*	gCachedCursor = nil;
+				
+				
+				if (nil == gCachedCursor)
+				{
+					// IMPORTANT: specified hot-spot should be synchronized with the image data
+					gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorWhiteCrosshairs"]
+																	hotSpot:NSMakePoint(15, 15)];
+				}
+				newCursor = gCachedCursor;
+			}
+			break;
+		
+		case kTerminalView_MousePointerColorRed:
+		default:
+			{
+				static NSCursor*	gCachedCursor = nil;
+				
+				
+				if (nil == gCachedCursor)
+				{
+					// IMPORTANT: specified hot-spot should be synchronized with the image data
+					gCachedCursor = [[NSCursor alloc] initWithImage:[NSImage imageNamed:@"CursorCrosshairs"]
+																	hotSpot:NSMakePoint(15, 15)];
+				}
+				newCursor = gCachedCursor;
+			}
+			break;
+		}
+	}
+	
+	if (nil == newCursor)
+	{
+		// some problem finding custom cursor and/or canvas structure;
+		// use system default cursor for now
+		newCursor = [NSCursor crosshairCursor];
+	}
+	
+	[self addCursorRect:[self bounds] cursor:newCursor];
 }// resetCursorRects
 
 

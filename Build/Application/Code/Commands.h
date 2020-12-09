@@ -676,7 +676,24 @@ points in the responder chain, such as views or windows.)
 @end //}
 
 /*!
-Actions related to vector graphics windows.
+Actions related to existing vector graphics windows.
+
+(Described as a protocol so that selector names appear in
+one location.  These are actually implemented at different
+points in the responder chain, such as views or windows.)
+*/
+@protocol Commands_VectorGraphicsModifying //{
+
+@required
+
+// actions
+	- (IBAction)
+	performGraphicsCanvasResizeTo100Percent:(id)_;
+
+@end //}
+
+/*!
+Actions related to new vector graphics windows.
 
 (Described as a protocol so that selector names appear in
 one location.  These are actually implemented at different

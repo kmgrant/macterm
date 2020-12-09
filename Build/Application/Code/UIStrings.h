@@ -229,6 +229,7 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuMoveToNewWorkspace			= 'MTab',
 	kUIStrings_ContextualMenuOpenThisResource			= 'OURL',
 	kUIStrings_ContextualMenuPrintScreen				= 'PrSc',
+	kUIStrings_ContextualMenuPrintSelectedCanvasRegion	= 'PrSv',
 	kUIStrings_ContextualMenuPrintSelectedText			= 'PrSl',
 	kUIStrings_ContextualMenuPasteText					= 'Pste',
 	kUIStrings_ContextualMenuRenameThisWindow			= 'Renm',
@@ -236,7 +237,8 @@ enum UIStrings_ContextualMenuCFString
 	kUIStrings_ContextualMenuSpeakSelectedText			= 'SpkS',
 	kUIStrings_ContextualMenuStopSpeaking				= 'SpkE',
 	kUIStrings_ContextualMenuShowCompletions			= 'SCmp',
-	kUIStrings_ContextualMenuSpecialKeySequences		= 'Keys'
+	kUIStrings_ContextualMenuSpecialKeySequences		= 'Keys',
+	kUIStrings_ContextualMenuZoomCanvas100Percent		= 'Z100',
 };
 
 /*!

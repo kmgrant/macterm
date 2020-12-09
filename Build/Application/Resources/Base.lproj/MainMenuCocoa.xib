@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17506"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="EventLoop_AppObject">
@@ -446,6 +446,12 @@ Gw
                                     <action selector="performPageClearToggle:" target="-1" id="Icv-my-j4V"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Actual Size" id="DRU-ec-3dU">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="performGraphicsCanvasResizeTo100Percent:" target="-1" id="4UR-Kb-l4i"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="835"/>
                             <menuItem title="Show Toolbar" id="297">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -810,13 +816,13 @@ Gw
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Window" systemMenu="window" id="24">
                         <items>
-                            <menuItem title="Minimize" keyEquivalent="" id="23">
+                            <menuItem title="Minimize" keyEquivalent="m" id="23">
                                 <modifierMask key="keyEquivalentModifierMask" shift="YES" control="YES" command="YES"/>
                                 <connections>
                                     <action selector="performMiniaturize:" target="-1" id="9rl-jG-7Mn"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Minimize All" alternate="YES" keyEquivalent="" id="BHJ-jc-BHy">
+                            <menuItem title="Minimize All" alternate="YES" keyEquivalent="m" id="BHJ-jc-BHy">
                                 <modifierMask key="keyEquivalentModifierMask" shift="YES" control="YES" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="performMiniaturizeAll:" target="-1" id="Ybp-lk-1se"/>
@@ -1006,6 +1012,7 @@ Gw
                     </menu>
                 </menuItem>
             </items>
+            <point key="canvasLocation" x="139" y="154"/>
         </menu>
         <menu id="1075" userLabel="Dock Menu">
             <items>

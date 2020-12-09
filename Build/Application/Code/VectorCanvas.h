@@ -47,6 +47,7 @@ class NSView;
 #include <ResultCode.template.h>
 
 // application includes
+#include "Commands.h"
 #include "SessionRef.typedef.h"
 #include "VectorInterpreterRef.typedef.h"
 
@@ -87,7 +88,10 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
-@interface VectorCanvas_View : NSControl //{
+@interface VectorCanvas_View : NSControl < Commands_Printing,
+											Commands_StandardEditing,
+											Commands_TextFormatting,
+											Commands_VectorGraphicsModifying > //{
 {
 @private
 	VectorInterpreter_Ref	_interpreterRef;
@@ -98,14 +102,6 @@ changes to an interface declared in a ".mm" file.
 // accessors
 	@property (assign) VectorInterpreter_Ref
 	interpreterRef;
-
-// actions
-	- (IBAction)
-	copy:(id)_;
-	- (IBAction)
-	performPrintScreen:(id)_;
-	- (IBAction)
-	performPrintSelection:(id)_;
 
 @end //}
 
