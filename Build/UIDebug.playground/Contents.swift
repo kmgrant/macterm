@@ -12,7 +12,8 @@ import MacTermQuills
 //let view = UIPrefsGeneralSpecial_Previews.previews
 //let view = UIPrefsGeneralFullScreen_Previews.previews
 //let view = UIPrefsGeneralNotifications_Previews.previews
-let view = UIPrefsSessionKeyboard_Previews.previews
+let view = UIPrefsSessionDataFlow_Previews.previews
+//let view = UIPrefsSessionKeyboard_Previews.previews
 //let view = UIPrefsSessionGraphics_Previews.previews
 //let view = UIPrefsTerminalOptions_Previews.previews
 //let view = UIPrefsTerminalEmulation_Previews.previews

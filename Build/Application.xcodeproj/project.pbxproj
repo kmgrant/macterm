@@ -128,6 +128,7 @@
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
 		0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF94E481477857900099BF2 /* PopoverManager.mm */; };
+		0AFC024F2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFC024E2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -492,6 +493,7 @@
 		0AF94E471477856B00099BF2 /* PopoverManager.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "PopoverManager.objc++.h"; path = "Shared/Code/PopoverManager.objc++.h"; sourceTree = "<group>"; };
 		0AF94E481477857900099BF2 /* PopoverManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PopoverManager.mm; path = Shared/Code/PopoverManager.mm; sourceTree = "<group>"; };
 		0AFC021524FB2688009C863F /* MacTermQuills.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacTermQuills.h; path = Application/Code/MacTermQuills.h; sourceTree = "<group>"; };
+		0AFC024E2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsSessionDataFlow.swift; path = Application/Code/UIPrefsSessionDataFlow.swift; sourceTree = "<group>"; };
 		0AFF11220AF41FEE006CCA34 /* RunApplication.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = RunApplication.py; path = Application/PythonCode/RunApplication.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -637,6 +639,7 @@
 				0A82D17D2557565700950356 /* UIPrefsGeneralNotifications.swift */,
 				0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */,
 				0AC3C56E2571680700E5DB94 /* UIPrefsGeneralSpecial.swift */,
+				0AFC024E2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift */,
 				0A858C692575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift */,
 				0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */,
 				0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */,
@@ -1270,6 +1273,7 @@
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
 				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */,
 				0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */,
+				0AFC024F2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift in Sources */,
 				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 				0A613E5020592085007C0829 /* Workspace.mm in Sources */,
 				0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */,

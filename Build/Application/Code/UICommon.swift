@@ -27,6 +27,7 @@
 
 ###############################################################*/
 
+import Cocoa
 import SwiftUI
 
 //
@@ -113,6 +114,28 @@ extension View {
 			return AnyView(offset(x: 0, y: 0).help(text))
 		}
 		return AnyView(offset(x: 0, y: 0))
+	}
+
+	// for custom views; locates any SwiftUI Environment setting
+	// so that "controlSize" can be set consistently
+	static func getNSControlSize(from environment: EnvironmentValues) -> NSControl.ControlSize {
+		var result: NSControl.ControlSize = .regular
+		switch environment.controlSize {
+		case .small:
+			result = .small
+		case .mini:
+			result = .mini
+		case .regular:
+			fallthrough
+		default:
+			result = .regular
+		}
+		if #available(macOS 11.0, *) {
+			if environment.controlSize == .large {
+				result = .large
+			}
+		}
+		return result
 	}
 }
 
@@ -458,6 +481,91 @@ struct UICommon_DefaultOptionHeaderView : View {
 				.padding([.top], 4)
 			Spacer()
 		}.withMacTermTopHeaderLayout()
+	}
+
+}
+
+struct UICommon_FileSystemPathView : NSViewRepresentable {
+
+	typealias NSViewType = NSPathControl
+
+	// the Coordinator is constructed by makeCoordinator() (once) and
+	// since it is a class it can do Objective-C things like implement
+	// action methods (UICommon_FileSystemPathView is a Swift struct)
+	class Coordinator : NSObject {
+
+		@Binding var urlRef: URL
+
+		init(_ urlRef: Binding<URL>) {
+			_urlRef = urlRef // use "_" to initialize a binding
+		}
+
+		// MARK: Actions
+
+		@objc func pathChangedAction(sender: Any?) {
+			// this is specified in UICommon_FileSystemPathView (makeNSView()) and
+			// is the "action" selector; according to NSPathControl documentation,
+			// this will be called when the URL changes via open panel or drags;
+			// the "sender" is the NSPathControl object
+			guard let definedSender = sender else { print("\(#function) failed: sender is nil"); return }
+			guard let pathControl = definedSender as? NSPathControl else { print("\(#function) failed: sender is not an NSPathControl"); return }
+			if let definedURL = pathControl.url {
+				urlRef = definedURL // SwiftUI binding (triggers any "didSet" actions)
+			} else {
+				print("failed to process path URL, currently set to nil")
+			}
+		}
+
+	}
+
+	private var allowedTypes: [String] // UTIs to constrain drags/open-select of files/folders
+	@Binding var urlRef: URL // SwiftUI binding, e.g. part of view model; also visible to Coordinator
+
+	init(_ urlRef: Binding<URL>, allowedTypes: [String] = ["public.folder"]) {
+		// note: perhaps surprisingly, this can be called very frequently by SwiftUI
+		// updates, and it will NOT call makeCoordinator() and makeNSView() each time;
+		// rather, the first time it will call:
+		//     init() -> makeCoordinator() -> makeNSView() -> updateNSView()
+		// ...and every other time it will call:
+		//     init() -> updateNSView()
+		_urlRef = urlRef // use "_" to initialize a binding
+		self.allowedTypes = allowedTypes
+	}
+
+	// MARK: NSViewRepresentable
+
+	func makeCoordinator() -> Coordinator {
+		// note: this is called after init() but only the first time this type of view
+		// is used (and makeNSView() will be called after this)
+		return Coordinator($urlRef)
+	}
+
+	func makeNSView(context: Self.Context) -> Self.NSViewType {
+		// IMPORTANT: this is called after init() and makeCoordinator() but only the
+		// first time this type of view is used; in all other cases, init() is
+		// called but then only updateNSView() will be called...
+		let result = NSViewType()
+		result.controlSize = Self.getNSControlSize(from: context.environment)
+		result.allowedTypes = self.allowedTypes
+		result.isEditable = true
+		result.pathStyle = .popUp
+		// IMPORTANT: according to NSPathControl documentation, the control’s "action"
+		// is invoked when the URL changes for any reason (e.g. drag-and-drop or file
+		// selection dialog); this is critical for updating the SwiftUI binding, and
+		// in particular nothing else will work (e.g. KVO observing does not)
+		result.target = context.coordinator
+		result.action = #selector(Coordinator.pathChangedAction)
+		// note: NSPathControlDelegate is not currently needed but if it is someday
+		// required, it can be implemented by the Coordinator class and set below
+		//result.delegate = context.coordinator
+		return result
+	}
+
+	func updateNSView(_ nsView: Self.NSViewType, context: Self.Context) {
+		// IMPORTANT: on every major state change, init() will be called first
+		// and updateNSView() is called last but in between the make...() methods
+		// above are only called the *first* time (see comments above)
+		nsView.url = self.urlRef
 	}
 
 }

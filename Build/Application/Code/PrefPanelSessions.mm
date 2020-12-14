@@ -110,13 +110,34 @@ The private class interface.
 
 
 /*!
-The private class interface.
+Implements SwiftUI interaction for the “Data Flow” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
 */
-@interface PrefPanelSessions_DataFlowViewManager (PrefPanelSessions_DataFlowViewManagerInternal) //{
+@interface PrefPanelSessions_DataFlowActionHandler : NSObject< UIPrefsSessionDataFlow_ActionHandling > //{
+{
+@private
+	PrefsContextManager_Object*		_prefsMgr;
+	UIPrefsSessionDataFlow_Model*	_viewModel;
+}
 
 // new methods
-	- (NSArray*)
-	primaryDisplayBindingKeys;
+	- (NSInteger)
+	resetToDefaultGetDelayValueWithTag:(Preferences_Tag)_;
+	- (BOOL)
+	resetToDefaultGetFlagWithTag:(Preferences_Tag)_;
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsSessionDataFlow_Model*
+	viewModel;
 
 @end //}
 
@@ -227,6 +248,10 @@ PrefPanelSessions_NewDataFlowPaneTagSet ()
 	tagList.push_back(kPreferences_TagLocalEchoEnabled);
 	tagList.push_back(kPreferences_TagPasteNewLineDelay);
 	tagList.push_back(kPreferences_TagScrollDelay);
+	tagList.push_back(kPreferences_TagCaptureAutoStart);
+	tagList.push_back(kPreferences_TagCaptureFileDirectoryURL);
+	tagList.push_back(kPreferences_TagCaptureFileName);
+	tagList.push_back(kPreferences_TagCaptureFileNameAllowsSubstitutions);
 	
 	result = Preferences_NewTagSet(tagList);
 	
@@ -640,7 +665,7 @@ init
 {
 	NSArray*	subViewManagers = @[
 										[[[PrefPanelSessions_ResourceViewManager alloc] init] autorelease],
-										[[[PrefPanelSessions_DataFlowViewManager alloc] init] autorelease],
+										[[[PrefPanelSessions_DataFlowVC alloc] init] autorelease],
 										[[[PrefPanelSessions_KeyboardVC alloc] init] autorelease],
 										[[[PrefPanelSessions_GraphicsVC alloc] init] autorelease],
 									];
@@ -1712,57 +1737,37 @@ updateCommandLineFromRemotePreferences
 
 
 #pragma mark -
-@implementation PrefPanelSessions_CaptureFileValue
+@implementation PrefPanelSessions_DataFlowActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.12)
 */
 - (instancetype)
-initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
+init
 {
-	self = [super initWithContextManager:aContextMgr];
+	self = [super init];
 	if (nil != self)
 	{
-		self->enabledObject = [[PreferenceValue_Flag alloc]
-									initWithPreferencesTag:kPreferences_TagCaptureAutoStart
-															contextManager:aContextMgr];
-		self->allowSubsObject = [[PreferenceValue_Flag alloc]
-									initWithPreferencesTag:kPreferences_TagCaptureFileNameAllowsSubstitutions
-															contextManager:aContextMgr];
-		self->fileNameObject = [[PreferenceValue_String alloc]
-									initWithPreferencesTag:kPreferences_TagCaptureFileName
-															contextManager:aContextMgr];
-		self->directoryPathObject = [[PreferenceValue_FileSystemObject alloc]
-										initWithURLInfoPreferencesTag:kPreferences_TagCaptureFileDirectoryURL
-																		contextManager:aContextMgr isDirectory:YES];
-		
-		// monitor the preferences context manager so that observers
-		// of preferences in sub-objects can be told to expect changes
-		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextWillChangeNotification
-							performSelector:@selector(prefsContextWillChange:)];
-		[self whenObject:aContextMgr postsNote:kPrefsContextManager_ContextDidChangeNotification
-							performSelector:@selector(prefsContextDidChange:)];
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsSessionDataFlow_Model alloc] initWithRunner:self]; // transfer ownership
 	}
 	return self;
-}// initWithContextManager:
+}// init
 
 
 /*!
 Destructor.
 
-(4.1)
+(2020.12)
 */
 - (void)
 dealloc
 {
-	[self ignoreWhenObjectsPostNotes];
-	[enabledObject release];
-	[allowSubsObject release];
-	[fileNameObject release];
-	[directoryPathObject release];
+	[_prefsMgr release];
+	[_viewModel release];
 	[super dealloc];
 }// dealloc
 
@@ -1771,215 +1776,556 @@ dealloc
 
 
 /*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
+Deletes any local override for the given delay value
+and returns the Default value (in milliseconds, for
+UI display),.
 
-(4.1)
+(2020.12)
 */
-- (void)
-prefsContextDidChange:(NSNotification*)		aNotification
+- (NSInteger)
+resetToDefaultGetDelayValueWithTag:(Preferences_Tag)	aTag
 {
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextWillChange:"
-	[self didChangeValueForKey:@"isEnabled"];
-	[self didChangeValueForKey:@"allowSubstitutions"];
-	[self didChangeValueForKey:@"directoryPathURLValue"];
-	[self didChangeValueForKey:@"fileNameStringValue"];
-	[self didSetPreferenceValue];
-}// prefsContextDidChange:
-
-
-/*!
-Responds to a change in preferences context by notifying
-observers that key values have changed (so that updates
-to the user interface occur).
-
-(4.1)
-*/
-- (void)
-prefsContextWillChange:(NSNotification*)	aNotification
-{
-#pragma unused(aNotification)
-	// note: should be opposite order of "prefsContextDidChange:"
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"fileNameStringValue"];
-	[self willChangeValueForKey:@"directoryPathURLValue"];
-	[self willChangeValueForKey:@"allowSubstitutions"];
-	[self willChangeValueForKey:@"isEnabled"];
-}// prefsContextWillChange:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isEnabled
-{
-	return [[self->enabledObject numberValue] boolValue];
-}
-- (void)
-setEnabled:(BOOL)	aFlag
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"isEnabled"];
+	NSInteger	result = 0;
 	
-	[self->enabledObject setNumberValue:((aFlag) ? @(YES) : @(NO))];
 	
-	[self didChangeValueForKey:@"isEnabled"];
-	[self didSetPreferenceValue];
-}// setEnabled:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-allowSubstitutions
-{
-	return [[self->allowSubsObject numberValue] boolValue];
-}
-- (void)
-setAllowSubstitutions:(BOOL)	aFlag
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"allowSubstitutions"];
-	
-	[self->allowSubsObject setNumberValue:((aFlag) ? @(YES) : @(NO))];
-	
-	[self didChangeValueForKey:@"allowSubstitutions"];
-	[self didSetPreferenceValue];
-}// setAllowSubstitutions:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSURL*)
-directoryPathURLValue
-{
-	return [self->directoryPathObject URLValue];
-}
-- (void)
-setDirectoryPathURLValue:(NSURL*)	aURL
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"directoryPathURLValue"];
-	
-	if (nil == aURL)
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:aTag])
 	{
-		[self->directoryPathObject setNilPreferenceValue];
-	}
-	else
-	{
-		[self->directoryPathObject setURLValue:aURL];
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", aTag);
 	}
 	
-	[self didChangeValueForKey:@"directoryPathURLValue"];
-	[self didSetPreferenceValue];
-}// setDirectoryPathURLValue:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-fileNameStringValue
-{
-	return [self->fileNameObject stringValue];
-}
-- (void)
-setFileNameStringValue:(NSString*)	aString
-{
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"fileNameStringValue"];
-	
-	if (nil == aString)
+	// return default value
 	{
-		[self->fileNameObject setNilPreferenceValue];
+		Preferences_TimeInterval	preferenceValue = false; // in seconds
+		Boolean						isDefault = false;
+		Preferences_Result			prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, aTag,
+																				sizeof(preferenceValue), &preferenceValue,
+																				true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", aTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// note: UI value is in milliseconds but stored value is not
+			preferenceValue = roundf(preferenceValue / kPreferences_TimeIntervalMillisecond);
+			result = STATIC_CAST(preferenceValue, NSInteger);
+		}
 	}
-	else
-	{
-		[self->fileNameObject setStringValue:aString];
-	}
-	
-	[self didChangeValueForKey:@"fileNameStringValue"];
-	[self didSetPreferenceValue];
-}// setFileNameStringValue:
-
-
-#pragma mark PreferenceValue_Inherited
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isInherited
-{
-	// if the current value comes from a default then the “inherited” state is YES
-	BOOL	result = ([self->enabledObject isInherited] && [self->allowSubsObject isInherited] &&
-						[self->fileNameObject isInherited] && [self->directoryPathObject isInherited]);
-	
 	
 	return result;
-}// isInherited
+}// resetToDefaultGetDelayValueWithTag:
 
 
 /*!
-Accessor.
+Helper function for protocol methods; deletes the
+given preference tag and returns the Default value.
 
-(4.1)
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetFlagWithTag:(Preferences_Tag)		aTag
+{
+	BOOL	result = NO;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:aTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", aTag);
+	}
+	
+	// return default value
+	{
+		Boolean				preferenceValue = false;
+		Boolean				isDefault = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, aTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", aTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = ((preferenceValue) ? YES : NO);
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetFlagWithTag:
+
+
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
+
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2020.12)
 */
 - (void)
-setNilPreferenceValue
+updateViewModelFromPrefsMgr
 {
-	[self willSetPreferenceValue];
-	[self willChangeValueForKey:@"directoryPathURLValue"];
-	[self willChangeValueForKey:@"fileNameStringValue"];
-	[self willChangeValueForKey:@"allowSubstitutions"];
-	[self willChangeValueForKey:@"isEnabled"];
-	[self->directoryPathObject setNilPreferenceValue];
-	[self->fileNameObject setNilPreferenceValue];
-	[self->allowSubsObject setNilPreferenceValue];
-	[self->enabledObject setNilPreferenceValue];
-	[self didChangeValueForKey:@"isEnabled"];
-	[self didChangeValueForKey:@"allowSubstitutions"];
-	[self didChangeValueForKey:@"fileNameStringValue"];
-	[self didChangeValueForKey:@"directoryPathURLValue"];
-	[self didSetPreferenceValue];
-}// setNilPreferenceValue
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	Boolean					isDefault = false; // reused below
+	Boolean					isDefaultAutoCapture = true; // initial value; see below
+	
+	
+	// allow initialization of "isDefault..." values without triggers
+	self.viewModel.defaultOverrideInProgress = YES;
+	self.viewModel.disableWriteback = YES;
+	
+	// update settings
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagLocalEchoEnabled;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.isLocalEchoEnabled = preferenceValue; // SwiftUI binding
+			self.viewModel.isDefaultLocalEchoEnabled = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag				preferenceTag = kPreferences_TagPasteNewLineDelay;
+		Preferences_TimeInterval	preferenceValue = 0;
+		Preferences_Result			prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																				sizeof(preferenceValue), &preferenceValue,
+																				true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// note: UI value is in milliseconds but stored value is not
+			preferenceValue = roundf(preferenceValue / kPreferences_TimeIntervalMillisecond);
+			self.viewModel.lineInsertionDelayValue = STATIC_CAST(preferenceValue, NSInteger); // SwiftUI binding
+			self.viewModel.isDefaultLineInsertionDelay = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag				preferenceTag = kPreferences_TagScrollDelay;
+		Preferences_TimeInterval	preferenceValue = 0;
+		Preferences_Result			prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																				sizeof(preferenceValue), &preferenceValue,
+																				true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			// note: UI value is in milliseconds but stored value is not
+			preferenceValue = roundf(preferenceValue / kPreferences_TimeIntervalMillisecond);
+			self.viewModel.scrollingDelayValue = STATIC_CAST(preferenceValue, NSInteger); // SwiftUI binding
+			self.viewModel.isDefaultScrollingDelay = isDefault; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCaptureAutoStart;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.isAutoCaptureToDirectoryEnabled = preferenceValue; // SwiftUI binding
+			isDefaultAutoCapture = (isDefaultAutoCapture && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagCaptureFileDirectoryURL;
+		Preferences_URLInfo		preferenceValue = { nullptr, false/* is stale */ };
+		Preferences_Result		prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue,
+																			true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.captureFileDirectory = BRIDGE_CAST(preferenceValue.urlRef, NSURL*); // SwiftUI binding
+			isDefaultAutoCapture = (isDefaultAutoCapture && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCaptureFileName;
+		CFStringRef			preferenceValue = CFSTR("");
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.captureFileName = BRIDGE_CAST(preferenceValue, NSString*); // SwiftUI binding
+			isDefaultAutoCapture = (isDefaultAutoCapture && isDefault); // see below; used to update binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCaptureFileNameAllowsSubstitutions;
+		Boolean				preferenceValue = false;
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			self.viewModel.isCaptureFileNameGenerated = preferenceValue; // SwiftUI binding
+			isDefaultAutoCapture = (isDefaultAutoCapture && isDefault); // see below; used to update binding
+		}
+	}
+	self.viewModel.isDefaultAutoCaptureToDirectoryEnabled = isDefaultAutoCapture; // SwiftUI binding
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+	self.viewModel.defaultOverrideInProgress = NO;
+	
+	// finally, specify “is editing Default” to prevent user requests for
+	// “restore to Default” from deleting the Default settings themselves!
+	self.viewModel.isEditingDefaultContext = Preferences_ContextIsDefault(sourceContext, Quills::Prefs::SESSION);
+}// updateViewModelFromPrefsMgr
 
 
-@end // PrefPanelSessions_CaptureFileValue
+#pragma mark UIPrefsSessionDataFlow_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2020.12)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update settings
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagLocalEchoEnabled;
+		Boolean				preferenceValue = self.viewModel.isLocalEchoEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag				preferenceTag = kPreferences_TagPasteNewLineDelay;
+		// note: UI value is in milliseconds but stored value is not
+		Preferences_TimeInterval	preferenceValue = (STATIC_CAST(self.viewModel.lineInsertionDelayValue, Preferences_TimeInterval) * kPreferences_TimeIntervalMillisecond);
+		Preferences_Result			prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																				sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag				preferenceTag = kPreferences_TagScrollDelay;
+		// note: UI value is in milliseconds but stored value is not
+		Preferences_TimeInterval	preferenceValue = (STATIC_CAST(self.viewModel.scrollingDelayValue, Preferences_TimeInterval) * kPreferences_TimeIntervalMillisecond);
+		Preferences_Result			prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																				sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCaptureAutoStart;
+		Boolean				preferenceValue = self.viewModel.isAutoCaptureToDirectoryEnabled;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag			preferenceTag = kPreferences_TagCaptureFileDirectoryURL;
+		Preferences_URLInfo		preferenceValue = { BRIDGE_CAST(self.viewModel.captureFileDirectory, CFURLRef), false/* is stale */ };
+		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCaptureFileName;
+		CFStringRef			preferenceValue = BRIDGE_CAST(self.viewModel.captureFileName, CFStringRef);
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagCaptureFileNameAllowsSubstitutions;
+		Boolean				preferenceValue = self.viewModel.isCaptureFileNameGenerated;
+		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetLocalEchoEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagLocalEchoEnabled];
+}// resetToDefaultGetLocalEchoEnabled
+
+
+/*!
+Deletes any local override for the given value and
+returns the Default value.
+
+(2020.12)
+*/
+- (NSInteger)
+resetToDefaultGetLineInsertionDelay
+{
+	return [self resetToDefaultGetDelayValueWithTag:kPreferences_TagPasteNewLineDelay];
+}// resetToDefaultGetLineInsertionDelay
+
+
+/*!
+Deletes any local override for the given value and
+returns the Default value.
+
+(2020.12)
+*/
+- (NSInteger)
+resetToDefaultGetScrollingDelay
+{
+	return [self resetToDefaultGetDelayValueWithTag:kPreferences_TagScrollDelay];
+}// resetToDefaultGetScrollingDelay
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetAutoCaptureToDirectoryEnabled
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagCaptureAutoStart];
+}// resetToDefaultGetAutoCaptureToDirectoryEnabled
+
+
+/*!
+Deletes any local override for the given URL and
+returns the Default value.
+
+(2020.12)
+*/
+- (NSURL*)
+resetToDefaultGetCaptureFileDirectory
+{
+	NSURL*				result = [NSURL fileURLWithPath:@"/var/tmp"];
+	Preferences_Tag		preferenceTag = kPreferences_TagCaptureFileDirectoryURL;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		Preferences_URLInfo		preferenceValue = { nullptr, false/* is stale */ };
+		Boolean					isDefault = false;
+		Preferences_Result		prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue,
+																			true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = BRIDGE_CAST(preferenceValue.urlRef, NSURL*);
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetCaptureFileDirectory
+
+
+/*!
+Deletes any local override for the given file name
+and returns the Default value.
+
+(2020.12)
+*/
+- (NSString*)
+resetToDefaultGetCaptureFileName
+{
+	NSString*			result = @"";
+	Preferences_Tag		preferenceTag = kPreferences_TagCaptureFileName;
+	
+	
+	// delete local preference
+	if (NO == [self.prefsMgr deleteDataForPreferenceTag:preferenceTag])
+	{
+		Console_Warning(Console_WriteValueFourChars, "failed to delete preference with tag", preferenceTag);
+	}
+	
+	// return default value
+	{
+		CFStringRef				preferenceValue = CFSTR("");
+		Boolean					isDefault = false;
+		Preferences_Result		prefsResult = Preferences_ContextGetData(self.prefsMgr.currentContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue,
+																			true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteValueFourChars, "failed to read default preference for tag", preferenceTag);
+			Console_Warning(Console_WriteValue, "preference result", prefsResult);
+		}
+		else
+		{
+			result = BRIDGE_CAST(preferenceValue, NSString*);
+		}
+	}
+	
+	return result;
+}// resetToDefaultGetCaptureFileName
+
+
+/*!
+Deletes any local override for the given flag and
+returns the Default value.
+
+(2020.12)
+*/
+- (BOOL)
+resetToDefaultGetCaptureFileNameIsGenerated
+{
+	return [self resetToDefaultGetFlagWithTag:kPreferences_TagCaptureFileNameAllowsSubstitutions];
+}// resetToDefaultGetCaptureFileNameIsGenerated
+
+
+@end //} PrefPanelSessions_DataFlowActionHandler
 
 
 #pragma mark -
-@implementation PrefPanelSessions_DataFlowViewManager
+@implementation PrefPanelSessions_DataFlowVC //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2020.12)
 */
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelSessionDataFlowCocoa" delegate:self context:nullptr];
+	PrefPanelSessions_DataFlowActionHandler*	actionHandler = [[PrefPanelSessions_DataFlowActionHandler alloc] init];
+	NSView*										newView = [UIPrefsSessionDataFlow_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -1991,91 +2337,54 @@ init
 /*!
 Destructor.
 
-(4.1)
+(2020.12)
 */
 - (void)
 dealloc
 {
-	[prefsMgr release];
+	[_actionHandler release];
 	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PrefPanelSessions_CaptureFileValue*)
-captureToFile
-{
-	return [self->byKey objectForKey:@"captureToFile"];
-}// captureToFile
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Flag*)
-localEcho
-{
-	return [self->byKey objectForKey:@"localEcho"];
-}// localEcho
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Number*)
-lineInsertionDelay
-{
-	return [self->byKey objectForKey:@"lineInsertionDelay"];
-}// lineInsertionDelay
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (PreferenceValue_Number*)
-scrollingDelay
-{
-	return [self->byKey objectForKey:@"scrollingDelay"];
-}// scrollingDelay
 
 
 #pragma mark Panel_Delegate
 
 
 /*!
-The first message ever sent, before any NIB loads; initialize the
-subclass, at least enough so that NIB object construction and
-bindings succeed.
+The first message ever sent, triggered by the call to the
+superclass "initWithView:delegate:context:" in "init";
+this functions as the rest of initialization and then
+the definition of "self" and properties is complete.
 
-(4.1)
+Upon return, "self" will be defined and return to "init".
+
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(void*)			aContext/* PrefPanelSessions_DataFlowActionHandler*; see "init" */
 {
-#pragma unused(aViewManager, aContext)
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary; number of settings */];
+#pragma unused(aViewManager)
+	assert(nil != aContext);
+	PrefPanelSessions_DataFlowActionHandler*	actionHandler = STATIC_CAST(aContext, PrefPanelSessions_DataFlowActionHandler*);
+	
+	
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	
+	_actionHandler = actionHandler; // transfer ownership
+	_idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self->logicalFirstResponder = self.view;
+	self->logicalLastResponder = self.view;
 }// panelViewManager:initializeWithContext:
 
 
 /*!
 Specifies the editing style of this panel.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2090,78 +2399,36 @@ requestingEditType:(Panel_EditType*)	outEditType
 First entry point after view is loaded; responds by performing
 any other view-dependent initializations.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
-	
-	// remember frame from XIB (it might be changed later)
-	self->idealFrame = [aContainerView frame];
-	
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
-	
-	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PrefPanelSessions_CaptureFileValue alloc]
-								initWithContextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"captureToFile"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
-								initWithPreferencesTag:kPreferences_TagLocalEchoEnabled
-														contextManager:self->prefsMgr]
-							autorelease]
-					forKey:@"localEcho"];
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
-								initWithPreferencesTag:kPreferences_TagPasteNewLineDelay
-														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeFloat64]
-							autorelease]
-					forKey:@"lineInsertionDelay"];
-	// display seconds as milliseconds for this value (should be in sync with units label in NIB!)
-	[[self->byKey objectForKey:@"lineInsertionDelay"] setScaleExponent:-3 rounded:YES];
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
-								initWithPreferencesTag:kPreferences_TagScrollDelay
-														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeFloat64]
-							autorelease]
-					forKey:@"scrollingDelay"];
-	// display seconds as milliseconds for this value (should be in sync with units label in NIB!)
-	[[self->byKey objectForKey:@"scrollingDelay"] setScaleExponent:-3 rounded:YES];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// remember initial frame (it might be changed later)
+	_idealFrame = [aContainerView frame];
 }// panelViewManager:didLoadContainerView:
 
 
 /*!
 Specifies a sensible width and height for this panel.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = self->idealFrame.size;
+	*outIdealSize = _idealFrame.size;
 }
 
 
 /*!
 Responds to a request for contextual help in this panel.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2179,7 +2446,7 @@ didPerformContextSensitiveHelp:(id)		sender
 /*!
 Responds just before a change to the visible state of this panel.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -2192,7 +2459,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 /*!
 Responds just after a change to the visible state of this panel.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)			aViewManager
@@ -2206,7 +2473,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 Responds to a change of data sets by resetting the panel to
 display the new data set.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2214,20 +2481,11 @@ didChangeFromDataSet:(void*)			oldDataSet
 toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
-	// note that all current values will change
-	for (NSString* keyName in [self primaryDisplayBindingKeys])
-	{
-		[self willChangeValueForKey:keyName];
-	}
+	// apply the specified settings
+	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
-	// now apply the specified settings
-	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
-	
-	// note that all values have changed (causes the display to be refreshed)
-	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
-	{
-		[self didChangeValueForKey:keyName];
-	}
+	// update the view by changing the model’s observed variables
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -2235,7 +2493,7 @@ toDataSet:(void*)						newDataSet
 Last entry point before the user finishes making changes
 (or discarding them).  Responds by saving preferences.
 
-(4.1)
+(2020.12)
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
@@ -2268,7 +2526,7 @@ Returns the localized icon image that should represent
 this panel in user interface elements (e.g. it might be
 used in a toolbar item).
 
-(4.1)
+(2020.12)
 */
 - (NSImage*)
 panelIcon
@@ -2285,7 +2543,7 @@ panelIcon
 Returns a unique identifier for the panel (e.g. it may be
 used in toolbar items that represent panels).
 
-(4.1)
+(2020.12)
 */
 - (NSString*)
 panelIdentifier
@@ -2299,7 +2557,7 @@ Returns the localized name that should be displayed as
 a label for this panel in user interface elements (e.g.
 it might be the name of a tab or toolbar icon).
 
-(4.1)
+(2020.12)
 */
 - (NSString*)
 panelName
@@ -2317,7 +2575,7 @@ any reason to resize vertically.
 IMPORTANT:	This is only a hint.  Panels must be prepared
 			to resize in both directions.
 
-(4.1)
+(2020.12)
 */
 - (Panel_ResizeConstraint)
 panelResizeAxes
@@ -2332,7 +2590,7 @@ panelResizeAxes
 /*!
 Returns the class of preferences edited by this panel.
 
-(4.1)
+(2020.12)
 */
 - (Quills::Prefs::Class)
 preferencesClass
@@ -2341,31 +2599,7 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelSessions_DataFlowViewManager
-
-
-#pragma mark -
-@implementation PrefPanelSessions_DataFlowViewManager (PrefPanelSessions_DataFlowViewManagerInternal)
-
-
-#pragma mark New Methods
-
-
-/*!
-Returns the names of key-value coding keys that represent the
-primary bindings of this panel (those that directly correspond
-to saved preferences).
-
-(4.1)
-*/
-- (NSArray*)
-primaryDisplayBindingKeys
-{
-	return @[@"localEcho", @"lineInsertionDelay", @"scrollingDelay", @"captureToFile"];
-}// primaryDisplayBindingKeys
-
-
-@end // PrefPanelSessions_DataFlowViewManager (PrefPanelSessions_DataFlowViewManagerInternal)
+@end //} PrefPanelSessions_KeyboardVC
 
 
 #pragma mark -
@@ -2930,7 +3164,7 @@ fromKeyCharPreference:(char)	aControlKeyChar
 	}
 	
 	return result;
-}// 
+}// setKeyID:fromKeyCharPreference:
 
 
 /*!
@@ -3639,7 +3873,7 @@ resetToDefaultGetSelectedNewlineMapping
 }// resetToDefaultGetSelectedNewlineMapping
 
 
-@end //}
+@end //} PrefPanelSessions_KeyboardActionHandler
 
 
 #pragma mark -
@@ -4288,7 +4522,7 @@ resetToDefaultGetPageCommandClearsScreen
 }// resetToDefaultGetPageCommandClearsScreen
 
 
-@end //}
+@end //} PrefPanelSessions_GraphicsActionHandler
 
 
 #pragma mark -
