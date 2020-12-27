@@ -61,6 +61,7 @@ class NSImage;
 #include "ListenerModel.h"
 
 // application includes
+#include <MacTermQuills/MacTermQuills.h> // for Terminal_CursorType and other enums used by SwiftUI
 #include "Emulation.h"
 #include "Preferences.h"
 #include "SessionRef.typedef.h"
@@ -140,18 +141,7 @@ enum
 													//!  XTerm colors (context: Terminal_XTermColorDescriptionConstPtr)
 };
 
-/*!
-Determines the shape of the cursor, when rendered.
-*/
-enum Terminal_CursorType
-{
-	kTerminal_CursorTypeBlock					= 0,	//!< solid, filled rectangle
-	kTerminal_CursorTypeUnderscore				= 1,	//!< 1-pixel-high underline
-	kTerminal_CursorTypeVerticalLine			= 2,	//!< standard Mac insertion point appearance
-	kTerminal_CursorTypeThickUnderscore			= 3,	//!< 2-pixel-high underscore, makes cursor easier to see
-	kTerminal_CursorTypeThickVerticalLine		= 4,	//!< 2-pixel-wide vertical line, makes cursor easier to see
-	kTerminal_CursorTypeCurrentPreferenceValue	= 200	//!< meta-value only used as a parameter in some routines
-};
+// NOTE: Terminal_CursorType is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 /*!
 Controls Terminal_Reset().
@@ -178,17 +168,7 @@ enum
 	kTerminal_SearchFlagsRegularExpression	= (1 << 3),		//!< string is a regular expression, not a literal match
 };
 
-/*!
-How scrollback lines are allocated.
-*/
-typedef UInt16 Terminal_ScrollbackType;
-enum
-{
-	kTerminal_ScrollbackTypeDisabled = 0,		//!< no lines are saved
-	kTerminal_ScrollbackTypeFixed = 1,			//!< a specific number of rows is read from the preferences
-	kTerminal_ScrollbackTypeUnlimited = 2,		//!< rows are allocated continuously, memory permitting
-	kTerminal_ScrollbackTypeDistributed = 3		//!< allocations favor the active window and starve rarely-used windows
-};
+// NOTE: Terminal_ScrollbackType is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 /*!
 Controls over the computer’s voice when it is speaking text.

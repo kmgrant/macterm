@@ -42,6 +42,7 @@
 #include <CoreServices/CoreServices.h>
 
 // application includes
+#include <MacTermQuills/MacTermQuills.h> // for VectorInterpreter_Mode and other enums used by SwiftUI
 #include "VectorCanvas.h"
 #include "VectorInterpreterRef.typedef.h"
 
@@ -59,17 +60,7 @@ enum
 	kVectorInterpreter_MaxY		= 4096
 };
 
-/*!
-The command set, which determines how input data streams
-are interpreted.
-*/
-typedef UInt16 VectorInterpreter_Mode;
-enum
-{
-	kVectorInterpreter_ModeDisabled		= 0,	//!< TEK 4014 command set
-	kVectorInterpreter_ModeTEK4014		= 4014,	//!< TEK 4014 command set
-	kVectorInterpreter_ModeTEK4105		= 4105	//!< TEK 4105 command set
-};
+// NOTE: VectorInterpreter_Mode is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 
 

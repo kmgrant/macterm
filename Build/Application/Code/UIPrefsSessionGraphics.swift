@@ -34,23 +34,17 @@ import SwiftUI
 // in order to interact with Swift playgrounds.
 //
 
-@objc public enum UIPrefsSessionGraphics_TEKMode : Int {
-	case off // no vector graphics
-	case tek4014 // black and white TEK 4014 emulator
-	case tek4105 // color TEK 4105 emulator
-}
-
 @objc public protocol UIPrefsSessionGraphics_ActionHandling : NSObjectProtocol {
 	// implement these functions to bind to button actions
 	func dataUpdated()
-	func resetToDefaultGetSelectedTEKMode() -> UIPrefsSessionGraphics_TEKMode
+	func resetToDefaultGetSelectedTEKMode() -> VectorInterpreter_Mode
 	func resetToDefaultGetPageCommandClearsScreen() -> Bool
 }
 
 class UIPrefsSessionGraphics_RunnerDummy : NSObject, UIPrefsSessionGraphics_ActionHandling {
 	// dummy used for debugging in playground (just prints function that is called)
 	func dataUpdated() { print(#function) }
-	func resetToDefaultGetSelectedTEKMode() -> UIPrefsSessionGraphics_TEKMode { print(#function); return .tek4105 }
+	func resetToDefaultGetSelectedTEKMode() -> VectorInterpreter_Mode { print(#function); return .TEK4105 }
 	func resetToDefaultGetPageCommandClearsScreen() -> Bool { print(#function); return false }
 }
 
@@ -66,7 +60,7 @@ public class UIPrefsSessionGraphics_Model : UICommon_DefaultingModel, Observable
 			if isOn { ifUserRequestedDefault { pageCommandClearsScreen = runner.resetToDefaultGetPageCommandClearsScreen() } }
 		}
 	}
-	@Published @objc public var selectedTEKMode: UIPrefsSessionGraphics_TEKMode = .off {
+	@Published @objc public var selectedTEKMode: VectorInterpreter_Mode = .disabled {
 		didSet(newType) {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultTEKMode = false }
@@ -102,14 +96,14 @@ public struct UIPrefsSessionGraphics_View : View {
 
 	@EnvironmentObject private var viewModel: UIPrefsSessionGraphics_Model
 
-	func localizedLabelView(_ forType: UIPrefsSessionGraphics_TEKMode) -> some View {
+	func localizedLabelView(_ forType: VectorInterpreter_Mode) -> some View {
 		var aTitle: String = ""
 		switch forType {
-		case .off:
+		case .disabled:
 			aTitle = "Disabled"
-		case .tek4014:
+		case .TEK4014:
 			aTitle = "TEK 4014 (black and white)"
-		case .tek4105:
+		case .TEK4105:
 			aTitle = "TEK 4105 (color)"
 		}
 		return Text(aTitle).tag(forType)
@@ -123,9 +117,9 @@ public struct UIPrefsSessionGraphics_View : View {
 			UICommon_Default1OptionLineView("TEK Graphics", bindIsDefaultTo: $viewModel.isDefaultTEKMode, isEditingDefault: viewModel.isEditingDefaultContext,
 											disableDefaultAlignmentGuide: true) {
 				Picker("", selection: $viewModel.selectedTEKMode) {
-					localizedLabelView(.off)
-					localizedLabelView(.tek4014)
-					localizedLabelView(.tek4105)
+					localizedLabelView(.disabled)
+					localizedLabelView(.TEK4014)
+					localizedLabelView(.TEK4105)
 				}.pickerStyle(RadioGroupPickerStyle())
 					.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)

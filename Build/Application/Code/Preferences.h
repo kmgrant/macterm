@@ -228,7 +228,7 @@ enum
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
 	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "SessionFactory_SpecialSession"
 	kPreferences_TagNoAnimations						= 'nanm',	//!< data: "Boolean"
-	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify…" constant
+	kPreferences_TagNotification						= 'noti',	//!< data: "UInt16", an "AlertMessages_NotificationType"
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
 	kPreferences_TagPureInverse							= 'pinv',	//!< data: "Boolean"
 	kPreferences_TagRandomTerminalFormats				= 'rfmt',	//!< data: "Boolean"

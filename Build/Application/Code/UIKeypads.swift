@@ -120,13 +120,6 @@ public enum UIKeypads_ControlKeyLabels : Int {
 	case keyCodesHex // control key with subtitle showing hex ASCII code, e.g. "0x07"
 }
 
-@objc public enum UIKeypads_FunctionKeyLayout : Int {
-	case vt220 // VT220 and multi-gnome-terminal: F1-F4 = PF1-PF4, F15 = help ("?"), F16 = "do"
-	case xtermX11 // XTerm on X11: 48 keys, all normal names
-	case xtermXFree86 // XTerm on XFree86 / gnome-terminal / GNU screen: 48 keys, F1-F4 = PF1-PF4
-	case rxvt // rxvt: 48 keys, F15 = help ("?"), F16 = "do"
-}
-
 @objc public enum UIKeypads_KeyID : Int {
 	case arrowDown
 	case arrowLeft
@@ -243,7 +236,7 @@ public class UIKeypads_Model : NSObject, ObservableObject {
 	public var runner: UIKeypads_ActionHandling
 	@Published @objc public var buttonsDisabled = false
 	@Published public var controlKeyLabels = UIKeypads_ControlKeyLabels.plain
-	@Published @objc public var functionKeyLayout = UIKeypads_FunctionKeyLayout.vt220 {
+	@Published @objc public var functionKeyLayout = Session_FunctionKeyLayout.VT220 {
 		didSet {
 			runner.saveChanges(viewModel: self)
 		}
@@ -967,13 +960,13 @@ public struct UIKeypads_FunctionKeyLayoutMenu : View {
 
 	@EnvironmentObject private var viewModel: UIKeypads_Model
 	private var isOnLayoutVT220: Binding<Bool> {
-		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .vt220 }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .vt220 })
+		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .VT220 }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .VT220 })
 	}
 	private var isOnLayoutXTermX11: Binding<Bool> {
-		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .xtermX11 }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .xtermX11 })
+		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .xTerm }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .xTerm })
 	}
 	private var isOnLayoutXTermXFree86: Binding<Bool> {
-		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .xtermXFree86 }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .xtermXFree86 })
+		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .xTermXFree86 }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .xTermXFree86 })
 	}
 	private var isOnLayoutRxvt: Binding<Bool> {
 		Binding<Bool>(get: { self.viewModel.functionKeyLayout == .rxvt }, set: { (Bool) -> Void in self.viewModel.functionKeyLayout = .rxvt })
@@ -1005,19 +998,19 @@ public struct UIKeypads_FunctionKeysView : View {
 		var nameF15 = "F15"
 		var nameF16 = "F16"
 		var is48Keys = true
-		if viewModel.functionKeyLayout == .vt220 ||
-			viewModel.functionKeyLayout == .xtermXFree86 {
+		if viewModel.functionKeyLayout == .VT220 ||
+			viewModel.functionKeyLayout == .xTermXFree86 {
 			nameF1 = "PF1"
 			nameF2 = "PF2"
 			nameF3 = "PF3"
 			nameF4 = "PF4"
 		}
-		if viewModel.functionKeyLayout == .vt220 ||
+		if viewModel.functionKeyLayout == .VT220 ||
 			viewModel.functionKeyLayout == .rxvt {
 			nameF15 = "?"
 			nameF16 = "do"
 		}
-		if viewModel.functionKeyLayout == .vt220 {
+		if viewModel.functionKeyLayout == .VT220 {
 			is48Keys = false
 		}
 		return VStack(

@@ -476,8 +476,7 @@ void				setScreenBaseColor					(My_TerminalViewPtr, TerminalView_ColorIndex, CGF
 void				setScreenCoreColor					(My_TerminalViewPtr, UInt16, CGFloatRGBColor const*);
 void				setScreenCustomColor				(My_TerminalViewPtr, TerminalView_ColorIndex, CGFloatRGBColor const*);
 void				setTextAttributesDictionary			(My_TerminalViewPtr, NSMutableDictionary*, TextAttributes_Object, Boolean = false);
-void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, CGRect*, HIMutableShapeRef,
-														 Terminal_CursorType = kTerminal_CursorTypeCurrentPreferenceValue);
+void				setUpCursorBounds					(My_TerminalViewPtr, SInt16, SInt16, CGRect*, HIMutableShapeRef);
 void				setUpScreenFontMetrics				(My_TerminalViewPtr);
 void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 Boolean				startMonitoringDataSource			(My_TerminalViewPtr, TerminalScreenRef);
@@ -9250,8 +9249,7 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 					 SInt16					inX,
 					 SInt16					inY,
 					 CGRect*				outBoundsPtr,
-					 HIMutableShapeRef		inoutUpdatedShapeOrNull,
-					 Terminal_CursorType	inTerminalCursorType)
+					 HIMutableShapeRef		inoutUpdatedShapeOrNull)
 {
 	enum
 	{
@@ -9267,15 +9265,8 @@ setUpCursorBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	CGSize					characterSizeInPixels; // based on font metrics
 	CGRect					rowBounds;
 	CGFloat					thickness = 0; // used for non-block-shaped cursors
-	Terminal_CursorType		terminalCursorType = inTerminalCursorType;
+	Terminal_CursorType		terminalCursorType = cursorType(inTerminalViewPtr);
 	
-	
-	// if requested, use whatever cursor shape the user wants;
-	// otherwise, calculate the bounds for the given shape
-	if (inTerminalCursorType == kTerminal_CursorTypeCurrentPreferenceValue)
-	{
-		terminalCursorType = cursorType(inTerminalViewPtr);
-	}
 	
 	getRowBounds(inTerminalViewPtr, inY, rowBounds);
 	

@@ -1061,7 +1061,7 @@ Preferences_Init ()
 										CFSTR("data-send-paste-no-warning"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagNotification,
 									CFSTR("when-alert-in-background"), kPreferences_DataTypeCFStringRef/* "alert", "animate", "badge", "ignore" */,
-									sizeof(SInt16), Quills::Prefs::GENERAL);
+									sizeof(UInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNotifyOfBeeps,
 									CFSTR("terminal-when-bell-in-background"), kPreferences_DataTypeCFStringRef/* "notify", "ignore" */,
 									sizeof(Boolean), Quills::Prefs::GENERAL);
@@ -6769,24 +6769,24 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							SInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, SInt16*);
+							UInt16*		storedValuePtr = REINTERPRET_CAST(outDataPtr, UInt16*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("ignore"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kAlert_NotifyDoNothing;
+								*storedValuePtr = kAlertMessages_NotificationTypeDoNothing;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("badge"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kAlert_NotifyDisplayDiamondMark;
+								*storedValuePtr = kAlertMessages_NotificationTypeMarkDockIcon;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("animate"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kAlert_NotifyDisplayIconAndDiamondMark;
+								*storedValuePtr = kAlertMessages_NotificationTypeMarkDockIconAndBounceOnce;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("alert"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kAlert_NotifyAlsoDisplayAlert;
+								*storedValuePtr = kAlertMessages_NotificationTypeMarkDockIconAndBounceRepeatedly;
 							}
 							else
 							{
@@ -9387,19 +9387,19 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(kPreferences_DataTypeCFStringRef == keyValueType);
 					switch (data)
 					{
-					case kAlert_NotifyDoNothing:
+					case kAlertMessages_NotificationTypeDoNothing:
 						setApplicationPreference(keyName, CFSTR("ignore"));
 						break;
 					
-					case kAlert_NotifyDisplayIconAndDiamondMark:
+					case kAlertMessages_NotificationTypeMarkDockIconAndBounceOnce:
 						setApplicationPreference(keyName, CFSTR("animate"));
 						break;
 					
-					case kAlert_NotifyAlsoDisplayAlert:
+					case kAlertMessages_NotificationTypeMarkDockIconAndBounceRepeatedly:
 						setApplicationPreference(keyName, CFSTR("alert"));
 						break;
 					
-					case kAlert_NotifyDisplayDiamondMark:
+					case kAlertMessages_NotificationTypeMarkDockIcon:
 					default:
 						setApplicationPreference(keyName, CFSTR("badge"));
 						break;

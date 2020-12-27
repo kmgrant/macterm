@@ -34,13 +34,6 @@ import SwiftUI
 // in order to interact with Swift playgrounds.
 //
 
-@objc public enum UIPrefsGeneralNotifications_BackgroundAction : Int {
-	case none // no action when notification appears while application is in the background
-	case modifyIcon // show special indicator in the Dock
-	case andBounceIcon // ...also animate Dock icon at least once
-	case andBounceRepeatedly // ...and bounce again periodically
-}
-
 @objc public protocol UIPrefsGeneralNotifications_ActionHandling : NSObjectProtocol {
 	// implement these functions to bind to button actions
 	func dataUpdated()
@@ -84,7 +77,7 @@ public class UIPrefsGeneralNotifications_Model : UICommon_BaseModel, ObservableO
 	@Published @objc public var bellNotificationInBackground = false {
 		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
 	}
-	@Published @objc public var backgroundNotificationAction: UIPrefsGeneralNotifications_BackgroundAction = .none {
+	@Published @objc public var backgroundNotificationAction: AlertMessages_NotificationType = .doNothing {
 		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	public var runner: UIPrefsGeneralNotifications_ActionHandling
@@ -110,16 +103,16 @@ public struct UIPrefsGeneralNotifications_View : View {
 
 	@EnvironmentObject private var viewModel: UIPrefsGeneralNotifications_Model
 
-	func localizedLabelView(_ forType: UIPrefsGeneralNotifications_BackgroundAction) -> some View {
+	func localizedLabelView(_ forType: AlertMessages_NotificationType) -> some View {
 		var aTitle: String = ""
 		switch forType {
-		case .none:
+		case .doNothing:
 			aTitle = "No alert"
-		case .modifyIcon:
+		case .markDockIcon:
 			aTitle = "Modify the Dock icon"
-		case .andBounceIcon:
+		case .markDockIconAndBounceOnce:
 			aTitle = "…and bounce the Dock icon"
-		case .andBounceRepeatedly:
+		case .markDockIconAndBounceRepeatedly:
 			aTitle = "…and bounce repeatedly"
 		}
 		return Text(aTitle).tag(forType)
@@ -169,10 +162,10 @@ public struct UIPrefsGeneralNotifications_View : View {
 				UICommon_OptionLineView("When In Background", disableDefaultAlignmentGuide: true, noDefaultSpacing: true) {
 					Picker("", selection: $viewModel.backgroundNotificationAction) {
 						// TBD: how to insert dividing-line in this type of menu?
-						localizedLabelView(.none)
-						localizedLabelView(.modifyIcon)
-						localizedLabelView(.andBounceIcon)
-						localizedLabelView(.andBounceRepeatedly)
+						localizedLabelView(.doNothing)
+						localizedLabelView(.markDockIcon)
+						localizedLabelView(.markDockIconAndBounceOnce)
+						localizedLabelView(.markDockIconAndBounceRepeatedly)
 					}.pickerStyle(RadioGroupPickerStyle())
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 						.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)

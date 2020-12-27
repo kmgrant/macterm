@@ -34,20 +34,13 @@ import SwiftUI
 // in order to interact with Swift playgrounds.
 //
 
-@objc public enum UIPrefsTerminalScreen_ScrollbackType : Int {
-	case off // no scrollback (disabled and empty)
-	case fixed // a specific number of maximum rows, after which the oldest lines are thrown away
-	case unlimited // lines never go away, more are allocated as needed
-	case distributed // a specific number of maximum rows but the limit is shared across other terminal screens that are also distributed
-}
-
 @objc public protocol UIPrefsTerminalScreen_ActionHandling : NSObjectProtocol {
 	// implement these functions to bind to button actions
 	func dataUpdated()
 	func resetToDefaultGetWidth() -> Int
 	func resetToDefaultGetHeight() -> Int
 	func resetToDefaultGetScrollbackRowCount() -> Int
-	func resetToDefaultGetScrollbackType() -> UIPrefsTerminalScreen_ScrollbackType
+	func resetToDefaultGetScrollbackType() -> Terminal_ScrollbackType
 }
 
 class UIPrefsTerminalScreen_RunnerDummy : NSObject, UIPrefsTerminalScreen_ActionHandling {
@@ -56,7 +49,7 @@ class UIPrefsTerminalScreen_RunnerDummy : NSObject, UIPrefsTerminalScreen_Action
 	func resetToDefaultGetWidth() -> Int { print(#function); return 80 }
 	func resetToDefaultGetHeight() -> Int { print(#function); return 24 }
 	func resetToDefaultGetScrollbackRowCount() -> Int { print(#function); return 200 }
-	func resetToDefaultGetScrollbackType() -> UIPrefsTerminalScreen_ScrollbackType { print(#function); return .off }
+	func resetToDefaultGetScrollbackType() -> Terminal_ScrollbackType { print(#function); return .disabled }
 }
 
 public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableObject {
@@ -107,7 +100,7 @@ public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableO
 			ifWritebackEnabled {
 				if scrollbackValue <= 0.5 {
 					// auto-off for zero value (causes same update triggers; see below)
-					selectedScrollbackType = .off
+					selectedScrollbackType = .disabled
 				} else {
 					inNonDefaultContext { isDefaultScrollback = false }
 					runner.dataUpdated()
@@ -115,7 +108,7 @@ public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableO
 			}
 		}
 	}
-	@Published @objc public var selectedScrollbackType: UIPrefsTerminalScreen_ScrollbackType = .off {
+	@Published @objc public var selectedScrollbackType: Terminal_ScrollbackType = .disabled {
 		didSet(newType) {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultScrollback = false }
@@ -151,10 +144,10 @@ public struct UIPrefsTerminalScreen_View : View {
 		return (.fixed != viewModel.selectedScrollbackType)
 	}
 
-	func localizedLabelView(_ forType: UIPrefsTerminalScreen_ScrollbackType) -> some View {
+	func localizedLabelView(_ forType: Terminal_ScrollbackType) -> some View {
 		var aTitle: String = ""
 		switch forType {
-		case .off:
+		case .disabled:
 			aTitle = "Off"
 		case .fixed:
 			aTitle = "Fixed Size"
@@ -187,7 +180,7 @@ public struct UIPrefsTerminalScreen_View : View {
 			UICommon_Default1OptionLineView("Scrollback", bindIsDefaultTo: $viewModel.isDefaultScrollback, isEditingDefault: viewModel.isEditingDefaultContext) {
 				Picker("", selection: $viewModel.selectedScrollbackType) {
 					// TBD: how to insert dividing-line in this type of menu?
-					localizedLabelView(.off)
+					localizedLabelView(.disabled)
 					localizedLabelView(.fixed)
 					localizedLabelView(.unlimited)
 					localizedLabelView(.distributed)

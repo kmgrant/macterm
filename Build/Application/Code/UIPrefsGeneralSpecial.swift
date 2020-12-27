@@ -34,14 +34,6 @@ import SwiftUI
 // in order to interact with Swift playgrounds.
 //
 
-@objc public enum UIPrefsGeneralSpecial_CursorType : Int {
-	case block // rectangular cursor
-	case verticalBar // normal insertion point
-	case underline // bottom line only
-	case thickVerticalBar // wider version of insertion point
-	case thickUnderline // thick bottom line only
-}
-
 @objc public enum UIPrefsGeneralSpecial_WindowResizeEffect : Int {
 	case terminalScreenSize
 	case textSize
@@ -68,7 +60,7 @@ class UIPrefsGeneralSpecial_RunnerDummy : NSObject, UIPrefsGeneralSpecial_Action
 
 public class UIPrefsGeneralSpecial_Model : UICommon_BaseModel, ObservableObject {
 
-	@Published @objc public var selectedCursorShape: UIPrefsGeneralSpecial_CursorType = .verticalBar {
+	@Published @objc public var selectedCursorShape: Terminal_CursorType = .verticalLine {
 		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var cursorFlashEnabled = false {
@@ -96,18 +88,18 @@ public struct UIPrefsGeneralSpecial_View : View {
 	@EnvironmentObject private var viewModel: UIPrefsGeneralSpecial_Model
 	private var tabSizeFormatter = NumberFormatter()
 
-	func localizedLabelView(_ forType: UIPrefsGeneralSpecial_CursorType) -> some View {
+	func localizedLabelView(_ forType: Terminal_CursorType) -> some View {
 		var aTitle: String = ""
 		switch forType {
 		case .block:
 			aTitle = "▊"
-		case .verticalBar:
+		case .verticalLine:
 			aTitle = "│"
-		case .underline:
+		case .underscore:
 			aTitle = "▁"
-		case .thickVerticalBar:
+		case .thickVerticalLine:
 			aTitle = "┃"
-		case .thickUnderline:
+		case .thickUnderscore:
 			aTitle = "▂"
 		}
 		return Text(aTitle).tag(forType)
@@ -148,10 +140,10 @@ public struct UIPrefsGeneralSpecial_View : View {
 				HStack {
 					Picker("", selection: $viewModel.selectedCursorShape) {
 						localizedLabelView(.block)
-						localizedLabelView(.verticalBar)
-						localizedLabelView(.underline)
-						localizedLabelView(.thickVerticalBar)
-						localizedLabelView(.thickUnderline)
+						localizedLabelView(.verticalLine)
+						localizedLabelView(.underscore)
+						localizedLabelView(.thickVerticalLine)
+						localizedLabelView(.thickUnderscore)
 					}.pickerStyle(SegmentedPickerStyle())
 						.frame(maxWidth: 200)
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label

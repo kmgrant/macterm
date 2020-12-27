@@ -156,7 +156,7 @@ Boolean						gIsAnimationAllowed = false;
 Boolean						gNotificationIsBackgrounded = false;
 Boolean						gNotificationIsIconBadged = false;
 Boolean						gUseSpeech = false;
-UInt16						gNotificationPreferences = kAlert_NotifyDisplayDiamondMark;
+UInt16						gNotificationPreferences = kAlertMessages_NotificationTypeMarkDockIcon;
 NSInteger					gNotificationRequestID = kInvalidUserAttentionRequestID;
 My_AlertPtrLocker&			gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
 My_AlertReferenceLocker&	gAlertRefLocks ()	{ static My_AlertReferenceLocker x; return x; }
@@ -929,19 +929,25 @@ backgroundNotification ()
 	if ((gNotificationIsBackgrounded) && (kInvalidUserAttentionRequestID == gNotificationRequestID))
 	{
 		// badge the application’s Dock tile with a caution icon, if that preference is set
-		if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark)
+		switch (gNotificationPreferences)
 		{
+		case kAlertMessages_NotificationTypeMarkDockIcon:
 			badgeApplicationDockTile();
-		}
+			break;
 		
-		// optionally add more noticeable effects
-		if (gNotificationPreferences >= kAlert_NotifyAlsoDisplayAlert)
-		{
-			gNotificationRequestID = [NSApp requestUserAttention:NSCriticalRequest];
-		}
-		else if (gNotificationPreferences >= kAlert_NotifyDisplayIconAndDiamondMark)
-		{
+		case kAlertMessages_NotificationTypeMarkDockIconAndBounceOnce:
+			badgeApplicationDockTile();
 			gNotificationRequestID = [NSApp requestUserAttention:NSInformationalRequest];
+			break;
+		
+		case kAlertMessages_NotificationTypeMarkDockIconAndBounceRepeatedly:
+			badgeApplicationDockTile();
+			gNotificationRequestID = [NSApp requestUserAttention:NSCriticalRequest];
+			break;
+		
+		case kAlertMessages_NotificationTypeDoNothing:
+		default:
+			break;
 		}
 		
 		result = true;

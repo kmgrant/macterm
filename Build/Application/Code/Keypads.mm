@@ -297,31 +297,9 @@ Keypads_IsFunctionKeyLayoutEqualTo	(Session_FunctionKeyLayout	inLayout)
 {
 	Boolean				result = false;
 	UIKeypads_Model*	viewModel = [Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController].viewModel;
-	auto				currentLayout = viewModel.functionKeyLayout;
 	
 	
-	switch (inLayout)
-	{
-	case kSession_FunctionKeyLayoutRxvt:
-		result = (UIKeypads_FunctionKeyLayoutRxvt == currentLayout);
-		break;
-	
-	case kSession_FunctionKeyLayoutVT220:
-		result = (UIKeypads_FunctionKeyLayoutVt220 == currentLayout);
-		break;
-	
-	case kSession_FunctionKeyLayoutXTerm:
-		result = (UIKeypads_FunctionKeyLayoutXtermX11 == currentLayout);
-		break;
-	
-	case kSession_FunctionKeyLayoutXTermXFree86:
-		result = (UIKeypads_FunctionKeyLayoutXtermXFree86 == currentLayout);
-		break;
-	
-	default:
-		// ???
-		break;
-	}
+	result = (viewModel.functionKeyLayout == inLayout);
 	
 	return result;
 }// IsFunctionKeyLayoutEqualTo
@@ -428,29 +406,7 @@ Keypads_SetFunctionKeyLayout	(Session_FunctionKeyLayout	inLayout)
 	
 	
 	// update UI and save to preferences (triggers "saveChangesWithViewModel:")
-	switch (inLayout)
-	{
-	case kSession_FunctionKeyLayoutRxvt:
-		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutRxvt;
-		break;
-	
-	case kSession_FunctionKeyLayoutVT220:
-		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutVt220;
-		break;
-	
-	case kSession_FunctionKeyLayoutXTerm:
-		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermX11;
-		break;
-	
-	case kSession_FunctionKeyLayoutXTermXFree86:
-		viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermXFree86;
-		break;
-	
-	default:
-		// ???
-		Console_Warning(Console_WriteValue, "ignoring unrecognized function key layout", (int)inLayout);
-		break;
-	}
+	viewModel.functionKeyLayout = inLayout;
 }// SetFunctionKeyLayout
 
 
@@ -1256,25 +1212,7 @@ init
 				gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
 			}
 			
-			switch (gFunctionKeysLayout)
-			{
-			case kSession_FunctionKeyLayoutRxvt:
-				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutRxvt;
-				break;
-			
-			case kSession_FunctionKeyLayoutXTerm:
-				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermX11;
-				break;
-			
-			case kSession_FunctionKeyLayoutXTermXFree86:
-				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutXtermXFree86;
-				break;
-			
-			case kSession_FunctionKeyLayoutVT220:
-			default:
-				self.viewModel.functionKeyLayout = UIKeypads_FunctionKeyLayoutVt220;
-				break;
-			}
+			self.viewModel.functionKeyLayout = gFunctionKeysLayout;
 		}
 		
 		self.windowFrameAutosaveName = @"FunctionKeys"; // (for backward compatibility, never change this)
@@ -1536,30 +1474,8 @@ Writes any settings to preferences, if appropriate.
 - (void)
 saveChangesWithViewModel:(UIKeypads_Model*)		aViewModel
 {
-	Session_FunctionKeyLayout	savedValue = kSession_FunctionKeyLayoutVT220;
+	Session_FunctionKeyLayout	savedValue = aViewModel.functionKeyLayout;
 	
-	
-	switch (aViewModel.functionKeyLayout)
-	{
-	case UIKeypads_FunctionKeyLayoutRxvt:
-		savedValue = kSession_FunctionKeyLayoutRxvt;
-		break;
-	
-	case UIKeypads_FunctionKeyLayoutVt220:
-		savedValue = kSession_FunctionKeyLayoutVT220;
-		break;
-	
-	case UIKeypads_FunctionKeyLayoutXtermX11:
-		savedValue = kSession_FunctionKeyLayoutXTerm;
-		break;
-	
-	case UIKeypads_FunctionKeyLayoutXtermXFree86:
-		savedValue = kSession_FunctionKeyLayoutXTermXFree86;
-		break;
-	
-	default:
-		break;
-	}
 	
 	// save function key layout
 	if (savedValue != gFunctionKeysLayout)

@@ -164,14 +164,6 @@ done from this implementation file, and used by this internal class.
 	resetToDefaultGetFlagWithTag:(Preferences_Tag)_;
 	- (char)
 	returnKeyCharPreferenceForUIEnum:(UIKeypads_KeyID)_;
-	- (Session_EmacsMetaKey)
-	returnMetaPreferenceForUIEnum:(UIPrefsSessionKeyboard_MetaMapping)_;
-	- (Session_NewlineMode)
-	returnNewlinePreferenceForUIEnum:(UIPrefsSessionKeyboard_NewlineMapping)_;
-	- (UIPrefsSessionKeyboard_MetaMapping)
-	returnUIEnumForMetaPreference:(Session_EmacsMetaKey)_;
-	- (UIPrefsSessionKeyboard_NewlineMapping)
-	returnUIEnumForNewlinePreference:(Session_NewlineMode)_;
 	- (BOOL)
 	setKeyID:(UIKeypads_KeyID*)_
 	fromKeyCharPreference:(char)_;
@@ -206,10 +198,6 @@ done from this implementation file, and used by this internal class.
 // new methods
 	- (BOOL)
 	resetToDefaultGetFlagWithTag:(Preferences_Tag)_;
-	- (VectorInterpreter_Mode)
-	returnPreferenceForUIEnum:(UIPrefsSessionGraphics_TEKMode)_;
-	- (UIPrefsSessionGraphics_TEKMode)
-	returnUIEnumForPreference:(VectorInterpreter_Mode)_;
 	- (void)
 	updateViewModelFromPrefsMgr;
 
@@ -2842,166 +2830,6 @@ returnKeyCharPreferenceForUIEnum:(UIKeypads_KeyID)	aUIEnum
 
 
 /*!
-Translate from UI-specified Emacs meta key constant to
-the equivalent constant stored in Preferences.
-
-TEMPORARY; this is primarily needed because it is tricky to
-expose certain Objective-C types in Swift.  If those can be
-consolidated, this mapping can go away.
-
-See also "returnUIEnumForMetaPreference:".
-
-(2020.12)
-*/
-- (Session_EmacsMetaKey)
-returnMetaPreferenceForUIEnum:(UIPrefsSessionKeyboard_MetaMapping)	aUIEnum
-{
-	Session_EmacsMetaKey	result = kSession_EmacsMetaKeyOff;
-	
-	
-	switch (aUIEnum)
-	{
-	case UIPrefsSessionKeyboard_MetaMappingOptionKey:
-		result = kSession_EmacsMetaKeyOption;
-		break;
-	
-	case UIPrefsSessionKeyboard_MetaMappingShiftOptionKeys:
-		result = kSession_EmacsMetaKeyShiftOption;
-		break;
-	
-	case UIPrefsSessionKeyboard_MetaMappingOff:
-	default:
-		result = kSession_EmacsMetaKeyOff;
-		break;
-	}
-	
-	return result;
-}// returnMetaPreferenceForUIEnum:
-
-
-/*!
-Translate from UI-specified new-line mapping constant to
-the equivalent constant stored in Preferences.
-
-TEMPORARY; this is primarily needed because it is tricky to
-expose certain Objective-C types in Swift.  If those can be
-consolidated, this mapping can go away.
-
-See also "returnUIEnumForNewlinePreference:".
-
-(2020.12)
-*/
-- (Session_NewlineMode)
-returnNewlinePreferenceForUIEnum:(UIPrefsSessionKeyboard_NewlineMapping)	aUIEnum
-{
-	Session_NewlineMode		result = kSession_NewlineModeMapLF;
-	
-	
-	switch (aUIEnum)
-	{
-	case UIPrefsSessionKeyboard_NewlineMappingCarriageReturn:
-		result = kSession_NewlineModeMapCR;
-		break;
-	
-	case UIPrefsSessionKeyboard_NewlineMappingCarriageReturnLineFeed:
-		result = kSession_NewlineModeMapCRLF;
-		break;
-	
-	case UIPrefsSessionKeyboard_NewlineMappingCarriageReturnNull:
-		result = kSession_NewlineModeMapCRNull;
-		break;
-	
-	case UIPrefsSessionKeyboard_NewlineMappingLineFeed:
-	default:
-		result = kSession_NewlineModeMapLF;
-		break;
-	}
-	
-	return result;
-}// returnNewlinePreferenceForUIEnum:
-
-
-/*!
-Translate from UI-specified Emacs meta-key constant to
-the equivalent constant stored in Preferences.
-
-TEMPORARY; this is primarily needed because it is tricky to
-expose certain Objective-C types in Swift.  If those can be
-consolidated, this mapping can go away.
-
-See also "returnPreferenceForUIEnum:".
-
-(2020.12)
-*/
-- (UIPrefsSessionKeyboard_MetaMapping)
-returnUIEnumForMetaPreference:(Session_EmacsMetaKey)	aPreferenceValue
-{
-	UIPrefsSessionKeyboard_MetaMapping		result = UIPrefsSessionKeyboard_MetaMappingOff;
-	
-	
-	switch (aPreferenceValue)
-	{
-	case kSession_EmacsMetaKeyOption:
-		result = UIPrefsSessionKeyboard_MetaMappingOptionKey;
-		break;
-	
-	case kSession_EmacsMetaKeyShiftOption:
-		result = UIPrefsSessionKeyboard_MetaMappingShiftOptionKeys;
-		break;
-	
-	case kSession_EmacsMetaKeyOff:
-	default:
-		result = UIPrefsSessionKeyboard_MetaMappingOff;
-		break;
-	}
-	
-	return result;
-}// returnUIEnumForMetaPreference:
-
-
-/*!
-Translate from UI-specified new-line mapping constant to
-the equivalent constant stored in Preferences.
-
-TEMPORARY; this is primarily needed because it is tricky to
-expose certain Objective-C types in Swift.  If those can be
-consolidated, this mapping can go away.
-
-See also "returnPreferenceForUIEnum:".
-
-(2020.12)
-*/
-- (UIPrefsSessionKeyboard_NewlineMapping)
-returnUIEnumForNewlinePreference:(Session_NewlineMode)		aPreferenceValue
-{
-	UIPrefsSessionKeyboard_NewlineMapping		result = UIPrefsSessionKeyboard_NewlineMappingLineFeed;
-	
-	
-	switch (aPreferenceValue)
-	{
-	case kSession_NewlineModeMapCR:
-		result = UIPrefsSessionKeyboard_NewlineMappingCarriageReturn;
-		break;
-	
-	case kSession_NewlineModeMapCRLF:
-		result = UIPrefsSessionKeyboard_NewlineMappingCarriageReturnLineFeed;
-		break;
-	
-	case kSession_NewlineModeMapCRNull:
-		result = UIPrefsSessionKeyboard_NewlineMappingCarriageReturnNull;
-		break;
-	
-	case kSession_NewlineModeMapLF:
-	default:
-		result = UIPrefsSessionKeyboard_NewlineMappingLineFeed;
-		break;
-	}
-	
-	return result;
-}// returnUIEnumForNewlinePreference:
-
-
-/*!
 Translates an ASCII code into a UI binding for a control key;
 only invisible control characters are supported (i.e. in
 the range 0x00-0x1F inclusive).
@@ -3317,7 +3145,7 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			self.viewModel.selectedMetaMapping = [self returnUIEnumForMetaPreference:preferenceValue]; // SwiftUI binding
+			self.viewModel.selectedMetaMapping = STATIC_CAST(preferenceValue, Session_EmacsMetaKey); // SwiftUI binding
 			self.viewModel.isDefaultEmacsMetaMapping = isDefault; // SwiftUI binding
 		}
 	}
@@ -3355,7 +3183,7 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			self.viewModel.selectedNewlineMapping = [self returnUIEnumForNewlinePreference:preferenceValue]; // SwiftUI binding
+			self.viewModel.selectedNewlineMapping = STATIC_CAST(preferenceValue, Session_NewlineMode); // SwiftUI binding
 			self.viewModel.isDefaultNewlineMapping = isDefault; // SwiftUI binding
 		}
 	}
@@ -3521,7 +3349,7 @@ dataUpdated
 	}
 	{
 		Preferences_Tag			preferenceTag = kPreferences_TagEmacsMetaKey;
-		VectorInterpreter_Mode	enumPrefValue = [self returnMetaPreferenceForUIEnum:self.viewModel.selectedMetaMapping];
+		Session_EmacsMetaKey	enumPrefValue = self.viewModel.selectedMetaMapping;
 		UInt16					preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
 		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
 																			sizeof(preferenceValue), &preferenceValue);
@@ -3548,7 +3376,7 @@ dataUpdated
 	}
 	{
 		Preferences_Tag			preferenceTag = kPreferences_TagNewLineMapping;
-		VectorInterpreter_Mode	enumPrefValue = [self returnNewlinePreferenceForUIEnum:self.viewModel.selectedNewlineMapping];
+		Session_NewlineMode		enumPrefValue = self.viewModel.selectedNewlineMapping;
 		UInt16					preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
 		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
 																			sizeof(preferenceValue), &preferenceValue);
@@ -3780,11 +3608,11 @@ returns the Default value.
 
 (2020.12)
 */
-- (UIPrefsSessionKeyboard_MetaMapping)
+- (Session_EmacsMetaKey)
 resetToDefaultGetSelectedMetaMapping
 {
-	UIPrefsSessionKeyboard_MetaMapping	result = UIPrefsSessionKeyboard_MetaMappingOff;
-	Preferences_Tag						preferenceTag = kPreferences_TagEmacsMetaKey;
+	Session_EmacsMetaKey	result = kSession_EmacsMetaKeyOff;
+	Preferences_Tag			preferenceTag = kPreferences_TagEmacsMetaKey;
 	
 	
 	// delete local preference
@@ -3809,7 +3637,7 @@ resetToDefaultGetSelectedMetaMapping
 		}
 		else
 		{
-			result = [self returnUIEnumForMetaPreference:STATIC_CAST(preferenceValue, Session_EmacsMetaKey)];
+			result = STATIC_CAST(preferenceValue, Session_EmacsMetaKey);
 		}
 	}
 	
@@ -3836,11 +3664,11 @@ returns the Default value.
 
 (2020.12)
 */
-- (UIPrefsSessionKeyboard_NewlineMapping)
+- (Session_NewlineMode)
 resetToDefaultGetSelectedNewlineMapping
 {
-	UIPrefsSessionKeyboard_NewlineMapping	result = UIPrefsSessionKeyboard_NewlineMappingLineFeed;
-	Preferences_Tag							preferenceTag = kPreferences_TagNewLineMapping;
+	Session_NewlineMode		result = kSession_NewlineModeMapLF;
+	Preferences_Tag			preferenceTag = kPreferences_TagNewLineMapping;
 	
 	
 	// delete local preference
@@ -3865,7 +3693,7 @@ resetToDefaultGetSelectedNewlineMapping
 		}
 		else
 		{
-			result = [self returnUIEnumForNewlinePreference:STATIC_CAST(preferenceValue, Session_NewlineMode)];
+			result = STATIC_CAST(preferenceValue, Session_NewlineMode);
 		}
 	}
 	
@@ -4261,82 +4089,6 @@ resetToDefaultGetFlagWithTag:(Preferences_Tag)		aTag
 
 
 /*!
-Translate from UI-specified base emulator type constant to
-the equivalent constant stored in Preferences.
-
-TEMPORARY; this is primarily needed because it is tricky to
-expose certain Objective-C types in Swift.  If those can be
-consolidated, this mapping can go away.
-
-See also "returnUIEnumForPreference:".
-
-(2020.11)
-*/
-- (VectorInterpreter_Mode)
-returnPreferenceForUIEnum:(UIPrefsSessionGraphics_TEKMode)	aUIEnum
-{
-	VectorInterpreter_Mode		result = kVectorInterpreter_ModeDisabled;
-	
-	
-	switch (aUIEnum)
-	{
-	case UIPrefsSessionGraphics_TEKModeTek4014:
-		result = kVectorInterpreter_ModeTEK4014;
-		break;
-	
-	case UIPrefsSessionGraphics_TEKModeTek4105:
-		result = kVectorInterpreter_ModeTEK4105;
-		break;
-	
-	case UIPrefsSessionGraphics_TEKModeOff:
-	default:
-		result = kVectorInterpreter_ModeDisabled;
-		break;
-	}
-	
-	return result;
-}// returnPreferenceForUIEnum:
-
-
-/*!
-Translate from UI-specified graphics mode constant to
-the equivalent constant stored in Preferences.
-
-TEMPORARY; this is primarily needed because it is tricky to
-expose certain Objective-C types in Swift.  If those can be
-consolidated, this mapping can go away.
-
-See also "returnPreferenceForUIEnum:".
-
-(2020.11)
-*/
-- (UIPrefsSessionGraphics_TEKMode)
-returnUIEnumForPreference:(VectorInterpreter_Mode)		aPreferenceValue
-{
-	UIPrefsSessionGraphics_TEKMode		result = UIPrefsSessionGraphics_TEKModeOff;
-	
-	
-	switch (aPreferenceValue)
-	{
-	case kVectorInterpreter_ModeTEK4014:
-		result = UIPrefsSessionGraphics_TEKModeTek4014;
-		break;
-	
-	case kVectorInterpreter_ModeTEK4105:
-		result = UIPrefsSessionGraphics_TEKModeTek4105;
-		break;
-	
-	case kVectorInterpreter_ModeDisabled:
-	default:
-		result = UIPrefsSessionGraphics_TEKModeOff;
-		break;
-	}
-	
-	return result;
-}// returnUIEnumForPreference:
-
-
-/*!
 Updates the view model’s observed properties based on
 current preferences context data.
 
@@ -4374,7 +4126,7 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			self.viewModel.selectedTEKMode = [self returnUIEnumForPreference:preferenceValue]; // SwiftUI binding
+			self.viewModel.selectedTEKMode = STATIC_CAST(preferenceValue, VectorInterpreter_Mode); // SwiftUI binding
 			self.viewModel.isDefaultTEKMode = isDefault; // SwiftUI binding
 		}
 	}
@@ -4436,7 +4188,7 @@ dataUpdated
 	// update TEK mode
 	{
 		Preferences_Tag			preferenceTag = kPreferences_TagTektronixMode;
-		VectorInterpreter_Mode	enumPrefValue = [self returnPreferenceForUIEnum:self.viewModel.selectedTEKMode];
+		VectorInterpreter_Mode	enumPrefValue = self.viewModel.selectedTEKMode;
 		UInt16					preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
 		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
 																			sizeof(preferenceValue), &preferenceValue);
@@ -4472,11 +4224,11 @@ returns the Default value.
 
 (2020.11)
 */
-- (UIPrefsSessionGraphics_TEKMode)
+- (VectorInterpreter_Mode)
 resetToDefaultGetSelectedTEKMode
 {
-	UIPrefsSessionGraphics_TEKMode		result = UIPrefsSessionGraphics_TEKModeOff;
-	Preferences_Tag						preferenceTag = kPreferences_TagTerminalEmulatorType;
+	VectorInterpreter_Mode		result = kVectorInterpreter_ModeDisabled;
+	Preferences_Tag				preferenceTag = kPreferences_TagTerminalEmulatorType;
 	
 	
 	// delete local preference
@@ -4501,7 +4253,7 @@ resetToDefaultGetSelectedTEKMode
 		}
 		else
 		{
-			result = [self returnUIEnumForPreference:STATIC_CAST(preferenceValue, VectorInterpreter_Mode)];
+			result = STATIC_CAST(preferenceValue, VectorInterpreter_Mode);
 		}
 	}
 	

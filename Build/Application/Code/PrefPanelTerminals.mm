@@ -2269,32 +2269,7 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			UIPrefsTerminalScreen_ScrollbackType	bindingValue = UIPrefsTerminalScreen_ScrollbackTypeOff;
-			
-			
-			switch (preferenceValue)
-			{
-			case kTerminal_ScrollbackTypeDisabled:
-				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeOff;
-				break;
-			
-			case kTerminal_ScrollbackTypeFixed:
-				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeFixed;
-				break;
-			
-			case kTerminal_ScrollbackTypeUnlimited:
-				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeUnlimited;
-				break;
-			
-			case kTerminal_ScrollbackTypeDistributed:
-				bindingValue = UIPrefsTerminalScreen_ScrollbackTypeDistributed;
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-			self.viewModel.selectedScrollbackType = bindingValue; // SwiftUI binding
+			self.viewModel.selectedScrollbackType = STATIC_CAST(preferenceValue, Terminal_ScrollbackType); // SwiftUI binding
 			isDefaultScrollbackType = isDefault; // see below; used to update binding
 		}
 	}
@@ -2379,35 +2354,10 @@ dataUpdated
 	}
 	{
 		Preferences_Tag				preferenceTag = kPreferences_TagTerminalScreenScrollbackType;
-		Terminal_ScrollbackType		enumPrefValue = kTerminal_ScrollbackTypeDisabled;
-		
-		
-		switch (self.viewModel.selectedScrollbackType)
-		{
-		case UIPrefsTerminalScreen_ScrollbackTypeOff:
-			enumPrefValue = kTerminal_ScrollbackTypeDisabled;
-			break;
-		
-		case UIPrefsTerminalScreen_ScrollbackTypeFixed:
-			enumPrefValue = kTerminal_ScrollbackTypeFixed;
-			break;
-		
-		case UIPrefsTerminalScreen_ScrollbackTypeUnlimited:
-			enumPrefValue = kTerminal_ScrollbackTypeUnlimited;
-			break;
-		
-		case UIPrefsTerminalScreen_ScrollbackTypeDistributed:
-			enumPrefValue = kTerminal_ScrollbackTypeDistributed;
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-		
-		UInt16				preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
-		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
-																		sizeof(preferenceValue), &preferenceValue);
+		Terminal_ScrollbackType		enumPrefValue = self.viewModel.selectedScrollbackType;
+		UInt16						preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
+		Preferences_Result			prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																				sizeof(preferenceValue), &preferenceValue);
 		
 		
 		if (kPreferences_ResultOK != prefsResult)
@@ -2554,11 +2504,11 @@ and returns the Default value of the setting.
 
 (2020.11)
 */
-- (UIPrefsTerminalScreen_ScrollbackType)
+- (Terminal_ScrollbackType)
 resetToDefaultGetScrollbackType
 {
-	UIPrefsTerminalScreen_ScrollbackType	result = UIPrefsTerminalScreen_ScrollbackTypeOff;
-	Preferences_Tag							preferenceTag = kPreferences_TagTerminalScreenScrollbackType;
+	Terminal_ScrollbackType		result = kTerminal_ScrollbackTypeDisabled;
+	Preferences_Tag				preferenceTag = kPreferences_TagTerminalScreenScrollbackType;
 	
 	
 	// delete local preference
@@ -2583,28 +2533,7 @@ resetToDefaultGetScrollbackType
 		}
 		else
 		{
-			switch (preferenceValue)
-			{
-			case kTerminal_ScrollbackTypeDisabled:
-				result = UIPrefsTerminalScreen_ScrollbackTypeOff;
-				break;
-			
-			case kTerminal_ScrollbackTypeFixed:
-				result = UIPrefsTerminalScreen_ScrollbackTypeFixed;
-				break;
-			
-			case kTerminal_ScrollbackTypeUnlimited:
-				result = UIPrefsTerminalScreen_ScrollbackTypeUnlimited;
-				break;
-			
-			case kTerminal_ScrollbackTypeDistributed:
-				result = UIPrefsTerminalScreen_ScrollbackTypeDistributed;
-				break;
-			
-			default:
-				// ???
-				break;
-			}
+			result = STATIC_CAST(preferenceValue, Terminal_ScrollbackType);
 		}
 	}
 	

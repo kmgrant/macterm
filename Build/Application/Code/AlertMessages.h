@@ -50,6 +50,7 @@ class NSWindow;
 #include <RetainRelease.template.h>
 
 // application includes
+#include <MacTermQuills/MacTermQuills.h> // for Session_FunctionKeyLayout and other enums used by SwiftUI
 #ifdef __OBJC__
 @class AlertMessages_ContentView;
 @class AlertMessages_WindowDraggingIcon;
@@ -61,18 +62,7 @@ class NSWindow;
 
 #pragma mark Constants
 
-/*!
-Pass one of these to Alert_SetNotificationPreferences()
-to decide how the application should respond to alerts
-that appear in the background.
-*/
-enum
-{
-	kAlert_NotifyDoNothing = 0,
-	kAlert_NotifyDisplayDiamondMark = 1,
-	kAlert_NotifyDisplayIconAndDiamondMark = 2,
-	kAlert_NotifyAlsoDisplayAlert = 3
-};
+// NOTE: AlertMessages_NotificationType is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 /*!
 Styles allow multiple properties of an alert to be

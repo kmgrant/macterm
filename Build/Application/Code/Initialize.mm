@@ -120,7 +120,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// set up notification info
 	Preferences_Init();
 	{
-		UInt16					notificationPreferences = kAlert_NotifyDisplayDiamondMark;
+		UInt16					notificationPreferences = kAlertMessages_NotificationTypeMarkDockIcon;
 		Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagNotification,
 																	sizeof(notificationPreferences),
 																	&notificationPreferences);
@@ -128,7 +128,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		
 		unless (kPreferences_ResultOK == prefsResult)
 		{
-			notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
+			notificationPreferences = kAlertMessages_NotificationTypeMarkDockIcon; // assume default, if preference can’t be found
 		}
 		
 		// the Interface Library Alert module is responsible for handling Notification Manager stuff...

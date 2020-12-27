@@ -1112,7 +1112,7 @@ updateViewModelFromPrefsMgr
 	// update background notification type
 	{
 		Preferences_Tag		preferenceTag = kPreferences_TagNotification;
-		SInt16				preferenceValue = 0;
+		UInt16				preferenceValue = 0;
 		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
 																		sizeof(preferenceValue), &preferenceValue,
 																		false/* search defaults */);
@@ -1125,29 +1125,7 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			UIPrefsGeneralNotifications_BackgroundAction	bindingValue = UIPrefsGeneralNotifications_BackgroundActionModifyIcon;
-			
-			
-			switch (preferenceValue)
-			{
-			case kAlert_NotifyDoNothing:
-				bindingValue = UIPrefsGeneralNotifications_BackgroundActionNone;
-				break;
-			
-			case kAlert_NotifyDisplayIconAndDiamondMark:
-				bindingValue = UIPrefsGeneralNotifications_BackgroundActionAndBounceIcon;
-				break;
-			
-			case kAlert_NotifyAlsoDisplayAlert:
-				bindingValue = UIPrefsGeneralNotifications_BackgroundActionAndBounceRepeatedly;
-				break;
-			
-			case kAlert_NotifyDisplayDiamondMark:
-			default:
-				bindingValue = UIPrefsGeneralNotifications_BackgroundActionModifyIcon;
-				break;
-			}
-			self.viewModel.backgroundNotificationAction = bindingValue; // SwiftUI binding
+			self.viewModel.backgroundNotificationAction = STATIC_CAST(preferenceValue, AlertMessages_NotificationType); // SwiftUI binding
 		}
 	}
 	
@@ -1247,33 +1225,11 @@ dataUpdated
 	
 	// update background notification type
 	{
-		Preferences_Tag					preferenceTag = kPreferences_TagNotification;
-		/*AlertMessages_NotifyType*/UInt16	enumPrefValue = kAlert_NotifyDisplayDiamondMark;
-		
-		
-		switch (self.viewModel.backgroundNotificationAction)
-		{
-		case UIPrefsGeneralNotifications_BackgroundActionNone:
-			enumPrefValue = kAlert_NotifyDoNothing;
-			break;
-		
-		case UIPrefsGeneralNotifications_BackgroundActionAndBounceIcon:
-			enumPrefValue = kAlert_NotifyDisplayIconAndDiamondMark;
-			break;
-		
-		case UIPrefsGeneralNotifications_BackgroundActionAndBounceRepeatedly:
-			enumPrefValue = kAlert_NotifyAlsoDisplayAlert;
-			break;
-		
-		case UIPrefsGeneralNotifications_BackgroundActionModifyIcon:
-		default:
-			enumPrefValue = kAlert_NotifyDisplayDiamondMark;
-			break;
-		}
-		
-		SInt16				preferenceValue = STATIC_CAST(enumPrefValue, SInt16);
-		Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
-																		sizeof(preferenceValue), &preferenceValue);
+		Preferences_Tag						preferenceTag = kPreferences_TagNotification;
+		AlertMessages_NotificationType		enumPrefValue = self.viewModel.backgroundNotificationAction;
+		UInt16								preferenceValue = STATIC_CAST(enumPrefValue, UInt16);
+		Preferences_Result					prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																						sizeof(preferenceValue), &preferenceValue);
 		
 		
 		if (kPreferences_ResultOK != prefsResult)
@@ -2405,33 +2361,7 @@ updateViewModelFromPrefsMgr
 		}
 		else
 		{
-			UIPrefsGeneralSpecial_CursorType	bindingValue = UIPrefsGeneralSpecial_CursorTypeVerticalBar;
-			
-			
-			switch (preferenceValue)
-			{
-			case kTerminal_CursorTypeBlock:
-				bindingValue = UIPrefsGeneralSpecial_CursorTypeBlock;
-				break;
-			
-			case kTerminal_CursorTypeThickUnderscore:
-				bindingValue = UIPrefsGeneralSpecial_CursorTypeThickUnderline;
-				break;
-			
-			case kTerminal_CursorTypeThickVerticalLine:
-				bindingValue = UIPrefsGeneralSpecial_CursorTypeThickVerticalBar;
-				break;
-			
-			case kTerminal_CursorTypeUnderscore:
-				bindingValue = UIPrefsGeneralSpecial_CursorTypeUnderline;
-				break;
-			
-			case kTerminal_CursorTypeVerticalLine:
-			default:
-				bindingValue = UIPrefsGeneralSpecial_CursorTypeVerticalBar;
-				break;
-			}
-			self.viewModel.selectedCursorShape = bindingValue; // SwiftUI binding
+			self.viewModel.selectedCursorShape = preferenceValue; // SwiftUI binding
 		}
 	}
 	{
@@ -2565,34 +2495,7 @@ dataUpdated
 	// update settings
 	{
 		Preferences_Tag			preferenceTag = kPreferences_TagTerminalCursorType;
-		Terminal_CursorType		enumPrefValue = kTerminal_CursorTypeVerticalLine;
-		
-		
-		switch (self.viewModel.selectedCursorShape)
-		{
-		case UIPrefsGeneralSpecial_CursorTypeBlock:
-			enumPrefValue = kTerminal_CursorTypeBlock;
-			break;
-		
-		case UIPrefsGeneralSpecial_CursorTypeThickUnderline:
-			enumPrefValue = kTerminal_CursorTypeThickUnderscore;
-			break;
-		
-		case UIPrefsGeneralSpecial_CursorTypeThickVerticalBar:
-			enumPrefValue = kTerminal_CursorTypeThickVerticalLine;
-			break;
-		
-		case UIPrefsGeneralSpecial_CursorTypeUnderline:
-			enumPrefValue = kTerminal_CursorTypeUnderscore;
-			break;
-		
-		case UIPrefsGeneralSpecial_CursorTypeVerticalBar:
-		default:
-			enumPrefValue = kTerminal_CursorTypeVerticalLine;
-			break;
-		}
-		
-		Terminal_CursorType		preferenceValue = STATIC_CAST(enumPrefValue, Terminal_CursorType);
+		Terminal_CursorType		preferenceValue = self.viewModel.selectedCursorShape;
 		Preferences_Result		prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
 																		sizeof(preferenceValue), &preferenceValue);
 		

@@ -61,6 +61,7 @@ class NSWindow;
 #include <ResultCode.template.h>
 
 // application includes
+#include <MacTermQuills/MacTermQuills.h> // for Session_FunctionKeyLayout and other enums used by SwiftUI
 #include "ConstantsRegistry.h"
 #include "Local.h"
 #include "TerminalWindow.h"
@@ -164,38 +165,9 @@ enum Session_Echo
 };
 typedef enum Session_Echo	Session_Echo;
 
-/*!
-Possible mappings to simulate a meta key on a Mac keyboard
-(useful for the Emacs text editor).
-*/
-typedef UInt16 Session_EmacsMetaKey;
-enum
-{
-	kSession_EmacsMetaKeyOff = 0,				//!< no mapping
-	kSession_EmacsMetaKeyShiftOption = 1,		//!< by holding down shift and option keys, meta is simulated
-	kSession_EmacsMetaKeyOption = 2				//!< by holding down option key, meta is simulated
-};
+// NOTE: Session_EmacsMetaKey is declared in "MacTermQuills.h" since it is used by SwiftUI
 
-/*!
-The keyboard layout to assume when a numbered function
-key is activated by Session_UserInputFunctionKey().
-
-Note that currently all keyboard layouts send exactly
-the same sequences for keys F5-F12, but can differ
-significantly for other ranges of keys.
-*/
-enum Session_FunctionKeyLayout
-{
-	kSession_FunctionKeyLayoutVT220			= 0,	//!< keys F6 through F20 send traditional VT220 sequences, and since they do not overlap
-													//!  F1-F4 are mapped to the VT100 PF1-PF4; F5 is mapped to the XTerm value; this is also
-													//!  known as the “multi-gnome-terminal” layout
-	kSession_FunctionKeyLayoutXTerm			= 1,	//!< keys F1 through F12 are similar to VT100 and VT220; keys F13-F48 send XTerm sequences
-	kSession_FunctionKeyLayoutXTermXFree86	= 2,	//!< similar to "kSession_FunctionKeyLayoutX11XTerm", except that the following key ranges
-													//!  send the values defined by the XTerm on XFree86: F1-F4, F13-F16, F25-F28, F37-F40;
-													//!  also known as the “gnome-terminal” layout, and a superset of what GNU “screen” uses
-	kSession_FunctionKeyLayoutRxvt			= 3		//!< very similar to "kSession_FunctionKeyLayoutVT220"; but F1-F4 follow XTerm instead of
-													//!  the VT100, F21-F44 have completely unique mappings, and there is no F45-F48
-};
+// NOTE: Session_FunctionKeyLayout is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 /*!
 Which characters are used for line endings in text files
@@ -208,17 +180,7 @@ enum Session_LineEnding
 	kSession_LineEndingCRLF			= 2		//!< PC style, carriage-return and line-feed characters
 };
 
-/*!
-Which characters will be sent when a new-line is requested.
-*/
-typedef UInt16 Session_NewlineMode;
-enum
-{
-	kSession_NewlineModeMapCR		= 0,	//!< newline means “carriage return” only (Classic Mac OS systems)
-	kSession_NewlineModeMapCRLF		= 1,	//!< newline means “carriage return, line feed” (MS-DOS or Windows systems)
-	kSession_NewlineModeMapCRNull	= 2,	//!< BSD 4.3 Unix; newline means “carriage return, null”
-	kSession_NewlineModeMapLF		= 3		//!< newline means “line feed” only (Unix systems)
-};
+// NOTE: Session_NewlineMode is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 /*!
 Protocols supported by a Session.

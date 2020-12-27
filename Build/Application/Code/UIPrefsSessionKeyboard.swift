@@ -34,19 +34,6 @@ import SwiftUI
 // in order to interact with Swift playgrounds.
 //
 
-@objc public enum UIPrefsSessionKeyboard_MetaMapping : Int {
-	case off // meta key is not used
-	case optionKey // meta key is activated by holding down Option
-	case shiftOptionKeys // meta key is activated by holding down Shift and Option
-}
-
-@objc public enum UIPrefsSessionKeyboard_NewlineMapping : Int {
-	case lineFeed // LF (octal 012)
-	case carriageReturn // CR (octal 015)
-	case carriageReturnLineFeed // CR LF (octal 015 012)
-	case carriageReturnNull // CR NULL (octal 015 000)
-}
-
 @objc public protocol UIPrefsSessionKeyboard_ActionHandling : NSObjectProtocol {
 	// implement these functions to bind to button actions
 	func dataUpdated()
@@ -57,9 +44,9 @@ import SwiftUI
 	func resetToDefaultGetSuspendKeyMapping() -> UIKeypads_KeyID
 	func resetToDefaultGetResumeKeyMapping() -> UIKeypads_KeyID
 	func resetToDefaultGetArrowKeysMapToEmacs() -> Bool
-	func resetToDefaultGetSelectedMetaMapping() -> UIPrefsSessionKeyboard_MetaMapping
+	func resetToDefaultGetSelectedMetaMapping() -> Session_EmacsMetaKey
 	func resetToDefaultGetDeleteSendsBackspace() -> Bool
-	func resetToDefaultGetSelectedNewlineMapping() -> UIPrefsSessionKeyboard_NewlineMapping
+	func resetToDefaultGetSelectedNewlineMapping() -> Session_NewlineMode
 }
 
 class UIPrefsSessionKeyboard_RunnerDummy : NSObject, UIPrefsSessionKeyboard_ActionHandling {
@@ -72,9 +59,9 @@ class UIPrefsSessionKeyboard_RunnerDummy : NSObject, UIPrefsSessionKeyboard_Acti
 	func resetToDefaultGetSuspendKeyMapping() -> UIKeypads_KeyID { print(#function); return .controlS }
 	func resetToDefaultGetResumeKeyMapping() -> UIKeypads_KeyID { print(#function); return .controlQ }
 	func resetToDefaultGetArrowKeysMapToEmacs() -> Bool { print(#function); return false }
-	func resetToDefaultGetSelectedMetaMapping() -> UIPrefsSessionKeyboard_MetaMapping { print(#function); return .off }
+	func resetToDefaultGetSelectedMetaMapping() -> Session_EmacsMetaKey { print(#function); return .off }
 	func resetToDefaultGetDeleteSendsBackspace() -> Bool { print(#function); return false }
-	func resetToDefaultGetSelectedNewlineMapping() -> UIPrefsSessionKeyboard_NewlineMapping { print(#function); return .lineFeed }
+	func resetToDefaultGetSelectedNewlineMapping() -> Session_NewlineMode { print(#function); return .mapLF }
 }
 
 public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, ObservableObject {
@@ -156,7 +143,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 			}
 		}
 	}
-	@Published @objc public var selectedMetaMapping: UIPrefsSessionKeyboard_MetaMapping = .off {
+	@Published @objc public var selectedMetaMapping: Session_EmacsMetaKey = .off {
 		didSet(newType) {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultEmacsMetaMapping = false }
@@ -172,7 +159,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 			}
 		}
 	}
-	@Published @objc public var selectedNewlineMapping: UIPrefsSessionKeyboard_NewlineMapping = .lineFeed {
+	@Published @objc public var selectedNewlineMapping: Session_NewlineMode = .mapLF {
 		didSet(newType) {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultNewlineMapping = false }
@@ -209,29 +196,29 @@ public struct UIPrefsSessionKeyboard_View : View {
 		return UIKeypads_ControlKeysView.localizedLabelView(forType)
 	}
 
-	func localizedLabelView(_ forType: UIPrefsSessionKeyboard_MetaMapping) -> some View {
+	func localizedLabelView(_ forType: Session_EmacsMetaKey) -> some View {
 		var aTitle: String = ""
 		switch forType {
 		case .off:
 			aTitle = "Off"
-		case .optionKey:
+		case .option:
 			aTitle = "⌥"
-		case .shiftOptionKeys:
+		case .shiftOption:
 			aTitle = "⇧ ⌥"
 		}
 		return Text(aTitle).tag(forType)
 	}
 
-	func localizedLabelView(_ forType: UIPrefsSessionKeyboard_NewlineMapping) -> some View {
+	func localizedLabelView(_ forType: Session_NewlineMode) -> some View {
 		var aTitle: String = ""
 		switch forType {
-		case .lineFeed:
+		case .mapLF:
 			aTitle = "LF"
-		case .carriageReturn:
+		case .mapCR:
 			aTitle = "CR"
-		case .carriageReturnLineFeed:
+		case .mapCRLF:
 			aTitle = "CR LF"
-		case .carriageReturnNull:
+		case .mapCRNull:
 			aTitle = "CR NULL"
 		}
 		return Text(aTitle).tag(forType)
@@ -364,8 +351,8 @@ public struct UIPrefsSessionKeyboard_View : View {
 				UICommon_Default1OptionLineView("Emacs Meta", bindIsDefaultTo: $viewModel.isDefaultEmacsMetaMapping, isEditingDefault: viewModel.isEditingDefaultContext) {
 					Picker("", selection: $viewModel.selectedMetaMapping) {
 						localizedLabelView(.off)
-						localizedLabelView(.optionKey)
-						localizedLabelView(.shiftOptionKeys)
+						localizedLabelView(.option)
+						localizedLabelView(.shiftOption)
 					}.pickerStyle(SegmentedPickerStyle())
 						.frame(maxWidth: 200)
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
@@ -378,10 +365,10 @@ public struct UIPrefsSessionKeyboard_View : View {
 				UICommon_Default1OptionLineView("New Line", bindIsDefaultTo: $viewModel.isDefaultNewlineMapping, isEditingDefault: viewModel.isEditingDefaultContext,
 												disableDefaultAlignmentGuide: true) {
 					Picker("", selection: $viewModel.selectedNewlineMapping) {
-						localizedLabelView(.lineFeed)
-						localizedLabelView(.carriageReturn)
-						localizedLabelView(.carriageReturnLineFeed)
-						localizedLabelView(.carriageReturnNull)
+						localizedLabelView(.mapLF)
+						localizedLabelView(.mapCR)
+						localizedLabelView(.mapCRLF)
+						localizedLabelView(.mapCRNull)
 					}.pickerStyle(PopUpButtonPickerStyle())
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 						.frame(minWidth: 160, maxWidth: 160)
