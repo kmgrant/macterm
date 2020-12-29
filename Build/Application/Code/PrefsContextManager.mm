@@ -287,7 +287,7 @@ IMPORTANT:	Only tags with values of type CGFloatRGBColor should be given!
 writeColor:(NSColor*)				aValue
 forPreferenceTag:(Preferences_Tag)	aTag
 {
-	NSColor*	newColor = [aValue colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	NSColor*	newColor = [aValue colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 	BOOL		result = NO;
 	
 	

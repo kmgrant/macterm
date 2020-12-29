@@ -3485,7 +3485,7 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				// INCOMPLETE; configure custom scroll bar with tick mark values
 				//scrollBarV.searchResults = ...
-				[scrollBarV setNeedsDisplay];
+				scrollBarV.needsDisplay = YES;
 			}
 		}
 		break;
@@ -4621,7 +4621,7 @@ initWithStringValue:(NSString*)		aStringValue
 		// create a view in which to display the string
 		{
 			_textView = [[NSTextField alloc] initWithFrame:NSZeroRect];
-			self.textView.alignment = NSCenterTextAlignment; // NSControl setting
+			self.textView.alignment = NSTextAlignmentCenter; // NSControl setting
 			self.textView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
 												NSViewMinYMargin /*| NSViewHeightSizable*/ | NSViewMaxYMargin);
 			self.textView.bezeled = NO;

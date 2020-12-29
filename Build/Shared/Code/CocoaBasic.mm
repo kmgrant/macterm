@@ -151,7 +151,7 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 {
 @autoreleasepool {
 	NSOpenPanel*		thePanel = [NSOpenPanel openPanel];
-	NSModalResponse		buttonHit = NSFileHandlingPanelCancelButton;
+	NSModalResponse		buttonHit = NSModalResponseCancel;
 	Boolean				result = false;
 	
 	
@@ -168,7 +168,7 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 	[thePanel setResolvesAliases:YES];
 	thePanel.allowedFileTypes = BRIDGE_CAST(inAllowedFileTypes, NSArray*);
 	buttonHit = [thePanel runModal];
-	result = (NSFileHandlingPanelOKButton == buttonHit);
+	result = (NSModalResponseOK == buttonHit);
 	if (result)
 	{
 		for (NSURL* currentFileURL in [thePanel URLs])

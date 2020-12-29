@@ -982,7 +982,7 @@ badgeApplicationDockTile ()
 	// the image location is somewhat arbitrary, and should probably be made configurable; TEMPORARY
 	[overlayImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
 										imageSize.width/* width */, imageSize.height/* height */)
-								fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+								fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
 	[appIconImage unlockFocus];
 	
 	[NSApp setApplicationIconImage:appIconImage];
@@ -1847,7 +1847,7 @@ imageForIconImageName:(NSString*)	anImageName
 			[newImage drawInRect:NSMakeRect(imageSize.width/* x coordinate */, 0/* y coordinate */,
 											imageSize.width/* width */, imageSize.height/* height */)
 									fromRect:NSZeroRect
-									operation:NSCompositeSourceOver
+									operation:NSCompositingOperationSourceOver
 									fraction:1.0];
 			[result unlockFocus];
 		}

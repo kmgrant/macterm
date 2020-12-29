@@ -1194,15 +1194,15 @@ performExportPreferenceCollectionToFile:(id)	sender
 		
 		// NOTE: in later SDK, might use "[NSButton checkboxWithTitle:target:action:]"
 		exportAllOption = [[NSButton alloc] initWithFrame:NSZeroRect];
-		exportAllOption.buttonType = NSSwitchButton;
+		exportAllOption.buttonType = NSButtonTypeSwitch;
 		exportAllOption.title = BRIDGE_CAST(exportAllTitleString.returnCFStringRef(), NSString*);
 		exportAllOption.toolTip = BRIDGE_CAST(exportAllHelpString.returnCFStringRef(), NSString*);
-		exportAllOption.state = NSOnState; // enable copy-defaults initially
+		exportAllOption.state = NSControlStateValueOn; // enable copy-defaults initially
 		[exportAllOption setFrameOrigin:NSMakePoint(0, 20)];
 		[exportAllOption sizeToFit];
 		
 		accessoryView = [[[NSBox alloc] initWithFrame:NSZeroRect] autorelease];
-		accessoryView.borderType = NSNoBorder;
+		accessoryView.transparent = YES;
 		accessoryView.boxType = NSBoxCustom;
 		accessoryView.title = @"";
 		[accessoryView addSubview:exportAllOption];
@@ -1211,13 +1211,13 @@ performExportPreferenceCollectionToFile:(id)	sender
 		savePanel.accessoryView = accessoryView;
 	}
 	
-	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
-	[savePanel setDirectory:nil];
-	[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+	savePanel.message = BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*);
+	savePanel.directoryURL = nil;
+	savePanel.nameFieldStringValue = BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*);
 	[savePanel beginSheetModalForWindow:self.window
 				completionHandler:^(NSInteger aReturnCode)
 				{
-					BOOL						isExportAll = (NSOnState == exportAllOption.state);
+					BOOL						isExportAll = (NSControlStateValueOn == exportAllOption.state);
 					Preferences_ExportFlags		exportOptions = 0;
 					
 					
@@ -1231,7 +1231,7 @@ performExportPreferenceCollectionToFile:(id)	sender
 						exportOptions |= kPreferences_ExportFlagCopyDefaultsAsNeeded;
 					}
 					
-					if (NSFileHandlingPanelOKButton == aReturnCode)
+					if (NSModalResponseOK == aReturnCode)
 					{
 						// export the contents of the preferences context (the Preferences
 						// module automatically ignores settings that are not part of the
@@ -2022,12 +2022,9 @@ makeTouchBar
 		_touchBarController.customizationAllowedItemIdentifiers =
 		@[
 			kConstantsRegistry_TouchBarItemIDFind,
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
-							NSTouchBarItemIdentifierFlexibleSpace),
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
-							NSTouchBarItemIdentifierFixedSpaceSmall),
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
-							NSTouchBarItemIdentifierFixedSpaceLarge)
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierFixedSpaceSmall,
+			NSTouchBarItemIdentifierFixedSpaceLarge
 		];
 		// (NOTE: default item identifiers are set in the NIB)
 	}
@@ -2244,7 +2241,7 @@ windowDidLoad
 			
 			// add hover effect to pop-up buttons, similar to toolbar
 			asPopupButton.bordered = YES;
-			asPopupButton.bezelStyle = NSShadowlessSquareBezelStyle;
+			asPopupButton.bezelStyle = NSBezelStyleShadowlessSquare;
 			asPopupButton.showsBorderOnlyWhileMouseInside = YES;
 		}
 		else if ([aChildView isKindOfClass:[NSButton class]])
@@ -2255,7 +2252,7 @@ windowDidLoad
 			// optionally also add hover effect to regular buttons
 			// for consistency (might disable)
 			asButton.bordered = YES;
-			asButton.bezelStyle = NSShadowlessSquareBezelStyle;
+			asButton.bezelStyle = NSBezelStyleShadowlessSquare;
 			asButton.showsBorderOnlyWhileMouseInside = YES;
 		}
 	}
@@ -3100,7 +3097,7 @@ newWindowFrame:(NSRect)			aNewWindowFrame
 		tmpFrame.size.width -= 1;
 		self.splitView.frame = tmpFrame;
 		
-		[REINTERPRET_CAST(self.window.contentView, NSView*) setNeedsDisplay:YES];
+		REINTERPRET_CAST(self.window.contentView, NSView*).needsDisplay = YES;
 	});
 }// setSourceListHidden:newWindowFrame:
 

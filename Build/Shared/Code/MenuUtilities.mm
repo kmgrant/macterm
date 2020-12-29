@@ -89,7 +89,7 @@ MenuUtilities_SetItemCheckMark	(id <NSValidatedUserInterfaceItem>	inItem,
 		NSMenuItem*		asMenuItem = STATIC_CAST(inItem, NSMenuItem*);
 		
 		
-		[asMenuItem setState:((inIsChecked) ? NSOnState : NSOffState)];
+		[asMenuItem setState:((inIsChecked) ? NSControlStateValueOn : NSControlStateValueOff)];
 	}
 }// SetItemCheckMark
 

@@ -152,7 +152,7 @@ multiple ways for a terminal window to become full-screen
 Boolean
 EventLoop_IsWindowFullScreen	(NSWindow*		inWindow)
 {
-	Boolean		result = (0 != ([inWindow styleMask] & FUTURE_SYMBOL(1 << 14, NSFullScreenWindowMask)));
+	Boolean		result = (0 != ([inWindow styleMask] & NSWindowStyleMaskFullScreen));
 	
 	
 	if (NO == result)
@@ -388,12 +388,9 @@ makeTouchBar
 			@[
 				kConstantsRegistry_TouchBarItemIDFind,
 				kConstantsRegistry_TouchBarItemIDFullScreen,
-				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
-								NSTouchBarItemIdentifierFlexibleSpace),
-				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
-								NSTouchBarItemIdentifierFixedSpaceSmall),
-				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
-								NSTouchBarItemIdentifierFixedSpaceLarge)
+				NSTouchBarItemIdentifierFlexibleSpace,
+				NSTouchBarItemIdentifierFixedSpaceSmall,
+				NSTouchBarItemIdentifierFixedSpaceLarge
 			];
 			// (NOTE: default item identifiers are set in the NIB)
 		}
@@ -411,12 +408,9 @@ makeTouchBar
 			_applicationTouchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDApplicationMain;
 			_applicationTouchBarController.customizationAllowedItemIdentifiers =
 			@[
-				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
-								NSTouchBarItemIdentifierFlexibleSpace),
-				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
-								NSTouchBarItemIdentifierFixedSpaceSmall),
-				FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
-								NSTouchBarItemIdentifierFixedSpaceLarge)
+				NSTouchBarItemIdentifierFlexibleSpace,
+				NSTouchBarItemIdentifierFixedSpaceSmall,
+				NSTouchBarItemIdentifierFixedSpaceLarge
 			];
 			// (NOTE: default item identifiers are set in the NIB)
 		}

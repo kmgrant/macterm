@@ -3930,8 +3930,8 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	if (nil != self)
 	{
 		self.button = [NSWindow standardWindowButton:NSWindowCloseButton
-														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
-																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
+														forStyleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+																		NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable)];
 		self.paletteLabel = NSLocalizedString(@"Close", @"toolbar item name; for closing the window");
 		self.menuFormRepresentation = [[[NSMenuItem alloc]
 										initWithTitle:self.paletteLabel
@@ -4003,8 +4003,8 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	if (nil != self)
 	{
 		self.button = [NSWindow standardWindowButton:NSWindowMiniaturizeButton
-														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
-																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
+														forStyleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+																		NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable)];
 		self.paletteLabel = NSLocalizedString(@"Minimize", @"toolbar item name; for minimizing the window");
 		self.menuFormRepresentation = [[[NSMenuItem alloc]
 										initWithTitle:self.paletteLabel
@@ -4076,8 +4076,8 @@ initWithItemIdentifier:(NSString*)		anIdentifier
 	if (nil != self)
 	{
 		self.button = [NSWindow standardWindowButton:NSWindowZoomButton
-														forStyleMask:(NSTitledWindowMask | NSClosableWindowMask |
-																		NSMiniaturizableWindowMask | NSResizableWindowMask)];
+														forStyleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+																		NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable)];
 		self.paletteLabel = NSLocalizedString(@"Zoom", @"toolbar item name; for zooming the window or controlling Full Screen");
 		self.menuFormRepresentation = [[[NSMenuItem alloc]
 										initWithTitle:self.paletteLabel
@@ -4206,7 +4206,7 @@ labelLayout:(TerminalToolbar_TextLabelLayout)	aDirection
 															aSize.width, aSize.height,
 															8/* bits per component*/, 0/* bytes per row or 0 for auto */,
 															grayColorSpace, kCGImageAlphaNone);
-	NSGraphicsContext*	asContextObj = [NSGraphicsContext graphicsContextWithGraphicsPort:maskContext flipped:NO];
+	NSGraphicsContext*	asContextObj = [NSGraphicsContext graphicsContextWithCGContext:maskContext flipped:NO];
 	
 	
 	[NSGraphicsContext saveGraphicsState];
@@ -4573,18 +4573,18 @@ layOutLabelText
 	switch (self.labelLayout)
 	{
 	case kTerminalToolbar_TextLabelLayoutLeftJustified:
-		self.alignment = NSLeftTextAlignment; // NSControl setting
+		self.alignment = NSTextAlignmentLeft; // NSControl setting
 		self.lineBreakMode = NSLineBreakByTruncatingTail;
 		break;
 	
 	case kTerminalToolbar_TextLabelLayoutRightJustified:
-		self.alignment = NSRightTextAlignment; // NSControl setting
+		self.alignment = NSTextAlignmentRight; // NSControl setting
 		self.lineBreakMode = NSLineBreakByTruncatingHead;
 		break;
 	
 	case kTerminalToolbar_TextLabelLayoutCenterJustified:
 	default:
-		self.alignment = NSCenterTextAlignment; // NSControl setting
+		self.alignment = NSTextAlignmentCenter; // NSControl setting
 		self.lineBreakMode = NSLineBreakByTruncatingMiddle;
 		break;
 	}

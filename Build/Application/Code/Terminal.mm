@@ -18539,7 +18539,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 	}
 	
 	// since the thread is finished, dispose of dynamically-allocated memory
-	Memory_DisposePtrInterruptSafe(REINTERPRET_CAST(&contextPtr, void**));
+	delete contextPtr;
 	
 	return nullptr;
 }// threadForTerminalSearch

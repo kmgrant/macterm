@@ -1038,7 +1038,7 @@ extendWithText		(CGMutablePathRef				inoutPath,
 				{
 					CGSize const		kCellSize = inMetrics.targetLayer.frame.size;
 					CGRect const		kCellFrame = CGRectMake(0, 0, kCellSize.width, kCellSize.height);
-					CGRect const		kFontRelativeFrame = CTFontGetBoundingRectsForGlyphs(currentFont, kCTFontHorizontalOrientation,
+					CGRect const		kFontRelativeFrame = CTFontGetBoundingRectsForGlyphs(currentFont, kCTFontOrientationHorizontal,
 																							&glyphFontIndex, nullptr/* sub-rectangles */,
 																							1/* number of items */);
 					CGFloat const		kOffsetX = (((horizontallyCentered)

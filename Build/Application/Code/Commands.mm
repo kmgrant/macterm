@@ -4957,13 +4957,13 @@ error:(NSString**)			outError // NOTE: really is NSString**, not NSError** (unli
 {
 #pragma unused(userData)
 	// NOTE: later versions of Mac OS X change pasteboard APIs significantly; this will eventually change
-	NSString*	theURLString = [aPasteboard stringForType:NSStringPboardType];
+	NSString*	theURLString = [aPasteboard stringForType:NSPasteboardTypeString];
 	NSString*	errorString = nil;
 	
 	
 	if (nil == theURLString)
 	{
-		theURLString = [aPasteboard stringForType:NSURLPboardType];
+		theURLString = [aPasteboard stringForType:NSPasteboardTypeURL];
 	}
 	
 	if (nil == theURLString)

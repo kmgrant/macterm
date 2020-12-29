@@ -543,7 +543,7 @@ vibrancy:(BOOL)							aVisualEffectFlag
 																				: aPoint)
 																			side:side];
 		
-		self = [super initWithContentRect:contentRectOnScreen styleMask:NSBorderlessWindowMask
+		self = [super initWithContentRect:contentRectOnScreen styleMask:NSWindowStyleMaskBorderless
 											backing:NSBackingStoreBuffered defer:NO];
 		if (nil != self)
 		{
@@ -2626,7 +2626,7 @@ newFullWindowImage
 		// now overlay the cached content of the window
 		[result lockFocus];
 		[self->_animationContentImage drawInRect:windowRelativeFrame fromRect:NSZeroRect
-													operation:NSCompositeSourceOver fraction:1.0];
+													operation:NSCompositingOperationSourceOver fraction:1.0];
 		[result unlockFocus];
 	}
 	@catch (NSException*	inException)
@@ -3158,10 +3158,10 @@ backgroundFrameImageAsColor
 				CGFloat const	kTransformHeight = NSHeight(drawnFrame);
 				CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
 				NSColor*		targetColor = nil; // reused below
-				NSColor*		outerLineColorRGB = [outerLineColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-				NSColor*		middleLineColorRGB = [middleLineColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-				NSColor*		innerLineColorRGB = [innerLineColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-				NSColor*		innerLine2ColorRGB = [innerLine2Color colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+				NSColor*		outerLineColorRGB = [outerLineColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+				NSColor*		middleLineColorRGB = [middleLineColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+				NSColor*		innerLineColorRGB = [innerLineColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+				NSColor*		innerLine2ColorRGB = [innerLine2Color colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 				
 				
 				// to draw each corner equally, “repeat” a lower-left drawing

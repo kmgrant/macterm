@@ -688,13 +688,13 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 										CFRetainRelease::kAlreadyRetained);
 	
 	
-	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
-	[savePanel setDirectory:nil];
-	[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+	savePanel.message = BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*);
+	savePanel.directoryURL = nil;
+	savePanel.nameFieldStringValue = BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*);
 	[savePanel beginSheetModalForWindow:Session_ReturnActiveNSWindow(inRef)
 				completionHandler:^(NSInteger aReturnCode)
 				{
-					if (NSFileHandlingPanelOKButton == aReturnCode)
+					if (NSModalResponseOK == aReturnCode)
 					{
 						My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 						
@@ -760,13 +760,13 @@ Session_DisplaySaveDialog	(SessionRef		inRef)
 										CFRetainRelease::kAlreadyRetained);
 	
 	
-	[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
-	[savePanel setDirectory:nil];
-	[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+	savePanel.message = BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*);
+	savePanel.directoryURL = nil;
+	savePanel.nameFieldStringValue = BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*);
 	[savePanel beginSheetModalForWindow:Session_ReturnActiveNSWindow(inRef)
 				completionHandler:^(NSInteger aReturnCode)
 				{
-					if (NSFileHandlingPanelOKButton == aReturnCode)
+					if (NSModalResponseOK == aReturnCode)
 					{
 						My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 						

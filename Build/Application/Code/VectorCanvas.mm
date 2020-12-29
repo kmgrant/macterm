@@ -331,7 +331,7 @@ VectorCanvas_ClearCaches	(VectorCanvas_Ref	inRef)
 	
 	[ptr->drawingPathElements removeAllObjects];
 	[ptr->scrapPath removeAllPoints];
-	[ptr->canvasView setNeedsDisplay:YES];
+	ptr->canvasView.needsDisplay = YES;
 }// ClearCaches
 
 
@@ -441,7 +441,7 @@ VectorCanvas_InvalidateView		(VectorCanvas_Ref	inRef)
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	[ptr->canvasView setNeedsDisplay:YES];
+	ptr->canvasView.needsDisplay = YES;
 }// InvalidateView
 
 
@@ -840,7 +840,7 @@ copyColorPreferences	(My_VectorCanvasPtr			inPtr,
 																				green:inPtr->outsideColor.green
 																				blue:inPtr->outsideColor.blue
 																				alpha:1.0];
-			[backgroundViewOrNil setNeedsDisplay];
+			backgroundViewOrNil.needsDisplay = YES;
 		}
 	}
 	
@@ -1221,7 +1221,7 @@ copy:(id)	sender
 #pragma unused(sender)
 	NSRect			imageBounds = self.frame;
 	NSImage*		copiedImage = [[NSImage alloc] initWithSize:imageBounds.size];
-	NSArray*		dataTypeArray = @[NSPDFPboardType, NSTIFFPboardType];
+	NSArray*		dataTypeArray = @[NSPasteboardTypePDF, NSPasteboardTypeTIFF];
 	NSPasteboard*	targetPasteboard = [NSPasteboard generalPasteboard];
 	
 	
@@ -1234,8 +1234,8 @@ copy:(id)	sender
 	// is more likely to be compatible with other applications and
 	// the latter preserves all the flexibility of the original drawing
 	[targetPasteboard declareTypes:dataTypeArray owner:nil];
-	[targetPasteboard setData:[self dataWithPDFInsideRect:imageBounds] forType:NSPDFPboardType];
-	[targetPasteboard setData:[copiedImage TIFFRepresentation] forType:NSTIFFPboardType];
+	[targetPasteboard setData:[self dataWithPDFInsideRect:imageBounds] forType:NSPasteboardTypePDF];
+	[targetPasteboard setData:[copiedImage TIFFRepresentation] forType:NSPasteboardTypeTIFF];
 	
 	[copiedImage release];
 }
@@ -1297,7 +1297,7 @@ performFormatByFavoriteName:(id)	sender
 	}
 	else
 	{
-		[canvasPtr->canvasView setNeedsDisplay:YES];
+		canvasPtr->canvasView.needsDisplay = YES;
 	}
 }
 - (id)
@@ -1339,7 +1339,7 @@ performFormatDefault:(id)	sender
 	}
 	else
 	{
-		[canvasPtr->canvasView setNeedsDisplay:YES];
+		canvasPtr->canvasView.needsDisplay = YES;
 	}
 }
 - (id)
@@ -1376,7 +1376,7 @@ performGraphicsCanvasResizeTo100Percent:(id)	sender
 	[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 	[[TerminalWindow_InfoBubble sharedInfoBubble] display];
 	
-	[self setNeedsDisplay];
+	self.needsDisplay = YES;
 }
 - (id)
 canPerformGraphicsCanvasResizeTo100Percent:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -1448,7 +1448,7 @@ magnifyWithEvent:(NSEvent*)		anEvent
 		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
 		
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 	}
 }// magnifyWithEvent:
 
@@ -1531,17 +1531,17 @@ mouseDown:(NSEvent*)	anEvent
 		
 		self.dragStart = NSMakePoint(viewLocation.x, viewLocation.y);
 		self.dragRectangle = NSZeroRect;
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 		
 		while (NO == dragEnded)
 		{
 			// TEMPORARY; in 10.10 SDK can probably switch to the NSWindow
 			// method "trackEventsMatchingMask:timeout:mode:handler:"
-			NSEvent*	eventObject = [NSApp nextEventMatchingMask:(NSLeftMouseDraggedMask |
-																		NSLeftMouseUpMask |
-																		NSFlagsChangedMask |
-																		NSKeyDownMask |
-																		NSKeyUpMask)
+			NSEvent*	eventObject = [NSApp nextEventMatchingMask:(NSEventMaskLeftMouseDragged |
+																		NSEventMaskLeftMouseUp |
+																		NSEventMaskFlagsChanged |
+																		NSEventMaskKeyDown |
+																		NSEventMaskKeyUp)
 																	untilDate:nil
 																	inMode:NSEventTrackingRunLoopMode
 																	dequeue:YES];
@@ -1551,7 +1551,7 @@ mouseDown:(NSEvent*)	anEvent
 			{
 				switch (eventObject.type)
 				{
-				case NSLeftMouseDragged:
+				case NSEventTypeLeftMouseDragged:
 					// update rectangle
 					if (NO == flagCancellation)
 					{
@@ -1572,7 +1572,7 @@ mouseDown:(NSEvent*)	anEvent
 					}
 					break;
 				
-				case NSFlagsChanged:
+				case NSEventTypeFlagsChanged:
 					// modifier keys changed
 					if (NO == flagCancellation)
 					{
@@ -1580,11 +1580,11 @@ mouseDown:(NSEvent*)	anEvent
 					}
 					break;
 				
-				case NSLeftMouseUp:
+				case NSEventTypeLeftMouseUp:
 					dragEnded = YES;
 					break;
 				
-				case NSKeyDown:
+				case NSEventTypeKeyDown:
 					// if the Escape key is pressed, cancel the drag; do not
 					// actually break the loop here, as it is crucial to still
 					// wait until the matching mouse-up event can be dequeued
@@ -1594,11 +1594,11 @@ mouseDown:(NSEvent*)	anEvent
 					{
 						flagCancellation = YES;
 						self.dragRectangle = NSZeroRect;
-						[self setNeedsDisplay];
+						self.needsDisplay = YES;
 					}
 					break;
 				
-				case NSKeyUp:
+				case NSEventTypeKeyUp:
 					// do nothing
 					break;
 				
@@ -1641,13 +1641,13 @@ mouseDown:(NSEvent*)	anEvent
 			[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 			[[TerminalWindow_InfoBubble sharedInfoBubble] display];
 			
-			[self setNeedsDisplay];
+			self.needsDisplay = YES;
 		}
 		
 		// hide zoom rectangle
 		self.dragStart = NSZeroPoint;
 		self.dragRectangle = NSZeroRect;
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 	}
 }// mouseDown:
 

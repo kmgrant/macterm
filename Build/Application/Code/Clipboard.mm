@@ -861,8 +861,8 @@ draggingEntered:(id <NSDraggingInfo>)	sender
 		
 		// show a highlight area by setting the appropriate view property
 		// and requesting a redraw
-		[self setShowDragHighlight:YES];
-		[self setNeedsDisplay];
+		self.showDragHighlight = YES;
+		self.needsDisplay = YES;
 	}
 	return result;
 }// draggingEntered:
@@ -880,8 +880,8 @@ draggingExited:(id <NSDraggingInfo>)	sender
 #pragma unused(sender)
 	// show a highlight area by setting the appropriate view property
 	// and requesting a redraw
-	[self setShowDragHighlight:NO];
-	[self setNeedsDisplay];
+	self.showDragHighlight = NO;
+	self.needsDisplay = YES;
 }// draggingExited:
 
 
@@ -989,8 +989,8 @@ prepareForDragOperation:(id <NSDraggingInfo>)	sender
 	BOOL	result = NO;
 	
 	
-	[self setShowDragHighlight:NO];
-	[self setNeedsDisplay];
+	self.showDragHighlight = NO;
+	self.needsDisplay = YES;
 	
 	// always accept the drag
 	result = YES;
@@ -1363,7 +1363,7 @@ has been changed.
 - (void)
 setNeedsDisplay
 {
-	[clipboardContent setNeedsDisplay];
+	clipboardContent.needsDisplay = YES;
 }// setNeedsDisplay
 
 

@@ -56,30 +56,6 @@ void
 
 //@}
 
-//!\name Core Memory Management Routines
-//@{
-
-Handle
-	Memory_NewHandle					(Size					inDesiredNumberOfBytes,
-										 Boolean				inIsCritical = false);
-
-void
-	Memory_DisposeHandle				(Handle*				inoutHandle);
-
-Ptr
-	Memory_NewPtr						(Size					inDesiredNumberOfBytes);
-
-void*
-	Memory_NewPtrInterruptSafe			(Size					inDesiredNumberOfBytes);
-
-void
-	Memory_DisposePtr					(Ptr*					inoutPtr);
-
-void
-	Memory_DisposePtrInterruptSafe		(void**					inoutPtr);
-
-//@}
-
 //!\name Weak References
 //@{
 

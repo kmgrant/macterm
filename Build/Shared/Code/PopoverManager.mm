@@ -402,7 +402,6 @@ display
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 		{
 			// remove window animations
-			//[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 			[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
 		}
 		break;
@@ -411,7 +410,6 @@ display
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 		{
 			// create fade-in effect; admittedly a bit of a hack...
-			//[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
 			[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorUtilityWindow];
 		}
 		break;
@@ -454,7 +452,7 @@ display
 				{
 					// default sheet animation is slow; replace animation but use the
 					// sheet method anyway to ensure window-modal event handling
-					self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSBorderlessWindowMask
+					self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSWindowStyleMaskBorderless
 																				backing:NSBackingStoreBuffered defer:YES];
 					[self->dummySheet setPreventsApplicationTerminationWhenModal:NO];
 					self->presentedSheet = self->dummySheet;
@@ -471,7 +469,6 @@ display
 			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 			{
 				// create bubble effect; admittedly a bit of a hack...
-				//[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(5, NSWindowAnimationBehaviorAlertPanel)];
 				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorAlertPanel];
 			}
 		}
@@ -805,7 +802,6 @@ afterDelay:(float)					aDelay
 			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 			{
 				// remove window animations
-				//[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
 			}
 			
@@ -835,7 +831,6 @@ afterDelay:(float)					aDelay
 			{
 				// remove system-provided window animations because this
 				// has a custom close animation style
-				//[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(2, NSWindowAnimationBehaviorNone)];
 				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
 			}
 			
@@ -847,7 +842,6 @@ afterDelay:(float)					aDelay
 			if ([self->containerWindow respondsToSelector:@selector(setAnimationBehavior:)])
 			{
 				// create fade-out effect; admittedly a bit of a hack...
-				//[self->containerWindow setAnimationBehavior:FUTURE_SYMBOL(4, NSWindowAnimationBehaviorUtilityWindow)];
 				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorUtilityWindow];
 			}
 			

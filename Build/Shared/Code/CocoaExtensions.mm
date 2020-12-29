@@ -112,8 +112,8 @@ background:(NSColor**)							inoutBackgroundColor
 	else
 	{
 		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
-		NSColor*		foregroundRGB = [*inoutForegroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-		NSColor*		backgroundRGB = [*inoutBackgroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		NSColor*		foregroundRGB = [*inoutForegroundColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+		NSColor*		backgroundRGB = [*inoutBackgroundColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 		
 		
 		if ((nil != foregroundRGB) && (nil != backgroundRGB))
@@ -185,8 +185,8 @@ background:(NSColor**)						inoutBackgroundColor
 	else
 	{
 		Float32 const	kTolerance = 0.5; // color intensities can vary by this much and still be considered black or white
-		NSColor*		foregroundRGB = [*inoutForegroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-		NSColor*		backgroundRGB = [*inoutBackgroundColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		NSColor*		foregroundRGB = [*inoutForegroundColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
+		NSColor*		backgroundRGB = [*inoutBackgroundColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 		
 		
 		if ((nil != foregroundRGB) && (nil != backgroundRGB))
@@ -278,7 +278,7 @@ otherwise it will be like "colorCloserToBlack".
 - (NSColor*)
 colorWithShading
 {
-	NSColor*	asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	NSColor*	asRGB = [self colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 	NSColor*	result = asRGB;
 	
 	
@@ -320,7 +320,7 @@ of the specified Core Graphics context.
 - (void)
 setAsBackgroundInCGContext:(CGContextRef)	aDrawingContext
 {
-	NSColor*		asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	NSColor*		asRGB = [self colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 	
 	
 	CGContextSetRGBFillColor(aDrawingContext, [asRGB redComponent], [asRGB greenComponent],
@@ -337,7 +337,7 @@ of the specified Core Graphics context.
 - (void)
 setAsForegroundInCGContext:(CGContextRef)	aDrawingContext
 {
-	NSColor*		asRGB = [self colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+	NSColor*		asRGB = [self colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 	
 	
 	CGContextSetRGBStrokeColor(aDrawingContext, [asRGB redComponent], [asRGB greenComponent],
@@ -407,7 +407,7 @@ imageFromSubRect:(NSRect)	aRect
 	
 	
 	[result lockFocus];
-	[self drawAtPoint:NSZeroPoint fromRect:aRect operation:NSCompositeCopy fraction:1.0];
+	[self drawAtPoint:NSZeroPoint fromRect:aRect operation:NSCompositingOperationCopy fraction:1.0];
 	[result unlockFocus];
 	
 	return result;

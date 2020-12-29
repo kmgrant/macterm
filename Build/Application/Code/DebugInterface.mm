@@ -286,8 +286,8 @@ showTestTerminalToolbar
 		
 		gDebugInterface_ToolbarWindow = [[TerminalToolbar_Window alloc]
 											initWithContentRect:newRect
-																styleMask:(NSTitledWindowMask | NSUtilityWindowMask | NSClosableWindowMask |
-																			NSMiniaturizableWindowMask)
+																styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskUtilityWindow | NSWindowStyleMaskClosable |
+																			NSWindowStyleMaskMiniaturizable)
 																backing:NSBackingStoreBuffered
 																defer:YES];
 	}

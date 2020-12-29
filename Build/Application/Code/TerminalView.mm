@@ -1129,14 +1129,14 @@ TerminalView_DisplaySaveSelectionUI		(TerminalViewRef	inView)
 													CFRetainRelease::kAlreadyRetained);
 				
 				
-				[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
-				[savePanel setDirectory:nil];
-				[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
-				[savePanel setAllowedFileTypes:@[@"png", @"tiff", @"bmp", @"gif", @"jpg", @"jpeg"]];
+				savePanel.message = BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*);
+				savePanel.directoryURL = nil;
+				savePanel.nameFieldStringValue = BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*);
+				savePanel.allowedFileTypes = @[@"png", @"tiff", @"bmp", @"gif", @"jpg", @"jpeg"];
 				[savePanel beginSheetModalForWindow:TerminalView_ReturnNSWindow(inView)
 							completionHandler:^(NSInteger aReturnCode)
 							{
-								if (NSFileHandlingPanelOKButton == aReturnCode)
+								if (NSModalResponseOK == aReturnCode)
 								{
 									// determine a bitmap representation that is consistent with the file name
 									NSData*					imageData = [imageObject TIFFRepresentation];
@@ -1144,26 +1144,26 @@ TerminalView_DisplaySaveSelectionUI		(TerminalViewRef	inView)
 									NSDictionary*			propertyDict = @{
 																				NSImageCompressionFactor: @(1.0)
 																			};
-									NSBitmapImageFileType	imageFileType = NSPNGFileType;
+									NSBitmapImageFileType	imageFileType = NSBitmapImageFileTypePNG;
 									NSError*				error = nil;
 									
 									
 									// TEMPORARY; there is probably a better way to do this...
 									if ([savePanel.URL.path hasSuffix:@"tiff"])
 									{
-										imageFileType = NSTIFFFileType;
+										imageFileType = NSBitmapImageFileTypeTIFF;
 									}
 									else if ([savePanel.URL.path hasSuffix:@"bmp"])
 									{
-										imageFileType = NSBMPFileType;
+										imageFileType = NSBitmapImageFileTypeBMP;
 									}
 									else if ([savePanel.URL.path hasSuffix:@"gif"])
 									{
-										imageFileType = NSGIFFileType;
+										imageFileType = NSBitmapImageFileTypeGIF;
 									}
 									else if ([savePanel.URL.path hasSuffix:@"jpg"] || [savePanel.URL.path hasSuffix:@"jpeg"])
 									{
-										imageFileType = NSJPEGFileType;
+										imageFileType = NSBitmapImageFileTypeJPEG;
 									}
 									
 									imageData = [imageRep representationUsingType:imageFileType properties:propertyDict];
@@ -1187,13 +1187,13 @@ TerminalView_DisplaySaveSelectionUI		(TerminalViewRef	inView)
 												CFRetainRelease::kAlreadyRetained);
 			
 			
-			[savePanel setMessage:BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*)];
-			[savePanel setDirectory:nil];
-			[savePanel setNameFieldStringValue:BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*)];
+			savePanel.message = BRIDGE_CAST(promptCFString.returnCFStringRef(), NSString*);
+			savePanel.directoryURL = nil;
+			savePanel.nameFieldStringValue = BRIDGE_CAST(saveFileCFString.returnCFStringRef(), NSString*);
 			[savePanel beginSheetModalForWindow:TerminalView_ReturnNSWindow(inView)
 						completionHandler:^(NSInteger aReturnCode)
 						{
-							if (NSFileHandlingPanelOKButton == aReturnCode)
+							if (NSModalResponseOK == aReturnCode)
 							{
 								CFRetainRelease		textSelection(TerminalView_ReturnSelectedTextCopyAsUnicode
 																	(inView, 0/* spaces equal to one tab, or zero for no substitution */,
@@ -5309,7 +5309,7 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 															imageSubRect.size.width, imageSubRect.size.height);
 			NSDictionary*		hintDict = @{}; // from NSString* to id
 			NSGraphicsContext*	graphicsContext = [NSGraphicsContext
-													graphicsContextWithGraphicsPort:inTerminalViewPtr->screen.currentRenderContext
+													graphicsContextWithCGContext:inTerminalViewPtr->screen.currentRenderContext
 																					flipped:YES];
 			auto				oldInterpolation = [graphicsContext imageInterpolation];
 			
@@ -5320,8 +5320,8 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 			CGContextSetAllowsAntialiasing(inTerminalViewPtr->screen.currentRenderContext, false);
 			[completeImage drawInRect:targetNSRect fromRect:sourceNSRect
 										operation:(inAttributes.hasSelection()
-													? NSCompositePlusDarker
-													: NSCompositeSourceOver)
+													? NSCompositingOperationPlusDarker
+													: NSCompositingOperationSourceOver)
 										fraction:1.0
 										respectFlipped:YES hints:hintDict];
 			CGContextSetAllowsAntialiasing(inTerminalViewPtr->screen.currentRenderContext, true);
@@ -5501,7 +5501,7 @@ drawVTGraphicsGlyph		(My_TerminalViewPtr			inTerminalViewPtr,
 	foregroundNSColor = STATIC_CAST([inTerminalViewPtr->text.attributeDict objectForKey:NSForegroundColorAttributeName],
 									NSColor*);
 	{
-		NSColor*	asRGB = [foregroundNSColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		NSColor*	asRGB = [foregroundNSColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 		
 		
 		assert(nil != asRGB);
@@ -8925,10 +8925,10 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
 			
 			// the view reads its color from the associated data structure automatically, so just redraw
-			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewBottom setNeedsDisplay:YES];
-			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewLeft setNeedsDisplay:YES];
-			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewRight setNeedsDisplay:YES];
-			[inTerminalViewPtr->encompassingNSView.terminalPaddingViewTop setNeedsDisplay:YES];
+			inTerminalViewPtr->encompassingNSView.terminalPaddingViewBottom.needsDisplay = YES;
+			inTerminalViewPtr->encompassingNSView.terminalPaddingViewLeft.needsDisplay = YES;
+			inTerminalViewPtr->encompassingNSView.terminalPaddingViewRight.needsDisplay = YES;
+			inTerminalViewPtr->encompassingNSView.terminalPaddingViewTop.needsDisplay = YES;
 		}
 		break;
 	
@@ -8953,10 +8953,10 @@ setScreenBaseColor	(My_TerminalViewPtr			inTerminalViewPtr,
 			inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground] = *inColorPtr;
 			
 			// the view reads its color from the associated data structure automatically, so just redraw
-			[inTerminalViewPtr->encompassingNSView.terminalMarginViewBottom setNeedsDisplay:YES];
-			[inTerminalViewPtr->encompassingNSView.terminalMarginViewLeft setNeedsDisplay:YES];
-			[inTerminalViewPtr->encompassingNSView.terminalMarginViewRight setNeedsDisplay:YES];
-			[inTerminalViewPtr->encompassingNSView.terminalMarginViewTop setNeedsDisplay:YES];
+			inTerminalViewPtr->encompassingNSView.terminalMarginViewBottom.needsDisplay = YES;
+			inTerminalViewPtr->encompassingNSView.terminalMarginViewLeft.needsDisplay = YES;
+			inTerminalViewPtr->encompassingNSView.terminalMarginViewRight.needsDisplay = YES;
+			inTerminalViewPtr->encompassingNSView.terminalMarginViewTop.needsDisplay = YES;
 		}
 		break;
 	
@@ -9199,7 +9199,7 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 						selectionTextColor = [NSColor blackColor];
 					}
 					foregroundNSColor = [selectionTextColor
-											colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+											colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 				}
 			}
 			else
@@ -9633,7 +9633,7 @@ they must often be updated as a set.
 void
 updateDisplay	(My_TerminalViewPtr		inTerminalViewPtr)
 {
-	[inTerminalViewPtr->encompassingNSView.terminalContentView setNeedsDisplay:YES];
+	inTerminalViewPtr->encompassingNSView.terminalContentView.needsDisplay = YES;
 }// updateDisplay
 
 
@@ -9828,7 +9828,7 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 			}
 			
 			searchResultBackgroundColor = [searchResultBackgroundColor
-											colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+											colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 			[searchResultBackgroundColor setAsBackgroundInCGContext:inDrawingContext];
 			
 			inTerminalViewPtr->screen.currentRenderNoBackground = false;
@@ -9884,7 +9884,7 @@ visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 		
 		
 		contentView.showVisualBell = YES;
-		[contentView setNeedsDisplay];
+		contentView.needsDisplay = YES;
 		[contentView retain];
 		if (nil != invertFilter)
 		{
@@ -9893,7 +9893,7 @@ visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 		CocoaExtensions_RunLater(0.2,
 									^{
 										contentView.showVisualBell = NO;
-										[contentView setNeedsDisplay];
+										contentView.needsDisplay = YES;
 										[contentView animator].layer.filters = nil;
 										[contentView release];
 									});
@@ -10036,7 +10036,7 @@ context:(void*)						aContext
 			{
 				// NSApplication has changed appearance, e.g. Dark or not; this
 				// may cause the colors to be different so refresh the display
-				[self setNeedsDisplay];
+				self.needsDisplay = YES;
 			}
 			else
 			{
@@ -10133,7 +10133,7 @@ drawRect:(NSRect)	aRect
 	
 	if (nil != self.exactColor)
 	{
-		NSColor*	asRGB = [self.exactColor colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+		NSColor*	asRGB = [self.exactColor colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 		
 		
 		// draw background
@@ -11715,7 +11715,7 @@ draggingEntered:(id <NSDraggingInfo>)	sender
 		// show a highlight area by setting the appropriate view property
 		// and requesting a redraw
 		self.showDragHighlight = YES;
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 		
 		self.didDragActivateWindow = NO;
 		self.dragEnterTime = CFAbsoluteTimeGetCurrent();
@@ -11787,7 +11787,7 @@ draggingExited:(id <NSDraggingInfo>)	sender
 	{
 		// remove the drag highlight
 		self.showDragHighlight = NO;
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 	}
 	
 	self.didDragActivateWindow = NO;
@@ -11813,7 +11813,7 @@ draggingEnded:(id <NSDraggingInfo>)		sender
 	{
 		// remove the drag highlight
 		self.showDragHighlight = NO;
-		[self setNeedsDisplay];
+		self.needsDisplay = YES;
 	}
 	
 	self.didDragActivateWindow = NO;
@@ -11921,7 +11921,7 @@ concludeDragOperation:(id <NSDraggingInfo>)		sender
 {
 #pragma unused(sender)
 	self.showDragHighlight = NO;
-	[self setNeedsDisplay];
+	self.needsDisplay = YES;
 }// concludeDragOperation:
 
 
@@ -12046,7 +12046,7 @@ context:(void*)						aContext
 				// NSApplication has changed appearance, e.g. Dark or not; this
 				// may cause the colors to be different so refresh the display
 				// (INCOMPLETE; auto-switch to dark-mode Format could occur here)
-				[self setNeedsDisplay];
+				self.needsDisplay = YES;
 			}
 			else
 			{
@@ -12574,9 +12574,9 @@ mouseDown:(NSEvent*)	anEvent
 		}
 		
 		// track mouse, extending selected range as appropriate
-		[self.window trackEventsMatchingMask:(NSLeftMouseDraggedMask |
-												NSLeftMouseUpMask |
-												NSFlagsChangedMask)
+		[self.window trackEventsMatchingMask:(NSEventMaskLeftMouseDragged |
+												NSEventMaskLeftMouseUp |
+												NSEventMaskFlagsChanged)
 												timeout:NSEventDurationForever
 												mode:NSEventTrackingRunLoopMode
 		handler:^(NSEvent* nextEvent, BOOL* outStopFlagPtr)
@@ -12589,7 +12589,7 @@ mouseDown:(NSEvent*)	anEvent
 			
 			switch (nextEvent.type)
 			{
-			case NSLeftMouseDragged:
+			case NSEventTypeLeftMouseDragged:
 				{
 					NSPoint				newWindowLocation = [nextEvent locationInWindow];
 					NSPoint				newViewLocation = [weakSelf convertPoint:newWindowLocation fromView:nil];
@@ -12623,7 +12623,7 @@ mouseDown:(NSEvent*)	anEvent
 				}
 				break;
 			
-			case NSFlagsChanged:
+			case NSEventTypeFlagsChanged:
 				// modifier keys changed (e.g. change selection type to rectangular/not)
 				if (nextEvent.modifierFlags & NSEventModifierFlagOption)
 				{
@@ -12647,7 +12647,7 @@ mouseDown:(NSEvent*)	anEvent
 				}
 				break;
 			
-			case NSLeftMouseUp:
+			case NSEventTypeLeftMouseUp:
 				*outStopFlagPtr = YES;
 				break;
 			
@@ -13511,7 +13511,7 @@ drawRect:(NSRect)	aRect
 			{
 				// use selection colors
 				NSColor*			highlightColorRGB = [[NSColor selectedTextBackgroundColor]
-															colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+															colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 				CGFloatRGBColor		highlightColorDevice;
 				
 				
@@ -13542,7 +13542,7 @@ drawRect:(NSRect)	aRect
 		{
 			CGRect				dummyBounds;
 			NSColor*			highlightColorRGB = [[NSColor selectedTextBackgroundColor]
-														colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+														colorUsingColorSpace:[NSColorSpace sRGBColorSpace]];
 			CGFloatRGBColor		highlightColorDevice;
 			
 			
@@ -13885,8 +13885,8 @@ assessIsDragForSingleButtonMouseDownEvent:(NSEvent*)	anEvent
 	// briefly track the mouse to see if it moves far enough
 	// to reasonably initiate a drag (if not, mouse-up will
 	// cause text to be deselected)
-	[self.window trackEventsMatchingMask:(NSLeftMouseDraggedMask |
-											NSLeftMouseUpMask)
+	[self.window trackEventsMatchingMask:(NSEventMaskLeftMouseDragged |
+											NSEventMaskLeftMouseUp)
 											timeout:NSEventDurationForever
 											mode:NSEventTrackingRunLoopMode
 	handler:^(NSEvent* nextEvent, BOOL* outStopFlagPtr)
@@ -13895,7 +13895,7 @@ assessIsDragForSingleButtonMouseDownEvent:(NSEvent*)	anEvent
 		{
 			switch (nextEvent.type)
 			{
-			case NSLeftMouseDragged:
+			case NSEventTypeLeftMouseDragged:
 				{
 					NSPoint		newWindowLocation = [nextEvent locationInWindow];
 					NSPoint		newViewLocation = [weakSelf convertPoint:newWindowLocation fromView:nil];
@@ -13912,7 +13912,7 @@ assessIsDragForSingleButtonMouseDownEvent:(NSEvent*)	anEvent
 				}
 				break;
 			
-			case NSLeftMouseUp:
+			case NSEventTypeLeftMouseUp:
 				*outStopFlagPtr = YES;
 				break;
 			
@@ -14382,7 +14382,7 @@ windowDidBecomeKey:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
 	self.terminalView.internalViewPtr->isActive = YES;
-	[self.terminalView.terminalContentView setNeedsDisplay];
+	self.terminalView.terminalContentView.needsDisplay = YES;
 }// windowDidBecomeKey:
 
 
@@ -14396,7 +14396,7 @@ windowDidResignKey:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
 	self.terminalView.internalViewPtr->isActive = NO;
-	[self.terminalView.terminalContentView setNeedsDisplay];
+	self.terminalView.terminalContentView.needsDisplay = YES;
 }// windowDidResignKey:
 
 

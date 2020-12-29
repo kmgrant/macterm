@@ -630,12 +630,9 @@ makeTouchBar
 		_touchBarController.customizationAllowedItemIdentifiers =
 		@[
 			kConstantsRegistry_TouchBarItemIDFullScreen,
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
-							NSTouchBarItemIdentifierFlexibleSpace),
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
-							NSTouchBarItemIdentifierFixedSpaceSmall),
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
-							NSTouchBarItemIdentifierFixedSpaceLarge)
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierFixedSpaceSmall,
+			NSTouchBarItemIdentifierFixedSpaceLarge
 		];
 		// (NOTE: default item identifiers are set in the NIB)
 	}
@@ -672,12 +669,11 @@ windowDidLoad
 	
 	if ([self.window respondsToSelector:@selector(setAnimationBehavior:)])
 	{
-		//[self.window setAnimationBehavior:FUTURE_SYMBOL(3, NSWindowAnimationBehaviorDocumentWindow)];
 		[self.window setAnimationBehavior:NSWindowAnimationBehaviorDocumentWindow];
 	}
 	
 	// enable Full Screen
-	[self.window setCollectionBehavior:([self.window collectionBehavior] | FUTURE_SYMBOL(1 << 7, NSWindowCollectionBehaviorFullScreenPrimary))];
+	[self.window setCollectionBehavior:([self.window collectionBehavior] | NSWindowCollectionBehaviorFullScreenPrimary)];
 	
 	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
 						performSelector:@selector(windowWillClose:)];

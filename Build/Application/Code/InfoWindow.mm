@@ -361,7 +361,7 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						[dimmedImage lockFocus];
 						[iconImage drawInRect:NSMakeRect(0, 0, imageSize.width, imageSize.height)
 												fromRect:NSMakeRect(0, 0, imageSize.width, imageSize.height)
-												operation:NSCompositeCopy fraction:0.5/* alpha */];
+												operation:NSCompositingOperationCopy fraction:0.5/* alpha */];
 						[dimmedImage unlockFocus];
 						iconImage = dimmedImage;
 						releaseImage = YES;
@@ -855,12 +855,9 @@ makeTouchBar
 		_touchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDInfoWindowMain;
 		_touchBarController.customizationAllowedItemIdentifiers =
 		@[
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFlexibleSpace",
-							NSTouchBarItemIdentifierFlexibleSpace),
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceSmall",
-							NSTouchBarItemIdentifierFixedSpaceSmall),
-			FUTURE_SYMBOL(@"NSTouchBarItemIdentifierFixedSpaceLarge",
-							NSTouchBarItemIdentifierFixedSpaceLarge)
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierFixedSpaceSmall,
+			NSTouchBarItemIdentifierFixedSpaceLarge
 		];
 		// (NOTE: default item identifiers are set in the NIB)
 	}

@@ -405,11 +405,7 @@ newWindow
 {
 	NSWindow*		result = [[NSWindow alloc]
 								initWithContentRect:NSMakeRect(0, 0, 1, 1)
-												#if MAC_OS_X_VERSION_MIN_REQUIRED < 101200 /* MAC_OS_X_VERSION_10_12 */
-													styleMask:NSTitledWindowMask
-												#else
 													styleMask:NSWindowStyleMaskTitled
-												#endif
 													backing:NSBackingStoreBuffered
 													defer:NO];
 	

@@ -579,7 +579,7 @@ createImageWindowFromImage	(NSWindow*	inWindow,
 	}
 	
 	// construct a fake window to display the same thing
-	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSBorderlessWindowMask
+	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSWindowStyleMaskBorderless
 													backing:NSBackingStoreBuffered defer:NO];
 	[result setOpaque:NO];
 	result.backgroundColor = [NSColor clearColor];
