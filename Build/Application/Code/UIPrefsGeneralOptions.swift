@@ -47,34 +47,34 @@ class UIPrefsGeneralOptions_RunnerDummy : NSObject, UIPrefsGeneralOptions_Action
 public class UIPrefsGeneralOptions_Model : UICommon_BaseModel, ObservableObject {
 
 	@Published @objc public var noWindowCloseOnExit = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var noAutoNewWindows = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var fadeInBackground = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var invertSelectedText = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var autoCopySelectedText = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var moveCursorToTextDropLocation = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var doNotDimBackgroundTerminalText = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var doNotWarnAboutMultiLinePaste = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var mapBackquoteToEscape = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var focusFollowsMouse = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	public var runner: UIPrefsGeneralOptions_ActionHandling
 

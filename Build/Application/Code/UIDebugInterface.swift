@@ -60,7 +60,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of terminal state (except echo)")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}
@@ -72,7 +72,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of terminal state (echo)")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}
@@ -84,7 +84,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of terminal input characters")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}
@@ -96,7 +96,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of pseudo-terminal device configurations")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}
@@ -108,7 +108,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of SIXEL decoder errors")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}
@@ -120,7 +120,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of SIXEL decoder state")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}
@@ -132,7 +132,7 @@ public class UIDebugInterface_Model : NSObject, ObservableObject {
 				print("no logging of SIXEL graphics summary")
 			}
 		}
-		didSet(isOn) {
+		didSet {
 			runner.updateSettingCache()
 		}
 	}

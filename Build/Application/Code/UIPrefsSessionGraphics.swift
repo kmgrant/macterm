@@ -61,7 +61,7 @@ public class UIPrefsSessionGraphics_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var selectedTEKMode: VectorInterpreter_Mode = .disabled {
-		didSet(newType) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultTEKMode = false }
 				runner.dataUpdated()
@@ -69,7 +69,7 @@ public class UIPrefsSessionGraphics_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var pageCommandClearsScreen = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultPageClears = false }
 				runner.dataUpdated()

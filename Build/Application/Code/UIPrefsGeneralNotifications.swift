@@ -69,16 +69,16 @@ public class UIPrefsGeneralNotifications_Model : UICommon_BaseModel, ObservableO
 
 	@Published @objc public var bellSoundItems: [UIPrefsGeneralNotifications_BellSoundItemModel] = []
 	@Published @objc public var selectedBellSoundID = UIPrefsGeneralNotifications_BellSoundItemModel.offItemModel.uniqueID {
-		didSet(isOn) { ifWritebackEnabled { runner.playSelectedBellSound(); runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.playSelectedBellSound(); runner.dataUpdated() } }
 	}
 	@Published @objc public var visualBell = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var bellNotificationInBackground = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var backgroundNotificationAction: AlertMessages_NotificationType = .doNothing {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	public var runner: UIPrefsGeneralNotifications_ActionHandling
 

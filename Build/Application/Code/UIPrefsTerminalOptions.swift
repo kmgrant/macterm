@@ -82,7 +82,7 @@ public class UIPrefsTerminalOptions_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var lineWrapEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultWrapLines = false }
 				runner.dataUpdated()
@@ -90,7 +90,7 @@ public class UIPrefsTerminalOptions_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var eightBitEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultEightBit = false }
 				runner.dataUpdated()
@@ -98,7 +98,7 @@ public class UIPrefsTerminalOptions_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var saveLinesOnClearEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultSaveLinesOnClear = false }
 				runner.dataUpdated()
@@ -106,7 +106,7 @@ public class UIPrefsTerminalOptions_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var normalKeypadTopRowEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultNormalKeypadTopRow = false }
 				runner.dataUpdated()
@@ -114,7 +114,7 @@ public class UIPrefsTerminalOptions_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var localPageKeysEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultLocalPageKeys = false }
 				runner.dataUpdated()

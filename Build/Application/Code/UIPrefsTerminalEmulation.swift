@@ -104,10 +104,10 @@ public class UIPrefsTerminalEmulation_Model : UICommon_DefaultingModel, Observab
 		}
 	}
 	@Published @objc public var selectedBaseEmulatorType: UIPrefsTerminalEmulation_BaseEmulatorType = .xterm {
-		willSet(newType) {
+		willSet {
 			ifWritebackEnabled {
 				// auto-set "Identity" to a reasonable default based on this
-				switch newType {
+				switch newValue {
 				case .none:
 					terminalIdentity = "dumb"
 				case .vt100:
@@ -121,7 +121,7 @@ public class UIPrefsTerminalEmulation_Model : UICommon_DefaultingModel, Observab
 				}
 			}
 		}
-		didSet(newType) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultBaseEmulator = false }
 				runner.dataUpdated()
@@ -129,7 +129,7 @@ public class UIPrefsTerminalEmulation_Model : UICommon_DefaultingModel, Observab
 		}
 	}
 	@Published @objc public var terminalIdentity = "xterm-256color" {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultIdentity = false }
 				runner.dataUpdated()
@@ -137,47 +137,47 @@ public class UIPrefsTerminalEmulation_Model : UICommon_DefaultingModel, Observab
 		}
 	}
 	@Published @objc public var tweak24BitColorEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakITermGraphicsEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakVT100FixLineWrappingBugEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakSixelGraphicsEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakXTerm256ColorsEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakXTermBackgroundColorEraseEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakXTermColorEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakXTermGraphicsEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
 	@Published @objc public var tweakXTermWindowAlterationEnabled = false {
-		didSet(isOn) {
+		didSet {
 			updateTweakValue()
 		}
 	}
@@ -188,7 +188,7 @@ public class UIPrefsTerminalEmulation_Model : UICommon_DefaultingModel, Observab
 	}
 
 	private func updateTweakValue() {
-		// call this from a "didSet(isOn)" above...this is a shared method
+		// call this from a "didSet" above...this is a shared method
 		// since they are all bound to the same Default flag
 		ifWritebackEnabled {
 			inNonDefaultContext { isDefaultEmulationTweaks = false }

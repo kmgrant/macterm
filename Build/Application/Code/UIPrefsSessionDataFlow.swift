@@ -88,7 +88,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var isLocalEchoEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultLocalEchoEnabled = false }
 				runner.dataUpdated()
@@ -101,7 +101,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 	// is using a more-flexible Double type, despite expecting Int, so that it is
 	// not possible for weird inputs to crash the app!!!
 	@Published @objc public var lineInsertionDelayValue = 10.0 {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultLineInsertionDelay = false }
 				runner.dataUpdated()
@@ -109,7 +109,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var scrollingDelayValue = 0.0 {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultScrollingDelay = false }
 				runner.dataUpdated()
@@ -117,7 +117,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var isAutoCaptureToDirectoryEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultAutoCaptureToDirectoryEnabled = false }
 				runner.dataUpdated()
@@ -125,7 +125,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var captureFileDirectory = URL(fileURLWithPath: "/var/tmp") {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultAutoCaptureToDirectoryEnabled = false }
 				runner.dataUpdated()
@@ -133,7 +133,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var captureFileName = "tmp.txt" {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultAutoCaptureToDirectoryEnabled = false }
 				runner.dataUpdated()
@@ -141,7 +141,7 @@ public class UIPrefsSessionDataFlow_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var isCaptureFileNameGenerated = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultAutoCaptureToDirectoryEnabled = false }
 				runner.dataUpdated()

@@ -112,7 +112,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var interruptKeyMapping: UIKeypads_KeyID = .controlC {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultInterruptKeyMapping = false }
 				runner.dataUpdated()
@@ -120,7 +120,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var suspendKeyMapping: UIKeypads_KeyID = .controlS {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultSuspendKeyMapping = false }
 				runner.dataUpdated()
@@ -128,7 +128,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var resumeKeyMapping: UIKeypads_KeyID = .controlQ {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultResumeKeyMapping = false }
 				runner.dataUpdated()
@@ -136,7 +136,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var arrowKeysMapToEmacs = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultEmacsCursorArrows = false }
 				runner.dataUpdated()
@@ -144,7 +144,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var selectedMetaMapping: Session_EmacsMetaKey = .off {
-		didSet(newType) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultEmacsMetaMapping = false }
 				runner.dataUpdated()
@@ -152,7 +152,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var deleteSendsBackspace = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultDeleteMapping = false }
 				runner.dataUpdated()
@@ -160,7 +160,7 @@ public class UIPrefsSessionKeyboard_Model : UICommon_DefaultingModel, Observable
 		}
 	}
 	@Published @objc public var selectedNewlineMapping: Session_NewlineMode = .mapLF {
-		didSet(newType) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultNewlineMapping = false }
 				runner.dataUpdated()

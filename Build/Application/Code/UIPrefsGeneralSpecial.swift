@@ -61,19 +61,19 @@ class UIPrefsGeneralSpecial_RunnerDummy : NSObject, UIPrefsGeneralSpecial_Action
 public class UIPrefsGeneralSpecial_Model : UICommon_BaseModel, ObservableObject {
 
 	@Published @objc public var selectedCursorShape: Terminal_CursorType = .verticalLine {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var cursorFlashEnabled = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var selectedWindowResizeEffect: UIPrefsGeneralSpecial_WindowResizeEffect = .terminalScreenSize {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var spacesPerTabValue = 4 {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var selectedCommandNBindingType: UIPrefsGeneralSpecial_CommandNBindingType = .bindDefaultSession {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	public var runner: UIPrefsGeneralSpecial_ActionHandling
 

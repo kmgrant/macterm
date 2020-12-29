@@ -61,7 +61,7 @@ public class UIPrefsWorkspaceOptions_Model : UICommon_DefaultingModel, Observabl
 		}
 	}
 	@Published @objc public var autoFullScreenEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultAutoFullScreen = false }
 				runner.dataUpdated()
@@ -69,7 +69,7 @@ public class UIPrefsWorkspaceOptions_Model : UICommon_DefaultingModel, Observabl
 		}
 	}
 	@Published @objc public var windowTabsEnabled = false {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultUseTabs = false }
 				runner.dataUpdated()

@@ -80,7 +80,7 @@ public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableO
 	// is using a more-flexible Double type, despite expecting Int, so that it is
 	// not possible for weird inputs to crash the app!!!
 	@Published @objc public var widthValue = 80.0 {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultWidth = false }
 				runner.dataUpdated()
@@ -88,7 +88,7 @@ public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableO
 		}
 	}
 	@Published @objc public var heightValue = 24.0 {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultHeight = false }
 				runner.dataUpdated()
@@ -96,7 +96,7 @@ public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableO
 		}
 	}
 	@Published @objc public var scrollbackValue = 200.0 {
-		didSet(isOn) {
+		didSet {
 			ifWritebackEnabled {
 				if scrollbackValue <= 0.5 {
 					// auto-off for zero value (causes same update triggers; see below)
@@ -109,7 +109,7 @@ public class UIPrefsTerminalScreen_Model : UICommon_DefaultingModel, ObservableO
 		}
 	}
 	@Published @objc public var selectedScrollbackType: Terminal_ScrollbackType = .disabled {
-		didSet(newType) {
+		didSet {
 			ifWritebackEnabled {
 				inNonDefaultContext { isDefaultScrollback = false }
 				runner.dataUpdated()

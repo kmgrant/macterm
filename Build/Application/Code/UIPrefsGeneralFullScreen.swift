@@ -47,16 +47,16 @@ class UIPrefsGeneralFullScreen_RunnerDummy : NSObject, UIPrefsGeneralFullScreen_
 public class UIPrefsGeneralFullScreen_Model : UICommon_BaseModel, ObservableObject {
 
 	@Published @objc public var showScrollBar = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var showMenuBar = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var showWindowFrame = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	@Published @objc public var allowForceQuit = false {
-		didSet(isOn) { ifWritebackEnabled { runner.dataUpdated() } }
+		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
 	public var runner: UIPrefsGeneralFullScreen_ActionHandling
 
