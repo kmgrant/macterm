@@ -4613,7 +4613,7 @@ initWithStringValue:(NSString*)		aStringValue
 	self = [super init];
 	if (nil != self)
 	{
-		_delayBeforeRemoval = 0.8; // arbitrary
+		_delayBeforeRemoval = 0.8; // arbitrary; should match "reset"
 		_releaseOnClose = YES;
 		_idealWindowRelativeAnchorPoint = NSZeroPoint; // initially...
 		_popoverMgr = nullptr; // see the methods that set the location of the window
@@ -4723,10 +4723,9 @@ setStringValue:(NSString*)		aStringValue
 
 
 /*!
-Displays the info bubble for a short period of time.
-
-Currently, the display time and animation style cannot
-be customized.
+Displays the info bubble for a short period of time (if
+"delayBeforeRemoval" is not equal to 0), or until the
+"removeWithAnimation" method is invoked.
 
 (2018.03)
 */
@@ -4744,15 +4743,14 @@ display
 	else
 	{
 		PopoverManager_DisplayPopover(self.popoverMgr);
-		// hide the window eventually
-		CocoaExtensions_RunLater(self.delayBeforeRemoval,
-									^{
-										PopoverManager_RemovePopover(weakSelf.popoverMgr, true/* “confirming” animation style */);
-										if (weakSelf.releaseOnClose)
-										{
-											//[weakSelf release]; // TEMPORARY (convert to "weakSelf" in future)
-										}
-									});
+		if (self.delayBeforeRemoval > 0)
+		{
+			// hide the window eventually
+			CocoaExtensions_RunLater(self.delayBeforeRemoval,
+										^{
+											[weakSelf removeWithAnimation];
+										});
+		}
 	}
 }// display
 
@@ -4826,6 +4824,43 @@ moveToCenterScreen:(NSScreen*)		aScreen
 											kPopoverManager_BehaviorTypeFloating,
 											STATIC_CAST(nil, NSView*));
 }// moveToCenterScreen:
+
+
+/*!
+Explicitly removes the bubble from the screen; used
+when the "delayBeforeRemoval" property is set to 0
+(otherwise, bubble is eventually removed by the call
+to "display").
+
+(2020.12)
+*/
+- (void)
+removeWithAnimation
+{
+	PopoverManager_RemovePopover(self.popoverMgr, true/* “confirming” animation style */);
+	if (self.releaseOnClose)
+	{
+		//[self release];
+	}
+}// removeWithAnimation
+
+
+/*!
+Sets certain properties to their default values.  Call this
+before using the shared bubble object for a new purpose, to
+ensure that properties do not carry over unexpectedly.
+
+Note that you must still call a setup method such as
+"moveToCenterScreen:" or "moveBelowCursorInTerminalWindow:"
+to set up the window location, prior to using "display".
+
+(2020.12)
+*/
+- (void)
+reset
+{
+	self.delayBeforeRemoval = 0.8;
+}// reset
 
 
 #pragma mark Popover_Delegate

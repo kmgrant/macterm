@@ -14641,6 +14641,251 @@ forView:(NSView*)					aView
 }// didReceiveMouseUpEvent:forView:
 
 
+#pragma mark NSView
+
+
+/*!
+Responds to a view entering a new superview (which includes
+"nil") by updating notifications.
+
+See also "viewWillMoveToWindow:".
+
+(2020.12)
+*/
+- (void)
+viewDidMoveToWindow
+{
+	if (nil != self.window)
+	{
+		[self whenObject:self postsNote:NSViewFrameDidChangeNotification
+							performSelector:@selector(viewFrameDidChange:)];
+	}
+}// viewDidMoveToWindow
+
+
+/*!
+Responds to a view leaving a window (if "nil") by updating
+view notifications.
+
+See also "viewDidMoveToWindow".
+
+(2020.12)
+*/
+- (void)
+viewWillMoveToWindow:(NSWindow*)	aWindow
+{
+	if (nil == aWindow)
+	{
+		[self ignoreWhenObject:self postsNote:NSViewFrameDidChangeNotification];
+	}
+}// viewWillMoveToWindow:
+
+
+/*!
+Responds to the start of a live resize by displaying the
+resize window (which will have either screen dimensions
+or font size, depending on current settings).
+
+See also "viewDidEndLiveResize".
+
+(2020.12)
+*/
+- (void)
+viewWillStartLiveResize
+{
+	[[TerminalWindow_InfoBubble sharedInfoBubble] reset];
+	[TerminalWindow_InfoBubble sharedInfoBubble].delayBeforeRemoval = 0; // disable auto-remove
+	[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"—"; // see "viewFrameDidChange:"
+	[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen];
+	[[TerminalWindow_InfoBubble sharedInfoBubble] display];
+}// viewWillStartLiveResize
+
+
+/*!
+Responds to the end of a live resize by performing the
+opposite of actions in "viewWillStartLiveResize".
+
+(2020.12)
+*/
+- (void)
+viewDidEndLiveResize
+{
+	[[TerminalWindow_InfoBubble sharedInfoBubble] removeWithAnimation];
+}// viewDidEndLiveResize
+
+
+#pragma mark NSViewNotifications
+
+
+/*!
+Responds to view frame changes by synchronizing the font size
+or the underlying terminal screen dimensions (depending on
+configuration).
+
+See also TerminalView_SetResizeScreenBufferWithView() and
+TerminalView_SetDisplayMode(), and the NSView property
+"postsFrameChangedNotifications".
+
+(2020.12)
+*/
+- (void)
+viewFrameDidChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	//NSLog(@"%p: terminal view frame change", self); // debug
+	if ((nil != self.internalViewPtr) && (false == self.internalViewPtr->screen.sizeNotMatchedWithView))
+	{
+		TerminalViewRef				terminalView = self.internalViewPtr->selfRef;
+		TerminalView_DisplayMode	oldDisplayMode = TerminalView_ReturnDisplayMode(terminalView);
+		TerminalView_DisplayMode	liveResizeDisplayMode = oldDisplayMode;
+		// see Preferences window, General pane, “Special” tab; choice of modifier key should be consistent
+		Boolean						invertMode = ((self.window.inLiveResize) &&
+													(0 != ([NSEvent modifierFlags] & NSEventModifierFlagControl)));
+		
+		
+		if (invertMode)
+		{
+			// in Preferences window, General pane, Special tab, it is noted
+			// that the user can temporarily invert this behavior via keyboard
+			liveResizeDisplayMode = ((kTerminalView_DisplayModeZoom == oldDisplayMode) ? kTerminalView_DisplayModeNormal : kTerminalView_DisplayModeZoom);
+		}
+		
+		switch (liveResizeDisplayMode)
+		{
+		case kTerminalView_DisplayModeZoom:
+			// change font size to fit new view frame at current screen dimensions
+			{
+				UInt16						columnCount = Terminal_ReturnColumnCount(self.internalViewPtr->screen.ref);
+				UInt16						rowCount = Terminal_ReturnRowCount(self.internalViewPtr->screen.ref);
+				TerminalView_PixelWidth		previousPixelWidth;
+				TerminalView_PixelHeight	previousPixelHeight;
+				Boolean						shrinkFontSize = false;
+				CGFloat						newFontSize = 14; // arbitrary (should be overwritten by query below)
+				SInt16						loopGuard = 10; // arbitrary; avoid accidental infinite loops
+				
+				
+				// this notification occurs after the view frame has already changed;
+				// determine how this initial frame compares to the ideal size (at
+				// the current screen dimensions) and adjust the font up or down
+				//
+				// INCOMPLETE: if the new frame size has a wildly different aspect
+				// ratio than the original, it might be useful to have a way to also
+				// adjust the terminal screen dimensions, even if the font size is
+				// also changing (e.g. if only one dimension changes, blow up the
+				// font but also fill in the gap with extra terminal cells...)
+				TerminalView_GetTheoreticalViewSize(terminalView, columnCount, rowCount, previousPixelWidth, previousPixelHeight);
+				shrinkFontSize = ((self.frame.size.width < previousPixelWidth.precisePixels()) ||
+									(self.frame.size.height < previousPixelHeight.precisePixels())); // if window appears to be shrinking, try smaller fonts; otherwise, try bigger ones
+				TerminalView_GetFontAndSize(terminalView, nullptr/* font family name */, &newFontSize);
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(terminalView, kTerminalView_DisplayModeNormal); // prevent interference with explicit resize
+				if (shrinkFontSize)
+				{
+					// find the smallest font size that will create the largest view within this area
+					// (without allowing the view to exceed the boundaries)
+					while ((loopGuard > 0) && (newFontSize > 4.0/* arbitrary */))
+					{
+						TerminalView_PixelWidth		newPixelWidth;
+						TerminalView_PixelHeight	newPixelHeight;
+						CGFloat						fontDelta = ((newFontSize < 18) ? -1.0 : -2.0); // arbitrary change per loop
+						
+						
+						--loopGuard;
+						newFontSize += fontDelta;
+						UNUSED_RETURN(TerminalView_Result)setFontAndSize(self.internalViewPtr, nullptr/* font family name */, newFontSize, 0/* scale */, false/* notify listeners */);
+						TerminalView_GetTheoreticalViewSize(terminalView, columnCount, rowCount, newPixelWidth, newPixelHeight);
+						if ((self.frame.size.width > newPixelWidth.precisePixels()) &&
+							(self.frame.size.height > newPixelHeight.precisePixels()))
+						{
+							// new ideal font size found but undo most recent font change (final view will otherwise be too large)
+							newFontSize -= fontDelta;
+							UNUSED_RETURN(TerminalView_Result)setFontAndSize(self.internalViewPtr, nullptr/* font family name */, newFontSize, 0/* scale */, true/* notify listeners */);
+							break;
+						}
+					}
+				}
+				else
+				{
+					// find the largest font size that will create the largest view within this area
+					// (without allowing the view to exceed the boundaries)
+					while (loopGuard > 0)
+					{
+						TerminalView_PixelWidth		newPixelWidth;
+						TerminalView_PixelHeight	newPixelHeight;
+						CGFloat						fontDelta = ((newFontSize < 18) ? +1.0 : +2.0); // arbitrary change per loop
+						
+						
+						--loopGuard;
+						newFontSize += fontDelta;
+						UNUSED_RETURN(TerminalView_Result)setFontAndSize(self.internalViewPtr, nullptr/* font family name */, newFontSize, 0/* scale */, false/* notify listeners */);
+						TerminalView_GetTheoreticalViewSize(terminalView, columnCount, rowCount, newPixelWidth, newPixelHeight);
+						if ((newPixelWidth.precisePixels() > self.frame.size.width) ||
+							(newPixelHeight.precisePixels() > self.frame.size.height))
+						{
+							// new ideal font size found but undo most recent font change (final view will otherwise be too large)
+							newFontSize -= fontDelta;
+							UNUSED_RETURN(TerminalView_Result)setFontAndSize(self.internalViewPtr, nullptr/* font family name */, newFontSize, 0/* scale */, true/* notify listeners */);
+							break;
+						}
+					}
+				}
+				// restore original mode (was temporarily disabled above during view size calculation)
+				UNUSED_RETURN(TerminalView_Result)TerminalView_SetDisplayMode(terminalView, oldDisplayMode);
+				if (self.window.inLiveResize)
+				{
+					CFRetainRelease		fontSizeFormatCFString(UIStrings_ReturnCopy(kUIStrings_TerminalDynamicResizeFontSize),
+																CFRetainRelease::kAlreadyRetained);
+					CFRetainRelease		fontSizeCFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, fontSizeFormatCFString.returnCFStringRef(),
+																					STATIC_CAST(newFontSize, unsigned long)),
+															CFRetainRelease::kAlreadyRetained);
+					
+					
+					// note: this bubble is displayed in "viewWillStartLiveResize"
+					[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(fontSizeCFString.returnCFStringRef(), NSString*);
+				}
+			}
+			break;
+		
+		case kTerminalView_DisplayModeNormal:
+		default:
+			// change screen dimensions to fit new view frame at current font size
+			{
+				TerminalView_PixelWidth		pixelWidth;
+				TerminalView_PixelHeight	pixelHeight;
+				UInt16						newColumnCount = 0;
+				TerminalView_RowIndex		newRowCount = 0;
+				
+				
+				// note: “theoretical dimensions” includes margin measurements so
+				// this works correctly for a frame monitor on the container view
+				// (namely, it should not be on the interior “content” view)
+				pixelWidth.setPrecisePixels(self.frame.size.width);
+				pixelHeight.setPrecisePixels(self.frame.size.height);
+				TerminalView_GetTheoreticalScreenDimensions(terminalView, pixelWidth, pixelHeight,
+															&newColumnCount, &newRowCount);
+				if ((newColumnCount) && (newRowCount))
+				{
+					//NSLog(@"apparent ideal dimensions: %d x %d", (int)newColumnCount, (int)newRowCount); // debug
+					UNUSED_RETURN(Terminal_Result)Terminal_SetVisibleScreenDimensions(self.internalViewPtr->screen.ref, newColumnCount, newRowCount);
+					if (self.window.inLiveResize)
+					{
+						CFRetainRelease		screenDimensionsFormatCFString(UIStrings_ReturnCopy(kUIStrings_TerminalDynamicResizeWidthHeight),
+																			CFRetainRelease::kAlreadyRetained);
+						CFRetainRelease		screenDimensionsCFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, screenDimensionsFormatCFString.returnCFStringRef(),
+																								STATIC_CAST(newColumnCount, unsigned long), STATIC_CAST(newRowCount, unsigned long)),
+																		CFRetainRelease::kAlreadyRetained);
+						
+						
+						// note: this bubble is displayed in "viewWillStartLiveResize"
+						[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = BRIDGE_CAST(screenDimensionsCFString.returnCFStringRef(), NSString*);
+					}
+				}
+			}
+			break;
+		}
+	}
+}// viewFrameDidChange:
+
+
 @end //} TerminalView_Object
 
 

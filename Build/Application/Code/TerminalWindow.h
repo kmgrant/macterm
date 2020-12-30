@@ -155,19 +155,23 @@ in Local Echo mode to show “invisible” characters.
 
 // accessors
 	@property (assign) CGFloat
-	delayBeforeRemoval;
+	delayBeforeRemoval; // set to 0 to disable auto-remove (then call "removeWithAnimation")
 	@property (assign) BOOL
 	releaseOnClose;
 	@property (strong) NSString*
-	stringValue;
+	stringValue; // updates display, and also resets "delayBeforeRemoval" to the default value
 
 // new methods
 	- (void)
-	display;
+	display; // automatically removed after "delayBeforeRemoval", if nonzero
 	- (void)
 	moveBelowCursorInTerminalWindow:(TerminalWindowRef)_;
 	- (void)
 	moveToCenterScreen:(NSScreen*)_;
+	- (void)
+	removeWithAnimation;
+	- (void)
+	reset; // call this before using the shared bubble for a new purpose
 
 @end //}
 

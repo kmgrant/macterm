@@ -323,6 +323,8 @@ Strings used in terminal windows.
 */
 enum UIStrings_TerminalCFString
 {
+	kUIStrings_TerminalDynamicResizeFontSize				= 'DRFS',
+	kUIStrings_TerminalDynamicResizeWidthHeight				= 'DRWH',
 	kUIStrings_TerminalInterruptProcess						= 'Intr',
 	kUIStrings_TerminalNewCommandsKeyCharacter				= 'NewK',
 	kUIStrings_TerminalPrintFromTerminalJobTitle			= 'PTrm',

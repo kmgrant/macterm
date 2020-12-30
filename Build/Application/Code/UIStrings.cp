@@ -1214,6 +1214,16 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_TerminalDynamicResizeFontSize:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$u pt"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalDynamicResizeFontSize; %1$u is font size, in points"));
+		break;
+	
+	case kUIStrings_TerminalDynamicResizeWidthHeight:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("%1$u × %2$u"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalDynamicResizeWidthHeight; %1$u is number of columns, %2$u is number of rows"));
+		break;
+	
 	case kUIStrings_TerminalInterruptProcess:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("[Interrupted]"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalInterruptProcess"));

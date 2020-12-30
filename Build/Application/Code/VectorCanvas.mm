@@ -1372,6 +1372,7 @@ performGraphicsCanvasResizeTo100Percent:(id)	sender
 	canvasPtr->unscaledZoomOriginX = 0;
 	canvasPtr->unscaledZoomOriginY = 0;
 	
+	[[TerminalWindow_InfoBubble sharedInfoBubble] reset];
 	[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = @"100%";
 	[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 	[[TerminalWindow_InfoBubble sharedInfoBubble] display];
@@ -1444,6 +1445,7 @@ magnifyWithEvent:(NSEvent*)		anEvent
 		}
 		
 		// display new zoom level to user (see also "mouseDown:")
+		[[TerminalWindow_InfoBubble sharedInfoBubble] reset];
 		[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = [NSString stringWithFormat:@"%d%%", (int)(canvasPtr->viewScaleX * 100.0)];
 		[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 		[[TerminalWindow_InfoBubble sharedInfoBubble] display];
@@ -1637,6 +1639,7 @@ mouseDown:(NSEvent*)	anEvent
 			canvasPtr->unscaledZoomOriginY += (self.dragRectangle.origin.y / kPreviousScaleY);
 			
 			// display new zoom level to user (see also "magnifyWithEvent:")
+			[[TerminalWindow_InfoBubble sharedInfoBubble] reset];
 			[TerminalWindow_InfoBubble sharedInfoBubble].stringValue = [NSString stringWithFormat:@"%d%%", (int)(canvasPtr->viewScaleX * 100.0), nil];
 			[[TerminalWindow_InfoBubble sharedInfoBubble] moveToCenterScreen:self.window.screen]; 
 			[[TerminalWindow_InfoBubble sharedInfoBubble] display];
