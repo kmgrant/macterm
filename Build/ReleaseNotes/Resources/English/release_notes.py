@@ -24,7 +24,12 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20200927',
+    '20210101',
+    '20201208',
+    '20201130',
+    '20201125',
+    '20201001',
+    '20200908',
     '20200727',
     '20200502',
     '20190331',
@@ -605,8 +610,25 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-    '20200927': [
+    '20210101': [
+        'Builds are now dual-architecture, supporting both older Macs and Apple Silicon Macs.',
+    ],
+    '20201208': [
+        'Vector graphics windows now have more contextual menu commands.',
+        'Vector graphics windows can now be zoomed back to 100% using a new "Actual Size" menu command.',
+    ],
+    '20201130': [
+        'Terminal views now render Sixel graphics much more quickly.',
+    ],
+    '20201125': [
+        'All icons now use system-provided symbol artwork on macOS 11 "Big Sur".',
+        'Alert messages have a new style, and on macOS 11 they now use larger buttons.',
+    ],
+    '20201001': [
         'Preferences window Formats pane now has a "Mouse Pointer Color" setting, with Red (default), Black or White options.',
+    ],
+    '20200908': [
+        'Floating keypad windows have a new appearance.',
     ],
     '20200727': [
         'Sessions can now have an associated Macro Set, which becomes the current set when the session first runs.',
