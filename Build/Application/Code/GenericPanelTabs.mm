@@ -38,9 +38,7 @@
 
 // standard-C++ includes
 #import <map>
-#import <stdexcept>
 #import <utility>
-#import <vector>
 
 // Mac includes
 #import <Cocoa/Cocoa.h>
@@ -54,11 +52,47 @@
 #import "Panel.h"
 #import "PrefsWindow.h"
 
+#pragma mark Types
 
-#pragma mark Internal Methods
+// note: a std::map is used because NSView does not meet the requirements
+// for the key type of an NSDictionary
+typedef std::map< NSView*, Panel_ViewManager* >		GenericPanelTabs_ViewManagerByView;
+
+/*!
+Private properties.
+*/
+@interface GenericPanelTabs_ViewManager () //{
+
+// accessors
+	//! Panel associated with currently-selected tab.
+	@property (weak) Panel_ViewManager*
+	activePanel;
+	//! The panel’s unique identication string in dotted-name format.
+	@property (strong, nonnull) NSString*
+	customPanelIdentifier;
+	//! The panel’s user-visible icon image.
+	@property (strong, nonnull) NSImage*
+	customPanelLocalizedIcon;
+	//! The panel’s user-visible title.
+	@property (strong, nonnull) NSString*
+	customPanelLocalizedName;
+	//! All view controllers represented by panel tabs.
+	@property (strong, nonnull) NSArray*
+	viewManagerArray;
+	//! Allows view controllers to be found based on the views they control.
+	@property (assign, nonnull) GenericPanelTabs_ViewManagerByView*
+	viewManagerByView;
+
+@end //}
+
+
+#pragma mark Public Methods
 
 #pragma mark -
 @implementation GenericPanelTabs_ViewManager
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -90,7 +124,7 @@ viewManagerArray:(NSArray*)		anArray
 	self = [super initWithNibNamed:@"GenericPanelTabsCocoa" delegate:self context:contextDictionary];
 	if (nil != self)
 	{
-		for (Panel_ViewManager* viewManager in self->viewManagerArray)
+		for (Panel_ViewManager* viewManager in self.viewManagerArray)
 		{
 			viewManager.panelParent = self;
 		}
@@ -107,17 +141,47 @@ Destructor.
 - (void)
 dealloc
 {
-	for (Panel_ViewManager* viewManager in self->viewManagerArray)
+	for (Panel_ViewManager* viewManager in self.viewManagerArray)
 	{
 		viewManager.panelParent = nil;
 	}
-	[identifier release];
-	[localizedName release];
-	[localizedIcon release];
-	[viewManagerArray release];
-	delete viewManagerByView;
-	[super dealloc];
+	delete _viewManagerByView;
 }// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Compiler expects this superclass designated initializer to
+be defined but this variant is not supported.
+
+(2021.01)
+*/
+- (instancetype)
+initWithNibNamed:(NSString*)		aNibName
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(NSObject*)					aContext
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithIdentifier:nil localizedName:nil localizedIcon:nil viewManagerArray:nil];
+}// initWithNibNamed:delegate:context:
+
+
+/*!
+Compiler expects this superclass designated initializer to
+be defined but this variant is not supported.
+
+(2021.01)
+*/
+- (instancetype)
+initWithView:(NSView*)				aView
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(NSObject*)					aContext
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithIdentifier:nil localizedName:nil localizedIcon:nil viewManagerArray:nil];
+}// initWithView:delegate:context:
 
 
 #pragma mark Actions
@@ -137,16 +201,16 @@ entry point responds to any change in selection.
 performTitleSegmentUpdate:(id)	sender
 {
 #pragma unused(sender)
-	if (STATIC_CAST(self->tabTitles.selectedSegment, NSUInteger) >= self->viewManagerArray.count)
+	if (STATIC_CAST(self.tabTitles.selectedSegment, NSUInteger) >= self.viewManagerArray.count)
 	{
 		Console_Warning(Console_WriteLine, "current segment index is larger than number of panels; ignoring action");
 	}
 	else
 	{
-		Panel_ViewManager*	viewMgr = [self->viewManagerArray objectAtIndex:self->tabTitles.selectedSegment];
+		Panel_ViewManager*	viewMgr = [self.viewManagerArray objectAtIndex:self.tabTitles.selectedSegment];
 		
 		
-		[self->tabView selectTabViewItemWithIdentifier:viewMgr.panelIdentifier];
+		[self.tabView selectTabViewItemWithIdentifier:viewMgr.panelIdentifier];
 	}
 }// performTitleSegmentUpdate:
 
@@ -167,9 +231,9 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeColor:(id)	sender
 {
-	if ([self->activePanel respondsToSelector:@selector(changeColor:)])
+	if ([self.activePanel respondsToSelector:@selector(changeColor:)])
 	{
-		[self->activePanel changeColor:sender];
+		[self.activePanel changeColor:sender];
 	}
 }// changeColor:
 
@@ -190,9 +254,9 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeFont:(id)		sender
 {
-	if ([self->activePanel respondsToSelector:@selector(changeFont:)])
+	if ([self.activePanel respondsToSelector:@selector(changeFont:)])
 	{
-		[self->activePanel changeFont:sender];
+		[self.activePanel changeFont:sender];
 	}
 }// changeFont:
 
@@ -211,38 +275,38 @@ tabView:(NSTabView*)					aTabView
 didSelectTabViewItem:(NSTabViewItem*)	anItem
 {
 #pragma unused(aTabView)
-	auto				toPair = self->viewManagerByView->find([anItem view]);
-	Panel_ViewManager*	newPanel = ((self->viewManagerByView->end() != toPair)
+	auto				toPair = self.viewManagerByView->find(anItem.view);
+	Panel_ViewManager*	newPanel = ((self.viewManagerByView->end() != toPair)
 									? toPair->second
 									: nil);
 	
 	
-	if (nil != self->activePanel)
+	if (nil != self.activePanel)
 	{
-		[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityHidden];
+		[self.activePanel.delegate panelViewManager:self.activePanel didChangePanelVisibility:kPanel_VisibilityHidden];
 	}
 	
 	if (nil != newPanel)
 	{
 		// find segment
 		NSUInteger	i = 0;
-		for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+		for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 		{
 			if ([viewMgr.panelIdentifier isEqualToString:newPanel.panelIdentifier])
 			{
-				[self->tabTitles setSelected:YES forSegment:i];
+				[self.tabTitles setSelected:YES forSegment:i];
 				break;
 			}
 			++i;
 		}
 		
-		self->activePanel = newPanel;
-		[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
+		self.activePanel = newPanel;
+		[self.activePanel.delegate panelViewManager:self.activePanel didChangePanelVisibility:kPanel_VisibilityDisplayed];
 	}
 	else
 	{
 		Console_Warning(Console_WriteLine, "tab view has selected item with no associated view manager");
-		self->activePanel = nil;
+		self.activePanel = nil;
 	}
 }// tabView:didSelectTabViewItem:
 
@@ -259,15 +323,15 @@ tabView:(NSTabView*)					aTabView
 willSelectTabViewItem:(NSTabViewItem*)	anItem
 {
 #pragma unused(aTabView)
-	auto				toPair = self->viewManagerByView->find([anItem view]);
-	Panel_ViewManager*	newPanel = ((self->viewManagerByView->end() != toPair)
+	auto				toPair = self.viewManagerByView->find([anItem view]);
+	Panel_ViewManager*	newPanel = ((self.viewManagerByView->end() != toPair)
 									? toPair->second
 									: nil);
 	
 	
-	if (nil != self->activePanel)
+	if (nil != self.activePanel)
 	{
-		[self->activePanel.delegate panelViewManager:self->activePanel willChangePanelVisibility:kPanel_VisibilityHidden];
+		[self.activePanel.delegate panelViewManager:self.activePanel willChangePanelVisibility:kPanel_VisibilityHidden];
 	}
 	
 	if (nil != newPanel)
@@ -300,18 +364,18 @@ initializeWithContext:(NSObject*)		aContext
 	NSArray*		givenViewManagers = [asDictionary objectForKey:@"viewManagerArray"];
 	
 	
-	self->activePanel = nil;
-	self->identifier = [givenIdentifier retain];
-	self->localizedName = [givenName retain];
-	self->localizedIcon = [givenIcon retain];
-	self->viewManagerArray = [givenViewManagers copy];
+	self.activePanel = nil;
+	self.customPanelIdentifier = givenIdentifier;
+	self.customPanelLocalizedName = givenName;
+	self.customPanelLocalizedIcon = givenIcon;
+	self.viewManagerArray = [givenViewManagers copy];
 	
 	// an NSView* object is not a valid key in an NSMutableDictionary
 	// but it will certainly work as a key in an STL map
-	self->viewManagerByView = new GenericPanelTabs_ViewManagerByView();
+	self.viewManagerByView = new GenericPanelTabs_ViewManagerByView();
 	for (Panel_ViewManager* viewMgr in givenViewManagers)
 	{
-		self->viewManagerByView->insert(std::make_pair([viewMgr managedView], viewMgr));
+		self.viewManagerByView->insert(std::make_pair([viewMgr managedView], viewMgr));
 	}
 }// panelViewManager:initializeWithContext:
 
@@ -328,7 +392,7 @@ requestingEditType:(Panel_EditType*)	outEditType
 #pragma unused(aViewManager)
 	// consult all tabs
 	*outEditType = kPanel_EditTypeNormal;
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		Panel_EditType		newEditType = kPanel_EditTypeNormal;
 		
@@ -359,43 +423,42 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != tabTitles);
-	assert(nil != tabView);
+	assert(nil != self.tabTitles);
+	assert(nil != self.tabView);
 	
 	// arrange to be notified of certain changes
-	[tabView setDelegate:self];
+	self.tabView.delegate = self;
 	
 	// create tabs for every view that was provided
 	if (@available(macOS 11.0, *))
 	{
 		// if possible, make tabs larger and shift down to make room
-		self->tabTitles.controlSize = NSControlSizeLarge;
-		self->tabTitles.frame = NSMakeRect(self->tabTitles.frame.origin.x,
-											self->tabTitles.frame.origin.y - 6/* arbitrary shift for larger size */,
-											self->tabTitles.frame.size.width,
-											self->tabTitles.frame.size.height);
+		self.tabTitles.controlSize = NSControlSizeLarge;
+		self.tabTitles.frame = NSMakeRect(self.tabTitles.frame.origin.x,
+											self.tabTitles.frame.origin.y - 6/* arbitrary shift for larger size */,
+											self.tabTitles.frame.size.width,
+											self.tabTitles.frame.size.height);
 	}
-	self->tabTitles.segmentCount = self->viewManagerArray.count;
-	self->tabTitles.target = self;
-	self->tabTitles.action = @selector(performTitleSegmentUpdate:);
+	self.tabTitles.segmentCount = self.viewManagerArray.count;
+	self.tabTitles.target = self;
+	self.tabTitles.action = @selector(performTitleSegmentUpdate:);
 	NSUInteger	i = 0;
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		NSTabViewItem*	tabItem = [[NSTabViewItem alloc] initWithIdentifier:[viewMgr panelIdentifier]];
 		
 		
-		[tabItem setLabel:[viewMgr panelName]];
-		[tabItem setView:[viewMgr managedView]];
-		[tabItem setInitialFirstResponder:[viewMgr logicalFirstResponder]];
+		tabItem.label = [viewMgr panelName];
+		tabItem.view = [viewMgr managedView];
+		tabItem.initialFirstResponder = [viewMgr logicalFirstResponder];
 		
-		[self->tabView addTabViewItem:tabItem];
-		[tabItem release];
+		[self.tabView addTabViewItem:tabItem];
 		
-		[self->tabTitles setLabel:[viewMgr panelName] forSegment:i];
-		[self->tabTitles setSelected:(0 == i) forSegment:i];
+		[self.tabTitles setLabel:[viewMgr panelName] forSegment:i];
+		[self.tabTitles setSelected:(0 == i) forSegment:i];
 		++i;
 	}
-	[self->tabTitles sizeToFit];
+	[self.tabTitles sizeToFit];
 }// panelViewManager:didLoadContainerView:
 
 
@@ -410,13 +473,13 @@ requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
 	NSRect			containerFrame = [[self managedView] frame];
-	NSRect			tabContentRect = [self->tabView contentRect];
+	NSRect			tabContentRect = [self.tabView contentRect];
 	
 	
 	*outIdealSize = containerFrame.size;
 	
 	// find ideal size after considering all tabs
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		NSSize		panelIdealSize = *outIdealSize;
 		
@@ -443,7 +506,7 @@ didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager)
 	// forward to active tab
-	[self->activePanel.delegate panelViewManager:self->activePanel didPerformContextSensitiveHelp:sender];
+	[self.activePanel.delegate panelViewManager:self.activePanel didPerformContextSensitiveHelp:sender];
 }// panelViewManager:didPerformContextSensitiveHelp:
 
 
@@ -458,7 +521,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 {
 #pragma unused(aViewManager)
 	// forward to active tab
-	[self->activePanel.delegate panelViewManager:self->activePanel willChangePanelVisibility:aVisibility];
+	[self.activePanel.delegate panelViewManager:self.activePanel willChangePanelVisibility:aVisibility];
 }// panelViewManager:willChangePanelVisibility:
 
 
@@ -473,7 +536,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager, aVisibility)
 	// forward to active tab
-	[self->activePanel.delegate panelViewManager:self->activePanel didChangePanelVisibility:aVisibility];
+	[self.activePanel.delegate panelViewManager:self.activePanel didChangePanelVisibility:aVisibility];
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -492,7 +555,7 @@ toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet, newDataSet)
 	// forward to all tabs
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		[viewMgr.delegate panelViewManager:viewMgr didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
 	}
@@ -514,7 +577,7 @@ userAccepted:(BOOL)						isAccepted
 {
 #pragma unused(aViewManager, aContainerView, isAccepted)
 	// forward to all tabs
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		[viewMgr.delegate panelViewManager:viewMgr didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
 	}
@@ -544,7 +607,7 @@ withAnimation:(BOOL)								isAnimated
 	// if the identifier does not match any tab)
 	@try
 	{
-		[self->tabView selectTabViewItemWithIdentifier:anIdentifier];
+		[self.tabView selectTabViewItemWithIdentifier:anIdentifier];
 	}
 	@catch (NSException*	anException)
 	{
@@ -562,7 +625,7 @@ to "panelParentEnumerateChildViewManagers".
 - (NSUInteger)
 panelParentChildCount
 {
-	return self->viewManagerArray.count;
+	return self.viewManagerArray.count;
 }// panelParentChildCount
 
 
@@ -575,7 +638,7 @@ for the tabs in this view.
 - (NSEnumerator*)
 panelParentEnumerateChildViewManagers
 {
-	return [self->viewManagerArray objectEnumerator];
+	return [self.viewManagerArray objectEnumerator];
 }// panelParentEnumerateChildViewManagers
 
 
@@ -592,7 +655,7 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
-	return [[self->localizedIcon retain] autorelease];
+	return self.customPanelLocalizedIcon;
 }// panelIcon
 
 
@@ -605,7 +668,7 @@ used in toolbar items that represent panels).
 - (NSString*)
 panelIdentifier
 {
-	return [[self->identifier retain] autorelease];
+	return self.customPanelIdentifier;
 }// panelIdentifier
 
 
@@ -619,7 +682,7 @@ it might be the name of a tab or toolbar icon).
 - (NSString*)
 panelName
 {
-	return [[self->localizedName retain] autorelease];
+	return self.customPanelLocalizedName;
 }// panelName
 
 
@@ -641,7 +704,7 @@ panelResizeAxes
 	Panel_ResizeConstraint	result = kPanel_ResizeConstraintBothAxes;
 	
 	
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		Panel_ResizeConstraint	panelConstraint = [viewMgr panelResizeAxes];
 		
@@ -717,7 +780,7 @@ preferencesClass
 	Quills::Prefs::Class	result = Quills::Prefs::GENERAL;
 	
 	
-	for (Panel_ViewManager* viewMgr in self->viewManagerArray)
+	for (Panel_ViewManager* viewMgr in self.viewManagerArray)
 	{
 		id									panelDelegate = viewMgr.delegate;
 		assert([[panelDelegate class] conformsToProtocol:@protocol(PrefsWindow_PanelInterface)]);

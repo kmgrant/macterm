@@ -79,8 +79,8 @@ only the selected list item values will be defined.
 */
 struct GenericPanelNumberedList_DataSet
 {
-	NSUInteger	selectedDataArrayIndex;
-	void*		parentPanelDataSetOrNull;
+	NSUInteger			selectedDataArrayIndex;
+	void* _Nullable		parentPanelDataSetOrNull;
 };
 
 
@@ -96,18 +96,18 @@ changes to an interface declared in a ".mm" file.
 @required
 
 	// return strong reference to user interface string representing numbered index in list
-	- (NSString*)
+	- (NSString* _Nullable)
 	numberedListIndexString;
 
 	// return strong reference to user interface icon representing item in list
-	- (NSImage*)
+	- (NSImage* _Nullable)
 	numberedListItemIconImage;
 
 	// return or update user interface string for name of item in list
-	- (NSString*)
+	- (NSString* _Nullable)
 	numberedListItemName;
 	- (void)
-	setNumberedListItemName:(NSString*)_;
+	setNumberedListItemName:(NSString* _Nullable)_;
 
 @end //}
 
@@ -126,20 +126,20 @@ the appropriate effect on the detail view.
 	// defined so that any bindings will work properly (e.g. set the
 	// property "listItemBindings" to an array of new objects)
 	- (void)
-	initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)_;
+	initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager* _Nonnull)_;
 
 	// respond to new selection in list (or, initial appearance of panel)
 	- (void)
-	numberedListViewManager:(GenericPanelNumberedList_ViewManager*)_
-	didChangeFromDataSet:(GenericPanelNumberedList_DataSet*)_
-	toDataSet:(GenericPanelNumberedList_DataSet*)_;
+	numberedListViewManager:(GenericPanelNumberedList_ViewManager* _Nonnull)_
+	didChangeFromDataSet:(GenericPanelNumberedList_DataSet* _Nullable)_
+	toDataSet:(GenericPanelNumberedList_DataSet* _Nullable)_;
 
 @optional
 
 	// invoked after list view has been loaded; use this opportunity to
 	// customize the UI, e.g. set properties like "headingTitleForNameColumn")
 	- (void)
-	containerViewDidLoadForNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)_;
+	containerViewDidLoadForNumberedListViewManager:(GenericPanelNumberedList_ViewManager* _Nonnull)_;
 
 @end //}
 
@@ -155,55 +155,54 @@ changes to an interface declared in a ".mm" file.
 																		Panel_Delegate,
 																		Panel_Parent,
 																		PrefsWindow_PanelInterface > //{
-{
-@private
-	NSString*								identifier;
-	NSString*								localizedName;
-	NSImage*								localizedIcon;
-	NSArrayController*						_itemArrayController;
-	NSView*									_masterContainer;
-	id< GenericPanelNumberedList_Master >	_masterDriver;
-	NSTableView*							_masterView;
-	NSView*									_detailContainer;
-	NSTabView*								_detailView;
-	Panel_ViewManager*						_detailViewManager;
-	NSSplitView*							_splitView;
-	NSIndexSet*								_listItemBindingIndexes;
-	NSArray*								_listItemBindings;
-	NSArray*								_itemBindingSortDescriptors;
-}
 
 // accessors
-	@property (strong) IBOutlet NSView*
+	//! The superview of the embedded panel, and the view whose frame
+	//! defines the right-hand region of the split view.
+	@property (strong, nonnull) IBOutlet NSView*
 	detailContainer;
-	@property (strong) IBOutlet NSTabView*
+	//! The embedded panel.
+	@property (strong, nonnull) IBOutlet NSTabView*
 	detailView;
-	@property (strong) NSString*
+	//! Allows the title of the icon column to be changed.
+	@property (strong, nonnull) NSString*
 	headingTitleForIconColumn;
-	@property (strong) NSString*
+	//! Allows the title of the name column to be changed (for example,
+	//! to say “Window Name” in a list of window configurations).
+	@property (strong, nonnull) NSString*
 	headingTitleForNameColumn;
-	@property (strong) IBOutlet NSArrayController*
+	//! The object that controls access to an array of elements in the
+	//! numbered list (bound to the columns of the table view).
+	@property (strong, nonnull) IBOutlet NSArrayController*
 	itemArrayController;
-	@property (strong) NSArray*
+	//! The rules for sorting columns of the numbered list.
+	@property (strong, nonnull) NSArray*
 	itemBindingSortDescriptors; // binding
-	@property (retain) NSIndexSet*
-	listItemBindingIndexes; // binding; selected item from "listItemBindings" (when changed, the master is notified)
-	@property (retain) NSArray*
+	//! Selected item from "listItemBindings" (when changed,
+	//! the master is notified).
+	@property (strong, nonnull) NSIndexSet*
+	listItemBindingIndexes; // binding
+	//! The objects that are managed by "itemArrayController".
+	@property (strong, nonnull) NSArray*
 	listItemBindings; // binding
-	@property (strong) IBOutlet NSView*
+	//! The superview of the numbered list, and the view whose frame
+	//! defines the left-hand region of the split view.
+	@property (strong, nonnull) IBOutlet NSView*
 	masterContainer;
-	@property (strong) IBOutlet NSTableView*
+	//! The numbered list itself; see also "masterContainer".
+	@property (strong, nonnull) IBOutlet NSTableView*
 	masterView;
-	@property (strong) IBOutlet NSSplitView*
+	//! The superview of the master and detail views, with a separator line.
+	@property (strong, nonnull) IBOutlet NSSplitView*
 	splitView;
 
 // initializers
-	- (instancetype)
-	initWithIdentifier:(NSString*)_
-	localizedName:(NSString*)_
-	localizedIcon:(NSImage*)_
-	master:(id< GenericPanelNumberedList_Master >)_
-	detailViewManager:(Panel_ViewManager*)_;
+	- (instancetype _Nullable)
+	initWithIdentifier:(NSString* _Nonnull)_
+	localizedName:(NSString* _Nonnull)_
+	localizedIcon:(NSImage* _Nonnull)_
+	master:(id< GenericPanelNumberedList_Master > _Nonnull)_
+	detailViewManager:(Panel_ViewManager* _Nonnull)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
 

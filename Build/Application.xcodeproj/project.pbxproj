@@ -16,7 +16,7 @@
 		0A22068D24FCA5F600E27657 /* UICommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A22068C24FCA5F600E27657 /* UICommon.swift */; };
 		0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A23A8D11C21077B00156B1E /* TextAttributes.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A23B1EC2502A22D000F643B /* UIArrangeWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A23B1EB2502A22D000F643B /* UIArrangeWindow.swift */; };
-		0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */; };
+		0A2890DD0D68017D0017D99E /* GenericPanelTabs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A2A35DD13AD2F17007A1E35 /* CocoaExtensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A35DC13AD2F17007A1E35 /* CocoaExtensions.mm */; };
 		0A2DC1B11881BEFE005A3979 /* TerminalLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2DC1B01881BEFE005A3979 /* TerminalLine.cp */; };
 		0A30289D1DB2BE2500C1C557 /* Network.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289C1DB2BE2500C1C557 /* Network.mm */; };
@@ -112,7 +112,7 @@
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.mm */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.mm */; };
 		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */; };
+		0ACC406A1A433256009D0D53 /* GenericPanelNumberedList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACC40691A433256009D0D53 /* GenericPanelNumberedList.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0ACF35C617EBCC1500178DE2 /* Emulation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACF35C517EBCC1500178DE2 /* Emulation.cp */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };

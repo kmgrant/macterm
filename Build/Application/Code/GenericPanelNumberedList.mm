@@ -56,9 +56,21 @@ Private properties.
 @interface GenericPanelNumberedList_ViewManager () //{
 
 // accessors
-	@property (strong) Panel_ViewManager*
+	//! The panel’s unique identication string in dotted-name format.
+	@property (strong, nonnull) NSString*
+	customPanelIdentifier;
+	//! The panel’s user-visible icon image.
+	@property (strong, nonnull) NSImage*
+	customPanelLocalizedIcon;
+	//! The panel’s user-visible title.
+	@property (strong, nonnull) NSString*
+	customPanelLocalizedName;
+	//! The object that is the view controller for the embedded panel.
+	@property (strong, nonnull) Panel_ViewManager*
 	detailViewManager;
-	@property (strong) id< GenericPanelNumberedList_Master >
+	//! The object that is notified of activity in the master, such as
+	//! clicks in different items of the numbered list.
+	@property (strong, nonnull) id< GenericPanelNumberedList_Master >
 	masterDriver;
 
 @end //}
@@ -84,59 +96,10 @@ The private class interface.
 @implementation GenericPanelNumberedList_ViewManager
 
 
-/*!
-The superview of the embedded panel, and the view whose frame
-defines the right-hand region of the split view.
-*/
-@synthesize detailContainer = _detailContainer;
+@synthesize listItemBindingIndexes = _listItemBindingIndexes;
 
-/*!
-The embedded panel.
-*/
-@synthesize detailView = _detailView;
 
-/*!
-The object that is the view controller for the embedded panel.
-*/
-@synthesize detailViewManager = _detailViewManager;
-
-/*!
-The object that controls access to an array of elements in the
-numbered list (bound to the columns of the table view).
-*/
-@synthesize itemArrayController = _itemArrayController;
-
-/*!
-The rules for sorting columns of the numbered list.
-*/
-@synthesize itemBindingSortDescriptors = _itemBindingSortDescriptors;
-
-/*!
-The objects that are managed by "itemArrayController".
-*/
-@synthesize listItemBindings = _listItemBindings;
-
-/*!
-The superview of the numbered list, and the view whose frame
-defines the left-hand region of the split view.
-*/
-@synthesize masterContainer = _masterContainer;
-
-/*!
-The object that is notified of activity in the master, such as
-clicks in different items of the numbered list.
-*/
-@synthesize masterDriver = _masterDriver;
-
-/*!
-The numbered list itself; see also "masterContainer".
-*/
-@synthesize masterView = _masterView;
-
-/*!
-The superview of the master and detail views, with a separator line.
-*/
-@synthesize splitView = _splitView;
+#pragma mark Initializers
 
 
 /*!
@@ -183,28 +146,49 @@ Destructor.
 dealloc
 {
 	self.detailViewManager.panelParent = nil;
-	[_detailContainer release];
-	[_detailView release];
-	[identifier release];
-	[_itemArrayController release];
-	[_itemBindingSortDescriptors release];
-	[localizedName release];
-	[localizedIcon release];
-	[_listItemBindingIndexes release];
-	[_listItemBindings release];
-	[_masterContainer release];
-	[_masterDriver release];
-	[_masterView release];
-	[_splitView release];
-	[super dealloc];
 }// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Compiler expects this superclass designated initializer to
+be defined but this variant is not supported.
+
+(2021.01)
+*/
+- (instancetype)
+initWithNibNamed:(NSString*)		aNibName
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(NSObject*)					aContext
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithIdentifier:nil localizedName:nil localizedIcon:nil master:nil detailViewManager:nil];
+}// initWithNibNamed:delegate:context:
+
+
+/*!
+Compiler expects this superclass designated initializer to
+be defined but this variant is not supported.
+
+(2021.011)
+*/
+- (instancetype)
+initWithView:(NSView*)				aView
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(NSObject*)					aContext
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithIdentifier:nil localizedName:nil localizedIcon:nil master:nil detailViewManager:nil];
+}// initWithView:delegate:context:
 
 
 #pragma mark Accessors
 
 
 /*!
-Allows the title of the icon column to be customized.
+Allows the title of the icon column to be changed.
 
 (2020.04)
 */
@@ -214,7 +198,7 @@ headingTitleForIconColumn
 	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
 	
 	
-	return [nameColumn.headerCell stringValue];
+	return nameColumn.headerCell.stringValue;
 }
 - (void)
 setHeadingTitleForIconColumn:(NSString*)	aNewTitle
@@ -222,14 +206,14 @@ setHeadingTitleForIconColumn:(NSString*)	aNewTitle
 	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:1];
 	
 	
-	[nameColumn.headerCell setStringValue:aNewTitle];
+	nameColumn.headerCell.stringValue = aNewTitle;
 }// setHeadingTitleForIconColumn:
 
 
 /*!
-Allows the title of the name column to be customized
-(for example, to say “Window Name” in a list of window
-configurations).
+Allows the title of the name column to be changed
+(for example, to say “Window Name” in a list of
+window configurations).
 
 (4.1)
 */
@@ -239,7 +223,7 @@ headingTitleForNameColumn
 	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:2];
 	
 	
-	return [nameColumn.headerCell stringValue];
+	return nameColumn.headerCell.stringValue;
 }
 - (void)
 setHeadingTitleForNameColumn:(NSString*)	aNewTitle
@@ -247,21 +231,20 @@ setHeadingTitleForNameColumn:(NSString*)	aNewTitle
 	NSTableColumn*		nameColumn = [self.masterView.tableColumns objectAtIndex:2];
 	
 	
-	[nameColumn.headerCell setStringValue:aNewTitle];
+	nameColumn.headerCell.stringValue = aNewTitle;
 }// setHeadingTitleForNameColumn:
 
 
 /*!
-Allows the title of the name column to be customized
-(for example, to say “Window Name” in a list of window
-configurations).
+Selected item from "listItemBindings" (when changed,
+the master is notified).
 
 (4.1)
 */
 - (NSIndexSet*)
 listItemBindingIndexes
 {
-	return [[_listItemBindingIndexes retain] autorelease];
+	return _listItemBindingIndexes;
 }
 - (void)
 setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
@@ -270,8 +253,8 @@ setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
 	{
 		GenericPanelNumberedList_DataSet	oldStruct;
 		GenericPanelNumberedList_DataSet	newStruct;
-		NSUInteger							oldBindingIndex = [self.listItemBindingIndexes firstIndex];
-		NSUInteger							newBindingIndex = [anIndexSet firstIndex];
+		NSUInteger							oldBindingIndex = self.listItemBindingIndexes.firstIndex;
+		NSUInteger							newBindingIndex = anIndexSet.firstIndex;
 		
 		
 		[self willChangeValueForKey:@"listItemBindingIndexes"];
@@ -289,8 +272,7 @@ setListItemBindingIndexes:(NSIndexSet*)		anIndexSet
 		}
 		
 		// update the value
-		[_listItemBindingIndexes release];
-		_listItemBindingIndexes = [anIndexSet retain];
+		_listItemBindingIndexes = [anIndexSet copy];
 		newStruct.parentPanelDataSetOrNull = nullptr;
 		if (newBindingIndex < [self.itemArrayController.arrangedObjects count])
 		{
@@ -433,10 +415,10 @@ initializeWithContext:(NSObject*)		aContext
 	Panel_ViewManager*	givenDetailViewManager = [asDictionary objectForKey:@"detailViewManager"];
 	
 	
-	self->identifier = [givenIdentifier retain];
-	self->localizedName = [givenName retain];
-	self->localizedIcon = [givenIcon retain];
-	self->_itemBindingSortDescriptors = [@[
+	self.customPanelIdentifier = givenIdentifier;
+	self.customPanelLocalizedName = givenName;
+	self.customPanelLocalizedIcon = givenIcon;
+	self->_itemBindingSortDescriptors = @[
 											// uses "id< GenericPanelNumberedList_ItemBinding >" method names
 											[NSSortDescriptor sortDescriptorWithKey:@"numberedListIndexString" ascending:YES
 																					selector:@selector(localizedStandardCompare:)],
@@ -444,11 +426,11 @@ initializeWithContext:(NSObject*)		aContext
 																					selector:@selector(imageNameCompare:)],
 											[NSSortDescriptor sortDescriptorWithKey:@"numberedListItemName" ascending:YES
 																					selector:@selector(localizedStandardCompare:)]
-										] retain];
+										];
 	self->_listItemBindingIndexes = [[NSIndexSet alloc] initWithIndex:0];
 	self->_listItemBindings = [[NSArray alloc] init];
 	self.masterDriver = givenDriver;
-	_detailViewManager = [givenDetailViewManager retain];
+	_detailViewManager = givenDetailViewManager;
 	self.detailViewManager.panelParent = self;
 	
 	assert(nil != self.detailViewManager);
@@ -495,17 +477,16 @@ didLoadContainerView:(NSView*)			aContainerView
 	NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[self.detailViewManager panelIdentifier]];
 	
 	
-	[tabItem setView:[self.detailViewManager managedView]];
-	[tabItem setInitialFirstResponder:[self.detailViewManager logicalFirstResponder]];
+	tabItem.view = [self.detailViewManager managedView];
+	tabItem.initialFirstResponder = [self.detailViewManager logicalFirstResponder];
 	[self.detailView addTabViewItem:tabItem];
-	[tabItem release];
 	
 	if ([self.masterDriver respondsToSelector:@selector(containerViewDidLoadForNumberedListViewManager:)])
 	{
 		[self.masterDriver containerViewDidLoadForNumberedListViewManager:self];
 	}
 	
-	[[self.masterView enclosingScrollView] setNextKeyView:[self.detailViewManager logicalFirstResponder]];
+	self.masterView.enclosingScrollView.nextKeyView = [self.detailViewManager logicalFirstResponder];
 }// panelViewManager:didLoadContainerView:
 
 
@@ -601,7 +582,7 @@ toDataSet:(void*)						newDataSet
 #pragma unused(aViewManager)
 	GenericPanelNumberedList_DataSet	oldStruct;
 	GenericPanelNumberedList_DataSet	newStruct;
-	NSUInteger							oldBindingIndex = [self.listItemBindingIndexes firstIndex];
+	NSUInteger							oldBindingIndex = self.listItemBindingIndexes.firstIndex;
 	
 	
 	// the "listItemBindings" property needs to send update
@@ -699,7 +680,7 @@ for the panels in this view.
 - (NSEnumerator*)
 panelParentEnumerateChildViewManagers
 {
-	return [[[@[self.detailViewManager] retain] autorelease] objectEnumerator];
+	return [@[self.detailViewManager] objectEnumerator];
 }// panelParentEnumerateChildViewManagers
 
 
@@ -716,7 +697,7 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
-	return [[self->localizedIcon retain] autorelease];
+	return self.customPanelLocalizedIcon;
 }// panelIcon
 
 
@@ -729,7 +710,7 @@ used in toolbar items that represent panels).
 - (NSString*)
 panelIdentifier
 {
-	return [[self->identifier retain] autorelease];
+	return self.customPanelIdentifier;
 }// panelIdentifier
 
 
@@ -743,7 +724,7 @@ it might be the name of a tab or toolbar icon).
 - (NSString*)
 panelName
 {
-	return [[self->localizedName retain] autorelease];
+	return self.customPanelLocalizedName;
 }// panelName
 
 

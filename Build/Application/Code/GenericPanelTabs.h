@@ -42,10 +42,6 @@
 
 #pragma once
 
-// standard-C++ includes
-#include <map>
-#include <vector>
-
 // Mac includes
 #include <CoreFoundation/CoreFoundation.h>
 #ifdef __OBJC__
@@ -62,8 +58,6 @@ class NSView;
 
 #pragma mark Types
 
-typedef std::map< NSView*, Panel_ViewManager* >		GenericPanelTabs_ViewManagerByView;
-
 #ifdef __OBJC__
 
 /*!
@@ -76,24 +70,19 @@ changes to an interface declared in a ".mm" file.
 @interface GenericPanelTabs_ViewManager : Panel_ViewManager< NSTabViewDelegate,
 																Panel_Delegate, Panel_Parent,
 																PrefsWindow_PanelInterface > //{
-{
-	IBOutlet NSSegmentedControl*	tabTitles;
-	IBOutlet NSTabView*				tabView;
-@private
-	Panel_ViewManager*						activePanel;
-	NSString*								identifier;
-	NSString*								localizedName;
-	NSImage*								localizedIcon;
-	NSArray*								viewManagerArray;
-	GenericPanelTabs_ViewManagerByView*		viewManagerByView;
-}
+
+// accessors
+	@property (strong, nonnull) IBOutlet NSSegmentedControl*
+	tabTitles;
+	@property (strong, nonnull) IBOutlet NSTabView*
+	tabView;
 
 // initializers
-	- (instancetype)
-	initWithIdentifier:(NSString*)_
-	localizedName:(NSString*)_
-	localizedIcon:(NSImage*)_
-	viewManagerArray:(NSArray*)_;
+	- (instancetype _Nullable)
+	initWithIdentifier:(NSString* _Nonnull)_
+	localizedName:(NSString* _Nonnull)_
+	localizedIcon:(NSImage* _Nonnull)_
+	viewManagerArray:(NSArray* _Nonnull)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
 
