@@ -296,8 +296,8 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = @[
-										[[[PrefPanelFormats_GeneralViewManager alloc] init] autorelease],
-										[[[PrefPanelFormats_StandardColorsViewManager alloc] init] autorelease],
+										[[PrefPanelFormats_GeneralViewManager alloc] init],
+										[[PrefPanelFormats_StandardColorsViewManager alloc] init],
 									];
 	NSString*	panelName = NSLocalizedStringFromTable(@"Formats", @"PrefPanelFormats",
 														@"the name of this panel");
@@ -322,18 +322,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end // PrefPanelFormats_ViewManager
@@ -511,26 +499,23 @@ Designated initializer.
 - (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
-									[[[PreferenceValue_IntegerDescriptor alloc]
+	NSArray*	descriptorArray = [[NSArray alloc] initWithObjects:
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kTerminalView_MousePointerColorRed
 																description:NSLocalizedStringFromTable
 																			(@"Red", @"PrefPanelFormats"/* table */,
-																				@"default (red) mouse pointer color")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"default (red) mouse pointer color")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kTerminalView_MousePointerColorBlack
 																description:NSLocalizedStringFromTable
 																			(@"Black", @"PrefPanelFormats"/* table */,
-																				@"white mouse pointer color")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"white mouse pointer color")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kTerminalView_MousePointerColorWhite
 																description:NSLocalizedStringFromTable
 																			(@"White", @"PrefPanelFormats"/* table */,
-																				@"white mouse pointer color")]
-										autorelease],
-									nil] autorelease];
+																				@"white mouse pointer color")],
+									nil];
 	
 	
 	assert(sizeof(TerminalView_MousePointerColor) == sizeof(UInt32));
@@ -543,18 +528,6 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	}
 	return self;
 }// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(2020.09)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end // PrefPanelFormats_MousePointerColorValue
@@ -598,14 +571,10 @@ dealloc
 		[self removeObserver:self forKeyPath:keyName];
 	}
 	
-	[sampleTerminalVC release];
-	[prefsMgr release];
-	[byKey release];
 	if (nullptr != sampleScreenBuffer)
 	{
 		Terminal_ReleaseScreen(&sampleScreenBuffer);
 	}
-	[super dealloc];
 }// dealloc
 
 
@@ -889,7 +858,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
@@ -1012,57 +981,57 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorNormalBackground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"normalBackgroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorNormalForeground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"normalForegroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBoldBackground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"boldBackgroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBoldForeground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"boldForegroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBlinkingBackground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"blinkingBackgroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorBlinkingForeground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"blinkingForegroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorCursorBackground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"cursorBackgroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_Flag alloc]
+	[self->byKey setObject:[[PreferenceValue_Flag alloc]
 								initWithPreferencesTag:kPreferences_TagAutoSetCursorColor
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"autoSetCursorColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorMatteBackground
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"matteBackgroundColor"];
-	[self->byKey setObject:[[[PreferenceValue_String alloc]
+	[self->byKey setObject:[[PreferenceValue_String alloc]
 								initWithPreferencesTag:kPreferences_TagFontName
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"fontFamily"];
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
+	[self->byKey setObject:[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagFontSize
 														contextManager:self->prefsMgr
-														preferenceCType:kPreferenceValue_CTypeFloat64] autorelease]
+														preferenceCType:kPreferenceValue_CTypeFloat64]
 					forKey:@"fontSize"];
-	[self->byKey setObject:[[[PrefPanelFormats_CharacterWidthContent alloc]
+	[self->byKey setObject:[[PrefPanelFormats_CharacterWidthContent alloc]
 								initWithPreferencesTag:kPreferences_TagFontCharacterWidthMultiplier
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"characterWidth"];
-	[self->byKey setObject:[[[PrefPanelFormats_MousePointerColorValue alloc]
-								initWithContextManager:self->prefsMgr] autorelease]
+	[self->byKey setObject:[[PrefPanelFormats_MousePointerColorValue alloc]
+								initWithContextManager:self->prefsMgr]
 					forKey:@"mousePointerColor"];
 	
 	// note that all values have changed (causes the display to be refreshed)
@@ -1459,21 +1428,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[sampleTerminalVC release];
-	[prefsMgr release];
-	[byKey release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -1802,7 +1756,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] init];
@@ -1923,69 +1877,69 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlack
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"blackNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlackBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"blackBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRed
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"redNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIRedBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"redBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreen
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"greenNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIGreenBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"greenBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellow
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"yellowNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIYellowBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"yellowBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlue
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"blueNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIBlueBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"blueBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagenta
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"magentaNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIMagentaBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"magentaBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyan
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"cyanNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSICyanBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"cyanBoldColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhite
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"whiteNormalColor"];
-	[self->byKey setObject:[[[PreferenceValue_Color alloc]
+	[self->byKey setObject:[[PreferenceValue_Color alloc]
 								initWithPreferencesTag:kPreferences_TagTerminalColorANSIWhiteBold
-														contextManager:self->prefsMgr] autorelease]
+														contextManager:self->prefsMgr]
 					forKey:@"whiteBoldColor"];
 	
 	// note that all values have changed (causes the display to be refreshed)

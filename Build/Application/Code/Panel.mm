@@ -100,12 +100,12 @@ bundle:(NSBundle*)				aBundle
 /*!
 Designated initializer.
 
-(4.1)
+(2021.01)
 */
 - (instancetype)
 initWithNibNamed:(NSString*)		aNibName
 delegate:(id< Panel_Delegate >)		aDelegate
-context:(void*)						aContext
+context:(NSObject*)					aContext
 {
 	self = [super initWithNibName:aNibName bundle:nil];
 	if (nil != self)
@@ -138,12 +138,12 @@ context:(void*)						aContext
 /*!
 Designated initializer, alternate (when view exists).
 
-(2020.11)
+(2021.01)
 */
 - (instancetype)
 initWithView:(NSView*)				aView
 delegate:(id< Panel_Delegate >)		aDelegate
-context:(void*)						aContext
+context:(NSObject*)					aContext
 {
 	self = [super initWithNibName:nil bundle:nil];
 	if (nil != self)

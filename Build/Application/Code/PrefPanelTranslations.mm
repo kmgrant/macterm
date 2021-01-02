@@ -154,18 +154,6 @@ description:(NSString*)						aDescription
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -208,19 +196,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[translationTables release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -282,7 +257,6 @@ backupFontFamilyName
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			result = BRIDGE_CAST(fontName, NSString*);
-			[result autorelease];
 		}
 	}
 	return result;
@@ -391,7 +365,7 @@ Accessor.
 - (NSArray*)
 translationTables
 {
-	return [[translationTables retain] autorelease];
+	return self->translationTables;
 }
 
 
@@ -442,7 +416,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	UInt16		characterSetCount = TextTranslation_ReturnCharacterSetCount();
@@ -459,9 +433,8 @@ initializeWithContext:(void*)			aContext
 		NSString*			encodingName = BRIDGE_CAST(CFStringGetNameOfEncoding(encodingID), NSString*);
 		
 		
-		[self->translationTables addObject:[[[PrefPanelTranslations_TableInfo alloc]
-												initWithEncodingType:encodingID description:encodingName]
-											autorelease]];
+		[self->translationTables addObject:[[PrefPanelTranslations_TableInfo alloc]
+												initWithEncodingType:encodingID description:encodingName]];
 	}
 	[self didChangeValueForKey:@"translationTables"];
 }// panelViewManager:initializeWithContext:

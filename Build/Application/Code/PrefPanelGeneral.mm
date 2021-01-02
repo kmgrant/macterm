@@ -388,10 +388,10 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = @[
-										[[[PrefPanelGeneral_OptionsVC alloc] init] autorelease],
-										[[[PrefPanelGeneral_SpecialVC alloc] init] autorelease],
-										[[[PrefPanelGeneral_FullScreenVC alloc] init] autorelease],
-										[[[PrefPanelGeneral_NotificationsVC alloc] init] autorelease],
+										[[PrefPanelGeneral_OptionsVC alloc] init],
+										[[PrefPanelGeneral_SpecialVC alloc] init],
+										[[PrefPanelGeneral_FullScreenVC alloc] init],
+										[[PrefPanelGeneral_NotificationsVC alloc] init],
 									];
 	NSString*	panelName = NSLocalizedStringFromTable(@"General", @"PrefPanelGeneral",
 														@"the name of this panel");
@@ -418,18 +418,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 @end //} PrefPanelGeneral_ViewManager
 
 
@@ -453,20 +441,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -678,19 +652,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -706,7 +667,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelGeneral_FullScreenActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_FullScreenActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -970,13 +931,13 @@ init
 		// fill in names of system sounds
 		{
 			NSArray*															soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
-			NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* >*	modelArray = [[[NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* > alloc] init] autorelease];
+			NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* >*	modelArray = [[NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* > alloc] init];
 			
 			
 			for (NSString* aSoundName in soundNamesOnly)
 			{
-				UIPrefsGeneralNotifications_BellSoundItemModel*		newItem = [[[UIPrefsGeneralNotifications_BellSoundItemModel alloc]
-																				initWithSoundName:aSoundName helpText:nil] autorelease];
+				UIPrefsGeneralNotifications_BellSoundItemModel*		newItem = [[UIPrefsGeneralNotifications_BellSoundItemModel alloc]
+																				initWithSoundName:aSoundName helpText:nil];
 				
 				
 				[modelArray addObject:newItem]; // (copies item)
@@ -986,20 +947,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -1313,19 +1260,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -1341,7 +1275,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelGeneral_NotificationsActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_NotificationsActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -1604,20 +1538,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -2015,19 +1935,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -2043,7 +1950,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelGeneral_OptionsActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_OptionsActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -2306,20 +2213,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -2632,19 +2525,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -2660,7 +2540,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelGeneral_SpecialActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_SpecialActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);

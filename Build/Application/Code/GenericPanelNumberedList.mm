@@ -421,7 +421,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager)
 	// IMPORTANT: see the initializer for the construction of this dictionary and the names of keys that are used

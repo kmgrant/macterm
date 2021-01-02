@@ -1194,7 +1194,7 @@ reality, use the simpler "initWithNibNamed:".
 - (instancetype)
 initWithNibNamed:(NSString*)		aNibName
 delegate:(id< Panel_Delegate >)		aDelegate
-context:(void*)						aContext
+context:(NSObject*)					aContext
 {
 	self = [super initWithNibNamed:aNibName delegate:aDelegate context:aContext];
 	if (nil != self)
@@ -1215,7 +1215,7 @@ This variant of initializer is not currently supported.
 - (instancetype)
 initWithView:(NSView*)				aView
 delegate:(id< Panel_Delegate >)		aDelegate
-context:(void*)						aContext
+context:(NSObject*)					aContext
 {
 	self = [super initWithView:aView delegate:aDelegate context:aContext];
 	if (nil != self)
@@ -1492,7 +1492,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->_registeredObservers = [[NSMutableArray alloc] init];

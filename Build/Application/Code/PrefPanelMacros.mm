@@ -401,19 +401,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[_macroEditorViewManager release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -455,18 +442,18 @@ initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewM
 						@[
 							// create as many managers as there are supported indexes
 							// (see the Preferences module)
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:1] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:2] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:3] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:4] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:5] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:6] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:7] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:8] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:9] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:10] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:11] autorelease],
-							[[[PrefPanelMacros_MacroInfo alloc] initWithIndex:12] autorelease],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:1],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:2],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:3],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:4],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:5],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:6],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:7],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:8],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:9],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:10],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:11],
+							[[PrefPanelMacros_MacroInfo alloc] initWithIndex:12],
 						];
 	
 	
@@ -540,50 +527,43 @@ Designated initializer.
 - (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
-									[[[PreferenceValue_IntegerDescriptor alloc]
+	NSArray*	descriptorArray = [[NSArray alloc] initWithObjects:
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionSendTextVerbatim
 																description:NSLocalizedStringFromTable
 																			(@"Enter Text Verbatim", @"PrefPanelMacros"/* table */,
-																				@"macro action: enter text verbatim")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"macro action: enter text verbatim")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionSendTextProcessingEscapes
 																description:NSLocalizedStringFromTable
 																			(@"Enter Text with Substitutions", @"PrefPanelMacros"/* table */,
-																				@"macro action: enter text with substitutions")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"macro action: enter text with substitutions")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionHandleURL
 																description:NSLocalizedStringFromTable
 																			(@"Open URL", @"PrefPanelMacros"/* table */,
-																				@"macro action: open URL")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"macro action: open URL")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionNewWindowWithCommand
 																description:NSLocalizedStringFromTable
 																			(@"New Window with Command", @"PrefPanelMacros"/* table */,
-																				@"macro action: new window with command")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"macro action: new window with command")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionSelectMatchingWindow
 																description:NSLocalizedStringFromTable
 																			(@"Select Window by Title", @"PrefPanelMacros"/* table */,
-																				@"macro action: select window by title")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"macro action: select window by title")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionFindTextVerbatim
 																description:NSLocalizedStringFromTable
 																			(@"Find in Local Terminal Verbatim", @"PrefPanelMacros"/* table */,
-																				@"macro action: find in local terminal verbatim")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"macro action: find in local terminal verbatim")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ActionFindTextProcessingEscapes
 																description:NSLocalizedStringFromTable
 																			(@"Find in Local Terminal with Substitutions", @"PrefPanelMacros"/* table */,
-																				@"macro action: find in local terminal with substitutions")]
-										autorelease],
-									nil] autorelease];
+																				@"macro action: find in local terminal with substitutions")],
+									nil];
 	
 	
 	self = [super initWithPreferencesTag:0L/* set externally later */
@@ -595,18 +575,6 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	}
 	return self;
 }// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end //} PrefPanelMacros_ActionValue
@@ -631,196 +599,165 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	// create a sentinel object (exact values do not matter, the only
 	// thing that is ever used is the pointer identity); this allows
 	// the interface to decide when to return a key-character binding
-	self.placeholderDescriptor = [[[PreferenceValue_IntegerDescriptor alloc]
+	self.placeholderDescriptor = [[PreferenceValue_IntegerDescriptor alloc]
 									initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsRealKey, 0/* exact value is never used */), UInt32)
 															description:NSLocalizedStringFromTable
 																		(@"Ordinary Character", @"PrefPanelMacros"/* table */,
-																			@"key: ordinary character")]
-									autorelease];
+																			@"key: ordinary character")];
 	
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
+	NSArray*	descriptorArray = [[NSArray alloc] initWithObjects:
 									self.placeholderDescriptor,
-									[[[PreferenceValue_IntegerDescriptor alloc]
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Delete/* 0x33 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌫ Backward Delete", @"PrefPanelMacros"/* table */,
-																				@"key: backward delete")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: backward delete")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_ForwardDelete/* 0x75 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌦ Forward Delete", @"PrefPanelMacros"/* table */,
-																				@"key: forward delete")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: forward delete")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Home/* 0x73 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"↖︎ Home", @"PrefPanelMacros"/* table */,
-																				@"key: home")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: home")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_End/* 0x77 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"↘︎ End", @"PrefPanelMacros"/* table */,
-																				@"key: end")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: end")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_PageUp/* 0x74 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇞ Page Up", @"PrefPanelMacros"/* table */,
-																				@"key: page up")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: page up")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_PageDown/* 0x79 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇟ Page Down", @"PrefPanelMacros"/* table */,
-																				@"key: page down")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: page down")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_UpArrow/* 0x7E */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇡ Up Arrow", @"PrefPanelMacros"/* table */,
-																				@"key: up arrow")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: up arrow")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_DownArrow/* 0x7D */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇣ Down Arrow", @"PrefPanelMacros"/* table */,
-																				@"key: down arrow")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: down arrow")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_LeftArrow/* 0x7B */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇠ Left Arrow", @"PrefPanelMacros"/* table */,
-																				@"key: left arrow")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: left arrow")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_RightArrow/* 0x7C */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⇢ Right Arrow", @"PrefPanelMacros"/* table */,
-																				@"key: right arrow")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: right arrow")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_ANSI_KeypadClear/* 0x47 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌧ Clear", @"PrefPanelMacros"/* table */,
-																				@"key: clear")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: clear")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Escape/* 0x35 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⎋ Escape", @"PrefPanelMacros"/* table */,
-																				@"key: escape")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: escape")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_Return/* 0x24 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"↩︎ Return", @"PrefPanelMacros"/* table */,
-																				@"key: return")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: return")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_ANSI_KeypadEnter/* 0x4C */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"⌤ Enter", @"PrefPanelMacros"/* table */,
-																				@"key: enter")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: enter")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F1/* 0x7A */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F1 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F1")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F1")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F2/* 0x78 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F2 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F2")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F2")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F3/* 0x63 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F3 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F3")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F3")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F4/* 0x76 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F4 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F4")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F4")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F5/* 0x60 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F5 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F5")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F5")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F6/* 0x61 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F6 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F6")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F6")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F7/* 0x62 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F7 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F7")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F7")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F8/* 0x64 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F8 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F8")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F8")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F9/* 0x65 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F9 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F9")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F9")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F10/* 0x6D */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F10 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F10")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F10")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F11/* 0x67 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F11 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F11")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F11")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F12/* 0x6F */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F12 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F12")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F12")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F13/* 0x69 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F13 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F13")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F13")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F14/* 0x6B */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F14 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F14")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F14")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F15/* 0x71 */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F15 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F15")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"key: F15")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:STATIC_CAST(MacroManager_MakeKeyID(kFlagIsVirtualKey, kVK_F16/* 0x6A */), UInt32)
 																description:NSLocalizedStringFromTable
 																			(@"F16 Function Key", @"PrefPanelMacros"/* table */,
-																				@"key: F16")]
-										autorelease],
-									nil] autorelease];
+																				@"key: F16")],
+									nil];
 	
 	
 	self = [super initWithPreferencesTag:0L/* set externally later */
@@ -832,18 +769,6 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	}
 	return self;
 }// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -1015,32 +940,28 @@ Designated initializer.
 - (instancetype)
 initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 {
-	NSArray*	descriptorArray = [[[NSArray alloc] initWithObjects:
-									[[[PreferenceValue_IntegerDescriptor alloc]
+	NSArray*	descriptorArray = [[NSArray alloc] initWithObjects:
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ModifierKeyMaskCommand
 																description:NSLocalizedStringFromTable
 																			(@"⌘", @"PrefPanelMacros"/* table */,
-																				@"Command key modifier")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"Command key modifier")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ModifierKeyMaskOption
 																description:NSLocalizedStringFromTable
 																			(@"⌥", @"PrefPanelMacros"/* table */,
-																				@"Option key modifier")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"Option key modifier")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ModifierKeyMaskControl
 																description:NSLocalizedStringFromTable
 																			(@"⌃", @"PrefPanelMacros"/* table */,
-																				@"Control key modifier")]
-										autorelease],
-									[[[PreferenceValue_IntegerDescriptor alloc]
+																				@"Control key modifier")],
+									[[PreferenceValue_IntegerDescriptor alloc]
 										initWithIntegerValue:kMacroManager_ModifierKeyMaskShift
 																description:NSLocalizedStringFromTable
 																			(@"⇧", @"PrefPanelMacros"/* table */,
-																				@"Shift key modifier")]
-										autorelease],
-									nil] autorelease];
+																				@"Shift key modifier")],
+									nil];
 	
 	
 	self = [super initWithPreferencesTag:0L/* set externally later */
@@ -1052,18 +973,6 @@ initWithContextManager:(PrefsContextManager_Object*)	aContextMgr
 	}
 	return self;
 }// initWithContextManager:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end //} PrefPanelMacros_ModifiersValue
@@ -1091,19 +1000,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[prefsMgr release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Actions
@@ -1282,7 +1178,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
@@ -1591,8 +1487,8 @@ configureForIndex:(Preferences_Index)	anIndex
 {
 	if (nil == self.macroAction)
 	{
-		[self->byKey setObject:[[[PrefPanelMacros_ActionValue alloc]
-									initWithContextManager:self->prefsMgr] autorelease]
+		[self->byKey setObject:[[PrefPanelMacros_ActionValue alloc]
+									initWithContextManager:self->prefsMgr]
 						forKey:@"macroAction"];
 	}
 	self.macroAction.preferencesTag = Preferences_ReturnTagVariantForIndex
@@ -1600,10 +1496,10 @@ configureForIndex:(Preferences_Index)	anIndex
 	
 	if (nil == self.macroContents)
 	{
-		[self->byKey setObject:[[[PreferenceValue_String alloc]
+		[self->byKey setObject:[[PreferenceValue_String alloc]
 									initWithPreferencesTag:Preferences_ReturnTagVariantForIndex
 															(kPreferences_TagIndexedMacroContents, anIndex)
-															contextManager:self->prefsMgr] autorelease]
+															contextManager:self->prefsMgr]
 						forKey:@"macroContents"];
 	}
 	self.macroContents.preferencesTag = Preferences_ReturnTagVariantForIndex
@@ -1611,8 +1507,8 @@ configureForIndex:(Preferences_Index)	anIndex
 	
 	if (nil == self.macroKey)
 	{
-		[self->byKey setObject:[[[PrefPanelMacros_InvokeWithValue alloc]
-									initWithContextManager:self->prefsMgr] autorelease]
+		[self->byKey setObject:[[PrefPanelMacros_InvokeWithValue alloc]
+									initWithContextManager:self->prefsMgr]
 						forKey:@"macroKey"];
 	}
 	self.macroKey.preferencesTag = Preferences_ReturnTagVariantForIndex
@@ -1620,8 +1516,8 @@ configureForIndex:(Preferences_Index)	anIndex
 	
 	if (nil == self.macroModifiers)
 	{
-		[self->byKey setObject:[[[PrefPanelMacros_ModifiersValue alloc]
-									initWithContextManager:self->prefsMgr] autorelease]
+		[self->byKey setObject:[[PrefPanelMacros_ModifiersValue alloc]
+									initWithContextManager:self->prefsMgr]
 						forKey:@"macroModifiers"];
 	}
 	self.macroModifiers.preferencesTag = Preferences_ReturnTagVariantForIndex

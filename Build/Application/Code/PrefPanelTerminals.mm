@@ -324,9 +324,9 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = @[
-										[[[PrefPanelTerminals_OptionsVC alloc] init] autorelease],
-										[[[PrefPanelTerminals_EmulationVC alloc] init] autorelease],
-										[[[PrefPanelTerminals_ScreenVC alloc] init] autorelease],
+										[[PrefPanelTerminals_OptionsVC alloc] init],
+										[[PrefPanelTerminals_EmulationVC alloc] init],
+										[[PrefPanelTerminals_ScreenVC alloc] init],
 									];
 	NSString*	panelName = NSLocalizedStringFromTable(@"Terminals", @"PrefPanelTerminals",
 														@"the name of this panel");
@@ -353,18 +353,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 @end //} PrefPanelTerminals_ViewManager
 
 
@@ -388,20 +376,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -1196,19 +1170,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -1224,7 +1185,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelTerminals_EmulationActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelTerminals_EmulationActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -1484,20 +1445,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -1861,19 +1808,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -1889,7 +1823,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelTerminals_OptionsActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelTerminals_OptionsActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -2149,20 +2083,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -2569,19 +2489,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -2597,7 +2504,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelTerminals_ScreenActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelTerminals_ScreenActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);

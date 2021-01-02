@@ -131,7 +131,7 @@ conform to this protocol.
 	// superclass minimally initialized, no NIB loaded yet; perform subclass initializations needed this early, e.g. so that NIB-provided bindings succeed
 	- (void)
 	panelViewManager:(Panel_ViewManager*)_
-	initializeWithContext:(void*)_;
+	initializeWithContext:(NSObject*)_;
 
 	// manager needs to know how the panel behaves; respond by filling in the "requestingEditType:" parameter
 	- (void)
@@ -234,11 +234,11 @@ changes to an interface declared in a ".mm" file.
 	- (instancetype)
 	initWithNibNamed:(NSString*)_
 	delegate:(id< Panel_Delegate >)_
-	context:(void*)_ NS_DESIGNATED_INITIALIZER;
+	context:(NSObject*)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initWithView:(NSView*)_
 	delegate:(id< Panel_Delegate >)_
-	context:(void*)_ NS_DESIGNATED_INITIALIZER;
+	context:(NSObject*)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
 	@property (assign) id< Panel_Delegate >

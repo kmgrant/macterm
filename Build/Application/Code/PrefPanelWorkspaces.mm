@@ -214,8 +214,8 @@ init
 {
 	NSArray*	subViewManagers =
 				@[
-					[[[PrefPanelWorkspaces_OptionsVC alloc] init] autorelease],
-					[[[PrefPanelWorkspaces_WindowsViewManager alloc] init] autorelease],
+					[[PrefPanelWorkspaces_OptionsVC alloc] init],
+					[[PrefPanelWorkspaces_WindowsViewManager alloc] init],
 				];
 	NSString*	panelName = NSLocalizedStringFromTable(@"Workspaces", @"PrefPanelWorkspaces",
 														@"the name of this panel");
@@ -242,18 +242,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 @end //} PrefPanelWorkspaces_ViewManager
 
 
@@ -277,20 +265,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -517,19 +491,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -545,7 +506,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelWorkspaces_OptionsActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelWorkspaces_OptionsActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -812,18 +773,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2018.08)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -841,7 +790,7 @@ description
 	if (nil == self.commandType)
 	{
 		// use Session Favorite name
-		result = [[self.sessionFavoriteName retain] autorelease];
+		result = self.sessionFavoriteName;
 	}
 	else
 	{
@@ -979,10 +928,7 @@ dealloc
 		
 		Preferences_ContextStopMonitoring(self.currentContext, [_workspacePrefListener listenerRef], kThisCommandTypeTag);
 		Preferences_ContextStopMonitoring(self.currentContext, [_workspacePrefListener listenerRef], kThisSessionFavoriteTag);
-		[_workspacePrefListener release];
 	}
-	
-	[super dealloc];
 }// dealloc
 
 
@@ -1330,19 +1276,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[_windowEditorViewManager release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -1384,16 +1317,16 @@ initializeNumberedListViewManager:(GenericPanelNumberedList_ViewManager*)	aViewM
 						@[
 							// create as many managers as there are supported indexes
 							// (see the Preferences module)
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:1] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:2] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:3] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:4] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:5] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:6] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:7] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:8] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:9] autorelease],
-							[[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:10] autorelease],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:1],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:2],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:3],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:4],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:5],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:6],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:7],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:8],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:9],
+							[[PrefPanelWorkspaces_WindowInfo alloc] initWithIndex:10],
 						];
 	
 	
@@ -1504,9 +1437,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[frameObject release];
-	[screenBoundsObject release];
-	[super dealloc];
 }// dealloc
 
 
@@ -1669,8 +1599,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[_descriptorArray release];
-	[super dealloc];
 }// dealloc
 
 
@@ -1710,7 +1638,7 @@ Accessor.
 - (NSArray*)
 valueDescriptorArray
 {
-	return [[_descriptorArray retain] autorelease];
+	return _descriptorArray;
 }// valueDescriptorArray
 
 
@@ -1797,10 +1725,9 @@ setCurrentValueDescriptor:(PrefPanelWorkspaces_SessionDescriptor*)	selectedObjec
 		{
 			// selection is one of the Session Favorite names
 			[self->commandTypeObject setNilPreferenceValue];
-			self->sessionObject.currentValueDescriptor = [[[PreferenceValue_StringDescriptor alloc]
+			self->sessionObject.currentValueDescriptor = [[PreferenceValue_StringDescriptor alloc]
 															initWithStringValue:selectedObject.sessionFavoriteName
-																				description:selectedObject.sessionFavoriteName]
-															autorelease];
+																				description:selectedObject.sessionFavoriteName];
 		}
 		else
 		{
@@ -1970,7 +1897,7 @@ rebuildSessionList
 	
 	// add an item that means “no session in this window slot”
 	// (should be the first item)
-	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
 	newDesc.commandType = [NSNumber numberWithInteger:0];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
@@ -1978,26 +1905,26 @@ rebuildSessionList
 	// add items for each user Session Favorite (including Default)
 	for (PreferenceValue_StringDescriptor* sessionDesc in [self->sessionObject valueDescriptorArray])
 	{
-		newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
+		newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
 		newDesc.commandType = nil;
 		newDesc.sessionFavoriteName = [sessionDesc describedStringValue];
 		[_descriptorArray addObject:newDesc];
 	}
 	
 	// add an item that means “open the Log-In Shell session in the window”
-	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
 	newDesc.commandType = [NSNumber numberWithInteger:kSessionFactory_SpecialSessionLogInShell];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 	
 	// add an item that means “open the (non-log-in) Shell session in the window”
-	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
 	newDesc.commandType = [NSNumber numberWithInteger:kSessionFactory_SpecialSessionShell];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
 	
 	// add an item that means “open the Custom New Session sheet when the window opens”
-	newDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
+	newDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
 	newDesc.commandType = [NSNumber numberWithInteger:kSessionFactory_SpecialSessionInteractiveSheet];
 	newDesc.sessionFavoriteName = nil;
 	[_descriptorArray addObject:newDesc];
@@ -2029,18 +1956,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Actions
@@ -2098,7 +2013,7 @@ performSetSessionToNone:(id)	sender
 	// the value "0" is assumed throughout (and in the
 	// Preferences module when processing the value)
 	// as a way to indicate an unused window slot
-	noneDesc = [[[PrefPanelWorkspaces_SessionDescriptor alloc] init] autorelease];
+	noneDesc = [[PrefPanelWorkspaces_SessionDescriptor alloc] init];
 	noneDesc.commandType = [NSNumber numberWithInteger:0];
 	noneDesc.sessionFavoriteName = nil;
 	self.windowSession.currentValueDescriptor = noneDesc;
@@ -2162,7 +2077,7 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
@@ -2462,8 +2377,8 @@ configureForIndex:(Preferences_Index)	anIndex
 {
 	if (nil == self.windowBoundaries)
 	{
-		[self->byKey setObject:[[[PrefPanelWorkspaces_WindowBoundariesValue alloc]
-									initWithContextManager:self->prefsMgr index:anIndex] autorelease]
+		[self->byKey setObject:[[PrefPanelWorkspaces_WindowBoundariesValue alloc]
+									initWithContextManager:self->prefsMgr index:anIndex]
 						forKey:@"windowBoundaries"];
 	}
 	else
@@ -2473,8 +2388,8 @@ configureForIndex:(Preferences_Index)	anIndex
 	
 	if (nil == self.windowSession)
 	{
-		[self->byKey setObject:[[[PrefPanelWorkspaces_WindowSessionValue alloc]
-									initWithContextManager:self->prefsMgr index:anIndex] autorelease]
+		[self->byKey setObject:[[PrefPanelWorkspaces_WindowSessionValue alloc]
+									initWithContextManager:self->prefsMgr index:anIndex]
 						forKey:@"windowSession"];
 	}
 	else

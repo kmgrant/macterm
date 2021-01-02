@@ -652,10 +652,10 @@ Designated initializer.
 init
 {
 	NSArray*	subViewManagers = @[
-										[[[PrefPanelSessions_ResourceViewManager alloc] init] autorelease],
-										[[[PrefPanelSessions_DataFlowVC alloc] init] autorelease],
-										[[[PrefPanelSessions_KeyboardVC alloc] init] autorelease],
-										[[[PrefPanelSessions_GraphicsVC alloc] init] autorelease],
+										[[PrefPanelSessions_ResourceViewManager alloc] init],
+										[[PrefPanelSessions_DataFlowVC alloc] init],
+										[[PrefPanelSessions_KeyboardVC alloc] init],
+										[[PrefPanelSessions_GraphicsVC alloc] init],
 									];
 	NSString*	panelName = NSLocalizedStringFromTable(@"Sessions", @"PrefPanelSessions",
 														@"the name of this panel");
@@ -680,18 +680,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end // PrefPanelSessions_ViewManager
@@ -730,11 +718,6 @@ dealloc
 																kPreferences_ChangeContextName);
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
 																kPreferences_ChangeNumberOfContexts);
-	[preferenceChangeListener release];
-	[_sessionFavoriteIndexes release];
-	[_sessionFavorites release];
-	[prefsMgr release];
-	[super dealloc];
 }// dealloc
 
 
@@ -766,7 +749,7 @@ context:(void*)							aContext
 			
 			
 			[self willChangeValueForKey:@"sessionFavorites"];
-			[_sessionFavorites release], _sessionFavorites = nil;
+			_sessionFavorites = nil;
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				NSMutableArray*		mutableArray = [[NSMutableArray alloc] initWithArray:BRIDGE_CAST(contextNamesCFArray, NSArray*)];
@@ -784,7 +767,7 @@ context:(void*)							aContext
 			else
 			{
 				Console_Warning(Console_WriteValue, "failed to refresh session list for Resource tab, error", prefsResult);
-				_sessionFavorites = [@[] retain];
+				_sessionFavorites = @[];
 			}
 			[self didChangeValueForKey:@"sessionFavorites"];
 		}
@@ -895,7 +878,7 @@ Accessor.
 - (NSIndexSet*)
 sessionFavoriteIndexes
 {
-	return [[_sessionFavoriteIndexes retain] autorelease];
+	return _sessionFavoriteIndexes;
 }
 - (void)
 setSessionFavoriteIndexes:(NSIndexSet*)		indexes
@@ -907,8 +890,7 @@ setSessionFavoriteIndexes:(NSIndexSet*)		indexes
 		
 		[self willChangeValueForKey:@"sessionFavoriteIndexes"];
 		
-		[_sessionFavoriteIndexes release];
-		_sessionFavoriteIndexes = [indexes retain];
+		_sessionFavoriteIndexes = indexes;
 		
 		[self didChangeValueForKey:@"sessionFavoriteIndexes"];
 		
@@ -1157,12 +1139,12 @@ bindings succeed.
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext
+initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
 	_serverBrowser = nil;
 	_sessionFavoriteIndexes = [[NSIndexSet alloc] init];
-	_sessionFavorites = [@[] retain];
+	_sessionFavorites = @[];
 	
 	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary; number of settings */];
@@ -1208,72 +1190,62 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[[PreferenceValue_StringByJoiningArray alloc]
+	[self->byKey setObject:[[PreferenceValue_StringByJoiningArray alloc]
 								initWithPreferencesTag:kPreferences_TagCommandLine
 														contextManager:self->prefsMgr
 														characterSetForSplitting:[NSCharacterSet whitespaceAndNewlineCharacterSet]
 														stringForJoiningElements:@" "]
-							autorelease]
 					forKey:@"commandLine"];
-	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavoriteLightMode
 														contextManager:self->prefsMgr
 														sourceClass:Quills::Prefs::FORMAT
 														includeDefault:YES]
-							autorelease]
 					forKey:@"formatFavoriteLightMode"];
-	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavoriteDarkMode
 														contextManager:self->prefsMgr
 														sourceClass:Quills::Prefs::FORMAT
 														includeDefault:YES]
-							autorelease]
 					forKey:@"formatFavoriteDarkMode"];
-	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedMacroSetFavorite
 														contextManager:self->prefsMgr
 														sourceClass:Quills::Prefs::MACRO_SET
 														includeDefault:YES]
-							autorelease]
 					forKey:@"macroSetFavorite"];
-	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTerminalFavorite
 														contextManager:self->prefsMgr
 														sourceClass:Quills::Prefs::TERMINAL
 														includeDefault:YES]
-							autorelease]
 					forKey:@"terminalFavorite"];
-	[self->byKey setObject:[[[PreferenceValue_CollectionBinding alloc]
+	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTranslationFavorite
 														contextManager:self->prefsMgr
 														sourceClass:Quills::Prefs::TRANSLATION
 														includeDefault:YES]
-							autorelease]
 					forKey:@"translationFavorite"];
 	
 	// these keys are not directly bound in the UI but they
 	// are convenient for setting remote-server preferences
-	[self->byKey setObject:[[[PreferenceValue_String alloc]
+	[self->byKey setObject:[[PreferenceValue_String alloc]
 								initWithPreferencesTag:kPreferences_TagServerHost
 														contextManager:self->prefsMgr]
-							autorelease]
 					forKey:@"serverHost"];
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
+	[self->byKey setObject:[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagServerPort
 														contextManager:self->prefsMgr
 														preferenceCType:kPreferenceValue_CTypeSInt16]
-							autorelease]
 					forKey:@"serverPort"];
-	[self->byKey setObject:[[[PreferenceValue_Number alloc]
+	[self->byKey setObject:[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagServerProtocol
 														contextManager:self->prefsMgr
 														preferenceCType:kPreferenceValue_CTypeUInt16]
-							autorelease]
 					forKey:@"serverProtocol"];
-	[self->byKey setObject:[[[PreferenceValue_String alloc]
+	[self->byKey setObject:[[PreferenceValue_String alloc]
 								initWithPreferencesTag:kPreferences_TagServerUserID
 														contextManager:self->prefsMgr]
-							autorelease]
 					forKey:@"serverUserID"];
 	
 	// note that all values have changed (causes the display to be refreshed)
@@ -1744,20 +1716,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.12)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -2322,19 +2280,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.12)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -2350,7 +2295,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelSessions_DataFlowActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_DataFlowActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -2610,20 +2555,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.12)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -3729,19 +3660,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.12)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -3757,7 +3675,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelSessions_KeyboardActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_KeyboardActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);
@@ -4029,20 +3947,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_prefsMgr release];
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark New Methods
 
 
@@ -4302,19 +4206,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2020.11)
-*/
-- (void)
-dealloc
-{
-	[_actionHandler release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Panel_Delegate
 
 
@@ -4330,7 +4221,7 @@ Upon return, "self" will be defined and return to "init".
 */
 - (void)
 panelViewManager:(Panel_ViewManager*)	aViewManager
-initializeWithContext:(void*)			aContext/* PrefPanelSessions_GraphicsActionHandler*; see "init" */
+initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_GraphicsActionHandler*; see "init" */
 {
 #pragma unused(aViewManager)
 	assert(nil != aContext);

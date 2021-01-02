@@ -800,11 +800,11 @@ init
 	{
 		self->currentPreferenceCollectionIndexes = [[NSIndexSet alloc] init];
 		self->currentPreferenceCollections = [[NSMutableArray alloc] init];
-		self->panelIDArray = [[NSMutableArray arrayWithCapacity:7/* arbitrary */] retain];
-		self->panelsByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
-		self->panelSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
-		self->windowSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
-		self->windowMinSizesByID = [[NSMutableDictionary dictionaryWithCapacity:7/* arbitrary */] retain];
+		self->panelIDArray = [[NSMutableArray alloc] initWithCapacity:7/* arbitrary */];
+		self->panelsByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
+		self->panelSizesByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
+		self->windowSizesByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
+		self->windowMinSizesByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
 		self->_touchBarController = nil; // created on demand
 		self->activePanel = nil;
 		self->_searchText = [@"" copy];
@@ -843,16 +843,6 @@ dealloc
 																kPreferences_ChangeContextName);
 	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
 																kPreferences_ChangeNumberOfContexts);
-	[_touchBarController release];
-	[preferenceChangeListener release];
-	[currentPreferenceCollectionIndexes release];
-	[currentPreferenceCollections release];
-	[panelIDArray release];
-	[panelsByID release];
-	[panelSizesByID release];
-	[windowSizesByID release];
-	[windowMinSizesByID release];
-	[super dealloc];
 }// dealloc
 
 
@@ -934,7 +924,7 @@ Accessor.
 currentPreferenceCollectionIndexes
 {
 	// TEMPORARY; should retrieve translation table that is saved in preferences
-	return [[currentPreferenceCollectionIndexes retain] autorelease];
+	return self->currentPreferenceCollectionIndexes;
 }
 - (void)
 setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
@@ -957,8 +947,7 @@ setCurrentPreferenceCollectionIndexes:(NSIndexSet*)		indexes
 													: nullptr;
 		
 		
-		[currentPreferenceCollectionIndexes release];
-		currentPreferenceCollectionIndexes = [indexes retain];
+		currentPreferenceCollectionIndexes = indexes;
 		
 		// write all the preference data in memory to disk
 		UNUSED_RETURN(Preferences_Result)Preferences_Save();
@@ -978,7 +967,7 @@ Accessor.
 - (NSArray*)
 currentPreferenceCollections
 {
-	return [[currentPreferenceCollections retain] autorelease];
+	return self->currentPreferenceCollections;
 }
 + (BOOL)
 automaticallyNotifiesObserversOfCurrentPreferenceCollections
@@ -1188,7 +1177,7 @@ performExportPreferenceCollectionToFile:(id)	sender
 		[exportAllOption setFrameOrigin:NSMakePoint(0, 20)];
 		[exportAllOption sizeToFit];
 		
-		accessoryView = [[[NSBox alloc] initWithFrame:NSZeroRect] autorelease];
+		accessoryView = [[NSBox alloc] initWithFrame:NSZeroRect];
 		accessoryView.transparent = YES;
 		accessoryView.boxType = NSBoxCustom;
 		accessoryView.title = @"";
@@ -1863,7 +1852,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 #pragma unused(toolbar, flag)
 	if ([itemIdentifier isEqualToString:kMy_PrefsWindowToolbarItemIDSearch])
 	{
-		return [[[PrefsWindow_ToolbarItemSearch alloc] initWithField:self->searchField] autorelease]; // TEMPORARY
+		return [[PrefsWindow_ToolbarItemSearch alloc] initWithField:self->searchField]; // TEMPORARY
 	}
 	
 	// NOTE: no need to handle standard items here
@@ -1879,7 +1868,7 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		// use new NSMenuToolbarItem for sub-panels
 		PrefsWindow_ToolbarItemCategoryMenu*	asMenuToolbarItem = [[PrefsWindow_ToolbarItemCategoryMenu alloc] initWithItemIdentifier:itemIdentifier];
 		id< Panel_Parent >						asParent = STATIC_CAST(itemPanel, id< Panel_Parent >);
-		NSMenu*									newMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		NSMenu*									newMenu = [[NSMenu alloc] initWithTitle:@""];
 		
 		
 		// add an item for each sub-category, using the settings
@@ -1888,10 +1877,10 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 		for (Panel_ViewManager* childPanel in
 				[asParent panelParentEnumerateChildViewManagers])
 		{
-			NSMenuItem*		newItem = [[[NSMenuItem alloc]
+			NSMenuItem*		newItem = [[NSMenuItem alloc]
 										initWithTitle:[childPanel panelName]
 														action:childPanel.panelDisplayAction
-														keyEquivalent:@""] autorelease];
+														keyEquivalent:@""];
 			
 			
 			newItem.target = childPanel.panelDisplayTarget;
@@ -1945,7 +1934,7 @@ in the given toolbar.
 toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 {
 #pragma unused(toolbar)
-	NSMutableArray*		result = [[self->panelIDArray mutableCopy] autorelease];
+	NSMutableArray*		result = [self->panelIDArray mutableCopy];
 	
 	
 	[result addObject:NSToolbarFlexibleSpaceItemIdentifier];
@@ -2084,7 +2073,7 @@ windowDidLoad
 					childViewMgr.panelDisplayTarget = childViewMgr;
 				}
 			}
-			[newViewMgr release], newViewMgr = nil;
+			newViewMgr = nil;
 		}
 	}
 	
@@ -2094,7 +2083,7 @@ windowDidLoad
 	// hardly any applications would have found THOSE useful...
 	{
 		NSString*		toolbarID = @"PreferencesToolbar"; // do not ever change this; that would only break user preferences
-		NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
+		NSToolbar*		windowToolbar = [[NSToolbar alloc] initWithIdentifier:toolbarID];
 		
 		
 		[windowToolbar setAllowsUserCustomization:NO];
@@ -2212,7 +2201,6 @@ windowDidLoad
 		[tabItem setInitialFirstResponder:[viewMgr logicalFirstResponder]];
 		
 		[self->containerTabView addTabViewItem:tabItem];
-		[tabItem release];
 	}
 	
 	// enable drag-and-drop in the source list
@@ -2497,7 +2485,7 @@ inSearchField:(NSSearchField*)		aSearchField
 			}
 		}
 	}
-	[matchingPanelIDs release];
+	matchingPanelIDs = nil;
 	
 	// display a menu with search results
 	{
@@ -2532,8 +2520,6 @@ inSearchField:(NSSearchField*)		aSearchField
 			[panelDisplayItem setImage:panelIcon];
 			[panelDisplayItem setTarget:panelObject.panelDisplayTarget]; // action is set in initializer above
 			[popUpResultsMenu addItem:panelDisplayItem];
-			[panelIcon release];
-			[panelDisplayItem release];
 		}
 		
 		if ([orderedMatchingPanels count] > 0)
@@ -3014,7 +3000,6 @@ rebuildSourceList
 			
 			
 			[self->currentPreferenceCollections addObject:newCollection];
-			[newCollection release], newCollection = nil;
 			haveAddedDefault = YES;
 		}
 	}
@@ -3136,18 +3121,6 @@ defer:(BOOL)					deferCreation
 	}
 	return self;
 }// initWithContentRect:styleMask:backing:defer:
-
-
-/*!
-Destructor.
-
-(2016.10)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Actions
