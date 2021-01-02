@@ -117,7 +117,7 @@
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
-		0AD7B345176C3224004A1532 /* BoundName.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7B344176C3224004A1532 /* BoundName.mm */; };
+		0AD7B345176C3224004A1532 /* BoundName.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7B344176C3224004A1532 /* BoundName.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };

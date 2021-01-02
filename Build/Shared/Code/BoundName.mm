@@ -39,6 +39,9 @@
 @implementation BoundName_Object
 
 
+#pragma mark Initializers
+
+
 /*!
 Designated initializer from base class.  Do not use;
 it is defined only to satisfy the compiler.
@@ -63,43 +66,10 @@ initWithBoundName:(NSString*)	aString
 	self = [super init];
 	if (nil != self)
 	{
-		[self setBoundName:aString];
+		_boundName = [aString copy];
 	}
 	return self;
 }// initWithBoundName:
-
-
-/*!
-Destructor.
-
-(1.9)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
-Accessor.
-
-(1.9)
-*/
-- (NSString*)
-boundName
-{
-	return [[boundNameString_ retain] autorelease];
-}
-- (void)
-setBoundName:(NSString*)	aString
-{
-	if (boundNameString_ != aString)
-	{
-		[boundNameString_ release];
-		boundNameString_ = [aString copy];
-	}
-}// setBoundName:
 
 
 /*!
@@ -110,16 +80,12 @@ Accessor.
 - (NSString*)
 description
 {
-	return [[boundNameString_ retain] autorelease];
+	return self.boundName;
 }
 - (void)
 setDescription:(NSString*)		aString
 {
-	if (boundNameString_ != aString)
-	{
-		[boundNameString_ release];
-		boundNameString_ = [aString copy];
-	}
+	self.boundName = aString;
 }// setDescription:
 
 

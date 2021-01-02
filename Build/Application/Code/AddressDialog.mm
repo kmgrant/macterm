@@ -37,7 +37,6 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
-#import <BoundName.objc++.h>
 #import <CFRetainRelease.h>
 #import <Console.h>
 #import <CocoaExtensions.objc++.h>

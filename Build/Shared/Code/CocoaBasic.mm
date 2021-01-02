@@ -461,7 +461,7 @@ CocoaBasic_ReturnUserSoundNames ()
 																	inDomains:(NSUserDomainMask |
 																				NSLocalDomainMask |
 																				NSSystemDomainMask)];
-	NSMutableArray*			result = [NSMutableArray array];
+	NSMutableArray*			result = [[NSMutableArray alloc] init];
 	
 	
 	for (NSURL* libraryDirectoryURL in libraryURLArray)
@@ -514,7 +514,7 @@ CocoaBasic_ReturnUserSoundNames ()
 		}
 	}
 	
-	return BRIDGE_CAST(result, CFArrayRef);
+	return BRIDGE_CAST_CFRETAIN(result, CFArrayRef);
 }// ReturnUserSoundNames
 
 

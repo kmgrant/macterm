@@ -34,32 +34,25 @@
 #pragma mark Types
 
 /*!
-Since some older versions of Mac OS X do not bind "description"
+Since some older versions of the OS do not bind "description"
 reliably, this exposes a string property that always has the
-same meaning on any version of Mac OS X.  It is recommended
+same meaning on any version of the OS.  It is recommended
 that user interface elements use "boundName" for bindings
 instead of "description".
 */
 @interface BoundName_Object : NSObject //{
-{
-	NSString*	boundNameString_;
-}
 
 // initializers
-	- (instancetype)
+	- (instancetype _Nullable)
 	init;
-	- (instancetype)
-	initWithBoundName:(NSString*)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype _Nullable)
+	initWithBoundName:(NSString* _Nullable)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
-	- (NSString*)
+	@property (strong, nullable) NSString*
 	boundName;
-	- (void)
-	setBoundName:(NSString*)_;
-	- (NSString*)
+	@property (strong, nullable) NSString*
 	description;
-	- (void)
-	setDescription:(NSString*)_;
 
 @end //}
 

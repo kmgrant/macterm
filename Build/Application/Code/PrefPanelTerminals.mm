@@ -47,7 +47,6 @@
 #import <objc/objc-runtime.h>
 
 // library includes
-#import <BoundName.objc++.h>
 #import <CFRetainRelease.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>

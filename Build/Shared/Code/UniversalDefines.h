@@ -88,12 +88,16 @@
 //! more self-documenting (they clarify the programmer’s intentions)
 #ifdef __cplusplus
 #define BRIDGE_CAST(ref, intendedType)			((__bridge intendedType)(ref))
+#define BRIDGE_CAST_CFRETAIN(ref, intendedCFType)	((__bridge_retained intendedCFType)(ref))
+#define BRIDGE_CAST_NSRETAIN(ref, intendedNSType)	((__bridge_transfer intendedNSType)(ref))
 #define CONST_CAST(ref, intendedType)			const_cast< intendedType >(ref)
 #define VOLATILE_CAST(ref, intendedType)		const_cast< intendedType >(ref) // C++ says const_cast overrides volatile too
 #define REINTERPRET_CAST(ref, intendedType)		reinterpret_cast< intendedType >(ref)
 #define STATIC_CAST(ref, intendedType)			static_cast< intendedType >(ref)
 #else
 #define BRIDGE_CAST(ref, intendedType)			((__bridge (intendedType))(ref))	//!< “I am exchanging NSFoo* and CFFooRef because they are DOCUMENTED as being toll-free bridged”
+#define BRIDGE_CAST_CFRETAIN(ref, intendedCFType)	((__bridge_retained intendedCFType)(ref))	//!< “I have some NSFoo* that needs to become CFFooRef, implicitly retaining the value for eventual CFRelease()”
+#define BRIDGE_CAST_NSRETAIN(ref, intendedNSType)	((__bridge_transfer intendedNSType)(ref))	//!< “I have some CFFooRef that needs to become NSFoo*, implicitly retaining the object for eventual [... release]”
 #define CONST_CAST(ref, intendedType)			((intendedType)(ref))	//!< “I know I am turning a constant pointer into a non-constant one”
 #define VOLATILE_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I know I am turning a volatile value into a non-volatile one”
 #define REINTERPRET_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I want to look at data as something else” (e.g. integer to pointer)

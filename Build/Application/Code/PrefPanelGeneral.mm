@@ -49,7 +49,6 @@
 
 // library includes
 #import <AlertMessages.h>
-#import <BoundName.objc++.h>
 #import <CFRetainRelease.h>
 #import <CFUtilities.h>
 #import <CocoaBasic.h>
@@ -930,7 +929,7 @@ init
 		
 		// fill in names of system sounds
 		{
-			NSArray*															soundNamesOnly = BRIDGE_CAST(CocoaBasic_ReturnUserSoundNames(), NSArray*);
+			NSArray*															soundNamesOnly = BRIDGE_CAST_NSRETAIN(CocoaBasic_ReturnUserSoundNames(), NSArray*);
 			NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* >*	modelArray = [[NSMutableArray< UIPrefsGeneralNotifications_BellSoundItemModel* > alloc] init];
 			
 			
