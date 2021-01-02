@@ -55,10 +55,10 @@ CocoaUserDefaults_CopyDomain	(CFStringRef	inFromName,
 {
 @autoreleasepool {
 	NSUserDefaults*		defaultsTarget = [NSUserDefaults standardUserDefaults];
-	NSDictionary*		dataDictionary = [defaultsTarget persistentDomainForName:(NSString*)inFromName];
+	NSDictionary*		dataDictionary = [defaultsTarget persistentDomainForName:BRIDGE_CAST(inFromName, NSString*)];
 	
 	
-	[defaultsTarget setPersistentDomain:dataDictionary forName:(NSString*)inToName];
+	[defaultsTarget setPersistentDomain:dataDictionary forName:BRIDGE_CAST(inToName, NSString*)];
 }// @autoreleasepool
 }// CopyDomain
 
@@ -73,7 +73,7 @@ void
 CocoaUserDefaults_DeleteDomain	(CFStringRef	inName)
 {
 @autoreleasepool {
-	[[NSUserDefaults standardUserDefaults] removePersistentDomainForName:(NSString*)inName];
+	[[NSUserDefaults standardUserDefaults] removePersistentDomainForName:BRIDGE_CAST(inName, NSString*)];
 }// @autoreleasepool
 }// DeleteDomain
 

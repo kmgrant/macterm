@@ -69,18 +69,6 @@ initWithNibName:(NSString*)		aNibName
 }// initWithNibName:
 
 
-/*!
-Destructor.
-
-(2016.11)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -156,18 +144,6 @@ initWithNibName:(NSString*)		aNibName
 	}
 	return self;
 }// initWithNibName:
-
-
-/*!
-Destructor.
-
-(2016.11)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark NSViewController

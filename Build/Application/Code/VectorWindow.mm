@@ -303,7 +303,7 @@ VectorWindow_SetTitle	(VectorWindow_Ref	inWindow,
 		NSWindow*	owningWindow = [controller window];
 		
 		
-		[owningWindow setTitle:(NSString*)inTitle];
+		[owningWindow setTitle:BRIDGE_CAST(inTitle, NSString*)];
 		result = kVectorWindow_ResultOK;
 	}
 	return result;

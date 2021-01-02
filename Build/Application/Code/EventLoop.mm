@@ -51,15 +51,6 @@
 
 
 
-#pragma mark Variables
-namespace {
-
-NSAutoreleasePool*		gGlobalPool = nil;
-
-} // anonymous namespace
-
-
-
 #pragma mark Public Methods
 
 /*!
@@ -78,10 +69,6 @@ EventLoop_Init ()
 {
 	EventLoop_Result	result = kEventLoop_ResultOK;
 	
-	
-	// a pool must be constructed here, because NSApplicationMain()
-	// is never called
-	gGlobalPool = [[NSAutoreleasePool alloc] init];
 	
 	// ensure that Cocoa globals are defined (NSApp); this has to be
 	// done separately, and not with NSApplicationMain(), because
@@ -119,7 +106,6 @@ no longer necessary to track events.
 void
 EventLoop_Done ()
 {
-	//[gGlobalPool release];
 }// Done
 
 
@@ -210,19 +196,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2016.11)
-*/
-- (void)
-dealloc
-{
-	[_terminalWindowTouchBarController release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark NSApplication

@@ -119,7 +119,6 @@ Clipboard_Init ()
 		// does change, the clipboard window is updated
 		updateClipboard();
 	}];
-	[gClipboardUpdatesTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 	
 	// if the window was open at last Quit, construct it right away;
 	// otherwise, wait until it is requested by the user
@@ -163,7 +162,6 @@ Clipboard_Done ()
 	}
 	
 	[gClipboardUpdatesTimer invalidate];
-	[gClipboardUpdatesTimer release];
 	gClipboardUpdatesTimer = nil;
 }// Done
 
@@ -263,7 +261,7 @@ Clipboard_CreateCFStringArrayFromPasteboard		(CFArrayRef&		outCFStringCFArray,
 										? [NSPasteboard generalPasteboard]
 										: inPasteboardOrNull;
 	NSArray*			objectArray = nil;
-	NSMutableArray*		newStringArray = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray*		newStringArray = [[NSMutableArray alloc] init];
 	NSDictionary*		fileReadingOptions = @{ NSPasteboardURLReadingFileURLsOnlyKey: @(YES) };
 	Boolean				result = false;
 	
@@ -650,10 +648,10 @@ updateClipboard ()
 		// image
 		typeCFString = copyTypeDescription(typeIdentifier);
 		gCurrentRenderData.clear();
-		[controller->clipboardImageContent setImage:[[[NSImage alloc] initWithPasteboard:generalPasteboard] autorelease]];
+		[controller->clipboardImageContent setImage:[[NSImage alloc] initWithPasteboard:generalPasteboard]];
 		[controller setShowImage:YES];
 		[controller setShowText:NO];
-		[controller setKindField:(NSString*)typeCFString];
+		[controller setKindField:BRIDGE_CAST(typeCFString, NSString*)];
 		[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
 		[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
 		[controller setNeedsDisplay];
@@ -682,7 +680,7 @@ updateClipboard ()
 		[controller->clipboardTextContent setEditable:NO];
 		[controller setShowImage:NO];
 		[controller setShowText:YES];
-		[controller setKindField:(NSString*)typeCFString];
+		[controller setKindField:BRIDGE_CAST(typeCFString, NSString*)];
 		[controller setDataSize:(textToRender.length * sizeof(UniChar))]; // TEMPORARY; this is probably not always right
 		[controller setLabel1:nil andValue:nil];
 		[controller setLabel2:nil andValue:nil];
@@ -699,7 +697,7 @@ updateClipboard ()
 		gCurrentRenderData.clear();
 		[controller setShowImage:NO];
 		[controller setShowText:NO];
-		[controller setKindField:(NSString*)typeCFString];
+		[controller setKindField:BRIDGE_CAST(typeCFString, NSString*)];
 		[controller setSizeField:BRIDGE_CAST(unknownCFString.returnCFStringRef(), NSString*)];
 		if ((nullptr == typeCFString) || (0 == CFStringGetLength(typeCFString)))
 		{
@@ -749,13 +747,6 @@ initWithFrame:(NSRect)		aFrame
 	}
 	return self;
 }// initWithFrame:
-
-
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -1060,18 +1051,6 @@ init
 
 
 /*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-/*!
 Returns a system-managed NSFont object that represents
 the user’s default terminal font at the specified size.
 This should be reasonable for displaying plain text in
@@ -1256,7 +1235,7 @@ andHeight:(size_t)		heightInPixels
 					finalCFString = CFSTR("");
 					CFRetain(finalCFString);
 				}
-				[self setLabel1:(NSString*)widthCFString andValue:(NSString*)finalCFString];
+				[self setLabel1:BRIDGE_CAST(widthCFString, NSString*) andValue:BRIDGE_CAST(finalCFString, NSString*)];
 				CFRelease(finalCFString), finalCFString = nullptr;
 				
 				if (1 == heightInPixels)
@@ -1274,7 +1253,7 @@ andHeight:(size_t)		heightInPixels
 					finalCFString = CFSTR("");
 					CFRetain(finalCFString);
 				}
-				[self setLabel2:(NSString*)heightCFString andValue:(NSString*)finalCFString];
+				[self setLabel2:BRIDGE_CAST(heightCFString, NSString*) andValue:BRIDGE_CAST(finalCFString, NSString*)];
 				CFRelease(finalCFString), finalCFString = nullptr;
 				
 				CFRelease(heightCFString), heightCFString = nullptr;

@@ -60,7 +60,7 @@ public:
 	void
 	endCapture ()
 	{
-		[this->captureFileHandle release], this->captureFileHandle = nil;
+		this->captureFileHandle = nil;
 	}
 	
 	void
@@ -70,8 +70,8 @@ public:
 		[this->captureFileHandle writeData:[BRIDGE_CAST(this->writtenNewLineSequence.returnCFStringRef(), NSString*) dataUsingEncoding:NSUTF8StringEncoding]];
 	}
 	
-	NSFileHandle*		captureFileHandle;			//!< target for writing data (retained)
-	CFRetainRelease		writtenNewLineSequence;		//!< the string to write for new-lines
+	NSFileHandle* __strong	captureFileHandle;			//!< target for writing data (retained)
+	CFRetainRelease			writtenNewLineSequence;		//!< the string to write for new-lines
 };
 typedef My_StreamCapture*			My_StreamCapturePtr;
 typedef My_StreamCapture const*		My_StreamCaptureConstPtr;
@@ -189,7 +189,6 @@ StreamCapture_Begin		(StreamCapture_Ref		inRef,
 		else
 		{
 			[ptr->captureFileHandle truncateFileAtOffset:0];
-			[ptr->captureFileHandle retain];
 			result = true;
 		}
 	}

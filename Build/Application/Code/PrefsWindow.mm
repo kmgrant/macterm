@@ -468,7 +468,6 @@ Destructor.
 dealloc
 {
 	Preferences_ReleaseContext(&preferencesContext);
-	[super dealloc];
 }// dealloc
 
 
@@ -527,13 +526,13 @@ setBoundName:(NSString*)	aString
 	}
 	else
 	{
-		Preferences_Result		prefsResult = Preferences_ContextRename(self->preferencesContext, (CFStringRef)aString);
+		Preferences_Result		prefsResult = Preferences_ContextRename(self->preferencesContext, BRIDGE_CAST(aString, CFStringRef));
 		
 		
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			Sound_StandardAlert();
-			Console_Warning(Console_WriteValueCFString, "failed to rename context, given name", (CFStringRef)aString);
+			Console_Warning(Console_WriteValueCFString, "failed to rename context, given name", BRIDGE_CAST(aString, CFStringRef));
 		}
 	}
 }// setBoundName:
@@ -722,18 +721,6 @@ initWithField:(NSSearchField*)	aField
 	}
 	return self;
 }// initWithField:
-
-
-/*!
-Destructor.
-
-(2017.07)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end //}

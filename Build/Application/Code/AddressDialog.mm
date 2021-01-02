@@ -196,9 +196,6 @@ dealloc
 {
 	Network_StopMonitoring(kNetwork_ChangeAddressListWillRebuild, [self->_networkChangeListener listenerRef]);
 	Network_StopMonitoring(kNetwork_ChangeAddressListDidRebuild, [self->_networkChangeListener listenerRef]);
-	[_networkChangeListener release];
-	[_viewModel release];
-	[super dealloc];
 }// dealloc
 
 
@@ -277,8 +274,7 @@ context:(void*)							aContext
 				NSString*	asString = STATIC_CAST(object, NSString*);
 				
 				
-				[mutableArray addObject:[[[UIAddressList_ItemModel alloc]
-											initWithString:asString] autorelease]];
+				[mutableArray addObject:[[UIAddressList_ItemModel alloc] initWithString:asString]];
 			}
 			self.viewModel.addressArray = mutableArray;
 			

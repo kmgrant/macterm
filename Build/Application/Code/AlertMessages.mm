@@ -185,10 +185,6 @@ The private class interface.
 	imageForIconImageName:(NSString*)_;
 	- (void)
 	recalculateIdealHeight;
-	- (void)
-	setStringProperty:(NSString**)_
-	withName:(NSString*)_
-	toValue:(NSString*)_;
 
 // accessors
 	@property (assign) Alert_IconID
@@ -266,7 +262,6 @@ Alert_NewWindowModal	(NSWindow*		inParentWindow)
 													(inParentWindow.contentView, alertPtr->viewController/* transfer ownership */,
 														nullptr/* data set */, true/* is alert style */));
 			assert(alertPtr->genericDialog.exists());
-			[alertPtr->viewController release]; // ownership transfers to "genericDialog"
 			
 			// set a default help button action
 			Alert_SetButtonResponseBlock(alertPtr->selfRef, kAlert_ItemHelpButton, ^{ HelpSystem_DisplayHelpWithoutContext(); });
@@ -971,7 +966,7 @@ badgeApplicationDockTile ()
 {
 @autoreleasepool
 {
-	NSImage*	appIconImage = [[NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()] copy];
+	NSImage*	appIconImage = [[NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnBundleIconFilenameNoExtension(), NSString*)] copy];
 	NSImage*	overlayImage = [NSImage imageNamed:NSImageNameCaution];
 	NSSize		imageSize = [appIconImage size];
 	
@@ -986,7 +981,6 @@ badgeApplicationDockTile ()
 	[appIconImage unlockFocus];
 	
 	[NSApp setApplicationIconImage:appIconImage];
-	[appIconImage release];
 	
 	gNotificationIsIconBadged = true;
 }// @autoreleasepool
@@ -1242,13 +1236,6 @@ dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
 	[self removeObserversSpecifiedInArray:self.registeredObservers];
-	[_registeredObservers release];
-	
-	[_titleText release];
-	[_dialogText release];
-	[_helpText release];
-	
-	[super dealloc];
 }// dealloc
 
 
@@ -1387,7 +1374,7 @@ that has no badge.
 - (NSString*)
 iconImageName
 {
-	return [[iconImageName copy] autorelease];
+	return [iconImageName copy];
 }
 + (BOOL)
 automaticallyNotifiesObserversOfIconImageName
@@ -1397,7 +1384,21 @@ automaticallyNotifiesObserversOfIconImageName
 - (void)
 setIconImageName:(NSString*)	aString
 {
-	[self setStringProperty:&iconImageName withName:@"iconImageName" toValue:aString];
+	if (aString != iconImageName)
+	{
+		[self willChangeValueForKey:@"iconImageName"];
+		
+		if (nil == aString)
+		{
+			iconImageName = @"";
+		}
+		else
+		{
+			iconImageName = [aString copy];
+		}
+		
+		[self didChangeValueForKey:@"iconImageName"];
+	}
 	[mainIconUI setImage:[self imageForIconImageName:aString]];
 }// setIconImageName:
 
@@ -1495,9 +1496,9 @@ initializeWithContext:(void*)			aContext
 {
 #pragma unused(aViewManager, aContext)
 	self->_registeredObservers = [[NSMutableArray alloc] init];
-	self->_titleText = [[NSString alloc] initWithString:@""];
-	self->_dialogText = [[NSString alloc] initWithString:@""];
-	self->_helpText = [[NSString alloc] initWithString:@""];
+	self->_titleText = @"";
+	self->_dialogText = @"";
+	self->_helpText = @"";
 	self->iconID = kAlert_IconIDDefault; // can change later
 	self->iconImageName = NSImageNameCaution; // can change later
 	
@@ -1505,8 +1506,8 @@ initializeWithContext:(void*)			aContext
 	self.panelHasContextualHelp = NO;
 	
 	// ensure that the display is updated after certain changes
-	[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(dialogText)] autorelease]];
-	[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(helpText)] autorelease]];
+	[self.registeredObservers addObject:[self newObserverFromSelector:@selector(dialogText)]];
+	[self.registeredObservers addObject:[self newObserverFromSelector:@selector(helpText)]];
 }// panelViewManager:initializeWithContext:
 
 
@@ -1818,7 +1819,7 @@ image is the application icon only.
 - (NSImage*)
 imageForIconImageName:(NSString*)	anImageName
 {
-	NSImage*	appIconImage = [NSImage imageNamed:(NSString*)AppResources_ReturnBundleIconFilenameNoExtension()];
+	NSImage*	appIconImage = [NSImage imageNamed:BRIDGE_CAST(AppResources_ReturnBundleIconFilenameNoExtension(), NSString*)];
 	NSImage*	result = appIconImage; // most alerts just use the application icon
 	
 	
@@ -1827,7 +1828,7 @@ imageForIconImageName:(NSString*)	anImageName
 		if (nil == result)
 		{
 			// failed to find image
-			Console_Warning(Console_WriteValueCFString, "failed to find icon for image name", (CFStringRef)anImageName);
+			Console_Warning(Console_WriteValueCFString, "failed to find icon for image name", BRIDGE_CAST(anImageName, CFStringRef));
 			result = appIconImage;
 		}
 		else if ([anImageName isEqualToString:NSImageNameApplicationIcon])
@@ -1898,35 +1899,6 @@ recalculateIdealHeight
 	// notify observers (e.g. to resize any parent window)
 	[self postNote:kPanel_IdealSizeDidChangeNotification];
 }// recalculateIdealHeight
-
-
-/*!
-A helper to make string-setters less cumbersome to write.
-
-(4.0)
-*/
-- (void)
-setStringProperty:(NSString**)		propertyPtr
-withName:(NSString*)				propertyName
-toValue:(NSString*)					aString
-{
-	if (aString != *propertyPtr)
-	{
-		[self willChangeValueForKey:propertyName];
-		
-		if (nil == aString)
-		{
-			*propertyPtr = [@"" retain];
-		}
-		else
-		{
-			[*propertyPtr autorelease];
-			*propertyPtr = [aString copy];
-		}
-		
-		[self didChangeValueForKey:propertyName];
-	}
-}// setStringProperty:withName:toValue:
 
 
 @end //} AlertMessages_VC (AlertMessages_VCInternal)

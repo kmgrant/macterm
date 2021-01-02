@@ -125,7 +125,6 @@ dealloc
 	{
 		Preferences_ReleaseContext(&self->currentContext);
 	}
-	[super dealloc];
 }// dealloc
 
 

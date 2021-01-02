@@ -299,8 +299,8 @@ void
 CocoaBasic_PlaySoundByName	(CFStringRef	inName)
 {
 @autoreleasepool {
-	[(NSSound*)[NSSound soundNamed:(NSString*)inName] stop];
-	[(NSSound*)[NSSound soundNamed:(NSString*)inName] play];
+	[(NSSound*)[NSSound soundNamed:BRIDGE_CAST(inName, NSString*)] stop];
+	[(NSSound*)[NSSound soundNamed:BRIDGE_CAST(inName, NSString*)] play];
 }// @autoreleasepool
 }// PlaySoundByName
 
@@ -314,7 +314,7 @@ void
 CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 {
 @autoreleasepool {
-	[[[[NSSound alloc] initWithContentsOfURL:(NSURL*)inFile byReference:NO] autorelease] play];
+	[[[NSSound alloc] initWithContentsOfURL:BRIDGE_CAST(inFile, NSURL*) byReference:NO] play];
 }// @autoreleasepool
 }// PlaySoundFile
 
@@ -361,7 +361,7 @@ CocoaBasic_PostUserNotification		(CFStringRef	inNotificationIdentifier,
 				dispatch_async(dispatch_get_main_queue(),
 				^{
 					auto	requestIdentifier = BRIDGE_CAST(inNotificationIdentifier, NSString*);
-					auto	newNotification = [[[UNMutableNotificationContent alloc] init] autorelease];
+					auto	newNotification = [[UNMutableNotificationContent alloc] init];
 					
 					
 					newNotification.title = BRIDGE_CAST(inTitle, NSString*);
@@ -541,7 +541,7 @@ CocoaBasic_SetFileTypeCreator	(CFStringRef	inPath,
 	
 	
 	// set attributes
-	result = [fileManager setAttributes:attributeDict ofItemAtPath:(NSString*)inPath
+	result = [fileManager setAttributes:attributeDict ofItemAtPath:BRIDGE_CAST(inPath, NSString*)
 										error:&error];
 	if (NO == result)
 	{
@@ -591,7 +591,7 @@ CocoaBasic_StartSpeakingString	(CFStringRef	inCFString)
 	{
 		gDefaultSynth = [[NSSpeechSynthesizer alloc] initWithVoice:nil];
 	}
-	speakOK = ([gDefaultSynth startSpeakingString:(NSString*)inCFString]) ? true : false;
+	speakOK = ([gDefaultSynth startSpeakingString:BRIDGE_CAST(inCFString, NSString*)]) ? true : false;
 	
 	return (speakOK) ? true : false;
 }// @autoreleasepool

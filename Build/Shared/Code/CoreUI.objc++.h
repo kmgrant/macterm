@@ -168,10 +168,6 @@ to use the view controller for constraints.  Until
 then, this is a viable alternative.
 */
 @interface CoreUI_LayoutView : NSView //{
-{
-@private
-	id < CoreUI_ViewLayoutDelegate >	_layoutDelegate;
-}
 
 // accessors
 	@property (assign) id < CoreUI_ViewLayoutDelegate >

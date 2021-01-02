@@ -470,21 +470,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(3.1)
-*/
-- (void)
-dealloc
-{
-	[_commandLineText release];
-	[_incompleteCommandFragments release];
-	[_textCursorNSColor release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Actions
 
 
@@ -571,7 +556,6 @@ incompleteCommandLineText
 	{
 		result = [_incompleteCommandFragments componentsJoinedByString:@"…"/* LOCALIZE THIS? */];
 		result = [result stringByAppendingString:@"…"/* LOCALIZE THIS? */];
-		[result retain];
 	}
 	
 	return result;
@@ -586,7 +570,7 @@ Returns the user’s default terminal background color.
 - (NSColor*)
 textBackgroundNSColor
 {
-	return [[commandLineField backgroundColor] retain];
+	return [commandLineField backgroundColor];
 }// textBackgroundNSColor
 
 
@@ -598,7 +582,7 @@ Returns the user’s default terminal text color.
 - (NSColor*)
 textForegroundNSColor
 {
-	return [[commandLineField textColor] retain];
+	return [commandLineField textColor];
 }// textForegroundNSColor
 
 
@@ -860,14 +844,13 @@ windowDidLoad
 			prefsResult = Preferences_GetData(kPreferences_TagTerminalColorCursorBackground, sizeof(colorInfo), &colorInfo);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				[self->_textCursorNSColor release];
 				self->_textCursorNSColor = [[NSColor colorWithDeviceRed:colorInfo.red green:colorInfo.green blue:colorInfo.blue
-																		alpha:1.0] retain];
+																		alpha:1.0] copy];
 			}
 			if (nil == self->_textCursorNSColor)
 			{
 				// assume a default if preference can’t be found
-				self->_textCursorNSColor = [self.textForegroundNSColor retain];
+				self->_textCursorNSColor = [self.textForegroundNSColor copy];
 			}
 		}
 	}
@@ -995,7 +978,7 @@ NOTE:	This has to be done as part of a notification
 - (void)
 synchronizeWithFormatPreferencesForFieldEditor:(NSTextView*)	aSelectedTextView
 {
-	CommandLine_PanelController*		cmdLineController = [CommandLine_PanelController sharedCommandLinePanelController];
+	CommandLine_PanelController*	cmdLineController = [CommandLine_PanelController sharedCommandLinePanelController];
 	NSColor*						backgroundColor = [cmdLineController textBackgroundNSColor];
 	NSColor*						textColor = [cmdLineController textForegroundNSColor];
 	NSColor*						selectionBackgroundColor = backgroundColor; // see below

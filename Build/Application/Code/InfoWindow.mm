@@ -385,7 +385,7 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
 			
 			
-			[[controller infoForSession:session] setObject:(NSString*)newURLCFString
+			[[controller infoForSession:session] setObject:BRIDGE_CAST(newURLCFString, NSString*)
 															forKey:kMyInfoColumnCommand];
 			refreshDisplay();
 		}
@@ -401,7 +401,7 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (Session_GetWindowUserDefinedTitle(session, titleCFString).ok())
 			{
-				[[controller infoForSession:session] setObject:(NSString*)titleCFString
+				[[controller infoForSession:session] setObject:BRIDGE_CAST(titleCFString, NSString*)
 																forKey:kMyInfoColumnWindow];
 			}
 			else
@@ -493,7 +493,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						
 						if (nullptr != creationTimeCFString)
 						{
-							[newInfo setObject:(NSString*)creationTimeCFString
+							[newInfo setObject:BRIDGE_CAST(creationTimeCFString, NSString*)
 												forKey:kMyInfoColumnCreationTime];
 							setDateOK = true;
 							CFRelease(creationTimeCFString), creationTimeCFString = nullptr;
@@ -508,13 +508,13 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					{
 						[newInfo setObject:iconImage forKey:kMyInfoColumnStatus];
 					}
-					[newInfo setObject:(NSString*)(Session_ReturnResourceLocationCFString(session))
+					[newInfo setObject:BRIDGE_CAST(Session_ReturnResourceLocationCFString(session), NSString*)
 										forKey:kMyInfoColumnCommand];
-					[newInfo setObject:(NSString*)(Session_ReturnPseudoTerminalDeviceNameCFString(session))
+					[newInfo setObject:BRIDGE_CAST(Session_ReturnPseudoTerminalDeviceNameCFString(session), NSString*)
 										forKey:kMyInfoColumnDevice];
 					if (Session_GetWindowUserDefinedTitle(session, titleCFString).ok())
 					{
-						[newInfo setObject:(NSString*)titleCFString forKey:kMyInfoColumnWindow];
+						[newInfo setObject:BRIDGE_CAST(titleCFString, NSString*) forKey:kMyInfoColumnWindow];
 					}
 					else
 					{
@@ -932,7 +932,7 @@ row:(int)							row
 		
 		if (nil != rowData)
 		{
-			Session_SetWindowUserDefinedTitle(rowData->session, (CFStringRef)asString);
+			Session_SetWindowUserDefinedTitle(rowData->session, BRIDGE_CAST(asString, CFStringRef));
 		}
 	}
 }// tableView:setObjectValue:forTableColumn:row:

@@ -94,10 +94,8 @@ ContextSensitiveMenu_AddItem	(NSMenu*		inToWhichMenu,
 		// is accomplished by using an attributed string
 		NSString*				titleString = BRIDGE_CAST(gGroupTitle.returnCFStringRef(), NSString*);
 		NSDictionary*			fontDict = @{NSFontAttributeName: [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]};
-		NSMenuItem*				groupItem = [[[NSMenuItem alloc] initWithTitle:titleString action:nil keyEquivalent:@""]
-												autorelease];
-		NSAttributedString*		attributedTitle = [[[NSAttributedString alloc] initWithString:titleString attributes:fontDict]
-													autorelease];
+		NSMenuItem*				groupItem = [[NSMenuItem alloc] initWithTitle:titleString action:nil keyEquivalent:@""];
+		NSAttributedString*		attributedTitle = [[NSAttributedString alloc] initWithString:titleString attributes:fontDict];
 		
 		
 		[groupItem setAttributedTitle:attributedTitle];
