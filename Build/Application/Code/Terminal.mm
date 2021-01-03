@@ -8855,7 +8855,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 									if ([argName isEqualToString:@"name"])
 									{
 										// the name is actually a string encoded in base64
-										NSData*		decodedName = [[[NSData alloc] initWithBase64EncodingOSImplementation:argValue]
+										NSData*		decodedName = [[[NSData alloc]
+																	initWithBase64EncodedString:argValue
+																								options:(NSDataBase64DecodingIgnoreUnknownCharacters)]
 																	autorelease];
 										NSString*	decodedString = [[NSString alloc] initWithData:decodedName encoding:NSUTF8StringEncoding];
 										
@@ -8998,7 +9000,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							
 							if (isBase64)
 							{
-								NSData*		decodedData = [[[NSData alloc] initWithBase64EncodingOSImplementation:dataString]
+								NSData*		decodedData = [[[NSData alloc]
+															initWithBase64EncodedString:dataString
+																						options:(NSDataBase64DecodingIgnoreUnknownCharacters)]
 															autorelease];
 								
 								
@@ -15882,10 +15886,10 @@ bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 										 Boolean				inAllowScrolling,
 										 Boolean				inRestoreCursor)
 {
-	UInt16 const	kCellsCoveredH = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(inTotalPixelsH, Float32) /
+	UInt16			cellsCoveredH = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(inTotalPixelsH, Float32) /
 																				STATIC_CAST(inCellPixelsH, Float32)),
 																		UInt16));
-	UInt16 const	kCellsCoveredV = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(inTotalPixelsV, Float32) /
+	UInt16			cellsCoveredV = std::max< UInt16 >(1, STATIC_CAST(roundf(STATIC_CAST(inTotalPixelsV, Float32) /
 																				STATIC_CAST(inCellPixelsV, Float32)),
 																		UInt16));
 	NSRect			subImageRect = NSZeroRect; // initialized below
@@ -15893,18 +15897,28 @@ bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	
 	if (DebugInterface_LogsSixelDecoderSummary())
 	{
-		Console_WriteValue("terminal columns covered by image", kCellsCoveredH);
-		Console_WriteValue("terminal rows covered by image", kCellsCoveredV);
+		Console_WriteValue("terminal columns covered by image", cellsCoveredH);
+		Console_WriteValue("terminal rows covered by image", cellsCoveredV);
+	}
+	
+	if (cellsCoveredH > inDataPtr->text.visibleScreen.numberOfColumnsAllocated)
+	{
+		cellsCoveredH = inDataPtr->text.visibleScreen.numberOfColumnsAllocated;
 		if (DebugInterface_LogsSixelDecoderErrors())
 		{
-			if (kCellsCoveredH > inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+			Console_Warning(Console_WriteLine, "the Sixel image has been clipped on the right side (terminal screen not wide enough)");
+			if (inDataPtr->text.visibleScreen.numberOfColumnsAllocated < inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
 			{
-				Console_Warning(Console_WriteLine, "the Sixel image has been clipped on the right side (terminal screen not wide enough)");
+				Console_Warning(Console_WriteLine, "it may be possible to see the whole image by resizing the window first");
 			}
-			if (kCellsCoveredV > inDataPtr->screenBuffer.size())
-			{
-				Console_Warning(Console_WriteLine, "the Sixel image has been clipped or scrolled vertically (terminal screen not tall enough)");
-			}
+		}
+	}
+	if (cellsCoveredV > inDataPtr->screenBuffer.size())
+	{
+		cellsCoveredV = inDataPtr->screenBuffer.size();
+		if (DebugInterface_LogsSixelDecoderErrors())
+		{
+			Console_Warning(Console_WriteLine, "the Sixel image has been clipped or scrolled vertically (terminal screen not tall enough)");
 		}
 	}
 	
@@ -15916,7 +15930,7 @@ bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 	// cursor location according to the number of text cells that are occupied
 	UInt16 const		kOriginalCursorX = inDataPtr->current.cursorX;
 	UInt16 const		kOriginalCursorY = inDataPtr->current.cursorY;
-	for (UInt16 i = 0; i < kCellsCoveredV; ++i)
+	for (UInt16 i = 0; i < cellsCoveredV; ++i)
 	{
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		
@@ -15924,7 +15938,7 @@ bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 		moveCursorX(inDataPtr, kOriginalCursorX);
 		subImageRect.origin.x = 0;
 		locateCursorLine(inDataPtr, cursorLineIterator);
-		for (UInt16 j = 0; j < kCellsCoveredH; ++j)
+		for (UInt16 j = 0; j < cellsCoveredH; ++j)
 		{
 			TextAttributes_BitmapID		cellBitmapID;
 			TextAttributes_Object		newAttributes;
