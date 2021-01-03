@@ -80,6 +80,19 @@ enum GenericDialog_ItemID
 
 typedef struct GenericDialog_OpaqueRef*		GenericDialog_Ref;
 
+
+/*!
+Block used for responding to button clicks in dialogs.
+*/
+typedef void (^GenericDialog_ButtonActionBlock)(void);
+
+
+/*!
+Block used for tearing down a dialog’s custom implementation.
+*/
+typedef void (^GenericDialog_CleanupBlock)(void);
+
+
 #ifdef __OBJC__
 
 /*!
@@ -92,62 +105,50 @@ changes to an interface declared in a ".mm" file.
 @interface GenericDialog_ViewManager : Panel_ViewManager< Panel_Delegate,
 															Panel_Parent,
 															PopoverManager_Delegate > //{
-{
-@private
-	IBOutlet NSTabView*			viewContainer;
-	IBOutlet CoreUI_Button*		actionButton;
-	IBOutlet CoreUI_Button*		cancelButton;
-	IBOutlet CoreUI_Button*		otherButton;
-	IBOutlet CoreUI_HelpButton*	helpButton;
-	void					(^_cleanupBlock)();
-	void					(^_helpButtonBlock)();
-	void					(^_primaryButtonBlock)();
-	void					(^_secondButtonBlock)();
-	void					(^_thirdButtonBlock)();
-	GenericDialog_ItemID	_harmfulActionItemID;
-	NSString*				_primaryButtonName;
-	NSString*				_secondButtonName;
-	NSString*				_thirdButtonName;
-	NSString*				identifier;
-	NSString*				localizedName;
-	NSImage*				localizedIcon;
-	NSSize					idealManagedViewSize;
-	NSSize					initialPanelSize;
-	Panel_ViewManager*		mainViewManager;
-	GenericDialog_Ref		dialogRef;
-}
 
 // initializers
-	- (instancetype)
-	initWithRef:(GenericDialog_Ref)_
-	identifier:(NSString*)_
-	localizedName:(NSString*)_
-	localizedIcon:(NSImage*)_
-	viewManager:(Panel_ViewManager*)_;
+	- (instancetype _Nullable)
+	initWithRef:(GenericDialog_Ref _Nonnull)_
+	identifier:(NSString* _Nonnull)_
+	localizedName:(NSString* _Nonnull)_
+	localizedIcon:(NSImage* _Nonnull)_
+	viewManager:(Panel_ViewManager* _Nonnull)_ NS_DESIGNATED_INITIALIZER;
 
-// accessors: user interface settings
-	@property (copy) void
-	(^cleanupBlock)();
+// accessors: user interface configuration and responders
+	@property (strong, nullable) GenericDialog_CleanupBlock
+	cleanupBlock;
 	@property (assign) GenericDialog_ItemID
 	harmfulActionItemID;
-	@property (copy) void
-	(^helpButtonBlock)();
-	@property (copy) void
-	(^primaryButtonBlock)();
-	@property (strong) NSString*
+	@property (strong, nullable) GenericDialog_ButtonActionBlock
+	helpButtonBlock;
+	@property (strong, nullable) GenericDialog_ButtonActionBlock
+	primaryButtonBlock;
+	@property (strong, nullable) NSString*
 	primaryButtonName; // binding
-	@property (copy) void
-	(^secondButtonBlock)();
-	@property (strong) NSString*
+	@property (strong, nullable) GenericDialog_ButtonActionBlock
+	secondButtonBlock;
+	@property (strong, nullable) NSString*
 	secondButtonName; // binding
-	@property (copy) void
-	(^thirdButtonBlock)();
-	@property (strong) NSString*
+	@property (strong, nullable) GenericDialog_ButtonActionBlock
+	thirdButtonBlock;
+	@property (strong, nullable) NSString*
 	thirdButtonName; // binding
+
+// accessors: XIB outlets
+	@property (strong, nonnull) IBOutlet CoreUI_Button*
+	actionButton;
+	@property (strong, nonnull) IBOutlet CoreUI_Button*
+	cancelButton;
+	@property (strong, nonnull) IBOutlet CoreUI_HelpButton*
+	helpButton;
+	@property (strong, nonnull) IBOutlet CoreUI_Button*
+	otherButton;
+	@property (strong, nonnull) IBOutlet NSTabView*
+	viewContainer;
 
 // actions
 	- (IBAction)
-	performThirdButtonAction:(id)_;
+	performThirdButtonAction:(id _Nullable)_;
 
 @end //}
 
@@ -159,60 +160,60 @@ changes to an interface declared in a ".mm" file.
 
 #ifdef __OBJC__
 // NOTE: SPECIFIED VIEW MANAGER IS RETAINED BY THIS CALL
-GenericDialog_Ref
-	GenericDialog_New							(NSView*							inModalToViewOrNullForAppModalDialog,
-												 Panel_ViewManager*					inHostedPanel,
-												 void*								inDataSetPtr,
+GenericDialog_Ref _Nullable
+	GenericDialog_New							(NSView* _Nullable					inModalToViewOrNullForAppModalDialog,
+												 Panel_ViewManager* _Nonnull		inHostedPanel,
+												 void* _Nullable					inDataSetPtr,
 												 Boolean							inIsAlert = false);
 #endif
 
 void
-	GenericDialog_Retain						(GenericDialog_Ref					inDialog);
+	GenericDialog_Retain						(GenericDialog_Ref _Nonnull			inDialog);
 
 void
-	GenericDialog_Release						(GenericDialog_Ref*					inoutDialogPtr);
+	GenericDialog_Release						(GenericDialog_Ref _Nonnull* _Nonnull		inoutDialogPtr);
 
 void
-	GenericDialog_Display						(GenericDialog_Ref					inDialog,
+	GenericDialog_Display						(GenericDialog_Ref _Nonnull			inDialog,
 												 Boolean							inAnimated,
-												 void								(^inImplementationReleaseBlock)());
+												 GenericDialog_CleanupBlock _Nullable	inImplementationReleaseBlock);
 
 void
-	GenericDialog_Remove						(GenericDialog_Ref					inDialog);
+	GenericDialog_Remove						(GenericDialog_Ref _Nonnull			inDialog);
 
-void*
-	GenericDialog_ReturnImplementation			(GenericDialog_Ref					inDialog);
+void* _Nullable
+	GenericDialog_ReturnImplementation			(GenericDialog_Ref _Nonnull			inDialog);
 
 GenericDialog_DialogEffect
-	GenericDialog_ReturnItemDialogEffect		(GenericDialog_Ref					inDialog,
+	GenericDialog_ReturnItemDialogEffect		(GenericDialog_Ref _Nonnull			inDialog,
 												 GenericDialog_ItemID				inItemID);
 
-Panel_ViewManager*
-	GenericDialog_ReturnViewManager				(GenericDialog_Ref					inDialog);
+Panel_ViewManager* _Nullable
+	GenericDialog_ReturnViewManager				(GenericDialog_Ref _Nonnull			inDialog);
 
 void
-	GenericDialog_SetDelayedKeyEquivalents		(GenericDialog_Ref					inDialog,
+	GenericDialog_SetDelayedKeyEquivalents		(GenericDialog_Ref _Nonnull			inDialog,
 												 Boolean							inKeyEquivalentsDelayed);
 
 void
-	GenericDialog_SetImplementation				(GenericDialog_Ref					inDialog,
-												 void*								inDataPtr);
+	GenericDialog_SetImplementation				(GenericDialog_Ref _Nonnull			inDialog,
+												 void* _Nullable					inDataPtr);
 
 void
-	GenericDialog_SetItemDialogEffect			(GenericDialog_Ref					inDialog,
+	GenericDialog_SetItemDialogEffect			(GenericDialog_Ref _Nonnull			inDialog,
 												 GenericDialog_ItemID				inItemID,
 												 GenericDialog_DialogEffect			inEffect);
 
 void
-	GenericDialog_SetItemResponseBlock			(GenericDialog_Ref					inDialog,
+	GenericDialog_SetItemResponseBlock			(GenericDialog_Ref _Nonnull			inDialog,
 												 GenericDialog_ItemID				inItemID,
-												 void								(^inResponseBlock)(),
+												 GenericDialog_ButtonActionBlock _Nullable	inResponseBlock,
 												 Boolean							inIsHarmfulAction = false);
 
 void
-	GenericDialog_SetItemTitle					(GenericDialog_Ref					inDialog,
+	GenericDialog_SetItemTitle					(GenericDialog_Ref _Nonnull			inDialog,
 												 GenericDialog_ItemID				inItemID,
-												 CFStringRef						inButtonTitle);
+												 CFStringRef _Nullable				inButtonTitle);
 
 
 
@@ -224,13 +225,13 @@ struct _GenericDialog_RefMgr
 	typedef GenericDialog_Ref	reference_type;
 	
 	static void
-	retain	(reference_type		inRef)
+	retain	(reference_type _Nonnull	inRef)
 	{
 		GenericDialog_Retain(inRef);
 	}
 	
 	static void
-	release	(reference_type		inRef)
+	release	(reference_type _Nonnull	inRef)
 	{
 		GenericDialog_Release(&inRef);
 	}

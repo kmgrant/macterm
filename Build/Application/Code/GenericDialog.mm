@@ -87,13 +87,13 @@ struct My_GenericDialog
 	
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
 	GenericDialog_Ref				selfRef;				//!< identical to address of structure, but typed as ref
-	NSView*							modalToView;			//!< if not nil, a view whose hierarchy is unusable while the dialog is open
+	NSView* __weak					modalToView;			//!< if not nil, a view whose hierarchy is unusable while the dialog is open
 	Boolean							isAlert;				//!< this may affect the window appearance or behavior
 	Boolean							delayedKeyEquivalents;	//!< key equivalents such as the default button are only set a short time after the dialog is displayed
-	GenericDialog_ViewManager*		containerViewManager;	//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
-	Panel_ViewManager*				hostedViewManager;		//!< new-style; the Cocoa view manager for the primary user interface
+	GenericDialog_ViewManager* __strong		containerViewManager;	//!< new-style; object for rendering user interface around primary view (such as OK and Cancel buttons)
+	Panel_ViewManager* __strong		hostedViewManager;		//!< new-style; the Cocoa view manager for the primary user interface
 	PopoverManager_Ref				popoverManager;			//!< object to help display popover window
-	Popover_Window*					popoverWindow;			//!< new-style, popover variant; contains a Cocoa view in a popover frame
+	Popover_Window* __strong		popoverWindow;			//!< new-style, popover variant; contains a Cocoa view in a popover frame
 	My_DialogEffectsByItemID		closeEffects;			//!< custom sheet-closing effects for certain items
 	void*							userDataPtr;			//!< optional; external data
 	Memory_WeakRefEraser			weakRefEraser;			//!< at destruction time, clears weak references that involve this object
@@ -122,6 +122,37 @@ the panel.
 
 
 /*!
+Private properties.
+*/
+@interface GenericDialog_ViewManager () //{
+
+// accessors
+	//! The panel’s unique identication string in dotted-name format.
+	@property (strong, nonnull) NSString*
+	customPanelIdentifier;
+	//! The panel’s user-visible icon image.
+	@property (strong, nonnull) NSImage*
+	customPanelLocalizedIcon;
+	//! The panel’s user-visible title.
+	@property (strong, nonnull) NSString*
+	customPanelLocalizedName;
+	//! External reference; alias for this object.
+	@property (assign) GenericDialog_Ref
+	dialogRef;
+	//! Ideal size, taking into account actual dialog configuration.
+	@property (assign) CGSize
+	idealManagedViewSize;
+	//! Captures initial size from XIB for use in later size queries.
+	@property (assign) CGSize
+	initialPanelSize;
+	//! View controller for dialog content.
+	@property (strong) Panel_ViewManager*
+	mainViewManager;
+
+@end //}
+
+
+/*!
 The private class interface.
 */
 @interface GenericDialog_ViewManager (GenericDialog_ViewManagerInternal) //{
@@ -131,7 +162,7 @@ The private class interface.
 	performActionFrom:(id)_
 	forButton:(GenericDialog_ItemID)_;
 	- (void)
-	setStringProperty:(NSString**)_
+	setStringProperty:(NSString* __strong*)_
 	withName:(NSString*)_
 	toValue:(NSString*)_;
 	- (void)
@@ -266,9 +297,9 @@ IMPORTANT:	When a GenericDialog_Ref is “owned” by another object,
 (2016.05)
 */
 void
-GenericDialog_Display	(GenericDialog_Ref		inDialog,
-						 Boolean				inAnimated,
-						 void					(^inImplementationReleaseBlock)())
+GenericDialog_Display	(GenericDialog_Ref				inDialog,
+						 Boolean						inAnimated,
+						 GenericDialog_CleanupBlock		inImplementationReleaseBlock)
 {
 	Popover_Window*		newPopoverWindow = nil;
 	Boolean				shouldRunModal = false;
@@ -319,7 +350,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 																							: kPopover_WindowStyleDialogSheet))
 																			arrowStyle:kPopover_ArrowStyleNone
 																			attachedToPoint:NSMakePoint(0, 0)/* TEMPORARY */
-																			inWindow:[ptr->modalToView window]];
+																			inWindow:ptr->modalToView.window];
 					ptr->popoverWindow = newPopoverWindow;
 					ptr->popoverWindow.arrowHeight = 0;
 					
@@ -669,7 +700,7 @@ modalToView						(inModalToNSViewOrNull),
 isAlert							(inIsAlert),
 delayedKeyEquivalents			(false),
 containerViewManager			(nil), // set later if necessary
-hostedViewManager				([inHostedViewManagerOrNull retain]),
+hostedViewManager				(inHostedViewManagerOrNull),
 popoverManager					(nullptr), // created as needed
 popoverWindow					(nil), // set later if necessary
 closeEffects					(),
@@ -697,10 +728,6 @@ My_GenericDialog::
 		PopoverManager_RemovePopover(popoverManager, false/* is confirming */);
 		PopoverManager_Dispose(&popoverManager);
 	}
-	
-	[popoverWindow release];
-	[hostedViewManager release];
-	[containerViewManager release];
 }// My_GenericDialog destructor
 
 
@@ -767,12 +794,9 @@ drawRect:(NSRect)	aRect
 @implementation GenericDialog_ViewManager
 
 
-@synthesize cleanupBlock = _cleanupBlock;
-@synthesize harmfulActionItemID = _harmfulActionItemID;
-@synthesize helpButtonBlock = _helpButtonBlock;
-@synthesize primaryButtonBlock = _primaryButtonBlock;
-@synthesize secondButtonBlock = _secondButtonBlock;
-@synthesize thirdButtonBlock = _thirdButtonBlock;
+@synthesize primaryButtonName = _primaryButtonName;
+@synthesize secondButtonName = _secondButtonName;
+@synthesize thirdButtonName = _thirdButtonName;
 
 
 #pragma mark Initializers
@@ -817,26 +841,52 @@ Destructor.
 - (void)
 dealloc
 {
-	Memory_EraseWeakReferences(self);
+	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
 	
 	[self ignoreWhenObjectsPostNotes];
 	
-	[_primaryButtonName release];
-	[_secondButtonName release];
-	[_thirdButtonName release];
+	self.mainViewManager.panelParent = nil;
 	
-	mainViewManager.panelParent = nil;
-	[identifier release];
-	[localizedName release];
-	[localizedIcon release];
-	
-	if (nullptr != dialogRef)
+	if (nullptr != _dialogRef)
 	{
-		GenericDialog_Release(&dialogRef);
+		GenericDialog_Release(&_dialogRef);
 	}
-	
-	[super dealloc];
 }// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Compiler expects this superclass designated initializer to
+be defined but this variant is not supported.
+
+(2021.01)
+*/
+- (instancetype)
+initWithNibNamed:(NSString*)		aNibName
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(NSObject*)					aContext
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithRef:nullptr identifier:nil localizedName:nil localizedIcon:nil viewManager:nil];
+}// initWithNibNamed:delegate:context:
+
+
+/*!
+Compiler expects this superclass designated initializer to
+be defined but this variant is not supported.
+
+(2021.01)
+*/
+- (instancetype)
+initWithView:(NSView*)				aView
+delegate:(id< Panel_Delegate >)		aDelegate
+context:(NSObject*)					aContext
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithRef:nullptr identifier:nil localizedName:nil localizedIcon:nil viewManager:nil];
+}// initWithView:delegate:context:
 
 
 #pragma mark Accessors
@@ -850,7 +900,7 @@ Accessor.
 - (NSString*)
 primaryButtonName
 {
-	return [[self->_primaryButtonName copy] autorelease];
+	return _primaryButtonName;
 }
 - (void)
 setPrimaryButtonName:(NSString*)	aString
@@ -873,7 +923,7 @@ Accessor.
 - (NSString*)
 secondButtonName
 {
-	return [[self->_secondButtonName copy] autorelease];
+	return _secondButtonName;
 }
 - (void)
 setSecondButtonName:(NSString*)	aString
@@ -881,7 +931,7 @@ setSecondButtonName:(NSString*)	aString
 	[self setStringProperty:&_secondButtonName withName:@"secondButtonName" toValue:aString];
 	
 	// if there is no name, remove the button from the key loop
-	[self->cancelButton setRefusesFirstResponder:(nil == aString)];
+	[self.cancelButton setRefusesFirstResponder:(nil == aString)];
 	
 	// NOTE: UI updates are OK here because there are no
 	// bindings that can be set ahead of construction
@@ -899,7 +949,7 @@ Accessor.
 - (NSString*)
 thirdButtonName
 {
-	return [[self->_thirdButtonName copy] autorelease];
+	return _thirdButtonName;
 }
 - (void)
 setThirdButtonName:(NSString*)		aString
@@ -907,7 +957,7 @@ setThirdButtonName:(NSString*)		aString
 	[self setStringProperty:&_thirdButtonName withName:@"thirdButtonName" toValue:aString];
 	
 	// if there is no name, remove the button from the key loop
-	[self->otherButton setRefusesFirstResponder:(nil == aString)];
+	[self.otherButton setRefusesFirstResponder:(nil == aString)];
 	
 	// for the third button, infer a suitable command key
 	if ((nil != aString) && (aString.length > 0))
@@ -917,8 +967,8 @@ setThirdButtonName:(NSString*)		aString
 		
 		// TEMPORARY; despite this setting, button keys do not seem
 		// to work; need to investigate why...
-		self->otherButton.keyEquivalent = keyCharString;
-		self->otherButton.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+		self.otherButton.keyEquivalent = keyCharString;
+		self.otherButton.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 	}
 	
 	// NOTE: UI updates are OK here because there are no
@@ -997,19 +1047,19 @@ initializeWithContext:(NSObject*)		aContext
 	
 	_harmfulActionItemID = kGenericDialog_ItemIDNone;
 	
-	self->identifier = [givenIdentifier retain];
-	self->localizedName = [givenName retain];
-	self->localizedIcon = [givenIcon retain];
-	self->mainViewManager = [givenViewManager retain];
+	self.customPanelIdentifier = givenIdentifier;
+	self.customPanelLocalizedName = givenName;
+	self.customPanelLocalizedIcon = givenIcon;
+	self.mainViewManager = givenViewManager;
 	{
 		assert(nil != givenDialogRefValue);
 		GenericDialog_Ref	givenDialogRef = STATIC_CAST([givenDialogRefValue pointerValue], GenericDialog_Ref);
 		
 		
-		self->dialogRef = givenDialogRef;
+		self.dialogRef = givenDialogRef;
 	}
 	
-	assert(nil != self->mainViewManager);
+	assert(nil != self.mainViewManager);
 }// panelViewManager:initializeWithContext:
 
 
@@ -1025,7 +1075,7 @@ requestingEditType:(Panel_EditType*)	outEditType
 #pragma unused(aViewManager)
 	// forward to child view
 	*outEditType = kPanel_EditTypeNormal;
-	[self->mainViewManager.delegate panelViewManager:aViewManager requestingEditType:outEditType];
+	[self.mainViewManager.delegate panelViewManager:aViewManager requestingEditType:outEditType];
 }// panelViewManager:requestingEditType:
 
 
@@ -1039,18 +1089,18 @@ any other view-dependent initializations.
 panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
-	assert(nil != self->actionButton);
-	assert(nil != self->cancelButton);
-	assert(nil != self->otherButton);
-	assert(nil != self->helpButton);
-	assert(nil != self->viewContainer);
+	assert(nil != self.actionButton);
+	assert(nil != self.cancelButton);
+	assert(nil != self.otherButton);
+	assert(nil != self.helpButton);
+	assert(nil != self.viewContainer);
 	
 	assert(aViewManager == self);
 	assert(aContainerView == self.managedView);
 	
 	[self whenObject:self.managedView.window postsNote:NSWindowDidResizeNotification
 						performSelector:@selector(parentViewFrameDidChange:)];
-	[self whenObject:self->mainViewManager.delegate postsNote:kPanel_IdealSizeDidChangeNotification
+	[self whenObject:self.mainViewManager.delegate postsNote:kPanel_IdealSizeDidChangeNotification
 						performSelector:@selector(childViewIdealSizeDidChange:)];
 	
 	// determine ideal size of embedded panel, and calculate the
@@ -1062,18 +1112,18 @@ didLoadContainerView:(NSView*)			aContainerView
 		
 		
 		// see also "childViewIdealSizeDidChange:"
-		[self->mainViewManager.delegate panelViewManager:self->mainViewManager requestingIdealSize:&idealManagedViewSize];
-		[self->mainViewManager.managedView setFrameSize:idealManagedViewSize];
+		[self.mainViewManager.delegate panelViewManager:self.mainViewManager requestingIdealSize:&_idealManagedViewSize];
+		[self.mainViewManager.managedView setFrameSize:self.idealManagedViewSize];
 		
-		if (idealManagedViewSize.width > initialWidth)
+		if (self.idealManagedViewSize.width > initialWidth)
 		{
-			initialWidth = idealManagedViewSize.width;
+			initialWidth = self.idealManagedViewSize.width;
 		}
-		initialHeight += idealManagedViewSize.height;
+		initialHeight += self.idealManagedViewSize.height;
 		
 		// resize the container (and the window, through constraints)
-		self->initialPanelSize = NSMakeSize(initialWidth, initialHeight);
-		[aContainerView setFrameSize:self->initialPanelSize];
+		self.initialPanelSize = NSMakeSize(initialWidth, initialHeight);
+		[aContainerView setFrameSize:self.initialPanelSize];
 	}
 	
 	// there is only one “tab” (and the frame and background are
@@ -1081,25 +1131,24 @@ didLoadContainerView:(NSView*)			aContainerView
 	// subview-management tasks to be taken care of automatically,
 	// such as the view size and initial keyboard focus
 	{
-		NSRect				panelFrame = self->mainViewManager.managedView.frame;
+		NSRect				panelFrame = self.mainViewManager.managedView.frame;
 		NSTabViewItem*		tabItem = [[NSTabViewItem alloc] initWithIdentifier:[aViewManager panelIdentifier]];
 		
 		
-		[tabItem setView:self->mainViewManager.managedView];
-		[tabItem setInitialFirstResponder:[self->mainViewManager logicalFirstResponder]];
-		[self->viewContainer addTabViewItem:tabItem];
-		[tabItem release];
+		tabItem.view = self.mainViewManager.managedView;
+		tabItem.initialFirstResponder = [self.mainViewManager logicalFirstResponder];
+		[self.viewContainer addTabViewItem:tabItem];
 		
 		// anchor at the top of the window
-		panelFrame.origin.y = NSHeight([[self->viewContainer superview] frame]) - NSHeight(panelFrame);
-		self->viewContainer.frame = panelFrame;
+		panelFrame.origin.y = NSHeight(self.viewContainer.superview.frame) - NSHeight(panelFrame);
+		self.viewContainer.frame = panelFrame;
 	}
 	
 	// link the key view chains of the panel and the dialog
-	assert(nil != [self->mainViewManager logicalFirstResponder]);
-	assert(nil != [self->mainViewManager logicalLastResponder]);
-	[self->mainViewManager logicalLastResponder].nextKeyView = self->actionButton;
-	self->helpButton.nextKeyView = [self->mainViewManager logicalFirstResponder];
+	assert(nil != [self.mainViewManager logicalFirstResponder]);
+	assert(nil != [self.mainViewManager logicalLastResponder]);
+	[self.mainViewManager logicalLastResponder].nextKeyView = self.actionButton;
+	self.helpButton.nextKeyView = [self.mainViewManager logicalFirstResponder];
 	
 	[self updateButtonLayout];
 }// panelViewManager:didLoadContainerView:
@@ -1143,7 +1192,7 @@ didPerformContextSensitiveHelp:(id)		sender
 {
 #pragma unused(aViewManager)
 	// forward to child view
-	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didPerformContextSensitiveHelp:sender];
+	[self.mainViewManager.delegate panelViewManager:self.mainViewManager didPerformContextSensitiveHelp:sender];
 	
 	// perform help block
 	[self performActionFrom:sender forButton:kGenericDialog_ItemIDHelpButton];
@@ -1164,9 +1213,9 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 	// initially disabled; if so, remove them here and install
 	// a delayed invocation to put them back
 	if ((kPanel_VisibilityDisplayed == aVisibility) &&
-		(nullptr != self->dialogRef))
+		(nullptr != self.dialogRef))
 	{
-		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self.dialogRef);
 		auto						setDestructiveActionBlock =
 									^(NSButton* aButton)
 									{
@@ -1199,17 +1248,17 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 									};
 		auto						setKeyEquivalentsBlock =
 									^{
-										NSButton*	keyButton = self->cancelButton;
+										NSButton*	keyButton = self.cancelButton;
 										
 										
 										if ((nil == keyButton) || (keyButton.isHidden))
 										{
-											keyButton = self->actionButton;
+											keyButton = self.actionButton;
 										}
 										UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:keyButton];
-										self.managedView.window.defaultButtonCell = self->actionButton.cell;
+										self.managedView.window.defaultButtonCell = self.actionButton.cell;
 										[self.managedView.window enableKeyEquivalentForDefaultButtonCell];
-										[self->actionButton display];
+										[self.actionButton display];
 									};
 		
 		
@@ -1219,23 +1268,23 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 			switch (self.harmfulActionItemID)
 			{
 			case kGenericDialog_ItemIDButton1:
-				if (nil != self->actionButton)
+				if (nil != self.actionButton)
 				{
-					setDestructiveActionBlock(self->actionButton);
+					setDestructiveActionBlock(self.actionButton);
 				}
 				break;
 			
 			case kGenericDialog_ItemIDButton2:
-				if (nil != self->cancelButton)
+				if (nil != self.cancelButton)
 				{
-					setDestructiveActionBlock(self->cancelButton);
+					setDestructiveActionBlock(self.cancelButton);
 				}
 				break;
 			
 			case kGenericDialog_ItemIDButton3:
-				if (nil != self->otherButton)
+				if (nil != self.otherButton)
 				{
-					setDestructiveActionBlock(self->otherButton);
+					setDestructiveActionBlock(self.otherButton);
 				}
 				break;
 			
@@ -1261,7 +1310,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 			{
 				[self.managedView.window disableKeyEquivalentForDefaultButtonCell];
 				self.managedView.window.defaultButtonCell = nil;
-				UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:self->helpButton];
+				UNUSED_RETURN(BOOL)[self.managedView.window makeFirstResponder:self.helpButton];
 				CocoaExtensions_RunLater(1.0/* arbitrary delay in seconds */, setKeyEquivalentsBlock);
 			}
 			else
@@ -1272,7 +1321,7 @@ willChangePanelVisibility:(Panel_Visibility)	aVisibility
 	}
 	
 	// forward to child view
-	[self->mainViewManager.delegate panelViewManager:self->mainViewManager willChangePanelVisibility:aVisibility];
+	[self.mainViewManager.delegate panelViewManager:self.mainViewManager willChangePanelVisibility:aVisibility];
 }// panelViewManager:willChangePanelVisibility:
 
 
@@ -1287,7 +1336,7 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 {
 #pragma unused(aViewManager)
 	// forward to child view
-	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didChangePanelVisibility:aVisibility];
+	[self.mainViewManager.delegate panelViewManager:self.mainViewManager didChangePanelVisibility:aVisibility];
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -1309,7 +1358,7 @@ toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager)
 	// forward to child view
-	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
+	[self.mainViewManager.delegate panelViewManager:self.mainViewManager didChangeFromDataSet:oldDataSet toDataSet:newDataSet];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -1328,7 +1377,7 @@ userAccepted:(BOOL)						isAccepted
 {
 #pragma unused(aViewManager)
 	// forward to child view
-	[self->mainViewManager.delegate panelViewManager:self->mainViewManager didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
+	[self.mainViewManager.delegate panelViewManager:self.mainViewManager didFinishUsingContainerView:aContainerView userAccepted:isAccepted];
 }// panelViewManager:didFinishUsingContainerView:userAccepted:
 
 
@@ -1374,7 +1423,7 @@ for the panels in this view.
 - (NSEnumerator*)
 panelParentEnumerateChildViewManagers
 {
-	return [[[@[self->mainViewManager] retain] autorelease] objectEnumerator];
+	return [@[self.mainViewManager] objectEnumerator];
 }// panelParentEnumerateChildViewManagers
 
 
@@ -1395,24 +1444,24 @@ loop is set in "panelViewManager:didLoadContainerView:".
 - (NSView*)
 logicalFirstResponder
 {
-	NSView*		result = [self->mainViewManager logicalFirstResponder];
+	NSView*		result = [self.mainViewManager logicalFirstResponder];
 	
 	
 	if (NO == result.canBecomeKeyView)
 	{
 		// abnormal panel that has no key-input items; instead,
 		// set initial focus to an available action button
-		if (self->cancelButton.canBecomeKeyView)
+		if (self.cancelButton.canBecomeKeyView)
 		{
-			result = self->cancelButton;
+			result = self.cancelButton;
 		}
-		else if (self->otherButton.canBecomeKeyView)
+		else if (self.otherButton.canBecomeKeyView)
 		{
-			result = self->otherButton;
+			result = self.otherButton;
 		}
 		else
 		{
-			result = self->actionButton;
+			result = self.actionButton;
 		}
 	}
 	
@@ -1430,7 +1479,7 @@ used in a toolbar item).
 - (NSImage*)
 panelIcon
 {
-	return [[self->localizedIcon retain] autorelease];
+	return self.customPanelLocalizedIcon;
 }// panelIcon
 
 
@@ -1443,7 +1492,7 @@ used in toolbar items that represent panels).
 - (NSString*)
 panelIdentifier
 {
-	return [[self->identifier retain] autorelease];
+	return self.customPanelIdentifier;
 }// panelIdentifier
 
 
@@ -1457,7 +1506,7 @@ it might be the name of a tab or toolbar icon).
 - (NSString*)
 panelName
 {
-	return [[self->localizedName retain] autorelease];
+	return self.customPanelLocalizedName;
 }// panelName
 
 
@@ -1470,7 +1519,7 @@ Returns the corresponding result from the child view manager.
 panelResizeAxes
 {
 	// return the child view’s constraint
-	Panel_ResizeConstraint	result = [self->mainViewManager panelResizeAxes];
+	Panel_ResizeConstraint	result = [self.mainViewManager panelResizeAxes];
 	
 	
 	return result;
@@ -1512,7 +1561,7 @@ popoverManager:(PopoverManager_Ref)		aPopoverManager
 getIdealSize:(NSSize*)					outSizePtr
 {
 #pragma unused(aPopoverManager)
-	*outSizePtr = self->initialPanelSize;
+	*outSizePtr = self.initialPanelSize;
 }// popoverManager:getIdealSize:
 
 
@@ -1595,9 +1644,9 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeColor:(id)	sender
 {
-	if ([self->mainViewManager respondsToSelector:@selector(changeColor:)])
+	if ([self.mainViewManager respondsToSelector:@selector(changeColor:)])
 	{
-		[self->mainViewManager changeColor:sender];
+		[self.mainViewManager changeColor:sender];
 	}
 }// changeColor:
 
@@ -1618,9 +1667,9 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeFont:(id)		sender
 {
-	if ([self->mainViewManager respondsToSelector:@selector(changeFont:)])
+	if ([self.mainViewManager respondsToSelector:@selector(changeFont:)])
 	{
-		[self->mainViewManager changeFont:sender];
+		[self.mainViewManager changeFont:sender];
 	}
 }// changeFont:
 
@@ -1643,16 +1692,16 @@ childViewIdealSizeDidChange:(NSNotification*)		aNotification
 {
 #pragma unused(aNotification)
 	// this should be in sync with any initialization code
-	NSSize		oldSize = self->idealManagedViewSize;
+	NSSize		oldSize = self.idealManagedViewSize;
 	
 	
 	// determine the new preferred size
-	[self->mainViewManager.delegate panelViewManager:self->mainViewManager requestingIdealSize:&idealManagedViewSize];
+	[self.mainViewManager.delegate panelViewManager:self.mainViewManager requestingIdealSize:&_idealManagedViewSize];
 	
 	// tweak the initial panel size so that anything else based
 	// on this (such as the window layout) is set up correctly
-	self->initialPanelSize.width += (self->idealManagedViewSize.width - oldSize.width);
-	self->initialPanelSize.height += (self->idealManagedViewSize.height - oldSize.height);
+	self.initialPanelSize = CGSizeMake(self.initialPanelSize.width + self.idealManagedViewSize.width - oldSize.width,
+										self.initialPanelSize.height + self.idealManagedViewSize.height - oldSize.height);
 	
 	// notify listeners of this change
 	[self postNote:kPanel_IdealSizeDidChangeNotification];
@@ -1696,7 +1745,7 @@ forButton:(GenericDialog_ItemID)	aButton
 #pragma unused(sender)
 	// buttons cannot reasonably perform any actions while the
 	// dialog is not yet defined
-	if (nullptr != self->dialogRef)
+	if (nullptr != self.dialogRef)
 	{
 		BOOL	userAccepted = (kGenericDialog_ItemIDButton1 == aButton);
 		BOOL	keepDialog = ((kGenericDialog_ItemIDHelpButton == aButton) ||
@@ -1706,7 +1755,7 @@ forButton:(GenericDialog_ItemID)	aButton
 		// locally lock/unlock the object in case the subsequent block
 		// decides to destroy the dialog
 		{
-			My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+			My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self.dialogRef);
 			BOOL						hasCustomEffect = (ptr->closeEffects.end() != ptr->closeEffects.find(aButton));
 			
 			
@@ -1725,8 +1774,8 @@ forButton:(GenericDialog_ItemID)	aButton
 		if (NO == keepDialog)
 		{
 			// inform the panel that it has finished
-			[self panelViewManager:self->mainViewManager
-									didFinishUsingContainerView:self->mainViewManager.managedView
+			[self panelViewManager:self.mainViewManager
+									didFinishUsingContainerView:self.mainViewManager.managedView
 									userAccepted:userAccepted];
 		}
 		
@@ -1774,7 +1823,7 @@ forButton:(GenericDialog_ItemID)	aButton
 		{
 			// hide the dialog and (if application-modal) end the modal session
 			{
-				My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+				My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self.dialogRef);
 				
 				
 				if (nil != ptr->popoverManager)
@@ -1811,21 +1860,19 @@ forButton:(GenericDialog_ItemID)	aButton
 			// initiated by the user, instead of having background tasks that
 			// set incorrect window states
 			{
-				NSWindow*	window = [[self->mainViewManager view] window];
+				NSWindow __weak*	window = self.mainViewManager.view.window;
 				
 				
-				[window retain];
 				CocoaExtensions_RunLater(0.5/* arbitrary (exceed animation time) */,
 											^{
 												[window orderOut:NSApp];
-												[window release];
 											});
 			}
 			
 			// release the dialog (this must happen outside any lock-block);
 			// note that this could destroy the object if there are no other
 			// retain calls in effect
-			GenericDialog_Release(&self->dialogRef);
+			GenericDialog_Release(&_dialogRef);
 		}
 	}
 }// performActionFrom:forButton:
@@ -1837,9 +1884,9 @@ A helper to make string-setters less cumbersome to write.
 (4.1)
 */
 - (void)
-setStringProperty:(NSString**)		propertyPtr
-withName:(NSString*)				propertyName
-toValue:(NSString*)					aString
+setStringProperty:(NSString* __strong*)		propertyPtr
+withName:(NSString*)						propertyName
+toValue:(NSString*)							aString
 {
 	if (aString != *propertyPtr)
 	{
@@ -1847,11 +1894,10 @@ toValue:(NSString*)					aString
 		
 		if (nil == aString)
 		{
-			*propertyPtr = [@"" retain];
+			*propertyPtr = @"";
 		}
 		else
 		{
-			[*propertyPtr autorelease];
 			*propertyPtr = [aString copy];
 		}
 		
@@ -1875,10 +1921,10 @@ this is an alert-style dialog.
 updateButtonLayout
 {
 	// do nothing unless views are loaded
-	if (nil != self->actionButton)
+	if (nil != self.actionButton)
 	{
-		NSArray<NSButton*>*			buttonArray = @[self->actionButton, self->cancelButton, self->otherButton];
-		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self->dialogRef);
+		NSArray<NSButton*>*			buttonArray = @[self.actionButton, self.cancelButton, self.otherButton];
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self.dialogRef);
 		
 		
 		if ((nullptr != ptr) && (ptr->isAlert))
@@ -1889,13 +1935,13 @@ updateButtonLayout
 				{
 					aButton.controlSize = NSControlSizeLarge;
 				}
-				self->helpButton.controlSize = NSControlSizeLarge;
-				[self->helpButton sizeToFit];
+				self.helpButton.controlSize = NSControlSizeLarge;
+				[self.helpButton sizeToFit];
 			}
 		}
 		
 		Localization_ArrangeNSButtonArray(BRIDGE_CAST(buttonArray, CFArrayRef));
-		Localization_AdjustHelpNSButton(self->helpButton);
+		Localization_AdjustHelpNSButton(self.helpButton);
 	}
 }// updateButtonLayout
 
