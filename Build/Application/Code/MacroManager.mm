@@ -202,7 +202,6 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 							[newItem setTarget:targetForSelector];
 							[newItem setTag:i]; // IMPORTANT: selector relies on this to know which macro is being requested!!!
 							ContextSensitiveMenu_AddItem(inoutContextualMenu, newItem);
-							[newItem release];
 						}
 					}
 				}
@@ -1299,7 +1298,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 												});
 								// return value ignored because wait time is “forever”
 								UNUSED_RETURN(long)dispatch_semaphore_wait(doneSignal, DISPATCH_TIME_FOREVER);
-								dispatch_release(doneSignal), doneSignal = nullptr;
+								doneSignal = nullptr;
 							}
 						#endif
 							if (false == isComplete)

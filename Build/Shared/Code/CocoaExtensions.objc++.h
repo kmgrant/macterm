@@ -61,15 +61,6 @@
 @end //}
 
 
-@interface NSData (CocoaExtensions_NSData) //{
-
-// initializers
-	- (instancetype)
-	initWithBase64EncodingOSImplementation:(NSString*)_;
-
-@end //}
-
-
 @interface NSImage (CocoaExtensions_NSImage) //{
 
 // new methods
@@ -112,11 +103,6 @@ Then, "removeObserverSpecifiedWith:" can be used
 to precisely remove the observer later.
 */
 @interface CocoaExtensions_ObserverSpec : NSObject //{
-{
-@private
-	__weak id	_observedObject;
-	NSString*	_keyPath;
-}
 
 // accessors
 	@property (strong) NSString*

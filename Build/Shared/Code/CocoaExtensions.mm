@@ -242,7 +242,7 @@ colorCloserToBlack
 	
 	if (nil == result)
 	{
-		result = [[self retain] autorelease];
+		result = self;
 	}
 	return result;
 }// colorCloserToBlack
@@ -262,7 +262,7 @@ colorCloserToWhite
 	
 	if (nil == result)
 	{
-		result = [[self retain] autorelease];
+		result = self;
 	}
 	return result;
 }// colorCloserToWhite
@@ -301,7 +301,7 @@ colorWithShading
 	
 	if (nil == result)
 	{
-		result = [[self retain] autorelease];
+		result = self;
 	}
 	
 	return result;
@@ -349,45 +349,6 @@ setAsForegroundInCGContext:(CGContextRef)	aDrawingContext
 
 
 #pragma mark -
-@implementation NSData (CocoaExtensions_NSData) //{
-
-
-#pragma mark Initializers
-
-
-/*!
-According to documentation, "initWithBase64Encoding:" has
-been implemented by NSData since 10.6 but wasn’t declared
-in the SDK until later; this method makes the OS version
-of the method available in a convenient way without having
-to worry about compiler warnings or make runtime checks in
-calling code.
-
-NOTE:	The initializer mentioned above has also been
-		deprecated in later SDKs; callers should therefore
-		eventually use "initWithBase64EncodedData:options:".
-
-(2017.12)
-*/
-- (instancetype)
-initWithBase64EncodingOSImplementation:(NSString*)		aString
-{
-	self = nil;
-	if ([NSData instancesRespondToSelector:@selector(initWithBase64Encoding:)])
-	{
-		id		result = [NSData alloc];
-		
-		
-		self = [result performSelector:@selector(initWithBase64Encoding:) withObject:aString];
-	}
-	return self;
-}// initWithBase64EncodingOSImplementation:
-
-
-@end //} NSData (CocoaExtensions_NSData)
-
-
-#pragma mark -
 @implementation NSImage (CocoaExtensions_NSImage) //{
 
 
@@ -402,8 +363,8 @@ Creates a new image out of a portion of this image.
 - (NSImage*)
 imageFromSubRect:(NSRect)	aRect
 {
-	NSImage*	result = [[[NSImage alloc]
-							initWithSize:aRect.size] autorelease];
+	NSImage*	result = [[NSImage alloc]
+							initWithSize:aRect.size];
 	
 	
 	[result lockFocus];
@@ -599,7 +560,7 @@ options:(NSKeyValueObservingOptions)	anOptionSet
 	result.keyPath = aKeyPath;
 	
 	// install the observer
-	[anObject addObserver:self forKeyPath:aKeyPath options:anOptionSet context:result];
+	[anObject addObserver:self forKeyPath:aKeyPath options:anOptionSet context:BRIDGE_CAST(result, void*)];
 	
 	return result;
 }// newObserverFromKeyPath:fromSelector:options:
@@ -704,7 +665,7 @@ removeObserverSpecifiedWith:(CocoaExtensions_ObserverSpec*)		aSpec
 {
 	@try
 	{
-		[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:aSpec];
+		[aSpec.observedObject removeObserver:self forKeyPath:aSpec.keyPath context:BRIDGE_CAST(aSpec, void*)];
 	}
 	@catch (NSException*	inException)
 	{
@@ -913,19 +874,6 @@ superviewWithClass:(Class)		aClass
 
 @synthesize keyPath = _keyPath;
 @synthesize observedObject = _observedObject;
-
-
-/*!
-Destructor.
-
-(2016.09)
-*/
-- (void)
-dealloc
-{
-	[_keyPath release];
-	[super dealloc];
-}// dealloc
 
 
 @end //} CocoaExtensions_ObserverSpec
