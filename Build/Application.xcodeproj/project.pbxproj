@@ -86,7 +86,7 @@
 		0AC6BB040A8C0BA000AFF37A /* SoundSystem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE19055432A400ACDF3A /* SoundSystem.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC6BB060A8C0BA000AFF37A /* Session.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE14055432A400ACDF3A /* Session.mm */; };
 		0AC6BB080A8C0BA000AFF37A /* TerminalWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE29055432A400ACDF3A /* TerminalWindow.mm */; };
-		0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE01055432A400ACDF3A /* Panel.mm */; };
+		0AC6BB090A8C0BA000AFF37A /* Panel.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE01055432A400ACDF3A /* Panel.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC6BB0B0A8C0BA000AFF37A /* AppResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE12055432A400ACDF3A /* AppResources.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC6BB0E0A8C0BA000AFF37A /* Preferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE03055432A400ACDF3A /* Preferences.cp */; };
 		0AC6BB120A8C0BA000AFF37A /* Local.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF3055432A400ACDF3A /* Local.cp */; };

@@ -52,49 +52,32 @@
 NSString*	kPanel_IdealSizeDidChangeNotification =
 				@"kPanel_IdealSizeDidChangeNotification";
 
+#pragma mark Types
+
+/*!
+Private properties.
+*/
+@interface Panel_ViewManager () //{
+
+// accessors
+	@property (assign) BOOL
+	isPanelUserInterfaceLoaded; // externally read-only, internally read-write
+
+@end //}
+
+
+
 #pragma mark Public Methods
 
 #pragma mark -
 @implementation Panel_ViewManager //{
 
 
-@synthesize delegate = _delegate;
-@synthesize isPanelUserInterfaceLoaded = _isPanelUserInterfaceLoaded;
-@synthesize panelDisplayAction = _panelDisplayAction;
-@synthesize panelDisplayTarget = _panelDisplayTarget;
-@synthesize panelHasContextualHelp = _panelHasContextualHelp;
-@synthesize panelParent = _panelParent;
+@synthesize logicalFirstResponder = _logicalFirstResponder;
+@synthesize logicalLastResponder = _logicalLastResponder;
 
 
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2017.06)
-*/
-- (instancetype)
-initWithCoder:(NSCoder*)	aCoder
-{
-#pragma unused(aCoder)
-	assert(false && "invalid way to initialize derived class");
-	return [self initWithNibNamed:@"" delegate:nil context:nil];
-}// initWithCoder:
-
-
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2017.06)
-*/
-- (instancetype)
-initWithNibName:(NSString*)		aNibName
-bundle:(NSBundle*)				aBundle
-{
-#pragma unused(aNibName, aBundle)
-	assert(false && "invalid way to initialize derived class");
-	return [self initWithNibNamed:@"" delegate:nil context:nil];
-}// initWithNibName:bundle:
+#pragma mark Initializers
 
 
 /*!
@@ -173,16 +156,38 @@ context:(NSObject*)					aContext
 }// initWithView:delegate:context
 
 
-/*!
-Destructor.
+#pragma mark Initializers Disabled From Superclass
 
-(4.1)
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
 */
-- (void)
-dealloc
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
 {
-	[super dealloc];
-}// dealloc
+#pragma unused(aCoder)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithNibNamed:@"" delegate:nil context:nil];
+}// initWithCoder:
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithNibName:(NSString*)		aNibName
+bundle:(NSBundle*)				aBundle
+{
+#pragma unused(aNibName, aBundle)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithNibNamed:@"" delegate:nil context:nil];
+}// initWithNibName:bundle:
 
 
 #pragma mark Actions
@@ -276,48 +281,33 @@ performDisplaySelfThroughParent:(id)	sender
 #pragma mark Accessors
 
 
-/*!
-Returns the view that a window ought to focus first
-using NSWindow’s "makeFirstResponder:".
-
-(4.1)
-*/
+// (See header file description.)
 - (NSView*)
 logicalFirstResponder
 {
-	return self->logicalFirstResponder;
-}// logicalFirstResponder
+	return _logicalFirstResponder;
+}
+- (void)
+setLogicalFirstResponder:(NSView*)	aView
+{
+	_logicalFirstResponder = aView;
+}// setLogicalFirstResponder:
 
 
-/*!
-Returns the last view of the panel that can receive focus
-for user input.
-
-When panels are instantiated in elaborate interfaces, this
-property is used to “connect” the chain of focused views
-seamlessly (e.g. so that the last focused view of the
-custom panel can Tab directly into the rest of the user
-interface, and vice-versa).  A customizing panel should
-call NSView’s "setNextKeyView:" appropriately.
-
-(4.1)
-*/
+// (See header file description.)
 - (NSView*)
 logicalLastResponder
 {
-	return self->logicalLastResponder;
-}// logicalLastResponder
+	return _logicalLastResponder;
+}
+- (void)
+setLogicalLastResponder:(NSView*)	aView
+{
+	_logicalLastResponder = aView;
+}// setLogicalLastResponder:
 
 
-/*!
-Returns the view that contains the entire panel.
-
-NOTE:	This is now redundant with the "view" property of
-		the parent NSViewController.  This method may be
-		removed in the future.
-
-(4.1)
-*/
+// (See header file description.)
 - (NSView*)
 managedView
 {
@@ -325,17 +315,7 @@ managedView
 }// managedView
 
 
-/*!
-Returns the type of editing that this panel does: either
-it edits a single data set, or it is able to continuously
-update itself as data sets are changed (see the delegate
-method "panelViewManager:didChangeFromDataSet:toDataSet:").
-
-This invokes "panelViewManager:requestingEditType:" on the
-delegate.
-
-(4.1)
-*/
+// (See header file description.)
 - (Panel_EditType)
 panelEditType
 {
@@ -442,10 +422,10 @@ loadView
 {
 	[super loadView];
 	
-	assert(nil != logicalFirstResponder);
-	assert(nil != logicalLastResponder);
+	assert(nil != self.logicalFirstResponder);
+	assert(nil != self.logicalLastResponder);
 	
-	self->_isPanelUserInterfaceLoaded = YES;
+	self.isPanelUserInterfaceLoaded = YES;
 	
 	[self.delegate panelViewManager:self didLoadContainerView:self.view];
 }// loadView

@@ -520,8 +520,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelWorkspaces_OptionsActionH
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
-	self->logicalFirstResponder = self.view;
-	self->logicalLastResponder = self.view;
+	self.logicalFirstResponder = self.view;
+	self.logicalLastResponder = self.view;
 }// panelViewManager:initializeWithContext:
 
 

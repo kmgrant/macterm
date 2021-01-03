@@ -680,8 +680,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_FullScreenActionH
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
-	self->logicalFirstResponder = self.view;
-	self->logicalLastResponder = self.view;
+	self.logicalFirstResponder = self.view;
+	self.logicalLastResponder = self.view;
 	
 	// update the view by changing the model’s observed variables (since this panel
 	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
@@ -1288,8 +1288,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_NotificationsActi
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
-	self->logicalFirstResponder = self.view;
-	self->logicalLastResponder = self.view;
+	self.logicalFirstResponder = self.view;
+	self.logicalLastResponder = self.view;
 	
 	// update the view by changing the model’s observed variables (since this panel
 	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
@@ -1963,8 +1963,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_OptionsActionHand
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
-	self->logicalFirstResponder = self.view;
-	self->logicalLastResponder = self.view;
+	self.logicalFirstResponder = self.view;
+	self.logicalLastResponder = self.view;
 	
 	// update the view by changing the model’s observed variables (since this panel
 	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"
@@ -2553,8 +2553,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelGeneral_SpecialActionHand
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
-	self->logicalFirstResponder = self.view;
-	self->logicalLastResponder = self.view;
+	self.logicalFirstResponder = self.view;
+	self.logicalLastResponder = self.view;
 	
 	// update the view by changing the model’s observed variables (since this panel
 	// does not manage collections, "panelViewManager:didChangeFromDataSet:toDataSet:"

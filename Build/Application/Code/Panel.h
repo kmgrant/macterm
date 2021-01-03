@@ -3,7 +3,9 @@
 	to be easily constructed.
 	
 	Panels should use a NIB file to define a container view and
-	link it to a Panel_ViewManager subclass (the file’s owner).
+	link it to a Panel_ViewManager subclass (the file’s owner),
+	or they should call "initWithView:delegate:context:" to use
+	a container NSView that is already in memory.
 */
 /*###############################################################
 
@@ -67,13 +69,13 @@ No userInfo is defined for this notification.  Panels typically
 already know the original ideal size, and they can find the new
 size by calling "panelViewManager:requestingIdealSize:" again.
 */
-extern NSString*	kPanel_IdealSizeDidChangeNotification;
+extern NSString* _Nonnull	kPanel_IdealSizeDidChangeNotification;
 
 /*!
 An “edit type” describes how a panel behaves: is it
 implicitly used for a single data store or can it
 represent other data stores (e.g. in a master-detail
-view)?  Cocoa only.
+view)?
 */
 enum Panel_EditType
 {
@@ -84,7 +86,7 @@ enum Panel_EditType
 /*!
 Specifies which resize behavior is sensible for the panel.
 Useful in aggregates (like tab views) to decide how the
-overall window should behave.  Cocoa only.
+overall window should behave.
 */
 enum Panel_ResizeConstraint
 {
@@ -97,7 +99,7 @@ enum Panel_ResizeConstraint
 /*!
 A state of visibility helps panels to decide what they
 should enable (e.g. sounds or animations, or auxiliary
-floating windows).  Cocoa only.
+floating windows).
 */
 enum Panel_Visibility
 {
@@ -112,8 +114,8 @@ enum Panel_Visibility
 
 struct Panel_DataSetTransition
 {
-	void*	oldDataSet;		// set to nullptr if not applicable (e.g. deleted)
-	void*	newDataSet;		// set to nullptr for a full reset with no new data (e.g. select nothing)
+	void* _Nullable		oldDataSet;		// set to nullptr if not applicable (e.g. deleted)
+	void* _Nullable		newDataSet;		// set to nullptr for a full reset with no new data (e.g. select nothing)
 };
 
 #ifdef __OBJC__
@@ -130,49 +132,49 @@ conform to this protocol.
 
 	// superclass minimally initialized, no NIB loaded yet; perform subclass initializations needed this early, e.g. so that NIB-provided bindings succeed
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	initializeWithContext:(NSObject*)_;
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	initializeWithContext:(NSObject* _Nullable)_;
 
 	// manager needs to know how the panel behaves; respond by filling in the "requestingEditType:" parameter
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	requestingEditType:(Panel_EditType*)_;
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	requestingEditType:(Panel_EditType* _Nonnull)_;
 
 	// view containing the panel has been loaded but no window has been created yet (WARNING: subclasses that delegate to themselves will not be initialized yet)
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	didLoadContainerView:(NSView*)_;
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	didLoadContainerView:(NSView* _Nonnull)_;
 
 	// manager needs to know the size the panel would prefer to have; respond by filling in the "requestingIdealSize:" parameter
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	requestingIdealSize:(NSSize*)_;
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	requestingIdealSize:(NSSize* _Nonnull)_;
 
 	// user has requested context-sensitive help; argument to "didPerformContextSensitiveHelp:" is the sender of the action
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	didPerformContextSensitiveHelp:(id)_;
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	didPerformContextSensitiveHelp:(id _Nullable)_;
 
 	// view will be redisplayed or obscured (e.g. in a tab view, because another tab is about to be displayed)
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
 	willChangePanelVisibility:(Panel_Visibility)_;
 
 	// view has now been redisplayed or obscured (e.g. in a tab view, because another tab has been displayed)
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
 	didChangePanelVisibility:(Panel_Visibility)_;
 
 	// data set to be represented by the view has changed; for inspector-style views this can happen more than once
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	didChangeFromDataSet:(void*)_
-	toDataSet:(void*)_;
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	didChangeFromDataSet:(void* _Nullable)_
+	toDataSet:(void* _Nullable)_;
 
 	// sent when containing window, etc. will go away; save settings if accepted but no need to update the user interface because it will be destroyed
 	- (void)
-	panelViewManager:(Panel_ViewManager*)_
-	didFinishUsingContainerView:(NSView*)_
+	panelViewManager:(Panel_ViewManager* _Nonnull)_
+	didFinishUsingContainerView:(NSView* _Nonnull)_
 	userAccepted:(BOOL)_;
 
 @end //}
@@ -187,7 +189,7 @@ managing multiple child panels.
 
 	// sent when a particular child (e.g. a tab in a tab view) should become visible and focused
 	- (void)
-	panelParentDisplayChildWithIdentifier:(NSString*)_
+	panelParentDisplayChildWithIdentifier:(NSString* _Nonnull)_
 	withAnimation:(BOOL)_;
 
 	// respond with the number of items that "panelParentEnumerateChildViewManagers" would cover
@@ -195,7 +197,7 @@ managing multiple child panels.
 	panelParentChildCount;
 
 	// respond with an ordered enumeration of all Panel_ViewManager* values managed by the parent
-	- (NSEnumerator*)
+	- (NSEnumerator* _Nonnull)
 	panelParentEnumerateChildViewManagers;
 
 @end //}
@@ -213,71 +215,116 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface Panel_ViewManager : NSViewController //{
-{
-	IBOutlet NSView*	logicalFirstResponder;
-	IBOutlet NSView*	logicalLastResponder;
-@private
-	BOOL					_isPanelUserInterfaceLoaded;
-	BOOL					_panelHasContextualHelp;
-	id< Panel_Delegate >	_delegate;
-	SEL						_panelDisplayAction;
-	id						_panelDisplayTarget;
-	id< Panel_Parent >		_panelParent;
-}
 
 // initializers
-	- (instancetype)
-	initWithCoder:(NSCoder*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithNibName:(NSString*)_
-	bundle:(NSBundle*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithNibNamed:(NSString*)_
-	delegate:(id< Panel_Delegate >)_
-	context:(NSObject*)_ NS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithView:(NSView*)_
-	delegate:(id< Panel_Delegate >)_
-	context:(NSObject*)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype _Nullable)
+	initWithNibNamed:(NSString* _Nonnull)_
+	delegate:(id< Panel_Delegate > _Nullable)_
+	context:(NSObject* _Nullable)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype _Nullable)
+	initWithView:(NSView* _Nonnull)_
+	delegate:(id< Panel_Delegate > _Nullable)_
+	context:(NSObject* _Nullable)_ NS_DESIGNATED_INITIALIZER;
 
-// accessors
-	@property (assign) id< Panel_Delegate >
+// accessors: other
+	//! This object is used to customize panel behavior, and is
+	//! almost certainly needed to produce the desired results. 
+	@property (assign, nullable) id< Panel_Delegate >
 	delegate;
-	@property (readonly) BOOL
-	isPanelUserInterfaceLoaded;
-	- (NSView*)
-	logicalFirstResponder;
-	- (NSView*)
-	logicalLastResponder;
-	@property (readonly) NSView*
-	managedView;
-	@property (assign) SEL
+	//! The "panelDisplayAction" is sent to "panelDisplayTarget"
+	//! when the user wants this panel to appear.  This could
+	//! be used by a menu command or other special feature of
+	//! the UI to cause a panel to appear in an unusual way;
+	//! for example, Preferences window panels are often shown
+	//! through this action.
+	//!
+	//! The Panel_Parent protocol defines the method
+	//! "panelParentDisplayChildWithIdentifier:withAnimation:",
+	//! which can be implemented with the help of these target
+	//! and action property values. 
+	@property (assign, nullable) SEL
 	panelDisplayAction;
-	@property (assign) id
+	//! The object that "panelDisplayAction" should be sent to.
+	@property (assign, nullable) id
 	panelDisplayTarget;
+	//! Set if this panel has any useful help action.  This is
+	//! given a default value of YES only if the "delegate"
+	//! has "panelViewManager:didPerformContextSensitiveHelp:"
+	//! implemented.  You can also set it yourself before the
+	//! panel appears.
 	@property (assign) BOOL
 	panelHasContextualHelp;
+	//! This should be set by special panels that act as parents
+	//! of other panels (e.g. the Preferences window, a set of
+	//! tabs, a master-detail view, or similar construct).  This
+	//! property allows a sub-panel to easily find its direct
+	//! parent panel.
+	//!
+	//! See the "Panel_Parent" protocol above for details on the
+	//! APIs of parents; "panelParentEnumerateChildViewManagers"
+	//! for example is a way to go from parent to child.
+	@property (assign, nullable) id< Panel_Parent >
+	panelParent; // should be set by parents when adding or removing children
+
+// accessors: read-only values
+	//! Use to ensure that user interface elements are fully
+	//! defined before doing things that may depend on the UI.
+	@property (readonly) BOOL
+	isPanelUserInterfaceLoaded;
+	//! This is the main view, it contains the entire panel.
+	//! This property exists for historical reasons, before the
+	//! base class of Panel_ViewManager was an NSViewController.
+	//! Now, this has the same value as "self.view" but note that
+	//! a Panel does not expect its view to change dynamically so
+	//! setting "self.view" is not recommended.
+	@property (readonly, nonnull) NSView*
+	managedView;
+	//! Returns the type of editing that this panel does: either
+	//! it edits a single data set, or it is able to continuously
+	//! update itself as data sets are changed (see the delegate
+	//! method "panelViewManager:didChangeFromDataSet:toDataSet:").
+	//!
+	//! This invokes "panelViewManager:requestingEditType:" on the
+	//! delegate.
 	@property (readonly) Panel_EditType
 	panelEditType;
-	@property (assign) id< Panel_Parent >
-	panelParent; // should be set by parents when adding or removing children
+
+// accessors: XIB outlets
+	//! Returns the view that a window ought to focus first using
+	//! NSWindow’s "makeFirstResponder:".  The actual first responder
+	//! at runtime will depend on what else is in the window, e.g.
+	//! there may be a parent panel with other controls that will
+	//! logically precede those in this panel.
+	//!
+	//! When a XIB is used, this is required at XIB loading time.
+	//! If "initWithView:delegate:context:" is used though, this
+	//! property may be set directly before the panel is displayed.
+	@property (assign, nullable) IBOutlet NSView*
+	logicalFirstResponder;
+	//! The last view of the panel that can receive focus for user input.
+	//!
+	//! When a XIB is used, this is required at XIB loading time.
+	//! If "initWithView:delegate:context:" is used though, this
+	//! property may be set directly before the panel is displayed.
+	@property (assign, nullable) IBOutlet NSView*
+	logicalLastResponder;
 
 // actions
 	- (IBAction)
-	orderFrontContextualHelp:(id)_;
+	orderFrontContextualHelp:(id _Nullable)_;
 	- (IBAction)
-	performCloseAndAccept:(id)_;
+	performCloseAndAccept:(id _Nullable)_;
 	- (IBAction)
-	performCloseAndDiscard:(id)_;
+	performCloseAndDiscard:(id _Nullable)_;
 	- (IBAction)
-	performDisplaySelfThroughParent:(id)_;
+	performDisplaySelfThroughParent:(id _Nullable)_;
 
 // overrides for subclasses
-	- (NSImage*)
+	- (NSImage* _Nonnull)
 	panelIcon; // required (not implemented in base)
-	- (NSString*)
+	- (NSString* _Nonnull)
 	panelIdentifier; // required (not implemented in base)
-	- (NSString*)
+	- (NSString* _Nonnull)
 	panelName; // required (not implemented in base)
 	- (Panel_ResizeConstraint)
 	panelResizeAxes; // required (not implemented in base)
