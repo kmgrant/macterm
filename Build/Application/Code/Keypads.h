@@ -96,8 +96,7 @@ void
 
 #ifdef __OBJC__
 void
-	Keypads_SetArrangeWindowPanelBinding		(id							inDidEndTarget,
-												 SEL						inDidEndSelector,
+	Keypads_SetArrangeWindowPanelBinding		(void						(^inDidEndBlock)(void),
 												 Preferences_Tag			inWindowBindingOrZero,
 												 FourCharCode				inDataTypeForWindowBinding,
 												 Preferences_Tag			inScreenBindingOrZero = 0,

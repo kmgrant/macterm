@@ -151,8 +151,7 @@ Preferences_Tag				gArrangeWindowScreenBinding = 0;
 FourCharCode				gArrangeWindowDataTypeForWindowBinding = kPreferences_DataTypeCGPoint;
 FourCharCode				gArrangeWindowDataTypeForScreenBinding = kPreferences_DataTypeHIRect;
 CGPoint						gArrangeWindowStackingOrigin = CGPointZero;
-id							gArrangeWindowDidEndTarget = nil;
-SEL							gArrangeWindowDidEndSelector = nil;
+void						(^gArrangeWindowDidEndBlock)(void) = nil;
 NSObject< Keypads_ControlKeyResponder >*		gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
@@ -168,9 +167,8 @@ Binds the “Arrange Window” panel to a preferences tag, which
 determines both the source of its initial window position and
 the destination that is auto-updated as the window is moved.
 
-This variant accepts an Objective-C object and selector to
-invoke when the user has finished setting the arrangement
-value.  The selector returns no value and accepts no arguments.
+This variant accepts a block to invoke when the user has
+finished setting the arrangement value.
 
 Set the screen binding information to nonzero values to also
 keep track of the boundaries of the display that contains most
@@ -190,11 +188,10 @@ the origin and size are both defined.
 
 Set "inBinding" to 0 to have no binding effect.
 
-(4.1)
+(2021.01)
 */
 void
-Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
-										 SEL						inDidEndSelector,
+Keypads_SetArrangeWindowPanelBinding	(void						(^inDidEndBlock)(void),
 										 Preferences_Tag			inWindowBindingOrZero,
 										 FourCharCode				inDataTypeForWindowBinding,
 										 Preferences_Tag			inScreenBindingOrZero,
@@ -232,8 +229,7 @@ Keypads_SetArrangeWindowPanelBinding	(id							inDidEndTarget,
 	gArrangeWindowScreenBinding = inScreenBindingOrZero;
 	gArrangeWindowDataTypeForScreenBinding = inDataTypeForScreenBinding;
 	
-	gArrangeWindowDidEndTarget = inDidEndTarget;
-	gArrangeWindowDidEndSelector = inDidEndSelector;
+	gArrangeWindowDidEndBlock = inDidEndBlock;
 	
 	if (0 != gArrangeWindowBinding)
 	{
@@ -280,7 +276,7 @@ Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag			inWindowBindingOrZero,
 										 FourCharCode				inDataTypeForScreenBinding,
 										 Preferences_ContextRef		inContextOrNull)
 {
-	Keypads_SetArrangeWindowPanelBinding(nil, nil, inWindowBindingOrZero, inDataTypeForWindowBinding,
+	Keypads_SetArrangeWindowPanelBinding(^{}, inWindowBindingOrZero, inDataTypeForWindowBinding,
 											inScreenBindingOrZero, inDataTypeForScreenBinding,
 											inContextOrNull);
 }// SetArrangeWindowPanelBinding (5 arguments)
@@ -702,7 +698,7 @@ Designated initializer.
 - (instancetype)
 init
 {
-	UIArrangeWindow_Model*	viewModel = [[[UIArrangeWindow_Model alloc] initWithRunner:self] autorelease];
+	UIArrangeWindow_Model*	viewModel = [[UIArrangeWindow_Model alloc] initWithRunner:self];
 	NSViewController*		viewController = [UIArrangeWindow_ObjC makeViewController:viewModel];
 	NSPanel*				panelObject = [NSPanel windowWithContentViewController:viewController];
 	
@@ -714,23 +710,10 @@ init
 	self = [super initWithWindow:panelObject];
 	if (nil != self)
 	{
-		self->_viewModel = [viewModel retain];
+		self->_viewModel = viewModel;
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.09)
-*/
-- (void)
-dealloc
-{
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -849,9 +832,9 @@ doneArrangingWithViewModel:(UIArrangeWindow_Model*)		viewModel
 			}
 		}
 		
-		if (nil != gArrangeWindowDidEndTarget)
+		if (nil != gArrangeWindowDidEndBlock)
 		{
-			[gArrangeWindowDidEndTarget performSelector:gArrangeWindowDidEndSelector withObject:nil];
+			gArrangeWindowDidEndBlock();
 		}
 	}
 	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, false);
@@ -901,7 +884,7 @@ Designated initializer.
 - (instancetype)
 init
 {
-	UIKeypads_Model*	viewModel = [[[UIKeypads_Model alloc] initWithRunner:self] autorelease];
+	UIKeypads_Model*	viewModel = [[UIKeypads_Model alloc] initWithRunner:self];
 	NSViewController*	viewController = [UIKeypads_ObjC makeControlKeysViewController:viewModel];
 	NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
 	
@@ -915,7 +898,7 @@ init
 	self = [super initWithWindow:panelObject];
 	if (nil != self)
 	{
-		self->_viewModel = [viewModel retain];
+		self->_viewModel = viewModel;
 		
 		self.windowFrameAutosaveName = @"ControlKeys"; // (for backward compatibility, never change this)
 		
@@ -935,8 +918,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[_viewModel release];
-	[super dealloc];
 }// dealloc
 
 
@@ -1184,7 +1165,7 @@ Designated initializer.
 - (instancetype)
 init
 {
-	UIKeypads_Model*	viewModel = [[[UIKeypads_Model alloc] initWithRunner:self] autorelease];
+	UIKeypads_Model*	viewModel = [[UIKeypads_Model alloc] initWithRunner:self];
 	NSViewController*	viewController = [UIKeypads_ObjC makeFunctionKeysViewController:viewModel];
 	NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
 	
@@ -1198,7 +1179,7 @@ init
 	self = [super initWithWindow:panelObject];
 	if (nil != self)
 	{
-		self->_viewModel = [viewModel retain];
+		self->_viewModel = viewModel;
 		
 		// update the menu and the global variable based on user preferences
 		{
@@ -1219,19 +1200,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.09)
-*/
-- (void)
-dealloc
-{
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -1532,7 +1500,7 @@ Designated initializer.
 - (instancetype)
 init
 {
-	UIKeypads_Model*	viewModel = [[[UIKeypads_Model alloc] initWithRunner:self] autorelease];
+	UIKeypads_Model*	viewModel = [[UIKeypads_Model alloc] initWithRunner:self];
 	NSViewController*	viewController = [UIKeypads_ObjC makeVT220KeysViewController:viewModel];
 	NSPanel*			panelObject = [NSPanel windowWithContentViewController:viewController];
 	
@@ -1546,25 +1514,12 @@ init
 	self = [super initWithWindow:panelObject];
 	if (nil != self)
 	{
-		self->_viewModel = [viewModel retain];
+		self->_viewModel = viewModel;
 		
 		self.windowFrameAutosaveName = @"VT220Keys"; // (for backward compatibility, never change this)
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2020.09)
-*/
-- (void)
-dealloc
-{
-	[_viewModel release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors

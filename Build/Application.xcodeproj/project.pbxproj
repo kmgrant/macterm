@@ -22,7 +22,7 @@
 		0A30289D1DB2BE2500C1C557 /* Network.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289C1DB2BE2500C1C557 /* Network.mm */; };
 		0A3028A01DB5D46100C1C557 /* MenuUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A30289F1DB5D46100C1C557 /* MenuUtilities.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
+		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A400EF324FB128100550A8F /* UIDebugInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400EF224FB128100550A8F /* UIDebugInterface.swift */; };

@@ -148,8 +148,6 @@ The private class interface.
 // new methods
 	- (void)
 	configureForIndex:(Preferences_Index)_;
-	- (void)
-	didFinishSettingWindowBoundary;
 
 // accessors
 	@property (readonly) NSArray*
@@ -1981,9 +1979,18 @@ performSetBoundary:(id)		sender
 	else
 	{
 		Preferences_Index const		currentIndex = self.windowsViewManager.selectedWindowInfo.preferencesIndex;
+		__weak decltype(self)		weakSelf = self;
 		
 		
-		Keypads_SetArrangeWindowPanelBinding(self, @selector(didFinishSettingWindowBoundary),
+		Keypads_SetArrangeWindowPanelBinding(^{
+													// this is invoked when the user is done setting a value;
+													// trigger updates to inheritance checkbox, etc.
+													[weakSelf.windowBoundaries willSetPreferenceValue];
+													[weakSelf.windowSession willSetPreferenceValue];
+													[weakSelf.windowSession didSetPreferenceValue];
+													[weakSelf.windowBoundaries didSetPreferenceValue];
+													//weakSelf.windowSession.currentValueDescriptor = weakSelf.windowSession.currentValueDescriptor;
+												},
 												Preferences_ReturnTagVariantForIndex
 												(kPreferences_TagIndexedWindowFrameBounds, currentIndex),
 												kPreferences_DataTypeHIRect,
@@ -2397,24 +2404,6 @@ configureForIndex:(Preferences_Index)	anIndex
 		self.windowSession.preferencesIndex = anIndex;
 	}
 }// configureForIndex:
-
-
-/*!
-This is invoked when the user indicates that he or she is
-finished setting the target window boundary.
-
-(4.1)
-*/
-- (void)
-didFinishSettingWindowBoundary
-{
-	// trigger updates to inheritance checkbox, etc.
-	[self.windowBoundaries willSetPreferenceValue];
-	[self.windowSession willSetPreferenceValue];
-	[self.windowSession didSetPreferenceValue];
-	[self.windowBoundaries didSetPreferenceValue];
-	//self.windowSession.currentValueDescriptor = self.windowSession.currentValueDescriptor;
-}// didFinishSettingWindowBoundary
 
 
 #pragma mark Accessors
