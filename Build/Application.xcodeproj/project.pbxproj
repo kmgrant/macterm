@@ -31,7 +31,7 @@
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; };
 		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; };
+		0A4FAF951525694700B8142A /* Popover.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4FAF941525694700B8142A /* Popover.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A56CB201FB6BF5500750D35 /* ParameterDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A56CB1F1FB6BF5500750D35 /* ParameterDecoder.cp */; };
 		0A613E5020592085007C0829 /* Workspace.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A613E4F20592085007C0829 /* Workspace.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A64C5EB1059E423005B8A48 /* StreamCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A64C5EA1059E423005B8A48 /* StreamCapture.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };

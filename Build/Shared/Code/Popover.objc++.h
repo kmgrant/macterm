@@ -1,10 +1,5 @@
 /*!	\file Popover.objc++.h
 	\brief Implements a popover-style window.
-	
-	Unlike popovers in Lion, these function on many older
-	versions of Mac OS X (tested back to Mac OS X 10.3).
-	They are also more flexible, allowing different colors
-	for instance.
 */
 /*###############################################################
 
@@ -151,15 +146,15 @@ dragging the mouse.
 	// provide YES for one or both axes that should allow resizing to take place;
 	// if not implemented, the assumption is that the window can resize both ways
 	- (void)
-	popover:(Popover_Window*)_
-	getHorizontalResizeAllowed:(BOOL*)_
-	getVerticalResizeAllowed:(BOOL*)_;
+	popover:(Popover_Window* _Nonnull)_
+	getHorizontalResizeAllowed:(BOOL* _Nonnull)_
+	getVerticalResizeAllowed:(BOOL* _Nonnull)_;
 
 @end //}
 
 
 /*!
-A popover-style window that works on many versions of Mac OS X.
+A popover-style window that works on many versions of the OS.
 
 This class handles only the visual parts of a popover, not the
 equally-important behavioral aspects.  To help display and manage
@@ -168,70 +163,24 @@ this window, see "PopoverManager.objc++.h".
 Note that accessor methods are generally meant to configure the
 window before displaying it.  The user should not normally see
 the window change its appearance while it is on screen.  One
-exception to this is "setHasArrow:", which will simply update the
+exception to this is "hasArrow", which will simply update the
 frame appearance.
 */
 @interface Popover_Window : NSWindow < CocoaAnimation_WindowImageProvider > //{
-{
-@private
-	NSMutableArray*			_registeredObservers;
-	NSWindow*				popoverParentWindow;
-	NSView*					embeddedView;
-	NSImage*				_animationContentImage;
-	NSImage*				_animationFullImage;
-	NSTrackingArea*			_trackTopEdge;
-	NSTrackingArea*			_trackLeftEdge;
-	NSTrackingArea*			_trackMainFrame;
-	NSTrackingArea*			_trackRightEdge;
-	NSTrackingArea*			_trackBottomEdge;
-	NSColor*				_borderOuterColor;
-	NSColor*				_borderPrimaryColor;
-	NSColor*				_borderOuterDisplayColor;
-	NSColor*				_borderPrimaryDisplayColor;
-	NSColor*				_popoverBackgroundColor;
-	id< Popover_ResizeDelegate >	_resizeDelegate;
-	NSPoint					_userResizeClickScreenPoint;
-	CGFloat					_userResizeOriginalCenterX;
-	CGFloat					_arrowBaseWidth;
-	CGFloat					_arrowHeight;
-	CGFloat					_borderWidth;
-	CGFloat					_cornerRadius;
-	CGFloat					_viewMargin;
-	BOOL					_layoutInProgress;
-	BOOL					_allowHorizontalResize;
-	BOOL					_allowVerticalResize;
-	BOOL					_hasRoundCornerBesideArrow;
-	BOOL					_isBeingResizedByUser;
-	BOOL					_userResizeTop;
-	BOOL					_userResizeLeft;
-	BOOL					_userResizeRight;
-	BOOL					_userResizeBottom;
-	Popover_Properties		_windowPropertyFlags;
-	Popover_WindowStyle		_lastAppliedWindowStyle;
-}
 
 // initializers
-	- (instancetype)
-	initWithContentRect:(NSRect)_
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
-	styleMask:(NSUInteger)_
-#else
-	styleMask:(NSWindowStyleMask)_
-#endif
-	backing:(NSBackingStoreType)_
-	defer:(BOOL)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithView:(NSView*)_
+	- (instancetype _Nullable)
+	initWithView:(NSView* _Nonnull)_
 	windowStyle:(Popover_WindowStyle)_
 	arrowStyle:(Popover_ArrowStyle)_
 	attachedToPoint:(NSPoint)_
-	inWindow:(NSWindow*)_;
-	- (instancetype)
-	initWithView:(NSView*)_
+	inWindow:(NSWindow* _Nullable)_;
+	- (instancetype _Nullable)
+	initWithView:(NSView* _Nonnull)_
 	windowStyle:(Popover_WindowStyle)_
 	arrowStyle:(Popover_ArrowStyle)_
 	attachedToPoint:(NSPoint)_
-	inWindow:(NSWindow*)_
+	inWindow:(NSWindow* _Nullable)_
 	vibrancy:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods: utilities
@@ -251,34 +200,75 @@ frame appearance.
 	preferredSide:(Popover_Properties)_;
 
 // accessors: colors
-	@property (copy) NSColor*
+	//! The outer border color is used to render the boundary of the
+	//! popover window.  See also "setBorderPrimaryColor:".
+	//!
+	//! The border thickness is determined by "setBorderWidth:".  If
+	//! the outer and primary colors are the same then the border
+	//! appears to be that thickness; otherwise the width is divided
+	//! roughly evenly between the two colors.
+	@property (strong, nonnull) NSColor*
 	borderOuterColor;
-	@property (copy) NSColor*
+	//! The primary border color is used to render a frame inside the
+	//! outer border (see "setBorderOuterColor:").
+	//!
+	//! The border thickness is determined by "setBorderWidth:".  If
+	//! the outer and primary colors are the same then the border
+	//! appears to be that thickness; otherwise the width is divided
+	//! roughly evenly between the two colors.
+	@property (strong, nonnull) NSColor*
 	borderPrimaryColor;
-	@property (copy) NSColor*
+	//! The popover background color is used to construct an image
+	//! that the NSWindow superclass uses for rendering.
+	//!
+	//! Use this property instead of the NSWindow "backgroundColor"
+	//! property because the normal background color is overridden
+	//! to contain the entire rendering of the popover window frame
+	//! (as a pattern image).
+	@property (strong, nonnull) NSColor*
 	popoverBackgroundColor;
 
 // accessors: general
+	//! The base width determines how “fat” the frame arrow’s triangle is.
 	@property (assign) CGFloat
 	arrowBaseWidth;
+	//! The height determines how “slender” the frame arrow’s triangle is.
 	@property (assign) CGFloat
 	arrowHeight;
+	//! The border is drawn inside the viewMargin area, expanding inwards;
+	//! it does not increase the width/height of the window.  You can use
+	//! "borderWidth" and "viewMargin" together to achieve the exact
+	//! look/geometry you want.
 	@property (assign) CGFloat
 	borderWidth;
+	//! The radius in pixels of the arc used to draw curves at the
+	//! corners of the popover frame.
 	@property (assign) CGFloat
 	cornerRadius;
+	//! When the window position puts the arrow near a corner of the
+	//! frame, this specifies how close to the corner the arrow is.
+	//! If a rounded corner appears then the arrow is off to the side;
+	//! otherwise the arrow is right in the corner.
 	@property (assign) BOOL
 	hasRoundCornerBesideArrow;
+	//! Specifies whether or not the frame has an arrow displayed.
+	//! This is set implicitly via "setArrowStyle:" or through an
+	//! initializer.
 	@property (readonly) BOOL
 	hasArrow;
-	@property (assign) id< Popover_ResizeDelegate >
+	//! If set, this object can be queried to guide resize behavior
+	//! (such as to decide that only one axis allows resizing).
+	@property (assign, nullable) id< Popover_ResizeDelegate >
 	resizeDelegate;
+	//! The style-specified distance between the edge of the view and
+	//! the window edge.  Additional space can be inserted if there
+	//! are resize handles.
 	@property (assign) CGFloat
 	viewMargin;
 
 // NSWindow
 	- (void)
-	setBackgroundColor:(NSColor*)_; // DO NOT USE; RESERVED FOR RENDERING
+	setBackgroundColor:(NSColor* _Nullable)_; // DO NOT USE; RESERVED FOR RENDERING
 
 @end //}
 

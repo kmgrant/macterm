@@ -177,53 +177,107 @@ The private class interface.
 
 @end //}
 
+/*!
+Private properties.
+*/
 @interface Popover_Window () //{
 
 // accessors
+	//! Set automatically when "resizeDelegate" changes, to the
+	//! value provided by the delegate.
+	//!
+	//! In addition, resizing is constrained if the window reaches
+	//! the minimum or maximum size set on the NSWindow.
 	@property (assign) BOOL
 	allowHorizontalResize;
+	//! Set automatically when "resizeDelegate" changes, to the
+	//! value provided by the delegate.
+	//!
+	//! In addition, resizing is constrained if the window reaches
+	//! the minimum or maximum size set on the NSWindow.
 	@property (assign) BOOL
 	allowVerticalResize;
-	@property (copy) NSImage*
+	//! An image of cached window content only; used for animations.
+	@property (strong) NSImage*
 	animationContentImage;
-	@property (copy) NSImage*
+	//! An image of the window frame and content; used for animations.
+	@property (strong) NSImage*
 	animationFullImage;
-	@property (copy) NSColor*
+	//! The outer border display color is what is currently used
+	//! for rendering, which may either be the value of the
+	//! property "borderOuterColor" or a temporary setting such
+	//! as a gray border for inactive windows.
+	@property (strong) NSColor*
 	borderOuterDisplayColor;
-	@property (copy) NSColor*
+	//! The primary border display color is what is currently used
+	//! for rendering, which may either be the value of the
+	//! property "borderPrimaryColor" or a temporary setting such
+	//! as a gray border for inactive windows.
+	@property (strong) NSColor*
 	borderPrimaryDisplayColor;
+	//! When set to YES, "updateBackground" does nothing.  Set this
+	//! when an action will trigger a series of property changes
+	//! that would otherwise cause multiple unnecessary updates.
 	@property (assign) BOOL
 	disableUpdateBackground;
+	//! The parent of the popover’s content view hierarchy.
+	@property (strong) NSView*
+	embeddedView;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) BOOL
 	isBeingResizedByUser;
+	//! The window style given at initialization time, or the last
+	//! style used with "applyWindowStyle:".
 	@property (assign) Popover_WindowStyle
 	lastAppliedWindowStyle;
+	//! Set internally, only during layout; see "redisplay".
 	@property (assign) BOOL
 	layoutInProgress;
+	//! The window that the popover appears on top of; and (when
+	//! the popover is acting as a modal dialog) the window that
+	//! is temporarily prevented from receiving user input.
+	@property (strong) NSWindow*
+	popoverParentWindow;
+	//! Stores information on key-value observers.
 	@property (strong) NSMutableArray*
 	registeredObservers;
+	//! Bottom-edge tracking; installed only for resizable windows.
 	@property (strong) NSTrackingArea*
 	trackBottomEdge;
+	//! Left-edge tracking; installed only for resizable windows.
 	@property (strong) NSTrackingArea*
 	trackLeftEdge;
+	//! Interior frame tracking; installed for all windows to make
+	//! sure the cursor is reset to an arrow.
 	@property (strong) NSTrackingArea*
 	trackMainFrame;
+	//! Right-edge tracking; installed only for resizable windows.
 	@property (strong) NSTrackingArea*
 	trackRightEdge;
+	//! Top-edge tracking; installed only for resizable windows.
 	@property (strong) NSTrackingArea*
 	trackTopEdge;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) NSPoint
 	userResizeClickScreenPoint;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) CGFloat
 	userResizeOriginalCenterX;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) BOOL
 	userResizeTop;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) BOOL
 	userResizeLeft;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) BOOL
 	userResizeRight;
+	//! Set internally, only during resize; see "mouseDown:".
 	@property (assign) BOOL
 	userResizeBottom;
+	//! The arrangement of the window content relative to any arrow.
+	//! This is the basis for the "arrowPlacement" and "windowPlacement"
+	//! convenience methods.
 	@property (assign) Popover_Properties
 	windowPropertyFlags;
 
@@ -236,212 +290,13 @@ The private class interface.
 @implementation Popover_Window //{
 
 
-#pragma mark Properties
-
-
-/*!
-Set automatically when "resizeDelegate" changes, to the
-value provided by the delegate.
-
-In addition, resizing is constrained if the window reaches
-the minimum or maximum size set on the NSWindow.
-*/
-@synthesize allowHorizontalResize = _allowHorizontalResize;
-
-/*!
-Set automatically when "resizeDelegate" changes, to the
-value provided by the delegate.
-
-In addition, resizing is constrained if the window reaches
-the minimum or maximum size set on the NSWindow.
-*/
-@synthesize allowVerticalResize = _allowVerticalResize;
-
-/*!
-An image of cached window content only; used for animations.
-*/
-@synthesize animationContentImage = _animationContentImage;
-
-/*!
-An image of the window frame and content; used for animations.
-*/
-@synthesize animationFullImage = _animationFullImage;
-
-/*!
-The height determines how “slender” the frame arrow’s triangle is.
-*/
-@synthesize arrowHeight = _arrowHeight;
-
-/*!
-The outer border color is used to render the boundary of
-the popover window.  See also "setBorderPrimaryColor:".
-
-The border thickness is determined by "setBorderWidth:".
-If the outer and primary colors are the same then the
-border appears to be that thickness; otherwise the width
-is divided roughly evenly between the two colors.
-*/
-@synthesize borderOuterColor = _borderOuterColor;
-
-/*!
-The outer border display color is what is currently used
-for rendering, which may either be the value of the
-property "borderOuterColor" or a temporary setting such
-as a gray border for inactive windows.
-*/
-@synthesize borderOuterDisplayColor = _borderOuterDisplayColor;
-
-/*!
-The primary border color is used to render a frame inside
-the outer border (see "setBorderOuterColor:").
-
-The border thickness is determined by "setBorderWidth:".
-If the outer and primary colors are the same then the
-border appears to be that thickness; otherwise the width
-is divided roughly evenly between the two colors.
-*/
-@synthesize borderPrimaryColor = _borderPrimaryColor;
-
-/*!
-The primary border display color is what is currently used
-for rendering, which may either be the value of the
-property "borderPrimaryColor" or a temporary setting such
-as a gray border for inactive windows.
-*/
-@synthesize borderPrimaryDisplayColor = _borderPrimaryDisplayColor;
-
-/*!
-When set to YES, "updateBackground" does nothing.  Set this
-when an action will trigger a series of property changes
-that would otherwise cause multiple unnecessary updates.
-*/
-@synthesize disableUpdateBackground = _disableUpdateBackground;
-
-/*!
-When the window position puts the arrow near a corner of
-the frame, this specifies how close to the corner the
-arrow is.  If a rounded corner appears then the arrow is
-off to the side; otherwise the arrow is right in the
-corner.
-*/
-@synthesize hasRoundCornerBesideArrow = _hasRoundCornerBesideArrow;
-
-/*!
-Set internally, only during resize; see "mouseDown:".
-*/
-@synthesize isBeingResizedByUser = _isBeingResizedByUser;
-
-/*!
-The window style given at initialization time, or the last
-style used with "applyWindowStyle:".
-*/
-@synthesize lastAppliedWindowStyle = _lastAppliedWindowStyle;
-
-/*!
-Set internally, only during layout; see "redisplay".
-*/
-@synthesize layoutInProgress = _layoutInProgress;
-
-/*!
-The popover background color is used to construct an image
-that the NSWindow superclass uses for rendering.
-
-Use this property instead of the NSWindow "backgroundColor"
-property because the normal background color is overridden
-to contain the entire rendering of the popover window frame
-(as a pattern image).
-*/
-@synthesize popoverBackgroundColor = _popoverBackgroundColor;
-
-/*!
-Stores information on key-value observers.
-*/
-@synthesize registeredObservers = _registeredObservers;
-
-/*!
-If set, this object can be queried to guide resize behavior
-(such as to decide that only one axis allows resizing).
-*/
-@synthesize resizeDelegate = _resizeDelegate;
-
-/*!
-Top-edge tracking; installed only for resizable windows.
-*/
-@synthesize trackTopEdge = _trackTopEdge;
-
-/*!
-Left-edge tracking; installed only for resizable windows.
-*/
-@synthesize trackLeftEdge = _trackLeftEdge;
-
-/*!
-Interior frame tracking; installed for all windows to make
-sure the cursor is reset to an arrow.
-*/
-@synthesize trackMainFrame = _trackMainFrame;
-
-/*!
-Right-edge tracking; installed only for resizable windows.
-*/
-@synthesize trackRightEdge = _trackRightEdge;
-
-/*!
-Bottom-edge tracking; installed only for resizable windows.
-*/
-@synthesize trackBottomEdge = _trackBottomEdge;
-
-/*!
-Set internally, only during resize; see "mouseDown:".
-*/
-@synthesize userResizeClickScreenPoint = _userResizeClickScreenPoint;
-
-/*!
-Set internally, only during resize; see "mouseDown:".
-*/
-@synthesize userResizeOriginalCenterX = _userResizeOriginalCenterX;
-
-/*!
-Set internally, only during resize; see "mouseDown:".
-*/
-@synthesize userResizeTop = _userResizeTop;
-@synthesize userResizeLeft = _userResizeLeft;
-@synthesize userResizeRight = _userResizeRight;
-@synthesize userResizeBottom = _userResizeBottom;
-
-/*!
-The arrangement of the window content relative to any arrow.
-This is the basis for the "arrowPlacement" and "windowPlacement"
-convenience methods.
-*/
-@synthesize windowPropertyFlags = _windowPropertyFlags;
+@synthesize arrowBaseWidth = _arrowBaseWidth;
+@synthesize borderWidth = _borderWidth;
+@synthesize cornerRadius = _cornerRadius;
+@synthesize viewMargin = _viewMargin;
 
 
 #pragma mark Initializers
-
-
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2017.06)
-*/
-- (instancetype)
-initWithContentRect:(NSRect)	aRect
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
-styleMask:(NSUInteger)			aStyleMask
-#else
-styleMask:(NSWindowStyleMask)	aStyleMask
-#endif
-backing:(NSBackingStoreType)	aBackingStoreType
-defer:(BOOL)					aDeferFlag
-{
-#pragma unused(aRect, aStyleMask, aBackingStoreType, aDeferFlag)
-	assert(false && "invalid way to initialize derived class");
-	return [self initWithView:nil windowStyle:kPopover_WindowStyleNormal
-								arrowStyle:kPopover_ArrowStyleNone
-								attachedToPoint:NSZeroPoint
-								inWindow:nil vibrancy:NO];
-}// initWithContentRect:styleMask:backing:defer:
 
 
 /*!
@@ -522,14 +377,14 @@ vibrancy:(BOOL)							aVisualEffectFlag
 		// Create initial contentRect for the attached window (can reset frame at any time).
 		// Note that the content rectangle given to NSWindow is just the frame rectangle;
 		// the illusion of a window margin is created during rendering.
-		Popover_Properties	side = [self.class bestSideForViewOfSize:[aView frame].size
+		Popover_Properties	side = [self.class bestSideForViewOfSize:aView.frame.size
 																		cornerMargins:NSMakeSize(kDefaultMargin, kDefaultMargin)
 																		arrowHeight:kDefaultArrowHeight
 																		arrowInset:kDefaultArrowInset
 																		at:aPoint
 																		onParentWindow:aWindow
 																		preferredSide:kPopover_PositionBottom];
-		NSSize		frameSize = [self.class frameSizeForEmbeddedViewSize:[aView frame].size
+		NSSize		frameSize = [self.class frameSizeForEmbeddedViewSize:aView.frame.size
 																			cornerMargins:NSMakeSize(kDefaultMargin, kDefaultMargin)
 																			arrowHeight:kDefaultArrowHeight];
 		NSRect		contentRectOnScreen = NSZeroRect;
@@ -549,16 +404,16 @@ vibrancy:(BOOL)							aVisualEffectFlag
 		{
 			[super setBackgroundColor:[NSColor clearColor]];
 			
-			[self setMovableByWindowBackground:NO];
-			[self setExcludedFromWindowsMenu:YES];
-			[self setPreventsApplicationTerminationWhenModal:NO];
-			[self setAlphaValue:1.0];
-			[self setOpaque:NO];
-			[self setHasShadow:YES];
+			self.movableByWindowBackground = NO;
+			self.excludedFromWindowsMenu = YES;
+			self.preventsApplicationTerminationWhenModal = NO;
+			self.alphaValue = 1.0;
+			self.opaque = NO;
+			self.hasShadow = YES;
 			
 			self->_registeredObservers = [[NSMutableArray alloc] init];
-			self->popoverParentWindow = aWindow;
-			self->embeddedView = aView;
+			self->_popoverParentWindow = aWindow;
+			self->_embeddedView = aView;
 			
 			self->_animationContentImage = nil;
 			self->_animationFullImage = nil;
@@ -592,16 +447,16 @@ vibrancy:(BOOL)							aVisualEffectFlag
 			self->_windowPropertyFlags = (kPopover_PropertyArrowMiddle | kPopover_PropertyPlaceFrameBelowArrow);
 			
 			// add view as subview ("fixViewFrame" will set the layout)
-			[[self contentViewAsNSView] addSubview:self->embeddedView];
+			[[self contentViewAsNSView] addSubview:self.embeddedView];
 			
 			// ensure that the display is updated after certain changes
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(borderOuterColor)] autorelease]];
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(borderPrimaryColor)] autorelease]];
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)] autorelease]];
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(popoverBackgroundColor)] autorelease]];
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(resizeDelegate)] autorelease]];
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(windowPropertyFlags)] autorelease]];
-			[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0] autorelease]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(borderOuterColor)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(borderPrimaryColor)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(hasRoundCornerBesideArrow)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(popoverBackgroundColor)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(resizeDelegate)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(windowPropertyFlags)]];
+			[self.registeredObservers addObject:[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0]];
 			
 			// ensure that frame-dependent property changes will cause the
 			// frame to be synchronized with the new values (note that the
@@ -653,7 +508,7 @@ vibrancy:(BOOL)							aVisualEffectFlag
 			{
 				@try
 				{
-					NSView*					parentView = [[self->embeddedView subviews] objectAtIndex:0];
+					NSView*					parentView = [[self.embeddedView subviews] objectAtIndex:0];
 					NSRect					visualFrame = NSMakeRect(0, 0, NSWidth(parentView.frame),
 																		NSHeight(parentView.frame));
 					NSVisualEffectView*		visualEffectObject = [[NSVisualEffectView alloc]
@@ -663,7 +518,7 @@ vibrancy:(BOOL)							aVisualEffectFlag
 					if (nil != visualEffectObject)
 					{
 						NSView*		visualEffectView = STATIC_CAST(visualEffectObject, NSView*);
-						NSArray*	subviews = [[[parentView subviews] copy] autorelease];
+						NSArray*	subviews = [[parentView subviews] copy];
 						
 						
 						if (nil == subviews)
@@ -675,22 +530,19 @@ vibrancy:(BOOL)							aVisualEffectFlag
 						visualEffectView.autoresizingMask = (NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
 																NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin);
 						
-						// keep the views from disappearing when they are removed temporarily
+						// move views to a different parent
 						[subviews enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop)
 						{
 						#pragma unused(index, stop)
 							NSView*		asView = STATIC_CAST(object, NSView*);
 							
 							
-							[[object retain] autorelease];
 							[asView removeFromSuperview];
 						}];
 						
 						[visualEffectView setSubviews:subviews];
-						[parentView setWantsLayer:YES];
+						parentView.wantsLayer = YES;
 						[parentView addSubview:visualEffectView];
-						
-						[visualEffectObject release], visualEffectObject = nil;
 					}
 					else
 					{
@@ -721,25 +573,33 @@ dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
 	
-	[_animationContentImage release];
-	[_animationFullImage release];
-	[_borderOuterColor release];
-	[_borderOuterDisplayColor release];
-	[_borderPrimaryColor release];
-	[_borderPrimaryDisplayColor release];
-	[_popoverBackgroundColor release];
-	[_trackTopEdge release];
-	[_trackLeftEdge release];
-	[_trackMainFrame release];
-	[_trackRightEdge release];
-	[_trackBottomEdge release];
-	
 	// remove observers registered by initializer
 	[self removeObserversSpecifiedInArray:self.registeredObservers];
-	[_registeredObservers release];
-	
-	[super dealloc];
 }// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithContentRect:(NSRect)	aRect
+styleMask:(NSWindowStyleMask)	aStyleMask
+backing:(NSBackingStoreType)	aBackingStoreType
+defer:(BOOL)					aDeferFlag
+{
+#pragma unused(aRect, aStyleMask, aBackingStoreType, aDeferFlag)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithView:nil windowStyle:kPopover_WindowStyleNormal
+								arrowStyle:kPopover_ArrowStyleNone
+								attachedToPoint:NSZeroPoint
+								inWindow:nil vibrancy:NO];
+}// initWithContentRect:styleMask:backing:defer:
 
 
 #pragma mark New Methods: Utilities
@@ -1014,8 +874,8 @@ onSide:(Popover_Properties)		aSide
 	{
 		NSPoint		idealOrigin = [self.class idealFrameOriginForSize:windowFrame.size
 																		arrowInset:self.arrowInset
-																		at:((nil != self->popoverParentWindow)
-																			? [self.class convertToScreenFromWindow:self->popoverParentWindow
+																		at:((nil != self.popoverParentWindow)
+																			? [self.class convertToScreenFromWindow:self.popoverParentWindow
 																													point:aPoint]
 																			: aPoint)
 																		side:aSide];
@@ -1047,12 +907,12 @@ within the parent window’s frame.
 setPointWithAutomaticPositioning:(NSPoint)	aPoint
 preferredSide:(Popover_Properties)			aSide
 {
-	Popover_Properties	chosenSide = [self.class bestSideForViewOfSize:self->embeddedView.frame.size
+	Popover_Properties	chosenSide = [self.class bestSideForViewOfSize:self.embeddedView.frame.size
 																		cornerMargins:[self cornerMargins]
 																		arrowHeight:self.arrowHeight
 																		arrowInset:self.arrowInset
 																		at:aPoint
-																		onParentWindow:self->popoverParentWindow
+																		onParentWindow:self.popoverParentWindow
 																		preferredSide:aSide];
 	
 	
@@ -1063,13 +923,7 @@ preferredSide:(Popover_Properties)			aSide
 #pragma mark Accessors: General
 
 
-/*!
-Accessor.
-
-The base width determines how “fat” the frame arrow’s triangle is.
-
-(1.0)
-*/
+// (See header file description.)
 - (CGFloat)
 arrowBaseWidth
 {
@@ -1078,7 +932,7 @@ arrowBaseWidth
 - (void)
 setArrowBaseWidth:(CGFloat)		aValue
 {
-	CGFloat		maxWidth = (MIN(NSWidth(self->embeddedView.frame), NSHeight(self->embeddedView.frame)) +
+	CGFloat		maxWidth = (MIN(NSWidth(self.embeddedView.frame), NSHeight(self.embeddedView.frame)) +
 							CGFLOAT_TIMES_2(MIN([self cornerMargins].width, [self cornerMargins].height))) -
 							self.cornerRadius;
 	
@@ -1101,16 +955,7 @@ setArrowBaseWidth:(CGFloat)		aValue
 }// setArrowBaseWidth:
 
 
-/*!
-Accessor.
-
-The border is drawn inside the viewMargin area, expanding inwards; it
-does not increase the width/height of the window.  You can use
-"setBorderWidth:" and "setViewMargin:" together to achieve the exact
-look/geometry you want.
-
-(1.0)
-*/
+// (See header file description.)
 - (CGFloat)
 borderWidth
 {
@@ -1138,14 +983,7 @@ setBorderWidth:(CGFloat)	aValue
 }// setBorderWidth:
 
 
-/*!
-Accessor.
-
-The radius in pixels of the arc used to draw curves at the
-corners of the popover frame.
-
-(1.0)
-*/
+// (See header file description.)
 - (CGFloat)
 cornerRadius
 {
@@ -1154,7 +992,7 @@ cornerRadius
 - (void)
 setCornerRadius:(CGFloat)	aValue
 {
-	CGFloat		maxRadius = CGFLOAT_DIV_2((MIN(NSWidth(self->embeddedView.frame), NSHeight(self->embeddedView.frame)) +
+	CGFloat		maxRadius = CGFLOAT_DIV_2((MIN(NSWidth(self.embeddedView.frame), NSHeight(self.embeddedView.frame)) +
 											CGFLOAT_TIMES_2(MIN([self cornerMargins].width, [self cornerMargins].height))) -
 											self.arrowBaseWidth);
 	
@@ -1174,13 +1012,7 @@ setCornerRadius:(CGFloat)	aValue
 }// setCornerRadius:
 
 
-/*!
-Accessor.
-
-Specifies whether or not the frame has an arrow displayed.
-This is set implicitly via "setArrowStyle:" or through an
-initializer.
-*/
+// (See header file description.)
 - (BOOL)
 hasArrow
 {
@@ -1191,15 +1023,7 @@ hasArrow
 }// hasArrow
 
 
-/*!
-Accessor.
-
-The style-specified distance between the edge of the view and
-the window edge.  Additional space can be inserted if there
-are resize handles.
-
-(1.0)
-*/
+// (See header file description.)
 - (CGFloat)
 viewMargin
 {
@@ -1294,7 +1118,7 @@ context:(void*)						aContext
 				[self setFrame:kNewFrame display:NO];
 				
 				// frame image is out of date
-				[_animationFullImage release], _animationFullImage = nil;
+				self.animationFullImage = nil;
 				
 				// fix layout and update background
 				[self redisplay];
@@ -1381,7 +1205,7 @@ context:(void*)						aContext
 				[self fixViewFrame];
 				
 				// frame image is out of date
-				[_animationFullImage release], _animationFullImage = nil;
+				self.animationFullImage = nil;
 			}
 			else if (KEY_PATH_IS_SEL(aKeyPath, @selector(windowPropertyFlags)))
 			{
@@ -1414,9 +1238,9 @@ the popover act like a secondary window.
 - (BOOL)
 validateMenuItem:(NSMenuItem*)	item
 {
-	if (self->popoverParentWindow)
+	if (self.popoverParentWindow)
 	{
-		return [self->popoverParentWindow validateMenuItem:item];
+		return [self.popoverParentWindow validateMenuItem:item];
 	}
 	return [super validateMenuItem:item];
 }// validateMenuItem:
@@ -1836,9 +1660,9 @@ like a secondary window.
 - (IBAction)
 performClose:(id)	sender
 {
-	if (self->popoverParentWindow)
+	if (self.popoverParentWindow)
 	{
-		[self->popoverParentWindow performClose:sender];
+		[self.popoverParentWindow performClose:sender];
 	}
 	else
 	{
@@ -2505,7 +2329,7 @@ fixViewFrame
 	
 	
 	[self contentViewAsNSView].frame = contentFrame;
-	self->embeddedView.frame = viewFrame;
+	self.embeddedView.frame = viewFrame;
 }// fixViewFrame
 
 
@@ -2520,8 +2344,8 @@ not be called from an initializer).
 idealFrameOriginForPoint:(NSPoint)		aPoint
 {
 	return [self.class idealFrameOriginForSize:self.frame.size arrowInset:self.arrowInset
-												at:((self->popoverParentWindow)
-													? [self.class convertToScreenFromWindow:self->popoverParentWindow
+												at:((self.popoverParentWindow)
+													? [self.class convertToScreenFromWindow:self.popoverParentWindow
 																							point:aPoint]
 													: aPoint)
 												side:self.windowPropertyFlags];
@@ -2548,7 +2372,7 @@ newContentWindowImage
 {
 	BOOL		wasVisible = self.isVisible;
 	NSPoint		oldFrameOrigin = self.frame.origin;
-	NSImage*	result = [[NSImage alloc] initWithSize:self->embeddedView.frame.size];
+	NSImage*	result = [[NSImage alloc] initWithSize:self.embeddedView.frame.size];
 	
 	
 	if (NO == wasVisible)
@@ -2560,15 +2384,12 @@ newContentWindowImage
 	
 	@try
 	{
-		NSBitmapImageRep*	imageRep = nil;
+		NSBitmapImageRep*	imageRep = [self.embeddedView bitmapImageRepForCachingDisplayInRect:self.embeddedView.bounds];
 		
 		
 		// create an image with the content of the window (no frame)
-		[self->embeddedView lockFocus];
-		imageRep = [[NSBitmapImageRep alloc] initWithFocusedViewRect:self->embeddedView.bounds];
-		[self->embeddedView unlockFocus];
+		[self.embeddedView cacheDisplayInRect:self.embeddedView.bounds toBitmapImageRep:imageRep];
 		[result addRepresentation:imageRep];
-		[imageRep release], imageRep = nil;
 	}
 	@catch (NSException*	inException)
 	{
@@ -2615,9 +2436,9 @@ newFullWindowImage
 	@try
 	{
 		NSRect		windowRelativeFrame = NSMakeRect
-											([self contentViewAsNSView].frame.origin.x + self->embeddedView.frame.origin.x,
-												[self contentViewAsNSView].frame.origin.y + self->embeddedView.frame.origin.y,
-												NSWidth(self->embeddedView.frame), NSHeight(self->embeddedView.frame));
+											([self contentViewAsNSView].frame.origin.x + self.embeddedView.frame.origin.x,
+												[self contentViewAsNSView].frame.origin.y + self.embeddedView.frame.origin.y,
+												NSWidth(self.embeddedView.frame), NSHeight(self.embeddedView.frame));
 		
 		
 		// create image with the frame of the window (no content)
@@ -2682,31 +2503,31 @@ removeTrackingAreas
 	if (nil != self.trackMainFrame)
 	{
 		[targetView removeTrackingArea:self.trackMainFrame];
-		[_trackMainFrame release], _trackMainFrame = nil;
+		self.trackMainFrame = nil;
 	}
 	
 	if (nil != self.trackLeftEdge)
 	{
 		[targetView removeTrackingArea:self.trackLeftEdge];
-		[_trackLeftEdge release], _trackLeftEdge = nil;
+		self.trackLeftEdge = nil;
 	}
 	
 	if (nil != self.trackRightEdge)
 	{
 		[targetView removeTrackingArea:self.trackRightEdge];
-		[_trackRightEdge release], _trackRightEdge = nil;
+		self.trackRightEdge = nil;
 	}
 	
 	if (nil == self.trackTopEdge)
 	{
 		[targetView removeTrackingArea:self.trackTopEdge];
-		[_trackTopEdge release], _trackTopEdge = nil;
+		self.trackTopEdge = nil;
 	}
 	
 	if (nil == self.trackBottomEdge)
 	{
 		[targetView removeTrackingArea:self.trackBottomEdge];
-		[_trackBottomEdge release], _trackBottomEdge = nil;
+		self.trackBottomEdge = nil;
 	}
 }// removeTrackingAreas
 
@@ -2739,9 +2560,9 @@ resetTrackingAreas
 	defaultCursorBounds.size.height -= CGFLOAT_TIMES_2(cornerMargins.height);
 	
 	// NOTE: old one removed by "removeTrackingAreas" call above
-	_trackMainFrame = [[NSTrackingArea alloc]
-						initWithRect:defaultCursorBounds options:trackingAreaOptions
-										owner:self userInfo:nil];
+	self.trackMainFrame = [[NSTrackingArea alloc]
+							initWithRect:defaultCursorBounds options:trackingAreaOptions
+											owner:self userInfo:nil];
 	[targetView addTrackingArea:self.trackMainFrame];
 	
 	if ((self.allowHorizontalResize) || (self.allowVerticalResize))
@@ -2795,7 +2616,7 @@ updateBackground
 		//NSLog(@"popover update"); // debug
 		
 		// frame image is out of date
-		[_animationFullImage release], _animationFullImage = nil;
+		self.animationFullImage = nil;
 		
 		//NSDisableScreenUpdates();
 		// call superclass to avoid overridden version from this class
@@ -3285,8 +3106,6 @@ backgroundFrameImageAsColor
 	[patternImage unlockFocus];
 	
 	result = [NSColor colorWithPatternImage:patternImage];
-	
-	[patternImage release];
 	
 	return result;
 }// backgroundFrameImageAsColor
