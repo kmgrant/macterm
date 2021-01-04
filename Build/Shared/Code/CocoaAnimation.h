@@ -53,7 +53,7 @@ to render the content view into a buffer.
 @required
 
 	// return (autoreleased) image rendering entire frame and content, with alpha
-	- (NSImage*)
+	- (NSImage* _Nonnull)
 	windowImage;
 
 @end //}
@@ -67,31 +67,31 @@ to render the content view into a buffer.
 //@{
 
 void
-	CocoaAnimation_TransitionWindowForDuplicate				(NSWindow*,
-															 NSWindow*);
+	CocoaAnimation_TransitionWindowForDuplicate				(NSWindow* _Nonnull,
+															 NSWindow* _Nonnull);
 
 void
-	CocoaAnimation_TransitionWindowForHide					(NSWindow*,
+	CocoaAnimation_TransitionWindowForHide					(NSWindow* _Nonnull,
 															 CGRect);
 
 void
-	CocoaAnimation_TransitionWindowForMove					(NSWindow*,
+	CocoaAnimation_TransitionWindowForMove					(NSWindow* _Nonnull,
 															 CGRect);
 
 void
-	CocoaAnimation_TransitionWindowForRemove				(NSWindow*,
+	CocoaAnimation_TransitionWindowForRemove				(NSWindow* _Nonnull,
 															 Boolean = false);
 
 void
-	CocoaAnimation_TransitionWindowForSheetOpen				(NSWindow*,
-															 NSWindow*);
+	CocoaAnimation_TransitionWindowForSheetOpen				(NSWindow* _Nonnull,
+															 NSWindow* _Nonnull);
 
 void
-	CocoaAnimation_TransitionWindowSectionForOpen			(NSWindow*,
+	CocoaAnimation_TransitionWindowSectionForOpen			(NSWindow* _Nonnull,
 															 CGRect);
 
 void
-	CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*,
+	CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow* _Nonnull,
 															 CGRect);
 
 //@}

@@ -78,34 +78,77 @@ enum My_AnimationTransition
 
 #pragma mark Types
 
+@class CocoaAnimation_WindowFrameAnimator;
+
+
+/*!
+A class of window that has no active content, just
+an image that appears similar to another window.
+This window persists for the duration of animations
+and then disappears (usually with some effect like
+a reduced size or alpha fade-out).
+
+The public CocoaAnimation_TransitionWindow...() APIs
+create image windows and associate animation managers
+with them.  That way, the animation’s lifetime is
+extended to match the image window itself.
+*/
+@interface CocoaAnimation_ImageWindow : NSWindow //{
+
+// accessors
+	@property (strong) CocoaAnimation_WindowFrameAnimator*
+	frameAnimationManager;
+
+@end //}
+
+
 /*!
 A class for performing animations on windows that
 works on older Mac OS X versions (that is, before
 Core Animation was available).
 */
 @interface CocoaAnimation_WindowFrameAnimator : NSObject //{
-{
-	NSWindow*			borderlessWindow;
-	NSWindow*			actualWindow;
-	NSRect				originalFrame;
-	NSRect				targetFrame;
-	unsigned int		frameCount;
-	unsigned int		currentFrame;
-	BOOL				animationDone;
-	NSTimeInterval*		frameDelays;
-	float*				frameAlphas;
-	float*				frameOffsetsH;
-	float*				frameOffsetsV;
-	float				frameUnitH;
-	float				frameUnitV;
-	float				frameDeltaSizeH;
-	float				frameDeltaSizeV;
-}
+
+// new methods
+	- (void)
+	nextAnimationStep;
+
+// accessors
+	@property (strong) NSWindow*
+	actualWindow;
+	@property (assign) BOOL
+	animationDone;
+	@property (weak) CocoaAnimation_ImageWindow*
+	borderlessWindow;
+	@property (assign) unsigned int
+	currentStep;
+	@property (assign) float*
+	frameAlphas;
+	@property (assign) unsigned int
+	frameCount;
+	@property (assign) float
+	frameDeltaSizeH;
+	@property (assign) float
+	frameDeltaSizeV;
+	@property (assign) NSTimeInterval*
+	frameDelays;
+	@property (assign) float*
+	frameOffsetsH;
+	@property (assign) float*
+	frameOffsetsV;
+	@property (assign) float
+	frameUnitH;
+	@property (assign) float
+	frameUnitV;
+	@property (assign) NSRect
+	originalFrame;
+	@property (assign) NSRect
+	targetFrame;
 
 // initializers
 	- (instancetype)
 	initWithTransition:(My_AnimationTransition)_
-	imageWindow:(NSWindow*)_
+	imageWindow:(CocoaAnimation_ImageWindow*)_
 	finalWindow:(NSWindow*)_
 	fromFrame:(NSRect)_
 	toFrame:(NSRect)_
@@ -115,7 +158,7 @@ Core Animation was available).
 	simplified:(BOOL)_ NS_DESIGNATED_INITIALIZER;
 	- (instancetype)
 	initWithTransition:(My_AnimationTransition)_
-	imageWindow:(NSWindow*)_
+	imageWindow:(CocoaAnimation_ImageWindow*)_
 	finalWindow:(NSWindow*)_
 	fromFrame:(NSRect)_
 	toFrame:(NSRect)_
@@ -123,17 +166,14 @@ Core Animation was available).
 	delayDistribution:(My_AnimationTimeDistribution)_
 	effect:(My_AnimationEffect)_;
 
-// new methods
-	- (void)
-	nextAnimationStep;
-
 @end //}
+
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-NSWindow*	createImageWindowFromImage			(NSWindow*, NSImage*, NSRect = NSZeroRect);
-NSWindow*	createImageWindowFromWindowRect		(NSWindow*, NSRect);
+CocoaAnimation_ImageWindow*		createImageWindowFromImage			(NSWindow*, NSImage*, NSRect = NSZeroRect);
+CocoaAnimation_ImageWindow*		createImageWindowFromWindowRect		(NSWindow*, NSRect);
 
 } // anonymous namespace
 
@@ -167,19 +207,19 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 	
 	// animate the change
 	{
-		float const		kAnimationDelay = 0.05f;
-		NSRect			oldFrame = [inRelativeToWindow frame];
-		NSRect			newFrame = NSZeroRect;
-		NSRect			mainScreenFrame = [[NSScreen mainScreen] visibleFrame];
-		NSWindow*		imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-										autorelease];
+		float const						kAnimationDelay = 0.05f;
+		NSRect							oldFrame = inRelativeToWindow.frame;
+		NSRect							newFrame = NSZeroRect;
+		NSRect							mainScreenFrame = [NSScreen mainScreen].visibleFrame;
+		CocoaAnimation_ImageWindow*		imageWindow = createImageWindowFromWindowRect(inTargetWindow, STATIC_CAST(inTargetWindow.contentView, NSView*).frame);
 		
 		
+		NSLog(@"? %@", imageWindow);
 		// target a new location that is slightly offset from the related window
 		newFrame.origin = oldFrame.origin;
 		newFrame.origin.x += 20/* arbitrary */;
 		newFrame.origin.y -= 20/* arbitrary */;
-		newFrame.size = [inTargetWindow frame].size;
+		newFrame.size = inTargetWindow.frame.size;
 		
 		// aim to keep the top-left corner on the screen
 		if (NO == NSPointInRect(NSMakePoint(newFrame.origin.x, newFrame.origin.y + NSHeight(newFrame)), mainScreenFrame))
@@ -191,17 +231,18 @@ CocoaAnimation_TransitionWindowForDuplicate		(NSWindow*		inTargetWindow,
 		
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
+		__weak decltype(inTargetWindow)		weakTargetWindow = inTargetWindow;
 		CocoaExtensions_RunLater((kAnimationDelay + 0.25),
-									^{ [inTargetWindow setFrame:newFrame display:YES]; });
+									^{ [weakTargetWindow setFrame:newFrame display:YES]; });
 		
 		// animate!
 		[imageWindow orderFront:nil];
-		[imageWindow setLevel:[inTargetWindow level]];
-		[[[CocoaAnimation_WindowFrameAnimator alloc]
-			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-								fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
-								delayDistribution:kMy_AnimationTimeDistributionLinear
-								effect:kMy_AnimationEffectFadeIn] autorelease];
+		imageWindow.level = inTargetWindow.level;
+		imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+												initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
+																	fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
+																	delayDistribution:kMy_AnimationTimeDistributionLinear
+																	effect:kMy_AnimationEffectFadeIn];
 	}
 }// @autoreleasepool
 }// TransitionWindowForDuplicate
@@ -226,10 +267,9 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-								autorelease];
-	NSRect		oldFrame = [imageWindow frame];
-	NSRect		newFrame = NSZeroRect;
+	CocoaAnimation_ImageWindow*		imageWindow = createImageWindowFromWindowRect(inTargetWindow, STATIC_CAST(inTargetWindow.contentView, NSView*).frame);
+	NSRect							oldFrame = imageWindow.frame;
+	NSRect							newFrame = NSZeroRect;
 	
 	
 	newFrame.origin.x = inEndLocation.origin.x;
@@ -239,12 +279,12 @@ CocoaAnimation_TransitionWindowForHide	(NSWindow*		inTargetWindow,
 	
 	// animate!
 	[imageWindow orderFront:nil];
-	[imageWindow setLevel:[inTargetWindow level]];
-	[[[CocoaAnimation_WindowFrameAnimator alloc]
-		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-							delayDistribution:kMy_AnimationTimeDistributionEaseOut
-							effect:kMy_AnimationEffectNone] autorelease];
+	imageWindow.level = inTargetWindow.level;
+	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+																fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
+																delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																effect:kMy_AnimationEffectNone];
 	
 	// hide the original window immediately; the animation on the
 	// image window can take however long it needs to complete
@@ -270,10 +310,9 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 										 CGRect			inEndLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-								autorelease];
-	NSRect		oldFrame = [imageWindow frame];
-	NSRect		newFrame = NSZeroRect;
+	CocoaAnimation_ImageWindow*		imageWindow = createImageWindowFromWindowRect(inTargetWindow, STATIC_CAST(inTargetWindow.contentView, NSView*).frame);
+	NSRect							oldFrame = imageWindow.frame;
+	NSRect							newFrame = NSZeroRect;
 	
 	
 	newFrame.origin.x = inEndLocation.origin.x;
@@ -283,15 +322,16 @@ CocoaAnimation_TransitionWindowForMove	(NSWindow*		inTargetWindow,
 	
 	// animate!
 	[imageWindow orderFront:nil];
-	[imageWindow setLevel:[inTargetWindow level]];
-	[[[CocoaAnimation_WindowFrameAnimator alloc]
-		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-							delayDistribution:kMy_AnimationTimeDistributionEaseOut
-							effect:kMy_AnimationEffectFadeIn] autorelease];
+	imageWindow.level = inTargetWindow.level;
+	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+																fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
+																delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																effect:kMy_AnimationEffectFadeIn];
 	
 	// the original window moves after a short delay
-	CocoaExtensions_RunLater(0.4, ^{ [inTargetWindow setFrame:newFrame display:YES]; });
+	__weak decltype(inTargetWindow)		weakTargetWindow = inTargetWindow;
+	CocoaExtensions_RunLater(0.4, ^{ [weakTargetWindow setFrame:newFrame display:YES]; });
 }// @autoreleasepool
 }// TransitionWindowForMove
 
@@ -319,11 +359,10 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 @autoreleasepool {
 	if ([inTargetWindow isVisible])
 	{
-		NSWindow*	imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-									autorelease];
-		NSRect		oldFrame = [imageWindow frame];
-		NSRect		newFrame = [imageWindow frame];
-		NSRect		screenFrame = [[inTargetWindow screen] frame];
+		CocoaAnimation_ImageWindow*		imageWindow = createImageWindowFromWindowRect(inTargetWindow, STATIC_CAST(inTargetWindow.contentView, NSView*).frame);
+		NSRect							oldFrame = imageWindow.frame;
+		NSRect							newFrame = imageWindow.frame;
+		NSRect							screenFrame = inTargetWindow.screen.frame;
 		
 		
 		if (inIsConfirming)
@@ -345,12 +384,12 @@ CocoaAnimation_TransitionWindowForRemove	(NSWindow*		inTargetWindow,
 		
 		// animate!
 		[imageWindow orderFront:nil];
-		[imageWindow setLevel:[inTargetWindow level]];
-		[[[CocoaAnimation_WindowFrameAnimator alloc]
-			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-								fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-								delayDistribution:kMy_AnimationTimeDistributionEaseOut
-								effect:kMy_AnimationEffectFadeOut] autorelease];
+		imageWindow.level = inTargetWindow.level;
+		imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+												initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+																	fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
+																	delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																	effect:kMy_AnimationEffectFadeOut];
 		
 		// hide the original window immediately; the animation on the
 		// image window can take however long it needs to complete
@@ -376,18 +415,18 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 												 NSWindow*		UNUSED_ARGUMENT(inRelativeToWindow))
 {
 @autoreleasepool {
-	NSRect		actualFrame = [inTargetWindow frame];
+	NSRect		actualFrame = inTargetWindow.frame;
 	BOOL		useAnimation = ((NSWidth(actualFrame) * NSHeight(actualFrame)) < 250000/* arbitrary */); // avoid if window is large
 	
 	
 	if (useAnimation)
 	{
-		float const		kAnimationDelay = 0.002f;
-		float const		kXInset = (0.18f * NSWidth(actualFrame)); // arbitrary
-		float const		kYInset = (0.18f * NSHeight(actualFrame)); // keep aspect ratio the same
-		NSRect			oldFrame = actualFrame;
-		NSRect			newFrame = actualFrame;
-		NSWindow*		imageWindow = nil;
+		float const						kAnimationDelay = 0.002f;
+		float const						kXInset = (0.18f * NSWidth(actualFrame)); // arbitrary
+		float const						kYInset = (0.18f * NSHeight(actualFrame)); // keep aspect ratio the same
+		NSRect							oldFrame = actualFrame;
+		NSRect							newFrame = actualFrame;
+		CocoaAnimation_ImageWindow*		imageWindow = nil;
 		
 		
 		// show the window offscreen so its image is defined
@@ -405,8 +444,7 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		}
 		else
 		{
-			imageWindow = [createImageWindowFromWindowRect(inTargetWindow, [STATIC_CAST(inTargetWindow.contentView, NSView*) frame])
-															autorelease];
+			imageWindow = createImageWindowFromWindowRect(inTargetWindow, STATIC_CAST(inTargetWindow.contentView, NSView*).frame);
 		}
 		
 		// start from a location that is slightly offset from the target window
@@ -417,17 +455,18 @@ CocoaAnimation_TransitionWindowForSheetOpen		(NSWindow*		inTargetWindow,
 		
 		// as a precaution, arrange to move the window to the correct
 		// location after a short delay (the animation may fail)
+		__weak decltype(inTargetWindow)		weakTargetWindow = inTargetWindow;
 		CocoaExtensions_RunLater((kAnimationDelay + 0.25),
-									^{ [inTargetWindow setFrame:newFrame display:YES]; });
+									^{ [weakTargetWindow setFrame:newFrame display:YES]; });
 		
 		// animate!
 		[imageWindow orderFront:nil];
-		[imageWindow setLevel:(1 + [inTargetWindow level])];
-		[[[CocoaAnimation_WindowFrameAnimator alloc]
-			initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
-								fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
-								delayDistribution:kMy_AnimationTimeDistributionEaseOut
-								effect:kMy_AnimationEffectFadeIn] autorelease];
+		imageWindow.level = (1 + inTargetWindow.level);
+		imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+												initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:inTargetWindow
+																	fromFrame:oldFrame toFrame:newFrame totalDelay:kAnimationDelay
+																	delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																	effect:kMy_AnimationEffectFadeIn];
 	}
 	else
 	{
@@ -457,16 +496,15 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 												 CGRect			inStartLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFromWindowRect
-								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
-															inStartLocation.size.width, inStartLocation.size.height))
-								autorelease];
-	NSRect		oldFrame = [imageWindow frame];
-	NSRect		newFrame = oldFrame;
+	CocoaAnimation_ImageWindow*		imageWindow = createImageWindowFromWindowRect
+													(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
+																				inStartLocation.size.width, inStartLocation.size.height));
+	NSRect							oldFrame = imageWindow.frame;
+	NSRect							newFrame = oldFrame;
 	
 	
 	// this effect uses a shadow
-	[imageWindow setHasShadow:YES];
+	imageWindow.hasShadow = YES;
 	
 	// make the section appear to zoom open
 	newFrame.size.width *= 4; // arbitrary
@@ -476,12 +514,12 @@ CocoaAnimation_TransitionWindowSectionForOpen	(NSWindow*		inTargetWindow,
 	
 	// animate!
 	[imageWindow orderFront:nil];
-	[imageWindow setLevel:[inTargetWindow level]];
-	[[[CocoaAnimation_WindowFrameAnimator alloc]
-		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
-							delayDistribution:kMy_AnimationTimeDistributionEaseOut
-							effect:kMy_AnimationEffectFadeOut] autorelease];
+	imageWindow.level = inTargetWindow.level;
+	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+																fromFrame:oldFrame toFrame:newFrame totalDelay:0.05
+																delayDistribution:kMy_AnimationTimeDistributionEaseOut
+																effect:kMy_AnimationEffectFadeOut];
 }// @autoreleasepool
 }// TransitionWindowSectionForOpen
 
@@ -504,16 +542,15 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 														 CGRect			inStartLocation)
 {
 @autoreleasepool {
-	NSWindow*	imageWindow = [createImageWindowFromWindowRect
-								(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
-															inStartLocation.size.width, inStartLocation.size.height))
-								autorelease];
-	NSRect		oldFrame = [imageWindow frame];
-	NSRect		newFrame = oldFrame;
+	CocoaAnimation_ImageWindow*		imageWindow = createImageWindowFromWindowRect
+													(inTargetWindow, NSMakeRect(inStartLocation.origin.x, inStartLocation.origin.y,
+																				inStartLocation.size.width, inStartLocation.size.height));
+	NSRect							oldFrame = imageWindow.frame;
+	NSRect							newFrame = oldFrame;
 	
 	
 	// this effect uses a shadow
-	[imageWindow setHasShadow:YES];
+	imageWindow.hasShadow = YES;
 	
 	// make the section appear to zoom down slightly;
 	// also make the closing frame bigger than the
@@ -530,12 +567,12 @@ CocoaAnimation_TransitionWindowSectionForSearchResult	(NSWindow*		inTargetWindow
 	
 	// animate!
 	[imageWindow orderFront:nil];
-	[imageWindow setLevel:[inTargetWindow level]];
-	[[[CocoaAnimation_WindowFrameAnimator alloc]
-		initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
-							fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
-							delayDistribution:kMy_AnimationTimeDistributionLinear
-							effect:kMy_AnimationEffectFadeIn] autorelease];
+	imageWindow.level = inTargetWindow.level;
+	imageWindow.frameAnimationManager = [[CocoaAnimation_WindowFrameAnimator alloc]
+											initWithTransition:kMy_AnimationTransitionSlide imageWindow:imageWindow finalWindow:nil
+																fromFrame:oldFrame toFrame:newFrame totalDelay:0.04
+																delayDistribution:kMy_AnimationTimeDistributionLinear
+																effect:kMy_AnimationEffectFadeIn];
 }// @autoreleasepool
 }// TransitionWindowSectionForSearchResult
 
@@ -556,17 +593,17 @@ the original window to continue to exist after this call returns.
 
 (2017.06)
 */
-NSWindow*
+CocoaAnimation_ImageWindow*
 createImageWindowFromImage	(NSWindow*	inWindow,
 							 NSImage*	inImage,
 							 NSRect		inCustomRectOrZeroRect)
 {
-	NSWindow*	result = nil;
-	NSRect		windowFrame = [inWindow frame];
-	NSRect		contentFrame = [inWindow contentRectForFrameRect:windowFrame];
-	NSRect		newFrame = (NSIsEmptyRect(inCustomRectOrZeroRect)
-							? windowFrame
-							: NSOffsetRect(inCustomRectOrZeroRect, contentFrame.origin.x, contentFrame.origin.y));
+	CocoaAnimation_ImageWindow*		result = nil;
+	NSRect							windowFrame = inWindow.frame;
+	NSRect							contentFrame = [inWindow contentRectForFrameRect:windowFrame];
+	NSRect							newFrame = (NSIsEmptyRect(inCustomRectOrZeroRect)
+												? windowFrame
+												: NSOffsetRect(inCustomRectOrZeroRect, contentFrame.origin.x, contentFrame.origin.y));
 	
 	
 	// guard against a possible exception if the given rectangle is bogus
@@ -579,9 +616,12 @@ createImageWindowFromImage	(NSWindow*	inWindow,
 	}
 	
 	// construct a fake window to display the same thing
-	result = [[NSWindow alloc] initWithContentRect:newFrame styleMask:NSWindowStyleMaskBorderless
-													backing:NSBackingStoreBuffered defer:NO];
-	[result setOpaque:NO];
+	result = [[CocoaAnimation_ImageWindow alloc]
+				initWithContentRect:newFrame
+									styleMask:NSWindowStyleMaskBorderless
+									backing:NSBackingStoreBuffered
+									defer:NO];
+	result.opaque = NO;
 	result.backgroundColor = [NSColor clearColor];
 	
 	// capture the image of the original window (a regular image view is used
@@ -595,10 +635,9 @@ createImageWindowFromImage	(NSWindow*	inWindow,
 		NSImageView*	imageView = [[NSImageView alloc] initWithFrame:zeroOriginBounds];
 		
 		
-		[imageView setImageScaling:NSImageScaleAxesIndependently];
-		[imageView setImage:inImage];
-		[result setContentView:imageView];
-		[imageView release], imageView = nil;
+		imageView.imageScaling = NSImageScaleAxesIndependently;
+		imageView.image = inImage;
+		result.contentView = imageView;
 	}
 	
 	return result;
@@ -610,7 +649,7 @@ Creates a new, borderless window whose content view is an
 image view that renders the specified portion of the given
 window.   The rectangle is a section of the content view’s
 bounds (that is, the unscaled region independent of any
-chosen frame), so use "[[inWindow contentView] frame]" to
+chosen frame), so use "inWindow.contentView.frame" to
 capture the entire window.
 
 This is very useful as a basis for animations, because it
@@ -620,27 +659,24 @@ tends to be much more lightweight.
 
 (1.8)
 */
-NSWindow*
+CocoaAnimation_ImageWindow*
 createImageWindowFromWindowRect		(NSWindow*		inWindow,
 									 NSRect			inContentViewSection)
 {
-	NSWindow*	result = nil;
-	NSView*		originalContentView = [inWindow contentView];
+	CocoaAnimation_ImageWindow*		result = nil;
+	NSView*							originalContentView = inWindow.contentView;
 	
 	
 	// capture the image of the original window
 	@autoreleasepool
 	{
-		NSBitmapImageRep*	imageRep = nil;
-		NSImage*			windowImage = [[[NSImage alloc] init] autorelease];
+		NSBitmapImageRep*	imageRep = [originalContentView bitmapImageRepForCachingDisplayInRect:inContentViewSection];
+		NSImage*			windowImage = [[NSImage alloc] init];
 		
 		
 		// capture the contents of the original window
-		[originalContentView lockFocus];
-		imageRep = [[NSBitmapImageRep alloc] initWithFocusedViewRect:inContentViewSection];
-		[originalContentView unlockFocus];
+		[originalContentView cacheDisplayInRect:inContentViewSection toBitmapImageRep:imageRep];
 		[windowImage addRepresentation:imageRep];
-		[imageRep release], imageRep = nil;
 		
 		// create a window to display this image
 		result = createImageWindowFromImage(inWindow, windowImage, inContentViewSection);
@@ -653,6 +689,12 @@ createImageWindowFromWindowRect		(NSWindow*		inWindow,
 
 
 #pragma mark -
+@implementation CocoaAnimation_ImageWindow //{
+
+@end //}
+
+
+#pragma mark -
 @implementation CocoaAnimation_WindowFrameAnimator //{
 
 
@@ -660,30 +702,19 @@ createImageWindowFromWindowRect		(NSWindow*		inWindow,
 
 
 /*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2016.09)
-*/
-- (instancetype)
-init
-{
-	assert(false && "invalid way to initialize derived class");
-	return [self initWithTransition:kMy_AnimationTransitionSlide imageWindow:nil
-									finalWindow:nil fromFrame:NSZeroRect toFrame:NSZeroRect
-									totalDelay:0 delayDistribution:kMy_AnimationTimeDistributionLinear
-									effect:kMy_AnimationEffectNone simplified:NO];
-}// init
-
-
-/*!
 Designated initializer.
 
-(1.8)
+The given CocoaAnimation_ImageWindow is held only by weak
+reference.  The lifetime of the animation is expected to
+match the lifetime of the image window, which can be done
+by setting the image window’s "frameAnimationManager" to
+this CocoaAnimation_WindowFrameAnimator instance.
+
+(2021.01)
 */
 - (instancetype)
 initWithTransition:(My_AnimationTransition)			aTransition
-imageWindow:(NSWindow*)								aBorderlessWindow
+imageWindow:(CocoaAnimation_ImageWindow*)			aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow
 fromFrame:(NSRect)									sourceRect
 toFrame:(NSRect)									targetRect
@@ -707,33 +738,33 @@ simplified:(BOOL)									isSimplified
 		// is going on (in which case automatic simplifications are made)
 		++gAnimationsInProgress;
 		
-		self->borderlessWindow = [aBorderlessWindow retain];
-		self->actualWindow = [theActualWindow retain];
-		self->originalFrame = sourceRect;
-		self->targetFrame = targetRect;
-		self->frameCount = (reduceFrameRate) ? 5 : 10;
+		_borderlessWindow = aBorderlessWindow;
+		_actualWindow = theActualWindow;
+		_originalFrame = sourceRect;
+		_targetFrame = targetRect;
+		_frameCount = (reduceFrameRate) ? 5 : 10;
 		if (baseDuration < 0.05/* arbitrary */)
 		{
 			// timers are not precise and over-delays are possible;
 			// arbitrarily cut frames if the total duration is
 			// intended to be quite fast (otherwise the animation
 			// could lag noticeably)
-			self->frameCount -= ((reduceFrameRate) ? 2 : 6); // arbitrary reducation
+			_frameCount -= ((reduceFrameRate) ? 2 : 6); // arbitrary reducation
 		}
-		self->currentFrame = 0;
-		self->animationDone = NO;
-		self->frameDelays = new NSTimeInterval[kCurveLength];
+		_currentStep = 0;
+		_animationDone = NO;
+		_frameDelays = new NSTimeInterval[kCurveLength];
 		if ((kMy_AnimationEffectFadeIn == anEffect) ||
 			(kMy_AnimationEffectFadeOut == anEffect))
 		{
-			self->frameAlphas = new float[kCurveLength];
+			_frameAlphas = new float[kCurveLength];
 		}
 		else
 		{
-			self->frameAlphas = nullptr;
+			_frameAlphas = nullptr;
 		}
-		self->frameOffsetsH = new float[kCurveLength];
-		self->frameOffsetsV = new float[kCurveLength];
+		_frameOffsetsH = new float[kCurveLength];
+		_frameOffsetsV = new float[kCurveLength];
 		
 		// start by configuring offsets in terms of a UNIT SQUARE,
 		// which means that the sum of all frame offsets should
@@ -748,8 +779,8 @@ simplified:(BOOL)									isSimplified
 			// move by even amounts directly toward the destination
 			for (size_t i = 0; i < kCurveLength; ++i)
 			{
-				self->frameOffsetsH[i] = i;
-				self->frameOffsetsV[i] = i;
+				_frameOffsetsH[i] = i;
+				_frameOffsetsV[i] = i;
 			}
 			break;
 		}
@@ -762,14 +793,14 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.3f;
-				self->frameAlphas[i++] = 0.4f;
-				self->frameAlphas[i++] = 0.5f;
-				self->frameAlphas[i++] = 0.6f;
-				self->frameAlphas[i++] = 0.7f;
-				self->frameAlphas[i++] = 0.8f;
-				self->frameAlphas[i++] = 0.9f;
-				self->frameAlphas[i++] = 0.95f;
+				_frameAlphas[i++] = 0.3f;
+				_frameAlphas[i++] = 0.4f;
+				_frameAlphas[i++] = 0.5f;
+				_frameAlphas[i++] = 0.6f;
+				_frameAlphas[i++] = 0.7f;
+				_frameAlphas[i++] = 0.8f;
+				_frameAlphas[i++] = 0.9f;
+				_frameAlphas[i++] = 0.95f;
 				assert(kCurveLength == i);
 			}
 			break;
@@ -779,14 +810,14 @@ simplified:(BOOL)									isSimplified
 				size_t		i = 0;
 				
 				
-				self->frameAlphas[i++] = 0.8f;
-				self->frameAlphas[i++] = 0.55f;
-				self->frameAlphas[i++] = 0.45f;
-				self->frameAlphas[i++] = 0.35f;
-				self->frameAlphas[i++] = 0.25f;
-				self->frameAlphas[i++] = 0.2f;
-				self->frameAlphas[i++] = 0.15f;
-				self->frameAlphas[i++] = 0.1f;
+				_frameAlphas[i++] = 0.8f;
+				_frameAlphas[i++] = 0.55f;
+				_frameAlphas[i++] = 0.45f;
+				_frameAlphas[i++] = 0.35f;
+				_frameAlphas[i++] = 0.25f;
+				_frameAlphas[i++] = 0.2f;
+				_frameAlphas[i++] = 0.15f;
+				_frameAlphas[i++] = 0.1f;
 				assert(kCurveLength == i);
 			}
 			break;
@@ -814,19 +845,19 @@ simplified:(BOOL)									isSimplified
 				float		scaleTotal = 0.0;
 				
 				
-				self->frameDelays[i] = 0.8; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 0.9; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 0.9; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 1.0; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 1.0; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 1.1; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 1.1; scaleTotal += self->frameDelays[i]; ++i;
-				self->frameDelays[i] = 1.2; scaleTotal += self->frameDelays[i]; ++i;
+				_frameDelays[i] = 0.8; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 0.9; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 0.9; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 1.0; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 1.0; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 1.1; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 1.1; scaleTotal += _frameDelays[i]; ++i;
+				_frameDelays[i] = 1.2; scaleTotal += _frameDelays[i]; ++i;
 				assert(kCurveLength == i);
 				for (i = 0; i < kCurveLength; ++i)
 				{
 					// scale the unit curve accordingly
-					self->frameDelays[i] *= (baseDuration / scaleTotal);
+					_frameDelays[i] *= (baseDuration / scaleTotal);
 				}
 			}
 			else
@@ -837,22 +868,22 @@ simplified:(BOOL)									isSimplified
 				for (i = 0; i < kCurveLength; ++i)
 				{
 					// linear
-					self->frameDelays[i] = kPerUnitLinearDelay;
+					_frameDelays[i] = kPerUnitLinearDelay;
 				}
 			}
 		}
 		
 		// calculate the size of each unit of the animation
-		self->frameUnitH = (self->targetFrame.origin.x - self->originalFrame.origin.x) / kCurveLength;
-		self->frameUnitV = (self->targetFrame.origin.y - self->originalFrame.origin.y) / kCurveLength;
-		self->frameDeltaSizeH = (self->targetFrame.size.width - self->originalFrame.size.width) / kCurveLength;
-		self->frameDeltaSizeV = (self->targetFrame.size.height - self->originalFrame.size.height) / kCurveLength;
+		_frameUnitH = (_targetFrame.origin.x - _originalFrame.origin.x) / kCurveLength;
+		_frameUnitV = (_targetFrame.origin.y - _originalFrame.origin.y) / kCurveLength;
+		_frameDeltaSizeH = (_targetFrame.size.width - _originalFrame.size.width) / kCurveLength;
+		_frameDeltaSizeV = (_targetFrame.size.height - _originalFrame.size.height) / kCurveLength;
 		
 		// finally, scale the offsets based on these units
 		for (size_t i = 0; i < kCurveLength; ++i)
 		{
-			self->frameOffsetsH[i] *= self->frameUnitH;
-			self->frameOffsetsV[i] *= self->frameUnitV;
+			_frameOffsetsH[i] *= _frameUnitH;
+			_frameOffsetsV[i] *= _frameUnitV;
 		}
 		
 		// begin animation
@@ -862,12 +893,12 @@ simplified:(BOOL)									isSimplified
 		// after a short period (otherwise it would leave a
 		// floating image on the screen that the user cannot
 		// remove)
-		[self->borderlessWindow retain]; // retain in case block runs after final release
+		__weak decltype(self)	weakSelf = self;
+		NSWindow* __strong		borderlessWindow = self.borderlessWindow;
 		CocoaExtensions_RunLater(2.0/* seconds; arbitrary */,
 									^{
-										self->animationDone = YES;
-										[self->borderlessWindow orderOut:nil];
-										[self->borderlessWindow release]; // balance retain above
+										weakSelf.animationDone = YES;
+										[borderlessWindow orderOut:nil];
 									});
 	}
 	return self;
@@ -882,7 +913,7 @@ animation (on older machines).
 */
 - (instancetype)
 initWithTransition:(My_AnimationTransition)			aTransition
-imageWindow:(NSWindow*)								aBorderlessWindow
+imageWindow:(CocoaAnimation_ImageWindow*)			aBorderlessWindow
 finalWindow:(NSWindow*)								theActualWindow
 fromFrame:(NSRect)									sourceRect
 toFrame:(NSRect)									targetRect
@@ -916,17 +947,31 @@ dealloc
 	}
 	
 	// if the animation is released too soon, force the correct window location
-	[self->borderlessWindow release];
-	[self->actualWindow release];
-	delete [] self->frameDelays;
-	delete [] self->frameOffsetsH;
-	delete [] self->frameOffsetsV;
-	if (nullptr != self->frameAlphas)
-	{
-		delete [] self->frameAlphas;
-	}
-	[super dealloc];
+	delete [] _frameDelays;
+	delete [] _frameOffsetsH;
+	delete [] _frameOffsetsV;
+	delete [] _frameAlphas;
 }// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2016.09)
+*/
+- (instancetype)
+init
+{
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithTransition:kMy_AnimationTransitionSlide imageWindow:nil
+									finalWindow:nil fromFrame:NSZeroRect toFrame:NSZeroRect
+									totalDelay:0 delayDistribution:kMy_AnimationTimeDistributionLinear
+									effect:kMy_AnimationEffectNone simplified:NO];
+}// init
 
 
 #pragma mark New Methods
@@ -943,7 +988,7 @@ this again after a short delay.
 - (void)
 nextAnimationStep
 {
-	NSRect	newFrame = self->originalFrame;
+	NSRect	newFrame = self.originalFrame;
 	
 	
 	// the offsets assume a unit square and scale according to the actual
@@ -951,14 +996,14 @@ nextAnimationStep
 	// offset of 1 when there are 5 frames means “20% of the distance from
 	// the beginning”, 2 means 40%, etc. so offsets should generally be
 	// well represented across the spectrum from 0 to the frame count
-	newFrame.origin.x += self->frameOffsetsH[self->currentFrame];
-	newFrame.origin.y += self->frameOffsetsV[self->currentFrame];
-	if (0 != self->frameDeltaSizeH)
+	newFrame.origin.x += self.frameOffsetsH[self.currentStep];
+	newFrame.origin.y += self.frameOffsetsV[self.currentStep];
+	if (0 != self.frameDeltaSizeH)
 	{
 		float	powerOfTwo = 0.0;
 		
 		
-		newFrame.size.width += (self->currentFrame * self->frameDeltaSizeH);
+		newFrame.size.width += (self.currentStep * self.frameDeltaSizeH);
 		
 		// if the new width is arbitrarily close to a power of 2, it
 		// is converted into an exact power of 2 so that optimizations
@@ -969,12 +1014,12 @@ nextAnimationStep
 			newFrame.size.width = powerOfTwo;
 		}
 	}
-	if (0 != self->frameDeltaSizeV)
+	if (0 != self.frameDeltaSizeV)
 	{
 		float	powerOfTwo = 0.0;
 		
 		
-		newFrame.size.height += (self->currentFrame * self->frameDeltaSizeV);
+		newFrame.size.height += (self.currentStep * self.frameDeltaSizeV);
 		
 		// if the new height is arbitrarily close to a power of 2, it
 		// is converted into an exact power of 2 so that optimizations
@@ -985,37 +1030,42 @@ nextAnimationStep
 			newFrame.size.height = powerOfTwo;
 		}
 	}
-	[self->borderlessWindow setFrame:newFrame display:YES];
+	[self.borderlessWindow setFrame:newFrame display:YES];
 	
 	// adjust alpha channel, if necessary
-	if (nullptr != self->frameAlphas)
+	if (nullptr != self.frameAlphas)
 	{
-		[self->borderlessWindow setAlphaValue:self->frameAlphas[self->currentFrame]];
+		[self.borderlessWindow setAlphaValue:self.frameAlphas[self.currentStep]];
 	}
 	
 	// step to next frame
-	self->currentFrame += (kCurveLength / self->frameCount);
-	if ((NO == self->animationDone) && (self->currentFrame < kCurveLength))
+	self.currentStep += (kCurveLength / self.frameCount);
+	if ((NO == self.animationDone) && (self.currentStep < kCurveLength))
 	{
-		CocoaExtensions_RunLater(self->frameDelays[self->currentFrame],
-									^{ [self nextAnimationStep]; });
+		// this is intentionally a strong reference to prevent the animation
+		// from being incomplete; it is retained (at least) by the delayed block
+		decltype(self)	blockSelf = self;
+		
+		
+		CocoaExtensions_RunLater(self.frameDelays[self.currentStep],
+									^{ [blockSelf nextAnimationStep]; });
 	}
 	else
 	{
-		self->animationDone = YES;
+		self.animationDone = YES;
 		
 		// force final frame to be exact
-		[self->borderlessWindow setFrame:self->targetFrame display:YES];
+		[self.borderlessWindow setFrame:self.targetFrame display:YES];
 		
 		// if a real window is being displayed, show it at this point
-		if (nil != self->actualWindow)
+		if (nil != self.actualWindow)
 		{
-			[self->actualWindow setFrame:self->targetFrame display:YES];
-			[self->actualWindow orderFront:nil];
+			[self.actualWindow setFrame:self.targetFrame display:YES];
+			[self.actualWindow orderFront:nil];
 		}
 		
 		// hide the fake window
-		[self->borderlessWindow orderOut:nil];
+		[self.borderlessWindow orderOut:nil];
 	}
 }// nextAnimationStep
 
