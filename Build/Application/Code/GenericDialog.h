@@ -39,8 +39,10 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 #ifdef __OBJC__
+@class NSObject;
 @class NSView;
 #else
+class NSObject;
 class NSView;
 #endif
 
@@ -184,6 +186,9 @@ void
 void* _Nullable
 	GenericDialog_ReturnImplementation			(GenericDialog_Ref _Nonnull			inDialog);
 
+NSObject* _Nullable
+	GenericDialog_ReturnImplementationNSObject	(GenericDialog_Ref _Nonnull			inDialog);
+
 GenericDialog_DialogEffect
 	GenericDialog_ReturnItemDialogEffect		(GenericDialog_Ref _Nonnull			inDialog,
 												 GenericDialog_ItemID				inItemID);
@@ -198,6 +203,10 @@ void
 void
 	GenericDialog_SetImplementation				(GenericDialog_Ref _Nonnull			inDialog,
 												 void* _Nullable					inDataPtr);
+
+void
+	GenericDialog_SetImplementationNSObject		(GenericDialog_Ref _Nonnull			inDialog,
+												 NSObject* _Nullable				inDataPtr);
 
 void
 	GenericDialog_SetItemDialogEffect			(GenericDialog_Ref _Nonnull			inDialog,

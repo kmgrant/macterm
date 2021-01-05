@@ -289,17 +289,14 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalView_BackgroundView : NSControl //{
-{
-@private
-	id< TerminalView_ClickDelegate >	_clickDelegate;
-	size_t								_colorIndex;
-	NSColor*							_exactColor;
-	void*								_internalViewPtr;
-}
 
 // accessors
+	//! Optional object to notify when a mouse event occurs
+	//! on this background.
 	@property (assign) id< TerminalView_ClickDelegate >
 	clickDelegate;
+	//! Optional override color, which takes precedence over
+	//! any other color mapping such as "colorIndex".
 	@property (strong) NSColor*
 	exactColor;
 
@@ -377,19 +374,17 @@ changes to an interface declared in a ".mm" file.
 													NSDraggingSource,
 													NSStandardKeyBindingResponding,
 													NSTextInputClient > //{
-{
-@private
-	BOOL								_showDragHighlight;
-	NSUInteger							_modifierFlagsForCursor;
-	void*								_internalViewPtr;
-	id< TerminalView_TextInputClient >	_textInputDelegate;
-}
 
 // new methods
 	- (TerminalViewRef)
 	terminalViewRef;
 
 // accessors
+	//! An object that is used to handle NSTextInputClient requests
+	//! indirectly, through a simplified API that is targeted at
+	//! sessions.  Any keystrokes or other user inputs received by
+	//! the terminal view itself will be interpreted and forwarded
+	//! to this delegate through an appropriate method call.
 	@property (assign) id< TerminalView_TextInputClient >
 	textInputDelegate;
 
@@ -403,19 +398,6 @@ be adopted, where the view controller might directly
 perform more view tasks).
 */
 @interface TerminalView_Object : CoreUI_LayoutView < TerminalView_ClickDelegate > //{
-{
-@private
-	void*								_internalViewPtr;
-	TerminalView_ContentView*			_terminalContentView;
-	TerminalView_BackgroundView*		_terminalMarginViewBottom;
-	TerminalView_BackgroundView*		_terminalMarginViewLeft;
-	TerminalView_BackgroundView*		_terminalMarginViewRight;
-	TerminalView_BackgroundView*		_terminalMarginViewTop;
-	TerminalView_BackgroundView*		_terminalPaddingViewBottom;
-	TerminalView_BackgroundView*		_terminalPaddingViewLeft;
-	TerminalView_BackgroundView*		_terminalPaddingViewRight;
-	TerminalView_BackgroundView*		_terminalPaddingViewTop;
-}
 
 // initializers
 	- (instancetype)
@@ -424,22 +406,61 @@ perform more view tasks).
 	initWithFrame:(NSRect)_;
 
 // accessors
+	//! The view that renders text flush to its boundaries.  (Any
+	//! extra space around the terminal is provided by other views.)
 	@property (strong) TerminalView_ContentView*
 	terminalContentView;
+	//! A primarily-horizontal margin along the bottom terminal edge.
+	//!
+	//! Margin views create space between terminal views and any
+	//! adjacent views.  Margins can be hidden to allow text to be
+	//! closer to adjacent views (useful in splits, for example).
+	//! The ends of the top and bottom margins extend horizontally to
+	//! cover the same horizontal space as any vertical margin areas.
+	//! If two terminal views are adjacent with no other views in
+	//! between (such as a split bar), their margin regions overlap
+	//! instead of creating extra space.  Padding spaces are not
+	//! shared.   Margins are rendered with the “matte” color.
 	@property (strong) TerminalView_BackgroundView*
 	terminalMarginViewBottom;
+	//! A primarily-vertical margin along the left terminal edge.
+	//! (For more comments on margin views, see the comments for
+	//! "terminalMarginViewBottom".)
 	@property (strong) TerminalView_BackgroundView*
 	terminalMarginViewLeft;
+	//! A primarily-vertical margin along the right terminal edge.
+	//! (For more comments on margin views, see the comments for
+	//! "terminalMarginViewBottom".)
 	@property (strong) TerminalView_BackgroundView*
 	terminalMarginViewRight;
+	//! A primarily-horizontal margin along the top terminal edge.
+	//! (For more comments on margin views, see the comments for
+	//! "terminalMarginViewBottom".)
 	@property (strong) TerminalView_BackgroundView*
 	terminalMarginViewTop;
+	//! A primarily-horizontal padding along the bottom terminal edge.
+	//!
+	//! Padding views create space between the terminal text and the
+	//! margin regions.  Padding can be hidden to allow text to be
+	//! closer to adjacent views (useful in splits, for example).
+	//! The ends of the top and bottom pads extend horizontally to
+	//! cover the same horizontal space as any vertical padding areas. 
+	//! Padding has the same background color as normal terminal text.
 	@property (strong) TerminalView_BackgroundView*
 	terminalPaddingViewBottom;
+	//! A primarily-vertical padding along the left terminal edge.
+	//! (For more comments on padding views, see the comments for
+	//! "terminalPaddingViewBottom".)
 	@property (strong) TerminalView_BackgroundView*
 	terminalPaddingViewLeft;
+	//! A primarily-vertical padding along the right terminal edge.
+	//! (For more comments on padding views, see the comments for
+	//! "terminalPaddingViewBottom".)
 	@property (strong) TerminalView_BackgroundView*
 	terminalPaddingViewRight;
+	//! A primarily-horizontal padding along the top terminal edge.
+	//! (For more comments on padding views, see the comments for
+	//! "terminalPaddingViewBottom".)
 	@property (strong) TerminalView_BackgroundView*
 	terminalPaddingViewTop;
 
@@ -460,8 +481,6 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface TerminalView_Controller : NSViewController < CoreUI_ViewLayoutDelegate > //{
-{
-}
 
 // initializers
 	- (instancetype)
@@ -479,10 +498,6 @@ Tweaks a standard scroll bar to provide extra features
 such as tick marks to show search results.
 */
 @interface TerminalView_ScrollBar : NSScroller //{
-{
-@private
-	void*	_internalViewPtr;
-}
 
 @end //}
 
@@ -494,11 +509,6 @@ adopted, where the view controller might directly perform
 more view tasks).
 */
 @interface TerminalView_ScrollableRootView : CoreUI_LayoutView //@{
-{
-@private
-	void*						_internalViewPtr;
-	TerminalView_ScrollBar*		_scrollBarV;
-}
 
 // initializers
 	- (instancetype)
@@ -507,6 +517,7 @@ more view tasks).
 	initWithFrame:(NSRect)_;
 
 // accessors
+	//! The vertical scroll bar.
 	@property (strong) TerminalView_ScrollBar*
 	scrollBarV;
 
@@ -519,11 +530,6 @@ zero or more terminal view controllers.  This is also
 responsible for arranging a scroll bar next to its view.
 */
 @interface TerminalView_ScrollableRootVC : NSViewController < CoreUI_ViewLayoutDelegate > //{
-{
-@private
-	TerminalView_ScrollBar*		_scrollBarV;
-	NSMutableArray*				_terminalViewControllers;
-}
 
 // initializers
 	- (instancetype)

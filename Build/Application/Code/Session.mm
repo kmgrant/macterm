@@ -194,14 +194,14 @@ struct My_Session
 	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
 	CFAbsoluteTime				watchTriggerAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the last watch of any kind went off
-	Session_TextInput*			textInputDelegate;			// for Cocoa; given text input to a view, send appropriate action or text to session
+	Session_TextInput* __strong	textInputDelegate;			// for Cocoa; given text input to a view, send appropriate action or text to session
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerWrap	windowValidationListener;	// responds after a window is created, and just before it dies
 	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
 	ListenerModel_ListenerWrap	vectorWindowListener;		// responds when vector graphics window states change
 	ListenerModel_ListenerWrap	preferencesListener;		// responds when certain preference values are initialized or changed
-	NSTimer*					longLifeTimer;				// called when a session has been open 15 seconds
-	NSTimer*					respawnSessionTimer;		// called when a session should be respawned
+	NSTimer* __strong			longLifeTimer;				// called when a session has been open 15 seconds; retain in order to invalidate at destruction time
+	NSTimer* __strong			respawnSessionTimer;		// called when a session should be respawned; retain in order to invalidate at destruction time
 	MemoryBlocks_WeakPairWrap
 	< SessionRef,
 		GenericDialog_Ref >		currentDialog;				// weak reference while a sheet is still open so a 2nd sheet is not displayed
@@ -224,7 +224,7 @@ struct My_Session
 	std::unique_ptr< UInt8[] >	readBufferPtr;				// buffer space for processing data
 	CFStringEncoding			writeEncoding;				// the character set that text (data) sent to a session should be using
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
-	NSTimer*					inactivityWatchTimer;		// called if data has not arrived after awhile
+	NSTimer* __strong			inactivityWatchTimer;		// called if data has not arrived after awhile; retain in order to invalidate at destruction time
 	Preferences_ContextWrap		recentSheetContext;			// defined temporarily while a Preferences-dependent sheet (such as key sequences) is up
 	My_SessionSheetType			sheetType;					// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
 	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
@@ -812,7 +812,7 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 		
 		dialog = GenericDialog_Wrap(GenericDialog_New(Session_ReturnActiveNSWindow(inRef).contentView, embeddedPanel, temporaryContext),
 									GenericDialog_Wrap::kAlreadyRetained);
-		[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+		embeddedPanel = nil; // panel is retained by the call above
 		GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 		GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
 											^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
@@ -1148,7 +1148,7 @@ Session_DisplayWindowRenameUI	(SessionRef		inRef)
 										if (kSession_ResultOK != Session_GetWindowUserDefinedTitle(inRef, result))
 										{
 											// failed; return copy of empty string
-											result = BRIDGE_CAST([@"" retain], CFStringRef);
+											result = BRIDGE_CAST(@"", CFStringRef);
 										}
 										
 										return result; // return-from-block
@@ -4953,7 +4953,7 @@ readBufferSizeInUse(0),
 readBufferPtr(std::make_unique<UInt8[]>(this->readBufferSizeMaximum)),
 writeEncoding(kCFStringEncodingUTF8), // initially...
 activeWatch(kSession_WatchNothing),
-inactivityWatchTimer(nil),
+inactivityWatchTimer(nil), // set later
 recentSheetContext(),
 sheetType(kMy_SessionSheetTypeNone),
 renameDialog(nullptr),
@@ -5014,7 +5014,6 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 			}
 		}
 	}];
-	[this->longLifeTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 	
 	// create a callback for preferences, then listen for certain preferences
 	// (this will also initialize the preferences cache values)
@@ -5088,19 +5087,16 @@ My_Session::
 	if (nil != this->longLifeTimer)
 	{
 		[this->longLifeTimer invalidate];
-		[this->longLifeTimer release];
 		this->longLifeTimer = nil;
 	}
 	if (nil != this->respawnSessionTimer)
 	{
 		[this->respawnSessionTimer invalidate];
-		[this->respawnSessionTimer release];
 		this->respawnSessionTimer = nil;
 	}
 	if (nil != this->inactivityWatchTimer)
 	{
 		[this->inactivityWatchTimer invalidate];
-		[this->inactivityWatchTimer release];
 		this->inactivityWatchTimer = nil;
 	}
 	
@@ -5152,7 +5148,7 @@ My_Session::
 	
 	if (nil != textInputDelegate)
 	{
-		[textInputDelegate release]; textInputDelegate = nil;
+		textInputDelegate = nil;
 	}
 }// My_Session destructor
 
@@ -6714,7 +6710,6 @@ terminationWarningClose		(SessionRef&	inoutSessionRef,
 				if (nil != ptr->respawnSessionTimer)
 				{
 					[ptr->respawnSessionTimer invalidate];
-					[ptr->respawnSessionTimer release];
 					ptr->respawnSessionTimer = nil;
 				}
 				ptr->respawnSessionTimer = [NSTimer scheduledTimerWithTimeInterval:(200 / 1000.0/* milliseconds per second */)/* in seconds */
@@ -6738,7 +6733,6 @@ terminationWarningClose		(SessionRef&	inoutSessionRef,
 					}
 				}];
 				//NSLog(@"schedule respawn timer %@", ptr->respawnSessionTimer);
-				[ptr->respawnSessionTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 			}
 		}
 	}
@@ -7040,14 +7034,12 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 			if (nil != inPtr->inactivityWatchTimer)
 			{
 				[inPtr->inactivityWatchTimer invalidate];
-				[inPtr->inactivityWatchTimer release];
 				inPtr->inactivityWatchTimer = nil;
 			}
 			inPtr->inactivityWatchTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeBeforeInactive/* in seconds */
 																					repeats:NO
 																					block:timerRunBlock];
 			//NSLog(@"schedule keep-alive watch %@", inPtr->inactivityWatchTimer);
-			[inPtr->inactivityWatchTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 		}
 	}
 	else if (kSession_WatchForInactivity == inWatchType)
@@ -7074,14 +7066,12 @@ watchTimerResetForSession	(My_SessionPtr	inPtr,
 			if (nil != inPtr->inactivityWatchTimer)
 			{
 				[inPtr->inactivityWatchTimer invalidate];
-				[inPtr->inactivityWatchTimer release];
 				inPtr->inactivityWatchTimer = nil;
 			}
 			inPtr->inactivityWatchTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeBeforeInactive/* in seconds */
 																					repeats:NO
 																					block:timerRunBlock];
 			//NSLog(@"schedule inactivity watch %@", inPtr->inactivityWatchTimer);
-			[inPtr->inactivityWatchTimer retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 		}
 	}
 }// watchTimerResetForSession

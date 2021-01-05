@@ -340,15 +340,14 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (nullptr != terminalWindow)
 			{
-				InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-				NSImage*				iconImage = nil;
+				InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
+				NSImage* __autoreleasing	iconImage = nil;
 				
 				
 				isObscured = TerminalWindow_IsObscured(terminalWindow);
 				if (Session_GetStateIconImage(session, iconImage).ok())
 				{
 					InfoWindow_SessionRow*	rowData = [controller infoForSession:session];
-					BOOL					releaseImage = NO;
 					
 					
 					if (isObscured)
@@ -364,14 +363,9 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 												operation:NSCompositingOperationCopy fraction:0.5/* alpha */];
 						[dimmedImage unlockFocus];
 						iconImage = dimmedImage;
-						releaseImage = YES;
 					}
 					[rowData setObject:iconImage forKey:kMyInfoColumnStatus];
 					refreshDisplay();
-					if (releaseImage)
-					{
-						[iconImage release];
-					}
 				}
 			}
 		}
@@ -447,8 +441,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			case kSession_StateBrandNew:
 				// change appropriate list item’s contents
 				{
-					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-					NSImage*				iconImage = nil;
+					InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
+					NSImage* __autoreleasing	iconImage = nil;
 					
 					
 					if (Session_GetStateIconImage(session, iconImage).ok())
@@ -468,19 +462,19 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			case kSession_StateActiveUnstable:
 				{
-					CFStringRef				titleCFString = nullptr;
-					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-					InfoWindow_SessionRow*	newInfo = [[InfoWindow_SessionRow alloc]
-														initWithSession:session
-																		andActivationTime:Session_TimeOfActivation
-																							(session)];
-					NSImage*				iconImage = nil;
-					CFLocaleRef				userLocale = CFLocaleCopyCurrent();
-					CFDateFormatterRef		dateFormatter = CFDateFormatterCreate
-															(kCFAllocatorDefault, userLocale,
-																kCFDateFormatterNoStyle/* date style */,
-																kCFDateFormatterLongStyle/* time style */);
-					Boolean					setDateOK = false;
+					CFStringRef					titleCFString = nullptr;
+					InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
+					InfoWindow_SessionRow*		newInfo = [[InfoWindow_SessionRow alloc]
+															initWithSession:session
+																			andActivationTime:Session_TimeOfActivation
+																								(session)];
+					NSImage* __autoreleasing	iconImage = nil;
+					CFLocaleRef					userLocale = CFLocaleCopyCurrent();
+					CFDateFormatterRef			dateFormatter = CFDateFormatterCreate
+																(kCFAllocatorDefault, userLocale,
+																	kCFDateFormatterNoStyle/* date style */,
+																	kCFDateFormatterLongStyle/* time style */);
+					Boolean						setDateOK = false;
 					
 					
 					CFRelease(userLocale), userLocale = nullptr;
@@ -526,15 +520,14 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					[controller removeSession:session];
 					[controller->dataArray addObject:newInfo];
 					[controller->infoTable reloadData];
-					[newInfo release];
 				}
 				break;
 			
 			case kSession_StateActiveStable:
 				// change appropriate list item’s contents
 				{
-					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-					NSImage*				iconImage = nil;
+					InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
+					NSImage* __autoreleasing	iconImage = nil;
 					
 					
 					if (Session_GetStateIconImage(session, iconImage).ok())
@@ -551,8 +544,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			case kSession_StateDead:
 				// change appropriate list item’s contents
 				{
-					InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-					NSImage*				iconImage = nil;
+					InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
+					NSImage* __autoreleasing	iconImage = nil;
 					
 					
 					if (Session_GetStateIconImage(session, iconImage).ok())
@@ -587,9 +580,9 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeStateAttributes:
 		// change appropriate list item’s contents
 		{
-			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-			NSImage*				iconImage = nil;
+			SessionRef					session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
+			NSImage* __autoreleasing	iconImage = nil;
 			
 			
 			if (Session_GetStateIconImage(session, iconImage).ok())
@@ -638,19 +631,6 @@ andActivationTime:(CFAbsoluteTime)	aTimeInterval
 	}
 	return self;
 }// initWithSession:andActivationTime:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[dataByKey release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -815,20 +795,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[_touchBarController release];
-	[dataArray release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark NSResponder
@@ -1045,23 +1011,23 @@ willBeInsertedIntoToolbar:(BOOL)	flag
 	// TEMPORARY - need to create all custom items
 	if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionDefaultFavorite])
 	{
-		result = [[[TerminalToolbar_ItemNewSessionDefaultFavorite alloc] init] autorelease];
+		result = [[TerminalToolbar_ItemNewSessionDefaultFavorite alloc] init];
 	}
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionLogInShell])
 	{
-		result = [[[TerminalToolbar_ItemNewSessionLogInShell alloc] init] autorelease];
+		result = [[TerminalToolbar_ItemNewSessionLogInShell alloc] init];
 	}
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDNewSessionShell])
 	{
-		result = [[[TerminalToolbar_ItemNewSessionShell alloc] init] autorelease];
+		result = [[TerminalToolbar_ItemNewSessionShell alloc] init];
 	}
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDStackWindows])
 	{
-		result = [[[TerminalToolbar_ItemStackWindows alloc] init] autorelease];
+		result = [[TerminalToolbar_ItemStackWindows alloc] init];
 	}
 	else if ([itemIdentifier isEqualToString:kTerminalToolbar_ItemIDCustomize])
 	{
-		result = [[[TerminalToolbar_ItemCustomize alloc] init] autorelease];
+		result = [[TerminalToolbar_ItemCustomize alloc] init];
 	}
 	return result;
 }// toolbar:itemForItemIdentifier:willBeInsertedIntoToolbar:
@@ -1151,7 +1117,7 @@ windowDidLoad
 	// hardly any applications would have found THOSE useful...
 	{
 		NSString*		toolbarID = @"SessionInfoToolbar"; // do not ever change this; that would only break user preferences
-		NSToolbar*		windowToolbar = [[[NSToolbar alloc] initWithIdentifier:toolbarID] autorelease];
+		NSToolbar*		windowToolbar = [[NSToolbar alloc] initWithIdentifier:toolbarID];
 		
 		
 		// Check preferences for a stored toolbar; if one exists, leave the
@@ -1368,18 +1334,6 @@ defer:(BOOL)					deferCreation
 	}
 	return self;
 }// initWithContentRect:styleMask:backing:defer:
-
-
-/*!
-Destructor.
-
-(2016.10)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
 
 
 @end //} InfoWindow_Object

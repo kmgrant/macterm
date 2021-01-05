@@ -240,14 +240,14 @@ struct My_TerminalView
 												// using Carbon Events, stored here to avoid extra system calls in cases
 												// where this would be slow (e.g. drawing)
 	
-	TerminalView_Object*	encompassingNSView;		// contains the terminal view hierarchy
+	TerminalView_Object* __strong	encompassingNSView;		// contains the terminal view hierarchy
 	
 	struct
 	{
 		struct
 		{
 			Boolean					isActive;	// true only if the timer is running
-			NSTimer*				objectRef;	// timer to invoke animation procedure periodically
+			NSTimer* __strong		objectRef;	// timer to invoke animation procedure periodically; retain in order to invalidate at destruction time
 		} timer;
 		
 		struct
@@ -327,13 +327,13 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 	
 	struct
 	{
-		TextAttributes_Object		attributes;		// current text attribute flags, affecting color of terminal text, etc.
-		NSMutableDictionary*		attributeDict;	// most recent equivalent attributed-string attributes (e.g. fonts, colors)
+		TextAttributes_Object			attributes;		// current text attribute flags, affecting color of terminal text, etc.
+		NSMutableDictionary* __strong	attributeDict;	// most recent equivalent attributed-string attributes (e.g. fonts, colors)
 		
 		struct
 		{
-			NSFont*				normalFont;		// font for most text; also represents current family, size and metrics (Cocoa terminals)
-			NSFont*				boldFont;		// alternate font for bold-weighted text (might match "normalFont" if no special font is found)
+			NSFont* __strong	normalFont;		// font for most text; also represents current family, size and metrics (Cocoa terminals)
+			NSFont* __strong	boldFont;		// alternate font for bold-weighted text (might match "normalFont" if no special font is found)
 			CFRetainRelease		familyName;		// CFStringRef; font name (as might appear in a Font menu)
 			struct Metrics
 			{
@@ -496,10 +496,15 @@ Private properties.
 @interface TerminalView_BackgroundView () //{
 
 // accessors
+	//! Zero-based index into the "text.colors" array of a
+	//! Terminal View structure, specifying the matte color
+	//! to use for rendering.
 	@property (assign) size_t
 	colorIndex; // a "kTerminalView_ColorIndex..." constant
+	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
+	//! Stores information on key-value observers.
 	@property (strong) NSMutableArray*
 	registeredObservers;
 
@@ -520,18 +525,34 @@ Private properties.
 @interface TerminalView_ContentView () //{
 
 // accessors
+	//! Set only during drags, to keep track of window activation
+	//! (background window can auto-activate from hovering drag).
 	@property (assign) BOOL
 	didDragActivateWindow;
+	//! Set only during drags, to keep track of time elapsed when
+	//! drag is hovering over background window.  If a drag has
+	//! hovered for long enough, the window auto-activates.
 	@property (assign) CFAbsoluteTime
 	dragEnterTime;
+	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
+	//! Current state of modifier keys, used to set an appropriate
+	//! cursor (that should be consistent with whatever action
+	//! would be performed by clicking or dragging with the same
+	//! modifier keys pressed).
 	@property (assign) NSUInteger
 	modifierFlagsForCursor;
+	//! Stores information on key-value observers.
 	@property (strong) NSMutableArray*
 	registeredObservers;
+	//! If set to YES, the background and text rendering is changed
+	//! to show that a drag-drop is pending.
 	@property (assign) BOOL
 	showDragHighlight;
+	//! If set to YES, the background and text rendering is changed
+	//! to show that a bell sound was triggered.  (Typically this
+	//! is immediately turned off afterward.)
 	@property (assign) BOOL
 	showVisualBell;
 
@@ -567,6 +588,7 @@ Private properties.
 @interface TerminalView_Object () //{
 
 // accessors
+	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
 
@@ -591,6 +613,7 @@ Private properties.
 @interface TerminalView_ScrollBar () //{
 
 // accessors
+	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
 
@@ -611,6 +634,7 @@ Private properties.
 @interface TerminalView_ScrollableRootView () //{
 
 // accessors
+	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
 
@@ -635,6 +659,9 @@ Private properties.
 @interface TerminalView_ScrollableRootVC () //{
 
 // accessors
+	//! The terminal views that are operated by this view controller’s
+	//! scroll views.  Also determines the source of annotations in
+	//! scroll bars (for example, tick bars during a text search).
 	@property (strong) NSMutableArray*
 	terminalViewControllers;
 
@@ -961,7 +988,7 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 				{
 					if (false == searchResults.empty())
 					{
-						NSMutableSet*	setOfCompletions = [[[NSMutableSet alloc] init] autorelease];
+						NSMutableSet*	setOfCompletions = [[NSMutableSet alloc] init];
 						CGRect			screenRelativeCursorBounds; // set below
 						
 						
@@ -1026,9 +1053,8 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 									isEqualToString:BRIDGE_CAST(searchQueryCFString.returnCFStringRef(), NSString*)]))
 						{
 							NSPoint				globalLocation = NSMakePoint(screenRelativeCursorBounds.origin.x, screenRelativeCursorBounds.origin.y);
-							NSMutableArray*		sortedCompletions = [[[NSMutableArray alloc] initWithCapacity:setOfCompletions.count]
-																		autorelease];
-							NSMenu*				completionsMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+							NSMutableArray*		sortedCompletions = [[NSMutableArray alloc] initWithCapacity:setOfCompletions.count];
+							NSMenu*				completionsMenu = [[NSMenu alloc] initWithTitle:@""];
 							NSUInteger			completionIndex = 0;
 							
 							
@@ -1058,7 +1084,6 @@ TerminalView_DisplayCompletionsUI	(TerminalViewRef	inView)
 								
 								
 								[completionsMenu addItem:newItem];
-								[newItem release], newItem = nil;
 								++completionIndex;
 							}
 							
@@ -1111,7 +1136,7 @@ TerminalView_DisplaySaveSelectionUI		(TerminalViewRef	inView)
 	if (TerminalView_TextSelectionExists(inView))
 	{
 		My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-		NSMutableArray*				selectedImages = [[[NSMutableArray alloc] init] autorelease];
+		NSMutableArray*				selectedImages = [[NSMutableArray alloc] init];
 		NSSavePanel*				savePanel = [NSSavePanel savePanel];
 		
 		
@@ -1469,12 +1494,9 @@ TerminalView_GetFontAndSize		(TerminalViewRef	inView,
 		if (nullptr != outFontFamilyNameOrNull)
 		{
 			CFStringRef		fontNameCFString = viewPtr->text.font.familyName.returnCFStringRef();
-			NSString*		asNSString = BRIDGE_CAST(fontNameCFString, NSString*);
 			
 			
-			[asNSString retain];
 			*outFontFamilyNameOrNull = fontNameCFString;
-			[asNSString autorelease];
 		}
 		
 		if (nullptr != outFontSizeOrNull)
@@ -3745,7 +3767,7 @@ configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
-encompassingNSView([inRootView retain])
+encompassingNSView(inRootView)
 {
 }// My_TerminalView 3-argument constructor (NSView*)
 
@@ -3996,15 +4018,13 @@ Destructor.
 My_TerminalView::
 ~My_TerminalView ()
 {
-	[this->encompassingNSView release];
-	[this->text.attributeDict release];
 	if (nil != this->text.font.normalFont)
 	{
-		[this->text.font.normalFont release], this->text.font.normalFont = nil;
+		this->text.font.normalFont = nil;
 	}
 	if (nil != this->text.font.boldFont)
 	{
-		[this->text.font.boldFont release], this->text.font.boldFont = nil;
+		this->text.font.boldFont = nil;
 	}
 	
 	// if the table is not the global one, a copy was allocated
@@ -4029,7 +4049,7 @@ My_TerminalView::
 	if (nil != this->animation.timer.objectRef)
 	{
 		[this->animation.timer.objectRef invalidate];
-		[this->animation.timer.objectRef release]; this->animation.timer.objectRef = nil;
+		this->animation.timer.objectRef = nil;
 	}
 	
 	CFRelease(this->animation.rendering.region); this->animation.rendering.region = nullptr;
@@ -5286,7 +5306,7 @@ drawTerminalScreenRunOp		(My_TerminalViewPtr			inTerminalViewPtr,
 		Terminal_Result				terminalResult = kTerminal_ResultOK;
 		TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
 		CGRect						imageSubRect = CGRectZero;
-		NSImage*					completeImage = nil;
+		NSImage* __autoreleasing	completeImage = nil;
 		
 		
 		terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref, bitmapID, imageSubRect, completeImage);
@@ -5409,10 +5429,9 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 		// draw the text with the correct attributes: font, etc.
 		CGFloat const			viewHeight = inTerminalViewPtr->screen.cache.viewHeightInPixels.precisePixels();
 		CGFloat const			cellHeight = inTerminalViewPtr->text.font.heightPerCell.precisePixels();
-		NSAttributedString*		attributedString = [[[NSAttributedString alloc]
+		NSAttributedString*		attributedString = [[NSAttributedString alloc]
 													initWithString:BRIDGE_CAST(inTextBufferAsCFString, NSString*)
-																	attributes:inTerminalViewPtr->text.attributeDict]
-																	autorelease];
+																	attributes:inTerminalViewPtr->text.attributeDict];
 		CFRetainRelease			lineObject(CTLineCreateWithAttributedString
 											(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
 											CFRetainRelease::kAlreadyRetained);
@@ -6260,7 +6279,7 @@ getImagesInVirtualRange		(My_TerminalViewPtr				inTerminalViewPtr,
 	TerminalView_CellRange		orderedRange = inRange;
 	Terminal_LineStackStorage	lineIteratorData;
 	Terminal_LineRef			lineIterator = nullptr;
-	NSMutableSet*				uniqueImages = [[[NSMutableSet alloc] init] autorelease];
+	NSMutableSet*				uniqueImages = [[NSMutableSet alloc] init];
 	
 	
 	// require beginning point to be “earlier” than the end point; swap points if not
@@ -6280,7 +6299,7 @@ getImagesInVirtualRange		(My_TerminalViewPtr				inTerminalViewPtr,
 												{
 													TextAttributes_BitmapID		bitmapID = inAttributes.bitmapID();
 													CGRect						subRect = CGRectZero;
-													NSImage*					completeImage = nil;
+													NSImage* __autoreleasing	completeImage = nil;
 													Terminal_Result				terminalResult = Terminal_BitmapGetFromID(inTerminalViewPtr->screen.ref,
 																															bitmapID,
 																															subRect,
@@ -7447,7 +7466,7 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 	
 	if (TerminalView_TextSelectionExists(inTerminalViewPtr->selfRef))
 	{
-		NSMutableArray*		selectedImages = [[[NSMutableArray alloc] init] autorelease];
+		NSMutableArray*		selectedImages = [[NSMutableArray alloc] init];
 		Boolean				isImageSelection = false;
 		
 		
@@ -7463,7 +7482,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7477,7 +7495,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7490,7 +7507,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -7502,7 +7518,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7515,7 +7530,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -7538,7 +7552,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -7552,7 +7565,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -7564,7 +7576,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7580,7 +7591,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7591,7 +7601,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7612,7 +7621,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 					if (nil != newItem)
 					{
 						ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-						[newItem release], newItem = nil;
 					}
 					CFRelease(commandText), commandText = nullptr;
 				}
@@ -7625,7 +7633,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7636,7 +7643,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7647,7 +7653,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7661,7 +7666,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7672,7 +7676,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7683,7 +7686,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7694,7 +7696,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -7710,7 +7711,6 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nil != newItem)
 			{
 				ContextSensitiveMenu_AddItem(inoutMenu, newItem);
-				[newItem release], newItem = nil;
 			}
 			CFRelease(commandText), commandText = nullptr;
 		}
@@ -8741,14 +8741,13 @@ setBlinkingTimerActive	(My_TerminalViewPtr		inTerminalViewPtr,
 				// reference must be revalidated in animateBlinkingItems()
 				animateBlinkingItems(timer, blockViewRef);
 			}];
-			[inTerminalViewPtr->animation.timer.objectRef retain]; // retain in order to invalidate at destruction time (note: block also checks for valid reference)
 		}
 		else
 		{
 			if (nil != inTerminalViewPtr->animation.timer.objectRef)
 			{
 				[inTerminalViewPtr->animation.timer.objectRef invalidate];
-				[inTerminalViewPtr->animation.timer.objectRef release]; inTerminalViewPtr->animation.timer.objectRef = nil;
+				inTerminalViewPtr->animation.timer.objectRef = nil;
 			}
 		}
 		inTerminalViewPtr->animation.timer.isActive = inIsActive;
@@ -8816,21 +8815,18 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 												: BRIDGE_CAST(inFontFamilyNameOrNull, NSString*));
 		
 		
-		[[sourceFontName retain] autorelease];
-		
 		// release any previous fonts
 		if (nil != inTerminalViewPtr->text.font.normalFont)
 		{
-			[inTerminalViewPtr->text.font.normalFont release], inTerminalViewPtr->text.font.normalFont = nil;
+			inTerminalViewPtr->text.font.normalFont = nil;
 		}
 		if (nil != inTerminalViewPtr->text.font.boldFont)
 		{
-			[inTerminalViewPtr->text.font.boldFont release], inTerminalViewPtr->text.font.boldFont = nil;
+			inTerminalViewPtr->text.font.boldFont = nil;
 		}
 		
 		// find a font for most text
 		inTerminalViewPtr->text.font.normalFont = [NSFont fontWithName:sourceFontName size:inFontSizeOrZero];
-		[inTerminalViewPtr->text.font.normalFont retain];
 		
 		// find a font for boldface text
 		inTerminalViewPtr->text.font.boldFont = [fontManager convertFont:inTerminalViewPtr->text.font.normalFont
@@ -8851,8 +8847,6 @@ setFontAndSize		(My_TerminalViewPtr		inTerminalViewPtr,
 		{
 			inTerminalViewPtr->text.font.boldFont = inTerminalViewPtr->text.font.normalFont;
 		}
-		
-		[inTerminalViewPtr->text.font.boldFont retain];
 	}
 	
 	if (inFontFamilyNameOrNull != nullptr)
@@ -9164,14 +9158,14 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 			if (inAttributes.hasSearchHighlight())
 			{
 				// use selection colors
-				NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
-				NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
+				NSColor*	searchResultTextColor = [foregroundNSColor copy];
+				NSColor*	searchResultBackgroundColor = [backgroundNSColor copy];
 				
 				
 				if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
 																	background:&searchResultBackgroundColor])
 				{
-					foregroundNSColor = [[foregroundNSColor copy] autorelease];
+					foregroundNSColor = [foregroundNSColor copy];
 				}
 				else
 				{
@@ -9188,8 +9182,8 @@ setTextAttributesDictionary		(My_TerminalViewPtr			inTerminalViewPtr,
 				else
 				{
 					// alter the color (usually to make it look darker)
-					NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
-					NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
+					NSColor*	selectionTextColor = [foregroundNSColor copy];
+					NSColor*	selectionBackgroundColor = [backgroundNSColor copy];
 					
 					
 					if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
@@ -9360,10 +9354,9 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 	NSMutableDictionary*	attributeDict = [[NSMutableDictionary alloc] init];
 	setTextAttributesDictionary(inTerminalViewPtr, attributeDict, TextAttributes_Object(), true/* suppress kerning */);
 	{
-		NSAttributedString*		attributedString = [[[NSAttributedString alloc]
+		NSAttributedString*		attributedString = [[NSAttributedString alloc]
 													initWithString:@"Âgp"/* arbitrary; test string for measurement */
-																	attributes:attributeDict]
-																	autorelease];
+																	attributes:attributeDict];
 		CFRetainRelease			lineObject(CTLineCreateWithAttributedString
 											(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
 											CFRetainRelease::kAlreadyRetained);
@@ -9378,7 +9371,7 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		inTerminalViewPtr->text.font.normalMetrics.baseLine = (descentMeasurement + (leadingMeasurement / 2.0f));
 		inTerminalViewPtr->text.font.heightPerCell.setPrecisePixels(ascentMeasurement + descentMeasurement + leadingMeasurement);
 	}
-	[attributeDict release]; attributeDict = nil;
+	attributeDict = nil;
 #endif
 	
 #if 0
@@ -9763,8 +9756,8 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 				else
 				{
 					// use selection colors
-					NSColor*	selectionTextColor = [[foregroundNSColor copy] autorelease];
-					NSColor*	selectionBackgroundColor = [[backgroundNSColor copy] autorelease];
+					NSColor*	selectionTextColor = [foregroundNSColor copy];
+					NSColor*	selectionBackgroundColor = [backgroundNSColor copy];
 					
 					
 					if (NO == [NSColor selectionColorsForForeground:&selectionTextColor
@@ -9807,8 +9800,8 @@ useTerminalTextColors	(My_TerminalViewPtr			inTerminalViewPtr,
 		if (inAttributes.hasSearchHighlight())
 		{
 			// use selection colors
-			NSColor*	searchResultTextColor = [[foregroundNSColor copy] autorelease];
-			NSColor*	searchResultBackgroundColor = [[backgroundNSColor copy] autorelease];
+			NSColor*	searchResultTextColor = [foregroundNSColor copy];
+			NSColor*	searchResultBackgroundColor = [backgroundNSColor copy];
 			
 			
 			if (NO == [NSColor searchResultColorsForForeground:&searchResultTextColor
@@ -9885,7 +9878,6 @@ visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 		
 		contentView.showVisualBell = YES;
 		contentView.needsDisplay = YES;
-		[contentView retain];
 		if (nil != invertFilter)
 		{
 			[contentView animator].layer.filters = @[invertFilter];
@@ -9895,7 +9887,6 @@ visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 										contentView.showVisualBell = NO;
 										contentView.needsDisplay = YES;
 										[contentView animator].layer.filters = nil;
-										[contentView release];
 									});
 	}
 }// visualBell
@@ -9905,38 +9896,6 @@ visualBell	(My_TerminalViewPtr		inTerminalViewPtr)
 
 #pragma mark -
 @implementation TerminalView_BackgroundView //{
-
-
-#pragma mark Internally-Declared Properties
-
-
-/*!
-Zero-based index into the "text.colors" array of a
-Terminal View structure, specifying the matte color
-to use for rendering.
-*/
-@synthesize colorIndex = _colorIndex;
-
-/*!
-Stores information on key-value observers.
-*/
-@synthesize registeredObservers = _registeredObservers;
-
-
-#pragma mark Externally-Declared Properties
-
-
-/*!
-Optional object to notify when a mouse event occurs
-on this background.
-*/
-@synthesize clickDelegate = _clickDelegate;
-
-/*!
-Optional override color, which takes precedence over
-any other color mapping such as "colorIndex".
-*/
-@synthesize exactColor = _exactColor;
 
 
 #pragma mark Initializers
@@ -9961,7 +9920,7 @@ initWithFrame:(NSRect)		aFrame
 		self.wantsLayer = YES;
 		
 		self->_registeredObservers = [[NSMutableArray alloc] init];
-		[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0] autorelease]];
+		[self.registeredObservers addObject:[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0]];
 	}
 	return self;
 }// initWithFrame:
@@ -9976,30 +9935,7 @@ Destructor.
 dealloc
 {
 	[self removeObserversSpecifiedInArray:self.registeredObservers];
-	[_registeredObservers release];
-	[_exactColor release];
-	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	_internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
 
 
 #pragma mark NSKeyValueObserving
@@ -10190,49 +10126,6 @@ isOpaque
 @implementation TerminalView_ContentView //{
 
 
-#pragma mark Internally-Declared Properties
-
-
-/*!
-Current state of modifier keys, used to set an appropriate
-cursor (that should be consistent with whatever action
-would be performed by clicking or dragging with the same
-modifier keys pressed).
-*/
-@synthesize modifierFlagsForCursor = _modifierFlagsForCursor;
-
-/*!
-Stores information on key-value observers.
-*/
-@synthesize registeredObservers = _registeredObservers;
-
-/*!
-If set to YES, the background and text rendering is changed
-to show that a drag-drop is pending.
-*/
-@synthesize showDragHighlight = _showDragHighlight;
-
-/*!
-If set to YES, the background and text rendering is changed
-to show that a bell sound was triggered.  (Typically this
-is immediately turned off afterward.)
-*/
-@synthesize showVisualBell = _showVisualBell;
-
-
-#pragma mark Externally-Declared Properties
-
-
-/*!
-An object that is used to handle NSTextInputClient requests
-indirectly, through a simplified API that is targeted at
-sessions.  Any keystrokes or other user inputs received by
-the terminal view itself will be interpreted and forwarded
-to this delegate through an appropriate method call.
-*/
-@synthesize textInputDelegate = _textInputDelegate;
-
-
 #pragma mark Initializers
 
 
@@ -10253,7 +10146,7 @@ initWithFrame:(NSRect)		aFrame
 		self->_internalViewPtr = nullptr;
 		
 		self->_registeredObservers = [[NSMutableArray alloc] init];
-		[self.registeredObservers addObject:[[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0] autorelease]];
+		[self.registeredObservers addObject:[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0]];
 		
 		[self registerForDraggedTypes:@[
 											// in order of preference; the list of accepted drag text types should
@@ -10284,29 +10177,7 @@ Destructor.
 dealloc
 {
 	[self removeObserversSpecifiedInArray:self.registeredObservers];
-	[_registeredObservers release];
-	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	_internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
 
 
 /*!
@@ -12344,7 +12215,7 @@ mouseDown:(NSEvent*)	anEvent
 			CGRect					shapeBounds = CGRectZero;
 			NSImage*				dragImage = nil;
 			HIMutableShapeRef		imageBlockShapeCopy = HIShapeCreateMutableCopy(selectedTextShape); // owned by block below (handler may draw image later)
-			NSString*				selectedTextCopy = [BRIDGE_CAST(selectedTextCFString.returnCFStringRef(), NSString*) retain]; // owned by block
+			NSString*				selectedTextCopy = BRIDGE_CAST(selectedTextCFString.returnCFStringRef(), NSString*); // owned by block
 			NSMutableDictionary*	attributeDict = [[NSMutableDictionary alloc] init]; // owned by block
 			
 			
@@ -12426,8 +12297,6 @@ mouseDown:(NSEvent*)	anEvent
 				// free objects that were allocated outside the block (with ownership
 				// transferred to the block; see above)
 				CFRelease(imageBlockShapeCopy);
-				[selectedTextCopy release];
-				[attributeDict release];
 				
 				return/* from block */ result;
 			}];
@@ -12436,7 +12305,7 @@ mouseDown:(NSEvent*)	anEvent
 			[selectedTextDragItem setDraggingFrame:shapeBounds contents:dragImage];
 		}
 		[draggedItems addObject:selectedTextDragItem]; // transfer ownership
-		[selectedTextDragItem release]; selectedTextDragItem = nil;
+		selectedTextDragItem = nil;
 		
 		if (0 == draggedItems.count)
 		{
@@ -12455,8 +12324,6 @@ mouseDown:(NSEvent*)	anEvent
 			dragSession.animatesToStartingPositionsOnCancelOrFail = YES;
 			dragSession.draggingFormation = NSDraggingFormationDefault;
 		}
-		
-		[draggedItems release]; draggedItems = nil;
 	}
 	
 	if ((newSelection) || (extendSelection))
@@ -13740,7 +13607,7 @@ menuForEvent:(NSEvent*)		anEvent
 	if (nullptr != viewPtr)
 	{
 		// display a contextual menu
-		result = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		result = [[NSMenu alloc] initWithTitle:@""];
 		
 		// set up the contextual menu
 		//[result setAllowsContextMenuPlugIns:NO];
@@ -14129,18 +13996,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(2016.03)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Accessors
 
 
@@ -14407,85 +14262,6 @@ windowDidResignKey:(NSNotification*)	aNotification
 @implementation TerminalView_Object //{
 
 
-#pragma mark Externally-Declared Properties
-
-
-/*!
-The view that renders text flush to its boundaries.  (Any
-extra space around the terminal is provided by other views.)
-*/
-@synthesize terminalContentView = _terminalContentView;
-
-/*!
-A primarily-horizontal padding along the bottom terminal edge.
-
-Padding views create space between the terminal text and the
-margin regions.  Padding can be hidden to allow text to be
-closer to adjacent views (useful in splits, for example).
-The ends of the top and bottom pads extend horizontally to
-cover the same horizontal space as any vertical padding areas. 
-Padding has the same background color as normal terminal text.
-*/
-@synthesize terminalPaddingViewBottom = _terminalPaddingViewBottom;
-
-/*!
-A primarily-vertical padding along the left terminal edge.
-(For more comments on padding views, see the comments for
-"terminalPaddingViewBottom".)
-*/
-@synthesize terminalPaddingViewLeft = _terminalPaddingViewLeft;
-
-/*!
-A primarily-vertical padding along the right terminal edge.
-(For more comments on padding views, see the comments for
-"terminalPaddingViewBottom".)
-*/
-@synthesize terminalPaddingViewRight = _terminalPaddingViewRight;
-
-/*!
-A primarily-horizontal padding along the top terminal edge.
-(For more comments on padding views, see the comments for
-"terminalPaddingViewBottom".)
-*/
-@synthesize terminalPaddingViewTop = _terminalPaddingViewTop;
-
-/*!
-A primarily-horizontal margin along the bottom terminal edge.
-
-Margin views create space between terminal views and any
-adjacent views.  Margins can be hidden to allow text to be
-closer to adjacent views (useful in splits, for example).
-The ends of the top and bottom margins extend horizontally to
-cover the same horizontal space as any vertical margin areas.
-If two terminal views are adjacent with no other views in
-between (such as a split bar), their margin regions overlap
-instead of creating extra space.  Padding spaces are not
-shared.   Margins are rendered with the “matte” color.
-*/
-@synthesize terminalMarginViewBottom = _terminalMarginViewBottom;
-
-/*!
-A primarily-vertical margin along the left terminal edge.
-(For more comments on margin views, see the comments for
-"terminalMarginViewBottom".)
-*/
-@synthesize terminalMarginViewLeft = _terminalMarginViewLeft;
-
-/*!
-A primarily-vertical margin along the right terminal edge.
-(For more comments on margin views, see the comments for
-"terminalMarginViewBottom".)
-*/
-@synthesize terminalMarginViewRight = _terminalMarginViewRight;
-
-/*!
-A primarily-horizontal margin along the top terminal edge.
-(For more comments on margin views, see the comments for
-"terminalMarginViewBottom".)
-*/
-@synthesize terminalMarginViewTop = _terminalMarginViewTop;
-
-
 #pragma mark Initializers
 
 
@@ -14523,47 +14299,6 @@ initWithFrame:(NSRect)		aFrame
 	}
 	return self;
 }// initWithFrame:
-
-
-/*!
-Destructor.
-
-(2018.04)
-*/
-- (void)
-dealloc
-{
-	[_terminalContentView release];
-	[_terminalPaddingViewTop release];
-	[_terminalPaddingViewRight release];
-	[_terminalPaddingViewLeft release];
-	[_terminalPaddingViewBottom release];
-	[_terminalMarginViewTop release];
-	[_terminalMarginViewRight release];
-	[_terminalMarginViewLeft release];
-	[_terminalMarginViewBottom release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(2018.04)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	_internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
 
 
 #pragma mark TerminalView_ClickDelegate
@@ -14910,35 +14645,35 @@ createSubviews
 	// initial frames are all empty
 	//
 	
-	_terminalMarginViewBottom = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalMarginViewBottom = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_terminalMarginViewBottom];
 	
-	_terminalMarginViewLeft = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalMarginViewLeft = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_terminalMarginViewLeft];
 	
-	_terminalMarginViewRight = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalMarginViewRight = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_terminalMarginViewRight];
 	
-	_terminalMarginViewTop = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalMarginViewTop = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_terminalMarginViewTop];
 	
-	_terminalPaddingViewBottom = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalPaddingViewBottom = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	_terminalPaddingViewBottom.clickDelegate = self;
 	[self addSubview:_terminalPaddingViewBottom];
 	
-	_terminalPaddingViewLeft = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalPaddingViewLeft = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	_terminalPaddingViewLeft.clickDelegate = self;
 	[self addSubview:_terminalPaddingViewLeft];
 	
-	_terminalPaddingViewRight = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalPaddingViewRight = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	_terminalPaddingViewRight.clickDelegate = self;
 	[self addSubview:_terminalPaddingViewRight];
 	
-	_terminalPaddingViewTop = [[[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalPaddingViewTop = [[TerminalView_BackgroundView alloc] initWithFrame:NSZeroRect];
 	_terminalPaddingViewTop.clickDelegate = self;
 	[self addSubview:_terminalPaddingViewTop];
 	
-	_terminalContentView = [[[TerminalView_ContentView alloc] initWithFrame:NSZeroRect] autorelease];
+	_terminalContentView = [[TerminalView_ContentView alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_terminalContentView];
 }// createSubviews
 
@@ -14968,38 +14703,6 @@ initWithFrame:(NSRect)		aFrame
 	}
 	return self;
 }// initWithFrame:
-
-
-/*!q
-Destructor.
-
-(2018.04)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(2018.04)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	_internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
 
 
 #pragma mark NSView
@@ -15094,15 +14797,6 @@ drawRect:(NSRect)	aRect
 @implementation TerminalView_ScrollableRootView //{
 
 
-#pragma mark Externally-Declared Properties
-
-
-/*!
-The vertical scroll bar.
-*/
-@synthesize scrollBarV = _scrollBarV;
-
-
 #pragma mark Initializers
 
 
@@ -15140,39 +14834,6 @@ initWithFrame:(NSRect)		aFrame
 	}
 	return self;
 }// initWithFrame:
-
-
-/*!
-Destructor.
-
-(2018.04)
-*/
-- (void)
-dealloc
-{
-	[_scrollBarV release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(2018.04)
-*/
-- (My_TerminalViewPtr)
-internalViewPtr
-{
-	return REINTERPRET_CAST(_internalViewPtr, My_TerminalViewPtr);
-}
-- (void)
-setInternalViewPtr:(My_TerminalViewPtr)		aViewPtr
-{
-	_internalViewPtr = aViewPtr;
-}// setInternalViewPtr:
 
 
 #pragma mark NSView
@@ -15221,7 +14882,7 @@ createSubviews
 	// initial frames are all empty
 	//
 	
-	_scrollBarV = [[[TerminalView_ScrollBar alloc] initWithFrame:NSZeroRect] autorelease];
+	self.scrollBarV = [[TerminalView_ScrollBar alloc] initWithFrame:NSZeroRect];
 	[self addSubview:_scrollBarV];
 }// createSubviews
 
@@ -15231,17 +14892,6 @@ createSubviews
 
 #pragma mark -
 @implementation TerminalView_ScrollableRootVC //{
-
-
-#pragma mark Internally-Declared Properties
-
-
-/*!
-The terminal views that are operated by this view controller’s
-scroll views.  Also determines the source of annotations in
-scroll bars (for example, tick bars during a text search).
-*/
-@synthesize terminalViewControllers = _terminalViewControllers;
 
 
 #pragma mark Initializers
@@ -15262,19 +14912,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2018.04)
-*/
-- (void)
-dealloc
-{
-	[_terminalViewControllers release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors

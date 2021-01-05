@@ -96,6 +96,7 @@ struct My_GenericDialog
 	Popover_Window* __strong		popoverWindow;			//!< new-style, popover variant; contains a Cocoa view in a popover frame
 	My_DialogEffectsByItemID		closeEffects;			//!< custom sheet-closing effects for certain items
 	void*							userDataPtr;			//!< optional; external data
+	NSObject* __strong				userDataObject;			//!< optional; external data but (since it is an NSObject*) it is retained
 	Memory_WeakRefEraser			weakRefEraser;			//!< at destruction time, clears weak references that involve this object
 };
 typedef My_GenericDialog*			My_GenericDialogPtr;
@@ -445,7 +446,7 @@ GenericDialog_Remove	(GenericDialog_Ref		inDialog)
 
 
 /*!
-Returns whatever was set with GenericDialog_SetImplementation,
+Returns value set with GenericDialog_SetImplementation(),
 or nullptr.
 
 (3.1)
@@ -461,6 +462,25 @@ GenericDialog_ReturnImplementation	(GenericDialog_Ref	inDialog)
 	
 	return result;
 }// ReturnImplementation
+
+
+/*!
+Returns value set with GenericDialog_SetImplementationNSObject(),
+or nil.
+
+(2021.01)
+*/
+NSObject*
+GenericDialog_ReturnImplementationNSObject	(GenericDialog_Ref	inDialog)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	NSObject*					result = nullptr;
+	
+	
+	if (nullptr != ptr) result = ptr->userDataObject;
+	
+	return result;
+}// ReturnImplementationNSObject
 
 
 /*!
@@ -546,6 +566,26 @@ GenericDialog_SetImplementation		(GenericDialog_Ref		inDialog,
 	
 	ptr->userDataPtr = inContext;
 }// SetImplementation
+
+
+/*!
+Associates an arbitrary Objective-C object (retained).
+Retrieve with GenericDialog_ReturnImplementationNSObject().
+
+The object can be released by calling this API again using
+an argument of "nil", or by disposing of the dialog.
+
+(2021.01)
+*/
+void
+GenericDialog_SetImplementationNSObject		(GenericDialog_Ref		inDialog,
+											 NSObject*				inContext)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	ptr->userDataObject = inContext;
+}// SetImplementationNSObject
 
 
 /*!
@@ -722,6 +762,8 @@ Destructor.  See GenericDialog_Release().
 My_GenericDialog::
 ~My_GenericDialog ()
 {
+	userDataObject = nil;
+	
 	if (nullptr != popoverManager)
 	{
 		[containerViewManager.delegate panelViewManager:containerViewManager willChangePanelVisibility:kPanel_VisibilityHidden];

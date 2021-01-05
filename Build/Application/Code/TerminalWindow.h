@@ -223,10 +223,6 @@ responsible for the layout of window views such as the
 terminal scroll controllers and any displayed “bars”.
 */
 @interface TerminalWindow_RootVC : NSViewController < CoreUI_ViewLayoutDelegate > //{
-{
-@private
-	NSMutableArray*		_terminalScrollControllers;
-}
 
 // accessors
 	- (TerminalWindow_RootView*)
@@ -261,14 +257,6 @@ changes to an interface declared in a ".mm" file.
 															Commands_TextFormatting,
 															Commands_WindowRenaming,
 															NSWindowDelegate > //{
-{
-@private
-	NSRect						_preFullScreenFrame;
-	TerminalWindowRef			_terminalWindowRef;
-	TerminalToolbar_Delegate*	_toolbarDelegate;
-	TerminalWindow_RootVC*		_rootVC;
-	NSString*					_preferredMacroSetName;
-}
 
 // initializers
 	- (instancetype)
@@ -276,10 +264,15 @@ changes to an interface declared in a ".mm" file.
 	owner:(TerminalWindowRef)_;
 
 // accessors
-	- (TerminalWindow_RootVC*)
+	//! View controller for the entire terminal window (all
+	//! subviews included, such as scroll bars).
+	@property (strong, readonly) TerminalWindow_RootVC*
 	rootViewController;
+	//! The name of a Macro collection that should become the
+	//! active macro set whenever this window is active.
 	@property (strong) NSString*
 	preferredMacroSetName;
+	//! The Terminal Window object that owns this window controller.
 	@property (assign) TerminalWindowRef
 	terminalWindowRef;
 

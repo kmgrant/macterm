@@ -97,12 +97,6 @@ to be temporary) and applies certain changes to the
 target terminal window.
 */
 @interface SessionFactory_NewSessionDataObject : NSObject //{
-{
-@private
-	BOOL						_disableObservers;
-	Preferences_ContextRef		_temporaryContext;
-	TerminalWindowRef			_terminalWindow;
-}
 
 // initializers
 	- (instancetype)
@@ -277,9 +271,9 @@ void
 SessionFactory_Done ()
 {
 	[gSessionFactoryWatchForExitsTimer invalidate];
-	[gSessionFactoryWatchForExitsTimer release]; gSessionFactoryWatchForExitsTimer = nil;
+	gSessionFactoryWatchForExitsTimer = nil;
 	
-	[gSessionWindowWatcher release]; gSessionWindowWatcher = nil;
+	gSessionWindowWatcher = nil;
 	
 	ListenerModel_ReleaseListener(&gSessionStateChangeListener);
 	ListenerModel_ReleaseListener(&gSessionChangeListenerRef);
@@ -1144,7 +1138,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 				dialog = GenericDialog_Wrap(GenericDialog_New(parentView, embeddedPanel, temporaryContext),
 											GenericDialog_Wrap::kAlreadyRetained);
 			}
-			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, startSessionString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
 												^{ handleNewSessionDialogClose(dialog.returnRef(), true/* is OK */); });
@@ -1162,9 +1156,9 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindow,
 													Preferences_ReleaseTagSet(&tagSet);
 												});
 			GenericDialog_SetItemDialogEffect(dialog.returnRef(), kGenericDialog_ItemIDButton2, kGenericDialog_DialogEffectCloseImmediately);
-			GenericDialog_SetImplementation(dialog.returnRef(), dataObject);
-			[dataObject retain], GenericDialog_Display(dialog.returnRef(), false/* animated */,
-														^{ [dataObject release]; }); // retains dialog until it is dismissed
+			GenericDialog_SetImplementationNSObject(dialog.returnRef(), dataObject);
+			GenericDialog_Display(dialog.returnRef(), false/* animated */,
+									^{ GenericDialog_SetImplementationNSObject(dialog.returnRef(), nil); }); // retains dialog until it is dismissed
 			dataObject.disableObservers = NO;
 			result = true;
 		}
@@ -2044,7 +2038,9 @@ void
 handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 								 Boolean				inOKButtonPressed)
 {
-	SessionFactory_NewSessionDataObject*	dataObject = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), SessionFactory_NewSessionDataObject*);
+	NSObject*								associatedObject = GenericDialog_ReturnImplementationNSObject(inDialogThatClosed);
+	assert([associatedObject isKindOfClass:SessionFactory_NewSessionDataObject.class]);
+	SessionFactory_NewSessionDataObject*	dataObject = STATIC_CAST(associatedObject, SessionFactory_NewSessionDataObject*);
 	PrefPanelSessions_ResourceViewManager*	viewMgr = STATIC_CAST(GenericDialog_ReturnViewManager(inDialogThatClosed),
 																	PrefPanelSessions_ResourceViewManager*);
 	
@@ -2112,7 +2108,7 @@ handleNewSessionDialogClose		(GenericDialog_Ref		inDialogThatClosed,
 		}
 	}
 	
-	[dataObject release], GenericDialog_SetImplementation(inDialogThatClosed, nullptr);
+	GenericDialog_SetImplementationNSObject(inDialogThatClosed, nil);
 }// handleNewSessionDialogClose
 
 
@@ -2454,11 +2450,6 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 @implementation SessionFactory_NewSessionDataObject //{
 
 
-@synthesize disableObservers = _disableObservers;
-@synthesize temporaryContext = _temporaryContext;
-@synthesize terminalWindow = _terminalWindow;
-
-
 #pragma mark Initializers
 
 
@@ -2504,7 +2495,6 @@ Destructor.
 dealloc
 {
 	Preferences_ReleaseContext(&_temporaryContext);
-	[super dealloc];
 }// dealloc
 
 
@@ -2615,7 +2605,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[super dealloc];
 }// dealloc
 
 

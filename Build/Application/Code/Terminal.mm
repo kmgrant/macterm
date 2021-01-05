@@ -1030,8 +1030,8 @@ public:
 	My_RGBComponentList*				trueColorTableBlues;	//!< blue components for all 24-bit colors; allocated only for supporting terminals
 	TextAttributes_TrueColorID			trueColorTableNextID;	//!< basis for new IDs; current entry for storing new colors in true-color table
 	TextAttributes_BitmapID				bitmapTableNextID;		//!< basis for new IDs; current entry for storing new bitmaps in bitmap table
-	NSMutableArray*						bitmapImageTable;		//!< NSArray of NSImage*; shared (“whole image”) bitmap representations by index (ID)
-	NSMutableArray*						bitmapSegmentTable;		//!< NSArray of NSValue* (holding NSRect); single-cell bitmap sub-rectangles by index (ID)
+	NSMutableArray* __strong			bitmapImageTable;		//!< NSArray of NSImage*; shared (“whole image”) bitmap representations by index (ID)
+	NSMutableArray* __strong			bitmapSegmentTable;		//!< NSArray of NSValue* (holding NSRect); single-cell bitmap sub-rectangles by index (ID)
 
 protected:
 	My_EmulatorEchoDataProcPtr
@@ -5964,8 +5964,6 @@ My_Emulator::~My_Emulator()
 	delete trueColorTableReds;
 	delete trueColorTableGreens;
 	delete trueColorTableBlues;
-	[bitmapImageTable release];
-	[bitmapSegmentTable release];
 }// My_Emulator destructor
 
 
@@ -8776,10 +8774,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				// this format is documented at: "http://www.iterm2.com/documentation-images.html"
 				// INCOMPLETE
-				NSString*			asNSString = [[[NSString alloc] initWithBytes:inDataPtr->emulator.stringAccumulator.c_str()
+				NSString*			asNSString = [[NSString alloc] initWithBytes:inDataPtr->emulator.stringAccumulator.c_str()
 																					length:inDataPtr->emulator.stringAccumulator.size()
-																					encoding:NSUTF8StringEncoding] autorelease];
-				NSMutableArray*		equalsSeparated = [[[asNSString componentsSeparatedByString:@"="] mutableCopy] autorelease];
+																					encoding:NSUTF8StringEncoding];
+				NSMutableArray*		equalsSeparated = [[asNSString componentsSeparatedByString:@"="] mutableCopy];
 				
 				
 				if (equalsSeparated.count < 2)
@@ -8831,7 +8829,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							{
 								assert([argObject isKindOfClass:NSString.class]);
 								NSString*			argString = STATIC_CAST(argObject, NSString*);
-								NSMutableArray*		argKeyValue = [[[argString componentsSeparatedByString:@"="] mutableCopy] autorelease];
+								NSMutableArray*		argKeyValue = [[argString componentsSeparatedByString:@"="] mutableCopy];
 								
 								
 								if (argKeyValue.count < 2)
@@ -8855,10 +8853,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 									if ([argName isEqualToString:@"name"])
 									{
 										// the name is actually a string encoded in base64
-										NSData*		decodedName = [[[NSData alloc]
+										NSData*		decodedName = [[NSData alloc]
 																	initWithBase64EncodedString:argValue
-																								options:(NSDataBase64DecodingIgnoreUnknownCharacters)]
-																	autorelease];
+																								options:(NSDataBase64DecodingIgnoreUnknownCharacters)];
 										NSString*	decodedString = [[NSString alloc] initWithData:decodedName encoding:NSUTF8StringEncoding];
 										
 										
@@ -9000,10 +8997,9 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 							
 							if (isBase64)
 							{
-								NSData*		decodedData = [[[NSData alloc]
+								NSData*		decodedData = [[NSData alloc]
 															initWithBase64EncodedString:dataString
-																						options:(NSDataBase64DecodingIgnoreUnknownCharacters)]
-															autorelease];
+																						options:(NSDataBase64DecodingIgnoreUnknownCharacters)];
 								
 								
 								if (nil == decodedData)
@@ -9016,7 +9012,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 									{
 										Boolean const	kScrollWithImage = true;
 										Boolean const	kRestoreCursor = false;
-										NSImage*		decodedImage = [[[NSImage alloc] initWithData:decodedData] autorelease];
+										NSImage*		decodedImage = [[NSImage alloc] initWithData:decodedData];
 										
 										
 										if (0 == totalPixelsH)
@@ -9310,7 +9306,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					// character sets are ever supported then their default pixel
 					// height is 3:1 over the width)  
 					__block NSColor*				currentColor = nil; // if "nil", use background color
-					__block NSMutableDictionary*	colorsByIndex = [[[NSMutableDictionary alloc] init] autorelease];
+					__block NSMutableDictionary*	colorsByIndex = [[NSMutableDictionary alloc] init];
 					NSImage*						completeImage = nil;
 					CGContextRef					drawingContext = nullptr;
 					UInt16							defaultCellPixelsH = 9; // number of dots across to define a terminal cell at normal width
@@ -9657,7 +9653,6 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 					bufferInsertInlineImageWithoutUpdate(inDataPtr, completeImage, totalPixelsH, totalPixelsV,
 															defaultCellPixelsH, defaultCellPixelsV,
 															kScrollWithImage, kRestoreCursor);
-					[completeImage release]; completeImage = nil;
 				}
 				
 				inDataPtr->emulator.stringAccumulator.clear();

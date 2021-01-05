@@ -131,9 +131,14 @@ Private properties.
 @interface TerminalWindow_Controller () //{
 
 // accessors
+	//! The value of the window "frame" property just prior to
+	//! entering Full Screen mode.  (Used to restore the original
+	//! window frame when Full Screen exits.)
 	@property (assign) NSRect
 	preFullScreenFrame;
-	@property (assign) TerminalToolbar_Delegate*
+	//! An object that specifies the majority of the behavior for
+	//! the terminal toolbar.
+	@property (strong) TerminalToolbar_Delegate*
 	toolbarDelegate;
 
 @end //}
@@ -185,6 +190,8 @@ Private properties.
 @interface TerminalWindow_RootView () //{
 
 // accessors
+	//! An array of an arbitrary number of scrollable containers that
+	//! appear in this root view.
 	@property (strong) NSMutableArray*
 	scrollableTerminalRootViews;
 
@@ -197,6 +204,11 @@ Private properties.
 @interface TerminalWindow_RootVC () //{
 
 // accessors
+	//! The scroll view controllers that indirectly determine which
+	//! terminal view controllers are shown in this root view.  A
+	//! default window has one scroll controller containing one view.
+	//! For example, a vertical split-view could be implemented as
+	//! additional scroll controllers holding more terminal views.
 	@property (strong) NSMutableArray*
 	terminalScrollControllers;
 
@@ -235,7 +247,7 @@ struct My_TerminalWindow
 	
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
 	
-	TerminalWindow_Controller*	windowController;			// controller for the main NSWindow (responds to events, etc.)
+	TerminalWindow_Controller* __strong		windowController;	// controller for the main NSWindow (responds to events, etc.)
 	NSWindow*					window;						// the Cocoa window reference for the terminal window
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabSizeInPixels;			// used to position and size a tab drawer, if any
@@ -470,7 +482,7 @@ TerminalWindow_DisplayCustomFormatUI	(TerminalWindowRef		inRef)
 			dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
 															embeddedPanel, temporaryContext),
 										GenericDialog_Wrap::kAlreadyRetained);
-			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
 												^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
@@ -541,7 +553,7 @@ TerminalWindow_DisplayCustomScreenSizeUI		(TerminalWindowRef		inRef)
 			dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
 															embeddedPanel, temporaryContext),
 										GenericDialog_Wrap::kAlreadyRetained);
-			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
 												^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
@@ -604,7 +616,7 @@ TerminalWindow_DisplayCustomTranslationUI	(TerminalWindowRef		inRef)
 			dialog = GenericDialog_Wrap(GenericDialog_New(TerminalWindow_ReturnNSWindow(inRef).contentView,
 															embeddedPanel, temporaryContext),
 										GenericDialog_Wrap::kAlreadyRetained);
-			[embeddedPanel release], embeddedPanel = nil; // panel is retained by the call above
+			embeddedPanel = nil; // panel is retained by the call above
 			GenericDialog_SetItemTitle(dialog.returnRef(), kGenericDialog_ItemIDButton1, okString.returnCFStringRef());
 			GenericDialog_SetItemResponseBlock(dialog.returnRef(), kGenericDialog_ItemIDButton1,
 												^{ sheetClosed(dialog.returnRef(), true/* is OK */); });
@@ -1380,7 +1392,7 @@ TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
 	My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
-	[ptr->window setMiniwindowTitle:(NSString*)inName];
+	[ptr->window setMiniwindowTitle:BRIDGE_CAST(inName, NSString*)];
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeIconTitle, ptr->selfRef/* context */);
 }// @autoreleasepool
 }// SetIconTitle
@@ -1815,7 +1827,7 @@ selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
 windowController([[TerminalWindow_Controller alloc]
-					initWithTerminalVC:[[[TerminalView_Controller alloc] init] autorelease]
+					initWithTerminalVC:[[TerminalView_Controller alloc] init]
 										owner:REINTERPRET_CAST(this, TerminalWindowRef)]),
 window(windowController.window),
 tabOffsetInPixels(0.0),
@@ -3055,7 +3067,7 @@ setWindowAndTabTitle	(My_TerminalWindowPtr	inPtr,
 						 CFStringRef			inNewTitle)
 {
 @autoreleasepool {
-	[inPtr->window setTitle:(NSString*)inNewTitle];
+	[inPtr->window setTitle:BRIDGE_CAST(inNewTitle, NSString*)];
 	
 	// technically the default behavior for Cocoa windows with tabs is
 	// to keep the titles of both in sync, though new APIs were added
@@ -3552,30 +3564,6 @@ updateScrollBars	(My_TerminalWindowPtr	inPtr)
 @implementation TerminalWindow_Controller //{
 
 
-#pragma mark Internally-Declared Properties
-
-/*!
-The value of the window "frame" property just prior to
-entering Full Screen mode.  (Used to restore the original
-window frame when Full Screen exits.)
-*/
-@synthesize preFullScreenFrame = _preFullScreenFrame;
-
-/*!
-An object that specifies the majority of the behavior for
-the terminal toolbar.
-*/
-@synthesize toolbarDelegate = _toolbarDelegate;
-
-
-#pragma mark Externally-Declared Properties
-
-/*!
-The Terminal Window object that owns this window controller.
-*/
-@synthesize terminalWindowRef = _terminalWindowRef;
-
-
 #pragma mark Initializers
 
 
@@ -3600,7 +3588,7 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		self.window.delegate = self;
 		
 		_preferredMacroSetName = @"Default";
-		_rootVC = [[TerminalWindow_RootVC alloc] init];
+		_rootViewController = [[TerminalWindow_RootVC alloc] init];
 		[self.rootViewController addScrollControllerBeyondEdge:NSMinYEdge];
 		{
 			id		defaultScrollVC = [[self.rootViewController enumerateScrollControllers] nextObject];
@@ -3632,7 +3620,7 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		// create toolbar
 		{
 			NSString*					toolbarID = @"TerminalToolbar"; // do not ever change this; that would only break user preferences
-			TerminalToolbar_Object*		windowToolbar = [[[TerminalToolbar_Object alloc] initWithIdentifier:toolbarID] autorelease];
+			TerminalToolbar_Object*		windowToolbar = [[TerminalToolbar_Object alloc] initWithIdentifier:toolbarID];
 			
 			
 			self->_toolbarDelegate = [[TerminalToolbar_Delegate alloc] initForToolbar:windowToolbar
@@ -3670,54 +3658,6 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 	}
 	return self;
 }// initWithTerminalVC:
-
-
-/*!
-Destructor.
-
-(2016.03)
-*/
-- (void)
-dealloc
-{
-	[_preferredMacroSetName release];
-	[_rootVC release];
-	[_toolbarDelegate release];
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(2018.04)
-*/
-- (TerminalWindow_RootVC*)
-rootViewController
-{
-	return _rootVC;
-}// rootViewController
-
-
-/*!
-Accessor.
-
-(2020.07)
-*/
-- (NSString*)
-preferredMacroSetName
-{
-	return _preferredMacroSetName;
-}
-- (void)
-setPreferredMacroSetName:(NSString*)	aString
-{
-	[_preferredMacroSetName autorelease];
-	_preferredMacroSetName = [aString copy];
-}// setPreferredMacroSetName:
 
 
 #pragma mark New Methods
@@ -4679,15 +4619,11 @@ Destructor.
 - (void)
 dealloc
 {
-	Memory_EraseWeakReferences(self);
-	[_textView release];
-	[_paddingView release];
+	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
 	if (nil != _popoverMgr)
 	{
 		PopoverManager_Dispose(&_popoverMgr);
 	}
-	[_infoWindow release];
-	[super dealloc];
 }// dealloc
 
 
@@ -5024,16 +4960,6 @@ _toolbarLeadingSpace
 @implementation TerminalWindow_RootView //{
 
 
-#pragma mark Internally-Declared Properties
-
-
-/*!
-An array of an arbitrary number of scrollable containers that
-appear in this root view. 
-*/
-@synthesize scrollableTerminalRootViews = _scrollableTerminalRootViews;
-
-
 #pragma mark Initializers
 
 
@@ -5069,19 +4995,6 @@ initWithFrame:(NSRect)		aFrame
 	}
 	return self;
 }// initWithFrame:
-
-
-/*!
-Destructor.
-
-(2018.04)
-*/
-- (void)
-dealloc
-{
-	[_scrollableTerminalRootViews release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -5164,19 +5077,6 @@ drawRect:(NSRect)	aRect
 @implementation TerminalWindow_RootVC //{
 
 
-#pragma mark Internally-Declared Properties
-
-
-/*!
-The scroll view controllers that indirectly determine which
-terminal view controllers are shown in this root view.  A
-default window has one scroll controller containing one view.
-For example, a vertical split-view could be implemented as
-additional scroll controllers holding more terminal views.
-*/
-@synthesize terminalScrollControllers = _terminalScrollControllers;
-
-
 #pragma mark Initializers
 
 
@@ -5195,19 +5095,6 @@ init
 	}
 	return self;
 }// init
-
-
-/*!
-Destructor.
-
-(2018.04)
-*/
-- (void)
-dealloc
-{
-	[_terminalScrollControllers release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -5260,8 +5147,7 @@ See also "enumerateScrollControllers" and
 - (void)
 addScrollControllerBeyondEdge:(NSRectEdge)	anEdge
 {
-	TerminalView_ScrollableRootVC*		newScrollVC = [[[TerminalView_ScrollableRootVC alloc] init]
-														autorelease];
+	TerminalView_ScrollableRootVC*		newScrollVC = [[TerminalView_ScrollableRootVC alloc] init];
 	
 	
 	if (NSMinYEdge != anEdge)
