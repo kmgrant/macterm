@@ -96,26 +96,22 @@ changes to an interface declared in a ".mm" file.
 */
 @interface VectorWindow_Controller : NSWindowController < Commands_WindowRenaming,
 															TerminalView_ClickDelegate > //{
-{
-	IBOutlet TerminalView_BackgroundView*	matteView;
-	IBOutlet VectorCanvas_View*				canvasView;
-@private
-	VectorWindow_Ref		selfRef;
-	ListenerModel_Ref		changeListenerModel;
-	VectorInterpreter_Ref	interpreterRef;
-	WindowTitleDialog_Ref	renameDialog;
-	TouchBar_Controller*		_touchBarController;
-}
 
 // initializers
-	- (instancetype)
-	initWithInterpreter:(VectorInterpreter_Ref)_;
+	- (instancetype _Nullable)
+	initWithInterpreter:(VectorInterpreter_Ref _Nonnull)_
+	owner:(VectorWindow_Ref _Nonnull)_;
 
 // accessors
-	- (VectorCanvas_View*)
+	//! The primary vector graphics display.
+	@property (strong, nonnull) IBOutlet VectorCanvas_View*
 	canvasView;
-	- (void)
-	setCanvasView:(VectorCanvas_View*)_;
+	//! The colored border display.
+	@property (strong, nonnull) IBOutlet TerminalView_BackgroundView*
+	matteView;
+	//! The Terminal Window object that owns this window controller.
+	@property (assign, nullable) VectorWindow_Ref
+	vectorWindowRef;
 
 @end //}
 
@@ -132,25 +128,22 @@ class VectorWindow_Controller;
 //!\name Creating and Destroying Vector Graphics Windows
 //@{
 
-VectorWindow_Ref
-	VectorWindow_New					(VectorInterpreter_Ref		inData);
+VectorWindow_Ref _Nullable
+	VectorWindow_New					(VectorInterpreter_Ref _Nonnull			inData);
 
 void
-	VectorWindow_Retain					(VectorWindow_Ref			inRef);
-
-void
-	VectorWindow_Release				(VectorWindow_Ref*			inoutRefPtr);
+	VectorWindow_Release				(VectorWindow_Ref _Nullable* _Nonnull	inoutRefPtr);
 
 //@}
 
 //!\name Manipulating Vector Graphics Pictures
 //@{
 
-VectorWindow_Controller*
-	VectorWindow_ReturnController		(VectorWindow_Ref			inWindow);
+VectorWindow_Controller* _Nullable
+	VectorWindow_ReturnController		(VectorWindow_Ref _Nullable		inWindow);
 
-VectorInterpreter_Ref
-	VectorWindow_ReturnInterpreter		(VectorWindow_Ref			inWindow);
+VectorInterpreter_Ref _Nullable
+	VectorWindow_ReturnInterpreter		(VectorWindow_Ref _Nullable		inWindow);
 
 //@}
 
@@ -158,10 +151,10 @@ VectorInterpreter_Ref
 //@{
 
 VectorWindow_Result
-	VectorWindow_Display				(VectorWindow_Ref			inWindow);
+	VectorWindow_Display				(VectorWindow_Ref _Nullable		inWindow);
 
-NSWindow*
-	VectorWindow_ReturnNSWindow			(VectorWindow_Ref			inWindow);
+NSWindow* _Nullable
+	VectorWindow_ReturnNSWindow			(VectorWindow_Ref _Nullable		inWindow);
 
 //@}
 
@@ -169,27 +162,23 @@ NSWindow*
 //@{
 
 VectorWindow_Result
-	VectorWindow_StartMonitoring		(VectorWindow_Ref			inWindow,
-										 VectorWindow_Event			inForWhichEvent,
-										 ListenerModel_ListenerRef	inListener);
+	VectorWindow_StartMonitoring		(VectorWindow_Ref _Nullable				inWindow,
+										 VectorWindow_Event						inForWhichEvent,
+										 ListenerModel_ListenerRef _Nonnull		inListener);
 
 VectorWindow_Result
-	VectorWindow_StopMonitoring			(VectorWindow_Ref			inWindow,
-										 VectorWindow_Event			inForWhichEvent,
-										 ListenerModel_ListenerRef	inListener);
+	VectorWindow_StopMonitoring			(VectorWindow_Ref _Nullable				inWindow,
+										 VectorWindow_Event						inForWhichEvent,
+										 ListenerModel_ListenerRef _Nonnull		inListener);
 
 //@}
 
 //!\name Miscellaneous
 //@{
 
-void
-	VectorWindow_CopyTitle				(VectorWindow_Ref			inWindow,
-										 CFStringRef&				outTitle);
-
 VectorWindow_Result
-	VectorWindow_SetTitle				(VectorWindow_Ref			inWindow,
-										 CFStringRef				inTitle);
+	VectorWindow_SetTitle				(VectorWindow_Ref _Nullable		inWindow,
+										 CFStringRef _Nullable			inTitle);
 
 //@}
 

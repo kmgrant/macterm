@@ -92,14 +92,9 @@ changes to an interface declared in a ".mm" file.
 											Commands_StandardEditing,
 											Commands_TextFormatting,
 											Commands_VectorGraphicsModifying > //{
-{
-@private
-	VectorInterpreter_Ref	_interpreterRef;
-	NSRect					_dragRectangle;
-	NSPoint					_dragStart;
-}
 
 // accessors
+	//! Interpreter and data store for canvas view.
 	@property (assign) VectorInterpreter_Ref
 	interpreterRef;
 

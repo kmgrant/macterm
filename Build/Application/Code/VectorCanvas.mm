@@ -100,15 +100,6 @@ has lines of different widths it must consist of an
 array of elements of this type.
 */
 @interface VectorCanvas_Path : NSObject //{
-{
-@public
-	VectorCanvas_PathPurpose	purpose;
-	NSBezierPath*				bezierPath;
-	Float32						normalLineWidth;
-	CGPathDrawingMode			drawingMode;
-	SInt16						fillColorIndex;
-	SInt16						strokeColorIndex;
-}
 
 // initializers
 	- (instancetype)
@@ -117,8 +108,18 @@ array of elements of this type.
 	initWithPurpose:(VectorCanvas_PathPurpose)_ NS_DESIGNATED_INITIALIZER;
 
 // accessors
-	- (void)
-	setPurpose:(VectorCanvas_PathPurpose)_;
+	@property (strong) NSBezierPath*
+	bezierPath;
+	@property (assign) CGPathDrawingMode
+	drawingMode;
+	@property (assign) SInt16
+	fillColorIndex;
+	@property (assign) Float32
+	normalLineWidth;
+	@property (assign) VectorCanvas_PathPurpose
+	purpose;
+	@property (assign) SInt16
+	strokeColorIndex;
 
 // new methods
 	- (VectorCanvas_Path*)
@@ -133,8 +134,13 @@ Private properties.
 @interface VectorCanvas_View () //{
 
 // accessors
+	//! If a non-empty rectangle, the rendering of the view
+	//! displays this as a drag rectangle.  Used for mouse
+	//! events.
 	@property (assign) NSRect
 	dragRectangle;
+	//! The location of the initial mouse-down when handling
+	//! drag rectangles.  Not meaningful otherwise.
 	@property (assign) NSPoint
 	dragStart;
 
@@ -162,23 +168,22 @@ Internal representation of a VectorCanvas_Ref.
 */
 struct My_VectorCanvas
 {
-	OSType					structureID;
-	VectorCanvas_Ref		selfRef;
-	VectorInterpreter_Ref	interpreter;
-	SessionRef				session;
-	My_CGColorList			deviceColors;
-	CGFloatRGBColor			outsideColor;
+	VectorCanvas_Ref				selfRef;
+	VectorInterpreter_Ref			interpreter;
+	SessionRef						session;
+	My_CGColorList					deviceColors;
+	CGFloatRGBColor					outsideColor;
 	TerminalView_MousePointerColor	mousePointerColor;
-	SInt16					ingin;
-	SInt16					canvasWidth;
-	SInt16					canvasHeight;
-	CGFloat					viewScaleX;
-	CGFloat					viewScaleY;
-	CGFloat					unscaledZoomOriginX;
-	CGFloat					unscaledZoomOriginY;
-	VectorCanvas_View*		canvasView;
-	NSMutableArray*			drawingPathElements;
-	NSBezierPath*			scrapPath;
+	Boolean							inGINMode;
+	SInt16							canvasWidth;
+	SInt16							canvasHeight;
+	CGFloat							viewScaleX;
+	CGFloat							viewScaleY;
+	CGFloat							unscaledZoomOriginX;
+	CGFloat							unscaledZoomOriginY;
+	VectorCanvas_View* __strong		canvasView;
+	NSMutableArray* __strong		drawingPathElements;
+	NSBezierPath* __strong			scrapPath;
 };
 typedef My_VectorCanvas*		My_VectorCanvasPtr;
 typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
@@ -228,14 +233,13 @@ VectorCanvas_New	(VectorInterpreter_Ref	inData)
 	
 	VectorCanvas_Retain(result);
 	
-	ptr->structureID = 'RGMW';
 	ptr->selfRef = result;
 	
 	// create regions for paths; the “complete path” represents the
 	// contents of the entire drawing to be rendered and the “scrap
 	// path“ represents something used temporarily by drawing commands
 	ptr->drawingPathElements = [[NSMutableArray alloc] initWithCapacity:10/* arbitrary; expands as needed */];
-	ptr->scrapPath = [[NSBezierPath bezierPath] retain];
+	ptr->scrapPath = [NSBezierPath bezierPath];
 	
 	ptr->canvasView = nil;
 	
@@ -247,7 +251,7 @@ VectorCanvas_New	(VectorInterpreter_Ref	inData)
 	ptr->viewScaleY = 1.0;
 	ptr->unscaledZoomOriginX = 0;
 	ptr->unscaledZoomOriginY = 0;
-	ptr->ingin = 0;
+	ptr->inGINMode = false;
 	
 	// create a color palette for this window (colors are set when a view is attached)
 	ptr->deviceColors.resize(kMy_MaxColors);
@@ -295,9 +299,9 @@ VectorCanvas_Release	(VectorCanvas_Ref*		inoutRefPtr)
 			My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), *inoutRefPtr);
 			
 			
-			[ptr->canvasView release], ptr->canvasView = nil;
-			[ptr->drawingPathElements release], ptr->drawingPathElements = nil;
-			[ptr->scrapPath release], ptr->scrapPath = nil;
+			ptr->canvasView = nil;
+			ptr->drawingPathElements = nil;
+			ptr->scrapPath = nil;
 		}
 		delete *(REINTERPRET_CAST(inoutRefPtr, My_VectorCanvasPtr*)), *inoutRefPtr = nullptr;
 	}
@@ -411,7 +415,7 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref			inRef,
 			// to make them visible
 			if (isSinglePoint)
 			{
-				[currentElement->bezierPath setLineCapStyle:NSRoundLineCapStyle];
+				currentElement.bezierPath.lineCapStyle = NSRoundLineCapStyle;
 				
 				// force the next drawing element to have a separate path
 				// (cannot afford to have the single point made invisible
@@ -419,8 +423,8 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref			inRef,
 				UNUSED_RETURN(VectorCanvas_Path*)pathElementWithPurpose(ptr, inPurpose, true/* force create */);
 			}
 			
-			[currentElement->bezierPath moveToPoint:NSMakePoint(x0, y0)];
-			[currentElement->bezierPath lineToPoint:NSMakePoint(x1, y1)];
+			[currentElement.bezierPath moveToPoint:NSMakePoint(x0, y0)];
+			[currentElement.bezierPath lineToPoint:NSMakePoint(x1, y1)];
 		}
 		result = kVectorCanvas_ResultOK;
 	}
@@ -459,7 +463,7 @@ VectorCanvas_MonitorMouse	(VectorCanvas_Ref	inRef)
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	ptr->ingin = 1;
+	ptr->inGINMode = true;
 	
 	return 0;
 }// MonitorMouse
@@ -544,15 +548,14 @@ VectorCanvas_ScrapPathFill	(VectorCanvas_Ref	inRef,
 			VectorCanvas_Path*	elementData = [[VectorCanvas_Path alloc] init];
 			
 			
-			[elementData->bezierPath appendBezierPath:ptr->scrapPath];
+			[elementData.bezierPath appendBezierPath:ptr->scrapPath];
 			if (inFrameWidthOrZero > 0.001/* arbitrary */)
 			{
-				[elementData->bezierPath setLineWidth:(inFrameWidthOrZero * elementData->normalLineWidth)];
+				elementData.bezierPath.lineWidth = (inFrameWidthOrZero * elementData.normalLineWidth);
 			}
-			elementData->drawingMode = kCGPathFill;
-			elementData->fillColorIndex = inFillColor;
+			elementData.drawingMode = kCGPathFill;
+			elementData.fillColorIndex = inFillColor;
 			[ptr->drawingPathElements addObject:elementData];
-			[elementData release];
 		}
 	}
 	
@@ -700,15 +703,15 @@ VectorCanvas_SetPenColor	(VectorCanvas_Ref			inRef,
 		VectorCanvas_Path*	currentElement = pathElementWithPurpose(ptr, inPurpose);
 		
 		
-		if (currentElement->strokeColorIndex != inColor)
+		if (currentElement.strokeColorIndex != inColor)
 		{
 			// to change the color, create a new entry (subsequent path
 			// changes will use this color until something changes again)
-			[ptr->drawingPathElements addObject:[[[VectorCanvas_Path alloc] initWithPurpose:inPurpose] autorelease]];
+			[ptr->drawingPathElements addObject:[[VectorCanvas_Path alloc] initWithPurpose:inPurpose]];
 			currentElement = [ptr->drawingPathElements lastObject];
 			assert(nil != currentElement);
 		}
-		currentElement->strokeColorIndex = inColor;
+		currentElement.strokeColorIndex = inColor;
 	}
 	
 	return result;
@@ -901,18 +904,18 @@ pathElementWithPurpose	(My_VectorCanvasPtr			inPtr,
 	if (0 == [inPtr->drawingPathElements count])
 	{
 		// drawing was empty
-		[inPtr->drawingPathElements addObject:[[[VectorCanvas_Path alloc] initWithPurpose:inPurpose] autorelease]];
+		[inPtr->drawingPathElements addObject:[[VectorCanvas_Path alloc] initWithPurpose:inPurpose]];
 	}
 	else
 	{
 		VectorCanvas_Path*	activePath = REINTERPRET_CAST([inPtr->drawingPathElements lastObject], VectorCanvas_Path*);
 		
 		
-		if ((inForceCreate) || (inPurpose != activePath->purpose))
+		if ((inForceCreate) || (inPurpose != activePath.purpose))
 		{
 			// drawing was empty or it was currently creating something
 			// different; make a new path with the requested purpose
-			[inPtr->drawingPathElements addObject:[[activePath copyWithEmptyPathForPurpose:inPurpose] autorelease]];
+			[inPtr->drawingPathElements addObject:[activePath copyWithEmptyPathForPurpose:inPurpose]];
 		}
 	}
 	result = [inPtr->drawingPathElements lastObject];
@@ -940,6 +943,9 @@ setPaletteColor		(My_VectorCanvasPtr			inPtr,
 
 #pragma mark -
 @implementation VectorCanvas_Path
+
+
+@synthesize purpose = _purpose;
 
 
 /*!
@@ -970,30 +976,17 @@ initWithPurpose:(VectorCanvas_PathPurpose)	aPurpose
 	self = [super init];
 	if (nil != self)
 	{
-		[self setPurpose:aPurpose]; // sets purpose and line width
-		self->bezierPath = [[NSBezierPath bezierPath] copy];
-		[self->bezierPath setLineWidth:self->normalLineWidth];
-		[self->bezierPath setLineCapStyle:NSRoundLineCapStyle];
-		[self->bezierPath setLineJoinStyle:NSBevelLineJoinStyle];
-		self->drawingMode = kCGPathStroke;
-		self->fillColorIndex = 0;
-		self->strokeColorIndex = 0;
+		self.purpose = aPurpose; // sets purpose and line width
+		_bezierPath = [[NSBezierPath bezierPath] copy];
+		self.bezierPath.lineWidth = self.normalLineWidth;
+		self.bezierPath.lineCapStyle = NSRoundLineCapStyle;
+		self.bezierPath.lineJoinStyle = NSBevelLineJoinStyle;
+		_drawingMode = kCGPathStroke;
+		_fillColorIndex = 0;
+		_strokeColorIndex = 0;
 	}
 	return self;
 }// initWithPurpose:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[bezierPath release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Accessors
@@ -1004,12 +997,17 @@ Accessor.
 
 (4.1)
 */
+- (VectorCanvas_PathPurpose)
+purpose
+{
+	return _purpose;
+}
 - (void)
 setPurpose:(VectorCanvas_PathPurpose)	aPurpose
 {
 	// the line width is directly dependent on the purpose of the path
-	self->purpose = aPurpose;
-	self->normalLineWidth = ((kVectorCanvas_PathPurposeText == aPurpose) ? kMy_DefaultTextStrokeWidth : kMy_DefaultStrokeWidth);
+	_purpose = aPurpose;
+	self.normalLineWidth = ((kVectorCanvas_PathPurposeText == aPurpose) ? kMy_DefaultTextStrokeWidth : kMy_DefaultStrokeWidth);
 }// setPurpose:
 
 
@@ -1029,13 +1027,12 @@ copyWithEmptyPathForPurpose:(VectorCanvas_PathPurpose)	aPurpose
 	
 	if (nil != result)
 	{
-		result->purpose = purpose;
-		result->normalLineWidth = normalLineWidth;
-		result->bezierPath = [[NSBezierPath bezierPath] copy];
-		result->drawingMode = drawingMode;
-		result->fillColorIndex = fillColorIndex;
-		result->strokeColorIndex = strokeColorIndex;
-		[result setPurpose:aPurpose];
+		result.bezierPath = [[NSBezierPath bezierPath] copy];
+		result.drawingMode = self.drawingMode;
+		result.fillColorIndex = self.fillColorIndex;
+		result.strokeColorIndex = self.strokeColorIndex;
+		result.purpose = aPurpose;
+		//result.normalLineWidth = self.normalLineWidth; // setting "purpose" updates "normalLineWidth"
 	}
 	return result;
 }// copyWithEmptyPathForPurpose:
@@ -1048,21 +1045,7 @@ copyWithEmptyPathForPurpose:(VectorCanvas_PathPurpose)	aPurpose
 @implementation VectorCanvas_View
 
 
-#pragma mark Internally-Declared Properties
-
-
-/*!
-If a non-empty rectangle, the rendering of the view
-displays this as a drag rectangle.  Used for mouse
-events.
-*/
-@synthesize dragRectangle = _dragRectangle;
-
-/*!
-The location of the initial mouse-down when handling
-drag rectangles.  Not meaningful otherwise.
-*/
-@synthesize dragStart = _dragStart;
+@synthesize interpreterRef = _interpreterRef;
 
 
 #pragma mark Initializers
@@ -1096,7 +1079,6 @@ Destructor.
 dealloc
 {
 	VectorInterpreter_Release(&_interpreterRef);
-	[super dealloc];
 }// dealloc
 
 
@@ -1149,30 +1131,26 @@ printing menu command.)
 performPrintScreen:(id)		sender
 {
 #pragma unused(sender)
-	NSPrintInfo*	printInfo = [[[NSPrintInfo sharedPrintInfo] copy] autorelease];
+	NSPrintInfo*	printInfo = [[NSPrintInfo sharedPrintInfo] copy];
 	
 	
 	// initial settings are basically arbitrary; attempting to make everything look nice
-	[printInfo setHorizontalPagination:NSFitPagination];
-	[printInfo setHorizontallyCentered:YES];
-	[printInfo setVerticalPagination:NSFitPagination];
-	[printInfo setVerticallyCentered:NO];
-	[printInfo setLeftMargin:72.0];
-	[printInfo setRightMargin:72.0];
-	[printInfo setTopMargin:72.0];
-	[printInfo setBottomMargin:72.0];
+	printInfo.horizontalPagination = NSFitPagination;
+	printInfo.horizontallyCentered = YES;
+	printInfo.verticalPagination = NSFitPagination;
+	printInfo.verticallyCentered = NO;
+	printInfo.leftMargin = 72.0;
+	printInfo.rightMargin = 72.0;
+	printInfo.topMargin = 72.0;
+	printInfo.bottomMargin = 72.0;
 	
-	if ([self bounds].size.width > [self bounds].size.height)
+	if (self.bounds.size.width > self.bounds.size.height)
 	{
-	#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090 /* MAC_OS_X_VERSION_10_9 */
-		[printInfo setOrientation:NSLandscapeOrientation];
-	#else
-		[printInfo setOrientation:NSPaperOrientationLandscape];
-	#endif
+		printInfo.orientation = NSPaperOrientationLandscape;
 	}
 	
 	[[NSPrintOperation printOperationWithView:self printInfo:printInfo]
-		runOperationModalForWindow:[self window] delegate:nil didRunSelector:nil contextInfo:nullptr];
+		runOperationModalForWindow:self.window delegate:nil didRunSelector:nil contextInfo:nullptr];
 }
 - (id)
 canPerformPrintScreen:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -1235,9 +1213,7 @@ copy:(id)	sender
 	// the latter preserves all the flexibility of the original drawing
 	[targetPasteboard declareTypes:dataTypeArray owner:nil];
 	[targetPasteboard setData:[self dataWithPDFInsideRect:imageBounds] forType:NSPasteboardTypePDF];
-	[targetPasteboard setData:[copiedImage TIFFRepresentation] forType:NSPasteboardTypeTIFF];
-	
-	[copiedImage release];
+	[targetPasteboard setData:copiedImage.TIFFRepresentation forType:NSPasteboardTypeTIFF];
 }
 - (id)
 canCopy:(id <NSValidatedUserInterfaceItem>)		anItem
@@ -1268,8 +1244,8 @@ performFormatByFavoriteName:(id)	sender
 	if ([[sender class] isSubclassOfClass:[NSMenuItem class]])
 	{
 		// use the specified preferences
-		NSMenuItem*		asMenuItem = (NSMenuItem*)sender;
-		CFStringRef		collectionName = BRIDGE_CAST([asMenuItem title], CFStringRef);
+		NSMenuItem*		asMenuItem = STATIC_CAST(sender, NSMenuItem*);
+		CFStringRef		collectionName = BRIDGE_CAST(asMenuItem.title, CFStringRef);
 		
 		
 		if ((nil != collectionName) && Preferences_IsContextNameInUse(Quills::Prefs::FORMAT, collectionName))
@@ -1467,7 +1443,7 @@ mouseDown:(NSEvent*)	anEvent
 {
 	VectorCanvas_Ref			canvasRef = VectorInterpreter_ReturnCanvas(self.interpreterRef);
 	My_VectorCanvasAutoLocker	canvasPtr(gVectorCanvasPtrLocks(), canvasRef);
-	NSPoint						windowLocation = [anEvent locationInWindow];
+	NSPoint						windowLocation = anEvent.locationInWindow;
 	NSPoint						viewLocation = [self convertPoint:windowLocation fromView:nil];
 	
 	
@@ -1499,7 +1475,7 @@ mouseDown:(NSEvent*)	anEvent
 		// reset zoom on double-click
 		[self performGraphicsCanvasResizeTo100Percent:nil];
 	}
-	else if (canvasPtr->ingin)
+	else if (canvasPtr->inGINMode)
 	{
 		// report the location of the cursor
 	#if 0
@@ -1557,7 +1533,7 @@ mouseDown:(NSEvent*)	anEvent
 					// update rectangle
 					if (NO == flagCancellation)
 					{
-						NSPoint		newWindowLocation = [eventObject locationInWindow];
+						NSPoint		newWindowLocation = eventObject.locationInWindow;
 						NSPoint		newViewLocation = [self convertPoint:newWindowLocation fromView:nil];
 						CGRect		asCGRect = NSRectToCGRect(self.dragRectangle);
 						
@@ -1716,7 +1692,7 @@ drawRect:(NSRect)	rect
 	
 	if (nullptr != canvasPtr)
 	{
-		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
+		CGContextRef	drawingContext = [NSGraphicsContext currentContext].CGContext;
 		
 		
 		// draw the background (unless this is for printing)
@@ -1801,7 +1777,7 @@ menuForEvent:(NSEvent*)		anEvent
 	if (nullptr != canvasPtr)
 	{
 		// display a contextual menu
-		result = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+		result = [[NSMenu alloc] initWithTitle:@""];
 		
 		// set up the contextual menu
 		//[result setAllowsContextMenuPlugIns:NO];
@@ -1823,7 +1799,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -1842,7 +1817,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -1853,7 +1827,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -1869,7 +1842,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -1885,7 +1857,6 @@ menuForEvent:(NSEvent*)		anEvent
 					if (nil != newItem)
 					{
 						ContextSensitiveMenu_AddItem(result, newItem);
-						[newItem release], newItem = nil;
 					}
 					CFRelease(commandText), commandText = nullptr;
 				}
@@ -1897,7 +1868,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -1908,7 +1878,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -1922,7 +1891,6 @@ menuForEvent:(NSEvent*)		anEvent
 				if (nil != newItem)
 				{
 					ContextSensitiveMenu_AddItem(result, newItem);
-					[newItem release], newItem = nil;
 				}
 				CFRelease(commandText), commandText = nullptr;
 			}
@@ -2009,7 +1977,7 @@ resetCursorRects
 		newCursor = [NSCursor crosshairCursor];
 	}
 	
-	[self addCursorRect:[self bounds] cursor:newCursor];
+	[self addCursorRect:self.bounds cursor:newCursor];
 }// resetCursorRects
 
 
@@ -2043,7 +2011,7 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 	
 	if (nullptr != canvasPtr)
 	{
-		CGContextRef	drawingContext = [[NSGraphicsContext currentContext] CGContext];
+		CGContextRef	drawingContext = [NSGraphicsContext currentContext].CGContext;
 		CGRect			contentBounds = NSRectToCGRect(aRect);
 		BOOL			isPrinting = (nil != [NSPrintOperation currentOperation]);
 		
@@ -2103,10 +2071,10 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 			for (VectorCanvas_Path* pathElement in canvasPtr->drawingPathElements)
 			{
 				// update graphics context state if it should change
-				if (pathElement->fillColorIndex != currentFillColorIndex)
+				if (pathElement.fillColorIndex != currentFillColorIndex)
 				{
-					assert((pathElement->fillColorIndex >= 0) && (pathElement->fillColorIndex < kMy_MaxColors));
-					if ((isPrinting) && (kMy_ColorIndexBackground == pathElement->fillColorIndex))
+					assert((pathElement.fillColorIndex >= 0) && (pathElement.fillColorIndex < kMy_MaxColors));
+					if ((isPrinting) && (kMy_ColorIndexBackground == pathElement.fillColorIndex))
 					{
 						// when printing, do not allow the background color to print
 						// (because it might be reformatted, e.g. white-on-black);
@@ -2115,16 +2083,16 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 					}
 					else
 					{
-						getPaletteColor(canvasPtr, pathElement->fillColorIndex, scratchColor);
+						getPaletteColor(canvasPtr, pathElement.fillColorIndex, scratchColor);
 						CGContextSetRGBFillColor(drawingContext, scratchColor.red, scratchColor.green,
 													scratchColor.blue, 1.0/* alpha */);
 					}
-					currentFillColorIndex = pathElement->fillColorIndex;
+					currentFillColorIndex = pathElement.fillColorIndex;
 				}
-				if (pathElement->strokeColorIndex != currentStrokeColorIndex)
+				if (pathElement.strokeColorIndex != currentStrokeColorIndex)
 				{
-					assert((pathElement->strokeColorIndex >= 0) && (pathElement->strokeColorIndex < kMy_MaxColors));
-					if ((isPrinting) && (kMy_ColorIndexForeground == pathElement->strokeColorIndex))
+					assert((pathElement.strokeColorIndex >= 0) && (pathElement.strokeColorIndex < kMy_MaxColors));
+					if ((isPrinting) && (kMy_ColorIndexForeground == pathElement.strokeColorIndex))
 					{
 						// when printing, do not allow the foreground color to print
 						// (because it might be reformatted, e.g. white-on-black);
@@ -2133,28 +2101,28 @@ renderDrawingInCurrentFocusWithRect:(NSRect)	aRect
 					}
 					else
 					{
-						getPaletteColor(canvasPtr, pathElement->strokeColorIndex, scratchColor);
+						getPaletteColor(canvasPtr, pathElement.strokeColorIndex, scratchColor);
 						CGContextSetRGBStrokeColor(drawingContext, scratchColor.red, scratchColor.green,
 													scratchColor.blue, 1.0/* alpha */);
 					}
-					currentStrokeColorIndex = pathElement->strokeColorIndex;
+					currentStrokeColorIndex = pathElement.strokeColorIndex;
 				}
 				
 				// make lines thicker when the drawing is bigger, up to a certain maximum thickness
-				[pathElement->bezierPath setLineWidth:std::max< CGFloat >(std::min< CGFloat >((contentBounds.size.width / canvasDisplayWidth) * pathElement->normalLineWidth,
-																								pathElement->normalLineWidth * 2/* arbitrary maximum */),
-																pathElement->normalLineWidth / 3 * 2/* arbitrary minimum */)];
+				[pathElement.bezierPath setLineWidth:std::max< CGFloat >(std::min< CGFloat >((contentBounds.size.width / canvasDisplayWidth) * pathElement.normalLineWidth,
+																								pathElement.normalLineWidth * 2/* arbitrary maximum */),
+																pathElement.normalLineWidth / 3 * 2/* arbitrary minimum */)];
 				
 				// add the new sub-path
-				switch (pathElement->drawingMode)
+				switch (pathElement.drawingMode)
 				{
 				case kCGPathFill:
-					[pathElement->bezierPath fill];
+					[pathElement.bezierPath fill];
 					break;
 				
 				case kCGPathStroke:
 				default:
-					[pathElement->bezierPath stroke];
+					[pathElement.bezierPath stroke];
 					break;
 				}
 			}

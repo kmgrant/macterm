@@ -49,6 +49,7 @@
 #import <MemoryBlockPtrLocker.template.h>
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
+#import <Registrar.template.h>
 #import <TouchBar.objc++.h>
 #import <WindowTitleDialog.h>
 
@@ -64,11 +65,50 @@
 #pragma mark Types
 namespace {
 
-typedef std::set< VectorWindow_Controller* >	My_VectorWindowRefTracker;
+typedef MemoryBlockReferenceTracker< VectorWindow_Ref >		My_RefTracker;
+typedef Registrar< VectorWindow_Ref, My_RefTracker >		My_RefRegistrar;
+
+/*!
+Internal representation of a VectorWindow_Ref.
+*/
+struct My_VectorWindow
+{
+	My_VectorWindow		(VectorInterpreter_Ref);
+	~My_VectorWindow ();
+	
+	My_RefRegistrar						refValidator;		// ensures this reference is recognized as a valid one
+	VectorWindow_Ref					selfRef;			// redundant reference to self, for convenience
+	VectorWindow_Controller* __strong	windowController;	// controller for the main NSWindow (responds to events, etc.)
+};
+typedef My_VectorWindow*		My_VectorWindowPtr;
+typedef My_VectorWindow const*	My_VectorWindowConstPtr;
+
+typedef std::set< VectorWindow_Ref >										My_VectorWindowRefTracker;
+typedef MemoryBlockPtrLocker< VectorWindow_Ref, My_VectorWindow >			My_VectorWindowPtrLocker;
+typedef LockAcquireRelease< VectorWindow_Ref, My_VectorWindow >				My_VectorWindowAutoLocker;
+typedef MemoryBlockReferenceLocker< VectorWindow_Ref, My_VectorWindow >		My_VectorWindowReferenceLocker;
 
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+
+/*!
+Private properties.
+*/
+@interface VectorWindow_Controller () //{
+
+// accessors
+	@property (assign) ListenerModel_Ref
+	changeListenerModel;
+	@property (assign) VectorInterpreter_Ref
+	interpreterRef;
+	@property (assign) WindowTitleDialog_Ref
+	renameDialog;
+	@property (strong) TouchBar_Controller*
+	touchBarController;
+
+@end //}
+
 
 /*!
 The private class interface.
@@ -87,14 +127,6 @@ The private class interface.
 	removeListener:(ListenerModel_ListenerRef)_
 	forEvent:(VectorWindow_Event)_;
 
-// accessors
-	- (VectorWindow_Ref)
-	canvasWindow;
-	- (VectorInterpreter_Ref)
-	interpreterRef;
-	- (void)
-	setInterpreterRef:(VectorInterpreter_Ref)_;
-
 // notifications
 	- (void)
 	windowWillClose:(NSNotification*)_;
@@ -104,7 +136,8 @@ The private class interface.
 #pragma mark Variables
 namespace {
 
-My_VectorWindowRefTracker&		gVectorCanvasWindowValidRefs ()	{ static My_VectorWindowRefTracker x; return x; }
+My_RefTracker&					gVectorWindowValidRefs ()	{ static My_RefTracker x; return x; }
+My_VectorWindowPtrLocker&		gVectorWindowPtrLocks ()	{ static My_VectorWindowPtrLocker x; return x; }
 
 } // anonymous namespace
 
@@ -130,29 +163,20 @@ first.
 VectorWindow_Ref
 VectorWindow_New	(VectorInterpreter_Ref		inData)
 {
-	VectorWindow_Controller*	controller = [[VectorWindow_Controller alloc] initWithInterpreter:inData];
+	VectorWindow_Ref	result = nullptr;
 	
 	
-	return [controller canvasWindow];
+	try
+	{
+		result = REINTERPRET_CAST(new My_VectorWindow(inData),
+									VectorWindow_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
+	return result;
 }// New
-
-
-/*!
-Adds a lock on the specified reference.  This indicates you are
-using the window, so attempts by anyone else to delete the window
-with VectorWindow_Release() will fail until you release your lock
-(and everyone else releases locks they may have).
-
-(4.1)
-*/
-void
-VectorWindow_Retain		(VectorWindow_Ref	inWindow)
-{
-	VectorWindow_Controller*	controller = VectorWindow_ReturnController(inWindow);
-	
-	
-	[controller retain];
-}// Retain
 
 
 /*!
@@ -166,37 +190,22 @@ nullptr.
 void
 VectorWindow_Release	(VectorWindow_Ref*		inoutRefPtr)
 {
-	if (nullptr != inoutRefPtr)
+	if (gVectorWindowPtrLocks().isLocked(*inoutRefPtr))
 	{
-		VectorWindow_Controller*	controller = VectorWindow_ReturnController(*inoutRefPtr);
-		
-		
-		[controller release], *inoutRefPtr = nullptr;
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked vector graphics window");
+	}
+	else
+	{
+		// clean up
+		{
+			My_VectorWindowAutoLocker	ptr(gVectorWindowPtrLocks(), *inoutRefPtr);
+			
+			
+			delete ptr;
+		}
+		*inoutRefPtr = nullptr;
 	}
 }// Release
-
-
-/*!
-Provides a copy of the window title string, or nullptr on error.
-
-(4.1)
-*/
-void
-VectorWindow_CopyTitle	(VectorWindow_Ref	inWindow,
-						 CFStringRef&		outTitle)
-{
-	VectorWindow_Controller*	controller = VectorWindow_ReturnController(inWindow);
-	
-	
-	outTitle = nullptr;
-	if (nil != controller)
-	{
-		NSWindow*	owningWindow = [controller window];
-		
-		
-		outTitle = BRIDGE_CAST([[owningWindow title] copy], CFStringRef);
-	}
-}// CopyTitle
 
 
 /*!
@@ -241,14 +250,15 @@ used (a possibility in external modules).
 VectorWindow_Controller*
 VectorWindow_ReturnController	(VectorWindow_Ref	inWindow)
 {
-	VectorWindow_Controller*	result = [VectorWindow_Controller windowControllerForWindowRef:inWindow];
+	VectorWindow_Controller*	result = nil;
 	
 	
-	if (gVectorCanvasWindowValidRefs().end() == gVectorCanvasWindowValidRefs().find(result))
+	// a reference that has been released is a bad reference
+	if (gVectorWindowValidRefs().end() != gVectorWindowValidRefs().find(inWindow))
 	{
-		// a reference that has been released is a bad reference
-		result = nil;
+		result = [VectorWindow_Controller windowControllerForWindowRef:inWindow];
 	}
+	
 	return result;
 }// ReturnController
 
@@ -303,7 +313,7 @@ VectorWindow_SetTitle	(VectorWindow_Ref	inWindow,
 		NSWindow*	owningWindow = [controller window];
 		
 		
-		[owningWindow setTitle:BRIDGE_CAST(inTitle, NSString*)];
+		owningWindow.title = BRIDGE_CAST(inTitle, NSString*);
 		result = kVectorWindow_ResultOK;
 	}
 	return result;
@@ -373,10 +383,44 @@ VectorWindow_StopMonitoring		(VectorWindow_Ref			inWindow,
 
 
 #pragma mark Internal Methods
+namespace {
+
+/*!
+Constructor.  See VectorWindow_New().
+
+(2021.01)
+*/
+My_VectorWindow::
+My_VectorWindow		(VectorInterpreter_Ref		inData)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+refValidator(REINTERPRET_CAST(this, VectorWindow_Ref), gVectorWindowValidRefs()),
+selfRef(REINTERPRET_CAST(this, VectorWindow_Ref)),
+windowController([[VectorWindow_Controller alloc]
+					initWithInterpreter:inData
+										owner:REINTERPRET_CAST(this, VectorWindow_Ref)])
+{
+}// MyVectorWindow constructor
+
+
+/*!
+Destructor.  See VectorWindow_Release().
+
+(2021.01)
+*/
+My_VectorWindow::
+~My_VectorWindow ()
+{
+}// MyVectorWindow destructor
+
+} // anonymous namespace
 
 
 #pragma mark -
-@implementation VectorWindow_Controller
+@implementation VectorWindow_Controller //{
+
+
+@synthesize interpreterRef = _interpreterRef;
 
 
 #pragma mark Initializers
@@ -389,20 +433,20 @@ Designated initializer.
 */
 - (instancetype)
 initWithInterpreter:(VectorInterpreter_Ref)		anInterpreter
+owner:(VectorWindow_Ref)						aVectorWindowRef
 {
 	self = [super initWithWindowNibName:@"VectorWindowCocoa"];
 	if (nil != self)
 	{
+		_changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard, 'VWIN');
+		_interpreterRef = anInterpreter;
 		VectorInterpreter_Retain(anInterpreter);
-		self->selfRef = [self canvasWindow];
-		self->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard, 'VWIN');
-		self->interpreterRef = anInterpreter;
-		self->renameDialog = nullptr;
-		self->_touchBarController = nil; // created on demand
-		gVectorCanvasWindowValidRefs().insert(self);
+		_renameDialog = nullptr;
+		_touchBarController = nil; // created on demand
+		_vectorWindowRef = aVectorWindowRef;
 	}
 	return self;
-}// initWithInterpreter:
+}// initWithInterpreter:owner:
 
 
 /*!
@@ -419,57 +463,20 @@ dealloc
 		[self.window toggleFullScreen:NSApp];
 	}
 	
-	[_touchBarController release];
-	
-	gVectorCanvasWindowValidRefs().erase(self);
 	[self ignoreWhenObjectsPostNotes];
-	[canvasView release];
-	if (nullptr != changeListenerModel)
+	if (nullptr != self.changeListenerModel)
 	{
-		ListenerModel_Dispose(&changeListenerModel);
+		ListenerModel_Dispose(&_changeListenerModel);
 	}
-	if (nullptr != renameDialog)
+	if (nullptr != self.renameDialog)
 	{
-		WindowTitleDialog_Dispose(&renameDialog);
+		WindowTitleDialog_Dispose(&_renameDialog);
 	}
-	if (nullptr != interpreterRef)
+	if (nullptr != self.interpreterRef)
 	{
-		VectorInterpreter_Release(&interpreterRef);
+		VectorInterpreter_Release(&_interpreterRef);
 	}
-	
-	[super dealloc];
 }// dealloc
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (VectorCanvas_View*)
-canvasView
-{
-	return canvasView;
-}
-- (void)
-setCanvasView:(VectorCanvas_View*)	aView
-{
-	if (canvasView != aView)
-	{
-		if (nil != canvasView)
-		{
-			[canvasView release];
-		}
-		if (nil != aView)
-		{
-			[aView retain];
-		}
-		canvasView = aView;
-	}
-}// setCanvasView:
 
 
 #pragma mark Actions: Commands_WindowRenaming
@@ -484,7 +491,7 @@ Displays an interface for setting the title of the canvas window.
 performRename:(id)	sender
 {
 #pragma unused(sender)
-	if (nullptr == self->renameDialog)
+	if (nullptr == self.renameDialog)
 	{
 		NSWindow*	windowRef = self.window; // keep "self" from being retained in the blocks below
 		Boolean		noAnimations = false;
@@ -500,7 +507,7 @@ performRename:(id)	sender
 		
 		// create the rename interface, specify how to initialize it
 		// and specify how to update the title when finished
-		self->renameDialog = WindowTitleDialog_NewWindowModal
+		self.renameDialog = WindowTitleDialog_NewWindowModal
 								(windowRef, (false == noAnimations),
 								^()
 								{
@@ -520,7 +527,7 @@ performRename:(id)	sender
 									}
 								});
 	}
-	WindowTitleDialog_Display(self->renameDialog);
+	WindowTitleDialog_Display(self.renameDialog);
 }
 - (id)
 canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
@@ -528,6 +535,37 @@ canPerformRename:(id <NSValidatedUserInterfaceItem>)	anItem
 #pragma unused(anItem)
 	return @(YES);
 }
+
+
+#pragma mark Accessors
+
+
+/*!
+Accessor.
+
+(4.1)
+*/
+- (VectorInterpreter_Ref)
+interpreterRef
+{
+	return _interpreterRef;
+}
+- (void)
+setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
+{
+	if (_interpreterRef != anInterpreter)
+	{
+		if (nullptr != _interpreterRef)
+		{
+			VectorInterpreter_Release(&_interpreterRef);
+		}
+		if (nullptr != anInterpreter)
+		{
+			VectorInterpreter_Retain(anInterpreter);
+		}
+		_interpreterRef = anInterpreter;
+	}
+}// setInterpreterRef:
 
 
 #pragma mark TerminalView_ClickDelegate
@@ -660,34 +698,30 @@ done in "init".)
 windowDidLoad
 {
 	[super windowDidLoad];
-	assert(nil != canvasView);
-	assert(nil != matteView);
+	assert(nil != self.canvasView);
+	assert(nil != self.matteView);
 	
-	matteView.clickDelegate = self;
+	self.matteView.clickDelegate = self;
 	
-	[canvasView setInterpreterRef:[self interpreterRef]];
+	self.canvasView.interpreterRef = self.interpreterRef;
 	
-	if ([self.window respondsToSelector:@selector(setAnimationBehavior:)])
-	{
-		[self.window setAnimationBehavior:NSWindowAnimationBehaviorDocumentWindow];
-	}
+	self.window.animationBehavior = NSWindowAnimationBehaviorDocumentWindow;
 	
 	// enable Full Screen
-	[self.window setCollectionBehavior:([self.window collectionBehavior] | NSWindowCollectionBehaviorFullScreenPrimary)];
+	self.window.collectionBehavior = (self.window.collectionBehavior | NSWindowCollectionBehaviorFullScreenPrimary);
 	
 	[self whenObject:self.window postsNote:NSWindowWillCloseNotification
 						performSelector:@selector(windowWillClose:)];
 	
-	
-	self.window.initialFirstResponder = canvasView;
+	self.window.initialFirstResponder = self.canvasView;
 }// windowDidLoad
 
 
-@end // VectorWindow_Controller
+@end //} VectorWindow_Controller
 
 
 #pragma mark -
-@implementation VectorWindow_Controller (VectorWindow_ControllerInternal)
+@implementation VectorWindow_Controller (VectorWindow_ControllerInternal) //{
 
 
 /*!
@@ -698,7 +732,16 @@ Accessor.
 + (VectorWindow_Controller*)
 windowControllerForWindowRef:(VectorWindow_Ref)		aWindow
 {
-	return REINTERPRET_CAST(aWindow, VectorWindow_Controller*);
+	VectorWindow_Controller*	result = nil;
+	My_VectorWindowAutoLocker	ptr(gVectorWindowPtrLocks(), aWindow);
+	
+	
+	if (nullptr != ptr)
+	{
+		result = ptr->windowController;
+	}
+	
+	return result;
 }// windowControllerForWindowRef:
 
 
@@ -714,7 +757,7 @@ Installs a handler for an event.
 onEvent:(VectorWindow_Event)				anEvent
 notifyListener:(ListenerModel_ListenerRef)	aListener
 {
-	UNUSED_RETURN(Boolean)ListenerModel_AddListenerForEvent(self->changeListenerModel, anEvent, aListener);
+	UNUSED_RETURN(Boolean)ListenerModel_AddListenerForEvent(self.changeListenerModel, anEvent, aListener);
 }// onEvent:notifyListener:
 
 
@@ -727,51 +770,8 @@ Removes a handler for an event.
 removeListener:(ListenerModel_ListenerRef)	aListener
 forEvent:(VectorWindow_Event)				anEvent
 {
-	ListenerModel_RemoveListenerForEvent(self->changeListenerModel, anEvent, aListener);
+	ListenerModel_RemoveListenerForEvent(self.changeListenerModel, anEvent, aListener);
 }// removeListener:forEvent:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (VectorWindow_Ref)
-canvasWindow
-{
-	return REINTERPRET_CAST(self, VectorWindow_Ref);
-}// canvasWindow
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (VectorInterpreter_Ref)
-interpreterRef
-{
-	return interpreterRef;
-}
-- (void)
-setInterpreterRef:(VectorInterpreter_Ref)	anInterpreter
-{
-	if (interpreterRef != anInterpreter)
-	{
-		if (nullptr != interpreterRef)
-		{
-			VectorInterpreter_Release(&interpreterRef);
-		}
-		if (nullptr != anInterpreter)
-		{
-			VectorInterpreter_Retain(anInterpreter);
-		}
-		interpreterRef = anInterpreter;
-	}
-}// setInterpreterRef:
 
 
 #pragma mark Notifications
@@ -787,10 +787,10 @@ windowWillClose:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
 	// notify listeners outside this module
-	ListenerModel_NotifyListenersOfEvent(self->changeListenerModel, kVectorWindow_EventWillClose, self->selfRef/* context */);
+	ListenerModel_NotifyListenersOfEvent(self.changeListenerModel, kVectorWindow_EventWillClose, self.vectorWindowRef/* context */);
 }// windowWillClose:
 
 
-@end // VectorWindow_Controller (VectorWindow_ControllerInternal)
+@end //} VectorWindow_Controller (VectorWindow_ControllerInternal)
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
