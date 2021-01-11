@@ -53,33 +53,58 @@
 #pragma mark Types
 
 /*!
+Private properties.
+*/
+@interface WindowTitleDialog_Object () //{
+
+// accessors
+	//! YES if there should be animation when opening/closing.
+	@property (assign) BOOL
+	animated;
+	//! Specify where arrow (if any) appears on the window border.
+	//! Note that this is not visible on macOS Big Sur because
+	//! the OS now has a centered sheet style.
+	@property (assign) NSTextAlignment
+	arrowAlignment;
+	//! Holds the Rename dialog view.
+	@property (strong) Popover_Window*
+	containerWindow;
+	//! Block to invoke when the dialog is dismissed.
+	@property (strong) WindowTitleDialog_CloseNotifyBlock
+	closeNotifyBlock;
+	//! Minimum size of the managed view.
+	@property (assign) NSSize
+	idealSize;
+	//! Block to invoke when initializing dialog title.
+	@property (strong) WindowTitleDialog_ReturnTitleCopyBlock
+	initBlock;
+	//! The view that implements the majority of the interface.
+	@property (strong) NSView*
+	managedView;
+	//! Manages common aspects of popover window behavior.
+	@property (assign) PopoverManager_Ref
+	popoverMgr;
+	//! The window to be given a new title.
+	@property (strong) NSWindow*
+	targetWindow;
+	//! Loads the Rename interface.
+	@property (strong) WindowTitleDialog_VC*
+	viewMgr;
+
+@end //}
+
+
+/*!
 Manages the rename-window user interface.
 */
-@interface WindowTitleDialog_Handler : NSObject< PopoverManager_Delegate, WindowTitleDialog_VCDelegate > //{
-{
-	WindowTitleDialog_Ref						_selfRef;				// identical to address of structure, but typed as ref
-	WindowTitleDialog_VC*						_viewMgr;				// loads the Rename interface
-	Popover_Window*								_containerWindow;		// holds the Rename dialog view
-	NSView*										_managedView;			// the view that implements the majority of the interface
-	NSWindow*									_targetCocoaWindow;		// the window to be renamed, if Cocoa
-	BOOL										_animated;				// YES if there should be animation when opening/closing
-	NSTextAlignment								_arrowAlignment;		// how to place the arrow
-	NSSize										_idealSize;				// minimum size of the managed view
-	PopoverManager_Ref							_popoverMgr;				// manages common aspects of popover window behavior
-	WindowTitleDialog_ReturnTitleCopyBlock		_initBlock;				// block to invoke when initializing dialog title
-	WindowTitleDialog_CloseNotifyBlock			_closeNotifyBlock;		// block to invoke when the dialog is dismissed
-}
-
-// class methods
-	+ (WindowTitleDialog_Handler*)
-	viewHandlerFromRef:(WindowTitleDialog_Ref)_;
+@interface WindowTitleDialog_Object (WindowTitleDialog_ObjectInternal) //{
 
 // initializers
 	- (instancetype)
-	initForCocoaWindow:(NSWindow*)_
+	initForWindow:(NSWindow*)_
 	animated:(BOOL)_
 	whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)_
-	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_ NS_DESIGNATED_INITIALIZER;
+	whenClosing:(WindowTitleDialog_CloseNotifyBlock)_;
 
 // new methods
 	- (void)
@@ -87,17 +112,21 @@ Manages the rename-window user interface.
 	- (void)
 	removeWithAcceptance:(BOOL)_;
 
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface WindowTitleDialog_VC () //{
+
 // accessors
-	@property (assign) NSTextAlignment
-	arrowAlignment;
-	- (NSWindow*)
-	renamedCocoaWindow;
-
-// PopoverManager_Delegate
-	// (undeclared)
-
-// WindowTitleDialog_VCDelegate
-	// (undeclared)
+	//! The window that is being renamed.
+	@property (strong) NSWindow*
+	parentWindow;
+	//! An object that implements UI behavior.
+	@property (assign) id< WindowTitleDialog_VCDelegate >
+	responder;
 
 @end //}
 
@@ -115,7 +144,7 @@ string is provided (otherwise, the string is nullptr).
 (2016.09)
 */
 WindowTitleDialog_Ref
-WindowTitleDialog_NewWindowModal	(NSWindow*								inCocoaParentWindow,
+WindowTitleDialog_NewWindowModal	(NSWindow*								inParentWindow,
 									 Boolean								inIsAnimated,
 									 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
 									 WindowTitleDialog_CloseNotifyBlock		inFinalBlock)
@@ -123,30 +152,13 @@ WindowTitleDialog_NewWindowModal	(NSWindow*								inCocoaParentWindow,
 	WindowTitleDialog_Ref	result = nullptr;
 	
 	
-	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Handler alloc]
-										initForCocoaWindow:inCocoaParentWindow
-															animated:inIsAnimated
-															whenInitializing:inInitBlock
-															whenClosing:inFinalBlock];
+	result = (WindowTitleDialog_Ref)[[WindowTitleDialog_Object alloc]
+										initForWindow:inParentWindow
+														animated:inIsAnimated
+														whenInitializing:inInitBlock
+														whenClosing:inFinalBlock];
 	return result;
 }// NewWindowModal
-
-
-/*!
-Call this method to destroy a window title dialog
-box and its associated data structures.  On return,
-your copy of the dialog reference is set to nullptr.
-
-(3.0)
-*/
-void
-WindowTitleDialog_Dispose	(WindowTitleDialog_Ref*		inoutDialogPtr)
-{
-	WindowTitleDialog_Handler*	ptr = [WindowTitleDialog_Handler viewHandlerFromRef:*inoutDialogPtr];
-	
-	
-	[ptr release];
-}// Dispose
 
 
 /*!
@@ -160,17 +172,14 @@ callback is invoked.
 void
 WindowTitleDialog_Display	(WindowTitleDialog_Ref	inDialog)
 {
-	WindowTitleDialog_Handler*	ptr = [WindowTitleDialog_Handler viewHandlerFromRef:inDialog];
-	
-	
-	if (nullptr == ptr)
+	if (nullptr == inDialog)
 	{
-		NSBeep();
+		NSBeep(); // TEMPORARY (display alert message?)
 	}
 	else
 	{
 		// load the view asynchronously and eventually display it in a window
-		[ptr display];
+		[inDialog display];
 	}
 }// Display
 
@@ -185,13 +194,7 @@ void
 WindowTitleDialog_SetAlignment	(WindowTitleDialog_Ref	inDialog,
 								 NSTextAlignment		inPointerAlignment)
 {
-	WindowTitleDialog_Handler*	ptr = [WindowTitleDialog_Handler viewHandlerFromRef:inDialog];
-	
-	
-	if (nullptr != ptr)
-	{
-		ptr.arrowAlignment = inPointerAlignment;
-	}
+	inDialog.arrowAlignment = inPointerAlignment;
 }// Display
 
 
@@ -199,151 +202,10 @@ WindowTitleDialog_SetAlignment	(WindowTitleDialog_Ref	inDialog,
 
 
 #pragma mark -
-@implementation WindowTitleDialog_Handler //{
+@implementation WindowTitleDialog_Object //{
 
 
 @synthesize arrowAlignment = _arrowAlignment;
-
-
-#pragma mark Class Methods
-
-
-/*!
-Converts from the opaque reference type to the internal type.
-
-(4.0)
-*/
-+ (WindowTitleDialog_Handler*)
-viewHandlerFromRef:(WindowTitleDialog_Ref)		aRef
-{
-	return REINTERPRET_CAST(aRef, WindowTitleDialog_Handler*);
-}// viewHandlerFromRef
-
-
-#pragma mark Initializers
-
-
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2016.09)
-*/
-- (instancetype)
-init
-{
-	assert(false && "invalid way to initialize derived class");
-	return [self initForCocoaWindow:nil animated:YES whenInitializing:nil whenClosing:nil];
-}// init
-
-
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initForCocoaWindow:(NSWindow*)								aCocoaWindow
-animated:(BOOL)												anAnimationFlag
-whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
-whenClosing:(WindowTitleDialog_CloseNotifyBlock)			aFinalBlock
-{
-	self = [super init];
-	if (nil != self)
-	{
-		_selfRef = REINTERPRET_CAST(self, WindowTitleDialog_Ref);
-		_viewMgr = nil;
-		_containerWindow = nil;
-		_managedView = nil;
-		_targetCocoaWindow = aCocoaWindow;
-		_popoverMgr = nullptr;
-		_idealSize = NSZeroSize; // set later
-		_animated = anAnimationFlag;
-		_arrowAlignment = NSTextAlignmentCenter;
-		_initBlock = Block_copy(anInitBlock);
-		_closeNotifyBlock = Block_copy(aFinalBlock);
-	}
-	return self;
-}// initForCocoaWindow:animated:whenInitializing:whenClosing:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	Memory_EraseWeakReferences(self);
-	Block_release(_initBlock);
-	Block_release(_closeNotifyBlock);
-	[_containerWindow release];
-	[_viewMgr release];
-	if (nullptr != _popoverMgr)
-	{
-		PopoverManager_Dispose(&_popoverMgr);
-	}
-	[super dealloc];
-}// dealloc
-
-
-#pragma mark New Methods
-
-
-/*!
-Creates the Rename view asynchronously; when the view is ready,
-it calls "titleDialog:didLoadManagedView:".
-
-(4.0)
-*/
-- (void)
-display
-{
-	if (nil == _viewMgr)
-	{
-		// no focus is done the first time because this is
-		// eventually done in "titleDialog:didLoadManagedView:"
-		_viewMgr = [[WindowTitleDialog_VC alloc]
-					initForCocoaWindow:_targetCocoaWindow responder:self];
-	}
-	else
-	{
-		// window is already loaded, just activate it
-		PopoverManager_DisplayPopover(_popoverMgr);
-	}
-}// display
-
-
-/*!
-Hides the popover.  It can be shown again at any time
-using the "display" method.
-
-(4.0)
-*/
-- (void)
-removeWithAcceptance:(BOOL)		isAccepted
-{
-	if (nil != _popoverMgr)
-	{
-		PopoverManager_RemovePopover(_popoverMgr, isAccepted);
-	}
-}// removeWithAcceptance:
-
-
-/*!
-Returns the Cocoa window that represents the renamed window.
-
-(4.0)
-*/
-- (NSWindow*)
-renamedCocoaWindow
-{
-	NSWindow*	result = _targetCocoaWindow;
-	
-	
-	return result;
-}// renamedCocoaWindow
 
 
 #pragma mark PopoverManager_Delegate
@@ -394,8 +256,8 @@ idealAnchorPointForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
 #pragma unused(aPopoverManager)
-	NSRect		screenFrame = [[parentWindow screen] visibleFrame];
-	NSRect		managedViewFrame = [_managedView frame];
+	NSRect		screenFrame = parentWindow.screen.visibleFrame;
+	NSRect		managedViewFrame = self.managedView.frame;
 	NSPoint		result = CGPointZero; // set below
 	
 	
@@ -476,12 +338,12 @@ created during the first invocation.
 titleDialog:(WindowTitleDialog_VC*)		aViewMgr
 didLoadManagedView:(NSView*)			aManagedView
 {
-	_managedView = aManagedView;
-	if (nil == _containerWindow)
+	self.managedView = aManagedView;
+	if (nil == self.containerWindow)
 	{
-		NSWindow*						asNSWindow = [self renamedCocoaWindow];
+		NSWindow*						asNSWindow = self.targetWindow;
 		PopoverManager_AnimationType	animationType = kPopoverManager_AnimationTypeStandard;
-		Boolean							noAnimations = (NO == self->_animated);
+		Boolean							noAnimations = (NO == self.animated);
 		
 		
 		if (noAnimations)
@@ -493,26 +355,26 @@ didLoadManagedView:(NSView*)			aManagedView
 		{
 			// on macOS 11, sheet animations make presenting an arrow-style popover
 			// work poorly; therefore, revert to a more normal sheet appearance
-			_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																	windowStyle:kPopover_WindowStyleDialogSheet
-																	arrowStyle:kPopover_ArrowStyleNone
-																	attachedToPoint:NSZeroPoint/* see delegate */
-																	inWindow:asNSWindow];
+			self.containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																		windowStyle:kPopover_WindowStyleDialogSheet
+																		arrowStyle:kPopover_ArrowStyleNone
+																		attachedToPoint:NSZeroPoint/* see delegate */
+																		inWindow:asNSWindow];
 		}
 		else
 		{
-			_containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-																	windowStyle:kPopover_WindowStyleDialogSheet
-																	arrowStyle:kPopover_ArrowStyleDefaultRegularSize
-																	attachedToPoint:NSZeroPoint/* see delegate */
-																	inWindow:asNSWindow];
+			self.containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																		windowStyle:kPopover_WindowStyleDialogSheet
+																		arrowStyle:kPopover_ArrowStyleDefaultRegularSize
+																		attachedToPoint:NSZeroPoint/* see delegate */
+																		inWindow:asNSWindow];
 		}
-		_idealSize = [_managedView frame].size;
-		[_containerWindow setReleasedWhenClosed:NO];
-		_popoverMgr = PopoverManager_New(_containerWindow, [aViewMgr logicalFirstResponder],
-											self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
-											_targetCocoaWindow.contentView);
-		PopoverManager_DisplayPopover(_popoverMgr);
+		self.idealSize = self.managedView.frame.size;
+		self.containerWindow.releasedWhenClosed = NO;
+		self.popoverMgr = PopoverManager_New(self.containerWindow, [aViewMgr logicalFirstResponder],
+												self/* delegate */, animationType, kPopoverManager_BehaviorTypeDialog,
+												self.targetWindow.contentView);
+		PopoverManager_DisplayPopover(self.popoverMgr);
 	}
 }// titleDialog:didLoadManagedView:
 
@@ -539,12 +401,12 @@ finalTitle:(NSString*)					newTitle
 	// prepare to rename the window
 	if (acceptedRename)
 	{
-		_closeNotifyBlock(BRIDGE_CAST(newTitle, CFStringRef));
+		self.closeNotifyBlock(BRIDGE_CAST(newTitle, CFStringRef));
 	}
 	else
 	{
 		// user cancelled
-		_closeNotifyBlock(nullptr/* no title; signals to block that user cancelled */);
+		self.closeNotifyBlock(nullptr/* no title; signals to block that user cancelled */);
 	}
 }// titleDialog:didFinishUsingManagedView:acceptingRename:finalTitle:
 
@@ -560,21 +422,133 @@ titleDialog:(WindowTitleDialog_VC*)				aViewMgr
 returnInitialTitleTextForManagedView:(NSView*)	aManagedView
 {
 #pragma unused(aViewMgr, aManagedView)
-	NSString*	result = [BRIDGE_CAST(_initBlock(), NSString*) autorelease]; // block returns a copy of a string
+	NSString*	result = BRIDGE_CAST(self.initBlock(), NSString*);
 	
 	
 	return result;
 }// titleDialog:returnInitialTitleTextForManagedView:
 
 
-@end //} WindowTitleDialog_Handler
+@end //}
+
+
+#pragma mark -
+@implementation WindowTitleDialog_Object (WindowTitleDialog_ObjectInternal) //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (instancetype)
+initForWindow:(NSWindow*)									aWindow
+animated:(BOOL)												anAnimationFlag
+whenInitializing:(WindowTitleDialog_ReturnTitleCopyBlock)	anInitBlock
+whenClosing:(WindowTitleDialog_CloseNotifyBlock)			aFinalBlock
+{
+	self = [super init];
+	if (nil != self)
+	{
+		_animated = anAnimationFlag;
+		_arrowAlignment = NSTextAlignmentCenter;
+		_closeNotifyBlock = aFinalBlock;
+		_containerWindow = nil;
+		_idealSize = NSZeroSize; // set later
+		_initBlock = anInitBlock;
+		_managedView = nil;
+		_popoverMgr = nullptr;
+		_targetWindow = aWindow;
+		_viewMgr = nil;
+	}
+	return self;
+}// initForWindow:animated:whenInitializing:whenClosing:
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+- (void)
+dealloc
+{
+	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
+	if (nullptr != _popoverMgr)
+	{
+		PopoverManager_Dispose(&_popoverMgr);
+	}
+}// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2016.09)
+*/
+- (instancetype)
+init
+{
+	assert(false && "invalid way to initialize derived class");
+	return nil;
+}// init
+
+
+#pragma mark New Methods
+
+
+/*!
+Creates the Rename view asynchronously; when the view is ready,
+it calls "titleDialog:didLoadManagedView:".
+
+(4.0)
+*/
+- (void)
+display
+{
+	if (nil == self.viewMgr)
+	{
+		// no focus is done the first time because this is
+		// eventually done in "titleDialog:didLoadManagedView:"
+		self.viewMgr = [[WindowTitleDialog_VC alloc]
+						initForWindow:self.targetWindow responder:self];
+	}
+	else
+	{
+		// window is already loaded, just activate it
+		PopoverManager_DisplayPopover(_popoverMgr);
+	}
+}// display
+
+
+/*!
+Hides the popover.  It can be shown again at any time
+using the "display" method.
+
+(4.0)
+*/
+- (void)
+removeWithAcceptance:(BOOL)		isAccepted
+{
+	if (nil != _popoverMgr)
+	{
+		PopoverManager_RemovePopover(_popoverMgr, isAccepted);
+	}
+}// removeWithAcceptance:
+
+
+@end //} WindowTitleDialog_Object
 
 
 #pragma mark -
 @implementation WindowTitleDialog_VC //{
-
-
-@synthesize titleText = _titleText;
 
 
 #pragma mark Initializers
@@ -591,7 +565,7 @@ initWithCoder:(NSCoder*)	aCoder
 {
 #pragma unused(aCoder)
 	assert(false && "invalid way to initialize derived class");
-	return [self initForCocoaWindow:nil responder:nil];
+	return [self initForWindow:nil responder:nil];
 }// initWithCoder:
 
 
@@ -607,7 +581,7 @@ bundle:(NSBundle*)				aBundle
 {
 #pragma unused(aNibName, aBundle)
 	assert(false && "invalid way to initialize derived class");
-	return [self initForCocoaWindow:nil responder:nil];
+	return [self initForWindow:nil responder:nil];
 }// initWithNibName:bundle:
 
 
@@ -617,35 +591,22 @@ Designated initializer of derived class.
 (4.0)
 */
 - (instancetype)
-initForCocoaWindow:(NSWindow*)					aCocoaWindow
+initForWindow:(NSWindow*)						aWindow
 responder:(id< WindowTitleDialog_VCDelegate >)	aResponder
 {
 	self = [super initWithNibName:@"WindowTitleDialogCocoa" bundle:nil];
 	if (nil != self)
 	{
 		_responder = aResponder;
-		_parentCocoaWindow = aCocoaWindow;
-		_titleText = [@"" retain];
+		_parentWindow = aWindow;
+		_titleText = @"";
 		
 		// NSViewController implicitly loads the NIB when the "view"
 		// property is accessed; force that here
 		[self view];
 	}
 	return self;
-}// initForCocoaWindow:responder:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[_titleText release];
-	[super dealloc];
-}// dealloc
+}// initForWindow:responder:
 
 
 #pragma mark New Methods
@@ -660,7 +621,7 @@ using NSWindow’s "makeFirstResponder:".
 - (NSView*)
 logicalFirstResponder
 {
-	return titleField;
+	return self.titleField;
 }// logicalFirstResponder
 
 
@@ -681,13 +642,13 @@ performCloseAndRename:(id)	sender
 	// current value has been committed; otherwise it is
 	// possible it will be lost (e.g. user has field focused
 	// but uses the mouse to click the button to proceed)
-	[[self->titleField window] makeFirstResponder:nil];
+	[self.titleField.window makeFirstResponder:nil];
 	
 	// now the binding should have the correct value...
 	{
-		NSString*	newTitleText = (nil == _titleText)
+		NSString*	newTitleText = (nil == self.titleText)
 									? @""
-									: [NSString stringWithString:_titleText];
+									: self.titleText;
 		
 		
 		[_responder titleDialog:self didFinishUsingManagedView:self.view
@@ -711,6 +672,7 @@ performCloseAndRevert:(id)	sender
 #pragma unused(sender)
 	[_responder titleDialog:self didFinishUsingManagedView:self.view
 									acceptingRename:NO finalTitle:nil];
+	self.titleText = @"";
 }// performCloseAndRevert:
 
 
@@ -728,18 +690,29 @@ NOTE:	As future SDKs are adopted, it makes more sense to only
 		to NSViewController and is not otherwise available).
 		This implementation can essentially move to "viewDidLoad".
 
-(4.1)
+(2021.01)
 */
 - (void)
-loadView
+viewDidLoad
 {
-	[super loadView];
+	[super viewDidLoad];
+	assert(nil != self.titleField);
 	
-	assert(nil != titleField);
-	
-	[_responder titleDialog:self didLoadManagedView:self.view];
-	self.titleText = [_responder titleDialog:self returnInitialTitleTextForManagedView:self.view];
-}// loadView
+	[self.responder titleDialog:self didLoadManagedView:self.view];
+}// viewDidLoad
+
+
+/*!
+Uses the delegate to initialize the window title field.
+
+(2021.01)
+*/
+- (void)
+viewWillAppear
+{
+	[super viewWillAppear];
+	self.titleText = [self.responder titleDialog:self returnInitialTitleTextForManagedView:self.view];
+}// viewWillAppear
 
 
 @end //} WindowTitleDialog_VC

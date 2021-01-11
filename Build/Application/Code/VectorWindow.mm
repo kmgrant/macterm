@@ -102,7 +102,7 @@ Private properties.
 	changeListenerModel;
 	@property (assign) VectorInterpreter_Ref
 	interpreterRef;
-	@property (assign) WindowTitleDialog_Ref
+	@property (strong) WindowTitleDialog_Ref
 	renameDialog;
 	@property (strong) TouchBar_Controller*
 	touchBarController;
@@ -467,10 +467,6 @@ dealloc
 	if (nullptr != self.changeListenerModel)
 	{
 		ListenerModel_Dispose(&_changeListenerModel);
-	}
-	if (nullptr != self.renameDialog)
-	{
-		WindowTitleDialog_Dispose(&_renameDialog);
 	}
 	if (nullptr != self.interpreterRef)
 	{

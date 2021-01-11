@@ -227,7 +227,7 @@ struct My_Session
 	NSTimer* __strong			inactivityWatchTimer;		// called if data has not arrived after awhile; retain in order to invalidate at destruction time
 	Preferences_ContextWrap		recentSheetContext;			// defined temporarily while a Preferences-dependent sheet (such as key sequences) is up
 	My_SessionSheetType			sheetType;					// if "kMy_SessionSheetTypeNone", no significant sheet is currently open
-	WindowTitleDialog_Ref		renameDialog;				// if defined, the user interface for renaming the terminal window
+	WindowTitleDialog_Ref __strong	renameDialog;			// if defined, the user interface for renaming the terminal window
 	Memory_WeakRefEraser		weakRefEraser;				// at destruction time, clears weak references that involve this object
 	SessionRef					selfRef;					// convenient reference to this structure
 	
@@ -5115,11 +5115,6 @@ My_Session::
 				Terminal_FileCaptureEnd(screenRef);
 			}
 		}
-	}
-	
-	if (nullptr != this->renameDialog)
-	{
-		WindowTitleDialog_Dispose(&this->renameDialog);
 	}
 	
 	closeTerminalWindow(this);

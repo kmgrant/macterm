@@ -62,7 +62,7 @@
 		0A998CB41E5F62D30002C083 /* url_parse.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA71E5F62400002C083 /* url_parse.py */; };
 		0A998CB51E5F62D30002C083 /* utilities.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA91E5F62570002C083 /* utilities.py */; };
 		0AA8131D24FF54A200E6B9E3 /* UIAddressList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA8131C24FF54A200E6B9E3 /* UIAddressList.swift */; };
-		0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */; };
+		0AB19DA81D87555D00D80A2D /* WindowTitleDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AB19DA71D87555D00D80A2D /* WindowTitleDialog.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
 		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC3C5552570ACA900E5DB94 /* UIPrefsSessionGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */; };

@@ -40,11 +40,14 @@
 #endif
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#ifdef __OBJC__
+#	import <PopoverManager.objc++.h>
+#endif
+
 
 
 #pragma mark Types
-
-typedef struct WindowTitleDialog_OpaqueStruct*		WindowTitleDialog_Ref;
 
 /*!
 A block that is invoked to retrieve a window title
@@ -52,7 +55,7 @@ when initializing the dialog for new use.  Typically
 this is implemented by reading some parent window’s
 current title string.
 */
-typedef CFStringRef (^WindowTitleDialog_ReturnTitleCopyBlock)();
+typedef CFStringRef _Nonnull (^WindowTitleDialog_ReturnTitleCopyBlock)();
 
 /*!
 A block that is invoked when the dialog is closed.
@@ -60,7 +63,7 @@ If the user accepted, a non-nullptr string will be
 given; typically this is used to update some parent
 window’s title.
 */
-typedef void (^WindowTitleDialog_CloseNotifyBlock)(CFStringRef/* new title or nullptr when cancelled */);
+typedef void (^WindowTitleDialog_CloseNotifyBlock)(CFStringRef _Nullable/* new title or nullptr when cancelled */);
 
 #ifdef __OBJC__
 
@@ -74,20 +77,20 @@ must conform to this protocol.
 
 	// use this opportunity to create and display a window to wrap the Rename view
 	- (void)
-	titleDialog:(WindowTitleDialog_VC*)_
-	didLoadManagedView:(NSView*)_;
+	titleDialog:(WindowTitleDialog_VC* _Nonnull)_
+	didLoadManagedView:(NSView* _Nonnull)_;
 
 	// perform the window rename yourself, but no need to update the user interface since it should be destroyed
 	- (void)
-	titleDialog:(WindowTitleDialog_VC*)_
-	didFinishUsingManagedView:(NSView*)_
+	titleDialog:(WindowTitleDialog_VC* _Nonnull)_
+	didFinishUsingManagedView:(NSView* _Nonnull)_
 	acceptingRename:(BOOL)_
-	finalTitle:(NSString*)_;
+	finalTitle:(NSString* _Nullable)_;
 
 	// return an NSString* to use for the initial title text field value
-	- (NSString*)
-	titleDialog:(WindowTitleDialog_VC*)_
-	returnInitialTitleTextForManagedView:(NSView*)_;
+	- (NSString* _Nullable)
+	titleDialog:(WindowTitleDialog_VC* _Nonnull)_
+	returnInitialTitleTextForManagedView:(NSView* _Nonnull)_;
 
 @end //}
 
@@ -100,55 +103,63 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface WindowTitleDialog_VC : NSViewController //{
-{
-	IBOutlet NSTextField*	titleField;
-@private
-	id< WindowTitleDialog_VCDelegate >	_responder;
-	NSWindow*							_parentCocoaWindow;
-	NSString*							_titleText;
-}
 
 // initializers
-	- (instancetype)
-	initForCocoaWindow:(NSWindow*)_
-	responder:(id< WindowTitleDialog_VCDelegate >)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype _Nullable)
+	initForWindow:(NSWindow* _Nonnull)_
+	responder:(id< WindowTitleDialog_VCDelegate > _Nullable)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
-	- (NSView*)
+	- (NSView* _Nonnull)
 	logicalFirstResponder;
 
 // accessors
-	@property (strong) NSString*
+	//! The field containing the new window title.
+	@property (strong, nonnull) IBOutlet NSTextField*
+	titleField;
+	//! The raw value of the new window title.
+	@property (strong, nullable) NSString*
 	titleText; // binding
 
 // actions
 	- (IBAction)
-	performCloseAndRename:(id)_;
+	performCloseAndRename:(id _Nullable)_;
 	- (IBAction)
-	performCloseAndRevert:(id)_;
+	performCloseAndRevert:(id _Nullable)_;
 
 @end //}
 
+
+/*!
+Manages the Find user interface.
+*/
+@interface WindowTitleDialog_Object : NSObject< PopoverManager_Delegate, WindowTitleDialog_VCDelegate > @end
+
+#else
+
+@class WindowTitleDialog_Object;
+
 #endif // __OBJC__
+
+// This is defined as an Objective-C object so it is compatible
+// with ARC rules (e.g. strong references).
+typedef WindowTitleDialog_Object*		WindowTitleDialog_Ref;
 
 
 
 #pragma mark Public Methods
 
-WindowTitleDialog_Ref
-	WindowTitleDialog_NewWindowModal				(NSWindow*								inCocoaParentWindow,
-													 Boolean								inIsAnimated,
-													 WindowTitleDialog_ReturnTitleCopyBlock	inInitBlock,
-													 WindowTitleDialog_CloseNotifyBlock		inFinalBlock);
+WindowTitleDialog_Ref _Nullable
+	WindowTitleDialog_NewWindowModal	(NSWindow* _Nonnull									inParentWindow,
+										 Boolean											inIsAnimated,
+										 WindowTitleDialog_ReturnTitleCopyBlock _Nullable	inInitBlock,
+										 WindowTitleDialog_CloseNotifyBlock _Nullable		inFinalBlock);
 
 void
-	WindowTitleDialog_Dispose						(WindowTitleDialog_Ref*					inoutDialogPtr);
+	WindowTitleDialog_Display			(WindowTitleDialog_Ref _Nonnull						inDialog);
 
 void
-	WindowTitleDialog_Display						(WindowTitleDialog_Ref					inDialog);
-
-void
-	WindowTitleDialog_SetAlignment					(WindowTitleDialog_Ref					inDialog,
-													 NSTextAlignment						inPointerLocation);
+	WindowTitleDialog_SetAlignment		(WindowTitleDialog_Ref _Nonnull						inDialog,
+										 NSTextAlignment									inPointerLocation);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
