@@ -71,31 +71,51 @@
 #pragma mark Types
 
 /*!
-Manages the Find user interface.
+Private properties.
 */
-@interface FindDialog_Handler : NSObject< FindDialog_VCDelegate, PopoverManager_Delegate > //{
-{
-	FindDialog_Ref					selfRef;			// identical to address of structure, but typed as ref
-	FindDialog_VC*					viewMgr;			// loads the Find interface
-	Popover_Window*					containerWindow;	// holds the Find dialog view
-	NSView*							managedView;		// the view that implements the majority of the interface
-	NSSize							idealViewSize;		// initial size of view
-	TerminalWindowRef				terminalWindow;		// the terminal window for which this dialog applies
-	PopoverManager_Ref				popoverMgr;			// manages common aspects of popover window behavior
-	FindDialog_CloseNotifyProcPtr	closeNotifyProc;	// routine to call when the dialog is dismissed
-	FindDialog_Options				cachedOptions;		// options set when the user interface is closed
-@private
-	NSMutableArray*					_historyArray;
-}
+@interface FindDialog_Object () //{
 
-// class methods
-	+ (FindDialog_Handler*)
-	viewHandlerFromRef:(FindDialog_Ref)_;
+// accessors
+	//! Options set when the user interface is closed.
+	@property (assign) FindDialog_Options
+	cachedOptions;
+	//! Holds the Find dialog view.
+	@property (strong) Popover_Window*
+	containerWindow;
+	//! When searches are performed, this captures a few previous query strings.
+	@property (strong) NSMutableArray*/* of NSString* */
+	historyArray;
+	//! Initial size of view.
+	@property (assign) NSSize
+	idealViewSize;
+	//! The view that implements the majority of the interface.
+	@property (strong) NSView*
+	managedView;
+	//! Block to run when the dialog is dismissed.
+	@property (strong) FindDialog_OnCloseBlock
+	onCloseBlock;
+	//! Manages common aspects of popover window behavior.
+	@property (assign) PopoverManager_Ref
+	popoverMgr;
+	//! Parent terminal window whose terminal screens are being searched.
+	@property (assign) TerminalWindowRef
+	terminalWindow;
+	//! Loads the Find interface.
+	@property (strong) FindDialog_VC*
+	viewMgr;
+
+@end //}
+
+
+/*!
+The private class interface.
+*/
+@interface FindDialog_Object (FindDialog_ObjectInternal) //{
 
 // initializers
 	- (instancetype)
 	initForTerminalWindow:(TerminalWindowRef)_
-	notificationProc:(FindDialog_CloseNotifyProcPtr)_
+	onCloseBlock:(FindDialog_OnCloseBlock)_
 	previousSearches:(NSMutableArray*)_
 	initialOptions:(FindDialog_Options)_;
 
@@ -116,33 +136,24 @@ Manages the Find user interface.
 	- (void)
 	zoomToSearchResults;
 
-// accessors
-	- (FindDialog_Options)
-	cachedOptions;
-	@property (strong) NSMutableArray*
-	historyArray;
-	- (TerminalWindowRef)
-	terminalWindow;
-
-// FindDialog_VCDelegate
-	- (void)
-	findDialog:(FindDialog_VC*)_
-	didLoadManagedView:(NSView*)_;
-	- (void)
-	findDialog:(FindDialog_VC*)_
-	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
-	- (void)
-	findDialog:(FindDialog_VC*)_
-	didSearchInManagedView:(NSView*)_
-	withQuery:(NSString*)_;
-	- (void)
-	findDialog:(FindDialog_VC*)_
-	didFinishUsingManagedView:(NSView*)_
-	acceptingSearch:(BOOL)_
-	finalOptions:(FindDialog_Options)_;
-
 // PopoverManager_Delegate
 	// (undeclared)
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface FindDialog_VC () //{
+
+// accessors
+	//! Object that operates the search interface.
+	@property (assign) id< FindDialog_VCDelegate >
+	responder;
+	//! Parent terminal window whose terminal screens are being searched.
+	@property (assign) TerminalWindowRef
+	terminalWindow;
 
 @end //}
 
@@ -163,44 +174,29 @@ window, which is also set to search that terminal window.
 
 Display the window with FindDialog_Display().  The user
 can close the window at any time, but the Find Dialog
-reference remains valid until you release it with a call
-to FindDialog_Dispose().  Your close notification routine
-may invoke APIs like FindDialog_ReturnOptions() to query
-the post-closing state of the window.
+reference remains valid until you release it (use ARC,
+e.g. a strong reference).  Your close notification block
+is passed arguments that indicate the state of the UI at
+the time the dialog is hidden.
 
 (3.0)
 */
 FindDialog_Ref
-FindDialog_New  (TerminalWindowRef				inTerminalWindow,
-				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-				 CFMutableArrayRef				inoutQueryStringHistory,
-				 FindDialog_Options				inFlags)
+FindDialog_New  (TerminalWindowRef			inTerminalWindow,
+				 FindDialog_OnCloseBlock	inBlock,
+				 CFMutableArrayRef			inoutQueryStringHistory,
+				 FindDialog_Options			inFlags)
 {
-	FindDialog_Ref	result = nullptr;
+	FindDialog_Ref		result = nullptr;
 	
 	
-	result = (FindDialog_Ref)[[FindDialog_Handler alloc]
-								initForTerminalWindow:inTerminalWindow
-														notificationProc:inCloseNotifyProcPtr
-														previousSearches:BRIDGE_CAST(inoutQueryStringHistory, NSMutableArray*)
-														initialOptions:inFlags];
+	result = [[FindDialog_Object alloc]
+				initForTerminalWindow:inTerminalWindow
+										onCloseBlock:inBlock
+										previousSearches:BRIDGE_CAST(inoutQueryStringHistory, NSMutableArray*)
+										initialOptions:inFlags];
 	return result;
 }// New
-
-
-/*!
-Releases the underlying data structure for a Find dialog.
-
-(3.0)
-*/
-void
-FindDialog_Dispose	(FindDialog_Ref*	inoutDialogPtr)
-{
-	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:*inoutDialogPtr];
-	
-	
-	[ptr release];
-}// Dispose
 
 
 /*!
@@ -213,68 +209,16 @@ in the dialog, its disposal callback is invoked.
 void
 FindDialog_Display	(FindDialog_Ref		inDialog)
 {
-	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:inDialog];
-	
-	
-	if (nullptr == ptr)
+	if (nullptr == inDialog)
 	{
 		Sound_StandardAlert(); // TEMPORARY (display alert message?)
 	}
 	else
 	{
 		// load the view asynchronously and eventually display it in a window
-		[ptr display];
+		[inDialog display];
 	}
 }// Display
-
-
-/*!
-Returns a set of flags indicating whether or not certain
-options are enabled for the specified dialog.  This is
-only guaranteed to be accurate from within a close
-notification routine (after the user interface is hidden);
-if the dialog is open this will not necessarily reflect
-the current state that the user has set up.
-
-If there are no options enabled, the result will be
-"kFindDialog_OptionsAllOff".
-
-(3.0)
-*/
-FindDialog_Options
-FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
-{
-	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:inDialog];
-	FindDialog_Options		result = kFindDialog_OptionsAllOff;
-	
-	
-	if (nullptr != ptr)
-	{
-		result = [ptr cachedOptions];
-	}
-	return result;
-}// ReturnOptions
-
-
-/*!
-Returns a reference to the terminal window that this
-dialog is attached to.
-
-(3.0)
-*/
-TerminalWindowRef
-FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
-{
-	FindDialog_Handler*		ptr = [FindDialog_Handler viewHandlerFromRef:inDialog];
-	TerminalWindowRef		result = nullptr;
-	
-	
-	if (nullptr != ptr)
-	{
-		result = [ptr terminalWindow];
-	}
-	return result;
-}// ReturnTerminalWindow
 
 
 /*!
@@ -372,7 +316,7 @@ FindDialog_SearchWithoutDialog		(CFStringRef			inQueryBaseOrNullToClear,
 		// NEVER search for strings that contain only whitespace, as this
 		// is a sure way to bring the search engine to its knees and it
 		// has no real value to the user
-		if (0 == [trimmedString length])
+		if (0 == trimmedString.length)
 		{
 			queryOK = false;
 		}
@@ -424,7 +368,7 @@ FindDialog_SearchWithoutDialog		(CFStringRef			inQueryBaseOrNullToClear,
 				// interpret it as a restriction that matches can only occur at
 				// the end of lines
 				{
-					unichar		tailCharacter = [asNSString characterAtIndex:([asNSString length] - 1)];
+					unichar		tailCharacter = [asNSString characterAtIndex:(asNSString.length - 1)];
 					
 					
 					if (('\n' == tailCharacter) || ('\r' == tailCharacter))
@@ -481,38 +425,271 @@ FindDialog_SearchWithoutDialog		(CFStringRef			inQueryBaseOrNullToClear,
 }// SearchWithoutDialog
 
 
-/*!
-The default handler for closing a search dialog.
-
-(3.0)
-*/
-void
-FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		UNUSED_ARGUMENT(inDialogThatClosed))
-{
-	// do nothing
-}// StandardCloseNotifyProc
-
-
 #pragma mark Internal Methods
 
 
 #pragma mark -
-@implementation FindDialog_Handler
+@implementation FindDialog_Object //{
 
 
 @synthesize historyArray = _historyArray;
 
 
+#pragma mark FindDialog_VCDelegate
+
+
 /*!
-Converts from the opaque reference type to the internal type.
+Called when a FindDialog_VC has finished loading and
+initializing its view; responds by displaying the view
+in a window and giving it keyboard focus.
+
+Since this may be invoked multiple times, the window is
+only created during the first invocation.
 
 (4.0)
 */
-+ (FindDialog_Handler*)
-viewHandlerFromRef:(FindDialog_Ref)		aRef
+- (void)
+findDialog:(FindDialog_VC*)		aViewMgr
+didLoadManagedView:(NSView*)	aManagedView
 {
-	return (FindDialog_Handler*)aRef;
-}// viewHandlerFromRef
+	self.managedView = aManagedView;
+	self.idealViewSize = aManagedView.frame.size;
+	if (nil == self.containerWindow)
+	{
+		NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow(self.terminalWindow);
+		
+		
+		self.containerWindow = [[Popover_Window alloc] initWithView:aManagedView
+																	windowStyle:kPopover_WindowStyleNormal
+																	arrowStyle:kPopover_ArrowStyleNone
+																	attachedToPoint:NSZeroPoint/* see delegate */
+																	inWindow:parentWindow];
+		self.containerWindow.releasedWhenClosed = NO;
+		{
+			NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow(self.terminalWindow);
+			NSView*		parentView = STATIC_CAST(cocoaWindow.contentView, NSView*);
+			
+			
+			self.popoverMgr = PopoverManager_New(self.containerWindow, [aViewMgr logicalFirstResponder],
+													self/* delegate */, kPopoverManager_AnimationTypeNone,
+													kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside
+													parentView);
+		}
+		PopoverManager_DisplayPopover(self.popoverMgr);
+	}
+}// findDialog:didLoadManagedView:
+
+
+/*!
+Called when highlighting should be removed.
+
+(4.1)
+*/
+- (void)
+findDialog:(FindDialog_VC*)										aViewMgr
+clearSearchHighlightingInContext:(FindDialog_SearchContext)		aContext
+{
+#pragma unused(aViewMgr)
+	[self clearSearchHighlightingInContext:aContext];
+}// findDialog:clearSearchHighlightingInContext:
+
+
+/*!
+Called when the user has triggered a search, either by
+starting to type text or hitting the default button.
+The specified string is for convenience, it should be
+equivalent to "[aViewMgr searchText]".
+
+(4.0)
+*/
+- (void)
+findDialog:(FindDialog_VC*)			aViewMgr
+didSearchInManagedView:(NSView*)	aManagedView
+withQuery:(NSString*)				searchText
+{
+#pragma unused(aManagedView)
+	BOOL		didSearch = NO;
+	UInt32		matchCount = [self initiateSearchFor:searchText
+														regularExpression:aViewMgr.regularExpressionSearch
+														ignoringCase:aViewMgr.caseInsensitiveSearch
+														allTerminals:aViewMgr.multiTerminalSearch
+														notFinal:YES didSearch:&didSearch];
+	
+	
+	[aViewMgr updateUserInterfaceWithMatches:matchCount didSearch:didSearch];
+}// findDialog:didSearchInManagedView:withQuery:
+
+
+/*!
+Called when the user has taken some action that would
+complete his or her interaction with the view; a
+sensible response is to close any containing window.
+If the search is accepted, initiate one final search;
+otherwise, undo any highlighting and restore the search
+results that were in effect before the Find dialog was
+opened.
+
+(4.0)
+*/
+- (void)
+findDialog:(FindDialog_VC*)				aViewMgr
+didFinishUsingManagedView:(NSView*)		aManagedView
+acceptingSearch:(BOOL)					acceptedSearch
+finalOptions:(FindDialog_Options)		options
+{
+#pragma unused(aViewMgr, aManagedView)
+	NSString*	searchText = [aViewMgr searchText];
+	BOOL		isRegEx = aViewMgr.regularExpressionSearch;
+	BOOL		caseInsensitive = aViewMgr.caseInsensitiveSearch;
+	BOOL		multiTerminal = aViewMgr.multiTerminalSearch;
+	
+	
+	self.cachedOptions = options;
+	
+	// make search history persistent for the window
+	NSMutableArray*		recentSearchesArray = self.historyArray;
+	if ((acceptedSearch) && (nil != searchText))
+	{
+		[recentSearchesArray removeObject:searchText]; // remove any older copy of this search phrase
+		[recentSearchesArray insertObject:searchText atIndex:0];
+		aViewMgr.searchField.recentSearches = [recentSearchesArray copy];
+	}
+	
+	// hide the popover
+	[self removeWithAcceptance:acceptedSearch];
+	
+	// highlight search results
+	if (acceptedSearch)
+	{
+		BOOL	didSearch = NO;
+		
+		
+		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText
+														regularExpression:isRegEx
+														ignoringCase:caseInsensitive
+														allTerminals:multiTerminal
+														notFinal:NO
+														didSearch:&didSearch];
+	}
+	else
+	{
+		// user cancelled; try to return to the previous search
+		if ((nil != recentSearchesArray) && ([recentSearchesArray count] > 0))
+		{
+			BOOL	didSearch = NO;
+			
+			
+			searchText = STATIC_CAST([recentSearchesArray objectAtIndex:0], NSString*);
+			UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText
+															regularExpression:isRegEx
+															ignoringCase:caseInsensitive
+															allTerminals:NO
+															notFinal:NO
+															didSearch:&didSearch];
+		}
+		else
+		{
+			// no previous search available; remove all highlighting
+			[self clearSearchHighlightingInContext:aViewMgr.searchContext];
+		}
+	}
+	
+	// notify of close
+	if (nullptr != self.onCloseBlock)
+	{
+		self.onCloseBlock(self, self.cachedOptions);
+	}
+}// findDialog:didFinishUsingManagedView:acceptingSearch:finalOptions:
+
+
+#pragma mark PopoverManager_Delegate
+
+
+/*!
+Assists the dynamic resize of a popover window by indicating
+whether or not there are per-axis constraints on resizing.
+
+(2017.06)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getHorizontalResizeAllowed:(BOOL*)		outHorizontalFlagPtr
+getVerticalResizeAllowed:(BOOL*)		outVerticalFlagPtr
+{
+#pragma unused(aPopoverManager)
+	*outHorizontalFlagPtr = YES;
+	*outVerticalFlagPtr = NO;
+}// popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:
+
+
+/*!
+Returns the initial view size for the popover.
+
+(2017.06)
+*/
+- (void)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+getIdealSize:(NSSize*)					outSizePtr
+{
+#pragma unused(aPopoverManager)
+	*outSizePtr = self.idealViewSize;
+}// popoverManager:getIdealSize:
+
+
+/*!
+Returns the location (relative to the window) where the
+popover’s arrow tip should appear.  The location of the
+popover itself depends on the arrow placement chosen by
+"idealArrowPositionForFrame:parentWindow:".
+
+(4.0)
+*/
+- (NSPoint)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealAnchorPointForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
+{
+#pragma unused(aPopoverManager, parentWindow)
+	NSPoint		result = NSZeroPoint;
+	
+	
+	if (nil != self.managedView)
+	{
+		NSRect		managedViewFrame = self.managedView.frame;
+		
+		
+		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0f/* arbitrary */, 0.0f);
+	}
+	return result;
+}// popoverManager:idealAnchorPointForFrame:parentWindow:
+
+
+/*!
+Returns arrow placement information for the popover.
+
+(4.0)
+*/
+- (Popover_Properties)
+popoverManager:(PopoverManager_Ref)		aPopoverManager
+idealArrowPositionForFrame:(NSRect)		parentFrame
+parentWindow:(NSWindow*)				parentWindow
+{
+#pragma unused(aPopoverManager, parentWindow, parentFrame)
+	Popover_Properties	result = kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameAboveArrow;
+	
+	
+	return result;
+}// idealArrowPositionForFrame:parentWindow:
+
+
+@end //}
+
+
+#pragma mark -
+@implementation FindDialog_Object (FindDialog_ObjectInternal) //{
+
+
+#pragma mark Initializers
 
 
 /*!
@@ -525,28 +702,27 @@ this class instance is destroyed.
 (4.0)
 */
 - (instancetype)
-initForTerminalWindow:(TerminalWindowRef)			aTerminalWindow
-notificationProc:(FindDialog_CloseNotifyProcPtr)	aProc
-previousSearches:(NSMutableArray*)					aStringArray
-initialOptions:(FindDialog_Options)					options
+initForTerminalWindow:(TerminalWindowRef)	aTerminalWindow
+onCloseBlock:(FindDialog_OnCloseBlock)		aBlock
+previousSearches:(NSMutableArray*)			aStringArray
+initialOptions:(FindDialog_Options)			options
 {
 	self = [super init];
 	if (nil != self)
 	{
-		self->selfRef = (FindDialog_Ref)self;
-		self->viewMgr = nil;
-		self->containerWindow = nil;
-		self->managedView = nil;
-		self->idealViewSize = NSZeroSize;
-		self->terminalWindow = aTerminalWindow;
-		self->popoverMgr = nullptr;
-		self->closeNotifyProc = aProc;
+		_cachedOptions = options;
+		_containerWindow = nil;
+		_historyArray = aStringArray;
+		_idealViewSize = NSZeroSize;
+		_managedView = nil;
+		_onCloseBlock = aBlock;
+		_popoverMgr = nullptr;
 		assert(nil != aStringArray);
-		self->_historyArray = [aStringArray retain];
-		self->cachedOptions = options;
+		_terminalWindow = aTerminalWindow;
+		_viewMgr = nil;
 	}
 	return self;
-}// initForTerminalWindow:notificationProc:previousSearches:initialOptions:
+}// initForTerminalWindow:onCloseBlock:previousSearches:initialOptions:
 
 
 /*!
@@ -557,15 +733,11 @@ Destructor.
 - (void)
 dealloc
 {
-	Memory_EraseWeakReferences(self);
-	[_historyArray release];
-	[containerWindow release];
-	[viewMgr release];
-	if (nullptr != popoverMgr)
+	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
+	if (nullptr != self.popoverMgr)
 	{
-		PopoverManager_Dispose(&popoverMgr);
+		PopoverManager_Dispose(&_popoverMgr);
 	}
-	[super dealloc];
 }// dealloc
 
 
@@ -602,18 +774,19 @@ it calls "findDialog:didLoadManagedView:".
 - (void)
 display
 {
-	if (nil == self->viewMgr)
+	if (nil == self.viewMgr)
 	{
 		// no focus is done the first time because this is
 		// eventually done in "findDialog:didLoadManagedView:"
-		self->viewMgr = [[FindDialog_VC alloc]
-							initForTerminalWindow:[self terminalWindow] responder:self
-													initialOptions:self->cachedOptions];
+		self.viewMgr = [[FindDialog_VC alloc]
+						initForTerminalWindow:self.terminalWindow
+												responder:self
+												initialOptions:self.cachedOptions];
 	}
 	else
 	{
 		// window is already loaded, just activate it
-		PopoverManager_DisplayPopover(self->popoverMgr);
+		PopoverManager_DisplayPopover(self.popoverMgr);
 	}
 }// display
 
@@ -697,7 +870,7 @@ didSearch:(BOOL*)				outDidSearch
 		}
 		
 		result = FindDialog_SearchWithoutDialog(BRIDGE_CAST(queryString, CFStringRef),
-												[self terminalWindow], searchFlags, &didSearch);
+												self.terminalWindow, searchFlags, &didSearch);
 		*outDidSearch = (true == didSearch);
 	}
 	
@@ -714,9 +887,9 @@ using the "display" method.
 - (void)
 removeWithAcceptance:(BOOL)		isAccepted
 {
-	if (nil != self->popoverMgr)
+	if (nil != self.popoverMgr)
 	{
-		PopoverManager_RemovePopover(self->popoverMgr, isAccepted);
+		PopoverManager_RemovePopover(self.popoverMgr, isAccepted);
 	}
 }// removeWithAcceptance:
 
@@ -733,289 +906,15 @@ conveniently invoked after a short delay.
 zoomToSearchResults
 {
 	// show the user where the text is
-	TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus([self terminalWindow]));
+	TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus(self.terminalWindow));
 }// zoomToSearchResults
 
 
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (FindDialog_Options)
-cachedOptions
-{
-	return cachedOptions;
-}// cachedOptions
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (TerminalWindowRef)
-terminalWindow
-{
-	return terminalWindow;
-}// terminalWindow
-
-
-#pragma mark FindDialog_VCDelegate
-
-
-/*!
-Called when a FindDialog_VC has finished loading and
-initializing its view; responds by displaying the view
-in a window and giving it keyboard focus.
-
-Since this may be invoked multiple times, the window is
-only created during the first invocation.
-
-(4.0)
-*/
-- (void)
-findDialog:(FindDialog_VC*)		aViewMgr
-didLoadManagedView:(NSView*)	aManagedView
-{
-	self->managedView = aManagedView;
-	self->idealViewSize = aManagedView.frame.size;
-	if (nil == self->containerWindow)
-	{
-		NSWindow*	parentWindow = TerminalWindow_ReturnNSWindow([self terminalWindow]);
-		
-		
-		self->containerWindow = [[Popover_Window alloc] initWithView:aManagedView
-								 										windowStyle:kPopover_WindowStyleNormal
-								 										arrowStyle:kPopover_ArrowStyleNone
-																		attachedToPoint:NSZeroPoint/* see delegate */
-																		inWindow:parentWindow];
-		[self->containerWindow setReleasedWhenClosed:NO];
-		{
-			NSWindow*	cocoaWindow = TerminalWindow_ReturnNSWindow([self terminalWindow]);
-			NSView*		parentView = STATIC_CAST([cocoaWindow contentView], NSView*);
-			
-			
-			self->popoverMgr = PopoverManager_New(self->containerWindow, [aViewMgr logicalFirstResponder],
-													self/* delegate */, kPopoverManager_AnimationTypeNone,
-													kPopoverManager_BehaviorTypeStandard, // e.g. dismiss by clicking outside
-													parentView);
-		}
-		PopoverManager_DisplayPopover(self->popoverMgr);
-	}
-}// findDialog:didLoadManagedView:
-
-
-/*!
-Called when highlighting should be removed.
-
-(4.1)
-*/
-- (void)
-findDialog:(FindDialog_VC*)										aViewMgr
-clearSearchHighlightingInContext:(FindDialog_SearchContext)		aContext
-{
-#pragma unused(aViewMgr)
-	[self clearSearchHighlightingInContext:aContext];
-}// findDialog:clearSearchHighlightingInContext:
-
-
-/*!
-Called when the user has triggered a search, either by
-starting to type text or hitting the default button.
-The specified string is for convenience, it should be
-equivalent to "[aViewMgr searchText]".
-
-(4.0)
-*/
-- (void)
-findDialog:(FindDialog_VC*)			aViewMgr
-didSearchInManagedView:(NSView*)	aManagedView
-withQuery:(NSString*)				searchText
-{
-#pragma unused(aManagedView)
-	BOOL		didSearch = NO;
-	UInt32		matchCount = [self initiateSearchFor:searchText
-														regularExpression:aViewMgr.regularExpressionSearch
-														ignoringCase:aViewMgr.caseInsensitiveSearch
-														allTerminals:aViewMgr.multiTerminalSearch
-														notFinal:YES didSearch:&didSearch];
-	
-	
-	[aViewMgr updateUserInterfaceWithMatches:matchCount didSearch:didSearch];
-}// findDialog:didSearchInManagedView:withQuery:
-
-
-/*!
-Called when the user has taken some action that would
-complete his or her interaction with the view; a
-sensible response is to close any containing window.
-If the search is accepted, initiate one final search;
-otherwise, undo any highlighting and restore the search
-results that were in effect before the Find dialog was
-opened.
-
-(4.0)
-*/
-- (void)
-findDialog:(FindDialog_VC*)				aViewMgr
-didFinishUsingManagedView:(NSView*)		aManagedView
-acceptingSearch:(BOOL)					acceptedSearch
-finalOptions:(FindDialog_Options)		options
-{
-#pragma unused(aViewMgr, aManagedView)
-	NSString*	searchText = [aViewMgr searchText];
-	BOOL		isRegEx = aViewMgr.regularExpressionSearch;
-	BOOL		caseInsensitive = aViewMgr.caseInsensitiveSearch;
-	BOOL		multiTerminal = aViewMgr.multiTerminalSearch;
-	
-	
-	self->cachedOptions = options;
-	
-	// make search history persistent for the window
-	NSMutableArray*		recentSearchesArray = self.historyArray;
-	if ((acceptedSearch) && (nil != searchText))
-	{
-		[recentSearchesArray removeObject:searchText]; // remove any older copy of this search phrase
-		[recentSearchesArray insertObject:searchText atIndex:0];
-		[[aViewMgr searchField] setRecentSearches:[[recentSearchesArray copy] autorelease]];
-	}
-	
-	// hide the popover
-	[self removeWithAcceptance:acceptedSearch];
-	
-	// highlight search results
-	if (acceptedSearch)
-	{
-		BOOL	didSearch = NO;
-		
-		
-		UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText
-														regularExpression:isRegEx
-														ignoringCase:caseInsensitive
-														allTerminals:multiTerminal
-														notFinal:NO
-														didSearch:&didSearch];
-	}
-	else
-	{
-		// user cancelled; try to return to the previous search
-		if ((nil != recentSearchesArray) && ([recentSearchesArray count] > 0))
-		{
-			BOOL	didSearch = NO;
-			
-			
-			searchText = STATIC_CAST([recentSearchesArray objectAtIndex:0], NSString*);
-			UNUSED_RETURN(UInt32)[self initiateSearchFor:searchText
-															regularExpression:isRegEx
-															ignoringCase:caseInsensitive
-															allTerminals:NO
-															notFinal:NO
-															didSearch:&didSearch];
-		}
-		else
-		{
-			// no previous search available; remove all highlighting
-			[self clearSearchHighlightingInContext:aViewMgr.searchContext];
-		}
-	}
-	
-	// notify of close
-	if (nullptr != self->closeNotifyProc)
-	{
-		FindDialog_InvokeCloseNotifyProc(self->closeNotifyProc, self->selfRef);
-	}
-}// findDialog:didFinishUsingManagedView:acceptingSearch:finalOptions:
-
-
-#pragma mark PopoverManager_Delegate
-
-
-/*!
-Assists the dynamic resize of a popover window by indicating
-whether or not there are per-axis constraints on resizing.
-
-(2017.06)
-*/
-- (void)
-popoverManager:(PopoverManager_Ref)		aPopoverManager
-getHorizontalResizeAllowed:(BOOL*)		outHorizontalFlagPtr
-getVerticalResizeAllowed:(BOOL*)		outVerticalFlagPtr
-{
-#pragma unused(aPopoverManager)
-	*outHorizontalFlagPtr = YES;
-	*outVerticalFlagPtr = NO;
-}// popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:
-
-
-/*!
-Returns the initial view size for the popover.
-
-(2017.06)
-*/
-- (void)
-popoverManager:(PopoverManager_Ref)		aPopoverManager
-getIdealSize:(NSSize*)					outSizePtr
-{
-#pragma unused(aPopoverManager)
-	*outSizePtr = self->idealViewSize;
-}// popoverManager:getIdealSize:
-
-
-/*!
-Returns the location (relative to the window) where the
-popover’s arrow tip should appear.  The location of the
-popover itself depends on the arrow placement chosen by
-"idealArrowPositionForFrame:parentWindow:".
-
-(4.0)
-*/
-- (NSPoint)
-popoverManager:(PopoverManager_Ref)		aPopoverManager
-idealAnchorPointForFrame:(NSRect)		parentFrame
-parentWindow:(NSWindow*)				parentWindow
-{
-#pragma unused(aPopoverManager, parentWindow)
-	NSPoint		result = NSZeroPoint;
-	
-	
-	if (nil != self->managedView)
-	{
-		NSRect		managedViewFrame = [self->managedView frame];
-		
-		
-		result = NSMakePoint(parentFrame.size.width - managedViewFrame.size.width - 16.0f/* arbitrary */, 0.0f);
-	}
-	return result;
-}// popoverManager:idealAnchorPointForFrame:parentWindow:
-
-
-/*!
-Returns arrow placement information for the popover.
-
-(4.0)
-*/
-- (Popover_Properties)
-popoverManager:(PopoverManager_Ref)		aPopoverManager
-idealArrowPositionForFrame:(NSRect)		parentFrame
-parentWindow:(NSWindow*)				parentWindow
-{
-#pragma unused(aPopoverManager, parentWindow, parentFrame)
-	Popover_Properties	result = kPopover_PropertyArrowBeginning | kPopover_PropertyPlaceFrameAboveArrow;
-	
-	
-	return result;
-}// idealArrowPositionForFrame:parentWindow:
-
-
-@end // FindDialog_Handler
+@end //} FindDialog_Object (FindDialog_ObjectInternal)
 
 
 #pragma mark -
-@implementation FindDialog_SearchField
+@implementation FindDialog_SearchField //{
 
 
 #pragma mark NSNibAwaking
@@ -1030,21 +929,58 @@ Checks IBOutlet bindings.
 awakeFromNib
 {
 	assert(nil != self.delegate); // in this case the delegate is pretty important
-	assert(nil != viewManager);
+	assert(nil != self.viewManager);
 }// awakeFromNib
 
 
-@end // FindDialog_SearchField
+@end //} FindDialog_SearchField
 
 
 #pragma mark -
-@implementation FindDialog_VC
+@implementation FindDialog_VC //{
 
 
-@synthesize searchProgressHidden = _searchProgressHidden;
-@synthesize searchText = _searchText;
-@synthesize statusText = _statusText;
-@synthesize successfulSearch = _successfulSearch;
+@synthesize caseInsensitiveSearch = _caseInsensitiveSearch;
+@synthesize regularExpressionSearch = _regularExpressionSearch;
+@synthesize multiTerminalSearch = _multiTerminalSearch;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(4.0)
+*/
+- (instancetype)
+initForTerminalWindow:(TerminalWindowRef)	aTerminalWindow
+responder:(id< FindDialog_VCDelegate >)		aResponder
+initialOptions:(FindDialog_Options)			options
+{
+	self = [super initWithNibName:@"FindDialogCocoa" bundle:nil];
+	if (nil != self)
+	{
+		_responder = aResponder;
+		_terminalWindow = aTerminalWindow;
+		
+		_caseInsensitiveSearch = (0 != (options & kFindDialog_OptionCaseInsensitive));
+		_multiTerminalSearch = (0 != (options & kFindDialog_OptionAllOpenTerminals));
+		_regularExpressionSearch = (0 != (options & kFindDialog_OptionRegularExpression));
+		_searchProgressHidden = YES;
+		_successfulSearch = YES;
+		_searchText = @"";
+		_statusText = @"";
+		
+		// NSViewController implicitly loads the NIB when the "view"
+		// property is accessed; force that here
+		[self view];
+	}
+	return self;
+}// initForTerminalWindow:responder:initialOptions:
+
+
+#pragma mark Initializers Disabled From Superclass
 
 
 /*!
@@ -1078,51 +1014,6 @@ bundle:(NSBundle*)				aBundle
 }// initWithNibName:bundle:
 
 
-/*!
-Designated initializer.
-
-(4.0)
-*/
-- (instancetype)
-initForTerminalWindow:(TerminalWindowRef)	aTerminalWindow
-responder:(id< FindDialog_VCDelegate >)		aResponder
-initialOptions:(FindDialog_Options)			options
-{
-	self = [super initWithNibName:@"FindDialogCocoa" bundle:nil];
-	if (nil != self)
-	{
-		responder = aResponder;
-		terminalWindow = aTerminalWindow;
-		_caseInsensitiveSearch = (0 != (options & kFindDialog_OptionCaseInsensitive));
-		_multiTerminalSearch = (0 != (options & kFindDialog_OptionAllOpenTerminals));
-		_regularExpressionSearch = (0 != (options & kFindDialog_OptionRegularExpression));
-		_searchProgressHidden = YES;
-		_successfulSearch = YES;
-		_searchText = [@"" retain];
-		_statusText = [@"" retain];
-		
-		// NSViewController implicitly loads the NIB when the "view"
-		// property is accessed; force that here
-		[self view];
-	}
-	return self;
-}// initForTerminalWindow:responder:initialOptions:
-
-
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[_searchText release];
-	[_statusText release];
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark New Methods
 
 
@@ -1135,7 +1026,7 @@ using NSWindow’s "makeFirstResponder:".
 - (NSView*)
 logicalFirstResponder
 {
-	return [self searchField];
+	return self.searchField;
 }// logicalFirstResponder
 
 
@@ -1181,8 +1072,10 @@ performCloseAndRevert:(id)	sender
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
 	}
-	[self->responder findDialog:self didFinishUsingManagedView:self.view
-										acceptingSearch:NO finalOptions:options];
+	[self.responder findDialog:self
+								didFinishUsingManagedView:self.view
+								acceptingSearch:NO
+								finalOptions:options];
 }// performCloseAndRevert:
 
 
@@ -1215,9 +1108,13 @@ performCloseAndSearch:(id)	sender
 	{
 		options |= kFindDialog_OptionCaseInsensitive;
 	}
-	[self->responder findDialog:self didSearchInManagedView:self.view withQuery:queryText];
-	[self->responder findDialog:self didFinishUsingManagedView:self.view
-										acceptingSearch:YES finalOptions:options];
+	[self.responder findDialog:self
+								didSearchInManagedView:self.view
+								withQuery:queryText];
+	[self.responder findDialog:self
+								didFinishUsingManagedView:self.view
+								acceptingSearch:YES
+								finalOptions:options];
 }// performCloseAndSearch:
 
 
@@ -1231,28 +1128,17 @@ in the field.  See also "performCloseAndSearch:".
 performSearch:(id)	sender
 {
 #pragma unused(sender)
-	NSString*	queryText = (nil == _searchText)
+	NSString*	queryText = (nil == self.searchText)
 							? @""
-							: [NSString stringWithString:_searchText];
+							: [NSString stringWithString:self.searchText];
 	
 	
 	self.statusText = @"";
 	self.searchProgressHidden = NO;
-	[self->responder findDialog:self didSearchInManagedView:self.view withQuery:queryText];
+	[self.responder findDialog:self
+								didSearchInManagedView:self.view
+								withQuery:queryText];
 }// performSearch:
-
-
-/*!
-Returns the view that contains the search query text and
-a menu of recent searches.
-
-(4.0)
-*/
-- (NSSearchField*)
-searchField
-{
-	return searchField;
-}// searchField
 
 
 /*!
@@ -1313,7 +1199,7 @@ didSearch:(BOOL)							didSearch
 	// update settings; due to bindings, the user interface will automatically be updated
 	self.statusText = BRIDGE_CAST(statusCFString, NSString*);
 	self.searchProgressHidden = YES;
-	self.successfulSearch = ((matchCount > 0) || ([_searchText length] <= 1));
+	self.successfulSearch = ((matchCount > 0) || (self.searchText.length <= 1));
 	
 	if ((nullptr != statusCFString) && (releaseStatusString))
 	{
@@ -1407,7 +1293,8 @@ setMultiTerminalSearch:(BOOL)	isMultiTerminal
 		// restricted to a single window)
 		if (NO == _multiTerminalSearch)
 		{
-			[self->responder findDialog:self clearSearchHighlightingInContext:kFindDialog_SearchContextGlobal];
+			[self.responder findDialog:self
+										clearSearchHighlightingInContext:kFindDialog_SearchContextGlobal];
 		}
 		
 		// update search results of current terminal window and
@@ -1436,12 +1323,13 @@ doCommandBySelector:(SEL)	aSelector
 	
 	
 	// this delegate is not designed to manage other fields...
-	assert(self->searchField == aControl);
+	assert(self.searchField == aControl);
 	
 	if (@selector(cancelOperation:) == aSelector)
 	{
 		// force the field to be empty and remove highlighting
-		[self->responder findDialog:self clearSearchHighlightingInContext:self.searchContext];
+		[self.responder findDialog:self
+									clearSearchHighlightingInContext:self.searchContext];
 		aTextView.string = @"";
 		[self performCloseAndRevert:self];
 		result = YES;
@@ -1476,13 +1364,13 @@ NOTE:	As future SDKs are adopted, it makes more sense to only
 loadView
 {
 	[super loadView];
+	assert(nil != self.searchField);
 	
-	assert(nil != searchField);
-	
-	[self->responder findDialog:self didLoadManagedView:self.view];
+	[self.responder findDialog:self
+								didLoadManagedView:self.view];
 }// loadView
 
 
-@end // FindDialog_VC
+@end //} FindDialog_VC
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

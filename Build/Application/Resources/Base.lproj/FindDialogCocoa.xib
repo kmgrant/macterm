@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17156" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17156"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -133,7 +133,7 @@
                     <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cws-Sm-u4V">
                         <rect key="frame" x="350" y="12" width="16" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSImageNameCaution" id="wYr-4M-wmh"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSCaution" id="wYr-4M-wmh"/>
                         <connections>
                             <binding destination="-2" name="hidden" keyPath="self.successfulSearch" id="LKh-UQ-GNW"/>
                         </connections>
@@ -201,6 +201,6 @@ Gw
         <userDefaultsController representsSharedInstance="YES" id="3XC-uQ-s0w"/>
     </objects>
     <resources>
-        <image name="NSImageNameCaution" width="128" height="128"/>
+        <image name="NSCaution" width="128" height="128"/>
     </resources>
 </document>

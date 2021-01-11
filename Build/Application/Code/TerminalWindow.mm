@@ -268,7 +268,7 @@ struct My_TerminalWindow
 	Boolean						viewSizeIndependent;	// true only temporarily, to handle transitional cases such as full-screen mode
 	Preferences_ContextWrap		recentSheetContext;		// defined temporarily while a Preferences-dependent sheet (such as screen size) is up
 	My_SheetType				sheetType;				// if a sheet is active, this is a hint as to what settings can be put in the context
-	FindDialog_Ref				searchDialog;			// retains the user interface for finding text in the terminal buffer
+	FindDialog_Ref __strong		searchDialog;			// retains the user interface for finding text in the terminal buffer
 	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
 	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
@@ -300,7 +300,6 @@ void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Cha
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
 void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
-void					handleFindDialogClose			(FindDialog_Ref);
 bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
 UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
@@ -666,7 +665,23 @@ TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 		
 		if (nullptr == ptr->searchDialog)
 		{
-			ptr->searchDialog = FindDialog_New(inRef, handleFindDialogClose,
+			ptr->searchDialog = FindDialog_New(inRef,
+												^(FindDialog_Ref		UNUSED_ARGUMENT(inDialogThatClosed),
+												  FindDialog_Options	inCurrentOptions)
+												{
+													TerminalWindowRef				blockRef = inRef;
+													My_TerminalWindowAutoLocker		blockPtr(gTerminalWindowPtrLocks(), blockRef);
+													
+													
+													if (nullptr != blockPtr)
+													{
+														// save things the user entered in the dialog
+														// (history array is implicitly saved because
+														// the mutable array given at construction is
+														// retained by reference)
+														blockPtr->recentSearchOptions = inCurrentOptions;
+													}
+												},
 												ptr->recentSearchStrings.returnCFMutableArrayRef(),
 												ptr->recentSearchOptions);
 		}
@@ -2067,11 +2082,6 @@ My_TerminalWindow::
 @autoreleasepool {
 	sheetContextEnd(this);
 	
-	if (nullptr != this->searchDialog)
-	{
-		FindDialog_Dispose(&this->searchDialog);
-	}
-	
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
 	TerminalWindow_SetObscured(this->selfRef, false);
 	
@@ -2420,34 +2430,6 @@ getWindowSizeFromViewSize	(My_TerminalWindowPtr	inPtr,
 											returnToolbarHeight(inPtr);
 	}
 }// getWindowSizeFromViewSize
-
-
-/*!
-Responds to a close of the Find dialog sheet in a terminal
-window.  Currently, this just retains the keyword string
-so that Find Again can be used, and remembers the user’s
-most recent checkbox settings.
-
-(3.0)
-*/
-void
-handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
-{
-	TerminalWindowRef		terminalWindow = FindDialog_ReturnTerminalWindow(inDialogThatClosed);
-	
-	
-	if (terminalWindow != nullptr)
-	{
-		My_TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		
-		
-		// save things the user entered in the dialog
-		// (history array is implicitly saved because
-		// the mutable array given at construction is
-		// retained by reference)
-		ptr->recentSearchOptions = FindDialog_ReturnOptions(inDialogThatClosed);
-	}
-}// handleFindDialogClose
 
 
 /*!

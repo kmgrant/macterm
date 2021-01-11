@@ -42,6 +42,11 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
+// library includes
+#ifdef __OBJC__
+#	import <PopoverManager.objc++.h>
+#endif
+
 // application includes
 #include "TerminalWindowRef.typedef.h"
 
@@ -69,8 +74,6 @@ enum FindDialog_SearchContext
 
 #pragma mark Types
 
-typedef struct FindDialog_OpaqueStruct*		FindDialog_Ref;
-
 #ifdef __OBJC__
 
 @class FindDialog_VC;
@@ -83,24 +86,24 @@ must conform to this protocol.
 
 	// use this opportunity to create and display a window to wrap the Find view
 	- (void)
-	findDialog:(FindDialog_VC*)_
-	didLoadManagedView:(NSView*)_;
+	findDialog:(FindDialog_VC* _Nonnull)_
+	didLoadManagedView:(NSView* _Nonnull)_;
 
 	// remove search highlighting
 	- (void)
-	findDialog:(FindDialog_VC*)_
+	findDialog:(FindDialog_VC* _Nonnull)_
 	clearSearchHighlightingInContext:(FindDialog_SearchContext)_;
 
 	// perform the search yourself, then call the view manager’s "updateUserInterfaceWithMatches:didSearch:"
 	- (void)
-	findDialog:(FindDialog_VC*)_
-	didSearchInManagedView:(NSView*)_
-	withQuery:(NSString*)_;
+	findDialog:(FindDialog_VC* _Nonnull)_
+	didSearchInManagedView:(NSView* _Nonnull)_
+	withQuery:(NSString* _Nullable)_;
 
 	// perform a search yourself, but no need to update the user interface since it should be destroyed
 	- (void)
-	findDialog:(FindDialog_VC*)_
-	didFinishUsingManagedView:(NSView*)_
+	findDialog:(FindDialog_VC* _Nonnull)_
+	didFinishUsingManagedView:(NSView* _Nonnull)_
 	acceptingSearch:(BOOL)_
 	finalOptions:(FindDialog_Options)_;
 
@@ -115,66 +118,63 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface FindDialog_VC : NSViewController< NSTextFieldDelegate > //{
-{
-	IBOutlet NSSearchField*		searchField;
-@private
-	id< FindDialog_VCDelegate >		responder;
-	TerminalWindowRef				terminalWindow;
-	NSString*						_searchText;
-	NSString*						_statusText;
-	BOOL							_caseInsensitiveSearch;
-	BOOL							_multiTerminalSearch;
-	BOOL							_regularExpressionSearch;
-	BOOL							_searchProgressHidden;
-	BOOL							_successfulSearch;
-}
 
 // initializers
-	- (instancetype)
-	initWithCoder:(NSCoder*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithNibName:(NSString*)_
-	bundle:(NSBundle*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initForTerminalWindow:(TerminalWindowRef)_
-	responder:(id< FindDialog_VCDelegate >)_
+	- (instancetype _Nullable)
+	initForTerminalWindow:(TerminalWindowRef _Nonnull)_
+	responder:(id< FindDialog_VCDelegate > _Nonnull)_
 	initialOptions:(FindDialog_Options)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
-	- (NSView*)
+	- (NSView* _Nonnull)
 	logicalFirstResponder;
-	- (NSSearchField*)
-	searchField;
 	- (void)
 	updateUserInterfaceWithMatches:(UInt32)_
 	didSearch:(BOOL)_;
 
 // actions
 	- (IBAction)
-	orderFrontContextualHelp:(id)_;
+	orderFrontContextualHelp:(id _Nullable)_;
 	- (IBAction)
-	performCloseAndRevert:(id)_;
+	performCloseAndRevert:(id _Nullable)_;
 	- (IBAction)
-	performCloseAndSearch:(id)_;
+	performCloseAndSearch:(id _Nullable)_;
 	- (IBAction)
-	performSearch:(id)_;
+	performSearch:(id _Nullable)_;
 
 // accessors
+	//! Determines value of “A=a” checkbox.
 	@property (assign) BOOL
 	caseInsensitiveSearch; // binding
+	//! Determines value of “All Windows” scope.
 	@property (assign) BOOL
 	multiTerminalSearch; // binding
+	//! Determines value of “Regex” checkbox.
 	@property (assign) BOOL
 	regularExpressionSearch; // binding
+	//! Non-UI property that should be consistent with scope
+	//! (either current window or all windows).
 	@property (readonly) FindDialog_SearchContext
 	searchContext;
+	//! View that contains the search query text and
+	//! a menu of recent searches.
+	@property (strong, nonnull) IBOutlet NSSearchField*
+	searchField;
+	//! Determines visibility of search progress indicator.
 	@property (assign) BOOL
 	searchProgressHidden; // binding
+	//! Determines hidden state of warning icon (set if there
+	//! is at least one match for the query, or no query set).
 	@property (assign) BOOL
 	successfulSearch; // binding
-	@property (strong) NSString*
+	//! Raw query string, which is interpreted based on other
+	//! search parameters (e.g. "caseInsensitiveSearch" or
+	//! "regularExpressionSearch").
+	@property (strong, nullable) NSString*
 	searchText; // binding
-	@property (strong) NSString*
+	//! Status message, such as an error when no match is found
+	//! or text that displays the number of matches.
+	@property (strong, nullable) NSString*
 	statusText; // binding
 
 @end //}
@@ -184,61 +184,59 @@ changes to an interface declared in a ".mm" file.
 Allows field actions to affect the search panel state.
 */
 @interface FindDialog_SearchField : NSSearchField //{
-{
-	IBOutlet FindDialog_VC*		viewManager;
-}
+
+// accessors
+	//! The parent view controller.
+	@property (weak, nullable) IBOutlet FindDialog_VC*
+	viewManager;
+
 @end //}
 
+
+/*!
+Manages the Find user interface.
+*/
+@interface FindDialog_Object : NSObject< FindDialog_VCDelegate, PopoverManager_Delegate > @end
+
+#else
+
+@class FindDialog_Object;
+
 #endif // __OBJC__
+
+// This is defined as an Objective-C object so it is compatible
+// with ARC rules (e.g. strong references).
+typedef FindDialog_Object*		FindDialog_Ref;
+
+
 
 #pragma mark Callbacks
 
 /*!
 Find Dialog Close Notification Method
 
-When a Find dialog is closed, this method is
-invoked.  Use this to know exactly when it is
-safe to call FindDialog_Dispose().
+This is called when the Find interface is removed; respond in
+any way required, e.g. saving state.
 */
-typedef void	 (*FindDialog_CloseNotifyProcPtr)	(FindDialog_Ref		inDialogThatClosed);
-inline void
-FindDialog_InvokeCloseNotifyProc	(FindDialog_CloseNotifyProcPtr	inUserRoutine,
-									 FindDialog_Ref					inDialogThatClosed)
-{
-	(*inUserRoutine)(inDialogThatClosed);
-}
+typedef void (^FindDialog_OnCloseBlock)	(FindDialog_Ref _Nonnull, FindDialog_Options);
 
 
 
 #pragma mark Public Methods
 
-FindDialog_Ref
-	FindDialog_New						(TerminalWindowRef				inTerminalWindow,
-										 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-										 CFMutableArrayRef				inoutQueryStringHistory,
-										 FindDialog_Options				inFlags = kFindDialog_OptionsAllOff);
+FindDialog_Ref _Nullable
+	FindDialog_New					(TerminalWindowRef _Nonnull			inTerminalWindow,
+									 FindDialog_OnCloseBlock _Nullable	inOnCloseBlock,
+									 CFMutableArrayRef _Nonnull			inoutQueryStringHistory,
+									 FindDialog_Options					inFlags = kFindDialog_OptionsAllOff);
 
 void
-	FindDialog_Dispose					(FindDialog_Ref*				inoutDialogPtr);
-
-void
-	FindDialog_Display					(FindDialog_Ref					inDialog);
-
-// ONLY VALID TO CALL FROM YOUR "FindDialog_CloseNotifyProcPtr"
-FindDialog_Options
-	FindDialog_ReturnOptions			(FindDialog_Ref					inDialog);
-
-// ONLY VALID TO CALL FROM YOUR "FindDialog_CloseNotifyProcPtr"
-TerminalWindowRef
-	FindDialog_ReturnTerminalWindow		(FindDialog_Ref					inDialog);
+	FindDialog_Display				(FindDialog_Ref _Nonnull			inDialog);
 
 UInt32
-	FindDialog_SearchWithoutDialog		(CFStringRef					inQueryBaseOrNullToClear,
-										 TerminalWindowRef				inStartTerminalWindow,
-										 FindDialog_Options				inFlags,
-										 Boolean*						outDidSearchOrNull = nullptr);
-
-void
-	FindDialog_StandardCloseNotifyProc	(FindDialog_Ref					inDialogThatClosed);
+	FindDialog_SearchWithoutDialog	(CFStringRef _Nullable				inQueryBaseOrNullToClear,
+									 TerminalWindowRef _Nonnull			inStartTerminalWindow,
+									 FindDialog_Options					inFlags,
+									 Boolean* _Nullable					outDidSearchOrNull = nullptr);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
