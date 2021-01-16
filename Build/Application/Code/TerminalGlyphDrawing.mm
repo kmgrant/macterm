@@ -92,7 +92,57 @@ CGAffineTransform* const	kMy_NoTransform = nullptr;
 
 @class TerminalGlyphDrawing_Metrics;
 
+/*!
+A block that renders a portion of a glyph, using the given
+metrics (and the layer’s own properties) as a guide.  See
+"sublayerBlocks" (in TerminalGlyphDrawing_Layer) and the
+helper methods like "addLayerUsingBlock:options:".
+*/
 typedef void (^My_ShapeDefinitionBlock)(CGMutablePathRef, TerminalGlyphDrawing_Metrics*);
+
+
+/*!
+Private properties.
+*/
+@interface TerminalGlyphDrawing_Layer () //{
+
+// accessors
+	//! Array index is bit number; sublayers that fill.
+	//! Set this by calling a helper like "addLayerUsingBlock:".
+	@property (assign) NSUInteger
+	filledSublayerFlags;
+	//! Sublayers that use an inset frame instead of the default.
+	//! Set this by calling a helper like "addLayerUsingBlock:".
+	@property (assign) NSUInteger
+	insetSublayerFlags;
+	//! Sublayers that exclusively fill (no stroke).
+	//! Set this by calling a helper like "addLayerUsingBlock:".
+	@property (assign) NSUInteger
+	noStrokeSublayerFlags;
+	//! Hints for rendering code, such as anti-aliasing, boldface and small-size.
+	@property (assign) TerminalGlyphDrawing_Options
+	options;
+	//! Sublayers that do not scale beyond a thick line width.
+	//! Set this by calling a helper like "addLayerUsingBlock:".
+	@property (assign) NSUInteger
+	thickLineSublayerFlags;
+	//! Sublayers that do not scale beyond a thin line width.
+	//! Set this by calling a helper like "addLayerUsingBlock:".
+	@property (assign) NSUInteger
+	thinLineSublayerFlags;
+	//! Blocks of code to render a sublayer of a glyph.  Complex
+	//! glyphs need sublayer blocks for each major parts  The
+	//! index of a block in this array corresponds directly to a
+	//! bit number in flag properties like "filledSublayerFlags".
+	//! See "addLayerUsingBlock:options:" and similar methods.
+	@property (strong) NSMutableArray< My_ShapeDefinitionBlock >*
+	sublayerBlocks;
+	//! The meaning of a rendered glyph in text.
+	@property (assign) UnicodeScalarValue
+	unicodePoint;
+
+@end //}
+
 
 /*!
 The private class interface.
@@ -100,10 +150,16 @@ The private class interface.
 @interface TerminalGlyphDrawing_Layer (TerminalGlyphDrawing_LayerInternal) //{
 
 // accessors
+	//! Returns true only if the options given at construction time
+	//! included "kTerminalGlyphDrawing_OptionAntialiasingDisabled".
 	- (BOOL)
 	isAntialiasingDisabled;
+	//! Returns true only if the options given at construction time
+	//! included "kTerminalGlyphDrawing_OptionBold".
 	- (BOOL)
 	isBold;
+	//! Returns true only if the options given at construction time
+	//! included "kTerminalGlyphDrawing_OptionSmallSize".
 	- (BOOL)
 	isSmallSize;
 
@@ -146,11 +202,6 @@ and use them together, be sure to gather all the values
 before changing any layer’s frame rectangle.
 */
 @interface TerminalGlyphDrawing_Metrics : NSObject //{
-{
-@private
-	CAShapeLayer*					targetLayer_;
-	TerminalGlyphDrawing_Layer*		owningLayer_;
-}
 
 // class methods
 	+ (instancetype)
@@ -167,54 +218,155 @@ before changing any layer’s frame rectangle.
 	standardBold;
 
 // accessors: layers
-	@property (strong, readonly) TerminalGlyphDrawing_Layer*
+	//! The base layer, where glyph common properties can
+	//! be found as needed (see "baselineHint").  This
+	//! may contain sublayers, one of which will be the
+	//! "targetLayer" of this object.
+	@property (weak, readonly) TerminalGlyphDrawing_Layer*
 	owningLayer;
-	@property (strong, readonly) CAShapeLayer*
+	//! The current sublayer being drawn, where low-level
+	//! rendering properties should be set (such as line
+	//! characteristics).  The drawing settings of each
+	//! sublayer can vary and all sublayers combine to
+	//! allow complex glyphs to have different components.
+	@property (weak, readonly) CAShapeLayer*
 	targetLayer;
 
 // accessors: layer size
+	//! Equal to half the frame height of "targetLayer".
 	@property (assign, readonly) CGFloat
 	layerHalfHeight;
+	//! Equal to half the frame width of "targetLayer".
 	@property (assign, readonly) CGFloat
 	layerHalfWidth;
+	//! Equal to the frame height of "targetLayer".
 	@property (assign, readonly) CGFloat
 	layerHeight;
+	//! Equal to the frame width of "targetLayer".
 	@property (assign, readonly) CGFloat
 	layerWidth;
 
 // accessors: default line size
+	//! Returns half of a “normal” line width, which is primarily
+	//! useful for aligning lines that overlap perpendicularly.
 	@property (assign, readonly) CGFloat
 	lineHalfWidth;
+	//! Returns the “normal” thickness of drawn lines (as
+	//! opposed to metrics for boldface or other uses).
 	@property (assign, readonly) CGFloat
 	lineWidth;
 
 // accessors: rendering pairs of lines
+	//! Returns the vertical location of the upper horizontal
+	//! line in a double-horizontal-line scenario.
 	@property (assign, readonly) CGFloat
 	doubleHorizontalFirstY;
+	//! Returns the vertical location of the lower horizontal
+	//! line in a double-horizontal-line scenario.
 	@property (assign, readonly) CGFloat
 	doubleHorizontalSecondY;
+	//! Returns the horizontal location of the left horizontal
+	//! line in a double-vertical-line scenario.
 	@property (assign, readonly) CGFloat
 	doubleVerticalFirstX;
+	//! Returns the horizontal location of the right horizontal
+	//! line in a double-vertical-line scenario.
 	@property (assign, readonly) CGFloat
 	doubleVerticalSecondX;
 
 // accessors: connecting lines to edges
+	//! Use this offset whenever drawing the ends of lines that are
+	//! intended to appear adjacent to a different-width line (a
+	//! normal-width layer adjacent to a bold one, or vice-versa).
 	@property (assign, readonly) CGFloat
 	squareLineBoldNormalJoin;
+	//! Returns the vertical coordinate that should be used to
+	//! start drawing a squared-off line from the bottom edge of
+	//! the frame (with the intent to produce a line that starts
+	//! from the bottom edge of the visible glyph rectangle).
+	//!
+	//! This is “outside” the cell because clipping is assumed
+	//! and because lines are usually supposed to connect to a
+	//! neighboring line seamlessly.  Any edge anti-aliasing will
+	//! be removed by the clipping of the overrun line.
 	@property (assign, readonly) CGFloat
 	squareLineBottomEdge;
+	//! Returns the horizontal coordinate that should be used to
+	//! start drawing a squared-off line from the left edge of
+	//! the frame (with the intent to produce a line that starts
+	//! from the left edge of the visible glyph rectangle).
+	//!
+	//! This is “outside” the cell because clipping is assumed
+	//! and because lines are usually supposed to connect to a
+	//! neighboring line seamlessly.  Any edge anti-aliasing will
+	//! be removed by the clipping of the overrun line.
 	@property (assign, readonly) CGFloat
 	squareLineLeftEdge;
+	//! Returns the horizontal coordinate that should be used to
+	//! start drawing a squared-off line from the right edge of
+	//! the frame (with the intent to produce a line that starts
+	//! from the right edge of the visible glyph rectangle).
+	//!
+	//! This is “outside” the cell because clipping is assumed
+	//! and because lines are usually supposed to connect to a
+	//! neighboring line seamlessly.  Any edge anti-aliasing will
+	//! be removed by the clipping of the overrun line.
 	@property (assign, readonly) CGFloat
 	squareLineRightEdge;
+	//! Returns the vertical coordinate that should be used to
+	//! start drawing a squared-off line from the top edge of
+	//! the frame (with the intent to produce a line that starts
+	//! from the top of the visible glyph rectangle).
+	//!
+	//! This is “outside” the cell because clipping is assumed
+	//! and because lines are usually supposed to connect to a
+	//! neighboring line seamlessly.  Any edge anti-aliasing will
+	//! be removed by the clipping of the overrun line.
 	@property (assign, readonly) CGFloat
 	squareLineTopEdge;
 
 // accessors: text properties
+	//! Returns the "baselineHint" property of the owning layer,
+	//! which is relative to the base Y coordinate used for drawing.
+	//! This allows vector graphics to appear aligned with text.
+	//!
+	//! WARNING:	This property is not accurate when the metrics
+	//! 			have been inset by "kMy_GlyphDrawingOptionInset"
+	//! 			because the baseline hint came from the original
+	//! 			frame rectangle.  The "insetAmount" method of the
+	//! 			TerminalGlyphDrawing_Layer class can be used to
+	//! 			bridge drawing that must consider both regions.
 	@property (assign, readonly) CGFloat
 	baselineHint; // WARNING: this property is not accurate when "kMy_GlyphDrawingOptionInset" is in use
 
 @end //}
+
+
+/*!
+Private properties.
+*/
+@interface TerminalGlyphDrawing_Cache () //{
+
+// accessors
+	//! Used for rendering bold text (kTerminalGlyphDrawing_OptionBold) at normal size.
+	@property (strong) TerminalGlyphDrawing_Layer*
+	normalBoldLayer;
+	//! Used for rendering plain text at normal size.
+	@property (strong) TerminalGlyphDrawing_Layer*
+	normalPlainLayer;
+	//! Used for rendering bold text at small size (kTerminalGlyphDrawing_OptionBold
+	//! and kTerminalGlyphDrawing_OptionSmallSize).
+	@property (strong) TerminalGlyphDrawing_Layer*
+	smallBoldLayer;
+	//! Used for rendering plain text at small size (kTerminalGlyphDrawing_OptionSmallSize).
+	@property (strong) TerminalGlyphDrawing_Layer*
+	smallPlainLayer;
+	//! The meaning of a rendered glyph in text.
+	@property (assign) UnicodeScalarValue
+	unicodePoint;
+
+@end //}
+
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -269,7 +421,7 @@ cacheWithUnicodePoint:(UnicodeScalarValue)		aUnicodePoint
 	
 	if (nil == result)
 	{
-		result = [[[self.class alloc] initWithUnicodePoint:aUnicodePoint] autorelease];
+		result = [[self.class alloc] initWithUnicodePoint:aUnicodePoint];
 		[pointCaches setObject:result forKey:numberKey];
 	}
 	return result;
@@ -290,11 +442,11 @@ initWithUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 	self = [super init];
 	if (nil != self)
 	{
-		self->unicodePoint_ = aUnicodePoint;
-		self->normalPlainLayer_ = nil;
-		self->normalBoldLayer_ = nil;
-		self->smallPlainLayer_ = nil;
-		self->smallBoldLayer_ = nil;
+		_normalBoldLayer = nil;
+		_normalPlainLayer = nil;
+		_smallBoldLayer = nil;
+		_smallPlainLayer = nil;
+		_unicodePoint = aUnicodePoint;
 	}
 	return self;
 }// initWithUnicodePoint:
@@ -316,30 +468,30 @@ depending on what the glyph handler does.
 layerWithOptions:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 color:(CGColorRef)									aColor
 {
-	TerminalGlyphDrawing_Layer*		result = nil;
-	TerminalGlyphDrawing_Layer**	choice = nullptr;
+	TerminalGlyphDrawing_Layer*				result = nil;
+	TerminalGlyphDrawing_Layer* __strong *	choice = nil;
 	
 	
 	if (anOptionFlagSet & kTerminalGlyphDrawing_OptionSmallSize)
 	{
 		if (anOptionFlagSet & kTerminalGlyphDrawing_OptionBold)
 		{
-			choice = &smallBoldLayer_;
+			choice = &_smallBoldLayer;
 		}
 		else
 		{
-			choice = &smallPlainLayer_;
+			choice = &_smallPlainLayer;
 		}
 	}
 	else
 	{
 		if (anOptionFlagSet & kTerminalGlyphDrawing_OptionBold)
 		{
-			choice = &normalBoldLayer_;
+			choice = &_normalBoldLayer;
 		}
 		else
 		{
-			choice = &normalPlainLayer_;
+			choice = &_normalPlainLayer;
 		}
 	}
 	
@@ -348,7 +500,7 @@ color:(CGColorRef)									aColor
 	if (nil == *choice)
 	{
 		*choice = [[TerminalGlyphDrawing_Layer alloc]
-					initWithUnicodePoint:unicodePoint_
+					initWithUnicodePoint:self.unicodePoint
 											options:anOptionFlagSet];
 	}
 	
@@ -368,9 +520,6 @@ color:(CGColorRef)									aColor
 @implementation TerminalGlyphDrawing_Layer //{
 
 
-@synthesize baselineHint = baselineHint_;
-
-
 #pragma mark Initializers
 
 
@@ -386,15 +535,15 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 	self = [super init];
 	if (nil != self)
 	{
-		self->unicodePoint_ = aUnicodePoint;
-		self->baselineHint_ = 0; // set later
-		self->options_ = anOptionFlagSet;
-		self->filledSublayerFlags_ = 0;
-		self->noStrokeSublayerFlags_ = 0;
-		self->insetSublayerFlags_ = 0;
-		self->thickLineSublayerFlags_ = 0;
-		self->thinLineSublayerFlags_ = 0;
-		self->sublayerBlocks_ = [[NSMutableArray alloc] init];
+		_baselineHint = 0; // set later
+		_filledSublayerFlags = 0;
+		_insetSublayerFlags = 0;
+		_noStrokeSublayerFlags = 0;
+		_options = anOptionFlagSet;
+		_sublayerBlocks = [[NSMutableArray< My_ShapeDefinitionBlock > alloc] init];
+		_thickLineSublayerFlags = 0;
+		_thinLineSublayerFlags = 0;
+		_unicodePoint = aUnicodePoint;
 		
 		self.geometryFlipped = YES;
 		
@@ -421,19 +570,6 @@ options:(TerminalGlyphDrawing_Options)		anOptionFlagSet
 	}
 	return self;
 }// initWithUnicodePoint:
-
-
-/*!
-Destructor.
-
-(4.1)
-*/
-- (void)
-dealloc
-{
-	[sublayerBlocks_ release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -489,13 +625,7 @@ baselineHint:(CGFloat)			aBaselineOffsetFromTop
 #pragma mark Accessors
 
 
-/*!
-Accesses the color that is used to draw the glyph.
-This color may be used to stroke or to fill, depending
-on what the glyph definition requires.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGColorRef)
 color
 {
@@ -531,10 +661,10 @@ setColor:(CGColorRef)		aColor
 		
 		
 		// sublayers can use the color for stroke or fill
-		asShapeLayer.fillColor = (0 != (filledSublayerFlags_ & kFlagMask))
+		asShapeLayer.fillColor = (0 != (self.filledSublayerFlags & kFlagMask))
 									? aColor
 									: nil;
-		asShapeLayer.strokeColor = (0 != (noStrokeSublayerFlags_ & kFlagMask))
+		asShapeLayer.strokeColor = (0 != (self.noStrokeSublayerFlags & kFlagMask))
 									? nil
 									: aColor;
 		++i;
@@ -1077,42 +1207,27 @@ extendWithText		(CGMutablePathRef				inoutPath,
 #pragma mark Accessors
 
 
-/*!
-Returns true only if the options given at construction time
-included "kTerminalGlyphDrawing_OptionAntialiasingDisabled".
-
-(4.1)
-*/
+// (See description in class interface.)
 - (BOOL)
 isAntialiasingDisabled
 {
-	return (0 != (options_ & kTerminalGlyphDrawing_OptionAntialiasingDisabled));
+	return (0 != (self.options & kTerminalGlyphDrawing_OptionAntialiasingDisabled));
 }// isAntialiasingDisabled
 
 
-/*!
-Returns true only if the options given at construction time
-included "kTerminalGlyphDrawing_OptionBold".
-
-(4.1)
-*/
+// (See description in class interface.)
 - (BOOL)
 isBold
 {
-	return (0 != (options_ & kTerminalGlyphDrawing_OptionBold));
+	return (0 != (self.options & kTerminalGlyphDrawing_OptionBold));
 }// isBold
 
 
-/*!
-Returns true only if the options given at construction time
-included "kTerminalGlyphDrawing_OptionSmallSize".
-
-(4.1)
-*/
+// (See description in class interface.)
 - (BOOL)
 isSmallSize
 {
-	return (0 != (options_ & kTerminalGlyphDrawing_OptionSmallSize));
+	return (0 != (self.options & kTerminalGlyphDrawing_OptionSmallSize));
 }// isSmallSize
 
 
@@ -1762,7 +1877,7 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
 					// draw triangle pointing to upper right
-					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
+					CGFloat const	kTriangleOffset = ([weakSelf isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
 					
 					
 					extendPath(aPath, CGFLOAT_TIMES_2(CGFLOAT_DIV_3(metrics.layerWidth)), CGFLOAT_DIV_3(metrics.layerHeight),
@@ -1772,7 +1887,7 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
+					CGFloat const	kTriangleOffset = ([weakSelf isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
 					
 					
 					// draw triangle pointing to lower left
@@ -1783,7 +1898,7 @@ addLayersForOutsideRangeUnicodePoint:(UnicodeScalarValue)	aUnicodePoint
 				} options:(kMy_GlyphDrawingOptionFill | kMy_GlyphDrawingOptionThinLine)];
 				[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 				{
-					CGFloat const	kTriangleOffset = ([self isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
+					CGFloat const	kTriangleOffset = ([weakSelf isSmallSize] ? 0 : CGFLOAT_DIV_4(metrics.lineWidth));
 					
 					
 					// fill in the middle
@@ -6360,10 +6475,10 @@ NOTE:	This approach allows for complex shapes to be composed.
 addLayerUsingBlock:(My_ShapeDefinitionBlock)	aBlock
 options:(My_GlyphDrawingOptions)				aFlagSet
 {
-	NSUInteger const	kFlagMask = (1 << sublayerBlocks_.count);
+	NSUInteger const	kFlagMask = (1 << self.sublayerBlocks.count);
 	
 	
-	assert(sublayerBlocks_.count < 32); // array size cannot exceed number of bits available
+	assert(self.sublayerBlocks.count < 32); // array size cannot exceed number of bits available
 	
 	//
 	// since layers can be destroyed and rebuilt for new targets,
@@ -6373,54 +6488,50 @@ options:(My_GlyphDrawingOptions)				aFlagSet
 	
 	if (aFlagSet & kMy_GlyphDrawingOptionFill)
 	{
-		filledSublayerFlags_ |= kFlagMask;
+		self.filledSublayerFlags |= kFlagMask;
 	}
 	else
 	{
-		filledSublayerFlags_ &= ~kFlagMask;
+		self.filledSublayerFlags &= ~kFlagMask;
 	}
 	
 	if (aFlagSet & kMy_GlyphDrawingOptionNoStroke)
 	{
-		noStrokeSublayerFlags_ |= kFlagMask;
+		self.noStrokeSublayerFlags |= kFlagMask;
 	}
 	else
 	{
-		noStrokeSublayerFlags_ &= ~kFlagMask;
+		self.noStrokeSublayerFlags &= ~kFlagMask;
 	}
 	
 	if (aFlagSet & kMy_GlyphDrawingOptionInset)
 	{
-		insetSublayerFlags_ |= kFlagMask;
+		self.insetSublayerFlags |= kFlagMask;
 	}
 	else
 	{
-		insetSublayerFlags_ &= ~kFlagMask;
+		self.insetSublayerFlags &= ~kFlagMask;
 	}
 	
 	if (aFlagSet & kMy_GlyphDrawingOptionThickLine)
 	{
-		thickLineSublayerFlags_ |= kFlagMask;
+		self.thickLineSublayerFlags |= kFlagMask;
 	}
 	else
 	{
-		thickLineSublayerFlags_ &= ~kFlagMask;
+		self.thickLineSublayerFlags &= ~kFlagMask;
 	}
 	
 	if (aFlagSet & kMy_GlyphDrawingOptionThinLine)
 	{
-		thinLineSublayerFlags_ |= kFlagMask;
+		self.thinLineSublayerFlags |= kFlagMask;
 	}
 	else
 	{
-		thinLineSublayerFlags_ &= ~kFlagMask;
+		self.thinLineSublayerFlags &= ~kFlagMask;
 	}
 	
-	// TEMPORARY: using the 10.6 SDK (older buggy compiler) a block
-	// that originated on the stack would be added to an NSArray as
-	// a type of object that crashes when released; to avoid this
-	// for now, a useless heap copy of the block is made
-	[sublayerBlocks_ addObject:[[aBlock copy] autorelease]];
+	[self.sublayerBlocks addObject:aBlock];
 }// addLayerUsingBlock:options:
 
 
@@ -6437,8 +6548,8 @@ addLayerUsingText:(NSString*)	aGlyph
 {
 	[self addLayerUsingBlock:^(CGMutablePathRef aPath, TerminalGlyphDrawing_Metrics* metrics)
 	{
-		NSMutableAttributedString*		attributedString = [[[NSMutableAttributedString alloc]
-															initWithString:aGlyph] autorelease];
+		NSMutableAttributedString*		attributedString = [[NSMutableAttributedString alloc]
+															initWithString:aGlyph];
 		BOOL							renderOK = false;
 		
 		
@@ -6522,20 +6633,19 @@ rebuildLayers
 	{
 		[layer removeFromSuperlayer];
 	}
-	[toDelete release], toDelete = nil;
+	toDelete = nil;
 	self.sublayers = nil;
 	
 	NSUInteger	i = 0;
-	for (id object in sublayerBlocks_)
+	for (My_ShapeDefinitionBlock aBlock in self.sublayerBlocks)
 	{
-		NSUInteger const			kFlagMask = (1 << i);
-		My_ShapeDefinitionBlock		asBlock = STATIC_CAST(object, decltype(asBlock));
-		CAShapeLayer*				layer = [CAShapeLayer layer];
-		CGMutablePathRef			mutablePath = CGPathCreateMutable();
+		NSUInteger const	kFlagMask = (1 << i);
+		CAShapeLayer*		layer = [CAShapeLayer layer];
+		CGMutablePathRef	mutablePath = CGPathCreateMutable();
 		
 		
 		layer.frame = CGRectMake(0, 0, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame));
-		if (0 != (insetSublayerFlags_ & kFlagMask))
+		if (0 != (self.insetSublayerFlags & kFlagMask))
 		{
 			// the inset amount is designed to avoid neighbor cells;
 			// it is for convenience in renderers that are NOT trying
@@ -6552,9 +6662,9 @@ rebuildLayers
 		
 		// note: these layer properties are only defaults; any
 		// shape definition block can override any setting
-		CGFloat const	kMaxLineWidth = ((0 != (thickLineSublayerFlags_ & kFlagMask))
+		CGFloat const	kMaxLineWidth = ((0 != (self.thickLineSublayerFlags & kFlagMask))
 											? 4.0 // arbitrary
-											: ((0 != (thinLineSublayerFlags_ & kFlagMask))
+											: ((0 != (self.thinLineSublayerFlags & kFlagMask))
 												? 2.0 // arbitrary
 												: (self.frame.size.width / 5.0f))); // arbitrary
 		layer.lineWidth = ((self.frame.size.width * self.frame.size.height) / 240); // arbitrary; make lines thicker when text is larger
@@ -6579,22 +6689,21 @@ rebuildLayers
 		}
 		layer.lineCap = kCALineCapSquare;
 		layer.lineJoin = kCALineJoinMiter;
-		layer.fillColor = (0 != (filledSublayerFlags_ & kFlagMask))
+		layer.fillColor = (0 != (self.filledSublayerFlags & kFlagMask))
 							? kOldColor
 							: nil;
-		layer.strokeColor = (0 != (noStrokeSublayerFlags_ & kFlagMask))
+		layer.strokeColor = (0 != (self.noStrokeSublayerFlags & kFlagMask))
 							? nil
 							: kOldColor;
 		
 		// use the block to draw the path itself (and possibly
 		// override any of the default layer settings above)
 		{
-			__weak decltype(self)			weakSelf = self;
 			TerminalGlyphDrawing_Metrics*	metrics = [TerminalGlyphDrawing_Metrics
-														metricsWithTargetLayer:layer owningLayer:weakSelf];
+														metricsWithTargetLayer:layer owningLayer:self];
 			
 			
-			(asBlock)(mutablePath, metrics);
+			aBlock(mutablePath, metrics);
 		}
 		layer.path = mutablePath;
 		CGPathRelease(mutablePath), mutablePath = nullptr;
@@ -6612,10 +6721,6 @@ rebuildLayers
 @implementation TerminalGlyphDrawing_Metrics
 
 
-@synthesize owningLayer = owningLayer_;
-@synthesize targetLayer = targetLayer_;
-
-
 #pragma mark Class Methods
 
 
@@ -6629,9 +6734,8 @@ configuration.
 metricsWithTargetLayer:(CAShapeLayer*)		aTargetLayer
 owningLayer:(TerminalGlyphDrawing_Layer*)	anOwningLayer
 {
-	return [[[self.class allocWithZone:NULL]
-				initWithTargetLayer:aTargetLayer owningLayer:anOwningLayer]
-			autorelease];
+	return [[self.class allocWithZone:NULL]
+				initWithTargetLayer:aTargetLayer owningLayer:anOwningLayer];
 }// metricsWithTargetLayer:owningLayer:
 
 
@@ -6650,25 +6754,11 @@ owningLayer:(TerminalGlyphDrawing_Layer*)	anOwningLayer
 	self = [super init];
 	if (nil != self)
 	{
-		owningLayer_ = [anOwningLayer retain];
-		targetLayer_ = [aTargetLayer retain];
+		_owningLayer = anOwningLayer;
+		_targetLayer = aTargetLayer;
 	}
 	return self;
 }// initWithTargetLayer:owningLayer:
-
-
-/*!
-Destructor.
-
-(2018.08)
-*/
-- (void)
-dealloc
-{
-	[owningLayer_ release];
-	[targetLayer_ release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark New Methods
@@ -6696,94 +6786,63 @@ standardBold
 #pragma mark Accessors: Layer Size
 
 
-/*!
-Returns half the height in pixels of the frame.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 layerHalfHeight
 {
-	//return DECR_PIXEL(CGFLOAT_DIV_2(CGRectGetHeight(self->targetLayer_.frame)));
-	return (CGFLOAT_DIV_2(CGRectGetHeight(self->targetLayer_.frame)));
+	//return DECR_PIXEL(CGFLOAT_DIV_2(CGRectGetHeight(self.targetLayer.frame)));
+	return (CGFLOAT_DIV_2(CGRectGetHeight(self.targetLayer.frame)));
 }// layerHalfHeight
 
 
-/*!
-Returns half the width in pixels of the frame.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 layerHalfWidth
 {
-	//return DECR_PIXEL(CGFLOAT_DIV_2(CGRectGetWidth(self->targetLayer_.frame)));
-	return (CGFLOAT_DIV_2(CGRectGetWidth(self->targetLayer_.frame)));
+	//return DECR_PIXEL(CGFLOAT_DIV_2(CGRectGetWidth(self.targetLayer.frame)));
+	return (CGFLOAT_DIV_2(CGRectGetWidth(self.targetLayer.frame)));
 }// layerHalfWidth
 
 
-/*!
-Returns the height in pixels of the frame.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 layerHeight
 {
-	return CGRectGetHeight(self->targetLayer_.frame);
+	return CGRectGetHeight(self.targetLayer.frame);
 }// layerHeight
 
 
-/*!
-Returns the width in pixels of the frame.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 layerWidth
 {
-	return CGRectGetWidth(self->targetLayer_.frame);
+	return CGRectGetWidth(self.targetLayer.frame);
 }// layerWidth
 
 
 #pragma mark Accessors: Default Line Size
 
 
-/*!
-Returns half of a “normal” line width, which is primarily
-useful for aligning lines that overlap perpendicularly.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 lineHalfWidth
 {
-	return CGFLOAT_DIV_2(self->targetLayer_.lineWidth);
+	return CGFLOAT_DIV_2(self.targetLayer.lineWidth);
 }// lineHalfWidth
 
 
-/*!
-Returns the “normal” thickness of drawn lines (as
-opposed to metrics for boldface or other uses).
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 lineWidth
 {
-	return self->targetLayer_.lineWidth;
+	return self.targetLayer.lineWidth;
 }// lineWidth
 
 
 #pragma mark Accessors: Rendering Pairs of Lines
 
 
-/*!
-Returns the vertical location of the upper horizontal
-line in a double-horizontal-line scenario.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 doubleHorizontalFirstY
 {
@@ -6791,19 +6850,14 @@ doubleHorizontalFirstY
 }// doubleHorizontalFirstY
 
 
-/*!
-Returns the vertical location of the lower horizontal
-line in a double-horizontal-line scenario.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 doubleHorizontalSecondY
 {
 	CGFloat		result = 0;
 	
 	
-	if (self->owningLayer_.isAntialiasingDisabled)
+	if (self.owningLayer.isAntialiasingDisabled)
 	{
 		// without anti-aliasing, arbitrarily force a single-pixel space
 		// compared to the other line so that the split is legible
@@ -6814,7 +6868,7 @@ doubleHorizontalSecondY
 		CGFloat		extraOffset = 0;
 		
 		
-		if (self->owningLayer_.isBold)
+		if (self.owningLayer.isBold)
 		{
 			// make sure the thicker lines are still separated
 			extraOffset += 0.2 * self.lineWidth;
@@ -6827,12 +6881,7 @@ doubleHorizontalSecondY
 }// doubleHorizontalSecondY
 
 
-/*!
-Returns the horizontal location of the left horizontal
-line in a double-vertical-line scenario.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 doubleVerticalFirstX
 {
@@ -6840,19 +6889,14 @@ doubleVerticalFirstX
 }// doubleVerticalFirstX
 
 
-/*!
-Returns the horizontal location of the right horizontal
-line in a double-vertical-line scenario.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 doubleVerticalSecondX
 {
 	CGFloat		result = 0;
 	
 	
-	if (self->owningLayer_.isAntialiasingDisabled)
+	if (self.owningLayer.isAntialiasingDisabled)
 	{
 		// without anti-aliasing, arbitrarily force a single-pixel space
 		// compared to the other line so that the split is legible
@@ -6863,7 +6907,7 @@ doubleVerticalSecondX
 		CGFloat		extraOffset = 0;
 		
 		
-		if (self->owningLayer_.isBold)
+		if (self.owningLayer.isBold)
 		{
 			// make sure the thicker lines are still separated
 			extraOffset += 0.2 * self.lineWidth;
@@ -6879,13 +6923,7 @@ doubleVerticalSecondX
 #pragma mark Accessors: Connecting Lines to Cell Edges
 
 
-/*!
-Use this offset whenever drawing the ends of lines that are
-intended to appear adjacent to a different-width line (a
-normal-width layer adjacent to a bold one, or vice-versa).
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 squareLineBoldNormalJoin
 {
@@ -6895,19 +6933,7 @@ squareLineBoldNormalJoin
 }// squareLineBoldNormalJoin
 
 
-/*!
-Returns the vertical coordinate that should be used to
-start drawing a squared-off line from the bottom edge of
-the frame (with the intent to produce a line that starts
-from the bottom edge of the visible glyph rectangle).
-
-This is “outside” the cell because clipping is assumed
-and because lines are usually supposed to connect to a
-neighboring line seamlessly.  Any edge anti-aliasing will
-be removed by the clipping of the overrun line.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 squareLineBottomEdge
 {
@@ -6916,19 +6942,7 @@ squareLineBottomEdge
 }// squareLineBottomEdge
 
 
-/*!
-Returns the horizontal coordinate that should be used to
-start drawing a squared-off line from the left edge of
-the frame (with the intent to produce a line that starts
-from the left edge of the visible glyph rectangle).
-
-This is “outside” the cell because clipping is assumed
-and because lines are usually supposed to connect to a
-neighboring line seamlessly.  Any edge anti-aliasing will
-be removed by the clipping of the overrun line.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 squareLineLeftEdge
 {
@@ -6937,19 +6951,7 @@ squareLineLeftEdge
 }// squareLineLeftEdge
 
 
-/*!
-Returns the horizontal coordinate that should be used to
-start drawing a squared-off line from the right edge of
-the frame (with the intent to produce a line that starts
-from the right edge of the visible glyph rectangle).
-
-This is “outside” the cell because clipping is assumed
-and because lines are usually supposed to connect to a
-neighboring line seamlessly.  Any edge anti-aliasing will
-be removed by the clipping of the overrun line.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 squareLineRightEdge
 {
@@ -6958,19 +6960,7 @@ squareLineRightEdge
 }// squareLineRightEdge
 
 
-/*!
-Returns the vertical coordinate that should be used to
-start drawing a squared-off line from the top edge of
-the frame (with the intent to produce a line that starts
-from the top of the visible glyph rectangle).
-
-This is “outside” the cell because clipping is assumed
-and because lines are usually supposed to connect to a
-neighboring line seamlessly.  Any edge anti-aliasing will
-be removed by the clipping of the overrun line.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 squareLineTopEdge
 {
@@ -6982,20 +6972,7 @@ squareLineTopEdge
 #pragma mark Accessors: Text Properties
 
 
-/*!
-Returns the "baselineHint" property of the owning layer,
-which is relative to the base Y coordinate used for drawing.
-This allows vector graphics to appear aligned with text.
-
-WARNING:	This property is not accurate when the metrics
-			have been inset by "kMy_GlyphDrawingOptionInset"
-			because the baseline hint came from the original
-			frame rectangle.  The "insetAmount" method of the
-			TerminalGlyphDrawing_Layer class can be used to
-			bridge drawing that must consider both regions.
-
-(4.1)
-*/
+// (See description in class interface.)
 - (CGFloat)
 baselineHint
 {

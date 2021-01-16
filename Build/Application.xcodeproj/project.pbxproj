@@ -26,7 +26,7 @@
 		0A3C2C20140C73F100739966 /* CocoaAnimation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C2C1F140C73F100739966 /* CocoaAnimation.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A400EF324FB128100550A8F /* UIDebugInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A400EF224FB128100550A8F /* UIDebugInterface.swift */; };
-		0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */; };
+		0A442C4D1B80C93C008B046B /* TerminalGlyphDrawing.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A442C4C1B80C93C008B046B /* TerminalGlyphDrawing.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46C56C15D864B700843BBC /* PreferenceValue.mm */; };
 		0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A47A08B14B3E33A00E39136 /* TerminalToolbar.mm */; };
 		0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };

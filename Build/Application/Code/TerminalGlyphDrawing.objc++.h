@@ -60,34 +60,26 @@ NOTE:	Normally this object is constructed only by a
 		"TerminalGlyphDrawing_Cache".
 */
 @interface TerminalGlyphDrawing_Layer : CALayer //{
-{
-@private
-	UnicodeScalarValue				unicodePoint_;
-	CGFloat							baselineHint_;
-	TerminalGlyphDrawing_Options	options_;
-	NSUInteger						filledSublayerFlags_; // array index is bit number; sublayers that fill
-	NSUInteger						noStrokeSublayerFlags_; // sublayers that exclusively fill (no stroke)
-	NSUInteger						insetSublayerFlags_; // sublayers that use an inset frame instead of the default
-	NSUInteger						thickLineSublayerFlags_; // sublayers that do not scale beyond a thick line width
-	NSUInteger						thinLineSublayerFlags_; // sublayers that do not scale beyond a thin line width
-	NSMutableArray*					sublayerBlocks_;
-}
 
 // initializers
-	- (instancetype)
+	- (instancetype _Nullable)
 	initWithUnicodePoint:(UnicodeScalarValue)_
 	options:(TerminalGlyphDrawing_Options)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
 	- (void)
-	renderInContext:(CGContextRef)_
+	renderInContext:(CGContextRef _Nonnull)_
 	frame:(CGRect)_
 	baselineHint:(CGFloat)_;
 
 // accessors
+	//! Relative to the base Y coordinate used for drawing;
+	//! allows glyphs to align with text.
 	@property (assign) CGFloat
 	baselineHint;
-	@property (assign) CGColorRef
+	//! The color that is used to draw the glyph.  May be used
+	//! to stroke, fill or draw text, depending on the glyph.
+	@property (assign, nonnull) CGColorRef
 	color;
 
 @end //}
@@ -97,27 +89,19 @@ NOTE:	Normally this object is constructed only by a
 This class caches related layers with small variations.
 */
 @interface TerminalGlyphDrawing_Cache : NSObject //{
-{
-@private
-	UnicodeScalarValue				unicodePoint_;
-	TerminalGlyphDrawing_Layer*		normalPlainLayer_;
-	TerminalGlyphDrawing_Layer*		normalBoldLayer_;
-	TerminalGlyphDrawing_Layer*		smallPlainLayer_;
-	TerminalGlyphDrawing_Layer*		smallBoldLayer_;
-}
 
 // class methods
-	+ (instancetype)
+	+ (instancetype _Nullable)
 	cacheWithUnicodePoint:(UnicodeScalarValue)_;
 
 // initializers
-	- (instancetype)
+	- (instancetype _Nullable)
 	initWithUnicodePoint:(UnicodeScalarValue)_;
 
 // new methods
-	- (TerminalGlyphDrawing_Layer*)
+	- (TerminalGlyphDrawing_Layer* _Nullable)
 	layerWithOptions:(TerminalGlyphDrawing_Options)_
-	color:(CGColorRef)_;
+	color:(CGColorRef _Nonnull)_;
 
 @end //}
 
