@@ -72,58 +72,55 @@ changes to an interface declared in a ".mm" file.
 @interface PrefPanelSessions_ResourceViewManager : Panel_ViewManager< Panel_Delegate,
 																		PrefsWindow_PanelInterface,
 																		ServerBrowser_DataChangeObserver > //{
-{
-	IBOutlet NSView*					commandLineTextField;
-@private
-	PrefsContextManager_Object*			prefsMgr;
-	ListenerModel_StandardListener*		preferenceChangeListener;
-	NSRect								idealFrame;
-	NSMutableDictionary*				byKey;
-	ServerBrowser_Ref					_serverBrowser;
-	NSIndexSet*							_sessionFavoriteIndexes;
-	NSArray*							_sessionFavorites;
-	BOOL								isEditingRemoteShell;
-}
+
+// accessors: outlets
+	//! The editable text area where the session’s command line is displayed.
+	//! This should be read or set only via the "commandLine" binding.
+	@property (strong, nonnull) IBOutlet NSView*
+	commandLineTextField;
 
 // accessors: preferences
-	- (PreferenceValue_StringByJoiningArray*)
+	- (PreferenceValue_StringByJoiningArray* _Nonnull)
 	commandLine; // binding
-	- (PreferenceValue_CollectionBinding*)
+	- (PreferenceValue_CollectionBinding* _Nonnull)
 	formatFavoriteLightMode; // binding
-	- (PreferenceValue_CollectionBinding*)
+	- (PreferenceValue_CollectionBinding* _Nonnull)
 	formatFavoriteDarkMode; // binding
-	- (PreferenceValue_CollectionBinding*)
+	- (PreferenceValue_CollectionBinding* _Nonnull)
 	macroSetFavorite; // binding
-	- (PreferenceValue_CollectionBinding*)
+	- (PreferenceValue_CollectionBinding* _Nonnull)
 	terminalFavorite; // binding
-	- (PreferenceValue_CollectionBinding*)
+	- (PreferenceValue_CollectionBinding* _Nonnull)
 	translationFavorite; // binding
 
 // accessors: low-level user interface state
-	- (BOOL)
+	//! Controls the selected state of the button that spawns the Server Browser.
+	@property (assign) BOOL
 	isEditingRemoteShell; // binding
-	@property (retain) NSIndexSet*
+	//! Currently-selected Session Favorite; when changed, the command line is updated.
+	@property (strong, nonnull) NSIndexSet*
 	sessionFavoriteIndexes; // binding
-	@property (retain, readonly) NSArray*
+	//! List of available Session Favorites, as short-cuts for starting new command lines.
+	@property (strong, nonnull, readonly) NSArray*
 	sessionFavorites; // binding
 
 // accessors: internal bindings
-	- (PreferenceValue_String*)
+	- (PreferenceValue_String* _Nonnull)
 	serverHost;
-	- (PreferenceValue_Number*)
+	- (PreferenceValue_Number* _Nonnull)
 	serverPort;
-	- (PreferenceValue_Number*)
+	- (PreferenceValue_Number* _Nonnull)
 	serverProtocol;
-	- (PreferenceValue_String*)
+	- (PreferenceValue_String* _Nonnull)
 	serverUserID;
 
 // actions
 	- (IBAction)
-	performSetCommandLineToDefaultShell:(id)_; // binding
+	performSetCommandLineToDefaultShell:(id _Nullable)_; // binding
 	- (IBAction)
-	performSetCommandLineToLogInShell:(id)_; // binding
+	performSetCommandLineToLogInShell:(id _Nullable)_; // binding
 	- (IBAction)
-	performSetCommandLineToRemoteShell:(id)_; // binding
+	performSetCommandLineToRemoteShell:(id _Nullable)_; // binding
 
 @end //}
 
@@ -136,14 +133,10 @@ Implements the “Data Flow” panel.
 */
 @interface PrefPanelSessions_DataFlowVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelSessions_DataFlowActionHandler*	_actionHandler;
-}
 
 // accessors
-	@property (strong) PrefPanelSessions_DataFlowActionHandler*
+	//! An object that responds to user activity in the UI.
+	@property (strong, nonnull) PrefPanelSessions_DataFlowActionHandler*
 	actionHandler;
 
 @end //}
@@ -157,14 +150,10 @@ Implements the “Keyboard” panel.
 */
 @interface PrefPanelSessions_KeyboardVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelSessions_KeyboardActionHandler*	_actionHandler;
-}
 
 // accessors
-	@property (strong) PrefPanelSessions_KeyboardActionHandler*
+	//! An object that responds to user activity in the UI.
+	@property (strong, nonnull) PrefPanelSessions_KeyboardActionHandler*
 	actionHandler;
 
 @end //}
@@ -178,14 +167,10 @@ Implements the “vector graphics” panel.
 */
 @interface PrefPanelSessions_GraphicsVC : Panel_ViewManager< Panel_Delegate,
 																PrefsWindow_PanelInterface > //{
-{
-@private
-	NSRect										_idealFrame;
-	PrefPanelSessions_GraphicsActionHandler*	_actionHandler;
-}
 
 // accessors
-	@property (strong) PrefPanelSessions_GraphicsActionHandler*
+	//! An object that responds to user activity in the UI.
+	@property (strong, nonnull) PrefPanelSessions_GraphicsActionHandler*
 	actionHandler;
 
 @end //}
@@ -196,19 +181,19 @@ Implements the “vector graphics” panel.
 
 #pragma mark Public Methods
 
-Preferences_TagSetRef
+Preferences_TagSetRef _Nonnull
 	PrefPanelSessions_NewDataFlowPaneTagSet		();
 
-Preferences_TagSetRef
+Preferences_TagSetRef _Nonnull
 	PrefPanelSessions_NewGraphicsPaneTagSet		();
 
-Preferences_TagSetRef
+Preferences_TagSetRef _Nonnull
 	PrefPanelSessions_NewKeyboardPaneTagSet		();
 
-Preferences_TagSetRef
+Preferences_TagSetRef _Nonnull
 	PrefPanelSessions_NewResourcePaneTagSet		();
 
-Preferences_TagSetRef
+Preferences_TagSetRef _Nonnull
 	PrefPanelSessions_NewTagSet					();
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

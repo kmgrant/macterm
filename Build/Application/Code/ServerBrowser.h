@@ -38,13 +38,13 @@
 // Mac includes
 #ifdef __OBJC__
 #	import <Cocoa/Cocoa.h>
+#else
+class NSWindow;
 #endif
 
 // library includes
 #ifdef __OBJC__
-@class NSWindow;
-#else
-class NSWindow;
+#	import <PopoverManager.objc++.h>
 #endif
 
 // application includes
@@ -53,8 +53,6 @@ class NSWindow;
 
 
 #pragma mark Types
-
-typedef struct ServerBrowser_OpaqueStruct*		ServerBrowser_Ref;
 
 #ifdef __OBJC__
 
@@ -77,29 +75,29 @@ nearly as convenient.
 
 	// the user has selected a different connection protocol type
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
 	didSetProtocol:(Session_Protocol)_;
 
 	// the user has entered a different server host name
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	didSetHostName:(NSString*)_;
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
+	didSetHostName:(NSString* _Nonnull)_;
 
 	// the user has entered a different server port number
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
 	didSetPortNumber:(NSUInteger)_;
 
 	// the user has entered a different server log-in ID
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	didSetUserID:(NSString*)_;
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
+	didSetUserID:(NSString* _Nonnull)_;
 
 @optional
 
 	// the browser has been removed
 	- (void)
-	serverBrowserDidClose:(ServerBrowser_VC*)_;
+	serverBrowserDidClose:(ServerBrowser_VC* _Nonnull)_;
 
 @end //}
 
@@ -112,18 +110,18 @@ must conform to this protocol.
 
 	// use this opportunity to create and display a window to wrap the view
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	didLoadManagedView:(NSView*)_;
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
+	didLoadManagedView:(NSView* _Nonnull)_;
 
 	// when the view is going away, perform any final updates
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	didFinishUsingManagedView:(NSView*)_;
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
+	didFinishUsingManagedView:(NSView* _Nonnull)_;
 
 	// user interface has hidden or displayed something that requires the view size to change
 	- (void)
-	serverBrowser:(ServerBrowser_VC*)_
-	setManagedView:(NSView*)_
+	serverBrowser:(ServerBrowser_VC* _Nonnull)_
+	setManagedView:(NSView* _Nonnull)_
 	toScreenFrame:(NSRect)_;
 
 @end //}
@@ -146,66 +144,46 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface ServerBrowser_VC : NSViewController< NSNetServiceBrowserDelegate > //{
-{
-	IBOutlet NSView*		discoveredHostsContainer;
-	IBOutlet NSTableView*	discoveredHostsTableView;
-	IBOutlet NSView*		logicalFirstResponder;
-	IBOutlet NSResponder*	nextResponderWhenHidingDiscoveredHosts;
-@private
-	id< ServerBrowser_VCDelegate >			_responder;
-	id< ServerBrowser_DataChangeObserver >	_dataObserver;
-	NSNetServiceBrowser*					_browser;
-	NSIndexSet*								_discoveredHostIndexes;
-	NSIndexSet*								_protocolIndexes;
-	NSMutableArray*							_discoveredHosts; // binding
-	NSMutableArray*							_recentHosts; // binding
-	NSArray*								_protocolDefinitions; // binding
-	NSString*								_errorMessage;
-	NSString*								_hostName;
-	NSString*								_portNumber;
-	NSString*								_userID;
-	id										_target;
-	BOOL									_hidesDiscoveredHosts;
-	BOOL									_hidesErrorMessage;
-	BOOL									_hidesPortNumberError;
-	BOOL									_hidesProgress;
-	BOOL									_hidesUserIDError;
-}
 
 // initializers
-	- (instancetype)
-	initWithCoder:(NSCoder*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithNibName:(NSString*)_
-	bundle:(NSBundle*)_ DISABLED_SUPERCLASS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithResponder:(id< ServerBrowser_VCDelegate >)_
-	dataObserver:(id< ServerBrowser_DataChangeObserver >)_ NS_DESIGNATED_INITIALIZER;
+	- (instancetype _Nullable)
+	initWithResponder:(id< ServerBrowser_VCDelegate > _Nullable)_
+	dataObserver:(id< ServerBrowser_DataChangeObserver > _Nullable)_ NS_DESIGNATED_INITIALIZER;
 
 // new methods
-	- (NSView*)
-	logicalFirstResponder;
 	- (IBAction)
-	lookUpHostName:(id)_;
+	lookUpHostName:(id _Nullable)_;
 	- (void)
 	rediscoverServices;
 
+// accessors: outlets
+	@property (strong, nonnull) IBOutlet NSView*
+	discoveredHostsContainer;
+	@property (strong, nonnull) IBOutlet NSTableView*
+	discoveredHostsTableView;
+	//! The view that a window ought to focus first using
+	//! NSWindow’s "makeFirstResponder:".
+	@property (strong, nonnull) IBOutlet NSView*
+	logicalFirstResponder;
+	@property (strong, nonnull) IBOutlet NSResponder*
+	nextResponderWhenHidingDiscoveredHosts;
+
 // accessors: array values
 	- (void)
-	insertObject:(ServerBrowser_NetService*)_
+	insertObject:(ServerBrowser_NetService* _Nonnull)_
 	inDiscoveredHostsAtIndex:(unsigned long)_;
 	- (void)
 	removeObjectFromDiscoveredHostsAtIndex:(unsigned long)_;
-	@property (retain) NSIndexSet*
+	@property (strong, nonnull) NSIndexSet*
 	discoveredHostIndexes; // binding
-	@property (retain, readonly) NSArray*
+	@property (strong, nonnull, readonly) NSArray*
 	protocolDefinitions;
-	@property (retain) NSIndexSet*
+	@property (strong, nonnull) NSIndexSet*
 	protocolIndexes; // binding
 	- (void)
 	setProtocolIndexByProtocol:(Session_Protocol)_;
 	- (void)
-	insertObject:(NSString*)_
+	insertObject:(NSString* _Nonnull)_
 	inRecentHostsAtIndex:(unsigned long)_;
 	- (void)
 	removeObjectFromRecentHostsAtIndex:(unsigned long)_;
@@ -213,15 +191,15 @@ changes to an interface declared in a ".mm" file.
 // accessors: general
 	- (Session_Protocol)
 	currentProtocolID;
-	@property (retain) NSString*
+	@property (strong, nonnull) NSString*
 	errorMessage;
-	@property (copy) NSString*
+	@property (strong, nonnull) NSString*
 	hostName; // binding
-	@property (copy) NSString*
+	@property (strong, nonnull) NSString*
 	portNumber; // binding
-	@property (retain) id
+	@property (strong, nonnull) id
 	target;
-	@property (copy) NSString*
+	@property (strong, nonnull) NSString*
 	userID; // binding
 
 // accessors: low-level user interface state
@@ -238,11 +216,11 @@ changes to an interface declared in a ".mm" file.
 
 // validators
 	- (BOOL)
-	validatePortNumber:(id*)_
-	error:(NSError**)_;
+	validatePortNumber:(id _Nonnull* _Nonnull)_
+	error:(NSError* _Nonnull* _Nonnull)_;
 	- (BOOL)
-	validateUserID:(id*)_
-	error:(NSError**)_;
+	validateUserID:(id _Nonnull* _Nonnull)_
+	error:(NSError* _Nonnull* _Nonnull)_;
 
 // NSViewController
 	- (void)
@@ -250,33 +228,44 @@ changes to an interface declared in a ".mm" file.
 
 @end //}
 
-#endif
+
+/*!
+Manages the Server Browser user interface.
+*/
+@interface ServerBrowser_Object : NSObject< NSWindowDelegate, PopoverManager_Delegate, ServerBrowser_VCDelegate > @end
+
+#else
+
+@class ServerBrowser_Object;
+
+#endif // __OBJC__
+
+// This is defined as an Objective-C object so it is compatible
+// with ARC rules (e.g. strong references).
+typedef ServerBrowser_Object*	ServerBrowser_Ref;
 
 
 
 #pragma mark Public Methods
 
 #ifdef __OBJC__
-ServerBrowser_Ref
-	ServerBrowser_New			(NSWindow*				inParentWindow,
-								 CGPoint				inParentRelativePoint,
-								 id< ServerBrowser_DataChangeObserver >		inDataObserver);
+ServerBrowser_Ref _Nullable
+	ServerBrowser_New			(NSWindow* _Nonnull				inParentWindow,
+								 CGPoint						inParentRelativePoint,
+								 id< ServerBrowser_DataChangeObserver > _Nullable	inDataObserver);
 #endif
 
 void
-	ServerBrowser_Dispose		(ServerBrowser_Ref*		inoutDialogPtr);
+	ServerBrowser_Configure		(ServerBrowser_Ref _Nonnull		inDialog,
+								 Session_Protocol				inProtocol,
+								 CFStringRef _Nullable			inHostName,
+								 UInt16							inPortNumber,
+								 CFStringRef _Nullable			inUserID);
 
 void
-	ServerBrowser_Configure		(ServerBrowser_Ref		inDialog,
-								 Session_Protocol		inProtocol,
-								 CFStringRef			inHostName,
-								 UInt16					inPortNumber,
-								 CFStringRef			inUserID);
+	ServerBrowser_Display		(ServerBrowser_Ref _Nonnull		inDialog);
 
 void
-	ServerBrowser_Display		(ServerBrowser_Ref		inDialog);
-
-void
-	ServerBrowser_Remove		(ServerBrowser_Ref		inDialog);
+	ServerBrowser_Remove		(ServerBrowser_Ref _Nonnull		inDialog);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -120,7 +120,7 @@
 		0AD7B345176C3224004A1532 /* BoundName.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7B344176C3224004A1532 /* BoundName.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7D0C2158AEBC9000C3264 /* PrefsContextManager.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
+		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AEE250E1EB6EF300057DD6F /* UTF8Decoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AEE250D1EB6EF300057DD6F /* UTF8Decoder.cp */; };
 		0AF0ADF225042F6F001A2C37 /* UIKeypads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF0ADF125042F6E001A2C37 /* UIKeypads.swift */; };

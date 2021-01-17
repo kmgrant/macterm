@@ -93,6 +93,35 @@ UInt16		readPreferencesForRemoteServers		(Preferences_ContextRef, Boolean, Sessi
 
 
 /*!
+Private properties.
+*/
+@interface PrefPanelSessions_ResourceViewManager () //{
+
+// accessors
+	//! Stores preference-managing objects by bound property name.
+	@property (strong) NSMutableDictionary*
+	byKey;
+	//! Stores a reasonable rectangle for the view that shows
+	//! all views with a useful size and layout.
+	@property (assign) NSRect
+	idealFrame;
+	//! Responds when underlying preference storage is changed.
+	@property (strong) ListenerModel_StandardListener*
+	preferenceChangeListener;
+	//! A wrapper for the low-level preferences API.
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	//! An object that manages the server-browsing popover view.
+	@property (strong) ServerBrowser_Ref
+	serverBrowser;
+	//! A cache of Session Favorite names for display in a UI menu.
+	@property (strong) NSArray*
+	sessionFavorites; // binding (set is allowed internally)
+
+@end //}
+
+
+/*!
 The private class interface.
 */
 @interface PrefPanelSessions_ResourceViewManager (PrefPanelSessions_ResourceViewManagerInternal) //{
@@ -118,11 +147,6 @@ Swift imports are not safe to do from header files but they can be
 done from this implementation file, and used by this internal class.
 */
 @interface PrefPanelSessions_DataFlowActionHandler : NSObject< UIPrefsSessionDataFlow_ActionHandling > //{
-{
-@private
-	PrefsContextManager_Object*		_prefsMgr;
-	UIPrefsSessionDataFlow_Model*	_viewModel;
-}
 
 // new methods
 	- (NSInteger)
@@ -133,10 +157,26 @@ done from this implementation file, and used by this internal class.
 	updateViewModelFromPrefsMgr;
 
 // accessors
+	//! A wrapper for the low-level preferences API.
 	@property (strong) PrefsContextManager_Object*
 	prefsMgr;
+	//! The SwiftUI data model that is bound to views.
 	@property (strong) UIPrefsSessionDataFlow_Model*
 	viewModel;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelSessions_DataFlowVC () //{
+
+// accessors
+	//! Stores a reasonable rectangle for the view that shows
+	//! all views with a useful size and layout.
+	@property (assign) NSRect
+	idealFrame;
 
 @end //}
 
@@ -152,11 +192,6 @@ done from this implementation file, and used by this internal class.
 */
 @interface PrefPanelSessions_KeyboardActionHandler : NSObject< Keypads_ControlKeyResponder,
 																UIPrefsSessionKeyboard_ActionHandling > //{
-{
-@private
-	PrefsContextManager_Object*		_prefsMgr;
-	UIPrefsSessionKeyboard_Model*	_viewModel;
-}
 
 // new methods
 	- (BOOL)
@@ -170,10 +205,26 @@ done from this implementation file, and used by this internal class.
 	updateViewModelFromPrefsMgr;
 
 // accessors
+	//! A wrapper for the low-level preferences API.
 	@property (strong) PrefsContextManager_Object*
 	prefsMgr;
+	//! The SwiftUI data model that is bound to views.
 	@property (strong) UIPrefsSessionKeyboard_Model*
 	viewModel;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelSessions_KeyboardVC () //{
+
+// accessors
+	//! Stores a reasonable rectangle for the view that shows
+	//! all views with a useful size and layout.
+	@property (assign) NSRect
+	idealFrame;
 
 @end //}
 
@@ -188,11 +239,6 @@ Swift imports are not safe to do from header files but they can be
 done from this implementation file, and used by this internal class.
 */
 @interface PrefPanelSessions_GraphicsActionHandler : NSObject< UIPrefsSessionGraphics_ActionHandling > //{
-{
-@private
-	PrefsContextManager_Object*		_prefsMgr;
-	UIPrefsSessionGraphics_Model*	_viewModel;
-}
 
 // new methods
 	- (BOOL)
@@ -201,10 +247,26 @@ done from this implementation file, and used by this internal class.
 	updateViewModelFromPrefsMgr;
 
 // accessors
+	//! A wrapper for the low-level preferences API.
 	@property (strong) PrefsContextManager_Object*
 	prefsMgr;
+	//! The SwiftUI data model that is bound to views.
 	@property (strong) UIPrefsSessionGraphics_Model*
 	viewModel;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface PrefPanelSessions_GraphicsVC () //{
+
+// accessors
+	//! Stores a reasonable rectangle for the view that shows
+	//! all views with a useful size and layout.
+	@property (assign) NSRect
+	idealFrame;
 
 @end //}
 
@@ -480,6 +542,11 @@ copyRemoteCommandLineString		(Session_Protocol	inProtocol,
 		case kSession_ProtocolSSH1:
 		case kSession_ProtocolSSH2:
 			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/ssh"));
+		#if 1
+			// recent versions of macOS no longer support SSH 1
+			// -2: protocol version 2
+			CFStringAppend(newCommandLineCFString, CFSTR(" -2 "));
+		#else
 			if (kSession_ProtocolSSH2 == inProtocol)
 			{
 				// -2: protocol version 2
@@ -490,6 +557,7 @@ copyRemoteCommandLineString		(Session_Protocol	inProtocol,
 				// -1: protocol version 1
 				CFStringAppend(newCommandLineCFString, CFSTR(" -1 "));
 			}
+		#endif
 			if (nil != portString)
 			{
 				// ssh uses "-p port" to specify the port number
@@ -597,7 +665,7 @@ readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
 	}
 	else
 	{
-		outProtocol = kSession_ProtocolSSH1; // arbitrary
+		outProtocol = kSession_ProtocolSSH2; // arbitrary
 	}
 	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(outHostNameCopy),
 												&outHostNameCopy, inSearchDefaults);
@@ -688,6 +756,9 @@ init
 @implementation PrefPanelSessions_ResourceViewManager
 
 
+@synthesize sessionFavoriteIndexes = _sessionFavoriteIndexes;
+
+
 /*!
 Designated initializer.
 
@@ -713,9 +784,9 @@ Destructor.
 - (void)
 dealloc
 {
-	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring(self.preferenceChangeListener.listenerRef,
 																kPreferences_ChangeContextName);
-	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring([preferenceChangeListener listenerRef],
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring(self.preferenceChangeListener.listenerRef,
 																kPreferences_ChangeNumberOfContexts);
 }// dealloc
 
@@ -748,7 +819,7 @@ context:(void*)							aContext
 			
 			
 			[self willChangeValueForKey:@"sessionFavorites"];
-			_sessionFavorites = nil;
+			self.sessionFavorites = nil;
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				NSMutableArray*		mutableArray = [[NSMutableArray alloc] initWithArray:BRIDGE_CAST(contextNamesCFArray, NSArray*)];
@@ -761,12 +832,12 @@ context:(void*)							aContext
 				// values implied by the array allocated here
 				[mutableArray insertObject:NSLocalizedStringFromTable(@"Select…", @"PrefPanelSessions", @"initial selection for “copy a Session” menu")
 											atIndex:0];
-				_sessionFavorites = mutableArray;
+				self.sessionFavorites = mutableArray;
 			}
 			else
 			{
 				Console_Warning(Console_WriteValue, "failed to refresh session list for Resource tab, error", prefsResult);
-				_sessionFavorites = @[];
+				self.sessionFavorites = @[];
 			}
 			[self didChangeValueForKey:@"sessionFavorites"];
 		}
@@ -790,7 +861,7 @@ Accessor.
 - (PreferenceValue_StringByJoiningArray*)
 commandLine
 {
-	return [self->byKey objectForKey:@"commandLine"];
+	return [self.byKey objectForKey:@"commandLine"];
 }// commandLine
 
 
@@ -802,7 +873,7 @@ Accessor.
 - (PreferenceValue_CollectionBinding*)
 formatFavoriteLightMode
 {
-	return [self->byKey objectForKey:@"formatFavoriteLightMode"];
+	return [self.byKey objectForKey:@"formatFavoriteLightMode"];
 }// formatFavoriteLightMode
 
 
@@ -814,7 +885,7 @@ Accessor.
 - (PreferenceValue_CollectionBinding*)
 formatFavoriteDarkMode
 {
-	return [self->byKey objectForKey:@"formatFavoriteDarkMode"];
+	return [self.byKey objectForKey:@"formatFavoriteDarkMode"];
 }// formatFavoriteDarkMode
 
 
@@ -826,7 +897,7 @@ Accessor.
 - (PreferenceValue_CollectionBinding*)
 macroSetFavorite
 {
-	return [self->byKey objectForKey:@"macroSetFavorite"];
+	return [self.byKey objectForKey:@"macroSetFavorite"];
 }// macroSetFavorite
 
 
@@ -838,7 +909,7 @@ Accessor.
 - (PreferenceValue_CollectionBinding*)
 terminalFavorite
 {
-	return [self->byKey objectForKey:@"terminalFavorite"];
+	return [self.byKey objectForKey:@"terminalFavorite"];
 }// terminalFavorite
 
 
@@ -850,23 +921,11 @@ Accessor.
 - (PreferenceValue_CollectionBinding*)
 translationFavorite
 {
-	return [self->byKey objectForKey:@"translationFavorite"];
+	return [self.byKey objectForKey:@"translationFavorite"];
 }// translationFavorite
 
 
 #pragma mark Accessors: Low-Level User Interface State
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-isEditingRemoteShell
-{
-	return isEditingRemoteShell;
-}// isEditingRemoteShell
 
 
 /*!
@@ -896,6 +955,10 @@ setSessionFavoriteIndexes:(NSIndexSet*)		indexes
 		// copy the corresponding session’s command line to the field
 		switch (selectedIndex)
 		{
+		case NSNotFound:
+			// empty set
+			break;
+		
 		case 0:
 			{
 				// header item
@@ -927,41 +990,42 @@ setSessionFavoriteIndexes:(NSIndexSet*)		indexes
 		
 		default:
 			{
-				NSString*					collectionName = [_sessionFavorites objectAtIndex:selectedIndex];
-				CFStringRef					asCFString = BRIDGE_CAST(collectionName, CFStringRef);
-				Preferences_ContextWrap		sessionContext(Preferences_NewContextFromFavorites
-															(Quills::Prefs::SESSION, asCFString),
-																Preferences_ContextWrap::kAlreadyRetained);
+				NSString*		collectionName = [self.sessionFavorites objectAtIndex:selectedIndex];
+				CFStringRef		asCFString = BRIDGE_CAST(collectionName, CFStringRef);
 				
 				
-				//Console_WriteValueCFString("setting command line using context", asCFString);
-				if (sessionContext.exists())
+				if (false == Preferences_IsContextNameInUse(Quills::Prefs::SESSION, asCFString))
 				{
-					[self setCommandLineFromSession:sessionContext.returnRef()];
+					// does not match any saved Session Favorite (should not happen if
+					// menu is set up correctly in UI but still important to check to
+					// ensure new collections are not accidentally constructed on error)
+					Console_Warning(Console_WriteValueCFString, "failed to copy command line from apparently-invalid collection name", asCFString);
+					Sound_StandardAlert();
 				}
 				else
 				{
-					// failed...
-					Console_Warning(Console_WriteValueCFString, "failed to copy command line from collection name", asCFString);
-					Sound_StandardAlert();
+					Preferences_ContextWrap		sessionContext(Preferences_NewContextFromFavorites
+																(Quills::Prefs::SESSION, asCFString),
+																	Preferences_ContextWrap::kAlreadyRetained);
+					
+					
+					//Console_WriteValueCFString("setting command line using context", asCFString);
+					if (sessionContext.exists())
+					{
+						[self setCommandLineFromSession:sessionContext.returnRef()];
+					}
+					else
+					{
+						// failed...
+						Console_Warning(Console_WriteValueCFString, "failed to copy command line from collection name", asCFString);
+						Sound_StandardAlert();
+					}
 				}
 			}
 			break;
 		}
 	}
 }// setSessionFavoriteIndexes:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSArray*)
-sessionFavorites
-{
-	return _sessionFavorites;
-}
 
 
 #pragma mark Accessors: Internal Bindings
@@ -975,7 +1039,7 @@ Accessor.
 - (PreferenceValue_String*)
 serverHost
 {
-	return [self->byKey objectForKey:@"serverHost"];
+	return [self.byKey objectForKey:@"serverHost"];
 }// serverHost
 
 
@@ -987,7 +1051,7 @@ Accessor.
 - (PreferenceValue_Number*)
 serverPort
 {
-	return [self->byKey objectForKey:@"serverPort"];
+	return [self.byKey objectForKey:@"serverPort"];
 }// serverPort
 
 
@@ -999,7 +1063,7 @@ Accessor.
 - (PreferenceValue_Number*)
 serverProtocol
 {
-	return [self->byKey objectForKey:@"serverProtocol"];
+	return [self.byKey objectForKey:@"serverProtocol"];
 }// serverProtocol
 
 
@@ -1011,7 +1075,7 @@ Accessor.
 - (PreferenceValue_String*)
 serverUserID
 {
-	return [self->byKey objectForKey:@"serverUserID"];
+	return [self.byKey objectForKey:@"serverUserID"];
 }// serverUserID
 
 
@@ -1104,10 +1168,10 @@ performSetCommandLineToRemoteShell:(id)		sender
 	else
 	{
 		NSWindow*	window = self.managedView.window;
-		NSPoint		fieldLocalPoint = NSMakePoint(CGFLOAT_DIV_2(NSWidth(self->commandLineTextField.bounds)),
-													CGFLOAT_DIV_2(NSHeight(self->commandLineTextField.bounds)));
+		NSPoint		fieldLocalPoint = NSMakePoint(CGFLOAT_DIV_2(NSWidth(self.commandLineTextField.bounds)),
+													CGFLOAT_DIV_2(NSHeight(self.commandLineTextField.bounds)));
 		CGPoint		browserPointOrigin = NSPointToCGPoint
-											([self->commandLineTextField convertPoint:fieldLocalPoint
+											([self.commandLineTextField convertPoint:fieldLocalPoint
 																						toView:nil/* make window coordinates */]);
 		
 		
@@ -1141,12 +1205,12 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 initializeWithContext:(NSObject*)		aContext
 {
 #pragma unused(aViewManager, aContext)
-	_serverBrowser = nil;
-	_sessionFavoriteIndexes = [[NSIndexSet alloc] init];
-	_sessionFavorites = @[];
+	self.serverBrowser = nil;
+	self.sessionFavoriteIndexes = [[NSIndexSet alloc] init];
+	self.sessionFavorites = @[];
 	
-	self->prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
-	self->byKey = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary; number of settings */];
+	self.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
+	self.byKey = [[NSMutableDictionary alloc] initWithCapacity:4/* arbitrary; number of settings */];
 }// panelViewManager:initializeWithContext:
 
 
@@ -1175,12 +1239,12 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != commandLineTextField);
-	assert(nil != byKey);
-	assert(nil != prefsMgr);
+	assert(nil != self.commandLineTextField);
+	assert(nil != self.byKey);
+	assert(nil != self.prefsMgr);
 	
 	// remember frame from XIB (it might be changed later)
-	self->idealFrame = [aContainerView frame];
+	self.idealFrame = [aContainerView frame];
 	
 	// note that all current values will change
 	for (NSString* keyName in [self primaryDisplayBindingKeys])
@@ -1189,62 +1253,62 @@ didLoadContainerView:(NSView*)			aContainerView
 	}
 	
 	// WARNING: Key names are depended upon by bindings in the XIB file.
-	[self->byKey setObject:[[PreferenceValue_StringByJoiningArray alloc]
+	[self.byKey setObject:[[PreferenceValue_StringByJoiningArray alloc]
 								initWithPreferencesTag:kPreferences_TagCommandLine
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														characterSetForSplitting:[NSCharacterSet whitespaceAndNewlineCharacterSet]
 														stringForJoiningElements:@" "]
 					forKey:@"commandLine"];
-	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
+	[self.byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavoriteLightMode
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														sourceClass:Quills::Prefs::FORMAT
 														includeDefault:YES]
 					forKey:@"formatFavoriteLightMode"];
-	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
+	[self.byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedFormatFavoriteDarkMode
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														sourceClass:Quills::Prefs::FORMAT
 														includeDefault:YES]
 					forKey:@"formatFavoriteDarkMode"];
-	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
+	[self.byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedMacroSetFavorite
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														sourceClass:Quills::Prefs::MACRO_SET
 														includeDefault:YES]
 					forKey:@"macroSetFavorite"];
-	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
+	[self.byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTerminalFavorite
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														sourceClass:Quills::Prefs::TERMINAL
 														includeDefault:YES]
 					forKey:@"terminalFavorite"];
-	[self->byKey setObject:[[PreferenceValue_CollectionBinding alloc]
+	[self.byKey setObject:[[PreferenceValue_CollectionBinding alloc]
 								initWithPreferencesTag:kPreferences_TagAssociatedTranslationFavorite
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														sourceClass:Quills::Prefs::TRANSLATION
 														includeDefault:YES]
 					forKey:@"translationFavorite"];
 	
 	// these keys are not directly bound in the UI but they
 	// are convenient for setting remote-server preferences
-	[self->byKey setObject:[[PreferenceValue_String alloc]
+	[self.byKey setObject:[[PreferenceValue_String alloc]
 								initWithPreferencesTag:kPreferences_TagServerHost
-														contextManager:self->prefsMgr]
+														contextManager:self.prefsMgr]
 					forKey:@"serverHost"];
-	[self->byKey setObject:[[PreferenceValue_Number alloc]
+	[self.byKey setObject:[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagServerPort
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														preferenceCType:kPreferenceValue_CTypeSInt16]
 					forKey:@"serverPort"];
-	[self->byKey setObject:[[PreferenceValue_Number alloc]
+	[self.byKey setObject:[[PreferenceValue_Number alloc]
 								initWithPreferencesTag:kPreferences_TagServerProtocol
-														contextManager:self->prefsMgr
+														contextManager:self.prefsMgr
 														preferenceCType:kPreferenceValue_CTypeUInt16]
 					forKey:@"serverProtocol"];
-	[self->byKey setObject:[[PreferenceValue_String alloc]
+	[self.byKey setObject:[[PreferenceValue_String alloc]
 								initWithPreferencesTag:kPreferences_TagServerUserID
-														contextManager:self->prefsMgr]
+														contextManager:self.prefsMgr]
 					forKey:@"serverUserID"];
 	
 	// note that all values have changed (causes the display to be refreshed)
@@ -1258,14 +1322,14 @@ didLoadContainerView:(NSView*)			aContainerView
 		Preferences_Result		error = kPreferences_ResultOK;
 		
 		
-		self->preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+		self.preferenceChangeListener = [[ListenerModel_StandardListener alloc]
 											initWithTarget:self
 															eventFiredSelector:@selector(model:preferenceChange:context:)];
 		
-		error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
+		error = Preferences_StartMonitoring([self.preferenceChangeListener listenerRef], kPreferences_ChangeContextName,
 											false/* call immediately to get initial value */);
 		assert(kPreferences_ResultOK == error);
-		error = Preferences_StartMonitoring([self->preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
+		error = Preferences_StartMonitoring([self.preferenceChangeListener listenerRef], kPreferences_ChangeNumberOfContexts,
 											true/* call immediately to get initial value */);
 		assert(kPreferences_ResultOK == error);
 	}
@@ -1282,7 +1346,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = self->idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
@@ -1349,7 +1413,7 @@ toDataSet:(void*)						newDataSet
 	}
 	
 	// now apply the specified settings
-	[self->prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
+	[self.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
 	// note that all values have changed (causes the display to be refreshed)
 	for (NSString* keyName in [[self primaryDisplayBindingKeys] reverseObjectEnumerator])
@@ -1568,10 +1632,10 @@ serverBrowserDidClose:(ServerBrowser_VC*)	aBrowser
 {
 #pragma unused(aBrowser)
 	[self willChangeValueForKey:@"isEditingRemoteShell"];
-	self->isEditingRemoteShell = NO;
+	self.isEditingRemoteShell = NO;
 	[self didChangeValueForKey:@"isEditingRemoteShell"];
 	
-	ServerBrowser_Dispose(&_serverBrowser);
+	self.serverBrowser = nil;
 }// serverBrowserDidClose:
 
 
@@ -1627,7 +1691,7 @@ setCommandLineFromSession:(Preferences_ContextRef)		inSession
 	{
 		// ONLY if no actual command line was found, generate a
 		// command line based on other settings (like host name)
-		Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
+		Session_Protocol	givenProtocol = kSession_ProtocolSSH2;
 		CFStringRef			commandLineCFString = nullptr;
 		CFStringRef			hostCFString = nullptr;
 		CFStringRef			userCFString = nullptr;
@@ -2303,8 +2367,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_DataFlowActionHa
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
+	self.idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -2339,7 +2403,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = aContainerView.frame;
 }// panelViewManager:didLoadContainerView:
 
 
@@ -2353,7 +2417,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
@@ -3683,8 +3747,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_KeyboardActionHa
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
+	self.idealFrame = CGRectMake(0, 0, 520, 330); // somewhat arbitrary; see SwiftUI code/playground
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -3719,7 +3783,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = aContainerView.frame;
 }// panelViewManager:didLoadContainerView:
 
 
@@ -3733,7 +3797,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
@@ -4229,8 +4293,8 @@ initializeWithContext:(NSObject*)		aContext/* PrefPanelSessions_GraphicsActionHa
 	
 	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	_actionHandler = actionHandler; // transfer ownership
-	_idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
+	self.actionHandler = actionHandler; // transfer ownership
+	self.idealFrame = CGRectMake(0, 0, 460, 200); // somewhat arbitrary; see SwiftUI code/playground
 	
 	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
 	// for now, assign to itself so it is not "nil"
@@ -4265,7 +4329,7 @@ didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
 	// remember initial frame (it might be changed later)
-	_idealFrame = [aContainerView frame];
+	self.idealFrame = aContainerView.frame;
 }// panelViewManager:didLoadContainerView:
 
 
@@ -4279,7 +4343,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = _idealFrame.size;
+	*outIdealSize = self.idealFrame.size;
 }
 
 
