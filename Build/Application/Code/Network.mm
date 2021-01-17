@@ -71,7 +71,7 @@ ListenerModel_Ref&		gNetworkChangeListenerModel ()
 							
 							return _;
 						}
-NSMutableArray*&		gRawAddressStringArray()		{ static NSMutableArray* _ = [[NSMutableArray alloc] init]; return _; }
+NSMutableArray*			gRawAddressStringArray()		{ static NSMutableArray* _ = [[NSMutableArray alloc] init]; return _; }
 BOOL					gAddressListRebuildInProgress = NO;
 
 } // anonymous namespace
@@ -95,7 +95,7 @@ IPv4 or IPv6 characteristics of the computer.
 (2016.10)
 */
 void
-Network_CopyLocalHostAddresses	(CFArrayRef&		outAddresses,
+Network_CopyLocalHostAddresses	(CFArrayRef&	outAddresses,
 								 Boolean*		outIsCompletePtr)
 {
 	// now that the IP address list is in use, set up the
@@ -118,7 +118,7 @@ Network_CopyLocalHostAddresses	(CFArrayRef&		outAddresses,
 		*outIsCompletePtr = (NO == gAddressListRebuildInProgress);
 	}
 	
-	outAddresses = BRIDGE_CAST([gRawAddressStringArray() copy], CFArrayRef);
+	outAddresses = BRIDGE_CAST_CFRETAIN([gRawAddressStringArray() copy], CFArrayRef);
 }// CopyLocalHostAddresses
 
 
@@ -351,7 +351,7 @@ regenerateAddressListWithCompletionBlock		(void	(^inCompletionBlock)())
 			
 			// despite "copy" attribute of property, system
 			// complains if this is freed; for now, leave it
-			//[addressList release], addressList = nil;
+			//addressList = nil;
 			
 			//Console_WriteLine("completed IP address search"); // debug
 			gAddressListRebuildInProgress = NO;
