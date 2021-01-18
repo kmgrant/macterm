@@ -13964,7 +13964,6 @@ sender:(id)				sender
 		{
 			UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
 												(printJob, self.window);
-			PrintTerminal_ReleaseJob(&printJob);
 		}
 	}
 }// printForSelector:sender:

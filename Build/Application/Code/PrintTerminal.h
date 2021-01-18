@@ -1,6 +1,5 @@
 /*!	\file PrintTerminal.h
-	\brief The new Mac OS X native printing mechanism for
-	terminal views in MacTerm.
+	\brief Methods for printing terminal text in MacTerm.
 */
 /*###############################################################
 
@@ -37,7 +36,7 @@
 
 // Mac includes
 #ifdef __OBJC__
-@class NSWindow;
+#	import <Cocoa/Cocoa.h>
 #else
 class NSWindow;
 #endif
@@ -63,33 +62,55 @@ enum PrintTerminal_Result
 
 #pragma mark Types
 
-typedef struct PrintTerminal_OpaqueJob*		PrintTerminal_JobRef;
+#ifdef __OBJC__
+
+/*!
+Manages jobs sent to a printer by the user (such
+as when selecting Print Screen).
+*/
+@interface PrintTerminal_Job : NSObject //{
+
+// initializers
+	- (instancetype _Nullable)
+	initWithString:(NSString* _Nonnull)_
+	font:(NSFont* _Nullable)_
+	title:(NSString* _Nullable)_
+	landscape:(BOOL)_ NS_DESIGNATED_INITIALIZER;
+
+@end //}
+
+#else
+
+class PrintTerminal_Job;
+
+#endif // __OBJC__
+
+// This is defined as an Objective-C object so it is compatible
+// with ARC rules (e.g. strong references).
+typedef PrintTerminal_Job*		PrintTerminal_JobRef;
 
 
 
 #pragma mark Public Methods
 
-//!\name Creating and Destroying Objects
+//!\name Creating Objects
 //@{
 
-PrintTerminal_JobRef
-	PrintTerminal_NewJobFromFile			(CFURLRef					inFile,
-											 TerminalViewRef			inView,
-											 CFStringRef				inJobName,
-											 Boolean					inDefaultToLandscape = false);
+PrintTerminal_JobRef _Nullable
+	PrintTerminal_NewJobFromFile			(CFURLRef _Nonnull				inFile,
+											 TerminalViewRef _Nonnull		inView,
+											 CFStringRef _Nonnull			inJobName,
+											 Boolean						inDefaultToLandscape = false);
 
-PrintTerminal_JobRef
-	PrintTerminal_NewJobFromSelectedText	(TerminalViewRef			inView,
-											 CFStringRef				inJobName,
-											 Boolean					inDefaultToLandscape = false);
+PrintTerminal_JobRef _Nullable
+	PrintTerminal_NewJobFromSelectedText	(TerminalViewRef _Nonnull		inView,
+											 CFStringRef _Nonnull			inJobName,
+											 Boolean						inDefaultToLandscape = false);
 
-PrintTerminal_JobRef
-	PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef			inView,
-											 TerminalScreenRef			inViewBuffer,
-											 CFStringRef				inJobName);
-
-void
-	PrintTerminal_ReleaseJob				(PrintTerminal_JobRef*		inoutJobPtr);
+PrintTerminal_JobRef _Nullable
+	PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef _Nonnull		inView,
+											 TerminalScreenRef _Nonnull		inViewBuffer,
+											 CFStringRef _Nonnull			inJobName);
 
 //@}
 
@@ -97,8 +118,8 @@ void
 //@{
 
 PrintTerminal_Result
-	PrintTerminal_JobSendToPrinter			(PrintTerminal_JobRef		inJob,
-											 NSWindow*					inParentWindowOrNil);
+	PrintTerminal_JobSendToPrinter			(PrintTerminal_JobRef _Nonnull	inJob,
+											 NSWindow* _Nullable			inParentWindowOrNil);
 
 //@}
 

@@ -6891,7 +6891,6 @@ printingEnd		(Boolean	inSendRemainderToPrinter)
 				{
 					UNUSED_RETURN(PrintTerminal_Result)PrintTerminal_JobSendToPrinter
 														(printJob, TerminalWindow_ReturnNSWindow(terminalWindow));
-					PrintTerminal_ReleaseJob(&printJob);
 				}
 			}
 		}

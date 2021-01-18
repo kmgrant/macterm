@@ -236,7 +236,7 @@ Manages the Server Browser user interface.
 
 #else
 
-@class ServerBrowser_Object;
+class ServerBrowser_Object;
 
 #endif // __OBJC__
 

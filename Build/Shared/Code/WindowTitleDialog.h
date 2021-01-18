@@ -137,7 +137,7 @@ Manages the Find user interface.
 
 #else
 
-@class WindowTitleDialog_Object;
+class WindowTitleDialog_Object;
 
 #endif // __OBJC__
 

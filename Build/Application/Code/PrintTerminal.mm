@@ -35,6 +35,7 @@
 
 // standard-C includes
 #import <cstring>
+#import <utility>
 
 // library includes
 #import <CocoaBasic.h>
@@ -60,27 +61,23 @@
 #pragma mark Types
 
 /*!
-Helper class for printing from a terminal view.
+Private properties.
 */
-@interface PrintTerminal_Job : NSObject //{
-{
-@public
-	NSString*	jobTitle;			//!< the title of the print job and preview window
-	NSString*	printedText;		//!< the lines of plain text to print
-	NSFont*		textFont;			//!< the font and size to use
-	BOOL		isLandscapeMode;	//!< if YES, page setup defaults to landscape mode
-}
+@interface PrintTerminal_Job () //{
 
-// class methods
-	+ (PrintTerminal_Job*)
-	jobFromRef:(PrintTerminal_JobRef)_;
-
-// initializers
-	- (instancetype)
-	initWithString:(NSString*)_
-	font:(NSFont*)_
-	title:(NSString*)_
-	landscape:(BOOL)_;
+// accessors
+	//! If YES, page setup defaults to landscape mode.
+	@property (assign) BOOL
+	isLandscapeMode;
+	//! The title of the print job and preview window.
+	@property (strong) NSString*
+	jobTitle;
+	//! The lines of plain text to print.
+	@property (strong) NSString*
+	printedText;
+	//! The font and size to use.
+	@property (strong) NSFont*
+	textFont;
 
 @end //}
 
@@ -99,6 +96,9 @@ NSFont*		returnNSFontForTerminalView		(TerminalViewRef);
 Creates a new object to manage printing of the text in the
 given file, using the font and size of the given view.
 Returns "nullptr" if any problem occurs.
+
+The returned reference is ARC-compliant so use a strong
+reference if necessary (otherwise release is implicit).
 
 (4.0)
 */
@@ -127,11 +127,10 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 	}
 	else
 	{
-		result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:printFileString
-																			font:returnNSFontForTerminalView(inView)
-																			title:BRIDGE_CAST(inJobName, NSString*)
-																			landscape:((inDefaultToLandscape) ? YES : NO)],
-									PrintTerminal_JobRef);
+		result = [[PrintTerminal_Job alloc] initWithString:printFileString
+															font:returnNSFontForTerminalView(inView)
+															title:BRIDGE_CAST(inJobName, NSString*)
+															landscape:((inDefaultToLandscape) ? YES : NO)];
 	}
 	
 	return result;
@@ -143,6 +142,9 @@ PrintTerminal_NewJobFromFile	(CFURLRef			inFile,
 Creates a new object to manage printing of the text currently
 on the main screen of a terminal view, using the font and size
 of that view.  Returns "nullptr" if any problem occurs.
+
+The returned reference is ARC-compliant so use a strong
+reference if necessary (otherwise release is implicit).
 
 (4.0)
 */
@@ -158,11 +160,10 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 	PrintTerminal_JobRef	result = nullptr;
 	
 	
-	result = REINTERPRET_CAST([[PrintTerminal_Job alloc] initWithString:BRIDGE_CAST(selectedText.returnCFStringRef(), NSString*)
-																		font:returnNSFontForTerminalView(inView)
-																		title:BRIDGE_CAST(inJobName, NSString*)
-																		landscape:((inDefaultToLandscape) ? YES : NO)],
-								PrintTerminal_JobRef);
+	result = [[PrintTerminal_Job alloc] initWithString:BRIDGE_CAST(selectedText.returnCFStringRef(), NSString*)
+														font:returnNSFontForTerminalView(inView)
+														title:BRIDGE_CAST(inJobName, NSString*)
+														landscape:((inDefaultToLandscape) ? YES : NO)];
 	return result;
 }// @autoreleasepool
 }// NewJobFromSelectedText
@@ -172,6 +173,9 @@ PrintTerminal_NewJobFromSelectedText	(TerminalViewRef	inView,
 Creates a new object to manage printing of the text currently
 on the main screen of a terminal view, using the font and size
 of that view.  Returns "nullptr" if any problem occurs.
+
+The returned reference is ARC-compliant so use a strong
+reference if necessary (otherwise release is implicit).
 
 (4.0)
 */
@@ -233,26 +237,6 @@ PrintTerminal_NewJobFromVisibleScreen	(TerminalViewRef	inView,
 
 
 /*!
-Decreases the retain count of the specified print job object
-and sets your copy of the reference to "nullptr".  If the
-object is no longer in use, it is destroyed.
-
-(4.0)
-*/
-void
-PrintTerminal_ReleaseJob	(PrintTerminal_JobRef*		inoutRefPtr)
-{
-@autoreleasepool {
-	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:*inoutRefPtr];
-	
-	
-	[ptr release];
-	*inoutRefPtr = nullptr;
-}// @autoreleasepool
-}// ReleaseJob
-
-
-/*!
 Allows the user to send the specified job to the printer.
 A preview interface is first displayed.
 
@@ -272,27 +256,21 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 								 NSWindow*				inParentWindowOrNil)
 {
 @autoreleasepool {
-	PrintTerminal_Job*		ptr = [PrintTerminal_Job jobFromRef:inRef];
 	PrintTerminal_Result	result = kPrintTerminal_ResultOK;
 	
 	
-	if (nullptr == ptr)
+	if (nullptr == inRef)
 	{
 		result = kPrintTerminal_ResultInvalidID;
 	}
 	else
 	{
 		NSPasteboard*			textToPrintPasteboard = [NSPasteboard pasteboardWithUniqueName];
-	#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
-		NSString*				pasteboardName = [textToPrintPasteboard name]; // non-property version does not seem to retain
-	#else
-		NSString*				pasteboardName = [textToPrintPasteboard.name autorelease]; // property uses "copy"
-	#endif
-		NSString*				titleString = ((nil != ptr->jobTitle)
-												? ptr->jobTitle
+		NSString*				pasteboardName = textToPrintPasteboard.name;
+		NSString*				titleString = ((nil != inRef.jobTitle)
+												? inRef.jobTitle
 												: @"");
-		NSMutableDictionary*		appEnvDict = [[[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary */]
-												autorelease];
+		NSMutableDictionary*	appEnvDict = [[NSMutableDictionary alloc] initWithCapacity:5/* arbitrary */];
 		CFErrorRef				errorRef = nullptr;
 		
 		
@@ -300,17 +278,22 @@ PrintTerminal_JobSendToPrinter	(PrintTerminal_JobRef	inRef,
 		// by the Print Preview internal application (also,
 		// every value must be an NSString* type)
 		[appEnvDict setValue:titleString forKey:@"MACTERM_PRINT_PREVIEW_JOB_TITLE"];
-		[appEnvDict setValue:[ptr->textFont fontName] forKey:@"MACTERM_PRINT_PREVIEW_FONT_NAME"];
-		[appEnvDict setValue:[NSString stringWithFormat:@"%f", STATIC_CAST([ptr->textFont pointSize], float)]
+		[appEnvDict setValue:inRef.textFont.fontName forKey:@"MACTERM_PRINT_PREVIEW_FONT_NAME"];
+		[appEnvDict setValue:[NSString stringWithFormat:@"%f", STATIC_CAST(inRef.textFont.pointSize, float)]
 								forKey:@"MACTERM_PRINT_PREVIEW_FONT_SIZE"];
 		[appEnvDict setValue:[NSString stringWithFormat:@"%f", STATIC_CAST(inParentWindowOrNil.contentView.frame.size.width, float)]
 								forKey:@"MACTERM_PRINT_PREVIEW_PIXEL_WIDTH_HINT"];
 		[appEnvDict setValue:pasteboardName forKey:@"MACTERM_PRINT_PREVIEW_PASTEBOARD_NAME"];
-		[appEnvDict setValue:((ptr->isLandscapeMode) ? @"1" : @"0") forKey:@"MACTERM_PRINT_PREVIEW_IS_LANDSCAPE"];
+		[appEnvDict setValue:((inRef.isLandscapeMode) ? @"1" : @"0") forKey:@"MACTERM_PRINT_PREVIEW_IS_LANDSCAPE"];
 		
 		// share the terminal text with the print-preview application
 		[textToPrintPasteboard clearContents];
-		if (NO == [textToPrintPasteboard writeObjects:@[ptr->printedText]])
+		if (nil == inRef.printedText)
+		{
+			Sound_StandardAlert();
+			Console_Warning(Console_WriteLine, "no terminal text available to print!");
+		}
+		else if (NO == [textToPrintPasteboard writeObjects:@[inRef.printedText]])
 		{
 			Sound_StandardAlert();
 			Console_Warning(Console_WriteLine, "unable to write terminal text to new pasteboard");
@@ -384,6 +367,9 @@ returnNSFontForTerminalView		(TerminalViewRef	inView)
 @implementation PrintTerminal_Job //{
 
 
+#pragma mark Initializers
+
+
 /*!
 Initialize with the (perhaps multi-line) string of text that
 is to be printed.
@@ -401,41 +387,29 @@ landscape:(BOOL)			landscapeMode
 	self = [super init];
 	if (nil != self)
 	{
-		jobTitle = [aTitle retain];
-		printedText = [aString retain];
-		textFont = [aFont retain];
-		isLandscapeMode = landscapeMode;
+		_isLandscapeMode = landscapeMode;
+		_jobTitle = aTitle;
+		_printedText = aString;
+		_textFont = aFont;
 	}
 	return self;
 }// initWithString:font:title:landscape:
 
 
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[jobTitle release];
-	[printedText release];
-	[textFont release];
-	[super dealloc];
-}// dealloc
+#pragma mark Initializers Disabled From Superclass
 
 
 /*!
-Returns the internal object that is equivalent to the
-given external reference.
+This is not a valid way to initialize this class.
 
-(4.0)
+(2021.01)
 */
-+ (PrintTerminal_Job*)
-jobFromRef:(PrintTerminal_JobRef)	ref
+- (instancetype)
+init
 {
-	return (PrintTerminal_Job*)ref;
-}// jobFromRef:
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithString:@"" font:nil title:nil landscape:NO];
+}// init
 
 
 @end //} PrintTerminal_Job

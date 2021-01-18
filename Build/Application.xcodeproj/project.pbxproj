@@ -11,7 +11,7 @@
 		0A043B041D8F5A7200511F30 /* RegionUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A043B031D8F5A7200511F30 /* RegionUtilities.cp */; };
 		0A0777411DCBC815004C9F78 /* TouchBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A0777401DCBC815004C9F78 /* TouchBar.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A1022161DDC26F100CEE0DF /* ConstantsRegistry.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1022151DDC26F100CEE0DF /* ConstantsRegistry.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; };
+		0A1A068A0ABA6241002C95D7 /* PrintTerminal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A22068A24FC668D00E27657 /* MacTermQuills.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AFC021524FB2688009C863F /* MacTermQuills.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0A22068D24FCA5F600E27657 /* UICommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A22068C24FCA5F600E27657 /* UICommon.swift */; };
 		0A23A8D21C21077B00156B1E /* TextAttributes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A23A8D11C21077B00156B1E /* TextAttributes.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };

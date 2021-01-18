@@ -200,7 +200,7 @@ Manages the Find user interface.
 
 #else
 
-@class FindDialog_Object;
+class FindDialog_Object;
 
 #endif // __OBJC__
 
