@@ -47,16 +47,16 @@
 
 #pragma mark Constants
 
-extern NSString*	kTerminalToolbar_ItemIDCustomize;
-extern NSString*	kTerminalToolbar_ItemIDNewSessionDefaultFavorite;
-extern NSString*	kTerminalToolbar_ItemIDNewSessionLogInShell;
-extern NSString*	kTerminalToolbar_ItemIDNewSessionShell;
-extern NSString*	kTerminalToolbar_ItemIDStackWindows;
-extern NSString*	kTerminalToolbar_DelegateSessionWillChangeNotification; // no userInfo is defined for this notification
-extern NSString*	kTerminalToolbar_DelegateSessionDidChangeNotification; // no userInfo is defined for this notification
-extern NSString*	kTerminalToolbar_ObjectDidChangeDisplayModeNotification; // no userInfo is defined for this notification
-extern NSString*	kTerminalToolbar_ObjectDidChangeSizeModeNotification; // no userInfo is defined for this notification
-extern NSString*	kTerminalToolbar_ObjectDidChangeVisibilityNotification; // no userInfo is defined for this notification
+extern NSString* _Nonnull	kTerminalToolbar_ItemIDCustomize;
+extern NSString* _Nonnull	kTerminalToolbar_ItemIDNewSessionDefaultFavorite;
+extern NSString* _Nonnull	kTerminalToolbar_ItemIDNewSessionLogInShell;
+extern NSString* _Nonnull	kTerminalToolbar_ItemIDNewSessionShell;
+extern NSString* _Nonnull	kTerminalToolbar_ItemIDStackWindows;
+extern NSString* _Nonnull	kTerminalToolbar_DelegateSessionWillChangeNotification; // no userInfo is defined for this notification
+extern NSString* _Nonnull	kTerminalToolbar_DelegateSessionDidChangeNotification; // no userInfo is defined for this notification
+extern NSString* _Nonnull	kTerminalToolbar_ObjectDidChangeDisplayModeNotification; // no userInfo is defined for this notification
+extern NSString* _Nonnull	kTerminalToolbar_ObjectDidChangeSizeModeNotification; // no userInfo is defined for this notification
+extern NSString* _Nonnull	kTerminalToolbar_ObjectDidChangeVisibilityNotification; // no userInfo is defined for this notification
 
 enum TerminalToolbar_TextLabelLayout
 {
@@ -79,7 +79,7 @@ indicate that the item should be notified of display changes.
 
 	// respond to change in NSToolbarDisplayMode value for a TerminalToolbar_Object
 	- (void)
-	didChangeDisplayModeForToolbar:(NSToolbar*)_;
+	didChangeDisplayModeForToolbar:(NSToolbar* _Nonnull)_;
 
 @end //}
 
@@ -97,13 +97,13 @@ added to a toolbar or removed from a toolbar.
 
 	// respond to item being added to valid toolbar (non-nil)
 	- (void)
-	item:(NSToolbarItem*)_
-	willEnterToolbar:(NSToolbar*)_;
+	item:(NSToolbarItem* _Nonnull)_
+	willEnterToolbar:(NSToolbar* _Nonnull)_;
 
 	// respond to item being removed from valid toolbar (non-nil)
 	- (void)
-	item:(NSToolbarItem*)_
-	didExitToolbar:(NSToolbar*)_;
+	item:(NSToolbarItem* _Nonnull)_
+	didExitToolbar:(NSToolbar* _Nonnull)_;
 
 @end //}
 
@@ -123,8 +123,8 @@ the customization palette case.
 @required
 
 	// return item for use in a customization sheet (be sure to set a "paletteLabel")
-	- (NSToolbarItem*)
-	paletteProxyToolbarItemWithIdentifier:(NSString*)_;
+	- (NSToolbarItem* _Nonnull)
+	paletteProxyToolbarItemWithIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -141,7 +141,7 @@ indicate that the item should be notified of size changes.
 
 	// respond to change in NSToolbarSizeMode value for a TerminalToolbar_Object
 	- (void)
-	didChangeSizeForToolbar:(NSToolbar*)_;
+	didChangeSizeForToolbar:(NSToolbar* _Nonnull)_;
 
 @end //}
 
@@ -158,12 +158,12 @@ window it’s in.)
 
 	// respond to actual change in current view window
 	- (void)
-	view:(NSView*)_
-	didEnterWindow:(NSWindow*)_;
+	view:(NSView* _Nonnull)_
+	didEnterWindow:(NSWindow* _Nonnull)_;
 
 	// respond to proposed change in current view window
 	- (void)
-	willChangeWindowForView:(NSView*)_;
+	willChangeWindowForView:(NSView* _Nonnull)_;
 
 @end //}
 
@@ -178,22 +178,18 @@ be changed as often as needed, e.g. to implement a floating
 toolbar.)
 */
 @interface TerminalToolbar_Delegate : NSObject < NSToolbarDelegate > //{
-{
-@private
-	SessionRef		associatedSession;
-	BOOL			allowExperimentalItems;
-}
 
 // initializers
-	- (instancetype)
-	initForToolbar:(NSToolbar*)_
+	- (instancetype _Nonnull)
+	initForToolbar:(NSToolbar* _Nonnull)_
 	experimentalItems:(BOOL)_;
 
 // accessors
-	- (SessionRef)
+	//! The session associated with the toolbar delegate
+	//! can be read by certain toolbar items in order to
+	//! maintain their states.
+	@property (assign, nullable) SessionRef
 	session;
-	- (void)
-	setSession:(SessionRef)_;
 
 @end //}
 
@@ -205,9 +201,9 @@ of the toolbar is of class TerminalToolbar_Delegate.
 @interface NSToolbar (TerminalToolbar_NSToolbarExtensions) //{
 
 // accessors
-	- (TerminalToolbar_Delegate*)
+	- (TerminalToolbar_Delegate* _Nullable)
 	terminalToolbarDelegate;
-	- (SessionRef)
+	- (SessionRef _Nullable)
 	terminalToolbarSession;
 
 @end //}
@@ -218,25 +214,21 @@ Base class for items that need to monitor the session that is
 associated with their toolbar’s delegate.
 */
 @interface TerminalToolbar_SessionDependentItem : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive > //{
-{
-@private
-	SessionRef		_sessionHint;
-}
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 // accessors
-	- (SessionRef)
+	- (SessionRef _Nullable)
 	session;
 	- (void)
-	setSessionHint:(SessionRef)_;
-	- (TerminalScreenRef)
+	setSessionHint:(SessionRef _Nullable)_;
+	- (TerminalScreenRef _Nullable)
 	terminalScreen;
-	- (TerminalViewRef)
+	- (TerminalViewRef _Nullable)
 	terminalView;
-	- (TerminalWindowRef)
+	- (TerminalWindowRef _Nullable)
 	terminalWindow;
 
 // overrides for subclasses
@@ -252,15 +244,10 @@ associated with their toolbar’s delegate.
 Base class for items that display a particular LED.
 */
 @interface TerminalToolbar_LEDItem : TerminalToolbar_SessionDependentItem //{
-{
-@private
-	ListenerModel_StandardListener*		screenChangeListener;
-	unsigned int						indexOfLED;
-}
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_
 	oneBasedIndexOfLED:(unsigned int)_;
 
 @end //}
@@ -269,12 +256,7 @@ Base class for items that display a particular LED.
 /*!
 Toolbar item “Bell”.
 */
-@interface TerminalToolbar_ItemBell : TerminalToolbar_SessionDependentItem //{
-{
-@private
-	ListenerModel_StandardListener*		screenChangeListener;
-}
-@end //}
+@interface TerminalToolbar_ItemBell : TerminalToolbar_SessionDependentItem @end
 
 
 /*!
@@ -286,12 +268,7 @@ Toolbar item “Customize”.
 /*!
 Toolbar item “Force Quit”.
 */
-@interface TerminalToolbar_ItemForceQuit : TerminalToolbar_SessionDependentItem //{
-{
-@private
-	ListenerModel_StandardListener*		sessionChangeListener;
-}
-@end //}
+@interface TerminalToolbar_ItemForceQuit : TerminalToolbar_SessionDependentItem @end
 
 
 /*!
@@ -336,16 +313,7 @@ Toolbar item to invoke macro with index of tag (in active set).
 @interface TerminalToolbar_ItemMacro : NSToolbarItem < TerminalToolbar_DisplayModeSensitive,
 														TerminalToolbar_ItemAddRemoveSensitive,
 														TerminalToolbar_ItemHasPaletteProxy,
-														TerminalToolbar_SizeSensitive > //{
-{
-	ListenerModel_StandardListener*		_macroManagerChangeListener;
-	ListenerModel_StandardListener*		_preferenceChangeListener;
-	NSBox*								_borderView;
-	NSButton*							_actionButton;
-	NSInteger							_tag;
-}
-@end //}
-
+														TerminalToolbar_SizeSensitive > @end
 
 /*!
 Toolbar item “Default”.
@@ -380,27 +348,17 @@ Toolbar item “Arrange in Front”.
 /*!
 Toolbar item “Suspend”.
 */
-@interface TerminalToolbar_ItemSuspend : TerminalToolbar_SessionDependentItem //{
-{
-@private
-	ListenerModel_StandardListener*		sessionChangeListener;
-}
-@end //}
+@interface TerminalToolbar_ItemSuspend : TerminalToolbar_SessionDependentItem @end
 
 
 /*!
 Base toolbar item for close/minimize/zoom buttons.
 */
-@interface TerminalToolbar_ItemWindowButton : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive >
-{
-@private
-	CocoaExtensions_ObserverSpec*	_viewWindowObserver;
-	NSButton*						_button;
-}
+@interface TerminalToolbar_ItemWindowButton : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive > //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -411,8 +369,8 @@ Toolbar item “Close”.
 @interface TerminalToolbar_ItemWindowButtonClose : TerminalToolbar_ItemWindowButton //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -423,8 +381,8 @@ Toolbar item “Minimize”.
 @interface TerminalToolbar_ItemWindowButtonMinimize : TerminalToolbar_ItemWindowButton //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -435,8 +393,8 @@ Toolbar item “Zoom”.
 @interface TerminalToolbar_ItemWindowButtonZoom : TerminalToolbar_ItemWindowButton //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -448,20 +406,25 @@ adjusts font to fit better, and uses fading as part of
 eventual truncation.
 */
 @interface TerminalToolbar_TextLabel : NSTextField //{
-{
-	TerminalToolbar_TextLabelLayout		_labelLayout;
-}
 
 // class methods
-	+ (CGImageRef)
+	+ (CGImageRef _Nullable)
 	newFadeMaskImageWithSize:(NSSize)_
 	labelLayout:(TerminalToolbar_TextLabelLayout)_;
 
 // accessors
+	//! Determines how the text should handle alignment, wrapping
+	//! and truncation.
 	@property (assign) TerminalToolbar_TextLabelLayout
 	labelLayout;
+	//! If this property is set to YES then the user can drag the
+	//! window even if the initial click is on this view.  This
+	//! overrides the base NSView class.
 	@property (assign) BOOL
 	mouseDownCanMoveWindow;
+	//! Set this to YES to make the font size slightly smaller by
+	//! default.  Note that, in addition, the font size adjusts
+	//! automatically based on available space.
 	@property (assign) BOOL
 	smallSize;
 
@@ -476,20 +439,17 @@ times) but you can set "overrideWindow" to force the
 title to come only from that window.
 */
 @interface TerminalToolbar_WindowTitleLabel : TerminalToolbar_TextLabel //{
-{
-	NSWindow*									_overrideWindow;
-	CocoaExtensions_ObserverSpec*				_windowTitleObserver;
-	id< TerminalToolbar_ViewWindowSensitive >	_windowMonitor;
-}
 
 // initializers
-	- (instancetype)
+	- (instancetype _Nonnull)
 	initWithFrame:(NSRect)_;
 
 // accessors
-	@property (strong) NSWindow*
+	//! Window that takes precedence over view’s own window.
+	@property (strong, nullable) NSWindow*
 	overrideWindow;
-	@property (assign) id< TerminalToolbar_ViewWindowSensitive >
+	//! External object to notify when the window changes.
+	@property (assign, nullable) id< TerminalToolbar_ViewWindowSensitive >
 	windowMonitor;
 
 @end //}
@@ -502,16 +462,11 @@ Toolbar item “Window Title”.
 																TerminalToolbar_ItemAddRemoveSensitive,
 																TerminalToolbar_ItemHasPaletteProxy,
 																TerminalToolbar_SizeSensitive,
-																TerminalToolbar_ViewWindowSensitive >
-{
-@private
-	BOOL								_disableFrameMonitor;
-	TerminalToolbar_WindowTitleLabel*	_textView;
-}
+																TerminalToolbar_ViewWindowSensitive > //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -522,8 +477,8 @@ Toolbar item “Left-Aligned Title”.
 @interface TerminalToolbar_ItemWindowTitleLeft : TerminalToolbar_ItemWindowTitle < TerminalToolbar_ItemHasPaletteProxy > //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -534,8 +489,8 @@ Toolbar item “Right-Aligned Title”.
 @interface TerminalToolbar_ItemWindowTitleRight : TerminalToolbar_ItemWindowTitle < TerminalToolbar_ItemHasPaletteProxy > //{
 
 // initializers
-	- (instancetype)
-	initWithItemIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
 
 @end //}
 
@@ -560,8 +515,8 @@ can be observed on this toolbar object to find out when
 @interface TerminalToolbar_Object : NSToolbar //{
 
 // initializers
-	- (instancetype)
-	initWithIdentifier:(NSString*)_;
+	- (instancetype _Nonnull)
+	initWithIdentifier:(NSString* _Nonnull)_;
 
 // accessors
 	@property (readonly) NSTextAlignment
@@ -590,21 +545,11 @@ call the TerminalToolbar_NSToolbarExtensions category’s
 methods on this toolbar).
 */
 @interface TerminalToolbar_Window : NSPanel //{
-{
-@private
-	ListenerModel_StandardListener*		sessionFactoryChangeListener;
-	TerminalToolbar_Delegate*			toolbarDelegate;
-	BOOL								isDisplayingSheet;
-}
 
 // initializers
-	- (instancetype)
+	- (instancetype _Nonnull)
 	initWithContentRect:(NSRect)_
-	#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_6
-	styleMask:(NSUInteger)_
-	#else
 	styleMask:(NSWindowStyleMask)_
-	#endif
 	backing:(NSBackingStoreType)_
 	defer:(BOOL)_;
 
