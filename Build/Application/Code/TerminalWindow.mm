@@ -168,7 +168,7 @@ Private properties.
 	infoWindow;
 	@property (strong) NSView*
 	paddingView;
-	@property (assign) PopoverManager_Ref
+	@property (strong) PopoverManager_Ref
 	popoverMgr;
 	@property (strong) NSTextField*
 	textView;
@@ -4602,10 +4602,6 @@ Destructor.
 dealloc
 {
 	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
-	if (nil != _popoverMgr)
-	{
-		PopoverManager_Dispose(&_popoverMgr);
-	}
 }// dealloc
 
 
@@ -4698,13 +4694,6 @@ moveBelowCursorInTerminalWindow:(TerminalWindowRef)		aTerminalWindow
 		Console_Warning(Console_WriteLine, "info bubble: unable to find window-relative terminal cursor coordinates");
 	}
 	self.idealWindowRelativeAnchorPoint = NSMakePoint(windowRelativeCursorBounds.origin.x, windowRelativeCursorBounds.origin.y);
-	
-	// arrange to display the label over this window
-	if (nullptr != self.popoverMgr)
-	{
-		PopoverManager_Dispose(&_popoverMgr);
-	}
-	
 	self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
 											self/* delegate */, kPopoverManager_AnimationTypeStandard,
 											kPopoverManager_BehaviorTypeFloating,
@@ -4732,11 +4721,6 @@ moveToCenterScreen:(NSScreen*)		aScreen
 	
 	self.idealWindowRelativeAnchorPoint = NSMakePoint(windowScreen.frame.origin.x + (NSWidth(windowScreen.frame) / 2.0),
 														windowScreen.frame.origin.y + (NSHeight(windowScreen.frame) / 2.0));
-	
-	if (nullptr != self.popoverMgr)
-	{
-		PopoverManager_Dispose(&_popoverMgr);
-	}
 	self.popoverMgr = PopoverManager_New(self.infoWindow, self.textView/* first responder */,
 											self/* delegate */, kPopoverManager_AnimationTypeStandard,
 											kPopoverManager_BehaviorTypeFloating,

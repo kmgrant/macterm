@@ -768,7 +768,6 @@ My_GenericDialog::
 	{
 		[containerViewManager.delegate panelViewManager:containerViewManager willChangePanelVisibility:kPanel_VisibilityHidden];
 		PopoverManager_RemovePopover(popoverManager, false/* is confirming */);
-		PopoverManager_Dispose(&popoverManager);
 	}
 }// My_GenericDialog destructor
 
@@ -1205,20 +1204,23 @@ Specifies a sensible width and height for this panel.
 panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
-	NSWindow*	viewWindow = aViewManager.view.window;
-	NSSize		popoverFrameSize = viewWindow.frame.size;
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self.dialogRef);
+	NSWindow*					viewWindow = aViewManager.view.window;
+	NSSize						popoverFrameSize = viewWindow.frame.size;
 	
 	
 	*outIdealSize = popoverFrameSize; // set a default in case the queries fail below
-	
-	// copy the size of the main view in the popover
-	[self popoverManager:nil getIdealSize:&popoverFrameSize];
+	if (nullptr != ptr)
 	{
-		NSRect		mockFrame = NSMakeRect(0, 0, popoverFrameSize.width, popoverFrameSize.height);
-		NSRect		contentFrame = [viewWindow contentRectForFrameRect:mockFrame];
-		
-		
-		*outIdealSize = contentFrame.size;
+		// copy the size of the main view in the popover
+		[self popoverManager:ptr->popoverManager getIdealSize:&popoverFrameSize];
+		{
+			NSRect		mockFrame = NSMakeRect(0, 0, popoverFrameSize.width, popoverFrameSize.height);
+			NSRect		contentFrame = [viewWindow contentRectForFrameRect:mockFrame];
+			
+			
+			*outIdealSize = contentFrame.size;
+		}
 	}
 }// panelViewManager:requestingIdealSize:
 

@@ -76,7 +76,18 @@ enum PopoverManager_BehaviorType
 
 #pragma mark Types
 
-typedef struct PopoverManager_OpaqueStruct*		PopoverManager_Ref;
+#ifdef __OBJC__
+
+/*!
+Manages popover behavior over a particular parent view.
+*/
+@interface PopoverManager_WC : NSWindowController< Popover_ResizeDelegate > @end
+
+
+// This is defined as an Objective-C object so it is compatible
+// with ARC rules (e.g. strong references).
+typedef PopoverManager_WC*		PopoverManager_Ref;
+
 
 /*!
 Classes that are passed as delegates to PopoverManager_New()
@@ -89,64 +100,68 @@ must conform to this protocol.
 	// return the proper position of the popover arrow tip (if any), relative
 	// to its parent window; also called during window resizing
 	- (NSPoint)
-	popoverManager:(PopoverManager_Ref)_
+	popoverManager:(PopoverManager_Ref _Nonnull)_
 	idealAnchorPointForFrame:(NSRect)_
-	parentWindow:(NSWindow*)_;
+	parentWindow:(NSWindow* _Nullable)_;
 
 	// return the desired popover arrow placement
 	- (Popover_Properties)
-	popoverManager:(PopoverManager_Ref)_
+	popoverManager:(PopoverManager_Ref _Nonnull)_
 	idealArrowPositionForFrame:(NSRect)_
-	parentWindow:(NSWindow*)_;
+	parentWindow:(NSWindow* _Nullable)_;
 
 	// provide initial dimensions for popover
 	- (void)
-	popoverManager:(PopoverManager_Ref)_
-	getIdealSize:(NSSize*)_;
+	popoverManager:(PopoverManager_Ref _Nonnull)_
+	getIdealSize:(NSSize* _Nonnull)_;
 
 @optional
 
 	// provide YES for one or both axes that should allow resizing to take place;
 	// if not implemented, the assumption is that the window can resize both ways
 	- (void)
-	popoverManager:(PopoverManager_Ref)_
-	getHorizontalResizeAllowed:(BOOL*)_
-	getVerticalResizeAllowed:(BOOL*)_;
+	popoverManager:(PopoverManager_Ref _Nonnull)_
+	getHorizontalResizeAllowed:(BOOL* _Nonnull)_
+	getVerticalResizeAllowed:(BOOL* _Nonnull)_;
 
 @end //}
+
+#else
+
+class PopoverManager_WC;
+typedef PopoverManager_WC*		PopoverManager_Ref;
+
+#endif // __OBJC__
 
 
 
 #pragma mark Public Methods
 
-PopoverManager_Ref
-	PopoverManager_New							(Popover_Window*				inPopover,
-												 NSView*						inLogicalFirstResponder,
-												 id< PopoverManager_Delegate >	inDelegate,
-												 PopoverManager_AnimationType	inAnimation,
-												 PopoverManager_BehaviorType	inBehavior,
-												 NSView*						inParentView);
+PopoverManager_Ref _Nullable
+	PopoverManager_New							(Popover_Window* _Nonnull					inPopover,
+												 NSView* _Nonnull							inLogicalFirstResponder,
+												 id< PopoverManager_Delegate > _Nullable	inDelegate,
+												 PopoverManager_AnimationType				inAnimation,
+												 PopoverManager_BehaviorType				inBehavior,
+												 NSView* _Nullable							inParentView);
 
 void
-	PopoverManager_Dispose						(PopoverManager_Ref*			inoutRefPtr);
+	PopoverManager_DisplayPopover				(PopoverManager_Ref _Nonnull	inRef);
 
 void
-	PopoverManager_DisplayPopover				(PopoverManager_Ref				inRef);
-
-void
-	PopoverManager_RemovePopover				(PopoverManager_Ref				inRef,
+	PopoverManager_RemovePopover				(PopoverManager_Ref _Nonnull	inRef,
 												 Boolean						inIsConfirming);
 
 void
-	PopoverManager_SetAnimationType				(PopoverManager_Ref				inRef,
+	PopoverManager_SetAnimationType				(PopoverManager_Ref _Nonnull	inRef,
 												 PopoverManager_AnimationType	inAnimation);
 
 void
-	PopoverManager_SetBehaviorType				(PopoverManager_Ref				inRef,
+	PopoverManager_SetBehaviorType				(PopoverManager_Ref _Nonnull	inRef,
 												 PopoverManager_BehaviorType	inBehavior);
 
 void
-	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref				inRef,
+	PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref _Nonnull	inRef,
 												 Float32						inDelay);
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

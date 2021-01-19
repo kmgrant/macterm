@@ -44,26 +44,54 @@
 
 #pragma mark Types
 
-@interface PopoverManager_WC : NSWindowController< Popover_ResizeDelegate > //{
-{
-@public
-	PopoverManager_Ref				selfRef;				// identical to address of structure, but typed as ref
-	__weak id< PopoverManager_Delegate >	delegate;				// used to determine dynamic popover information
-	Popover_Window*					containerWindow;		// holds the popover itself (note: is an NSWindow subclass)
-	NSView*							logicalFirstResponder;	// the view to give initial keyboard focus to, in "display" method
-	PopoverManager_AnimationType	animationType;			// specifies how to open and close the popover window
-	PopoverManager_BehaviorType		behaviorType;			// specifies how the popover window responds to other events
-	BOOL							isAutoPositionQueued;	// used to ensure at most one response to an auto-position request
-	BOOL							isHeldOpenBySheet;		// used to prevent some popovers from disappearing while sheets are open
-	BOOL							isNoActivationMonitor;	// used to temporarily disable a monitor to prevent recursion
-	NSWindow*						dummySheet;				// for convenience in event-handling for dialogs, a dummy sheet
-	NSWindow*						presentedSheet;			// might be "dummySheet" or "containerWindow", depending on mode
-	NSView*							parentView;				// the view the popover is relative to, if Cocoa (and modal to, if dialog behavior)
-}
+/*!
+Private properties.
+*/
+@interface PopoverManager_WC () //{
 
-// class methods
-	+ (PopoverManager_WC*)
-	popoverWindowControllerFromRef:(PopoverManager_Ref)_;
+// accessors
+	//! Specifies how to open and close the popover window.
+	@property (assign) PopoverManager_AnimationType
+	animationType;
+	//! Specifies how the popover window responds to other events.
+	@property (assign) PopoverManager_BehaviorType
+	behaviorType;
+	//! Holds the popover itself (note: is an NSWindow subclass).
+	@property (strong) Popover_Window*
+	containerWindow;
+	//! Used to determine dynamic popover information.
+	@property (weak) id< PopoverManager_Delegate >
+	delegate;
+	//! For convenience in dialog event-handling, a dummy sheet.
+	@property (strong) NSWindow*
+	dummySheet;
+	//! Used to ensure at most one response to an auto-position
+	//! request.
+	@property (assign) BOOL
+	isAutoPositionQueued;
+	//! Used to prevent some popovers from disappearing while
+	//! sheets are open.
+	@property (assign) BOOL
+	isHeldOpenBySheet;
+	//! Used to temporarily disable a monitor to prevent recursion.
+	@property (assign) BOOL
+	isNoActivationMonitor;
+	//! The view to give initial keyboard focus to, in the
+	//! "display" method.
+	@property (strong) NSView*
+	logicalFirstResponder;
+	//! Matches "dummySheet" or "containerWindow" (mode-dependent).
+	@property (strong) NSWindow*
+	presentedSheet;
+	//! The view the popover is relative to (and modal to,
+	//! if dialog behavior).
+	@property (strong) NSView*
+	parentView;
+
+@end //}
+
+
+@interface PopoverManager_WC (PopoverManager_WCInternal) //{
 
 // initializers
 	- (instancetype)
@@ -151,22 +179,6 @@ PopoverManager_New	(Popover_Window*				inPopover,
 
 
 /*!
-Destroys a popover manager and sets your copy of the
-reference to nullptr.
-
-(2.7)
-*/
-void
-PopoverManager_Dispose	(PopoverManager_Ref*	inoutRefPtr)
-{
-	PopoverManager_WC*		ptr = [PopoverManager_WC popoverWindowControllerFromRef:*inoutRefPtr];
-	
-	
-	[ptr release];
-}// Dispose
-
-
-/*!
 Uses an appropriate animation sequence to display the
 popover window associated with this manager, or simply
 gives it keyboard focus and puts it in front if it is
@@ -177,10 +189,7 @@ already visible.
 void
 PopoverManager_DisplayPopover	(PopoverManager_Ref		inRef)
 {
-	PopoverManager_WC*		ptr = [PopoverManager_WC popoverWindowControllerFromRef:inRef];
-	
-	
-	[ptr display];
+	[inRef display];
 }// Display
 
 
@@ -197,10 +206,7 @@ void
 PopoverManager_RemovePopover	(PopoverManager_Ref		inRef,
 								 Boolean				inIsConfirming)
 {
-	PopoverManager_WC*		ptr = [PopoverManager_WC popoverWindowControllerFromRef:inRef];
-	
-	
-	[ptr removeWindowWithAcceptance:inIsConfirming];
+	[inRef removeWindowWithAcceptance:inIsConfirming];
 }// Remove
 
 
@@ -216,10 +222,7 @@ void
 PopoverManager_SetAnimationType		(PopoverManager_Ref				inRef,
 									 PopoverManager_AnimationType	inAnimation)
 {
-	PopoverManager_WC*		ptr = [PopoverManager_WC popoverWindowControllerFromRef:inRef];
-	
-	
-	ptr->animationType = inAnimation;
+	inRef.animationType = inAnimation;
 }// SetAnimationType
 
 
@@ -232,10 +235,7 @@ void
 PopoverManager_SetBehaviorType		(PopoverManager_Ref				inRef,
 									 PopoverManager_BehaviorType	inBehavior)
 {
-	PopoverManager_WC*		ptr = [PopoverManager_WC popoverWindowControllerFromRef:inRef];
-	
-	
-	ptr->behaviorType = inBehavior;
+	inRef.behaviorType = inBehavior;
 }// SetBehaviorType
 
 
@@ -258,30 +258,12 @@ void
 PopoverManager_UseIdealLocationAfterDelay	(PopoverManager_Ref		inRef,
 											 Float32				inDelay)
 {
-	PopoverManager_WC*		ptr = [PopoverManager_WC popoverWindowControllerFromRef:inRef];
-	
-	
-	[ptr moveToIdealPositionAfterDelay:inDelay];
+	[inRef moveToIdealPositionAfterDelay:inDelay];
 }// UseIdealLocationAfterDelay
 
 
 #pragma mark -
 @implementation PopoverManager_WC //{
-
-
-#pragma mark Class Methods
-
-
-/*!
-Converts from the opaque reference type to the internal type.
-
-(2.7)
-*/
-+ (PopoverManager_WC*)
-popoverWindowControllerFromRef:(PopoverManager_Ref)		aRef
-{
-	return (PopoverManager_WC*)aRef;
-}// popoverWindowControllerFromRef
 
 
 #pragma mark Initializers
@@ -307,20 +289,18 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 	self = [super initWithWindow:aPopover];
 	if (nil != self)
 	{
-		self->selfRef = STATIC_CAST(self, PopoverManager_Ref);
-		self->delegate = anObject;
-		self->containerWindow = aPopover;
-		[self->containerWindow retain];
-		self->containerWindow.resizeDelegate = self;
-		self->logicalFirstResponder = aView;
-		self->animationType = animationSpec;
-		self->behaviorType = behaviorSpec;
-		self->isAutoPositionQueued = NO;
-		self->isHeldOpenBySheet = NO;
-		self->isNoActivationMonitor = NO;
-		self->dummySheet = nil; // created as needed
-		self->presentedSheet = nil; // set later
-		self->parentView = aCocoaViewOrNil;
+		_delegate = anObject;
+		_containerWindow = aPopover;
+		_containerWindow.resizeDelegate = self;
+		_logicalFirstResponder = aView;
+		_animationType = animationSpec;
+		_behaviorType = behaviorSpec;
+		_isAutoPositionQueued = NO;
+		_isHeldOpenBySheet = NO;
+		_isNoActivationMonitor = NO;
+		_dummySheet = nil; // created as needed
+		_presentedSheet = nil; // set later
+		_parentView = aCocoaViewOrNil;
 		
 		// there may be no parent window if it is being used to
 		// implement an application-modal dialog; otherwise,
@@ -345,11 +325,11 @@ delegate:(id< PopoverManager_Delegate >)		anObject
 		}
 		
 		// also monitor the popover itself to know when to auto-hide
-		[self whenObject:self->containerWindow postsNote:NSWindowDidEndSheetNotification
+		[self whenObject:self.containerWindow postsNote:NSWindowDidEndSheetNotification
 							performSelector:@selector(windowDidEndSheet:)];
-		[self whenObject:self->containerWindow postsNote:NSWindowWillBeginSheetNotification
+		[self whenObject:self.containerWindow postsNote:NSWindowWillBeginSheetNotification
 							performSelector:@selector(windowWillBeginSheet:)];
-		[self whenObject:self->containerWindow postsNote:NSWindowDidResignKeyNotification
+		[self whenObject:self.containerWindow postsNote:NSWindowDidResignKeyNotification
 							performSelector:@selector(windowDidResignKey:)];
 		
 		// install handlers to correct the window level when the
@@ -374,8 +354,6 @@ dealloc
 	[self removeWindowWithAcceptance:NO];
 	[self.class cancelPreviousPerformRequestsWithTarget:self];
 	[self ignoreWhenObjectsPostNotes];
-	[containerWindow release];
-	[super dealloc];
 }// dealloc
 
 
@@ -396,13 +374,13 @@ display
 	
 	[self setToIdealSize];
 	[self moveToIdealPosition];
-	switch (self->animationType)
+	switch (self.animationType)
 	{
 	case kPopoverManager_AnimationTypeNone:
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 		{
 			// remove window animations
-			[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
+			self.containerWindow.animationBehavior = NSWindowAnimationBehaviorNone;
 		}
 		break;
 	
@@ -410,13 +388,13 @@ display
 		if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 		{
 			// create fade-in effect; admittedly a bit of a hack...
-			[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorUtilityWindow];
+			self.containerWindow.animationBehavior = NSWindowAnimationBehaviorUtilityWindow;
 		}
 		break;
 	
 	case kPopoverManager_AnimationTypeStandard:
 	default:
-		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeDialog == self.behaviorType)
 		{
 			if (@available(macOS 11.0, *))
 			{
@@ -427,22 +405,22 @@ display
 			{
 				// display window with custom animation; window-modal state is
 				// achieved by dummy sheet however (see below)
-				CocoaAnimation_TransitionWindowForSheetOpen(self->containerWindow, [self parentCocoaWindow]);
+				CocoaAnimation_TransitionWindowForSheetOpen(self.containerWindow, [self parentCocoaWindow]);
 			}
 			
 			// the goal is to bypass any normal sheet display/animation
 			// but the convenience of automatic window-modal event handling
 			// is still useful; an empty-frame window is created as a real
 			// sheet for event blocking, and then covered by the popover
-			if (nil != self->parentView)
+			if (nil != self.parentView)
 			{
 				if (noForcedDisplay)
 				{
 					// default sheet animation on macOS Big Sur is better; use it,
 					// suppressing custom animations (also, no dummy sheet is
 					// required, this also handles window-modal state)
-					self->presentedSheet = self->containerWindow;
-					[[self parentCocoaWindow] beginSheet:self->presentedSheet
+					self.presentedSheet = self.containerWindow;
+					[[self parentCocoaWindow] beginSheet:self.presentedSheet
 															completionHandler:^(NSModalResponse aResponse)
 															{
 															#pragma unused(aResponse)
@@ -452,11 +430,11 @@ display
 				{
 					// default sheet animation is slow; replace animation but use the
 					// sheet method anyway to ensure window-modal event handling
-					self->dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSWindowStyleMaskBorderless
+					self.dummySheet = [[NSWindow alloc] initWithContentRect:NSZeroRect styleMask:NSWindowStyleMaskBorderless
 																				backing:NSBackingStoreBuffered defer:YES];
-					[self->dummySheet setPreventsApplicationTerminationWhenModal:NO];
-					self->presentedSheet = self->dummySheet;
-					[[self parentCocoaWindow] beginSheet:self->presentedSheet
+					self.dummySheet.preventsApplicationTerminationWhenModal = NO;
+					self.presentedSheet = self.dummySheet;
+					[[self parentCocoaWindow] beginSheet:self.presentedSheet
 															completionHandler:^(NSModalResponse aResponse)
 															{
 															#pragma unused(aResponse)
@@ -469,7 +447,7 @@ display
 			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 			{
 				// create bubble effect; admittedly a bit of a hack...
-				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorAlertPanel];
+				self.containerWindow.animationBehavior = NSWindowAnimationBehaviorAlertPanel;
 			}
 		}
 		break;
@@ -477,9 +455,9 @@ display
 	
 	if (NO == noForcedDisplay)
 	{
-		[[self parentCocoaWindow] addChildWindow:self->containerWindow ordered:NSWindowAbove];
+		[[self parentCocoaWindow] addChildWindow:self.containerWindow ordered:NSWindowAbove];
 		
-		if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeFloating == self.behaviorType)
 		{
 			[self popOverMakeKey:NO forceVisible:YES];
 		}
@@ -508,7 +486,7 @@ idealAnchorPointForFrame:(NSRect)	parentFrame
 parentWindow:(NSWindow*)			parentWindow
 {
 #pragma unused(parentWindow)
-	NSPoint		result = [self->delegate popoverManager:self->selfRef idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
+	NSPoint		result = [self.delegate popoverManager:self idealAnchorPointForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
@@ -526,7 +504,7 @@ IMPORTANT:	This must be implemented by the delegate.
 idealArrowPositionForFrame:(NSRect)		parentFrame
 parentWindow:(NSWindow*)				parentWindow
 {
-	Popover_Properties	result = [self->delegate popoverManager:self->selfRef idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
+	Popover_Properties	result = [self.delegate popoverManager:self idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
 	
 	
 	return result;
@@ -548,7 +526,7 @@ idealSize
 	NSSize		result = NSMakeSize(100, 100); // arbitrary (delegate must override)
 	
 	
-	[self->delegate popoverManager:self->selfRef getIdealSize:&result];
+	[self.delegate popoverManager:self getIdealSize:&result];
 	
 	return result;
 }// idealSize
@@ -562,7 +540,7 @@ Returns YES only if the popover is currently displayed.
 - (BOOL)
 isVisible
 {
-	return [self->containerWindow isVisible];
+	return [self.containerWindow isVisible];
 }// isVisible
 
 
@@ -614,11 +592,11 @@ moveToIdealPosition
 	Popover_Properties	arrowType = [self idealArrowPositionForFrame:parentFrame parentWindow:parentWindow];
 	
 	
-	[self->containerWindow setPointWithAutomaticPositioning:popoverLocation preferredSide:arrowType];
+	[self.containerWindow setPointWithAutomaticPositioning:popoverLocation preferredSide:arrowType];
 	
 	// clear the flag that is used to track delayed
 	// invocations of this request
-	self->isAutoPositionQueued = NO;
+	self.isAutoPositionQueued = NO;
 }// moveToIdealPosition
 
 
@@ -632,7 +610,7 @@ further requests until this one is fulfilled.
 - (void)
 moveToIdealPositionAfterDelay:(float)	aDelayInSeconds
 {
-	if (NO == self->isAutoPositionQueued)
+	if (NO == self.isAutoPositionQueued)
 	{
 		__weak decltype(self)	weakSelf = self;
 		
@@ -641,7 +619,7 @@ moveToIdealPositionAfterDelay:(float)	aDelayInSeconds
 									^{
 										[weakSelf moveToIdealPosition];
 									});
-		self->isAutoPositionQueued = YES;
+		self.isAutoPositionQueued = YES;
 	}
 }// moveToIdealPositionAfterDelay
 
@@ -667,7 +645,7 @@ Returns the Cocoa window that represents the parent.
 - (NSWindow*)
 parentCocoaWindow
 {
-	NSWindow*	result = [self->parentView window];
+	NSWindow*	result = self.parentView.window;
 	
 	
 	return result;
@@ -692,15 +670,15 @@ forceVisible:(BOOL)		aForceVisibleFlag
 {
 	if ([self isVisible] || (aForceVisibleFlag))
 	{
-		[self->containerWindow setLevel:([[self parentCocoaWindow] level] + 1)];
+		self.containerWindow.level = (self.parentCocoaWindow.level + 1);
 		if (aBecomeKeyFlag)
 		{
-			[self->containerWindow makeFirstResponder:self->logicalFirstResponder];
-			[self->containerWindow makeKeyAndOrderFront:nil];
+			[self.containerWindow makeFirstResponder:self.logicalFirstResponder];
+			[self.containerWindow makeKeyAndOrderFront:nil];
 		}
 		else
 		{
-			[self->containerWindow orderFront:nil];
+			[self.containerWindow orderFront:nil];
 		}
 	}
 }// popOverMakeKey:forceVisible:
@@ -716,7 +694,7 @@ done when the parent window of the popover is deactivated.
 - (void)
 popUnder
 {
-	[self->containerWindow setLevel:[[self parentCocoaWindow] level]];
+	self.containerWindow.level = self.parentCocoaWindow.level;
 }// popUnder
 
 
@@ -772,93 +750,89 @@ afterDelay:(float)					aDelay
 	float const		kDelayZeroEpsilon = 0.001f; // arbitrary; less than this is treated as immediate
 	
 	
-	if (self->isHeldOpenBySheet)
+	if (self.isHeldOpenBySheet)
 	{
 		return;
 	}
 	
 	// if a dummy sheet was opened to absorb parent-window events, end it
-	if (nil != self->presentedSheet)
+	if (nil != self.presentedSheet)
 	{
-		[NSApp endSheet:self->presentedSheet];
-		self->presentedSheet = nil;
+		[NSApp endSheet:self.presentedSheet];
+		self.presentedSheet = nil;
 	}
-	if (nil != self->dummySheet)
+	if (nil != self.dummySheet)
 	{
-		[self->dummySheet orderOut:NSApp];
-		[self->dummySheet release], self->dummySheet = nil;
+		[self.dummySheet orderOut:NSApp];
+		self.dummySheet = nil;
 	}
 	
 	// hide the popover; remove the parent window association first to keep
 	// the parent window from disappearing on some versions of Mac OS X!
-	if ([self->containerWindow parentWindow] == [self parentCocoaWindow])
+	if (self.containerWindow.parentWindow == self.parentCocoaWindow)
 	{
-		[[self parentCocoaWindow] removeChildWindow:self->containerWindow];
+		[self.parentCocoaWindow removeChildWindow:self.containerWindow];
 	}
-	switch (self->animationType)
+	switch (self.animationType)
 	{
 	case kPopoverManager_AnimationTypeNone:
 		{
 			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 			{
 				// remove window animations
-				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
+				self.containerWindow.animationBehavior = NSWindowAnimationBehaviorNone;
 			}
 			
 			if (aDelay < kDelayZeroEpsilon)
 			{
-				[self->containerWindow close];
+				[self.containerWindow close];
 			}
 			else
 			{
-				NSWindow*	window = self->containerWindow;
+				NSWindow*	window = self.containerWindow;
 				
 				
-				[window retain];
 				CocoaExtensions_RunLater(aDelay,
 											^{
 												[window close];
-												[window release];
 											});
 			}
 		}
 		break;
 	
 	default:
-		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeDialog == self.behaviorType)
 		{
 			if ([NSWindow instancesRespondToSelector:@selector(setAnimationBehavior:)])
 			{
 				// remove system-provided window animations because this
 				// has a custom close animation style
-				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
+				self.containerWindow.animationBehavior = NSWindowAnimationBehaviorNone;
 			}
 			
-			CocoaAnimation_TransitionWindowForRemove(self->containerWindow, isAccepted);
+			CocoaAnimation_TransitionWindowForRemove(self.containerWindow, isAccepted);
 		}
 		else
 		{
 			// currently, all other closing animations are the same
-			if ([self->containerWindow respondsToSelector:@selector(setAnimationBehavior:)])
+			if ([self.containerWindow respondsToSelector:@selector(setAnimationBehavior:)])
 			{
 				// create fade-out effect; admittedly a bit of a hack...
-				[self->containerWindow setAnimationBehavior:NSWindowAnimationBehaviorUtilityWindow];
+				self.containerWindow.animationBehavior = NSWindowAnimationBehaviorUtilityWindow;
 			}
 			
 			if (aDelay < kDelayZeroEpsilon)
 			{
-				[self->containerWindow close];
+				[self.containerWindow close];
 			}
 			else
 			{
-				NSWindow*	window = self->containerWindow;
+				NSWindow*	window = self.containerWindow;
 				
 				
-				[window retain];
 				CocoaExtensions_RunLater(aDelay,
 											^{
 												[window close];
-												[window release];
 											});
 			}
 		}
@@ -876,11 +850,11 @@ size of its content view.
 - (void)
 setToIdealSize
 {
-	NSRect		parentFrame = [self->containerWindow frameRectForViewSize:[self idealSize]];
+	NSRect		parentFrame = [self.containerWindow frameRectForViewSize:self.idealSize];
 	
 	
-	[self->containerWindow setFrame:parentFrame display:NO];
-	self->containerWindow.minSize = parentFrame.size;
+	[self.containerWindow setFrame:parentFrame display:NO];
+	self.containerWindow.minSize = parentFrame.size;
 }// setToIdealSize
 
 
@@ -900,7 +874,7 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeColor:(id)	sender
 {
-	NSObject*	asNSObject = STATIC_CAST(self->delegate, NSObject*);
+	NSObject*	asNSObject = STATIC_CAST(self.delegate, NSObject*);
 	
 	
 	if ([asNSObject respondsToSelector:@selector(changeColor:)])
@@ -926,7 +900,7 @@ NOTE:	It is possible that one day panels will be set up
 - (void)
 changeFont:(id)		sender
 {
-	NSObject*	asNSObject = STATIC_CAST(self->delegate, NSObject*);
+	NSObject*	asNSObject = STATIC_CAST(self.delegate, NSObject*);
 	
 	
 	if ([asNSObject respondsToSelector:@selector(changeFont:)])
@@ -954,9 +928,9 @@ getHorizontalResizeAllowed:(BOOL*)	outHorizontalFlagPtr
 getVerticalResizeAllowed:(BOOL*)	outVerticalFlagPtr
 {
 #pragma unused(aPopover)
-	if ([self->delegate respondsToSelector:@selector(popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:)])
+	if ([self.delegate respondsToSelector:@selector(popoverManager:getHorizontalResizeAllowed:getVerticalResizeAllowed:)])
 	{
-		[self->delegate popoverManager:self->selfRef
+		[self.delegate popoverManager:self
 										getHorizontalResizeAllowed:outHorizontalFlagPtr
 										getVerticalResizeAllowed:outVerticalFlagPtr];
 	}
@@ -976,7 +950,7 @@ other applications.
 applicationDidBecomeActive:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	if ([self->containerWindow isKeyWindow])
+	if (self.containerWindow.isKeyWindow)
 	{
 		[self makeKeyAndOrderFrontIfVisible];
 	}
@@ -1014,13 +988,13 @@ parentWindowDidBecomeKey:(NSNotification*)		aNotification
 	
 	if (newKeyWindow == [self parentCocoaWindow])
 	{
-		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeDialog == self.behaviorType)
 		{
 			// allow other normal windows to sit above background popovers
 			[self makeKeyAndOrderFrontIfVisible];
 			// UNIMPLEMENTED: determine how to deactivate window frame in Cocoa
 		}
-		else if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+		else if (kPopoverManager_BehaviorTypeFloating == self.behaviorType)
 		{
 			// allow other normal windows to sit above background popovers
 			[self orderFrontIfVisible];
@@ -1043,7 +1017,7 @@ parentWindowDidMove:(NSNotification*)		aNotification
 	
 	if (resizedWindow == [self parentCocoaWindow])
 	{
-		if ([self isVisible])
+		if (self.isVisible)
 		{
 			// IMPORTANT: since this notification occurs constantly during
 			// a live move of the parent window, limit number of responses
@@ -1067,10 +1041,10 @@ parentWindowDidResignKey:(NSNotification*)		aNotification
 	
 	if (formerKeyWindow == [self parentCocoaWindow])
 	{
-		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeDialog == self.behaviorType)
 		{
 			// when the parent window is active, the popover should remain on top
-			if ([self isVisible])
+			if (self.isVisible)
 			{
 				[self popUnder];
 			}
@@ -1116,8 +1090,7 @@ windowDidEndSheet:(NSNotification*)		aNotification
 	//NSWindow*	sheetParentWindow = (NSWindow*)[aNotification object];
 	
 	
-	self->isHeldOpenBySheet = NO;
-	[self release];
+	self.isHeldOpenBySheet = NO;
 }// windowDidEndSheet:
 
 
@@ -1134,26 +1107,26 @@ windowDidResignKey:(NSNotification*)		aNotification
 	NSWindow*	formerKeyWindow = (NSWindow*)[aNotification object];
 	
 	
-	if (formerKeyWindow == self->containerWindow)
+	if (formerKeyWindow == self.containerWindow)
 	{
 		BOOL	removePopover = YES;
 		
 		
-		if (kPopoverManager_BehaviorTypeDialog == self->behaviorType)
+		if (kPopoverManager_BehaviorTypeDialog == self.behaviorType)
 		{
 			// dialogs try to retain keyboard focus, expecting to be
 			// dismissed in an explicit way (e.g. via buttons)
 			removePopover = NO;
-			if ([self isVisible])
+			if (self.isVisible)
 			{
 				[self popUnder];
 			}
 		}
-		else if (kPopoverManager_BehaviorTypeFloating == self->behaviorType)
+		else if (kPopoverManager_BehaviorTypeFloating == self.behaviorType)
 		{
 			// floating windows stay on top but relinquish focus
 			removePopover = NO;
-			if ([self isVisible])
+			if (self.isVisible)
 			{
 				[self orderFrontIfVisible];
 			}
@@ -1161,9 +1134,9 @@ windowDidResignKey:(NSNotification*)		aNotification
 		
 		if (removePopover)
 		{
-			if ([self isVisible])
+			if (self.isVisible)
 			{
-				if ((nil == [formerKeyWindow attachedSheet]) &&
+				if ((nil == formerKeyWindow.attachedSheet) &&
 					(NO == [[NSApp keyWindow] isKindOfClass:NSPanel.class]))
 				{
 					[self removeWindowWithAcceptance:NO];
@@ -1187,8 +1160,7 @@ windowWillBeginSheet:(NSNotification*)		aNotification
 	//NSWindow*	sheetParentWindow = (NSWindow*)[aNotification object];
 	
 	
-	[self retain];
-	self->isHeldOpenBySheet = YES;
+	self.isHeldOpenBySheet = YES;
 }// windowWillBeginSheet:
 
 

@@ -94,7 +94,7 @@ Private Properties.
 	@property (strong) NSView*
 	managedView;
 	//! Manages common aspects of popover window behavior.
-	@property (assign) PopoverManager_Ref
+	@property (strong) PopoverManager_Ref
 	popoverMgr;
 	//! The point relative to the parent window where the popover arrow appears.
 	@property (assign) CGPoint
@@ -371,10 +371,6 @@ Destructor.
 dealloc
 {
 	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
-	if (nullptr != _popoverMgr)
-	{
-		PopoverManager_Dispose(&_popoverMgr);
-	}
 }// dealloc
 
 

@@ -95,7 +95,7 @@ Private properties.
 	@property (strong) FindDialog_OnCloseBlock
 	onCloseBlock;
 	//! Manages common aspects of popover window behavior.
-	@property (assign) PopoverManager_Ref
+	@property (strong) PopoverManager_Ref
 	popoverMgr;
 	//! Parent terminal window whose terminal screens are being searched.
 	@property (assign) TerminalWindowRef
@@ -734,10 +734,6 @@ Destructor.
 dealloc
 {
 	Memory_EraseWeakReferences(BRIDGE_CAST(self, void*));
-	if (nullptr != self.popoverMgr)
-	{
-		PopoverManager_Dispose(&_popoverMgr);
-	}
 }// dealloc
 
 

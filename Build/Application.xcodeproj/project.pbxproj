@@ -127,7 +127,7 @@
 		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
-		0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF94E481477857900099BF2 /* PopoverManager.mm */; };
+		0AF94E491477857900099BF2 /* PopoverManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AF94E481477857900099BF2 /* PopoverManager.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AFC024F2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFC024E2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift */; };
 /* End PBXBuildFile section */
 
