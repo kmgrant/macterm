@@ -154,7 +154,7 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performActionForMacro:(id)_;
+	performActionForMacro:(id _Nullable)_;
 
 @end //}
 
@@ -172,15 +172,15 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performMacroSwitchNone:(id)_;
+	performMacroSwitchNone:(id _Nullable)_;
 	- (IBAction)
-	performMacroSwitchDefault:(id)_;
+	performMacroSwitchDefault:(id _Nullable)_;
 	- (IBAction)
-	performMacroSwitchByFavoriteName:(id)_;
+	performMacroSwitchByFavoriteName:(id _Nullable)_;
 	- (IBAction)
-	performMacroSwitchNext:(id)_;
+	performMacroSwitchNext:(id _Nullable)_;
 	- (IBAction)
-	performMacroSwitchPrevious:(id)_;
+	performMacroSwitchPrevious:(id _Nullable)_;
 
 @end //}
 
@@ -197,9 +197,9 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performPrintScreen:(id)_;
+	performPrintScreen:(id _Nullable)_;
 	- (IBAction)
-	performPrintSelection:(id)_;
+	performPrintSelection:(id _Nullable)_;
 
 @end //}
 
@@ -216,9 +216,9 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performKill:(id)_;
+	performKill:(id _Nullable)_;
 	- (IBAction)
-	performRestart:(id)_;
+	performRestart:(id _Nullable)_;
 
 @end //}
 
@@ -236,11 +236,11 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performInterruptProcess:(id)_;
+	performInterruptProcess:(id _Nullable)_;
 	- (IBAction)
-	performJumpScrolling:(id)_;
+	performJumpScrolling:(id _Nullable)_;
 	- (IBAction)
-	performSuspendToggle:(id)_;
+	performSuspendToggle:(id _Nullable)_;
 
 @end //}
 
@@ -258,17 +258,17 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	copy:(id)_;
+	copy:(id _Nullable)_;
 
 @optional
 
 // actions
 	- (IBAction)
-	paste:(id)_;
+	paste:(id _Nullable)_;
 	- (IBAction)
-	selectAll:(id)_;
+	selectAll:(id _Nullable)_;
 	- (IBAction)
-	selectNone:(id)_;
+	selectNone:(id _Nullable)_;
 
 @end //}
 
@@ -285,21 +285,21 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performFind:(id)_;
+	performFind:(id _Nullable)_;
 
 @optional
 
 // actions
 	- (IBAction)
-	performFindCursor:(id)_;
+	performFindCursor:(id _Nullable)_;
 	- (IBAction)
-	performFindNext:(id)_;
+	performFindNext:(id _Nullable)_;
 	- (IBAction)
-	performFindPrevious:(id)_;
+	performFindPrevious:(id _Nullable)_;
 	- (IBAction)
-	performSendMenuItemText:(id)_; // from completions menu; “types” the menu item title text
+	performSendMenuItemText:(id _Nullable)_; // from completions menu; “types” the menu item title text
 	- (IBAction)
-	performShowCompletions:(id)_;
+	performShowCompletions:(id _Nullable)_;
 
 @end //}
 
@@ -316,11 +316,11 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performSpeechToggle:(id)_;
+	performSpeechToggle:(id _Nullable)_;
 	- (IBAction)
-	startSpeaking:(id)_;
+	startSpeaking:(id _Nullable)_;
 	- (IBAction)
-	stopSpeaking:(id)_;
+	stopSpeaking:(id _Nullable)_;
 
 @end //}
 
@@ -337,13 +337,13 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performUndo:(id)_;
+	performUndo:(id _Nullable)_;
 
 @optional
 
 // actions
 	- (IBAction)
-	performRedo:(id)_;
+	performRedo:(id _Nullable)_;
 
 @end //}
 
@@ -361,9 +361,9 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performMaximize:(id)_;
+	performMaximize:(id _Nullable)_;
 	- (IBAction)
-	toggleFullScreen:(id)_;
+	toggleFullScreen:(id _Nullable)_;
 
 @end //}
 
@@ -380,13 +380,13 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performArrangeInFront:(id)_;
+	performArrangeInFront:(id _Nullable)_;
 	- (IBAction)
-	performCloseAll:(id)_;
+	performCloseAll:(id _Nullable)_;
 	- (IBAction)
-	performMiniaturizeAll:(id)_;
+	performMiniaturizeAll:(id _Nullable)_;
 	- (IBAction)
-	performZoomAll:(id)_;
+	performZoomAll:(id _Nullable)_;
 
 @end //}
 
@@ -403,13 +403,13 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	orderFrontNextWindow:(id)_;
+	orderFrontNextWindow:(id _Nullable)_;
 	- (IBAction)
-	orderFrontNextWindowHidingPrevious:(id)_;
+	orderFrontNextWindowHidingPrevious:(id _Nullable)_;
 	- (IBAction)
-	orderFrontPreviousWindow:(id)_;
+	orderFrontPreviousWindow:(id _Nullable)_;
 	- (IBAction)
-	orderFrontSpecificWindow:(id)_;
+	orderFrontSpecificWindow:(id _Nullable)_;
 
 @end //}
 
@@ -426,9 +426,9 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	mergeAllWindows:(id)_;
+	mergeAllWindows:(id _Nullable)_;
 	- (IBAction)
-	moveTabToNewWindow:(id)_;
+	moveTabToNewWindow:(id _Nullable)_;
 
 @end //}
 
@@ -446,15 +446,15 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performCopyWithTabSubstitution:(id)_;
+	performCopyWithTabSubstitution:(id _Nullable)_;
 	- (IBAction)
-	performSelectEntireScrollbackBuffer:(id)_;
+	performSelectEntireScrollbackBuffer:(id _Nullable)_;
 
 @optional
 
 // actions
 	- (IBAction)
-	performCopyAndPaste:(id)_;
+	performCopyAndPaste:(id _Nullable)_;
 
 @end //}
 
@@ -471,15 +471,15 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performBellToggle:(id)_;
+	performBellToggle:(id _Nullable)_;
 	- (IBAction)
-	performSetActivityHandlerNone:(id)_;
+	performSetActivityHandlerNone:(id _Nullable)_;
 	- (IBAction)
-	performSetActivityHandlerNotifyOnNext:(id)_;
+	performSetActivityHandlerNotifyOnNext:(id _Nullable)_;
 	- (IBAction)
-	performSetActivityHandlerNotifyOnIdle:(id)_;
+	performSetActivityHandlerNotifyOnIdle:(id _Nullable)_;
 	- (IBAction)
-	performSetActivityHandlerSendKeepAliveOnIdle:(id)_;
+	performSetActivityHandlerSendKeepAliveOnIdle:(id _Nullable)_;
 
 @end //}
 
@@ -496,11 +496,11 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performCaptureBegin:(id)_;
+	performCaptureBegin:(id _Nullable)_;
 	- (IBAction)
-	performCaptureEnd:(id)_;
+	performCaptureEnd:(id _Nullable)_;
 	- (IBAction)
-	performSaveSelection:(id)_;
+	performSaveSelection:(id _Nullable)_;
 
 @end //}
 
@@ -518,23 +518,23 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performDeleteMapToBackspace:(id)_;
+	performDeleteMapToBackspace:(id _Nullable)_;
 	- (IBAction)
-	performDeleteMapToDelete:(id)_;
+	performDeleteMapToDelete:(id _Nullable)_;
 	- (IBAction)
-	performEmacsCursorModeToggle:(id)_;
+	performEmacsCursorModeToggle:(id _Nullable)_;
 	- (IBAction)
-	performLocalPageKeysToggle:(id)_;
+	performLocalPageKeysToggle:(id _Nullable)_;
 	- (IBAction)
-	performMappingCustom:(id)_;
+	performMappingCustom:(id _Nullable)_;
 	- (IBAction)
-	performSetFunctionKeyLayoutRxvt:(id)_;
+	performSetFunctionKeyLayoutRxvt:(id _Nullable)_;
 	- (IBAction)
-	performSetFunctionKeyLayoutVT220:(id)_;
+	performSetFunctionKeyLayoutVT220:(id _Nullable)_;
 	- (IBAction)
-	performSetFunctionKeyLayoutXTermX11:(id)_;
+	performSetFunctionKeyLayoutXTermX11:(id _Nullable)_;
 	- (IBAction)
-	performSetFunctionKeyLayoutXTermXFree86:(id)_;
+	performSetFunctionKeyLayoutXTermXFree86:(id _Nullable)_;
 
 @end //}
 
@@ -551,23 +551,23 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performLineWrapToggle:(id)_;
+	performLineWrapToggle:(id _Nullable)_;
 	- (IBAction)
-	performLocalEchoToggle:(id)_;
+	performLocalEchoToggle:(id _Nullable)_;
 	- (IBAction)
-	performReset:(id)_;
+	performReset:(id _Nullable)_;
 	- (IBAction)
-	performSaveOnClearToggle:(id)_;
+	performSaveOnClearToggle:(id _Nullable)_;
 	- (IBAction)
-	performScrollbackClear:(id)_;
+	performScrollbackClear:(id _Nullable)_;
 	- (IBAction)
-	performTerminalLED1Toggle:(id)_;
+	performTerminalLED1Toggle:(id _Nullable)_;
 	- (IBAction)
-	performTerminalLED2Toggle:(id)_;
+	performTerminalLED2Toggle:(id _Nullable)_;
 	- (IBAction)
-	performTerminalLED3Toggle:(id)_;
+	performTerminalLED3Toggle:(id _Nullable)_;
 	- (IBAction)
-	performTerminalLED4Toggle:(id)_;
+	performTerminalLED4Toggle:(id _Nullable)_;
 
 @end //}
 
@@ -584,13 +584,13 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performTerminalViewPageDown:(id)_;
+	performTerminalViewPageDown:(id _Nullable)_;
 	- (IBAction)
-	performTerminalViewPageEnd:(id)_;
+	performTerminalViewPageEnd:(id _Nullable)_;
 	- (IBAction)
-	performTerminalViewPageHome:(id)_;
+	performTerminalViewPageHome:(id _Nullable)_;
 	- (IBAction)
-	performTerminalViewPageUp:(id)_;
+	performTerminalViewPageUp:(id _Nullable)_;
 
 @end //}
 
@@ -607,21 +607,21 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performScreenResizeCustom:(id)_;
+	performScreenResizeCustom:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeNarrower:(id)_;
+	performScreenResizeNarrower:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeShorter:(id)_;
+	performScreenResizeShorter:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeStandard:(id)_;
+	performScreenResizeStandard:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeTall:(id)_;
+	performScreenResizeTall:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeTaller:(id)_;
+	performScreenResizeTaller:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeWide:(id)_;
+	performScreenResizeWide:(id _Nullable)_;
 	- (IBAction)
-	performScreenResizeWider:(id)_;
+	performScreenResizeWider:(id _Nullable)_;
 
 @end //}
 
@@ -638,23 +638,23 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performFormatByFavoriteName:(id)_;
+	performFormatByFavoriteName:(id _Nullable)_;
 	- (IBAction)
-	performFormatCustom:(id)_;
+	performFormatCustom:(id _Nullable)_;
 	- (IBAction)
-	performFormatDefault:(id)_;
+	performFormatDefault:(id _Nullable)_;
 	- (IBAction)
-	performFormatTextBigger:(id)_;
+	performFormatTextBigger:(id _Nullable)_;
 	- (IBAction)
-	performFormatTextMaximum:(id)_;
+	performFormatTextMaximum:(id _Nullable)_;
 	- (IBAction)
-	performFormatTextSmaller:(id)_;
+	performFormatTextSmaller:(id _Nullable)_;
 	- (IBAction)
-	performTranslationSwitchByFavoriteName:(id)_;
+	performTranslationSwitchByFavoriteName:(id _Nullable)_;
 	- (IBAction)
-	performTranslationSwitchCustom:(id)_;
+	performTranslationSwitchCustom:(id _Nullable)_;
 	- (IBAction)
-	performTranslationSwitchDefault:(id)_;
+	performTranslationSwitchDefault:(id _Nullable)_;
 
 @end //}
 
@@ -671,7 +671,7 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performOpenURL:(id)_;
+	performOpenURL:(id _Nullable)_;
 
 @end //}
 
@@ -688,7 +688,7 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performGraphicsCanvasResizeTo100Percent:(id)_;
+	performGraphicsCanvasResizeTo100Percent:(id _Nullable)_;
 
 @end //}
 
@@ -705,9 +705,9 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performNewTEKPage:(id)_;
+	performNewTEKPage:(id _Nullable)_;
 	- (IBAction)
-	performPageClearToggle:(id)_;
+	performPageClearToggle:(id _Nullable)_;
 
 @end //}
 
@@ -724,7 +724,7 @@ points in the responder chain, such as views or windows.)
 
 // actions
 	- (IBAction)
-	performRename:(id)_;
+	performRename:(id _Nullable)_;
 
 @end //}
 
@@ -744,32 +744,24 @@ changes to an interface declared in a ".mm" file.
 											Commands_StandardWindowSwitching,
 											Commands_VectorGraphicsOpening,
 											NSUserInterfaceValidations > //{
-{
-@private
-	NSString*	_fullScreenCommandName;
-}
 
 // class methods
-	+ (instancetype)
+	+ (instancetype _Nullable)
 	sharedExecutor;
-
-// accessors
-	@property (strong) NSString*
-	fullScreenCommandName;
 
 // new methods: explicit validation (rarely needed)
 	- (BOOL)
-	defaultValidationForAction:(SEL)_
-	sourceItem:(id <NSValidatedUserInterfaceItem>)_;
+	defaultValidationForAction:(SEL _Nonnull)_
+	sourceItem:(id <NSValidatedUserInterfaceItem> _Nullable)_;
 	- (BOOL)
-	validateAction:(SEL)_
-	sender:(id)_
-	sourceItem:(id <NSValidatedUserInterfaceItem>)_;
+	validateAction:(SEL _Nonnull)_
+	sender:(id _Nullable)_
+	sourceItem:(id <NSValidatedUserInterfaceItem> _Nullable)_;
 
 // new methods: menu items
-	- (NSMenuItem*)
-	newMenuItemForAction:(SEL)_
-	itemTitle:(NSString*)_
+	- (NSMenuItem* _Nullable)
+	newMenuItemForAction:(SEL _Nonnull)_
+	itemTitle:(NSString* _Nonnull)_
 	ifEnabled:(BOOL)_;
 
 @end //}
@@ -787,30 +779,30 @@ Actions that create new terminal-based sessions.
 
 // actions
 	- (IBAction)
-	performNewDefault:(id)_;
+	performNewDefault:(id _Nullable)_;
 	- (IBAction)
-	performNewByFavoriteName:(id)_;
+	performNewByFavoriteName:(id _Nullable)_;
 	- (IBAction)
-	performNewLogInShell:(id)_;
+	performNewLogInShell:(id _Nullable)_;
 	- (IBAction)
-	performNewShell:(id)_;
+	performNewShell:(id _Nullable)_;
 	- (IBAction)
-	performNewCustom:(id)_;
+	performNewCustom:(id _Nullable)_;
 	- (IBAction)
-	performRestoreWorkspaceDefault:(id)_;
+	performRestoreWorkspaceDefault:(id _Nullable)_;
 	- (IBAction)
-	performRestoreWorkspaceByFavoriteName:(id)_;
+	performRestoreWorkspaceByFavoriteName:(id _Nullable)_;
 	- (IBAction)
-	performOpen:(id)_;
+	performOpen:(id _Nullable)_;
 	- (IBAction)
-	performDuplicate:(id)_;
+	performDuplicate:(id _Nullable)_;
 	- (IBAction)
-	performSaveAs:(id)_;
+	performSaveAs:(id _Nullable)_;
 
 // methods of the form required by setEventHandler:andSelector:forEventClass:andEventID:
 	- (void)
-	receiveGetURLEvent:(NSAppleEventDescriptor*)_
-	replyEvent:(NSAppleEventDescriptor*)_;
+	receiveGetURLEvent:(NSAppleEventDescriptor* _Nonnull)_
+	replyEvent:(NSAppleEventDescriptor* _Nonnull)_;
 
 @end //}
 
@@ -821,11 +813,11 @@ Actions that cause Internet addresses to be accessed.
 
 // actions
 	- (IBAction)
-	performCheckForUpdates:(id)_;
+	performCheckForUpdates:(id _Nullable)_;
 	- (IBAction)
-	performGoToMainWebSite:(id)_;
+	performGoToMainWebSite:(id _Nullable)_;
 	- (IBAction)
-	performProvideFeedback:(id)_;
+	performProvideFeedback:(id _Nullable)_;
 
 @end //}
 
@@ -836,19 +828,19 @@ Actions that affect a window’s properties, placement and size.
 
 // actions
 	- (IBAction)
-	performHideWindow:(id)_;
+	performHideWindow:(id _Nullable)_;
 	- (IBAction)
-	performHideOtherWindows:(id)_;
+	performHideOtherWindows:(id _Nullable)_;
 	- (IBAction)
-	performMoveWindowRight:(id)_;
+	performMoveWindowRight:(id _Nullable)_;
 	- (IBAction)
-	performMoveWindowLeft:(id)_;
+	performMoveWindowLeft:(id _Nullable)_;
 	- (IBAction)
-	performMoveWindowDown:(id)_;
+	performMoveWindowDown:(id _Nullable)_;
 	- (IBAction)
-	performMoveWindowUp:(id)_;
+	performMoveWindowUp:(id _Nullable)_;
 	- (IBAction)
-	performShowHiddenWindows:(id)_;
+	performShowHiddenWindows:(id _Nullable)_;
 
 @end //}
 
@@ -859,27 +851,27 @@ Actions that display specific windows.
 
 // actions
 	- (IBAction)
-	orderFrontAbout:(id)_;
+	orderFrontAbout:(id _Nullable)_;
 	- (IBAction)
-	orderFrontCommandLine:(id)_;
+	orderFrontCommandLine:(id _Nullable)_;
 	- (IBAction)
-	orderFrontContextualHelp:(id)_;
+	orderFrontContextualHelp:(id _Nullable)_;
 	- (IBAction)
-	orderFrontControlKeys:(id)_;
+	orderFrontControlKeys:(id _Nullable)_;
 	- (IBAction)
-	orderFrontDebuggingOptions:(id)_;
+	orderFrontDebuggingOptions:(id _Nullable)_;
 	- (IBAction)
-	orderFrontIPAddresses:(id)_;
+	orderFrontIPAddresses:(id _Nullable)_;
 	- (IBAction)
-	orderFrontPreferences:(id)_;
+	orderFrontPreferences:(id _Nullable)_;
 	- (IBAction)
-	orderFrontSessionInfo:(id)_;
+	orderFrontSessionInfo:(id _Nullable)_;
 	- (IBAction)
-	orderFrontVT220FunctionKeys:(id)_;
+	orderFrontVT220FunctionKeys:(id _Nullable)_;
 	- (IBAction)
-	orderFrontVT220Keypad:(id)_;
+	orderFrontVT220Keypad:(id _Nullable)_;
 	- (IBAction)
-	toggleClipboard:(id)_;
+	toggleClipboard:(id _Nullable)_;
 
 @end //}
 
@@ -909,12 +901,12 @@ Boolean
 
 Boolean
 	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
-											 void*						inUnusedLegacyPtr = nullptr);
+											 void* _Nullable			inUnusedLegacyPtr = nullptr);
 
 #ifdef __OBJC__
 Boolean
-	Commands_ViaFirstResponderPerformSelector	(SEL					inSelector,
-											 id							inObjectOrNil = nil);
+	Commands_ViaFirstResponderPerformSelector	(SEL _Nonnull			inSelector,
+											 id _Nullable				inObjectOrNil = nil);
 #endif
 
 //@}
@@ -924,15 +916,15 @@ Boolean
 
 Commands_Result
 	Commands_InsertPrefNamesIntoMenu		(Quills::Prefs::Class		inClass,
-											 NSMenu*					inoutMenu,
+											 NSMenu* _Nonnull			inoutMenu,
 											 SInt64						inAtItemIndex,
 											 SInt16						inInitialIndent,
-											 SEL						inAction);
+											 SEL _Nonnull				inAction);
 
 #ifdef __OBJC__
-NSMenuItem*
-	Commands_NewMenuItemForAction			(SEL						inActionSelector,
-											 CFStringRef				inPreferredTitle,
+NSMenuItem* _Nullable
+	Commands_NewMenuItemForAction			(SEL _Nonnull				inActionSelector,
+											 CFStringRef _Nonnull		inPreferredTitle,
 											 Boolean					inMustBeEnabled = false);
 #endif
 

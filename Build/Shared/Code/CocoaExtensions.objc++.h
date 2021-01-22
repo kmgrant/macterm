@@ -213,22 +213,26 @@ void
 
 /*!
 Uses compile-time type deduction to invoke a selector on an
-object that returns a single non-object parameter value and
-takes no arguments.  The result is returned via parameter.
-(When result is an object, use "performSelector:withObject:".)
+object that requires a single parameter and returns a value.
 
 Returns true only if the selector was found and invoked.
 
 This is just a convenient way to use NSInvocation and set up
-everything properly for a single-primitive-return-value case.
+everything for a single-argument case with a return value.
+It is useful as an alternative to the "performSelector:..."
+methods when using ARC.
 
-(2016.03)
+See also PerformSelectorOnTargetReturningValue() and
+CocoaExtensions_PerformSelectorOnTargetWithValue().
+
+(2021.01)
 */
-template < typename arg_type >
+template < typename arg_type, typename return_type >
 BOOL
-CocoaExtensions_PerformSelectorOnTargetReturningValue	(SEL		inSelector,
-														 id			inTarget,
-														 arg_type*	outValuePtr)
+CocoaExtensions_PerformSelectorOnTargetWithArgReturningValue	(SEL			inSelector,
+																 id				inTarget,
+																 arg_type		inSingleArgument,
+																 return_type*	outValuePtr)
 {
 	BOOL	result = [inTarget respondsToSelector:inSelector];
 	
@@ -240,11 +244,13 @@ CocoaExtensions_PerformSelectorOnTargetReturningValue	(SEL		inSelector,
 		
 		
 		// note: first “real” argument of target method is at #2
-		[methodInvoker setReturnValue:outValuePtr];
+		[methodInvoker setArgument:&inSingleArgument atIndex:2];
 		[methodInvoker invoke];
+		assert(sizeof(*outValuePtr) == methodInvoker.methodSignature.methodReturnLength);
+		[methodInvoker getReturnValue:outValuePtr];
 	}
 	return result;
-}// PerformSelectorOnTargetReturningValue
+}// PerformSelectorOnTargetWithArgReturningValue
 
 
 /*!

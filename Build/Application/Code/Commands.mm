@@ -505,7 +505,7 @@ Commands_InsertPrefNamesIntoMenu	(Quills::Prefs::Class	inClass,
 				NSMenuItem*		newItem = nil;
 				
 				
-				newItem = [inoutMenu insertItemWithTitle:(NSString*)nameCFString
+				newItem = [inoutMenu insertItemWithTitle:BRIDGE_CAST(nameCFString, NSString*)
 															action:inAction keyEquivalent:@""
 															atIndex:(inAtItemIndex + totalItems)];
 				if (nil != newItem)
@@ -760,17 +760,17 @@ addWindowMenuItemForSession		(SessionRef			inSession,
 		NSAttributedString*		titleString = attributedStringForWindowMenuItemTitle(newItem.title);
 		
 		
-		[newItem setAttributedTitle:titleString];
+		newItem.attributedTitle = titleString;
 		
 		// set icon appropriately for the state
 		setWindowMenuItemMarkForSession(inSession, newItem);
 		
 		// set action and implied canXYZ: method to set state
-		[newItem setAction:@selector(orderFrontSpecificWindow:)];
+		newItem.action = @selector(orderFrontSpecificWindow:);
 		
 		// attach the given session as a property of the new item
-		[newItem setRepresentedObject:[[[Commands_SessionWrap alloc] initWithSession:inSession] autorelease]];
-		assert(nil != [newItem representedObject]);
+		newItem.representedObject = [[Commands_SessionWrap alloc] initWithSession:inSession];
+		assert(nil != newItem.representedObject);
 		
 		// all done adding this item!
 		result = YES;
@@ -792,7 +792,7 @@ attributed strings).
 NSAttributedString*
 attributedStringForWindowMenuItemTitle		(NSString*		inTitleText)
 {
-	NSMutableAttributedString*		result = [[[NSMutableAttributedString alloc] initWithString:inTitleText] autorelease];
+	NSMutableAttributedString*		result = [[NSMutableAttributedString alloc] initWithString:inTitleText];
 	
 	
 	// unfortunately, attributed strings have no properties whatsoever, so even normal text
@@ -1369,14 +1369,14 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (Session_GetWindowUserDefinedTitle(session, text) == kSession_ResultOK)
 			{
 				NSMenuItem*				item = returnWindowMenuItemForSession(session);
-				NSAttributedString*		asAttributedString = attributedStringForWindowMenuItemTitle(STATIC_CAST(text, NSString*));
+				NSAttributedString*		asAttributedString = attributedStringForWindowMenuItemTitle(BRIDGE_CAST(text, NSString*));
 				
 				
 				// NOTE: this MUST use "setAttributedTitle:" (not "setTitle:")
 				// because addWindowMenuItemForSession() creates items using
 				// attributed titles in the first place and the OS appears to
 				// ignore "setTitle:" when there is an attributed title
-				[item setAttributedTitle:asAttributedString];
+				item.attributedTitle = asAttributedString;
 			}
 		}
 		break;
@@ -1447,14 +1447,14 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 	}
 	
 	// first clear the non-command-key modifiers of certain “New” commands
-	[defaultItem setKeyEquivalent:@""];
-	[defaultItem setKeyEquivalentModifierMask:0];
-	[logInShellItem setKeyEquivalent:@""];
-	[logInShellItem setKeyEquivalentModifierMask:0];
-	[shellItem setKeyEquivalent:@""];
-	[shellItem setKeyEquivalentModifierMask:0];
-	[dialogItem setKeyEquivalent:@""];
-	[dialogItem setKeyEquivalentModifierMask:0];
+	defaultItem.keyEquivalent = @"";
+	defaultItem.keyEquivalentModifierMask = 0;
+	logInShellItem.keyEquivalent = @"";
+	logInShellItem.keyEquivalentModifierMask = 0;
+	shellItem.keyEquivalent = @"";
+	shellItem.keyEquivalentModifierMask = 0;
+	dialogItem.keyEquivalent = @"";
+	dialogItem.keyEquivalentModifierMask = 0;
 	
 	// Modifiers are assigned appropriately based on the given command.
 	// If a menu item is assigned to command-N, then Default is given
@@ -1470,20 +1470,20 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			
 			item = defaultItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 			
 			item = shellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagControl;
 			
 			item = logInShellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
 			
 			item = dialogItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
 		}
 		break;
 	
@@ -1494,20 +1494,20 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			
 			item = defaultItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagControl;
 			
 			item = shellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 			
 			item = logInShellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
 			
 			item = dialogItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
 		}
 		break;
 	
@@ -1518,20 +1518,20 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			
 			item = defaultItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
 			
 			item = shellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagControl;
 			
 			item = logInShellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 			
 			item = dialogItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
 		}
 		break;
 	
@@ -1542,20 +1542,20 @@ setNewCommand	(SessionFactory_SpecialSession		inCommandNShortcutCommand)
 			
 			
 			item = defaultItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagShift];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
 			
 			item = shellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagControl];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagControl;
 			
 			item = logInShellItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand | NSEventModifierFlagOption];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
 			
 			item = dialogItem;
-			[item setKeyEquivalent:charNSString];
-			[item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+			item.keyEquivalent = charNSString;
+			item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 		}
 		break;
 	
@@ -1891,7 +1891,7 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 	// now, set the disabled/enabled state
 	{
 		TerminalWindowRef			terminalWindow = Session_ReturnActiveTerminalWindow(inSession);
-		NSMutableAttributedString*	styledText = [[[item attributedTitle] mutableCopyWithZone:NULL] autorelease];
+		NSMutableAttributedString*	styledText = [item.attributedTitle mutableCopyWithZone:NULL];
 		
 		
 		if ((nullptr != terminalWindow) && TerminalWindow_IsObscured(terminalWindow))
@@ -1991,9 +1991,6 @@ updateFadeAllTerminalWindows	(Boolean	inInactiveState)
 Commands_Executor*		gCommands_Executor = nil;
 
 
-@synthesize fullScreenCommandName = _fullScreenCommandName;
-
-
 /*!
 Returns the singleton.
 
@@ -2007,7 +2004,7 @@ sharedExecutor
 	
 	dispatch_once(&onceToken,
 	^{
-		[[self.class allocWithZone:NULL] init];
+		gCommands_Executor = [[self.class allocWithZone:NULL] init];
 		assert(nil != gCommands_Executor);
 	});
 	return gCommands_Executor;
@@ -2029,18 +2026,6 @@ init
 	[self whenObject:[NSApp mainMenu] postsNote:NSMenuDidBeginTrackingNotification
 						performSelector:@selector(menuBarDidBeginTracking:)];
 	
-	// initialize dynamic menu item titles
-	{
-		CFStringRef		titleCFString = nullptr;
-		
-		
-		if (UIStrings_Copy(kUIStrings_ContextualMenuFullScreenEnter, titleCFString).ok())
-		{
-			self.fullScreenCommandName = BRIDGE_CAST(titleCFString, NSString*);
-			CFRelease(titleCFString), titleCFString = nullptr;
-		}
-	}
-	
 	// this approach allows the singleton to be constructed from
 	// anywhere, even an object in a NIB
 	if (nil == gCommands_Executor)
@@ -2061,7 +2046,6 @@ Destructor.
 dealloc
 {
 	[self ignoreWhenObjectsPostNotes];
-	[super dealloc];
 }// dealloc
 
 
@@ -2087,7 +2071,7 @@ be unavailable).
 defaultValidationForAction:(SEL)				aSelector
 sourceItem:(id <NSValidatedUserInterfaceItem>)	anItem
 {
-#pragma unused(aSelector, anItem)
+#pragma unused(anItem)
 	// It is actually much more common for a command to apply to a
 	// terminal window, than to apply at all times.  Therefore, the
 	// default behavior is to allow a command only if there is a
@@ -2169,12 +2153,24 @@ sourceItem:(id <NSValidatedUserInterfaceItem>)	anItem
 		if (nil != target)
 		{
 			// See selectorToValidateAction: for more information on the form of the selector.
-			result = [[target performSelector:validator withObject:anItem] boolValue];
+			NSNumber*	boolObject = nil;
+			BOOL		hasMethod = NO;
+			
+			
+			hasMethod = CocoaExtensions_PerformSelectorOnTargetWithArgReturningValue(validator, target, anItem, &boolObject);
+			result = [boolObject boolValue];
+			//NSLog(@"target@%p validator %@ (found: %d) -> %d", target, NSStringFromSelector(validator), (int)hasMethod, (int)result); // debug
 		}
 		else if ([self respondsToSelector:validator])
 		{
 			// See selectorToValidateAction: for more information on the form of the selector.
-			result = [[self performSelector:validator withObject:anItem] boolValue];
+			NSNumber*	boolObject = nil;
+			BOOL		hasMethod = NO;
+			
+			
+			hasMethod = CocoaExtensions_PerformSelectorOnTargetWithArgReturningValue(validator, self, anItem, &boolObject);
+			result = [boolObject boolValue];
+			//NSLog(@"self@%p validator %@ (found: %d) -> %d", self, NSStringFromSelector(validator), (int)hasMethod, (int)result); // debug
 		}
 		else
 		{
@@ -3417,7 +3413,7 @@ to the front.
 applicationDidBecomeActive:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	//NSApplication*			application = (NSApplication*)[aNotification object];
+	//NSApplication*			application = (NSApplication*)aNotification.object;
 	
 	
 	Alert_SetIsBackgrounded(false); // automatically removes any posted notifications from alerts
@@ -3441,8 +3437,8 @@ bundle must also advertise the methods of each Service.
 - (void)
 applicationDidFinishLaunching:(NSNotification*)		aNotification
 {
-	NSApplication*				application = STATIC_CAST([aNotification object], NSApplication*);
-	Commands_ServiceProviders*	providers = [[[Commands_ServiceProviders alloc] init] autorelease];
+	NSApplication*				application = STATIC_CAST(aNotification.object, NSApplication*);
+	Commands_ServiceProviders*	providers = [[Commands_ServiceProviders alloc] init];
 	
 	
 	// note: it is not clear if the system retains the given object, so
@@ -3461,11 +3457,11 @@ bundle must also advertise the types of URLs that are supported.
 - (void)
 applicationWillFinishLaunching:(NSNotification*)	aNotification
 {
-	NSApplication*			application = (NSApplication*)[aNotification object];
+	NSApplication*			application = (NSApplication*)aNotification.object;
 	NSAppleEventManager*	events = [NSAppleEventManager sharedAppleEventManager];
 	
 	
-	[events setEventHandler:[application delegate] andSelector:@selector(receiveGetURLEvent:replyEvent:)
+	[events setEventHandler:application.delegate andSelector:@selector(receiveGetURLEvent:replyEvent:)
 													forEventClass:kInternetEventClass
 													andEventID:kAEGetURL];
 }// applicationWillFinishLaunching:
@@ -3481,7 +3477,7 @@ come to the front.
 applicationWillResignActive:(NSNotification*)	aNotification
 {
 #pragma unused(aNotification)
-	//NSApplication*			application = (NSApplication*)[aNotification object];
+	//NSApplication*			application = (NSApplication*)aNotification.object;
 	
 	
 	Alert_SetIsBackgrounded(true); // automatically removes any posted notifications from alerts
@@ -3905,8 +3901,7 @@ performProvideFeedback:(id)		sender
 													(CFBundleGetValueForInfoDictionaryKey
 														(AppResources_ReturnBundleForInfo(),
 															CFSTR("CFBundleVersion")));
-	NSMutableDictionary*	appEnvDict = [[[NSMutableDictionary alloc] initWithCapacity:1/* arbitrary */]
-											autorelease];
+	NSMutableDictionary*	appEnvDict = [[NSMutableDictionary alloc] initWithCapacity:1/* arbitrary */];
 	NSRunningApplication*	runHandle = nil;
 	CFErrorRef				errorRef = nullptr;
 	
@@ -4706,18 +4701,6 @@ init
 }// init
 
 
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 #pragma mark Registered Service Providers
 
 
@@ -5076,18 +5059,6 @@ initWithSession:(SessionRef)	aSession
 }// initWithSession:
 
 
-/*!
-Destructor.
-
-(4.0)
-*/
-- (void)
-dealloc
-{
-	[super dealloc];
-}// dealloc
-
-
 @end //} Commands_SessionWrap
 
 
@@ -5118,8 +5089,7 @@ selectorNameForValidateActionName:(NSString*)	anActionSelectorName
 	
 	if (nil != anActionSelectorName)
 	{
-		NSMutableString*	nameOfAction = [[[NSMutableString alloc] initWithString:anActionSelectorName]
-											autorelease];
+		NSMutableString*	nameOfAction = [[NSMutableString alloc] initWithString:anActionSelectorName];
 		NSString*			actionFirstChar = [nameOfAction substringToIndex:1];
 		
 		
@@ -5200,7 +5170,7 @@ used to ensure that dynamic items are up-to-date.
 - (void)
 menuBarDidBeginTracking:(NSNotification*)	aNotification
 {
-	NSMenu*		trackedMenuBar = REINTERPRET_CAST([aNotification object], NSMenu*);
+	NSMenu*		trackedMenuBar = REINTERPRET_CAST(aNotification.object, NSMenu*);
 	
 	
 	if ([NSApp mainMenu] != trackedMenuBar)

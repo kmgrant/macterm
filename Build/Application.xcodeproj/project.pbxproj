@@ -97,7 +97,7 @@
 		0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE3055432A400ACDF3A /* UIStrings.cp */; };
 		0AC6BB240A8C0BA000AFF37A /* FindDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD7055432A400ACDF3A /* FindDialog.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
-		0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC3055432A400ACDF3A /* Commands.mm */; };
+		0AC6BB290A8C0BA000AFF37A /* Commands.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC3055432A400ACDF3A /* Commands.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE2D055432A400ACDF3A /* TextTranslation.cp */; };
 		0AC6BB320A8C0BA000AFF37A /* InfoWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE7055432A400ACDF3A /* InfoWindow.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0AC6BB340A8C0BA000AFF37A /* StringUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCFC07FAC06200248DDF /* StringUtilities.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
