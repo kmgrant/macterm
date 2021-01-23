@@ -83,6 +83,9 @@ Session_Result const	kSession_ResultNotReady(4);					//!< session is not in a st
 /*!
 Setting changes that MacTerm allows other modules to “listen” for,
 via Session_StartMonitoring().
+
+See also similar monitoring APIs at different levels: Terminal,
+Terminal View, Terminal Window and Session Factory.
 */
 typedef ListenerModel_Event		Session_Change;
 enum

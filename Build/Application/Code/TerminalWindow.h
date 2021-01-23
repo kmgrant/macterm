@@ -90,6 +90,9 @@ enum TerminalWindow_Result
 /*!
 Setting changes that MacTerm allows other modules to “listen” for,
 via TerminalWindow_StartMonitoring().
+
+See also similar monitoring APIs at different levels: Terminal,
+Terminal View, Session and Session Factory.
 */
 enum TerminalWindow_Change
 {
@@ -99,10 +102,6 @@ enum TerminalWindow_Change
 	
 	kTerminalWindow_ChangeObscuredState		= 'ShHd',	//!< a monitored Terminal Window has been
 														//!  hidden or redisplayed (context:
-														//!  TerminalWindowRef)
-	
-	kTerminalWindow_ChangeScreenDimensions	= 'Size',	//!< the screen dimensions of a monitored
-														//!  Terminal Window have changed (context:
 														//!  TerminalWindowRef)
 	
 	kTerminalWindow_ChangeWindowTitle		= 'NWnT'	//!< the title of a monitored Terminal Window

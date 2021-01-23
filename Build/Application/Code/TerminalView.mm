@@ -322,6 +322,8 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 			// is changed; see that routine’s documentation for more information
 			TerminalView_PixelWidth		viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
 			TerminalView_PixelHeight	viewHeightInPixels;		//   always identical to the current dimensions of the content view
+			UInt16						columnCountAtLastNotify;	// captures last screen column count that triggered notification, to minimize traffic
+			UInt16						rowCountAtLastNotify;	// captures last screen row count that triggered notification, to minimize traffic
 		} cache;
 	} screen;
 	
@@ -3845,6 +3847,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.topVisibleEdgeInRows = 0;
 	this->screen.cache.viewWidthInPixels.setIntegralPixels(0); // set later...
 	this->screen.cache.viewHeightInPixels.setIntegralPixels(0); // set later...
+	this->screen.cache.columnCountAtLastNotify = 0; // updated when triggered
+	this->screen.cache.rowCountAtLastNotify = 0; // updated when triggered
 	this->screen.sizeNotMatchedWithView = false;
 	this->screen.focusRingEnabled = true;
 	this->screen.isReverseVideo = 0;
@@ -8247,6 +8251,33 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	switch (inTerminalChange)
 	{
+	case kTerminal_ChangeScreenSize:
+		{
+			TerminalScreenRef	screenRef = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			UInt16 const		newColumnCount = Terminal_ReturnColumnCount(screenRef);
+			UInt16 const		newRowCount = Terminal_ReturnRowCount(screenRef);
+			
+			
+			// this notification is only sent if the view change actually modified the screen dimensions
+			if ((viewPtr->screen.cache.columnCountAtLastNotify != newColumnCount) ||
+				(viewPtr->screen.cache.rowCountAtLastNotify != newRowCount))
+			{
+				TerminalView_ScreenInfo		infoStruct;
+				
+				
+				bzero(&infoStruct, sizeof(infoStruct));
+				infoStruct.viewRef = view;
+				infoStruct.screenRef = screenRef;
+				
+				viewPtr->screen.cache.columnCountAtLastNotify = newColumnCount;
+				viewPtr->screen.cache.rowCountAtLastNotify = newRowCount;
+				
+				eventNotifyForView(viewPtr, kTerminalView_EventScreenSizeChanged,
+									&infoStruct/* context */);
+			}
+		}
+		break;
+	
 	case kTerminal_ChangeTextEdited:
 		{
 			Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
@@ -9545,6 +9576,7 @@ startMonitoringDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
 		// ask to be notified of screen buffer content changes
 		inTerminalViewPtr->screen.contentMonitor.setWithNoRetain(ListenerModel_NewStandardListener
 																	(screenBufferChanged, inTerminalViewPtr->selfRef/* context */));
+		Terminal_StartMonitoring(screenRef, kTerminal_ChangeScreenSize, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeTextEdited, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeScrollActivity, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StartMonitoring(screenRef, kTerminal_ChangeXTermColor, inTerminalViewPtr->screen.contentMonitor.returnRef());
@@ -9598,6 +9630,7 @@ stopMonitoringDataSource	(My_TerminalViewPtr		inTerminalViewPtr,
 		Terminal_StopMonitoring(screenRef, kTerminal_ChangeVideoMode, inTerminalViewPtr->screen.videoModeMonitor.returnRef());
 		
 		// stop listening for screen buffer content changes
+		Terminal_StopMonitoring(screenRef, kTerminal_ChangeScreenSize, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StopMonitoring(screenRef, kTerminal_ChangeTextEdited, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StopMonitoring(screenRef, kTerminal_ChangeScrollActivity, inTerminalViewPtr->screen.contentMonitor.returnRef());
 		Terminal_StopMonitoring(screenRef, kTerminal_ChangeXTermColor, inTerminalViewPtr->screen.contentMonitor.returnRef());

@@ -130,11 +130,16 @@ enum TerminalView_DisplayMode
 /*!
 Events in a Terminal View that other modules can register to
 receive notification of.
+
+See also similar monitoring APIs at different levels: Terminal,
+Terminal Window, Session and Session Factory.
 */
 enum TerminalView_Event
 {
 	kTerminalView_EventFontSizeChanged			= 'FSiz',	//!< the font size used for drawing text has been altered
 															//!  (context: TerminalViewRef)
+	kTerminalView_EventScreenSizeChanged		= 'SSiz',	//!< the underlying terminal screen dimensions have been altered
+															//!  (context: TerminalView_ScreenInfo*)
 	kTerminalView_EventScrolling				= 'Scrl',	//!< the visible part of the terminal view has changed
 															//!  (context: TerminalViewRef)
 	kTerminalView_EventSearchResultsExistence	= 'Srch'	//!< the result of TerminalView_SearchResultsExist() is now
@@ -221,6 +226,17 @@ private:
 
 typedef TerminalView_PixelValue< SInt16, CGFloat >	TerminalView_PixelWidth;
 typedef TerminalView_PixelValue< SInt32, CGFloat >	TerminalView_PixelHeight;
+
+/*!
+Used for "kTerminalView_EventScreenSizeChanged" to indicate
+which terminal screen buffer was changed (e.g. to determine
+the new screen dimensions).
+*/
+struct TerminalView_ScreenInfo
+{
+	TerminalViewRef		viewRef;
+	TerminalScreenRef	screenRef;
+};
 
 /*!
 Since a terminal view can have a potentially huge scrollback

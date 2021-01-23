@@ -126,15 +126,13 @@ An object that serves as a delegate for input events
 on a terminal view.
 */
 @interface Session_TextInput : NSObject < TerminalView_TextInputClient > //{
-{
-	SessionRef		_sessionRef;
-}
 
 // initializers
 	- (instancetype)
 	initWithSession:(SessionRef)_;
 
 // accessors
+	//! The session that receives text input strings and commands.
 	@property (assign) SessionRef
 	sessionRef;
 
@@ -194,10 +192,11 @@ struct My_Session
 	CFAbsoluteTime				activationAbsoluteTime;		// result of CFAbsoluteTimeGetCurrent() call when the command starts or restarts
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the command ends
 	CFAbsoluteTime				watchTriggerAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call when the last watch of any kind went off
-	Session_TextInput* __strong	textInputDelegate;			// for Cocoa; given text input to a view, send appropriate action or text to session
+	Session_TextInput* __strong	textInputDelegate;			// given text input to a view, send appropriate action or text to session
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerWrap	windowValidationListener;	// responds after a window is created, and just before it dies
 	ListenerModel_ListenerWrap	terminalWindowListener;		// responds when terminal window states change
+	ListenerModel_ListenerWrap	terminalViewListener;		// responds when terminal view or screen states change
 	ListenerModel_ListenerWrap	vectorWindowListener;		// responds when vector graphics window states change
 	ListenerModel_ListenerWrap	preferencesListener;		// responds when certain preference values are initialized or changed
 	NSTimer* __strong			longLifeTimer;				// called when a session has been open 15 seconds; retain in order to invalidate at destruction time
@@ -280,6 +279,8 @@ Preferences_ContextRef		sheetContextBegin					(My_SessionPtr, Quills::Prefs::Cla
 void						sheetContextEnd						(My_SessionPtr);
 void						terminalHoverLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
 void						terminalInsertLocalEchoString		(My_SessionPtr, UInt8 const*, size_t);
+void						terminalViewChanged					(ListenerModel_Ref, ListenerModel_Event,
+																 void*, void*);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						terminationWarningClose				(SessionRef&, Boolean, Boolean);
@@ -6526,12 +6527,75 @@ terminalInsertLocalEchoString	(My_SessionPtr		inPtr,
 
 
 /*!
+Invoked whenever a monitored terminal view state is
+changed.
+
+This routine responds by notifying the process running
+in the session window.
+
+(2021.01)
+*/
+void
+terminalViewChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+						 ListenerModel_Event	inTerminalWindowSettingThatChanged,
+						 void*					inEventContextPtr,
+						 void*					inListenerContextPtr)
+{
+	SessionRef	session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
+	
+	
+	switch (inTerminalWindowSettingThatChanged)
+	{
+	case kTerminalView_EventScreenSizeChanged:
+		// notify the process that the screen dimensions have changed
+		// (e.g. this would cause a text editor to adjust its layout)
+		{
+			TerminalView_ScreenInfo*	infoPtr = REINTERPRET_CAST(inEventContextPtr, TerminalView_ScreenInfo*);
+			Boolean						error = false;
+			
+			
+			if (nullptr == infoPtr) error = true;
+			else
+			{
+				if (nullptr == session) error = true;
+				else
+				{
+					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+					UInt16					newColumnCount = Terminal_ReturnColumnCount(infoPtr->screenRef);
+					UInt16					newRowCount = Terminal_ReturnRowCount(infoPtr->screenRef);
+					
+					
+					// send an I/O control message to the TTY informing it that the screen size has changed
+					if (nullptr != ptr->mainProcess)
+					{
+						//NSLog(@"view: term -> %d x %d", (int)newColumnCount, (int)newRowCount); // debug
+						Local_TerminalResize(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
+												newColumnCount, newRowCount,
+												0/* tmp - not easy to tell pixel width here */,
+												0/* tmp - not easy to tell pixel width here */);
+					}
+				}
+			}
+			
+			if (error)
+			{
+				//Console_Warning(Console_WriteLine, "unable to notify listeners of screen-size change");
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// terminalViewChanged
+
+
+/*!
 Invoked whenever a monitored terminal window state is
 changed (see where TerminalWindow_New() is called for
 a session, to see which states are subsequently
-monitored).  This routine responds by notifying the
-processes running in a session window that the size
-of the terminal screen is now different.
+monitored).
 
 (3.0)
 */
@@ -6569,47 +6633,6 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (error)
 			{
 				//Console_Warning(Console_WriteLine, "unable to notify listeners of obscured-state change");
-			}
-		}
-		break;
-	
-	case kTerminalWindow_ChangeScreenDimensions:
-		// tell processes running in the window about the new screen size
-		{
-			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inEventContextPtr, TerminalWindowRef);
-			Boolean				error = false;
-			
-			
-			if (terminalWindow == nullptr) error = true;
-			else
-			{
-				if (session == nullptr) error = true;
-				else
-				{
-					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-					UInt16					newColumnCount = 0;
-					UInt16					newRowCount = 0;
-					
-					
-					// determine new size
-					TerminalWindow_GetScreenDimensions(terminalWindow, &newColumnCount, &newRowCount);
-					
-					// send an I/O control message to the TTY informing it that the screen size has changed
-					if (nullptr != ptr->mainProcess)
-					{
-						Local_TerminalResize(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
-												newColumnCount, newRowCount,
-												0/* tmp - not easy to tell pixel width here */,
-												0/* tmp - not easy to tell pixel width here */);
-					}
-				}
-			}
-			
-			if (error)
-			{
-				// warn the user somehow?
-				// unimplemented
-				Console_Warning(Console_WriteLine, "unable to transmit screen dimension changes to window processes");
 			}
 		}
 		break;
@@ -7091,37 +7114,55 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeWindowValid:
 		// install window-dependent event handlers
 		{
-			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			Session_TextInput*		inputDelegate = nil;
-			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			SessionRef					session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			Session_TextInput*			inputDelegate = nil;
+			My_SessionAutoLocker		ptr(gSessionPtrLocks(), session);
+			ListenerModel_ListenerRef	viewListenerRef = nullptr;
 			
 			
+			// find out when the window is obscured with the Hide command
+			// (or when it is redisplayed)
 			ptr->terminalWindowListener.setWithNoRetain(ListenerModel_NewStandardListener
 														(terminalWindowChanged, session/* context */));
-			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
-											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
 											ptr->terminalWindowListener.returnRef());
 			
-			// install a listener for keystrokes on each view’s control;
-			// in the future, terminal windows may have multiple views,
-			// which can be focused independently
+			// find out when each terminal view’s screen buffer size changes
+			// so that the session process can be notified (e.g. this allows
+			// a text editor to adjust its layout)
+			ptr->terminalViewListener.setWithNoRetain(ListenerModel_NewStandardListener
+														(terminalViewChanged, session/* context */));
+			viewListenerRef = ptr->terminalViewListener.returnRef(); // for use in block below
+			
+			// set local delegate for each view; this is what allows keyboard
+			// events, etc. to be translated into session input and ultimately
+			// make the terminal work when the user starts typing!
 			ptr->textInputDelegate = [[Session_TextInput alloc] initWithSession:session];
 			inputDelegate = ptr->textInputDelegate; // for use in block below
+			
+			// apply listeners to each view in the session window, as needed;
+			// in the future, terminal windows may have multiple views, which
+			// could be focused independently (TEMPORARY; this may need to be
+			// adjusted in multi-view scenario, e.g. if more than one process
+			// can run in a single window, the session needs to know which
+			// view matches the session)
 			{
 				TerminalWindow_Result		iterationResult = kTerminalWindow_ResultOK;
 				
 				
+				// TEMPORARY; for now, treat all views equivalently; in the future
+				// it may be necessary to skip any view not directly associated
+				// with this session...
 				iterationResult = TerminalWindow_ForEachTerminalView(ptr->terminalWindow,
 				^(TerminalViewRef	aView,
 				  Boolean&			UNUSED_ARGUMENT(outStopFlag))
 				{
-					// set local delegate for each view; this is what allows keyboard
-					// events, etc. to be translated into session input and ultimately
-					// make the terminal work when the user starts typing!
 					TerminalView_Object*		viewObject = TerminalView_ReturnContainerNSView(aView);
 					TerminalView_ContentView*	contentView = viewObject.terminalContentView;
 					
+					
+					TerminalView_StartMonitoring(aView, kTerminalView_EventScreenSizeChanged,
+													viewListenerRef);
 					
 					if (nil == viewObject)
 					{
@@ -7163,12 +7204,11 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeWindowInvalid:
 		// remove window-dependent event handlers
 		{
-			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			SessionRef					session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			My_SessionAutoLocker		ptr(gSessionPtrLocks(), session);
+			ListenerModel_ListenerRef	viewListenerRef = ptr->terminalViewListener.returnRef();
 			
 			
-			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
-											ptr->terminalWindowListener.returnRef());
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
 											ptr->terminalWindowListener.returnRef());
 			
@@ -7186,6 +7226,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					
 					contentView.textInputDelegate = nil;
+					TerminalView_StopMonitoring(aView, kTerminalView_EventScreenSizeChanged,
+													viewListenerRef);
 				});
 				if (kTerminalWindow_ResultOK != iterationResult)
 				{
@@ -7206,15 +7248,6 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 #pragma mark -
 @implementation Session_TextInput //{
-
-
-#pragma mark Internally-Declared Properties
-
-
-/*!
-The session that receives text input strings and commands.
-*/
-@synthesize sessionRef = _sessionRef;
 
 
 #pragma mark Initializers
