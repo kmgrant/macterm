@@ -76,32 +76,20 @@ there is only one option (a basic document-style window)
 but that may change.
 */
 @interface ChildProcessWC_Object : NSWindowController< NSWindowDelegate > //{
-{
-@private
-	NSRunningApplication*			_childApplication;
-	NSMutableArray*					_registeredObservers;
-	ChildProcessWC_AtExitBlockType	_atExitBlock;
-	BOOL							_exitHandled;
-	BOOL							_terminationRequestInProgress;
-}
 
 // class methods
-	+ (instancetype)
-	childProcessWCWithRunningApp:(NSRunningApplication*)_;
-	+ (instancetype)
-	childProcessWCWithRunningApp:(NSRunningApplication*)_
-	atExit:(ChildProcessWC_AtExitBlockType)_;
+	+ (instancetype _Nullable)
+	childProcessWCWithRunningApp:(NSRunningApplication* _Nonnull)_;
+	+ (instancetype _Nullable)
+	childProcessWCWithRunningApp:(NSRunningApplication* _Nonnull)_
+	atExit:(ChildProcessWC_AtExitBlockType _Nullable)_;
 
 // initializers
-	- (instancetype)
-	initWithCoder:(NSCoder*)_;
-	- (instancetype)
-	initWithRunningApp:(NSRunningApplication*)_;
-	- (instancetype)
-	initWithRunningApp:(NSRunningApplication*)_
-	atExit:(ChildProcessWC_AtExitBlockType)_ NS_DESIGNATED_INITIALIZER;
-	- (instancetype)
-	initWithWindow:(NSWindow*)_;
+	- (instancetype _Nullable)
+	initWithRunningApp:(NSRunningApplication* _Nonnull)_;
+	- (instancetype _Nullable)
+	initWithRunningApp:(NSRunningApplication* _Nonnull)_
+	atExit:(ChildProcessWC_AtExitBlockType _Nullable)_ NS_DESIGNATED_INITIALIZER;
 
 @end //}
 

@@ -43,7 +43,7 @@
 		0A694C372447FD000061822C /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C362447FD000061822C /* CoreServices.framework */; };
 		0A694C392447FEDF0061822C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C382447FEDF0061822C /* QuartzCore.framework */; };
 		0A694C3B2447FEEB0061822C /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A694C3A2447FEEB0061822C /* UserNotifications.framework */; };
-		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
+		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */; };
 		0A82D1602555E2FC00950356 /* UIPrefsWorkspaceOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D15F2555E2FC00950356 /* UIPrefsWorkspaceOptions.swift */; };

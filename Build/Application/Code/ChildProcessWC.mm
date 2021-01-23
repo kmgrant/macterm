@@ -49,6 +49,13 @@
 #pragma mark Internal Method Prototypes
 
 /*!
+Window class for subprocess proxies.
+*/
+@interface ChildProcessWC_Window : NSWindow //{
+
+@end //}
+
+/*!
 The private class interface.
 */
 @interface ChildProcessWC_Object (ChildProcessWC_ObjectInternal) //{
@@ -56,7 +63,7 @@ The private class interface.
 // new methods
 	- (void)
 	handleChildExit;
-	- (NSWindow*)
+	- (ChildProcessWC_Window*)
 	newWindow;
 
 @end //}
@@ -64,19 +71,30 @@ The private class interface.
 @interface ChildProcessWC_Object () //{
 
 // accessors
-	@property (copy) void
-	(^atExitBlock)();
-	@property (retain) NSRunningApplication*
+	//! The block to invoke when the subprocess exits for any reason. 
+	@property (strong) ChildProcessWC_AtExitBlockType
+	atExitBlock;
+	//! A representation of the child process that displays the window.
+	@property (strong) NSRunningApplication*
 	childApplication;
+	//! Ensures that the exit block is invoked only once.
+	@property (assign) BOOL
+	exitHandled;
+	//! For key-value observing of key properties of the subprocess.
 	@property (strong) NSMutableArray*
 	registeredObservers;
+	//! Helps to keep track of user-initiated requests to close the window
+	//! so that it does not happen twice (e.g. if process happens to exit
+	//! while already handling a user-requested window close).
+	@property (assign) BOOL
+	terminationRequestInProgress;
 
 @end //}
 
 #pragma mark Variables
 namespace {
 
-NSMutableArray*&	gChildProcessWindowProxies()		{ static NSMutableArray* _ = [[NSMutableArray alloc] init]; return _; } // array of ChildProcessWC_Object*
+NSMutableArray*		gChildProcessWindowProxies()	{ static NSMutableArray* _ = [[NSMutableArray alloc] init]; return _; } // array of ChildProcessWC_Object*
 
 } // anonymous namespace
 
@@ -88,11 +106,6 @@ NSMutableArray*&	gChildProcessWindowProxies()		{ static NSMutableArray* _ = [[NS
 @implementation ChildProcessWC_Object //{
 
 
-@synthesize atExitBlock = _atExitBlock;
-@synthesize childApplication = _childApplication;
-@synthesize registeredObservers = _registeredObservers;
-
-
 #pragma mark Class Methods
 
 
@@ -102,9 +115,9 @@ Convenience initializer.
 (2016.09)
 */
 + (instancetype)
-childProcessWCWithRunningApp:(NSRunningApplication*)		aRunningApp
+childProcessWCWithRunningApp:(NSRunningApplication*)	aRunningApp
 {
-	return [[[self.class alloc] initWithRunningApp:aRunningApp] autorelease];
+	return [[self.class alloc] initWithRunningApp:aRunningApp];
 }// childProcessWCWithRunningApp:
 
 
@@ -114,29 +127,14 @@ Convenience initializer.
 (2016.09)
 */
 + (instancetype)
-childProcessWCWithRunningApp:(NSRunningApplication*)		aRunningApp
+childProcessWCWithRunningApp:(NSRunningApplication*)	aRunningApp
 atExit:(ChildProcessWC_AtExitBlockType)					anExitBlock
 {
-	return [[[self.class alloc] initWithRunningApp:aRunningApp atExit:anExitBlock] autorelease];
+	return [[self.class alloc] initWithRunningApp:aRunningApp atExit:anExitBlock];
 }// childProcessWCWithRunningApp:modalToWindow:atExit:
 
 
 #pragma mark Initializers
-
-
-/*!
-Designated initializer from base class.  Do not use;
-it is defined only to satisfy the compiler.
-
-(2017.06)
-*/
-- (instancetype)
-initWithCoder:(NSCoder*)	aCoder
-{
-#pragma unused(aCoder)
-	assert(false && "invalid way to initialize derived class");
-	return [self initWithRunningApp:nil];
-}// initWithCoder:
 
 
 /*!
@@ -160,20 +158,19 @@ Designated initializer.
 initWithRunningApp:(NSRunningApplication*)	aRunningApp
 atExit:(ChildProcessWC_AtExitBlockType)		anExitBlock
 {
-	NSWindow*	window = [self newWindow];
+	ChildProcessWC_Window*		window = [self newWindow];
 	
 	
 	self = [super initWithWindow:window];
 	if (nil != self)
 	{
-		_childApplication = [aRunningApp retain];
+		_childApplication = aRunningApp;
 		_registeredObservers = [[NSMutableArray alloc] init];
-		[self.registeredObservers addObject:[[self newObserverFromKeyPath:@"terminated" ofObject:aRunningApp
-																			options:(NSKeyValueChangeSetting)]
-											autorelease]];
+		[self.registeredObservers addObject:[self newObserverFromKeyPath:@"terminated" ofObject:aRunningApp
+																			options:(NSKeyValueChangeSetting)]];
 		if (nullptr != anExitBlock)
 		{
-			_atExitBlock = Block_copy(anExitBlock);
+			_atExitBlock = anExitBlock;
 		}
 		else
 		{
@@ -195,6 +192,39 @@ atExit:(ChildProcessWC_AtExitBlockType)		anExitBlock
 
 
 /*!
+Destructor.
+
+(2016.09)
+*/
+- (void)
+dealloc
+{
+	//NSLog(@"ChildProcessWC_Object dealloc"); // debug
+	[self handleChildExit];
+	[self ignoreWhenObjectsPostNotes];
+	[self removeObserversSpecifiedInArray:self.registeredObservers];
+}// dealloc
+
+
+#pragma mark Initializers Disabled From Superclass
+
+
+/*!
+Designated initializer from base class.  Do not use;
+it is defined only to satisfy the compiler.
+
+(2017.06)
+*/
+- (instancetype)
+initWithCoder:(NSCoder*)	aCoder
+{
+#pragma unused(aCoder)
+	assert(false && "invalid way to initialize derived class");
+	return [self initWithRunningApp:nil];
+}// initWithCoder:
+
+
+/*!
 Designated initializer from base class.  Do not use;
 it is defined only to satisfy the compiler.
 
@@ -207,28 +237,6 @@ initWithWindow:(NSWindow*)		aWindow
 	assert(false && "invalid way to initialize derived class");
 	return [self initWithRunningApp:nil];
 }// initWithWindow:
-
-
-/*!
-Destructor.
-
-(2016.09)
-*/
-- (void)
-dealloc
-{
-	//NSLog(@"ChildProcessWC_Object dealloc"); // debug
-	[self handleChildExit];
-	if (nullptr != self->_atExitBlock)
-	{
-		Block_release(self->_atExitBlock);
-	}
-	[self ignoreWhenObjectsPostNotes];
-	[self removeObserversSpecifiedInArray:self.registeredObservers];
-	[_childApplication release];
-	[_registeredObservers release];
-	[super dealloc];
-}// dealloc
 
 
 #pragma mark Notifications
@@ -272,12 +280,12 @@ context:(void*)						aContext
 		{
 			if ([aKeyPath isEqualToString:@"terminated"])
 			{
-				if (_terminationRequestInProgress)
+				if (self.terminationRequestInProgress)
 				{
 					// termination has completed; this should exactly match the
 					// response in "windowWillClose:" for the non-request case
 					[self handleChildExit];
-					_terminationRequestInProgress = NO;
+					self.terminationRequestInProgress = NO;
 				}
 				else
 				{
@@ -316,9 +324,31 @@ windowDidBecomeMain:(NSNotification*)	aNote
 	// since the window “becomes main” again when the
 	// user activates this application later, it is
 	// necessary to force a move to the next window
-	//BOOL	canNext = [[[NSApp keyWindow] firstResponder] tryToPerform:@selector(orderFrontNextWindow:) with:nil];
-	[[Commands_Executor sharedExecutor] orderFrontNextWindow:nil];
-	[self.childApplication activateWithOptions:(0)];
+	if (NO == self.childApplication.isTerminated)
+	{
+		BOOL	isSomeOnscreenWindow = NO;
+		
+		
+		// ensure that some open window is visible to the user (e.g.
+		// it is possible the user has used the Hide feature to
+		// obscure them all); otherwise there is no need to switch
+		for (NSWindow* aWindow in NSApp.windows)
+		{
+			if ((aWindow.isVisible) &&
+				(NO == [aWindow isKindOfClass:ChildProcessWC_Window.class]) &&
+				(nil != aWindow.screen) && ([NSScreen mainScreen] == aWindow.screen))
+			{
+				isSomeOnscreenWindow = YES;
+				break;
+			}
+		}
+		
+		if (isSomeOnscreenWindow)
+		{
+			[[Commands_Executor sharedExecutor] orderFrontNextWindow:nil];
+			[self.childApplication activateWithOptions:(0)];
+		}
+	}
 }// windowDidBecomeMain:
 
 
@@ -338,7 +368,7 @@ windowWillClose:(NSNotification*)	aNote
 	// monitor the "terminated" property and continue the
 	// exit processing only when the change is received;
 	// see "observeValueForKeyPath:ofObject:change:context:"
-	_terminationRequestInProgress = YES;
+	self.terminationRequestInProgress = YES;
 	
 	// although typically the close is a side effect of
 	// the child already having exited, an explicit close
@@ -349,7 +379,7 @@ windowWillClose:(NSNotification*)	aNote
 		// process has already exited; this should exactly match the
 		// response in "observeValueForKeyPath:ofObject:change:context:"
 		// for the request case
-		_terminationRequestInProgress = NO;
+		self.terminationRequestInProgress = NO;
 		[self handleChildExit];
 	}
 }// windowWillClose:
@@ -378,7 +408,7 @@ status has already been handled.
 handleChildExit
 {
 	//NSLog(@"ChildProcessWC_Object handle exit"); // debug
-	if (NO == _exitHandled)
+	if (NO == self.exitHandled)
 	{
 		if (nil != self.atExitBlock)
 		{
@@ -389,7 +419,7 @@ handleChildExit
 		// this part will have no effect
 		[gChildProcessWindowProxies() removeObject:self];
 		
-		_exitHandled = YES;
+		self.exitHandled = YES;
 	}
 }// handleChildExit
 
@@ -400,14 +430,14 @@ for a window in a different process.  See the initializer.
 
 (2017.06)
 */
-- (NSWindow*)
+- (ChildProcessWC_Window*)
 newWindow
 {
-	NSWindow*		result = [[NSWindow alloc]
-								initWithContentRect:NSMakeRect(0, 0, 1, 1)
-													styleMask:NSWindowStyleMaskTitled
-													backing:NSBackingStoreBuffered
-													defer:NO];
+	ChildProcessWC_Window*	result = [[ChildProcessWC_Window alloc]
+										initWithContentRect:NSMakeRect(0, 0, 1, 1)
+															styleMask:NSWindowStyleMaskTitled
+															backing:NSBackingStoreBuffered
+															defer:NO];
 	
 	
 	// enable "windowDidBecomeMain:", etc.
@@ -433,5 +463,34 @@ newWindow
 
 
 @end //} ChildProcessWC_Object (ChildProcessWC_ObjectInternal)
+
+
+#pragma mark -
+@implementation ChildProcessWC_Window //{
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2021.01)
+*/
+- (instancetype)
+initWithContentRect:(NSRect)	contentRect
+styleMask:(NSWindowStyleMask)	aStyle
+backing:(NSBackingStoreType)	bufferingType
+defer:(BOOL)					flag
+{
+	self = [super initWithContentRect:contentRect styleMask:aStyle backing:bufferingType defer:flag];
+	if (nil != self)
+	{
+	}
+	return self;
+}// initWithContentRect:styleMask:backing:defer:
+
+
+@end //} ChildProcessWC_Window
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
