@@ -2,3 +2,4 @@ OBJROOT = _Generated
 SYMROOT = _Generated
 
 SWIG_PREFIX = /opt/swig-$(SWIG_VERSION)
+SWIG_PREFIX_ALT = /usr/local

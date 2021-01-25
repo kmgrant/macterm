@@ -16,13 +16,23 @@
 # Kevin Grant (kmg@mac.com)
 # December 13, 2007
 
+awk=/usr/bin/awk
 cat=/bin/cat
+grep=/usr/bin/grep
 mv=/bin/mv
 printf=/usr/bin/printf
 rm=/bin/rm
 swig=${SWIG_PREFIX}/bin/swig
 if [ "x${SWIG}" != "x" ] ; then
+    # explicit path overrides default search
     swig=${SWIG}
+else
+    # to make it easier to rely on, say, Homebrew,
+    # fall back to an alternate prefix by default
+    if [ ! -x "${swig}" ] ; then
+        echo "$0: warning: not found or not executable: '${swig}'" >&2
+        swig=${SWIG_PREFIX_ALT}/bin/swig
+    fi
 fi
 touch=/usr/bin/touch
 
@@ -35,6 +45,26 @@ cxx_tmp=/tmp/${INPUT_FILE_BASE}_wrap.cxx.NEW.$$
 if [ "x${DERIVED_FILES_DIR}" = "x" ] ; then
     echo "$0: run this only from Xcode" >&2
     exit 1
+fi
+
+# test that swig is runnable, with a suitable version
+if [ ! -x "${swig}" ] ; then
+    echo "$0: not found or not executable: '${swig}'" >&2
+    exit 1
+fi
+swig_ver_output=`${swig} -version`
+if [ "x$?" != "x0" ] ; then
+    echo "$0: failed to run 'swig' from '$swig' (if you have Homebrew, try 'brew install swig')" >&2
+    exit 1
+else
+    echo "$0: configured to run '${swig}'" >&2
+fi
+actual_swig_ver=`echo ${swig_ver_output} | $grep "SWIG Version" | $awk '{print $3}'`
+if [ "x$actual_swig_ver" != "x${SWIG_VERSION}" ] ; then
+    echo "$0: warning: this project was last tested with SWIG ${SWIG_VERSION} but installed version ($swig) is $actual_swig_ver" >&2
+    #exit 1
+else
+    echo "$0: (this matches the recommended SWIG version, ${SWIG_VERSION})" >&2
 fi
 
 # change to the target directory, because SWIG annoyingly
