@@ -149,24 +149,39 @@ public struct UIPrefsTerminalOptions_View : View {
 			alignment: .leading
 		) {
 			UICommon_DefaultOptionHeaderView()
-			UICommon_Default1OptionLineView("General", bindIsDefaultTo: $viewModel.isDefaultWrapLines, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("General",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Line Wrap",
+																							bindIsDefaultTo: $viewModel.isDefaultWrapLines),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Wrap lines (no truncation)", isOn: $viewModel.lineWrapEnabled)
 					.macTermToolTipText("Set if new text should appear on the next line when the terminal cursor is at the right end of the screen, instead of overwriting the last column.")
 			}
-			UICommon_Default1OptionLineView("", bindIsDefaultTo: $viewModel.isDefaultEightBit, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "8-Bit Bytes",
+																							bindIsDefaultTo: $viewModel.isDefaultEightBit),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Do not strip high bit of bytes", isOn: $viewModel.eightBitEnabled)
 					.macTermToolTipText("Set if bytes should be treated as 8-bit values instead of 7-bit values (some applications require this).")
 			}
-			UICommon_Default1OptionLineView("", bindIsDefaultTo: $viewModel.isDefaultSaveLinesOnClear, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Save Lines on Clear",
+																							bindIsDefaultTo: $viewModel.isDefaultSaveLinesOnClear),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Save lines when screen clears", isOn: $viewModel.saveLinesOnClearEnabled)
 					.macTermToolTipText("Set if all the rows of text on the main terminal screen should be inserted into the scrollback buffer instead of going away when the screen clears.")
 			}
 			Spacer().asMacTermSectionSpacingV()
-			UICommon_Default1OptionLineView("Keyboard", bindIsDefaultTo: $viewModel.isDefaultNormalKeypadTopRow, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Keyboard",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Normal Keypad Top Row",
+																							bindIsDefaultTo: $viewModel.isDefaultNormalKeypadTopRow),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Normal keypad top row", isOn: $viewModel.normalKeypadTopRowEnabled)
 					.macTermToolTipText("Set if keypad buttons on extended keyboards have their normal actions instead of being remapped to the VT PF1, PF2, PF3 and PF4 keys.")
 			}
-			UICommon_Default1OptionLineView("", bindIsDefaultTo: $viewModel.isDefaultLocalPageKeys, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Local Page Keys",
+																							bindIsDefaultTo: $viewModel.isDefaultLocalPageKeys),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Local page keys (↖︎↘︎⇞⇟)", isOn: $viewModel.localPageKeysEnabled)
 					.macTermToolTipText("Set if the Home, End, Page Up and Page Down keys affect local scrolling in MacTerm instead of being sent to the active session as remote paging commands.")
 			}

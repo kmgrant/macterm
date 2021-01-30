@@ -271,19 +271,50 @@ struct UICommon_OptionLineView <Content: View> : View {
 }
 
 // (this is used several times in the views below)
-var UICommon_DefaultToggleToolTipText: String = "When the current collection is not the Default collection, this may be set to tie the preference on the right to the Default collection.  Edit the preference on the right to remove the tie and make the setting unique to this collection."
+var UICommon_DefaultToggleAccessibilityDesc = "Restore to Default Value"
+var UICommon_DefaultToggleAccessibilityDescTemplate = NSLocalizedString("%1$@: Restore to Default Value",
+																		comment: "accessibility description of preference setting; 1$ = description of setting") 
+var UICommon_DefaultToggleToolTipText = NSLocalizedString("When the current collection is not the Default collection, this may be set to tie the preference next to this checkbox to the Default collection.  Edit the preference next to this checkbox to remove the tie and make the setting unique to this collection.",
+															comment: "tooltip for checkbox that returns a preference setting to its default value") 
+var UICommon_DefaultToggleToolTipTextTemplate = NSLocalizedString("When the current collection is not the Default collection, this may be set to tie “%1$@” to the Default collection.  Edit “%1$@” to remove the tie and make the setting unique to this collection.",
+																	comment: "tooltip for checkbox that returns named preference setting to its default value (multi-checkbox case); 1$ = description of setting")
+
+struct UICommon_DefaultToggleProperties {
+
+	// this collects all the unique attributes of “Use Default” checkboxes
+	// that frequently appear next to settings in Preferences panels
+	var accessibilityPrefName: String? // should be Title Case and short
+	var bindIsDefaultTo: Binding<Bool> // binding
+	var customToolTip = false // optional; most checkboxes appear alone so their tooltips can be generic without identifying preferences
+
+	func accessibilityDescription() -> String {
+		if let definedPrefName = self.accessibilityPrefName {
+			return String(format: UICommon_DefaultToggleAccessibilityDescTemplate, definedPrefName)
+		}
+		return UICommon_DefaultToggleAccessibilityDesc
+	}
+
+	func toolTipText() -> String {
+		if self.customToolTip {
+			if let definedPrefName = self.accessibilityPrefName {
+				return String(format: UICommon_DefaultToggleToolTipTextTemplate, definedPrefName)
+			}
+		}
+		return UICommon_DefaultToggleToolTipText
+	}
+
+}
 
 struct UICommon_Default1OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
 	private var disableDefaultAlignmentGuide = false
 	private var isEditingDefault = false
-	var isDefaultBinding: Binding<Bool>
+	var toggle1: UICommon_DefaultToggleProperties
 	let optionView: Content
 	var title = ""
 
-	// variant with “default” checkbox, title, and content
-	init(_ aTitle: String, bindIsDefaultTo: Binding<Bool>, isEditingDefault: Bool,
+	init(_ aTitle: String, toggleConfig: UICommon_DefaultToggleProperties, isEditingDefault: Bool,
 			disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
@@ -291,21 +322,22 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 			self.title = aTitle + ":"
 		}
 		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
-		self.isDefaultBinding = bindIsDefaultTo
 		self.isEditingDefault = isEditingDefault
 		self.optionView = content()
+		self.toggle1 = toggleConfig
 	}
 
 	var body: some View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			Toggle(" ", isOn: isDefaultBinding)
+			Toggle(" ", isOn: toggle1.bindIsDefaultTo)
 				.controlSize(.mini)
-				.disabled(isEditingDefault || isDefaultBinding.wrappedValue)
+				.disabled(isEditingDefault || toggle1.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
+				.accessibility(label: Text(self.toggle1.accessibilityDescription()))
+				.macTermToolTipText(toggle1.toolTipText())
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
@@ -338,13 +370,12 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 	@State private var unusedDefault = true
 	private var disableDefaultAlignmentGuide = false
 	private var isEditingDefault = false
-	var isDefault1Binding: Binding<Bool>
-	var isDefault2Binding: Binding<Bool>
+	var toggle1: UICommon_DefaultToggleProperties
+	var toggle2: UICommon_DefaultToggleProperties
 	let optionView: Content
 	var title = ""
 
-	// variant with “default” checkbox, title, and content
-	init(_ aTitle: String, bindIsDefault1To: Binding<Bool>, bindIsDefault2To: Binding<Bool>,
+	init(_ aTitle: String, toggle1Config: UICommon_DefaultToggleProperties, toggle2Config: UICommon_DefaultToggleProperties,
 			isEditingDefault: Bool, disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
@@ -352,28 +383,33 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 			self.title = aTitle + ":"
 		}
 		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
-		self.isDefault1Binding = bindIsDefault1To
-		self.isDefault2Binding = bindIsDefault2To
 		self.isEditingDefault = isEditingDefault
 		self.optionView = content()
+		self.toggle1 = toggle1Config
+		self.toggle2 = toggle2Config
+		// when there are multiple checkboxes, include preference names in tooltips
+		self.toggle1.customToolTip = true
+		self.toggle2.customToolTip = true
 	}
 
 	var body: some View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			Toggle(" ", isOn: isDefault1Binding)
+			Toggle(" ", isOn: toggle1.bindIsDefaultTo)
 				.controlSize(.mini)
-				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
+				.disabled(isEditingDefault || toggle1.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
-			Toggle(" ", isOn: isDefault2Binding)
+				.accessibility(label: Text(self.toggle1.accessibilityDescription()))
+				.macTermToolTipText(toggle1.toolTipText())
+			Toggle(" ", isOn: toggle2.bindIsDefaultTo)
 				.controlSize(.mini)
-				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
+				.disabled(isEditingDefault || toggle2.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
+				.accessibility(label: Text(self.toggle2.accessibilityDescription()))
+				.macTermToolTipText(toggle2.toolTipText())
 			// create unused checkboxes to ensure consistent alignment if
 			// any “default” options appear in the same stack
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
@@ -400,50 +436,57 @@ struct UICommon_Default3OptionLineView <Content: View> : View {
 	@State private var unusedDefault = true
 	private var disableDefaultAlignmentGuide = false
 	private var isEditingDefault = false
-	var isDefault1Binding: Binding<Bool>
-	var isDefault2Binding: Binding<Bool>
-	var isDefault3Binding: Binding<Bool>
+	var toggle1: UICommon_DefaultToggleProperties
+	var toggle2: UICommon_DefaultToggleProperties
+	var toggle3: UICommon_DefaultToggleProperties
 	let optionView: Content
 	var title = ""
 
-	// variant with “default” checkbox, title, and content
-	init(_ aTitle: String, bindIsDefault1To: Binding<Bool>, bindIsDefault2To: Binding<Bool>, bindIsDefault3To: Binding<Bool>,
-			isEditingDefault: Bool, disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
+	init(_ aTitle: String, toggle1Config: UICommon_DefaultToggleProperties, toggle2Config: UICommon_DefaultToggleProperties,
+			toggle3Config: UICommon_DefaultToggleProperties, isEditingDefault: Bool,
+			disableDefaultAlignmentGuide: Bool = false, @ViewBuilder content: () -> Content) {
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
 			self.title = aTitle + ":"
 		}
 		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
-		self.isDefault1Binding = bindIsDefault1To
-		self.isDefault2Binding = bindIsDefault2To
-		self.isDefault3Binding = bindIsDefault3To
 		self.isEditingDefault = isEditingDefault
 		self.optionView = content()
+		self.toggle1 = toggle1Config
+		self.toggle2 = toggle2Config
+		self.toggle3 = toggle3Config
+		// when there are multiple checkboxes, include preference names in tooltips
+		self.toggle1.customToolTip = true
+		self.toggle2.customToolTip = true
+		self.toggle3.customToolTip = true
 	}
 
 	var body: some View {
 		HStack(
 			alignment: .sectionAlignmentMacTerm
 		) {
-			Toggle(" ", isOn: isDefault1Binding)
+			Toggle(" ", isOn: toggle1.bindIsDefaultTo)
 				.controlSize(.mini)
-				.disabled(isEditingDefault || isDefault1Binding.wrappedValue)
+				.disabled(isEditingDefault || toggle1.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
-			Toggle(" ", isOn: isDefault2Binding)
+				.accessibility(label: Text(self.toggle1.accessibilityDescription()))
+				.macTermToolTipText(toggle1.toolTipText())
+			Toggle(" ", isOn: toggle2.bindIsDefaultTo)
 				.controlSize(.mini)
-				.disabled(isEditingDefault || isDefault2Binding.wrappedValue)
+				.disabled(isEditingDefault || toggle2.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
-			Toggle(" ", isOn: isDefault3Binding)
+				.accessibility(label: Text(self.toggle2.accessibilityDescription()))
+				.macTermToolTipText(toggle2.toolTipText())
+			Toggle(" ", isOn: toggle3.bindIsDefaultTo)
 				.controlSize(.mini)
-				.disabled(isEditingDefault || isDefault3Binding.wrappedValue)
+				.disabled(isEditingDefault || toggle3.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
-				.macTermToolTipText(UICommon_DefaultToggleToolTipText)
+				.accessibility(label: Text(self.toggle3.accessibilityDescription()))
+				.macTermToolTipText(toggle3.toolTipText())
 			// (all variants have space for up to 3 checkboxes so no extra padding here)
 			Text(title).asMacTermSectionHeading()
 				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })

@@ -181,13 +181,19 @@ public struct UIPrefsSessionDataFlow_View : View {
 			alignment: .leading
 		) {
 			UICommon_DefaultOptionHeaderView()
-			UICommon_Default1OptionLineView("Duplication", bindIsDefaultTo: $viewModel.isDefaultLocalEchoEnabled, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Duplication",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Local Echo",
+																							bindIsDefaultTo: $viewModel.isDefaultLocalEchoEnabled),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("Locally echo keystrokes", isOn: $viewModel.isLocalEchoEnabled)
 					.macTermToolTipText("Set if MacTerm displays which keys have been pressed, as you type.  Useful if the application running in the terminal does not echo keystrokes or it responds more slowly than you type.")
 			}
 			Spacer().asMacTermMinorSectionSpacingV()
 			Group {
-				UICommon_Default1OptionLineView("Line Insertion Delay", bindIsDefaultTo: $viewModel.isDefaultLineInsertionDelay, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Line Insertion Delay",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Line Insertion Delay",
+																								bindIsDefaultTo: $viewModel.isDefaultLineInsertionDelay),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					TextField("", value: $viewModel.lineInsertionDelayValue, formatter: lineInsertionDelayFormatter)
 						.frame(minWidth: 70, maxWidth: 70)
 						.macTermToolTipText("Delay between inserted lines; for example, when pasting or dragging-and-dropping several lines at once.  Some terminal applications do not work correctly if text is sent too quickly.")
@@ -196,7 +202,10 @@ public struct UIPrefsSessionDataFlow_View : View {
 				Spacer().asMacTermMinorSectionSpacingV()
 			}
 			Group {
-				UICommon_Default1OptionLineView("Scrolling Delay", bindIsDefaultTo: $viewModel.isDefaultScrollingDelay, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Scrolling Delay",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Scrolling Delay",
+																								bindIsDefaultTo: $viewModel.isDefaultScrollingDelay),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					TextField("", value: $viewModel.scrollingDelayValue, formatter: scrollingDelayFormatter)
 						.frame(minWidth: 70, maxWidth: 70)
 						.macTermToolTipText("Delay as lines are scrolled off the screen.  This can make it easier to keep track of rapidly-scrolling command output but setting this to 0 is strongly recommended.")
@@ -205,7 +214,10 @@ public struct UIPrefsSessionDataFlow_View : View {
 				Spacer().asMacTermMinorSectionSpacingV()
 			}
 			Group {
-				UICommon_Default1OptionLineView("Capture to File", bindIsDefaultTo: $viewModel.isDefaultAutoCaptureToDirectoryEnabled, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Capture to File",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Capture to File",
+																								bindIsDefaultTo: $viewModel.isDefaultAutoCaptureToDirectoryEnabled),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					Toggle("Automatically write to directory:", isOn: $viewModel.isAutoCaptureToDirectoryEnabled)
 						.macTermToolTipText("Set if all text displayed in a terminal window should be saved to a file (as configured below).  At any time, you can use the “End Capture to File” command in the File menu.")
 				}

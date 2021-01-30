@@ -233,7 +233,10 @@ public struct UIPrefsTerminalEmulation_View : View {
 			alignment: .leading
 		) {
 			UICommon_DefaultOptionHeaderView()
-			UICommon_Default1OptionLineView("Base Emulator", bindIsDefaultTo: $viewModel.isDefaultBaseEmulator, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Base Emulator",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Base Emulator",
+																							bindIsDefaultTo: $viewModel.isDefaultBaseEmulator),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Picker("", selection: $viewModel.selectedBaseEmulatorType) {
 					localizedLabelView(.none)
 					localizedLabelView(.vt100)
@@ -246,13 +249,19 @@ public struct UIPrefsTerminalEmulation_View : View {
 					.macTermToolTipText("The hardware that terminal sequences are generally expected to match (see “Emulation Tweaks” below though).")
 			}
 			Spacer().asMacTermMinorSectionSpacingV()
-			UICommon_Default1OptionLineView("Identity", bindIsDefaultTo: $viewModel.isDefaultIdentity, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Identity",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Identity",
+																							bindIsDefaultTo: $viewModel.isDefaultIdentity),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", text: $viewModel.terminalIdentity)
 					.frame(minWidth: 150, maxWidth: 150)
 					.macTermToolTipText("An answer-back message that applications can query to determine MacTerm’s capabilities.  For example, on Unix this might match a $TERM variable.")
 			}
 			Spacer().asMacTermMinorSectionSpacingV()
-			UICommon_Default1OptionLineView("Emulation Tweaks", bindIsDefaultTo: $viewModel.isDefaultEmulationTweaks, isEditingDefault: viewModel.isEditingDefaultContext,
+			UICommon_Default1OptionLineView("Emulation Tweaks",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Emulation Tweaks",
+																							bindIsDefaultTo: $viewModel.isDefaultEmulationTweaks),
+											isEditingDefault: viewModel.isEditingDefaultContext,
 											disableDefaultAlignmentGuide: true) {
 				List {
 					Toggle("24-Bit Color (Millions)", isOn: $viewModel.tweak24BitColorEnabled)

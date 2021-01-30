@@ -164,20 +164,29 @@ public struct UIPrefsTerminalScreen_View : View {
 			alignment: .leading
 		) {
 			UICommon_DefaultOptionHeaderView()
-			UICommon_Default1OptionLineView("Width", bindIsDefaultTo: $viewModel.isDefaultWidth, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Width",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Width",
+																							bindIsDefaultTo: $viewModel.isDefaultWidth),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", value: $viewModel.widthValue, formatter: widthFormatter)
 					.frame(minWidth: 50, maxWidth: 50)
 					.macTermToolTipText("Number of columns visible on the terminal screen.")
 				Spacer()
 			}
 			Spacer().asMacTermMinorSectionSpacingV()
-			UICommon_Default1OptionLineView("Height", bindIsDefaultTo: $viewModel.isDefaultHeight, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Height",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Height",
+																							bindIsDefaultTo: $viewModel.isDefaultHeight),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				TextField("", value: $viewModel.heightValue, formatter: heightFormatter)
 					.frame(minWidth: 50, maxWidth: 50)
 					.macTermToolTipText("Number of rows visible on the terminal screen.")
 			}
 			Spacer().asMacTermMinorSectionSpacingV()
-			UICommon_Default1OptionLineView("Scrollback", bindIsDefaultTo: $viewModel.isDefaultScrollback, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Scrollback",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Scrollback",
+																							bindIsDefaultTo: $viewModel.isDefaultScrollback),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Picker("", selection: $viewModel.selectedScrollbackType) {
 					// TBD: how to insert dividing-line in this type of menu?
 					localizedLabelView(.disabled)

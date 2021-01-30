@@ -230,7 +230,10 @@ public struct UIPrefsSessionKeyboard_View : View {
 		) {
 			UICommon_DefaultOptionHeaderView()
 			Group {
-				UICommon_Default1OptionLineView("Process Control", bindIsDefaultTo: $viewModel.isDefaultInterruptKeyMapping, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Process Control",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Interrupt Key",
+																								bindIsDefaultTo: $viewModel.isDefaultInterruptKeyMapping),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					ZStack(
 						alignment: .trailing
 					) {
@@ -255,7 +258,10 @@ public struct UIPrefsSessionKeyboard_View : View {
 					}
 					Text("Interrupt Process")
 				}
-				UICommon_Default1OptionLineView("Flow Control", bindIsDefaultTo: $viewModel.isDefaultSuspendKeyMapping, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Flow Control",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Suspend Key",
+																								bindIsDefaultTo: $viewModel.isDefaultSuspendKeyMapping),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					ZStack(
 						alignment: .trailing
 					) {
@@ -280,7 +286,10 @@ public struct UIPrefsSessionKeyboard_View : View {
 					}
 					Text("Suspend (Scroll Lock / XOFF)")
 				}
-				UICommon_Default1OptionLineView("", bindIsDefaultTo: $viewModel.isDefaultResumeKeyMapping, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Resume Key",
+																								bindIsDefaultTo: $viewModel.isDefaultResumeKeyMapping),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					ZStack(
 						alignment: .trailing
 					) {
@@ -344,11 +353,17 @@ public struct UIPrefsSessionKeyboard_View : View {
 			UICommon_DividerSectionView()
 			//Spacer().asMacTermSectionSpacingV()
 			Group {
-				UICommon_Default1OptionLineView("Emacs Cursor", bindIsDefaultTo: $viewModel.isDefaultEmacsCursorArrows, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Emacs Cursor",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Emacs Cursor",
+																								bindIsDefaultTo: $viewModel.isDefaultEmacsCursorArrows),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					Toggle("Map to arrow keys", isOn: $viewModel.arrowKeysMapToEmacs)
 						.macTermToolTipText("Set if arrow keys send equivalent cursor-movement commands as defined by the Emacs text editor.")
 				}
-				UICommon_Default1OptionLineView("Emacs Meta", bindIsDefaultTo: $viewModel.isDefaultEmacsMetaMapping, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Emacs Meta",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Emacs Meta Key Mapping",
+																								bindIsDefaultTo: $viewModel.isDefaultEmacsMetaMapping),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					Picker("", selection: $viewModel.selectedMetaMapping) {
 						localizedLabelView(.off)
 						localizedLabelView(.option)
@@ -358,11 +373,17 @@ public struct UIPrefsSessionKeyboard_View : View {
 						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
 						.macTermToolTipText("Whether or not to send a “meta” sequence when the specified key(s) are pressed.  Used for commands in the Emacs text editor.")
 				}
-				UICommon_Default1OptionLineView("Delete", bindIsDefaultTo: $viewModel.isDefaultDeleteMapping, isEditingDefault: viewModel.isEditingDefaultContext) {
+				UICommon_Default1OptionLineView("Delete",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "Delete Key",
+																								bindIsDefaultTo: $viewModel.isDefaultDeleteMapping),
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					Toggle("Map to backspace", isOn: $viewModel.deleteSendsBackspace)
 						.macTermToolTipText("Set if the keyboard Delete key sends a “backspace” character instead of a “delete” character.")
 				}
-				UICommon_Default1OptionLineView("New Line", bindIsDefaultTo: $viewModel.isDefaultNewlineMapping, isEditingDefault: viewModel.isEditingDefaultContext,
+				UICommon_Default1OptionLineView("New Line",
+												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "New Line Mapping",
+																								bindIsDefaultTo: $viewModel.isDefaultNewlineMapping),
+												isEditingDefault: viewModel.isEditingDefaultContext,
 												disableDefaultAlignmentGuide: true) {
 					Picker("", selection: $viewModel.selectedNewlineMapping) {
 						localizedLabelView(.mapLF)

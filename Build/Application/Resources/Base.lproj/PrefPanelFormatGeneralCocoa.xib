@@ -542,13 +542,14 @@
                                 <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="Dvw-QP-wuM" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
-                                    <accessibility description="White Mouse Pointer"/>
+                                    <accessibility description="Black Mouse Pointer"/>
                                 </buttonCell>
                             </column>
                             <column>
-                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="9ck-Ji-iih">
+                                <buttonCell type="square" bezelStyle="shadowlessSquare" imagePosition="left" alignment="center" borderStyle="border" inset="2" id="9ck-Ji-iih" customClass="CoreUI_SquareButtonCell">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                    <accessibility description="White Mouse Pointer"/>
                                 </buttonCell>
                             </column>
                         </cells>

@@ -114,7 +114,10 @@ public struct UIPrefsSessionGraphics_View : View {
 			alignment: .leading
 		) {
 			UICommon_DefaultOptionHeaderView()
-			UICommon_Default1OptionLineView("TEK Graphics", bindIsDefaultTo: $viewModel.isDefaultTEKMode, isEditingDefault: viewModel.isEditingDefaultContext,
+			UICommon_Default1OptionLineView("TEK Graphics",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "TEK Graphics",
+																							bindIsDefaultTo: $viewModel.isDefaultTEKMode),
+											isEditingDefault: viewModel.isEditingDefaultContext,
 											disableDefaultAlignmentGuide: true) {
 				Picker("", selection: $viewModel.selectedTEKMode) {
 					localizedLabelView(.disabled)
@@ -126,7 +129,10 @@ public struct UIPrefsSessionGraphics_View : View {
 					.macTermToolTipText("Type of vector graphics sequences to recognize in this session.")
 			}
 			Spacer().asMacTermSectionSpacingV()
-			UICommon_Default1OptionLineView("Options", bindIsDefaultTo: $viewModel.isDefaultPageClears, isEditingDefault: viewModel.isEditingDefaultContext) {
+			UICommon_Default1OptionLineView("Options",
+											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "PAGE Clears Screen",
+																							bindIsDefaultTo: $viewModel.isDefaultPageClears),
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Toggle("PAGE clears screen", isOn: $viewModel.pageCommandClearsScreen)
 					.macTermToolTipText("Set if a TEK graphics “PAGE” command clears the screen of the current vector graphics window instead of opening a new window.")
 			}
