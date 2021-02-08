@@ -233,4 +233,57 @@ MacTerm respects some of XTerm's window sequences, so a terminal
  application may also affect a window.  Typically an application
  will rename the window or minimize it into the Dock.
 
+h2(#notifications). Event Handling
+
+You can set up automatic responses to certain events in a session
+ if it is not running in the active window.  These handlers are
+ available in the Terminal menu as well as in the equivalent
+ toolbar item’s menu.
+
+Notifications sent to the system while MacTerm is in the background
+ are governed by your notification preference settings in MacTerm
+ as well as System Preferences.  For example, you might have set it
+ to modify the MacTerm Dock icon.
+
+If the "Session Info" window is visible when a notification is
+ triggered, the session icon will be modified to indicate which
+ window is sending the notification.
+
+h3. Handlers
+
+h4. None
+
+Turns off event handling entirely.
+
+h4. Notify on Next Activity
+
+If the monitored session receives new data while MacTerm is not the
+ active application, a notification is sent.  This can be used, for
+ example, to detect when a long-running command has returned to a
+ shell prompt, if it emits no other output.
+
+h4. Notify on Inactivity (After Delay)
+
+If the monitored session is not currently receiving any data and
+ continues to receive no data for a period of time, and MacTerm is
+ not the active application, then this will be triggered.
+
+The delay can be customized with the @data-receive-idle-seconds@
+ low-level preference setting; see "advanced preferences":advprefs.html#sessions
+ for details.
+
+h4. Send Keep-Alive on Inactivity
+
+If the monitored session is not currently receiving any data and
+ continues to receive no data for a period of time, a character
+ will be input to the active session in an attempt to keep it
+ from automatically terminating.  (This can be useful with remote
+ server connections, for example.)
+
+The exact character that is sent is determined by the Python API.
+
+The delay can be customized with the @data-receive-idle-seconds@
+ low-level preference setting; see "advanced preferences":advprefs.html#sessions
+ for details.
+
 notextile. </div>

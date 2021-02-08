@@ -2641,7 +2641,7 @@ Session_SetTerminalWindow	(SessionRef			inRef,
 
 /*!
 Enables or disables notification of network activity and
-inactivity.
+inactivity.  This triggers event "kSession_ChangeWatch".
 
 When a notifier fires, this flag is cleared.
 
@@ -2669,6 +2669,8 @@ Session_SetWatch	(SessionRef		inRef,
 	{
 		watchClearForSession(ptr);
 	}
+	
+	changeNotifyForSession(ptr, kSession_ChangeWatch, inRef);
 }// SetWatch
 
 

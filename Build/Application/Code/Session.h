@@ -111,6 +111,10 @@ enum
 													//!  have changed; use Session_ReturnStateAttributes()
 													//!  to test attributes (context: SessionRef)
 	
+	kSession_ChangeWatch				= 'Wtch',	//!< the Session_Watch of a monitored Session has
+													//!  changed; various Session_WatchIs...() APIs can
+													//!  be used to get the new value (context: SessionRef)
+	
 	kSession_ChangeWindowInvalid		= 'WDie',	//!< the terminal window of a monitored Session is
 													//!  *about to be* destroyed, and therefore is now
 													//!  invalid (context: SessionRef)

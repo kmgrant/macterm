@@ -210,10 +210,32 @@ of the toolbar is of class TerminalToolbar_Delegate.
 
 
 /*!
+For session-dependent items.  Normally these will all inherit
+from "TerminalToolbar_SessionDependentItem" but for items
+that can’t (e.g. "TerminalToolbar_ItemNotifyOnActivity", since
+it uses "NSMenuToolbarItem"), there is this protocol.
+*/
+@protocol TerminalToolbar_SessionHinting //{
+
+@required
+
+	// if this item has no toolbar yet (such as, construction during toolbar customization),
+	// "setSessionHint:" can be used to improve the default setup of the item to match the
+	// target toolbar; this value should NOT be used to determine the associated session
+	// for an item unless the item has no toolbar assigned; in addition, this value should
+	// be cleared by future "session" queries if a toolbar exists
+	- (void)
+	setSessionHint:(SessionRef _Nullable)_;
+
+@end //}
+
+
+/*!
 Base class for items that need to monitor the session that is
 associated with their toolbar’s delegate.
 */
-@interface TerminalToolbar_SessionDependentItem : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive > //{
+@interface TerminalToolbar_SessionDependentItem : NSToolbarItem < TerminalToolbar_ItemAddRemoveSensitive,
+																	TerminalToolbar_SessionHinting > //{
 
 // initializers
 	- (instancetype _Nonnull)
@@ -222,8 +244,37 @@ associated with their toolbar’s delegate.
 // accessors
 	- (SessionRef _Nullable)
 	session;
+	- (TerminalScreenRef _Nullable)
+	terminalScreen;
+	- (TerminalViewRef _Nullable)
+	terminalView;
+	- (TerminalWindowRef _Nullable)
+	terminalWindow;
+
+// overrides for subclasses
 	- (void)
-	setSessionHint:(SessionRef _Nullable)_;
+	didChangeSession;
+	- (void)
+	willChangeSession;
+
+@end //}
+
+
+/*!
+Base class for items that need to monitor the session that is
+associated with their toolbar’s delegate and also subclass
+NSMenuToolbarItem.
+*/
+@interface TerminalToolbar_SessionDependentMenuItem : NSMenuToolbarItem < TerminalToolbar_ItemAddRemoveSensitive,
+																			TerminalToolbar_SessionHinting > //{
+
+// initializers
+	- (instancetype _Nonnull)
+	initWithItemIdentifier:(NSString* _Nonnull)_;
+
+// accessors
+	- (SessionRef _Nullable)
+	session;
 	- (TerminalScreenRef _Nullable)
 	terminalScreen;
 	- (TerminalViewRef _Nullable)
@@ -331,6 +382,12 @@ Toolbar item “Log-In Shell”.
 Toolbar item “Shell”.
 */
 @interface TerminalToolbar_ItemNewSessionShell : NSToolbarItem @end
+
+
+/*!
+Toolbar item to enable session activity notifications.
+*/
+@interface TerminalToolbar_ItemNotifyOnActivity : TerminalToolbar_SessionDependentMenuItem @end
 
 
 /*!

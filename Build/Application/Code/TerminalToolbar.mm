@@ -81,6 +81,7 @@ NSString*	kMy_ToolbarItemIDMacro9						= @"net.macterm.MacTerm.toolbaritem.macro
 NSString*	kMy_ToolbarItemIDMacro10					= @"net.macterm.MacTerm.toolbaritem.macro10";
 NSString*	kMy_ToolbarItemIDMacro11					= @"net.macterm.MacTerm.toolbaritem.macro11";
 NSString*	kMy_ToolbarItemIDMacro12					= @"net.macterm.MacTerm.toolbaritem.macro12";
+NSString*	kMy_ToolbarItemIDNotifications				= @"net.macterm.MacTerm.toolbaritem.notifications";
 NSString*	kMy_ToolbarItemIDPrint						= @"net.macterm.MacTerm.toolbaritem.print";
 NSString*	kMy_ToolbarItemIDSuspend					= @"net.macterm.MacTerm.toolbaritem.suspend";
 NSString*	kMy_ToolbarItemIDWindowButtonClose			= @"net.macterm.MacTerm.toolbaritem.windowbuttonclose";
@@ -121,6 +122,9 @@ Private properties.
 	//! If YES, unfinished items are available for testing.
 	@property (assign) BOOL
 	allowExperimentalItems;
+	//! The toolbar that this is a delegate for.
+	@property (weak) NSToolbar*
+	toolbar;
 
 @end //}
 
@@ -143,12 +147,7 @@ Private properties.
 @interface TerminalToolbar_SessionDependentItem () //{
 
 // accessors
-	//! If this item has no toolbar yet (such as, construction during
-	//! toolbar customization), "setSessionHint:" can be used to improve
-	//! the default setup of the item to match the target toolbar.  This
-	//! value is NOT used by the "session" method unless the item has no
-	//! toolbar assigned.  In addition, this value is cleared by future
-	//! calls to "session" if a toolbar exists.
+	//! For compliance with "TerminalToolbar_SessionHinting".
 	@property (assign) SessionRef
 	sessionHint;
 
@@ -158,6 +157,31 @@ Private properties.
 The private class interface.
 */
 @interface TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal) //{
+
+// new methods
+	- (void)
+	installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
+	- (void)
+	removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)_;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_SessionDependentMenuItem () //{
+
+// accessors
+	//! For compliance with "TerminalToolbar_SessionHinting".
+	@property (assign) SessionRef
+	sessionHint;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_SessionDependentMenuItem (TerminalToolbar_SessionDependentMenuItemInternal) //{
 
 // new methods
 	- (void)
@@ -382,6 +406,48 @@ The private class interface.
 	updateSizeConstraints;
 	- (void)
 	updateWithPreferenceValuesFromMacroSet:(Preferences_ContextRef)_;
+
+@end //}
+
+/*!
+Private properties.
+*/
+@interface TerminalToolbar_ItemNotifyOnActivity () //{
+
+// accessors
+	//! This is implemented to fix a bug in macOS 10.15, which
+	//! could crash at runtime in toolbars because "isBordered"
+	//! is invoked by the OS on NSMenuToolbarItem instances
+	//! (which does not otherwise define the method).
+	//!
+	//! By subclassing NSMenuToolbarItem to implement the method,
+	//! the system will not raise an exception on macOS 10.15.
+	//! (This is not an issue on macOS 11 Big Sur.)
+	@property (assign, getter=isBordered) BOOL
+	bordered;
+	//! This is notified of changes to session properties.
+	@property (strong) ListenerModel_StandardListener*
+	sessionChangeListener;
+
+@end //}
+
+/*!
+The private class interface.
+*/
+@interface TerminalToolbar_ItemNotifyOnActivity (TerminalToolbar_ItemNotifyOnActivityInternal) //{
+
+// methods of the form required by ListenerModel_StandardListener
+	- (void)
+	model:(ListenerModel_Ref)_
+	sessionChange:(ListenerModel_Event)_
+	context:(void*)_;
+
+// new methods
+	- (void)
+	session:(SessionRef)_
+	setAsCurrentBinding:(BOOL)_;
+	- (void)
+	setStateFromSession:(SessionRef)_;
 
 @end //}
 
@@ -637,6 +703,7 @@ experimentalItems:(BOOL)		experimentalFlag
 	{
 		_allowExperimentalItems = experimentalFlag;
 		_session = nullptr;
+		_toolbar = aToolbar;
 		
 		[self whenObject:aToolbar postsNote:kTerminalToolbar_ObjectDidChangeDisplayModeNotification
 							performSelector:@selector(toolbarDidChangeDisplayMode:)];
@@ -875,6 +942,10 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	{
 		result = [[TerminalToolbar_ItemNewSessionShell alloc] init];
 	}
+	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDNotifications])
+	{
+		result = [[TerminalToolbar_ItemNotifyOnActivity alloc] init];
+	}
 	else if ([itemIdentifier isEqualToString:kMy_ToolbarItemIDPrint])
 	{
 		result = [[TerminalToolbar_ItemPrint alloc] init];
@@ -922,12 +993,12 @@ willBeInsertedIntoToolbar:(BOOL)	willBeInToolbar
 	// necessary for new toolbars full of items; it is only important
 	// when the user customizes the toolbar, to ensure that new items
 	// immediately display appropriate data from the target session)
-	if ((willBeInToolbar) && [result isKindOfClass:TerminalToolbar_SessionDependentItem.class])
+	if ((willBeInToolbar) && [result conformsToProtocol:@protocol(TerminalToolbar_SessionHinting)])
 	{
-		TerminalToolbar_SessionDependentItem*	asSessionItem = STATIC_CAST(result, TerminalToolbar_SessionDependentItem*);
+		id< TerminalToolbar_SessionHinting >	asSessionHinting = STATIC_CAST(result, id< TerminalToolbar_SessionHinting >);
 		
 		
-		asSessionItem.sessionHint = self.session;
+		[asSessionHinting setSessionHint:self.session];
 	}
 	
 	// if this item is being constructed for use in a customization sheet
@@ -1006,6 +1077,7 @@ toolbarAllowedItemIdentifiers:(NSToolbar*)	toolbar
 									kMy_ToolbarItemIDForceQuit,
 									kMy_ToolbarItemIDSuspend,
 									kMy_ToolbarItemIDBell,
+									kMy_ToolbarItemIDNotifications,
 									kTerminalToolbar_ItemIDStackWindows,
 									kTerminalToolbar_ItemIDCustomize,
 								]];
@@ -1035,6 +1107,7 @@ toolbarDefaultItemIdentifiers:(NSToolbar*)	toolbar
 				kMy_ToolbarItemIDSuspend,
 				kMy_ToolbarItemIDWindowTitle,
 				kMy_ToolbarItemIDBell,
+				kMy_ToolbarItemIDNotifications,
 				kMy_ToolbarItemIDPrint,
 				kMy_ToolbarItemIDFullScreen, // now redundant with "kMy_ToolbarItemIDWindowButtonZoom"
 				NSToolbarSpaceItemIdentifier,
@@ -1093,7 +1166,8 @@ toolbarDidRemoveItem:(NSNotification*)		aNotification
 			}
 			else
 			{
-				//Console_Warning(Console_WriteValueAddress, "removed item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'", asToolbarItem); // debug
+				//Console_Warning(Console_WriteValueCFString, "removed item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'; class", BRIDGE_CAST(NSStringFromClass(asToolbarItem.class), CFStringRef)); // debug
+				//Console_Warning(Console_WriteValueAddress, "removed item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'", BRIDGE_CAST(asToolbarItem, void*)); // debug
 			}
 		}
 	}
@@ -1155,7 +1229,8 @@ toolbarWillAddItem:(NSNotification*)	aNotification
 			}
 			else
 			{
-				//Console_Warning(Console_WriteValueAddress, "added item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'", asToolbarItem); // debug
+				//Console_Warning(Console_WriteValueCFString, "added item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'; class", BRIDGE_CAST(NSStringFromClass(asToolbarItem.class), CFStringRef)); // debug
+				//Console_Warning(Console_WriteValueAddress, "added item does not implement 'TerminalToolbar_ItemAddRemoveSensitive'", BRIDGE_CAST(asToolbarItem, void*)); // debug
 			}
 		}
 	}
@@ -2358,7 +2433,7 @@ didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 
 
 /*!
-Called when the specified item has been added to the
+Called when the given item is about to be added to the
 specified toolbar.
 
 (2020.05)
@@ -3063,6 +3138,394 @@ performToolbarItemAction:(id)	sender
 
 
 #pragma mark -
+@implementation TerminalToolbar_ItemNotifyOnActivity //{
+
+
+@synthesize bordered = _bordered;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2021.02)
+*/
+- (instancetype)
+init
+{
+	self = [super initWithItemIdentifier:kMy_ToolbarItemIDNotifications];
+	if (nil != self)
+	{
+		_bordered = NO;
+		_sessionChangeListener = [[ListenerModel_StandardListener alloc]
+									initWithTarget:self
+													eventFiredSelector:@selector(model:sessionChange:context:)];
+		
+		// populate menu with same items as those in menu bar
+		{
+			NSMenu*			newMenu = [[NSMenu alloc] initWithTitle:@""];
+			NSMenuItem*		newItem = nil; // reused below
+			
+			
+			newItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"None", "toolbar menu item for controlling disabling of notifications")
+														action:@selector(performSetActivityHandlerNone:)
+														keyEquivalent:@""];
+			newItem.target = nil; // use first responder
+			// child items do not need an icon (the parent does,
+			// and currently parent and child have the same icon)
+			//newItem.image = ...;
+			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
+			[newMenu addItem:newItem];
+			newItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Notify on Next Activity", "toolbar menu item for controlling notification when new data arrives")
+														action:@selector(performSetActivityHandlerNotifyOnNext:)
+														keyEquivalent:@""];
+			newItem.target = nil; // use first responder
+			// child items do not need an icon (the parent does,
+			// and currently parent and child have the same icon)
+			//newItem.image = ...;
+			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
+			[newMenu addItem:newItem];
+			newItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Notify on Inactivity (After Delay)", "toolbar menu item for controlling notification when session becomes idle")
+														action:@selector(performSetActivityHandlerNotifyOnIdle:)
+														keyEquivalent:@""];
+			newItem.target = nil; // use first responder
+			// child items do not need an icon (the parent does,
+			// and currently parent and child have the same icon)
+			//newItem.image = ...;
+			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
+			[newMenu addItem:newItem];
+			newItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Send Keep-Alive on Inactivity", "toolbar menu item for controlling keep-alive when session becomes idle")
+														action:@selector(performSetActivityHandlerSendKeepAliveOnIdle:)
+														keyEquivalent:@""];
+			newItem.target = nil; // use first responder
+			// child items do not need an icon (the parent does,
+			// and currently parent and child have the same icon)
+			//newItem.image = ...;
+			//newItem.image.size = NSMakeSize(24, 24); // shrink default image, which is too large
+			[newMenu addItem:newItem];
+			
+			// menu toolbar item settings
+			self.menu = newMenu;
+			self.showsIndicator = YES;
+		}
+		
+		// basic toolbar item settings
+		self.action = @selector(performToolbarItemAction:);
+		self.target = self;
+		//self.enabled = YES; // see "setStateFromSession:"
+		self.label = NSLocalizedString(@"Notifications", @"toolbar item name; for selecting a notification mode");
+		self.paletteLabel = self.label;
+		self.toolTip = self.label;
+		
+		// set image and enabled state
+		[self setStateFromSession:nullptr];
+	}
+	return self;
+}// init
+
+
+/*!
+Destructor.
+
+(2021.02)
+*/
+- (void)
+dealloc
+{
+	[self willChangeSession]; // automatically stop monitoring the screen
+}// dealloc
+
+
+#pragma mark Actions
+
+
+/*!
+Responds when the toolbar item is used.
+
+(2021.02)
+*/
+- (void)
+performToolbarItemAction:(id)	sender
+{
+	SessionRef		targetSession = [self session];
+	
+	
+	if (Session_IsValid(targetSession))
+	{
+		// arbitrary; currently this is a toggle (notify on activity, or not)
+		// even though more types are possible; the user must select others
+		// from the menu but the button acts as a short-cut for some of them
+		if (Session_WatchIsOff(targetSession))
+		{
+			// arbitrarily enable activity notifications (most common type?);
+			// user can still pick a different type from the menu
+			Session_SetWatch(targetSession, kSession_WatchForPassiveData);
+		}
+		else
+		{
+			// turn off notifications
+			Session_SetWatch(targetSession, kSession_WatchNothing);
+		}
+	}
+	else
+	{
+		// should not happen (as item should be disabled when validated)
+		Sound_StandardAlert();
+	}
+}// performToolbarItemAction:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2021.02)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id										result = [super copyWithZone:zone];
+	TerminalToolbar_ItemNotifyOnActivity*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_ItemNotifyOnActivity.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_ItemNotifyOnActivity*);
+	asSelf.bordered = self.bordered;
+	asSelf.sessionChangeListener = [self.sessionChangeListener copy];
+	asSelf.sessionChangeListener.target = asSelf;
+	[self setStateFromSession:self.session];
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark NSToolbarItem
+
+
+// (See description in class interface.)
+- (BOOL)
+isBordered
+{
+	return _bordered;
+}
+- (void)
+setBordered:(BOOL)		aFlag
+{
+	_bordered = aFlag;
+}// setBordered:
+
+
+#pragma mark TerminalToolbar_ItemAddRemoveSensitive
+
+
+/*!
+Called when the given item is about to be added to the
+specified toolbar.
+
+(2021.02)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+willEnterToolbar:(NSToolbar*)	aToolbar
+{
+	[super item:anItem willEnterToolbar:aToolbar];
+	[self session:[aToolbar terminalToolbarDelegate].session setAsCurrentBinding:YES];
+	[self setStateFromSession:[aToolbar terminalToolbarDelegate].session];
+}// item:willEnterToolbar:
+
+
+/*!
+Called when the specified item has been removed from
+the specified toolbar.
+
+(2021.02)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+didExitToolbar:(NSToolbar*)		aToolbar
+{
+	[super item:anItem didExitToolbar:aToolbar];
+	[self session:[aToolbar terminalToolbarDelegate].session setAsCurrentBinding:NO];
+	[self setStateFromSession:nullptr];
+}// item:didExitToolbar:
+
+
+#pragma mark TerminalToolbar_SessionDependentItem
+
+
+/*!
+Invoked by the superclass whenever the target session of
+the owning toolbar is about to change.
+
+Responds by removing monitors on the previous session.
+
+(2021.02)
+*/
+- (void)
+willChangeSession
+{
+	[super willChangeSession];
+	
+	SessionRef	session = self.session;
+	
+	
+	[self session:session setAsCurrentBinding:NO];
+	[self setStateFromSession:nullptr];
+}// willChangeSession
+
+
+/*!
+Invoked by the superclass whenever the target session of
+the owning toolbar has changed.
+
+Responds by updating the icon state.
+
+(2021.02)
+*/
+- (void)
+didChangeSession
+{
+	[super didChangeSession];
+	
+	SessionRef	session = self.session;
+	
+	
+	[self setStateFromSession:session];
+	[self session:session setAsCurrentBinding:YES];
+}// didChangeSession
+
+
+@end //} TerminalToolbar_ItemNotifyOnActivity
+
+
+#pragma mark -
+@implementation TerminalToolbar_ItemNotifyOnActivity (TerminalToolbar_ItemNotifyOnActivityInternal) //{
+
+
+#pragma mark Methods of the Form Required by ListenerModel_StandardListener
+
+
+/*!
+Called when a monitored session event occurs.  See
+"didChangeSession" for the set of events that is monitored.
+
+(2021.02)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+sessionChange:(ListenerModel_Event)		anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel)
+	switch (anEvent)
+	{
+	case kSession_ChangeWatch:
+		{
+			SessionRef	session = REINTERPRET_CAST(aContext, SessionRef);
+			
+			
+			[self setStateFromSession:session];
+		}
+		break;
+	
+	default:
+		// ???
+		Console_Warning(Console_WriteValueFourChars,
+						"notifications toolbar item: session change handler received unexpected event", anEvent);
+		break;
+	}
+}// model:sessionChange:context:
+
+
+#pragma mark New Methods
+
+
+/*!
+Installs or removes callbacks based on a given SessionRef.
+This should occur when a binding is going to change, such
+as just before an item will be added, etc. (usually in
+direct response to some other notification).
+
+See also "setStateFromSession:", which only updates UI
+aspects (such as icon and enabled state) based on a
+given SessionRef.
+
+(2021.02)
+*/
+- (void)
+session:(SessionRef)		aSession
+setAsCurrentBinding:(BOOL)	isBinding
+{
+	if (Session_IsValid(aSession))
+	{
+		if (isBinding)
+		{
+			Session_StartMonitoring(aSession, kSession_ChangeWatch, self.sessionChangeListener.listenerRef);
+		}
+		else
+		{
+			Session_StopMonitoring(aSession, kSession_ChangeWatch, self.sessionChangeListener.listenerRef);
+		}
+	}
+}// session:setAsCurrentBinding:
+
+
+/*!
+Updates the toolbar icon based on the current notifications
+of the given session.  If "nullptr" is given then the icon
+is reset.
+
+The icon is based on the effect the item will have when used,
+NOT the current state of notifications.
+
+See also "session:setAsCurrentBinding:", which installs or
+removes callbacks based on a given SessionRef.
+
+(2021.02)
+*/
+- (void)
+setStateFromSession:(SessionRef)	aSession
+{
+	Boolean const	kSessionIsValid = Session_IsValid(aSession);
+	
+	
+	self.enabled = kSessionIsValid;
+	
+	if ((kSessionIsValid) && Session_WatchIsOff(aSession))
+	{
+		self.toolTip = NSLocalizedString(@"Notify on next activity", @"toolbar item tooltip; set notification on activity");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"bell.badge" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			// no icon is defined for 10.15 users (TEMPORARY?)
+		}
+	}
+	else
+	{
+		self.toolTip = NSLocalizedString(@"Turn off notifications", @"toolbar item tooltip; remove notification on activity");
+		if (@available(macOS 11.0, *))
+		{
+			self.image = [NSImage imageWithSystemSymbolName:@"bell.slash" accessibilityDescription:self.toolTip];
+		}
+		else
+		{
+			// no icon is defined for 10.15 users (TEMPORARY?)
+		}
+	}
+}// setStateFromSession:
+
+
+@end //} TerminalToolbar_ItemNotifyOnActivity (TerminalToolbar_ItemNotifyOnActivityInternal)
+
+
+#pragma mark -
 @implementation TerminalToolbar_ItemPrint //{
 
 
@@ -3221,10 +3684,9 @@ init
 		self.enabled = YES;
 		self.label = NSLocalizedString(@"Suspend (Scroll Lock)", @"toolbar item name; for suspending the running process");
 		self.paletteLabel = self.label;
-		self.sessionChangeListener = [[ListenerModel_StandardListener alloc]
-										initWithTarget:self
-														eventFiredSelector:@selector(model:sessionChange:context:)];
-		
+		_sessionChangeListener = [[ListenerModel_StandardListener alloc]
+									initWithTarget:self
+													eventFiredSelector:@selector(model:sessionChange:context:)];
 		[self setStateFromSession:nullptr];
 	}
 	return self;
@@ -3700,7 +4162,8 @@ setButton:(NSButton*)	aWindowButton
 		
 		[self removeObserverSpecifiedWith:self.viewWindowObserver];
 		_viewWindowObserver = [self newObserverFromSelector:@selector(window) ofObject:aWindowButton
-															options:(NSKeyValueChangeSetting)];
+															options:(NSKeyValueObservingOptionNew |
+																		NSKeyValueObservingOptionOld)];
 	}
 }// setButton:
 
@@ -3789,7 +4252,7 @@ context:(void*)						aContext
 				
 				
 				// remove any previous monitor
-				if (nil != oldValue)
+				if ((nil != oldValue) && ([NSNull null] != oldValue))
 				{
 					assert([oldValue isKindOfClass:NSWindow.class]);
 					NSWindow*	asWindow = STATIC_CAST(oldValue, NSWindow*);
@@ -3848,7 +4311,7 @@ context:(void*)						aContext
 
 
 /*!
-Called when the specified item has been added to the
+Called when the given item is about to be added to the
 specified toolbar.
 
 (2018.03)
@@ -4187,7 +4650,7 @@ initWithFrame:(NSRect)	aRect
 		_frameDisplayEnabled = NO;
 		_gradientFadeEnabled = NO;
 		_stringValueObserver = [self newObserverFromSelector:@selector(stringValue) ofObject:self
-																options:(NSKeyValueChangeSetting)];
+																options:(NSKeyValueObservingOptionNew)];
 		_labelLayout = kTerminalToolbar_TextLabelLayoutLeftJustified; // see also "lineBreakMode" below
 		_mouseDownCanMoveWindow = NO;
 		_smallSize = NO;
@@ -4312,7 +4775,7 @@ context:(void*)						aContext
 				
 				
 				//NSLog(@"stringValue changed: %@", aChangeDictionary); // debug
-				if (nil != newValue)
+				if ((nil != newValue) && ([NSNull null] != newValue))
 				{
 					assert([newValue isKindOfClass:NSString.class]);
 					//NSString*	asString = STATIC_CAST(newValue, NSString*);
@@ -4458,7 +4921,7 @@ idealFrameSizeForString:(NSString*)		aString
 		self.stringValue = originalValue; // remove sizing string
 		[self invalidateIntrinsicContentSize];
 		self.stringValueObserver = [self newObserverFromSelector:@selector(stringValue) ofObject:self
-																	options:(NSKeyValueChangeSetting)];
+																	options:(NSKeyValueObservingOptionNew)];
 	}
 	
 	return result;
@@ -4723,7 +5186,7 @@ setOverrideWindow:(NSWindow*)	aWindow
 		_overrideWindow = aWindow;
 		[self removeObserverSpecifiedWith:self.windowTitleObserver];
 		self.windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:aWindow
-																	options:(NSKeyValueChangeSetting)];
+																	options:(NSKeyValueObservingOptionNew)];
 	}
 }// setOverrideWindow
 
@@ -4758,7 +5221,7 @@ context:(void*)						aContext
 				
 				
 				//NSLog(@"title changed: %@", aChangeDictionary); // debug
-				if (nil != newValue)
+				if ((nil != newValue) && ([NSNull null] != newValue))
 				{
 					assert([newValue isKindOfClass:NSString.class]);
 					NSString*	asString = STATIC_CAST(newValue, NSString*);
@@ -4843,7 +5306,7 @@ viewWillMoveToWindow:(NSWindow*)	aWindow
 			{
 				[self removeObserverSpecifiedWith:self.windowTitleObserver];
 				_windowTitleObserver = [self newObserverFromSelector:@selector(title) ofObject:aWindow
-																		options:(NSKeyValueChangeSetting)];
+																		options:(NSKeyValueObservingOptionNew)];
 				
 				// is this necessary, or is the observer called automatically from the above?
 				self.stringValue = ((nil != aWindow.title) ? aWindow.title : @"");
@@ -5048,7 +5511,7 @@ didChangeDisplayModeForToolbar:(NSToolbar*)		aToolbar
 
 
 /*!
-Called when the specified item has been added to the
+Called when the given item is about to be added to the
 specified toolbar.
 
 If the layout of the "textView" is centered (i.e.
@@ -5857,7 +6320,7 @@ validateToolbarItem:(NSToolbarItem*)	anItem
 
 
 /*!
-Called when the specified item has been added to the
+Called when the given item is about to be added to the
 specified toolbar.
 
 (2018.03)
@@ -5907,7 +6370,7 @@ installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)		aToolbar
 {
 	[self whenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification
 						performSelector:@selector(sessionWillChange:)];
-	[self whenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification
+	[self whenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification
 						performSelector:@selector(sessionDidChange:)];
 }// installSessionDependentItemNotificationHandlersForToolbar:
 
@@ -5922,11 +6385,322 @@ and "copyWithZone:".
 removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)		aToolbar
 {
 	[self ignoreWhenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification];
-	[self ignoreWhenObject:[self.toolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification];
+	[self ignoreWhenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification];
 }// removeSessionDependentItemNotificationHandlersForToolbar:
 
 
 @end //} TerminalToolbar_SessionDependentItem (TerminalToolbar_SessionDependentItemInternal)
+
+
+#pragma mark -
+@implementation TerminalToolbar_SessionDependentMenuItem //{
+
+
+@synthesize sessionHint = _sessionHint;
+
+
+#pragma mark Initializers
+
+
+/*!
+Designated initializer.
+
+(2021.02)
+*/
+- (instancetype)
+initWithItemIdentifier:(NSString*)		anIdentifier
+{
+	self = [super initWithItemIdentifier:anIdentifier];
+	if (nil != self)
+	{
+		_sessionHint = nullptr;
+	}
+	return self;
+}// initWithItemIdentifier:
+
+
+/*!
+Destructor.
+
+(2021.02)
+*/
+- (void)
+dealloc
+{
+	[self removeSessionDependentItemNotificationHandlersForToolbar:self.toolbar];
+}// dealloc
+
+
+#pragma mark Accessors
+
+
+/*!
+Convenience method for finding the session currently associated
+with the toolbar that contains this item (may be "nullptr").
+
+If the item has no toolbar yet, "setSessionHint:" can be used
+to influence this return value.
+
+(2021.02)
+*/
+- (SessionRef)
+session
+{
+	SessionRef		result = self.toolbar.terminalToolbarSession;
+	
+	
+	if (nullptr == result)
+	{
+		result = _sessionHint;
+	}
+	else
+	{
+		self.sessionHint = nullptr;
+	}
+	
+	return result;
+}// session
+
+
+// (See description in class interface.)
+- (SessionRef)
+sessionHint
+{
+	return _sessionHint;
+}
+- (void)
+setSessionHint:(SessionRef)		aSession
+{
+	_sessionHint = aSession;
+}// setSessionHint
+
+
+/*!
+Convenience method for finding the terminal screen buffer of
+the view that is currently focused in the terminal window of
+the toolbar’s associated session, if any (may be "nullptr").
+
+(2021.02)
+*/
+- (TerminalScreenRef)
+terminalScreen
+{
+	TerminalWindowRef	terminalWindow = self.terminalWindow;
+	TerminalScreenRef	result = (nullptr != terminalWindow)
+									? TerminalWindow_ReturnScreenWithFocus(terminalWindow)
+									: nullptr;
+	
+	
+	return result;
+}// terminalScreen
+
+
+/*!
+Convenience method for finding the terminal view that is
+currently focused in the terminal window of the toolbar’s
+associated session, if any (may be "nullptr").
+
+(2021.02)
+*/
+- (TerminalViewRef)
+terminalView
+{
+	TerminalWindowRef	terminalWindow = self.terminalWindow;
+	TerminalViewRef		result = (nullptr != terminalWindow)
+									? TerminalWindow_ReturnViewWithFocus(terminalWindow)
+									: nullptr;
+	
+	
+	return result;
+}// terminalView
+
+
+/*!
+Convenience method for finding the terminal window that is
+currently active in the toolbar’s associated session, if any
+(may be "nullptr").
+
+(2021.02)
+*/
+- (TerminalWindowRef)
+terminalWindow
+{
+	SessionRef			session = self.session;
+	TerminalWindowRef	result = (Session_IsValid(session))
+									? Session_ReturnActiveTerminalWindow(session)
+									: nullptr;
+	
+	
+	return result;
+}// terminalWindow
+
+
+#pragma mark Subclass Overrides
+
+
+/*!
+Subclasses should override this to respond when the session
+for the item has changed.
+
+(2021.02)
+*/
+- (void)
+didChangeSession
+{
+}// didChangeSession
+
+
+/*!
+Subclasses should override this to respond when the session
+for the item is about to change.
+
+(2021.02)
+*/
+- (void)
+willChangeSession
+{
+}// willChangeSession
+
+
+#pragma mark Notifications
+
+
+/*!
+Triggered by the toolbar’s delegate whenever the associated
+session has changed.  The toolbar item should respond by
+updating its state.
+
+For convenience, this just invokes another method with more
+direct parameters; subclasses should override only that
+method.
+
+(2021.02)
+*/
+- (void)
+sessionDidChange:(NSNotification*)	aNotification
+{
+#pragma unused(aNotification)
+	[self didChangeSession];
+}// sessionDidChange:
+
+
+/*!
+Triggered by the toolbar’s delegate whenever the associated
+session is about to change.  The toolbar item should respond
+by undoing any setup it might have done to handle a previous
+session’s state.
+
+For convenience, this just invokes another method with more
+direct parameters; subclasses should override only that
+method.
+
+(2021.02)
+*/
+- (void)
+sessionWillChange:(NSNotification*)		aNotification
+{
+#pragma unused(aNotification)
+	[self willChangeSession];
+}// sessionWillChange:
+
+
+#pragma mark NSCopying
+
+
+/*!
+Returns a copy of this object.
+
+(2021.02)
+*/
+- (id)
+copyWithZone:(NSZone*)	zone
+{
+	id											result = [super copyWithZone:zone];
+	TerminalToolbar_SessionDependentMenuItem*	asSelf = nil;
+	
+	
+	assert([result isKindOfClass:TerminalToolbar_SessionDependentMenuItem.class]); // parent supports NSCopying so this should have been done properly
+	asSelf = STATIC_CAST(result, TerminalToolbar_SessionDependentMenuItem*);
+	asSelf.sessionHint = self.sessionHint;
+	
+	return result;
+}// copyWithZone:
+
+
+#pragma mark TerminalToolbar_ItemAddRemoveSensitive
+
+
+/*!
+Called when the given item is about to be added to the
+specified toolbar.
+
+(2021.02)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+willEnterToolbar:(NSToolbar*)	aToolbar
+{
+	assert(self == anItem);
+	[self installSessionDependentItemNotificationHandlersForToolbar:aToolbar];
+}// item:willEnterToolbar:
+
+
+/*!
+Called when the specified item has been removed from
+the specified toolbar.
+
+(2021.02)
+*/
+- (void)
+item:(NSToolbarItem*)			anItem
+didExitToolbar:(NSToolbar*)		aToolbar
+{
+	assert(self == anItem);
+	[self removeSessionDependentItemNotificationHandlersForToolbar:aToolbar];
+}// item:didExitToolbar:
+
+
+@end //} TerminalToolbar_SessionDependentMenuItem
+
+
+#pragma mark -
+@implementation TerminalToolbar_SessionDependentMenuItem (TerminalToolbar_SessionDependentMenuItemInternal) //{
+
+
+#pragma mark New Methods
+
+
+/*!
+This only needs to be called by initializers
+and "copyWithZone:".
+
+(2021.02)
+*/
+- (void)
+installSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)		aToolbar
+{
+	[self whenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification
+						performSelector:@selector(sessionWillChange:)];
+	[self whenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification
+						performSelector:@selector(sessionDidChange:)];
+}// installSessionDependentItemNotificationHandlersForToolbar:
+
+
+/*!
+This only needs to be called by initializers
+and "copyWithZone:".
+
+(2021.02)
+*/
+- (void)
+removeSessionDependentItemNotificationHandlersForToolbar:(NSToolbar*)		aToolbar
+{
+	[self ignoreWhenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionWillChangeNotification];
+	[self ignoreWhenObject:[aToolbar terminalToolbarDelegate] postsNote:kTerminalToolbar_DelegateSessionDidChangeNotification];
+}// removeSessionDependentItemNotificationHandlersForToolbar:
+
+
+@end //} TerminalToolbar_SessionDependentMenuItem (TerminalToolbar_SessionDependentMenuItemInternal)
 
 
 #pragma mark -
