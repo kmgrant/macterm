@@ -42,6 +42,7 @@
 #pragma once
 
 // standard-C++ includes
+#include <iosfwd>
 #include <string>
 
 // Mac includes
@@ -261,7 +262,8 @@ void
 
 void
 	Console_WriteValueFourChars		(char const*		inLabel,
-									 FourCharCode		inValue);
+									 FourCharCode		inValue,
+									 std::ostream*		inoutStreamPtrOrNull = nullptr);
 
 void
 	Console_WriteValuePair			(char const*		inLabel,

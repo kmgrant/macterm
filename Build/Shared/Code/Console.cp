@@ -602,27 +602,65 @@ Console_WriteValueFloat4	(char const*	inLabel,
 
 
 /*!
-Writes the value of an "OSType" variable.  A
-string of the form "label = value" is written
-to the console (with a new-line).
+Writes the value of an "OSType" variable as characters.
+A string of the form "label = value" is written to the
+given stream, if any; if "inoutStreamPtrOrNull" is set
+to nullptr, the output goes to the console instead.
+
+Any characters in the invisible range will appear as
+converted visible sequences.
 
 (1.0)
 */
 void
 Console_WriteValueFourChars		(char const*	inLabel,
-								 FourCharCode	inValue)
+								 FourCharCode	inValue,
+								 std::ostream*	inoutStreamPtrOrNull)
 {
-	CFRetainRelease		typeCFString(CFStringCreateWithFormat
-										(kCFAllocatorDefault, nullptr/* options */,
-											CFSTR("%c%c%c%c"),
-											STATIC_CAST(0x000000FFUL & (inValue >> 24), unsigned char),
-											STATIC_CAST(0x000000FFUL & (inValue >> 16), unsigned char),
-											STATIC_CAST(0x000000FFUL & (inValue >> 8), unsigned char),
-											STATIC_CAST(0x000000FFUL & (inValue >> 0), unsigned char)),
-											CFRetainRelease::kAlreadyRetained);
+	std::ostringstream		strStream;
+	std::ostream&			outStream = ((inoutStreamPtrOrNull)
+											? *inoutStreamPtrOrNull
+											: strStream);
+	unsigned char			fourChars[] =
+							{
+								STATIC_CAST(0x000000FFUL & (inValue >> 24), unsigned char),
+								STATIC_CAST(0x000000FFUL & (inValue >> 16), unsigned char),
+								STATIC_CAST(0x000000FFUL & (inValue >> 8), unsigned char),
+								STATIC_CAST(0x000000FFUL & (inValue >> 0), unsigned char),
+							};
 	
 	
-	Console_WriteValueCFString(inLabel, typeCFString.returnCFStringRef());
+	// write each character in a “printable” fashion
+	outStream << inLabel << " = ";
+	for (UInt16 i = 0; i < sizeof(fourChars) / sizeof(*fourChars); ++i)
+	{
+		if (fourChars[i] < ' '/* space */)
+		{
+			std::string		cStr;
+			cStr = fourChars[i] + '@';
+			outStream << '^' << cStr.c_str();
+		}
+		else if (fourChars[i] == ' '/* space */)
+		{
+			outStream << "<sp>";
+		}
+		else if (fourChars[i] >= 127)
+		{
+			outStream << "<" << STATIC_CAST(fourChars[i], unsigned int) << ">";
+		}
+		else
+		{
+			std::string		cStr;
+			cStr = fourChars[i];
+			outStream << cStr.c_str();
+		}
+	}
+	
+	if (nullptr == inoutStreamPtrOrNull)
+	{
+		std::string		sString = strStream.str();
+		Console_WriteLine(sString.c_str());
+	}
 }// WriteValueFourChars
 
 

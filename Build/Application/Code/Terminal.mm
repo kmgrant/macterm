@@ -3176,27 +3176,12 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						// show the handler that determined the new state
 						std::ostringstream	debugInfoSS;
 						std::string			debugStr;
-						CFRetainRelease		newStateDescCFString(UTCreateStringForOSType(states.second),
-																	CFRetainRelease::kAlreadyRetained);
-						char const*			newStateCStringOrNull = (newStateDescCFString.exists()
-																		? CFStringGetCStringPtr(newStateDescCFString.returnCFStringRef(),
-																								CFStringGetFastestEncoding
-																								(newStateDescCFString.returnCFStringRef()))
-																		: nullptr);
 						
 						
-						debugInfoSS << "new state '";
-						if (nullptr == newStateCStringOrNull)
-						{
-							debugInfoSS << "<" << states.second << ">"; // failed to convert; show integer value
-						}
-						else
-						{
-							debugInfoSS << newStateCStringOrNull;
-						}
+						Console_WriteValueFourChars("new state", states.second, &debugInfoSS);
 						if (false == dataPtr->debugStateHandlerSequence.empty())
 						{
-							debugInfoSS << "'; handler path:";
+							debugInfoSS << "; handler path:";
 							for (auto aProcPtr : dataPtr->debugStateHandlerSequence)
 							{
 								auto			procIter = gCallbackIDsByFuncPtr().find(aProcPtr);
