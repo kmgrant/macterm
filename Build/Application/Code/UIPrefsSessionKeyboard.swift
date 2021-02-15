@@ -246,7 +246,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							}
 						}) {
 							localizedLabelView(viewModel.interruptKeyMapping)
-						}.asMacTermKeypadKeyRectCompact()
+						}.asMacTermKeypadKeyRectCompact(selected: viewModel.isKeypadBindingToInterruptKey)
 							.macTermToolTipText("Click this to show the “Control Keys” palette, then choose a new key from the palette to bind the setting.")
 						if viewModel.isKeypadBindingToInterruptKey {
 							if #available(macOS 11.0, *) {
@@ -274,7 +274,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							}
 						}) {
 							localizedLabelView(viewModel.suspendKeyMapping)
-						}.asMacTermKeypadKeyRectCompact()
+						}.asMacTermKeypadKeyRectCompact(selected: viewModel.isKeypadBindingToSuspendKey)
 							.macTermToolTipText("Click this to show the “Control Keys” palette, then choose a new key from the palette to bind the setting.")
 						if viewModel.isKeypadBindingToSuspendKey {
 							if #available(macOS 11.0, *) {
@@ -302,7 +302,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							}
 						}) {
 							localizedLabelView(viewModel.resumeKeyMapping)
-						}.asMacTermKeypadKeyRectCompact()
+						}.asMacTermKeypadKeyRectCompact(selected: viewModel.isKeypadBindingToResumeKey)
 							.macTermToolTipText("Click this to show the “Control Keys” palette, then choose a new key from the palette to bind the setting.")
 						if viewModel.isKeypadBindingToResumeKey {
 							if #available(macOS 11.0, *) {
@@ -321,7 +321,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							.fixedSize(horizontal: false, vertical: true)
 							.lineLimit(2)
 							.multilineTextAlignment(.leading)
-							.frame(maxWidth: 220)
+							.frame(maxWidth: 220, alignment: .leading)
 							.offset(x: 18, y: 0) // try to align with checkbox label
 					} else if viewModel.isKeypadBindingToSuspendKey {
 						Text("Use “Control Keys” to select a key binding for “Suspend”.")
@@ -329,7 +329,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							.fixedSize(horizontal: false, vertical: true)
 							.lineLimit(2)
 							.multilineTextAlignment(.leading)
-							.frame(maxWidth: 220)
+							.frame(maxWidth: 220, alignment: .leading)
 							.offset(x: 18, y: 0) // try to align with checkbox label
 					} else if viewModel.isKeypadBindingToResumeKey {
 						Text("Use “Control Keys” to select a key binding for “Resume”.")
@@ -337,7 +337,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							.fixedSize(horizontal: false, vertical: true)
 							.lineLimit(2)
 							.multilineTextAlignment(.leading)
-							.frame(maxWidth: 220)
+							.frame(maxWidth: 220, alignment: .leading)
 							.offset(x: 18, y: 0) // try to align with checkbox label
 					} else {
 						Text("First click a button above, then choose a replacement key from the palette.")
@@ -345,7 +345,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							.fixedSize(horizontal: false, vertical: true)
 							.lineLimit(2)
 							.multilineTextAlignment(.leading)
-							.frame(maxWidth: 220)
+							.frame(maxWidth: 220, alignment: .leading)
 							.offset(x: 18, y: 0) // try to align with checkbox label
 					}
 				}
@@ -370,7 +370,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 						localizedLabelView(.shiftOption)
 					}.pickerStyle(SegmentedPickerStyle())
 						.frame(maxWidth: 200)
-						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
+						.macTermOffsetForEmptyPickerTitle()
 						.macTermToolTipText("Whether or not to send a “meta” sequence when the specified key(s) are pressed.  Used for commands in the Emacs text editor.")
 				}
 				UICommon_Default1OptionLineView("Delete",
@@ -383,17 +383,15 @@ public struct UIPrefsSessionKeyboard_View : View {
 				UICommon_Default1OptionLineView("New Line",
 												toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "New Line Mapping",
 																								bindIsDefaultTo: $viewModel.isDefaultNewlineMapping),
-												isEditingDefault: viewModel.isEditingDefaultContext,
-												disableDefaultAlignmentGuide: true) {
+												isEditingDefault: viewModel.isEditingDefaultContext) {
 					Picker("", selection: $viewModel.selectedNewlineMapping) {
 						localizedLabelView(.mapLF)
 						localizedLabelView(.mapCR)
 						localizedLabelView(.mapCRLF)
 						localizedLabelView(.mapCRNull)
 					}.pickerStyle(PopUpButtonPickerStyle())
-						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
+						.macTermOffsetForEmptyPickerTitle()
 						.frame(minWidth: 160, maxWidth: 160)
-						.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
 						.macTermToolTipText("How to terminate lines in text (for example, Unix-like systems typically expect a LF mapping).")
 				}
 			}

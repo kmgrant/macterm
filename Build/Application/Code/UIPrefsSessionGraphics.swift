@@ -117,15 +117,13 @@ public struct UIPrefsSessionGraphics_View : View {
 			UICommon_Default1OptionLineView("TEK Graphics",
 											toggleConfig: UICommon_DefaultToggleProperties(accessibilityPrefName: "TEK Graphics",
 																							bindIsDefaultTo: $viewModel.isDefaultTEKMode),
-											isEditingDefault: viewModel.isEditingDefaultContext,
-											disableDefaultAlignmentGuide: true) {
+											isEditingDefault: viewModel.isEditingDefaultContext) {
 				Picker("", selection: $viewModel.selectedTEKMode) {
 					localizedLabelView(.disabled)
 					localizedLabelView(.TEK4014)
 					localizedLabelView(.TEK4105)
 				}.pickerStyle(RadioGroupPickerStyle())
-					.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
+					.macTermOffsetForEmptyPickerTitle()
 					.macTermToolTipText("Type of vector graphics sequences to recognize in this session.")
 			}
 			Spacer().asMacTermSectionSpacingV()

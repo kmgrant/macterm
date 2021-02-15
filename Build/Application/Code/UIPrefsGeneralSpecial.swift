@@ -137,7 +137,9 @@ public struct UIPrefsGeneralSpecial_View : View {
 		) {
 			Spacer().asMacTermSectionSpacingV()
 			UICommon_OptionLineView("Terminal Cursor", noDefaultSpacing: true) {
-				HStack {
+				HStack(
+					alignment: .firstTextBaseline
+				) {
 					Picker("", selection: $viewModel.selectedCursorShape) {
 						localizedLabelView(.block)
 						localizedLabelView(.verticalLine)
@@ -146,7 +148,7 @@ public struct UIPrefsGeneralSpecial_View : View {
 						localizedLabelView(.thickUnderscore)
 					}.pickerStyle(SegmentedPickerStyle())
 						.frame(maxWidth: 200)
-						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
+						.macTermOffsetForEmptyPickerTitle()
 						.macTermToolTipText("Select terminal cursor shape (exact size depends on terminal screen font).")
 					Toggle("Flash", isOn: $viewModel.cursorFlashEnabled)
 						.fixedSize()
@@ -164,13 +166,12 @@ public struct UIPrefsGeneralSpecial_View : View {
 				}
 				Spacer().asMacTermMinorSectionSpacingV()
 				Group {
-					UICommon_OptionLineView("Window Resize Effect", disableDefaultAlignmentGuide: true, noDefaultSpacing: true) {
+					UICommon_OptionLineView("Window Resize Effect", noDefaultSpacing: true) {
 						Picker("", selection: $viewModel.selectedWindowResizeEffect) {
 							localizedLabelView(.terminalScreenSize)
 							localizedLabelView(.textSize)
 						}.pickerStyle(RadioGroupPickerStyle())
-							.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
-							.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
+							.macTermOffsetForEmptyPickerTitle()
 							.macTermToolTipText("Select whether resizing a terminal window will adjust the font size (with same columns and rows), or adjust columns and rows (with same font size).")
 					}
 					UICommon_OptionLineView("", noDefaultSpacing: true) {
@@ -197,15 +198,14 @@ public struct UIPrefsGeneralSpecial_View : View {
 				}
 			}
 			Spacer().asMacTermMinorSectionSpacingV()
-			UICommon_OptionLineView("⌘N Key Equivalent", disableDefaultAlignmentGuide: true, noDefaultSpacing: true) {
+			UICommon_OptionLineView("⌘N Key Equivalent", noDefaultSpacing: true) {
 				Picker("", selection: $viewModel.selectedCommandNBindingType) {
 					localizedLabelView(.bindDefaultSession)
 					localizedLabelView(.bindShell)
 					localizedLabelView(.bindLogInShell)
 					localizedLabelView(.bindCustomNewSession)
 				}.pickerStyle(RadioGroupPickerStyle())
-					.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
+					.macTermOffsetForEmptyPickerTitle()
 					.macTermToolTipText("Action to perform when the ⌘N key equivalent is used (also visible in File menu).")
 			}
 			Spacer().asMacTermSectionSpacingV()

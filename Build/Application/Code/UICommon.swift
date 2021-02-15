@@ -78,7 +78,7 @@ extension VerticalAlignment {
 	// for sections, when the goal is to align a custom view with the section title text;
 	// example usage:
 	// - given VStack, first child at top could use...
-	//   .alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+	//   .alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 	// note that view helper classes below have a "disableDefaultAlignmentGuide" option
 	// to allow customizations such as the above; otherwise, by default any option view
 	// will have an alignment guide applied to encourage a nice layout by default
@@ -101,6 +101,19 @@ extension View {
 			return true
 		}
 		return false
+	}
+
+	// eliminate left-padding created by Picker for empty label
+	public func macTermOffsetForEmptyPickerTitle() -> some View {
+		offset(x: -8, y: 0)
+	}
+
+	// for scrollable List controls that appear in sections;
+	// this calls alignmentGuide() to shift the text to line up
+	// well with its section title (note: this may require the
+	// option view to use "disableDefaultAlignmentGuide")
+	public func macTermSectionAlignmentGuideList() -> some View {
+		alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + (isOS11() ? 27 : 18) })
 	}
 
 	// simplifies call to help() API (only available in macOS 11),
@@ -245,25 +258,25 @@ struct UICommon_OptionLineView <Content: View> : View {
 					.controlSize(.mini)
 					.labelsHidden()
 					.hidden()
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 					.controlSize(.mini)
 					.labelsHidden()
 					.hidden()
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 					.controlSize(.mini)
 					.labelsHidden()
 					.hidden()
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
 			Text(title).asMacTermSectionHeading()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			if disableDefaultAlignmentGuide {
 				optionView
 			} else {
 				optionView
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
 		}.withMacTermSectionLayout()
 	}
@@ -335,7 +348,7 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 				.controlSize(.mini)
 				.disabled(isEditingDefault || toggle1.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				.accessibility(label: Text(self.toggle1.accessibilityDescription()))
 				.macTermToolTipText(toggle1.toolTipText())
 			// create unused checkboxes to ensure consistent alignment if
@@ -345,20 +358,20 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 				.disabled(true)
 				.labelsHidden()
 				.hidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			Toggle(" ", isOn: $unusedDefault) // blank space helps to set vertical alignment
 				.controlSize(.mini)
 				.disabled(true)
 				.labelsHidden()
 				.hidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			Text(title).asMacTermSectionHeading()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			if disableDefaultAlignmentGuide {
 				optionView
 			} else {
 				optionView
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
 		}.withMacTermSectionLayout()
 	}
@@ -400,14 +413,14 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 				.controlSize(.mini)
 				.disabled(isEditingDefault || toggle1.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				.accessibility(label: Text(self.toggle1.accessibilityDescription()))
 				.macTermToolTipText(toggle1.toolTipText())
 			Toggle(" ", isOn: toggle2.bindIsDefaultTo)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || toggle2.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				.accessibility(label: Text(self.toggle2.accessibilityDescription()))
 				.macTermToolTipText(toggle2.toolTipText())
 			// create unused checkboxes to ensure consistent alignment if
@@ -417,14 +430,14 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 				.disabled(true)
 				.labelsHidden()
 				.hidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			Text(title).asMacTermSectionHeading()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			if disableDefaultAlignmentGuide {
 				optionView
 			} else {
 				optionView
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
 		}.withMacTermSectionLayout()
 	}
@@ -470,31 +483,31 @@ struct UICommon_Default3OptionLineView <Content: View> : View {
 				.controlSize(.mini)
 				.disabled(isEditingDefault || toggle1.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				.accessibility(label: Text(self.toggle1.accessibilityDescription()))
 				.macTermToolTipText(toggle1.toolTipText())
 			Toggle(" ", isOn: toggle2.bindIsDefaultTo)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || toggle2.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				.accessibility(label: Text(self.toggle2.accessibilityDescription()))
 				.macTermToolTipText(toggle2.toolTipText())
 			Toggle(" ", isOn: toggle3.bindIsDefaultTo)
 				.controlSize(.mini)
 				.disabled(isEditingDefault || toggle3.bindIsDefaultTo.wrappedValue)
 				.labelsHidden()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 				.accessibility(label: Text(self.toggle3.accessibilityDescription()))
 				.macTermToolTipText(toggle3.toolTipText())
 			// (all variants have space for up to 3 checkboxes so no extra padding here)
 			Text(title).asMacTermSectionHeading()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			if disableDefaultAlignmentGuide {
 				optionView
 			} else {
 				optionView
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
 		}.withMacTermSectionLayout()
 	}

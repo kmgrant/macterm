@@ -260,7 +260,7 @@ Files with generated names can coexist with previous logs in the same directory,
 						.multilineTextAlignment(.leading)
 						.disabled(isAutoCaptureDisabled())
 						.foregroundColor(isAutoCaptureDisabled() ? .gray : .primary) // default behavior of disabled() does not dim the text so do that manually
-						.frame(maxWidth: 400)
+						.frame(maxWidth: 400, alignment: .leading)
 						.padding([.leading], 16)
 				}
 			}

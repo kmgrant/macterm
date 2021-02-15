@@ -100,7 +100,6 @@ public struct UIPrefsGeneralFullScreen_View : View {
 					.fixedSize(horizontal: false, vertical: true)
 					.lineLimit(3)
 					.multilineTextAlignment(.leading)
-					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.middle] })
 					.frame(maxWidth: 400)
 			}.withMacTermSectionLayout()
 			Spacer().asMacTermSectionSpacingV()

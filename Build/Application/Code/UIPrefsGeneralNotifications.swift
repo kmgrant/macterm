@@ -134,7 +134,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 							UIPrefsGeneralNotifications_BellSoundItemView().environmentObject(item)
 						}
 					}.pickerStyle(PopUpButtonPickerStyle())
-						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
+						.macTermOffsetForEmptyPickerTitle()
 						.frame(minWidth: 160, maxWidth: 160)
 						.macTermToolTipText("The sound to play when a terminal bell occurs.")
 				}
@@ -159,7 +159,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 			}
 			Spacer().asMacTermSectionSpacingV()
 			Group {
-				UICommon_OptionLineView("When In Background", disableDefaultAlignmentGuide: true, noDefaultSpacing: true) {
+				UICommon_OptionLineView("When In Background", noDefaultSpacing: true) {
 					Picker("", selection: $viewModel.backgroundNotificationAction) {
 						// TBD: how to insert dividing-line in this type of menu?
 						localizedLabelView(.doNothing)
@@ -167,8 +167,7 @@ public struct UIPrefsGeneralNotifications_View : View {
 						localizedLabelView(.markDockIconAndBounceOnce)
 						localizedLabelView(.markDockIconAndBounceRepeatedly)
 					}.pickerStyle(RadioGroupPickerStyle())
-						.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
-						.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.top] + 8 }) // TEMPORARY; try to find a nicer way to do this (top-align both)
+						.macTermOffsetForEmptyPickerTitle()
 						.macTermToolTipText("How to respond to notifications when MacTerm is not the active application.")
 				}
 			}

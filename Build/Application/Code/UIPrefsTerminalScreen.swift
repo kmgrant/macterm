@@ -194,7 +194,7 @@ public struct UIPrefsTerminalScreen_View : View {
 					localizedLabelView(.unlimited)
 					localizedLabelView(.distributed)
 				}.pickerStyle(PopUpButtonPickerStyle())
-					.offset(x: -8, y: 0) // TEMPORARY; to eliminate left-padding created by Picker for empty label
+					.macTermOffsetForEmptyPickerTitle()
 					.frame(minWidth: 160, maxWidth: 160)
 					.macTermToolTipText("How to manage text that has scrolled off the top of the terminal screen.")
 			}
