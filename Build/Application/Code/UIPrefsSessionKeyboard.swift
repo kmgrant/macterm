@@ -246,7 +246,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							}
 						}) {
 							localizedLabelView(viewModel.interruptKeyMapping)
-						}.asMacTermKeypadKeyRectCompact()
+						}.asMacTermKeypadKeyRectCompact(selected: viewModel.isKeypadBindingToInterruptKey)
 							.macTermToolTipText("Click this to show the “Control Keys” palette, then choose a new key from the palette to bind the setting.")
 						if viewModel.isKeypadBindingToInterruptKey {
 							if #available(macOS 11.0, *) {
@@ -274,7 +274,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							}
 						}) {
 							localizedLabelView(viewModel.suspendKeyMapping)
-						}.asMacTermKeypadKeyRectCompact()
+						}.asMacTermKeypadKeyRectCompact(selected: viewModel.isKeypadBindingToSuspendKey)
 							.macTermToolTipText("Click this to show the “Control Keys” palette, then choose a new key from the palette to bind the setting.")
 						if viewModel.isKeypadBindingToSuspendKey {
 							if #available(macOS 11.0, *) {
@@ -302,7 +302,7 @@ public struct UIPrefsSessionKeyboard_View : View {
 							}
 						}) {
 							localizedLabelView(viewModel.resumeKeyMapping)
-						}.asMacTermKeypadKeyRectCompact()
+						}.asMacTermKeypadKeyRectCompact(selected: viewModel.isKeypadBindingToResumeKey)
 							.macTermToolTipText("Click this to show the “Control Keys” palette, then choose a new key from the palette to bind the setting.")
 						if viewModel.isKeypadBindingToResumeKey {
 							if #available(macOS 11.0, *) {

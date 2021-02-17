@@ -35,6 +35,12 @@ import SwiftUI
 //
 
 extension Button {
+	// compact key button that fits its text label, even if it is long
+	public func asMacTermKeypadKeyCompactTitleExactWidth(_ width: CGFloat, selected: Bool = false) -> some View {
+		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 12, narrowWidth: false, narrowHeight: true, compact: true, exactWidth: width, selected: selected)
+		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
+			.buttonStyle(styleObject)
+	}
 	// set specific dimensions for square keypad keys
 	public func asMacTermKeypadKeySquare() -> some View {
 		let styleObject = UIKeypads_KeyButtonStyle()
@@ -55,19 +61,19 @@ extension Button {
 	}
 	// horizontal key button (e.g. keypad “0”)
 	public func asMacTermKeypadKeyRect2HLargeFont() -> some View {
-		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 20, narrowWidth: false, narrowHeight: true)
+		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 20, narrowWidth: false, narrowHeight: true, selected: false)
 		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
 			.buttonStyle(styleObject)
 	}
 	// vertical key button (e.g. keypad “Enter”)
 	public func asMacTermKeypadKeyRect2VLargeFont() -> some View {
-		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 20, narrowWidth: true, narrowHeight: false)
+		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 20, narrowWidth: true, narrowHeight: false, selected: false)
 		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
 			.buttonStyle(styleObject)
 	}
 	// compact key button (e.g. interrupt/suspend/resume settings)
-	public func asMacTermKeypadKeyRectCompact() -> some View {
-		let styleObject = UIKeypads_KeyButtonStyle(narrowWidth: false, narrowHeight: true, compact: true)
+	public func asMacTermKeypadKeyRectCompact(selected: Bool = false) -> some View {
+		let styleObject = UIKeypads_KeyButtonStyle(fontSize: 12, narrowWidth: false, narrowHeight: true, compact: true, selected: selected)
 		return frame(minWidth: styleObject.width, maxWidth: styleObject.width, minHeight: styleObject.height, maxHeight: styleObject.height)
 			.buttonStyle(styleObject)
 	}
@@ -253,28 +259,34 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 	public var fontSize: CGFloat
 	public var width: CGFloat
 	public var height: CGFloat
+	public var selected: Bool
 
 	init() {
-		self.init(fontSize: 14, narrowWidth: true, narrowHeight: true, compact: false)
+		self.init(fontSize: 14, narrowWidth: true, narrowHeight: true, compact: false, selected: false)
 	}
 
 	init(fontSize: CGFloat) {
-		self.init(fontSize: fontSize, narrowWidth: true, narrowHeight: true, compact: false)
+		self.init(fontSize: fontSize, narrowWidth: true, narrowHeight: true, compact: false, selected: false)
 	}
 
 	init(narrowWidth: Bool, narrowHeight: Bool, compact: Bool = false) {
 		self.init(fontSize: 12, narrowWidth: narrowWidth, narrowHeight: narrowHeight,
-					compact: compact)
+					compact: compact, selected: false)
 	}
 
-	init(fontSize: CGFloat, narrowWidth: Bool, narrowHeight: Bool, compact: Bool = false) {
+	init(fontSize: CGFloat, narrowWidth: Bool, narrowHeight: Bool, compact: Bool = false, exactWidth: CGFloat = 0.0, selected: Bool) {
 		self.fontSize = fontSize
-		self.width = narrowWidth ? (compact ? 24 : 36) : (compact ? 64 : 81)
+		if exactWidth > 0.0 {
+			self.width = exactWidth
+		} else {
+			self.width = narrowWidth ? (compact ? 24 : 36) : (compact ? 64 : 81)
+		}
 		self.height = narrowHeight ? (compact ? 24 : 36) : (compact ? 63 : 82)
+		self.selected = selected
 	}
 
 	func makeBody(configuration: Self.Configuration) -> some View {
-		UIKeypads_KeyButton(configuration: configuration, fontSize: fontSize, width: width, height: height)
+		UIKeypads_KeyButton(configuration: configuration, fontSize: fontSize, width: width, height: height, selected: selected)
 	}
 
 	private struct UIKeypads_KeyButton : View {
@@ -286,6 +298,7 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 		let fontSize: CGFloat
 		let width: CGFloat
 		let height: CGFloat
+		let selected: Bool
 
 		var body: some View {
 			// make a button that looks like a keyboard key, and handle all modes (Dark/Light)
@@ -293,27 +306,44 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 			let drawAsDark = (colorScheme == .dark)
 			let drawAsEnabled = (viewEnabled == true)
 			let drawAsPressed = (configuration.isPressed == true)
+			let drawAsSelected = (selected == true)
 			let borderColor = drawAsDark
 								? (drawAsEnabled
-									? (drawAsPressed
-										? Color(red: 0.8, green: 0.8, blue: 0.8)
-										: Color(red: 0.5, green: 0.5, blue: 0.5))
+									? (drawAsSelected
+										? (drawAsPressed
+											? Color(red: 0.8, green: 0.8, blue: 0.8)
+											: Color(red: 1.0, green: 1.0, blue: 1.0))
+										: (drawAsPressed
+											? Color(red: 0.8, green: 0.8, blue: 0.8)
+											: Color(red: 0.5, green: 0.5, blue: 0.5)))
 									: Color(red: 0.4, green: 0.4, blue: 0.4))
 								: (drawAsEnabled
-									? (drawAsPressed
-										? Color(red: 0.5, green: 0.5, blue: 0.5)
-										: Color(red: 0.6, green: 0.6, blue: 0.6))
+									? (drawAsSelected
+										? (drawAsPressed
+											? Color(red: 0.3, green: 0.3, blue: 0.3)
+											: Color(red: 0.4, green: 0.4, blue: 0.4))
+										: (drawAsPressed
+											? Color(red: 0.5, green: 0.5, blue: 0.5)
+											: Color(red: 0.6, green: 0.6, blue: 0.6)))
 									: Color(red: 0.7, green: 0.7, blue: 0.7))
 			let textColor = drawAsDark
 							? (drawAsEnabled
-								? (drawAsPressed
-									? Color(red: 0.9, green: 0.9, blue: 0.9)
-									: Color(red: 0.8, green: 0.8, blue: 0.8))
+								? (drawAsSelected
+									? (drawAsPressed
+										? Color(red: 0.8, green: 0.8, blue: 0.8)
+										: Color(red: 1.0, green: 1.0, blue: 1.0))
+									: (drawAsPressed
+										? Color(red: 0.9, green: 0.9, blue: 0.9)
+										: Color(red: 0.8, green: 0.8, blue: 0.8)))
 								: Color(red: 0.4, green: 0.4, blue: 0.4))
 							: (drawAsEnabled
-								? (drawAsPressed
-									? Color(red: 0.0, green: 0.0, blue: 0.0)
-									: Color(red: 0.2, green: 0.2, blue: 0.2))
+								? (drawAsSelected
+									? (drawAsPressed
+										? Color(red: 0.0, green: 0.0, blue: 0.0)
+										: Color(red: 0.2, green: 0.2, blue: 0.2))
+									: (drawAsPressed
+										? Color(red: 0.0, green: 0.0, blue: 0.0)
+										: Color(red: 0.2, green: 0.2, blue: 0.2)))
 								: Color(red: 0.7, green: 0.7, blue: 0.7))
 			let buttonGradientLightNormal = Gradient(stops: [
 					Gradient.Stop(color: Color(red: 0.97, green: 0.97, blue: 0.97), location: 0.0),
@@ -333,13 +363,25 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 					Gradient.Stop(color: Color(red: 0.6, green: 0.6, blue: 0.6), location: 0.2),
 					Gradient.Stop(color: Color(red: 0.5, green: 0.5, blue: 0.5), location: 0.95)
 				])
+			let buttonGradientLightSelected = Gradient(stops: [
+					Gradient.Stop(color: Color(red: 0.77, green: 0.77, blue: 0.77), location: 0.0),
+					Gradient.Stop(color: Color(red: 0.79, green: 0.79, blue: 0.79), location: 0.2),
+					Gradient.Stop(color: Color(red: 0.65, green: 0.65, blue: 0.65), location: 1.0)
+				])
+			let buttonGradientDarkSelected = Gradient(stops: [
+					Gradient.Stop(color: Color.accentColor, location: 0.0),
+					Gradient.Stop(color: Color.accentColor, location: 0.2),
+					Gradient.Stop(color: Color.accentColor, location: 0.95)
+				])
 			let buttonGradientLightDisabled = Gradient(stops: [
-					Gradient.Stop(color: Color(red: 0.8, green: 0.8, blue: 0.8), location: 0.2)
+					Gradient.Stop(color: Color(red: 0.95, green: 0.95, blue: 0.95), location: 0.2)
 				])
 			let buttonGradientDarkDisabled = Gradient(stops: [
 					Gradient.Stop(color: Color(red: 0.2, green: 0.2, blue: 0.2), location: 0.2)
 				])
-			let buttonGradientNormal = drawAsDark ? buttonGradientDarkNormal : buttonGradientLightNormal
+			let buttonGradientNormal = drawAsSelected
+										? (drawAsDark ? buttonGradientDarkSelected : buttonGradientLightSelected)
+										: (drawAsDark ? buttonGradientDarkNormal : buttonGradientLightNormal)
 			let buttonGradientPressed = drawAsDark ? buttonGradientDarkPressed : buttonGradientLightPressed
 			let buttonGradientDisabled = drawAsDark ? buttonGradientDarkDisabled : buttonGradientLightDisabled
 			let buttonEnabledBackground = LinearGradient(gradient: drawAsPressed ? buttonGradientPressed : buttonGradientNormal,
@@ -351,21 +393,21 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 			return configuration.label
 				.frame(minWidth: self.width, maxWidth: self.width,
 						minHeight: self.height, maxHeight: self.height)
-				.animation(.spring())
+				.animation(drawAsSelected ? nil : .spring())
 				.background(
 					ZStack {
 						RoundedRectangle(cornerRadius: 3.5, style: .continuous)
 							.inset(by: 0)
 							.fill(drawAsEnabled ? buttonEnabledBackground : buttonDisabledBackground)
 						RoundedRectangle(cornerRadius: 3, style: .continuous)
-							.stroke(borderColor, lineWidth: 1)
+							.stroke(borderColor, lineWidth: drawAsSelected ? (drawAsDark ? 4 : 3) : 1)
 							.blendMode(.normal)
 					}
 				)
-				.focusable(drawAsEnabled) // TEMPORARY; note, this appears to create correct focus ring but space-bar activation does nothing (SwiftUI 1.0 bug?); revisit in next SDK 
-				.font(.system(size: fontSize, weight: .bold, design: .default))
+				.focusable(drawAsEnabled) // TEMPORARY; note, this appears to create correct focus ring but space-bar activation does nothing (SwiftUI 1.0 bug?); revisit in next SDK
+				.font(.system(size: fontSize, weight: drawAsSelected ? ((fontSize > 11) ? .heavy : .semibold) : .semibold, design: .default))
 				.foregroundColor(textColor)
-				.scaleEffect(drawAsPressed ? 0.95 : 1)
+				.scaleEffect(drawAsPressed ? 0.98 : 1)
 		}
 	}
 
