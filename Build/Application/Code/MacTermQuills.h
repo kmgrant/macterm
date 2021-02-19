@@ -43,6 +43,78 @@ typedef CF_CLOSED_ENUM(SInt16, AlertMessages_NotificationType)
 };
 
 /*!
+Possible ways for macros to interpret their content and act on it. 
+*/
+typedef CF_CLOSED_ENUM(UInt32, MacroManager_Action)
+{
+	kMacroManager_ActionSendTextVerbatim			= 'MAEV',	//!< macro content is a string to send as-is (no
+																//!  metacharacters allowed)
+	kMacroManager_ActionSendTextProcessingEscapes	= 'MAET',	//!< macro content is a string to send (perhaps
+																//!  with metacharacters to be substituted)
+	kMacroManager_ActionHandleURL					= 'MAOU',	//!< macro content is a URL to be opened
+	kMacroManager_ActionNewWindowWithCommand		= 'MANW',	//!< macro content is a Unix command line to be
+																//!  executed in a new terminal window
+	kMacroManager_ActionSelectMatchingWindow		= 'MASW',	//!< macro content is a string to use as a search
+																//!  key against the titles of open windows; the
+																//!  next window with a matching title is activated
+	kMacroManager_ActionFindTextVerbatim			= 'MAFV',	//!< macro content is a string to send as-is (no
+																//!  metacharacters allowed)
+	kMacroManager_ActionFindTextProcessingEscapes	= 'MAFS'	//!< macro content is a string to send (perhaps
+																//!  with metacharacters to be substituted)
+};
+
+/*!
+Predefined virtual keys that are selectable in Preferences
+(additional key bindings are implied by using an “ordinary
+key” selection and additional characters). 
+*/
+typedef CF_CLOSED_ENUM(UInt32, MacroManager_KeyBinding)
+{
+	kMacroManager_KeyBindingOrdinaryCharacter	= 0,	//!< additional character(s) required to define fully (e.g. binding is a letter key)
+	kMacroManager_KeyBindingBackwardDelete		= 1,	//!< backward delete (⌫) key
+	kMacroManager_KeyBindingForwardDelete		= 2,	//!< forward delete (⌦) key
+	kMacroManager_KeyBindingHome				= 3,	//!< home key
+	kMacroManager_KeyBindingEnd					= 4,	//!< end key
+	kMacroManager_KeyBindingPageUp				= 5,	//!< page up key
+	kMacroManager_KeyBindingPageDown			= 6,	//!< page down key
+	kMacroManager_KeyBindingUpArrow				= 7,	//!< up arrow key
+	kMacroManager_KeyBindingDownArrow			= 8,	//!< down arrow key
+	kMacroManager_KeyBindingLeftArrow			= 9,	//!< left arrow key
+	kMacroManager_KeyBindingRightArrow			= 10,	//!< right arrow key
+	kMacroManager_KeyBindingClear				= 11,	//!< clear (⌧) key
+	kMacroManager_KeyBindingEscape				= 12,	//!< escape key
+	kMacroManager_KeyBindingReturn				= 13,	//!< return key
+	kMacroManager_KeyBindingEnter				= 14,	//!< enter key
+	kMacroManager_KeyBindingFunctionKeyF1		= 15,	//!< F1
+	kMacroManager_KeyBindingFunctionKeyF2		= 16,	//!< F2
+	kMacroManager_KeyBindingFunctionKeyF3		= 17,	//!< F3
+	kMacroManager_KeyBindingFunctionKeyF4		= 18,	//!< F4
+	kMacroManager_KeyBindingFunctionKeyF5		= 19,	//!< F5
+	kMacroManager_KeyBindingFunctionKeyF6		= 20,	//!< F6
+	kMacroManager_KeyBindingFunctionKeyF7		= 21,	//!< F7
+	kMacroManager_KeyBindingFunctionKeyF8		= 22,	//!< F8
+	kMacroManager_KeyBindingFunctionKeyF9		= 23,	//!< F9
+	kMacroManager_KeyBindingFunctionKeyF10		= 24,	//!< F10
+	kMacroManager_KeyBindingFunctionKeyF11		= 25,	//!< F11
+	kMacroManager_KeyBindingFunctionKeyF12		= 26,	//!< F12
+	kMacroManager_KeyBindingFunctionKeyF13		= 27,	//!< F13
+	kMacroManager_KeyBindingFunctionKeyF14		= 28,	//!< F14
+	kMacroManager_KeyBindingFunctionKeyF15		= 29,	//!< F15 
+	kMacroManager_KeyBindingFunctionKeyF16		= 30	//!< F16
+};
+
+/*!
+Modifier keys that are supported by macros.
+*/
+typedef CF_OPTIONS(UInt32, MacroManager_ModifierKeyMask)
+{
+	kMacroManager_ModifierKeyMaskCommand	= (1 << 0),		//!< command key (⌘)
+	kMacroManager_ModifierKeyMaskControl	= (1 << 1),		//!< control key (⌃)
+	kMacroManager_ModifierKeyMaskOption		= (1 << 2),		//!< option key (⌥)
+	kMacroManager_ModifierKeyMaskShift		= (1 << 3)		//!< shift key (⇧)
+};
+
+/*!
 Possible mappings to simulate a meta key on a Mac keyboard
 (useful for the Emacs text editor).
 */

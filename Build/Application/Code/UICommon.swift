@@ -226,16 +226,22 @@ struct UICommon_OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
 	private var disableDefaultAlignmentGuide = false
+	private var isSmallMultilineTitle = false
 	private var noDefaultSpacing = false
 	let optionView: Content
 	var title = ""
 
 	// variant with title and content
-	init(_ aTitle: String, disableDefaultAlignmentGuide: Bool = false, noDefaultSpacing: Bool = false, @ViewBuilder content: () -> Content) {
+	init(_ aTitle: String, isSmallMultilineTitle: Bool = false, disableDefaultAlignmentGuide: Bool = false, noDefaultSpacing: Bool = false, @ViewBuilder content: () -> Content) {
+		self.isSmallMultilineTitle = isSmallMultilineTitle
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
 		} else {
-			self.title = aTitle + ":"
+			if isSmallMultilineTitle {
+				self.title = aTitle
+			} else {
+				self.title = aTitle + ":"
+			}
 		}
 		self.disableDefaultAlignmentGuide = disableDefaultAlignmentGuide
 		self.noDefaultSpacing = noDefaultSpacing
@@ -270,8 +276,19 @@ struct UICommon_OptionLineView <Content: View> : View {
 					.hidden()
 					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
-			Text(title).asMacTermSectionHeading()
-				.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
+			if isSmallMultilineTitle {
+				Text(title)
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
+					.controlSize(.small)
+					.fixedSize(horizontal: false, vertical: true)
+					.lineLimit(10)
+					.multilineTextAlignment(.leading)
+					.padding(0)
+					.frame(width: 160, alignment: .leading)
+			} else {
+				Text(title).asMacTermSectionHeading()
+					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
+			}
 			if disableDefaultAlignmentGuide {
 				optionView
 			} else {

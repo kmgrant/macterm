@@ -69,6 +69,7 @@ class NSMenuItem;
 #include <ResultCode.template.h>
 
 // application includes
+#include <MacTermQuills/MacTermQuills.h> // for MacroManager_Action and other enums used by SwiftUI
 #include "Preferences.h"
 #include "SessionRef.typedef.h"
 
@@ -84,46 +85,13 @@ MacroManager_Result const	kMacroManager_ResultOK(0);					//!< no error
 MacroManager_Result const	kMacroManager_ResultGenericFailure(1);		//!< unspecified error occurred
 
 /*!
-Possible ways for macros to interpret their content and act on it. 
-*/
-enum MacroManager_Action
-{
-	kMacroManager_ActionSendTextVerbatim			= 'MAEV',	//!< macro content is a string to send as-is (no
-																//!  metacharacters allowed)
-	kMacroManager_ActionSendTextProcessingEscapes	= 'MAET',	//!< macro content is a string to send (perhaps
-																//!  with metacharacters to be substituted)
-	kMacroManager_ActionHandleURL					= 'MAOU',	//!< macro content is a URL to be opened
-	kMacroManager_ActionNewWindowWithCommand		= 'MANW',	//!< macro content is a Unix command line to be
-																//!  executed in a new terminal window
-	kMacroManager_ActionSelectMatchingWindow		= 'MASW',	//!< macro content is a string to use as a search
-																//!  key against the titles of open windows; the
-																//!  next window with a matching title is activated
-	kMacroManager_ActionFindTextVerbatim			= 'MAFV',	//!< macro content is a string to send as-is (no
-																//!  metacharacters allowed)
-	kMacroManager_ActionFindTextProcessingEscapes	= 'MAFS'	//!< macro content is a string to send (perhaps
-																//!  with metacharacters to be substituted)
-};
-
-/*!
 Used with MacroManager_StartMonitoring() and MacroManager_StopMonitoring()
 to be notified of important changes.
 */
 enum MacroManager_Change
 {
-	kMacroManager_ChangeMacroSetFrom				= 'MMSF',	//!< macro set is about to change (context: old MacroManager_ReturnCurrentMacros())
-	kMacroManager_ChangeMacroSetTo					= 'MMST',	//!< macro set has now changed (context: new MacroManager_ReturnCurrentMacros())
-};
-
-/*!
-Modifier keys that are supported by macros.
-*/
-typedef UInt32 MacroManager_ModifierKeyMask;
-enum
-{
-	kMacroManager_ModifierKeyMaskCommand	= (1 << 0),		//!< command key (⌘)
-	kMacroManager_ModifierKeyMaskControl	= (1 << 1),		//!< control key (⌃)
-	kMacroManager_ModifierKeyMaskOption		= (1 << 2),		//!< option key (⌥)
-	kMacroManager_ModifierKeyMaskShift		= (1 << 3)		//!< shift key (⇧)
+	kMacroManager_ChangeMacroSetFrom	= 'MMSF',	//!< macro set is about to change (context: old MacroManager_ReturnCurrentMacros())
+	kMacroManager_ChangeMacroSetTo		= 'MMST',	//!< macro set has now changed (context: new MacroManager_ReturnCurrentMacros())
 };
 
 UInt16 const kMacroManager_MaximumMacroSetSize = 12;	//!< TEMPORARY: arbitrary upper limit on macro set length, for simplicity in other code

@@ -10923,7 +10923,12 @@ virtualKeyParseName	(CFStringRef	inName,
 	Boolean		result = true;
 	
 	
-	if (1 == CFStringGetLength(inName))
+	if (0 == CFStringGetLength(inName))
+	{
+		outCharacterOrKeyCode = 0;
+		outIsVirtualKey = false;
+	}
+	else if (1 == CFStringGetLength(inName))
 	{
 		outCharacterOrKeyCode = STATIC_CAST(CFStringGetCharacterAtIndex(inName, 0), UInt16);
 		outIsVirtualKey = false;

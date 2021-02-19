@@ -46,6 +46,7 @@
 		0A6C44671D84A7E500E1B0E2 /* ChildProcessWC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A6C44661D84A7E500E1B0E2 /* ChildProcessWC.mm */; };
 		0A70B8AD1079C33B0013E76F /* PythonMain.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A70B8AC1079C33B0013E76F /* PythonMain.cp */; };
 		0A7DB82A1FAC2293007505E0 /* SixelDecoder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */; };
+		0A80AE1F25D2430500A6ECD9 /* UIPrefsMacroEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A80AE1E25D2430500A6ECD9 /* UIPrefsMacroEditor.swift */; };
 		0A82D1602555E2FC00950356 /* UIPrefsWorkspaceOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D15F2555E2FC00950356 /* UIPrefsWorkspaceOptions.swift */; };
 		0A82D16A2557159C00950356 /* UIPrefsGeneralOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */; };
 		0A82D1742557443C00950356 /* UIPrefsGeneralFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82D1732557443C00950356 /* UIPrefsGeneralFullScreen.swift */; };
@@ -364,6 +365,7 @@
 		0A7B831E19D66751000A4240 /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Production.xcconfig; path = Shared/Production.xcconfig; sourceTree = "<group>"; };
 		0A7DB8291FAC2293007505E0 /* SixelDecoder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SixelDecoder.cp; path = Application/Code/SixelDecoder.cp; sourceTree = "<group>"; };
 		0A7DB82B1FAC229E007505E0 /* SixelDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SixelDecoder.h; path = Application/Code/SixelDecoder.h; sourceTree = "<group>"; };
+		0A80AE1E25D2430500A6ECD9 /* UIPrefsMacroEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsMacroEditor.swift; path = Application/Code/UIPrefsMacroEditor.swift; sourceTree = "<group>"; };
 		0A82D15F2555E2FC00950356 /* UIPrefsWorkspaceOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsWorkspaceOptions.swift; path = Application/Code/UIPrefsWorkspaceOptions.swift; sourceTree = "<group>"; };
 		0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsGeneralOptions.swift; path = Application/Code/UIPrefsGeneralOptions.swift; sourceTree = "<group>"; };
 		0A82D1732557443C00950356 /* UIPrefsGeneralFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIPrefsGeneralFullScreen.swift; path = Application/Code/UIPrefsGeneralFullScreen.swift; sourceTree = "<group>"; };
@@ -639,6 +641,7 @@
 				0A82D17D2557565700950356 /* UIPrefsGeneralNotifications.swift */,
 				0A82D1692557159C00950356 /* UIPrefsGeneralOptions.swift */,
 				0AC3C56E2571680700E5DB94 /* UIPrefsGeneralSpecial.swift */,
+				0A80AE1E25D2430500A6ECD9 /* UIPrefsMacroEditor.swift */,
 				0AFC024E2581350D00F0D1B7 /* UIPrefsSessionDataFlow.swift */,
 				0A858C692575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift */,
 				0AC3C5542570ACA900E5DB94 /* UIPrefsSessionGraphics.swift */,
@@ -1240,6 +1243,7 @@
 				0A0777411DCBC815004C9F78 /* TouchBar.mm in Sources */,
 				0AC6BB480A8C0BA100AFF37A /* Clipboard.mm in Sources */,
 				0AC6BB490A8C0BA100AFF37A /* AlertMessages.mm in Sources */,
+				0A80AE1F25D2430500A6ECD9 /* UIPrefsMacroEditor.swift in Sources */,
 				0AC6BB4B0A8C0BA100AFF37A /* Terminal.mm in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.mm in Sources */,

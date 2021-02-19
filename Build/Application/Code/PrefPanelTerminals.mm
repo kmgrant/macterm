@@ -469,8 +469,8 @@ returnPreferenceForUIEnum:(UIPrefsTerminalEmulation_BaseEmulatorType)	aUIEnum
 
 
 /*!
-Translate from UI-specified base emulator type constant to
-the equivalent constant stored in Preferences.
+Translate an emulator constant read from Preferences to the
+equivalent constant in the UI.
 
 TEMPORARY; this is primarily needed because it is tricky to
 expose certain Objective-C types in Swift.  If those can be
