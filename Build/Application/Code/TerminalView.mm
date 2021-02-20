@@ -2157,7 +2157,7 @@ TerminalView_ReturnSelectedImageArrayCopy	(TerminalViewRef	inView)
 {
     My_TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	NSMutableArray*				mutableArray = [[NSMutableArray alloc] init];
-	CFArrayRef					result = BRIDGE_CAST(mutableArray, CFArrayRef);
+	CFArrayRef					result = BRIDGE_CAST_CFRETAIN(mutableArray, CFArrayRef);
 	
 	
 	getImagesInVirtualRange(viewPtr, viewPtr->text.selection.range, mutableArray);
