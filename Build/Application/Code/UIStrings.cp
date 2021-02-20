@@ -745,9 +745,14 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuFullScreenExit"));
 		break;
 	
-	case kUIStrings_ContextualMenuGroupTitleMacros:
+	case kUIStrings_ContextualMenuGroupTitleClipboardMacros:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros Using Copied Text:"), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuGroupTitleClipboardMacros"));
+		break;
+	
+	case kUIStrings_ContextualMenuGroupTitleSelectionMacros:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros Using Selected Text:"), CFSTR("ContextualMenus"),
-													CFSTR("kUIStrings_ContextualMenuGroupTitleMacros"));
+													CFSTR("kUIStrings_ContextualMenuGroupTitleSelectionMacros"));
 		break;
 	
 	case kUIStrings_ContextualMenuHideThisWindow:

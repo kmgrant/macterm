@@ -24,6 +24,9 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20210220',
+    '20210207',
+    '20210123',
     '20210101',
     '20201208',
     '20201130',
@@ -610,6 +613,18 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20210220': [
+        'Macros that support substitution now expand "\|" into the number of terminal columns.  (Note, as before, "\#" expands into the number of lines.)',
+        'Macros that support substitution now expand "\." into Clipboard text, as if Paste had been used at that point, where each line except the last is followed by the current session’s new-line sequence.  Note that this works even in macros that do not send text so it is actually more flexible than using Paste.',
+        'Macros that support substitution now expand "\:" into Clipboard text, as if Paste had been used at that point, where each line is joined together and no new-line sequences are used.',
+        'Contextual menus will now automatically display any named macro with an Action of some "with Substitutions" type if it uses any of the new Clipboard sequences above ("\.", "\:") and there is currently text on the Clipboard.',
+    ],
+    '20210207': [
+        'Event handlers can now be enabled or disabled with a Notifications toolbar item (bell icon).  For example, you can enable “Notify on Next Activity” this way.',
+    ],
+    '20210123': [
+        'Fixed process notification on window resize.',
+    ],
     '20210101': [
         'Builds are now dual-architecture, supporting both older Macs and Apple Silicon Macs.',
     ],
@@ -1638,7 +1653,7 @@ notes_by_version = {
     '20110104': [
         'Fixed a problem where it was too hard to select text or otherwise use the mouse when close to the edge of a terminal.',
         'Fixed text display when inserting in the middle of a line.',
-        'Fixed Paste to convert newline characters (^J) into carriage returns (^M), to avoid confusing some programs.',
+        'Fixed Paste to convert new-line characters (^J) into carriage returns (^M), to avoid confusing some programs.',
     ],
     '20110101': [
         'Fixed a problem where floating windows could not transfer keyboard focus back to terminal windows that were clicked.',

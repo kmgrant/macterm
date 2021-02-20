@@ -244,8 +244,12 @@ that was successfully converted.  This includes any data that
 might be converted into text, such as converting a file or
 directory into an escaped file system path.
 
+Multi-line text returns a separate item in the array for
+each line (the caller can then choose how to process these
+lines, e.g. by inserting new-lines or joining them).
+
 When there is more than one item on the pasteboard, all the
-items are returned as separate strings.
+items are also separated.
 
 When successful (returning true), the "outCFStringCFArray"
 will be defined and you must call CFRelease() on it when

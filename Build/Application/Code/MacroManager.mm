@@ -59,6 +59,7 @@
 #import <StringUtilities.h>
 
 // application includes
+#import "Clipboard.h"
 #import "ConstantsRegistry.h"
 #import "FindDialog.h"
 #import "Network.h"
@@ -144,6 +145,76 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 												: nullptr;
 	
 	
+	if ((nullptr != activeTerminalView) &&
+		[[NSPasteboard generalPasteboard] canReadItemWithDataConformingToTypes:@[BRIDGE_CAST(kUTTypePlainText, NSString*)]])
+	{
+		Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
+												? gCurrentMacroSet()
+												: inMacroSetOrNullForActiveSet;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		MacroManager_Action		actionType = kMacroManager_ActionSendTextVerbatim;
+		CFStringRef				contentsCFString = nullptr;
+		CFStringRef				nameCFString = nullptr;
+		CFStringRef				groupTitleCFString = nullptr;
+		NSMenuItem*				newItem = nil;
+		SEL						macroInvokerSelector = @selector(performActionForMacro:); // see Commands.pm
+		id						targetForSelector = [Commands_Executor sharedExecutor]; // TEMPORARY during Carbon transition; see Commands.h
+		
+		
+		UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_ContextualMenuGroupTitleClipboardMacros, groupTitleCFString);
+		
+		ContextSensitiveMenu_NewItemGroup(groupTitleCFString);
+		
+		// see which macros are applicable
+		for (Preferences_Index i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+		{
+			// retrieve action
+			prefsResult = Preferences_ContextGetData
+							(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
+								sizeof(actionType), &actionType, inCheckDefaults);
+			if ((kPreferences_ResultOK == prefsResult) &&
+				((kMacroManager_ActionSendTextProcessingEscapes == actionType) ||
+					(kMacroManager_ActionFindTextProcessingEscapes == actionType)))
+			{
+				// retrieve contents
+				prefsResult = Preferences_ContextGetData
+								(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
+									sizeof(contentsCFString), &contentsCFString, inCheckDefaults);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					NSString*	contentsNSString = BRIDGE_CAST(contentsCFString, NSString*);
+					
+					
+					// if the macro performs substitutions and it contains any of the
+					// sequences that deal with the Clipboard then the macro should
+					// be inserted into the contextual menu
+					if (([contentsNSString rangeOfString:@"\\."].length > 0) ||
+						([contentsNSString rangeOfString:@"\\:"].length > 0))
+					{
+						// retrieve name
+						prefsResult = Preferences_ContextGetData
+										(prefsContext, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
+											sizeof(nameCFString), &nameCFString, inCheckDefaults);
+						if (kPreferences_ResultOK == prefsResult)
+						{
+							newItem = [[NSMenuItem alloc] initWithTitle:BRIDGE_CAST(nameCFString, NSString*)
+																		action:macroInvokerSelector
+																		keyEquivalent:@""];
+							[newItem setTarget:targetForSelector];
+							[newItem setTag:i]; // IMPORTANT: selector relies on this to know which macro is being requested!!!
+							ContextSensitiveMenu_AddItem(inoutContextualMenu, newItem);
+						}
+					}
+				}
+			}
+		}
+		
+		if (nullptr != groupTitleCFString)
+		{
+			CFRelease(groupTitleCFString), groupTitleCFString = nullptr;
+		}
+	}
+	
 	if ((nullptr != activeTerminalView) && TerminalView_TextSelectionExists(activeTerminalView))
 	{
 		Preferences_ContextRef	prefsContext = (nullptr == inMacroSetOrNullForActiveSet)
@@ -159,7 +230,7 @@ MacroManager_AddContextualMenuGroup		(NSMenu*					inoutContextualMenu,
 		id						targetForSelector = [Commands_Executor sharedExecutor]; // TEMPORARY during Carbon transition; see Commands.h
 		
 		
-		UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_ContextualMenuGroupTitleMacros, groupTitleCFString);
+		UNUSED_RETURN(UIStrings_Result)UIStrings_Copy(kUIStrings_ContextualMenuGroupTitleSelectionMacros, groupTitleCFString);
 		
 		ContextSensitiveMenu_NewItemGroup(groupTitleCFString);
 		
@@ -1057,7 +1128,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 	CFStringInlineBuffer	charBuffer;
 	CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */),
 											CFRetainRelease::kAlreadyRetained);
-	__block Boolean			substitutionError = false;
+	__block UInt16			substitutionErrors = 0;
 	UniChar					octalSequenceCharCode = '\0'; // overwritten each time a \0nn is processed
 	SInt16					readOctal = -1;		// if 0, a \0 was read, and the first "n" (in \0nn) might be next;
 												// if 1, a \1 was read, and the first "n" (in \1nn) might be next;
@@ -1125,7 +1196,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 				default:
 					// ???
 					Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
-					substitutionError = true;
+					++substitutionErrors;
 					readOctal = -1; // flag error
 					break;
 				}
@@ -1166,7 +1237,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 				default:
 					// ???
 					Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
-					substitutionError = true;
+					++substitutionErrors;
 					readOctal = -1; // flag error
 					break;
 				}
@@ -1198,13 +1269,46 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 					++i; // skip special sequence character
 					break;
 				
+				case '|':
+					// number of terminal columns
+					{
+						TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(inTargetSession);
+						
+						
+						++substitutionErrors; // initially...
+						if (nullptr == kTerminalWindow)
+						{
+							Console_WriteLine("unexpected error finding the terminal window, while handling \\| sequence");
+						}
+						else
+						{
+							TerminalScreenRef const		kTerminalScreen = TerminalWindow_ReturnScreenWithFocus(kTerminalWindow);
+							
+							
+							if (nullptr == kTerminalScreen)
+							{
+								Console_WriteLine("unexpected error finding the terminal screen, while handling \\| sequence");
+							}
+							else
+							{
+								unsigned int const		kColumnCount = Terminal_ReturnColumnCount(kTerminalScreen);
+								
+								
+								CFStringAppendFormat(finalCFString.returnCFMutableStringRef(), nullptr/* options */, CFSTR("%u"), kColumnCount);
+								--substitutionErrors;
+							}
+						}
+					}
+					++i; // skip special sequence character
+					break;
+				
 				case '#':
 					// number of terminal lines
 					{
 						TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(inTargetSession);
 						
 						
-						substitutionError = true;
+						++substitutionErrors; // initially...
 						if (nullptr == kTerminalWindow)
 						{
 							Console_WriteLine("unexpected error finding the terminal window, while handling \\# sequence");
@@ -1220,15 +1324,90 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 							}
 							else
 							{
-								unsigned int const			kLineCount = Terminal_ReturnRowCount(kTerminalScreen);
-								CFRetainRelease				numberCFString(CFStringCreateWithFormat
-																			(kCFAllocatorDefault, nullptr/* options */,
-																				CFSTR("%u"), kLineCount), CFRetainRelease::kAlreadyRetained);
+								unsigned int const		kLineCount = Terminal_ReturnRowCount(kTerminalScreen);
 								
 								
-								CFStringAppend(finalCFString.returnCFMutableStringRef(), numberCFString.returnCFStringRef());
-								substitutionError = false;
+								CFStringAppendFormat(finalCFString.returnCFMutableStringRef(), nullptr/* options */, CFSTR("%u"), kLineCount);
+								--substitutionErrors;
 							}
+						}
+					}
+					++i; // skip special sequence character
+					break;
+				
+				case '.':
+				case ':':
+					// auto-Paste at this point in the macro (optionally joined into one line)
+					{
+						CFArrayRef		clipboardStringItems = nullptr;
+						
+						
+						if (Clipboard_CreateCFStringArrayFromPasteboard(clipboardStringItems))
+						{
+							if (':' == nextChar)
+							{
+								// expand Clipboard line but join into a single line
+								NSString*	joinedString = [BRIDGE_CAST(clipboardStringItems, NSArray*) componentsJoinedByString:@" "];
+								
+								
+								if (nil == joinedString)
+								{
+									++substitutionErrors;
+								}
+								else
+								{
+									CFStringAppend(finalCFString.returnCFMutableStringRef(), BRIDGE_CAST(joinedString, CFStringRef));
+								}
+							}
+							else
+							{
+								Session_EventKeys	keyConfig = Session_ReturnEventKeys(inTargetSession);
+								CFRetainRelease		workArea;
+								NSArray*			asNSArray = BRIDGE_CAST(clipboardStringItems, NSArray*);
+								
+								
+								// expand normally but use session-specified new-line sequences
+								for (NSUInteger j = 0; j < asNSArray.count; ++j)
+								{
+									id				aString = [asNSArray objectAtIndex:j];
+									assert([aString isKindOfClass:NSString.class]);
+									CFStringRef		asCFString = BRIDGE_CAST(aString, CFStringRef);
+									
+									
+									CFStringAppend(finalCFString.returnCFMutableStringRef(), asCFString);
+									if (j < (asNSArray.count - 1))
+									{
+										switch (keyConfig.newline)
+										{
+										case kSession_NewlineModeMapCR:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015"));
+											break;
+										
+										case kSession_NewlineModeMapCRLF:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\012"));
+											break;
+										
+										case kSession_NewlineModeMapCRNull:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\015\000"));
+											break;
+										
+										case kSession_NewlineModeMapLF:
+										default:
+											CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\012"));
+											break;
+										}
+									}
+								}
+							}
+							if (nullptr != clipboardStringItems)
+							{
+								CFRelease(clipboardStringItems); clipboardStringItems = nullptr;
+							}
+						}
+						else
+						{
+							// nothing on the Clipboard; skip this item
+							++substitutionErrors;
 						}
 					}
 					++i; // skip special sequence character
@@ -1313,7 +1492,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 						
 						if (nullptr == localIPAddresses)
 						{
-							substitutionError = true;
+							++substitutionErrors;
 						}
 						else
 						{
@@ -1325,7 +1504,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 								// TEMPORARY; determine if it is sensible to consider this an error
 								// (while nothing can be substituted, there was also nothing found
 								// and that may be a meaningful case)
-								substitutionError = true;
+								++substitutionErrors;
 							}
 							else if (sendSingleAddress)
 							{
@@ -1335,7 +1514,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 								
 								if (nullptr == arbitraryAddress)
 								{
-									substitutionError = true;
+									++substitutionErrors;
 								}
 								else
 								{
@@ -1390,11 +1569,11 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 							
 							if (nullptr != kTerminalView)
 							{
-								CFStringRef			selectedText = TerminalView_ReturnSelectedTextCopyAsUnicode
-																	(kTerminalView, 0/* spaces to replace with tabs */,
-																		(('s' == nextChar)
-																			? 0
-																			: kTerminalView_TextFlagInline));
+								CFStringRef		selectedText = TerminalView_ReturnSelectedTextCopyAsUnicode
+																(kTerminalView, 0/* spaces to replace with tabs */,
+																	(('s' == nextChar)
+																		? 0
+																		: kTerminalView_TextFlagInline));
 								
 								
 								if (nullptr != selectedText)
@@ -1506,7 +1685,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 				default:
 					// ???
 					Console_Warning(Console_WriteValueCharacter, "unrecognized backslash escape", STATIC_CAST(nextChar, UInt8));
-					substitutionError = true;
+					++substitutionErrors;
 					break;
 				}
 			}
@@ -1518,7 +1697,7 @@ returnStringCopyWithSubstitutions	(CFStringRef	inBaseString,
 		}
 	}
 	
-	if (false == substitutionError)
+	if (0 == substitutionErrors)
 	{
 		result = finalCFString.returnCFStringRef();
 		CFRetain(result);

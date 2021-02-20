@@ -7609,6 +7609,9 @@ populateContextualMenu	(My_TerminalViewPtr		inTerminalViewPtr,
 			CFRelease(commandText), commandText = nullptr;
 		}
 		
+		// some macros can now operate on Clipboard data; insert items as appropriate
+		MacroManager_AddContextualMenuGroup(inoutMenu, nullptr/* current macro set */, true/* search defaults */); // implicitly calls ContextSensitiveMenu_NewItemGroup() again
+		
 		// window arrangement menu items
 		ContextSensitiveMenu_NewItemGroup();
 		

@@ -4675,7 +4675,7 @@ Session_UserInputPaste	(SessionRef		inRef,
 									^{
 										// first join the text into one line (replace new-line sequences
 										// with single spaces), then Paste
-										NSString*	joinedString = [blockPendingLines componentsJoinedByString:@""];
+										NSString*	joinedString = [blockPendingLines componentsJoinedByString:@" "];
 										
 										
 										Session_UserInputCFString(inRef, BRIDGE_CAST(joinedString, CFStringRef));

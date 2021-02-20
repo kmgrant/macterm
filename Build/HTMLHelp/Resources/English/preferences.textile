@@ -481,7 +481,7 @@ The Macros menu displays macros that are currently in effect,
 It is also possible to display macros in the toolbar.  Each
  macro toolbar item is associated with an entry in the current
  macro set, and it dynamically changes.  For example, if the
- item “Macro 1” is put in the toolbar, the item will always
+ item "Macro 1" is put in the toolbar, the item will always
  activate the first macro in the current macro set and the item
  name will change with the macro.  (If a macro has no name, a
  generic icon and macro number is shown instead.)
@@ -493,12 +493,12 @@ The active set of macros is determined in three ways:
   terminal, this choice is preserved whenever you switch back
   to the same window.
 
-- If you select a “Default Macro Set” when configuring a new
+- If you select a "Default Macro Set" when configuring a new
   Session, that set will be used when the window opens (and
   whenever switching back to that window, unless you change it
   manually above).
 
-- The “Default” set of macros is consulted in any other case,
+- The "Default" set of macros is consulted in any other case,
   including shell windows.
 
 A macro can be used by typing its key equivalent (displayed in
@@ -511,8 +511,8 @@ This displays the number of macros in the set (currently fixed
  at 12), and their names.
 
 The names can be edited by clicking and hovering on them, or
- selecting an item and pressing Return.  Names are currently
- only used in the Macros menu (if enabled).
+ selecting an item and pressing Return.  Names are used in the
+ Macros menu and in macro toolbar items.
 
 h3. Selected Macro
 
@@ -554,6 +554,11 @@ Any combination of zero to four standard modifier keys that
 Modifiers are highly recommended!  Most keys are needed for
  other things by default, and shouldn't invoke macros by
  themselves.
+
+Note that if you use "Ordinary Key" and a character that
+ normally requires the ⇧ key (such as a capital letter),
+ the ⇧ modifier is implied even if it does not appear
+ selected in this section.
 
 h4. Action
 
@@ -617,6 +622,8 @@ bq. *Tip:* If you create a macro with content of "\j" (joined text
  selection) and action "Find in Local Terminal with Substitutions",
  you can use it to perform a search for any phrase you select
  with the mouse -- even if it wraps from one line to another.
+ Similarly, you can use "\:" to do this with text from the
+ Clipboard.
 
 Many substitution sequences correspond directly to the codes
  used by control keys.  For this reason, MacTerm offers an
@@ -639,20 +646,19 @@ table(deftable).
 (def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal[1]; e.g. @\177@ is delete|
 (def). |<(key). @\b@|(desc)<. backspace (equivalent to @\010@)|
 (def). |<(key). @\e@|(desc)<. escape (@^[@; equivalent to @\033@)|
-(def). |<(key). @\i@|(desc)<. dynamically substitute a network address[2] of the computer|
-(def). |<(key). @\I@|(desc)<. dynamically substitute space-separated list of all network addresses[2] of the computer|
-(def). |<(key). @\j@|(desc)<. dynamically substitute the terminal's current text selection, stripping all new-lines (to join into one line)|
+(def). |<(key). @\i@|(desc)<. substitute network address[2] of computer|
+(def). |<(key). @\I@|(desc)<. substitute space-separated list of all network addresses[2] of computer|
+(def). |<(key). @\j@|(desc)<. substitute terminal's current text selection[3], replacing all new-lines with spaces (to join into one line)|
 (def). |<(key). @\n@|(desc)<. new-line sequence for current session: either CR, CR-LF, CR-NULL or LF|
-(def). |<(key). @\q@|(desc)<. dynamically substitute the terminal's current text selection, stripping all new-lines and quoting (inserting backslashes before every space or tab)|
+(def). |<(key). @\q@|(desc)<. substitute terminal's current text selection[3], stripping all new-lines and quoting (inserting backslashes before every space or tab)|
 (def). |<(key). @\r@|(desc)<. carriage return (@^M@; equivalent to @\015@)|
-(def). |<(key). @\s@|(desc)<. dynamically substitute the terminal's current text selection, verbatim (even keeping new-lines)|
+(def). |<(key). @\s@|(desc)<. substitute terminal's current text selection[3], verbatim (even keeping new-lines)|
 (def). |<(key). @\t@|(desc)<. horizontal tab|
-(def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
+(def). |<(key). @\.@|(desc)<. substitute text from Clipboard[4] at this point, as if Paste had been used; each line (except last) is followed by new-line sequence for current session: either CR, CR-LF, CF-NULL or LF|
+(def). |<(key). @\:@|(desc)<. substitute text from Clipboard[4] at this point, replacing all new-lines with spaces (to join into one line)|
+(def). |<(key). @\|@|(desc)<. substitute number of terminal columns|
+(def). |<(key). @\#@|(desc)<. substitute number of terminal lines|
 (def). |<(key). @\"@|(desc)<. quote; allowed for legacy reasons but no longer needs escaping|
-
-If you use the @\s@, @\j@ or @\q@ sequences in a macro that has a
- name, it will *automatically appear in contextual menus* when
- text is selected in a terminal window.
 
 fn1. To see the octal versions of all ASCII characters,
  look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
@@ -669,6 +675,14 @@ fn2. Currently there is no way to choose which network address is actually
  You can use Window >> Network Addresses of This Mac to see all the IP
  addresses that your computer has and drag the desired one into a
  terminal window.
+
+fn3. If you use the @\s@, @\j@ or @\q@ sequences in a macro that has a
+ name, it will *automatically appear in contextual menus* when
+ text is selected in a terminal window.
+
+fn4. If you use the @\.@ or @\:@ sequences in a macro that has a name,
+ it will *automatically appear in contextual menus* when there is any
+ text on the Clipboard.
 
 h2(#workspaces). Workspaces
 

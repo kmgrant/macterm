@@ -188,7 +188,7 @@ table(deftable).
 (deftop). |(key). @format-favorite@|(types). _string_|
 (defbottom). |\2(desc). This Format collection is used by default when the session starts, unless the system is in Dark Mode and a dark-specific variant exists (see below).|
 (deftop). |(key). @format-favorite-dark@|(types). _string_|
-(defbottom). |\2(desc). If the system is currently in Dark Mode (macOS 10.14 “Mojave” or later), this Format collection is used by default when the session starts in place of the normal Format; also, if the system Dark Mode is enabled at a later point, this is swapped in automatically.|
+(defbottom). |\2(desc). If the system is currently in Dark Mode (macOS 10.14 or later), this Format collection is used by default when the session starts in place of the normal Format; also, if the system Dark Mode is enabled at a later point, this is swapped in automatically.|
 (deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@|
 (defbottom). |\2(desc). Using the Delete key sends this instruction (backspace or delete) to the session.|
 (deftop). |(key). @key-map-function-keys@|(types). _string_: @xterm-xfree86@, @xterm@, @rxvt@ or @vt220@|

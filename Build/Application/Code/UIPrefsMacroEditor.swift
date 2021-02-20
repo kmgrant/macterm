@@ -158,7 +158,7 @@ public struct UIPrefsMacroEditor_View : View {
 		case .findTextVerbatim:
 			result = "Initiates a search in the current terminal window using the text in the field.  Backslash (\\) sequences are NOT replaced."
 		case .handleURL:
-			result = "Opens the URL entered in the field (such as a web site or E-mail link)."
+			result = "Opens the URL entered in the field (like a web site or E-mail link)."
 		case .newWindowWithCommand:
 			result = "Opens a new terminal window, running the command line entered in the field."
 		case .selectMatchingWindow:
@@ -486,7 +486,7 @@ public struct UIPrefsMacroEditor_View : View {
 							if viewModel.isKeypadBindingToMacroContentInsertion {
 								RoundedRectangle(cornerRadius: 3).stroke()
 							}
-						}
+						}.padding([.vertical], 10)
 						ZStack(
 							alignment: .trailing
 						) {
