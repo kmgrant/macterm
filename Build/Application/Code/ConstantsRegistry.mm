@@ -44,11 +44,17 @@
 // WARNING: Various Touch Bar IDs are duplicated in the XIB that loads the
 // corresponding Touch Bar.  Currently, they are manually synchronized.
 NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDApplicationMain	= @"net.macterm.MacTerm.touchbar.application";
+NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDGenericDialog		= @"net.macterm.MacTerm.touchbar.genericdialog";
 NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDInfoWindowMain		= @"net.macterm.MacTerm.touchbar.infowindow";
 NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDPrefsWindowMain	= @"net.macterm.MacTerm.touchbar.prefswindow";
 NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDTerminalWindowMain	= @"net.macterm.MacTerm.touchbar.terminals";
 NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDVectorWindowMain	= @"net.macterm.MacTerm.touchbar.vectorwindow";
 NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFind			= @"net.macterm.MacTerm.touchbaritem.find";
 NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFullScreen		= @"net.macterm.MacTerm.touchbaritem.fullscreen";
+NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButton1	= @"net.macterm.MacTerm.touchbaritem.button1";
+NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButton2	= @"net.macterm.MacTerm.touchbaritem.button2";
+NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButton3	= @"net.macterm.MacTerm.touchbaritem.button3";
+NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButtonGroup	= @"net.macterm.MacTerm.touchbaritem.buttongroup";
+NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDHelpButton		= @"net.macterm.MacTerm.touchbaritem.helpbutton";
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

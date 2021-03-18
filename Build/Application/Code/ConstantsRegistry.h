@@ -89,12 +89,18 @@ CFStringRef const kConstantsRegistry_PrefPanelDescriptorWorkspaces			= CFSTR("ne
 //@{
 
 extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDApplicationMain;
+extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDGenericDialog;
 extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDInfoWindowMain;
 extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDPrefsWindowMain;
 extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDTerminalWindowMain;
 extern NSTouchBarCustomizationIdentifier const		kConstantsRegistry_TouchBarIDVectorWindowMain;
 extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFind;
 extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDFullScreen;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButton1;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButton2;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButton3;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDGenericButtonGroup;
+extern NSTouchBarItemIdentifier const				kConstantsRegistry_TouchBarItemIDHelpButton;
 
 //@}
 #endif

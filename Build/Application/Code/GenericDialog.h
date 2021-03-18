@@ -150,6 +150,12 @@ changes to an interface declared in a ".mm" file.
 
 // actions
 	- (IBAction)
+	performHelpButtonAction:(id _Nullable)_;
+	- (IBAction)
+	performPrimaryButtonAction:(id _Nullable)_;
+	- (IBAction)
+	performSecondButtonAction:(id _Nullable)_;
+	- (IBAction)
 	performThirdButtonAction:(id _Nullable)_;
 
 @end //}

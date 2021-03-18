@@ -140,6 +140,11 @@ Private properties.
 	//! External reference; alias for this object.
 	@property (assign) GenericDialog_Ref
 	dialogRef;
+	//! Created on demand by "makeTouchBar"; this is different
+	//! than the NSResponder "touchBar" property, which has
+	//! side effects such as archiving, etc.
+	@property (strong) NSTouchBar*
+	dynamicTouchBar;
 	//! Ideal size, taking into account actual dialog configuration.
 	@property (assign) CGSize
 	idealManagedViewSize;
@@ -1003,11 +1008,10 @@ setThirdButtonName:(NSString*)		aString
 	// for the third button, infer a suitable command key
 	if ((nil != aString) && (aString.length > 0))
 	{
-		NSString*	keyCharString = [aString substringWithRange:[aString rangeOfComposedCharacterSequenceAtIndex:0]];
+		// lowercase the “first letter” to avoid implicit shift-key binding
+		NSString*	keyCharString = [[aString substringWithRange:[aString rangeOfComposedCharacterSequenceAtIndex:0]] localizedLowercaseString];
 		
 		
-		// TEMPORARY; despite this setting, button keys do not seem
-		// to work; need to investigate why...
 		self.otherButton.keyEquivalent = keyCharString;
 		self.otherButton.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 	}
@@ -1024,6 +1028,22 @@ setThirdButtonName:(NSString*)		aString
 
 
 /*!
+Invoked when the user clicks the help button in the dialog.
+See the "helpButtonBlock" property.
+
+(2021.03)
+*/
+- (IBAction)
+performHelpButtonAction:(id)	sender
+{
+	if (self.panelHasContextualHelp)
+	{
+		[self panelViewManager:self didPerformContextSensitiveHelp:sender];
+	}
+}// performHelpButtonAction:
+
+
+/*!
 Invoked when the user clicks the first button in the dialog.
 See the "primaryButtonName" property.
 
@@ -1033,7 +1053,7 @@ See the "primaryButtonName" property.
 performPrimaryButtonAction:(id)		sender
 {
 	[self performActionFrom:sender forButton:kGenericDialog_ItemIDButton1];
-}// performPrimaryButtonAction
+}// performPrimaryButtonAction:
 
 
 /*!
@@ -1046,7 +1066,7 @@ See the "secondButtonName" property.
 performSecondButtonAction:(id)	sender
 {
 	[self performActionFrom:sender forButton:kGenericDialog_ItemIDButton2];
-}// performSecondButtonAction
+}// performSecondButtonAction:
 
 
 /*!
@@ -1059,7 +1079,7 @@ See the "thirdButtonName" property.
 performThirdButtonAction:(id)	sender
 {
 	[self performActionFrom:sender forButton:kGenericDialog_ItemIDButton3];
-}// performThirdButtonAction
+}// performThirdButtonAction:
 
 
 #pragma mark Panel_Delegate
@@ -1381,6 +1401,29 @@ didChangePanelVisibility:(Panel_Visibility)		aVisibility
 #pragma unused(aViewManager)
 	// forward to child view
 	[self.mainViewManager.delegate panelViewManager:self.mainViewManager didChangePanelVisibility:aVisibility];
+	
+	// fix initial focus of buttons for alerts
+	if (kPanel_VisibilityDisplayed == aVisibility)
+	{
+		My_GenericDialogAutoLocker		ptr(gGenericDialogPtrLocks(), self.dialogRef);
+		
+		
+		if (ptr->isAlert)
+		{
+			if (nil != self.cancelButton)
+			{
+				[aViewManager.view.window makeFirstResponder:self.cancelButton];
+			}
+			else if (nil != self.otherButton)
+			{
+				[aViewManager.view.window makeFirstResponder:self.otherButton];
+			}
+			else if (nil != self.actionButton)
+			{
+				[aViewManager.view.window makeFirstResponder:self.actionButton];
+			}
+		}
+	}
 }// panelViewManager:didChangePanelVisibility:
 
 
@@ -1718,6 +1761,139 @@ changeFont:(id)		sender
 }// changeFont:
 
 
+#pragma mark NSResponder
+
+
+/*!
+On OS 10.12.1 and beyond, returns a Touch Bar to display
+at the top of the hardware keyboard (when available) or
+in any Touch Bar simulator window.
+
+This method should not be called except by the OS.
+
+(2021.03)
+*/
+- (NSTouchBar*)
+makeTouchBar
+{
+	NSTouchBar*		result = self.dynamicTouchBar;
+	
+	
+	if (nil == result)
+	{
+		My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), self.dialogRef);
+		
+		
+		// TEMPORARY; for an unknown reason, buttons do not work if
+		// the dialog is in an application-modal state (even though
+		// they do appear); for now, allow this only for sheets
+		if (nil == ptr->modalToView)
+		{
+			// do not use the Touch Bar for application-modal dialogs
+		}
+		else
+		{
+			NSMutableArray< NSTouchBarItem* >*	buttonItems = [[NSMutableArray< NSTouchBarItem* > alloc] init];
+			NSButtonTouchBarItem*		button1Item = [NSButtonTouchBarItem
+														buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDGenericButton1
+																							title:self.primaryButtonName
+																							target:self
+																							action:@selector(performPrimaryButtonAction:)];
+			NSButtonTouchBarItem*		button2Item = [NSButtonTouchBarItem
+														buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDGenericButton2
+																							title:self.secondButtonName
+																							target:self
+																							action:@selector(performSecondButtonAction:)];
+			NSButtonTouchBarItem*		button3Item = [NSButtonTouchBarItem
+														buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDGenericButton3
+																							title:self.thirdButtonName
+																							target:self
+																							action:@selector(performThirdButtonAction:)];
+			NSButtonTouchBarItem*		helpItem = nil;
+			
+			
+			if (@available(macOS 11.0, *))
+			{
+				helpItem = [NSButtonTouchBarItem buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDHelpButton
+																					image:[NSImage imageWithSystemSymbolName:@"questionmark.circle"
+																																accessibilityDescription:@"?"]
+																					target:self
+																					action:@selector(performHelpButtonAction:)];
+			}
+			else
+			{
+				helpItem = [NSButtonTouchBarItem buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDHelpButton
+																					title:@"?"
+																					target:self
+																					action:@selector(performHelpButtonAction:)];
+			}
+			
+			self.dynamicTouchBar = result = [[NSTouchBar alloc] init];
+			//result.customizationIdentifier = kConstantsRegistry_TouchBarIDGenericDialog;
+			//result.customizationAllowedItemIdentifiers = @[...];
+			if (self.panelHasContextualHelp)
+			{
+				// help button
+				[buttonItems addObject:helpItem];
+			}
+			if ((nil != self.primaryButtonName) && (nil != self.secondButtonName) && (nil != self.thirdButtonName))
+			{
+				// three buttons
+				[buttonItems addObject:button3Item];
+				[buttonItems addObject:button2Item];
+				[buttonItems addObject:button1Item];
+			}
+			else if ((nil != self.primaryButtonName) && (nil != self.secondButtonName))
+			{
+				// two buttons
+				[buttonItems addObject:button2Item];
+				[buttonItems addObject:button1Item];
+			}
+			else if (nil != self.primaryButtonName)
+			{
+				// one button
+				[buttonItems addObject:button1Item];
+			}
+			NSGroupTouchBarItem*	buttonGroupItem = [NSGroupTouchBarItem groupItemWithIdentifier:kConstantsRegistry_TouchBarItemIDGenericButtonGroup
+																									items:buttonItems];
+			//result.templateItems = [NSSet setWithArray:buttonItems];
+			result.templateItems = [NSSet setWithArray:@[ buttonGroupItem ]];
+			result.defaultItemIdentifiers =
+			@[
+				NSTouchBarItemIdentifierFlexibleSpace,
+				kConstantsRegistry_TouchBarItemIDGenericButtonGroup,
+				NSTouchBarItemIdentifierFlexibleSpace,
+				NSTouchBarItemIdentifierOtherItemsProxy,
+			];
+			result.principalItemIdentifier = kConstantsRegistry_TouchBarItemIDGenericButtonGroup;
+			
+			helpItem.bezelColor = [NSColor clearColor];
+			
+			if (kGenericDialog_ItemIDButton3 == self.harmfulActionItemID)
+			{
+				button3Item.bezelColor = [NSColor systemRedColor];
+			}
+			
+			if (kGenericDialog_ItemIDButton2 == self.harmfulActionItemID)
+			{
+				button2Item.bezelColor = [NSColor systemRedColor];
+			}
+			
+			if (kGenericDialog_ItemIDButton1 == self.harmfulActionItemID)
+			{
+				button1Item.bezelColor = [NSColor systemRedColor];
+			}
+			else
+			{
+				button1Item.bezelColor = [NSColor controlAccentColor];
+			}
+		}
+	}
+	
+	return result;
+}// makeTouchBar
+
+
 #pragma mark Notifications
 
 
@@ -1813,6 +1989,12 @@ forButton:(GenericDialog_ItemID)	aButton
 					PopoverManager_SetAnimationType(ptr->popoverManager, kPopoverManager_AnimationTypeNone);
 				}
 			}
+		}
+		
+		if (userAccepted)
+		{
+			// ensure that any active text edits are applied
+			[[NSApp keyWindow] makeFirstResponder:nil];
 		}
 		
 		if (NO == keepDialog)
