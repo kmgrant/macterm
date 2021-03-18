@@ -221,7 +221,6 @@ CursorWhiteMoveCursorSmall
 # should be an <xyz>.xib source and implied <xyz>.nib output
 APP_XIB_PREFIXES := \
 Base.lproj/AlertMessagesCocoa \
-Base.lproj/ApplicationTouchBarCocoa \
 Base.lproj/ClipboardCocoa \
 Base.lproj/CommandLineCocoa \
 Base.lproj/FindDialogCocoa \
@@ -229,7 +228,6 @@ Base.lproj/GenericDialogCocoa \
 Base.lproj/GenericPanelNumberedListCocoa \
 Base.lproj/GenericPanelTabsCocoa \
 Base.lproj/InfoWindowCocoa \
-Base.lproj/InfoWindowTouchBarCocoa \
 Base.lproj/MainMenuCocoa \
 Base.lproj/PrefPanelFormatGeneralCocoa \
 Base.lproj/PrefPanelFormatStandardColorsCocoa \
@@ -239,15 +237,12 @@ Base.lproj/PrefPanelSessionResourceCocoa \
 Base.lproj/PrefPanelTranslationsCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \
 Base.lproj/PrefsWindowCocoa \
-Base.lproj/PrefsWindowTouchBarCocoa \
 Base.lproj/ServerBrowserCocoa \
 Base.lproj/TerminalRootCocoa \
 Base.lproj/TerminalScrollableRootViewCocoa \
 Base.lproj/TerminalViewCocoa \
 Base.lproj/TerminalWindowCocoa \
-Base.lproj/TerminalWindowTouchBarCocoa \
-Base.lproj/VectorWindowCocoa \
-Base.lproj/VectorWindowTouchBarCocoa
+Base.lproj/VectorWindowCocoa
 SHARED_XIB_PREFIXES := \
 Base.lproj/WindowTitleDialogCocoa
 APP_RESOURCES_BUNDLES_GENERATED := \

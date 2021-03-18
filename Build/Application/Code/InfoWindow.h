@@ -46,11 +46,6 @@
 #endif
 #include <CoreServices/CoreServices.h>
 
-// library includes
-#ifdef __OBJC__
-#	include <TouchBar.objc++.h>
-#endif
-
 // application includes
 #include "SessionRef.typedef.h"
 
@@ -59,8 +54,6 @@
 #pragma mark Types
 
 #ifdef __OBJC__
-
-@class InfoWindow_SessionRow;
 
 /*!
 Implements the window class of InfoWindow_Controller.
@@ -92,13 +85,6 @@ Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
 @interface InfoWindow_Controller : NSWindowController< NSToolbarDelegate > //{
-{
-@public
-	IBOutlet NSTableView*	infoTable;
-	NSMutableArray*			dataArray;
-@private
-	TouchBar_Controller*		_touchBarController;
-}
 
 // class methods
 	+ (instancetype)

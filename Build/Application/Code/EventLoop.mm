@@ -43,11 +43,25 @@
 #import <CocoaBasic.h>
 #import <CocoaExtensions.objc++.h>
 #import <Console.h>
-#import <TouchBar.objc++.h>
 
 // application includes
 #import "Commands.h"
 #import "TerminalWindow.h"
+
+
+
+#pragma mark Types
+
+/*!
+Private properties.
+*/
+@interface EventLoop_AppObject () //{
+
+// accessors
+	@property (strong) NSTouchBar*
+	dynamicTouchBar;
+
+@end //}
 
 
 
@@ -192,7 +206,7 @@ init
 	self = [super init];
 	if (nil != self)
 	{
-		_terminalWindowTouchBarController = nil; // created on demand
+		_dynamicTouchBar = nil; // created on demand
 	}
 	return self;
 }// init
@@ -343,55 +357,23 @@ This method should not be called except by the OS.
 - (NSTouchBar*)
 makeTouchBar
 {
-	NSTouchBar*		result = nil;
+	NSTouchBar*		result = self.dynamicTouchBar;
 	
 	
-	// in order to be able to return a Touch Bar for a Carbon window,
-	// the application instance acts as the first responder in the
-	// chain and returns an appropriate bar (this approach is
-	// temporary; when using a pure Cocoa terminal window, it will
-	// make more sense to move the Touch Bar to that controller)
-	if (nullptr != TerminalWindow_ReturnFromMainWindow())
+	if (nil == result)
 	{
-		if (nil == _terminalWindowTouchBarController)
-		{
-			_terminalWindowTouchBarController = [[TouchBar_Controller alloc] initWithNibName:@"TerminalWindowTouchBarCocoa"];
-			_terminalWindowTouchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDTerminalWindowMain;
-			_terminalWindowTouchBarController.customizationAllowedItemIdentifiers =
-			@[
-				kConstantsRegistry_TouchBarItemIDFind,
-				kConstantsRegistry_TouchBarItemIDFullScreen,
-				NSTouchBarItemIdentifierFlexibleSpace,
-				NSTouchBarItemIdentifierFixedSpaceSmall,
-				NSTouchBarItemIdentifierFixedSpaceLarge
-			];
-			// (NOTE: default item identifiers are set in the NIB)
-		}
-		
-		// the controller should force the NIB to load and define
-		// the Touch Bar, using the settings above and in the NIB
-		result = _terminalWindowTouchBarController.touchBar;
-		assert(nil != result);
-	}
-	else
-	{
-		if (nil == _applicationTouchBarController)
-		{
-			_applicationTouchBarController = [[TouchBar_Controller alloc] initWithNibName:@"ApplicationTouchBarCocoa"];
-			_applicationTouchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDApplicationMain;
-			_applicationTouchBarController.customizationAllowedItemIdentifiers =
-			@[
-				NSTouchBarItemIdentifierFlexibleSpace,
-				NSTouchBarItemIdentifierFixedSpaceSmall,
-				NSTouchBarItemIdentifierFixedSpaceLarge
-			];
-			// (NOTE: default item identifiers are set in the NIB)
-		}
-		
-		// the controller should force the NIB to load and define
-		// the Touch Bar, using the settings above and in the NIB
-		result = _applicationTouchBarController.touchBar;
-		assert(nil != result);
+		self.dynamicTouchBar = result = [[NSTouchBar alloc] init];
+		result.customizationIdentifier = kConstantsRegistry_TouchBarIDApplicationMain;
+		result.customizationAllowedItemIdentifiers =
+		@[
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierFixedSpaceSmall,
+			NSTouchBarItemIdentifierFixedSpaceLarge
+		];
+		result.defaultItemIdentifiers =
+		@[
+			NSTouchBarItemIdentifierOtherItemsProxy,
+		];
 	}
 	
 	return result;

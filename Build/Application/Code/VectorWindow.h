@@ -44,9 +44,6 @@ class NSWindow;
 // library includes
 #include <ListenerModel.h>
 #include <ResultCode.template.h>
-#ifdef __OBJC__
-#	include <TouchBar.objc++.h>
-#endif
 #include <WindowTitleDialog.h>
 
 // application includes

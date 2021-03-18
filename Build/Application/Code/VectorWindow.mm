@@ -50,7 +50,6 @@
 #import <MemoryBlockReferenceLocker.template.h>
 #import <MemoryBlocks.h>
 #import <Registrar.template.h>
-#import <TouchBar.objc++.h>
 #import <WindowTitleDialog.h>
 
 // application includes
@@ -100,12 +99,15 @@ Private properties.
 // accessors
 	@property (assign) ListenerModel_Ref
 	changeListenerModel;
+	//! Created on demand by "makeTouchBar"; this is different
+	//! than the NSResponder "touchBar" property, which has
+	//! side effects such as archiving, etc.
+	@property (strong) NSTouchBar*
+	dynamicTouchBar;
 	@property (assign) VectorInterpreter_Ref
 	interpreterRef;
 	@property (strong) WindowTitleDialog_Ref
 	renameDialog;
-	@property (strong) TouchBar_Controller*
-	touchBarController;
 
 @end //}
 
@@ -439,10 +441,10 @@ owner:(VectorWindow_Ref)						aVectorWindowRef
 	if (nil != self)
 	{
 		_changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard, 'VWIN');
+		_dynamicTouchBar = nil; // created on demand
 		_interpreterRef = anInterpreter;
 		VectorInterpreter_Retain(anInterpreter);
 		_renameDialog = nullptr;
-		_touchBarController = nil; // created on demand
 		_vectorWindowRef = aVectorWindowRef;
 	}
 	return self;
@@ -654,27 +656,41 @@ This method should not be called except by the OS.
 - (NSTouchBar*)
 makeTouchBar
 {
-	NSTouchBar*		result = nil;
+	NSTouchBar*		result = self.dynamicTouchBar;
 	
 	
-	if (nil == _touchBarController)
+	if (nil == result)
 	{
-		_touchBarController = [[TouchBar_Controller alloc] initWithNibName:@"VectorWindowTouchBarCocoa"];
-		_touchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDVectorWindowMain;
-		_touchBarController.customizationAllowedItemIdentifiers =
+		self.dynamicTouchBar = result = [[NSTouchBar alloc] init];
+		result.customizationIdentifier = kConstantsRegistry_TouchBarIDVectorWindowMain;
+		result.customizationAllowedItemIdentifiers =
 		@[
 			kConstantsRegistry_TouchBarItemIDFullScreen,
 			NSTouchBarItemIdentifierFlexibleSpace,
 			NSTouchBarItemIdentifierFixedSpaceSmall,
 			NSTouchBarItemIdentifierFixedSpaceLarge
 		];
-		// (NOTE: default item identifiers are set in the NIB)
+		result.defaultItemIdentifiers =
+		@[
+			kConstantsRegistry_TouchBarItemIDFullScreen,
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierOtherItemsProxy,
+		];
+		NSButtonTouchBarItem*		fullScreenItem = [NSButtonTouchBarItem
+														buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDFullScreen
+																							image:[NSImage imageNamed:NSImageNameTouchBarEnterFullScreenTemplate]
+																							target:nil
+																							action:@selector(toggleFullScreen:)];
+		fullScreenItem.customizationLabel = NSLocalizedString(@"Full Screen", @"“Full Screen” touch bar item customization palette label");
+		if (nil == fullScreenItem)
+		{
+			NSLog(@"failed to construct one or more vector graphics touch bar items!");
+		}
+		else
+		{
+			result.templateItems = [NSSet setWithArray:@[ fullScreenItem ]];
+		}
 	}
-	
-	// the controller should force the NIB to load and define
-	// the Touch Bar, using the settings above and in the NIB
-	result = _touchBarController.touchBar;
-	assert(nil != result);
 	
 	return result;
 }// makeTouchBar

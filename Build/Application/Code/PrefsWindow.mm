@@ -171,6 +171,20 @@ Toolbar item for search field.
 @end //}
 
 /*!
+Private properties.
+*/
+@interface PrefsWindow_Controller () //{
+
+// accessors
+	//! Created on demand by "makeTouchBar"; this is different
+	//! than the NSResponder "touchBar" property, which has
+	//! side effects such as archiving, etc.
+	@property (strong) NSTouchBar*
+	dynamicTouchBar;
+
+@end //}
+
+/*!
 The private class interface.
 */
 @interface PrefsWindow_Controller (PrefsWindow_ControllerInternal) //{
@@ -800,12 +814,12 @@ init
 	{
 		self->currentPreferenceCollectionIndexes = [[NSIndexSet alloc] init];
 		self->currentPreferenceCollections = [[NSMutableArray alloc] init];
+		_dynamicTouchBar = nil; // created on demand
 		self->panelIDArray = [[NSMutableArray alloc] initWithCapacity:7/* arbitrary */];
 		self->panelsByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
 		self->panelSizesByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
 		self->windowSizesByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
 		self->windowMinSizesByID = [[NSMutableDictionary alloc] initWithCapacity:7/* arbitrary */];
-		self->_touchBarController = nil; // created on demand
 		self->activePanel = nil;
 		self->_searchText = [@"" copy];
 		
@@ -1988,27 +2002,41 @@ This method should not be called except by the OS.
 - (NSTouchBar*)
 makeTouchBar
 {
-	NSTouchBar*		result = nil;
+	NSTouchBar*		result = self.dynamicTouchBar;
 	
 	
-	if (nil == _touchBarController)
+	if (nil == result)
 	{
-		_touchBarController = [[TouchBar_Controller alloc] initWithNibName:@"PrefsWindowTouchBarCocoa"];
-		_touchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDPrefsWindowMain;
-		_touchBarController.customizationAllowedItemIdentifiers =
+		self.dynamicTouchBar = result = [[NSTouchBar alloc] init];
+		result.customizationIdentifier = kConstantsRegistry_TouchBarIDPrefsWindowMain;
+		result.customizationAllowedItemIdentifiers =
 		@[
 			kConstantsRegistry_TouchBarItemIDFind,
 			NSTouchBarItemIdentifierFlexibleSpace,
 			NSTouchBarItemIdentifierFixedSpaceSmall,
 			NSTouchBarItemIdentifierFixedSpaceLarge
 		];
-		// (NOTE: default item identifiers are set in the NIB)
+		result.defaultItemIdentifiers =
+		@[
+			kConstantsRegistry_TouchBarItemIDFind,
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierOtherItemsProxy,
+		];
+		NSButtonTouchBarItem*		findItem = [NSButtonTouchBarItem
+												buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDFind
+																					image:[NSImage imageNamed:NSImageNameTouchBarSearchTemplate]
+																					target:nil
+																					action:@selector(performFind:)];
+		findItem.customizationLabel = NSLocalizedString(@"Find", @"“Find” touch bar item customization palette label");
+		if (nil == findItem)
+		{
+			NSLog(@"failed to construct one or more preferences window touch bar items!");
+		}
+		else
+		{
+			result.templateItems = [NSSet setWithArray:@[ findItem ]];
+		}
 	}
-	
-	// the controller should force the NIB to load and define
-	// the Touch Bar, using the settings above and in the NIB
-	result = _touchBarController.touchBar;
-	assert(nil != result);
 	
 	return result;
 }// makeTouchBar

@@ -131,6 +131,11 @@ Private properties.
 @interface TerminalWindow_Controller () //{
 
 // accessors
+	//! Created on demand by "makeTouchBar"; this is different
+	//! than the NSResponder "touchBar" property, which has
+	//! side effects such as archiving, etc.
+	@property (strong) NSTouchBar*
+	dynamicTouchBar;
 	//! The value of the window "frame" property just prior to
 	//! entering Full Screen mode.  (Used to restore the original
 	//! window frame when Full Screen exits.)
@@ -3569,6 +3574,7 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		
 		self.window.delegate = self;
 		
+		_dynamicTouchBar = nil; // created on demand
 		_preferredMacroSetName = @"Default";
 		_rootViewController = [[TerminalWindow_RootVC alloc] init];
 		[self.rootViewController addScrollControllerBeyondEdge:NSMinYEdge];
@@ -4210,6 +4216,70 @@ windowWillExitFullScreen:(NSNotification*)		aNotification
 		setUpForFullScreenModal(ptr, isBecomingFullScreen, shouldSwapViewMode, kMy_FullScreenStateInProgress);
 	}
 }// windowWillExitFullScreen:
+
+
+#pragma mark NSResponder
+
+
+/*!
+On OS 10.12.1 and beyond, returns a Touch Bar to display
+at the top of the hardware keyboard (when available) or
+in any Touch Bar simulator window.
+
+This method should not be called except by the OS.
+
+(2021.03)
+*/
+- (NSTouchBar*)
+makeTouchBar
+{
+	NSTouchBar*		result = self.dynamicTouchBar;
+	
+	
+	if (nil == result)
+	{
+		self.dynamicTouchBar = result = [[NSTouchBar alloc] init];
+		result.customizationIdentifier = kConstantsRegistry_TouchBarIDTerminalWindowMain;
+		result.customizationAllowedItemIdentifiers =
+		@[
+			kConstantsRegistry_TouchBarItemIDFind,
+			kConstantsRegistry_TouchBarItemIDFullScreen,
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierFixedSpaceSmall,
+			NSTouchBarItemIdentifierFixedSpaceLarge
+		];
+		result.defaultItemIdentifiers =
+		@[
+			kConstantsRegistry_TouchBarItemIDFind,
+			NSTouchBarItemIdentifierFixedSpaceLarge,
+			kConstantsRegistry_TouchBarItemIDFullScreen,
+			NSTouchBarItemIdentifierFlexibleSpace,
+			NSTouchBarItemIdentifierOtherItemsProxy,
+		];
+		NSButtonTouchBarItem*		findItem = [NSButtonTouchBarItem
+												buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDFind
+																					image:[NSImage imageNamed:NSImageNameTouchBarSearchTemplate]
+																					target:nil
+																					action:@selector(performFind:)];
+		findItem.customizationLabel = NSLocalizedString(@"Find", @"“Find” touch bar item customization palette label");
+		NSButtonTouchBarItem*		fullScreenItem = [NSButtonTouchBarItem
+														buttonTouchBarItemWithIdentifier:kConstantsRegistry_TouchBarItemIDFullScreen
+																							image:[NSImage imageNamed:NSImageNameTouchBarEnterFullScreenTemplate]
+																							target:nil
+																							action:@selector(toggleFullScreen:)];
+		fullScreenItem.customizationLabel = NSLocalizedString(@"Full Screen", @"“Full Screen” touch bar item customization palette label");
+		if ((nil == findItem) || (nil == fullScreenItem))
+		{
+			NSLog(@"failed to construct one or more terminal touch bar items!");
+		}
+		else
+		{
+			result.templateItems = [NSSet setWithArray:@[ findItem, fullScreenItem ]];
+		}
+	}
+	
+	return result;
+}// makeTouchBar
 
 
 #pragma mark NSWindowDelegate

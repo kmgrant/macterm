@@ -54,7 +54,6 @@
 #import <MemoryBlocks.h>
 #import <RegionUtilities.h>
 #import <SoundSystem.h>
-#import <TouchBar.objc++.h>
 
 // application includes
 #import "Commands.h"
@@ -103,6 +102,22 @@ This class holds information displayed in a row of the table.
 	- (void)
 	setObject:(id)_
 	forKey:(NSString*)_;
+
+@end //}
+
+
+/*!
+Private properties.
+*/
+@interface InfoWindow_Controller () //{
+
+// accessors
+	@property (strong) NSMutableArray< InfoWindow_SessionRow* >*
+	dataArray;
+	@property (strong) NSTouchBar*
+	dynamicTouchBar;
+	@property (strong) NSTableView*
+	infoTable;
 
 @end //}
 
@@ -245,7 +260,7 @@ InfoWindow_ReturnSelectedSession ()
 {
 	SessionRef				result = nullptr;
 	InfoWindow_Controller*	controller = [InfoWindow_Controller sharedInfoWindowController];
-	NSInteger				selectedRow = [controller->infoTable selectedRow];
+	NSInteger				selectedRow = [controller.infoTable selectedRow];
 	
 	
 	if (selectedRow >= 0)
@@ -296,7 +311,7 @@ refreshDisplay ()
 {
 	InfoWindow_Controller*		controller = [InfoWindow_Controller sharedInfoWindowController];
 	InfoWindow_SessionRow*		selectedRowData = nil;
-	NSInteger					oldSelectedRow = [controller->infoTable selectedRow];
+	NSInteger					oldSelectedRow = [controller.infoTable selectedRow];
 	
 	
 	// update the new Cocoa-based table
@@ -304,12 +319,12 @@ refreshDisplay ()
 	{
 		selectedRowData = [controller infoForRow:oldSelectedRow];
 	}
-	[controller->dataArray sortUsingDescriptors:[controller->infoTable sortDescriptors]];
-	[controller->infoTable reloadData];
+	[controller.dataArray sortUsingDescriptors:[controller.infoTable sortDescriptors]];
+	[controller.infoTable reloadData];
 	if (nil != selectedRowData)
 	{
-		[controller->infoTable selectRowIndexes:[NSIndexSet indexSetWithIndex:
-															[controller->dataArray indexOfObject:selectedRowData]]
+		[controller.infoTable selectRowIndexes:[NSIndexSet indexSetWithIndex:
+															[controller.dataArray indexOfObject:selectedRowData]]
 												byExtendingSelection:NO];
 	}
 }// refreshDisplay
@@ -518,8 +533,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// that there is still an entry in the table for the session that has
 					// (again) become active; so, remove any old item first
 					[controller removeSession:session];
-					[controller->dataArray addObject:newInfo];
-					[controller->infoTable reloadData];
+					[controller.dataArray addObject:newInfo];
+					[controller.infoTable reloadData];
 				}
 				break;
 			
@@ -790,8 +805,9 @@ init
 	self = [super initWithWindowNibName:@"InfoWindowCocoa"];
 	if (nil != self)
 	{
-		self->dataArray = [[NSMutableArray alloc] init]; // elements are of type InfoWindow_SessionRow*
-		_touchBarController = nil; // created on demand
+		_dataArray = [[NSMutableArray< InfoWindow_SessionRow* > alloc] init]; // elements are of type InfoWindow_SessionRow*
+		_dynamicTouchBar = nil; // created on demand
+		_infoTable = nullptr; // set in NIB
 	}
 	return self;
 }// init
@@ -812,26 +828,24 @@ This method should not be called except by the OS.
 - (NSTouchBar*)
 makeTouchBar
 {
-	NSTouchBar*		result = nil;
+	NSTouchBar*		result = self.dynamicTouchBar;
 	
 	
-	if (nil == _touchBarController)
+	if (nil == result)
 	{
-		_touchBarController = [[TouchBar_Controller alloc] initWithNibName:@"InfoWindowTouchBarCocoa"];
-		_touchBarController.customizationIdentifier = kConstantsRegistry_TouchBarIDInfoWindowMain;
-		_touchBarController.customizationAllowedItemIdentifiers =
+		self.dynamicTouchBar = result = [[NSTouchBar alloc] init];
+		result.customizationIdentifier = kConstantsRegistry_TouchBarIDInfoWindowMain;
+		result.customizationAllowedItemIdentifiers =
 		@[
 			NSTouchBarItemIdentifierFlexibleSpace,
 			NSTouchBarItemIdentifierFixedSpaceSmall,
 			NSTouchBarItemIdentifierFixedSpaceLarge
 		];
-		// (NOTE: default item identifiers are set in the NIB)
+		result.defaultItemIdentifiers =
+		@[
+			NSTouchBarItemIdentifierOtherItemsProxy,
+		];
 	}
-	
-	// the controller should force the NIB to load and define
-	// the Touch Bar, using the settings above and in the NIB
-	result = _touchBarController.touchBar;
-	assert(nil != result);
 	
 	return result;
 }// makeTouchBar
@@ -848,9 +862,9 @@ Returns the size of the internal array.
 - (NSInteger)
 numberOfRowsInTableView:(NSTableView*)	tableView
 {
-	if (self->infoTable == tableView)
+	if (self.infoTable == tableView)
 	{
-		return [self->dataArray count];
+		return self.dataArray.count;
 	}
 	return 0;
 }// numberOfRowsInTableView:
@@ -867,7 +881,7 @@ tableView:(NSTableView*)					tableView
 objectValueForTableColumn:(NSTableColumn*)	tableColumn
 row:(int)									row
 {
-	assert(self->infoTable == tableView);
+	assert(self.infoTable == tableView);
 	return [[self infoForRow:row] objectForKey:[tableColumn identifier]];
 }// tableView:objectValueForTableColumn:row:
 
@@ -887,7 +901,7 @@ row:(int)							row
 	NSString*	columnKey = [tableColumn identifier];
 	
 	
-	assert(self->infoTable == tableView);
+	assert(self.infoTable == tableView);
 	[[self infoForRow:row] setObject:object forKey:columnKey];
 	if ([columnKey isEqualToString:kMyInfoColumnWindow])
 	{
@@ -922,11 +936,11 @@ sortDescriptorsDidChange:(NSArray*)		oldDescriptors
 	{
 		selectedRowData = [self infoForRow:oldSelectedRow];
 	}
-	[self->dataArray sortUsingDescriptors:[tableView sortDescriptors]];
+	[self.dataArray sortUsingDescriptors:[tableView sortDescriptors]];
 	[tableView reloadData];
 	if (nil != selectedRowData)
 	{
-		[tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:[self->dataArray indexOfObject:selectedRowData]]
+		[tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:[self.dataArray indexOfObject:selectedRowData]]
 									byExtendingSelection:NO];
 	}
 }// tableView:sortDescriptorsDidChange:
@@ -1100,7 +1114,7 @@ done in "init...".)
 windowDidLoad
 {
 	[super windowDidLoad];
-	assert(nil != infoTable);
+	assert(nil != self.infoTable);
 	
 	[self.window setExcludedFromWindowsMenu:YES];
 	
@@ -1150,8 +1164,8 @@ windowDidLoad
 	}
 	
 	// arrange to detect double-clicks on table view rows
-	[self->infoTable setDoubleAction:@selector(didDoubleClickInView:)];
-	[self->infoTable setTarget:self];
+	[self.infoTable setDoubleAction:@selector(didDoubleClickInView:)];
+	[self.infoTable setTarget:self];
 }// windowDidLoad
 
 
@@ -1222,9 +1236,9 @@ infoForRow:(NSInteger)	row
 	InfoWindow_SessionRow*	result = nil;
 	
 	
-	if ((row >= 0) && (row < [self numberOfRowsInTableView:self->infoTable]))
+	if ((row >= 0) && (row < [self numberOfRowsInTableView:self.infoTable]))
 	{
-		id		infoObject = [self->dataArray objectAtIndex:row];
+		id		infoObject = [self.dataArray objectAtIndex:row];
 		assert([infoObject isKindOfClass:InfoWindow_SessionRow.class]);
 		
 		
@@ -1246,7 +1260,7 @@ infoForSession:(SessionRef)		aSession
 	InfoWindow_SessionRow*	result = nil;
 	
 	
-	for (InfoWindow_SessionRow* sessionRowObject in self->dataArray)
+	for (InfoWindow_SessionRow* sessionRowObject in self.dataArray)
 	{
 		if (aSession == sessionRowObject->session)
 		{
@@ -1271,7 +1285,7 @@ removeSession:(SessionRef)		aSession
 	int		i = 0;
 	
 	
-	for (InfoWindow_SessionRow* sessionRowObject in self->dataArray)
+	for (InfoWindow_SessionRow* sessionRowObject in self.dataArray)
 	{
 		if (aSession == sessionRowObject->session)
 		{
@@ -1282,7 +1296,7 @@ removeSession:(SessionRef)		aSession
 	}
 	if (deletedIndex >= 0)
 	{
-		[self->dataArray removeObjectAtIndex:deletedIndex];
+		[self.dataArray removeObjectAtIndex:deletedIndex];
 	}
 }// removeSession:
 

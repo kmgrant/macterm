@@ -42,7 +42,6 @@
 // library includes
 #ifdef __OBJC__
 #	import <CocoaExtensions.objc++.h>
-#	import <TouchBar.objc++.h>
 @class ListenerModel_StandardListener;
 #endif
 
@@ -136,7 +135,6 @@ changes to an interface declared in a ".mm" file.
 	NSString*							_searchText;
 	ListenerModel_StandardListener*		preferenceChangeListener;
 	BOOL								_sourceListHidden;
-	TouchBar_Controller*				_touchBarController; // created on demand
 	NSView*								_detailContainer;
 	NSView*								_masterContainer;
 	NSSplitView*						_splitView;
