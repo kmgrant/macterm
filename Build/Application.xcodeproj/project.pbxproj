@@ -200,7 +200,6 @@
 		0A08CA0C224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/TerminalViewCocoa.xib; sourceTree = "<group>"; };
 		0A08CA0D224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08CA0F224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
-		0A08CA12224F346C00DA2569 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Application/Resources/en.lproj/PreferencesSearch.strings; sourceTree = "<group>"; };
 		0A08CA1A224F7E3500DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Application/Resources/Base.lproj/Credits.html; sourceTree = "<group>"; };
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
 		0A0ADD44178A5FB800E72DF4 /* CursorIBeam@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "CursorIBeam@2x.png"; path = "Application/Resources/CursorIBeam@2x.png"; sourceTree = "<group>"; };
@@ -327,6 +326,12 @@
 		0A47E880155CD40400608A0A /* VectorWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindowRef.typedef.h; path = Application/Code/VectorWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A4AC969155ED67E00FA6184 /* VectorWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorWindow.h; path = Application/Code/VectorWindow.h; sourceTree = "<group>"; };
 		0A4AC96A155ED68C00FA6184 /* VectorWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VectorWindow.mm; path = Application/Code/VectorWindow.mm; sourceTree = "<group>"; };
+		0A4B77F626045473008B41A3 /* DefaultFormat5.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = DefaultFormat5.plist; path = Application/Resources/DefaultFormat5.plist; sourceTree = "<group>"; };
+		0A4B77F726045473008B41A3 /* DefaultFormat7.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = DefaultFormat7.plist; path = Application/Resources/DefaultFormat7.plist; sourceTree = "<group>"; };
+		0A4B77F826045473008B41A3 /* DefaultFormat8.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = DefaultFormat8.plist; path = Application/Resources/DefaultFormat8.plist; sourceTree = "<group>"; };
+		0A4B77F926045473008B41A3 /* DefaultFormat10.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = DefaultFormat10.plist; path = Application/Resources/DefaultFormat10.plist; sourceTree = "<group>"; };
+		0A4B77FA26045473008B41A3 /* DefaultFormat9.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = DefaultFormat9.plist; path = Application/Resources/DefaultFormat9.plist; sourceTree = "<group>"; };
+		0A4B77FB26045473008B41A3 /* DefaultFormat6.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = DefaultFormat6.plist; path = Application/Resources/DefaultFormat6.plist; sourceTree = "<group>"; };
 		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = PrefPanelWorkspaces.mm; path = Application/Code/PrefPanelWorkspaces.mm; sourceTree = "<group>"; };
 		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
 		0A4EA9F7245DDC4C003C1C9F /* Network.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Network.h; path = Application/Code/Network.h; sourceTree = "<group>"; };
@@ -615,8 +620,13 @@
 				0AA66E3713160F0700B234C4 /* DefaultFormat2.plist */,
 				0AA66E3E131611EF00B234C4 /* DefaultFormat3.plist */,
 				0A21A1CD131766EA0012240D /* DefaultFormat4.plist */,
+				0A4B77F626045473008B41A3 /* DefaultFormat5.plist */,
+				0A4B77FB26045473008B41A3 /* DefaultFormat6.plist */,
+				0A4B77F726045473008B41A3 /* DefaultFormat7.plist */,
+				0A4B77F826045473008B41A3 /* DefaultFormat8.plist */,
+				0A4B77FA26045473008B41A3 /* DefaultFormat9.plist */,
+				0A4B77F926045473008B41A3 /* DefaultFormat10.plist */,
 				0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */,
-				0ADA30D4188AF9FB00B313FC /* PreferencesSearch.strings */,
 				0AA42A290F0C95B80057B393 /* Template-Application-Info.plist */,
 				0ADB0D3305A7FBD90054A4E9 /* Template-DefaultPreferences.plist */,
 				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTerm.framework-Info.plist */,
@@ -1484,14 +1494,6 @@
 				0A08CA1A224F7E3500DA2569 /* Base */,
 			);
 			name = Credits.html;
-			sourceTree = "<group>";
-		};
-		0ADA30D4188AF9FB00B313FC /* PreferencesSearch.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA12224F346C00DA2569 /* en */,
-			);
-			name = PreferencesSearch.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
