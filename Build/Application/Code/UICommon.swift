@@ -67,10 +67,11 @@ extension Spacer {
 
 extension Text {
 	// for sections, e.g. in Preferences, a right-aligned title like "Options:"
-	public func asMacTermSectionHeading() -> some View {
+	public func asMacTermSectionHeading(isSmall: Bool = false) -> some View {
 		bold()
-		.frame(width: 160, alignment: .trailing)
+		.frame(width: isSmall ? 80 : 160, alignment: .trailing)
 		.multilineTextAlignment(.trailing)
+		.controlSize(isSmall ? .small : .regular)
 	}
 }
 
@@ -226,13 +227,15 @@ struct UICommon_OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
 	private var disableDefaultAlignmentGuide = false
+	private var isSmallHeading = false
 	private var isSmallMultilineTitle = false
 	private var noDefaultSpacing = false
 	let optionView: Content
 	var title = ""
 
 	// variant with title and content
-	init(_ aTitle: String, isSmallMultilineTitle: Bool = false, disableDefaultAlignmentGuide: Bool = false, noDefaultSpacing: Bool = false, @ViewBuilder content: () -> Content) {
+	init(_ aTitle: String, isSmallHeading: Bool = false, isSmallMultilineTitle: Bool = false, disableDefaultAlignmentGuide: Bool = false, noDefaultSpacing: Bool = false, @ViewBuilder content: () -> Content) {
+		self.isSmallHeading = isSmallHeading
 		self.isSmallMultilineTitle = isSmallMultilineTitle
 		if aTitle == "" {
 			self.title = " " // blank space ensures consistent vertical spacing
@@ -286,7 +289,7 @@ struct UICommon_OptionLineView <Content: View> : View {
 					.padding(0)
 					.frame(width: 160, alignment: .leading)
 			} else {
-				Text(title).asMacTermSectionHeading()
+				Text(title).asMacTermSectionHeading(isSmall: isSmallHeading)
 					.alignmentGuide(.sectionAlignmentMacTerm, computeValue: { d in d[.firstTextBaseline] })
 			}
 			if disableDefaultAlignmentGuide {

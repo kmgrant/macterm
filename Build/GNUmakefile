@@ -221,7 +221,6 @@ CursorWhiteMoveCursorSmall
 # should be an <xyz>.xib source and implied <xyz>.nib output
 APP_XIB_PREFIXES := \
 Base.lproj/AlertMessagesCocoa \
-Base.lproj/ClipboardCocoa \
 Base.lproj/CommandLineCocoa \
 Base.lproj/FindDialogCocoa \
 Base.lproj/GenericDialogCocoa \

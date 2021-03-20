@@ -586,12 +586,12 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ClipboardWindowLabelWidth:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Width:"), CFSTR("ClipboardWindow"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Width"), CFSTR("ClipboardWindow"),
 													CFSTR("kUIStrings_ClipboardWindowLabelWidth; used to label the width property of a copied image"));
 		break;
 	
 	case kUIStrings_ClipboardWindowLabelHeight:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Height:"), CFSTR("ClipboardWindow"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Height"), CFSTR("ClipboardWindow"),
 													CFSTR("kUIStrings_ClipboardWindowLabelHeight; used to label the height property of a copied image"));
 		break;
 	

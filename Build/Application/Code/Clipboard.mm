@@ -66,15 +66,9 @@
 #import "TerminalView.h"
 #import "UIStrings.h"
 
+// Swift imports
+#import <MacTermQuills/MacTermQuills-Swift.h>
 
-
-#pragma mark Constants
-namespace {
-
-Float32 const	kSeparatorWidth = 1.0; // vertical line rendered at edge of Clipboard window content
-Float32 const	kSeparatorPerceivedWidth = 2.0;
-
-} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
@@ -86,11 +80,50 @@ void			updateClipboard				();
 
 } // anonymous namespace
 
+#pragma mark Types
+
+/*!
+Implements the Clipboard window.  See "ClipboardCocoa.xib".
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Clipboard_WindowController : NSWindowController < UIClipboard_ActionHandling > //{
+
+// class methods
+	+ (id)
+	sharedClipboardWindowController;
+
+// new methods
+	- (void)
+	setNeedsDisplay;
+
+// accessors
+	@property (strong) UIClipboard_Model*
+	viewModel;
+	- (void)
+	setDataSize:(size_t)_;
+	- (void)
+	setDataWidth:(size_t)_
+	andHeight:(size_t)_;
+	- (void)
+	setKindField:(NSString*)_;
+	- (void)
+	setLabel1:(NSString*)_
+	andValue:(NSString*)_;
+	- (void)
+	setLabel2:(NSString*)_
+	andValue:(NSString*)_;
+	- (void)
+	setSizeField:(NSString*)_;
+
+@end //}
+
 #pragma mark Variables
 namespace {
 
-CFRetainRelease		gCurrentRenderData;
-NSTimer*			gClipboardUpdatesTimer = nil;
+NSTimer*	gClipboardUpdatesTimer = nil;
 
 } // anonymous namespace
 
@@ -651,14 +684,12 @@ updateClipboard ()
 	{
 		// image
 		typeCFString = copyTypeDescription(typeIdentifier);
-		gCurrentRenderData.clear();
-		[controller->clipboardImageContent setImage:[[NSImage alloc] initWithPasteboard:generalPasteboard]];
-		[controller setShowImage:YES];
-		[controller setShowText:NO];
-		[controller setKindField:BRIDGE_CAST(typeCFString, NSString*)];
+		controller.viewModel.clipboardText = @"";
+		controller.viewModel.clipboardImage = [[NSImage alloc] initWithPasteboard:generalPasteboard];
+		controller.viewModel.clipboardUnknown = NO;
+		controller.viewModel.kindValue = BRIDGE_CAST(typeCFString, NSString*);
 		[controller setDataSize:(CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender))];
 		[controller setDataWidth:CGImageGetWidth(imageToRender) andHeight:CGImageGetHeight(imageToRender)];
-		[controller setNeedsDisplay];
 		CFRelease(imageToRender), imageToRender = nullptr;
 		CFRelease(typeIdentifier), typeIdentifier = nullptr;
 	}
@@ -669,26 +700,16 @@ updateClipboard ()
 		
 		
 		typeCFString = copyTypeDescription(kUTTypeText);
-		gCurrentRenderData.setWithRetain(BRIDGE_CAST(textToRender, CFStringRef));
-		[controller->clipboardTextContent setEditable:YES];
-		[controller->clipboardTextContent setString:@""];
-		{
-			// since the previous content may have been styled text, try
-			// to reset as much as possible (font, color, etc.)
-			[controller->clipboardTextContent setFont:
-												[Clipboard_WindowController
-													returnNSFontForMonospacedTextOfSize:14/* arbitrary */]];
-			[controller->clipboardTextContent setTextColor:[NSColor textColor]];
-		}
-		[controller->clipboardTextContent paste:NSApp];
-		[controller->clipboardTextContent setEditable:NO];
-		[controller setShowImage:NO];
-		[controller setShowText:YES];
-		[controller setKindField:BRIDGE_CAST(typeCFString, NSString*)];
+		controller.viewModel.clipboardText = textToRender;
+		controller.viewModel.clipboardImage = nil;
+		controller.viewModel.clipboardUnknown = NO;
+		controller.viewModel.kindValue = BRIDGE_CAST(typeCFString, NSString*);
 		[controller setDataSize:(textToRender.length * sizeof(UniChar))]; // TEMPORARY; this is probably not always right
-		[controller setLabel1:nil andValue:nil];
-		[controller setLabel2:nil andValue:nil];
-		[controller setNeedsDisplay];
+		controller.viewModel.extraInfoLabel1 = nil;
+		controller.viewModel.extraInfoValue1 = nil;
+		controller.viewModel.extraInfoLabel2 = nil;
+		controller.viewModel.extraInfoValue2 = nil;
+		CFRelease(stringsToRender), stringsToRender = nullptr;
 	}
 	else
 	{
@@ -697,19 +718,20 @@ updateClipboard ()
 											CFRetainRelease::kAlreadyRetained);
 		
 		
+		controller.viewModel.clipboardText = @"";
+		controller.viewModel.clipboardImage = nil;
+		controller.viewModel.clipboardUnknown = (generalPasteboard.pasteboardItems.count > 0);
 		typeCFString = copyTypeDescription(typeIdentifier);
-		gCurrentRenderData.clear();
-		[controller setShowImage:NO];
-		[controller setShowText:NO];
 		[controller setKindField:BRIDGE_CAST(typeCFString, NSString*)];
 		[controller setSizeField:BRIDGE_CAST(unknownCFString.returnCFStringRef(), NSString*)];
 		if ((nullptr == typeCFString) || (0 == CFStringGetLength(typeCFString)))
 		{
 			[controller setKindField:BRIDGE_CAST(unknownCFString.returnCFStringRef(), NSString*)];
 		}
-		[controller setLabel1:nil andValue:nil];
-		[controller setLabel2:nil andValue:nil];
-		[controller setNeedsDisplay];
+		controller.viewModel.extraInfoLabel1 = nil;
+		controller.viewModel.extraInfoValue1 = nil;
+		controller.viewModel.extraInfoLabel2 = nil;
+		controller.viewModel.extraInfoValue2 = nil;
 	}
 	if (nullptr != typeCFString)
 	{
@@ -718,298 +740,6 @@ updateClipboard ()
 }// updateClipboard
 
 } // anonymous namespace
-
-
-#pragma mark -
-@implementation Clipboard_ContentView
-
-
-/*!
-Constructor.
-
-(4.0)
-*/
-- (instancetype)
-initWithFrame:(NSRect)		aFrame
-{
-	self = [super initWithFrame:aFrame];
-	if (nil != self)
-	{
-		self->showDragHighlight = NO;
-		
-		// the list of accepted drag text types should correspond with what
-		// Clipboard_CreateCFStringArrayFromPasteboard() actually supports;
-		// image types can be supported much more generally
-		[self registerForDraggedTypes:@[
-											BRIDGE_CAST(kUTTypeUTF16ExternalPlainText, NSString*),
-											BRIDGE_CAST(kUTTypeUTF16PlainText, NSString*),
-											BRIDGE_CAST(kUTTypeUTF8PlainText, NSString*),
-											BRIDGE_CAST(kUTTypePlainText, NSString*),
-											@"com.apple.traditional-mac-plain-text",
-											BRIDGE_CAST(kUTTypeImage, NSString*),
-										]];
-	}
-	return self;
-}// initWithFrame:
-
-
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (BOOL)
-showDragHighlight
-{
-	return showDragHighlight;
-}
-- (void)
-setShowDragHighlight:(BOOL)		flag
-{
-	showDragHighlight = flag;
-}// setShowDragHighlight:
-
-
-#pragma mark NSControl
-
-
-/*!
-Draws the separator on the edge of clipboard content,
-as well as any applicable drag highlights.
-
-(4.0)
-*/
-- (void)
-drawRect:(NSRect)	rect
-{
-	Boolean const		kHasOverlayScrollBars = (NULL != class_getClassMethod([NSScroller class], @selector(preferredScrollerStyle)))
-												? (NSScrollerStyleOverlay == [NSScroller preferredScrollerStyle])
-												: false;
-	Float32 const		kHorizontalScrollBarWidth = (kHasOverlayScrollBars)
-														? 0
-														: 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
-	Float32 const		kVerticalScrollBarWidth = (kHasOverlayScrollBars)
-													? 0
-													: 15.0; // arbitrary; TEMPORARY, should retrieve dynamically from somewhere
-	CGContextRef		drawingContext = [[NSGraphicsContext currentContext] CGContext];
-	NSRect				entireRect = [self bounds];
-	CGRect				contentBounds;
-	
-	
-	[super drawRect:rect];
-	
-	// paint entire background first
-	contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
-	CGContextSetRGBFillColor(drawingContext, 1.0, 1.0, 1.0, 1.0/* alpha */);
-	CGContextFillRect(drawingContext, contentBounds);
-	
-	// now define the region that excludes the vertical separator and scroll bar
-	// (so that an appropriate drag highlight appears around the logical border)
-	contentBounds.origin.x += kSeparatorWidth;
-	contentBounds.origin.y += kHorizontalScrollBarWidth;
-	contentBounds.size.width -= (kSeparatorWidth + kVerticalScrollBarWidth);
-	contentBounds.size.height -= kHorizontalScrollBarWidth;
-	
-	// perform any necessary rendering for drags
-	if ([self showDragHighlight])
-	{
-		DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
-		DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
-	}
-	else
-	{
-		DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
-		DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
-	}
-	
-	// draw a separator on the edge, which will be next to the splitter;
-	// the scroll view should be offset slightly in the NIB, so that
-	// this separator is visible while the scroll view is visible
-	contentBounds = CGRectMake(entireRect.origin.x, entireRect.origin.y, entireRect.size.width, entireRect.size.height);
-	contentBounds.size.width = kSeparatorWidth;
-	CGContextSetRGBStrokeColor(drawingContext, 0, 0, 0, 1.0/* alpha */);
-	CGContextStrokeRect(drawingContext, contentBounds);
-}// drawRect
-
-
-#pragma mark NSDraggingDestination
-
-
-/*!
-Invoked when the user has dragged data into the main content
-area of the Clipboard window.
-
-(4.0)
-*/
-- (NSDragOperation)
-draggingEntered:(id <NSDraggingInfo>)	sender
-{
-	NSDragOperation		result = NSDragOperationNone;
-	
-	
-	if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
-	{
-		result = NSDragOperationCopy;
-		
-		// show a highlight area by setting the appropriate view property
-		// and requesting a redraw
-		self.showDragHighlight = YES;
-		self.needsDisplay = YES;
-	}
-	return result;
-}// draggingEntered:
-
-
-/*!
-Invoked when the user has dragged data out of the main content
-area of the Clipboard window.
-
-(4.0)
-*/
-- (void)
-draggingExited:(id <NSDraggingInfo>)	sender
-{
-#pragma unused(sender)
-	// show a highlight area by setting the appropriate view property
-	// and requesting a redraw
-	self.showDragHighlight = NO;
-	self.needsDisplay = YES;
-}// draggingExited:
-
-
-/*!
-Invoked when the user has dropped data into the main content
-area of the Clipboard window.
-
-(4.0)
-*/
-- (BOOL)
-performDragOperation:(id <NSDraggingInfo>)		sender
-{
-	BOOL			result = NO;
-	NSPasteboard*	dragPasteboard = [sender draggingPasteboard];
-	NSString*		imageType = [dragPasteboard availableTypeFromArray:@[BRIDGE_CAST(kUTTypeImage, NSString*)]];
-	
-	
-	// handle the drop (by copying the data to the clipboard)
-	if (nil != imageType)
-	{
-		// drag apparently contains one or more images
-		NSArray*		objectArray = nil;
-		NSDictionary*	readingOptions = @{};
-		
-		
-		objectArray = [dragPasteboard readObjectsForClasses:@[NSImage.class] options:readingOptions];
-		if ((nil == objectArray) || (0 == objectArray.count))
-		{
-			Sound_StandardAlert();
-			Console_Warning(Console_WriteLine, "failed to read any image from the drag");
-		}
-		else
-		{
-			Boolean		firstImage = true;
-			
-			
-			for (id anObject in objectArray)
-			{
-				if ([anObject isKindOfClass:NSImage.class])
-				{
-					NSImage*	asImage = STATIC_CAST(anObject, NSImage*);
-					
-					
-					// put the text on the clipboard
-					if (Clipboard_AddNSImageToPasteboard(asImage, [NSPasteboard generalPasteboard],
-															firstImage/* clear first */))
-					{
-						// success!
-						result = YES;
-					}
-					
-					firstImage = false;
-				}
-			}
-			
-			// force a view update, as obviously it is now out of date
-			updateClipboard();
-		}
-	}
-	else
-	{
-		// drag should contain text (as only text and image types
-		// were declared in earlier "registerForDraggedTypes" call)
-		CFArrayRef		copiedTextCFStringCFArray;
-		Boolean			copyOK = Clipboard_CreateCFStringArrayFromPasteboard(copiedTextCFStringCFArray, dragPasteboard);
-		
-		
-		if (false == copyOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
-		}
-		else
-		{
-			// put the text on the clipboard
-			NSString*	joinedString = [BRIDGE_CAST(copiedTextCFStringCFArray, NSArray*) componentsJoinedByString:@"\n"];
-			
-			
-			if (Clipboard_AddCFStringToPasteboard(BRIDGE_CAST(joinedString, CFStringRef)))
-			{
-				// force a view update, as obviously it is now out of date
-				updateClipboard();
-				
-				// success!
-				result = YES;
-			}
-			CFRelease(copiedTextCFStringCFArray), copiedTextCFStringCFArray = nullptr;
-		}
-	}
-	
-	return result;
-}// performDragOperation:
-
-
-/*!
-Invoked when the user is about to drop data into the content
-area of the Clipboard window; returns YES only if the data is
-acceptable.
-
-(4.0)
-*/
-- (BOOL)
-prepareForDragOperation:(id <NSDraggingInfo>)	sender
-{
-#pragma unused(sender)
-	BOOL	result = NO;
-	
-	
-	self.showDragHighlight = NO;
-	self.needsDisplay = YES;
-	
-	// always accept the drag
-	result = YES;
-	
-	return result;
-}// prepareForDragOperation:
-
-
-#pragma mark NSView
-
-
-/*!
-Returns YES only if the view has no transparency at all.
-
-(4.0)
-*/
-- (BOOL)
-isOpaque
-{
-	return YES;
-}// isOpaque
-
-
-@end // Clipboard_ContentView
 
 
 #pragma mark -
@@ -1046,37 +776,24 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self = [super initWithWindowNibName:@"ClipboardCocoa"];
+	UIClipboard_Model*		viewModel = [[UIClipboard_Model alloc] initWithRunner:self];
+	NSViewController*		viewController = [UIClipboard_ObjC makeViewController:viewModel];
+	NSWindow*				windowObject = [NSWindow windowWithContentViewController:viewController];
+	
+	
+	windowObject.styleMask = (NSWindowStyleMaskTitled |
+								NSWindowStyleMaskClosable |
+								NSWindowStyleMaskMiniaturizable |
+								NSWindowStyleMaskResizable);
+	windowObject.title = NSLocalizedString(@"Clipboard: MacTerm", @"title of Clipboard window");
+	
+	self = [super initWithWindow:windowObject];
 	if (nil != self)
 	{
+		self.viewModel = viewModel;
 	}
 	return self;
 }// init
-
-
-/*!
-Returns a system-managed NSFont object that represents
-the user’s default terminal font at the specified size.
-This should be reasonable for displaying plain text in
-the Clipboard window.
-
-(4.0)
-*/
-+ (NSFont*)
-returnNSFontForMonospacedTextOfSize:(unsigned int)	fontSize
-{
-	NSFont*				result = nil;
-	CFStringRef			fontName = nullptr;
-	Preferences_Result	prefsResult = kPreferences_ResultOK;
-	
-	
-	prefsResult = Preferences_GetData(kPreferences_TagFontName, sizeof(fontName), &fontName);
-	if (kPreferences_ResultOK == prefsResult)
-	{
-		result = [NSFont fontWithName:BRIDGE_CAST(fontName, NSString*) size:fontSize];
-	}
-	return result;
-}// returnNSFontForMonospacedTextOfSize:
 
 
 /*!
@@ -1278,7 +995,7 @@ data on the Clipboard.
 - (void)
 setKindField:(NSString*)	aString
 {
-	[valueKind setStringValue:aString];
+	self.viewModel.kindValue = aString;
 }// setKindField:
 
 
@@ -1294,17 +1011,13 @@ andValue:(NSString*)	valueString
 {
 	if (nil != labelString)
 	{
-		[label1 setStringValue:labelString];
-		[value1 setStringValue:valueString];
-		[label1 setHidden:NO];
-		[value1 setHidden:NO];
+		self.viewModel.extraInfoLabel1 = labelString;
+		self.viewModel.extraInfoValue1 = valueString;
 	}
 	else
 	{
-		[label1 setStringValue:@""];
-		[value1 setStringValue:@""];
-		[label1 setHidden:YES];
-		[value1 setHidden:YES];
+		self.viewModel.extraInfoLabel1 = nil;
+		self.viewModel.extraInfoValue1 = nil;
 	}
 }// setLabel1:andValue:
 
@@ -1321,17 +1034,13 @@ andValue:(NSString*)	valueString
 {
 	if (nil != labelString)
 	{
-		[label2 setStringValue:labelString];
-		[value2 setStringValue:valueString];
-		[label2 setHidden:NO];
-		[value2 setHidden:NO];
+		self.viewModel.extraInfoLabel2 = labelString;
+		self.viewModel.extraInfoValue2 = valueString;
 	}
 	else
 	{
-		[label2 setStringValue:@""];
-		[value2 setStringValue:@""];
-		[label2 setHidden:YES];
-		[value2 setHidden:YES];
+		self.viewModel.extraInfoLabel2 = nil;
+		self.viewModel.extraInfoValue2 = nil;
 	}
 }// setLabel2:andValue:
 
@@ -1346,72 +1055,8 @@ has been changed.
 - (void)
 setNeedsDisplay
 {
-	clipboardContent.needsDisplay = YES;
+	self.window.contentView.needsDisplay = YES;
 }// setNeedsDisplay
-
-
-/*!
-Specifies that the current Clipboard data is graphical, and
-causes a more appropriate user interface to be displayed.
-
-(4.0)
-*/
-- (void)
-setShowImage:(BOOL)		flag
-{
-	if (flag)
-	{
-		NSSize	imageSize = [[clipboardImageContent image] size];
-		NSRect	newFrame = [clipboardContent bounds];
-		
-		
-		newFrame.origin.x += kSeparatorPerceivedWidth;
-		newFrame.size.width -= kSeparatorPerceivedWidth;
-		if (NO == [clipboardImageContainer isDescendantOf:clipboardContent])
-		{
-			[clipboardContent addSubview:clipboardImageContainer];
-		}
-		[clipboardImageContainer setFrame:newFrame];
-		[clipboardImageContent setFrameSize:imageSize];
-		[clipboardImageContainer setHidden:NO];
-	}
-	else
-	{
-		[clipboardImageContainer removeFromSuperview];
-		[clipboardImageContainer setHidden:YES];
-	}
-}// setShowImage:
-
-
-/*!
-Specifies that the current Clipboard data is textual, and
-causes a more appropriate user interface to be displayed.
-
-(4.0)
-*/
-- (void)
-setShowText:(BOOL)		flag
-{
-	if (flag)
-	{
-		NSRect	newFrame = [clipboardContent bounds];
-		
-		
-		newFrame.origin.x += kSeparatorPerceivedWidth;
-		newFrame.size.width -= kSeparatorPerceivedWidth;
-		if (NO == [clipboardTextContainer isDescendantOf:clipboardContent])
-		{
-			[clipboardContent addSubview:clipboardTextContainer];
-		}
-		[clipboardTextContainer setFrame:newFrame];
-		[clipboardTextContainer setHidden:NO];
-	}
-	else
-	{
-		[clipboardTextContainer removeFromSuperview];
-		[clipboardTextContainer setHidden:YES];
-	}
-}// setShowText:
 
 
 /*!
@@ -1423,47 +1068,11 @@ data on the Clipboard.
 - (void)
 setSizeField:(NSString*)	aString
 {
-	[valueSize setStringValue:aString];
+	self.viewModel.sizeValue = aString;
 }// setSizeField:
 
 
 #pragma mark NSWindowController
-
-
-/*!
-Handles initialization that depends on user interface
-elements being properly set up.  (Everything else is just
-done in "init...".)
-
-(4.0)
-*/
-- (void)
-windowDidLoad
-{
-	[super windowDidLoad];
-	assert(nil != clipboardContent);
-	assert(nil != clipboardImageContainer);
-	assert(nil != clipboardImageContent);
-	assert(nil != clipboardTextContainer);
-	assert(nil != clipboardTextContent);
-	assert(nil != valueKind);
-	assert(nil != valueSize);
-	assert(nil != label1);
-	assert(nil != value1);
-	assert(nil != label2);
-	assert(nil != value2);
-	
-	[[self window] setExcludedFromWindowsMenu:YES];
-	
-	// the horizontal scroller is enabled in the NIB, but that has no effect
-	// unless the text itself is set up to never wrap...
-	//[[clipboardTextContent textContainer] setWidthTracksTextView:NO];
-	
-	[self setShowImage:NO];
-	[self setShowText:NO];
-	[self setLabel1:nil andValue:nil];
-	[self setLabel2:nil andValue:nil];
-}// windowDidLoad
 
 
 /*!
