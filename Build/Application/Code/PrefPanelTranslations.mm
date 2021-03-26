@@ -61,40 +61,49 @@
 #import "TextTranslation.h"
 #import "UIStrings.h"
 
+// Swift imports
+#import <MacTermQuills/MacTermQuills-Swift.h>
+
 
 
 #pragma mark Types
 
 /*!
-Implements an object wrapper for translation tables, that allows
-them to be easily inserted into user interface elements without
-losing less user-friendly information about each encoding.
+Implements SwiftUI interaction for the “Full Screen” panel.
+
+This is technically only a separate internal class because the main
+view controller must be visible in the header but a Swift-defined
+protocol for the view controller must be implemented somewhere.
+Swift imports are not safe to do from header files but they can be
+done from this implementation file, and used by this internal class.
 */
-@interface PrefPanelTranslations_TableInfo : BoundName_Object //{
-{
-@private
-	CFStringEncoding	encodingType;
-}
+@interface PrefPanelTranslations_ActionHandler : NSObject< UIPrefsTranslations_ActionHandling > //{
 
-// initializers
-	- (instancetype)
-	initWithEncodingType:(CFStringEncoding)_
-	description:(NSString*)_;
-
-// accessors; see "Translation Tables" array controller in the NIB, for key names
-	- (CFStringEncoding)
-	encodingType;
+// new methods
 	- (void)
-	setEncodingType:(CFStringEncoding)_;
+	fontPanelWillClose:(id)_;
+	- (void)
+	updateViewModelFromPrefsMgr;
+
+// accessors
+	@property (strong) PrefsContextManager_Object*
+	prefsMgr;
+	@property (strong) UIPrefsTranslations_Model*
+	viewModel;
 
 @end //}
 
-#pragma mark Internal Method Prototypes
 
 /*!
-The private class interface.
+Private properties.
 */
-@interface PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal) @end
+@interface PrefPanelTranslations_VC () //{
+
+// accessors
+	@property (strong) PrefPanelTranslations_ActionHandler*
+	actionHandler;
+
+@end //}
 
 
 
@@ -133,52 +142,219 @@ PrefPanelTranslations_NewTagSet ()
 #pragma mark Internal Methods
 
 #pragma mark -
-@implementation PrefPanelTranslations_TableInfo
+@implementation PrefPanelTranslations_ActionHandler //{
 
 
 /*!
 Designated initializer.
 
-(4.1)
+(2021.03)
 */
 - (instancetype)
-initWithEncodingType:(CFStringEncoding)		anEncoding
-description:(NSString*)						aDescription
+init
 {
-	self = [super initWithBoundName:aDescription];
+	self = [super init];
 	if (nil != self)
 	{
-		[self setEncodingType:anEncoding];
+		_prefsMgr = nil; // see "panelViewManager:initializeWithContext:"
+		_viewModel = [[UIPrefsTranslations_Model alloc] initWithRunner:self]; // transfer ownership
+		
+		UInt16		characterSetCount = TextTranslation_ReturnCharacterSetCount();
+		auto		mutableArray = [[NSMutableArray< UIPrefsTranslations_ItemModel* > alloc] initWithCapacity:characterSetCount];
+		
+		
+		// build a table of available text encodings
+		for (UInt16 i = 1; i <= characterSetCount; ++i)
+		{
+			CFStringEncoding	encodingID = TextTranslation_ReturnIndexedCharacterSet(i);
+			
+			
+			[mutableArray addObject:[[UIPrefsTranslations_ItemModel alloc] init:encodingID]];
+		}
+		self.viewModel.translationTableArray = mutableArray;
 	}
 	return self;
 }// init
 
 
-#pragma mark Accessors
+/*!
+Destructor.
+
+(2021.03)
+*/
+- (void)
+dealloc
+{
+	[self ignoreWhenObjectsPostNotes];
+}// dealloc
+
+
+#pragma mark New Methods
 
 
 /*!
-Accessor.
+See "setBackupFontWithViewModel:".
 
-(4.0)
+(2021.03)
 */
-- (CFStringEncoding)
-encodingType
-{
-	return encodingType;
-}
 - (void)
-setEncodingType:(CFStringEncoding)		anEncoding
+fontPanelWillClose:(id)		sender
 {
-	encodingType = anEncoding;
-}// setEncodingType:
+	self.viewModel.isFontPanelBindingToBackupFont = NO;
+}// fontPanelWillClose:
 
 
-@end // PrefPanelTranslations_TableInfo
+/*!
+Updates the view model’s observed properties based on
+current preferences context data.
 
+This is only needed when changing contexts.
+
+See also "dataUpdated", which should be roughly the
+inverse of this.
+
+(2021.03)
+*/
+- (void)
+updateViewModelFromPrefsMgr
+{
+	Preferences_ContextRef	sourceContext = self.prefsMgr.currentContext;
+	Boolean					isDefault = false; // reused below
+	
+	
+	// allow initialization of values without triggers
+	self.viewModel.disableWriteback = YES;
+	
+	// update settings
+	{
+		CFStringEncoding	preferenceValue = TextTranslation_ContextReturnEncoding(sourceContext);
+		
+		
+		if (kCFStringEncodingInvalidId == preferenceValue)
+		{
+			self.viewModel.selectedEncoding = nil; // SwiftUI binding
+		}
+		else
+		{
+			self.viewModel.selectedEncoding = [[UIPrefsTranslations_ItemModel alloc] init:preferenceValue]; // SwiftUI binding
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagBackupFontName;
+		CFStringRef			preferenceValue = CFSTR("");
+		Preferences_Result	prefsResult = Preferences_ContextGetData(sourceContext, preferenceTag,
+																		sizeof(preferenceValue), &preferenceValue,
+																		true/* search defaults */, &isDefault);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			//Console_Warning(Console_WriteValueFourChars, "failed to get local copy of preference for tag", preferenceTag);
+			//Console_Warning(Console_WriteValue, "preference result", prefsResult);
+			self.viewModel.backupFontName = nil; // SwiftUI binding
+			self.viewModel.useBackupFont = false; // SwiftUI binding
+		}
+		else
+		{
+			self.viewModel.backupFontName = BRIDGE_CAST(preferenceValue, NSString*); // SwiftUI binding
+			self.viewModel.useBackupFont = true; // SwiftUI binding
+			//self.viewModel.isDefaultBackupFont = isDefault; // SwiftUI binding
+		}
+	}
+	
+	// restore triggers
+	self.viewModel.disableWriteback = NO;
+}// updateViewModelFromPrefsMgr
+
+
+#pragma mark UIPrefsTranslations_ActionHandling
+
+
+/*!
+Called by the UI when the user has made a change.
+
+Currently this is called for any change to any setting so the
+only way to respond is to copy all model data to the preferences
+context.  If performance or other issues arise, it is possible
+to expand the protocol to have (say) per-setting callbacks but
+for now this is simpler and sufficient.
+
+See also "updateViewModelFromPrefsMgr", which should be roughly
+the inverse of this.
+
+(2021.03)
+*/
+- (void)
+dataUpdated
+{
+	Preferences_ContextRef	targetContext = self.prefsMgr.currentContext;
+	
+	
+	// update settings
+	if (nil != self.viewModel.selectedEncoding)
+	{
+		if (false == TextTranslation_ContextSetEncoding(targetContext, self.viewModel.selectedEncoding.id))
+		{
+			Console_Warning(Console_WriteLine, "failed to save text encoding");
+		}
+	}
+	{
+		Preferences_Tag		preferenceTag = kPreferences_TagBackupFontName;
+		CFStringRef			preferenceValue = BRIDGE_CAST(self.viewModel.backupFontName, CFStringRef);
+		
+		
+		if (nullptr == preferenceValue)
+		{
+			Preferences_ContextDeleteData(targetContext, preferenceTag);
+		}
+		else
+		{
+			Preferences_Result	prefsResult = Preferences_ContextSetData(targetContext, preferenceTag,
+																			sizeof(preferenceValue), &preferenceValue);
+			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteValueFourChars, "failed to update local copy of preference for tag", preferenceTag);
+				Console_Warning(Console_WriteValue, "preference result", prefsResult);
+			}
+		}
+	}
+}// dataUpdated
+
+
+/*!
+Called by the UI when the user asks to select a new
+backup font.  This responds by displaying the system
+Font Panel (bound to the preference setting).
+
+(2021.03)
+*/
+- (void)
+setBackupFontWithViewModel:(UIPrefsTranslations_Model*)		viewModel
+{
+	if (nil == viewModel)
+	{
+		[self ignoreWhenObject:[NSFontPanel sharedFontPanel] postsNote:NSWindowWillCloseNotification];
+		[[NSFontPanel sharedFontPanel] orderOut:nil];
+	}
+	else
+	{
+		NSFont*		initialFont = [NSFont fontWithName:viewModel.backupFontName size:[NSFont systemFontSize]];
+		
+		
+		viewModel.isFontPanelBindingToBackupFont = YES;
+		[[NSFontManager sharedFontManager] setSelectedFont:initialFont isMultiple:NO];
+		[[NSFontPanel sharedFontPanel] orderFront:nil];
+		[self whenObject:[NSFontPanel sharedFontPanel] postsNote:NSWindowWillCloseNotification performSelector:@selector(fontPanelWillClose:)]; // see "dealloc"
+	}
+}// setBackupFontWithViewModel
+
+
+@end //}
 
 #pragma mark -
-@implementation PrefPanelTranslations_ViewManager
+@implementation PrefPanelTranslations_VC //{
 
 
 /*!
@@ -189,7 +365,11 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self = [super initWithNibNamed:@"PrefPanelTranslationsCocoa" delegate:self context:nullptr];
+	PrefPanelTranslations_ActionHandler*	actionHandler = [[PrefPanelTranslations_ActionHandler alloc] init];
+	NSView*									newView = [UIPrefsTranslations_ObjC makeView:actionHandler.viewModel];
+	
+	
+	self = [super initWithView:newView delegate:self context:actionHandler/* transfer ownership (becomes "actionHandler" property in "panelViewManager:initializeWithContext:") */];
 	if (nil != self)
 	{
 		// do not initialize here; most likely should use "panelViewManager:initializeWithContext:"
@@ -198,209 +378,24 @@ init
 }// init
 
 
-#pragma mark Accessors
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (BOOL)
-backupFontEnabled
-{
-	return (NO == [[self backupFontFamilyName] isEqualToString:@""]);
-}
-- (void)
-setBackupFontEnabled:(BOOL)		aFlag
-{
-	if ([self backupFontEnabled] != aFlag)
-	{
-		if (aFlag)
-		{
-			// the default is arbitrary (TEMPORARY; should probably read this from somewhere else)
-			NSString*	defaultFont = [[NSFont userFixedPitchFontOfSize:[NSFont systemFontSize]] familyName];
-			
-			
-			if (nil == defaultFont)
-			{
-				defaultFont = @"Monaco";
-			}
-			[self setBackupFontFamilyName:defaultFont];
-		}
-		else
-		{
-			[self setBackupFontFamilyName:@""];
-		}
-	}
-}// setBackupFontEnabled:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSString*)
-backupFontFamilyName
-{
-	NSString*	result = @"";
-	
-	
-	if (Preferences_ContextIsValid(self->activeContext))
-	{
-		CFStringRef			fontName = nullptr;
-		Preferences_Result	prefsResult = Preferences_ContextGetData(self->activeContext, kPreferences_TagBackupFontName,
-																		sizeof(fontName), &fontName, false/* search defaults too */);
-		
-		
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			result = BRIDGE_CAST(fontName, NSString*);
-		}
-	}
-	return result;
-}
-- (void)
-setBackupFontFamilyName:(NSString*)		aString
-{
-	if (Preferences_ContextIsValid(self->activeContext))
-	{
-		CFStringRef			fontName = BRIDGE_CAST(aString, CFStringRef);
-		BOOL				saveOK = NO;
-		Preferences_Result	prefsResult = Preferences_ContextSetData(self->activeContext, kPreferences_TagBackupFontName,
-																		sizeof(fontName), &fontName);
-		
-		
-		if (kPreferences_ResultOK == prefsResult)
-		{
-			saveOK = YES;
-		}
-		
-		if (NO == saveOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save backup font preference");
-		}
-	}
-}// setBackupFontFamilyName:
-
-
-/*!
-Accessor.
-
-(4.0)
-*/
-- (NSIndexSet*)
-translationTableIndexes
-{
-	NSIndexSet*		result = [NSIndexSet indexSetWithIndex:0];
-	
-	
-	if (Preferences_ContextIsValid(self->activeContext))
-	{
-		CFStringEncoding	encodingID = TextTranslation_ContextReturnEncoding(self->activeContext, kCFStringEncodingInvalidId);
-		
-		
-		if (kCFStringEncodingInvalidId != encodingID)
-		{
-			UInt16		index = TextTranslation_ReturnCharacterSetIndex(encodingID);
-			
-			
-			if (0 == index)
-			{
-				// not found
-				Console_Warning(Console_WriteValue, "saved encoding is not available on the current system", encodingID);
-			}
-			else
-			{
-				// translate from one-based to zero-based
-				result = [NSIndexSet indexSetWithIndex:(index - 1)];
-			}
-		}
-	}
-	return result;
-}
-- (void)
-setTranslationTableIndexes:(NSIndexSet*)	indexes
-{
-	if (Preferences_ContextIsValid(self->activeContext))
-	{
-		BOOL	saveOK = NO;
-		
-		
-		[self willChangeValueForKey:@"translationTableIndexes"];
-		
-		if ([indexes count] > 0)
-		{
-			// translate from zero-based to one-based
-			UInt16		index = STATIC_CAST(1 + [indexes firstIndex], UInt16);
-			
-			
-			// update preferences
-			if (TextTranslation_ContextSetEncoding(self->activeContext, TextTranslation_ReturnIndexedCharacterSet(index),
-													false/* via copy */))
-			{
-				saveOK = YES;
-			}
-			
-			// scroll the list to reveal the current selection
-			[self->translationTableView scrollRowToVisible:[indexes firstIndex]];
-		}
-		
-		if (NO == saveOK)
-		{
-			Console_Warning(Console_WriteLine, "failed to save translation table preference");
-		}
-		
-		[self didChangeValueForKey:@"translationTableIndexes"];
-	}
-}// setTranslationTableIndexes:
-
-
-/*!
-Accessor.
-
-(4.1)
-*/
-- (NSArray*)
-translationTables
-{
-	return self->translationTables;
-}
-
-
-#pragma mark Actions
-
-
-/*!
-Displays a font panel for editing the backup font.
-
-(4.1)
-*/
-- (IBAction)
-performBackupFontSelection:(id)		sender
-{
-	[[NSFontPanel sharedFontPanel] orderFront:sender];
-}// performBackupFontSelection:
-
-
 #pragma mark NSFontPanel
 
 
 /*!
-Updates the “backup font” preference based on the user’s
-selection in the system’s Fonts panel.
+Updates the “backup font” based on the user’s selection
+in the system’s Fonts panel.
 
-(4.1)
+(2021.03)
 */
 - (void)
 changeFont:(id)		sender
 {
-	NSFont*		oldFont = [NSFont fontWithName:[self backupFontFamilyName] size:[NSFont systemFontSize]];
-	NSFont*		newFont = [sender convertFont:oldFont];
+	NSFont*		defaultFont = [NSFont monospacedSystemFontOfSize:[NSFont systemFontSize] weight:NSFontWeightRegular];
+	NSFont*		oldFont = [NSFont fontWithName:self.actionHandler.viewModel.backupFontName size:[NSFont systemFontSize]];
+	NSFont*		newFont = [sender convertFont:((nil == oldFont) ? defaultFont : oldFont)];
 	
 	
-	[self setBackupFontFamilyName:[newFont familyName]];
+	self.actionHandler.viewModel.backupFontName = newFont.familyName;
 }// changeFont:
 
 
@@ -418,25 +413,18 @@ bindings succeed.
 panelViewManager:(Panel_ViewManager*)	aViewManager
 initializeWithContext:(NSObject*)		aContext
 {
-#pragma unused(aViewManager, aContext)
-	UInt16		characterSetCount = TextTranslation_ReturnCharacterSetCount();
+#pragma unused(aViewManager)
+	PrefPanelTranslations_ActionHandler*	actionHandler = STATIC_CAST(aContext, PrefPanelTranslations_ActionHandler*);
 	
 	
-	self->translationTables = [[NSMutableArray alloc] initWithCapacity:characterSetCount];
-	self->activeContext = nullptr; // set later
+	actionHandler.prefsMgr = [[PrefsContextManager_Object alloc] initWithDefaultContextInClass:[self preferencesClass]];
 	
-	// build a table of available text encodings
-	[self willChangeValueForKey:@"translationTables"];
-	for (UInt16 i = 1; i <= characterSetCount; ++i)
-	{
-		CFStringEncoding	encodingID = TextTranslation_ReturnIndexedCharacterSet(i);
-		NSString*			encodingName = BRIDGE_CAST(CFStringGetNameOfEncoding(encodingID), NSString*);
-		
-		
-		[self->translationTables addObject:[[PrefPanelTranslations_TableInfo alloc]
-												initWithEncodingType:encodingID description:encodingName]];
-	}
-	[self didChangeValueForKey:@"translationTables"];
+	_actionHandler = actionHandler; // transfer ownership
+	
+	// TEMPORARY; not clear how to extract views from SwiftUI-constructed hierarchy;
+	// for now, assign to itself so it is not "nil"
+	self.logicalFirstResponder = self.view;
+	self.logicalLastResponder = self.view;
 }// panelViewManager:initializeWithContext:
 
 
@@ -465,7 +453,6 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 didLoadContainerView:(NSView*)			aContainerView
 {
 #pragma unused(aViewManager, aContainerView)
-	assert(nil != translationTableView);
 }// panelViewManager:didLoadContainerView:
 
 
@@ -479,7 +466,7 @@ panelViewManager:(Panel_ViewManager*)	aViewManager
 requestingIdealSize:(NSSize*)			outIdealSize
 {
 #pragma unused(aViewManager)
-	*outIdealSize = [[self managedView] frame].size;
+	*outIdealSize = CGSizeMake(500, 350); // somewhat arbitrary; see SwiftUI code/playground;
 }// panelViewManager:requestingIdealSize:
 
 
@@ -539,14 +526,11 @@ didChangeFromDataSet:(void*)			oldDataSet
 toDataSet:(void*)						newDataSet
 {
 #pragma unused(aViewManager, oldDataSet)
-	self->activeContext = REINTERPRET_CAST(newDataSet, Preferences_ContextRef);
+	// apply the specified settings
+	[self.actionHandler.prefsMgr setCurrentContext:REINTERPRET_CAST(newDataSet, Preferences_ContextRef)];
 	
-	// invoke every accessor with itself, which has the effect of
-	// reading the current preference values (of the now-current
-	// new context) and then updating the display based on them
-	[self setBackupFontEnabled:[self backupFontEnabled]];
-	[self setBackupFontFamilyName:[self backupFontFamilyName]];
-	[self setTranslationTableIndexes:[self translationTableIndexes]];
+	// update the view by changing the model’s observed variables
+	[self.actionHandler updateViewModelFromPrefsMgr];
 }// panelViewManager:didChangeFromDataSet:toDataSet:
 
 
@@ -660,13 +644,6 @@ preferencesClass
 }// preferencesClass
 
 
-@end // PrefPanelTranslations_ViewManager
-
-
-#pragma mark -
-@implementation PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
-
-
-@end // PrefPanelTranslations_ViewManager (PrefPanelTranslations_ViewManagerInternal)
+@end //} PrefPanelTranslations_VC
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

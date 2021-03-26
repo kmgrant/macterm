@@ -233,7 +233,6 @@ Base.lproj/PrefPanelFormatStandardColorsCocoa \
 Base.lproj/PrefPanelMacrosCocoa \
 Base.lproj/PrefPanelSessionDataFlowCocoa \
 Base.lproj/PrefPanelSessionResourceCocoa \
-Base.lproj/PrefPanelTranslationsCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \
 Base.lproj/PrefsWindowCocoa \
 Base.lproj/ServerBrowserCocoa \

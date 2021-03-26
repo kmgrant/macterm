@@ -50,40 +50,10 @@
 #ifdef __OBJC__
 
 /*!
-Loads a NIB file that defines this panel.
-
-Note that this is only in the header for the sake of
-Interface Builder, which will not synchronize with
-changes to an interface declared in a ".mm" file.
+Implements the “Translations” panel.
 */
-@interface PrefPanelTranslations_ViewManager : Panel_ViewManager< Panel_Delegate,
-																	PrefsWindow_PanelInterface > //{
-{
-	IBOutlet NSTableView*	translationTableView;
-@private
-	NSMutableArray*				translationTables;
-	Preferences_ContextRef		activeContext;
-}
-
-// accessors
-	- (BOOL)
-	backupFontEnabled;
-	- (void)
-	setBackupFontEnabled:(BOOL)_; // binding
-	- (NSString*)
-	backupFontFamilyName;
-	- (void)
-	setBackupFontFamilyName:(NSString*)_; // binding
-	- (NSIndexSet*)
-	translationTableIndexes;
-	- (void)
-	setTranslationTableIndexes:(NSIndexSet*)_; // binding
-	- (NSArray*)
-	translationTables; // binding
-
-// actions
-	- (IBAction)
-	performBackupFontSelection:(id)_;
+@interface PrefPanelTranslations_VC : Panel_ViewManager< Panel_Delegate,
+															PrefsWindow_PanelInterface > //{
 
 @end //}
 

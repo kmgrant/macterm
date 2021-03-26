@@ -2084,7 +2084,7 @@ windowDidLoad
 					[PrefPanelSessions_ViewManager class],
 					[PrefPanelTerminals_ViewManager class],
 					[PrefPanelFormats_ViewManager class],
-					[PrefPanelTranslations_ViewManager class]
+					[PrefPanelTranslations_VC class]
 				])
 		{
 			newViewMgr = [[viewMgrClass alloc] init];

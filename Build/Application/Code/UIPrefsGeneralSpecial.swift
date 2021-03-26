@@ -49,17 +49,18 @@ import SwiftUI
 @objc public protocol UIPrefsGeneralSpecial_ActionHandling : NSObjectProtocol {
 	// implement these functions to bind to button actions
 	func dataUpdated()
-	func setWindowStackingOrigin()
+	func setWindowStackingOrigin(viewModel: UIPrefsGeneralSpecial_Model) // caller should set "viewModel.isArrangeWindowBindingToStackingOrigin" while bound
 }
 
 class UIPrefsGeneralSpecial_RunnerDummy : NSObject, UIPrefsGeneralSpecial_ActionHandling {
 	// dummy used for debugging in playground (just prints function that is called)
 	func dataUpdated() { print(#function) }
-	func setWindowStackingOrigin() { print(#function) }
+	func setWindowStackingOrigin(viewModel: UIPrefsGeneralSpecial_Model) { print(#function); viewModel.isArrangeWindowBindingToStackingOrigin = true }
 }
 
 public class UIPrefsGeneralSpecial_Model : UICommon_BaseModel, ObservableObject {
 
+	@Published @objc public var isArrangeWindowBindingToStackingOrigin = false
 	@Published @objc public var selectedCursorShape: Terminal_CursorType = .verticalLine {
 		didSet { ifWritebackEnabled { runner.dataUpdated() } }
 	}
@@ -158,11 +159,17 @@ public struct UIPrefsGeneralSpecial_View : View {
 			Spacer().asMacTermMinorSectionSpacingV()
 			Group {
 				UICommon_OptionLineView("Window Stacking Origin", noDefaultSpacing: true) {
-					Button(action: { viewModel.runner.setWindowStackingOrigin() }) {
+					Button(action: {
+						if viewModel.isArrangeWindowBindingToStackingOrigin {
+							viewModel.isArrangeWindowBindingToStackingOrigin = false
+						} else {
+							viewModel.isArrangeWindowBindingToStackingOrigin = false // initially...
+							viewModel.runner.setWindowStackingOrigin(viewModel: viewModel)
+						}
+					}) {
 						Text("Set…")
-							.frame(minWidth: 50)
-							.macTermToolTipText("Specify screen location where top-left corner of first new window should be anchored.")
-					}
+					}.asMacTermKeypadKeyCompactTitleExactWidth(66, selected: viewModel.isArrangeWindowBindingToStackingOrigin)
+						.macTermToolTipText("Specify screen location where top-left corner of first new window should be anchored.")
 				}
 				Spacer().asMacTermMinorSectionSpacingV()
 				Group {

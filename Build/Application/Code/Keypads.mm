@@ -152,6 +152,7 @@ FourCharCode				gArrangeWindowDataTypeForWindowBinding = kPreferences_DataTypeCG
 FourCharCode				gArrangeWindowDataTypeForScreenBinding = kPreferences_DataTypeHIRect;
 CGPoint						gArrangeWindowStackingOrigin = CGPointZero;
 void						(^gArrangeWindowDidEndBlock)(void) = nil;
+NSObject< Keypads_ArrangeWindowsResponder >*	gArrangeWindowsResponder = nil;
 NSObject< Keypads_ControlKeyResponder >*		gControlKeysResponder = nil;
 Boolean						gControlKeysMayAutoHide = false;
 Session_FunctionKeyLayout	gFunctionKeysLayout = kSession_FunctionKeyLayoutVT220;
@@ -368,6 +369,14 @@ Keypads_RemoveResponder		(Keypads_WindowType		inFromKeypad,
 {
 	switch (inFromKeypad)
 	{
+	case kKeypads_WindowTypeArrangeWindow:
+		if (gArrangeWindowsResponder == inCurrentTarget)
+		{
+			gArrangeWindowsResponder = nil;
+			Keypads_SetVisible(inFromKeypad, false);
+		}
+		break;
+	
 	case kKeypads_WindowTypeControlKeys:
 		if (gControlKeysResponder == inCurrentTarget)
 		{
@@ -380,7 +389,6 @@ Keypads_RemoveResponder		(Keypads_WindowType		inFromKeypad,
 		}
 		break;
 	
-	case kKeypads_WindowTypeArrangeWindow:
 	case kKeypads_WindowTypeFunctionKeys:
 	case kKeypads_WindowTypeVT220Keys:
 	default:
@@ -441,6 +449,24 @@ Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
 	{
 		switch (inFromKeypad)
 		{
+		case kKeypads_WindowTypeArrangeWindow:
+			if ([inCurrentTarget conformsToProtocol:@protocol(Keypads_ArrangeWindowsResponder)])
+			{
+				auto		asResponder = STATIC_CAST(inCurrentTarget, NSObject< Keypads_ArrangeWindowsResponder >*);
+				
+				
+				gArrangeWindowsResponder = asResponder;
+			}
+			else
+			{
+				NSLog(@"arrange-windows responder does not conform to protocol correctly: %@", inCurrentTarget);
+			}
+			if (false == Keypads_IsVisible(inFromKeypad))
+			{
+				Keypads_SetVisible(inFromKeypad, true);
+			}
+			break;
+		
 		case kKeypads_WindowTypeControlKeys:
 			if ([inCurrentTarget conformsToProtocol:@protocol(Keypads_ControlKeyResponder)])
 			{
@@ -453,14 +479,13 @@ Keypads_SetResponder	(Keypads_WindowType		inFromKeypad,
 			{
 				NSLog(@"keypad responder does not conform to protocol correctly: %@", inCurrentTarget);
 			}
-			if (false == Keypads_IsVisible(kKeypads_WindowTypeControlKeys))
+			if (false == Keypads_IsVisible(inFromKeypad))
 			{
 				Keypads_SetVisible(inFromKeypad, true);
 				gControlKeysMayAutoHide = true;
 			}
 			break;
 		
-		case kKeypads_WindowTypeArrangeWindow:
 		case kKeypads_WindowTypeFunctionKeys:
 		case kKeypads_WindowTypeVT220Keys:
 		default:
@@ -839,12 +864,17 @@ doneArrangingWithViewModel:(UIArrangeWindow_Model*)		viewModel
 	}
 	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, false);
 	
+	if (nil != gArrangeWindowsResponder)
+	{
+		[gArrangeWindowsResponder arrangeWindowsDialogHidden];
+	}
+	
 	// release the binding
 	if (nullptr != gArrangeWindowBindingContext)
 	{
 		Preferences_ReleaseContext(&gArrangeWindowBindingContext);
 	}
-}// doneArranging
+}// doneArrangingWithViewModel:
 
 
 @end //} Keypads_ArrangeWindowPanelController

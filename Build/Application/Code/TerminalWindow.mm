@@ -607,7 +607,7 @@ TerminalWindow_DisplayCustomTranslationUI	(TerminalWindowRef		inRef)
 		else
 		{
 			GenericDialog_Wrap					dialog;
-			PrefPanelTranslations_ViewManager*	embeddedPanel = [[PrefPanelTranslations_ViewManager alloc] init];
+			PrefPanelTranslations_VC*			embeddedPanel = [[PrefPanelTranslations_VC alloc] init];
 			CFRetainRelease						addToPrefsString(UIStrings_ReturnCopy(kUIStrings_PreferencesWindowAddToFavoritesButton),
 																	CFRetainRelease::kAlreadyRetained);
 			CFRetainRelease						cancelString(UIStrings_ReturnCopy(kUIStrings_ButtonCancel),

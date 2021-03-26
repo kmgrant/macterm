@@ -174,7 +174,7 @@ protocol for the view controller must be implemented somewhere.
 Swift imports are not safe to do from header files but they can be
 done from this implementation file, and used by this internal class.
 */
-@interface PrefPanelGeneral_SpecialActionHandler : NSObject< UIPrefsGeneralSpecial_ActionHandling > //{
+@interface PrefPanelGeneral_SpecialActionHandler : NSObject< Keypads_ArrangeWindowsResponder, UIPrefsGeneralSpecial_ActionHandling > //{
 {
 @private
 	PrefsContextManager_Object*		_prefsMgr;
@@ -2276,7 +2276,7 @@ updateViewModelFromPrefsMgr
 	}
 	// note: stacking origin (kPreferences_TagWindowStackingOrigin) is
 	// not directly displayed in the panel and is handled indirectly
-	// via the "setWindowStackingOrigin" protocol method
+	// via the "setWindowStackingOriginWithViewModel:" protocol method
 	{
 		Preferences_Tag		preferenceTag = kPreferences_TagTerminalResizeAffectsFontSize;
 		Boolean				preferenceValue = false;
@@ -2361,6 +2361,26 @@ updateViewModelFromPrefsMgr
 }// updateViewModelFromPrefsMgr
 
 
+#pragma mark Keypads_ArrangeWindowsResponder
+
+
+/*!
+Received when the “arrange windows” dialog is closed while
+this class instance is its current responder (as set by
+Keypads_SetResponder()).
+
+This handles the event by updating the UI and state.
+
+(2021.03)
+*/
+- (void)
+arrangeWindowsDialogHidden
+{
+	// remove annotations from buttons that indicate that location setting is in progress
+	self.viewModel.isArrangeWindowBindingToStackingOrigin = NO;
+}// arrangeWindowsDialogHidden
+
+
 #pragma mark UIPrefsGeneralSpecial_ActionHandling
 
 
@@ -2413,7 +2433,7 @@ dataUpdated
 	}
 	// note: stacking origin (kPreferences_TagWindowStackingOrigin) is
 	// not directly displayed in the panel and is handled indirectly
-	// via the "setWindowStackingOrigin" protocol method
+	// via the "setWindowStackingOriginWithViewModel:" protocol method
 	{
 		Preferences_Tag		preferenceTag = kPreferences_TagTerminalResizeAffectsFontSize;
 		Boolean				preferenceValue = (UIPrefsGeneralSpecial_WindowResizeEffectTextSize == self.viewModel.selectedWindowResizeEffect);
@@ -2489,11 +2509,13 @@ indirectly through the arrange-window feature.
 (2020.11)
 */
 - (void)
-setWindowStackingOrigin
+setWindowStackingOriginWithViewModel:(UIPrefsGeneralSpecial_Model*)		viewModel
 {
+	viewModel.isArrangeWindowBindingToStackingOrigin = YES;
 	Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin, kPreferences_DataTypeCGPoint);
+	Keypads_SetResponder(kKeypads_WindowTypeArrangeWindow, self);
 	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
-}// setWindowStackingOrigin
+}// setWindowStackingOriginWithViewModel:
 
 
 @end //}

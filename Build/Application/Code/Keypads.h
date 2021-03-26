@@ -65,6 +65,21 @@ enum
 
 /*!
 Classes conform to this protocol in order to receive
+notifications about the “arrange window” palette.
+*/
+@protocol Keypads_ArrangeWindowsResponder //{
+
+@required
+
+	// notification that floating window has been removed
+	- (void)
+	arrangeWindowsDialogHidden;
+
+@end //}
+
+
+/*!
+Classes conform to this protocol in order to receive
 notifications about control keys clicked in the palette.
 */
 @protocol Keypads_ControlKeyResponder //{
@@ -112,14 +127,14 @@ Boolean
 
 void
 	Keypads_RemoveResponder						(Keypads_WindowType			inKeypad,
-												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >*
+												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >* or NSObject< Keypads_ArrangeWindowResponder >*
 
 void
 	Keypads_SetFunctionKeyLayout				(Session_FunctionKeyLayout	inLayout);
 
 void
 	Keypads_SetResponder						(Keypads_WindowType			inKeypad,
-												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >*
+												 NSObject*					inTarget); // NSObject< Keypads_ControlKeyResponder >* or NSObject< Keypads_ArrangeWindowResponder >*
 
 void
 	Keypads_SetVisible							(Keypads_WindowType			inKeypad,
