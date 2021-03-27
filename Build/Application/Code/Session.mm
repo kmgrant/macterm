@@ -7283,8 +7283,13 @@ initWithSession:(SessionRef)	aSession
 
 /*!
 Handles control character sequences, e.g. if the user types
-a control-C then the parameter is 'c'.  Upper-case letters
-should not be sent.
+a control-C then the parameter is 'c'.
+
+The given character should be in the visible range from '@'
+to the delete character (127), i.e. comprising lower-case
+characters, upper-case characters or certain symbols only.
+Otherwise, it will be sent as a raw character (and is a
+programming error).
 
 (2018.12)
 */
@@ -7295,7 +7300,11 @@ terminalView:(TerminalViewRef)			aTerminalViewRef
 	if (Session_IsValid(self.sessionRef))
 	{
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), self.sessionRef);
-		char					controlKeyValue = (aControlChar - '`'); // translate lower-case letter to actual control character
+		char					controlKeyValue = ((aControlChar >= '`') // translate visible character to actual control character
+													? (aControlChar - '`') // e.g. typical for uppercase letter
+													: ((aControlChar >= '@')
+														? (aControlChar - '@') // e.g. typical for lowercase letter or symbol
+														: aControlChar));
 		
 		
 		if (controlKeyValue == ptr->eventKeys.suspend)
@@ -7383,8 +7392,7 @@ receivedDeleteWordBackwardInTerminalView:(TerminalViewRef)		aTerminalViewRef
 
 /*!
 Handles Emacs meta character sequences, e.g. if the user types
-meta-X then the parameter is 'x'.  Upper-case letters should
-not be sent.
+meta-X then the parameter is 'x'.
 
 (2020.04)
 */
@@ -7456,7 +7464,22 @@ terminalView:(TerminalViewRef)	aTerminalViewRef
 			localEchoString(ptr, asCFString);
 		}
 		
-		Session_SendDataCFString(self.sessionRef, asCFString);
+		if (ptr->preferencesCache.remapBackquoteToEscape)
+		{
+			if ((1 == CFStringGetLength(asCFString)) && ('`' == CFStringGetCharacterAtIndex(asCFString, 0)))
+			{
+				// remap backquote to Escape sequence
+				[self receivedControlWithCharacter:'[' terminalView:aTerminalViewRef];
+			}
+			else
+			{
+				Session_SendDataCFString(self.sessionRef, asCFString);
+			}
+		}
+		else
+		{
+			Session_SendDataCFString(self.sessionRef, asCFString);
+		}
 	}
 }// receivedString:terminalView:
 

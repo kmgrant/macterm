@@ -12064,7 +12064,7 @@ keyDown:(NSEvent*)		anEvent
 				char	asChar = STATIC_CAST([characterString characterAtIndex:0], char);
 				
 				
-				if ((asChar >= 32) && (asChar <= 127))
+				if ((asChar >= 64/* '@' */) && (asChar <= 127))
 				{
 					if (metaDown)
 					{
@@ -12969,8 +12969,32 @@ doCommandBySelector:(SEL)	aSelector
 	My_TerminalViewPtr		viewPtr = self.internalViewPtr;
 	
 	
-	//NSLog(@"term view %@: asked to: %@", NSStringFromSelector(_cmd), NSStringFromSelector(aSelector)); // debug
-	if (@selector(deleteBackward:) == aSelector)
+	//NSLog(@"term view '%@' asked to '%@'", NSStringFromSelector(_cmd), NSStringFromSelector(aSelector)); // debug
+	if (@selector(cancel:) == aSelector)
+	{
+		// ignore redundant command
+	}
+	else if (@selector(cancelOperation:) == aSelector)
+	{
+		// Escape key; should be sent to session
+		if (nil != self.textInputDelegate)
+		{
+			if (nullptr != viewPtr)
+			{
+				//[self.textInputDelegate receivedString:@"\033" terminalView:viewPtr->selfRef];
+				[self.textInputDelegate receivedControlWithCharacter:'[' terminalView:viewPtr->selfRef];
+			}
+			else
+			{
+				Sound_StandardAlert();
+			}
+		}
+		else
+		{
+			Sound_StandardAlert();
+		}
+	}
+	else if (@selector(deleteBackward:) == aSelector)
 	{
 		// send appropriate delete sequence to session (varies)
 		if (nullptr != viewPtr)
