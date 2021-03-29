@@ -189,8 +189,6 @@
 		0A08C9F5224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenuCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F6224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatGeneralCocoa.xib; sourceTree = "<group>"; };
 		0A08C9F7224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelFormatStandardColorsCocoa.xib; sourceTree = "<group>"; };
-		0A08C9FC224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelMacrosCocoa.xib; sourceTree = "<group>"; };
-		0A08C9FD224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionDataFlowCocoa.xib; sourceTree = "<group>"; };
 		0A08CA00224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
 		0A08CA06224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
 		0A08CA07224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
@@ -845,8 +843,6 @@
 				0A0E9F511DB17FF3006A8BF5 /* MainMenuCocoa.xib */,
 				0A0E9F771DB18127006A8BF5 /* PrefPanelFormatGeneralCocoa.xib */,
 				0A0E9F791DB18127006A8BF5 /* PrefPanelFormatStandardColorsCocoa.xib */,
-				0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */,
-				0A0E9F851DB18127006A8BF5 /* PrefPanelSessionDataFlowCocoa.xib */,
 				0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */,
 				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
 				0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */,
@@ -1377,22 +1373,6 @@
 				0A08C9F7224F345E00DA2569 /* Base */,
 			);
 			name = PrefPanelFormatStandardColorsCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F831DB18127006A8BF5 /* PrefPanelMacrosCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9FC224F345E00DA2569 /* Base */,
-			);
-			name = PrefPanelMacrosCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F851DB18127006A8BF5 /* PrefPanelSessionDataFlowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08C9FD224F345E00DA2569 /* Base */,
-			);
-			name = PrefPanelSessionDataFlowCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */ = {

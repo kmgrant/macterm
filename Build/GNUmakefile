@@ -230,8 +230,6 @@ Base.lproj/InfoWindowCocoa \
 Base.lproj/MainMenuCocoa \
 Base.lproj/PrefPanelFormatGeneralCocoa \
 Base.lproj/PrefPanelFormatStandardColorsCocoa \
-Base.lproj/PrefPanelMacrosCocoa \
-Base.lproj/PrefPanelSessionDataFlowCocoa \
 Base.lproj/PrefPanelSessionResourceCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \
 Base.lproj/PrefsWindowCocoa \
