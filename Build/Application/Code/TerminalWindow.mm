@@ -3566,17 +3566,19 @@ Eventually, this will be the basis for the default interface.
 initWithTerminalVC:(TerminalView_Controller*)	aViewController
 owner:(TerminalWindowRef)						aTerminalWindowRef
 {
-	self = [super initWithWindowNibName:@"TerminalWindowCocoa"];
+	auto					viewController = [[TerminalWindow_RootVC alloc] init];
+	TerminalWindow_Object*	window = [TerminalWindow_Object windowWithContentViewController:viewController];
+	
+	
+	assert(nil != window);
+	self = [super initWithWindow:window];
 	if (nil != self)
 	{
-		NSView*		contentView = REINTERPRET_CAST(self.window.contentView, NSView*);
-		
-		
 		self.window.delegate = self;
 		
 		_dynamicTouchBar = nil; // created on demand
 		_preferredMacroSetName = @"Default";
-		_rootViewController = [[TerminalWindow_RootVC alloc] init];
+		_rootViewController = viewController; // transfer ownership
 		[self.rootViewController addScrollControllerBeyondEdge:NSMinYEdge];
 		{
 			id		defaultScrollVC = [[self.rootViewController enumerateScrollControllers] nextObject];
@@ -3596,10 +3598,6 @@ owner:(TerminalWindowRef)						aTerminalWindowRef
 		}
 		
 		_terminalWindowRef = aTerminalWindowRef;
-		
-		// add root view controller’s view
-		self.rootViewController.view.frame = NSMakeRect(0, 0, NSWidth(contentView.frame), NSHeight(contentView.frame));
-		[contentView addSubview:self.rootViewController.view];
 		
 		// initialize content view for use in window (remove any default styling, etc.)
 		TerminalView_SelectNothing(aViewController.terminalView.terminalContentView.terminalViewRef);
@@ -5124,10 +5122,18 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self = [super initWithNibName:@"TerminalRootCocoa" bundle:nil];
+	self = [super initWithNibName:nil bundle:nil];
 	if (nil != self)
 	{
+		auto	rootView = [[TerminalWindow_RootView alloc] initWithFrame:NSZeroRect];
+		
+		
 		_terminalScrollControllers = [[NSMutableArray alloc] init];
+		
+		// when no NIB is present, "view" must be assigned
+		rootView.layoutDelegate = self;
+		self.view = rootView;
+		assert(nil != self.rootView);
 	}
 	return self;
 }// init
@@ -5265,31 +5271,6 @@ resizeSubviewsWithOldSize:(NSSize)	anOldSize
 		asVC.view.frame = NSMakeRect(0, 0, NSWidth(self.view.frame), NSHeight(self.view.frame));
 	}
 }// layoutDelegateForView:resizeSubviewsWithOldSize:
-
-
-#pragma mark NSViewController
-
-
-/*!
-Invoked by NSViewController once the "self.view" property is set,
-after the NIB file is loaded.  This essentially guarantees that
-all file-defined user interface elements are now instantiated and
-other settings that depend on valid UI objects can now be made.
-
-NOTE:	As future SDKs are adopted, it makes more sense to only
-		implement "viewDidLoad" (which was only recently added
-		to NSViewController and is not otherwise available).
-		This implementation can essentially move to "viewDidLoad".
-
-(2016.03)
-*/
-- (void)
-loadView
-{
-	[super loadView];
-	assert(nil != self.rootView);
-	self.rootView.layoutDelegate = self;
-}// loadView
 
 
 @end //} TerminalWindow_RootVC

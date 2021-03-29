@@ -195,10 +195,6 @@
 		0A08CA06224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
 		0A08CA07224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08CA09224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
-		0A08CA0A224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Application/Resources/Base.lproj/TerminalRootCocoa.xib; sourceTree = "<group>"; };
-		0A08CA0B224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/TerminalScrollableRootViewCocoa.xib; sourceTree = "<group>"; };
-		0A08CA0C224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/TerminalViewCocoa.xib; sourceTree = "<group>"; };
-		0A08CA0D224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/TerminalWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08CA0F224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08CA1A224F7E3500DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Application/Resources/Base.lproj/Credits.html; sourceTree = "<group>"; };
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
@@ -855,10 +851,6 @@
 				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
 				0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */,
 				0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */,
-				0AC4185B208D35800068A309 /* TerminalRootCocoa.xib */,
-				0AC41859208BB7A10068A309 /* TerminalScrollableRootViewCocoa.xib */,
-				0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */,
-				0A0E9FA11DB18127006A8BF5 /* TerminalWindowCocoa.xib */,
 				0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */,
 			);
 			name = XIBs;
@@ -1435,45 +1427,12 @@
 			name = ServerBrowserCocoa.xib;
 			sourceTree = "<group>";
 		};
-		0A0E9F9F1DB18127006A8BF5 /* TerminalViewCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA0C224F346000DA2569 /* Base */,
-			);
-			name = TerminalViewCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9FA11DB18127006A8BF5 /* TerminalWindowCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA0D224F346000DA2569 /* Base */,
-			);
-			name = TerminalWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
 		0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				0A08CA0F224F346000DA2569 /* Base */,
 			);
 			name = VectorWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AC41859208BB7A10068A309 /* TerminalScrollableRootViewCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA0B224F346000DA2569 /* Base */,
-			);
-			name = TerminalScrollableRootViewCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0AC4185B208D35800068A309 /* TerminalRootCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA0A224F346000DA2569 /* Base */,
-			);
-			name = TerminalRootCocoa.xib;
-			path = ../..;
 			sourceTree = "<group>";
 		};
 		0AC5687412CFC73800BAA7F0 /* Credits.html */ = {

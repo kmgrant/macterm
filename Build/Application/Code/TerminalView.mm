@@ -14047,9 +14047,67 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self = [super initWithNibName:@"TerminalViewCocoa" bundle:nil];
+	self = [super initWithNibName:nil bundle:nil];
 	if (nil != self)
 	{
+		Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL),
+													Preferences_ContextWrap::kAlreadyRetained);
+		Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION),
+														Preferences_ContextWrap::kAlreadyRetained);
+		auto						terminalView = [[TerminalView_Object alloc] initWithFrame:NSZeroRect];
+		
+		
+		terminalView.layoutDelegate = self;
+		
+		@try
+		{
+			// could customize the new contexts above to initialize settings;
+			// currently, this is not done
+			{
+				TerminalScreenRef		buffer = nullptr;
+				Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
+																			translationConfig.returnRef(), &buffer);
+				
+				
+				if (kTerminal_ResultOK != bufferResult)
+				{
+					Console_WriteValue("error creating test terminal screen buffer", bufferResult);
+				}
+				else
+				{
+					TerminalViewRef		viewRef = TerminalView_NewNSViewBased(terminalView, buffer, nullptr/* format */);
+					
+					
+					if (nullptr == viewRef)
+					{
+						Console_WriteLine("error creating test terminal view!");
+					}
+					else
+					{
+						// write some text in various styles to the screen (happens to be a
+						// copy of what the sample view does); this will help with testing
+						// the new Cocoa-based renderer as it is implemented
+						Terminal_EmulatorProcessCString(buffer,
+														"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
+						Terminal_EmulatorProcessCString(buffer,
+														"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
+						// the range selected here should be as long as the length of the word “sel” above
+						TerminalView_SelectVirtualRange(viewRef, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
+						// the range selected here should be as long as the length of the word “find” above
+						TerminalView_FindVirtualRange(viewRef, std::make_pair(std::make_pair(4, 0), std::make_pair(8, 1)/* exclusive end */));
+					}
+				}
+			}
+		}
+		@finally
+		{
+			terminalConfig.clear();
+			translationConfig.clear();
+		}
+		
+		// when no NIB is present, "view" must be assigned
+		self.view = terminalView;
+		assert(nil != self.terminalView);
 	}
 	return self;
 }// init
@@ -14175,81 +14233,6 @@ resizeSubviewsWithOldSize:(NSSize)	anOldSize
 
 
 #pragma mark NSViewController
-
-
-/*!
-Invoked by NSViewController once the "self.view" property is set,
-after the NIB file is loaded.  This essentially guarantees that
-all file-defined user interface elements are now instantiated and
-other settings that depend on valid UI objects can now be made.
-
-NOTE:	As future SDKs are adopted, it makes more sense to only
-		implement "viewDidLoad" (which was only recently added
-		to NSViewController and is not otherwise available).
-		This implementation can essentially move to "viewDidLoad".
-
-(2016.03)
-*/
-- (void)
-loadView
-{
-	[super loadView];
-	assert(nil != self.terminalView);
-	
-	Preferences_ContextWrap		terminalConfig(Preferences_NewContext(Quills::Prefs::TERMINAL),
-												Preferences_ContextWrap::kAlreadyRetained);
-	Preferences_ContextWrap		translationConfig(Preferences_NewContext(Quills::Prefs::TRANSLATION),
-													Preferences_ContextWrap::kAlreadyRetained);
-	
-	
-	self.terminalView.layoutDelegate = self;
-	
-	@try
-	{
-		// could customize the new contexts above to initialize settings;
-		// currently, this is not done
-		{
-			TerminalScreenRef		buffer = nullptr;
-			Terminal_Result			bufferResult = Terminal_NewScreen(terminalConfig.returnRef(),
-																		translationConfig.returnRef(), &buffer);
-			
-			
-			if (kTerminal_ResultOK != bufferResult)
-			{
-				Console_WriteValue("error creating test terminal screen buffer", bufferResult);
-			}
-			else
-			{
-				TerminalViewRef		viewRef = TerminalView_NewNSViewBased(self.terminalView, buffer, nullptr/* format */);
-				
-				
-				if (nullptr == viewRef)
-				{
-					Console_WriteLine("error creating test terminal view!");
-				}
-				else
-				{
-					// write some text in various styles to the screen (happens to be a
-					// copy of what the sample view does); this will help with testing
-					// the new Cocoa-based renderer as it is implemented
-					Terminal_EmulatorProcessCString(buffer,
-													"\033[2J\033[H"); // clear screen, home cursor (assumes VT100)
-					Terminal_EmulatorProcessCString(buffer,
-													"sel find norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m");
-					// the range selected here should be as long as the length of the word “sel” above
-					TerminalView_SelectVirtualRange(viewRef, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
-					// the range selected here should be as long as the length of the word “find” above
-					TerminalView_FindVirtualRange(viewRef, std::make_pair(std::make_pair(4, 0), std::make_pair(8, 1)/* exclusive end */));
-				}
-			}
-		}
-	}
-	@finally
-	{
-		terminalConfig.clear();
-		translationConfig.clear();
-	}
-}// loadView
 
 
 /*!
@@ -14964,10 +14947,18 @@ Designated initializer.
 - (instancetype)
 init
 {
-	self = [super initWithNibName:@"TerminalScrollableRootViewCocoa" bundle:nil];
+	self = [super initWithNibName:nil bundle:nil];
 	if (nil != self)
 	{
+		auto	scrollableRootView = [[TerminalView_ScrollableRootView alloc] initWithFrame:NSZeroRect];
+		
+		
 		_terminalViewControllers = [[NSMutableArray alloc] init];
+		
+		// when no NIB is present, "view" must be assigned
+		scrollableRootView.layoutDelegate = self;
+		self.view = scrollableRootView;
+		assert(nil != self.scrollableRootView);
 	}
 	return self;
 }// init
@@ -15096,31 +15087,6 @@ resizeSubviewsWithOldSize:(NSSize)	anOldSize
 	self.scrollableRootView.scrollBarV.frame = NSMakeRect(NSWidth(self.view.frame) - scrollBarWidth,
 															0, scrollBarWidth, NSHeight(self.view.frame));
 }// layoutDelegateForView:resizeSubviewsWithOldSize:
-
-
-#pragma mark NSViewController
-
-
-/*!
-Invoked by NSViewController once the "self.view" property is set,
-after the NIB file is loaded.  This essentially guarantees that
-all file-defined user interface elements are now instantiated and
-other settings that depend on valid UI objects can now be made.
-
-NOTE:	As future SDKs are adopted, it makes more sense to only
-		implement "viewDidLoad" (which was only recently added
-		to NSViewController and is not otherwise available).
-		This implementation can essentially move to "viewDidLoad".
-
-(2016.03)
-*/
-- (void)
-loadView
-{
-	[super loadView];
-	assert(nil != self.scrollableRootView);
-	self.scrollableRootView.layoutDelegate = self;
-}// loadView
 
 
 @end //} TerminalView_ScrollableRootVC
