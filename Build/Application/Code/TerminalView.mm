@@ -11803,12 +11803,16 @@ performDragOperation:(id <NSDraggingInfo>)		sender
 	}
 	
 	// “type” the text; this could trigger the “multi-line paste” alert
-	sessionResult = Session_UserInputPaste(listeningSession, dragPasteboard);
-	if (sessionResult.ok())
+	if ((nullptr != listeningSession) && (NO == Session_IsReadOnly(listeningSession)))
 	{
-		result = YES;
+		sessionResult = Session_UserInputPaste(listeningSession, dragPasteboard);
+		if (sessionResult.ok())
+		{
+			result = YES;
+		}
 	}
-	else
+	
+	if (NO == result)
 	{
 		Console_Warning(Console_WriteValue, "failed to drop pasteboard item, error", sessionResult.code());
 	}
