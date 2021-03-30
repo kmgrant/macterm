@@ -7021,33 +7021,26 @@ handleMultiClick	(My_TerminalViewPtr		inTerminalViewPtr,
 			Terminal_LineStackStorage	lineIteratorData;
 			Terminal_LineRef			lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, selectionStart.second,
 																					0/* origin row */, &lineIteratorData);
-			UniChar const*				textStart = nullptr;
-			UniChar const*				textPastEnd = nullptr;
-			Terminal_TextCopyFlags		flags = 0L;
+			CFStringRef					textCFString = nullptr;
+			Terminal_Result				getTextError = Terminal_GetLineCFString(inTerminalViewPtr->screen.ref, lineIterator, textCFString);
 			
-			
-			// configure terminal routine
-			if (inTerminalViewPtr->text.selection.isRectangular) flags |= kTerminal_TextCopyFlagsRectangular;
 			
 			// double-click - select a word; or, do intelligent double-click
 			// based on the character underneath the cursor
 			// TEMPORARY; only one line is examined, but this is probably
 			// more useful if it joins at least the preceding line, and
 			// possible the following line as well
-			if (kTerminal_ResultOK ==
-				Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator, textStart, textPastEnd, flags))
+			if (kTerminal_ResultOK != getTextError)
 			{
-				// NOTE: while currently a short-cut is taken to avoid copying the string,
-				// this may have to become a true copy if this is expanded to look at text
-				// across more than one line
-				CFRetainRelease			asCFString(CFStringCreateWithCharactersNoCopy
-													(kCFAllocatorDefault, textStart, textPastEnd - textStart, kCFAllocatorNull/* deallocator */),
-													CFRetainRelease::kAlreadyRetained);
-				std::string				asUTF8;
+				Console_Warning(Console_WriteValue, "failed to obtain current line of terminal text", getTextError);
+			}
+			else
+			{
+				const char*				ptrUTF8 = [BRIDGE_CAST(textCFString, NSString*) UTF8String];
+				std::string				asUTF8{ (ptrUTF8) ? ptrUTF8 : "" };
 				std::pair< long, long >	wordInfo; // offset (zero-based), and count
 				
 				
-				StringUtilities_CFToUTF8(asCFString.returnCFStringRef(), asUTF8);
 				try
 				{
 					wordInfo = Quills::Terminal::word_of_char_in_string(asUTF8, selectionStart.first);

@@ -416,6 +416,11 @@ Terminal_Result
 											 Terminal_TextFilterFlags	inFlags = 0);
 
 Terminal_Result
+	Terminal_GetLineCFString				(TerminalScreenRef			inScreen,
+											 Terminal_LineRef			inRow,
+											 CFStringRef&				outCFString);
+
+Terminal_Result
 	Terminal_GetLineRange					(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumn,

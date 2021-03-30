@@ -3709,6 +3709,43 @@ Terminal_GetLine	(TerminalScreenRef			inScreen,
 
 
 /*!
+Returns the raw text of an entire line in constant time.
+
+\retval kTerminal_ResultOK
+if the reference was returned successfully
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference is invalid
+
+\retval kTerminal_ResultInvalidIterator
+if the specified row reference is invalid
+
+(2021.03)
+*/
+Terminal_Result
+Terminal_GetLineCFString	(TerminalScreenRef	inScreen,
+							 Terminal_LineRef	inRow,
+							 CFStringRef&		outCFString)
+{
+	Terminal_Result			result = kTerminal_ResultOK;
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
+	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
+	
+	
+	outCFString = nullptr;
+	
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
+	else
+	{
+		outCFString = iteratorPtr->currentLine().textCFString.returnCFStringRef();
+	}
+	
+	return result;
+}// GetLineCFString
+
+
+/*!
 Allows read-only access to a single line of text - everything
 from the specified start column, inclusive, of the given row to
 the specified end column, exclusive.
