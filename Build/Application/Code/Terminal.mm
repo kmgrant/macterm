@@ -3573,8 +3573,8 @@ Terminal_ForEachLikeAttributeRun	(TerminalScreenRef			inRef,
 	#if 0
 		// DEBUGGING ONLY: if you suspect a bug in the incremental loop below,
 		// try asking the entire line to be drawn without formatting, first
-		inDoWhat(currentLine.textVectorSize/* length */,
-					currentLine.textCFString.returnCFStringRef(),
+		inDoWhat(CFStringGetLength(currentLine.returnCFStringRef()),
+					currentLine.returnCFStringRef(),
 					inStartRow,
 					0/* zero-based start column */,
 					currentLine.returnGlobalAttributes());
@@ -3592,7 +3592,7 @@ Terminal_ForEachLikeAttributeRun	(TerminalScreenRef			inRef,
 		{
 			currentAttributes = *attrIterator;
 			if ((currentAttributes != previousAttributes) ||
-				(characterIndex == STATIC_CAST(currentLine.textVectorSize - 1, SInt16)) ||
+				(characterIndex == STATIC_CAST(CFStringGetLength(currentLine.returnCFStringRef()) - 1, SInt16)) ||
 				(characterIndex == STATIC_CAST(currentAttributeVector.size() - 1, SInt16)))
 			{
 				styleRunLength = characterIndex - runStartCharacterIndex;
@@ -3602,7 +3602,7 @@ Terminal_ForEachLikeAttributeRun	(TerminalScreenRef			inRef,
 				{
 					TextAttributes_Object		rangeAttributes = previousAttributes;
 					NSRange						runRange = NSMakeRange(runStartCharacterIndex, styleRunLength);
-					CFStringRef					lineAsCFString = currentLine.textCFString.returnCFStringRef();
+					CFStringRef					lineAsCFString = currentLine.returnCFStringRef();
 					NSString*					lineAsNSString = BRIDGE_CAST(lineAsCFString, NSString*);
 					NSString*					styleRunSubstring = [lineAsNSString substringWithRange:runRange];
 					
@@ -3682,8 +3682,11 @@ Terminal_GetLineGlobalAttributes	(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 
 
 /*!
-Like Terminal_GetLineRange(), but automatically pulls in the
+Like Terminal_GetLineRange() but automatically pulls in the
 entire line (from the first column to past the end column).
+
+Updated to return CFStringRef and CFRange instead of direct
+Unicode pointers.
 
 \retval kTerminal_ResultOK
 if the data was copied successfully
@@ -3694,17 +3697,17 @@ if the specified screen reference is invalid
 \retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
-(3.1)
+(2021.04)
 */
 Terminal_Result
 Terminal_GetLine	(TerminalScreenRef			inScreen,
 					 Terminal_LineRef			inRow,
-					 UniChar const*&			outPossibleReferenceStart,
-					 UniChar const*&			outPossibleReferencePastEnd,
+					 CFStringRef&				outReferenceString,
+					 CFRange&					outReferenceRange,
 					 Terminal_TextFilterFlags	inFlags)
 {
 	return Terminal_GetLineRange(inScreen, inRow, 0/* first column */, -1/* last column; negative means “very end” */,
-									outPossibleReferenceStart, outPossibleReferencePastEnd, inFlags);
+									outReferenceString, outReferenceRange, inFlags);
 }// GetLine
 
 
@@ -3738,7 +3741,7 @@ Terminal_GetLineCFString	(TerminalScreenRef	inScreen,
 	else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
-		outCFString = iteratorPtr->currentLine().textCFString.returnCFStringRef();
+		outCFString = iteratorPtr->currentLine().returnCFStringRef();
 	}
 	
 	return result;
@@ -3750,18 +3753,16 @@ Allows read-only access to a single line of text - everything
 from the specified start column, inclusive, of the given row to
 the specified end column, exclusive.
 
+If the given columns pass partway through a wider glyph, the
+resulting string range will extend outward (backward from the
+start and forward from the end) to encompass those glyphs.
+
 Pass -1 for the end column to conveniently refer to the end of
 the line.  Otherwise, pass a nonnegative number to index a
 column, where 0 is the first column.
 
-The pointers must be immediately used to access data; they could
-become invalid (for instance, if the line is about to be
-scrolled into oblivion from the oldest part of the scrollback
-buffer).
-
-As their names imply, the range parameters are inclusive at the
-beginning and exclusive at the end, such that the pointer
-difference is zero if the range is empty.  (Like the STL.)
+Updated to return CFStringRef and CFRange instead of direct
+Unicode pointers.
 
 NOTE:	This API is somewhat implementation dependent.  So this
 		API could change in the future, and any code that calls
@@ -3779,15 +3780,15 @@ if the specified row reference is invalid
 \retval kTerminal_ResultParameterError
 if the specified column is out of range and nonnegative
 
-(3.1)
+(2021.04)
 */
 Terminal_Result
 Terminal_GetLineRange	(TerminalScreenRef			inScreen,
 						 Terminal_LineRef			inRow,
 						 UInt16						inZeroBasedStartColumn,
 						 SInt16						inZeroBasedPastEndColumnOrNegativeForLastColumn,
-						 UniChar const*&			outReferenceStart,
-						 UniChar const*&			outReferencePastEnd,
+						 CFStringRef&				outReferenceString,
+						 CFRange&					outReferenceRange,
 						 Terminal_TextFilterFlags	inFlags)
 {
 	Terminal_Result			result = kTerminal_ResultParameterError;
@@ -3795,37 +3796,39 @@ Terminal_GetLineRange	(TerminalScreenRef			inScreen,
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	
 	
-	outReferenceStart = nullptr;
-	outReferencePastEnd = nullptr;
+	outReferenceString = nullptr;
+	outReferenceRange = CFRangeMake(0, 0);
 	
 	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
+		auto const&		currentLine = iteratorPtr->currentLine();
 		UInt16 const	kPastEndColumn = (inZeroBasedPastEndColumnOrNegativeForLastColumn < 0)
 											? dataPtr->text.visibleScreen.numberOfColumnsPermitted
 											: inZeroBasedPastEndColumnOrNegativeForLastColumn;
 		
 		
-		if (kPastEndColumn > iteratorPtr->currentLine().textVectorSize)
+		if (kPastEndColumn > dataPtr->text.visibleScreen.numberOfColumnsPermitted)
 		{
 			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
-			outReferenceStart = iteratorPtr->currentLine().textVectorBegin + inZeroBasedStartColumn;
-			outReferencePastEnd = iteratorPtr->currentLine().textVectorBegin + kPastEndColumn;
+			outReferenceString = currentLine.returnCFStringRef();
+			outReferenceRange = StringUtilities_ReturnSubstringRangeForCellRange
+								(outReferenceString, StringUtilities_Cell(inZeroBasedStartColumn), StringUtilities_Cell(kPastEndColumn - inZeroBasedStartColumn),
+														kStringUtilities_PartialSymbolRulePrevious, kStringUtilities_PartialSymbolRuleNext);
 			if (inFlags & kTerminal_TextFilterFlagsNoEndWhitespace)
 			{
-				UniChar const*		lastCharPtr = outReferencePastEnd - 1;
+				NSCharacterSet*		whitespaceSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
 				
 				
-				// LOCALIZE THIS
-				while ((lastCharPtr != outReferenceStart) && std::isspace(*lastCharPtr))
+				while ((outReferenceRange.length != 0) &&
+						[whitespaceSet characterIsMember:CFStringGetCharacterAtIndex(outReferenceString, outReferenceRange.location + outReferenceRange.length - 1)])
 				{
-					--lastCharPtr;
+					--(outReferenceRange.length);
 				}
-				outReferencePastEnd = lastCharPtr + 1;
 			}
 			result = kTerminal_ResultOK;
 		}
@@ -18463,7 +18466,7 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 		// that begin at the end of one line and continue at the start of
 		// the next, but that is a known limitation right now (TEMPORARY)
 		My_ScreenBufferLine const&	kLine = **toLine;
-		CFStringRef const			kCFStringToSearch = stringByStrippingEndWhitespace(kLine.textCFString.returnCFStringRef());
+		CFStringRef const			kCFStringToSearch = stringByStrippingEndWhitespace(kLine.returnCFStringRef());
 		std::vector<CFRange>		matchRanges;
 		
 		

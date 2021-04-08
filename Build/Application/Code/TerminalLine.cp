@@ -61,7 +61,6 @@ TerminalLine_Object ()
 :
 textVectorBegin(REINTERPRET_CAST(malloc(kTerminalLine_MaximumCharacterCount * sizeof(UniChar)), UniChar*)),
 textVectorEnd(textVectorBegin + kTerminalLine_MaximumCharacterCount),
-textVectorSize(textVectorEnd - textVectorBegin),
 textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 				(kCFAllocatorDefault, textVectorBegin, kTerminalLine_MaximumCharacterCount,
 					kTerminalLine_MaximumCharacterCount/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
@@ -85,7 +84,6 @@ TerminalLine_Object	(TerminalLine_Object const&		inCopy)
 :
 textVectorBegin(REINTERPRET_CAST(malloc(kTerminalLine_MaximumCharacterCount * sizeof(UniChar)), UniChar*)),
 textVectorEnd(textVectorBegin + kTerminalLine_MaximumCharacterCount),
-textVectorSize(textVectorEnd - textVectorBegin),
 textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
 				(kCFAllocatorDefault, textVectorBegin, kTerminalLine_MaximumCharacterCount,
 					kTerminalLine_MaximumCharacterCount/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),

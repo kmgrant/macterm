@@ -8044,8 +8044,8 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 			// if appropriate, ignore some characters on each line
 			for (CFIndex i = kSelectionStart.second; i < kSelectionPastEnd.second; ++i)
 			{
-				UniChar const*		textBegin = nullptr;
-				UniChar const*		textPastEnd = nullptr;
+				CFStringRef		referenceCFString = nullptr;
+				CFRange			stringRange = CFRangeMake(0, 0);
 				
 				
 				if ((inTerminalViewPtr->text.selection.isRectangular) ||
@@ -8054,7 +8054,7 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 					// for rectangular or one-line selections, copy a specific column range
 					textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 															kSelectionStart.first, kSelectionPastEnd.first,
-															textBegin, textPastEnd);
+															referenceCFString, stringRange);
 					if (kTerminal_ResultOK != textGrabResult)
 					{
 						Console_Warning(Console_WriteValue, "one-line text copy failed, terminal error", textGrabResult);
@@ -8076,7 +8076,7 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 						// first line is anchored at the end (LOCALIZE THIS)
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 																kSelectionStart.first, -1/* end column */,
-																textBegin, textPastEnd,
+																referenceCFString, stringRange,
 																(2/* arbitrary */ == (kSelectionPastEnd.second - kSelectionStart.second))
 																	? 0/* flags */
 																	: kTerminal_TextFilterFlagsNoEndWhitespace);
@@ -8091,7 +8091,7 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 						// last line is anchored at the beginning (LOCALIZE THIS)
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 																0/* start column */, kSelectionPastEnd.first,
-																textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
+																referenceCFString, stringRange, kTerminal_TextFilterFlagsNoEndWhitespace);
 						if (kTerminal_ResultOK != textGrabResult)
 						{
 							Console_Warning(Console_WriteValue, "last-line-anchored-at-beginning text copy failed, terminal error", textGrabResult);
@@ -8102,7 +8102,7 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 					{
 						// middle lines span the whole width
 						textGrabResult = Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator,
-															textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
+															referenceCFString, stringRange, kTerminal_TextFilterFlagsNoEndWhitespace);
 						if (kTerminal_ResultOK != textGrabResult)
 						{
 							Console_Warning(Console_WriteValue, "middle-spanning-line text copy failed, terminal error", textGrabResult);
@@ -8113,26 +8113,13 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 				
 				// add the characters for the line...
 				{
-					ptrdiff_t	copyLength = (textPastEnd - textBegin);
+					CFRetainRelease		substringObject(CFStringCreateWithSubstring(kCFAllocatorDefault, referenceCFString, stringRange),
+														CFRetainRelease::kAlreadyRetained);
 					
 					
-					if (copyLength < 0)
+					if (substringObject.exists())
 					{
-						Console_Warning(Console_WriteValue, "internal error, copy range ended up negative; proposed size", copyLength);
-						copyLength = 0;
-					}
-					
-					if (copyLength > 0)
-					{
-						ptrdiff_t const		kSanityCheckCopyLimit = 256; // arbitrary, but matches maximum line buffer size
-						
-						
-						if (copyLength > kSanityCheckCopyLimit)
-						{
-							Console_Warning(Console_WriteValue, "internal error, unexpectedly large line copy (truncating); proposed size", copyLength);
-							copyLength = kSanityCheckCopyLimit;
-						}
-						CFStringAppendCharacters(resultMutable, textBegin, copyLength/* number of characters */);
+						CFStringAppend(resultMutable, substringObject.returnCFStringRef());
 						
 						// perform spaces-to-tabs substitution; this could be done while
 						// appending text in the first place but instead it is done as a

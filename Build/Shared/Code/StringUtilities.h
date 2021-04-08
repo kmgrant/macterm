@@ -38,12 +38,58 @@
 
 
 
+#pragma mark Constants
+
+/*!
+This determines how to treat symbols that cover more
+than one cell (column) when an intersecting range does
+not cover the entire region.  For example, when there
+is a two-column-span symbol and only one of its columns
+is in the target range, this rule decides whether the
+symbol is discarded or preserved.
+*/
+enum StringUtilities_PartialSymbolRule
+{
+	kStringUtilities_PartialSymbolRulePrevious	= 0,	//!< pretend target cell is earlier (back to end of previous full symbol)
+	kStringUtilities_PartialSymbolRuleNext		= 1		//!< pretend target cell is later (ahead to start of next full symbol)
+};
+
 #pragma mark Types
 
 /*!
-Used to iterate over composed character sequences.
+Wrapper for integer values meant to represent columns
+(as opposed to array indices or something else).
+
+A common source of bugs would be to treat a character
+index the same as a column, and they may be different.
+The explicit type makes it easy to ensure correct use.
+
+A “column” or “cell” is the amount of space that would
+normally be consumed by a Latin-alphabet letter such as
+the letter “A”.  There are composed character sequences
+that consume more than one column (like most elements
+of Asian languages, among others), and even sequences
+that use less than one column (like zero-width space).
+
+Note that although a column count is represented as an
+integer, a font rendering could occupy a fractional
+number of columns.  Symbols are prevented from bleeding
+into neighboring cells by applying scaling factors that
+produce integral cell widths.  The scaling factors are
+found by “studying” (StringUtilities_StudyInRange()).
+
+See the utility functions below.
 */
-typedef void (^StringUtilities_ComposedCharacterBlock) (CFStringRef, CFRange, Boolean&);
+struct StringUtilities_Cell
+{
+	UInt16		columns_;
+	
+	explicit StringUtilities_Cell	(UInt16		inValue)
+	:
+	columns_(inValue)
+	{
+	}
+};
 
 /*!
 Caches information about a string; for details, see the
@@ -67,6 +113,10 @@ struct StringUtilities_DataFromStudy
 	}
 };
 
+/*!
+Used to iterate over composed character sequences.
+*/
+typedef void (^StringUtilities_ComposedCharacterBlock) (CFStringRef, CFRange, Boolean&);
 
 
 #pragma mark Public Methods
@@ -107,6 +157,18 @@ void
 	StringUtilities_ForEachComposedCharacterSequenceInRange	(CFStringRef,
 														 CFRange,
 														 StringUtilities_ComposedCharacterBlock);
+
+CFIndex
+	StringUtilities_ReturnCharacterIndexForCell			(CFStringRef,
+														 StringUtilities_Cell,
+														 StringUtilities_PartialSymbolRule);
+
+CFRange
+	StringUtilities_ReturnSubstringRangeForCellRange	(CFStringRef,
+														 StringUtilities_Cell,
+														 StringUtilities_Cell,
+														 StringUtilities_PartialSymbolRule = kStringUtilities_PartialSymbolRulePrevious,
+														 StringUtilities_PartialSymbolRule = kStringUtilities_PartialSymbolRuleNext);
 
 UnicodeScalarValue
 	StringUtilities_ReturnUnicodeSymbol					(CFStringRef);

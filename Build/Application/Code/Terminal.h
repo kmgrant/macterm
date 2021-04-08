@@ -411,8 +411,8 @@ Terminal_Result
 Terminal_Result
 	Terminal_GetLine						(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
-											 UniChar const*&			outReferenceStart,
-											 UniChar const*&			outReferencePastEnd,
+											 CFStringRef&				outReferenceString,
+											 CFRange&					outReferenceRange,
 											 Terminal_TextFilterFlags	inFlags = 0);
 
 Terminal_Result
@@ -425,8 +425,8 @@ Terminal_Result
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumn,
 											 SInt16						inZeroBasedPastEndColumnOrNegativeForLastColumn,
-											 UniChar const*&			outReferenceStart,
-											 UniChar const*&			outReferencePastEnd,
+											 CFStringRef&				outReferenceString,
+											 CFRange&					outReferenceRange,
 											 Terminal_TextFilterFlags	inFlags = 0);
 
 //@}

@@ -126,9 +126,6 @@ struct TerminalLine_Object
 {
 	TerminalLine_TextIterator		textVectorBegin;	//!< where characters exist
 	TerminalLine_TextIterator		textVectorEnd;		//!< for convenience; past-the-end of this buffer
-	size_t							textVectorSize;		//!< for convenience; size of buffer
-	CFRetainRelease					textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
-														//!  so the buffer can be manipulated directly if desired
 	
 	TerminalLine_Object ();
 	~TerminalLine_Object ();
@@ -147,6 +144,9 @@ struct TerminalLine_Object
 	inline TerminalLine_TextAttributesList const&
 	returnAttributeVector () const;
 	
+	inline CFStringRef
+	returnCFStringRef() const;
+	
 	inline TextAttributes_Object
 	returnGlobalAttributes () const;
 	
@@ -160,6 +160,8 @@ struct TerminalLine_Object
 	structureInitialize ();
 
 private:
+	CFRetainRelease					textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
+														//!  so the buffer can be manipulated directly if desired
 	TerminalLine_AttributeInfo*		attributeInfo;
 	
 	void
@@ -330,6 +332,20 @@ const
 {
 	return this->returnAttributeInfo().attributeVector;
 }// TerminalLine_Object::returnAttributeVector
+
+
+/*!
+Returns a Core Foundation string representation of this line.
+
+(2021.04)
+*/
+CFStringRef
+TerminalLine_Object::
+returnCFStringRef ()
+const
+{
+	return this->textCFString.returnCFStringRef();
+}// TerminalLine_Object::returnCFStringRef
 
 
 /*!

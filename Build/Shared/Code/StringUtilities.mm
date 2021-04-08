@@ -254,6 +254,82 @@ StringUtilities_ForEachComposedCharacterSequenceInRange		(CFStringRef								inS
 
 
 /*!
+Returns the number of “characters” from the start of the
+given string that are needed to cover the specified number
+of cells.  (This can be used to construct substrings, for
+example.)
+
+Note that the accuracy of this call, and even its speed,
+depends on how the cell spans of glyphs are determined.
+See the "StringUtilities_Cell" documentation for cell
+information, and see StringUtilities_StudyInRange() to see
+characteristics of strings that may be tracked when finding
+cells.
+
+The last symbol that intersects the given range of cells
+may be wider than the end of the range; if so, the behavior
+depends on "inPartialSymbolRule".  When the rule is to bind
+to the next symbol, the effective cell index is greater
+than the requested cell; when the rule is to bind to the
+previous symbol, the effective cell index is smaller.
+
+The returned character index refers to the 16-bit elements
+of a Core Foundation String object and not the number of
+Unicode values formed after composing sequences, etc.
+
+This is useful for anything that depends on the visual
+presentation of a string, such as a terminal view.  It
+allows you to start from a visual description, like the
+range of text selected by the user, and convert into the
+part of the string representing that region of cells.
+
+(2021.04)
+*/
+CFIndex
+StringUtilities_ReturnCharacterIndexForCell		(CFStringRef							UNUSED_ARGUMENT(inStringData),
+												 StringUtilities_Cell					inCellIndex,
+												 StringUtilities_PartialSymbolRule		UNUSED_ARGUMENT(inPartialSymbolRule))
+{
+	// TEMPORARY; this is simplified for porting purposes
+	// and assumes the index matches the cell for now
+	// (an alternate version of this has been developed
+	// that determines the exact range of each displayed
+	// glyph in the given string and it will be able to
+	// return correct ranges in complex cases)
+	CFIndex		result = inCellIndex.columns_;
+	
+	
+	return result;
+}// ReturnCharacterIndexForCell
+
+
+/*!
+This is equivalent to but potentially faster than calling
+StringUtilities_ReturnCharacterIndexForCell() for both ends
+of a range.
+
+(2021.04)
+*/
+CFRange
+StringUtilities_ReturnSubstringRangeForCellRange	(CFStringRef							UNUSED_ARGUMENT(inStringData),
+													 StringUtilities_Cell					inCellStartIndex,
+													 StringUtilities_Cell					inCellCount,
+													 StringUtilities_PartialSymbolRule		UNUSED_ARGUMENT(inPartialSymbolRule1),
+													 StringUtilities_PartialSymbolRule		UNUSED_ARGUMENT(inPartialSymbolRule2))
+{
+	// TEMPORARY; this is simplified for porting purposes
+	// and assumes the indexes matches the cells for now
+	// (an alternate version of this has been developed
+	// that can traverse the string and determine the
+	// exact ranges occupied by glyphs in each cell)
+	CFRange		result = CFRangeMake(inCellStartIndex.columns_, inCellCount.columns_);
+	
+	
+	return result;
+}// ReturnSubstringRangeForCellRange
+
+
+/*!
 Given a substring representing a single composed character
 sequence (such as that returned by the iteration method
 "enumerateSubstringsInRange:options:usingBlock:"), returns
