@@ -304,14 +304,14 @@ void					calculateWindowFrameCocoa		(My_TerminalWindowPtr, UInt16*, UInt16*, NSR
 void					changeNotifyForTerminalWindow	(My_TerminalWindowPtr, TerminalWindow_Change, void*);
 TerminalScreenRef		getActiveScreen					(My_TerminalWindowPtr);
 TerminalViewRef			getActiveView					(My_TerminalWindowPtr);
-void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
+void					getWindowSizeFromViewSize		(My_TerminalWindowPtr, CGFloat, CGFloat, CGFloat*, CGFloat*);
 bool					lessThanIfGreaterAreaCocoa		(NSWindow*, NSWindow*);
 UInt16					returnScrollBarWidth			(My_TerminalWindowPtr);
 UInt16					returnStatusBarHeight			(My_TerminalWindowPtr);
 UInt16					returnToolbarHeight				(My_TerminalWindowPtr);
 void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void					setScreenPreferences			(My_TerminalWindowPtr, Preferences_ContextRef, Boolean = false);
-void					setStandardState				(My_TerminalWindowPtr, UInt16, UInt16, Boolean = false);
+void					setStandardState				(My_TerminalWindowPtr, CGFloat, CGFloat, Boolean = false);
 void					setUpForFullScreenModal			(My_TerminalWindowPtr, Boolean, Boolean, My_FullScreenState);
 void					setViewFormatPreferences		(My_TerminalWindowPtr, Preferences_ContextRef);
 void					setViewSizeIndependentFromWindow(My_TerminalWindowPtr, Boolean);
@@ -2005,7 +2005,7 @@ allViews()
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
 											Terminal_ReturnColumnCount(newScreen), Terminal_ReturnRowCount(newScreen),
 											screenWidth, screenHeight);
-		setStandardState(this, screenWidth.integralPixels(), screenHeight.integralPixels());
+		setStandardState(this, screenWidth.precisePixels(), screenHeight.precisePixels());
 	}
 	
 	// stagger the window (this is effective for newly-created windows
@@ -2420,10 +2420,10 @@ specified dimensions.
 */
 void
 getWindowSizeFromViewSize	(My_TerminalWindowPtr	inPtr,
-							 SInt16					inScreenInteriorWidthInPixels,
-							 SInt16					inScreenInteriorHeightInPixels,
-							 SInt16*				outWindowContentWidthInPixels,
-							 SInt16*				outWindowContentHeightInPixels)
+							 CGFloat				inScreenInteriorWidthInPixels,
+							 CGFloat				inScreenInteriorHeightInPixels,
+							 CGFloat*				outWindowContentWidthInPixels,
+							 CGFloat*				outWindowContentHeightInPixels)
 {
 	if (nullptr != outWindowContentWidthInPixels)
 	{
@@ -2763,13 +2763,13 @@ by zooming “out”.
 */
 void
 setStandardState	(My_TerminalWindowPtr	inPtr,
-					 UInt16					inScreenWidthInPixels,
-					 UInt16					inScreenHeightInPixels,
+					 CGFloat				inScreenWidthInPixels,
+					 CGFloat				inScreenHeightInPixels,
 					 Boolean				inAnimatedResize)
 {
-	SInt16		windowWidth = 0;
-	SInt16		windowHeight = 0;
-	SInt16		originalHeight = NSHeight(inPtr->window.frame);
+	CGFloat		windowWidth = 0;
+	CGFloat		windowHeight = 0;
+	CGFloat		originalHeight = NSHeight(inPtr->window.frame);
 	
 	
 	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
@@ -3087,7 +3087,7 @@ setWindowToIdealSizeForDimensions	(My_TerminalWindowPtr	inPtr,
 		
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 											inColumns, inRows, screenWidth, screenHeight);
-		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels(), inAnimateWindowChanges);
+		setStandardState(inPtr, screenWidth.precisePixels(), screenHeight.precisePixels(), inAnimateWindowChanges);
 	}
 }// setWindowToIdealSizeForDimensions
 
@@ -3111,7 +3111,7 @@ setWindowToIdealSizeForFont		(My_TerminalWindowPtr	inPtr)
 		
 		TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
 									screenWidth, screenHeight);
-		setStandardState(inPtr, screenWidth.integralPixels(), screenHeight.integralPixels());
+		setStandardState(inPtr, screenWidth.precisePixels(), screenHeight.precisePixels());
 	}
 }// setWindowToIdealSizeForFont
 
