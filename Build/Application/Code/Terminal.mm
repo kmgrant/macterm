@@ -1799,7 +1799,7 @@ void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_AttributeRule);
 void						bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
 void						bufferInsertInlineImageWithoutUpdate	(My_ScreenBufferPtr, NSImage*, UInt16, UInt16, UInt16, UInt16, Boolean, Boolean);
-void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
+void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, CFStringRef,
 																	 TextAttributes_Object = TextAttributes_Object(),
 																	 Boolean = true);
 void						bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr, SInt16, My_AttributeRule);
@@ -9868,7 +9868,7 @@ alignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 	// special colors or oversized text when doing screen alignment)
 	for (auto& lineInfo : inDataPtr->screenBuffer)
 	{
-		bufferLineFill(inDataPtr, *lineInfo, 'E', TextAttributes_Object(), true/* change line global attributes to match */);
+		bufferLineFill(inDataPtr, *lineInfo, CFSTR("E"), TextAttributes_Object(), true/* change line global attributes to match */);
 	}
 	
 	// update the display - UNIMPLEMENTED
@@ -15253,7 +15253,7 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	// clear out the specified part of the screen line
 	if (inChanges & kMy_BufferChangesEraseAllText)
 	{
-		std::fill(textIterator, endText, ' ');
+		(*cursorLineIterator)->fillWith(CFSTR(" "));
 	}
 	else
 	{
@@ -16017,11 +16017,11 @@ attributes on the line.
 void
 bufferLineFill	(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 				 My_ScreenBufferLine&		inRow,
-				 UInt8						inFillCharacter,
+				 CFStringRef				inFillCharacter,
 				 TextAttributes_Object		inFillAttributes,
 				 Boolean					inUpdateLineGlobalAttributesAlso)
 {
-	std::fill(inRow.textVectorBegin, inRow.textVectorEnd, inFillCharacter);
+	inRow.fillWith(inFillCharacter);
 	std::fill(inRow.returnMutableAttributeVector().begin(), inRow.returnMutableAttributeVector().end(), inFillAttributes);
 	if (inUpdateLineGlobalAttributesAlso)
 	{
@@ -16863,16 +16863,17 @@ eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 	SInt16										midColumn = STATIC_CAST(INTEGER_DIV_2
 																		(inDataPtr->text.visibleScreen.numberOfColumnsPermitted),
 																			SInt16);
-	TerminalLine_TextIterator					textIterator = nullptr;
+	CFIndex										midStringIndex = StringUtilities_ReturnCharacterIndexForCell
+																	(inRow.returnCFStringRef(), StringUtilities_Cell(midColumn),
+														 				kStringUtilities_PartialSymbolRulePrevious);
+	CFRange										clearedRange = CFRangeMake(midStringIndex, CFStringGetLength(inRow.returnCFStringRef()) - midStringIndex);
 	TerminalLine_TextAttributesList::iterator	attrIterator;
 	
 	
 	// clear from halfway point to end of line
-	textIterator = inRow.textVectorBegin;
-	std::advance(textIterator, midColumn);
 	attrIterator = inRow.returnMutableAttributeVector().begin();
 	std::advance(attrIterator, midColumn);
-	std::fill(textIterator, inRow.textVectorEnd, ' ');
+	inRow.fillWith(CFSTR(" "), clearedRange);
 	std::fill(attrIterator, inRow.returnMutableAttributeVector().end(), inRow.returnGlobalAttributes());
 }// eraseRightHalfOfLine
 

@@ -254,6 +254,52 @@ StringUtilities_ForEachComposedCharacterSequenceInRange		(CFStringRef								inS
 
 
 /*!
+Returns a string consisting of the specified number of
+blank characters.
+
+This reuses substrings of an internal buffer to try to
+minimize actual string allocation but allocation could
+still occur if the given length is greater than the
+cache.
+
+(2021.04)
+*/
+CFStringRef
+StringUtilities_ReturnBlankStringCopy	(CFIndex	inLength)
+{
+	static dispatch_once_t		onceToken;
+	static CFStringRef			gBlankString = nullptr;
+	static CFIndex				gBlankLength = 0;
+	CFStringRef					result = nullptr;
+	
+	
+	dispatch_once(&onceToken,
+	^{
+		gBlankString = CFSTR("                                                  "
+							 "                                                  "
+							 "                                                  "
+							 "                                                  ");
+		gBlankLength = CFStringGetLength(gBlankString);
+	});
+	
+	if (inLength > gBlankLength)
+	{
+		CFMutableStringRef		mutableString = CFStringCreateMutable(kCFAllocatorDefault, inLength);
+		
+		
+		CFStringPad(mutableString, CFSTR(" "), inLength, 0/* padding offset */);
+		result = mutableString;
+	}
+	else
+	{
+		result = CFStringCreateWithSubstring(kCFAllocatorDefault, gBlankString, CFRangeMake(0, inLength));
+	}
+	
+	return result;
+}// ReturnBlankStringCopy
+
+
+/*!
 Returns the number of “characters” from the start of the
 given string that are needed to cover the specified number
 of cells.  (This can be used to construct substrings, for

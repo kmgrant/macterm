@@ -45,6 +45,7 @@
 
 // library includes
 #include <CFRetainRelease.h>
+#include <StringUtilities.h>
 
 // application includes
 #include "TextAttributes.h"
@@ -141,6 +142,15 @@ struct TerminalLine_Object
 	inline bool
 	operator != (TerminalLine_Object const&  inLine) const;
 	
+	void
+	clearAttributes ();
+	
+	inline void
+	fillWith (CFStringRef);
+	
+	inline void
+	fillWith (CFStringRef, CFRange);
+	
 	inline TerminalLine_TextAttributesList const&
 	returnAttributeVector () const;
 	
@@ -163,9 +173,6 @@ private:
 	CFRetainRelease					textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
 														//!  so the buffer can be manipulated directly if desired
 	TerminalLine_AttributeInfo*		attributeInfo;
-	
-	void
-	clearAttributes ();
 	
 	void
 	copyAttributes (TerminalLine_AttributeInfo const*);
@@ -299,6 +306,61 @@ const
 {
 	return (false == (this->operator ==(inLine)));
 }// TerminalLine_Object::operator !=
+
+
+/*!
+Variant that applies to the entire string.
+
+(2021.04)
+*/
+void
+TerminalLine_Object::
+fillWith	(CFStringRef	inString)
+{
+	this->fillWith(inString, CFRangeMake(0, CFStringGetLength(this->textCFString.returnCFStringRef())));
+}// fillWith
+
+
+/*!
+Overwrites the specified range with copies of the given string,
+up to the maximum character count.  Note that any existing
+attributes still apply; see also clearAttributes().
+
+(2021.04)
+*/
+void
+TerminalLine_Object::
+fillWith	(CFStringRef	inString,
+			 CFRange		inRange)
+{
+	CFRange		fillRange = CFRangeMake(std::min(inRange.location, STATIC_CAST(kTerminalLine_MaximumCharacterCount, CFIndex)), 0);
+	
+	
+	fillRange.length = std::min(STATIC_CAST(kTerminalLine_MaximumCharacterCount, CFIndex) - fillRange.location, inRange.length);
+	
+#if 1
+	// for now, fill buffer directly (this also won’t work for
+	// a multi-character symbol but this is legacy anyway)
+	std::fill(textVectorBegin + fillRange.location, textVectorBegin + fillRange.location + fillRange.length, CFStringGetCharacterAtIndex(inString, 0));
+#else
+	// cannot do this yet; CFMutableString APIs cause issues when there is an external-characters buffer
+	// (and, this will be replaced by CFMutableAttributedString anyway)
+	if (kCFCompareEqualTo == CFStringCompare(inString, CFSTR(" "), 0/* flags */))
+	{
+		// optimization; try to reuse cached blanks
+		CFRetainRelease		blankCFString(StringUtilities_ReturnBlankStringCopy(fillRange.length),
+											CFRetainRelease::kAlreadyRetained);
+		
+		
+		CFStringReplace(this->textCFString.returnCFMutableStringRef(), fillRange, blankCFString.returnCFStringRef());
+	}
+	else
+	{
+		CFStringPad(this->textCFString.returnCFMutableStringRef(), "", CFStringGetLength(this->textCFString.returnCFStringRef()) - fillRange.location - fillRange.length, 0/* pad offset */);
+		CFStringPad(this->textCFString.returnCFMutableStringRef(), inString, fillRange.length, 0/* pad offset */);
+	}
+#endif
+}// TerminalLine_Object::fillWith
 
 
 /*!

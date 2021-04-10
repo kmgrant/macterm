@@ -8128,22 +8128,14 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 						// iteratively replace ranges of spaces)
 						if (inMaxSpacesToReplaceWithTabOrZero > 0)
 						{
-							CFRetainRelease		spacesString(CFStringCreateMutable
-																(kCFAllocatorDefault,
-																	inMaxSpacesToReplaceWithTabOrZero),
-																	CFRetainRelease::kAlreadyRetained);
-							CFStringRef			singleSpaceString = CFSTR(" "); // LOCALIZE THIS?
-							CFStringRef			tabString = CFSTR("\011"); // LOCALIZE THIS?
-							
-							
 							// create a string to represent the required whitespace range
 							// (TEMPORARY: there is no reason to do this every time, it
 							// could be cached at the time the user preference changes;
 							// for now however the lazy approach is being taken)
-							for (UInt16 spaceIndex = 0; spaceIndex < inMaxSpacesToReplaceWithTabOrZero; ++spaceIndex)
-							{
-								CFStringAppend(spacesString.returnCFMutableStringRef(), singleSpaceString);
-							}
+							CFRetainRelease		spacesString(StringUtilities_ReturnBlankStringCopy(inMaxSpacesToReplaceWithTabOrZero),
+																CFRetainRelease::kAlreadyRetained);
+							CFStringRef			tabString = CFSTR("\011"); // LOCALIZE THIS?
+							
 							
 							// first replace all “long” series of spaces with single tabs, as per user preference
 							UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
@@ -8153,15 +8145,13 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 							// replace all smaller ranges of spaces with one tab as well
 							for (UInt16 maxSpaces = (inMaxSpacesToReplaceWithTabOrZero - 1); maxSpaces > 0; --maxSpaces)
 							{
-								// create a string representing the next-largest range of spaces...
-								CFStringReplaceAll(spacesString.returnCFMutableStringRef(), CFSTR(""));
-								for (UInt16 spaceIndex = 0; spaceIndex < maxSpaces; ++spaceIndex)
-								{
-									CFStringAppend(spacesString.returnCFMutableStringRef(), singleSpaceString);
-								}
+								// create a string representing the next-smallest range of spaces...
+								CFRetainRelease		smallerSpacesString(StringUtilities_ReturnBlankStringCopy(maxSpaces),
+																		CFRetainRelease::kAlreadyRetained);
+								
 								
 								// ...and turn those spaces into a tab
-								UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
+								UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, smallerSpacesString.returnCFStringRef(), tabString,
 																				CFRangeMake(0, CFStringGetLength(resultMutable)),
 																				0/* comparison options */);
 							}

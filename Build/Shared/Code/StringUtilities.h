@@ -158,6 +158,9 @@ void
 														 CFRange,
 														 StringUtilities_ComposedCharacterBlock);
 
+CFStringRef
+	StringUtilities_ReturnBlankStringCopy				(CFIndex);
+
 CFIndex
 	StringUtilities_ReturnCharacterIndexForCell			(CFStringRef,
 														 StringUtilities_Cell,
