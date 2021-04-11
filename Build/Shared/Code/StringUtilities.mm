@@ -167,6 +167,73 @@ StringUtilities_CFToUTF8	(CFStringRef	inCFString,
 
 
 /*!
+Calls StringUtilities_ForEachComposedCellClusterInRange()
+for the entire length of the string, starting at 0.
+
+(2021.04)
+*/
+void
+StringUtilities_ForEachComposedCellCluster	(CFStringRef					inStringData,
+											 StringUtilities_CellBlock		inBlock)
+{
+	if (nullptr != inStringData)
+	{
+		StringUtilities_ForEachComposedCellClusterInRange(inStringData, CFRangeMake(0, CFStringGetLength(inStringData)), inBlock);
+	}
+}// ForEachComposedCellCluster
+
+
+/*!
+Invokes a block on each composed character sequence in the given
+range of the given string, with a focus on rendering: additional
+details are provided on the number of cells (terminal columns)
+that are likely to be needed and the scaling that will be
+necessary in Core Text to occupy that integral cell count.
+
+This does not only use Core Text; it also adds in heuristics to
+better match intent.  For instance, Unicode specifies (and legacy
+applications expect) that all box-drawing characters in the range
+of 0x2500 to 0x259F are a single column, even though the Mac will
+typically try to make them double-width when rendered by fonts.
+This function will force such corrections and ignore the fonts.
+
+This uses StringUtilities_ForEachComposedCharacterSequenceInRange()
+so it has that function’s documented advantages over an ordinary
+NSString call: typically covering all composed character sequences
+(even invalid ones that have replacement characters).
+
+(2021.04)
+*/
+void
+StringUtilities_ForEachComposedCellClusterInRange	(CFStringRef				inStringData,
+													 CFRange					inRange,
+													 StringUtilities_CellBlock	inBlock)
+{
+	// iterate over the composed character sequences and call the
+	// given block on each one
+	StringUtilities_ForEachComposedCharacterSequenceInRange
+	(inStringData, inRange,
+	^(CFStringRef	inSubstring,
+	  CFRange		inSubstringRange,
+	  Boolean&		outStop)
+	{
+		// TEMPORARY; this is a partial port of work done elsewhere
+		// that is excluding attributes used to compute different
+		// values depending on the contents of the string; for now,
+		// to ease porting, these parameters are fixed
+		// (INCOMPLETE)
+		UInt16 const	kCellCount = 1;
+		CGFloat const	kWidthScaleFactor = 1.0;
+		
+		
+		inBlock(inSubstring, StringUtilities_Cell(kCellCount), inSubstringRange,
+				kWidthScaleFactor, outStop);
+	});
+}// ForEachComposedCellClusterInRange
+
+
+
+/*!
 Calls StringUtilities_ForEachComposedCharacterSequenceInRange()
 for the entire length of the string, starting at 0.
 

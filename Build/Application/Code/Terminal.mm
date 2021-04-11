@@ -666,6 +666,30 @@ typedef My_CharacterSetInfo*			My_CharacterSetInfoPtr;
 typedef My_CharacterSetInfo const*		My_CharacterSetInfoConstPtr;
 
 /*!
+A pair of columns that define the start and past-end
+cells of a range in the buffer on the same line.
+*/
+struct My_CellBoundary
+{
+public:
+	My_CellBoundary	(UInt16		inStartColumn,
+					 UInt16		inColumnCount)
+	: startCell(inStartColumn), cellCount(inColumnCount)
+	{
+	}
+	
+	bool
+	operator ==		(My_CellBoundary const&		inOther)
+	{
+		return ((inOther.startCell == this->startCell) &&
+				(inOther.cellCount == this->cellCount));
+	}
+	
+	UInt16	startCell;  //!< zero-based column number where range occurs
+	UInt16	cellCount;	//!< number of cells to include
+};
+
+/*!
 A pair of rows that define the start and end rows,
 inclusive, of a range in the buffer.
 */
@@ -1793,6 +1817,7 @@ void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr, My_BufferChanges);
 void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_BufferChanges, My_ScreenBufferLine&);
+void						bufferEraseRange						(My_ScreenBufferPtr, Boolean, My_ScreenBufferLine&, My_CellBoundary);
 void						bufferEraseVisibleScreen				(My_ScreenBufferPtr, My_BufferChanges);
 void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
 																	 My_ScreenBufferLineList::iterator&,
@@ -15250,27 +15275,11 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 		}
 	}
 	
-	// clear out the specified part of the screen line
-	if (inChanges & kMy_BufferChangesEraseAllText)
-	{
-		(*cursorLineIterator)->fillWith(CFSTR(" "));
-	}
-	else
-	{
-		// erase only erasable characters
-		for (; textIterator != endText; ++textIterator, ++attrIterator)
-		{
-			if ((endAttrs == attrIterator) || (false == (*attrIterator).hasAttributes(kTextAttributes_CannotErase)))
-			{
-				*textIterator = ' ';
-			}
-		}
-	}
-	
 	// add the remainder of the row to the text-change region;
 	// this should trigger things like Terminal View updates
 	//Console_WriteLine("text changed event: erase from cursor column to line end");
 	{
+		Boolean const				eraseAllFlag = (0 != (inChanges & kMy_BufferChangesEraseAllText));
 		Terminal_RangeDescription	range;
 		
 		
@@ -15279,6 +15288,9 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 		range.firstColumn = postWrapCursorX;
 		range.columnCount = fillDistance;
 		range.rowCount = 1;
+		
+		bufferEraseRange(inDataPtr, eraseAllFlag, *(*cursorLineIterator), My_CellBoundary(range.firstColumn, range.columnCount));
+		
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromCursorColumn
@@ -15343,27 +15355,11 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 		}
 	}
 	
-	// clear out the specified screen line
-	if (inChanges & kMy_BufferChangesEraseAllText)
-	{
-		std::fill(textIterator, endText, ' ');
-	}
-	else
-	{
-		// erase only erasable characters
-		for (; textIterator != endText; ++textIterator, ++attrIterator)
-		{
-			if ((endAttrs == attrIterator) || (false == (*attrIterator).hasAttributes(kTextAttributes_CannotErase)))
-			{
-				*textIterator = ' ';
-			}
-		}
-	}
-	
 	// add the remainder of the row to the text-change region;
 	// this should trigger things like Terminal View updates
 	//Console_WriteLine("text changed event: erase from cursor column to line end");
 	{
+		Boolean const				eraseAllFlag = (0 != (inChanges & kMy_BufferChangesEraseAllText));
 		Terminal_RangeDescription	range;
 		
 		
@@ -15372,6 +15368,9 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 		range.firstColumn = postWrapCursorX;
 		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 		range.rowCount = 1;
+		
+		bufferEraseRange(inDataPtr, eraseAllFlag, *(*cursorLineIterator), My_CellBoundary(range.firstColumn, range.columnCount));
+		
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromCursorColumnToLineEnd
@@ -15552,27 +15551,11 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 		}
 	}
 	
-	// clear out the specified part of the screen line
-	if (inChanges & kMy_BufferChangesEraseAllText)
-	{
-		std::fill(textIterator, endText, ' ');
-	}
-	else
-	{
-		// erase only erasable characters
-		for (; textIterator != endText; ++textIterator, ++attrIterator)
-		{
-			if ((endAttrs == attrIterator) || (false == (*attrIterator).hasAttributes(kTextAttributes_CannotErase)))
-			{
-				*textIterator = ' ';
-			}
-		}
-	}
-	
 	// add the first part of the row to the text-change region;
 	// this should trigger things like Terminal View updates
 	//Console_WriteLine("text changed event: erase from line begin to cursor column");
 	{
+		Boolean const				eraseAllFlag = (0 != (inChanges & kMy_BufferChangesEraseAllText));
 		Terminal_RangeDescription	range;
 		
 		
@@ -15581,6 +15564,9 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 		range.firstColumn = 0;
 		range.columnCount = fillDistance;
 		range.rowCount = 1;
+		
+		bufferEraseRange(inDataPtr, eraseAllFlag, *(*cursorLineIterator), My_CellBoundary(range.firstColumn, range.columnCount));
+		
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
 	}
 }// bufferEraseFromLineBeginToCursorColumn
@@ -15600,8 +15586,6 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 								 My_BufferChanges		inChanges,
 								 My_ScreenBufferLine&	inRow)
 {
-	TerminalLine_TextIterator						textIterator = nullptr;
-	TerminalLine_TextIterator						endText = nullptr;
 	TerminalLine_TextAttributesList::iterator		attrIterator;
 	TerminalLine_TextAttributesList::iterator		endAttrs;
 	
@@ -15609,8 +15593,6 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	// find the right line offset
 	attrIterator = inRow.returnMutableAttributeVector().begin();
 	endAttrs = inRow.returnMutableAttributeVector().end();
-	textIterator = inRow.textVectorBegin;
-	endText = inRow.textVectorEnd;
 	
 	// 3.0 - line-global attributes are cleared only if clearing an entire line
 	inRow.returnMutableGlobalAttributes().clear();
@@ -15636,22 +15618,73 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	}
 	
 	// clear out the screen line
-	if (inChanges & kMy_BufferChangesEraseAllText)
 	{
-		std::fill(textIterator, endText, ' ');
-	}
-	else
-	{
-		// erase only erasable characters
-		for (; textIterator != endText; ++textIterator, ++attrIterator)
-		{
-			if ((endAttrs == attrIterator) || (false == (*attrIterator).hasAttributes(kTextAttributes_CannotErase)))
-			{
-				*textIterator = ' ';
-			}
-		}
+		Boolean const	eraseAllFlag = (0 != (inChanges & kMy_BufferChangesEraseAllText));
+		
+		
+		bufferEraseRange(inDataPtr, eraseAllFlag, inRow, My_CellBoundary(0, inDataPtr->text.visibleScreen.numberOfColumnsAllocated));
 	}
 }// bufferEraseLineWithoutUpdate
+
+
+/*!
+Erases only cells in the specified range that have not been
+marked with a “cannot erase” attribute (for protected areas
+in some terminals), unless "inEraseAll" is set (in which
+case the range is unconditionally erased).
+
+(2021.04)
+*/
+void
+bufferEraseRange	(My_ScreenBufferPtr  	inDataPtr,
+					 Boolean				inEraseAll,
+					 My_ScreenBufferLine&	inRow,
+					 My_CellBoundary		inCellRange)
+{
+	if (inCellRange.cellCount > 0)
+	{
+		assert(inCellRange.startCell < inDataPtr->text.visibleScreen.numberOfColumnsAllocated);
+		assert(inCellRange.cellCount <= inDataPtr->text.visibleScreen.numberOfColumnsAllocated);
+		CFRange		textRange = StringUtilities_ReturnSubstringRangeForCellRange
+								(inRow.returnCFStringRef(),
+									StringUtilities_Cell(inCellRange.startCell), StringUtilities_Cell(inCellRange.cellCount),
+									kStringUtilities_PartialSymbolRulePrevious, kStringUtilities_PartialSymbolRuleNext);
+		
+		
+		if (inEraseAll)
+		{
+			inRow.fillWith(CFSTR(" "), textRange);
+		}
+		else
+		{
+			TerminalLine_TextAttributesList const&		attributeVector = inRow.returnAttributeVector();
+			__block auto								attrIterator = attributeVector.begin();
+			auto										endAttrs = attributeVector.end();
+			
+			
+			std::advance(attrIterator, inCellRange.startCell);
+			StringUtilities_ForEachComposedCellClusterInRange(inRow.returnCFStringRef(), textRange,
+			^(CFStringRef UNUSED_ARGUMENT(substringRef), StringUtilities_Cell cellCount, CFRange substringRange, CGFloat UNUSED_ARGUMENT(scaleFactor), Boolean& UNUSED_ARGUMENT(stopFlag))
+			{
+				Boolean		noErase = false;
+				
+				
+				for (auto i = 0; ((i < cellCount.columns_) && (endAttrs != attrIterator)); ++i)
+				{
+					if ((*attrIterator).hasAttributes(kTextAttributes_CannotErase))
+					{
+						noErase = true;
+					}
+					++attrIterator;
+				}
+				if (false == noErase)
+				{
+					inRow.fillWith(CFSTR(" "), substringRange);
+				}
+			});
+		}
+	}
+}// bufferEraseOnlyErasableCells
 
 
 /*!

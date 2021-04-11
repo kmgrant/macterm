@@ -114,6 +114,24 @@ struct StringUtilities_DataFromStudy
 };
 
 /*!
+Used to iterate over composed character sequences whose
+widths have been measured for rendering purposes.  For
+example, a wide symbol that should be rendered across two
+adjacent columns of a terminal has a cell count of 2, and
+an Emoji that is slightly wider than 2 cells might have a
+scaling factor like 0.9 to indicate that it must be shrunk
+in order to fit the specified number of cells (columns).
+
+The arguments are: the composed character sequence string,
+its rounded integer cell (terminal column) count, the
+substring range of the sequence in the original string,
+the scaling factor that should be applied when rendering
+to fit the precise-integer cell count, and an output flag
+to terminate iteration early if necessary.
+*/
+typedef void (^StringUtilities_CellBlock) (CFStringRef, StringUtilities_Cell, CFRange, CGFloat, Boolean&);
+
+/*!
 Used to iterate over composed character sequences.
 */
 typedef void (^StringUtilities_ComposedCharacterBlock) (CFStringRef, CFRange, Boolean&);
@@ -148,6 +166,15 @@ void
 
 //!\name Unicode Utilities
 //@{
+
+void
+	StringUtilities_ForEachComposedCellCluster			(CFStringRef,
+														 StringUtilities_CellBlock);
+
+void
+	StringUtilities_ForEachComposedCellClusterInRange	(CFStringRef,
+														 CFRange,
+														 StringUtilities_CellBlock);
 
 void
 	StringUtilities_ForEachComposedCharacterSequence	(CFStringRef,
