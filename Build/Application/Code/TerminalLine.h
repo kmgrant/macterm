@@ -146,10 +146,16 @@ struct TerminalLine_Object
 	clearAttributes ();
 	
 	inline void
+	deleteRange (StringUtilities_Cell, StringUtilities_Cell, TextAttributes_Object const&, StringUtilities_Cell);
+	
+	inline void
 	fillWith (CFStringRef);
 	
 	inline void
 	fillWith (CFStringRef, CFRange);
+	
+	inline void
+	insertBlanks (StringUtilities_Cell, StringUtilities_Cell, TextAttributes_Object const&, StringUtilities_Cell);
 	
 	inline TerminalLine_TextAttributesList const&
 	returnAttributeVector () const;
@@ -309,6 +315,92 @@ const
 
 
 /*!
+Deletes the specified range of cells, shifting the region
+of text and attributes ahead of it (up to "inEndLimit")
+to occupy the new space.  Spaces are inserted between
+the shifted text and "inEndLimit", to fill the same number
+of cells.  The new spaces are assigned "inCopiedAttributes"
+(this could be used to set a background color for example).
+
+Text is not disturbed if it is before "inRangeStartCell",
+or at or beyond "inEndLimit".  This could be used to make
+focused changes within a larger buffer, such as managing a
+visible region.
+
+The string occupies the same number of cells as before
+but the string buffer length could change, depending on
+the Unicode structure of the replaced character sequences.
+Therefore, CFIndex values for any character in the string
+after the deletion point could be affected by this call!
+(See StringUtilities_ReturnCharacterIndexForCell() and
+similar methods to resolve new CFIndex values based on a
+cell/column number.)
+
+See also insertBlanks().
+
+(2021.05)
+*/
+void
+TerminalLine_Object::
+deleteRange		(StringUtilities_Cell			inRangeStartCell,
+				 StringUtilities_Cell			inRangeCellCount,
+				 TextAttributes_Object const&	inCopiedAttributes,
+				 StringUtilities_Cell			inEndLimit)
+{
+	assert(inEndLimit.columns_ >= (inRangeStartCell + inRangeCellCount).columns_);
+	
+	// update attributes
+	{
+		TerminalLine_TextAttributesList::iterator	pastVisibleEnd = returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator	toCursorAttr = returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator	toFirstPreservedAttr;
+		TerminalLine_TextAttributesList::iterator	pastLastRelocatedAttr;
+		
+		
+		std::advance(pastVisibleEnd, inEndLimit.columns_);
+		
+		pastLastRelocatedAttr = pastVisibleEnd;
+		
+		std::advance(toCursorAttr, inRangeStartCell.columns_);
+		toFirstPreservedAttr = toCursorAttr;
+		std::advance(toFirstPreservedAttr, inRangeCellCount.columns_);
+		std::advance(pastLastRelocatedAttr, -STATIC_CAST(inRangeCellCount.columns_, SInt16));
+		
+		std::copy(toFirstPreservedAttr, pastVisibleEnd, toCursorAttr);
+		std::fill(pastLastRelocatedAttr, pastVisibleEnd, inCopiedAttributes);
+	}
+	
+#if 1
+	// for now, access buffer directly (this won’t work for
+	// a multi-character fill but this is legacy anyway)
+	auto	endLimit = (textVectorBegin + inEndLimit.columns_);
+	
+	
+	std::copy(textVectorBegin + (inRangeStartCell + inRangeCellCount).columns_, endLimit, textVectorBegin + inRangeStartCell.columns_);
+	std::fill(endLimit - inRangeCellCount.columns_, endLimit, ' ');
+#else
+	// preferred method, with updated storage: modify the
+	// Core Foundation string storage appropriately (this
+	// must be done carefully to ensure that cells/columns
+	// are identified and overwritten correctly)
+	CFRange const		deletedRange = StringUtilities_ReturnSubstringRangeForCellRange
+										(this->textCFString.returnCFStringRef(), inRangeStartCell, inRangeCellCount,
+											kStringUtilities_PartialSymbolRulePrevious, kStringUtilities_PartialSymbolRuleNext);
+	CFIndex const		endLimitIndex = StringUtilities_ReturnCharacterIndexForCell
+										(this->textCFString.returnCFStringRef(), inEndLimit, kStringUtilities_PartialSymbolRuleNext);
+	CFRetainRelease		blankString(StringUtilities_ReturnBlankStringCopy(inRangeCellCount.columns_),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	// order is important; adding blanks to the end first will
+	// ensure the given range for deletion is not invalidated
+	CFStringInsert(this->textCFString.returnCFMutableStringRef(), endLimitIndex, blankString.returnCFStringRef());
+	CFStringDelete(this->textCFString.returnCFMutableStringRef(), deletedRange);
+#endif
+}// TerminalLine_Object::deleteRange
+
+
+/*!
 Variant that applies to the entire string.
 
 (2021.04)
@@ -317,7 +409,13 @@ void
 TerminalLine_Object::
 fillWith	(CFStringRef	inString)
 {
+#if 1
+	// for now, fill buffer directly (this also won’t work for
+	// a multi-character symbol but this is legacy anyway)
+	std::fill(textVectorBegin, textVectorEnd, CFStringGetCharacterAtIndex(inString, 0));
+#else
 	this->fillWith(inString, CFRangeMake(0, CFStringGetLength(this->textCFString.returnCFStringRef())));
+#endif
 }// fillWith
 
 
@@ -356,11 +454,101 @@ fillWith	(CFStringRef	inString,
 	}
 	else
 	{
-		CFStringPad(this->textCFString.returnCFMutableStringRef(), "", CFStringGetLength(this->textCFString.returnCFStringRef()) - fillRange.location - fillRange.length, 0/* pad offset */);
-		CFStringPad(this->textCFString.returnCFMutableStringRef(), inString, fillRange.length, 0/* pad offset */);
+		CFRetainRelease		fillCFString(CFStringCreateMutable(kCFAllocatorDefault, fillRange.length),
+											CFRetainRelease::kAlreadyRetained);
+		
+		
+		CFStringPad(fillCFString.returnCFMutableStringRef(), inString, fillRange.length, 0/* pad offset */);
+		CFStringReplace(this->textCFString.returnCFMutableStringRef(), fillRange, fillCFString.returnCFStringRef());
 	}
 #endif
 }// TerminalLine_Object::fillWith
+
+
+/*!
+Inserts the specified number of blank cells at the given
+point, shifting text and attributes forward, truncating
+anything at or beyond "inEndLimit".  The new spaces are
+assigned "inCopiedAttributes" (this could be used to set a
+background color for example).
+
+Text is not disturbed if it is before "inRangeStartCell",
+or at or beyond "inEndLimit".  This could be used to make
+focused changes within a larger buffer, such as managing a
+visible region.
+
+The string occupies the same number of cells as before
+but the string buffer length could change, depending on
+the Unicode structure of the replaced character sequences.
+Therefore, CFIndex values for any character in the string
+after the insertion point could be affected by this call!
+(See StringUtilities_ReturnCharacterIndexForCell() and
+similar methods to resolve new CFIndex values based on a
+cell/column number.)
+
+See also deleteRange().
+
+(2021.05)
+*/
+void
+TerminalLine_Object::
+insertBlanks	(StringUtilities_Cell			inRangeStartCell,
+				 StringUtilities_Cell			inRangeCellCount,
+				 TextAttributes_Object const&	inCopiedAttributes,
+				 StringUtilities_Cell			inEndLimit)
+{
+	assert(inEndLimit.columns_ >= (inRangeStartCell + inRangeCellCount).columns_);
+	
+	// update attributes
+	{
+		TerminalLine_TextAttributesList::iterator		pastVisibleEnd = returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator		toCursorAttr = returnMutableAttributeVector().begin();
+		TerminalLine_TextAttributesList::iterator		toFirstRelocatedAttr;
+		TerminalLine_TextAttributesList::iterator		pastLastPreservedAttr;
+		
+		
+		std::advance(pastVisibleEnd, inEndLimit.columns_);
+		
+		pastLastPreservedAttr = pastVisibleEnd;
+		
+		std::advance(toCursorAttr, inRangeStartCell.columns_);
+		toFirstRelocatedAttr = toCursorAttr;
+		std::advance(toFirstRelocatedAttr, inRangeCellCount.columns_);
+		std::advance(pastLastPreservedAttr, -STATIC_CAST(inRangeCellCount.columns_, SInt16));
+		
+		std::copy_backward(toCursorAttr, pastLastPreservedAttr, pastVisibleEnd);
+		std::fill(toCursorAttr, toFirstRelocatedAttr, inCopiedAttributes);
+	}
+	
+#if 1
+	// for now, access buffer directly (this won’t work for
+	// a multi-character fill but this is legacy anyway)
+	auto	endLimit = (textVectorBegin + inEndLimit.columns_);
+	
+	
+	std::copy_backward(textVectorBegin + inRangeStartCell.columns_, endLimit - inRangeCellCount.columns_, endLimit);
+	std::fill(textVectorBegin + inRangeStartCell.columns_, textVectorBegin + (inRangeStartCell + inRangeCellCount).columns_, ' ');
+#else
+	// preferred method, with updated storage: modify the
+	// Core Foundation string storage appropriately (this
+	// must be done carefully to ensure that cells/columns
+	// are identified and overwritten correctly)
+	CFRange const		shiftedRange = StringUtilities_ReturnSubstringRangeForCellRange
+										(this->textCFString.returnCFStringRef(), inRangeStartCell, inRangeCellCount,
+											kStringUtilities_PartialSymbolRulePrevious, kStringUtilities_PartialSymbolRuleNext);
+	CFIndex const		endLimitIndex = StringUtilities_ReturnCharacterIndexForCell
+										(this->textCFString.returnCFStringRef(), inEndLimit, kStringUtilities_PartialSymbolRuleNext);
+	CFIndex const		deletedUniCharCount = (endLimitIndex - shiftedRange.location - shiftedRange.length);
+	CFRetainRelease		blankString(StringUtilities_ReturnBlankStringCopy(inRangeCellCount.columns_),
+									CFRetainRelease::kAlreadyRetained);
+	
+	
+	// order is important; deleting from later in the string first
+	// will ensure given range for insertion is not invalidated
+	CFStringDelete(this->textCFString.returnCFMutableStringRef(), CFRangeMake(endLimitIndex - deletedUniCharCount, deletedUniCharCount));
+	CFStringInsert(this->textCFString.returnCFMutableStringRef(), shiftedRange.location, blankString.returnCFStringRef());
+#endif
+}// TerminalLine_Object::insertBlanks
 
 
 /*!

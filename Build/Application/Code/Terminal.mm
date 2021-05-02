@@ -39,13 +39,13 @@
 #import <cstdio>
 #import <cstdlib>
 #import <cstring>
-#import <set>
 
 // standard-C++ includes
 #import <algorithm>
 #import <iterator>
 #import <list>
 #import <map>
+#import <set>
 #import <sstream>
 #import <stdexcept>
 #import <string>
@@ -405,10 +405,13 @@ enum
 																//!  and the attributes added by other flags shall be applied SECOND
 	kMy_BufferChangesResetLineAttributes		= (1 << 2),		//!< any completely-erased line resets line attributes, such as double-sized text, to normal;
 																//!  if you use this option then you must also use kMy_BufferChangesResetCharacterAttributes
-	kMy_BufferChangesKeepBackgroundColor		= (1 << 3)		//!< copies the background color that was most recently set, to ALL reset cells; this is a
+	kMy_BufferChangesKeepBackgroundColor		= (1 << 3),		//!< copies the background color that was most recently set, to ALL reset cells; this is a
 																//!  relatively efficient way to preserve background color across a large area (e.g. without
 																//!  requiring spaces), though it is technically non-standard behavior in a lot of terminals;
 																//!  note that the foreground color is not affected
+	kMy_BufferChangesResetCursorAttributes		= (1 << 4),		//!< normally moveCursorY() will update attributes to match the new cursor line; for any
+																//!  unusual updates that affect the cursor while it remains on the same line, use this to
+																//!  ensure that cursor and drawing attributes use the appropriate line-global settings
 };
 
 enum My_CharacterSet
@@ -2721,6 +2724,7 @@ Terminal_DebugDumpDetailedSnapshot		(TerminalScreenRef		inRef)
 																			dataPtr->customScrollingRegion.lastRow);
 	Console_WriteValuePair("Current scrolling region first and last rows", dataPtr->originRegionPtr->firstRow,
 																			dataPtr->originRegionPtr->lastRow);
+	Console_WriteValue("Mode: ANSI", dataPtr->modeANSIEnabled);
 	Console_WriteValue("Mode: auto-wrap", dataPtr->modeAutoWrap);
 	Console_WriteValue("Mode: cursor keys for application", dataPtr->modeCursorKeysForApp);
 	Console_WriteValue("Mode: application keys", dataPtr->modeApplicationKeys);
@@ -2728,9 +2732,12 @@ Terminal_DebugDumpDetailedSnapshot		(TerminalScreenRef		inRef)
 	Console_WriteValue("Mode: insert, not replace", dataPtr->modeInsertNotReplace);
 	Console_WriteValue("Mode: new-line option", dataPtr->modeNewLineOption);
 	Console_WriteValue("Emulator UTF-8 mode", dataPtr->emulator.isUTF8Encoding);
+	Console_WriteValue("Emulator UTF-8 locked", dataPtr->emulator.lockUTF8);
 	Console_WriteValue("Emulator ignores requests to shift character sets", dataPtr->emulator.disableShifts);
 	Console_WriteValue("Emulator accepts 8-bit and 7-bit codes", dataPtr->emulator.is8BitReceiver());
 	Console_WriteValue("Emulator transmits 8-bit codes", dataPtr->emulator.is8BitTransmitter());
+	Console_WriteValueBitFlags("Drawing attributes: current, upper 32 bits", dataPtr->current.drawingAttributes.returnValueInRange(TextAttributes_Object::BitRange(0xFFFFFFFF, 32)));
+	Console_WriteValueBitFlags("Drawing attributes: current, lower 32 bits", dataPtr->current.drawingAttributes.returnValueInRange(TextAttributes_Object::BitRange(0xFFFFFFFF, 0)));
 	// INCOMPLETE - could put just about anything here, whatever is interesting to know
 }// DebugDumpDetailedSnapshot
 
@@ -10333,6 +10340,14 @@ modeSetReset	(My_ScreenBufferPtr		inDataPtr,
 																						? @selector(performScreenResizeWide:)
 																						: @selector(performScreenResizeStandard:),
 																						nil/* object parameter */);
+						
+						// also erase the screen buffer and reset scrolling regions
+						// (as specified in manual for DECCOLM in VT510)
+						inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
+						bufferEraseVisibleScreen(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
+						
+						// home the cursor
+						moveCursor(inDataPtr, 0, 0);
 					}
 					break;
 				
@@ -11208,18 +11223,36 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			
 			locateCursorLine(inDataPtr, cursorLineIterator);
 			
+			// VT100 manual specifies that a cursor in the right half of
+			// the normal screen width should be stuck at the half-way point
+			moveCursorLeftToHalf(inDataPtr);
+			
 			// check line-global attributes; if this line was single-width,
 			// clear out the entire right half of the line
-			eraseRightHalfOfLine(inDataPtr, **cursorLineIterator);
+			if (false == inDataPtr->current.cursorAttributes.hasDoubleAny())
+			{
+				eraseRightHalfOfLine(inDataPtr, **cursorLineIterator);
+			}
 			
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, kTextAttributes_DoubleHeightTop/* set */,
 										kTextAttributes_DoubleTextAll/* clear */);
 			
-			// VT100 manual specifies that a cursor in the right half of
-			// the normal screen width should be stuck at the half-way point
-			moveCursorLeftToHalf(inDataPtr);
+			// add entire row to the text-change region;
+			// this should trigger things like Terminal View updates
+			{
+				Terminal_RangeDescription	range;
+				
+				
+				range.screen = inDataPtr->selfRef;
+				range.firstRow = inDataPtr->current.cursorY;
+				range.firstColumn = 0;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+				range.rowCount = 1;
+				
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+			}
 		}
 		break;
 	
@@ -11230,18 +11263,36 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			
 			locateCursorLine(inDataPtr, cursorLineIterator);
 			
+			// VT100 manual specifies that a cursor in the right half of
+			// the normal screen width should be stuck at the half-way point
+			moveCursorLeftToHalf(inDataPtr);
+			
 			// check line-global attributes; if this line was single-width,
 			// clear out the entire right half of the line
-			eraseRightHalfOfLine(inDataPtr, **cursorLineIterator);
+			if (false == inDataPtr->current.cursorAttributes.hasDoubleAny())
+			{
+				eraseRightHalfOfLine(inDataPtr, **cursorLineIterator);
+			}
 			
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, kTextAttributes_DoubleHeightBottom/* set */,
 										kTextAttributes_DoubleTextAll/* clear */);
 			
-			// VT100 manual specifies that a cursor in the right half of
-			// the normal screen width should be stuck at the half-way point
-			moveCursorLeftToHalf(inDataPtr);
+			// add entire row to the text-change region;
+			// this should trigger things like Terminal View updates
+			{
+				Terminal_RangeDescription	range;
+				
+				
+				range.screen = inDataPtr->selfRef;
+				range.firstRow = inDataPtr->current.cursorY;
+				range.firstColumn = 0;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+				range.rowCount = 1;
+				
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+			}
 		}
 		break;
 	
@@ -11252,18 +11303,36 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			
 			locateCursorLine(inDataPtr, cursorLineIterator);
 			
+			// VT100 manual specifies that a cursor in the right half of
+			// the normal screen width should be stuck at the half-way point
+			moveCursorLeftToHalf(inDataPtr);
+			
 			// check line-global attributes; if this line was single-width,
 			// clear out the entire right half of the line
-			eraseRightHalfOfLine(inDataPtr, **cursorLineIterator);
+			if (false == inDataPtr->current.cursorAttributes.hasDoubleAny())
+			{
+				eraseRightHalfOfLine(inDataPtr, **cursorLineIterator);
+			}
 			
 			// set attributes global to the line, which means that there is
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, kTextAttributes_DoubleWidth/* set */,
 										kTextAttributes_DoubleTextAll/* clear */);
 			
-			// VT100 manual specifies that a cursor in the right half of
-			// the normal screen width should be stuck at the half-way point
-			moveCursorLeftToHalf(inDataPtr);
+			// add entire row to the text-change region;
+			// this should trigger things like Terminal View updates
+			{
+				Terminal_RangeDescription	range;
+				
+				
+				range.screen = inDataPtr->selfRef;
+				range.firstRow = inDataPtr->current.cursorY;
+				range.firstColumn = 0;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+				range.rowCount = 1;
+				
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+			}
 		}
 		break;
 	
@@ -11321,6 +11390,21 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			// no option for any character to lack the attribute on this line
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, TextAttributes_Object()/* set */,
 										kTextAttributes_DoubleTextAll/* clear */);
+			
+			// add the last half of the row to the text-change region;
+			// this should trigger things like Terminal View updates
+			{
+				Terminal_RangeDescription	range;
+				
+				
+				range.screen = inDataPtr->selfRef;
+				range.firstRow = inDataPtr->current.cursorY;
+				range.firstColumn = STATIC_CAST(INTEGER_DIV_2(inDataPtr->text.visibleScreen.numberOfColumnsPermitted), SInt16);
+				range.columnCount = STATIC_CAST(INTEGER_DIV_2(inDataPtr->text.visibleScreen.numberOfColumnsPermitted), SInt16);
+				range.rowCount = 1;
+				
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
+			}
 		}
 		break;
 	
@@ -15200,7 +15284,7 @@ bufferEraseCursorLine	(My_ScreenBufferPtr		inDataPtr,
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	
 	// clear appropriate attributes and text
-	bufferEraseLineWithoutUpdate(inDataPtr, inChanges, **cursorLineIterator);
+	bufferEraseLineWithoutUpdate(inDataPtr, inChanges | kMy_BufferChangesResetCursorAttributes, **cursorLineIterator);
 	
 	// add the entire row contents to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -15230,8 +15314,6 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 								 My_BufferChanges		inChanges,
 								 UInt16					inCharacterCount)
 {
-	TerminalLine_TextIterator						textIterator = nullptr;
-	TerminalLine_TextIterator						endText = nullptr;
 	TerminalLine_TextAttributesList::iterator		attrIterator;
 	TerminalLine_TextAttributesList::iterator		endAttrs;
 	My_ScreenBufferLineList::iterator				cursorLineIterator;
@@ -15253,10 +15335,6 @@ bufferEraseFromCursorColumn		(My_ScreenBufferPtr		inDataPtr,
 	std::advance(attrIterator, postWrapCursorX);
 	endAttrs = attrIterator;
 	std::advance(endAttrs, fillDistance);
-	textIterator = (*cursorLineIterator)->textVectorBegin;
-	std::advance(textIterator, postWrapCursorX);
-	endText = textIterator;
-	std::advance(endText, fillDistance);
 	
 	// change attributes if appropriate; note that since a partial line is
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
@@ -15306,8 +15384,6 @@ void
 bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 										 My_BufferChanges		inChanges)
 {
-	TerminalLine_TextIterator						textIterator = nullptr;
-	TerminalLine_TextIterator						endText = nullptr;
 	TerminalLine_TextAttributesList::iterator		attrIterator;
 	TerminalLine_TextAttributesList::iterator		endAttrs;
 	My_ScreenBufferLineList::iterator				cursorLineIterator;
@@ -15334,9 +15410,6 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr,
 	attrIterator = (*cursorLineIterator)->returnMutableAttributeVector().begin();
 	std::advance(attrIterator, postWrapCursorX);
 	endAttrs = (*cursorLineIterator)->returnMutableAttributeVector().end();
-	textIterator = (*cursorLineIterator)->textVectorBegin;
-	std::advance(textIterator, postWrapCursorX);
-	endText = (*cursorLineIterator)->textVectorEnd;
 	
 	// change attributes if appropriate; note that since a partial line is
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
@@ -15510,8 +15583,6 @@ void
 bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 										 My_BufferChanges		inChanges)
 {
-	TerminalLine_TextIterator						textIterator = nullptr;
-	TerminalLine_TextIterator						endText = nullptr;
 	TerminalLine_TextAttributesList::iterator		attrIterator;
 	TerminalLine_TextAttributesList::iterator		endAttrs;
 	My_ScreenBufferLineList::iterator				cursorLineIterator;
@@ -15530,9 +15601,6 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr		inDataPtr,
 	attrIterator = (*cursorLineIterator)->returnMutableAttributeVector().begin();
 	endAttrs = attrIterator;
 	std::advance(endAttrs, fillDistance);
-	textIterator = (*cursorLineIterator)->textVectorBegin;
-	endText = textIterator;
-	std::advance(endText, fillDistance);
 	
 	// change attributes if appropriate; note that since a partial line is
 	// being erased, "kMy_BufferChangesResetLineAttributes" does NOT apply
@@ -15590,6 +15658,15 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	TerminalLine_TextAttributesList::iterator		endAttrs;
 	
 	
+	// if the cursor line has changed and the cursor is not going
+	// to move, remove previous global settings and update them
+	// afterward with the new values
+	if (inChanges & kMy_BufferChangesResetCursorAttributes)
+	{
+		inDataPtr->current.cursorAttributes.removeAttributes(inRow.returnGlobalAttributes());
+		inDataPtr->current.drawingAttributes.removeAttributes(inRow.returnGlobalAttributes());
+	}
+	
 	// find the right line offset
 	attrIterator = inRow.returnMutableAttributeVector().begin();
 	endAttrs = inRow.returnMutableAttributeVector().end();
@@ -15615,6 +15692,15 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 		{
 			(*tmpAttrIterator).colorIndexBackgroundCopyFrom(inDataPtr->current.latentAttributes);
 		}
+	}
+	
+	// if the cursor line has changed and the cursor is not going
+	// to move, attributes need to be updated here to reflect the
+	// new global line settings
+	if (inChanges & kMy_BufferChangesResetCursorAttributes)
+	{
+		inDataPtr->current.cursorAttributes.addAttributes(inRow.returnGlobalAttributes());
+		inDataPtr->current.drawingAttributes.addAttributes(inRow.returnGlobalAttributes());
 	}
 	
 	// clear out the screen line
@@ -15660,11 +15746,20 @@ bufferEraseRange	(My_ScreenBufferPtr  	inDataPtr,
 			TerminalLine_TextAttributesList const&		attributeVector = inRow.returnAttributeVector();
 			__block auto								attrIterator = attributeVector.begin();
 			auto										endAttrs = attributeVector.end();
+			__block std::vector<CFRange>				erasedRanges;
 			
 			
 			std::advance(attrIterator, inCellRange.startCell);
+			
+			// since a replaced range may occupy more than one character
+			// but a blank space is exactly one character, erased ranges
+			// must first be identified and then erased in a 2nd loop
 			StringUtilities_ForEachComposedCellClusterInRange(inRow.returnCFStringRef(), textRange,
-			^(CFStringRef UNUSED_ARGUMENT(substringRef), StringUtilities_Cell cellCount, CFRange substringRange, CGFloat UNUSED_ARGUMENT(scaleFactor), Boolean& UNUSED_ARGUMENT(stopFlag))
+			^(CFStringRef				UNUSED_ARGUMENT(substringRef),
+			  StringUtilities_Cell		cellCount,
+			  CFRange					substringRange,
+			  CGFloat					UNUSED_ARGUMENT(scaleFactor),
+			  Boolean&					UNUSED_ARGUMENT(stopFlag))
 			{
 				Boolean		noErase = false;
 				
@@ -15679,9 +15774,17 @@ bufferEraseRange	(My_ScreenBufferPtr  	inDataPtr,
 				}
 				if (false == noErase)
 				{
-					inRow.fillWith(CFSTR(" "), substringRange);
+					erasedRanges.push_back(substringRange);
 				}
 			});
+			
+			// order is important; to avoid invalidating ranges after deletion,
+			// they must be applied from back-to-front in the string (see the
+			// loop above)
+			for (auto toRange = erasedRanges.rbegin(); toRange != erasedRanges.rend(); ++toRange)
+			{
+				inRow.fillWith(CFSTR(" "), *toRange);
+			}
 		}
 	}
 }// bufferEraseOnlyErasableCells
@@ -15708,7 +15811,10 @@ bufferEraseVisibleScreen	(My_ScreenBufferPtr		inDataPtr,
 	// clear buffer
 	for (auto& lineInfo : inDataPtr->screenBuffer)
 	{
-		bufferEraseLineWithoutUpdate(inDataPtr, inChanges, *lineInfo);
+		// technically cursor attributes only need to change once but all
+		// lines are being erased anyway so it is easier to not try to
+		// identify the cursor line first
+		bufferEraseLineWithoutUpdate(inDataPtr, inChanges | kMy_BufferChangesResetCursorAttributes, *lineInfo);
 	}
 	
 	// add the entire visible buffer to the text-change region;
@@ -15868,47 +15974,9 @@ bufferInsertBlanksAtCursorColumnWithoutUpdate	(My_ScreenBufferPtr		inDataPtr,
 		copiedAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.latentAttributes);
 	}
 	
-	// update attributes
-	{
-		TerminalLine_TextAttributesList::iterator		pastVisibleEnd = (*toCursorLine)->returnMutableAttributeVector().begin();
-		TerminalLine_TextAttributesList::iterator		toCursorAttr = (*toCursorLine)->returnMutableAttributeVector().begin();
-		TerminalLine_TextAttributesList::iterator		toFirstRelocatedAttr;
-		TerminalLine_TextAttributesList::iterator		pastLastPreservedAttr;
-		
-		
-		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
-		
-		pastLastPreservedAttr = pastVisibleEnd;
-		
-		std::advance(toCursorAttr, postWrapCursorX);
-		toFirstRelocatedAttr = toCursorAttr;
-		std::advance(toFirstRelocatedAttr, numBlanksToAdd);
-		std::advance(pastLastPreservedAttr, -numBlanksToAdd);
-		
-		std::copy_backward(toCursorAttr, pastLastPreservedAttr, pastVisibleEnd);
-		std::fill(toCursorAttr, toFirstRelocatedAttr, copiedAttributes);
-	}
-	
-	// update text
-	{
-		TerminalLine_TextIterator		pastVisibleEnd = (*toCursorLine)->textVectorBegin;
-		TerminalLine_TextIterator		toCursorChar = (*toCursorLine)->textVectorBegin;
-		TerminalLine_TextIterator		toFirstRelocatedChar;
-		TerminalLine_TextIterator		pastLastPreservedChar;
-		
-		
-		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
-		
-		pastLastPreservedChar = pastVisibleEnd;
-		
-		std::advance(toCursorChar, postWrapCursorX);
-		toFirstRelocatedChar = toCursorChar;
-		std::advance(toFirstRelocatedChar, numBlanksToAdd);
-		std::advance(pastLastPreservedChar, -numBlanksToAdd);
-		
-		std::copy_backward(toCursorChar, pastLastPreservedChar, pastVisibleEnd);
-		std::fill(toCursorChar, toFirstRelocatedChar, ' ');
-	}
+	// update text and attributes
+	(*toCursorLine)->insertBlanks(StringUtilities_Cell(postWrapCursorX), StringUtilities_Cell(numBlanksToAdd),
+									copiedAttributes, StringUtilities_Cell(inDataPtr->current.returnNumberOfColumnsPermitted()));
 }// bufferInsertBlanksAtCursorColumnWithoutUpdate
 
 
@@ -16117,47 +16185,9 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 		copiedAttributes.colorIndexBackgroundCopyFrom(inDataPtr->current.latentAttributes);
 	}
 	
-	// update attributes
-	{
-		TerminalLine_TextAttributesList::iterator	pastVisibleEnd = (*toCursorLine)->returnMutableAttributeVector().begin();
-		TerminalLine_TextAttributesList::iterator	toCursorAttr = (*toCursorLine)->returnMutableAttributeVector().begin();
-		TerminalLine_TextAttributesList::iterator	toFirstPreservedAttr;
-		TerminalLine_TextAttributesList::iterator	pastLastRelocatedAttr;
-		
-		
-		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
-		
-		pastLastRelocatedAttr = pastVisibleEnd;
-		
-		std::advance(toCursorAttr, postWrapCursorX);
-		toFirstPreservedAttr = toCursorAttr;
-		std::advance(toFirstPreservedAttr, numCharsToRemove);
-		std::advance(pastLastRelocatedAttr, -numCharsToRemove);
-		
-		std::copy(toFirstPreservedAttr, pastVisibleEnd, toCursorAttr);
-		std::fill(pastLastRelocatedAttr, pastVisibleEnd, copiedAttributes);
-	}
-	
-	// update text
-	{
-		TerminalLine_TextIterator	pastVisibleEnd = (*toCursorLine)->textVectorBegin;
-		TerminalLine_TextIterator	toCursorChar = (*toCursorLine)->textVectorBegin;
-		TerminalLine_TextIterator	toFirstPreservedChar;
-		TerminalLine_TextIterator	pastLastRelocatedChar;
-		
-		
-		std::advance(pastVisibleEnd, inDataPtr->current.returnNumberOfColumnsPermitted());
-		
-		pastLastRelocatedChar = pastVisibleEnd;
-		
-		std::advance(toCursorChar, postWrapCursorX);
-		toFirstPreservedChar = toCursorChar;
-		std::advance(toFirstPreservedChar, numCharsToRemove);
-		std::advance(pastLastRelocatedChar, -numCharsToRemove);
-		
-		std::copy(toFirstPreservedChar, pastVisibleEnd, toCursorChar);
-		std::fill(pastLastRelocatedChar, pastVisibleEnd, ' ');
-	}
+	// update text and attributes
+	(*toCursorLine)->deleteRange(StringUtilities_Cell(postWrapCursorX), StringUtilities_Cell(numCharsToRemove),
+									copiedAttributes, StringUtilities_Cell(inDataPtr->current.returnNumberOfColumnsPermitted()));
 	
 	// add the entire line from the cursor to the end
 	// to the text-change region; this would trigger

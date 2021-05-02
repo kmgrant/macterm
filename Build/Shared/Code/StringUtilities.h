@@ -89,6 +89,18 @@ struct StringUtilities_Cell
 	columns_(inValue)
 	{
 	}
+	
+	StringUtilities_Cell
+	operator + (StringUtilities_Cell const&		other)
+	{
+		return StringUtilities_Cell(columns_ + other.columns_);
+	}
+	
+	StringUtilities_Cell
+	operator - (StringUtilities_Cell const&		other)
+	{
+		return StringUtilities_Cell(columns_ - other.columns_);
+	}
 };
 
 /*!
