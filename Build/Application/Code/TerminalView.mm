@@ -341,8 +341,7 @@ TerminalView_RowIndex	currentRenderedLine;	// only defined while drawing; the ro
 			{
 				CGFloat		baseLine;		// starting point for ascenders, relative to the bottom of the cell
 				CGFloat		size;			// point size of text written in the font indicated by "familyName"
-			} normalMetrics,	// metrics for text meant to fit in a single cell (normal)
-			  doubleMetrics;	// metrics for text meant to fit in 4 cells, not 1 cell (double-width/height)
+			} normalMetrics;	// metrics for text meant to fit in a single cell (normal)
 			CGFloat			scaleWidthPerCell;	// a multiplier (normally 1.0) to force characters from the font to fit in a different width
 TerminalView_PixelWidth		baseWidthPerCell;	// value of "widthPerCell" without any scaling applied
 TerminalView_PixelWidth		widthPerCell;	// number of pixels wide each character is (multiply by 2 on double-width lines);
@@ -5077,7 +5076,6 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 			if (nullptr != lineIterator)
 			{
 				TextAttributes_Object	lineGlobalAttributes;
-				Terminal_Result			terminalError = kTerminal_ResultOK;
 				
 				
 				// unfortunately rendering requires knowledge of the physical location of
@@ -5117,19 +5115,6 @@ drawSection		(My_TerminalViewPtr		inTerminalViewPtr,
 					else
 					{
 						result = true;
-					}
-					
-					// since double-width text is a row-wide attribute, it must be applied
-					// to the entire row instead of per-style-run; do that here
-					terminalError = Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, lineIterator,
-																		&lineGlobalAttributes);
-					if (kTerminal_ResultOK != terminalError)
-					{
-						lineGlobalAttributes.clear();
-					}
-					if (lineGlobalAttributes.hasDoubleWidth())
-					{
-						// UNIMPLEMENTED: stretch line to double-width image
 					}
 					
 					releaseRowIterator(inTerminalViewPtr, &lineIterator);
@@ -5406,7 +5391,11 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 	// of the text storage, not in the graphics context
 	setTextAttributesDictionary(inTerminalViewPtr, inTerminalViewPtr->text.attributeDict, inAttributes);
 	
-	if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
+	if (inAttributes.hasDoubleHeightTop())
+	{
+		// ignore; top half is not drawn (bottom is drawn twice as large, below)
+	}
+	else if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
 	{
 		CGFloat				baselineHint = 0;
 		CGFloat				cellCount = inCharacterCount; // TEMPORARY; this is not really true and must be deduced from the text
@@ -5424,6 +5413,10 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			UnicodeScalarValue		glyphType = StringUtilities_ReturnUnicodeSymbol(aSubstring);
 			
 			
+			// NOTE: double-sized text is handled implicitly here because the
+			// glyph renderers use the given rectangle (which has been sized
+			// ahead of time to be correct if the line is double-width and/or
+			// double-height)
 			drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, glyphBounds, glyphType, baselineHint, inAttributes);
 			glyphBounds.origin.x += glyphBounds.size.width;
 		});
@@ -5440,15 +5433,33 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 											(BRIDGE_CAST(attributedString, CFAttributedStringRef)),
 											CFRetainRelease::kAlreadyRetained);
 		CTLineRef				asLineRef = REINTERPRET_CAST(lineObject.returnCFTypeRef(), CTLineRef);
-		// text is laid out using Core Text metrics previously cached by setUpScreenFontMetrics();
-		// (for efficiency and also consistency, as cells are the same size regardless of attributes)
+		// text is laid out using Core Text metrics previously cached by setUpScreenFontMetrics()
+		// (for efficiency and also consistency, as cells are the same size regardless of attributes,
+		// except for double-size text which is scaled below)
 		NSPoint					drawingLocation = NSMakePoint(inBoundaries.origin.x,
 																viewHeight - inBoundaries.origin.y - cellHeight + inTerminalViewPtr->text.font.normalMetrics.baseLine);
 		CGContextSaveRestore	_(inDrawingContext);
 		
 		
 		CGContextTranslateCTM(inDrawingContext, 0, viewHeight);
-		CGContextScaleCTM(inDrawingContext, 1.0, -1.0);
+		if (inAttributes.hasDoubleWidth())
+		{
+			CGContextScaleCTM(inDrawingContext, 2.0, -1.0);
+			drawingLocation.x *= 0.5; // convert point to 2x scale
+		}
+		else if (inAttributes.hasDoubleHeightBottom())
+		{
+			// note: hasDoubleHeightTop() is handled earlier so it
+			// is not considered in this if-else clause
+			CGContextScaleCTM(inDrawingContext, 2.0, -2.0);
+			drawingLocation.x *= 0.5; // convert point to 2x scale
+			drawingLocation.y -= (cellHeight - inTerminalViewPtr->text.font.normalMetrics.baseLine); // default drawing location assumes single height; offset by additional single height
+			drawingLocation.y *= 0.5; // convert point to 2x scale
+		}
+		else
+		{
+			CGContextScaleCTM(inDrawingContext, 1.0, -1.0);
+		}
 		
 		CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
 		CTLineDraw(asLineRef, inDrawingContext);
@@ -5460,7 +5471,14 @@ drawTerminalText	(My_TerminalViewPtr			inTerminalViewPtr,
 			// in the same family and Cocoa does not seem as capable as QuickDraw in
 			// terms of inventing a bold rendering for such fonts; as a work-around
 			// text is drawn TWICE (the second at a slight offset from the original)
-			drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 30)); // arbitrary
+			if (inAttributes.hasDoubleAny())
+			{
+				drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 60)); // arbitrary
+			}
+			else
+			{
+				drawingLocation.x += (1 + (inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 30)); // arbitrary
+			}
 			
 			CGContextSetTextPosition(inDrawingContext, drawingLocation.x, drawingLocation.y);
 			CTLineDraw(asLineRef, inDrawingContext);
@@ -5984,12 +6002,15 @@ eraseSection	(My_TerminalViewPtr		inTerminalViewPtr,
 	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
 						inLeftmostColumnToErase, inPastRightmostColumnToErase - inLeftmostColumnToErase,
 						outRowSectionBounds);
+#if 0
+	// (this is now a valid case for the top of double-height lines)
 	if (CGRectIsEmpty(outRowSectionBounds))
 	{
 		Console_Warning(Console_WriteValueFloat4, "attempt to erase empty row section",
 						outRowSectionBounds.origin.x, outRowSectionBounds.origin.y,
 						outRowSectionBounds.size.width, outRowSectionBounds.size.height);
 	}
+#endif
 	
 	if (false == inTerminalViewPtr->screen.currentRenderNoBackground)
 	{
@@ -6365,6 +6386,7 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 	outBounds.size.height = inTerminalViewPtr->text.font.heightPerCell.precisePixels();
 	
 	// account for double-height rows
+	// TEMPORARY: this is more inefficient than it should be...
 	getVirtualVisibleRegion(inTerminalViewPtr, nullptr/* left */, &topRow, nullptr/* right */, nullptr/* bottom */);
 	rowIterator = findRowIterator(inTerminalViewPtr, topRow + inZeroBasedRowIndex, &rowIteratorData);
 	if (nullptr != rowIterator)
@@ -6379,7 +6401,13 @@ getRowBounds	(My_TerminalViewPtr		inTerminalViewPtr,
 			if (globalAttributes.hasDoubleHeightTop())
 			{
 				// if this is the top half, the total boundaries extend downwards by one normal line height
-				outBounds.size.height *= 2.0;
+				// but in order to have a “fat line” when selecting text, etc. the top half is considered
+				// to have a ZERO height (this also works because the underlying text storage is identical
+				// on both the top and bottom halves); also, the Y coordinate is offset due to the initial
+				// value of "sectionTopEdge" above that assumed a normal cell height...
+				outBounds.origin.y -= outBounds.size.height;
+				//outBounds.size.height *= 2.0;
+				outBounds.size.height = 0;
 			}
 			else if (globalAttributes.hasDoubleHeightBottom())
 			{
@@ -6840,9 +6868,11 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 								 Boolean					inIsRectangular)
 {
 	HIShapeRef			result = nullptr;
+	HIMutableShapeRef	mutableResult = HIShapeCreateMutable();
 	CGRect				screenBounds;
 	TerminalView_Cell	selectionStart;
 	TerminalView_Cell	selectionPastEnd;
+	Boolean				isRectangular = inIsRectangular;
 	
 	
 	screenBounds = NSRectToCGRect([inTerminalViewPtr->encompassingNSView.terminalContentView bounds]);
@@ -6866,82 +6896,65 @@ getVirtualRangeAsNewHIShape		(My_TerminalViewPtr			inTerminalViewPtr,
 	if ((INTEGER_ABSOLUTE(selectionPastEnd.second - selectionStart.second) <= 1) ||
 		(inIsRectangular))
 	{
-		// then the area to be highlighted is a rectangle; this simplifies things...
+		isRectangular = true;
+	}
+	
+	// make the points the “right way around”, in case the first point is
+	// technically to the right of or below the second point
+	sortAnchors(selectionStart, selectionPastEnd, isRectangular);
+	
+	// iterate over rows; this is necessary because it is possible
+	// for any row to be double-width, affecting the final shape
+	for (CFIndex i = selectionStart.second; i < selectionPastEnd.second; ++i)
+	{
 		CGRect		clippedRect;
-		CGRect		selectionBounds;
+		CGRect		rowSectionBounds;
 		
 		
-		// make the points the “right way around”, in case the first point is
-		// technically to the right of or below the second point
-		sortAnchors(selectionStart, selectionPastEnd, true/* is a rectangular selection */);
-		
-		// set up rectangle bounding area to be highlighted
-		selectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels(),
-										selectionStart.second * inTerminalViewPtr->text.font.heightPerCell.precisePixels(),
-										(selectionPastEnd.first - selectionStart.first) * inTerminalViewPtr->text.font.widthPerCell.precisePixels(),
-										(selectionPastEnd.second - selectionStart.second) * inTerminalViewPtr->text.font.heightPerCell.precisePixels());
+		// TEMPORARY; getRowSectionBounds() is an inefficient call that
+		// probably needs a relative version when iterating through rows
+		if (isRectangular)
+		{
+			// then the area to be highlighted is a rectangle; this simplifies things...
+			getRowSectionBounds(inTerminalViewPtr, i, selectionStart.first, selectionPastEnd.first - selectionStart.first, rowSectionBounds);
+		}
+		else
+		{
+			// then the area to be highlighted is irregularly shaped; this is more complex...
+			UInt16		columnCount = inTerminalViewPtr->screen.cache.columnCountAtLastNotify;
+			
+			
+			if (i == selectionStart.second)
+			{
+				// bounds of first (possibly partial) line to be highlighted
+				// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
+				getRowSectionBounds(inTerminalViewPtr, i, selectionStart.first, columnCount - selectionStart.first, rowSectionBounds);
+			}
+			else if (i == (selectionPastEnd.second - 1))
+			{
+				// bounds of last (possibly partial) line to be highlighted
+				// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
+				getRowSectionBounds(inTerminalViewPtr, i, 0, selectionPastEnd.first, rowSectionBounds);
+			}
+			else
+			{
+				// highlight extends across more than two lines - fill in the space in between
+				getRowSectionBounds(inTerminalViewPtr, i, 0, columnCount, rowSectionBounds);
+			}
+		}
 		
 		// the final selection region is the portion of the full rectangle
 		// that fits within the current screen boundaries
-		clippedRect = CGRectIntegral(CGRectIntersection(selectionBounds, screenBounds));
-		if (0.0 != inInsets)
-		{
-			clippedRect = CGRectInset(clippedRect, inInsets, inInsets);
-		}
-		result = HIShapeCreateWithRect(&clippedRect);
+		clippedRect = CGRectIntegral(CGRectIntersection(rowSectionBounds, screenBounds));
+		UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
 	}
-	else
+	
+	if (0.0 != inInsets)
 	{
-		// then the area to be highlighted is irregularly shaped; this is more complex...
-		HIMutableShapeRef	mutableResult = nullptr;
-		CGRect				clippedRect;
-		CGRect				partialSelectionBounds;
-		
-		
-		mutableResult = HIShapeCreateMutable();
-		
-		// make the points the “right way around”, in case the first point is
-		// technically to the right of or below the second point
-		sortAnchors(selectionStart, selectionPastEnd, false/* is a rectangular selection */);
-		
-		// bounds of first (possibly partial) line to be highlighted
-		{
-			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
-			partialSelectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() + inInsets,
-												selectionStart.second * inTerminalViewPtr->text.font.heightPerCell.precisePixels() + inInsets,
-												inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels() -
-													selectionStart.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() -
-													2.0f * inInsets,
-												inTerminalViewPtr->text.font.heightPerCell.precisePixels()/* no insets here, due to shrunk mid-section */);
-			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
-			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
-		}
-		
-		// bounds of last (possibly partial) line to be highlighted
-		{
-			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
-			partialSelectionBounds = CGRectMake(inInsets,
-												(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCell.precisePixels() - inInsets,
-												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCell.precisePixels() - 2.0f * inInsets,
-												inTerminalViewPtr->text.font.heightPerCell.precisePixels()/* no insets here, due to shrunk mid-section */);
-			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
-			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
-		}
-		
-		if ((selectionPastEnd.second - selectionStart.second) > 2)
-		{
-			// highlight extends across more than two lines - fill in the space in between
-			partialSelectionBounds = CGRectMake(inInsets,
-												(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCell.precisePixels() + inInsets,
-												inTerminalViewPtr->screen.cache.viewWidthInPixels.precisePixels() - 2.0f * inInsets,
-												(selectionPastEnd.second - selectionStart.second - 2/* skip first and last lines */) *
-													inTerminalViewPtr->text.font.heightPerCell.precisePixels() - 2.0f * inInsets);
-			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
-			UNUSED_RETURN(OSStatus)HIShapeUnionWithRect(mutableResult, &clippedRect);
-		}
-		
-		result = mutableResult;
+		UNUSED_RETURN(OSStatus)HIShapeInset(mutableResult, inInsets, inInsets);
 	}
+	
+	result = mutableResult;
 	
 	return result;
 }// getVirtualRangeAsNewHIShape
@@ -7209,7 +7222,7 @@ highlightVirtualRange	(My_TerminalViewPtr				inTerminalViewPtr,
 		}
 		else
 		{
-		#if 1
+		#if 0
 			// Core Graphics and QuickDraw tend to clash and introduce
 			// antialiasing artifacts in edge cases; rather than try to
 			// debug all of the places this could happen, a full screen
@@ -8038,143 +8051,162 @@ returnSelectedTextCopyAsUnicode		(My_TerminalViewPtr			inTerminalViewPtr,
 																					&lineIteratorData);
 			Terminal_Result				iteratorAdvanceResult = kTerminal_ResultOK;
 			Terminal_Result				textGrabResult = kTerminal_ResultOK;
+			Terminal_Result				attributeGrabResult = kTerminal_ResultOK;
 			
 			
 			// read every line of Unicode characters within this range;
 			// if appropriate, ignore some characters on each line
 			for (CFIndex i = kSelectionStart.second; i < kSelectionPastEnd.second; ++i)
 			{
-				CFStringRef		referenceCFString = nullptr;
-				CFRange			stringRange = CFRangeMake(0, 0);
+				CFStringRef				referenceCFString = nullptr;
+				CFRange					stringRange = CFRangeMake(0, 0);
+				TextAttributes_Object	lineGlobalAttributes;
+				Boolean					skipLine = false;
 				
 				
-				if ((inTerminalViewPtr->text.selection.isRectangular) ||
-					(1 == (kSelectionPastEnd.second - kSelectionStart.second)))
+				attributeGrabResult = Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, lineIterator, &lineGlobalAttributes);
+				if (kTerminal_ResultOK == attributeGrabResult)
 				{
-					// for rectangular or one-line selections, copy a specific column range
-					textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
-															kSelectionStart.first, kSelectionPastEnd.first,
-															referenceCFString, stringRange);
-					if (kTerminal_ResultOK != textGrabResult)
+					if (lineGlobalAttributes.hasDoubleHeightTop())
 					{
-						Console_Warning(Console_WriteValue, "one-line text copy failed, terminal error", textGrabResult);
-						break;
+						// double-height text is replicated on two lines and the top half
+						// is not rendered at all; skip the top half (the bottom half
+						// will have identical text and this will match the user’s
+						// expectation of seeing the text only appear once)
+						skipLine = true;
 					}
 				}
-				else
+				
+				if (false == skipLine)
 				{
-					// for standard selections, the first and last lines are different
-					// TEMPORARY: whitespace exclusion flags are mostly a hack to work
-					// around the fact that terminals do not currently know where a
-					// line actually ends; they store whitespace for the full width,
-					// and it is undesirable to pad copied lines with meaningless spaces;
-					// heuristics are employed to arbitrarily strip this end space most
-					// of the time, making an exception for short (~2 line) wraps that
-					// are most likely part of the same, continuing line anyway
-					if (i == kSelectionStart.second)
+					if ((inTerminalViewPtr->text.selection.isRectangular) ||
+						(1 == (kSelectionPastEnd.second - kSelectionStart.second)))
 					{
-						// first line is anchored at the end (LOCALIZE THIS)
+						// for rectangular or one-line selections, copy a specific column range
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
-																kSelectionStart.first, -1/* end column */,
-																referenceCFString, stringRange,
-																(2/* arbitrary */ == (kSelectionPastEnd.second - kSelectionStart.second))
-																	? 0/* flags */
-																	: kTerminal_TextFilterFlagsNoEndWhitespace);
+																kSelectionStart.first, kSelectionPastEnd.first,
+																referenceCFString, stringRange);
 						if (kTerminal_ResultOK != textGrabResult)
 						{
-							Console_Warning(Console_WriteValue, "first-line-anchored-at-end text copy failed, terminal error", textGrabResult);
-							break;
-						}
-					}
-					else if (i == (kSelectionPastEnd.second - 1))
-					{
-						// last line is anchored at the beginning (LOCALIZE THIS)
-						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
-																0/* start column */, kSelectionPastEnd.first,
-																referenceCFString, stringRange, kTerminal_TextFilterFlagsNoEndWhitespace);
-						if (kTerminal_ResultOK != textGrabResult)
-						{
-							Console_Warning(Console_WriteValue, "last-line-anchored-at-beginning text copy failed, terminal error", textGrabResult);
+							Console_Warning(Console_WriteValue, "one-line text copy failed, terminal error", textGrabResult);
 							break;
 						}
 					}
 					else
 					{
-						// middle lines span the whole width
-						textGrabResult = Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator,
-															referenceCFString, stringRange, kTerminal_TextFilterFlagsNoEndWhitespace);
-						if (kTerminal_ResultOK != textGrabResult)
+						// for standard selections, the first and last lines are different
+						// TEMPORARY: whitespace exclusion flags are mostly a hack to work
+						// around the fact that terminals do not currently know where a
+						// line actually ends; they store whitespace for the full width,
+						// and it is undesirable to pad copied lines with meaningless spaces;
+						// heuristics are employed to arbitrarily strip this end space most
+						// of the time, making an exception for short (~2 line) wraps that
+						// are most likely part of the same, continuing line anyway
+						if (i == kSelectionStart.second)
 						{
-							Console_Warning(Console_WriteValue, "middle-spanning-line text copy failed, terminal error", textGrabResult);
-							break;
-						}
-					}
-				}
-				
-				// add the characters for the line...
-				{
-					CFRetainRelease		substringObject(CFStringCreateWithSubstring(kCFAllocatorDefault, referenceCFString, stringRange),
-														CFRetainRelease::kAlreadyRetained);
-					
-					
-					if (substringObject.exists())
-					{
-						CFStringAppend(resultMutable, substringObject.returnCFStringRef());
-						
-						// perform spaces-to-tabs substitution; this could be done while
-						// appending text in the first place but instead it is done as a
-						// lazy post-processing step (also, no effort is made to perform
-						// particularly well...multiple linear searches are done to
-						// iteratively replace ranges of spaces)
-						if (inMaxSpacesToReplaceWithTabOrZero > 0)
-						{
-							// create a string to represent the required whitespace range
-							// (TEMPORARY: there is no reason to do this every time, it
-							// could be cached at the time the user preference changes;
-							// for now however the lazy approach is being taken)
-							CFRetainRelease		spacesString(StringUtilities_ReturnBlankStringCopy(inMaxSpacesToReplaceWithTabOrZero),
-																CFRetainRelease::kAlreadyRetained);
-							CFStringRef			tabString = CFSTR("\011"); // LOCALIZE THIS?
-							
-							
-							// first replace all “long” series of spaces with single tabs, as per user preference
-							UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
-																			CFRangeMake(0, CFStringGetLength(resultMutable)),
-																			0/* comparison options */);
-							
-							// replace all smaller ranges of spaces with one tab as well
-							for (UInt16 maxSpaces = (inMaxSpacesToReplaceWithTabOrZero - 1); maxSpaces > 0; --maxSpaces)
+							// first line is anchored at the end (LOCALIZE THIS)
+							textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+																	kSelectionStart.first, -1/* end column */,
+																	referenceCFString, stringRange,
+																	(2/* arbitrary */ == (kSelectionPastEnd.second - kSelectionStart.second))
+																		? 0/* flags */
+																		: kTerminal_TextFilterFlagsNoEndWhitespace);
+							if (kTerminal_ResultOK != textGrabResult)
 							{
-								// create a string representing the next-smallest range of spaces...
-								CFRetainRelease		smallerSpacesString(StringUtilities_ReturnBlankStringCopy(maxSpaces),
-																		CFRetainRelease::kAlreadyRetained);
-								
-								
-								// ...and turn those spaces into a tab
-								UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, smallerSpacesString.returnCFStringRef(), tabString,
-																				CFRangeMake(0, CFStringGetLength(resultMutable)),
-																				0/* comparison options */);
+								Console_Warning(Console_WriteValue, "first-line-anchored-at-end text copy failed, terminal error", textGrabResult);
+								break;
 							}
 						}
-					}
-				}
-				
-				// if requested, add a new-line
-				if (0 == (inFlags & kTerminalView_TextFlagInline))
-				{
-					// do not terminate last line unless requested
-					if ((i < (kSelectionPastEnd.second - 1)) ||
-						(0 != (inFlags & kTerminalView_TextFlagLastLineHasSeparator)))
-					{
-						// TEMPORARY; should this also have the option of capturing
-						// text in other ways, such as the session’s default line-endings?
-						if (inFlags & kTerminalView_TextFlagLineSeparatorLF)
+						else if (i == (kSelectionPastEnd.second - 1))
 						{
-							CFStringAppendCString(resultMutable, "\012", kCFStringEncodingASCII);
+							// last line is anchored at the beginning (LOCALIZE THIS)
+							textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+																	0/* start column */, kSelectionPastEnd.first,
+																	referenceCFString, stringRange, kTerminal_TextFilterFlagsNoEndWhitespace);
+							if (kTerminal_ResultOK != textGrabResult)
+							{
+								Console_Warning(Console_WriteValue, "last-line-anchored-at-beginning text copy failed, terminal error", textGrabResult);
+								break;
+							}
 						}
 						else
 						{
-							CFStringAppendCString(resultMutable, "\015", kCFStringEncodingASCII);
+							// middle lines span the whole width
+							textGrabResult = Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator,
+																referenceCFString, stringRange, kTerminal_TextFilterFlagsNoEndWhitespace);
+							if (kTerminal_ResultOK != textGrabResult)
+							{
+								Console_Warning(Console_WriteValue, "middle-spanning-line text copy failed, terminal error", textGrabResult);
+								break;
+							}
+						}
+					}
+					
+					// add the characters for the line...
+					{
+						CFRetainRelease		substringObject(CFStringCreateWithSubstring(kCFAllocatorDefault, referenceCFString, stringRange),
+															CFRetainRelease::kAlreadyRetained);
+						
+						
+						if (substringObject.exists())
+						{
+							CFStringAppend(resultMutable, substringObject.returnCFStringRef());
+							
+							// perform spaces-to-tabs substitution; this could be done while
+							// appending text in the first place but instead it is done as a
+							// lazy post-processing step (also, no effort is made to perform
+							// particularly well...multiple linear searches are done to
+							// iteratively replace ranges of spaces)
+							if (inMaxSpacesToReplaceWithTabOrZero > 0)
+							{
+								// create a string to represent the required whitespace range
+								// (TEMPORARY: there is no reason to do this every time, it
+								// could be cached at the time the user preference changes;
+								// for now however the lazy approach is being taken)
+								CFRetainRelease		spacesString(StringUtilities_ReturnBlankStringCopy(inMaxSpacesToReplaceWithTabOrZero),
+																	CFRetainRelease::kAlreadyRetained);
+								CFStringRef			tabString = CFSTR("\011"); // LOCALIZE THIS?
+								
+								
+								// first replace all “long” series of spaces with single tabs, as per user preference
+								UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, spacesString.returnCFStringRef(), tabString,
+																				CFRangeMake(0, CFStringGetLength(resultMutable)),
+																				0/* comparison options */);
+								
+								// replace all smaller ranges of spaces with one tab as well
+								for (UInt16 maxSpaces = (inMaxSpacesToReplaceWithTabOrZero - 1); maxSpaces > 0; --maxSpaces)
+								{
+									// create a string representing the next-smallest range of spaces...
+									CFRetainRelease		smallerSpacesString(StringUtilities_ReturnBlankStringCopy(maxSpaces),
+																			CFRetainRelease::kAlreadyRetained);
+									
+									
+									// ...and turn those spaces into a tab
+									UNUSED_RETURN(CFIndex)CFStringFindAndReplace(resultMutable, smallerSpacesString.returnCFStringRef(), tabString,
+																					CFRangeMake(0, CFStringGetLength(resultMutable)),
+																					0/* comparison options */);
+								}
+							}
+						}
+					}
+					
+					// if requested, add a new-line
+					if (0 == (inFlags & kTerminalView_TextFlagInline))
+					{
+						// do not terminate last line unless requested
+						if ((i < (kSelectionPastEnd.second - 1)) ||
+							(0 != (inFlags & kTerminalView_TextFlagLastLineHasSeparator)))
+						{
+							// TEMPORARY; should this also have the option of capturing
+							// text in other ways, such as the session’s default line-endings?
+							if (inFlags & kTerminalView_TextFlagLineSeparatorLF)
+							{
+								CFStringAppendCString(resultMutable, "\012", kCFStringEncodingASCII);
+							}
+							else
+							{
+								CFStringAppendCString(resultMutable, "\015", kCFStringEncodingASCII);
+							}
 						}
 					}
 				}
@@ -9404,7 +9436,10 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 	
 	// scale the font width according to user preferences (this should be
 	// consistent with kerning in setTextAttributesDictionary(), which
-	// is suppressed in the call above to find a proper base width)
+	// is suppressed in the call above to find a proper base width);
+	// note that double-size text no longer has its own font metrics
+	// because Core Graphics is really good at producing nice-looking
+	// text simply by applying transforms (unlike QuickDraw previously)
 	{
 		CGFloat		reduction = inTerminalViewPtr->text.font.baseWidthPerCell.precisePixels();
 		
@@ -9412,12 +9447,6 @@ setUpScreenFontMetrics	(My_TerminalViewPtr		inTerminalViewPtr)
 		reduction *= inTerminalViewPtr->text.font.scaleWidthPerCell;
 		inTerminalViewPtr->text.font.widthPerCell.setPrecisePixels(reduction);
 	}
-	
-	// now use the font metrics to determine how big double-width text should be;
-	// this is the ideal font size that would fit 4 screen cells (which is not
-	// necessarily a simple doubling of the normal font)
-	//inTerminalViewPtr->text.font.doubleMetrics.size = ...
-	//inTerminalViewPtr->text.font.doubleMetrics.baseLine = ...
 	
 	// the thickness of lines in certain glyphs is also scaled with the font size
 	inTerminalViewPtr->text.font.thicknessHorizontalLines = std::max< CGFloat >(1.0f, inTerminalViewPtr->text.font.widthPerCell.precisePixels() / 5.0f); // arbitrary
@@ -13502,6 +13531,10 @@ drawRect:(NSRect)	aRect
 				fullRectangleBounds.size.width = viewPtr->text.font.widthPerCell.precisePixels();
 				fullRectangleBounds.size.height = newHeight;
 				RegionUtilities_CenterCGRectIn(dotBounds, fullRectangleBounds);
+				if (cursorAttributes.hasDoubleWidth())
+				{
+					dotBounds.origin.x += (viewPtr->text.font.heightPerCell.precisePixels() * 0.3/* arbitrary */);
+				}
 				
 				// draw the dot in the middle of the cell that the cursor occupies
 				if (kTerminal_CursorTypeBlock == gPreferenceProxies.cursorType)

@@ -10228,7 +10228,10 @@ eraseInLine		(My_ScreenBufferPtr		inDataPtr)
 		break;
 	
 	case 2:
-		bufferEraseCursorLine(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse());
+		// unlike erase-in-display (VT100 'ED'), 'EL' is not documented as having
+		// any effect on line-level attributes when entire lines are erased so
+		// do not touch line settings such as double-size text here
+		bufferEraseCursorLine(inDataPtr, inDataPtr->emulator.returnEraseEffectsForNormalUse() & ~kMy_BufferChangesResetLineAttributes);
 		break;
 	
 	default:
@@ -11391,7 +11394,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			changeLineGlobalAttributes(inDataPtr, **cursorLineIterator, TextAttributes_Object()/* set */,
 										kTextAttributes_DoubleTextAll/* clear */);
 			
-			// add the last half of the row to the text-change region;
+			// add the entire row to the text-change region;
 			// this should trigger things like Terminal View updates
 			{
 				Terminal_RangeDescription	range;
@@ -11399,8 +11402,8 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 				
 				range.screen = inDataPtr->selfRef;
 				range.firstRow = inDataPtr->current.cursorY;
-				range.firstColumn = STATIC_CAST(INTEGER_DIV_2(inDataPtr->text.visibleScreen.numberOfColumnsPermitted), SInt16);
-				range.columnCount = STATIC_CAST(INTEGER_DIV_2(inDataPtr->text.visibleScreen.numberOfColumnsPermitted), SInt16);
+				range.firstColumn = 0;
+				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 				range.rowCount = 1;
 				
 				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeTextEdited, &range);
@@ -15661,7 +15664,8 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	// if the cursor line has changed and the cursor is not going
 	// to move, remove previous global settings and update them
 	// afterward with the new values
-	if (inChanges & kMy_BufferChangesResetCursorAttributes)
+	if ((inChanges & kMy_BufferChangesResetCursorAttributes) &&
+		(inChanges & kMy_BufferChangesResetLineAttributes))
 	{
 		inDataPtr->current.cursorAttributes.removeAttributes(inRow.returnGlobalAttributes());
 		inDataPtr->current.drawingAttributes.removeAttributes(inRow.returnGlobalAttributes());
@@ -15670,9 +15674,6 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	// find the right line offset
 	attrIterator = inRow.returnMutableAttributeVector().begin();
 	endAttrs = inRow.returnMutableAttributeVector().end();
-	
-	// 3.0 - line-global attributes are cleared only if clearing an entire line
-	inRow.returnMutableGlobalAttributes().clear();
 	
 	// change attributes if appropriate
 	if (inChanges & kMy_BufferChangesResetLineAttributes)
@@ -15697,7 +15698,8 @@ bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 	// if the cursor line has changed and the cursor is not going
 	// to move, attributes need to be updated here to reflect the
 	// new global line settings
-	if (inChanges & kMy_BufferChangesResetCursorAttributes)
+	if ((inChanges & kMy_BufferChangesResetCursorAttributes) &&
+		(inChanges & kMy_BufferChangesResetLineAttributes))
 	{
 		inDataPtr->current.cursorAttributes.addAttributes(inRow.returnGlobalAttributes());
 		inDataPtr->current.drawingAttributes.addAttributes(inRow.returnGlobalAttributes());
