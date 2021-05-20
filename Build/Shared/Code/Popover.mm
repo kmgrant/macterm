@@ -363,8 +363,8 @@ vibrancy:(BOOL)							aVisualEffectFlag
 	else
 	{
 		BOOL const		kDefaultCornerIsRounded = YES;
-		CGFloat const	kDefaultArrowBaseWidth = 30.0; // see also "applyArrowStyle:"
-		CGFloat const	kDefaultArrowHeight = 0.0; // see also "applyArrowStyle:"
+		CGFloat const	kDefaultArrowBaseWidth = 28.0; // see also "applyArrowStyle:"
+		CGFloat const	kDefaultArrowHeight = 13.0; // see also "applyArrowStyle:"
 		CGFloat const	kDefaultCornerRadius = 8.0;
 		CGFloat const	kDefaultCornerRadiusForArrowCorner = (kDefaultCornerIsRounded)
 																? kDefaultCornerRadius
@@ -675,9 +675,18 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 		self.backgroundColor = [self colorPopoverBackground];
 		self.borderOuterColor = [self colorPopoverFrameOuter];
 		self.borderPrimaryColor = [self colorPopoverFramePrimary];
-		self.viewMargin = 3.0f;
-		self.borderWidth = 2.2f;
-		self.cornerRadius = 4.0f;
+		if (@available(macOS 11.0, *))
+		{
+			self.viewMargin = 3.0f;
+			self.borderWidth = 2.2f;
+			self.cornerRadius = 8.0f;
+		}
+		else
+		{
+			self.viewMargin = 3.0f;
+			self.borderWidth = 2.2f;
+			self.cornerRadius = 4.0f;
+		}
 		break;
 	
 	case kPopover_WindowStyleAlertAppModal:

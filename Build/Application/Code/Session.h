@@ -189,15 +189,7 @@ enum Session_LineEnding
 
 // NOTE: Session_NewlineMode is declared in "MacTermQuills.h" since it is used by SwiftUI
 
-/*!
-Protocols supported by a Session.
-*/
-enum Session_Protocol
-{
-	kSession_ProtocolSFTP			= 0,	//!< secure file transfer protocol
-	kSession_ProtocolSSH1			= 1,	//!< secure shell protocol, version 1
-	kSession_ProtocolSSH2			= 2,	//!< secure shell protocol, version 2
-};
+// NOTE: Session_Protocol is declared in "MacTermQuills.h" since it is used by SwiftUI
 
 /*!
 Possible states a Session can be in.

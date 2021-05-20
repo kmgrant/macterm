@@ -158,6 +158,16 @@ typedef CF_CLOSED_ENUM(UInt16, Session_NewlineMode)
 };
 
 /*!
+Protocols supported by a Session.
+*/
+typedef CF_CLOSED_ENUM(UInt16, Session_Protocol)
+{
+	kSession_ProtocolSFTP			= 0,	//!< secure file transfer protocol
+	kSession_ProtocolSSH1			= 1,	//!< secure shell protocol, version 1
+	kSession_ProtocolSSH2			= 2,	//!< secure shell protocol, version 2
+};
+
+/*!
 Determines the shape of the cursor, when rendered.
 */
 typedef CF_CLOSED_ENUM(UInt16, Terminal_CursorType)

@@ -56,6 +56,7 @@
 		0A82FF1525532A8800768C85 /* UIPrefsTerminalEmulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A82FF1425532A8800768C85 /* UIPrefsTerminalEmulation.swift */; };
 		0A858C6A2575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A858C692575FDEE00A53F30 /* UIPrefsSessionKeyboard.swift */; };
 		0A90C79B1DBC557B005EABE0 /* CoreUI.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A90C79A1DBC557B005EABE0 /* CoreUI.mm */; };
+		0A92C2C52648526D00DC09B8 /* UIServerBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A92C2C42648526D00DC09B8 /* UIServerBrowser.swift */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0A998CB01E5F62D30002C083 /* file_kvp.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA31E5F62400002C083 /* file_kvp.py */; };
 		0A998CB11E5F62D30002C083 /* file_open.py in pymacterm */ = {isa = PBXBuildFile; fileRef = 0A998CA41E5F62400002C083 /* file_open.py */; };
@@ -192,7 +193,6 @@
 		0A08CA00224F345E00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelSessionResourceCocoa.xib; sourceTree = "<group>"; };
 		0A08CA06224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefPanelWorkspaceWindowsCocoa.xib; sourceTree = "<group>"; };
 		0A08CA07224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/PrefsWindowCocoa.xib; sourceTree = "<group>"; };
-		0A08CA09224F345F00DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ServerBrowserCocoa.xib; sourceTree = "<group>"; };
 		0A08CA0F224F346000DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/VectorWindowCocoa.xib; sourceTree = "<group>"; };
 		0A08CA1A224F7E3500DA2569 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Application/Resources/Base.lproj/Credits.html; sourceTree = "<group>"; };
 		0A0ADD43178A5FB800E72DF4 /* CursorIBeam.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = CursorIBeam.png; path = Application/Resources/CursorIBeam.png; sourceTree = "<group>"; };
@@ -371,6 +371,7 @@
 		0A8D8B14178F8BC6004F694C /* TerminalWindowRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindowRef.typedef.h; path = Application/Code/TerminalWindowRef.typedef.h; sourceTree = "<group>"; };
 		0A90C79A1DBC557B005EABE0 /* CoreUI.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CoreUI.mm; path = Shared/Code/CoreUI.mm; sourceTree = "<group>"; };
 		0A90C79C1DBC5588005EABE0 /* CoreUI.objc++.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CoreUI.objc++.h"; path = "Shared/Code/CoreUI.objc++.h"; sourceTree = "<group>"; };
+		0A92C2C42648526D00DC09B8 /* UIServerBrowser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIServerBrowser.swift; path = Application/Code/UIServerBrowser.swift; sourceTree = "<group>"; };
 		0A95C6C61888DCB800DFEB97 /* PreferencesSearch.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = PreferencesSearch.plist; path = Application/Resources/PreferencesSearch.plist; sourceTree = "<group>"; };
 		0A998CA31E5F62400002C083 /* file_kvp.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = file_kvp.py; path = Application/PythonCode/pymacterm/file_kvp.py; sourceTree = "<group>"; };
 		0A998CA41E5F62400002C083 /* file_open.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; name = file_open.py; path = Application/PythonCode/pymacterm/file_open.py; sourceTree = "<group>"; };
@@ -647,6 +648,7 @@
 				0A67A901254A0C82002798E0 /* UIPrefsTerminalScreen.swift */,
 				0A77534C2606F9A6003CDE56 /* UIPrefsTranslations.swift */,
 				0A82D15F2555E2FC00950356 /* UIPrefsWorkspaceOptions.swift */,
+				0A92C2C42648526D00DC09B8 /* UIServerBrowser.swift */,
 				0AD62711055DEB7000843EA9 /* ApplicationPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.mm */,
@@ -846,7 +848,6 @@
 				0A0E9F8B1DB18127006A8BF5 /* PrefPanelSessionResourceCocoa.xib */,
 				0A0E9F971DB18127006A8BF5 /* PrefPanelWorkspaceWindowsCocoa.xib */,
 				0A0E9F991DB18127006A8BF5 /* PrefsWindowCocoa.xib */,
-				0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */,
 				0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */,
 			);
 			name = XIBs;
@@ -1275,6 +1276,7 @@
 				0A47A08C14B3E33A00E39136 /* TerminalToolbar.mm in Sources */,
 				0A4FAF951525694700B8142A /* Popover.mm in Sources */,
 				0A4AC96B155ED68C00FA6184 /* VectorWindow.mm in Sources */,
+				0A92C2C52648526D00DC09B8 /* UIServerBrowser.swift in Sources */,
 				0AD7D0C3158AEBC9000C3264 /* PrefsContextManager.mm in Sources */,
 				0A46C56D15D864B700843BBC /* PreferenceValue.mm in Sources */,
 				0A82D1742557443C00950356 /* UIPrefsGeneralFullScreen.swift in Sources */,
@@ -1397,14 +1399,6 @@
 				0A08CA07224F345F00DA2569 /* Base */,
 			);
 			name = PrefsWindowCocoa.xib;
-			sourceTree = "<group>";
-		};
-		0A0E9F9D1DB18127006A8BF5 /* ServerBrowserCocoa.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A08CA09224F345F00DA2569 /* Base */,
-			);
-			name = ServerBrowserCocoa.xib;
 			sourceTree = "<group>";
 		};
 		0A0E9FA31DB18127006A8BF5 /* VectorWindowCocoa.xib */ = {

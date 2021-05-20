@@ -75,12 +75,13 @@ DNR_New		(char const*	inHostNameCString,
 			 void			(^inResponseBlock)(struct hostent*))
 {
 	DNR_Result		result = kDNR_ResultOK;
+	char*			hostNameCopy = strdup(inHostNameCString);
 	
 	
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0/* flags */),
 	^{
 		int					posixError = 0;
-		struct hostent*		hostData = getipnodebyname(inHostNameCString,
+		struct hostent*		hostData = getipnodebyname(hostNameCopy,
 														inRestrictIPv4 ? AF_INET : AF_INET6,
 														AI_DEFAULT, &posixError);
 		
@@ -88,11 +89,11 @@ DNR_New		(char const*	inHostNameCString,
 		{
 			if (HOST_NOT_FOUND == posixError)
 			{
-				Console_WriteLine("lookup failed; host not found");
+				Console_WriteValueCString("lookup failed (not found); host", hostNameCopy);
 			}
 			else if (TRY_AGAIN == posixError)
 			{
-				Console_WriteLine("lookup failed (suggest retrying)");
+				Console_WriteValueCString("lookup failed (suggest retrying); host", hostNameCopy);
 			}
 			else
 			{
@@ -100,6 +101,7 @@ DNR_New		(char const*	inHostNameCString,
 			}
 		}
 		
+		free(hostNameCopy);
 		dispatch_async(dispatch_get_main_queue(),
 		^{
 			inResponseBlock(hostData);

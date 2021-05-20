@@ -69,7 +69,7 @@ extension Text {
 	// for sections, e.g. in Preferences, a right-aligned title like "Options:"
 	public func asMacTermSectionHeading(isSmall: Bool = false) -> some View {
 		bold()
-		.frame(width: isSmall ? 80 : 160, alignment: .trailing)
+		.frame(width: isSmall ? CGFloat(80) : CGFloat(160), alignment: .trailing)
 		.multilineTextAlignment(.trailing)
 		.controlSize(isSmall ? .small : .regular)
 	}
@@ -153,6 +153,7 @@ extension View {
 	}
 }
 
+// MARK: -
 public class UICommon_BaseModel : NSObject {
 
 	@objc public var disableWriteback = false // to prevent changes from causing looping updates; see below, and Objective-C code that initializes views or changes data sources
@@ -166,6 +167,7 @@ public class UICommon_BaseModel : NSObject {
 
 }
 
+// MARK: -
 public class UICommon_DefaultingModel : UICommon_BaseModel {
 
 	@objc public var defaultOverrideInProgress = false // to prevent changes to default flags from causing looping updates; see below, and Objective-C models that change data sources
@@ -205,6 +207,7 @@ public class UICommon_DefaultingModel : UICommon_BaseModel {
 
 }
 
+// MARK: -
 struct UICommon_DividerSectionView : View {
 
 	var body: some View {
@@ -223,6 +226,7 @@ struct UICommon_DividerSectionView : View {
 
 }
 
+// MARK: -
 struct UICommon_OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
@@ -303,6 +307,7 @@ struct UICommon_OptionLineView <Content: View> : View {
 
 }
 
+// MARK: -
 // (this is used several times in the views below)
 var UICommon_DefaultToggleAccessibilityDesc = "Restore to Default Value"
 var UICommon_DefaultToggleAccessibilityDescTemplate = NSLocalizedString("%1$@: Restore to Default Value",
@@ -338,6 +343,7 @@ struct UICommon_DefaultToggleProperties {
 
 }
 
+// MARK: -
 struct UICommon_Default1OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
@@ -398,6 +404,7 @@ struct UICommon_Default1OptionLineView <Content: View> : View {
 
 }
 
+// MARK: -
 struct UICommon_Default2OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
@@ -464,6 +471,7 @@ struct UICommon_Default2OptionLineView <Content: View> : View {
 
 }
 
+// MARK: -
 struct UICommon_Default3OptionLineView <Content: View> : View {
 
 	@State private var unusedDefault = true
@@ -534,6 +542,7 @@ struct UICommon_Default3OptionLineView <Content: View> : View {
 
 }
 
+// MARK: -
 struct UICommon_DefaultOptionHeaderView : View {
 
 	var title = ""
@@ -561,6 +570,43 @@ struct UICommon_DefaultOptionHeaderView : View {
 
 }
 
+// MARK: -
+struct UICommon_FieldErrorView : View {
+
+	private var isError: Binding<Bool>
+	private var toolTipText: String
+
+	init(_ isError: Binding<Bool>, toolTipText: String) {
+		self.isError = isError
+		self.toolTipText = toolTipText
+	}
+
+	var body: some View {
+		// this is hidden or displayed based on the binding; it should
+		// appear after an affected TextField because the arrow will
+		// point backward to the field with the error (since it is
+		// expected to appear next to text, its default alignment
+		// guide assumes a text baseline)
+		let result = HStack {
+			Image(nsImage: isError.wrappedValue ? (NSImage(named: NSImage.invalidDataFreestandingTemplateName) ?? NSImage()) : NSImage())
+				.resizable()
+				.alignmentGuide(.firstTextBaseline, computeValue: { d in d[.middle] + 4 })
+				.frame(maxWidth: 16, maxHeight: 16)
+			Image(nsImage: isError.wrappedValue ? (NSImage(named: NSImage.cautionName) ?? NSImage()) : NSImage())
+				.resizable()
+				.alignmentGuide(.firstTextBaseline, computeValue: { d in d[.middle] + 4 })
+				.frame(maxWidth: 16, maxHeight: 16)
+		}.frame(maxHeight: 16)
+		if isError.wrappedValue {
+			result.macTermToolTipText(toolTipText)
+		} else {
+			result
+		}
+	}
+
+}
+
+// MARK: -
 struct UICommon_FileSystemPathView : NSViewRepresentable {
 
 	typealias NSViewType = NSPathControl
@@ -646,6 +692,7 @@ struct UICommon_FileSystemPathView : NSViewRepresentable {
 
 }
 
+// MARK: -
 struct UICommon_ProgressCircleView : NSViewRepresentable {
 
 	typealias NSViewType = NSProgressIndicator

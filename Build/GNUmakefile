@@ -233,7 +233,6 @@ Base.lproj/PrefPanelFormatStandardColorsCocoa \
 Base.lproj/PrefPanelSessionResourceCocoa \
 Base.lproj/PrefPanelWorkspaceWindowsCocoa \
 Base.lproj/PrefsWindowCocoa \
-Base.lproj/ServerBrowserCocoa \
 Base.lproj/VectorWindowCocoa
 SHARED_XIB_PREFIXES := \
 Base.lproj/WindowTitleDialogCocoa
