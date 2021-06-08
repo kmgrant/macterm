@@ -169,7 +169,6 @@ $(wildcard $(SRC_APP_CODE_TOP)/Quills*)
 # bundles) for convenience when writing rules that
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
-Application.sb \
 DefaultFormat1.plist \
 DefaultFormat2.plist \
 DefaultFormat3.plist \

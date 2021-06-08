@@ -183,31 +183,6 @@ if __name__ == "__main__":
     MAIN_SCRIPT = path_join(MACOS_DIR, "RunApplication.py")
     sys.argv.insert(1, MAIN_SCRIPT)
 
-    # if the system supports sandboxing, run the program in a sandbox
-    # (EXPERIMENTAL: eventually this might be enabled automatically by
-    # system type but for now it is only activated when the appropriate
-    # environment setting is made)
-    if False:
-        IS_SANDBOXED = (MAC_OS_NAME not in ("Panther", "Tiger"))
-    else:
-        IS_SANDBOXED = (("MACTERM_SANDBOXED" in os.environ) and
-                        (os.environ["MACTERM_SANDBOXED"] == "1"))
-    SANDBOX_PROFILE_PATH = None
-    if IS_SANDBOXED:
-        # WARNING: if you choose to override with a custom profile it is still
-        # recommended that you begin with an import of the default one; e.g.
-        # (import "/Applications/MacTerm.app/Contents/Resources/Application.sb")
-        if "MACTERM_SANDBOX_PROFILE" in os.environ:
-            SANDBOX_PROFILE_PATH = os.environ["MACTERM_SANDBOX_PROFILE"]
-        else:
-            SANDBOX_PROFILE_PATH = path_join(BUNDLE_DIR, 'Contents',
-                                             'Resources', 'Application.sb')
-        print("MacTerm: Sandboxing has been enabled using restrictions from",
-              "the profile '%s'." % SANDBOX_PROFILE_PATH)
-        sys.argv.insert(0, SANDBOX_PROFILE_PATH)
-        sys.argv.insert(0, '-f')
-        sys.argv.insert(0, '/usr/bin/sandbox-exec')
-
     # if requested, run in the debugger
     RUN_IN_DEBUGGER = (("MACTERM_DEBUG" in os.environ) and
                        (os.environ["MACTERM_DEBUG"] == "1"))
