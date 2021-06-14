@@ -374,10 +374,14 @@ struct UIKeypads_KeyButtonStyle : ButtonStyle {
 					Gradient.Stop(color: Color.accentColor, location: 0.95)
 				])
 			let buttonGradientLightDisabled = Gradient(stops: [
-					Gradient.Stop(color: Color(red: 0.95, green: 0.95, blue: 0.95), location: 0.2)
+					Gradient.Stop(color: Color(red: 0.95, green: 0.95, blue: 0.95), location: 0.0),
+					Gradient.Stop(color: Color(red: 0.95, green: 0.95, blue: 0.95), location: 0.2),
+					Gradient.Stop(color: Color(red: 0.95, green: 0.95, blue: 0.95), location: 1.0)
 				])
 			let buttonGradientDarkDisabled = Gradient(stops: [
-					Gradient.Stop(color: Color(red: 0.2, green: 0.2, blue: 0.2), location: 0.2)
+					Gradient.Stop(color: Color(red: 0.2, green: 0.2, blue: 0.2), location: 0.0),
+					Gradient.Stop(color: Color(red: 0.2, green: 0.2, blue: 0.2), location: 0.2),
+					Gradient.Stop(color: Color(red: 0.2, green: 0.2, blue: 0.2), location: 1.0)
 				])
 			let buttonGradientNormal = drawAsSelected
 										? (drawAsDark ? buttonGradientDarkSelected : buttonGradientLightSelected)

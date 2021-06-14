@@ -229,6 +229,7 @@ public struct UIServerBrowser_View : View {
 								}.labelsHidden()
 									.disabled(viewModel.recentHostsArray.isEmpty)
 									.frame(maxWidth: 16)
+									.offset(x: -12, y: 0) // account for UI difference in Catalina
 									.controlSize(.small)
 							}
 						}.padding([.trailing], 4)
