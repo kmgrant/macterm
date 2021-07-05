@@ -157,6 +157,9 @@ struct TerminalLine_Object
 	inline void
 	insertBlanks (StringUtilities_Cell, StringUtilities_Cell, TextAttributes_Object const&, StringUtilities_Cell);
 	
+	inline void
+	replaceCell (StringUtilities_Cell, CFStringRef, TextAttributes_Object const&);
+	
 	inline TerminalLine_TextAttributesList const&
 	returnAttributeVector () const;
 	
@@ -549,6 +552,46 @@ insertBlanks	(StringUtilities_Cell			inRangeStartCell,
 	CFStringInsert(this->textCFString.returnCFMutableStringRef(), shiftedRange.location, blankString.returnCFStringRef());
 #endif
 }// TerminalLine_Object::insertBlanks
+
+
+/*!
+Replaces the portion of the internal buffer that matches
+the given cell boundary, changing the text and attributes.
+
+As with other methods that work with “cells”, the effect
+of this depends on both the bytes required to represent
+characters and the number of visible cells they occupy.
+(Sometimes a character requires a lot of bytes but may
+not occupy the same number of cells, for instance.)
+
+(2021.07)
+*/
+void
+TerminalLine_Object::
+replaceCell		(StringUtilities_Cell			inRangeStartCell,
+				 CFStringRef					inReplacementValue,
+				 TextAttributes_Object const&	inNewAttributes)
+{
+	// update attributes
+	returnMutableAttributeVector()[inRangeStartCell.columns_] = inNewAttributes;
+	
+#if 1
+	// for now, access buffer directly (this won’t work for
+	// a multi-character fill but this is legacy anyway)
+	textVectorBegin[inRangeStartCell.columns_] = StringUtilities_ReturnUnicodeSymbol(inReplacementValue);
+#else
+	// preferred method, with updated storage: modify the
+	// Core Foundation string storage appropriately (this
+	// must be done carefully to ensure that cells/columns
+	// are identified and overwritten correctly)
+	CFRange const	replacedRange = StringUtilities_ReturnSubstringRangeForCellRange
+									(this->textCFString.returnCFStringRef(), inRangeStartCell, StringUtilities_Cell(1)/* count */,
+										kStringUtilities_PartialSymbolRulePrevious, kStringUtilities_PartialSymbolRuleNext);
+	
+	
+	CFStringReplace(this->textCFString.returnCFMutableStringRef(), replacedRange, inReplacementValue);
+#endif
+}// TerminalLine_Object::replaceCell
 
 
 /*!

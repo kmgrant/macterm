@@ -1899,8 +1899,7 @@ void						tabStopClearAll							(My_ScreenBufferPtr);
 UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr, Boolean);
 void						tabStopInitialize						(My_ScreenBufferPtr);
 void*						threadForTerminalSearch					(void*);
-UniChar						translateCharacter						(My_ScreenBufferPtr, UnicodeScalarValue, TextAttributes_Object,
-																	 TextAttributes_Object&);
+void						translateCell							(My_ScreenBufferPtr, My_ScreenBufferLinePtr&, StringUtilities_Cell, CFStringRef, TextAttributes_Object);
 
 } // anonymous namespace
 
@@ -12200,11 +12199,11 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 		break;
 	
 	case kStateNGM:
-		// enter graphics mode - unimplemented
+		inDataPtr->current.drawingAttributes.addAttributes(kTextAttributes_VTGraphics);
 		break;
 	
 	case kStateXGM:
-		// exit graphics mode - unimplemented
+		inDataPtr->current.drawingAttributes.removeAttributes(kTextAttributes_VTGraphics);
 		break;
 	
 	case kStateCH:
@@ -16798,7 +16797,6 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		__block My_ScreenBufferLineList::iterator	cursorLineIterator;
 		__block SInt16								preWriteCursorX = inDataPtr->current.cursorX;
 		__block My_ScreenRowIndex					preWriteCursorY = inDataPtr->current.cursorY;
-		__block TextAttributes_Object				temporaryAttributes;
 		
 		
 		// WARNING: This is done once here, for efficiency, and is only
@@ -16812,14 +16810,10 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		  CFRange		UNUSED_ARGUMENT(aRange),
 		  Boolean&		UNUSED_ARGUMENT(outStopFlag))
 		{
-			UnicodeScalarValue		glyphType = StringUtilities_ReturnUnicodeSymbol(aSubstring);
-			
-			
 		#if 0
 			// debug
 			{
 				Console_WriteValueCFString("echo character: glyph", aSubstring);
-				Console_WriteValue("echo character: value", glyphType);
 			}
 		#endif
 			
@@ -16841,10 +16835,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			{
 				bufferInsertBlanksAtCursorColumnWithoutUpdate(inDataPtr, 1/* number of blank characters */, kMy_AttributeRuleInitialize);
 			}
-			(*cursorLineIterator)->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, glyphType,
-																									inDataPtr->current.drawingAttributes,
-																									temporaryAttributes);
-			(*cursorLineIterator)->returnMutableAttributeVector()[inDataPtr->current.cursorX] = temporaryAttributes;
+			translateCell(inDataPtr, (*cursorLineIterator), StringUtilities_Cell(inDataPtr->current.cursorX), aSubstring, inDataPtr->current.drawingAttributes);
 			
 			if (false == inDataPtr->wrapPending)
 			{
@@ -18645,35 +18636,55 @@ threadForTerminalSearch		(void*	inSearchThreadContextPtr)
 
 
 /*!
-Translates the given character code using the rules
-of the current character set of the specified screen
-(character sets G0 or G1, for VT terminals).  The
-new code is returned, which may be unchanged.
+Sets the contents of the given screen cell, translating
+its contents appropriately given the context (e.g. VT
+G0/G1 terminal character set, and graphics attributes).
+The cell’s attributes are also set to the given value
+but may be adjusted, e.g. to mark a value as graphical.
 
-The attributes are now provided too, which allows
-the internal storage of an original character to be
-more appropriate; e.g. an ASCII-encoded graphics
-character may be stored as the Unicode character
-that has the intended glyph.
+Note that this could cause the original input value to
+be lost, replaced by its equivalent.  In practice, this
+makes the text buffer closer to user expectations, e.g.
+can copy/paste a Unicode string containing what appears
+on screen, instead of a raw string that only makes sense
+to the terminal buffer.  This also means however that
+when “resetting” the terminal, text will not be reverted
+too, e.g. graphics symbols will remain.  If this is
+required, the caller should first copy the string before
+requesting translation.
 
-If the given character needs its attributes changed
-(typically, because it is actually graphical), those
-new attributes are returned.  The new attributes
-should ONLY apply to the given character; they do
-not indicate a new default for the character stream.
+In most cases, the cell will simply copy the given text
+and attributes to the buffer without making any changes.
 
-(4.0)
+(2021.07)
 */
-inline UniChar
-translateCharacter	(My_ScreenBufferPtr			inDataPtr,
-					 UnicodeScalarValue			inCharacter,
-					 TextAttributes_Object		inAttributes,
-					 TextAttributes_Object&		outNewAttributes)
+inline void
+translateCell	(My_ScreenBufferPtr			inDataPtr,
+				 My_ScreenBufferLinePtr&	inoutUpdatedTerminalLinePtr, // note: using "&" due to TerminalLine_Handle wrapper object type
+				 StringUtilities_Cell		inFirstUpdatedCell,
+				 CFStringRef				inCellCharacter,
+				 TextAttributes_Object		inAttributes)
 {
-	UniChar		result = inCharacter;
+	UnicodeScalarValue				glyphType = StringUtilities_ReturnUnicodeSymbol(inCellCharacter);
+	NSString*						newString = nil;
+	__block TextAttributes_Object	tmpAttributes = inAttributes; // used as needed below
+	__block TextAttributes_Object*	newAttributes = nil; // if any attributes must change, set this to "&tmpAttributes" and modify "tmpAttributes"
+	
+	auto stringWithCharacter = ^(UniChar aChar)
+	{
+		// short-cut for creating string from up to two-byte Unicode value
+		return/* from lambda */ [NSString stringWithCharacters:&aChar length:1];
+	};
+	
+	auto removeVTGraphicsAttribute = ^()
+	{
+		// remove VT graphics flag and then note that attributes have been
+		// modified and need to be updated in the terminal buffer
+		tmpAttributes.removeAttributes(kTextAttributes_VTGraphics);
+		newAttributes = &tmpAttributes;
+	};
 	
 	
-	outNewAttributes = inAttributes; // initially...
 	switch (inDataPtr->current.characterSetInfoPtr->translationTable)
 	{
 	case kMy_CharacterSetVT100UnitedStates:
@@ -18683,7 +18694,10 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 	case kMy_CharacterSetVT100UnitedKingdom:
 		// the only difference between ASCII and U.K. is that
 		// the pound sign (#) is a British currency symbol (£)
-		if (inCharacter == '#') result = 0x00A3;
+		if (glyphType == '#')
+		{
+			newString = stringWithCharacter(0x00A3);
+		}
 		break;
 	
 	default:
@@ -18691,23 +18705,19 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		break;
 	}
 	
-	// TEMPORARY - the renderer does not handle most Unicode characters,
-	// but programs sometimes choose “unnecessarily exotic” variations
-	// of characters that would lead to unknown-character renderings when
-	// it is pretty easy to choose sensible ASCII equivalents...
-	switch (inCharacter)
+	if (inAttributes.hasAttributes(kTextAttributes_VTGraphics) &&
+		((glyphType >= 0x0020) && (glyphType <= 0x005E)))
 	{
-	case 0x2212: // minus sign
-	case 0x2010: // hyphen
-		result = '-';
-		break;
-	
-	default:
-		break;
+		// the initial set of punctuation characters and all
+		// capital letters might be marked as “graphical” but
+		// they are still rendered normally in graphics mode;
+		// remove the attribute to produce the right rendering
+		removeVTGraphicsAttribute(); // render normally
 	}
-	
-	if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
+	else if (inAttributes.hasAttributes(kTextAttributes_VTGraphics))
 	{
+		// this is a cell marked as “graphical” that really is
+		// rendered differently than the underlying text storage
 		Boolean const	kIsBold = inAttributes.hasBold();
 		Boolean const	kVT52 = (false == inDataPtr->modeANSIEnabled);
 		
@@ -18717,247 +18727,455 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		// copy and paste of text will do the right thing (the renderer may
 		// still choose not to rely on Unicode fonts for rendering them);
 		// INCOMPLETE: this might need terminal-emulator-specific code
-		// IMPORTANT: old drawing code currently requires that non-graphical
-		// symbols below (e.g. degrees, plus-minus, etc.) successfully
-		// translate to the Mac Roman encoding
-		switch (inCharacter)
+		switch (glyphType)
 		{
+		case '_':
+			newString = stringWithCharacter(' '); // blank (same in VT52)
+			removeVTGraphicsAttribute(); // render normally
+			break;
+		
 		case '`':
-			result = 0x25CA; // filled diamond; using hollow (lozenge) for now, Unicode 0x2666 is better
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			if (kVT52)
+			{
+				newString = stringWithCharacter(' '); // (reserved in VT52; render as a space)
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2666); // filled diamond
+				//removeVTGraphicsAttribute(); // render normally
+			}
 			break;
 		
 		case 'a':
-			result = 0x2592; // checkerboard
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2588); // solid block
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2592); // checkerboard
+			}
 			break;
 		
 		case 'b':
-			result = 0x21E5; // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x215F); // fraction numerator one
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x21E5); // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+			}
 			break;
 		
 		case 'c':
-			result = 0x21DF; // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x00B3); // fraction numerator three (not in Unicode; render as a superscript '3')
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x21DF); // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+			}
 			break;
 		
 		case 'd':
-			result = 0x2190; // carriage return (international symbol is an arrow pointing right to left)
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2075); // fraction numerator five (not in Unicode; render as a superscript '5')
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2190); // carriage return (international symbol is an arrow pointing right to left)
+			}
 			break;
 		
 		case 'e':
-			result = 0x2193; // line feed (international symbol is an arrow pointing top to bottom)
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2077); // fraction numerator seven (not in Unicode; render as a superscript '7')
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2193); // line feed (international symbol is an arrow pointing top to bottom)
+			}
 			break;
 		
 		case 'f':
-			result = 0x00B0; // degrees (same in VT52)
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x00B0); // degrees (same in VT52)
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 'g':
-			result = 0x00B1; // plus or minus (same in VT52)
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x00B1); // plus or minus (same in VT52)
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 'h':
-			result = 0x21B5; // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2192); // rightwards arrow
+			}
+			else
+			{
+				newString = stringWithCharacter(0x21B5); // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+			}
 			break;
 		
 		case 'i':
-			result = 0x2913; // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2026); // ellipsis
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2913); // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+			}
 			break;
 		
 		case 'j':
 			if (kVT52)
 			{
-				result = 0x00F7; // division
-				inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+				newString = stringWithCharacter(0x00F7); // division
+				removeVTGraphicsAttribute(); // render normally
 			}
 			else
 			{
-				result = (kIsBold) ? 0x251B : 0x2518; // hook mid-top to mid-left
+				newString = stringWithCharacter((kIsBold) ? 0x251B : 0x2518); // hook mid-top to mid-left
 			}
 			break;
 		
 		case 'k':
-			result = (kIsBold) ? 0x2513 : 0x2510; // hook mid-left to mid-bottom
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2193); // downwards arrow
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x2513 : 0x2510); // hook mid-left to mid-bottom
+			}
 			break;
 		
 		case 'l':
-			result = (kIsBold) ? 0x250F : 0x250C; // hook mid-right to mid-bottom
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BA); // bar at scan 0
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x250F : 0x250C); // hook mid-right to mid-bottom
+			}
 			break;
 		
 		case 'm':
-			result = (kIsBold) ? 0x2517 : 0x2514; // hook mid-top to mid-right
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BA); // bar at scan 1 (not enough lines in Unicode; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x2517 : 0x2514); // hook mid-top to mid-right
+			}
 			break;
 		
 		case 'n':
-			result = (kIsBold) ? 0x254B : 0x253C; // cross
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BB); // bar at scan 2 (not enough lines in Unicode; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x254B : 0x253C); // cross
+			}
 			break;
 		
 		case 'o':
-			result = 0x23BA; // top line
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BB); // bar at scan 3 (not enough lines in Unicode; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter(0x23BA); // top line
+			}
 			break;
 		
 		case 'p':
-			result = 0x23BB; // line between top and middle regions
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BC); // bar at scan 4 (not enough lines in Unicode; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter(0x23BB); // line between top and middle regions
+			}
 			break;
 		
 		case 'q':
-			result = (kIsBold) ? 0x2501 : 0x2500; // middle line
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BC); // bar at scan 5 (not enough lines in Unicode; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x2501 : 0x2500); // middle line
+			}
 			break;
 		
 		case 'r':
-			result = 0x23BC; // line between middle and bottom regions
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BD); // bar at scan 6 (not enough lines in Unicode; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter(0x23BC); // line between middle and bottom regions
+			}
 			break;
 		
 		case 's':
-			result = 0x23BD; // bottom line
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x23BD); // bar at scan 7 (not enough lines in Unicode but largest in VT52 is scan 7; assign arbitrarily)
+			}
+			else
+			{
+				newString = stringWithCharacter(0x23BD); // bottom line
+			}
 			break;
 		
 		case 't':
-			result = (kIsBold) ? 0x2523 : 0x251C; // cross minus the left piece
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2080); // superscript 0
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x2523 : 0x251C); // cross minus the left piece
+			}
 			break;
 		
 		case 'u':
-			result = (kIsBold) ? 0x252B : 0x2524; // cross minus the right piece
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2081); // superscript 1
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x252B : 0x2524); // cross minus the right piece
+			}
 			break;
 		
 		case 'v':
-			result = (kIsBold) ? 0x253B : 0x2534; // cross minus the bottom piece
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2082); // superscript 2
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x253B : 0x2534); // cross minus the bottom piece
+			}
 			break;
 		
 		case 'w':
-			result = (kIsBold) ? 0x2533 : 0x252C; // cross minus the top piece
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2083); // superscript 3
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x2533 : 0x252C); // cross minus the top piece
+			}
 			break;
 		
 		case 'x':
-			result = (kIsBold) ? 0x2503 : 0x2502; // vertical line
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2084); // superscript 4
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter((kIsBold) ? 0x2503 : 0x2502); // vertical line
+			}
 			break;
 		
 		case 'y':
-			result = 0x2264; // less than or equal to
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2085); // superscript 5
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2264); // less than or equal to
+				removeVTGraphicsAttribute(); // render normally
+			}
 			break;
 		
 		case 'z':
-			result = 0x2265; // greater than or equal to
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2086); // superscript 6
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2265); // greater than or equal to
+				removeVTGraphicsAttribute(); // render normally
+			}
 			break;
 		
 		case '{':
-			result = 0x03C0; // pi
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2087); // superscript 7
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x03C0); // pi
+				removeVTGraphicsAttribute(); // render normally
+			}
 			break;
 		
 		case '|':
-			result = 0x2260; // not equal to
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2088); // superscript 8
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x2260); // not equal to
+				removeVTGraphicsAttribute(); // render normally
+			}
 			break;
 		
 		case '}':
-			result = 0x00A3; // British pounds (currency) symbol
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			if (kVT52)
+			{
+				newString = stringWithCharacter(0x2089); // superscript 9
+				removeVTGraphicsAttribute(); // render normally
+			}
+			else
+			{
+				newString = stringWithCharacter(0x00A3); // British pounds (currency) symbol
+				removeVTGraphicsAttribute(); // render normally
+			}
 			break;
 		
 		case '~':
 			if (kVT52)
 			{
-				result = 0x00B6; // pilcrow (paragraph) sign
-				inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+				newString = stringWithCharacter(0x00B6); // pilcrow (paragraph) sign
+				removeVTGraphicsAttribute(); // render normally
 			}
 			else
 			{
-				result = 0x2027; // centered dot
-				inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+				newString = stringWithCharacter(0x2027); // centered dot
+				removeVTGraphicsAttribute(); // render normally
 			}
 			break;
 		
 		case 159:
-			result = 0x0192; // small 'f' with hook
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x0192); // small 'f' with hook
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 224:
-			result = 0x03B1; // alpha
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03B1); // alpha
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 225:
-			result = 0x00DF; // beta
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x00DF); // beta
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 226:
-			result = 0x0393; // capital gamma
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x0393); // capital gamma
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 227:
-			result = 0x03C0; // pi
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03C0); // pi
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 228:
-			result = 0x03A3; // capital sigma
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03A3); // capital sigma
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 229:
-			result = 0x03C3; // sigma
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03C3); // sigma
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 230:
-			result = 0x00B5; // mu
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x00B5); // mu
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 231:
-			result = 0x03C4; // tau
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03C4); // tau
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 232:
-			result = 0x03A6; // capital phi
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03A6); // capital phi
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 233:
-			result = 0x0398; // capital theta
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x0398); // capital theta
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 234:
-			result = 0x03A9; // capital omega
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03A9); // capital omega
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 235:
-			result = 0x03B4; // delta
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03B4); // delta
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 237:
-			result = 0x03C6; // phi
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03C6); // phi
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 238:
-			result = 0x03B5; // epsilon
-			inAttributes.removeAttributes(kTextAttributes_VTGraphics); // render normally
+			newString = stringWithCharacter(0x03B5); // epsilon
+			removeVTGraphicsAttribute(); // render normally
 			break;
 		
 		case 251:
-			result = 0x221A; // square root left edge
+			newString = stringWithCharacter(0x221A); // square root left edge
 			break;
 		
 		default:
 			break;
 		}
 	}
-	else if ((inCharacter >= 0x2800) && (inCharacter <= 0x28FF))
+	else if ((glyphType >= 0x2800) && (glyphType <= 0x28FF))
 	{
 		// all characters in the Braille range
-		outNewAttributes.addAttributes(kTextAttributes_VTGraphics);
+		tmpAttributes.addAttributes(kTextAttributes_VTGraphics);
+		newAttributes = &tmpAttributes;
 	}
 	else
 	{
@@ -18965,7 +19183,7 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		// but it may still be best to *tag* it as such so that a more
 		// advanced rendering can be done (default font renderings for
 		// graphics are not always as nice)
-		switch (inCharacter)
+		switch (glyphType)
 		{
 		// this list should generally match the set of Unicode characters that
 		// are handled by the drawVTGraphicsGlyph() internal method in the
@@ -19187,7 +19405,8 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0xE0B2: // "powerline" leftward triangle
 		case 0xE0B3: // "powerline" leftward arrowhead
 		case 0xFFFD: // replacement character
-			outNewAttributes.addAttributes(kTextAttributes_VTGraphics);
+			tmpAttributes.addAttributes(kTextAttributes_VTGraphics);
+			newAttributes = &tmpAttributes;
 			break;
 		
 		default:
@@ -19195,8 +19414,36 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		}
 	}
 	
-	return result;
-}// translateCharacter
+	// replace attributes at this cell location, and optionally
+	// update the character as well (if "newString" is defined)
+	if (nil != newString)
+	{
+		// text changed, and possibly attributes as well
+		CFStringRef		asCFString = BRIDGE_CAST(newString, CFStringRef);
+		
+		
+		if (nil != newAttributes)
+		{
+			inoutUpdatedTerminalLinePtr->replaceCell(inFirstUpdatedCell, asCFString, *newAttributes);
+		}
+		else
+		{
+			inoutUpdatedTerminalLinePtr->replaceCell(inFirstUpdatedCell, asCFString, inAttributes);
+		}
+	}
+	else
+	{
+		// sometimes text is not changed but attributes do change
+		if (nil != newAttributes)
+		{
+			inoutUpdatedTerminalLinePtr->replaceCell(inFirstUpdatedCell, inCellCharacter, *newAttributes);
+		}
+		else
+		{
+			inoutUpdatedTerminalLinePtr->replaceCell(inFirstUpdatedCell, inCellCharacter, inAttributes);
+		}
+	}
+}// translateCell
 
 } // anonymous namespace
 
