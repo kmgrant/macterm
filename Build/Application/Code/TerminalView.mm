@@ -8721,6 +8721,7 @@ selectionModify		(My_TerminalViewPtr				inTerminalViewPtr,
 				inTerminalViewPtr->text.selection.isRectangular);
 	
 	highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
+	copySelectedTextIfUserPreference(inTerminalViewPtr);
 	
 	if ((didChangeRows) && (inAllowScrolling))
 	{
@@ -12555,6 +12556,7 @@ mouseDown:(NSEvent*)	anEvent
 			
 			case NSEventTypeLeftMouseUp:
 				*outStopFlagPtr = YES;
+				copySelectedTextIfUserPreference(viewPtr);
 				break;
 			
 			default:
