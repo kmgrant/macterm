@@ -535,6 +535,14 @@ Private properties.
 	//! hovered for long enough, the window auto-activates.
 	@property (assign) CFAbsoluteTime
 	dragEnterTime;
+	//! Tracks the mouse even in background windows so that the
+	//! window can automatically become “key” if the user preference
+	//! for “focus follows mouse” is set.
+	@property (strong) NSTrackingArea*
+	focusFollowsMouseTrackingArea;
+	//! Auto-updated when the corresponding user preference changes.
+	@property (assign) BOOL
+	focusShouldFollowMouse;
 	//! Internal version of associated TerminalViewRef.
 	@property (assign) My_TerminalViewPtr
 	internalViewPtr; // weak
@@ -544,6 +552,9 @@ Private properties.
 	//! modifier keys pressed).
 	@property (assign) NSUInteger
 	modifierFlagsForCursor;
+	//! Responds when underlying preference storage is changed.
+	@property (strong) ListenerModel_StandardListener*
+	preferenceChangeListener;
 	//! Stores information on key-value observers.
 	@property (strong) NSMutableArray*
 	registeredObservers;
@@ -574,11 +585,17 @@ The private class interface.
 	extendSelectionForKeyBindingSelector:(SEL)_
 	sender:(id)_;
 	- (void)
+	model:(ListenerModel_Ref)_
+	preferenceChange:(ListenerModel_Event)_
+	context:(void*)_;
+	- (void)
 	moveCursorForKeyBindingSelector:(SEL)_
 	sender:(id)_;
 	- (void)
 	printForSelector:(SEL)_
 	sender:(id)_;
+	- (void)
+	setFocusFollowsMouseTrackingAreasEnabled:(BOOL)_;
 
 @end //}
 
@@ -10176,12 +10193,13 @@ initWithFrame:(NSRect)		aFrame
 	self = [super initWithFrame:aFrame];
 	if (nil != self)
 	{
-		self->_showDragHighlight = NO;
-		self->_showVisualBell = NO;
-		self->_modifierFlagsForCursor = 0;
-		self->_internalViewPtr = nullptr;
-		
-		self->_registeredObservers = [[NSMutableArray alloc] init];
+		_focusFollowsMouseTrackingArea = nil; // see "updateTrackingAreas"
+		_focusShouldFollowMouse = NO; // see "model:preferenceChange:context:"
+		_internalViewPtr = nullptr;
+		_modifierFlagsForCursor = 0;
+		_registeredObservers = [[NSMutableArray alloc] init];
+		_showDragHighlight = NO;
+		_showVisualBell = NO;
 		[self.registeredObservers addObject:[self newObserverFromSelector:@selector(effectiveAppearance) ofObject:NSApp options:0]];
 		
 		[self registerForDraggedTypes:@[
@@ -10199,6 +10217,20 @@ initWithFrame:(NSRect)		aFrame
 		
 		self.refusesFirstResponder = NO;
 		self.wantsLayer = YES;
+		
+		// install a callback that finds out about changes to key preferences
+		{
+			Preferences_Result		error = kPreferences_ResultOK;
+			
+			
+			self.preferenceChangeListener = [[ListenerModel_StandardListener alloc]
+												initWithTarget:self
+																eventFiredSelector:@selector(model:preferenceChange:context:)];
+			
+			error = Preferences_StartMonitoring([self.preferenceChangeListener listenerRef], kPreferences_TagFocusFollowsMouse,
+												true/* call immediately to get initial value */);
+			assert(kPreferences_ResultOK == error);
+		}
 	}
 	return self;
 }// initWithFrame:
@@ -10212,6 +10244,8 @@ Destructor.
 - (void)
 dealloc
 {
+	UNUSED_RETURN(Preferences_Result)Preferences_StopMonitoring(self.preferenceChangeListener.listenerRef,
+																kPreferences_TagFocusFollowsMouse);
 	[self removeObserversSpecifiedInArray:self.registeredObservers];
 }// dealloc
 
@@ -12573,6 +12607,36 @@ mouseDown:(NSEvent*)	anEvent
 
 
 /*!
+Implements the “focus follows mouse” preference by making
+the window the key window when the mouse moves inside it.
+
+See also "mouseExited:" and properties of type "NSTrackingArea".
+
+(2021.08)
+*/
+- (void)
+mouseEntered:(NSEvent*)		anEvent
+{
+	//NSLog(@"focus following mouse into: %@", self); // debug
+	[self.window makeKeyWindow];
+	UNUSED_RETURN(BOOL)[self.window makeFirstResponder:self];
+}// mouseEntered:
+
+
+/*!
+Currently this method does nothing because “focus follows mouse”
+can be implemented entirely by "mouseEntered:".
+
+(2021.08)
+*/
+- (void)
+mouseExited:(NSEvent*)		anEvent
+{
+	//NSLog(@"focus following mouse away from: %@", self); // debug
+}// mouseExited:
+
+
+/*!
 Obtains data from a Services item.
 
 Arbitrarily, it is assumed that text returned from a
@@ -13788,6 +13852,24 @@ shouldDelayWindowOrderingForEvent:(NSEvent*)	anEvent
 }// shouldDelayWindowOrderingForEvent:
 
 
+/*!
+Implements the “focus follows mouse” preference by maintaining
+mouse-tracking areas that help to determine when the focused
+window should be changed.
+
+This is generally called when the window is opened or resized.
+
+(2021.08)
+*/
+- (void)
+updateTrackingAreas
+{
+	[super updateTrackingAreas];
+	
+	[self setFocusFollowsMouseTrackingAreasEnabled:self.focusShouldFollowMouse];
+}// updateTrackingAreas
+
+
 @end //} TerminalView_ContentView
 
 
@@ -13938,6 +14020,41 @@ sender:(id)									sender
 
 
 /*!
+Called when a monitored preference is changed.  See the
+initializer for the set of events that is monitored.
+
+(2021.08)
+*/
+- (void)
+model:(ListenerModel_Ref)				aModel
+preferenceChange:(ListenerModel_Event)	anEvent
+context:(void*)							aContext
+{
+#pragma unused(aModel, aContext)
+	switch (anEvent)
+	{
+	case kPreferences_TagFocusFollowsMouse:
+		{
+			BOOL	newValue = false;
+			
+			
+			unless (kPreferences_ResultOK == Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(newValue), &newValue))
+			{
+				newValue = false; // assume a value, if preference can’t be found
+			}
+			self.focusShouldFollowMouse = newValue;
+			[self setFocusFollowsMouseTrackingAreasEnabled:newValue];
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// model:preferenceChange:context:
+
+
+/*!
 Standard handler for "moveLeft:", "moveRight:" and
 similar methods.
 
@@ -14036,6 +14153,37 @@ sender:(id)				sender
 		}
 	}
 }// printForSelector:sender:
+
+
+/*!
+Adds or removes mouse-tracking for the purposes of implementing
+the “focus follows mouse” feature.
+
+This is a helper method that should not be called arbitrarily.
+See "updateTrackingAreas" and code that responds to changes in
+user preferences ("model:preferenceChange:context:").
+
+(2021.08)
+*/
+- (void)
+setFocusFollowsMouseTrackingAreasEnabled:(BOOL)		aFlag
+{
+	if (nil != self.focusFollowsMouseTrackingArea)
+	{
+		[self removeTrackingArea:self.focusFollowsMouseTrackingArea];
+		self.focusFollowsMouseTrackingArea = nil;
+	}
+	
+	if (aFlag)
+	{
+		self.focusFollowsMouseTrackingArea = [[NSTrackingArea alloc]
+												initWithRect:NSZeroRect
+																options:(NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect)
+																owner:self
+																userInfo:nil];
+		[self addTrackingArea:self.focusFollowsMouseTrackingArea];
+	}
+}// 
 
 
 @end //} TerminalView_ContentView (TerminalView_ContentViewInternal)
