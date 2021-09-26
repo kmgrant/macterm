@@ -12617,9 +12617,15 @@ See also "mouseExited:" and properties of type "NSTrackingArea".
 - (void)
 mouseEntered:(NSEvent*)		anEvent
 {
-	//NSLog(@"focus following mouse into: %@", self); // debug
-	[self.window makeKeyWindow];
-	UNUSED_RETURN(BOOL)[self.window makeFirstResponder:self];
+	if (anEvent.trackingArea == self.focusFollowsMouseTrackingArea)
+	{
+		//NSLog(@"focus following mouse into: %@", self); // debug
+		if (NO == NSApp.keyWindow.isModalPanel)
+		{
+			[self.window makeKeyWindow];
+			UNUSED_RETURN(BOOL)[self.window makeFirstResponder:self];
+		}
+	}
 }// mouseEntered:
 
 
@@ -12632,7 +12638,10 @@ can be implemented entirely by "mouseEntered:".
 - (void)
 mouseExited:(NSEvent*)		anEvent
 {
-	//NSLog(@"focus following mouse away from: %@", self); // debug
+	if (anEvent.trackingArea == self.focusFollowsMouseTrackingArea)
+	{
+		//NSLog(@"focus following mouse away from: %@", self); // debug
+	}
 }// mouseExited:
 
 
