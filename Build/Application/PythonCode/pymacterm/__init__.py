@@ -6,36 +6,34 @@ run_module_tests -- invoke _test() method of given module
 run_all_tests -- run tests of all modules in the package
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 def run_module_tests(mod):
-    """Every module must have a _test() function, which
-    uses "doctest"; this function invokes that for the
-    given module.
-
-    Note that a _test() call is only expected to print
-    output if there are problems.
+    """Every module must support doctest; this runs doctest.testmod()
+    on each module and (if there are errors) prints results.
 
     """
-    (failures, test_count) = mod._test()
+    import doctest
+    (failures, test_count) = doctest.testmod(mod)
     if not failures:
         print("MacTerm: %s module: SUCCESSFUL unit test (total tests: %d)" %
               (mod.__name__, test_count))
+    return failures
 
 def run_all_tests():
     """Run tests in every module that has tests.
     """
+    failures = 0
     from . import file_kvp
     from . import file_open
     from . import term_text
     from . import url_open
     from . import url_parse
     from . import utilities
-    run_module_tests(file_kvp)
-    run_module_tests(file_open)
-    run_module_tests(term_text)
-    run_module_tests(url_open)
-    run_module_tests(url_parse)
-    run_module_tests(utilities)
+    failures += run_module_tests(file_kvp)
+    failures += run_module_tests(file_open)
+    failures += run_module_tests(term_text)
+    failures += run_module_tests(url_open)
+    failures += run_module_tests(url_parse)
+    failures += run_module_tests(utilities)
+    if failures > 0:
+        raise RuntimeError("one or more tests failed; see above")

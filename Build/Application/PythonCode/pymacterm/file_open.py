@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
 
 """Routines to open various types of files.
@@ -9,9 +8,6 @@ script -- run any executable file as a Session
 session -- start a Session according to a ".session" key-value-pair file
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '1 January 2008'
@@ -105,10 +101,3 @@ def session(pathname):
             ignored_session = quills.Session(args)
         else:
             raise KeyError('no "command" was found in the file')
-
-def _test():
-    """Runs all of this module's "doctest" test cases.
-    """
-    import doctest
-    from . import file_open
-    return doctest.testmod(file_open)

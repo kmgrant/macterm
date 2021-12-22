@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
 
 """Parse key-value-pair file formats such as ".session".
@@ -15,9 +14,6 @@ parser does not care what the keys are, or what order they are in.
 Parser -- class to translate key-value-pair syntax into Python data
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '13 April 2009'
@@ -113,7 +109,7 @@ class Parser(object):
         ... 'b = "2"\\n',
         ... ])
         >>> d = p.results()
-        >>> k = d.keys()[:]
+        >>> k = list(d.keys())
         >>> k.sort()
         >>> print(k)
         ['a', 'b', 'c', 'xyz']
@@ -130,7 +126,7 @@ class Parser(object):
         ...        p = Parser(lines=['this is garbage input'])
         ... except SyntaxError as e:
         ...        print(str(e))
-        session file line 1: need more than 1 value to unpack
+        session file line 1: not enough values to unpack (expected 2, got 1)
 
         """
         self._definitions = dict()
@@ -171,13 +167,3 @@ class Parser(object):
 
         """
         return self._definitions
-
-def _test():
-    """Runs all of this module's "doctest" test cases.
-    """
-    import doctest
-    from . import file_kvp
-    return doctest.testmod(file_kvp)
-
-if __name__ == '__main__':
-    _test()

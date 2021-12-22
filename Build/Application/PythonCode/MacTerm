@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # vim: set fileencoding=UTF-8 :
 
 """The main entry point to MacTerm.
@@ -12,9 +12,6 @@ such as /Library/Frameworks; but it's nice to have all the files together, and
 definitely nice when users don't need an installer or administrator privileges.
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 __author__ = "Kevin Grant <kmg@mac.com>"
 __date__ = "2 September 2006"
@@ -40,7 +37,7 @@ if __name__ == "__main__":
 
     # the PyMacTerm.framework code is not compiled, so its version
     # will depend only on whatever the current implementation is
-    PYMACTERM_PYLIB_VER = "2.6"
+    PYMACTERM_PYLIB_VER = "3.9"
     PYMACTERM_DIR = path_join(FRAMEWORKS_DIR, "PyMacTerm.framework")
     PYMACTERM_VERSIONS_DIR = path_join(PYMACTERM_DIR, "Versions")
     PYMACTERM_CURRENT_DIR = path_join(PYMACTERM_VERSIONS_DIR, "Current")
@@ -64,7 +61,7 @@ if __name__ == "__main__":
     # The interpreter MUST be invoked from a location physically inside the
     # bundle in order for the system to assign the correct bundle ID for such
     # things as the application menu and preferences.  A tiny executable runs
-    # the Python interpreter from C++ (e.g. "MacTerm_python2.6_wrap").
+    # the Python interpreter from C++ (e.g. "MacTerm_python3.9_wrap").
     #
     # MacTermQuills.framework code is the largest piece.  It is available as a
     # Universal binary.
@@ -75,7 +72,7 @@ if __name__ == "__main__":
     # will once again be necessary to have separate SWIG-generated wrappers for
     # each incompatible Python version.)
     DEFAULT_QUILLS_FW_VER = "B"
-    DEFAULT_QUILLS_PYLIB_VER = "2.6"
+    DEFAULT_QUILLS_PYLIB_VER = "3.9"
     DEFAULT_WRAPPER = "MacTerm_python%s_wrap" % DEFAULT_QUILLS_PYLIB_VER
     if MAC_OS_NAME in ("Big Sur", "Catalina", "Mojave", "Yosemite", "El Capitán",
                        "Sierra", "High Sierra"):

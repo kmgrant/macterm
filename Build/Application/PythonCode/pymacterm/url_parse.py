@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
 
 """Routines to distill various kinds of URLs into components.
@@ -23,9 +22,6 @@ ssh -- handle URLs of the form "ssh://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
@@ -34,8 +30,8 @@ __version__ = '4.0.0'
 from .utilities import \
     slash_free_path as _slash_free_path, \
     sort_dict as _sort_dict
-import urlparse
-#import urllib.parse as urlparse # for Python 3.0
+#import urlparse # for Python 2.x
+import urllib.parse as urlparse # for Python 3.x
 
 def _host_port(netloc):
     """_host_port(netloc) -> (host, port)
@@ -147,6 +143,12 @@ def file(url):
     (scheme, netloc, path, params, query, fragment) = \
         urlparse.urlparse(url, 'file', allow_pound_notation)
     if 'file' != scheme:
+        raise ValueError("not a file URL")
+    # the python3 version of urllib.parse assumes that a
+    # string with spaces and no scheme is a file URL and
+    # does so inconsistently with the urlparse library
+    # from python2; for consistency, reject it here
+    if ' ' in path:
         raise ValueError("not a file URL")
     if path == '':
         path = '/'
@@ -270,13 +272,3 @@ def x_man_page(url):
     result['section'] = section
     result['cmd'] = cmd
     return result
-
-def _test():
-    """Runs all of this module's "doctest" test cases.
-    """
-    import doctest
-    from . import url_parse
-    return doctest.testmod(url_parse)
-
-if __name__ == '__main__':
-    _test()

@@ -36,7 +36,7 @@ int
 main	(int	argc,
 		 char*	argv[])
 {
-	return Py_Main(argc, argv);
+	return Py_BytesMain(argc, argv);
 }
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

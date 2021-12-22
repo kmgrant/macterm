@@ -1,17 +1,22 @@
 #include "CustomPaths.xcconfig"
 #include "Signature.xcconfig"
 
-// the version of SWIG required to work with the system Python
-// (see also SWIG_PREFIX and SWIG_PREFIX_ALT)
-SWIG_VERSION = 4.0.2
+// (this is now only used to trigger warnings, as the default
+// build does not run SWIG from a path that has a version)
+RECOMMENDED_SWIG_VERSION = 4.0.2
 
-// set to the project Python version; as of 10.9 this is not in the SDK root
-// (note: the author has chosen to use the same path when building SWIG; it is
-// not known if this consistency matters for correct SWIG output)
-PYTHON_FRAMEWORK_ROOT = /System/Library/Frameworks/Python.framework/Versions/2.7
+// set to the project Python version; as of Xcode 13.2 this must be a custom
+// build of Python because the OS no longer allows linking to the system one
+// (note: in "../../Application.xcodeproj/project.pbxproj", the script that
+// runs SWIG via "Tools/RunSwig.sh" accepts arguments that may need to be
+// consistent with the Python version chosen here, and the install path of
+// Python modules typically includes the Python version as well)
+PYTHON_FRAMEWORK_ROOT = /opt/homebrew/opt/python@3.9/Frameworks/Python.framework/Versions/3.9
 
-// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python-config --includes":
-PYTHON_INCLUDES = -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7 -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
+// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python3-config --embed --includes"
+// (simply replacing this value with that output is strongly recommended)
+PYTHON_INCLUDES = -I/opt/homebrew/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/include/python3.9 -I/opt/homebrew/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/include/python3.9
 
-// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python-config --ldflags":
-PYTHON_LDFLAGS = -L/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config -lpython2.7 -ldl -framework CoreFoundation
+// the following should be the result of "$(PYTHON_FRAMEWORK_ROOT)/bin/python3-config --embed --ldflags":
+// (simply replacing this value with that output is strongly recommended)
+PYTHON_LDFLAGS = -L/opt/homebrew/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin -lpython3.9 -ldl -framework CoreFoundation

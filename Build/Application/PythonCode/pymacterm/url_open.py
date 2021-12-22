@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
 
 """Routines to open MacTerm sessions using information in URLs.
@@ -13,9 +12,6 @@ ssh -- handle URLs of the form "ssh://user@host:port"
 x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
@@ -192,16 +188,3 @@ def x_man_page(url):
         ignored_session = quills.Session(['/usr/bin/man', cmd])
     else:
         raise ValueError("unsupported form of x-man-page URL")
-
-def _test():
-    """Runs all of this module's "doctest" test cases.
-    """
-    import doctest
-    from . import url_open
-    result = None
-    try:
-        result = doctest.testmod(url_open)
-    except Exception as _:
-        import sys
-        print("unexpected exception caught: %s" % str(_), file=sys.stderr)
-    return result

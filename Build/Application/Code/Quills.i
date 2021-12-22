@@ -424,14 +424,14 @@ CallPythonStringLongReturnLongPair	(void*	inPythonFunctionObject,
 		}
 		
 		item0 = PyTuple_GetItem(pythonResult, 0);
-		if ((nullptr == item0) || (false == PyInt_CheckExact(item0)))
+		if ((nullptr == item0) || (false == PyLong_CheckExact(item0)))
 		{
 			throw _Quills_CallbackError("First item of returned tuple must be an integer", pythonDef);
 		}
 		result.first = PyInt_AsLong(item0);
 		
 		item1 = PyTuple_GetItem(pythonResult, 1);
-		if ((nullptr == item1) || (false == PyInt_CheckExact(item1)))
+		if ((nullptr == item1) || (false == PyLong_CheckExact(item1)))
 		{
 			throw _Quills_CallbackError("Second item of returned tuple must be an integer", pythonDef);
 		}

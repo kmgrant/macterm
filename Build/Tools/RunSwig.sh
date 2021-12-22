@@ -60,11 +60,11 @@ else
     echo "$0: configured to run '${swig}'" >&2
 fi
 actual_swig_ver=`echo ${swig_ver_output} | $grep "SWIG Version" | $awk '{print $3}'`
-if [ "x$actual_swig_ver" != "x${SWIG_VERSION}" ] ; then
-    echo "$0: warning: this project was last tested with SWIG ${SWIG_VERSION} but installed version ($swig) is $actual_swig_ver" >&2
+if [ "x$actual_swig_ver" != "x${RECOMMENDED_SWIG_VERSION}" ] ; then
+    echo "$0: warning: this project was last tested with SWIG ${RECOMMENDED_SWIG_VERSION} but installed version ($swig) is $actual_swig_ver" >&2
     #exit 1
 else
-    echo "$0: (this matches the recommended SWIG version, ${SWIG_VERSION})" >&2
+    echo "$0: (this matches the recommended SWIG version, ${RECOMMENDED_SWIG_VERSION})" >&2
 fi
 
 # change to the target directory, because SWIG annoyingly

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # vim: set fileencoding=UTF-8 :
 
 """This is where the bulk of MacTerm is initialized, but it's best to run it
@@ -17,9 +17,6 @@ This exposure to Python simplifies debugging, and gives you extensibility and
 configuration options that most applications lack!  This file shows just a few
 examples of what you can do...look for more information at MacTerm.net.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 __author__ = 'Kevin Grant <kmg@mac.com>'
 __date__ = '24 August 2006'
@@ -33,12 +30,12 @@ def warn(*args, **kwargs):
 if __name__ == "__main__":
     import os
     import string
+    import sys
     import datetime
 
     try:
         from quills import Base, Events, Prefs, Session, Terminal
     except ImportError as err:
-        import sys
         warn("Unable to import Quills.")
         if "DYLD_LIBRARY_PATH" in os.environ:
             warn("Shared library path:", os.environ["DYLD_LIBRARY_PATH"])
@@ -211,6 +208,7 @@ if __name__ == "__main__":
     if DO_TESTING:
         import pymacterm
         pymacterm.run_all_tests()
+        sys.exit(0)
 
     # register MacTerm features that are actually implemented in Python!
     Session.on_urlopen_call(pymacterm.url_open.file, 'file')

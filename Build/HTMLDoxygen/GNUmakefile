@@ -36,7 +36,7 @@ DOXYGEN := doxygen
 DOXYGEN_CONF_TEMPLATE := $(CURDIR)/Resources/Doxygen.conf.in
 TMP_CONF := /tmp/Doxygen.conf
 
-PY_SRC := $(CURDIR)/../MacTerm.app/Contents/Frameworks/MacTermQuills.framework/Versions/B/lib/python2.6/Quills.py
+PY_SRC := $(CURDIR)/../MacTerm.app/Contents/Frameworks/MacTermQuills.framework/Versions/B/lib/python3.9/Quills.py
 ifeq ($(strip $(PY_SRC)),)
 $(warning Failed to find "Quills.py"; Python generation will have no effect!)
 endif

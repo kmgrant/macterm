@@ -148,7 +148,7 @@
 				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).py",
 			);
 			runOncePerArchitecture = 0;
-			script = "Tools/RunSwig.sh -c++ -python -I`pwd`/PythonWrapper -I`pwd`/Application/Code -I`pwd`/Shared/Code -outcurrentdir ${INPUT_FILE_PATH}\n";
+			script = "Tools/RunSwig.sh -c++ -python -py3 -I`pwd`/PythonWrapper -I`pwd`/Application/Code -I`pwd`/Shared/Code -outcurrentdir ${INPUT_FILE_PATH}\n";
 		};
 /* End PBXBuildRule section */
 
@@ -156,7 +156,7 @@
 		0A9AF6810AF5A81100E7DF18 /* pymacterm */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.6/pymacterm";
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python3.9/pymacterm";
 			dstSubfolderSpec = 0;
 			files = (
 				0A998CB01E5F62D30002C083 /* file_kvp.py in pymacterm */,
