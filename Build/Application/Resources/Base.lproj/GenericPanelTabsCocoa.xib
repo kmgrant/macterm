@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="19529" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="19529"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -23,11 +23,11 @@
                 <rect key="frame" x="0.0" y="0.0" width="520" height="296"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <box verticalHuggingPriority="750" boxType="separator" id="NWu-63-dee">
+                    <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="NWu-63-dee">
                         <rect key="frame" x="0.0" y="254" width="520" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     </box>
-                    <tabView type="noTabsNoBorder" id="1958">
+                    <tabView fixedFrame="YES" type="noTabsNoBorder" translatesAutoresizingMaskIntoConstraints="NO" id="1958">
                         <rect key="frame" x="0.0" y="0.0" width="520" height="256"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
@@ -35,10 +35,10 @@
                             <outlet property="nextKeyView" destination="POD-B2-oz9" id="kh2-Ic-W2T"/>
                         </connections>
                     </tabView>
-                    <segmentedControl verticalHuggingPriority="750" id="POD-B2-oz9">
-                        <rect key="frame" x="8" y="262" width="22" height="24"/>
+                    <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="POD-B2-oz9">
+                        <rect key="frame" x="0.0" y="262" width="22" height="24"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="automatic" trackingMode="selectOne" id="P3i-uJ-FQV">
+                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="P3i-uJ-FQV">
                             <font key="font" metaFont="system"/>
                             <segments>
                                 <segment/>
@@ -47,6 +47,7 @@
                     </segmentedControl>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="139" y="155"/>
         </box>
     </objects>
 </document>
