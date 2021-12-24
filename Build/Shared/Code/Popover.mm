@@ -714,6 +714,15 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 			self.borderWidth = 6.0f;
 			self.cornerRadius = 3.0f;
 		}
+		if (@available(macOS 11.0, *))
+		{
+			// on Big Sur and later, sheet effect is different and
+			// window corners are rounded; apply rounding to the
+			// content to make it look better
+			self.embeddedView.wantsLayer = YES;
+			self.embeddedView.layer.cornerRadius = 5.0;
+			self.embeddedView.layer.cornerCurve = kCACornerCurveContinuous;
+		}
 		break;
 	
 	case kPopover_WindowStyleDialogAppModal:
@@ -732,6 +741,15 @@ applyWindowStyle:(Popover_WindowStyle)		aWindowStyle
 		self.viewMargin = 7.0f;
 		self.borderWidth = 6.0f;
 		self.cornerRadius = 3.0f;
+		if (@available(macOS 11.0, *))
+		{
+			// on Big Sur and later, sheet effect is different and
+			// window corners are rounded; apply rounding to the
+			// content to make it look better
+			self.embeddedView.wantsLayer = YES;
+			self.embeddedView.layer.cornerRadius = 5.0;
+			self.embeddedView.layer.cornerCurve = kCACornerCurveContinuous;
+		}
 		break;
 	
 	case kPopover_WindowStyleHelp:
